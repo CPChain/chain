@@ -23,6 +23,8 @@ web3.eth.sendTransaction(simpleTx, function(err, transactionHash) {
         console.log(transactionHash);
         console.log("balance of " + a + ": " + web3.eth.getBalance(a).toString(10));
         console.log("balance of " + b + ": " + web3.eth.getBalance(b).toString(10));
+    } else {
+        console.log(err)
     }
 });
 
