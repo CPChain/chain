@@ -17,10 +17,10 @@
 package dpor
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
-	"bytes"
 )
 
 var (
@@ -49,7 +49,7 @@ func ExampleDporContext_encode() {
 	// Output:
 	// <nil> → C680C0C280C0C0
 	// &{hello [[0 206 13 70 217 36 204 132 55 200 6 114 20 150 89 159 195 255 162 104]] {1000 [{[0 206 13 70 217 36 204 132 55 200 6 114 20 150 89 159 195 255 162 104] sign_xxx}]} [[0 206 13 70 217 36 204 132 55 200 6 114 20 150 89 159 195 255 162 104]]} → F8568568656C6C6FD59400CE0D46D924CC8437C806721496599FC3FFA268E38203E8DFDE9400CE0D46D924CC8437C806721496599FC3FFA268887369676E5F787878D59400CE0D46D924CC8437C806721496599FC3FFA268
-	}
+}
 
 // rlp/decode_test.go#BenchmarkDecodeIntSliceReuse
 func ExampleDporContext_decode() {

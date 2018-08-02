@@ -175,7 +175,6 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*params.ChainConfig
 			return genesis.Config, hash, &GenesisMismatchError{stored, hash}
 		}
 	}
-	log.Info("stored:","stored",stored)
 	// Get the existing chain configuration.
 	newcfg := genesis.configOrDefault(stored)
 	storedcfg := rawdb.ReadChainConfig(db, stored)
@@ -213,10 +212,14 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 		return params.MainnetChainConfig
 	case ghash == params.TestnetGenesisHash:
 		return params.TestnetChainConfig
-	case ghash == params.DporGenesisHash:
-		return params.DporRinkebyChainConfig
+	case ghash == params.CpchainGenesisHash:
+		// TODO
+		panic("not implemented.")
+		//return params.CpchainChainConfig
 	default:
 		return params.AllEthashProtocolChanges
+		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
+		// check the ussage of `newcfg' in `setupGenesisBlock'.
 	}
 }
 
@@ -335,12 +338,12 @@ func DefaultRinkebyGenesisBlock() *Genesis {
 	}
 }
 
-// DefaultRinkebyGenesisBlock returns the Rinkeby network genesis block.
-func DefaultDporRinkebyGenesisBlock() *Genesis {
+// DefaultCpchainGenesisBlock returns the cpchain network genesis block.
+func DefaultCpchainGenesisBlock() *Genesis {
 	return &Genesis{
-		Config:     params.DporRinkebyChainConfig,
+		Config:     params.CpchainChainConfig,
 		Timestamp:  1492009146,
-		ExtraData:  hexutil.MustDecode("0x52657370656374206d7920617574686f7269746168207e452e436172746d616e42eb768f2244c8811c63729a21a3569731535f067ffc57839b00206d1ad20c69a1981b489f772031b279182d99e65703f0076e4812653aab85fca0f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000c05302acebd0730e3a18a058d7d1cb1204c4a092e94b7b6c5a0e526a4d97f9768ad6097bde25c62aef3dd127de235f15ffb4fc0d71469d1339df64650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
 		GasLimit:   4700000,
 		Difficulty: big.NewInt(1),
 		Alloc:      decodePrealloc(rinkebyAllocData),

@@ -17,9 +17,9 @@
 package dpor
 
 import (
-	"io"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
+	"io"
 )
 
 type BlockSignature struct {
@@ -58,11 +58,11 @@ func (c *DporContext) EncodeRLP(w io.Writer) (err error) {
 	} else {
 		return rlp.Encode(
 			w, dporStorageContext{
-			Name: c.Name,
-			Committees: c.Committees ,
-			SignatureInfo: c.SignatureInfo,
-			CandidateList:c.CandidateList,
-		})
+				Name:          c.Name,
+				Committees:    c.Committees,
+				SignatureInfo: c.SignatureInfo,
+				CandidateList: c.CandidateList,
+			})
 	}
 }
 

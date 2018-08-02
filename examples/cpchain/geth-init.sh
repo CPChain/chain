@@ -17,5 +17,7 @@ do
     rm -rf data/dd$i/geth
     mkdir -p data/dd$i/keystore
     cp keys/key$i data/dd$i/keystore
-    $proj_dir/build/bin/geth --datadir data/dd$i init conf/genesis.json
+
+    # not needed.
+    # $proj_dir/build/bin/geth --datadir data/dd$i init conf/genesis.json
 done

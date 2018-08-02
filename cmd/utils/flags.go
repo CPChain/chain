@@ -35,6 +35,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/consensus/clique"
+	"github.com/ethereum/go-ethereum/consensus/dpor"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -59,7 +60,6 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 	"gopkg.in/urfave/cli.v1"
-	"github.com/ethereum/go-ethereum/consensus/dpor"
 )
 
 var (
@@ -374,7 +374,7 @@ var (
 
 	CpchainFlag = cli.BoolFlag{
 		Name:  "cpchain",
-		Usage: "Enable cpchain configuration",
+		Usage: "Enable cpchain network configuration",
 	}
 
 	// RPC settings
@@ -588,6 +588,9 @@ func MakeDataDir(ctx *cli.Context) string {
 		}
 		if ctx.GlobalBool(RinkebyFlag.Name) {
 			return filepath.Join(path, "rinkeby")
+		}
+		if ctx.GlobalBool(CpchainFlag.Name) {
+			return filepath.Join(path, "cpchain")
 		}
 		return path
 	}
@@ -1062,7 +1065,7 @@ func SetShhConfig(ctx *cli.Context, stack *node.Node, cfg *whisper.Config) {
 // SetEthConfig applies eth-related command line flags to the config.
 func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 	// Avoid conflicting network flags
-	checkExclusive(ctx, DeveloperFlag, TestnetFlag, RinkebyFlag)
+	checkExclusive(ctx, DeveloperFlag, TestnetFlag, RinkebyFlag, CpchainFlag)
 	checkExclusive(ctx, FastSyncFlag, LightModeFlag, SyncModeFlag)
 	checkExclusive(ctx, LightServFlag, LightModeFlag)
 	checkExclusive(ctx, LightServFlag, SyncModeFlag, "light")
@@ -1135,9 +1138,9 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 		cfg.Genesis = core.DefaultRinkebyGenesisBlock()
 	case ctx.GlobalBool(CpchainFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = 19527
+			cfg.NetworkId = 42
 		}
-		//cfg.Genesis = core.DefaultDporRinkebyGenesisBlock()
+		cfg.Genesis = core.DefaultCpchainGenesisBlock()
 	case ctx.GlobalBool(DeveloperFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 1337
@@ -1285,7 +1288,7 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		genesis = core.DefaultRinkebyGenesisBlock()
 	case ctx.GlobalBool(CpchainFlag.Name):
-		genesis = core.DefaultDporRinkebyGenesisBlock()
+		genesis = core.DefaultCpchainGenesisBlock()
 	case ctx.GlobalBool(DeveloperFlag.Name):
 		Fatalf("Developer chains are ephemeral")
 	}
@@ -1304,7 +1307,7 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 	var engine consensus.Engine
 	if config.Clique != nil {
 		engine = clique.New(config.Clique, chainDb)
-	}else if config.Dpor != nil || ctx.GlobalBool(CpchainFlag.Name){
+	} else if config.Dpor != nil || ctx.GlobalBool(CpchainFlag.Name) {
 		engine = dpor.New(config.Dpor, chainDb)
 	} else {
 		engine = ethash.NewFaker()
