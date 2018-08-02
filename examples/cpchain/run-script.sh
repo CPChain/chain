@@ -9,4 +9,4 @@ proj_dir=../..
 
 ipc_path_base=/tmp/go-ethereum-ipc
 
-$proj_dir/build/bin/geth --exec "loadScript(\"$scriptfile\")" attach ipc:${ipc_path_base}3
+$proj_dir/build/bin/geth --exec "loadScript(\"$scriptfile\")" attach ipc:${ipc_path_base}1

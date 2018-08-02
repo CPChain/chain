@@ -11,7 +11,7 @@ mkdir -p data/logs
 
 proj_dir=../..
 
-for i in {3..6}
+for i in {1..4}
 do
     echo "[*] Configuring node $i"
     rm -rf data/dd$i/geth
