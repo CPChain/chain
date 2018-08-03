@@ -175,7 +175,6 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*params.ChainConfig
 			return genesis.Config, hash, &GenesisMismatchError{stored, hash}
 		}
 	}
-
 	// Get the existing chain configuration.
 	newcfg := genesis.configOrDefault(stored)
 	storedcfg := rawdb.ReadChainConfig(db, stored)
@@ -213,8 +212,14 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 		return params.MainnetChainConfig
 	case ghash == params.TestnetGenesisHash:
 		return params.TestnetChainConfig
+	case ghash == params.CpchainGenesisHash:
+		// TODO
+		panic("not implemented.")
+		//return params.CpchainChainConfig
 	default:
 		return params.AllEthashProtocolChanges
+		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
+		// check the ussage of `newcfg' in `setupGenesisBlock'.
 	}
 }
 
@@ -330,6 +335,25 @@ func DefaultRinkebyGenesisBlock() *Genesis {
 		GasLimit:   4700000,
 		Difficulty: big.NewInt(1),
 		Alloc:      decodePrealloc(rinkebyAllocData),
+	}
+}
+
+// DefaultCpchainGenesisBlock returns the cpchain network genesis block.
+func DefaultCpchainGenesisBlock() *Genesis {
+	return &Genesis{
+		Config:     params.CpchainChainConfig,
+		Timestamp:  1492009146,
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000c05302acebd0730e3a18a058d7d1cb1204c4a092e94b7b6c5a0e526a4d97f9768ad6097bde25c62aef3dd127de235f15ffb4fc0d71469d1339df64650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:   4700000,
+		Difficulty: big.NewInt(1),
+		Alloc: map[common.Address]GenesisAccount{
+			common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0x0000000000000000000000000000000000000000"): {Balance: big.NewInt(0x00000000000000000)},
+			common.HexToAddress("0x0000000000000000000000000000000000000001"): {Balance: big.NewInt(0x00000000000000000)},
+			common.HexToAddress("0x0000000000000000000000000000000000000002"): {Balance: big.NewInt(0x00000000000000000)},
+			common.HexToAddress("0x00000000000000000000000000000000000000ff"): {Balance: big.NewInt(0x00000000000000000)},
+		},
 	}
 }
 
