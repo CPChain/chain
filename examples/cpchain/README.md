@@ -1,4 +1,7 @@
-It contains a simple example of geth that starts 4 nodes and issues a transaction from node 1 to node 2.
+It contains a simple example of geth that starts 4 nodes and issues a transaction from node 1 to
+node 2.  node1 and node2 are the initial signers.
+
+
 
 # Usage
 
