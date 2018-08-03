@@ -31,4 +31,4 @@ $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd4 --ipcpath ${ipc_path
 echo ""
 echo "All nodes configured. See 'data/logs' for logs, and run e.g. 'geth attach /path/to/geth.ipc' to attach to the first Geth node."
 
-echo "To test sending a transaction from Node 1 to Node 2, run './runscript.sh transactions/simple-transaction.js'"
+echo "To test sending a transaction from Node 1 to Node 2, run './run-script.sh transactions/simple-transaction.js'"
