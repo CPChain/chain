@@ -19,6 +19,7 @@ package dpor
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -39,7 +40,7 @@ func ExampleDporContext_encode() {
 		SignatureInfo: BlockSignatureInfo{
 			BlockNumber: 1000,
 			BlockSignatures: []BlockSignature{
-				BlockSignature{Address: address, Signature: "sign_xxx"}},
+				{Address: address, Signature: "sign_xxx"}},
 		},
 		CandidateList: []common.Address{address}}
 	bytes, _ = rlp.EncodeToBytes(context)

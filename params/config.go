@@ -82,7 +82,7 @@ var (
 
 	// CpchainChainConfig contains the chain parameters to run a node on the Cpchain network.
 	CpchainChainConfig = &ChainConfig{
-		ChainID:             big.NewInt(42),
+		ChainID: big.NewInt(42),
 		Dpor: &DporConfig{
 			Period: 15,
 			Epoch:  30000,
@@ -104,11 +104,11 @@ var (
 	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}, nil}
 
 	// FIXME add to genesis.go
-	AllCpchainProtocolChanges = &ChainConfig{big.NewInt(42), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil,nil, &DporConfig{Period: 0, Epoch: 30000}}
+	AllCpchainProtocolChanges = &ChainConfig{big.NewInt(42), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, &DporConfig{Period: 0, Epoch: 30000}}
 
 	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil, nil}
 
-	TestRules       = TestChainConfig.Rules(new(big.Int))
+	TestRules = TestChainConfig.Rules(new(big.Int))
 )
 
 // ChainConfig is the core config which determines the blockchain settings.

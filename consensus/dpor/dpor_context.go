@@ -17,9 +17,10 @@
 package dpor
 
 import (
+	"io"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
-	"io"
 )
 
 type BlockSignature struct {
@@ -27,13 +28,13 @@ type BlockSignature struct {
 	Signature string
 }
 
-//blocknumber -> []BlockSignature
-// store map[signerAddress][signature]
+// BlockSignatureInfo blocknumber -> []BlockSignature, store map[signerAddress][signature]
 type BlockSignatureInfo struct {
 	BlockNumber     uint64
 	BlockSignatures []BlockSignature
 }
 
+// DporContext is Dpor context info
 type DporContext struct {
 	Name          string
 	Committees    []common.Address
@@ -73,12 +74,7 @@ func (c *DporContext) DecodeRLP(s *rlp.Stream) error {
 	if err == nil {
 		// read CandidateList from globalContext
 		//cl := []common.Address{}
-		*c = DporContext{
-			Name:          context.Name,
-			Committees:    context.Committees,
-			SignatureInfo: context.SignatureInfo,
-			CandidateList: context.CandidateList,
-		}
+		*c = DporContext(context)
 	}
 	return err
 }
