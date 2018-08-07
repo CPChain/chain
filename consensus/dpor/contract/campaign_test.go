@@ -15,6 +15,7 @@ import (
 )
 
 func TestCampaign(t *testing.T) {
+	t.Skip("we shall use a simulated backend.")
 
 	// create client.
 	client, err := ethclient.Dial("https://rinkeby.infura.io")
