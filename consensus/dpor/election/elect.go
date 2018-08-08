@@ -10,7 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/consensus/dpor/rpt"
 )
 
-// randRange returns a random integer between i and j.
+// randRange returns a random integer between [ min(i,j), max(i,j) )
+// NB, the rhs is open.
 func randRange(i, j int) int {
 	if j > i {
 		return i + rand.Intn(j-i)
@@ -18,52 +19,37 @@ func randRange(i, j int) int {
 	return j + rand.Intn(i-j)
 }
 
-func getClosest(val1 float64, val2 float64, target float64, mid int) (float64, int) {
-	if target-val1 <= val2-target {
-		return val1, mid - 1
-	}
-	return val2, mid
-}
-
-// findNearest returns the value and the position when finding the nearest item
-// in a slice `array' with target `target'.
 func findNearest(array []float64, target float64) (float64, int) {
-	n := len(array)
-	if target <= array[0] {
-		return array[0], 0
-	}
-	if target >= array[n-1] {
-		return array[n-1], n - 1
+	if len(array) == 0 {
+		panic("array length must be nonzero.")
 	}
 
-	// Doing binary search
-	i, mid := 0, 0
-	j := n
+	lo, hi := 0, len(array)-1
 
-	for i < j {
-		mid = (i + j) / 2
-
-		if array[mid] == target {
-			return array[mid], mid
-		}
-
-		if target < array[mid] {
-			if mid > 0 && target > array[mid-1] {
-				return getClosest(array[mid-1], array[mid], target, mid)
-			}
-			j = mid
-
+	// invariant: the nearest number is always within [lo,hi]
+	for lo+1 < hi {
+		mid := lo + (hi-lo)/2
+		if array[mid] >= target {
+			hi = mid
 		} else {
-			if mid < n-1 && target < array[mid+1] {
-				return getClosest(array[mid], array[mid+1], target, mid+1)
-			}
-			i = mid + 1
+			lo = mid
 		}
 	}
-	return array[mid], mid
+
+	if array[lo] >= target {
+		return array[lo], lo
+	} else if array[hi] <= target {
+		return array[hi], hi
+	} else {
+		// ok.  we check the gap
+		if target-array[lo] <= array[hi]-target {
+			return array[lo], lo
+		}
+		return array[hi], hi
+	}
 }
 
-// when given a candidate's reputation dict, a random seed, and the size
+// When given a candidate's reputation dict, a random seed, and the size
 // of the committee, `election' method returns an unique election result.
 func elect(rpts rpt.RPTs, seed int, viewLength int) map[int]common.Address {
 	sort.Sort(rpts)
