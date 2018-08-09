@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package campaign
+package contract
 
 import (
 	"math/big"
@@ -14,10 +14,10 @@ import (
 )
 
 // CampaignABI is the input ABI used to generate the binding from.
-const CampaignABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"minimumNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"view_idx\",\"type\":\"uint256\"}],\"name\":\"CandidatesOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"candidate\",\"type\":\"address\"}],\"name\":\"CandidateInfoOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"baseDeposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"candidates\",\"outputs\":[{\"name\":\"numOfCampaign\",\"type\":\"uint256\"},{\"name\":\"deposit\",\"type\":\"uint256\"},{\"name\":\"timestamp\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maximumNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"viewIdx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"ViewChange\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"campaignHistory\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"minimumRpt\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"num_of_campaign\",\"type\":\"uint256\"},{\"name\":\"rpt\",\"type\":\"uint256\"}],\"name\":\"ClaimCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
+const CampaignABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"minimumNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"view_idx\",\"type\":\"uint256\"}],\"name\":\"CandidatesOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"candidate\",\"type\":\"address\"}],\"name\":\"CandidateInfoOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"baseDeposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"campaignSnapshots\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"candidates\",\"outputs\":[{\"name\":\"numOfCampaign\",\"type\":\"uint256\"},{\"name\":\"deposit\",\"type\":\"uint256\"},{\"name\":\"timestamp\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maximumNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"viewIdx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"ViewChange\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"minimumRpt\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"num_of_campaign\",\"type\":\"uint256\"},{\"name\":\"rpt\",\"type\":\"uint256\"}],\"name\":\"ClaimCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"QuitCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
 
 // CampaignBin is the compiled bytecode used for deploying new contracts.
-const CampaignBin = `0x60806040526000600155603260025560326003556001600455600a60055534801561002957600080fd5b5060008054600160a060020a031916331790556106cb8061004b6000396000f3006080604052600436106100ae5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663241ead3581146100b35780632d621bda146100da578063684d9e101461014257806369474625146101815780638ab66a9014610196578063ae3f11bf146101b7578063b07eaaf0146101cc578063beff1476146101e1578063c685de7b146101f8578063e41cf0031461022f578063ee1cfa0814610244575b600080fd5b3480156100bf57600080fd5b506100c8610252565b60408051918252519081900360200190f35b3480156100e657600080fd5b506100f2600435610258565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561012e578181015183820152602001610116565b505050509050019250505060405180910390f35b34801561014e57600080fd5b50610163600160a060020a03600435166102c4565b60408051938452602084019290925282820152519081900360600190f35b34801561018d57600080fd5b506100c86102ec565b3480156101a257600080fd5b50610163600160a060020a03600435166102f2565b3480156101c357600080fd5b506100c8610313565b3480156101d857600080fd5b506100c8610319565b3480156101ed57600080fd5b506101f661031f565b005b34801561020457600080fd5b5061021360043560243561042a565b60408051600160a060020a039092168252519081900360200190f35b34801561023b57600080fd5b506100c8610461565b6101f6600435602435610467565b60045481565b6000818152600760209081526040918290208054835181840281018401909452808452606093928301828280156102b857602002820191906000526020600020905b8154600160a060020a0316815260019091019060200180831161029a575b50505050509050919050565b600160a060020a03166000908152600660205260409020805460018201546002909201549092565b60025481565b60066020526000908152604090208054600182015460029092015490919083565b60055481565b60015481565b6000805b60015460009081526007602052604090205482101561041e57600154600090815260076020526040902080548390811061035957fe5b6000918252602080832090910154600254600160a060020a0390911680845260069092526040909220600101549092501061041357600254600160a060020a038216600090815260066020908152604080832060019081018054959095039094559254825260079052208054839081106103cf57fe5b6000918252602082200154600254604051600160a060020a039092169281156108fc029290818181858888f19350505050158015610411573d6000803e3d6000fd5b505b600190910190610323565b50506001805481019055565b60076020528160005260406000208181548110151561044557fe5b600091825260209091200154600160a060020a03169150829050565b60035481565b60008060035483101515156104c6576040805160e560020a62461bcd02815260206004820152600c60248201527f746f6f206c6f77207270742e0000000000000000000000000000000000000000604482015290519081900360640190fd5b60045484101580156104da57506005548411155b1515610530576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b6002548402341461058b576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b33600081815260066020526040902054909250156105f3576040805160e560020a62461bcd02815260206004820152601960248201527f616c726561647920636c61696d65642063616d706169676e2e00000000000000604482015290519081900360640190fd5b506040805160608101825284815234602080830191825242838501908152600160a060020a0386166000908152600690925293902091518255516001808301919091559151600290910155545b836001540181101561069957600081815260076020908152604082208054600180820183559184529190922001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03851617905501610640565b505050505600a165627a7a72305820628b34b60d30561172750602ad06b7effc144ded05b72a3831f2210c9c73d5da0029`
+const CampaignBin = `0x60806040526000600155603260025560326003556001600455600a60055534801561002957600080fd5b5060008054600160a060020a031916331790556108438061004b6000396000f3006080604052600436106100b95763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663241ead3581146100be5780632d621bda146100e5578063684d9e101461015f57806369474625146101b05780637186a1f5146101c55780638ab66a9014610211578063ae3f11bf14610244578063b07eaaf014610259578063beff14761461026e578063e41cf00314610285578063ee1cfa081461029a578063fdb29715146102bd575b600080fd5b3480156100ca57600080fd5b506100d36102c5565b60408051918252519081900360200190f35b3480156100f157600080fd5b5061010f6004803603602081101561010857600080fd5b50356102cb565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561014b578181015183820152602001610133565b505050509050019250505060405180910390f35b34801561016b57600080fd5b506101926004803603602081101561018257600080fd5b5035600160a060020a0316610337565b60408051938452602084019290925282820152519081900360600190f35b3480156101bc57600080fd5b506100d361035f565b3480156101d157600080fd5b506101f5600480360360408110156101e857600080fd5b5080359060200135610365565b60408051600160a060020a039092168252519081900360200190f35b34801561021d57600080fd5b506101926004803603602081101561023457600080fd5b5035600160a060020a031661039c565b34801561025057600080fd5b506100d36103bd565b34801561026557600080fd5b506100d36103c3565b34801561027a57600080fd5b506102836103c9565b005b34801561029157600080fd5b506100d36104d0565b610283600480360360408110156102b057600080fd5b50803590602001356104d6565b6102836106e9565b60045481565b60008181526007602090815260409182902080548351818402810184019094528084526060939283018282801561032b57602002820191906000526020600020905b8154600160a060020a0316815260019091019060200180831161030d575b50505050509050919050565b600160a060020a03166000908152600660205260409020805460018201546002909201549092565b60025481565b60076020528160005260406000208181548110151561038057fe5b600091825260209091200154600160a060020a03169150829050565b60066020526000908152604090208054600182015460029092015490919083565b60055481565b60015481565b60005b6001546000908152600760205260409020548110156104c557600154600090815260076020526040812080548390811061040257fe5b6000918252602080832090910154600254600160a060020a039091168084526006909252604090922060010154909250106104bc57600254600160a060020a0382166000908152600660209081526040808320600190810180549590950390945592548252600790522080548390811061047857fe5b6000918252602082200154600254604051600160a060020a039092169281156108fc029290818181858888f193505050501580156104ba573d6000803e3d6000fd5b505b506001016103cc565b506001805481019055565b60035481565b600354811015610530576040805160e560020a62461bcd02815260206004820152600c60248201527f746f6f206c6f77207270742e0000000000000000000000000000000000000000604482015290519081900360640190fd5b600454821015801561054457506005548211155b151561059a576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b600254820234146105f5576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b336000818152600660205260409020541515610656576040805160608101825284815234602080830191825242838501908152600160a060020a03861660009081526006909252939020915182555160018201559051600290910155610686565b600160a060020a038116600090815260066020526040902080548401815560018101805434019055426002909101555b6001545b83600154018110156106e357600081815260076020908152604082208054600180820183559184529190922001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0385161790550161068a565b50505050565b336000818152600660205260408120541161074e576040805160e560020a62461bcd02815260206004820152601660248201527f616c726561647920717569742063616d706169676e2e00000000000000000000604482015290519081900360640190fd5b604080516060810182526000808252602080830182815242848601908152600160a060020a0387168085526006909352858420945185559051600185018190559051600290940193909355925182156108fc029291818181858888f193505050501580156107c0573d6000803e3d6000fd5b5060005b6001546000908152600760205260409020548110156108135760015460009081526007602052604090208054600160a060020a03841691908390811061080657fe5b50600052506001016107c4565b50505600a165627a7a7230582019f58c52950e1d18de15392aed5ab3c929fe1fb2f0aa2766789dc1c5c13c32b60029`
 
 // DeployCampaign deploys a new Ethereum contract, binding an instance of Campaign to it.
 func DeployCampaign(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Campaign, error) {
@@ -258,30 +258,30 @@ func (_Campaign *CampaignCallerSession) BaseDeposit() (*big.Int, error) {
 	return _Campaign.Contract.BaseDeposit(&_Campaign.CallOpts)
 }
 
-// CampaignHistory is a free data retrieval call binding the contract method 0xc685de7b.
+// CampaignSnapshots is a free data retrieval call binding the contract method 0x7186a1f5.
 //
-// Solidity: function campaignHistory( uint256,  uint256) constant returns(address)
-func (_Campaign *CampaignCaller) CampaignHistory(opts *bind.CallOpts, arg0 *big.Int, arg1 *big.Int) (common.Address, error) {
+// Solidity: function campaignSnapshots( uint256,  uint256) constant returns(address)
+func (_Campaign *CampaignCaller) CampaignSnapshots(opts *bind.CallOpts, arg0 *big.Int, arg1 *big.Int) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
 	)
 	out := ret0
-	err := _Campaign.contract.Call(opts, out, "campaignHistory", arg0, arg1)
+	err := _Campaign.contract.Call(opts, out, "campaignSnapshots", arg0, arg1)
 	return *ret0, err
 }
 
-// CampaignHistory is a free data retrieval call binding the contract method 0xc685de7b.
+// CampaignSnapshots is a free data retrieval call binding the contract method 0x7186a1f5.
 //
-// Solidity: function campaignHistory( uint256,  uint256) constant returns(address)
-func (_Campaign *CampaignSession) CampaignHistory(arg0 *big.Int, arg1 *big.Int) (common.Address, error) {
-	return _Campaign.Contract.CampaignHistory(&_Campaign.CallOpts, arg0, arg1)
+// Solidity: function campaignSnapshots( uint256,  uint256) constant returns(address)
+func (_Campaign *CampaignSession) CampaignSnapshots(arg0 *big.Int, arg1 *big.Int) (common.Address, error) {
+	return _Campaign.Contract.CampaignSnapshots(&_Campaign.CallOpts, arg0, arg1)
 }
 
-// CampaignHistory is a free data retrieval call binding the contract method 0xc685de7b.
+// CampaignSnapshots is a free data retrieval call binding the contract method 0x7186a1f5.
 //
-// Solidity: function campaignHistory( uint256,  uint256) constant returns(address)
-func (_Campaign *CampaignCallerSession) CampaignHistory(arg0 *big.Int, arg1 *big.Int) (common.Address, error) {
-	return _Campaign.Contract.CampaignHistory(&_Campaign.CallOpts, arg0, arg1)
+// Solidity: function campaignSnapshots( uint256,  uint256) constant returns(address)
+func (_Campaign *CampaignCallerSession) CampaignSnapshots(arg0 *big.Int, arg1 *big.Int) (common.Address, error) {
+	return _Campaign.Contract.CampaignSnapshots(&_Campaign.CallOpts, arg0, arg1)
 }
 
 // Candidates is a free data retrieval call binding the contract method 0x8ab66a90.
@@ -447,6 +447,27 @@ func (_Campaign *CampaignSession) ClaimCampaign(num_of_campaign *big.Int, rpt *b
 // Solidity: function ClaimCampaign(num_of_campaign uint256, rpt uint256) returns()
 func (_Campaign *CampaignTransactorSession) ClaimCampaign(num_of_campaign *big.Int, rpt *big.Int) (*types.Transaction, error) {
 	return _Campaign.Contract.ClaimCampaign(&_Campaign.TransactOpts, num_of_campaign, rpt)
+}
+
+// QuitCampaign is a paid mutator transaction binding the contract method 0xfdb29715.
+//
+// Solidity: function QuitCampaign() returns()
+func (_Campaign *CampaignTransactor) QuitCampaign(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Campaign.contract.Transact(opts, "QuitCampaign")
+}
+
+// QuitCampaign is a paid mutator transaction binding the contract method 0xfdb29715.
+//
+// Solidity: function QuitCampaign() returns()
+func (_Campaign *CampaignSession) QuitCampaign() (*types.Transaction, error) {
+	return _Campaign.Contract.QuitCampaign(&_Campaign.TransactOpts)
+}
+
+// QuitCampaign is a paid mutator transaction binding the contract method 0xfdb29715.
+//
+// Solidity: function QuitCampaign() returns()
+func (_Campaign *CampaignTransactorSession) QuitCampaign() (*types.Transaction, error) {
+	return _Campaign.Contract.QuitCampaign(&_Campaign.TransactOpts)
 }
 
 // ViewChange is a paid mutator transaction binding the contract method 0xbeff1476.

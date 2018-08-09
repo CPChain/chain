@@ -1,4 +1,4 @@
-package campaign
+package contract
 
 import (
 	"context"
@@ -9,13 +9,15 @@ import (
 
 	"testing"
 
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 func TestCampaign(t *testing.T) {
-	t.Skip("we shall use a simulated backend.")
+	//t.Skip("we shall use a simulated backend.")
 
 	// create client.
 	client, err := ethclient.Dial("https://rinkeby.infura.io")
@@ -40,11 +42,11 @@ func TestCampaign(t *testing.T) {
 	fmt.Println("from address:", fromAddress.Hex()) // 0x96216849c49358B10257cb55b28eA603c874b05E
 
 	// create contract deploy transaction.
-	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
-	fmt.Println("nonce:", nonce)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	//fmt.Println("nonce:", nonce)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	gasLimit := 3000000
 	gasPrice, err := client.SuggestGasPrice(context.Background())
@@ -54,12 +56,11 @@ func TestCampaign(t *testing.T) {
 	}
 
 	auth := bind.NewKeyedTransactor(privateKey)
-	auth.Nonce = big.NewInt(int64(nonce))
+	//auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)       // in wei
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
 
-	// /*
 	// launch contract deploy transaction.
 	address, tx, instance, err := DeployCampaign(auth, client)
 	if err != nil {
@@ -74,8 +75,7 @@ func TestCampaign(t *testing.T) {
 		fmt.Println("DeployCampaign is Pending...", tx.Hash().Hex())
 	}
 	for isPending {
-
-		fmt.Println("Pending...", tx.Hash().Hex())
+		time.Sleep(time.Second * 2)
 
 		tx, isPending, err = client.TransactionByHash(context.Background(), tx.Hash())
 		if err != nil {
@@ -88,21 +88,20 @@ func TestCampaign(t *testing.T) {
 		log.Fatal(err)
 	}
 	fmt.Println("deploy contract transaction receipt status:", receipt.Status)
-	// */
 
 	// load contract from address
 	// address := common.HexToAddress("0x6eC85AC61684e5250257B27FDEfFDE79246fADb1")
 	// instance, err := NewCampaign(address, client)
 
 	// launch claimCampaign contract func call transaction.
-	nonce, err = client.PendingNonceAt(context.Background(), fromAddress)
-	fmt.Println("nonce:", nonce)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//nonce, err = client.PendingNonceAt(context.Background(), fromAddress)
+	//fmt.Println("nonce:", nonce)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	auth = bind.NewKeyedTransactor(privateKey)
-	auth.Nonce = big.NewInt(int64(nonce))
+	//auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(50)      // in wei
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
@@ -120,7 +119,7 @@ func TestCampaign(t *testing.T) {
 	}
 	for claimIsPending {
 
-		fmt.Println("Pending...", claimtx.Hash().Hex())
+		time.Sleep(time.Second * 2)
 
 		claimtx, claimIsPending, err = client.TransactionByHash(context.Background(), claimtx.Hash())
 		if err != nil {
