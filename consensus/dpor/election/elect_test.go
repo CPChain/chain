@@ -49,24 +49,24 @@ func TestElect(t *testing.T) {
 		rpts = append(rpts, rpt.RPT{Address: addresses[i], Rpt: rptx[i]})
 	}
 
-	seed := 66
+	seed := int64(66)
 	viewLength := 5
-	commissioners := elect(rpts, seed, viewLength)
+	signers := Elect(rpts, seed, viewLength)
 
 	fmt.Println("commissioners:")
-	for i := 0; i < len(commissioners); i++ {
-		fmt.Println(i, commissioners[i].Hex())
+	for i := 0; i < len(signers); i++ {
+		fmt.Println(i, signers[uint64(i)].Hex())
 	}
 
-	expectedCommittee := map[int]common.Address{
-		0: addresses[9],
-		1: addresses[4],
-		2: addresses[3],
-		3: addresses[2],
-		4: addresses[1],
+	expectedCommittee := []common.Address{
+		addresses[9],
+		addresses[4],
+		addresses[3],
+		addresses[2],
+		addresses[1],
 	}
 	for i := 0; i < viewLength; i++ {
-		if commissioners[i] != expectedCommittee[i] {
+		if signers[uint64(i)] != expectedCommittee[i] {
 			t.Error("elect error.")
 		}
 	}
