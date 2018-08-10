@@ -14,6 +14,7 @@ import (
 	"bytes"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -77,41 +78,52 @@ func TestCampaign(t *testing.T) {
 		log.Fatalf("mined address :%s,before mined address:%s", addressAfterMined, address)
 	}
 
-	auth = bind.NewKeyedTransactor(privateKey)
-	auth.Value = big.NewInt(50)      // in wei
-	auth.GasLimit = uint64(gasLimit) // in units
-	auth.GasPrice = gasPrice
+	fmt.Println("*******************************************************")
+	numOfCampaign, deposit, _ := ClaimCampaign(privateKey, gasLimit, gasPrice, err, instance, startTime, ctx, client, fromAddress)
+	assert(1, 50, numOfCampaign, deposit, t)
 
+	fmt.Println("*******************************************************")
+	numOfCampaign, deposit, _ = ClaimCampaign(privateKey, gasLimit, gasPrice, err, instance, startTime, ctx, client, fromAddress)
+	assert(2, 100, numOfCampaign, deposit, t)
+}
+
+func assert(expectNum int64, expectDeposit int64, numOfCampaign *big.Int, deposit *big.Int, t *testing.T) {
+	if numOfCampaign.Cmp(big.NewInt(expectNum)) != 0 || deposit.Cmp(big.NewInt(expectDeposit)) != 0 {
+		t.Fatal("unexpected numOfCampaign, deposit:", numOfCampaign, deposit)
+	}
+}
+
+func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *Campaign, startTime time.Time, ctx context.Context, client *ethclient.Client, fromAddress common.Address) (*big.Int, *big.Int, *big.Int) {
+	auth := bind.NewKeyedTransactor(privateKey)
+	auth.Value = big.NewInt(50)
+	// in wei
+	auth.GasLimit = uint64(gasLimit)
+	// in units
+	auth.GasPrice = gasPrice
 	claimtx, err := instance.ClaimCampaign(auth, big.NewInt(int64(1)), big.NewInt(int64(60)))
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(claimtx.Hash().Hex())
-
+	fmt.Println("TX:", claimtx.Hash().Hex())
 	startTime = time.Now()
-
-	receipt, err := bind.WaitMined(ctx, client, tx)
+	receipt, err := bind.WaitMined(ctx, client, claimtx)
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
 	}
 	fmt.Printf("tx mining take time:%s\n", time.Since(startTime))
-
 	fmt.Println("receipt.Status:", receipt.Status)
-
 	// test contract state variable call.
 	x, err := instance.MinimumRpt(nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("minimum reputation: ", x)
-
 	// test contract map variable call.
-	x, y, z, err := instance.CandidateInfoOf(nil, fromAddress)
+	numOfCampaign, deposit, timestamp, err := instance.CandidateInfoOf(nil, fromAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("candidate info of", fromAddress.Hex(), ":", x, y, z)
-
+	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, deposit, timestamp)
 	// see candidates of view zero.
 	candidates, err := instance.CandidatesOf(nil, big.NewInt(0))
 	if err != nil {
@@ -121,4 +133,5 @@ func TestCampaign(t *testing.T) {
 	for i := 0; i < len(candidates); i++ {
 		fmt.Println("number", i, candidates[i].Hex())
 	}
+	return numOfCampaign, deposit, timestamp
 }
