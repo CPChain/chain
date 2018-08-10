@@ -94,9 +94,9 @@ func (api *API) Proposals() map[common.Address]bool {
 	defer api.dpor.lock.RUnlock()
 
 	proposals := make(map[common.Address]bool)
-	for address, auth := range api.dpor.proposals {
-		proposals[address] = auth
-	}
+	// for address, auth := range api.dpor.proposals {
+	// proposals[address] = auth
+	// }
 	return proposals
 }
 
@@ -106,7 +106,7 @@ func (api *API) Propose(address common.Address, auth bool) {
 	api.dpor.lock.Lock()
 	defer api.dpor.lock.Unlock()
 
-	api.dpor.proposals[address] = auth
+	// api.dpor.proposals[address] = auth
 }
 
 // Discard drops a currently running proposal, stopping the signer from casting
@@ -115,5 +115,5 @@ func (api *API) Discard(address common.Address) {
 	api.dpor.lock.Lock()
 	defer api.dpor.lock.Unlock()
 
-	delete(api.dpor.proposals, address)
+	// delete(api.dpor.proposals, address)
 }

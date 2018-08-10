@@ -84,8 +84,8 @@ var (
 	CpchainChainConfig = &ChainConfig{
 		ChainID: big.NewInt(42),
 		Dpor: &DporConfig{
-			Period: 15,
-			Epoch:  30000,
+			Period: 3,
+			Epoch:  3,
 		},
 	}
 
@@ -104,7 +104,7 @@ var (
 	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}, nil}
 
 	// FIXME add to genesis.go
-	AllCpchainProtocolChanges = &ChainConfig{big.NewInt(42), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, &DporConfig{Period: 0, Epoch: 30000}}
+	AllCpchainProtocolChanges = &ChainConfig{big.NewInt(42), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, &DporConfig{Period: 0, Epoch: 3}}
 
 	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil, nil}
 
