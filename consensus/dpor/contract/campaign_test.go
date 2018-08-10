@@ -11,6 +11,8 @@ import (
 
 	"time"
 
+	"bytes"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -41,13 +43,6 @@ func TestCampaign(t *testing.T) {
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 	fmt.Println("from address:", fromAddress.Hex()) // 0x96216849c49358B10257cb55b28eA603c874b05E
 
-	// create contract deploy transaction.
-	//nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
-	//fmt.Println("nonce:", nonce)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
 	gasLimit := 3000000
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	fmt.Println("gasPrice:", gasPrice)
@@ -56,7 +51,7 @@ func TestCampaign(t *testing.T) {
 	}
 
 	auth := bind.NewKeyedTransactor(privateKey)
-	//auth.Nonce = big.NewInt(int64(nonce))
+	//auth.Nonce = big.NewInt(int64(nonce)) // not necessary
 	auth.Value = big.NewInt(0)       // in wei
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
@@ -66,42 +61,23 @@ func TestCampaign(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("contract address:", address.Hex())
-	fmt.Println(tx.Hash().Hex())
 
-	// wait until tx receipt status becomes 1.
-	tx, isPending, err := client.TransactionByHash(context.Background(), tx.Hash())
-	if isPending {
-		fmt.Println("DeployCampaign is Pending...", tx.Hash().Hex())
-	}
-	for isPending {
-		time.Sleep(time.Second * 2)
+	fmt.Printf("Contract pending deploy: 0x%x\n", address)
+	fmt.Printf("Transaction waiting to be mined: 0x%x\n\n", tx.Hash())
 
-		tx, isPending, err = client.TransactionByHash(context.Background(), tx.Hash())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	}
-	receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
+	startTime := time.Now()
+	fmt.Printf("TX start @:%s", time.Now())
+	ctx := context.Background()
+	addressAfterMined, err := bind.WaitDeployed(ctx, client, tx)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to deploy contact when mining :%v", err)
 	}
-	fmt.Println("deploy contract transaction receipt status:", receipt.Status)
-
-	// load contract from address
-	// address := common.HexToAddress("0x6eC85AC61684e5250257B27FDEfFDE79246fADb1")
-	// instance, err := NewCampaign(address, client)
-
-	// launch claimCampaign contract func call transaction.
-	//nonce, err = client.PendingNonceAt(context.Background(), fromAddress)
-	//fmt.Println("nonce:", nonce)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	fmt.Printf("tx mining take time:%s\n", time.Since(startTime))
+	if !bytes.Equal(address.Bytes(), addressAfterMined.Bytes()) {
+		log.Fatalf("mined address :%s,before mined address:%s", addressAfterMined, address)
+	}
 
 	auth = bind.NewKeyedTransactor(privateKey)
-	//auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(50)      // in wei
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
@@ -112,26 +88,15 @@ func TestCampaign(t *testing.T) {
 	}
 	fmt.Println(claimtx.Hash().Hex())
 
-	// wait until tx receipt status becomes 1.
-	claimtx, claimIsPending, err := client.TransactionByHash(context.Background(), claimtx.Hash())
-	if claimIsPending {
-		fmt.Println("call claimCampaign is Pending...", claimtx.Hash().Hex())
-	}
-	for claimIsPending {
+	startTime = time.Now()
 
-		time.Sleep(time.Second * 2)
-
-		claimtx, claimIsPending, err = client.TransactionByHash(context.Background(), claimtx.Hash())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	}
-	claimReceipt, err := client.TransactionReceipt(context.Background(), claimtx.Hash())
+	receipt, err := bind.WaitMined(ctx, client, tx)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to deploy contact when mining :%v", err)
 	}
-	fmt.Println("claimCampaign call transaction receipt status:", claimReceipt.Status)
+	fmt.Printf("tx mining take time:%s\n", time.Since(startTime))
+
+	fmt.Println("receipt.Status:", receipt.Status)
 
 	// test contract state variable call.
 	x, err := instance.MinimumRpt(nil)
