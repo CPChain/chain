@@ -159,7 +159,7 @@ func TestClaimCampaign(t *testing.T) {
 	assert(2, 100, numOfCampaign, deposit, t)
 
 	// get candidates by view index
-	candidates, err := campaign.CandidatesOf(big.NewInt(1))
+	candidates, err := campaign.CandidatesOf(big.NewInt(0))
 	if err != nil {
 		t.Fatal(err)
 	}

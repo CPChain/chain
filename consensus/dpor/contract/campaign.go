@@ -17,7 +17,7 @@ import (
 const CampaignABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"minimumNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"view_idx\",\"type\":\"uint256\"}],\"name\":\"CandidatesOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"candidate\",\"type\":\"address\"}],\"name\":\"CandidateInfoOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"baseDeposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maximumNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"viewIdx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"ViewChange\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"minimumRpt\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"num_of_campaign\",\"type\":\"uint256\"},{\"name\":\"rpt\",\"type\":\"uint256\"}],\"name\":\"ClaimCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"QuitCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
 
 // CampaignBin is the compiled bytecode used for deploying new contracts.
-const CampaignBin = `0x60806040526000600155603260025560326003556001600455600a60055534801561002957600080fd5b5060008054600160a060020a031916331790556109208061004b6000396000f3006080604052600436106100a35763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663241ead3581146100a85780632d621bda146100cf578063684d9e10146101375780636947462514610176578063ae3f11bf1461018b578063b07eaaf0146101a0578063beff1476146101b5578063e41cf003146101cc578063ee1cfa08146101e1578063fdb29715146101ef575b600080fd5b3480156100b457600080fd5b506100bd6101f7565b60408051918252519081900360200190f35b3480156100db57600080fd5b506100e76004356101fd565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561012357818101518382015260200161010b565b505050509050019250505060405180910390f35b34801561014357600080fd5b50610158600160a060020a036004351661026c565b60408051938452602084019290925282820152519081900360600190f35b34801561018257600080fd5b506100bd610294565b34801561019757600080fd5b506100bd61029a565b3480156101ac57600080fd5b506100bd6102a0565b3480156101c157600080fd5b506101ca6102a6565b005b3480156101d857600080fd5b506100bd6103b8565b6101ca6004356024356103be565b6101ca61071e565b60045481565b60008181526007602090815260409182902060010180548351818402810184019094528084526060939283018282801561026057602002820191906000526020600020905b8154600160a060020a03168152600190910190602001808311610242575b50505050509050919050565b600160a060020a03166000908152600660205260409020805460018201546002909201549092565b60025481565b60055481565b60015481565b6000805b60018054600090815260076020526040902001548210156103ac57600180546000908152600760205260409020018054839081106102e457fe5b6000918252602080832090910154600254600160a060020a039091168084526006909252604090922060010154909250106103a157600254600160a060020a0382166000908152600660209081526040808320600190810180549590950390945583548352600790915290200180548390811061035d57fe5b6000918252602082200154600254604051600160a060020a039092169281156108fc029290818181858888f1935050505015801561039f573d6000803e3d6000fd5b505b6001909101906102aa565b50506001805481019055565b60035481565b600080600354831015151561041d576040805160e560020a62461bcd02815260206004820152600c60248201527f746f6f206c6f77207270742e0000000000000000000000000000000000000000604482015290519081900360640190fd5b60025484023414610478576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b33600081815260066020526040902054909250151561054a5760045484101580156104a557506005548411155b15156104fb576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b6040805160608101825285815234602080830191825260018054848601908152600160a060020a0388166000908152600690935294909120925183559051908201559051600290910155610619565b600454600160a060020a0383166000908152600660205260409020548501108015906105925750600554600160a060020a038316600090815260066020526040902054850111155b15156105e8576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b600160a060020a03821660009081526006602052604090208054850181556001808201805434019055546002909101555b50600160a060020a0381166000908152600660205260409020600201545b600160a060020a03821660009081526006602052604090206002015484018110156107185760008181526007602090815260409182902082517f5df0a15c0000000000000000000000000000000000000000000000000000000081526004810191909152600160a060020a0385166024820152915173__contract/campaign.sol:Set_____________92635df0a15c926044808301939192829003018186803b1580156106e457600080fd5b505af41580156106f8573d6000803e3d6000fd5b505050506040513d602081101561070e57600080fd5b5050600101610637565b50505050565b336000818152600660205260408120548110610784576040805160e560020a62461bcd02815260206004820152601660248201527f616c726561647920717569742063616d706169676e2e00000000000000000000604482015290519081900360640190fd5b6040805160608101825260008082526020808301828152838501838152600160a060020a0388168085526006909352858420945185559051600185018190559051600290940193909355925182156108fc029291818181858888f193505050501580156107f5573d6000803e3d6000fd5b5050600160a060020a0381166000908152600660205260409020600201545b600160a060020a0382166000908152600660205260409020548110156108f05760008181526007602090815260409182902082517f874021430000000000000000000000000000000000000000000000000000000081526004810191909152600160a060020a0385166024820152915173__contract/campaign.sol:Set_____________926387402143926044808301939192829003018186803b1580156108bc57600080fd5b505af41580156108d0573d6000803e3d6000fd5b505050506040513d60208110156108e657600080fd5b5050600101610814565b50505600a165627a7a723058203abf3fbb3aa130a6d8f5ced68bc7b38418d7532b305e6adf44cf1f3c9f693f920029`
+const CampaignBin = `0x60806040526000600155603260025560326003556001600455600a60055534801561002957600080fd5b5060008054600160a060020a0319163317905561095a8061004b6000396000f3006080604052600436106100a35763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663241ead3581146100a85780632d621bda146100cf578063684d9e10146101375780636947462514610176578063ae3f11bf1461018b578063b07eaaf0146101a0578063beff1476146101b5578063e41cf003146101cc578063ee1cfa08146101e1578063fdb29715146101ef575b600080fd5b3480156100b457600080fd5b506100bd6101f7565b60408051918252519081900360200190f35b3480156100db57600080fd5b506100e76004356101fd565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561012357818101518382015260200161010b565b505050509050019250505060405180910390f35b34801561014357600080fd5b50610158600160a060020a036004351661026c565b60408051938452602084019290925282820152519081900360600190f35b34801561018257600080fd5b506100bd610294565b34801561019757600080fd5b506100bd61029a565b3480156101ac57600080fd5b506100bd6102a0565b3480156101c157600080fd5b506101ca6102a6565b005b3480156101d857600080fd5b506100bd6103b8565b6101ca6004356024356103be565b6101ca610689565b60045481565b60008181526007602090815260409182902060010180548351818402810184019094528084526060939283018282801561026057602002820191906000526020600020905b8154600160a060020a03168152600190910190602001808311610242575b50505050509050919050565b600160a060020a03166000908152600660205260409020805460018201546002909201549092565b60025481565b60055481565b60015481565b6000805b60018054600090815260076020526040902001548210156103ac57600180546000908152600760205260409020018054839081106102e457fe5b6000918252602080832090910154600254600160a060020a039091168084526006909252604090922060010154909250106103a157600254600160a060020a0382166000908152600660209081526040808320600190810180549590950390945583548352600790915290200180548390811061035d57fe5b6000918252602082200154600254604051600160a060020a039092169281156108fc029290818181858888f1935050505015801561039f573d6000803e3d6000fd5b505b6001909101906102aa565b50506001805481019055565b60035481565b600080600354831015151561041d576040805160e560020a62461bcd02815260206004820152600c60248201527f746f6f206c6f77207270742e0000000000000000000000000000000000000000604482015290519081900360640190fd5b60025484023414610478576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b33600081815260066020526040902054909250151561054a5760045484101580156104a557506005548411155b15156104fb576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b6040805160608101825285815234602080830191825260018054848601908152600160a060020a0388166000908152600690935294909120925183559051908201559051600290910155610619565b600454600160a060020a0383166000908152600660205260409020548501108015906105925750600554600160a060020a038316600090815260066020526040902054850111155b15156105e8576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b600160a060020a03821660009081526006602052604090208054850181556001808201805434019055546002909101555b50600160a060020a0381166000908152600660205260409020600201545b600160a060020a038216600090815260066020526040902060020154840181101561068357600081815260076020526040902061067a908363ffffffff6107ca16565b50600101610637565b50505050565b3360008181526006602052604081205481106106ef576040805160e560020a62461bcd02815260206004820152601660248201527f616c726561647920717569742063616d706169676e2e00000000000000000000604482015290519081900360640190fd5b6040805160608101825260008082526020808301828152838501838152600160a060020a0388168085526006909352858420945185559051600185018190559051600290940193909355925182156108fc029291818181858888f19350505050158015610760573d6000803e3d6000fd5b5050600160a060020a0381166000908152600660205260409020600201545b600160a060020a0382166000908152600660205260409020548110156107c65760008181526007602052604090206107bd908363ffffffff61085216565b5060010161077f565b5050565b600160a060020a03811660009081526020839052604081205460ff16156107f35750600061084c565b50600160a060020a0381166000818152602084815260408220805460ff19166001908117909155858101805480830182559084529190922001805473ffffffffffffffffffffffffffffffffffffffff19169092179091555b92915050565b600160a060020a038116600090815260208390526040812054819060ff16151561087f5760009150610927565b50600160a060020a0382166000908152602084905260408120805460ff191690555b60018401548110156109225782600160a060020a031684600101828154811015156108c857fe5b600091825260209091200154600160a060020a0316141561091a57600184018054829081106108f357fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff191690555b6001016108a1565b600191505b50929150505600a165627a7a72305820b675e554201d82e783393fb9c77dec917bc81d1b2cf95b13015ebd62b2ccb89a0029`
 
 // DeployCampaign deploys a new Ethereum contract, binding an instance of Campaign to it.
 func DeployCampaign(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Campaign, error) {
@@ -423,4 +423,165 @@ func (_Campaign *CampaignSession) ViewChange() (*types.Transaction, error) {
 // Solidity: function ViewChange() returns()
 func (_Campaign *CampaignTransactorSession) ViewChange() (*types.Transaction, error) {
 	return _Campaign.Contract.ViewChange(&_Campaign.TransactOpts)
+}
+
+// SetABI is the input ABI used to generate the binding from.
+const SetABI = "[]"
+
+// SetBin is the compiled bytecode used for deploying new contracts.
+const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a723058207249db5eb09cc69a3a59314f00b237960e47bb5fb8e676383a1367d64dd93d890029`
+
+// DeploySet deploys a new Ethereum contract, binding an instance of Set to it.
+func DeploySet(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Set, error) {
+	parsed, err := abi.JSON(strings.NewReader(SetABI))
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(SetBin), backend)
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	return address, tx, &Set{SetCaller: SetCaller{contract: contract}, SetTransactor: SetTransactor{contract: contract}, SetFilterer: SetFilterer{contract: contract}}, nil
+}
+
+// Set is an auto generated Go binding around an Ethereum contract.
+type Set struct {
+	SetCaller     // Read-only binding to the contract
+	SetTransactor // Write-only binding to the contract
+	SetFilterer   // Log filterer for contract events
+}
+
+// SetCaller is an auto generated read-only Go binding around an Ethereum contract.
+type SetCaller struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// SetTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type SetTransactor struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// SetFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type SetFilterer struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// SetSession is an auto generated Go binding around an Ethereum contract,
+// with pre-set call and transact options.
+type SetSession struct {
+	Contract     *Set              // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts     // Call options to use throughout this session
+	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+}
+
+// SetCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// with pre-set call options.
+type SetCallerSession struct {
+	Contract *SetCaller    // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts // Call options to use throughout this session
+}
+
+// SetTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// with pre-set transact options.
+type SetTransactorSession struct {
+	Contract     *SetTransactor    // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+}
+
+// SetRaw is an auto generated low-level Go binding around an Ethereum contract.
+type SetRaw struct {
+	Contract *Set // Generic contract binding to access the raw methods on
+}
+
+// SetCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type SetCallerRaw struct {
+	Contract *SetCaller // Generic read-only contract binding to access the raw methods on
+}
+
+// SetTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type SetTransactorRaw struct {
+	Contract *SetTransactor // Generic write-only contract binding to access the raw methods on
+}
+
+// NewSet creates a new instance of Set, bound to a specific deployed contract.
+func NewSet(address common.Address, backend bind.ContractBackend) (*Set, error) {
+	contract, err := bindSet(address, backend, backend, backend)
+	if err != nil {
+		return nil, err
+	}
+	return &Set{SetCaller: SetCaller{contract: contract}, SetTransactor: SetTransactor{contract: contract}, SetFilterer: SetFilterer{contract: contract}}, nil
+}
+
+// NewSetCaller creates a new read-only instance of Set, bound to a specific deployed contract.
+func NewSetCaller(address common.Address, caller bind.ContractCaller) (*SetCaller, error) {
+	contract, err := bindSet(address, caller, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &SetCaller{contract: contract}, nil
+}
+
+// NewSetTransactor creates a new write-only instance of Set, bound to a specific deployed contract.
+func NewSetTransactor(address common.Address, transactor bind.ContractTransactor) (*SetTransactor, error) {
+	contract, err := bindSet(address, nil, transactor, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &SetTransactor{contract: contract}, nil
+}
+
+// NewSetFilterer creates a new log filterer instance of Set, bound to a specific deployed contract.
+func NewSetFilterer(address common.Address, filterer bind.ContractFilterer) (*SetFilterer, error) {
+	contract, err := bindSet(address, nil, nil, filterer)
+	if err != nil {
+		return nil, err
+	}
+	return &SetFilterer{contract: contract}, nil
+}
+
+// bindSet binds a generic wrapper to an already deployed contract.
+func bindSet(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := abi.JSON(strings.NewReader(SetABI))
+	if err != nil {
+		return nil, err
+	}
+	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_Set *SetRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _Set.Contract.SetCaller.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_Set *SetRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Set.Contract.SetTransactor.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_Set *SetRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _Set.Contract.SetTransactor.contract.Transact(opts, method, params...)
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_Set *SetCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _Set.Contract.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_Set *SetTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Set.Contract.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_Set *SetTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _Set.Contract.contract.Transact(opts, method, params...)
 }
