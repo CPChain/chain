@@ -17,8 +17,6 @@
 // Package dpor implements the dpor consensus engine.
 package dpor
 
-//go:generate abigen --sol contract/campaign.sol --exc contract/campaign.sol:Set --pkg contract --out contract/campaign.go
-
 import (
 	"bytes"
 	"errors"

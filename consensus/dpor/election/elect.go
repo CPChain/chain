@@ -49,12 +49,12 @@ func findNearest(array []float64, target float64) (float64, int) {
 	}
 }
 
-// When given a candidate's reputation dict, a random seed, and the size
-// of the committee, `election' method returns an unique election result.
-func elect(rpts rpt.RPTs, seed int, viewLength int) map[int]common.Address {
+// Elect returns election result of the given rpt list of candidates,
+// seed and viewLength.
+func Elect(rpts rpt.RPTs, seed int64, viewLength int) map[uint64]common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
-	rand.Seed(int64(seed))
+	rand.Seed(seed)
 
 	upper := 10
 	lower := 0
@@ -72,7 +72,8 @@ func elect(rpts rpt.RPTs, seed int, viewLength int) map[int]common.Address {
 	for i := 0; i < len(sortedRpts); i++ {
 		scaledRpts[i].Rpt /= scale
 	}
-	commissioners := map[int]common.Address{0: sortedRpts[0].Address}
+
+	signers := make(map[uint64]common.Address)
 
 	for i := 0; i < viewLength; i++ {
 		var srpts []float64
@@ -81,9 +82,9 @@ func elect(rpts rpt.RPTs, seed int, viewLength int) map[int]common.Address {
 		}
 		_, pos := findNearest(srpts, randoms[i])
 
-		commissioners[i] = scaledRpts[pos].Address
+		signers[uint64(i)] = scaledRpts[pos].Address
 		scaledRpts = append(scaledRpts[:pos], scaledRpts[pos+1:]...)
 
 	}
-	return commissioners
+	return signers
 }

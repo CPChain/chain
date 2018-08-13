@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.24;
 
 library Set {
     // We define a new struct datatype that will be used to
@@ -15,7 +15,7 @@ library Set {
     // to call the first parameter 'self', if the function can
     // be seen as a method of that object.
     function insert(Data storage self, address value)
-      public returns (bool)
+      internal returns (bool)
     {
         if (self.flags[value])
             return false; // already there
@@ -25,7 +25,7 @@ library Set {
     }
 
     function remove(Data storage self, address value)
-       public returns (bool)
+       internal returns (bool)
     {
         if (!self.flags[value])
             return false; // not there
@@ -39,13 +39,13 @@ library Set {
     }
 
     function contains(Data storage self, address value)
-       public view returns (bool)
+       internal view returns (bool)
     {
         return self.flags[value];
     }
 
     function getAll(Data storage self)
-       public view returns (address[])
+       internal view returns (address[])
     {
         return self.values;
     }
