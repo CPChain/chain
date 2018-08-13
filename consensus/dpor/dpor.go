@@ -17,8 +17,6 @@
 // Package dpor implements the dpor consensus engine.
 package dpor
 
-//go:generate abigen --sol contract/campaign.sol --exc contract/campaign.sol:Set --pkg contract --out contract/campaign.go
-
 import (
 	"bytes"
 	"errors"
@@ -29,7 +27,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/consensus/misc"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -50,18 +47,22 @@ const (
 	inmemorySignatures = 4096 // Number of recent block signatures to keep in memory
 
 	wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
+
+	pctAccept = 2 / 3 // 2 / 3 of the signers' signature to accept the block
 )
 
-// Dpor proof-of-authority protocol constants.
+// Dpor proof-of-reputation protocol constants.
 var (
-	epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
-	blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
+	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
+	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
+
+	viewLength = uint64(21) // Default number of signers, also the number of blocks after whick to launch viewChange.
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
 
-	nonceAuthVote = hexutil.MustDecode("0xffffffffffffffff") // Magic nonce number to vote on adding a new signer
-	nonceDropVote = hexutil.MustDecode("0x0000000000000000") // Magic nonce number to vote on removing a signer.
+	// nonceAuthVote = hexutil.MustDecode("0xffffffffffffffff") // Magic nonce number to vote on adding a new signer
+	// nonceDropVote = hexutil.MustDecode("0x0000000000000000") // Magic nonce number to vote on removing a signer.
 
 	uncleHash = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
 
@@ -81,6 +82,9 @@ var (
 	// errInvalidCheckpointBeneficiary is returned if a checkpoint/epoch transition
 	// block has a beneficiary set to non-zeroes.
 	errInvalidCheckpointBeneficiary = errors.New("beneficiary in checkpoint block non-zero")
+
+	// errInvalidCheckpointApplyNumber
+	errInvalidCheckpointApplyNumber = errors.New("invalid checkpoint apply number")
 
 	// errInvalidVote is returned if a nonce value is something else that the two
 	// allowed constants of 0x00..0 or 0xff..f.
@@ -128,6 +132,9 @@ var (
 	// errUnauthorized is returned if a header is signed by a non-authorized entity.
 	errUnauthorized = errors.New("unauthorized")
 
+	// errNotEnoughSigs is returned if there is not enough sigatures.
+	errNotEnoughSigs = errors.New("not enough sigs")
+
 	// errWaitTransactions is returned if an empty block is attempted to be sealed
 	// on an instant chain (0 second period). It's important to refuse these as the
 	// block reward is zero, so an empty block just bloats the chain... fast.
@@ -173,9 +180,7 @@ func sigHash(header *types.Header) (hash common.Hash) {
 func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, error) {
 	// If the signature's already cached, return that
 	hash := header.Hash()
-	if address, known := sigcache.Get(hash); known {
-		return address.(common.Address), nil
-	}
+
 	// Retrieve the signature from the header extra-data
 	if len(header.Extra) < extraSeal {
 		return common.Address{}, errMissingSignature
@@ -190,12 +195,18 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, er
 	var signer common.Address
 	copy(signer[:], crypto.Keccak256(pubkey[1:])[12:])
 
-	sigcache.Add(hash, signer)
+	if addresses, known := sigcache.Get(hash); known {
+		addresses.(map[common.Address]struct{})[signer] = struct{}{}
+	} else {
+		addresses := make(map[common.Address]struct{})
+		addresses[signer] = struct{}{}
+		sigcache.Add(hash, addresses)
+	}
 	return signer, nil
 }
 
-// Dpor is the proof-of-authority consensus engine proposed to support the
-// Ethereum testnet following the Ropsten attacks.
+// Dpor is the proof-of-reputation consensus engine proposed to support the
+// cpchain testnet.
 type Dpor struct {
 	config *params.DporConfig // Consensus engine configuration parameters
 	db     ethdb.Database     // Database to store and retrieve snapshot checkpoints
@@ -210,13 +221,13 @@ type Dpor struct {
 	lock   sync.RWMutex   // Protects the signer fields
 }
 
-// New creates a Dpor proof-of-authority consensus engine with the initial
+// New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
 func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 	// Set any missing consensus parameters to their defaults
 	conf := *config
 	if conf.Epoch == 0 {
-		conf.Epoch = epochLength
+		conf.Epoch = viewLength
 	}
 	// Allocate the snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
@@ -283,12 +294,12 @@ func (c *Dpor) verifyHeader(chain consensus.ChainReader, header *types.Header, p
 		return errInvalidCheckpointBeneficiary
 	}
 	// Nonces must be 0x00..0 or 0xff..f, zeroes enforced on checkpoints
-	if !bytes.Equal(header.Nonce[:], nonceAuthVote) && !bytes.Equal(header.Nonce[:], nonceDropVote) {
-		return errInvalidVote
-	}
-	if checkpoint && !bytes.Equal(header.Nonce[:], nonceDropVote) {
-		return errInvalidCheckpointVote
-	}
+	// if !bytes.Equal(header.Nonce[:], nonceAuthVote) && !bytes.Equal(header.Nonce[:], nonceDropVote) {
+	// return errInvalidVote
+	// }
+	// if checkpoint && !bytes.Equal(header.Nonce[:], nonceDropVote) {
+	// return errInvalidCheckpointVote
+	// }
 	// Check that the extra-data contains both the vanity and signature
 	if len(header.Extra) < extraVanity {
 		return errMissingVanity
@@ -461,6 +472,29 @@ func (c *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header) err
 	return c.verifySeal(chain, header, nil)
 }
 
+// enoughSigs checks signatures has enough signature to accept the block.
+func enoughSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
+	numSigs := 0
+	hash := header.Hash()
+
+	if addresses, known := sigcache.Get(hash); known {
+		sigs := addresses.(map[common.Address]struct{})
+		for idx, signer := range signers {
+			if _, ok := sigs[signer]; ok {
+				numSigs++
+			}
+		}
+	} else {
+		ecrecover(header, sigcache)
+		return false, nil
+	}
+
+	if uint64(numSigs) >= viewLength*pctAccept {
+		return true, nil
+	}
+	return false, nil
+}
+
 // verifySeal checks whether the signature contained in the header satisfies the
 // consensus protocol requirements. The method accepts an optional list of parent
 // headers that aren't yet part of the local blockchain to generate the snapshots
@@ -482,17 +516,34 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	if err != nil {
 		return err
 	}
-	if _, ok := snap.Signers[signer]; !ok {
+
+	// --- our check starts ---
+
+	// TODO: add our signature check method here.
+
+	// check if the signer is in the committee.
+	if ok := snap.isSigner(signer); !ok {
 		return errUnauthorized
 	}
-	for seen, recent := range snap.Recents {
-		if recent == signer {
-			// Signer is among recents, only fail if the current block doesn't shift it out
-			if limit := uint64(len(snap.Signers)/2 + 1); seen > number-limit {
-				return errUnauthorized
-			}
-		}
+
+	// check if there is enough signatures to accept the block.
+	accept, err := enoughSigs(header, c.signatures, snap.signers())
+
+	if !accept || err != nil {
+		return errNotEnoughSigs
 	}
+
+	// TODO: change Hash func in core/types/block.go to
+	// change hash method to exclude signature in extraData.
+
+	// TODO: there must check if the leader is in the sigs.
+	// then in header.Extra add self signature.
+
+	//  // TODO: sign the block and broadcast it if self is in the committee.
+	//  // NOTE: only sign a block once.
+
+	// --- our check ends ---
+
 	// Ensure that the difficulty corresponds to the turn-ness of the signer
 	inturn := snap.inturn(header.Number.Uint64(), signer)
 	if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
@@ -521,22 +572,26 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 		c.lock.RLock()
 
 		// Gather all the proposals that make sense voting on
-		addresses := make([]common.Address, 0, len(c.proposals))
-		for address, authorize := range c.proposals {
-			if snap.validVote(address, authorize) {
-				addresses = append(addresses, address)
+		/*
+				addresses := make([]common.Address, 0, len(c.proposals))
+				for address, authorize := range c.proposals {
+					if false {
+						// if snap.validVote(address, authorize) {
+						addresses = append(addresses, address)
+					}
+				}
+			// If there's pending proposals, cast a vote on them
+			if len(addresses) > 0 {
+				header.Coinbase = addresses[rand.Intn(len(addresses))]
+				if c.proposals[header.Coinbase] {
+					copy(header.Nonce[:], nonceAuthVote)
+				} else {
+					copy(header.Nonce[:], nonceDropVote)
+				}
 			}
-		}
-		// If there's pending proposals, cast a vote on them
-		if len(addresses) > 0 {
-			header.Coinbase = addresses[rand.Intn(len(addresses))]
-			if c.proposals[header.Coinbase] {
-				copy(header.Nonce[:], nonceAuthVote)
-			} else {
-				copy(header.Nonce[:], nonceDropVote)
-			}
-		}
-		c.lock.RUnlock()
+			c.lock.RUnlock()
+
+		*/
 	}
 	// Set the correct difficulty
 	header.Difficulty = CalcDifficulty(snap, c.signer)
@@ -614,7 +669,7 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	if err != nil {
 		return nil, err
 	}
-	if _, authorized := snap.Signers[signer]; !authorized {
+	if authorized := signer == snap.Signers[block.Number().Uint64()%c.config.Epoch]; !authorized {
 		return nil, errUnauthorized
 	}
 	// If we're amongst the recent signers, wait for the next block

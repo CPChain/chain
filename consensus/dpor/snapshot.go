@@ -18,7 +18,10 @@ package dpor
 
 import (
 	"encoding/json"
+	"log"
 	"math/big"
+
+	// "net/rpc"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
@@ -134,13 +137,91 @@ func (s *Snapshot) apply(headers []*types.Header) (*Snapshot, error) {
 	// Iterate through the headers and create a new snapshot
 	snap := s.copy()
 
-	// TODO: implement viewChange( rpt calc call and elect calc call) here, then get net committee.
-	snap = s.viewChange(headers, snap) // TODO: add block states to this func call.
+	/*
+		if uint64(len(headers)) != viewLength {
+			return nil, errInvalidCheckpointApplyNumber
+		}
+		// TODO: implement viewChange( rpt calc call and elect calc call) here, then get net committee.
+		snap = s.viewChange(headers, snap) // TODO: add block states to this func call.
+	*/
+
+	for _, header := range headers {
+		err := snap.applyHeader(header)
+		if err != nil {
+			log.Fatal("Snapshot apply header error.")
+		}
+	}
 
 	snap.Number += uint64(len(headers))
 	snap.Hash = headers[len(headers)-1].Hash()
 
 	return snap, nil
+}
+
+// TODO: finish this func to apply header to snapshot to calculate reputations of candidates fetched from candidate contract.
+func (s *Snapshot) applyHeader(header *types.Header) error {
+	// update snapshot attributes.
+	s.Number = header.Number.Uint64()
+	s.Hash = header.Hash()
+
+	s.updateCandidates(header)
+	s.updateRpts(header)
+
+	if s.Number%checkpointInterval == 0 {
+		s.updateView(header.Hash().Big().Int64())
+	}
+	return nil
+}
+
+// TODO: fix this logic.
+func (s *Snapshot) updateCandidates(header *types.Header) error {
+	var (
+		key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+		addr   = crypto.PubkeyToAddress(key.PublicKey)
+	)
+	// TODO: wrap this backend.
+	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	transactOpts := bind.NewKeyedTransactor(key)
+	instance, err := NewCampaign(transactOpts, common.HexToAddress(""), contractBackend)
+	if err != nil {
+		return err
+	}
+
+	candidates, err := instance.CandidatesOf(big.NewInt(int64(header.Number.Uint64() / viewLength)))
+	if err != nil {
+		return err
+	}
+
+	newCandidates := make(map[common.Address]struct{})
+	for _, candidate := range candidates {
+		newCandidates[candidate] = struct{}{}
+	}
+	s.Candidates = newCandidates
+
+	return nil
+}
+
+// TODO: implement this func to get rpts for candidates. maybe save it as a map.
+func (s *Snapshot) updateRpts(header *types.Header) error {
+	return nil
+}
+
+// viewChange use rpt and election result to get new committee(signers).
+func (s *Snapshot) updateView(seed int64) error {
+	s.calcElection(seed)
+	return nil
+}
+
+// TODO: finish this func.
+func (s *Snapshot) calcElection(seed int64) (map[uint64]common.Address, error) {
+	viewLength := int(s.config.Epoch)
+	candidates := s.candidates()
+
+	collector := rpt.BasicCollector{}
+	rptDict := collector.GetRpts(&candidates)
+	newSigners := election.Elect(rptDict, seed, viewLength)
+
+	return newSigners, nil
 }
 
 // signers retrieves all signers in the committee.
@@ -150,6 +231,17 @@ func (s *Snapshot) signers() []common.Address {
 		signers = append(signers, signer)
 	}
 	return signers
+}
+
+func (s *Snapshot) isSigner(address common.Address) bool {
+	result := false
+	for idx, signer := range s.signers() {
+		if address == signer {
+			result = true
+			break
+		}
+	}
+	return result
 }
 
 // candidates retrieves all candidates recorded in the campaign contract.
@@ -168,53 +260,4 @@ func (s *Snapshot) inturn(number uint64, signer common.Address) bool {
 		offset++
 	}
 	return (number % uint64(len(signers))) == uint64(offset)
-}
-
-// viewChange returns a new snapshot based on previous snapshot and the block
-// states. to use rpt and election package to get new committee(signers).
-func (s *Snapshot) viewChange(headers []*types.Header, snap *Snapshot) *Snapshot {
-
-	var (
-		key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-		name   = "my name on ENS"
-		hash   = crypto.Keccak256Hash([]byte("my content"))
-		addr   = crypto.PubkeyToAddress(key.PublicKey)
-	)
-
-	lastHeader := headers[len(headers)-1]
-
-	seed := getSeed(lastHeader)
-	viewLength := getViewLength(lastHeader)
-
-	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-	transactOpts := bind.NewKeyedTransactor(key)
-	instance, err := NewCampaign(transactOpts, contractAddr, contractBackend)
-
-	candidates := instance.CandidatesOf(big.NewInt(lastHeader.Number.Int64() / int64(viewLength)))
-	// candidates := []common.Address{}
-	// candidates := campaign.GetCandidates(lastHeader, snap)
-
-	newCandidates := make(map[common.Address]struct{})
-	for _, candidate := range candidates {
-		newCandidates[candidate] = struct{}{}
-	}
-
-	collector := rpt.BasicCollector{}
-	rptDict := collector.GetRpts(&candidates)
-	newSigners := election.Elect(rptDict, seed, viewLength)
-
-	snap.Signers = newSigners
-	snap.Candidates = newCandidates
-
-	return snap
-}
-
-func getSeed(header *types.Header) int64 {
-	hash := header.Hash()
-	seed := hash.Big().Int64()
-	return seed
-}
-
-func getViewLength(header *types.Header) int {
-	return 21
 }
