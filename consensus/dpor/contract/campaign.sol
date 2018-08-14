@@ -30,9 +30,15 @@ library Set {
         if (!self.flags[value])
             return false; // not there
         self.flags[value] = false;
+
         for (uint i = 0 ; i < self.values.length ; i++){
             if (self.values[i] == value){
-                delete self.values[i];
+                for (uint j = i; j<self.values.length-1; j++){
+                    self.values[j] = self.values[j+1];
+                }
+                delete self.values[self.values.length-1];
+                self.values.length--;
+                break;
             }
         }
         return true;
@@ -92,7 +98,6 @@ contract Campaign {
             require((candidates[candidate].numOfCampaign + num_of_campaign >= minimumNoc && candidates[candidate].numOfCampaign + num_of_campaign <= maximumNoc), "num of campaign out of range.");
             candidates[candidate].numOfCampaign += num_of_campaign;
             candidates[candidate].deposit += msg.value;
-            // candidates[candidate].startViewIdx = viewIdx;
         }
 
         // add candidate to campaignSnapshots.
@@ -105,8 +110,6 @@ contract Campaign {
     function QuitCampaign() public payable {
         address candidate = msg.sender;
         require(candidates[candidate].numOfCampaign > 0, "already quit campaign.");
-        candidates[candidate] = CandidateInfo(0, 0, 0);
-
         // remove candidate from current view snapshot
         for(uint i = viewIdx; i < candidates[candidate].startViewIdx + candidates[candidate].numOfCampaign; i++) {
             if(candidates[candidate].deposit >= baseDeposit){
@@ -115,6 +118,7 @@ contract Campaign {
             }
             campaignSnapshots[i].remove(candidate);
         }
+        candidates[candidate].numOfCampaign = 0;
     }
 
     function CandidatesOf(uint view_idx) public view returns (address[]){
