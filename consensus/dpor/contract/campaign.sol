@@ -92,7 +92,7 @@ contract Campaign {
             require((candidates[candidate].numOfCampaign + num_of_campaign >= minimumNoc && candidates[candidate].numOfCampaign + num_of_campaign <= maximumNoc), "num of campaign out of range.");
             candidates[candidate].numOfCampaign += num_of_campaign;
             candidates[candidate].deposit += msg.value;
-            candidates[candidate].startViewIdx = viewIdx;
+            // candidates[candidate].startViewIdx = viewIdx;
         }
 
         // add candidate to campaignSnapshots.
@@ -105,13 +105,14 @@ contract Campaign {
     function QuitCampaign() public payable {
         address candidate = msg.sender;
         require(candidates[candidate].numOfCampaign > 0, "already quit campaign.");
-
         candidates[candidate] = CandidateInfo(0, 0, 0);
 
-        candidate.transfer(candidates[candidate].deposit);
-
         // remove candidate from current view snapshot
-        for(uint i = candidates[candidate].startViewIdx; i < candidates[candidate].numOfCampaign; i++) {
+        for(uint i = viewIdx; i < candidates[candidate].startViewIdx + candidates[candidate].numOfCampaign; i++) {
+            if(candidates[candidate].deposit >= baseDeposit){
+                candidates[candidate].deposit -= baseDeposit;
+                candidate.transfer(baseDeposit);
+            }
             campaignSnapshots[i].remove(candidate);
         }
     }
@@ -130,7 +131,7 @@ contract Campaign {
             address candidate = campaignSnapshots[viewIdx].values[i];
             if(candidates[candidate].deposit >= baseDeposit){
                 candidates[candidate].deposit -= baseDeposit;
-                campaignSnapshots[viewIdx].values[i].transfer(baseDeposit);
+                candidate.transfer(baseDeposit);
             }
         }
         viewIdx = viewIdx + 1;
