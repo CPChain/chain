@@ -77,8 +77,5 @@ func (self *Campaign) MaximumNoc() (*big.Int, error) {
 }
 
 func (self *Campaign) ClaimCampaign(numOfCampaign *big.Int, rpt *big.Int) (*types.Transaction, error) {
-	opts := self.TransactOpts
-	//opts.GasLimit = 0 // in units
-	opts.Value = big.NewInt(50 * numOfCampaign.Int64()) // in wei
-	return self.Contract.ClaimCampaign(&opts, numOfCampaign, rpt)
+	return self.Contract.ClaimCampaign(&self.TransactOpts, numOfCampaign, rpt)
 }

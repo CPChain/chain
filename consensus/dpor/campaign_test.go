@@ -50,10 +50,12 @@ func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.Simulat
 
 func TestDeployCampaign(t *testing.T) {
 	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+
+	//consensusEngine := NewFaker()
+	//contractBackend := backends.NewSimulatedBackendWithType(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}}, consensusEngine, params.AllCpchainProtocolChanges)
+
 	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
-	if err != nil {
-		t.Fatalf("deploy contract: expected no error, got %v", err)
-	}
+	checkError(t, "deploy contract: expected no error, got %v", err)
 
 	transactOpts := bind.NewKeyedTransactor(key)
 	campaign, err := NewCampaign(transactOpts, contractAddr, contractBackend)
@@ -83,16 +85,12 @@ func TestDeployCampaign(t *testing.T) {
 	contractBackend.Commit()
 
 	// test contract map variable call.
-	x, y, z, err := campaign.CandidateInfoOf(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println("candidate info of", addr.Hex(), ":", x, y, z)
+	numOfCampaign, deposit, startViewIdx, err := campaign.CandidateInfoOf(addr)
+	checkError(t, "CandidateInfoOf error: %v", err)
+	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
 
 	candidates, err := campaign.CandidatesOf(big.NewInt(0))
-	if err != nil {
-		t.Fatal(err)
-	}
+	checkError(t, "CandidatesOf error: %v", err)
 	fmt.Println("candidates of first view:")
 	for i := 0; i < len(candidates); i++ {
 		fmt.Println("number", i, candidates[i].Hex())
@@ -105,16 +103,14 @@ func checkError(t *testing.T, msg string, err error) {
 	}
 }
 
-func TestClaimCampaign(t *testing.T) {
+func TestClaimAndQuitCampaign(t *testing.T) {
 	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
 	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	fmt.Println("contractAddr:", contractAddr)
-	if err != nil {
-		t.Fatalf("deploy contract: expected no error, got %v", err)
-	}
+	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
@@ -125,20 +121,19 @@ func TestClaimCampaign(t *testing.T) {
 	_ = contractAddr
 	printBalance(contractBackend)
 
-	//ctx := context.Background()
+	// setup TransactOpts
+	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
+	campaign.TransactOpts.Value = big.NewInt(50 * 1)
+
 	tx, err := campaign.ClaimCampaign(big.NewInt(1), big.NewInt(60))
-	if err != nil {
-		t.Fatalf("ClaimCampaign error: %v", err)
-	}
+	checkError(t, "ClaimCampaign error:", err)
 	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
 	// test contract map variable call.
 	numOfCampaign, deposit, startViewIdx, err := campaign.CandidateInfoOf(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
 	assert(1, 50, numOfCampaign, deposit, t)
 
@@ -152,17 +147,13 @@ func TestClaimCampaign(t *testing.T) {
 
 	// test contract map variable call.
 	numOfCampaign, deposit, startViewIdx, err = campaign.CandidateInfoOf(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
 	assert(2, 100, numOfCampaign, deposit, t)
 
 	// get candidates by view index
 	candidates, err := campaign.CandidatesOf(big.NewInt(0))
-	if err != nil {
-		t.Fatal(err)
-	}
+	checkError(t, "CandidatesOf error: %v", err)
 	fmt.Println("len(candidates):", len(candidates))
 	if len(candidates) != 1 {
 		t.Fatal("len(candidates) != 1")
@@ -172,6 +163,26 @@ func TestClaimCampaign(t *testing.T) {
 		fmt.Println("number", i, candidates[i].Hex())
 	}
 	printBalance(contractBackend)
+
+	// quit campaign
+	// setup TransactOpts
+	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
+	campaign.TransactOpts.Value = big.NewInt(0)
+	campaign.TransactOpts.GasLimit = 100000
+	campaign.TransactOpts.GasPrice = big.NewInt(0)
+	tx, err = campaign.QuitCampaign()
+	checkError(t, "QuitCampaign error: %v", err)
+	fmt.Println("QuitCampaign tx:", tx.Hash().Hex())
+	contractBackend.Commit()
+	printBalance(contractBackend)
+
+	// verify quit campaign result
+	candidates, err = campaign.CandidatesOf(big.NewInt(0))
+	checkError(t, "CandidatesOf error: %v", err)
+	fmt.Println("len(candidates):", len(candidates))
+	if len(candidates) != 0 {
+		t.Fatal("len(candidates) != 0")
+	}
 }
 
 func printBalance(contractBackend *backends.SimulatedBackend) {
