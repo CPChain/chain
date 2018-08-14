@@ -89,12 +89,7 @@ func TestDeployCampaign(t *testing.T) {
 	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
 
-	candidates, err := campaign.CandidatesOf(big.NewInt(0))
-	checkError(t, "CandidatesOf error: %v", err)
-	fmt.Println("candidates of first view:")
-	for i := 0; i < len(candidates); i++ {
-		fmt.Println("number", i, candidates[i].Hex())
-	}
+	verifyCandidates(campaign, t, big.NewInt(0), 0)
 }
 
 func checkError(t *testing.T, msg string, err error) {
@@ -125,22 +120,21 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
 	campaign.TransactOpts.Value = big.NewInt(50 * 1)
 
+	// ClaimCampaign 1st time
 	tx, err := campaign.ClaimCampaign(big.NewInt(1), big.NewInt(60))
 	checkError(t, "ClaimCampaign error:", err)
 	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
-	// test contract map variable call.
+	// verify result
 	numOfCampaign, deposit, startViewIdx, err := campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
 	assert(1, 50, numOfCampaign, deposit, t)
 
 	tx, err = campaign.ClaimCampaign(big.NewInt(1), big.NewInt(60))
-	if err != nil {
-		t.Fatalf("ClaimCampaign error: %v", err)
-	}
+	checkError(t,"ClaimCampaign error: %v",err)
 	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
 	contractBackend.Commit()
 	printBalance(contractBackend)
@@ -183,6 +177,73 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	if len(candidates) != 0 {
 		t.Fatal("len(candidates) != 0")
 	}
+}
+
+func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
+	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	printBalance(contractBackend)
+
+	fmt.Println("deploy Campaign")
+	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	fmt.Println("contractAddr:", contractAddr)
+	checkError(t, "deploy contract: expected no error, got %v", err)
+	contractBackend.Commit()
+	printBalance(contractBackend)
+
+	fmt.Println("load Campaign")
+	transactOpts := bind.NewKeyedTransactor(key)
+	campaign, err := NewCampaign(transactOpts, contractAddr, contractBackend)
+	checkError(t, "can't deploy root registry: %v", err)
+	_ = contractAddr
+	printBalance(contractBackend)
+
+	// setup TransactOpts
+	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
+	campaign.TransactOpts.Value = big.NewInt(50 * 2)
+
+	tx, err := campaign.ClaimCampaign(big.NewInt(2), big.NewInt(60))
+	checkError(t, "ClaimCampaign error:", err)
+	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
+	contractBackend.Commit()
+	printBalance(contractBackend)
+
+	// test contract map variable call.
+	numOfCampaign, deposit, startViewIdx, err := campaign.CandidateInfoOf(addr)
+	checkError(t, "CandidateInfoOf error: %v", err)
+	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
+	assert(2, 100, numOfCampaign, deposit, t)
+
+	// get candidates by view index
+	verifyCandidates(campaign, t, big.NewInt(0), 1)
+	printBalance(contractBackend)
+
+	// view change 1st time
+	tx, err = campaign.ViewChange()
+
+	// get candidates by view index
+	verifyCandidates(campaign, t, big.NewInt(0), 1)
+	printBalance(contractBackend)
+
+	// get candidates by view index
+	verifyCandidates(campaign, t, big.NewInt(1), 0)
+	printBalance(contractBackend)
+
+	// view change 2nd time
+	tx, err = campaign.ViewChange()
+
+	// get candidates by view index
+	verifyCandidates(campaign, t, big.NewInt(1), 1)
+	printBalance(contractBackend)
+}
+
+func verifyCandidates(campaign *Campaign, t *testing.T, viewIdx *big.Int, candidateLengh int) {
+	candidates, err := campaign.CandidatesOf(viewIdx)
+	checkError(t, "CandidatesOf error: %v", err)
+	fmt.Println("len(candidates):", len(candidates))
+	if len(candidates) != candidateLengh {
+		t.Fatal("len(candidates) != ", candidateLengh)
+	}
+
 }
 
 func printBalance(contractBackend *backends.SimulatedBackend) {
