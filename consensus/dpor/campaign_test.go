@@ -180,7 +180,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 }
 
 func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
-	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
@@ -216,9 +216,13 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	// get candidates by view index
 	verifyCandidates(campaign, t, big.NewInt(0), 1)
 	printBalance(contractBackend)
+	contractBackend.Commit()
 
 	// view change 1st time
+	fmt.Println("ViewChange")
 	tx, err = campaign.ViewChange()
+	checkError(t,"ViewChange error:%v", err)
+	contractBackend.Commit()
 
 	// get candidates by view index
 	verifyCandidates(campaign, t, big.NewInt(0), 1)
@@ -229,16 +233,32 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	printBalance(contractBackend)
 
 	// view change 2nd time
+	fmt.Println("ViewChange")
 	tx, err = campaign.ViewChange()
+	checkError(t,"ViewChange error:%v", err)
+	contractBackend.Commit()
 
 	// get candidates by view index
+	verifyCandidates(campaign, t, big.NewInt(0), 1)
 	verifyCandidates(campaign, t, big.NewInt(1), 1)
-	printBalance(contractBackend)
-
-	// get candidates by view index
 	verifyCandidates(campaign, t, big.NewInt(2), 0)
 	printBalance(contractBackend)
 
+	// quit campaign
+	// setup TransactOpts
+	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
+	campaign.TransactOpts.Value = big.NewInt(0)
+	campaign.TransactOpts.GasLimit = 100000
+	campaign.TransactOpts.GasPrice = big.NewInt(0)
+	tx, err = campaign.QuitCampaign()
+	checkError(t, "QuitCampaign error: %v", err)
+	fmt.Println("QuitCampaign tx:", tx.Hash().Hex())
+	contractBackend.Commit()
+	printBalance(contractBackend)
+
+	verifyCandidates(campaign, t, big.NewInt(0), 1)
+	verifyCandidates(campaign, t, big.NewInt(1), 1)
+	verifyCandidates(campaign, t, big.NewInt(2), 0)
 }
 
 func verifyCandidates(campaign *Campaign, t *testing.T, viewIdx *big.Int, candidateLengh int) {

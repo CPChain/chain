@@ -130,7 +130,7 @@ contract Campaign {
     }
 
     // TODO. add restriction that only last commissioner can call this with require statement.
-    function ViewChange() public {
+    function ViewChange() public payable {
         for(uint i = 0; i < campaignSnapshots[viewIdx].values.length; i++){
             address candidate = campaignSnapshots[viewIdx].values[i];
             if(candidates[candidate].deposit >= baseDeposit){
