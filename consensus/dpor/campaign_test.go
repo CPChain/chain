@@ -134,7 +134,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	assert(1, 50, numOfCampaign, deposit, t)
 
 	tx, err = campaign.ClaimCampaign(big.NewInt(1), big.NewInt(60))
-	checkError(t,"ClaimCampaign error: %v",err)
+	checkError(t, "ClaimCampaign error: %v", err)
 	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
 	contractBackend.Commit()
 	printBalance(contractBackend)
@@ -225,7 +225,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	printBalance(contractBackend)
 
 	// get candidates by view index
-	verifyCandidates(campaign, t, big.NewInt(1), 0)
+	verifyCandidates(campaign, t, big.NewInt(1), 1)
 	printBalance(contractBackend)
 
 	// view change 2nd time
@@ -234,6 +234,11 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	// get candidates by view index
 	verifyCandidates(campaign, t, big.NewInt(1), 1)
 	printBalance(contractBackend)
+
+	// get candidates by view index
+	verifyCandidates(campaign, t, big.NewInt(2), 0)
+	printBalance(contractBackend)
+
 }
 
 func verifyCandidates(campaign *Campaign, t *testing.T, viewIdx *big.Int, candidateLengh int) {
