@@ -89,14 +89,14 @@ func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 func NewSimulatedBackendWithType(alloc core.GenesisAlloc, consensusEngine consensus.Engine, config *params.ChainConfig, extraData []byte) *SimulatedBackend {
 	database := ethdb.NewMemDatabase()
 	genesis := core.Genesis{
-		Config: config,
-		Alloc: alloc,
-		ExtraData: extraData,
+		Config:     config,
+		Alloc:      alloc,
+		ExtraData:  extraData,
 		Difficulty: big.NewInt(0),
-		Number:0,
-		GasUsed:0,
-		Coinbase:common.HexToAddress("0x0000000000000000000000000000000000000000"),
-		GasLimit:4700000 }
+		Number:     0,
+		GasUsed:    0,
+		Coinbase:   common.HexToAddress("0x0000000000000000000000000000000000000000"),
+		GasLimit:   4700000}
 	genesis.MustCommit(database)
 
 	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, consensusEngine, vm.Config{})
@@ -110,11 +110,6 @@ func NewSimulatedBackendWithType(alloc core.GenesisAlloc, consensusEngine consen
 	}
 	backend.rollback()
 	return backend
-
-
-
-
-
 
 }
 
