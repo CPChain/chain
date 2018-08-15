@@ -86,9 +86,17 @@ func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 
 // NewSimulatedBackend creates a new binding backend using a simulated blockchain
 // for testing purposes.
-func NewSimulatedBackendWithType(alloc core.GenesisAlloc, consensusEngine consensus.Engine, config *params.ChainConfig) *SimulatedBackend {
+func NewSimulatedBackendWithType(alloc core.GenesisAlloc, consensusEngine consensus.Engine, config *params.ChainConfig, extraData []byte) *SimulatedBackend {
 	database := ethdb.NewMemDatabase()
-	genesis := core.Genesis{Config: config, Alloc: alloc}
+	genesis := core.Genesis{
+		Config: config,
+		Alloc: alloc,
+		ExtraData: extraData,
+		Difficulty: big.NewInt(0),
+		Number:0,
+		GasUsed:0,
+		Coinbase:common.HexToAddress("0x0000000000000000000000000000000000000000"),
+		GasLimit:4700000 }
 	genesis.MustCommit(database)
 
 	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, consensusEngine, vm.Config{})
@@ -103,19 +111,11 @@ func NewSimulatedBackendWithType(alloc core.GenesisAlloc, consensusEngine consen
 	backend.rollback()
 	return backend
 
-	//database := ethdb.NewMemDatabase()
-	//genesis := core.Genesis{Config: params.AllEthashProtocolChanges, Alloc: alloc}
-	//genesis.MustCommit(database)
-	//blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{})
-	//
-	//backend := &SimulatedBackend{
-	//	database:   database,
-	//	blockchain: blockchain,
-	//	config:     genesis.Config,
-	//	events:     filters.NewEventSystem(new(event.TypeMux), &filterBackend{database, blockchain}, false),
-	//}
-	//backend.rollback()
-	//return backend
+
+
+
+
+
 }
 
 // Commit imports all the pending transactions as a single block and starts a

@@ -30,6 +30,8 @@ import (
 	"github.com/ethereum/go-ethereum/consensus/dpor/contract"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 var (
@@ -221,7 +223,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	// view change 1st time
 	fmt.Println("ViewChange")
 	tx, err = campaign.ViewChange()
-	checkError(t,"ViewChange error:%v", err)
+	checkError(t, "ViewChange error:%v", err)
 	contractBackend.Commit()
 
 	// get candidates by view index
@@ -235,7 +237,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	// view change 2nd time
 	fmt.Println("ViewChange")
 	tx, err = campaign.ViewChange()
-	checkError(t,"ViewChange error:%v", err)
+	checkError(t, "ViewChange error:%v", err)
 	contractBackend.Commit()
 
 	// get candidates by view index
@@ -259,6 +261,26 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	verifyCandidates(campaign, t, big.NewInt(0), 1)
 	verifyCandidates(campaign, t, big.NewInt(1), 1)
 	verifyCandidates(campaign, t, big.NewInt(2), 0)
+}
+
+func TestClaimAndViewChangeThenQuitCampaignSimple(t *testing.T) {
+	t.Skip("test with dpor after dpor rewrite")
+	db := ethdb.NewMemDatabase()
+	consensusEngine := New(&params.DporConfig{Epoch: 1000}, db)
+	extraData := []byte("0x0000000000000000000000000000000000000000000000000000000000000000c05302acebd0730e3a18a058d7d1cb1204c4a092e94b7b6c5a0e526a4d97f9768ad6097bde25c62aef3dd127de235f15ffb4fc0d71469d1339df64650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+
+	contractBackend := backends.NewSimulatedBackendWithType(
+		core.GenesisAlloc{
+			addr: {Balance: big.NewInt(100000000000000)}}, consensusEngine, params.AllCpchainProtocolChanges,
+		extraData)
+	printBalance(contractBackend)
+
+	fmt.Println("deploy Campaign")
+	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	fmt.Println("contractAddr:", contractAddr)
+	checkError(t, "deploy contract: expected no error, got %v", err)
+	contractBackend.Commit()
+	printBalance(contractBackend)
 }
 
 func verifyCandidates(campaign *Campaign, t *testing.T, viewIdx *big.Int, candidateLengh int) {
