@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -693,6 +694,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 	hash := block.Hash()
 	peers := pm.peers.PeersWithoutBlock(hash)
+
+	log.Info("--------I am in handler.BroadcastBlock start--------")
+	log.Info("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
+	log.Info("--------I am in handler.BroadcastBlock start--------")
 
 	// If propagation is requested, send to a subset of the peer
 	if propagate {

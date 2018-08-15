@@ -21,7 +21,7 @@ import (
 	"bytes"
 	"errors"
 	"math/big"
-	"math/rand"
+	"strconv"
 	"sync"
 	"time"
 
@@ -42,13 +42,14 @@ import (
 )
 
 const (
-	checkpointInterval = 1024 // Number of blocks after which to save the vote snapshot to the database
-	inmemorySnapshots  = 128  // Number of recent vote snapshots to keep in memory
-	inmemorySignatures = 4096 // Number of recent block signatures to keep in memory
+	checkpointInterval = 3 // Number of blocks after which to save the vote snapshot to the database
+	inmemorySnapshots  = 6 // Number of recent vote snapshots to keep in memory
+	inmemorySignatures = 6 // Number of recent block signatures to keep in memory
 
 	wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
 
-	pctAccept = 2 / 3 // 2 / 3 of the signers' signature to accept the block
+	// pctAccept = 2 / 3 // 2 / 3 of the signers' signature to accept the block
+	pctAccept = 1 / 2 // 1/2 for test.
 )
 
 // Dpor proof-of-reputation protocol constants.
@@ -56,7 +57,8 @@ var (
 	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
 	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
-	viewLength = uint64(21) // Default number of signers, also the number of blocks after whick to launch viewChange.
+	viewLength = uint64(3) // Default number of signers, also the number of blocks after whick to launch viewChange.
+	// viewLength = uint64(21) // Default number of signers, also the number of blocks after whick to launch viewChange.
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -132,8 +134,18 @@ var (
 	// errUnauthorized is returned if a header is signed by a non-authorized entity.
 	errUnauthorized = errors.New("unauthorized")
 
+	// --- our new error types ---
+
 	// errNotEnoughSigs is returned if there is not enough sigatures.
 	errNotEnoughSigs = errors.New("not enough sigs")
+
+	// errMultiBlockInOneHeight is returned if there is multi blocks in one height in the chain.
+	errMultiBlockInOnHeight = errors.New("multi blocks in one height")
+
+	// errLeaderNotInSigs is returned if the leader not in the sigs.
+	errLeaderNotInSigs = errors.New("leader is not in the sigs")
+
+	// --- our new error types ---
 
 	// errWaitTransactions is returned if an empty block is attempted to be sealed
 	// on an instant chain (0 second period). It's important to refuse these as the
@@ -214,7 +226,10 @@ type Dpor struct {
 	recents    *lru.ARCCache // Snapshots for recent block to speed up reorgs
 	signatures *lru.ARCCache // Signatures of recent blocks to speed up mining
 
-	proposals map[common.Address]bool // Current list of proposals we are pushing
+	// NOTE: this will not be used.
+	// proposals map[common.Address]bool // Current list of proposals we are pushing
+
+	signedBlocks map[uint64]struct{} // record signed blocks.
 
 	signer common.Address // Ethereum address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
@@ -238,7 +253,7 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 		db:         db,
 		recents:    recents,
 		signatures: signatures,
-		proposals:  make(map[common.Address]bool),
+		// proposals:  make(map[common.Address]bool),
 	}
 }
 
@@ -472,9 +487,12 @@ func (c *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header) err
 	return c.verifySeal(chain, header, nil)
 }
 
-// enoughSigs checks signatures has enough signature to accept the block.
-func enoughSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
+// acceptSigs checks signatures has enough signature to accept the block.
+func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, bool, error) {
 	numSigs := 0
+	enoughSigs := false
+	leaderIn := false
+	leaderRound := (header.Number.Uint64() - 1) % viewLength
 	hash := header.Hash()
 
 	if addresses, known := sigcache.Get(hash); known {
@@ -482,17 +500,21 @@ func enoughSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.A
 		for idx, signer := range signers {
 			if _, ok := sigs[signer]; ok {
 				numSigs++
+				if uint64(idx) == leaderRound {
+					leaderIn = true
+				}
 			}
 		}
 	} else {
 		ecrecover(header, sigcache)
-		return false, nil
+		return false, false, nil
 	}
 
+	// num of sigs must > 2/3 * viewLength, leader must be in the sigs.
 	if uint64(numSigs) >= viewLength*pctAccept {
-		return true, nil
+		enoughSigs = true
 	}
-	return false, nil
+	return enoughSigs, leaderIn, nil
 }
 
 // verifySeal checks whether the signature contained in the header satisfies the
@@ -519,39 +541,67 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 
 	// --- our check starts ---
 
+	log.Info("--------I am in dpor.verifySeal start--------")
+	log.Info("number:" + strconv.Itoa(int(number)))
+	log.Info("signer:" + signer.Hex())
+	log.Info("hash:" + header.Hash().Hex())
+	log.Info("--------I am in dpor.verifySeal start--------")
+
 	// TODO: add our signature check method here.
+
+	// TODO: change Hash func in core/types/block.go to
+	// change hash method to exclude signature in extraData. Done.
 
 	// check if the signer is in the committee.
 	if ok := snap.isSigner(signer); !ok {
 		return errUnauthorized
 	}
 
-	// check if there is enough signatures to accept the block.
-	accept, err := enoughSigs(header, c.signatures, snap.signers())
+	// check if accept the sigs and if leader is in the sigs.
+	enoughSigs, leaderIn, err := acceptSigs(header, c.signatures, snap.signers())
 
-	if !accept || err != nil {
-		return errNotEnoughSigs
+	if err != nil {
+		return err
 	}
+	// TODO: fix this logic.
+	if leaderIn {
+		if !enoughSigs {
 
-	// TODO: change Hash func in core/types/block.go to
-	// change hash method to exclude signature in extraData.
-
-	// TODO: there must check if the leader is in the sigs.
-	// then in header.Extra add self signature.
-
-	//  // TODO: sign the block and broadcast it if self is in the committee.
-	//  // NOTE: only sign a block once.
+			// TODO: sign the block and broadcast it if self is in the committee.
+			// NOTE: only sign a block once.
+			if snap.isSigner(c.signer) {
+				if _, signed := c.signedBlocks[header.Number.Uint64()]; signed {
+					return errMultiBlockInOnHeight
+				}
+				// Sign all the things!
+				sighash, err := c.signFn(accounts.Account{Address: c.signer}, sigHash(header).Bytes())
+				if err != nil {
+					return err
+				}
+				copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
+			} else {
+				return errNotEnoughSigs
+			}
+		}
+	} else if !leaderIn {
+		return errLeaderNotInSigs
+	}
 
 	// --- our check ends ---
 
-	// Ensure that the difficulty corresponds to the turn-ness of the signer
-	inturn := snap.inturn(header.Number.Uint64(), signer)
-	if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
-		return errInvalidDifficulty
-	}
-	if !inturn && header.Difficulty.Cmp(diffNoTurn) != 0 {
-		return errInvalidDifficulty
-	}
+	/*
+		// Ensure that the difficulty corresponds to the turn-ness of the signer
+		inturn := snap.isLeader(header.Number.Uint64(), signer)
+		log.Info("signer:" + signer.Hex() + "inturn:" + strconv.FormatBool(inturn))
+		if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
+			log.Info("fuck the difficulty:" + strconv.Itoa(int(header.Difficulty.Int64())))
+			return errInvalidDifficulty
+		}
+		if !inturn && header.Difficulty.Cmp(diffNoTurn) != 0 {
+			log.Info("fuck the difficulty:" + strconv.Itoa(int(header.Difficulty.Int64())))
+			return errInvalidDifficulty
+		}
+	*/
 	return nil
 }
 
@@ -569,17 +619,17 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 		return err
 	}
 	if number%c.config.Epoch != 0 {
-		c.lock.RLock()
 
 		// Gather all the proposals that make sense voting on
 		/*
-				addresses := make([]common.Address, 0, len(c.proposals))
-				for address, authorize := range c.proposals {
-					if false {
-						// if snap.validVote(address, authorize) {
-						addresses = append(addresses, address)
-					}
+			c.lock.RLock()
+			addresses := make([]common.Address, 0, len(c.proposals))
+			for address, authorize := range c.proposals {
+				if false {
+					// if snap.validVote(address, authorize) {
+					addresses = append(addresses, address)
 				}
+			}
 			// If there's pending proposals, cast a vote on them
 			if len(addresses) > 0 {
 				header.Coinbase = addresses[rand.Intn(len(addresses))]
@@ -595,6 +645,15 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	}
 	// Set the correct difficulty
 	header.Difficulty = CalcDifficulty(snap, c.signer)
+	log.Info("--------I am in dpor.Prepare start--------")
+	log.Info("header.Difficulty:" + strconv.Itoa(int(header.Difficulty.Uint64())))
+
+	if snap.isLeader(header.Number.Uint64(), c.signer) {
+		log.Info("i am leader:" + c.signer.Hex())
+	} else {
+		log.Info("i am not leader:" + c.signer.Hex())
+	}
+	log.Info("--------I am in dpor.Prepare end--------")
 
 	// Ensure the extra data has all it's components
 	if len(header.Extra) < extraVanity {
@@ -669,7 +728,23 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	if err != nil {
 		return nil, err
 	}
-	if authorized := signer == snap.Signers[block.Number().Uint64()%c.config.Epoch]; !authorized {
+	x := block.Number().Int64()
+	pb := chain.GetBlock(block.Header().ParentHash, uint64(1))
+	psigner, err := ecrecover(pb.Header(), c.signatures)
+	z := snap.Signers[(block.Number().Uint64()-1)%c.config.Epoch].Hex()
+	log.Info("------I am in dpor.Seal start------")
+	log.Info("------ready to sign block------")
+	log.Info("number:" + strconv.Itoa(int(x)))
+	log.Info("hash:" + block.Hash().Hex())
+	log.Info("signer of this block:" + signer.Hex())
+	log.Info("------previous block------")
+	log.Info("hash pb:" + pb.Hash().Hex())
+	log.Info("signer of pb:" + psigner.Hex())
+	log.Info("------leader of this round------")
+	log.Info("leader signer:" + z)
+	log.Info("------I am in dpor.Seal end------")
+
+	if authorized := signer == snap.Signers[(block.Number().Uint64()-1)%c.config.Epoch]; !authorized {
 		return nil, errUnauthorized
 	}
 	// If we're amongst the recent signers, wait for the next block
@@ -683,16 +758,21 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 			}
 		}
 	}
-	// Sweet, the protocol permits us to sign the block, wait for our time
-	delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
-	if header.Difficulty.Cmp(diffNoTurn) == 0 {
-		// It's not our turn explicitly to sign, delay it a bit
-		wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
-		delay += time.Duration(rand.Int63n(int64(wiggle)))
 
-		log.Trace("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
-	}
-	log.Trace("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
+	// TODO: fix this logic.
+	delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
+	/*
+		// Sweet, the protocol permits us to sign the block, wait for our time
+		delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
+		if header.Difficulty.Cmp(diffNoTurn) == 0 {
+			// It's not our turn explicitly to sign, delay it a bit
+			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
+			delay += time.Duration(rand.Int63n(int64(wiggle)))
+
+			log.Trace("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
+		}
+		log.Trace("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
+	*/
 
 	select {
 	case <-stop:
@@ -724,7 +804,7 @@ func (c *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func CalcDifficulty(snap *Snapshot, signer common.Address) *big.Int {
-	if snap.inturn(snap.Number+1, signer) {
+	if snap.isLeader(snap.Number+1, signer) {
 		return new(big.Int).Set(diffInTurn)
 	}
 	return new(big.Int).Set(diffNoTurn)
