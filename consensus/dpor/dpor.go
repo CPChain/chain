@@ -265,6 +265,7 @@ func (c *Dpor) Author(header *types.Header) (common.Address, error) {
 
 // VerifyHeader checks whether a header conforms to the consensus rules.
 func (c *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool) error {
+	log.Info("debug...verifyHeader", header.Number.Uint64(), header.Hash().Hex(), header.Extra)
 	return c.verifyHeader(chain, header, nil)
 }
 
