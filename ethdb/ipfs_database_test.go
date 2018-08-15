@@ -1,18 +1,18 @@
 package ethdb_test
 
 import (
-"testing"
 	"github.com/ethereum/go-ethereum/ethdb"
-	)
+	"testing"
+)
 
 type composer struct {
-	name 		string
-	birthYear 	int
+	name      string
+	birthYear int
 }
-
 
 const testDbUrl = "localhost:5001"
 const testDbWrongUrl = "localhost:5002"
+
 var normalContent = []byte("this is a placeholder for private tx payload.")
 
 // Test for putting and getting normal content
@@ -20,7 +20,7 @@ func TestIpfsDbGetPutWithNormalContent(t *testing.T) {
 	db := ethdb.NewIpfsDb(testDbUrl)
 	key, err := db.Put(normalContent)
 	if key == nil {
-		t.Errorf("Normal put operation should return a non-empty key.");
+		t.Errorf("Normal put operation should return a non-empty key.")
 	}
 	if err != nil {
 		t.Errorf("Normal put operation should succeed and return an nil error.")
