@@ -15,16 +15,9 @@ const testDbUrl = "localhost:5001"
 const testDbWrongUrl = "localhost:5002"
 var normalContent = []byte("this is a placeholder for private tx payload.")
 
-func TestIpfsDb_PutGet(t *testing.T) {
-	db := ethdb.NewIpfsDb(testDbUrl)
-	testIpfsDbWithNormalContent(t, db)
-	testIpfsDbWithEmptyValue(t, db)
-
-	testIpfsDbWithWrongUrl(t)
-}
-
 // Test for putting and getting normal content
-func testIpfsDbWithNormalContent(t *testing.T, db *ethdb.IpfsDatabase) {
+func TestIpfsDbGetPutWithNormalContent(t *testing.T) {
+	db := ethdb.NewIpfsDb(testDbUrl)
 	key, err := db.Put(normalContent)
 	if key == nil {
 		t.Errorf("Normal put operation should return a non-empty key.");
@@ -42,7 +35,8 @@ func testIpfsDbWithNormalContent(t *testing.T, db *ethdb.IpfsDatabase) {
 }
 
 // Test for putting and getting empty content
-func testIpfsDbWithEmptyValue(t *testing.T, db *ethdb.IpfsDatabase) {
+func TestIpfsDbGetPutWithEmptyValue(t *testing.T) {
+	db := ethdb.NewIpfsDb(testDbUrl)
 	// putting empty value into db should work as normal
 	emptyContent := []byte{}
 
@@ -62,7 +56,7 @@ func testIpfsDbWithEmptyValue(t *testing.T, db *ethdb.IpfsDatabase) {
 	}
 }
 
-func testIpfsDbWithWrongUrl(t *testing.T) {
+func TestIpfsDbWithWrongUrl(t *testing.T) {
 	wrongDb := ethdb.NewIpfsDb(testDbWrongUrl)
 	_, err := wrongDb.Put(normalContent)
 	if err == nil {

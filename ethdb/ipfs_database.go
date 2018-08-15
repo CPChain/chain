@@ -2,7 +2,8 @@ package ethdb
 
 import (
     "github.com/ipfs/go-ipfs-api"
-        )
+        "bytes"
+)
 
 type IpfsDatabase struct {
 	url 		string
@@ -25,12 +26,12 @@ func (db *IpfsDatabase) Get(key []byte) ([]byte, error) {
     k := string(key[:])
     reader, err := db.shell.Cat(k)
     if err != nil {
-        return []byte{}, err
+        return nil, err
     }
 
     const bufsize = 1000
     buf := make([]byte, bufsize)
-    ret := make([]byte, bufsize)
+    ret := []byte{}
     for {
         n, _ := reader.Read(buf)
         if n == 0 {
@@ -43,8 +44,14 @@ func (db *IpfsDatabase) Get(key []byte) ([]byte, error) {
 }
 
 func (db *IpfsDatabase) Put(value []byte) ([]byte, error) {
-    // TODO: implment it
-    return nil, nil
+    reader := bytes.NewBuffer(value)
+    hash, err := db.shell.Add(reader)
+
+    if err != nil {
+        return nil, err
+    } else {
+        return []byte(hash), nil
+    }
 }
 
 func (db *IpfsDatabase) Delete(key []byte) error {
