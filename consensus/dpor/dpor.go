@@ -545,7 +545,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	log.Info("number:" + strconv.Itoa(int(number)))
 	log.Info("signer:" + signer.Hex())
 	log.Info("hash:" + header.Hash().Hex())
-	log.Info("--------I am in dpor.verifySeal start--------")
+	log.Info("--------I am in dpor.verifySeal end--------")
 
 	// TODO: add our signature check method here.
 

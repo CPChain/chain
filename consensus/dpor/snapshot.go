@@ -293,11 +293,10 @@ func (s *Snapshot) isLeader(header *types.Header, address common.Address) bool {
 */
 
 func (s *Snapshot) isLeader(number uint64, signer common.Address) bool {
+
 	log.Info("checking leader: number:" + strconv.Itoa(int(number)) + "signer:" + signer.Hex())
 	log.Info("leader:" + s.signers()[(number-1)%viewLength].Hex())
-	for _, s := range s.signers() {
-		log.Info(s.Hex())
-	}
+
 	result := false
 	if signer == s.signers()[(number-1)%viewLength] {
 		result = true
