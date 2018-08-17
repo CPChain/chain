@@ -697,7 +697,7 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 
 	log.Info("--------I am in handler.BroadcastBlock start--------")
 	log.Info("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
-	log.Info("--------I am in handler.BroadcastBlock start--------")
+	log.Info("--------I am in handler.BroadcastBlock end--------")
 
 	// If propagation is requested, send to a subset of the peer
 	if propagate {

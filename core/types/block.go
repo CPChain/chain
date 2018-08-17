@@ -99,8 +99,8 @@ type headerMarshaling struct {
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
 // RLP encoding.
 func (h *Header) Hash() common.Hash {
-	// return rlpHash(h) // TODO: I changed this line, check if it is correct.
-	return sigHash(h)
+	// return rlpHash(h)
+	return sigHash(h) // TODO: this is wrong, fix this.
 }
 
 func sigHash(header *Header) (hash common.Hash) {

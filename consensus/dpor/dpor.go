@@ -48,8 +48,7 @@ const (
 
 	wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
 
-	// pctAccept = 2 / 3 // 2 / 3 of the signers' signature to accept the block
-	pctAccept = 1 / 2 // 1/2 for test.
+	pctAccept = 2 / 3 // 2 / 3 of the signers' signature to accept the block
 )
 
 // Dpor proof-of-reputation protocol constants.
@@ -511,7 +510,7 @@ func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.A
 	}
 
 	// num of sigs must > 2/3 * viewLength, leader must be in the sigs.
-	if uint64(numSigs) >= viewLength*pctAccept {
+	if uint64(numSigs) > viewLength*pctAccept {
 		enoughSigs = true
 	}
 	return enoughSigs, leaderIn, nil
@@ -541,11 +540,17 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 
 	// --- our check starts ---
 
+	// TODO: delete this.
 	log.Info("--------I am in dpor.verifySeal start--------")
 	log.Info("number:" + strconv.Itoa(int(number)))
 	log.Info("signer:" + signer.Hex())
 	log.Info("hash:" + header.Hash().Hex())
-	log.Info("--------I am in dpor.verifySeal start--------")
+	log.Info("signers:")
+	for idx, signer := range snap.signers() {
+		log.Info(strconv.Itoa(idx) + ": " + signer.Hex())
+	}
+	log.Info("--------I am in dpor.verifySeal end--------")
+	// TODO: delete this.
 
 	// TODO: add our signature check method here.
 
@@ -563,7 +568,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	if err != nil {
 		return err
 	}
-	// TODO: fix this logic.
+	// TODO: fix this logic. TODO: header.extraData ...committee|leaderSig.SignerSig.
 	if leaderIn {
 		if !enoughSigs {
 
@@ -589,6 +594,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 
 	// --- our check ends ---
 
+	// TODO: fix this.
 	/*
 		// Ensure that the difficulty corresponds to the turn-ness of the signer
 		inturn := snap.isLeader(header.Number.Uint64(), signer)
@@ -645,6 +651,8 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	}
 	// Set the correct difficulty
 	header.Difficulty = CalcDifficulty(snap, c.signer)
+
+	// TODO: delete this.
 	log.Info("--------I am in dpor.Prepare start--------")
 	log.Info("header.Difficulty:" + strconv.Itoa(int(header.Difficulty.Uint64())))
 
@@ -654,6 +662,7 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 		log.Info("i am not leader:" + c.signer.Hex())
 	}
 	log.Info("--------I am in dpor.Prepare end--------")
+	// TODO: delete this.
 
 	// Ensure the extra data has all it's components
 	if len(header.Extra) < extraVanity {
@@ -728,6 +737,8 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: delete this.
 	x := block.Number().Int64()
 	pb := chain.GetBlock(block.Header().ParentHash, uint64(1))
 	psigner, err := ecrecover(pb.Header(), c.signatures)
@@ -743,6 +754,7 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	log.Info("------leader of this round------")
 	log.Info("leader signer:" + z)
 	log.Info("------I am in dpor.Seal end------")
+	// TODO: delete this.
 
 	if authorized := signer == snap.Signers[(block.Number().Uint64()-1)%c.config.Epoch]; !authorized {
 		return nil, errUnauthorized

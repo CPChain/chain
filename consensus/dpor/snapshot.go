@@ -122,45 +122,31 @@ func (s *Snapshot) apply(headers []*types.Header) (*Snapshot, error) {
 	if len(headers) == 0 {
 		return s, nil
 	}
-	/*
-		// Sanity check that the headers can be applied
-		for i := 0; i < len(headers)-1; i++ {
-			if headers[i+1].Number.Uint64() != headers[i].Number.Uint64()+1 {
-				return nil, errInvalidVotingChain
-			}
+	// Sanity check that the headers can be applied
+	for i := 0; i < len(headers)-1; i++ {
+		if headers[i+1].Number.Uint64() != headers[i].Number.Uint64()+1 {
+			return nil, errInvalidVotingChain
 		}
-	*/
+	}
 	for _, header := range headers {
 		log.Info(strconv.Itoa(int(header.Number.Uint64())))
 	}
-	/*
-		if headers[0].Number.Uint64() != s.Number+1 {
-			log.Info("fuck the invalid voting chain")
-			log.Info("s.Number:" + strconv.Itoa(int(s.Number)))
-			log.Info("s.Number+1:" + strconv.Itoa(int(s.Number+1)))
-			log.Info("headers[0].Number.Uint64():" + strconv.Itoa(int(headers[0].Number.Uint64())))
-			return nil, errInvalidVotingChain
-		}
-	*/
+
+	if headers[0].Number.Uint64() != s.Number+1 {
+		return nil, errInvalidVotingChain
+	}
 	// Iterate through the headers and create a new snapshot
 	snap := s.copy()
-
-	/*
-		if uint64(len(headers)) != viewLength {
-			return nil, errInvalidCheckpointApplyNumber
-		}
-		// TODO: implement viewChange( rpt calc call and elect calc call) here, then get net committee.
-		snap = s.viewChange(headers, snap) // TODO: add block states to this func call.
-	*/
 
 	for _, header := range headers {
 		err := snap.applyHeader(header)
 		if err != nil {
-			// log.Fatal("Snapshot apply header error.")
+			log.Warn("Snapshot apply header error.", err)
+			return nil, err
 		}
 	}
 
-	snap.Number += uint64(len(headers))
+	snap.Number = headers[len(headers)-1].Number.Uint64()
 	snap.Hash = headers[len(headers)-1].Hash()
 
 	return snap, nil
@@ -183,31 +169,14 @@ func (s *Snapshot) applyHeader(header *types.Header) error {
 
 // TODO: fix this logic.
 func (s *Snapshot) updateCandidates(header *types.Header) error {
-	/*
-		var (
-			key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-			addr   = crypto.PubkeyToAddress(key.PublicKey)
-		)
-		// TODO: wrap this backend.
-		contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-		transactOpts := bind.NewKeyedTransactor(key)
-		instance, err := NewCampaign(transactOpts, common.HexToAddress(""), contractBackend)
-		if err != nil {
-			return err
-		}
-
-		candidates, err := instance.CandidatesOf(big.NewInt(int64(header.Number.Uint64() / viewLength)))
-		if err != nil {
-			return err
-		}
-	*/
-
+	// TODO: delete this.
 	candidates := []common.Address{
 		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
 		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
 		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
 	}
+	// TODO: above is wrong.
+	// TODO: delete this.
 
 	newCandidates := make(map[common.Address]struct{})
 	for _, candidate := range candidates {
@@ -236,35 +205,41 @@ func (s *Snapshot) calcElection(seed int64) (map[uint64]common.Address, error) {
 
 	collector := rpt.BasicCollector{}
 	rptDict := collector.GetRpts(&candidates)
+
+	// TODO: fix this.
+	rptDict[0] = rpt.RPT{
+		Address: common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+		Rpt:     50,
+	}
+	rptDict[1] = rpt.RPT{
+		Address: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+		Rpt:     100,
+	}
+	rptDict[2] = rpt.RPT{
+		Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+		Rpt:     20,
+	}
+
+	// TODO: delete this.
+	log.Info("election params:")
+	log.Info("seed: " + strconv.Itoa(int(seed)))
+	log.Info("viewLength: " + strconv.Itoa(int(viewLength)))
+	log.Info("candidates:")
+	for _, rpt := range rptDict {
+		log.Info(rpt.Address.Hex() + ": " + strconv.Itoa(int(rpt.Rpt)))
+	}
+	// TODO: delete this.
+
 	newSigners := election.Elect(rptDict, seed, viewLength)
 
-	newSigners = map[uint64]common.Address{
-		0: common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		1: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		2: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		3: common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
-	}
+	s.Signers = newSigners
 
 	return newSigners, nil
 }
 
 // signers retrieves all signers in the committee.
 func (s *Snapshot) signers() []common.Address {
-	// TODO: this is wrong. delete this leter.
-	newSigners := map[uint64]common.Address{
-		0: common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		1: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		2: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-
-		// 3: common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
-	}
-	s.Signers = newSigners
-	// END of wrong.
-
 	signers := make([]common.Address, 0, len(s.Signers))
-	// for _, signer := range s.Signers {
-	// signers = append(signers, signer)
-	// }
 	for i := 0; i < len(s.Signers); i++ {
 		signers = append(signers, s.Signers[uint64(i)])
 	}
@@ -282,22 +257,13 @@ func (s *Snapshot) isSigner(address common.Address) bool {
 	return result
 }
 
-/*
-func (s *Snapshot) isLeader(header *types.Header, address common.Address) bool {
-	result := false
-	if address == s.signers()[(header.Number.Uint64()-1)%viewLength] {
-		result = true
-	}
-	return result
-}
-*/
-
 func (s *Snapshot) isLeader(number uint64, signer common.Address) bool {
+
+	// TODO: delete this.
 	log.Info("checking leader: number:" + strconv.Itoa(int(number)) + "signer:" + signer.Hex())
 	log.Info("leader:" + s.signers()[(number-1)%viewLength].Hex())
-	for _, s := range s.signers() {
-		log.Info(s.Hex())
-	}
+	// TODO: delete this.
+
 	result := false
 	if signer == s.signers()[(number-1)%viewLength] {
 		result = true
