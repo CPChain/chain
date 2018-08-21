@@ -19,7 +19,6 @@ package dpor
 import (
 	"encoding/json"
 	// "log"
-	"strconv"
 
 	// "net/rpc"
 
@@ -128,9 +127,6 @@ func (s *Snapshot) apply(headers []*types.Header) (*Snapshot, error) {
 			return nil, errInvalidVotingChain
 		}
 	}
-	for _, header := range headers {
-		log.Info(strconv.Itoa(int(header.Number.Uint64())))
-	}
 
 	if headers[0].Number.Uint64() != s.Number+1 {
 		return nil, errInvalidVotingChain
@@ -220,16 +216,6 @@ func (s *Snapshot) calcElection(seed int64) (map[uint64]common.Address, error) {
 		Rpt:     20,
 	}
 
-	// TODO: delete this.
-	log.Info("election params:")
-	log.Info("seed: " + strconv.Itoa(int(seed)))
-	log.Info("viewLength: " + strconv.Itoa(int(viewLength)))
-	log.Info("candidates:")
-	for _, rpt := range rptDict {
-		log.Info(rpt.Address.Hex() + ": " + strconv.Itoa(int(rpt.Rpt)))
-	}
-	// TODO: delete this.
-
 	newSigners := election.Elect(rptDict, seed, viewLength)
 
 	s.Signers = newSigners
@@ -258,12 +244,6 @@ func (s *Snapshot) isSigner(address common.Address) bool {
 }
 
 func (s *Snapshot) isLeader(number uint64, signer common.Address) bool {
-
-	// TODO: delete this.
-	log.Info("checking leader: number:" + strconv.Itoa(int(number)) + "signer:" + signer.Hex())
-	log.Info("leader:" + s.signers()[(number-1)%viewLength].Hex())
-	// TODO: delete this.
-
 	result := false
 	if signer == s.signers()[(number-1)%viewLength] {
 		result = true
