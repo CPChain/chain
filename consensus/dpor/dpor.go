@@ -198,8 +198,8 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, co
 	if len(header.Extra) < extraSeal {
 		return common.Address{}, common.Address{}, errMissingSignature
 	}
-	leaderSig := header.Extra[len(header.Extra)-extraSeal*2 : len(header.Extra)-extraSeal]
-	signerSig := header.Extra[len(header.Extra)-extraSeal:]
+	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
+	signerSig := header.Extra1[:]
 
 	// Recover the public key and the Ethereum address
 	leaderPubkey, err := crypto.Ecrecover(sigHash(header, true).Bytes(), leaderSig)
@@ -338,11 +338,11 @@ func (c *Dpor) verifyHeader(chain consensus.ChainReader, header *types.Header, p
 	if len(header.Extra) < extraVanity {
 		return errMissingVanity
 	}
-	if len(header.Extra) < extraVanity+extraSeal*2 {
+	if len(header.Extra) < extraVanity+extraSeal {
 		return errMissingSignature
 	}
 	// Ensure that the extra-data contains a signer list on checkpoint, but none otherwise
-	signersBytes := len(header.Extra) - extraVanity - extraSeal*2
+	signersBytes := len(header.Extra) - extraVanity - extraSeal
 	// if !checkpoint && signersBytes != 0 {
 	// return errExtraSigners
 	// }
@@ -405,7 +405,7 @@ func (c *Dpor) verifyCascadingFields(chain consensus.ChainReader, header *types.
 		for i, signer := range snap.signers() {
 			copy(signers[i*common.AddressLength:], signer[:])
 		}
-		extraSuffix := len(header.Extra) - extraSeal*2
+		extraSuffix := len(header.Extra) - extraSeal
 		if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
 			return errInvalidCheckpointSigners
 		}
@@ -441,7 +441,7 @@ func (c *Dpor) snapshot(chain consensus.ChainReader, number uint64, hash common.
 			if err := c.VerifyHeader(chain, genesis, false); err != nil {
 				return nil, err
 			}
-			signers := make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal*2)/common.AddressLength)
+			signers := make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal)/common.AddressLength)
 			for i := 0; i < len(signers); i++ {
 				copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
 			}
@@ -598,7 +598,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 			if err != nil {
 				return err
 			}
-			copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
+			copy(header.Extra1[:], sighash)
 		} else {
 
 			if int(currentNum)-int(number) > int(2*c.config.Epoch) {
@@ -685,7 +685,8 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 		header.Extra = append(header.Extra, signer[:]...)
 	}
 	// }
-	header.Extra = append(header.Extra, make([]byte, extraSeal*2)...)
+	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
+	header.Extra1 = make([]byte, extraSeal)
 
 	// Mix digest is reserved for now, set to empty
 	header.MixDigest = common.Hash{}
@@ -788,7 +789,7 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	if err != nil {
 		return nil, err
 	}
-	copy(header.Extra[len(header.Extra)-extraSeal*2:len(header.Extra)-extraSeal], sighash)
+	copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
 
 	return block.WithSeal(header), nil
 }
