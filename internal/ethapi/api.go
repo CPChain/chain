@@ -40,6 +40,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/private"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -1119,6 +1120,10 @@ type SendTxArgs struct {
 	// newer name and should be preferred by clients.
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input"`
+
+	// CPC Private Tx Implement
+	PrivateFrom  string   `json:"privateFrom"`
+	Participants []string `json:"participants"`
 }
 
 // setDefaults is a helper function that fills in default values for unspecified tx fields.
@@ -1217,6 +1222,19 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	if err := args.setDefaults(ctx, s.b); err != nil {
 		return common.Hash{}, err
 	}
+
+	// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
+	isPrivate := len(args.PrivateFrom) != 0 && len(args.Participants) != 0 && args.Data != nil
+	if isPrivate {
+		sealedAddr, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce))
+		if err != nil {
+			panic(err)
+		}
+
+		// Replace original content with security one.
+		args.Data = (*hexutil.Bytes)(&sealedAddr)
+	}
+
 	// Assemble the transaction and sign with the wallet
 	tx := args.toTransaction()
 

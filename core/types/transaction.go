@@ -173,6 +173,7 @@ func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.data.Pri
 func (tx *Transaction) Value() *big.Int    { return new(big.Int).Set(tx.data.Amount) }
 func (tx *Transaction) Nonce() uint64      { return tx.data.AccountNonce }
 func (tx *Transaction) CheckNonce() bool   { return true }
+func (tx *Transaction) IsPrivate() bool    { return true } // TODO: temporarily return true for debugging private tx
 
 // To returns the recipient address of the transaction.
 // It returns nil if the transaction is a contract creation.
@@ -249,6 +250,14 @@ func (tx *Transaction) Cost() *big.Int {
 
 func (tx *Transaction) RawSignatureValues() (*big.Int, *big.Int, *big.Int) {
 	return tx.data.V, tx.data.R, tx.data.S
+}
+
+func (tx *Transaction) GetV() uint64 {
+	return tx.data.V.Uint64()
+}
+
+func (tx *Transaction) SetV(v uint64) {
+	tx.data.V.SetUint64(v)
 }
 
 // Transactions is a Transaction slice type for basic sorting.
