@@ -49,11 +49,7 @@ func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.Simulat
 }
 
 func TestDeployCampaign(t *testing.T) {
-	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-
-	//consensusEngine := NewFaker()
-	//contractBackend := backends.NewSimulatedBackendWithType(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}}, consensusEngine, params.AllCpchainProtocolChanges)
-
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
 	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 
@@ -99,7 +95,7 @@ func checkError(t *testing.T, msg string, err error) {
 }
 
 func TestClaimAndQuitCampaign(t *testing.T) {
-	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
@@ -180,7 +176,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 }
 
 func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
-	contractBackend := backends.NewSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
