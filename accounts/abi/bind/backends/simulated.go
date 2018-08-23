@@ -87,6 +87,7 @@ func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	database := ethdb.NewMemDatabase()
 	genesis := core.Genesis{Config: params.AllCpchainProtocolChanges, Alloc: alloc}
 	genesis.MustCommit(database)
+	// TODO we need our own NewFaker(), `ethash.NewFaker' does nothing.
 	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{})
 
 	backend := &SimulatedBackend{
