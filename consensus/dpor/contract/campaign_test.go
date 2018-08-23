@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"os"
+	"path/filepath"
 
 	"testing"
 
@@ -32,7 +34,8 @@ func TestCampaign(t *testing.T) {
 
 	// create account.
 	// privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
-	keyPath := "/home/jsyqrt/go/src/github.com/ethereum/go-ethereum/examples/cpchain/data/dd1/keystore/"
+	file, _ := os.Open("../../../examples/cpchain/data/dd1/keystore/")
+	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
 	kst := keystore.NewKeyStore(keyPath, 2, 1)
 	account := kst.Accounts()[0]
 	account, key, err := kst.GetDecryptedKey(account, "password")

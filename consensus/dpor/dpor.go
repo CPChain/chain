@@ -19,7 +19,6 @@ package dpor
 
 import (
 	"bytes"
-	"encoding/hex"
 	"errors"
 	"math/big"
 	"strconv"
@@ -43,13 +42,13 @@ import (
 )
 
 const (
-	checkpointInterval = 3 // Number of blocks after which to save the vote snapshot to the database
-	inmemorySnapshots  = 6 // Number of recent vote snapshots to keep in memory
-	inmemorySignatures = 6 // Number of recent block signatures to keep in memory
+	checkpointInterval = 3    // Number of blocks after which to save the vote snapshot to the database
+	inmemorySnapshots  = 1000 // Number of recent vote snapshots to keep in memory
+	inmemorySignatures = 1000 // Number of recent block signatures to keep in memory
 
 	wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
 
-	pctAccept = 2 / 3 // 2 / 3 of the signers' signature to accept the block
+	pctAccept = 0.667 // 2 / 3 of the signers' signature to accept the block
 )
 
 // Dpor proof-of-reputation protocol constants.
@@ -136,9 +135,6 @@ var (
 
 	// --- our new error types ---
 
-	// errNotEnoughSigs is returned if there is not enough sigatures.
-	errNotEnoughSigs = errors.New("not enough sigs")
-
 	// errMultiBlockInOneHeight is returned if there is multi blocks in one height in the chain.
 	errMultiBlockInOnHeight = errors.New("multi blocks in one height")
 
@@ -202,10 +198,8 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, co
 	if len(header.Extra) < extraSeal {
 		return common.Address{}, common.Address{}, errMissingSignature
 	}
-	leaderSig := header.Extra[len(header.Extra)-extraSeal*2 : len(header.Extra)-extraSeal]
-	signerSig := header.Extra[len(header.Extra)-extraSeal:]
-	log.Info(hex.Dump(leaderSig))
-	log.Info(hex.Dump(signerSig))
+	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
+	signerSig := header.Extra1[:]
 
 	// Recover the public key and the Ethereum address
 	leaderPubkey, err := crypto.Ecrecover(sigHash(header, true).Bytes(), leaderSig)
@@ -344,11 +338,11 @@ func (c *Dpor) verifyHeader(chain consensus.ChainReader, header *types.Header, p
 	if len(header.Extra) < extraVanity {
 		return errMissingVanity
 	}
-	if len(header.Extra) < extraVanity+extraSeal*2 {
+	if len(header.Extra) < extraVanity+extraSeal {
 		return errMissingSignature
 	}
 	// Ensure that the extra-data contains a signer list on checkpoint, but none otherwise
-	signersBytes := len(header.Extra) - extraVanity - extraSeal*2
+	signersBytes := len(header.Extra) - extraVanity - extraSeal
 	// if !checkpoint && signersBytes != 0 {
 	// return errExtraSigners
 	// }
@@ -411,7 +405,7 @@ func (c *Dpor) verifyCascadingFields(chain consensus.ChainReader, header *types.
 		for i, signer := range snap.signers() {
 			copy(signers[i*common.AddressLength:], signer[:])
 		}
-		extraSuffix := len(header.Extra) - extraSeal*2
+		extraSuffix := len(header.Extra) - extraSeal
 		if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
 			return errInvalidCheckpointSigners
 		}
@@ -447,7 +441,7 @@ func (c *Dpor) snapshot(chain consensus.ChainReader, number uint64, hash common.
 			if err := c.VerifyHeader(chain, genesis, false); err != nil {
 				return nil, err
 			}
-			signers := make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal*2)/common.AddressLength)
+			signers := make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal)/common.AddressLength)
 			for i := 0; i < len(signers); i++ {
 				copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
 			}
@@ -532,7 +526,7 @@ func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.A
 	}
 
 	// num of sigs must > 2/3 * viewLength, leader must be in the sigs.
-	if uint64(numSigs) > pctAccept*viewLength {
+	if uint64(numSigs) > uint64(pctAccept*float64(viewLength)) {
 		accept = true
 	}
 	return accept, nil
@@ -561,20 +555,13 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	}
 
 	// --- our check starts ---
-
-	// TODO: delete this.
-	log.Info("--------I am in dpor.verifySeal start--------")
-	log.Info("number:" + strconv.Itoa(int(number)))
-	log.Info("signer:" + signer.Hex())
-	log.Info("hash:" + header.Hash().Hex())
-	log.Info("signers:")
-	for idx, signer := range snap.signers() {
-		log.Info(strconv.Itoa(idx) + ": " + signer.Hex())
-	}
-	log.Info("--------I am in dpor.verifySeal end--------")
-	// TODO: delete this.
-
 	// TODO: add our signature check method here.
+	log.Info("--------I am in dpor.verifySeal start--------")
+	log.Info("number: " + strconv.Itoa(int(header.Number.Uint64())))
+	log.Info("leader: " + leader.Hex())
+	log.Info("signer: " + signer.Hex())
+	log.Info("current header: " + strconv.Itoa(int(chain.CurrentHeader().Number.Uint64())))
+	log.Info("--------I am in dpor.verifySeal end--------")
 
 	// TODO: change Hash func in core/types/block.go to
 	// change hash method to exclude signature in extraData. Done.
@@ -588,6 +575,8 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	// if ok := snap.isSigner(signer); !ok {
 	// return errUnauthorized
 	// }
+
+	currentNum := chain.CurrentHeader().Number.Uint64()
 
 	// check if accept the sigs and if leader is in the sigs.
 	// enoughSigs, leaderIn, err := acceptSigs(header, c.signatures, snap.signers())
@@ -609,9 +598,19 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 			if err != nil {
 				return err
 			}
-			copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
+			copy(header.Extra1[:], sighash)
 		} else {
-			return errNotEnoughSigs
+
+			if int(currentNum)-int(number) > int(2*c.config.Epoch) {
+				log.Info(strconv.Itoa(int(currentNum)))
+				log.Info(strconv.Itoa(int(number)))
+				log.Info(strconv.Itoa(int(2 * c.config.Epoch)))
+				if chain.GetHeaderByNumber(number).Hash() != header.Hash() {
+					return consensus.ErrUnknownAncestor
+				}
+			} else {
+				return consensus.ErrNotEnoughSigs
+			}
 		}
 	}
 
@@ -675,18 +674,6 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	// Set the correct difficulty
 	header.Difficulty = CalcDifficulty(snap, c.signer)
 
-	// TODO: delete this.
-	log.Info("--------I am in dpor.Prepare start--------")
-	log.Info("header.Difficulty:" + strconv.Itoa(int(header.Difficulty.Uint64())))
-
-	if snap.isLeader(header.Number.Uint64(), c.signer) {
-		log.Info("i am leader:" + c.signer.Hex())
-	} else {
-		log.Info("i am not leader:" + c.signer.Hex())
-	}
-	log.Info("--------I am in dpor.Prepare end--------")
-	// TODO: delete this.
-
 	// Ensure the extra data has all it's components
 	if len(header.Extra) < extraVanity {
 		header.Extra = append(header.Extra, bytes.Repeat([]byte{0x00}, extraVanity-len(header.Extra))...)
@@ -698,9 +685,8 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 		header.Extra = append(header.Extra, signer[:]...)
 	}
 	// }
-	header.Extra = append(header.Extra, make([]byte, extraSeal*2)...)
-
-	log.Info("extra length:" + strconv.Itoa(len(header.Extra)))
+	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
+	header.Extra1 = make([]byte, extraSeal)
 
 	// Mix digest is reserved for now, set to empty
 	header.MixDigest = common.Hash{}
@@ -763,25 +749,6 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 
-	// TODO: delete this.
-	x := block.Number().Int64()
-	pb := chain.GetBlock(block.Header().ParentHash, uint64(1))
-	pleader, psigner, err := ecrecover(pb.Header(), c.signatures)
-	z := snap.Signers[(block.Number().Uint64()-1)%c.config.Epoch].Hex()
-	log.Info("------I am in dpor.Seal start------")
-	log.Info("------ready to sign block------")
-	log.Info("number:" + strconv.Itoa(int(x)))
-	log.Info("hash:" + block.Hash().Hex())
-	log.Info("signer of this block:" + signer.Hex())
-	log.Info("------previous block------")
-	log.Info("hash pb:" + pb.Hash().Hex())
-	log.Info("leader of pb:" + pleader.Hex())
-	log.Info("signer of pb:" + psigner.Hex())
-	log.Info("------leader of this round------")
-	log.Info("leader signer:" + z)
-	log.Info("------I am in dpor.Seal end------")
-	// TODO: delete this.
-
 	if authorized := signer == snap.Signers[(block.Number().Uint64()-1)%c.config.Epoch]; !authorized {
 		return nil, errUnauthorized
 	}
@@ -822,10 +789,7 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	if err != nil {
 		return nil, err
 	}
-	copy(header.Extra[len(header.Extra)-extraSeal*2:len(header.Extra)-extraSeal], sighash)
-	log.Info("sig length:" + strconv.Itoa(len(sighash)))
-	log.Info("sealed dump:" + strconv.Itoa(len(header.Extra)))
-	log.Info(hex.Dump(header.Extra))
+	copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
 
 	return block.WithSeal(header), nil
 }

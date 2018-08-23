@@ -34,4 +34,7 @@ var (
 	// ErrInvalidNumber is returned if a block's number doesn't equal it's parent's
 	// plus one.
 	ErrInvalidNumber = errors.New("invalid block number")
+
+	// ErrNotEnoughSigs is returned if there is not enough signatures for a block.
+	ErrNotEnoughSigs = errors.New("not enough sigs")
 )

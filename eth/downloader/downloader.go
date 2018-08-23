@@ -25,6 +25,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ethereum/go-ethereum/consensus"
+
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -330,6 +332,9 @@ func (d *Downloader) Synchronise(id string, head common.Hash, td *big.Int, mode 
 		} else {
 			d.dropPeer(id)
 		}
+	case consensus.ErrNotEnoughSigs:
+		log.Warn("Not enough signatures, waiting", "err", err)
+
 	default:
 		log.Warn("Synchronisation failed, retrying", "err", err)
 	}
@@ -1360,6 +1365,10 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 	}
 	if index, err := d.blockchain.InsertChain(blocks); err != nil {
 		log.Debug("Downloaded item processing failed", "number", results[index].Header.Number, "hash", results[index].Header.Hash(), "err", err)
+		// TODO: fix this.
+		if err == consensus.ErrNotEnoughSigs {
+			return err
+		}
 		return errInvalidChain
 	}
 	return nil
