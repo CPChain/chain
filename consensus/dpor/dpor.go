@@ -278,6 +278,29 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 	}
 }
 
+// NewFaker creates a ethash consensus engine with a fake PoW scheme that accepts
+// all blocks' seal as valid, though they still have to conform to the Ethereum
+// consensus rules.
+// TODO @xumx
+//func NewFaker() *Dpor {
+//	// Set any missing consensus parameters to their defaults
+//	conf := &params.DporConfig{
+//		Period: 1,
+//		Epoch:  10,
+//	}
+//	// Allocate the snapshot caches and create the engine
+//	recents, _ := lru.NewARC(inmemorySnapshots)
+//	signatures, _ := lru.NewARC(inmemorySignatures)
+//	database := ethdb.NewMemDatabase()
+//	return &Dpor{
+//		config:     conf,
+//		db:         database,
+//		recents:    recents,
+//		signatures: signatures,
+//		proposals:  make(map[common.Address]bool),
+//	}
+//}
+
 // Author implements consensus.Engine, returning the Ethereum address recovered
 // from the signature in the header's extra-data section.
 func (c *Dpor) Author(header *types.Header) (common.Address, error) {
