@@ -198,8 +198,11 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, co
 	if len(header.Extra) < extraSeal {
 		return common.Address{}, common.Address{}, errMissingSignature
 	}
+
+	// header.Extra[extraVanity:Committee:leader-sig]
+	// header.Extra2[signer0-sig:signer1-sig:...:signerN-sig]
 	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
-	signerSig := header.Extra1[:]
+	signerSig := header.Extra2[:]
 
 	// Recover the public key and the Ethereum address
 	leaderPubkey, err := crypto.Ecrecover(sigHash(header, true).Bytes(), leaderSig)
@@ -274,6 +277,29 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 		// proposals:  make(map[common.Address]bool),
 	}
 }
+
+// NewFaker creates a ethash consensus engine with a fake PoW scheme that accepts
+// all blocks' seal as valid, though they still have to conform to the Ethereum
+// consensus rules.
+// TODO @xumx
+//func NewFaker() *Dpor {
+//	// Set any missing consensus parameters to their defaults
+//	conf := &params.DporConfig{
+//		Period: 1,
+//		Epoch:  10,
+//	}
+//	// Allocate the snapshot caches and create the engine
+//	recents, _ := lru.NewARC(inmemorySnapshots)
+//	signatures, _ := lru.NewARC(inmemorySignatures)
+//	database := ethdb.NewMemDatabase()
+//	return &Dpor{
+//		config:     conf,
+//		db:         database,
+//		recents:    recents,
+//		signatures: signatures,
+//		proposals:  make(map[common.Address]bool),
+//	}
+//}
 
 // Author implements consensus.Engine, returning the Ethereum address recovered
 // from the signature in the header's extra-data section.
@@ -598,7 +624,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 			if err != nil {
 				return err
 			}
-			copy(header.Extra1[:], sighash)
+			copy(header.Extra2[:], sighash)
 		} else {
 
 			if int(currentNum)-int(number) > int(2*c.config.Epoch) {
@@ -686,7 +712,7 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	}
 	// }
 	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
-	header.Extra1 = make([]byte, extraSeal)
+	header.Extra2 = make([]byte, extraSeal)
 
 	// Mix digest is reserved for now, set to empty
 	header.MixDigest = common.Hash{}

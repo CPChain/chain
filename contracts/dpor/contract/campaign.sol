@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.24;
 
 library Set {
     // We define a new struct datatype that will be used to
@@ -15,7 +15,7 @@ library Set {
     // to call the first parameter 'self', if the function can
     // be seen as a method of that object.
     function insert(Data storage self, address value)
-      public returns (bool)
+      internal returns (bool)
     {
         if (self.flags[value])
             return false; // already there
@@ -25,27 +25,33 @@ library Set {
     }
 
     function remove(Data storage self, address value)
-       public returns (bool)
+       internal returns (bool)
     {
         if (!self.flags[value])
             return false; // not there
         self.flags[value] = false;
+
         for (uint i = 0 ; i < self.values.length ; i++){
             if (self.values[i] == value){
-                delete self.values[i];
+                for (uint j = i; j<self.values.length-1; j++){
+                    self.values[j] = self.values[j+1];
+                }
+                delete self.values[self.values.length-1];
+                self.values.length--;
+                break;
             }
         }
         return true;
     }
 
     function contains(Data storage self, address value)
-       public view returns (bool)
+       internal view returns (bool)
     {
         return self.flags[value];
     }
 
     function getAll(Data storage self)
-       public view returns (address[])
+       internal view returns (address[])
     {
         return self.values;
     }
@@ -92,7 +98,6 @@ contract Campaign {
             require((candidates[candidate].numOfCampaign + num_of_campaign >= minimumNoc && candidates[candidate].numOfCampaign + num_of_campaign <= maximumNoc), "num of campaign out of range.");
             candidates[candidate].numOfCampaign += num_of_campaign;
             candidates[candidate].deposit += msg.value;
-            candidates[candidate].startViewIdx = viewIdx;
         }
 
         // add candidate to campaignSnapshots.
@@ -105,15 +110,15 @@ contract Campaign {
     function QuitCampaign() public payable {
         address candidate = msg.sender;
         require(candidates[candidate].numOfCampaign > 0, "already quit campaign.");
-
-        candidates[candidate] = CandidateInfo(0, 0, 0);
-
-        candidate.transfer(candidates[candidate].deposit);
-
         // remove candidate from current view snapshot
-        for(uint i = candidates[candidate].startViewIdx; i < candidates[candidate].numOfCampaign; i++) {
+        for(uint i = viewIdx; i < candidates[candidate].startViewIdx + candidates[candidate].numOfCampaign; i++) {
+            if(candidates[candidate].deposit >= baseDeposit){
+                candidates[candidate].deposit -= baseDeposit;
+                candidate.transfer(baseDeposit);
+            }
             campaignSnapshots[i].remove(candidate);
         }
+        candidates[candidate].numOfCampaign = 0;
     }
 
     function CandidatesOf(uint view_idx) public view returns (address[]){
@@ -125,12 +130,12 @@ contract Campaign {
     }
 
     // TODO. add restriction that only last commissioner can call this with require statement.
-    function ViewChange() public {
+    function ViewChange() public payable {
         for(uint i = 0; i < campaignSnapshots[viewIdx].values.length; i++){
             address candidate = campaignSnapshots[viewIdx].values[i];
             if(candidates[candidate].deposit >= baseDeposit){
                 candidates[candidate].deposit -= baseDeposit;
-                campaignSnapshots[viewIdx].values[i].transfer(baseDeposit);
+                candidate.transfer(baseDeposit);
             }
         }
         viewIdx = viewIdx + 1;
