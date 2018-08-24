@@ -66,10 +66,91 @@ func TestCopySnapshot(t *testing.T) {
 	}
 }
 
+// TODO test me later
+func TestApplyHeader(t *testing.T) {
+	t.Skip("test me later")
+}
+
+func TestUpdateCandidates(t *testing.T) {
+	t.Skip("not implemented,test me later")
+}
+
+func TestUpdateRpts(t *testing.T) {
+	t.Skip("not implemented,test me later")
+}
+
+func TestUpdateView(t *testing.T) {
+	t.Skip("not implemented,test me later")
+}
+
+func TestCalcElection(t *testing.T) {
+	t.Skip("not implemented,test me later")
+}
+
+func TestInturn(t *testing.T) {
+	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	tests := []struct {
+		number         uint64
+		addr           common.Address
+		expectedResult bool
+	}{
+		{0, addr1, true},
+		{0, addr2, false},
+		{0, addr3, false},
+		{1, addr1, false},
+		{1, addr2, true},
+		{1, addr3, false},
+		{2, addr1, false},
+		{2, addr2, false},
+		{2, addr3, true},
+		{3, addr1, true},
+		{3, addr2, false},
+		{3, addr3, false},
+		{4, addr1, false},
+		{4, addr2, true},
+		{4, addr3, false},
+		{5, addr1, false},
+		{5, addr2, false},
+		{5, addr3, true},
+	}
+
+	for _, tt := range tests {
+		assertInturn(snap, t, tt.number, tt.addr, tt.expectedResult)
+	}
+}
+
+func assertInturn(snap *Snapshot, t *testing.T, number uint64, addr common.Address, expectedResult bool) {
+	inturn := snap.inturn(number, addr)
+	if inturn != expectedResult {
+		t.Errorf("expected result is %v,get %v,number:%v,addr:%v", expectedResult, inturn, number, addr)
+	}
+}
+
+func TestIsSigner(t *testing.T) {
+	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress()[1:2])
+	isSinger := snap.isSigner(addr1)
+	if isSinger {
+		t.Errorf("expected isSinger %v,get %v", false, isSinger)
+	}
+	isSinger = snap.isSigner(addr2)
+	if !isSinger {
+		t.Errorf("expected isSinger %v,get %v", true, isSinger)
+	}
+}
+
+func TestSigners(t *testing.T) {
+	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	signers := snap.signers()
+	equalSigner := reflect.DeepEqual(signers, getSignerAddress())
+	if !equalSigner {
+		t.Errorf("expected isEqualSigner is %v,get %v", true, equalSigner)
+	}
+}
+
 func TestIsLeader(t *testing.T) {
 	isLeader := snapIsLeader(addr1)
 	if !isLeader {
-		t.Errorf("expect isLeader true get %v", isLeader)
+		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
 }
 
