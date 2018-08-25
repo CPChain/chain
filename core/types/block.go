@@ -94,6 +94,7 @@ type headerMarshaling struct {
 	GasUsed    hexutil.Uint64
 	Time       *hexutil.Big
 	Extra      hexutil.Bytes
+	Extra2     hexutil.Bytes
 	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
 }
 
@@ -120,7 +121,6 @@ func sigHash(header *Header) (hash common.Hash) {
 		header.GasLimit,
 		header.GasUsed,
 		header.Time,
-		// header.Extra[:len(header.Extra)-65], // Yes, this will panic if extra is too short
 		header.Extra,
 		header.MixDigest,
 		header.Nonce,
@@ -280,6 +280,10 @@ func CopyHeader(h *Header) *Header {
 		cpy.Extra = make([]byte, len(h.Extra))
 		copy(cpy.Extra, h.Extra)
 	}
+	if len(h.Extra2) > 0 {
+		cpy.Extra2 = make([]byte, len(h.Extra2))
+		copy(cpy.Extra2, h.Extra2)
+	}
 	return &cpy
 }
 
@@ -345,6 +349,7 @@ func (b *Block) TxHash() common.Hash      { return b.header.TxHash }
 func (b *Block) ReceiptHash() common.Hash { return b.header.ReceiptHash }
 func (b *Block) UncleHash() common.Hash   { return b.header.UncleHash }
 func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Extra) }
+func (b *Block) Extra2() []byte           { return common.CopyBytes(b.header.Extra2) }
 
 func (b *Block) Header() *Header { return b.header } // TODO: fix it.
 // func (b *Block) Header() *Header { return CopyHeader(b.header) }

@@ -29,7 +29,7 @@ func (h Header) MarshalJSON() ([]byte, error) {
 		GasUsed     hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time        *hexutil.Big   `json:"timestamp"        gencodec:"required"`
 		Extra       hexutil.Bytes  `json:"extraData"        gencodec:"required"`
-		Extra2      []byte         `json:"extraData2"       gencodec:"required"`
+		Extra2      hexutil.Bytes  `json:"extraData2"       gencodec:"required"`
 		MixDigest   common.Hash    `json:"mixHash"          gencodec:"required"`
 		Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
 		Hash        common.Hash    `json:"hash"`
@@ -71,7 +71,7 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		GasUsed     *hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time        *hexutil.Big    `json:"timestamp"        gencodec:"required"`
 		Extra       *hexutil.Bytes  `json:"extraData"        gencodec:"required"`
-		Extra2      []byte          `json:"extraData2"       gencodec:"required"`
+		Extra2      *hexutil.Bytes  `json:"extraData2"       gencodec:"required"`
 		MixDigest   *common.Hash    `json:"mixHash"          gencodec:"required"`
 		Nonce       *BlockNonce     `json:"nonce"            gencodec:"required"`
 	}
@@ -134,7 +134,7 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 	if dec.Extra2 == nil {
 		return errors.New("missing required field 'extraData2' for Header")
 	}
-	h.Extra2 = dec.Extra2
+	h.Extra2 = *dec.Extra2
 	if dec.MixDigest == nil {
 		return errors.New("missing required field 'mixHash' for Header")
 	}

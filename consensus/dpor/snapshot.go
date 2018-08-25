@@ -40,11 +40,9 @@ type Snapshot struct {
 	Number uint64      `json:"number"` // Block number where the snapshot was created
 	Hash   common.Hash `json:"hash"`   // Block hash where the snapshot was created
 
-	Signers    map[uint64]common.Address   `json:"signers"`    // Set of authorized signers at this moment
-	Recents    map[uint64]common.Address   `json:"recents"`    // Set of recent signers for spam protections
-	Candidates map[common.Address]struct{} `json:"candidates"` // Set of candidates read from campaign contract
-
-	// Signers    map[common.Address]struct{} `json:"signers"`    // Set of authorized signers at this moment
+	signers    []common.Address          `json:"signers"`    // Set of authorized signers at this moment
+	candidates []common.Address          `json:"candidates"` // Set of candidates read from campaign contract
+	Recents    map[uint64]common.Address `json:"recents"`    // Set of recent signers for spam protections
 }
 
 // newSnapshot creates a new snapshot with the specified startup parameters. This
@@ -52,16 +50,15 @@ type Snapshot struct {
 // the genesis block.
 func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint64, hash common.Hash, signers []common.Address) *Snapshot {
 	snap := &Snapshot{
-		config:     config,
-		sigcache:   sigcache,
-		Number:     number,
-		Hash:       hash,
-		Signers:    make(map[uint64]common.Address),
-		Recents:    make(map[uint64]common.Address),
-		Candidates: make(map[common.Address]struct{}),
+		config:   config,
+		sigcache: sigcache,
+		Number:   number,
+		Hash:     hash,
+		signers:  make([]common.Address, config.Epoch),
+		Recents:  make(map[uint64]common.Address),
 	}
-	for idx, signer := range signers {
-		snap.Signers[uint64(idx)] = signer
+	for round, signer := range signers {
+		snap.signers[round] = signer
 	}
 	return snap
 }
@@ -98,18 +95,18 @@ func (s *Snapshot) copy() *Snapshot {
 		sigcache:   s.sigcache,
 		Number:     s.Number,
 		Hash:       s.Hash,
-		Signers:    make(map[uint64]common.Address),
+		signers:    make([]common.Address, s.config.Epoch),
+		candidates: make([]common.Address, len(s.candidates)),
 		Recents:    make(map[uint64]common.Address),
-		Candidates: make(map[common.Address]struct{}),
 	}
-	for idx, signer := range s.Signers {
-		cpy.Signers[idx] = signer
+	for round, signer := range s.signers {
+		cpy.signers[round] = signer
 	}
 	for block, signer := range s.Recents {
 		cpy.Recents[block] = signer
 	}
-	for candidate := range s.Candidates {
-		cpy.Candidates[candidate] = struct{}{}
+	for idx, candidate := range s.candidates {
+		cpy.candidates[idx] = candidate
 	}
 	return cpy
 }
@@ -155,10 +152,16 @@ func (s *Snapshot) applyHeader(header *types.Header) error {
 	s.Hash = header.Hash()
 
 	s.updateCandidates(header)
-	s.updateRpts(header)
 
 	if s.Number%checkpointInterval == 0 {
-		s.updateView(header.Hash().Big().Int64())
+		rpts, err := s.updateRpts(header)
+		if err != nil {
+			return err
+		}
+
+		seed := header.Hash().Big().Int64()
+		viewLength := int(s.config.Epoch)
+		s.updateView(rpts, seed, viewLength)
 	}
 	return nil
 }
@@ -172,99 +175,77 @@ func (s *Snapshot) updateCandidates(header *types.Header) error {
 		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
 	}
 	// TODO: above is wrong.
-	// TODO: delete this.
 
-	newCandidates := make(map[common.Address]struct{})
-	for _, candidate := range candidates {
-		newCandidates[candidate] = struct{}{}
-	}
-	s.Candidates = newCandidates
-
+	s.candidates = candidates
 	return nil
 }
 
 // TODO: implement this func to get rpts for candidates. maybe save it as a map.
-func (s *Snapshot) updateRpts(header *types.Header) error {
-	return nil
-}
-
-// viewChange use rpt and election result to get new committee(signers).
-func (s *Snapshot) updateView(seed int64) error {
-	s.calcElection(seed)
-	return nil
-}
-
-// TODO: finish this func.
-func (s *Snapshot) calcElection(seed int64) (map[uint64]common.Address, error) {
-	viewLength := int(s.config.Epoch)
-	candidates := s.candidates()
-
-	collector := rpt.BasicCollector{}
-	rptDict := collector.GetRpts(&candidates)
+func (s *Snapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 
 	// TODO: fix this.
-	rptDict[0] = rpt.RPT{
-		Address: common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		Rpt:     50,
-	}
-	rptDict[1] = rpt.RPT{
-		Address: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		Rpt:     100,
-	}
-	rptDict[2] = rpt.RPT{
-		Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		Rpt:     20,
-	}
+	/*
+		collector := rpt.BasicCollector{}
+		rpts := collector.GetRpts(&candidates, header.Number.Uint64())
+	*/
 
-	newSigners := election.Elect(rptDict, seed, viewLength)
+	rpts := rpt.RPTs{
+		rpt.RPT{
+			Address: common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+			Rpt:     50,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+			Rpt:     100,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+			Rpt:     20,
+		},
+	}
+	// TODO: above is wrong.
 
-	s.Signers = newSigners
-
-	return newSigners, nil
+	return rpts, nil
 }
 
-// signers retrieves all signers in the committee.
-func (s *Snapshot) signers() []common.Address {
-	signers := make([]common.Address, 0, len(s.Signers))
-	for i := 0; i < len(s.Signers); i++ {
-		signers = append(signers, s.Signers[uint64(i)])
-	}
-	return signers
+// updateView use rpt and election result to get new committee(signers).
+func (s *Snapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
+	signers := election.Elect(rpts, seed, viewLength)
+
+	s.signers = signers
+	return nil
 }
 
-func (s *Snapshot) isSigner(address common.Address) bool {
-	result := false
-	for _, signer := range s.signers() {
-		if address == signer {
-			result = true
-			break
+// Signers retrieves all signers in the committee.
+func (s *Snapshot) Signers() []common.Address {
+	return s.signers
+}
+
+func (s *Snapshot) signerRound(signer common.Address) (int, bool) {
+	for round, s := range s.Signers() {
+		if s == signer {
+			return round, true
 		}
 	}
+	return -1, false
+}
+
+func (s *Snapshot) isSigner(signer common.Address) bool {
+	_, result := s.signerRound(signer)
 	return result
 }
 
-func (s *Snapshot) isLeader(number uint64, signer common.Address) bool {
-	result := false
-	if signer == s.signers()[(number-1)%viewLength] {
-		result = true
-	}
-	return result
+func (s *Snapshot) isLeader(signer common.Address, number uint64) bool {
+	round, result := s.signerRound(signer)
+	return result && (round == int((number-1)%s.config.Epoch))
 }
 
-// candidates retrieves all candidates recorded in the campaign contract.
-func (s *Snapshot) candidates() []common.Address {
-	candidates := make([]common.Address, 0, len(s.Candidates))
-	for candidate := range s.Candidates {
-		candidates = append(candidates, candidate)
-	}
-	return candidates
+// Candidates retrieves all candidates recorded in the campaign contract.
+func (s *Snapshot) Candidates() []common.Address {
+	return s.candidates
 }
 
 // inturn returns if a signer at a given block height is in-turn or not.
 func (s *Snapshot) inturn(number uint64, signer common.Address) bool {
-	signers, offset := s.signers(), 0
-	for offset < len(signers) && signers[offset] != signer {
-		offset++
-	}
-	return (number % uint64(len(signers))) == uint64(offset)
+	return s.isLeader(signer, number)
 }
