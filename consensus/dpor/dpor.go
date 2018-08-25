@@ -240,6 +240,8 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []
 			// Cache it!
 			sigs, _ := sigcache.Get(hash)
 			sigs.(map[common.Address][]byte)[signer] = signerSig
+
+			signers = append(signers, signer)
 		}
 	}
 	return leader, signers, nil
