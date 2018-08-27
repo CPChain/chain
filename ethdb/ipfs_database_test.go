@@ -1,8 +1,9 @@
 package ethdb_test
 
 import (
-	"github.com/ethereum/go-ethereum/ethdb"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/ethdb"
 )
 
 type composer struct {
@@ -45,7 +46,7 @@ func TestIpfsDbGetPutWithEmptyValue(t *testing.T) {
 		t.Errorf("Putting empty content should return a non-empty key.")
 	}
 	if err != nil {
-		t.Errorf("Putting empty content shoudl succeed and return an nil error.")
+		t.Errorf("Putting empty content should succeed and return an nil error.")
 	}
 	retValue, err := db.Get(key)
 	if err != nil {
