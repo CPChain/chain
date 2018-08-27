@@ -34,15 +34,8 @@ var (
 	addr1 = common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465")
 	addr2 = common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092")
 	addr3 = common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")
+	addr4 = common.HexToAddress("0x3333333333333333333333333333333333333333")
 )
-
-func getSigners() map[uint64]common.Address {
-	signers := make(map[uint64]common.Address)
-	signers[0] = addr1
-	signers[1] = addr2
-	signers[2] = addr3
-	return signers
-}
 
 func getSignerAddress() []common.Address {
 	signersAddr := make([]common.Address, 3)
@@ -52,12 +45,8 @@ func getSignerAddress() []common.Address {
 	return signersAddr
 }
 
-func getCandidates() map[common.Address]struct{} {
-	candidates := make(map[common.Address]struct{}, 3)
-	candidates[addr1] = struct{}{}
-	candidates[addr2] = struct{}{}
-	candidates[addr3] = struct{}{}
-	return candidates
+func getCandidates() []common.Address {
+	return getSignerAddress()
 }
 
 func getRecents() map[uint64]common.Address {
@@ -67,46 +56,49 @@ func getRecents() map[uint64]common.Address {
 	return signers
 }
 
+func TestAcceptSigsShouldBeFalse(t *testing.T) {
+	signersAddr := getSignerAddress()
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	accept1 := acceptHeaderSigs(cache, addr1, signersAddr[1:2], signersAddr)
+	if accept1 {
+		t.Errorf("Accept Sigs Should Be False")
+	}
+}
+
 func TestAcceptSigsShouldBeTrue(t *testing.T) {
 	signersAddr := getSignerAddress()
 	cache, _ := lru.NewARC(inmemorySnapshots)
-	header := &types.Header{
-		Coinbase:    addr1,
-		Number:      big.NewInt(1),
-		Difficulty:  big.NewInt(int64(1)),
-		UncleHash:   types.EmptyUncleHash,
-		TxHash:      types.EmptyRootHash,
-		ReceiptHash: types.EmptyRootHash,
-	}
-	accept, _ := acceptSigs(header, cache, signersAddr)
-	if accept {
+	accept1 := acceptHeaderSigs(cache, addr1, signersAddr, signersAddr)
+	if !accept1 {
 		t.Errorf("Accept Sigs Should Be True")
 	}
 }
 
-func TestAcceptSigsShouldBeFalse(t *testing.T) {
-	signersAddr := getSignerAddress()
-	cache, _ := lru.NewARC(inmemorySnapshots)
+func acceptHeaderSigs(cache *lru.ARCCache, coinbase common.Address, signerAddres []common.Address, signersAddr []common.Address) bool {
 	header := &types.Header{
-		Coinbase:    addr1,
+		Coinbase:    coinbase,
 		Number:      big.NewInt(1),
 		Difficulty:  big.NewInt(int64(1)),
 		UncleHash:   types.EmptyUncleHash,
 		TxHash:      types.EmptyRootHash,
 		ReceiptHash: types.EmptyRootHash,
 	}
-	accept, _ := acceptSigs(header, cache, signersAddr)
-	if !accept {
-		t.Errorf("Accept Sigs Should Be False")
+	sigs := make(map[common.Address][]byte)
+	for _, signer := range signerAddres {
+		sigs[signer] = []byte("ok")
 	}
+	cache.Add(header.Hash(), sigs)
 
+	accept, _ := acceptSigs(header, cache, signersAddr)
+	return accept
 }
 
 func TestCalcDifficultyWhenSnapshotIsNotLeader(t *testing.T) {
-	signers := getSigners()
-	result := CalcDifficulty(
-		&Snapshot{config: &params.DporConfig{Period: 3, Epoch: 3}, Signers: signers,
-			Number: 1}, signers[0])
+	signers := getSignerAddress()
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	config := &params.DporConfig{Period: 3, Epoch: 3}
+	snapshot := newSnapshot(config, cache, 1, common.Hash{}, signers)
+	result := CalcDifficulty(snapshot, signers[0])
 	fmt.Println("TestCalcDifficulty result:", result)
 	if big.NewInt(1).Cmp(result) != 0 {
 		t.Errorf("expect:%d, but get: %v", 1, result)
@@ -114,10 +106,11 @@ func TestCalcDifficultyWhenSnapshotIsNotLeader(t *testing.T) {
 }
 
 func TestCalcDifficultyWhenSnapshotIsLeader(t *testing.T) {
-	signers := getSigners()
-	result := CalcDifficulty(
-		&Snapshot{config: &params.DporConfig{Period: 3, Epoch: 3}, Signers: signers,
-			Number: 1}, signers[1])
+	signers := getSignerAddress()
+	config := &params.DporConfig{Period: 3, Epoch: 3}
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	snapshot := newSnapshot(config, cache, 1, common.Hash{}, signers)
+	result := CalcDifficulty(snapshot, signers[1])
 	fmt.Println("TestCalcDifficultyWhenSnapshotIsLeader result:", result)
 	if big.NewInt(2).Cmp(result) != 0 {
 		t.Errorf("expect:%d, but get: %v", 2, result)

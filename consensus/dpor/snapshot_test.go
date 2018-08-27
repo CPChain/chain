@@ -23,11 +23,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/hashicorp/golang-lru"
 )
 
 func TestNewSnapshot(t *testing.T) {
 	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
-	equal := reflect.DeepEqual(snap.signers(), getSignerAddress())
+	equal := reflect.DeepEqual(snap.Signers(), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
@@ -37,7 +38,7 @@ func TestNewSnapshot(t *testing.T) {
 		t.Errorf("expect 0 recents,get %v", len(recents))
 	}
 
-	candidates := snap.Candidates
+	candidates := snap.Candidates()
 	if len(candidates) != 0 {
 		t.Errorf("expect 0 candidates,get %v", len(candidates))
 	}
@@ -45,12 +46,12 @@ func TestNewSnapshot(t *testing.T) {
 
 func TestCopySnapshot(t *testing.T) {
 	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
-	snap.Candidates = getCandidates()
+	snap.candidates = getCandidates()
 	snap.Recents = getRecents()
 
 	cpySnap := snap.copy()
 
-	equal := reflect.DeepEqual(cpySnap.signers(), getSignerAddress())
+	equal := reflect.DeepEqual(cpySnap.Signers(), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
@@ -60,7 +61,7 @@ func TestCopySnapshot(t *testing.T) {
 		t.Errorf("expect 2 recents,get %v", len(recents))
 	}
 
-	candidates := cpySnap.Candidates
+	candidates := cpySnap.Candidates()
 	if len(candidates) != 3 {
 		t.Errorf("expect 3 candidates,get %v", len(candidates))
 	}
@@ -88,41 +89,38 @@ func TestCalcElection(t *testing.T) {
 }
 
 func TestInturn(t *testing.T) {
-	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	signers := getSignerAddress()
+	config := &params.DporConfig{Period: 3, Epoch: 3}
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	snap := newSnapshot(config, cache, 1, common.Hash{}, signers)
+
 	tests := []struct {
 		number         uint64
 		addr           common.Address
 		expectedResult bool
 	}{
-		{0, addr1, true},
-		{0, addr2, false},
-		{0, addr3, false},
-		{1, addr1, false},
-		{1, addr2, true},
+		{1, addr1, true},
+		{1, addr2, false},
 		{1, addr3, false},
 		{2, addr1, false},
-		{2, addr2, false},
-		{2, addr3, true},
-		{3, addr1, true},
+		{2, addr2, true},
+		{2, addr3, false},
+		{3, addr1, false},
 		{3, addr2, false},
-		{3, addr3, false},
-		{4, addr1, false},
-		{4, addr2, true},
+		{3, addr3, true},
+		{4, addr1, true},
+		{4, addr2, false},
 		{4, addr3, false},
 		{5, addr1, false},
-		{5, addr2, false},
-		{5, addr3, true},
+		{5, addr2, true},
+		{5, addr3, false},
 	}
 
 	for _, tt := range tests {
-		assertInturn(snap, t, tt.number, tt.addr, tt.expectedResult)
-	}
-}
-
-func assertInturn(snap *Snapshot, t *testing.T, number uint64, addr common.Address, expectedResult bool) {
-	inturn := snap.inturn(number, addr)
-	if inturn != expectedResult {
-		t.Errorf("expected result is %v,get %v,number:%v,addr:%v", expectedResult, inturn, number, addr)
+		inturn := snap.inturn(tt.number, tt.addr)
+		if inturn != tt.expectedResult {
+			t.Errorf("expected result is %v,get %v,number:%v,addr:%v", tt.expectedResult, inturn, tt.number, tt.addr)
+		}
 	}
 }
 
@@ -139,36 +137,84 @@ func TestIsSigner(t *testing.T) {
 }
 
 func TestSigners(t *testing.T) {
-	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
-	signers := snap.signers()
+	snap := createSnapshot()
+	signers := snap.Signers()
 	equalSigner := reflect.DeepEqual(signers, getSignerAddress())
 	if !equalSigner {
 		t.Errorf("expected isEqualSigner is %v,get %v", true, equalSigner)
 	}
 }
 
+func TestIsLeaderErrorWhenBlockNumberIsZero(t *testing.T) {
+	snap := createSnapshot()
+	isLeader := snap.isLeader(addr1, 0)
+	if isLeader {
+		t.Errorf("expect isLeader Error, get %v", isLeader)
+	}
+}
+
 func TestIsLeader(t *testing.T) {
-	isLeader := snapIsLeader(addr1)
+	snap := createSnapshot()
+	isLeader := snap.isLeader(addr1, 1)
+	if !isLeader {
+		t.Errorf("expect isLeader true, get %v", isLeader)
+	}
+	isLeader = snap.isLeader(addr2, 2)
+	if !isLeader {
+		t.Errorf("expect isLeader true, get %v", isLeader)
+	}
+	isLeader = snap.isLeader(addr3, 3)
 	if !isLeader {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
 }
 
 func TestIsNotLeader(t *testing.T) {
-	isLeader := snapIsLeader(addr2)
+	snap := createSnapshot()
+	isLeader := snap.isLeader(addr2, 1)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
-	isLeader = snapIsLeader(addr3)
+	isLeader = snap.isLeader(addr1, 2)
+	if isLeader {
+		t.Errorf("expect isLeader false get %v", isLeader)
+	}
+	isLeader = snap.isLeader(addr1, 3)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
 }
 
-func snapIsLeader(leader common.Address) bool {
-	signers := getSigners()
-	snap := &Snapshot{config: &params.DporConfig{Period: 3, Epoch: 3}, Signers: signers,
-		Number: 1}
-	isLeader := snap.isLeader(0, leader)
-	return isLeader
+func TestSignerRoundFail(t *testing.T) {
+	snap := createSnapshot()
+	round, ok := snap.signerRound(addr4)
+	if ok || round != -1 {
+		t.Errorf("expect round %v, get %v", -1, round)
+	}
+}
+
+func TestSignerRoundOk(t *testing.T) {
+	snap := createSnapshot()
+	round, ok := snap.signerRound(addr1)
+	if !ok || round != 0 {
+		t.Errorf("expect round %v, get %v", 0, round)
+	}
+
+	round, ok = snap.signerRound(addr2)
+	if !ok || round != 1 {
+		t.Errorf("expect round %v, get %v", 1, round)
+	}
+
+	round, ok = snap.signerRound(addr3)
+	if !ok || round != 2 {
+		t.Errorf("expect round %v, get %v", 2, round)
+	}
+}
+
+func createSnapshot() *Snapshot {
+	signers := getSignerAddress()
+	config := &params.DporConfig{Period: 3, Epoch: 3}
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	snap := newSnapshot(config, cache, 1, common.Hash{}, signers)
+	return snap
 }
