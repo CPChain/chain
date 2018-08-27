@@ -18,6 +18,8 @@ package dpor
 
 import (
 	"encoding/json"
+	"errors"
+
 	// "log"
 
 	// "net/rpc"
@@ -30,6 +32,10 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
 	lru "github.com/hashicorp/golang-lru"
+)
+
+var (
+	errGenesisBlockNumber = errors.New("Genesis block has no leader")
 )
 
 // Snapshot is the state of the authorization voting at a given point in time.
@@ -235,9 +241,12 @@ func (s *Snapshot) isSigner(signer common.Address) bool {
 	return result
 }
 
-func (s *Snapshot) isLeader(signer common.Address, number uint64) bool {
+func (s *Snapshot) isLeader(signer common.Address, number uint64) (bool, error) {
+	if number == 0 {
+		return false, errGenesisBlockNumber
+	}
 	round, result := s.signerRound(signer)
-	return result && (round == int((number-1)%s.config.Epoch))
+	return result && (round == int((number-1)%s.config.Epoch)), nil
 }
 
 // Candidates retrieves all candidates recorded in the campaign contract.
@@ -247,5 +256,9 @@ func (s *Snapshot) Candidates() []common.Address {
 
 // inturn returns if a signer at a given block height is in-turn or not.
 func (s *Snapshot) inturn(number uint64, signer common.Address) bool {
-	return s.isLeader(signer, number)
+	ok, err := s.isLeader(signer, number)
+	if err != nil {
+		return false
+	}
+	return ok
 }
