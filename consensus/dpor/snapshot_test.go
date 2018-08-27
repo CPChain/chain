@@ -147,39 +147,39 @@ func TestSigners(t *testing.T) {
 
 func TestIsLeaderErrorWhenBlockNumberIsZero(t *testing.T) {
 	snap := createSnapshot()
-	isLeader := snap.isLeader(addr1, 0)
-	if isLeader {
+	isLeader, err := snap.isLeader(addr1, 0)
+	if err == nil {
 		t.Errorf("expect isLeader Error, get %v", isLeader)
 	}
 }
 
 func TestIsLeader(t *testing.T) {
 	snap := createSnapshot()
-	isLeader := snap.isLeader(addr1, 1)
-	if !isLeader {
+	isLeader, err := snap.isLeader(addr1, 1)
+	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader = snap.isLeader(addr2, 2)
-	if !isLeader {
+	isLeader, err = snap.isLeader(addr2, 2)
+	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader = snap.isLeader(addr3, 3)
-	if !isLeader {
+	isLeader, err = snap.isLeader(addr3, 3)
+	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
 }
 
 func TestIsNotLeader(t *testing.T) {
 	snap := createSnapshot()
-	isLeader := snap.isLeader(addr2, 1)
+	isLeader, _ := snap.isLeader(addr2, 1)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
-	isLeader = snap.isLeader(addr1, 2)
+	isLeader, _ = snap.isLeader(addr1, 2)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
-	isLeader = snap.isLeader(addr1, 3)
+	isLeader, _ = snap.isLeader(addr1, 3)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
