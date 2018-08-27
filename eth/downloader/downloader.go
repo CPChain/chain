@@ -333,6 +333,7 @@ func (d *Downloader) Synchronise(id string, head common.Hash, td *big.Int, mode 
 			d.dropPeer(id)
 		}
 	case consensus.ErrNotEnoughSigs:
+		// TODO: he will broadcast the blocks.
 		log.Warn("Not enough signatures, waiting", "err", err)
 
 	default:
