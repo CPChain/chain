@@ -28,7 +28,7 @@ import (
 
 func TestNewSnapshot(t *testing.T) {
 	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
-	equal := reflect.DeepEqual(snap.Signers(), getSignerAddress())
+	equal := reflect.DeepEqual(snap.signers(), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
@@ -38,7 +38,7 @@ func TestNewSnapshot(t *testing.T) {
 		t.Errorf("expect 0 recents,get %v", len(recents))
 	}
 
-	candidates := snap.Candidates()
+	candidates := snap.candidates()
 	if len(candidates) != 0 {
 		t.Errorf("expect 0 candidates,get %v", len(candidates))
 	}
@@ -46,12 +46,12 @@ func TestNewSnapshot(t *testing.T) {
 
 func TestCopySnapshot(t *testing.T) {
 	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
-	snap.candidates = getCandidates()
+	snap.Candidates = getCandidates()
 	snap.Recents = getRecents()
 
 	cpySnap := snap.copy()
 
-	equal := reflect.DeepEqual(cpySnap.Signers(), getSignerAddress())
+	equal := reflect.DeepEqual(cpySnap.signers(), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
@@ -61,7 +61,7 @@ func TestCopySnapshot(t *testing.T) {
 		t.Errorf("expect 2 recents,get %v", len(recents))
 	}
 
-	candidates := cpySnap.Candidates()
+	candidates := cpySnap.candidates()
 	if len(candidates) != 3 {
 		t.Errorf("expect 3 candidates,get %v", len(candidates))
 	}
@@ -138,7 +138,7 @@ func TestIsSigner(t *testing.T) {
 
 func TestSigners(t *testing.T) {
 	snap := createSnapshot()
-	signers := snap.Signers()
+	signers := snap.signers()
 	equalSigner := reflect.DeepEqual(signers, getSignerAddress())
 	if !equalSigner {
 		t.Errorf("expected isEqualSigner is %v,get %v", true, equalSigner)
@@ -187,26 +187,26 @@ func TestIsNotLeader(t *testing.T) {
 
 func TestSignerRoundFail(t *testing.T) {
 	snap := createSnapshot()
-	round, ok := snap.signerRound(addr4)
-	if ok || round != -1 {
+	round, err := snap.signerRound(addr4)
+	if err == nil || round != -1 {
 		t.Errorf("expect round %v, get %v", -1, round)
 	}
 }
 
 func TestSignerRoundOk(t *testing.T) {
 	snap := createSnapshot()
-	round, ok := snap.signerRound(addr1)
-	if !ok || round != 0 {
+	round, err := snap.signerRound(addr1)
+	if err != nil || round != 0 {
 		t.Errorf("expect round %v, get %v", 0, round)
 	}
 
-	round, ok = snap.signerRound(addr2)
-	if !ok || round != 1 {
+	round, err = snap.signerRound(addr2)
+	if err != nil || round != 1 {
 		t.Errorf("expect round %v, get %v", 1, round)
 	}
 
-	round, ok = snap.signerRound(addr3)
-	if !ok || round != 2 {
+	round, err = snap.signerRound(addr3)
+	if err != nil || round != 2 {
 		t.Errorf("expect round %v, get %v", 2, round)
 	}
 }

@@ -20,10 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	// "log"
-
-	// "net/rpc"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus/dpor/election"
 	"github.com/ethereum/go-ethereum/consensus/dpor/rpt"
@@ -35,7 +31,8 @@ import (
 )
 
 var (
-	errGenesisBlockNumber = errors.New("Genesis block has no leader")
+	errSignerNotInCommittee = errors.New("signer not in committee")
+	errGenesisBlockNumber   = errors.New("Genesis block has no leader")
 )
 
 // Snapshot is the state of the authorization voting at a given point in time.
@@ -46,8 +43,8 @@ type Snapshot struct {
 	Number uint64      `json:"number"` // Block number where the snapshot was created
 	Hash   common.Hash `json:"hash"`   // Block hash where the snapshot was created
 
-	signers    []common.Address          `json:"signers"`    // Set of authorized signers at this moment
-	candidates []common.Address          `json:"candidates"` // Set of candidates read from campaign contract
+	Signers    []common.Address          `json:"signers"`    // Set of authorized signers at this moment
+	Candidates []common.Address          `json:"candidates"` // Set of candidates read from campaign contract
 	Recents    map[uint64]common.Address `json:"recents"`    // Set of recent signers for spam protections
 }
 
@@ -60,12 +57,10 @@ func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint6
 		sigcache: sigcache,
 		Number:   number,
 		Hash:     hash,
-		signers:  make([]common.Address, config.Epoch),
+		Signers:  make([]common.Address, config.Epoch),
 		Recents:  make(map[uint64]common.Address),
 	}
-	for round, signer := range signers {
-		snap.signers[round] = signer
-	}
+	copy(snap.Signers, signers)
 	return snap
 }
 
@@ -101,18 +96,14 @@ func (s *Snapshot) copy() *Snapshot {
 		sigcache:   s.sigcache,
 		Number:     s.Number,
 		Hash:       s.Hash,
-		signers:    make([]common.Address, s.config.Epoch),
-		candidates: make([]common.Address, len(s.candidates)),
+		Signers:    make([]common.Address, s.config.Epoch),
+		Candidates: make([]common.Address, len(s.Candidates)),
 		Recents:    make(map[uint64]common.Address),
 	}
-	for round, signer := range s.signers {
-		cpy.signers[round] = signer
-	}
+	copy(cpy.Signers, s.Signers)
+	copy(cpy.Candidates, s.Candidates)
 	for block, signer := range s.Recents {
 		cpy.Recents[block] = signer
-	}
-	for idx, candidate := range s.candidates {
-		cpy.candidates[idx] = candidate
 	}
 	return cpy
 }
@@ -182,7 +173,7 @@ func (s *Snapshot) updateCandidates(header *types.Header) error {
 	}
 	// TODO: above is wrong.
 
-	s.candidates = candidates
+	s.Candidates = candidates
 	return nil
 }
 
@@ -218,40 +209,43 @@ func (s *Snapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 func (s *Snapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
 	signers := election.Elect(rpts, seed, viewLength)
 
-	s.signers = signers
+	s.Signers = signers
 	return nil
 }
 
 // Signers retrieves all signers in the committee.
-func (s *Snapshot) Signers() []common.Address {
-	return s.signers
+func (s *Snapshot) signers() []common.Address {
+	return s.Signers
 }
 
-func (s *Snapshot) signerRound(signer common.Address) (int, bool) {
-	for round, s := range s.Signers() {
+func (s *Snapshot) signerRound(signer common.Address) (int, error) {
+	for round, s := range s.signers() {
 		if s == signer {
-			return round, true
+			return round, nil
 		}
 	}
-	return -1, false
+	return -1, errSignerNotInCommittee
 }
 
 func (s *Snapshot) isSigner(signer common.Address) bool {
-	_, result := s.signerRound(signer)
-	return result
+	_, err := s.signerRound(signer)
+	return err == nil
 }
 
 func (s *Snapshot) isLeader(signer common.Address, number uint64) (bool, error) {
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
-	round, result := s.signerRound(signer)
-	return result && (round == int((number-1)%s.config.Epoch)), nil
+	round, err := s.signerRound(signer)
+	if err != nil {
+		return false, err
+	}
+	return (round == int((number-1)%s.config.Epoch)), nil
 }
 
 // Candidates retrieves all candidates recorded in the campaign contract.
-func (s *Snapshot) Candidates() []common.Address {
-	return s.candidates
+func (s *Snapshot) candidates() []common.Address {
+	return s.Candidates
 }
 
 // inturn returns if a signer at a given block height is in-turn or not.

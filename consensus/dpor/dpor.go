@@ -46,7 +46,7 @@ const (
 	inmemorySnapshots  = 1000 // Number of recent vote snapshots to keep in memory
 	inmemorySignatures = 1000 // Number of recent block signatures to keep in memory
 
-	wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
+	// wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
 
 	pctAccept = 0.667 // 2 / 3 of the signers' signature to accept the block
 )
@@ -85,15 +85,15 @@ var (
 	errInvalidCheckpointBeneficiary = errors.New("beneficiary in checkpoint block non-zero")
 
 	// errInvalidCheckpointApplyNumber
-	errInvalidCheckpointApplyNumber = errors.New("invalid checkpoint apply number")
+	// errInvalidCheckpointApplyNumber = errors.New("invalid checkpoint apply number")
 
 	// errInvalidVote is returned if a nonce value is something else that the two
 	// allowed constants of 0x00..0 or 0xff..f.
-	errInvalidVote = errors.New("vote nonce not 0x00..0 or 0xff..f")
+	// errInvalidVote = errors.New("vote nonce not 0x00..0 or 0xff..f")
 
 	// errInvalidCheckpointVote is returned if a checkpoint/epoch transition block
 	// has a vote nonce set to non-zeroes.
-	errInvalidCheckpointVote = errors.New("vote nonce in checkpoint block non-zero")
+	// errInvalidCheckpointVote = errors.New("vote nonce in checkpoint block non-zero")
 
 	// errMissingVanity is returned if a block's extra-data section is shorter than
 	// 32 bytes, which is required to store the signer vanity.
@@ -105,7 +105,7 @@ var (
 
 	// errExtraSigners is returned if non-checkpoint block contain signer data in
 	// their extra-data fields.
-	errExtraSigners = errors.New("non-checkpoint block contains extra signer list")
+	// errExtraSigners = errors.New("non-checkpoint block contains extra signer list")
 
 	// errInvalidCheckpointSigners is returned if a checkpoint block contains an
 	// invalid list of signers (i.e. non divisible by 20 bytes, or not the correct
@@ -139,7 +139,7 @@ var (
 	errMultiBlockInOnHeight = errors.New("multi blocks in one height")
 
 	// errLeaderNotInSigs is returned if the leader not in the sigs.
-	errLeaderNotInSigs = errors.New("leader is not in the sigs")
+	// errLeaderNotInSigs = errors.New("leader is not in the sigs")
 
 	// --- our new error types ---
 
@@ -436,7 +436,7 @@ func (c *Dpor) verifyCascadingFields(chain consensus.ChainReader, header *types.
 	// If the block is a checkpoint block, verify the signer list
 	if number%c.config.Epoch == 0 {
 		signers := make([]byte, c.config.Epoch*common.AddressLength)
-		for round, signer := range snap.Signers() {
+		for round, signer := range snap.signers() {
 			copy(signers[round*common.AddressLength:(round+1)*common.AddressLength], signer[:])
 		}
 		extraSuffix := len(header.Extra) - extraSeal
@@ -614,14 +614,14 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	}
 
 	// check if accept the sigs and if leader is in the sigs.
-	accept, err := acceptSigs(header, c.signatures, snap.Signers())
+	accept, err := acceptSigs(header, c.signatures, snap.signers())
 	if err != nil {
 		return err
 	}
 
 	s, _ := c.signatures.Get(hash)
 	sigs := s.(map[common.Address][]byte)
-	for round, signer := range snap.Signers() {
+	for round, signer := range snap.signers() {
 		if sigHash, ok := sigs[signer]; ok {
 			copy(header.Extra2[round*extraSeal:(round+1)*extraSeal], sigHash)
 		}
@@ -684,7 +684,7 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	header.Extra = header.Extra[:extraVanity]
 
 	// if number%c.config.Epoch == 0 {
-	for _, signer := range snap.Signers() {
+	for _, signer := range snap.signers() {
 		header.Extra = append(header.Extra, signer[:]...)
 	}
 	// }
