@@ -605,7 +605,11 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	log.Info("--------I am in dpor.verifySeal end--------")
 
 	// check if the leader is the real leader.
-	if ok := snap.isLeader(leader, number); !ok {
+	ok, err := snap.isLeader(leader, number)
+	if err != nil {
+		return err
+	}
+	if !ok {
 		return errUnauthorized
 	}
 
@@ -646,7 +650,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	// --- our check ends ---
 
 	// Ensure that the difficulty corresponds to the turn-ness of the signer
-	inturn := snap.isLeader(leader, header.Number.Uint64())
+	inturn, _ := snap.isLeader(leader, header.Number.Uint64())
 	if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
 		return errInvalidDifficulty
 	}
@@ -748,7 +752,11 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 
-	if authorized := snap.isLeader(c.signer, number); !authorized {
+	ok, err := snap.isLeader(c.signer, number)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, errUnauthorized
 	}
 
@@ -816,7 +824,7 @@ func (c *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func CalcDifficulty(snap *Snapshot, signer common.Address) *big.Int {
-	if snap.isLeader(signer, snap.Number+1) {
+	if ok, _ := snap.isLeader(signer, snap.Number+1); ok {
 		return new(big.Int).Set(diffInTurn)
 	}
 	return new(big.Int).Set(diffNoTurn)

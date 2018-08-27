@@ -16,7 +16,12 @@
 
 package consensus
 
-import "errors"
+import (
+	"errors"
+	"strconv"
+
+	"github.com/ethereum/go-ethereum/core/types"
+)
 
 var (
 	// ErrUnknownAncestor is returned when validating a block requires an ancestor
@@ -36,5 +41,15 @@ var (
 	ErrInvalidNumber = errors.New("invalid block number")
 
 	// ErrNotEnoughSigs is returned if there is not enough signatures for a block.
-	ErrNotEnoughSigs = errors.New("not enough sigs")
+	ErrNotEnoughSigs = &ErrNotEnoughSigsType{BadIndex: 0}
 )
+
+// ErrNotEnoughSigsType is returned if there is not enough signatures for a block.
+type ErrNotEnoughSigsType struct {
+	BadIndex int
+	Blocks   []*types.Block
+}
+
+func (e *ErrNotEnoughSigsType) Error() string {
+	return "not enough sigs: bad idx: " + strconv.Itoa(e.BadIndex)
+}

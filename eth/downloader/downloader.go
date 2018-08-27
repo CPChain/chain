@@ -1368,6 +1368,8 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 		log.Debug("Downloaded item processing failed", "number", results[index].Header.Number, "hash", results[index].Header.Hash(), "err", err)
 		// TODO: fix this.
 		if err == consensus.ErrNotEnoughSigs {
+			err := err.(*consensus.ErrNotEnoughSigsType)
+			err.Blocks = blocks
 			return err
 		}
 		return errInvalidChain

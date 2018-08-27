@@ -1128,6 +1128,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			}
 
 		case err == consensus.ErrNotEnoughSigs:
+			err := err.(*consensus.ErrNotEnoughSigsType)
+			err.BadIndex = i
 			return i, events, coalescedLogs, err
 
 		case err != nil:
