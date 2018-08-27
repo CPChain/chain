@@ -1,20 +1,19 @@
-package private
+package types
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"math/big"
 )
 
 // Represents the Cpchain message which supports private tx, extending normal Message
 type CpcMessage struct {
-	types.Message
+	Message
 	isPrivate bool
 }
 
 func NewCpcMessage(from common.Address, to *common.Address, nonce uint64, amount *big.Int, gasLimit uint64, price *big.Int, data []byte, checkNonce bool, isPrivate bool) CpcMessage {
 	return CpcMessage{
-		Message:   types.NewMessage(from, to, nonce, amount, gasLimit, price, data, checkNonce),
+		Message:   NewMessage(from, to, nonce, amount, gasLimit, price, data, checkNonce),
 		isPrivate: isPrivate,
 	}
 }
@@ -29,11 +28,11 @@ const PrivateTxTag2 = 48 // When r is odd
 
 // Represent CPChain transaction
 type CpcTransaction struct {
-	*types.Transaction
+	*Transaction
 }
 
 // AsMessage returns the transaction as a CpcMessage.
-func (tx *CpcTransaction) ASMessage(s types.Signer) (CpcMessage, error) {
+func (tx *CpcTransaction) ASMessage(s Signer) (CpcMessage, error) {
 	msg, err := tx.Transaction.AsMessage(s)
 	if err != nil {
 		return CpcMessage{}, err

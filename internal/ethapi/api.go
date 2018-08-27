@@ -45,7 +45,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
-)
+	)
 
 const (
 	defaultGasPrice = 50 * params.Shannon
@@ -1226,7 +1226,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
 	isPrivate := len(args.PrivateFrom) != 0 && len(args.Participants) != 0 && args.Data != nil
 	if isPrivate {
-		sealedAddr, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce))
+		sealedAddr, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants)
 		if err != nil {
 			panic(err)
 		}

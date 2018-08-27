@@ -158,7 +158,11 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 		chainID := deriveChainId(dec.V).Uint64()
 		V = byte(dec.V.Uint64() - 35 - 2*chainID)
 	} else {
-		V = byte(dec.V.Uint64() - 27)
+		if dec.V.Uint64() == PrivateTxTag1 || dec.V.Uint64() == PrivateTxTag2 {
+			V = byte(dec.V.Uint64() - PrivateTxTag1)
+		} else {
+			V = byte(dec.V.Uint64() - 27)
+		}
 	}
 	if !crypto.ValidateSignatureValues(V, dec.R, dec.S, false) {
 		return ErrInvalidSig
@@ -173,7 +177,6 @@ func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.data.Pri
 func (tx *Transaction) Value() *big.Int    { return new(big.Int).Set(tx.data.Amount) }
 func (tx *Transaction) Nonce() uint64      { return tx.data.AccountNonce }
 func (tx *Transaction) CheckNonce() bool   { return true }
-func (tx *Transaction) IsPrivate() bool    { return true } // TODO: temporarily return true for debugging private tx
 
 // To returns the recipient address of the transaction.
 // It returns nil if the transaction is a contract creation.

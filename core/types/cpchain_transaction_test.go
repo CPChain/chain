@@ -1,15 +1,14 @@
-package private
+package types
 
 import (
 	"testing"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 )
 
 func TestTxIsPrivate(t *testing.T) {
-	trans := types.NewTransaction(0, common.HexToAddress("0xb794f5ea0ba39494ce83a213fffba74279579268"), new(big.Int), 0, new(big.Int), nil)
-	cpcTrans := CpcTransaction{*trans}
+	trans := NewTransaction(0, common.HexToAddress("0xb794f5ea0ba39494ce83a213fffba74279579268"), new(big.Int), 0, new(big.Int), nil)
+	cpcTrans := CpcTransaction{trans}
 
 	if cpcTrans.IsPrivate() == true {
 		t.Fatal("Initial IsPrivate state should be false.")
