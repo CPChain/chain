@@ -55,7 +55,6 @@ var DefaultConfig = Config{
 		Blocks:     20,
 		Percentile: 60,
 	},
-	IpfsUrl: "localhost:5001", // TODO: It will be replaced with an official IPFS public CPC gateway.
 }
 
 func init() {
