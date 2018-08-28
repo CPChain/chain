@@ -32,7 +32,7 @@ func (db *IpfsDatabase) Get(key []byte) ([]byte, error) {
 
 	const bufsize = 1000
 	buf := make([]byte, bufsize)
-	ret := []byte{}
+	var ret []byte
 	for {
 		n, _ := reader.Read(buf)
 		if n == 0 {
