@@ -22,7 +22,7 @@ func TestSealPrivatePayload(t *testing.T) {
 		t.Fatal("It should return non-empty participants.")
 	}
 
-	ipfsDb := ethdb.NewIpfsDb("localhost:5001")
+	ipfsDb := ethdb.NewIpfsDb(DefaultIpfsUrl)
 	content, err := ipfsDb.Get(replacement.Address)
 	if err != nil {
 		t.Fatal("It should return expected content from IPFS.")

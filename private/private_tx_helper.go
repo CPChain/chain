@@ -46,8 +46,6 @@ type PayloadReplacement struct {
 	Address      []byte
 }
 
-const defaultDbUrl = "localhost:5001"
-
 // Encrypt private tx's payload and send to IPFS, then replace the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
 func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (PayloadReplacement, error) {
@@ -70,7 +68,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 	sealed := NewSealedPrivatePayload(encryptPayload, symKeys, pubKeys)
 
 	// Put to IPFS
-	ipfsDb := ethdb.NewIpfsDb(defaultDbUrl)
+	ipfsDb := ethdb.NewIpfsDb(DefaultIpfsUrl)
 	bytesToPut, _ := sealed.toBytes()
 	ipfsAddr, err := ipfsDb.Put(bytesToPut)
 
@@ -139,22 +137,6 @@ func encryptPayload(payload []byte, nonce []byte) (encryptedPayload []byte, symm
 
 	encrypted := aesgcm.Seal(nil, nonce, payload, nil)
 	return encrypted, symKey, nil
-}
-
-// Decrypt payload with the given symmetric key.
-// Returns decrypted payload and error if exists.
-func decrypt(cipherdata []byte, skey []byte, nonce []byte) ([]byte, error) {
-	block, err := aes.NewCipher(skey)
-	if err != nil {
-		return nil, err
-	}
-
-	aesgcm, err := cipher.NewGCM(block)
-	data, err := aesgcm.Open(nil, nonce, cipherdata, nil)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }
 
 // Below code is temporary and just for testing. It will be removed later.
