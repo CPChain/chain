@@ -1226,13 +1226,14 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
 	isPrivate := len(args.PrivateFrom) != 0 && len(args.Participants) != 0 && args.Data != nil
 	if isPrivate {
-		sealedAddr, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants)
+		payloadReplace, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants)
 		if err != nil {
 			panic(err)
 		}
 
 		// Replace original content with security one.
-		args.Data = (*hexutil.Bytes)(&sealedAddr)
+		replaceData, err := rlp.EncodeToBytes(payloadReplace)
+		args.Data = (*hexutil.Bytes)(&replaceData)
 	}
 
 	// Assemble the transaction and sign with the wallet

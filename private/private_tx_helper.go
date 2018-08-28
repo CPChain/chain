@@ -41,11 +41,16 @@ func (sealed *SealedPrivatePayload) toBytes() ([]byte, error) {
 	return bytes, nil
 }
 
+type PayloadReplacement struct {
+	Participants []string
+	Address      []byte
+}
+
 const defaultDbUrl = "localhost:5001"
 
 // Encrypt private tx's payload and send to IPFS, then replace the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
-func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) ([]byte, error) {
+func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (PayloadReplacement, error) {
 	// Encrypt payload
 	// use tx's nonce as gcm nonce
 	nonce := make([]byte, 12)
@@ -56,16 +61,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) ([]byt
 		panic(err)
 	}
 
-	// Retrieve address, r, s, v values.
-	pubKeys := make([]*rsa.PublicKey, len(parties))
-
-	for i, p := range parties {
-		if p[:2] != "0x" {
-			p = "0x" + p
-		}
-		keyBuf, _ := hexutil.Decode(p)
-		pubKeys[i], _ = x509.ParsePKCS1PublicKey(keyBuf)
-	}
+	pubKeys, _ := stringsToPublicKeys(parties)
 
 	// Encrypt symmetric keys for participants with related public key.
 	symKeys := sealSymmetricKey(symKey, pubKeys)
@@ -76,7 +72,27 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) ([]byt
 	// Put to IPFS
 	ipfsDb := ethdb.NewIpfsDb(defaultDbUrl)
 	bytesToPut, _ := sealed.toBytes()
-	return ipfsDb.Put(bytesToPut)
+	ipfsAddr, err := ipfsDb.Put(bytesToPut)
+
+	// Enclose as a PayloadReplacement struct.
+	replacement := PayloadReplacement{
+		Address:      ipfsAddr,
+		Participants: parties,
+	}
+	return replacement, nil
+}
+
+func stringsToPublicKeys(keys []string) ([]*rsa.PublicKey, error) {
+	pubKeys := make([]*rsa.PublicKey, len(keys))
+
+	for i, p := range keys {
+		if p[:2] != "0x" {
+			p = "0x" + p
+		}
+		keyBuf, _ := hexutil.Decode(p)
+		pubKeys[i], _ = x509.ParsePKCS1PublicKey(keyBuf)
+	}
+	return pubKeys, nil
 }
 
 func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
