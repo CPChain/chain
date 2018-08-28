@@ -45,7 +45,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	)
+)
 
 const (
 	defaultGasPrice = 50 * params.Shannon

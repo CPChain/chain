@@ -4,19 +4,20 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/binary"
-		"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/rlp"
-	"io"
-			"github.com/ethereum/go-ethereum/common/hexutil"
 	"crypto/rsa"
-		"crypto/x509"
+	"crypto/x509"
+	"encoding/binary"
+	"io"
+
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 type SealedPrivatePayload struct {
-	Payload      []byte
+	Payload       []byte
 	SymmetricKeys [][]byte
-	Participants [][]byte
+	Participants  [][]byte
 }
 
 func NewSealedPrivatePayload(encryptedPayload []byte, symmetricKey [][]byte, participants []*rsa.PublicKey) SealedPrivatePayload {
@@ -26,9 +27,9 @@ func NewSealedPrivatePayload(encryptedPayload []byte, symmetricKey [][]byte, par
 	}
 
 	return SealedPrivatePayload{
-		Payload:      encryptedPayload,
+		Payload:       encryptedPayload,
 		SymmetricKeys: symmetricKey,
-		Participants: keysToStore,
+		Participants:  keysToStore,
 	}
 }
 
@@ -140,7 +141,6 @@ func decrypt(cipherdata []byte, skey []byte, nonce []byte) ([]byte, error) {
 	return data, nil
 }
 
-
 // Below code is temporary and just for testing. It will be removed later.
 
 // Test private keys and public keys in dev environment.
@@ -160,7 +160,8 @@ func decrypt(cipherdata []byte, skey []byte, nonce []byte) ([]byte, error) {
 //     private key: 0x308204a40201000282010100c41b896062c93243e178e11d146bdecdcacf06b7e561d57a245cebfbf8572864fb6b68556eb453bd66a5c9fef4247692ea3bd9dbb2ee8c1cc252ea3dff518fec37d9b240369bfc0d9708e776f0e3fc907a67f3c950839ffcb5f942114408efc9d931babcaef330106e3db1ec6fdc32ff3a8e2713b5ecc66efb786f857cb3f490093728f4262fbbaf800d55fda578331cfb4e4fde45a7770287498dc41af8efcacf9c7f892ef2933db57c76d7ab94d2d32c2edd18eb98bb5334110188565805d7b6438feb638d4a16d0fd8c24f869da373248e5b0cf8216d69715b5b164dcda884bdec9c7c74f4f1b8fc9f4b5973b8027590c67f410f5f41504bcb7e448edb7bb02030100010282010045e43e80c0944e3acd17e4bb157520721daecd092b5243e00527acdf1f7208ae7cc099eda0c7d9f46da9f6a4cbe456f22352f3610e9360123bdb8b2a4f5d853abde8f35359631c60c78c5fda0f1e61fc27f3f679b01d491eaac84c189533ce2a15235917380ee9f96120d1d19f484e509250e97267eb1c099fcc1b8aea97c43815a3c2aa816a3e4941748b3eeb34dfc2d132f4418357768d59cd6a46041a4dfaf9c6d0922fe38f9544f1c85bd3813fcab9a4c3786e72f37b8853fef14f8a5c956de378b64e4f2ffe401b117e807cd3993b547229a7c894841c3d8eb18d9dd13c2c1e3a7ec9898600f319fa3fcf1194f804224bcbde30b19b768da03f81bed07902818100dbf4899e1d4eb3887fc4ae1ee33eb1ec37f70f8be1895b4c8d2a551ae4b3424680b9f6b7cf4a4d3ad1c3e1cbaf2c16945599a15c7df66272425099ea6b3ae4a65d05d1cde225b424be3f70a756ae8223b324916fcfc98c6671bc4e2f2584eb700cd2782864f2b837e6c9457ab5a57c7d4d259cd6c7b4b2604e6b07abdd39ba7502818100e43e8d82fe34d93f699d56a0936d26660d722cfe627c1ae40faef709707d662c4f7aa34978c25a95ed632fe5fcf2028e5f5721871e4161ce58c5d0f12db9232afc876c173999251ab9532c08d98f5ece1e607952109074a432f73090432485511d8f5a85ae93870be4f206d68ed7a21f333c138c9f036080ae8c1919210c836f0281806aa73e7b9eb664b39150ab256b07217aeb002f57a27ad9fc5a8ee6496e0fc5d92dddfe55ce7bb6cb089fb4c2f123ada72b829d0d9e3e7429f721e2201af2a9a04986e2deb403984020c7de3625ffe436af4cd200a77e9147b36a9d769af8c2b8c85eddc8a87a50fd3a38ea29c01e8828b1d9c51d1824f4416284df696491f36902818100c0b978f0450a06ef1e94f652bc698be4dc31ae80565488b84dede536993fa9887ccc0718c0d90b78516c514397e419f871d4b6c0caf1564ed072a84d1dd8983371ec3f7f14e995850d3b87912973800ff7626acebaa1df7bce751f12913f433b0d04c0e0e45a39cbf753ce2659930697e5c13298a8a44756210cb71c9ae5600d02818100b8a6ecbd5de335b7205b9922a4a0f9eef1fccd76c8d7024839af95181c5d75cb42561f656e31b0784cb0d1489da7b8c9dc0d74416f8a586ab00a0db7cbe593da1e3eb39136e09820c9951a9d8180542694fd211ded0095d021d0fce058b1a68bb6dc7f787e162b51208ba373de910d790ab544f597d70b57a18e1be455b9f118
 //     public key: 0x3082010a0282010100c41b896062c93243e178e11d146bdecdcacf06b7e561d57a245cebfbf8572864fb6b68556eb453bd66a5c9fef4247692ea3bd9dbb2ee8c1cc252ea3dff518fec37d9b240369bfc0d9708e776f0e3fc907a67f3c950839ffcb5f942114408efc9d931babcaef330106e3db1ec6fdc32ff3a8e2713b5ecc66efb786f857cb3f490093728f4262fbbaf800d55fda578331cfb4e4fde45a7770287498dc41af8efcacf9c7f892ef2933db57c76d7ab94d2d32c2edd18eb98bb5334110188565805d7b6438feb638d4a16d0fd8c24f869da373248e5b0cf8216d69715b5b164dcda884bdec9c7c74f4f1b8fc9f4b5973b8027590c67f410f5f41504bcb7e448edb7bb0203010001
 
-var testKeyMap = make(map[string] *rsa.PrivateKey)
+var testKeyMap = make(map[string]*rsa.PrivateKey)
+
 func GetPrivateKeyForAccount(account string) *rsa.PrivateKey {
 	if len(testKeyMap) == 0 {
 		// initialize

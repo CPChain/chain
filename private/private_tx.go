@@ -1,9 +1,10 @@
 package private
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"math/big"
 )
 
 // Represents the Cpchain message which supports private tx, extending normal Message
