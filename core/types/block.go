@@ -86,6 +86,24 @@ type Header struct {
 	Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
 }
 
+type headerStorage struct {
+	ParentHash  common.Hash
+	UncleHash   common.Hash
+	Coinbase    common.Address
+	Root        common.Hash
+	TxHash      common.Hash
+	ReceiptHash common.Hash
+	Bloom       Bloom
+	Difficulty  *big.Int
+	Number      *big.Int
+	GasLimit    uint64
+	GasUsed     uint64
+	Time        *big.Int
+	Extra       []byte
+	MixDigest   common.Hash
+	Nonce       BlockNonce
+}
+
 // field type overrides for gencodec
 type headerMarshaling struct {
 	Difficulty *hexutil.Big
@@ -96,6 +114,53 @@ type headerMarshaling struct {
 	Extra      hexutil.Bytes
 	Extra2     hexutil.Bytes
 	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
+}
+
+// DecodeRLP decodes the Ethereum
+func (h *Header) DecodeRLP(s *rlp.Stream) error {
+	var hs headerStorage
+	if err := s.Decode(&hs); err != nil {
+		return err
+	}
+	*h = Header{
+		ParentHash:  hs.ParentHash,
+		UncleHash:   hs.UncleHash,
+		Coinbase:    hs.Coinbase,
+		Root:        hs.Root,
+		TxHash:      hs.TxHash,
+		ReceiptHash: hs.ReceiptHash,
+		Bloom:       hs.Bloom,
+		Difficulty:  hs.Difficulty,
+		Number:      hs.Number,
+		GasLimit:    hs.GasLimit,
+		GasUsed:     hs.GasUsed,
+		Time:        hs.Time,
+		Extra:       hs.Extra,
+		MixDigest:   hs.MixDigest,
+		Nonce:       hs.Nonce,
+	}
+	return nil
+}
+
+// EncodeRLP serializes b into the Ethereum RLP block format.
+func (h *Header) EncodeRLP(w io.Writer) error {
+	return rlp.Encode(w, headerStorage{
+		ParentHash:  h.ParentHash,
+		UncleHash:   h.UncleHash,
+		Coinbase:    h.Coinbase,
+		Root:        h.Root,
+		TxHash:      h.TxHash,
+		ReceiptHash: h.ReceiptHash,
+		Bloom:       h.Bloom,
+		Difficulty:  h.Difficulty,
+		Number:      h.Number,
+		GasLimit:    h.GasLimit,
+		GasUsed:     h.GasUsed,
+		Time:        h.Time,
+		Extra:       h.Extra,
+		MixDigest:   h.MixDigest,
+		Nonce:       h.Nonce,
+	})
 }
 
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
@@ -349,7 +414,8 @@ func (b *Block) TxHash() common.Hash      { return b.header.TxHash }
 func (b *Block) ReceiptHash() common.Hash { return b.header.ReceiptHash }
 func (b *Block) UncleHash() common.Hash   { return b.header.UncleHash }
 func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Extra) }
-func (b *Block) Extra2() []byte           { return common.CopyBytes(b.header.Extra2) }
+
+func (b *Block) Extra2() []byte { return common.CopyBytes(b.header.Extra2) }
 
 func (b *Block) Header() *Header { return b.header } // TODO: fix it.
 // func (b *Block) Header() *Header { return CopyHeader(b.header) }
