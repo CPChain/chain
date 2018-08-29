@@ -77,6 +77,9 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 	ipfsDb := ethdb.NewIpfsDb(defaultDbURL)
 	bytesToPut, _ := sealed.toBytes()
 	ipfsAddr, err := ipfsDb.Put(bytesToPut)
+	if err != nil {
+		return PayloadReplacement{}, err
+	}
 
 	// Enclose as a PayloadReplacement struct.
 	replacement := PayloadReplacement{
@@ -114,11 +117,11 @@ func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
 	return result
 }
 
-const Key_Length = 32
+const keyLength = 32
 
 // generateSymmetricKey generate a random symmetric key.
 func generateSymmetricKey() ([]byte, error) {
-	key := make([]byte, Key_Length)
+	key := make([]byte, keyLength)
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
 		return nil, err
 	}
@@ -144,22 +147,6 @@ func encryptPayload(payload []byte, nonce []byte) (encryptedPayload []byte, symm
 
 	encrypted := aesgcm.Seal(nil, nonce, payload, nil)
 	return encrypted, symKey, nil
-}
-
-// decrypt function decrypts payload with the given symmetric key.
-// Returns decrypted payload and error if exists.
-func decrypt(cipherdata []byte, skey []byte, nonce []byte) ([]byte, error) {
-	block, err := aes.NewCipher(skey)
-	if err != nil {
-		return nil, err
-	}
-
-	aesgcm, err := cipher.NewGCM(block)
-	data, err := aesgcm.Open(nil, nonce, cipherdata, nil)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }
 
 // Below code is temporary and just for testing. It will be removed later.
