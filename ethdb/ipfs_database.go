@@ -3,64 +3,58 @@ package ethdb
 import (
 	"bytes"
 
+	"io"
+
+	"io/ioutil"
+
 	"github.com/ipfs/go-ipfs-api"
 )
 
+// IPFS-based database.
 type IpfsDatabase struct {
-	url   string
-	shell *shell.Shell
+	adapter IpfsAdapter
 }
 
+// Adapter for IPFS access and make a room for weaving fake IPFS in unit test.
+type IpfsAdapter interface {
+	// Read data from IPFS.
+	Cat(path string) (io.ReadCloser, error)
+	// Add/save data to IPFS.
+	Add(r io.Reader) (string, error)
+}
+
+// Create a new IpfsDatabase instance with given url which is the IPFS node's API url.
 func NewIpfsDb(url string) *IpfsDatabase {
-	s := shell.NewShell(url)
-	return NewIpfsDbWithShell(url, s)
+	s := IpfsAdapter(shell.NewShell(url))
+	return NewIpfsDbWithAdapter(s)
 }
 
-func NewIpfsDbWithShell(url string, s *shell.Shell) *IpfsDatabase {
+// Create a new IpfsDatabase instance with given IPFS adapter.
+func NewIpfsDbWithAdapter(adapter IpfsAdapter) *IpfsDatabase {
 	return &IpfsDatabase{
-		url:   url,
-		shell: s,
+		adapter: adapter,
 	}
 }
 
+// Retrieve data from IPFS with given key.
 func (db *IpfsDatabase) Get(key []byte) ([]byte, error) {
 	k := string(key[:])
-	reader, err := db.shell.Cat(k)
+	reader, err := db.adapter.Cat(k)
 	if err != nil {
 		return nil, err
 	}
 
-	const bufsize = 1000
-	buf := make([]byte, bufsize)
-	ret := []byte{}
-	for {
-		n, _ := reader.Read(buf)
-		if n == 0 {
-			break
-		}
-
-		ret = append(ret, buf[:n]...)
-	}
-	return ret, nil
+	return ioutil.ReadAll(reader)
 }
 
+// Save data to IPFS and return key(internally it is a hash).
 func (db *IpfsDatabase) Put(value []byte) ([]byte, error) {
 	reader := bytes.NewBuffer(value)
-	hash, err := db.shell.Add(reader)
+	hash, err := db.adapter.Add(reader)
 
 	if err != nil {
 		return nil, err
 	} else {
 		return []byte(hash), nil
 	}
-}
-
-func (db *IpfsDatabase) Delete(key []byte) error {
-	// TODO: implement it
-	return nil
-}
-
-func (db *IpfsDatabase) Has(key []byte) (bool, error) {
-	// TODO: implement it
-	return false, nil
 }
