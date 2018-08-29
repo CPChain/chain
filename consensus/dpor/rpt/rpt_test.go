@@ -4,17 +4,24 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"testing"
 
 	"github.com/ethereum/go-ethereum/params"
 
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func ExampleBasicCollector_GetRpt() {
-	hex := "0x96216849c49358B10257cb55b28eA603c874b05E"
+var (
+	//endpoint = "http://localhost:8501"
+	endpoint = "https://rinkeby.infura.io"
+	blockNum = uint64(0)
+	hex      = "0x96216849c49358B10257cb55b28eA603c874b05E"
+)
+
+func TestBasicCollector_GetRpt(t *testing.T) {
+
 	address := common.HexToAddress(hex)
-	blockNum := uint64(2764854)
-	endpoint := "https://rinkeby.infura.io"
+
 	config := &CollectorConfig{
 		LeaderReward: 50,
 		ProxyReward:  50,
@@ -35,16 +42,18 @@ func ExampleBasicCollector_GetRpt() {
 	}
 	bc, err := NewBasicCollector(endpoint, config)
 	if err != nil {
-		fmt.Println(err)
+		t.Errorf("TestBasicCollector_GetRpt error:%v", err)
 	}
 
 	rpt := bc.GetRpt(address, blockNum)
 	fmt.Println("address:", rpt.Address.Hex(), "rpt:", rpt.Rpt)
+	if hex != rpt.Address.Hex() {
+		t.Error("rpt address error")
+	}
 	// output: address: 0x96216849c49358B10257cb55b28eA603c874b05E rpt: 1.8992704077599994e+19
 }
 
-func ExampleNewBasicCollector() {
-	endpoint := "https://rinkeby.infura.io"
+func TestNewBasicCollector(t *testing.T) {
 	config := &CollectorConfig{
 		LeaderReward: 50,
 		ProxyReward:  50,
@@ -68,8 +77,6 @@ func ExampleNewBasicCollector() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	hex := "0x96216849c49358B10257cb55b28eA603c874b05E"
-	blockNum := 2764854
 	address := common.HexToAddress(hex)
 	balance, err := bc.BalanceAt(context.Background(), address, big.NewInt(int64(blockNum)))
 
@@ -78,9 +85,7 @@ func ExampleNewBasicCollector() {
 
 }
 
-func ExampleBasicCollector_GetRpts() {
-	blockNum := uint64(2764854)
-	endpoint := "https://rinkeby.infura.io"
+func TestBasicCollector_GetRpts(t *testing.T) {
 	config := &CollectorConfig{
 		LeaderReward: 50,
 		ProxyReward:  50,
@@ -102,7 +107,7 @@ func ExampleBasicCollector_GetRpts() {
 
 	bc, err := NewBasicCollector(endpoint, config)
 	if err != nil {
-		fmt.Println(err)
+		t.Errorf("TestBasicCollector_GetRpts error:%v", err)
 	}
 
 	var addresses []common.Address
@@ -118,9 +123,7 @@ func ExampleBasicCollector_GetRpts() {
 	// output: rpt of 0x0000000000000000000000000000000000000000 is 13766293544625745920.000000
 }
 
-func ExampleBasicCollector_GetRptInfos() {
-	blockNum := uint64(2764854)
-	endpoint := "https://rinkeby.infura.io"
+func TestBasicCollector_GetRptInfos(t *testing.T) {
 	config := &CollectorConfig{
 		LeaderReward: 50,
 		ProxyReward:  50,
@@ -142,7 +145,7 @@ func ExampleBasicCollector_GetRptInfos() {
 
 	bc, err := NewBasicCollector(endpoint, config)
 	if err != nil {
-		fmt.Println(err)
+		t.Errorf("TestBasicCollector_GetRptInfos error:%v", err)
 	}
 	var addresses []common.Address
 
