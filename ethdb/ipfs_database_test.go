@@ -3,22 +3,46 @@ package ethdb_test
 import (
 	"testing"
 
+	"bytes"
+	"crypto/sha256"
+	"io"
+	"io/ioutil"
+
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/ethdb"
 )
 
-type composer struct {
-	name      string
-	birthYear int
+// Fake IPFS for unit test.
+type FakeIpfsAdapter struct {
+	store map[string][]byte
 }
 
-const testDbUrl = "localhost:5001"
+func newFakeIpfsAdapter() *FakeIpfsAdapter {
+	return &FakeIpfsAdapter{
+		store: map[string][]byte{},
+	}
+}
+
+func (adapter *FakeIpfsAdapter) Cat(path string) (io.ReadCloser, error) {
+	buf := adapter.store[path]
+	return ioutil.NopCloser(bytes.NewReader(buf)), nil
+}
+
+func (adapter *FakeIpfsAdapter) Add(r io.Reader) (string, error) {
+	data, _ := ioutil.ReadAll(r)
+	hash := sha256.Sum256(data)
+	path := hexutil.Encode(hash[:])
+	adapter.store[path] = data[:]
+	return path, nil
+}
+
 const testDbWrongUrl = "localhost:5002"
 
 var normalContent = []byte("this is a placeholder for private tx payload.")
 
-// Test for putting and getting normal content
+// Test for putting and getting normal content.
 func TestIpfsDbGetPutWithNormalContent(t *testing.T) {
-	db := ethdb.NewIpfsDb(testDbUrl)
+	db := ethdb.NewIpfsDbWithAdapter(newFakeIpfsAdapter())
 	key, err := db.Put(normalContent)
 	if key == nil {
 		t.Errorf("Normal put operation should return a non-empty key.")
@@ -35,9 +59,9 @@ func TestIpfsDbGetPutWithNormalContent(t *testing.T) {
 	}
 }
 
-// Test for putting and getting empty content
+// Test for putting and getting empty content.
 func TestIpfsDbGetPutWithEmptyValue(t *testing.T) {
-	db := ethdb.NewIpfsDb(testDbUrl)
+	db := ethdb.NewIpfsDbWithAdapter(newFakeIpfsAdapter())
 	// putting empty value into db should work as normal
 	emptyContent := []byte{}
 
@@ -57,6 +81,7 @@ func TestIpfsDbGetPutWithEmptyValue(t *testing.T) {
 	}
 }
 
+// Test new IPFS database with wrong URL.
 func TestIpfsDbWithWrongUrl(t *testing.T) {
 	wrongDb := ethdb.NewIpfsDb(testDbWrongUrl)
 	_, err := wrongDb.Put(normalContent)

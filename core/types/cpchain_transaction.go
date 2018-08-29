@@ -12,6 +12,7 @@ type CpcMessage struct {
 	isPrivate bool
 }
 
+// Create a new CpcMessage instance with given parameters.
 func NewCpcMessage(from common.Address, to *common.Address, nonce uint64, amount *big.Int, gasLimit uint64, price *big.Int, data []byte, checkNonce bool, isPrivate bool) CpcMessage {
 	return CpcMessage{
 		Message:   NewMessage(from, to, nonce, amount, gasLimit, price, data, checkNonce),
@@ -19,6 +20,7 @@ func NewCpcMessage(from common.Address, to *common.Address, nonce uint64, amount
 	}
 }
 
+// Return if the CpcMessage instance is private.
 func (cm CpcMessage) IsPrivate() bool {
 	return cm.isPrivate
 }
@@ -27,7 +29,7 @@ func (cm CpcMessage) IsPrivate() bool {
 const PrivateTxTag1 = 47 // When r is even
 const PrivateTxTag2 = 48 // When r is odd
 
-// Represent CPChain transaction
+// Represent CPChain transaction.
 type CpcTransaction struct {
 	*Transaction
 }
@@ -44,12 +46,12 @@ func (tx *CpcTransaction) ASMessage(s Signer) (CpcMessage, error) {
 	}, nil
 }
 
-// Check if the CPChain tx is private
+// Check if the CPChain tx is private.
 func (tx *CpcTransaction) IsPrivate() bool {
 	return tx.GetV() == PrivateTxTag1 || tx.GetV() == PrivateTxTag2
 }
 
-// Set the tx as private
+// Set the tx as private.
 func (tx *CpcTransaction) SetPrivate(isPrivate bool) {
 	if isPrivate {
 		if tx.GetV() == 28 {
