@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"strconv"
 	"sync"
@@ -693,7 +692,14 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 // will only announce it's availability (depending what's requested).
 func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 	hash := block.Hash()
+
 	peers := pm.peers.PeersWithoutBlock(hash)
+	// TODO: fix this.
+	log.Info("--------dpor:" + strconv.FormatBool(pm.chainconfig.Dpor != nil) + "--------")
+	if pm.chainconfig.Dpor != nil {
+		peers = pm.peers.AllPeers()
+		log.Info("got all peers.")
+	}
 
 	log.Info("--------I am in handler.BroadcastBlock start--------")
 	log.Info("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
@@ -709,8 +715,11 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash)
 			return
 		}
+		// TODO: fix this.
+		log.Info("propagating block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex() + "td: " + strconv.Itoa(int(td.Int64())))
 		// Send the block to a subset of our peers
-		transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		// transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		transfer := peers[:]
 		for _, peer := range transfer {
 			peer.AsyncSendNewBlock(block, td)
 		}

@@ -657,6 +657,7 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 			go f.broadcastBlock(block, true)
 
 		case consensus.ErrNotEnoughSigs:
+			go f.broadcastBlock(block, true)
 			return
 
 		case consensus.ErrFutureBlock:
