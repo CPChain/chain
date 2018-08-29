@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
+// TestSealPrivatePayload test seal and encrypt private tx's payload.
 func TestSealPrivatePayload(t *testing.T) {
 	payload := []byte("This is a payload plaintext.")
 	txNonce := uint64(10000)
@@ -44,6 +45,7 @@ func TestSealPrivatePayload(t *testing.T) {
 	}
 }
 
+// TestGetPrivateKeyForAccount tests getting private key for given account.
 func TestGetPrivateKeyForAccount(t *testing.T) {
 	account1 := "e94b7b6c5a0e526a4d97f9768ad6097bde25c62a"
 	prv1 := GetPrivateKeyForAccount(account1)

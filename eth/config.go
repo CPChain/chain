@@ -116,7 +116,7 @@ type Config struct {
 	DocRoot string `toml:"-"`
 
 	// The URL for access API of IPFS
-	IpfsUrl string
+	IpfsURL string
 }
 
 type configMarshaling struct {

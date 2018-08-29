@@ -255,6 +255,7 @@ func (tx *Transaction) RawSignatureValues() (*big.Int, *big.Int, *big.Int) {
 	return tx.data.V, tx.data.R, tx.data.S
 }
 
+// GetV returns V value.
 func (tx *Transaction) GetV() uint64 {
 	if tx.data.V != nil {
 		return tx.data.V.Uint64()
@@ -263,6 +264,7 @@ func (tx *Transaction) GetV() uint64 {
 	}
 }
 
+// SetV sets V value by given value.
 func (tx *Transaction) SetV(v uint64) {
 	if tx.data.V == nil {
 		tx.data.V = &big.Int{}

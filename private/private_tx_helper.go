@@ -14,12 +14,14 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
+// SealedPrivatePayload represents a sealed payload entity in IPFS.
 type SealedPrivatePayload struct {
 	Payload       []byte
 	SymmetricKeys [][]byte
 	Participants  [][]byte
 }
 
+// NewSealedPrivatePayload creates new SealedPrivatePayload instance with given parameters.
 func NewSealedPrivatePayload(encryptedPayload []byte, symmetricKey [][]byte, participants []*rsa.PublicKey) SealedPrivatePayload {
 	keysToStore := make([][]byte, len(participants))
 	for i, key := range participants {
@@ -33,6 +35,7 @@ func NewSealedPrivatePayload(encryptedPayload []byte, symmetricKey [][]byte, par
 	}
 }
 
+// toBytes returns serialized SealedPrivatePayload instance represented by bytes.
 func (sealed *SealedPrivatePayload) toBytes() ([]byte, error) {
 	bytes, err := rlp.EncodeToBytes(sealed)
 	if err != nil {
@@ -41,14 +44,15 @@ func (sealed *SealedPrivatePayload) toBytes() ([]byte, error) {
 	return bytes, nil
 }
 
+// PayloadReplacement represents the replacement data which substitute the private tx payload.
 type PayloadReplacement struct {
 	Participants []string
 	Address      []byte
 }
 
-const defaultDbUrl = "localhost:5001"
+const defaultDbURL = "localhost:5001"
 
-// Encrypt private tx's payload and send to IPFS, then replace the payload with the address in IPFS.
+// SealPrivatePayload encrypts private tx's payload and send to IPFS, then replace the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
 func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (PayloadReplacement, error) {
 	// Encrypt payload
@@ -70,7 +74,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 	sealed := NewSealedPrivatePayload(encryptPayload, symKeys, pubKeys)
 
 	// Put to IPFS
-	ipfsDb := ethdb.NewIpfsDb(defaultDbUrl)
+	ipfsDb := ethdb.NewIpfsDb(defaultDbURL)
 	bytesToPut, _ := sealed.toBytes()
 	ipfsAddr, err := ipfsDb.Put(bytesToPut)
 
@@ -82,6 +86,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 	return replacement, nil
 }
 
+// stringsToPublicKeys converts string to rsa.PublicKey instance.
 func stringsToPublicKeys(keys []string) ([]*rsa.PublicKey, error) {
 	pubKeys := make([]*rsa.PublicKey, len(keys))
 
@@ -95,6 +100,7 @@ func stringsToPublicKeys(keys []string) ([]*rsa.PublicKey, error) {
 	return pubKeys, nil
 }
 
+// sealSymmetricKey sealed symmetric key by encrypting it with participant's public keys one by one.
 func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
 	result := make([][]byte, len(keys))
 	for i, key := range keys {
@@ -110,7 +116,7 @@ func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
 
 const Key_Length = 32
 
-// Generate a random symmetric key.
+// generateSymmetricKey generate a random symmetric key.
 func generateSymmetricKey() ([]byte, error) {
 	key := make([]byte, Key_Length)
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
@@ -119,8 +125,7 @@ func generateSymmetricKey() ([]byte, error) {
 	return key, nil
 }
 
-// Encrypt payload with a random symmetric key.
-// Returns encrypted payload and the random symmetric key.
+// encryptPayload encrypts payload with a random symmetric key and returns encrypted payload and the random symmetric key.
 func encryptPayload(payload []byte, nonce []byte) (encryptedPayload []byte, symmetricKey []byte, err error) {
 	symKey, err := generateSymmetricKey()
 	if err != nil {
@@ -141,7 +146,7 @@ func encryptPayload(payload []byte, nonce []byte) (encryptedPayload []byte, symm
 	return encrypted, symKey, nil
 }
 
-// Decrypt payload with the given symmetric key.
+// decrypt function decrypts payload with the given symmetric key.
 // Returns decrypted payload and error if exists.
 func decrypt(cipherdata []byte, skey []byte, nonce []byte) ([]byte, error) {
 	block, err := aes.NewCipher(skey)
@@ -158,7 +163,6 @@ func decrypt(cipherdata []byte, skey []byte, nonce []byte) ([]byte, error) {
 }
 
 // Below code is temporary and just for testing. It will be removed later.
-
 // Test private keys and public keys in dev environment.
 // Account1: e94b7b6c5a0e526a4d97f9768ad6097bde25c62a
 //     private key: 0x308204a30201000282010100d065e5942da25a81fc431f46788281a19d2b961ca14cddc09376c7d63d949ae581735cbee1ff96d60b6410a4501d2c9df01ec6152e39600a80f0af1446c5f4ec275a292c5d9d1ef70a07c04c4f0dd1c8e586059002c16e9c4189c47c848adbd06f256a05da7557f3a4d781e7f185a47045eb4926c6db5c45f639091c7c3e1b29c9869f293b97963cdb83f586bf7e35d2ae1745c79baaa9912f2acd46b1fe35112c50eff32d356e6c2edc27dfa5564ad2ce04e8f39de86ddf5eb76e5958b23da580c242653463eec95ca186f916d5709ccae8ede25c1ad4b19cd62b1e1cfe7e6ea53f8fcd3c7812d2ceb89b5cd3e0d7d4926c9627ddd531fc59010b95a30de8a70203010001028201003b4901aac9e0aa06d890efd0c86fb81915f1545f08b42951a3a1e2efdbcceed3e3a3c1fabba84e6cce08c5833917539e0ab5767c880de2789a7dde10d2a1762fc87229cc69454d8dd1d8aaa80ac54faceb3ed94e42ba6c911f43e615d64efa81ad5ce3708ed95b1001111defb211e6d9d9ca39a142691d32f9fcf7ce96b9c457f7725ba60f8b83db5f8c9cafa419cb5e887518623733f41a7406afc2e193763f4ca714bec73df3514c82d4890b5b53650f5d2f72e0ad15180ee7809a2bc8ae18fdb7b9a525bdcb3a66ba9607c00c48791c71b6c51d058717af98d3e8ed72adcbcf0a023ab55ae5fe1845fb67195e9a558886854fc27f6b70a5382045f5ae074102818100df46f0c09eb444a5a2dfda893327682d4294543457a79f2d23cebd847def1b0ab8dac3662c459af1a1adc525254957c6580de7852bfe297b805b1e875cb0509c056ac05b9bab2c65b8204f8ffbeb190884113e3571014bceb73206efbd454779a51c0cab907ef24df5a0d176f238d247dc4aa41f7124ea11c2e6d8008de2ba3902818100eef0b69627e0e907eee0e7238b70ca206595b74f7ece36a05955f7ca50500628e74367bbb068918686f9185d05749b9ac916b683b2e3fb4554ba3d03691a1f1ac90c99c0aa881560600e5c3b7d64b48bce4d03ab8c51e28f6e48dd5c3778400a4cad76a76ac1a9b47da4c8586316a47143e3e944c9d9c6d82d844b39d3cf39df02818100a48062ceb7deff18be1889ad3e0811a40f02b3cb60ad7a044af67e0108bbcac3aa905b188313c165b7860cd322569819e534515877a229b3f94ca9007814db3f286a8f50af2f7d657034360a5243d34cc7e8e0598569bc0d90418684c9812a790061db1fe834ef96ea9ad2d8fcfb4a4a718e78bf45a039e85e1db0153074545902818023bca8f26860813a088666cbb02d5c6de003b6791354306367392e6879fe9e0d3c199ec839a84a2bbec03ede9ad447f9ac9dd30a7b95119ddb0047e3dcb26578921d6a59a0a7ddda9e434794363afbadf55b1b736af74c557b7f366c76776bcc9e8f4b31db0bc02018b2aeac5995a75eb172c30ee0c9cbadc59105d74e50ae2d0281801d051eae3e078597601839a55eedbca499c8e539a9da45a5c7de45b57c3fdeb0c8a2eb8bf34cf7511640fbfe9c4c3bdc824d6afea738890af633fe2a4d0223373010a3bc992094248e03355dfef0e04aa8b122e45e2b5fba27c4636bbe71d09d401625d62e70999d0cf0e509b8f09da683e5ab8350eff925f4e482aedce2c8f8
@@ -178,6 +182,7 @@ func decrypt(cipherdata []byte, skey []byte, nonce []byte) ([]byte, error) {
 
 var testKeyMap = make(map[string]*rsa.PrivateKey)
 
+// GetPrivateKeyForAccount returns private key for given account. It is for testing purpose.
 func GetPrivateKeyForAccount(account string) *rsa.PrivateKey {
 	if len(testKeyMap) == 0 {
 		// initialize
