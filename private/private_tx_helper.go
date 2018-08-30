@@ -16,9 +16,12 @@ import (
 
 // SealedPrivatePayload represents a sealed payload entity in IPFS.
 type SealedPrivatePayload struct {
-	Payload       []byte
+	// Payload represents the encrypted payload with a random symmetric key.
+	Payload []byte
+	// SymmetricKeys represents the symmetric key encrypted with participants' public keys. The same symmetric key but encrypted with different RSA public key.
 	SymmetricKeys [][]byte
-	Participants  [][]byte
+	// Participants represents the public keys of participants.
+	Participants [][]byte
 }
 
 // NewSealedPrivatePayload creates new SealedPrivatePayload instance with given parameters.
@@ -46,8 +49,10 @@ func (sealed *SealedPrivatePayload) toBytes() ([]byte, error) {
 
 // PayloadReplacement represents the replacement data which substitute the private tx payload.
 type PayloadReplacement struct {
+	// Participants represents a list of public keys which belongs to defined participants. They are used for encryption of symmetric key.
 	Participants []string
-	Address      []byte
+	// Address represents an IPFS address which actually a hash of content.
+	Address []byte
 }
 
 const defaultDbURL = "localhost:5001"
