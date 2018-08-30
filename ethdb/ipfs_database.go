@@ -2,9 +2,7 @@ package ethdb
 
 import (
 	"bytes"
-
 	"io"
-
 	"io/ioutil"
 
 	"github.com/ipfs/go-ipfs-api"
