@@ -12,11 +12,12 @@ import (
 	"github.com/ethereum/go-ethereum/ethdb"
 )
 
-// Fake IPFS for unit test.
+// FakeIpfsAdapter is a fake IPFS for unit test.
 type FakeIpfsAdapter struct {
 	store map[string][]byte
 }
 
+// newFakeIpfsAdapter creates a new FakeIpfsAdapter instance.
 func newFakeIpfsAdapter() *FakeIpfsAdapter {
 	return &FakeIpfsAdapter{
 		store: map[string][]byte{},
@@ -36,11 +37,11 @@ func (adapter *FakeIpfsAdapter) Add(r io.Reader) (string, error) {
 	return path, nil
 }
 
-const testDbWrongUrl = "localhost:5002"
+const testDbWrongURL = "localhost:5002"
 
 var normalContent = []byte("this is a placeholder for private tx payload.")
 
-// Test for putting and getting normal content.
+// TestIpfsDbGetPutWithNormalContent tests for putting and getting normal content.
 func TestIpfsDbGetPutWithNormalContent(t *testing.T) {
 	db := ethdb.NewIpfsDbWithAdapter(newFakeIpfsAdapter())
 	key, err := db.Put(normalContent)
@@ -59,7 +60,7 @@ func TestIpfsDbGetPutWithNormalContent(t *testing.T) {
 	}
 }
 
-// Test for putting and getting empty content.
+// TestIpfsDbGetPutWithEmptyValue tests for putting and getting empty content.
 func TestIpfsDbGetPutWithEmptyValue(t *testing.T) {
 	db := ethdb.NewIpfsDbWithAdapter(newFakeIpfsAdapter())
 	// putting empty value into db should work as normal
@@ -81,9 +82,9 @@ func TestIpfsDbGetPutWithEmptyValue(t *testing.T) {
 	}
 }
 
-// Test new IPFS database with wrong URL.
+// TestIpfsDbWithWrongUrl tests new IPFS database with wrong URL.
 func TestIpfsDbWithWrongUrl(t *testing.T) {
-	wrongDb := ethdb.NewIpfsDb(testDbWrongUrl)
+	wrongDb := ethdb.NewIpfsDb(testDbWrongURL)
 	_, err := wrongDb.Put(normalContent)
 	if err == nil {
 		t.Errorf("Wrong url should cause an error.")
