@@ -420,8 +420,8 @@ func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Ext
 
 func (b *Block) Extra2() []byte { return common.CopyBytes(b.header.Extra2) }
 
-//func (b *Block) Header() *Header { return b.header } // TODO: fix it.
-func (b *Block) Header() *Header { return CopyHeader(b.header) }
+func (b *Block) RefHeader() *Header { return b.header } // TODO: fix it.
+func (b *Block) Header() *Header    { return CopyHeader(b.header) }
 
 // Body returns the non-header content of the block.
 func (b *Block) Body() *Body { return &Body{b.transactions, b.uncles} }

@@ -1038,13 +1038,15 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	)
 	// Start the parallel header verifier
 	headers := make([]*types.Header, len(chain))
+	refHeaders := make([]*types.Header, len(chain))
 	seals := make([]bool, len(chain))
 
 	for i, block := range chain {
 		headers[i] = block.Header()
+		refHeaders[i] = block.RefHeader()
 		seals[i] = true
 	}
-	abort, results := bc.engine.VerifyHeaders(bc, headers, seals, headers)
+	abort, results := bc.engine.VerifyHeaders(bc, headers, seals, refHeaders)
 	defer close(abort)
 
 	// Start a parallel signature recovery (signer will fluke on fork transition, minimal perf loss)

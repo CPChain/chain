@@ -149,11 +149,15 @@ func (a *RemoteAgent) SubmitWork(nonce types.BlockNonce, mixDigest, hash common.
 	result.Nonce = nonce
 	result.MixDigest = mixDigest
 
-	if err := a.engine.VerifySeal(a.chain, result, nil); err != nil {
+	refResult := work.Block.RefHeader()
+	refResult.Nonce = nonce
+	refResult.MixDigest = mixDigest
+
+	if err := a.engine.VerifySeal(a.chain, result, refResult); err != nil {
 		log.Warn("Invalid proof-of-work submitted", "hash", hash, "err", err)
 		return false
 	}
-	block := work.Block.WithSeal(result)
+	block := work.Block.WithSeal(refResult)
 
 	// Solutions seems to be valid, return to the miner and notify acceptance
 	a.returnCh <- &Result{work, block}

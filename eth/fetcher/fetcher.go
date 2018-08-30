@@ -53,7 +53,7 @@ type headerRequesterFn func(common.Hash) error
 type bodyRequesterFn func([]common.Hash) error
 
 // headerVerifierFn is a callback type to verify a block's header for fast propagation.
-type headerVerifierFn func(header *types.Header) error
+type headerVerifierFn func(header *types.Header, refHeader *types.Header) error
 
 // blockBroadcasterFn is a callback type for broadcasting a block to connected peers.
 type blockBroadcasterFn func(block *types.Block, propagate bool)
@@ -650,7 +650,7 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 			return
 		}
 		// Quickly validate the header and propagate the block if it passes
-		switch err := f.verifyHeader(block.Header()); err {
+		switch err := f.verifyHeader(block.Header(), block.RefHeader()); err {
 		case nil:
 			// All ok, quickly propagate to our peers
 			propBroadcastOutTimer.UpdateSince(block.ReceivedAt)
