@@ -18,6 +18,7 @@ import (
 type SealedPrivatePayload struct {
 	// Payload represents the encrypted payload with a random symmetric key.
 	Payload []byte
+	// For public keys, the order is consistent in SymmetricKeys and Participants.
 	// SymmetricKeys represents the symmetric key encrypted with participants' public keys. The same symmetric key but encrypted with different RSA public key.
 	SymmetricKeys [][]byte
 	// Participants represents the public keys of participants.
@@ -57,7 +58,7 @@ type PayloadReplacement struct {
 
 const defaultDbURL = "localhost:5001"
 
-// SealPrivatePayload encrypts private tx's payload and send to IPFS, then replace the payload with the address in IPFS.
+// SealPrivatePayload encrypts private tx's payload and sends it to IPFS, then replaces the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
 func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (PayloadReplacement, error) {
 	// Encrypt payload
@@ -65,7 +66,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 	nonce := make([]byte, 12)
 	binary.BigEndian.PutUint64(nonce, txNonce)
 	binary.BigEndian.PutUint32(nonce[8:], uint32(txNonce))
-	encryptPayload, symKey, err := encryptPayload(payload, nonce)
+	encryptedPayload, symKey, err := encryptPayload(payload, nonce)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +77,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 	symKeys := sealSymmetricKey(symKey, pubKeys)
 
 	// Seal the payload by encrypting payload and appending symmetric key and participants.
-	sealed := NewSealedPrivatePayload(encryptPayload, symKeys, pubKeys)
+	sealed := NewSealedPrivatePayload(encryptedPayload, symKeys, pubKeys)
 
 	// Put to IPFS
 	ipfsDb := ethdb.NewIpfsDb(defaultDbURL)

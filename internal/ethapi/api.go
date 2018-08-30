@@ -1231,7 +1231,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		}
 
 		// Replace original content with security one.
-		replaceData, err := rlp.EncodeToBytes(payloadReplace)
+		replaceData, _ := rlp.EncodeToBytes(payloadReplace)
 		args.Data = (*hexutil.Bytes)(&replaceData)
 	}
 
