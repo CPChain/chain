@@ -69,6 +69,8 @@ type Backend interface {
 
 	ChainConfig() *params.ChainConfig
 	CurrentBlock() *types.Block
+
+	IpfsDb() *ethdb.IpfsDatabase // IPfsDb returns IPFS database instance.
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

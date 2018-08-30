@@ -55,11 +55,9 @@ type PayloadReplacement struct {
 	Address []byte
 }
 
-const defaultDbURL = "localhost:5001"
-
 // SealPrivatePayload encrypts private tx's payload and send to IPFS, then replace the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
-func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (PayloadReplacement, error) {
+func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, ipfsDb *ethdb.IpfsDatabase) (PayloadReplacement, error) {
 	// Encrypt payload
 	// use tx's nonce as gcm nonce
 	nonce := make([]byte, 12)
@@ -70,7 +68,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 		panic(err)
 	}
 
-	pubKeys, _ := stringsToPublicKeys(parties)
+	pubKeys, _ := stringsToPublicKeys(participants)
 
 	// Encrypt symmetric keys for participants with related public key.
 	symKeys := sealSymmetricKey(symKey, pubKeys)
@@ -79,7 +77,6 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 	sealed := NewSealedPrivatePayload(encryptPayload, symKeys, pubKeys)
 
 	// Put to IPFS
-	ipfsDb := ethdb.NewIpfsDb(defaultDbURL)
 	bytesToPut, _ := sealed.toBytes()
 	ipfsAddr, err := ipfsDb.Put(bytesToPut)
 	if err != nil {
@@ -89,7 +86,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 	// Enclose as a PayloadReplacement struct.
 	replacement := PayloadReplacement{
 		Address:      ipfsAddr,
-		Participants: parties,
+		Participants: participants,
 	}
 	return replacement, nil
 }
