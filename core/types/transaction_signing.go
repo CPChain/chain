@@ -212,7 +212,7 @@ func (fs FrontierSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v *
 
 	prvTx := PrivateTransaction{tx}
 	if prvTx.IsPrivate() {
-		v = new(big.Int).SetBytes([]byte{sig[64] + PrivateTxTag1})
+		v = new(big.Int).SetBytes([]byte{sig[64] + PrivateTxTag})
 	} else {
 		v = new(big.Int).SetBytes([]byte{sig[64] + 27})
 	}
@@ -244,7 +244,7 @@ func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool, isPriv
 
 	var offset uint64
 	if isPrivate {
-		offset = PrivateTxTag1
+		offset = PrivateTxTag
 	} else {
 		offset = 27
 	}
