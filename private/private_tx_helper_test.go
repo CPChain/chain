@@ -16,7 +16,8 @@ func TestSealPrivatePayload(t *testing.T) {
 		"0x3082010a0282010100bc84262a13ceff4b5d3bfb296d594658ce52b2853d88df4393f96644cdb0c5ab8bf72d529422d955e046c225cf67cf311c3c32ca02abf9f0e3cf669dc702ae07fd234a953113c9744ef11bf33c9794e4b57742bcb2139edfdcc1fbc6258414ca4d9872ee59769aa8caecaa5495c891c168963fd6793e19a42e630f9265abaaf8374911c5ac5dc3170f122c5697fabc72fc4604523a4dd629a34510ade89a0eb26e9ad1ba56f0dfcc83294bcbda9b7d97b2e41d6ea2ad84957e4353207ac51753b801206b4ff99df96bcaec37728956b41ebe892eed87543cf41fba2b02401f15d6daa335baecd30f1622f8bf1bfd39ac638eee957dc3c30ed3b6d823708cd0470203010001"}
 
 	fakeIpfsAdapter := ethdb.NewFakeIpfsAdapter()
-	replacement, err := SealPrivatePayload(payload, txNonce, parties, ethdb.NewIpfsDbWithAdapter(fakeIpfsAdapter))
+	ipfsDb := ethdb.NewIpfsDbWithAdapter(fakeIpfsAdapter)
+	replacement, err := SealPrivatePayload(payload, txNonce, parties, ipfsDb)
 	if err != nil {
 		t.Fatal("It should return expected IPFS address without any error.")
 	}
@@ -24,8 +25,7 @@ func TestSealPrivatePayload(t *testing.T) {
 		t.Fatal("It should return non-empty participants.")
 	}
 
-	ipfsDb := ethdb.NewIpfsDb("localhost:5001")
-	content, err := ipfsDb.Get(replacement.Address)
+	content, err := ipfsDb.Get(replacement.TxPayloadUri)
 	if err != nil {
 		t.Fatal("It should return expected content from IPFS.")
 	}
