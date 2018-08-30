@@ -657,7 +657,10 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 			go f.broadcastBlock(block, true)
 
 		case consensus.ErrNotEnoughSigs:
+			log.Debug("--------I am in fetcher.insert start--------")
+			log.Debug("Now without enough sigs, broadcasting the block...")
 			go f.broadcastBlock(block, true)
+			log.Debug("--------I am in fetcher.insert start--------")
 			return
 
 		case consensus.ErrFutureBlock:

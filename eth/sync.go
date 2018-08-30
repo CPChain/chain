@@ -204,8 +204,10 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		// TODO: check if there is any security problems!
 		if err == consensus.ErrNotEnoughSigs {
 			err := err.(*consensus.ErrNotEnoughSigsType)
-			log.Info("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
-			log.Info("broadcasting num: " + strconv.Itoa(err.BadIndex) + "block number:" + strconv.Itoa(int(err.Blocks[err.BadIndex].Number().Uint64())))
+			log.Debug("--------I am in sync.Synchronise start--------")
+			log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
+			log.Debug("broadcasting num: " + strconv.Itoa(err.BadIndex) + "block number:" + strconv.Itoa(int(err.Blocks[err.BadIndex].Number().Uint64())))
+			log.Debug("--------I am in sync.Synchronise end--------")
 			go pm.BroadcastBlock(err.Blocks[err.BadIndex], true)
 
 			// for i := err.BadIndex; i < len(err.Blocks); i++ {

@@ -42,6 +42,9 @@ var (
 
 	// ErrNotEnoughSigs is returned if there is not enough signatures for a block.
 	ErrNotEnoughSigs = &ErrNotEnoughSigsType{BadIndex: 0}
+
+	// ErrUnauthorized is returned if a header is signed by a non-authorized entity.
+	ErrUnauthorized = errors.New("unauthorized leader")
 )
 
 // ErrNotEnoughSigsType is returned if there is not enough signatures for a block.

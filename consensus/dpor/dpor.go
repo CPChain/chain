@@ -130,9 +130,6 @@ var (
 	// be modified via out-of-range or non-contiguous headers.
 	errInvalidVotingChain = errors.New("invalid voting chain")
 
-	// errUnauthorized is returned if a header is signed by a non-authorized entity.
-	errUnauthorized = errors.New("unauthorized")
-
 	// --- our new error types ---
 
 	// errMultiBlockInOneHeight is returned if there is multi blocks in one height in the chain.
@@ -593,16 +590,16 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 
 	// --- our check starts ---
 	// TODO: add our signature check method here.
-	log.Info("--------I am in dpor.verifySeal start--------")
-	log.Info("hash: " + hash.Hex())
-	log.Info("number: " + strconv.Itoa(int(number)))
+	log.Debug("--------I am in dpor.verifySeal start--------")
+	log.Debug("hash: " + hash.Hex())
+	log.Debug("number: " + strconv.Itoa(int(number)))
 	log.Info("current header: " + strconv.Itoa(int(chain.CurrentHeader().Number.Uint64())))
-	log.Info("leader: " + leader.Hex())
-	log.Info("signers: ")
+	log.Debug("leader: " + leader.Hex())
+	log.Debug("signers: ")
 	for round, signer := range signers {
-		log.Info(strconv.Itoa(round) + ": " + signer.Hex())
+		log.Debug(strconv.Itoa(round) + ": " + signer.Hex())
 	}
-	log.Info("--------I am in dpor.verifySeal end--------")
+	log.Debug("--------I am in dpor.verifySeal end--------")
 
 	// check if the leader is the real leader.
 	ok, err := snap.isLeader(leader, number)
@@ -610,7 +607,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 		return err
 	}
 	if !ok {
-		return errUnauthorized
+		return consensus.ErrUnauthorized
 	}
 
 	// check if accept the sigs and if leader is in the sigs.
@@ -757,7 +754,7 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 	if !ok {
-		return nil, errUnauthorized
+		return nil, consensus.ErrUnauthorized
 	}
 
 	// TODO: fix this.

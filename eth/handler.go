@@ -694,16 +694,16 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 	hash := block.Hash()
 
 	peers := pm.peers.PeersWithoutBlock(hash)
+
 	// TODO: fix this.
-	log.Info("--------dpor:" + strconv.FormatBool(pm.chainconfig.Dpor != nil) + "--------")
+	log.Debug("--------I am in handler.BroadcastBlock start--------")
+	log.Debug("--------dpor:" + strconv.FormatBool(pm.chainconfig.Dpor != nil) + "--------")
 	if pm.chainconfig.Dpor != nil {
 		peers = pm.peers.AllPeers()
-		log.Info("got all peers.")
+		log.Debug("got all peers.")
 	}
 
-	log.Info("--------I am in handler.BroadcastBlock start--------")
-	log.Info("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
-	log.Info("--------I am in handler.BroadcastBlock end--------")
+	log.Debug("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
 
 	// If propagation is requested, send to a subset of the peer
 	if propagate {
@@ -716,7 +716,8 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 			return
 		}
 		// TODO: fix this.
-		log.Info("propagating block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex() + "td: " + strconv.Itoa(int(td.Int64())))
+		log.Debug("propagating block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex() + "td: " + strconv.Itoa(int(td.Int64())))
+		log.Debug("--------I am in handler.BroadcastBlock end--------")
 		// Send the block to a subset of our peers
 		// transfer := peers[:int(math.Sqrt(float64(len(peers))))]
 		transfer := peers[:]
