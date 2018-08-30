@@ -9,7 +9,7 @@ import (
 
 func TestTxIsPrivate(t *testing.T) {
 	trans := NewTransaction(0, common.HexToAddress("0xb794f5ea0ba39494ce83a213fffba74279579268"), new(big.Int), 0, new(big.Int), nil)
-	cpcTrans := PrivateTransaction{trans}
+	cpcTrans := (*PrivateTransaction)(trans)
 
 	if cpcTrans.IsPrivate() {
 		t.Fatal("Initial IsPrivate state should be false.")

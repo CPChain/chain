@@ -30,20 +30,16 @@ const PrivateTxTag = 47  // When r is even
 const PrivateTxTag2 = 48 // When r is odd
 
 // PrivateTransaction represents a private transaction.
-type PrivateTransaction struct {
-	*Transaction
-}
+type PrivateTransaction Transaction
 
 // AsMessage returns the transaction as a PrivateMessage.
 func (tx *PrivateTransaction) AsMessage(s Signer) (PrivateMessage, error) {
-	msg, err := tx.Transaction.AsMessage(s)
+	msg, err := tx.AsMessage(s)
 	if err != nil {
 		return PrivateMessage{}, err
 	}
 
-	return PrivateMessage{
-		Message: msg,
-	}, nil
+	return PrivateMessage(msg), nil
 }
 
 // IsPrivate checks if the tx is private.
@@ -66,4 +62,21 @@ func (tx *PrivateTransaction) SetPrivate(isPrivate bool) {
 			tx.SetV(27)
 		}
 	}
+}
+
+// GetV returns V value.
+func (tx *PrivateTransaction) GetV() uint64 {
+	if tx.data.V != nil {
+		return tx.data.V.Uint64()
+	} else {
+		return 0
+	}
+}
+
+// SetV sets V value by given value.
+func (tx *PrivateTransaction) SetV(v uint64) {
+	if tx.data.V == nil {
+		tx.data.V = &big.Int{}
+	}
+	tx.data.V.SetUint64(v)
 }
