@@ -593,7 +593,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	log.Debug("--------I am in dpor.verifySeal start--------")
 	log.Debug("hash: " + hash.Hex())
 	log.Debug("number: " + strconv.Itoa(int(number)))
-	log.Info("current header: " + strconv.Itoa(int(chain.CurrentHeader().Number.Uint64())))
+	log.Debug("current header: " + strconv.Itoa(int(chain.CurrentHeader().Number.Uint64())))
 	log.Debug("leader: " + leader.Hex())
 	log.Debug("signers: ")
 	for round, signer := range signers {
