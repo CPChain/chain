@@ -1121,8 +1121,7 @@ type SendTxArgs struct {
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input"`
 
-	// CPC Private Tx Implement
-	PrivateFrom  string   `json:"privateFrom"`
+	// Private Tx Implementation
 	Participants []string `json:"participants"`
 }
 
@@ -1224,7 +1223,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	}
 
 	// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
-	isPrivate := len(args.PrivateFrom) != 0 && len(args.Participants) != 0 && args.Data != nil
+	isPrivate := len(args.Participants) != 0 && args.Data != nil
 	if isPrivate {
 		payloadReplace, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants)
 		if err != nil {
