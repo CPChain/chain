@@ -158,8 +158,8 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 		chainID := deriveChainId(dec.V).Uint64()
 		V = byte(dec.V.Uint64() - 35 - 2*chainID)
 	} else {
-		if dec.V.Uint64() == PrivateTxTag1 || dec.V.Uint64() == PrivateTxTag2 {
-			V = byte(dec.V.Uint64() - PrivateTxTag1)
+		if dec.V.Uint64() == PrivateTxTag || dec.V.Uint64() == PrivateTxTag2 {
+			V = byte(dec.V.Uint64() - PrivateTxTag)
 		} else {
 			V = byte(dec.V.Uint64() - 27)
 		}

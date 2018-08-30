@@ -26,7 +26,7 @@ func (cm PrivateMessage) IsPrivate() bool {
 }
 
 // Ref: https://bitcoin.stackexchange.com/questions/38351/ecdsa-v-r-s-what-is-v
-const PrivateTxTag1 = 47 // When r is even
+const PrivateTxTag = 47  // When r is even
 const PrivateTxTag2 = 48 // When r is odd
 
 // PrivateTransaction represents a private transaction.
@@ -48,7 +48,7 @@ func (tx *PrivateTransaction) ASMessage(s Signer) (PrivateMessage, error) {
 
 // IsPrivate checks if the tx is private.
 func (tx *PrivateTransaction) IsPrivate() bool {
-	return tx.GetV() == PrivateTxTag1 || tx.GetV() == PrivateTxTag2
+	return tx.GetV() == PrivateTxTag || tx.GetV() == PrivateTxTag2
 }
 
 // SetPrivate sets the tx as private.
@@ -57,7 +57,7 @@ func (tx *PrivateTransaction) SetPrivate(isPrivate bool) {
 		if tx.GetV() == 28 {
 			tx.SetV(PrivateTxTag2)
 		} else {
-			tx.SetV(PrivateTxTag1)
+			tx.SetV(PrivateTxTag)
 		}
 	} else {
 		if tx.GetV() == PrivateTxTag2 {
