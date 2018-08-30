@@ -38,7 +38,7 @@ func TestTestMode(t *testing.T) {
 	}
 	head.Nonce = types.EncodeNonce(block.Nonce())
 	head.MixDigest = block.MixDigest()
-	if err := ethash.VerifySeal(nil, head); err != nil {
+	if err := ethash.VerifySeal(nil, head, nil); err != nil {
 		t.Fatalf("unexpected verification error: %v", err)
 	}
 }
@@ -74,6 +74,6 @@ func verifyTest(wg *sync.WaitGroup, e *Ethash, workerIndex, epochs int) {
 			block = 0
 		}
 		head := &types.Header{Number: big.NewInt(block), Difficulty: big.NewInt(100)}
-		e.VerifySeal(nil, head)
+		e.VerifySeal(nil, head, nil)
 	}
 }

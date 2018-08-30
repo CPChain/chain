@@ -21,12 +21,32 @@ import (
 	"math/big"
 	"testing"
 
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/rlp"
 )
+
+type headerTest struct {
+	ParentHash  common.Hash
+	UncleHash   common.Hash
+	Coinbase    common.Address
+	Root        common.Hash
+	TxHash      common.Hash
+	ReceiptHash common.Hash
+	Bloom       types.Bloom
+	Difficulty  *big.Int
+	Number      *big.Int
+	GasLimit    uint64
+	GasUsed     uint64
+	Time        *big.Int
+	Extra       []byte
+	MixDigest   common.Hash
+	Nonce       types.BlockNonce
+}
 
 // Tests block header storage and retrieval operations.
 func TestHeaderStorage(t *testing.T) {
@@ -47,8 +67,33 @@ func TestHeaderStorage(t *testing.T) {
 	if entry := ReadHeaderRLP(db, header.Hash(), header.Number.Uint64()); entry == nil {
 		t.Fatalf("Stored header RLP not found")
 	} else {
+		var headerFromRLP types.Header
+		rlp.DecodeBytes(entry, &headerFromRLP)
+		fmt.Println("headerFromRLP:", headerFromRLP)
+		fmt.Println("headerFromRLP extra:", string(headerFromRLP.Extra))
+
+		// remove extra2 field from RLP to align with code in header.Hash
+		tmpHeader := headerTest{
+			headerFromRLP.ParentHash,
+			headerFromRLP.UncleHash,
+			headerFromRLP.Coinbase,
+			headerFromRLP.Root,
+			headerFromRLP.TxHash,
+			headerFromRLP.ReceiptHash,
+			headerFromRLP.Bloom,
+			headerFromRLP.Difficulty,
+			headerFromRLP.Number,
+			headerFromRLP.GasLimit,
+			headerFromRLP.GasUsed,
+			headerFromRLP.Time,
+			headerFromRLP.Extra,
+			headerFromRLP.MixDigest,
+			headerFromRLP.Nonce,
+		}
+		tmpHeaderBytes, _ := rlp.EncodeToBytes(tmpHeader)
+
 		hasher := sha3.NewKeccak256()
-		hasher.Write(entry)
+		hasher.Write(tmpHeaderBytes)
 
 		if hash := common.BytesToHash(hasher.Sum(nil)); hash != header.Hash() {
 			t.Fatalf("Retrieved RLP header mismatch: have %v, want %v", entry, header)
@@ -59,6 +104,30 @@ func TestHeaderStorage(t *testing.T) {
 	if entry := ReadHeader(db, header.Hash(), header.Number.Uint64()); entry != nil {
 		t.Fatalf("Deleted header returned: %v", entry)
 	}
+}
+
+func sigHash(header *types.Header) (hash common.Hash) {
+	hasher := sha3.NewKeccak256()
+
+	rlp.Encode(hasher, []interface{}{
+		header.ParentHash,
+		header.UncleHash,
+		header.Coinbase,
+		header.Root,
+		header.TxHash,
+		header.ReceiptHash,
+		header.Bloom,
+		header.Difficulty,
+		header.Number,
+		header.GasLimit,
+		header.GasUsed,
+		header.Time,
+		header.Extra,
+		header.MixDigest,
+		header.Nonce,
+	})
+	hasher.Sum(hash[:0])
+	return hash
 }
 
 // Tests block body storage and retrieval operations.
