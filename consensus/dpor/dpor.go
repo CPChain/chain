@@ -317,20 +317,20 @@ func (c *Dpor) Author(header *types.Header) (common.Address, error) {
 }
 
 // VerifyHeader checks whether a header conforms to the consensus rules.
-func (c *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool) error {
-	return c.verifyHeader(chain, header, nil)
+func (c *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool, refHeader *types.Header) error {
+	return c.verifyHeader(chain, header, nil, refHeader)
 }
 
 // VerifyHeaders is similar to VerifyHeader, but verifies a batch of headers. The
 // method returns a quit channel to abort the operations and a results channel to
 // retrieve the async verifications (the order is that of the input slice).
-func (c *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, seals []bool) (chan<- struct{}, <-chan error) {
+func (c *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, seals []bool, refHeaders []*types.Header) (chan<- struct{}, <-chan error) {
 	abort := make(chan struct{})
 	results := make(chan error, len(headers))
 
 	go func() {
 		for i, header := range headers {
-			err := c.verifyHeader(chain, header, headers[:i])
+			err := c.verifyHeader(chain, header, headers[:i], refHeaders[i])
 
 			select {
 			case <-abort:
@@ -346,7 +346,7 @@ func (c *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Heade
 // caller may optionally pass in a batch of parents (ascending order) to avoid
 // looking those up from the database. This is useful for concurrently verifying
 // a batch of new headers.
-func (c *Dpor) verifyHeader(chain consensus.ChainReader, header *types.Header, parents []*types.Header) error {
+func (c *Dpor) verifyHeader(chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	if header.Number == nil {
 		return errUnknownBlock
 	}
@@ -402,14 +402,14 @@ func (c *Dpor) verifyHeader(chain consensus.ChainReader, header *types.Header, p
 		return err
 	}
 	// All basic checks passed, verify cascading fields
-	return c.verifyCascadingFields(chain, header, parents)
+	return c.verifyCascadingFields(chain, header, parents, refHeader)
 }
 
 // verifyCascadingFields verifies all the header fields that are not standalone,
 // rather depend on a batch of previous headers. The caller may optionally pass
 // in a batch of parents (ascending order) to avoid looking those up from the
 // database. This is useful for concurrently verifying a batch of new headers.
-func (c *Dpor) verifyCascadingFields(chain consensus.ChainReader, header *types.Header, parents []*types.Header) error {
+func (c *Dpor) verifyCascadingFields(chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	// The genesis block is the always valid dead-end
 	number := header.Number.Uint64()
 	if number == 0 {
@@ -445,7 +445,7 @@ func (c *Dpor) verifyCascadingFields(chain consensus.ChainReader, header *types.
 		}
 	}
 	// All basic checks passed, verify the seal and return
-	return c.verifySeal(chain, header, parents)
+	return c.verifySeal(chain, header, parents, refHeader)
 }
 
 // snapshot retrieves the authorization snapshot at a given point in time.
@@ -472,7 +472,7 @@ func (c *Dpor) snapshot(chain consensus.ChainReader, number uint64, hash common.
 		// If we're at block zero, make a snapshot
 		if number == 0 {
 			genesis := chain.GetHeaderByNumber(0)
-			if err := c.VerifyHeader(chain, genesis, false); err != nil {
+			if err := c.VerifyHeader(chain, genesis, false, nil); err != nil {
 				return nil, err
 			}
 			signers := make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal)/common.AddressLength)
@@ -536,8 +536,8 @@ func (c *Dpor) VerifyUncles(chain consensus.ChainReader, block *types.Block) err
 
 // VerifySeal implements consensus.Engine, checking whether the signature contained
 // in the header satisfies the consensus protocol requirements.
-func (c *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header) error {
-	return c.verifySeal(chain, header, nil)
+func (c *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, refHeader *types.Header) error {
+	return c.verifySeal(chain, header, nil, refHeader)
 }
 
 // acceptSigs checks signatures has enough signature to accept the block.
@@ -570,7 +570,7 @@ func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.A
 // consensus protocol requirements. The method accepts an optional list of parent
 // headers that aren't yet part of the local blockchain to generate the snapshots
 // from.
-func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, parents []*types.Header) error {
+func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	hash := header.Hash()
 	number := header.Number.Uint64()
 
@@ -623,7 +623,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	sigs := s.(map[common.Address][]byte)
 	for round, signer := range snap.signers() {
 		if sigHash, ok := sigs[signer]; ok {
-			copy(header.Extra2[round*extraSeal:(round+1)*extraSeal], sigHash)
+			copy(refHeader.Extra2[round*extraSeal:(round+1)*extraSeal], sigHash)
 		}
 	}
 
@@ -641,7 +641,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 				return err
 			}
 			round, _ := snap.signerRound(c.signer)
-			copy(header.Extra2[round*extraSeal:(round+1)*extraSeal], sighash)
+			copy(refHeader.Extra2[round*extraSeal:(round+1)*extraSeal], sighash)
 		} else {
 			return consensus.ErrNotEnoughSigs
 		}
