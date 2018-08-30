@@ -125,8 +125,8 @@ func (s EIP155Signer) Equal(s2 Signer) bool {
 var big8 = big.NewInt(8)
 
 func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
-	cpcTx := CpcTransaction{tx}
-	if cpcTx.IsPrivate() {
+	prvTx := PrivateTransaction{tx}
+	if prvTx.IsPrivate() {
 		return HomesteadSigner{}.Sender(tx)
 	}
 
@@ -138,14 +138,14 @@ func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
 	}
 	V := new(big.Int).Sub(tx.data.V, s.chainIdMul)
 	V.Sub(V, big8)
-	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true, cpcTx.IsPrivate())
+	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true, prvTx.IsPrivate())
 }
 
 // WithSignature returns a new transaction with the given signature. This signature
 // needs to be in the [R || S || V] format where V is 0 or 1.
 func (s EIP155Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big.Int, err error) {
-	cpcTx := CpcTransaction{tx}
-	if cpcTx.IsPrivate() {
+	prvTx := PrivateTransaction{tx}
+	if prvTx.IsPrivate() {
 		return HomesteadSigner{}.SignatureValues(tx, sig)
 	}
 
@@ -190,8 +190,8 @@ func (hs HomesteadSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v 
 }
 
 func (hs HomesteadSigner) Sender(tx *Transaction) (common.Address, error) {
-	cpcTx := CpcTransaction{tx}
-	return recoverPlain(hs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, true, cpcTx.IsPrivate())
+	prvTx := PrivateTransaction{tx}
+	return recoverPlain(hs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, true, prvTx.IsPrivate())
 }
 
 type FrontierSigner struct{}
@@ -210,8 +210,8 @@ func (fs FrontierSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v *
 	r = new(big.Int).SetBytes(sig[:32])
 	s = new(big.Int).SetBytes(sig[32:64])
 
-	cpcTx := CpcTransaction{tx}
-	if cpcTx.IsPrivate() {
+	prvTx := PrivateTransaction{tx}
+	if prvTx.IsPrivate() {
 		v = new(big.Int).SetBytes([]byte{sig[64] + PrivateTxTag1})
 	} else {
 		v = new(big.Int).SetBytes([]byte{sig[64] + 27})
@@ -233,8 +233,8 @@ func (fs FrontierSigner) Hash(tx *Transaction) common.Hash {
 }
 
 func (fs FrontierSigner) Sender(tx *Transaction) (common.Address, error) {
-	cpcTx := CpcTransaction{tx}
-	return recoverPlain(fs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, false, cpcTx.IsPrivate())
+	prvTx := PrivateTransaction{tx}
+	return recoverPlain(fs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, false, prvTx.IsPrivate())
 }
 
 func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool, isPrivate bool) (common.Address, error) {
