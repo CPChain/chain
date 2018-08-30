@@ -123,24 +123,7 @@ func (h *Header) DecodeRLP(s *rlp.Stream) error {
 	if err := s.Decode(&hs); err != nil {
 		return err
 	}
-	*h = Header{
-		ParentHash:  hs.ParentHash,
-		UncleHash:   hs.UncleHash,
-		Coinbase:    hs.Coinbase,
-		Root:        hs.Root,
-		TxHash:      hs.TxHash,
-		ReceiptHash: hs.ReceiptHash,
-		Bloom:       hs.Bloom,
-		Difficulty:  hs.Difficulty,
-		Number:      hs.Number,
-		GasLimit:    hs.GasLimit,
-		GasUsed:     hs.GasUsed,
-		Time:        hs.Time,
-		Extra:       hs.Extra,
-		Extra2:      hs.Extra2,
-		MixDigest:   hs.MixDigest,
-		Nonce:       hs.Nonce,
-	}
+	*h = Header(hs)
 	return nil
 }
 
