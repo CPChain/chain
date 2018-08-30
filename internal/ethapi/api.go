@@ -1121,7 +1121,7 @@ type SendTxArgs struct {
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input"`
 
-	// CPC Private Tx Implement
+	// private tx implementation
 	PrivateFrom  string   `json:"privateFrom"`
 	Participants []string `json:"participants"`
 }
