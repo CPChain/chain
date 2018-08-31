@@ -42,7 +42,7 @@ type sigCache struct {
 func MakeSigner(config *params.ChainConfig, blockNumber *big.Int) Signer {
 	var signer Signer
 	switch {
-	case config.IsEIP155(blockNumber):
+	case config.IsEIP155(blockNumber) || config.IsCpchain():
 		signer = NewEIP155Signer(config.ChainID)
 	case config.IsHomestead(blockNumber):
 		signer = HomesteadSigner{}
@@ -127,6 +127,8 @@ var big8 = big.NewInt(8)
 func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
 	privTx := (*PrivateTransaction)(tx)
 	if privTx.IsPrivate() {
+		// As tx.Protected in following code will return true when V = 47/48 indicating private tx, we just add the if logic
+		// to let the program handle private tx as same as what the program does for public tx. So I add the
 		return HomesteadSigner{}.Sender(tx)
 	}
 
