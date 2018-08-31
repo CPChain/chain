@@ -56,7 +56,8 @@ var (
 	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
 	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
-	viewLength = uint64(3) // Default number of signers, also the number of blocks after whick to launch viewChange.
+	// TODO
+	viewLength = uint64(3) // Default number of signers, also the number of blocks after which to launch viewChange.
 	// viewLength = uint64(21) // Default number of signers, also the number of blocks after whick to launch viewChange.
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
@@ -182,6 +183,7 @@ func sigHash(header *types.Header) (hash common.Hash) {
 }
 
 // ecrecover extracts the Ethereum account address from a signed header.
+// the return value is (leader_address, signer_addresses, error)
 func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
 
 	hash := header.Hash()
@@ -192,7 +194,7 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []
 
 	// header extra field format:
 	// header.Extra[extraVanity:Committee:leader-sig]
-	// header.Extra2[signer0-sig:signer1-sig:...:signerN-sig]
+	// header.Extra2[signer1-sig:...:signerN-sig]
 
 	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
 	signersSig := header.Extra2[:]
@@ -283,28 +285,6 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 	}
 }
 
-// NewFaker creates a ethash consensus engine with a fake PoW scheme that accepts
-// all blocks' seal as valid, though they still have to conform to the Ethereum
-// consensus rules.
-// TODO @xumx
-//func NewFaker() *Dpor {
-//	// Set any missing consensus parameters to their defaults
-//	conf := &params.DporConfig{
-//		Period: 1,
-//		Epoch:  10,
-//	}
-//	// Allocate the snapshot caches and create the engine
-//	recents, _ := lru.NewARC(inmemorySnapshots)
-//	signatures, _ := lru.NewARC(inmemorySignatures)
-//	database := ethdb.NewMemDatabase()
-//	return &Dpor{
-//		config:     conf,
-//		db:         database,
-//		recents:    recents,
-//		signatures: signatures,
-//		proposals:  make(map[common.Address]bool),
-//	}
-//}
 
 // Author implements consensus.Engine, returning the Ethereum address recovered
 // from the signature in the header's extra-data section.
@@ -431,6 +411,7 @@ func (c *Dpor) verifyCascadingFields(chain consensus.ChainReader, header *types.
 		return err
 	}
 	// If the block is a checkpoint block, verify the signer list
+	// TODO why only check on epoch?
 	if number%c.config.Epoch == 0 {
 		signers := make([]byte, c.config.Epoch*common.AddressLength)
 		for round, signer := range snap.signers() {
@@ -537,7 +518,7 @@ func (c *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, ref
 	return c.verifySeal(chain, header, nil, refHeader)
 }
 
-// acceptSigs checks signatures has enough signature to accept the block.
+// acceptSigs checks that signatures have enough signatures to accept the block.
 // func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, bool, error) {
 func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
 	numSigs := 0
@@ -624,6 +605,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 		}
 	}
 
+	// We haven't reached the 2/3 rule.
 	// TODO: fix this logic.
 	if !accept {
 		// TODO: sign the block if self is in the committee.
@@ -686,6 +668,7 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	}
 	// }
 	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
+	// We suppose each signer only produces one block.
 	header.Extra2 = make([]byte, extraSeal*int(c.config.Epoch))
 
 	// Mix digest is reserved for now, set to empty

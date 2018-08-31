@@ -152,6 +152,7 @@ func (h *Header) EncodeRLP(w io.Writer) error {
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
 // RLP encoding.
 func (h *Header) Hash() common.Hash {
+	// because of the introduction of `extra2', we define a `sigHash' to exclude that field.
 	// return rlpHash(h)
 	return sigHash(h) // TODO: this is wrong, fix this.
 }
