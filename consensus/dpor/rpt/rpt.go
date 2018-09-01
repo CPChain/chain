@@ -5,15 +5,17 @@ package rpt
 
 import (
 	"context"
-	"fmt"
 	"math/big"
+
+	"github.com/ethereum/go-ethereum/rpc"
+
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
 )
 
 var (
@@ -64,10 +66,18 @@ type CollectorConfig struct {
 	DporConfig   *params.DporConfig
 }
 
+// ClientBackend is the client operation interface
+type ClientBackend interface {
+	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
+	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
+	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
+}
+
 // BasicCollector is the default rpt collector
 type BasicCollector struct {
 	// TODO: backend here.
-	*ethclient.Client
+	//*ethclient.Client
+	ClientBackend
 	Config CollectorConfig
 }
 
@@ -91,19 +101,23 @@ type Info struct {
 	ContractInfo ContractRptInfo
 }
 
-// NewBasicCollector returns a new BasicCollector object.
-func NewBasicCollector(endpoint string, config *CollectorConfig) (*BasicCollector, error) {
+func NewEthClient(endpoint string) (*ethclient.Client, error) {
 	log.Info("connecting to RPT API", "url", endpoint)
 	client, err := rpc.Dial(endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("error connecting to RPT API %s: %s", endpoint, err)
+		return nil, err
 	}
-	ethClient := ethclient.NewClient(client)
+	return ethclient.NewClient(client), nil
+
+}
+
+// NewBasicCollector returns a new BasicCollector object.
+func NewBasicCollector(ethClient ClientBackend, config *CollectorConfig) (*BasicCollector, error) {
 	bc := &BasicCollector{
-		Client: ethClient,
-		Config: *config,
+		ClientBackend: ethClient,
+		Config:        *config,
 	}
-	return bc, err
+	return bc, nil
 }
 
 // GetRpt returns reputation of the given address.
@@ -212,6 +226,9 @@ func (bc *BasicCollector) getIfLeader(address common.Address, number uint64) flo
 	number = number%bc.Config.DporConfig.Epoch - 1
 	leaderBytes := header.Extra[uint64(extraVanity)+number*common.AddressLength : uint64(extraVanity)+(number+1)*common.AddressLength]
 	leader := common.BytesToAddress(leaderBytes)
+
+	fmt.Println("leader.Hex():", leader.Hex())
+
 	if leader == address {
 		return bc.Config.LeaderReward
 	}
