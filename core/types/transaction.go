@@ -58,6 +58,9 @@ type txdata struct {
 
 	// This is only used when marshaling to JSON.
 	Hash *common.Hash `json:"hash" rlp:"-"`
+
+	// IsPrivate indicates if the transaction is private.
+	IsPrivate bool `json:"private" gencodec:"required"`
 }
 
 type txdataMarshaling struct {
@@ -158,11 +161,7 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 		chainID := deriveChainId(dec.V).Uint64()
 		V = byte(dec.V.Uint64() - 35 - 2*chainID)
 	} else {
-		if dec.V.Uint64() == PrivateTxTag || dec.V.Uint64() == PrivateTxTag2 {
-			V = byte(dec.V.Uint64() - PrivateTxTag)
-		} else {
-			V = byte(dec.V.Uint64() - 27)
-		}
+		V = byte(dec.V.Uint64() - 27)
 	}
 	if !crypto.ValidateSignatureValues(V, dec.R, dec.S, false) {
 		return ErrInvalidSig

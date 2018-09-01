@@ -360,7 +360,7 @@ func (self *worker) makeCurrent(parent *types.Block, header *types.Header) error
 	}
 	work := &Work{
 		config:    self.config,
-		signer:    types.NewEIP155Signer(self.config.ChainID),
+		signer:    types.NewPrivTxSupportEIP155Signer(self.config.ChainID),
 		state:     state,
 		ancestors: set.New(),
 		family:    set.New(),

@@ -42,7 +42,9 @@ type sigCache struct {
 func MakeSigner(config *params.ChainConfig, blockNumber *big.Int) Signer {
 	var signer Signer
 	switch {
-	case config.IsEIP155(blockNumber) || config.IsCpchain():
+	case config.IsCpchain():
+		signer = NewPrivTxSupportEIP155Signer(config.ChainID)
+	case config.IsEIP155(blockNumber):
 		signer = NewEIP155Signer(config.ChainID)
 	case config.IsHomestead(blockNumber):
 		signer = HomesteadSigner{}
@@ -102,6 +104,39 @@ type Signer interface {
 	Equal(Signer) bool
 }
 
+// PrivTxSupportEIP155Signer implements the signer which could be able to sign both public tx and private tx. It also implement EIP155 rules.
+// TODO: once the CPChain standards released, it will be rename <x>Signer where <x> is CPChain standard name such as CIP001.
+type PrivTxSupportEIP155Signer struct{ EIP155Signer }
+
+func NewPrivTxSupportEIP155Signer(chanId *big.Int) PrivTxSupportEIP155Signer {
+	return PrivTxSupportEIP155Signer{NewEIP155Signer(chanId)}
+}
+
+func (s PrivTxSupportEIP155Signer) Hash(tx *Transaction) common.Hash {
+	return rlpHash([]interface{}{
+		tx.data.AccountNonce,
+		tx.data.Price,
+		tx.data.GasLimit,
+		tx.data.Recipient,
+		tx.data.Amount,
+		tx.data.Payload,
+		tx.data.IsPrivate,
+		s.chainId, uint(0), uint(0),
+	})
+}
+
+func (s PrivTxSupportEIP155Signer) Sender(tx *Transaction) (common.Address, error) {
+	if !tx.Protected() {
+		return HomesteadSigner{}.Sender(tx)
+	}
+	if tx.ChainId().Cmp(s.chainId) != 0 {
+		return common.Address{}, ErrInvalidChainId
+	}
+	V := new(big.Int).Sub(tx.data.V, s.chainIdMul)
+	V.Sub(V, big8)
+	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
+}
+
 // EIP155Transaction implements Signer using the EIP155 rules.
 type EIP155Signer struct {
 	chainId, chainIdMul *big.Int
@@ -125,13 +160,6 @@ func (s EIP155Signer) Equal(s2 Signer) bool {
 var big8 = big.NewInt(8)
 
 func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
-	privTx := (*PrivateTransaction)(tx)
-	if privTx.IsPrivate() {
-		// As tx.Protected in following code will return true when V = 47/48 indicating private tx, we just add the if logic
-		// to let the program handle private tx as same as what the program does for public tx. So I add the
-		return HomesteadSigner{}.Sender(tx)
-	}
-
 	if !tx.Protected() {
 		return HomesteadSigner{}.Sender(tx)
 	}
@@ -140,19 +168,13 @@ func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
 	}
 	V := new(big.Int).Sub(tx.data.V, s.chainIdMul)
 	V.Sub(V, big8)
-	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true, privTx.IsPrivate())
+	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
 }
 
 // WithSignature returns a new transaction with the given signature. This signature
 // needs to be in the [R || S || V] format where V is 0 or 1.
 func (s EIP155Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big.Int, err error) {
-	privTx := (*PrivateTransaction)(tx)
-	if privTx.IsPrivate() {
-		R, S, V, err = HomesteadSigner{}.SignatureValues(tx, sig)
-	} else {
-		R, S, V, err = HomesteadSigner{}.SignatureValues(tx, sig)
-	}
-
+	R, S, V, err = HomesteadSigner{}.SignatureValues(tx, sig)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -193,8 +215,7 @@ func (hs HomesteadSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v 
 }
 
 func (hs HomesteadSigner) Sender(tx *Transaction) (common.Address, error) {
-	prvTx := (*PrivateTransaction)(tx)
-	return recoverPlain(hs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, true, prvTx.IsPrivate())
+	return recoverPlain(hs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, true)
 }
 
 type FrontierSigner struct{}
@@ -212,13 +233,7 @@ func (fs FrontierSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v *
 	}
 	r = new(big.Int).SetBytes(sig[:32])
 	s = new(big.Int).SetBytes(sig[32:64])
-
-	prvTx := (*PrivateTransaction)(tx)
-	if prvTx.IsPrivate() {
-		v = new(big.Int).SetBytes([]byte{sig[64] + PrivateTxTag})
-	} else {
-		v = new(big.Int).SetBytes([]byte{sig[64] + 27})
-	}
+	v = new(big.Int).SetBytes([]byte{sig[64] + 27})
 	return r, s, v, nil
 }
 
@@ -236,23 +251,14 @@ func (fs FrontierSigner) Hash(tx *Transaction) common.Hash {
 }
 
 func (fs FrontierSigner) Sender(tx *Transaction) (common.Address, error) {
-	prvTx := (*PrivateTransaction)(tx)
-	return recoverPlain(fs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, false, prvTx.IsPrivate())
+	return recoverPlain(fs.Hash(tx), tx.data.R, tx.data.S, tx.data.V, false)
 }
 
-func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool, isPrivate bool) (common.Address, error) {
+func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (common.Address, error) {
 	if Vb.BitLen() > 8 {
 		return common.Address{}, ErrInvalidSig
 	}
-
-	var offset uint64
-	if isPrivate {
-		offset = PrivateTxTag
-	} else {
-		offset = 27
-	}
-	V := byte(Vb.Uint64() - offset)
-
+	V := byte(Vb.Uint64() - 27)
 	if !crypto.ValidateSignatureValues(V, R, S, homestead) {
 		return common.Address{}, ErrInvalidSig
 	}
