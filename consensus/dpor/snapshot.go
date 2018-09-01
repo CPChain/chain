@@ -240,7 +240,7 @@ func (s *Snapshot) isLeader(signer common.Address, number uint64) (bool, error) 
 	if err != nil {
 		return false, err
 	}
-	return (round == int((number-1)%s.config.Epoch)), nil
+	return round == int((number-1)%s.config.Epoch), nil
 }
 
 // Candidates retrieves all candidates recorded in the campaign contract.
