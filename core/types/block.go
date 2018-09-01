@@ -86,25 +86,6 @@ type Header struct {
 	Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
 }
 
-type headerStorage struct {
-	ParentHash  common.Hash
-	UncleHash   common.Hash
-	Coinbase    common.Address
-	Root        common.Hash
-	TxHash      common.Hash
-	ReceiptHash common.Hash
-	Bloom       Bloom
-	Difficulty  *big.Int
-	Number      *big.Int
-	GasLimit    uint64
-	GasUsed     uint64
-	Time        *big.Int
-	Extra       []byte
-	Extra2      []byte
-	MixDigest   common.Hash
-	Nonce       BlockNonce
-}
-
 // field type overrides for gencodec
 type headerMarshaling struct {
 	Difficulty *hexutil.Big
@@ -115,38 +96,6 @@ type headerMarshaling struct {
 	Extra      hexutil.Bytes
 	Extra2     hexutil.Bytes
 	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
-}
-
-// DecodeRLP decodes the Ethereum
-func (h *Header) DecodeRLP(s *rlp.Stream) error {
-	var hs headerStorage
-	if err := s.Decode(&hs); err != nil {
-		return err
-	}
-	*h = Header(hs)
-	return nil
-}
-
-// EncodeRLP serializes b into the Ethereum RLP block format.
-func (h *Header) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, headerStorage{
-		ParentHash:  h.ParentHash,
-		UncleHash:   h.UncleHash,
-		Coinbase:    h.Coinbase,
-		Root:        h.Root,
-		TxHash:      h.TxHash,
-		ReceiptHash: h.ReceiptHash,
-		Bloom:       h.Bloom,
-		Difficulty:  h.Difficulty,
-		Number:      h.Number,
-		GasLimit:    h.GasLimit,
-		GasUsed:     h.GasUsed,
-		Time:        h.Time,
-		Extra:       h.Extra,
-		Extra2:      h.Extra2,
-		MixDigest:   h.MixDigest,
-		Nonce:       h.Nonce,
-	})
 }
 
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
