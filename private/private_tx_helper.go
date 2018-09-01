@@ -41,11 +41,7 @@ func NewSealedPrivatePayload(encryptedPayload []byte, symmetricKey [][]byte, par
 
 // toBytes returns serialized SealedPrivatePayload instance represented by bytes.
 func (sealed *SealedPrivatePayload) toBytes() ([]byte, error) {
-	bytes, err := rlp.EncodeToBytes(sealed)
-	if err != nil {
-		panic(err)
-	}
-	return bytes, nil
+	return rlp.EncodeToBytes(sealed)
 }
 
 // PayloadReplacement represents the replacement data which substitute the private tx payload.
@@ -64,10 +60,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, i
 	nonce := make([]byte, 12)
 	binary.BigEndian.PutUint64(nonce, txNonce)
 	binary.BigEndian.PutUint32(nonce[8:], uint32(txNonce))
-	encryptedPayload, symKey, err := encryptPayload(payload, nonce)
-	if err != nil {
-		panic(err)
-	}
+	encryptedPayload, symKey, _ := encryptPayload(payload, nonce)
 
 	pubKeys, _ := stringsToPublicKeys(participants)
 
@@ -110,10 +103,7 @@ func stringsToPublicKeys(keys []string) ([]*rsa.PublicKey, error) {
 func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
 	result := make([][]byte, len(keys))
 	for i, key := range keys {
-		encryptedKey, err := rsa.EncryptPKCS1v15(rand.Reader, key, symKey)
-		if err != nil {
-			panic(err)
-		}
+		encryptedKey, _ := rsa.EncryptPKCS1v15(rand.Reader, key, symKey)
 		result[i] = encryptedKey
 	}
 
@@ -123,30 +113,19 @@ func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
 const keyLength = 32
 
 // generateSymmetricKey generate a random symmetric key.
-func generateSymmetricKey() ([]byte, error) {
+func generateSymmetricKey() []byte {
 	key := make([]byte, keyLength)
-	if _, err := io.ReadFull(rand.Reader, key); err != nil {
-		return nil, err
-	}
-	return key, nil
+	io.ReadFull(rand.Reader, key)
+	return key
 }
 
 // encryptPayload encrypts payload with a random symmetric key and returns encrypted payload and the random symmetric key.
 func encryptPayload(payload []byte, nonce []byte) (encryptedPayload []byte, symmetricKey []byte, err error) {
-	symKey, err := generateSymmetricKey()
-	if err != nil {
-		panic(err)
-	}
+	symKey := generateSymmetricKey()
 
-	block, err := aes.NewCipher(symKey)
-	if err != nil {
-		panic(err)
-	}
+	block, _ := aes.NewCipher(symKey)
 
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		panic(err)
-	}
+	aesgcm, _ := cipher.NewGCM(block)
 
 	encrypted := aesgcm.Seal(nil, nonce, payload, nil)
 	return encrypted, symKey, nil

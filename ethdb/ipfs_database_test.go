@@ -57,3 +57,15 @@ func TestIpfsDbWithWrongUrl(t *testing.T) {
 		t.Errorf("Wrong url should cause an error.")
 	}
 }
+
+// TestIpfsDbWithWrongUrl tests new IPFS database with wrong URL.
+func TestIpfsDatabase_Get(t *testing.T) {
+	db := NewIpfsDbWithAdapter(NewFakeIpfsAdapter())
+	v, err := db.Get([]byte("abcdef"))
+	if err == nil {
+		t.Errorf("Getting for unexsitent key should produce an error.")
+	}
+	if v != nil {
+		t.Error("The value should be nil when error occurs.")
+	}
+}

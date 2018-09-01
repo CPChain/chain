@@ -136,3 +136,24 @@ func TestChainId(t *testing.T) {
 		t.Error("expected no error")
 	}
 }
+
+func TestSigningPrivateTx(t *testing.T) {
+	key, _ := crypto.GenerateKey()
+	addr := crypto.PubkeyToAddress(key.PublicKey)
+
+	signer := NewEIP155Signer(big.NewInt(42))
+	testTx := NewTransaction(0, addr, new(big.Int), 0, new(big.Int), nil)
+	((*PrivateTransaction)(testTx)).SetPrivate(true)
+	tx, err := SignTx(testTx, signer, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	from, err := Sender(signer, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if from != addr {
+		t.Errorf("exected from and address to be equal. Got %x want %x", from, addr)
+	}
+}

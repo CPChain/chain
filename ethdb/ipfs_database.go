@@ -9,6 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ipfs/go-ipfs-api"
+	"github.com/pkg/errors"
 )
 
 // IpfsDatabase is a IPFS-based database.
@@ -75,6 +76,9 @@ func NewFakeIpfsAdapter() *FakeIpfsAdapter {
 
 func (adapter *FakeIpfsAdapter) Cat(path string) (io.ReadCloser, error) {
 	buf := adapter.store[path]
+	if buf == nil {
+		return nil, errors.New("Path not found.")
+	}
 	return ioutil.NopCloser(bytes.NewReader(buf)), nil
 }
 

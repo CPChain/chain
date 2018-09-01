@@ -148,10 +148,11 @@ func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
 func (s EIP155Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big.Int, err error) {
 	privTx := (*PrivateTransaction)(tx)
 	if privTx.IsPrivate() {
-		return HomesteadSigner{}.SignatureValues(tx, sig)
+		R, S, V, err = HomesteadSigner{}.SignatureValues(tx, sig)
+	} else {
+		R, S, V, err = HomesteadSigner{}.SignatureValues(tx, sig)
 	}
 
-	R, S, V, err = HomesteadSigner{}.SignatureValues(tx, sig)
 	if err != nil {
 		return nil, nil, nil, err
 	}
