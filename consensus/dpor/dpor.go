@@ -48,7 +48,8 @@ const (
 
 	// wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
 
-	pctAccept = 0.667 // 2 / 3 of the signers' signature to accept the block
+	pctA = 2
+	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
 // Dpor proof-of-reputation protocol constants.
@@ -56,15 +57,11 @@ var (
 	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
 	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
-	// TODO
-	viewLength = uint64(3) // Default number of signers, also the number of blocks after which to launch viewChange.
-	// viewLength = uint64(21) // Default number of signers, also the number of blocks after whick to launch viewChange.
+	epochLength = uint(3) // Default number of signers, also the number of blocks after which to launch election.
+	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
-
-	// nonceAuthVote = hexutil.MustDecode("0xffffffffffffffff") // Magic nonce number to vote on adding a new signer
-	// nonceDropVote = hexutil.MustDecode("0x0000000000000000") // Magic nonce number to vote on removing a signer.
 
 	uncleHash = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
 
@@ -104,15 +101,6 @@ var (
 	// to contain a 65 byte secp256k1 signature.
 	errMissingSignature = errors.New("extra-data 65 byte suffix signature missing")
 
-	// errExtraSigners is returned if non-checkpoint block contain signer data in
-	// their extra-data fields.
-	// errExtraSigners = errors.New("non-checkpoint block contains extra signer list")
-
-	// errInvalidCheckpointSigners is returned if a checkpoint block contains an
-	// invalid list of signers (i.e. non divisible by 20 bytes, or not the correct
-	// ones).
-	errInvalidCheckpointSigners = errors.New("invalid signer list on checkpoint block")
-
 	// errInvalidMixDigest is returned if a block's mix digest is non-zero.
 	errInvalidMixDigest = errors.New("non-zero mix digest")
 
@@ -133,11 +121,17 @@ var (
 
 	// --- our new error types ---
 
-	// errMultiBlockInOneHeight is returned if there is multi blocks in one height in the chain.
-	errMultiBlockInOnHeight = errors.New("multi blocks in one height")
+	// errMultiBlocksInOneHeight is returned if there is multi blocks in one height in the chain.
+	errMultiBlocksInOneHeight = errors.New("multi blocks in one height")
 
-	// errLeaderNotInSigs is returned if the leader not in the sigs.
-	// errLeaderNotInSigs = errors.New("leader is not in the sigs")
+	// errInvalidSigBytes is returned if the signatures bytes in header.extra2 is not valid.
+	errInvalidSigBytes = errors.New("error signers sigs bytes")
+
+	// errInvalidSigners is returned if a block contains an invalid extra sigers bytes.
+	errInvalidSigners = errors.New("invalid signer list on checkpoint block")
+
+	// errNotSigsInCache is returned if the cache is unable to store and return sigs.
+	errNotSigsInCache = errors.New("signatures not found in cache")
 
 	// --- our new error types ---
 
@@ -192,7 +186,7 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []
 		return common.Address{}, []common.Address{}, errMissingSignature
 	}
 
-	// header extra field format:
+	// NOTE: Header extraData field format:
 	// header.Extra[extraVanity:Committee:leader-sig]
 	// header.Extra2[signer1-sig:...:signerN-sig]
 
@@ -218,7 +212,7 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []
 
 	// Return if there is no signers' signatures.
 	if len(signersSig)%extraSeal != 0 {
-		return leader, []common.Address{}, errors.New("error signers sigs bytes")
+		return leader, []common.Address{}, errInvalidSigBytes
 	}
 
 	var signers []common.Address
@@ -268,7 +262,7 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 	// Set any missing consensus parameters to their defaults
 	conf := *config
 	if conf.Epoch == 0 {
-		conf.Epoch = viewLength
+		conf.Epoch = uint64(epochLength)
 	}
 	// Allocate the snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
@@ -284,7 +278,6 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 		signedBlocks: signedBlocks,
 	}
 }
-
 
 // Author implements consensus.Engine, returning the Ethereum address recovered
 // from the signature in the header's extra-data section.
@@ -333,18 +326,13 @@ func (c *Dpor) verifyHeader(chain consensus.ChainReader, header *types.Header, p
 	if header.Time.Cmp(big.NewInt(time.Now().Unix())) > 0 {
 		return consensus.ErrFutureBlock
 	}
+
 	// Checkpoint blocks need to enforce zero beneficiary
 	checkpoint := (number % c.config.Epoch) == 0
 	if checkpoint && header.Coinbase != (common.Address{}) {
 		return errInvalidCheckpointBeneficiary
 	}
-	// Nonces must be 0x00..0 or 0xff..f, zeroes enforced on checkpoints
-	// if !bytes.Equal(header.Nonce[:], nonceAuthVote) && !bytes.Equal(header.Nonce[:], nonceDropVote) {
-	// return errInvalidVote
-	// }
-	// if checkpoint && !bytes.Equal(header.Nonce[:], nonceDropVote) {
-	// return errInvalidCheckpointVote
-	// }
+
 	// Check that the extra-data contains both the vanity and signature
 	if len(header.Extra) < extraVanity {
 		return errMissingVanity
@@ -352,32 +340,35 @@ func (c *Dpor) verifyHeader(chain consensus.ChainReader, header *types.Header, p
 	if len(header.Extra) < extraVanity+extraSeal {
 		return errMissingSignature
 	}
+
 	// Ensure that the extra-data contains a signer list on checkpoint, but none otherwise
 	signersBytes := len(header.Extra) - extraVanity - extraSeal
-	// if !checkpoint && signersBytes != 0 {
-	// return errExtraSigners
-	// }
-	if checkpoint && signersBytes%common.AddressLength != 0 {
-		return errInvalidCheckpointSigners
+	if signersBytes%common.AddressLength != 0 {
+		return errInvalidSigners
 	}
+
 	// Ensure that the mix digest is zero as we don't have fork protection currently
 	if header.MixDigest != (common.Hash{}) {
 		return errInvalidMixDigest
 	}
+
 	// Ensure that the block doesn't contain any uncles which are meaningless in PoA
 	if header.UncleHash != uncleHash {
 		return errInvalidUncleHash
 	}
+
 	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
 	if number > 0 {
 		if header.Difficulty == nil || (header.Difficulty.Cmp(diffInTurn) != 0 && header.Difficulty.Cmp(diffNoTurn) != 0) {
 			return errInvalidDifficulty
 		}
 	}
+
 	// If all checks passed, validate any special fields for hard forks
 	if err := misc.VerifyForkHashes(chain.Config(), header, false); err != nil {
 		return err
 	}
+
 	// All basic checks passed, verify cascading fields
 	return c.verifyCascadingFields(chain, header, parents, refHeader)
 }
@@ -410,17 +401,14 @@ func (c *Dpor) verifyCascadingFields(chain consensus.ChainReader, header *types.
 	if err != nil {
 		return err
 	}
-	// If the block is a checkpoint block, verify the signer list
-	// TODO why only check on epoch?
-	if number%c.config.Epoch == 0 {
-		signers := make([]byte, c.config.Epoch*common.AddressLength)
-		for round, signer := range snap.signers() {
-			copy(signers[round*common.AddressLength:(round+1)*common.AddressLength], signer[:])
-		}
-		extraSuffix := len(header.Extra) - extraSeal
-		if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
-			return errInvalidCheckpointSigners
-		}
+	// Check signers bytes in extraData
+	signers := make([]byte, c.config.Epoch*common.AddressLength)
+	for round, signer := range snap.signers() {
+		copy(signers[round*common.AddressLength:(round+1)*common.AddressLength], signer[:])
+	}
+	extraSuffix := len(header.Extra) - extraSeal
+	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
+		return errInvalidSigners
 	}
 	// All basic checks passed, verify the seal and return
 	return c.verifySeal(chain, header, parents, refHeader)
@@ -519,9 +507,8 @@ func (c *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, ref
 }
 
 // acceptSigs checks that signatures have enough signatures to accept the block.
-// func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, bool, error) {
 func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
-	numSigs := 0
+	numSigs := uint(0)
 	accept := false
 	hash := header.Hash()
 
@@ -533,15 +520,18 @@ func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.A
 			}
 		}
 	} else {
-		ecrecover(header, sigcache)
-		return false, nil
+		return false, errNotSigsInCache
 	}
 
-	// num of sigs must > 2/3 * viewLength, leader must be in the sigs.
-	if uint64(numSigs) > uint64(pctAccept*float64(viewLength)) {
+	// num of sigs must > 2/3 * epochLength, leader must be in the sigs.
+	if pctPBFT(numSigs, epochLength) {
 		accept = true
 	}
 	return accept, nil
+}
+
+func pctPBFT(n uint, N uint) bool {
+	return uint(pctB)*n > uint(pctA)*N
 }
 
 // verifySeal checks whether the signature contained in the header satisfies the
@@ -570,7 +560,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	}
 
 	// --- our check starts ---
-	// TODO: add our signature check method here.
+	// Some debug infos here.
 	log.Debug("--------I am in dpor.verifySeal start--------")
 	log.Debug("hash: " + hash.Hex())
 	log.Debug("number: " + strconv.Itoa(int(number)))
@@ -582,7 +572,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	}
 	log.Debug("--------I am in dpor.verifySeal end--------")
 
-	// check if the leader is the real leader.
+	// Check if the leader is the real leader.
 	ok, err := snap.isLeader(leader, number)
 	if err != nil {
 		return err
@@ -591,7 +581,7 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 		return consensus.ErrUnauthorized
 	}
 
-	// check if accept the sigs and if leader is in the sigs.
+	// Check if accept the sigs and if leader is in the sigs.
 	accept, err := acceptSigs(header, c.signatures, snap.signers())
 	if err != nil {
 		return err
@@ -606,13 +596,12 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 	}
 
 	// We haven't reached the 2/3 rule.
-	// TODO: fix this logic.
 	if !accept {
-		// TODO: sign the block if self is in the committee.
-		// NOTE: only sign a block once.
+		// Sign the block if self is in the committee.
 		if snap.isSigner(c.signer) {
+			// NOTE: only sign a block once.
 			if signedHash, signed := c.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {
-				return errMultiBlockInOnHeight
+				return errMultiBlocksInOneHeight
 			}
 			// Sign it!
 			sighash, err := c.signFn(accounts.Account{Address: c.signer}, sigHash(header).Bytes())
@@ -625,7 +614,6 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 			return consensus.ErrNotEnoughSigs
 		}
 	}
-
 	// --- our check ends ---
 
 	// Ensure that the difficulty corresponds to the turn-ness of the signer
@@ -740,24 +728,8 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, consensus.ErrUnauthorized
 	}
 
-	// TODO: fix this.
 	/*
-		// If we're amongst the recent signers, wait for the next block
-		for seen, recent := range snap.Recents {
-			if recent == signer {
-				// Signer is among recents, only wait if the current block doesn't shift it out
-				if limit := uint64(len(snap.Signers)/2 + 1); number < limit || seen > number-limit {
-					log.Info("Signed recently, must wait for others")
-					<-stop
-					return nil, nil
-				}
-			}
-		}
-	*/
-
-	// TODO: fix this logic.
-	delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
-	/*
+		// TODO: fix this logic.
 		// Sweet, the protocol permits us to sign the block, wait for our time
 		delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
 		if header.Difficulty.Cmp(diffNoTurn) == 0 {
@@ -768,13 +740,14 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 			log.Trace("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
 		}
 		log.Trace("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
+
+		select {
+		case <-stop:
+			return nil, nil
+		case <-time.After(delay):
+		}
 	*/
 
-	select {
-	case <-stop:
-		return nil, nil
-	case <-time.After(delay):
-	}
 	// Sign all the things!
 	sighash, err := signFn(accounts.Account{Address: signer}, sigHash(header).Bytes())
 	if err != nil {
