@@ -54,12 +54,13 @@ var (
 )
 
 const (
-	bodyCacheLimit      = 256
-	blockCacheLimit     = 256
-	maxFutureBlocks     = 256
-	maxTimeFutureBlocks = 30
-	badBlockLimit       = 10
-	triesInMemory       = 128
+	bodyCacheLimit             = 256
+	blockCacheLimit            = 256
+	maxFutureBlocks            = 256
+	maxTimeFutureBlocks        = 30
+	badBlockLimit              = 10
+	waitingSignatureBlockLimit = 10
+	triesInMemory              = 128
 
 	// BlockChainVersion ensures that an incompatible database forces a resync from scratch.
 	BlockChainVersion = 3
@@ -154,20 +155,23 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 	futureBlocks, _ := lru.New(maxFutureBlocks)
 	badBlocks, _ := lru.New(badBlockLimit)
 
+	waitingSignatureBlocks, _ := lru.New(waitingSignatureBlockLimit)
+
 	bc := &BlockChain{
-		chainConfig:  chainConfig,
-		cacheConfig:  cacheConfig,
-		db:           db,
-		triegc:       prque.New(),
-		stateCache:   state.NewDatabase(db),
-		quit:         make(chan struct{}),
-		bodyCache:    bodyCache,
-		bodyRLPCache: bodyRLPCache,
-		blockCache:   blockCache,
-		futureBlocks: futureBlocks,
-		engine:       engine,
-		vmConfig:     vmConfig,
-		badBlocks:    badBlocks,
+		chainConfig:            chainConfig,
+		cacheConfig:            cacheConfig,
+		db:                     db,
+		triegc:                 prque.New(),
+		stateCache:             state.NewDatabase(db),
+		quit:                   make(chan struct{}),
+		bodyCache:              bodyCache,
+		bodyRLPCache:           bodyRLPCache,
+		blockCache:             blockCache,
+		futureBlocks:           futureBlocks,
+		engine:                 engine,
+		vmConfig:               vmConfig,
+		badBlocks:              badBlocks,
+		waitingSignatureBlocks: waitingSignatureBlocks,
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
