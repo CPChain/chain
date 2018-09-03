@@ -129,7 +129,13 @@ type BlockChain struct {
 	validator Validator // block and state validator interface
 	vmConfig  vm.Config
 
-	badBlocks *lru.Cache // Bad block cache
+	badBlocks              *lru.Cache // Bad block cache
+	waitingSignatureBlocks *lru.Cache // Bad block cache
+}
+
+// WaitingSignatureBlocks returns waitingSignatureBlocks
+func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
+	return bc.waitingSignatureBlocks
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -1132,7 +1138,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		case err == consensus.ErrNotEnoughSigs:
 			err := err.(*consensus.ErrNotEnoughSigsType)
-			err.BadIndex = i
+			err.NotEnoughSigsBlockHash = block.Hash()
+			bc.waitingSignatureBlocks.Add(block.Hash(), block)
 			return i, events, coalescedLogs, err
 
 		case err != nil:

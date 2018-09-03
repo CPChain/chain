@@ -18,9 +18,8 @@ package consensus
 
 import (
 	"errors"
-	"strconv"
 
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var (
@@ -41,7 +40,7 @@ var (
 	ErrInvalidNumber = errors.New("invalid block number")
 
 	// ErrNotEnoughSigs is returned if there is not enough signatures for a block.
-	ErrNotEnoughSigs = &ErrNotEnoughSigsType{BadIndex: 0}
+	ErrNotEnoughSigs = &ErrNotEnoughSigsType{NotEnoughSigsBlockHash: common.Hash{}}
 
 	// ErrUnauthorized is returned if a header is signed by a non-authorized entity.
 	ErrUnauthorized = errors.New("unauthorized leader")
@@ -49,10 +48,9 @@ var (
 
 // ErrNotEnoughSigsType is returned if there is not enough signatures for a block.
 type ErrNotEnoughSigsType struct {
-	BadIndex int
-	Blocks   []*types.Block
+	NotEnoughSigsBlockHash common.Hash
 }
 
 func (e *ErrNotEnoughSigsType) Error() string {
-	return "not enough sigs: bad idx: " + strconv.Itoa(e.BadIndex)
+	return "not enough sigs: block hash: " + e.NotEnoughSigsBlockHash.Hex()
 }

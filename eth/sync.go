@@ -18,7 +18,6 @@ package eth
 
 import (
 	"math/rand"
-	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -203,17 +202,17 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 
 		// TODO: check if there is any security problems!
 		if err == consensus.ErrNotEnoughSigs {
-			err := err.(*consensus.ErrNotEnoughSigsType)
+
 			log.Debug("--------I am in sync.Synchronise start--------")
 			log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
-			log.Debug("broadcasting num: " + strconv.Itoa(err.BadIndex) + "block number:" + strconv.Itoa(int(err.Blocks[err.BadIndex].Number().Uint64())))
 			log.Debug("--------I am in sync.Synchronise end--------")
-			go pm.BroadcastBlock(err.Blocks[err.BadIndex], true)
 
-			// for i := err.BadIndex; i < len(err.Blocks); i++ {
-			// 	log.Info("broadcasting num: " + strconv.Itoa(i) + "block number:" + strconv.Itoa(int(err.Blocks[i].Number().Uint64())))
-			// 	go pm.BroadcastBlock(err.Blocks[i], true)
-			// }
+			err := err.(*consensus.ErrNotEnoughSigsType)
+			hash := err.NotEnoughSigsBlockHash
+			if waitingSignatureBlock, known := pm.downloader.Blockchain.WaitingSignatureBlocks().Get(hash); known {
+				waitingSignatureBlock := waitingSignatureBlock.(*types.Block)
+				go pm.BroadcastBlock(waitingSignatureBlock, true)
+			}
 		}
 		return
 	}
