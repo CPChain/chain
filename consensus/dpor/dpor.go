@@ -524,13 +524,14 @@ func acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.A
 	}
 
 	// num of sigs must > 2/3 * epochLength, leader must be in the sigs.
-	if pctPBFT(numSigs, epochLength) {
+	if percentagePBFT(numSigs, epochLength) {
 		accept = true
 	}
 	return accept, nil
 }
 
-func pctPBFT(n uint, N uint) bool {
+// percentagePBFT returns n is large than pctPBFT * N.
+func percentagePBFT(n uint, N uint) bool {
 	return uint(pctB)*n > uint(pctA)*N
 }
 

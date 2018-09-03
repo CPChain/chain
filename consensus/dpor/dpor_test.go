@@ -18,16 +18,14 @@
 package dpor
 
 import (
-	"testing"
-
-	"math/big"
-
 	"fmt"
+	"math/big"
+	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -114,5 +112,31 @@ func TestCalcDifficultyWhenSnapshotIsLeader(t *testing.T) {
 	fmt.Println("TestCalcDifficultyWhenSnapshotIsLeader result:", result)
 	if big.NewInt(2).Cmp(result) != 0 {
 		t.Errorf("expect:%d, but get: %v", 2, result)
+	}
+}
+
+func Test_percentagePBFT(t *testing.T) {
+	type args struct {
+		n uint
+		N uint
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		// TODO: Add test cases.
+		{"0", args{0, 21}, false},
+		{"14", args{14, 21}, false},
+		{"15", args{15, 21}, true},
+		{"21", args{21, 21}, true},
+		{"1000", args{1000, 21}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := percentagePBFT(tt.args.n, tt.args.N); got != tt.want {
+				t.Errorf("percentagePBFT() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
