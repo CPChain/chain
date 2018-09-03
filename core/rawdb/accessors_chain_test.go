@@ -106,30 +106,6 @@ func TestHeaderStorage(t *testing.T) {
 	}
 }
 
-func sigHash(header *types.Header) (hash common.Hash) {
-	hasher := sha3.NewKeccak256()
-
-	rlp.Encode(hasher, []interface{}{
-		header.ParentHash,
-		header.UncleHash,
-		header.Coinbase,
-		header.Root,
-		header.TxHash,
-		header.ReceiptHash,
-		header.Bloom,
-		header.Difficulty,
-		header.Number,
-		header.GasLimit,
-		header.GasUsed,
-		header.Time,
-		header.Extra,
-		header.MixDigest,
-		header.Nonce,
-	})
-	hasher.Sum(hash[:0])
-	return hash
-}
-
 // Tests block body storage and retrieval operations.
 func TestBodyStorage(t *testing.T) {
 	db := ethdb.NewMemDatabase()

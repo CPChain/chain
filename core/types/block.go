@@ -106,6 +106,7 @@ func (h *Header) Hash() common.Hash {
 	return sigHash(h) // TODO: this is wrong, fix this.
 }
 
+// sigHash returns hash of header without `extra2' field.
 func sigHash(header *Header) (hash common.Hash) {
 	hasher := sha3.NewKeccak256()
 
