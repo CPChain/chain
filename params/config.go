@@ -236,6 +236,10 @@ func (c *ChainConfig) IsConstantinople(num *big.Int) bool {
 
 // IsCpchain returns if it is CpchainDawn era.
 func (c *ChainConfig) IsCpchain() bool {
+	if c.ChainID == nil {
+		return false
+	}
+
 	return c.ChainID.Uint64() == CpchainChainId
 }
 

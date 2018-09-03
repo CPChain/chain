@@ -38,8 +38,8 @@ func TestGetPrivateKeyForAccount(t *testing.T) {
 
 // TestSealPrivatePayloadWithFaultIPFS tests the SealPrivatePayload function with fault IPFS server.
 func TestSealPrivatePayloadWithFaultIPFS(t *testing.T) {
-	adapter := FaultIpfsAdapter{}
-	ipfsDb := ethdb.NewIpfsDbWithAdapter(&adapter)
+	adapter := ethdb.NewFakeIpfsAdapter()
+	ipfsDb := ethdb.NewIpfsDbWithAdapter(adapter)
 	callSealPrivatePayload(t, ipfsDb)
 }
 
