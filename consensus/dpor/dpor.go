@@ -191,7 +191,12 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []
 	// header.Extra2[signer1-sig:...:signerN-sig]
 
 	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
-	signersSig := header.Extra2[:]
+	// signersSig := header.Extra2[:]
+	ss, err := header.DecodedExtra2(types.TypeExtra2SignaturesDecoder)
+	if err != nil {
+		return common.Address{}, []common.Address{}, err
+	}
+	signersSig := ss.Data
 
 	// Recover the public key and the Ethereum address of leader.
 	leaderPubkey, err := crypto.Ecrecover(sigHash(header).Bytes(), leaderSig)
@@ -590,10 +595,19 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 
 	s, _ := c.signatures.Get(hash)
 	sigs := s.(map[common.Address][]byte)
+
+	// Copy all signatures recovered to allSigs.
+	allSigs := make([]byte, int(c.config.Epoch)*extraSeal)
 	for round, signer := range snap.signers() {
 		if sigHash, ok := sigs[signer]; ok {
-			copy(refHeader.Extra2[round*extraSeal:(round+1)*extraSeal], sigHash)
+			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sigHash)
 		}
+	}
+
+	// Encode allSigs to header.extra2.
+	err = refHeader.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
+	if err != nil {
+		return err
 	}
 
 	// We haven't reached the 2/3 rule.
@@ -610,7 +624,16 @@ func (c *Dpor) verifySeal(chain consensus.ChainReader, header *types.Header, par
 				return err
 			}
 			round, _ := snap.signerRound(c.signer)
-			copy(refHeader.Extra2[round*extraSeal:(round+1)*extraSeal], sighash)
+
+			// Copy signer's signature to the right position in the allSigs.
+			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
+
+			// Encode to header.extra2
+			err = refHeader.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
+			if err != nil {
+				return err
+			}
+
 		} else {
 			return consensus.ErrNotEnoughSigs
 		}
@@ -658,7 +681,7 @@ func (c *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	// }
 	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
 	// We suppose each signer only produces one block.
-	header.Extra2 = make([]byte, extraSeal*int(c.config.Epoch))
+	header.Extra2 = make([]byte, extraSeal*int(c.config.Epoch)+1)
 
 	// Mix digest is reserved for now, set to empty
 	header.MixDigest = common.Hash{}
@@ -756,10 +779,18 @@ func (c *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	}
 	copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
 
-	// Also place sigHash to Extra2.
-	round, _ := snap.signerRound(signer)
-	copy(header.Extra2[round*extraSeal:(round+1)*extraSeal], sighash)
+	// allSigs is a SignatureExtra2.
+	allSigs := make([]byte, int(c.config.Epoch)*extraSeal)
 
+	// Copy signature to the right position in allSigs.
+	round, _ := snap.signerRound(signer)
+	copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
+
+	// Encode it to header.extra2.
+	err = header.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
+	if err != nil {
+		return nil, err
+	}
 	return block.WithSeal(header), nil
 }
 

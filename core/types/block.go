@@ -19,6 +19,7 @@ package types
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"math/big"
 	"sort"
@@ -32,9 +33,24 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
+const (
+	// TypeExtra2Signatures is the first byte in header.extra2 if the extra2Data is signatures.
+	TypeExtra2Signatures = 0
+)
+
+type EncoderAndDecoder struct {
+	Encoder Extra2Encoder
+	Decoder Extra2Decoder
+}
+
 var (
-	EmptyRootHash  = DeriveSha(Transactions{})
-	EmptyUncleHash = CalcUncleHash(nil)
+	UNKNOWN_EXTRA2_TYPE = errors.New("unknown extra2 type")
+
+	EmptyRootHash         = DeriveSha(Transactions{})
+	EmptyUncleHash        = CalcUncleHash(nil)
+	Extra2RegisterMapping = map[uint8]EncoderAndDecoder{
+		TypeExtra2Signatures: {TypeExtra2SignaturesEncoder, TypeExtra2SignaturesDecoder},
+	}
 )
 
 // A BlockNonce is a 64-bit hash which proves (combined with the
@@ -104,6 +120,63 @@ func (h *Header) Hash() common.Hash {
 	// because of the introduction of `extra2', we define a `sigHash' to exclude that field.
 	// return rlpHash(h)
 	return sigHash(h) // TODO: this is wrong, fix this.
+}
+
+// Extra2Struct is the structure of header.extra2.
+type Extra2Struct struct {
+	Type uint8
+	Data []byte
+}
+
+// Extra2Decoder is used to format the bytes in extra2 and get a structured result.
+type Extra2Decoder func([]byte) (Extra2Struct, error)
+
+// Extra2Encoder is used to serialize the given structure to bytes.
+type Extra2Encoder func(Extra2Struct) ([]byte, error)
+
+// DecodedExtra2 returns formated structure of extra2.
+func (h *Header) DecodedExtra2(decoder Extra2Decoder) (Extra2Struct, error) {
+	extra2 := make([]byte, len(h.Extra2))
+	copy(extra2[:], h.Extra2)
+	dataType := extra2[0]
+	encoderAndDecoder, ok := Extra2RegisterMapping[dataType]
+	if !ok {
+		return Extra2Struct{}, UNKNOWN_EXTRA2_TYPE
+	}
+	return encoderAndDecoder.Decoder(extra2)
+}
+
+// EncodeToExtra2 serializes the data with the given serializer to extra2 in header.
+func (h *Header) EncodeToExtra2(data Extra2Struct) error {
+	dataType := data.Type
+	encoderAndDecoder, ok := Extra2RegisterMapping[dataType]
+	if !ok {
+		return UNKNOWN_EXTRA2_TYPE
+	}
+	extra2, err := encoderAndDecoder.Encoder(data)
+	if err != nil {
+		return err
+	}
+	h.Extra2 = extra2
+	return nil
+}
+
+// TypeExtra2SignaturesDecoder implements Extra2Decoder.
+func TypeExtra2SignaturesDecoder(extra2 []byte) (Extra2Struct, error) {
+	if n := len(extra2); n < 1 {
+		return Extra2Struct{}, errors.New("too short extra2")
+	}
+	data := Extra2Struct{Type: TypeExtra2Signatures, Data: make([]byte, len(extra2)-1)}
+	copy(data.Data[:], extra2[1:])
+	return data, nil
+}
+
+// TypeExtra2SignaturesEncoder implements Extra2Encoder.
+func TypeExtra2SignaturesEncoder(data Extra2Struct) ([]byte, error) {
+	extra2 := make([]byte, len(data.Data)+1)
+	extra2[0] = TypeExtra2Signatures
+	copy(extra2[1:], data.Data)
+	return extra2, nil
 }
 
 // sigHash returns hash of header without `extra2' field.
