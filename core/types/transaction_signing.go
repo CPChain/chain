@@ -42,6 +42,8 @@ type sigCache struct {
 func MakeSigner(config *params.ChainConfig, blockNumber *big.Int) Signer {
 	var signer Signer
 	switch {
+	case config.IsCpchain():
+		signer = NewPrivTxSupportEIP155Signer(config.ChainID)
 	case config.IsEIP155(blockNumber):
 		signer = NewEIP155Signer(config.ChainID)
 	case config.IsHomestead(blockNumber):
@@ -100,6 +102,39 @@ type Signer interface {
 	Hash(tx *Transaction) common.Hash
 	// Equal returns true if the given signer is the same as the receiver.
 	Equal(Signer) bool
+}
+
+// PrivTxSupportEIP155Signer implements the signer which could be able to sign both public tx and private tx. It also implement EIP155 rules.
+// TODO: once the CPChain standards released, it will be rename <x>Signer where <x> is CPChain standard name such as CIP001.
+type PrivTxSupportEIP155Signer struct{ EIP155Signer }
+
+func NewPrivTxSupportEIP155Signer(chanId *big.Int) PrivTxSupportEIP155Signer {
+	return PrivTxSupportEIP155Signer{NewEIP155Signer(chanId)}
+}
+
+func (s PrivTxSupportEIP155Signer) Hash(tx *Transaction) common.Hash {
+	return rlpHash([]interface{}{
+		tx.data.AccountNonce,
+		tx.data.Price,
+		tx.data.GasLimit,
+		tx.data.Recipient,
+		tx.data.Amount,
+		tx.data.Payload,
+		tx.data.IsPrivate,
+		s.chainId, uint(0), uint(0),
+	})
+}
+
+func (s PrivTxSupportEIP155Signer) Sender(tx *Transaction) (common.Address, error) {
+	if !tx.Protected() {
+		return HomesteadSigner{}.Sender(tx)
+	}
+	if tx.ChainId().Cmp(s.chainId) != 0 {
+		return common.Address{}, ErrInvalidChainId
+	}
+	V := new(big.Int).Sub(tx.data.V, s.chainIdMul)
+	V.Sub(V, big8)
+	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
 }
 
 // EIP155Transaction implements Signer using the EIP155 rules.

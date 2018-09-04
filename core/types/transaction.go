@@ -58,6 +58,9 @@ type txdata struct {
 
 	// This is only used when marshaling to JSON.
 	Hash *common.Hash `json:"hash" rlp:"-"`
+
+	// IsPrivate indicates if the transaction is private.
+	IsPrivate bool `json:"private" gencodec:"required"`
 }
 
 type txdataMarshaling struct {
