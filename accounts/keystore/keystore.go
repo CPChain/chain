@@ -383,6 +383,12 @@ func (ks *KeyStore) getDecryptedKey(a accounts.Account, auth string) (accounts.A
 	return a, key, err
 }
 
+// GetDecryptedKey returns private key of account with given passphrase.
+func (ks *KeyStore) GetDecryptedKey(a accounts.Account, passphrase string) (accounts.Account, *Key, error) {
+	a, key, err := ks.getDecryptedKey(a, passphrase)
+	return a, key, err
+}
+
 func (ks *KeyStore) expire(addr common.Address, u *unlocked, timeout time.Duration) {
 	t := time.NewTimer(timeout)
 	defer t.Stop()
