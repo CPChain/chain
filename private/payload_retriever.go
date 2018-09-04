@@ -15,41 +15,41 @@ import (
 
 // Read tx's payload replacement, retrieve encrypted payload from IPFS and decrypt it.
 // Return decrypted payload, a flag indicating if the node has enough permission and error if there is.
-func RetrieveAndDecryptPayload(data []byte, txNonce uint64) (payload []byte, hasPermission bool, err error) {
-	prv := getKey()
-	pub := hexutil.Encode(x509.MarshalPKCS1PublicKey(&prv.PublicKey))
+func RetrieveAndDecryptPayload(data []byte, txNonce uint64, ipfsDb *ethdb.IpfsDatabase) (payload []byte, hasPermission bool, error error) {
 	replacement := PayloadReplacement{}
-	e := rlp.DecodeBytes(data, &replacement)
-	if e != nil {
-		panic(e)
+	err := rlp.DecodeBytes(data, &replacement)
+	if err != nil {
+		return []byte{}, false, err
 	}
 
-	// Check if the current node is in the participant group by comapring public key.
-	// Decrypt with its private key and return result.
-	sealed := getDataFromIpfs(replacement.Address)
+	prv := getKey()
+	pub := hexutil.Encode(x509.MarshalPKCS1PublicKey(&prv.PublicKey))
+
+	// Check if the current node is in the participant group by comparing is public key and decrypt with its private
+	// key and return result.
+	sealed := getDataFromIpfs(replacement.TxPayloadUri, ipfsDb)
 	sp := SealedPrivatePayload{}
-	e = rlp.DecodeBytes(sealed, &sp)
-	if e != nil {
-		panic(e)
+	err = rlp.DecodeBytes(sealed, &sp)
+	if err != nil {
+		return []byte{}, false, err
 	}
 	for i, k := range replacement.Participants {
 		encryptedKey := sp.SymmetricKeys[i]
 		// If the participant's public key equals to current public key, decrypt with corresponding private key.
 		if k == pub {
 			symKey := decryptSymKey(encryptedKey, prv)
-			decrypted, e := decryptPayload(sp.Payload, symKey, txNonce)
-			return decrypted, true, e
+			decrypted, _ := decryptPayload(sp.Payload, symKey, txNonce)
+			return decrypted, true, nil
 		}
 	}
 
 	return []byte{}, false, nil
 }
 
-func getDataFromIpfs(ipfsAddress []byte) []byte {
-	ipfsDb := ethdb.NewIpfsDb(DefaultIpfsUrl)
+func getDataFromIpfs(ipfsAddress []byte, ipfsDb *ethdb.IpfsDatabase) []byte {
 	content, err := ipfsDb.Get(ipfsAddress)
 	if err != nil {
-		panic(err)
+		return []byte{}
 	}
 	return content
 }
@@ -60,10 +60,7 @@ func getKey() *rsa.PrivateKey {
 }
 
 func decryptSymKey(data []byte, privateKey *rsa.PrivateKey) []byte {
-	decrypted, err := rsa.DecryptPKCS1v15(nil, privateKey, data)
-	if err != nil {
-		panic(err)
-	}
+	decrypted, _ := rsa.DecryptPKCS1v15(nil, privateKey, data)
 	return decrypted
 }
 
@@ -77,13 +74,13 @@ func decryptPayload(cipherdata []byte, skey []byte, txNonce uint64) ([]byte, err
 
 	block, err := aes.NewCipher(skey)
 	if err != nil {
-		return nil, err
+		return []byte{}, err
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	data, err := aesgcm.Open(nil, nonce, cipherdata, nil)
 	if err != nil {
-		return nil, err
+		return []byte{}, err
 	}
 	return data, nil
 }
