@@ -131,7 +131,7 @@ type BlockChain struct {
 	vmConfig  vm.Config
 
 	badBlocks              *lru.Cache // Bad block cache
-	waitingSignatureBlocks *lru.Cache // Bad block cache
+	waitingSignatureBlocks *lru.Cache // not enough signatures block cache
 }
 
 // WaitingSignatureBlocks returns waitingSignatureBlocks
