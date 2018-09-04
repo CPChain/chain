@@ -18,6 +18,7 @@ import (
 type SealedPrivatePayload struct {
 	// Payload represents the encrypted payload with a random symmetric key.
 	Payload []byte
+	// For public keys, the order is consistent in SymmetricKeys and Participants.
 	// SymmetricKeys represents the symmetric key encrypted with participants' public keys. The same symmetric key but encrypted with different RSA public key.
 	SymmetricKeys [][]byte
 	// Participants represents the public keys of participants.
@@ -40,46 +41,36 @@ func NewSealedPrivatePayload(encryptedPayload []byte, symmetricKey [][]byte, par
 
 // toBytes returns serialized SealedPrivatePayload instance represented by bytes.
 func (sealed *SealedPrivatePayload) toBytes() ([]byte, error) {
-	bytes, err := rlp.EncodeToBytes(sealed)
-	if err != nil {
-		panic(err)
-	}
-	return bytes, nil
+	return rlp.EncodeToBytes(sealed)
 }
 
 // PayloadReplacement represents the replacement data which substitute the private tx payload.
 type PayloadReplacement struct {
 	// Participants represents a list of public keys which belongs to defined participants. They are used for encryption of symmetric key.
 	Participants []string
-	// Address represents an IPFS address which actually a hash of content.
-	Address []byte
+	// TxPayloadUri represents an IPFS address which actually a hash of content.
+	TxPayloadUri []byte
 }
 
-const defaultDbURL = "localhost:5001"
-
-// SealPrivatePayload encrypts private tx's payload and send to IPFS, then replace the payload with the address in IPFS.
+// SealPrivatePayload encrypts private tx's payload and sends it to IPFS, then replaces the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
-func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (PayloadReplacement, error) {
+func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, ipfsDb *ethdb.IpfsDatabase) (PayloadReplacement, error) {
 	// Encrypt payload
 	// use tx's nonce as gcm nonce
 	nonce := make([]byte, 12)
 	binary.BigEndian.PutUint64(nonce, txNonce)
 	binary.BigEndian.PutUint32(nonce[8:], uint32(txNonce))
-	encryptPayload, symKey, err := encryptPayload(payload, nonce)
-	if err != nil {
-		panic(err)
-	}
+	encryptedPayload, symKey, _ := encryptPayload(payload, nonce)
 
-	pubKeys, _ := stringsToPublicKeys(parties)
+	pubKeys, _ := stringsToPublicKeys(participants)
 
 	// Encrypt symmetric keys for participants with related public key.
 	symKeys := sealSymmetricKey(symKey, pubKeys)
 
 	// Seal the payload by encrypting payload and appending symmetric key and participants.
-	sealed := NewSealedPrivatePayload(encryptPayload, symKeys, pubKeys)
+	sealed := NewSealedPrivatePayload(encryptedPayload, symKeys, pubKeys)
 
 	// Put to IPFS
-	ipfsDb := ethdb.NewIpfsDb(defaultDbURL)
 	bytesToPut, _ := sealed.toBytes()
 	ipfsAddr, err := ipfsDb.Put(bytesToPut)
 	if err != nil {
@@ -88,8 +79,8 @@ func SealPrivatePayload(payload []byte, txNonce uint64, parties []string) (Paylo
 
 	// Enclose as a PayloadReplacement struct.
 	replacement := PayloadReplacement{
-		Address:      ipfsAddr,
-		Participants: parties,
+		TxPayloadUri: ipfsAddr,
+		Participants: participants,
 	}
 	return replacement, nil
 }
@@ -112,10 +103,7 @@ func stringsToPublicKeys(keys []string) ([]*rsa.PublicKey, error) {
 func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
 	result := make([][]byte, len(keys))
 	for i, key := range keys {
-		encryptedKey, err := rsa.EncryptPKCS1v15(rand.Reader, key, symKey)
-		if err != nil {
-			panic(err)
-		}
+		encryptedKey, _ := rsa.EncryptPKCS1v15(rand.Reader, key, symKey)
 		result[i] = encryptedKey
 	}
 
@@ -125,30 +113,19 @@ func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
 const keyLength = 32
 
 // generateSymmetricKey generate a random symmetric key.
-func generateSymmetricKey() ([]byte, error) {
+func generateSymmetricKey() []byte {
 	key := make([]byte, keyLength)
-	if _, err := io.ReadFull(rand.Reader, key); err != nil {
-		return nil, err
-	}
-	return key, nil
+	io.ReadFull(rand.Reader, key)
+	return key
 }
 
 // encryptPayload encrypts payload with a random symmetric key and returns encrypted payload and the random symmetric key.
 func encryptPayload(payload []byte, nonce []byte) (encryptedPayload []byte, symmetricKey []byte, err error) {
-	symKey, err := generateSymmetricKey()
-	if err != nil {
-		panic(err)
-	}
+	symKey := generateSymmetricKey()
 
-	block, err := aes.NewCipher(symKey)
-	if err != nil {
-		panic(err)
-	}
+	block, _ := aes.NewCipher(symKey)
 
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		panic(err)
-	}
+	aesgcm, _ := cipher.NewGCM(block)
 
 	encrypted := aesgcm.Seal(nil, nonce, payload, nil)
 	return encrypted, symKey, nil

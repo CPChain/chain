@@ -880,7 +880,7 @@ type RPCTransaction struct {
 func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64) *RPCTransaction {
 	var signer types.Signer = types.FrontierSigner{}
 	if tx.Protected() {
-		signer = types.NewEIP155Signer(tx.ChainId())
+		signer = types.NewPrivTxSupportEIP155Signer(tx.ChainId())
 	}
 	from, _ := types.Sender(signer, tx)
 	v, r, s := tx.RawSignatureValues()
@@ -1057,7 +1057,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, ha
 
 	var signer types.Signer = types.FrontierSigner{}
 	if tx.Protected() {
-		signer = types.NewEIP155Signer(tx.ChainId())
+		signer = types.NewPrivTxSupportEIP155Signer(tx.ChainId())
 	}
 	from, _ := types.Sender(signer, tx)
 
@@ -1225,13 +1225,13 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
 	isPrivate := len(args.Participants) != 0 && args.Data != nil
 	if isPrivate {
-		payloadReplace, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants)
+		payloadReplace, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants, s.b.IpfsDb())
 		if err != nil {
 			panic(err)
 		}
 
 		// Replace original content with security one.
-		replaceData, err := rlp.EncodeToBytes(payloadReplace)
+		replaceData, _ := rlp.EncodeToBytes(payloadReplace)
 		args.Data = (*hexutil.Bytes)(&replaceData)
 	}
 
@@ -1239,7 +1239,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	tx := args.toTransaction()
 
 	var chainID *big.Int
-	if config := s.b.ChainConfig(); config.IsEIP155(s.b.CurrentBlock().Number()) {
+	if config := s.b.ChainConfig(); config.IsEIP155(s.b.CurrentBlock().Number()) || config.IsCpchain() {
 		chainID = config.ChainID
 	}
 	signed, err := wallet.SignTx(account, tx, chainID)
@@ -1334,7 +1334,7 @@ func (s *PublicTransactionPoolAPI) PendingTransactions() ([]*RPCTransaction, err
 	for _, tx := range pending {
 		var signer types.Signer = types.HomesteadSigner{}
 		if tx.Protected() {
-			signer = types.NewEIP155Signer(tx.ChainId())
+			signer = types.NewPrivTxSupportEIP155Signer(tx.ChainId())
 		}
 		from, _ := types.Sender(signer, tx)
 		if _, exists := accounts[from]; exists {
@@ -1362,7 +1362,7 @@ func (s *PublicTransactionPoolAPI) Resend(ctx context.Context, sendArgs SendTxAr
 	for _, p := range pending {
 		var signer types.Signer = types.HomesteadSigner{}
 		if p.Protected() {
-			signer = types.NewEIP155Signer(p.ChainId())
+			signer = types.NewPrivTxSupportEIP155Signer(p.ChainId())
 		}
 		wantSigHash := signer.Hash(matchTx)
 

@@ -197,3 +197,8 @@ func (b *LesApiBackend) ServiceFilter(ctx context.Context, session *bloombits.Ma
 		go session.Multiplex(bloomRetrievalBatch, bloomRetrievalWait, b.eth.bloomRequests)
 	}
 }
+
+// IpfsDb returns IPFS database instance.
+func (b *LesApiBackend) IpfsDb() *ethdb.IpfsDatabase {
+	return b.eth.IpfsDb()
+}

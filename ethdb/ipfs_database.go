@@ -5,7 +5,11 @@ import (
 	"io"
 	"io/ioutil"
 
+	"crypto/sha256"
+
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ipfs/go-ipfs-api"
+	"github.com/pkg/errors"
 )
 
 // IpfsDatabase is a IPFS-based database.
@@ -56,4 +60,32 @@ func (db *IpfsDatabase) Put(value []byte) ([]byte, error) {
 	} else {
 		return []byte(hash), nil
 	}
+}
+
+// FakeIpfsAdapter is a fake IPFS for unit test.
+type FakeIpfsAdapter struct {
+	store map[string][]byte
+}
+
+// NewFakeIpfsAdapter creates a new FakeIpfsAdapter instance.
+func NewFakeIpfsAdapter() *FakeIpfsAdapter {
+	return &FakeIpfsAdapter{
+		store: map[string][]byte{},
+	}
+}
+
+func (adapter *FakeIpfsAdapter) Cat(path string) (io.ReadCloser, error) {
+	buf := adapter.store[path]
+	if buf == nil {
+		return nil, errors.New("Path not found.")
+	}
+	return ioutil.NopCloser(bytes.NewReader(buf)), nil
+}
+
+func (adapter *FakeIpfsAdapter) Add(r io.Reader) (string, error) {
+	data, _ := ioutil.ReadAll(r)
+	hash := sha256.Sum256(data)
+	path := hexutil.Encode(hash[:])
+	adapter.store[path] = data[:]
+	return path, nil
 }

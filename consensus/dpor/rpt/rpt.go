@@ -187,7 +187,7 @@ func (bc *BasicCollector) getTxVolume(address common.Address, number uint64) flo
 		log.Warn("error with bc.getTxVolume", "error", err)
 	}
 	txvs := float64(0)
-	signer := types.NewEIP155Signer(bc.Config.ChainConfig.ChainID)
+	signer := types.NewPrivTxSupportEIP155Signer(bc.Config.ChainConfig.ChainID)
 	txs := block.Transactions()
 	for _, tx := range txs {
 		sender, err := signer.Sender(tx)
