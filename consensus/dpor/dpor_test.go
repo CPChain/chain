@@ -20,7 +20,6 @@ package dpor
 import (
 	"math/big"
 	"reflect"
-	"sync"
 	"testing"
 
 	"time"
@@ -190,7 +189,7 @@ func TestDpor_VerifyHeader(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		chain     consensus.ChainReader
@@ -216,7 +215,7 @@ func TestDpor_VerifyHeader(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			if err := c.VerifyHeader(tt.args.chain, tt.args.header, tt.args.seal, tt.args.refHeader); (err != nil) != tt.wantErr {
 				t.Errorf("Dpor.VerifyHeader(%v, %v, %v, %v) error = %v, wantErr %v", tt.args.chain, tt.args.header, tt.args.seal, tt.args.refHeader, err, tt.wantErr)
@@ -234,7 +233,7 @@ func TestDpor_VerifyHeaders(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		chain      consensus.ChainReader
@@ -261,7 +260,7 @@ func TestDpor_VerifyHeaders(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			got, got1 := c.VerifyHeaders(tt.args.chain, tt.args.headers, tt.args.seals, tt.args.refHeaders)
 			if !reflect.DeepEqual(got, tt.want) {
@@ -316,7 +315,7 @@ func TestDpor_snapshot(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		chain   consensus.ChainReader
@@ -335,13 +334,13 @@ func TestDpor_snapshot(t *testing.T) {
 		// TODO: Add test cases.
 		{"when VerifyHeader failed,return error",
 			fields{recents: cache, db: &fakeDb{}, config: config}, args{
-			chain: &FakeReader{}, number: 0, hash: common.Hash{},
-		}, nil, true},
+				chain: &FakeReader{}, number: 0, hash: common.Hash{},
+			}, nil, true},
 
 		{"snapshot cached in recents,return cached value",
 			fields{recents: snapshotCache, db: &fakeDb{}, config: config}, args{
-			chain: &FakeReader{}, number: 0, hash: hash,
-		}, &Snapshot{}, false},
+				chain: &FakeReader{}, number: 0, hash: hash,
+			}, &Snapshot{}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -353,7 +352,7 @@ func TestDpor_snapshot(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			got, err := c.snapshot(tt.args.chain, tt.args.number, tt.args.hash, tt.args.parents)
 			if (err != nil) != tt.wantErr {
@@ -419,7 +418,7 @@ func TestDpor_VerifySeal(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		chain     consensus.ChainReader
@@ -444,7 +443,7 @@ func TestDpor_VerifySeal(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			if err := c.VerifySeal(tt.args.chain, tt.args.header, tt.args.refHeader); (err != nil) != tt.wantErr {
 				t.Errorf("Dpor.VerifySeal(%v, %v, %v) error = %v, wantErr %v", tt.args.chain, tt.args.header, tt.args.refHeader, err, tt.wantErr)
@@ -506,7 +505,7 @@ func TestDpor_Prepare(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		chain  consensus.ChainReader
@@ -530,7 +529,7 @@ func TestDpor_Prepare(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			if err := c.Prepare(tt.args.chain, tt.args.header); (err != nil) != tt.wantErr {
 				t.Errorf("Dpor.Prepare(%v, %v) error = %v, wantErr %v", tt.args.chain, tt.args.header, err, tt.wantErr)
@@ -548,7 +547,7 @@ func TestDpor_Finalize(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		chain    consensus.ChainReader
@@ -577,7 +576,7 @@ func TestDpor_Finalize(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			got, err := c.Finalize(tt.args.chain, tt.args.header, tt.args.state, tt.args.txs, tt.args.uncles, tt.args.receipts)
 			if (err != nil) != tt.wantErr {
@@ -600,7 +599,7 @@ func TestDpor_Authorize(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		signer common.Address
@@ -623,7 +622,7 @@ func TestDpor_Authorize(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			c.Authorize(tt.args.signer, tt.args.signFn)
 		})
@@ -639,7 +638,7 @@ func TestDpor_Seal(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		chain consensus.ChainReader
@@ -665,7 +664,7 @@ func TestDpor_Seal(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			got, err := c.Seal(tt.args.chain, tt.args.block, tt.args.stop)
 			if (err != nil) != tt.wantErr {
@@ -688,7 +687,7 @@ func TestDpor_CalcDifficulty(t *testing.T) {
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
 		signFn       SignerFn
-		lock         sync.RWMutex
+		// lock         sync.RWMutex
 	}
 	type args struct {
 		chain  consensus.ChainReader
@@ -713,7 +712,7 @@ func TestDpor_CalcDifficulty(t *testing.T) {
 				signedBlocks: tt.fields.signedBlocks,
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
-				lock:         tt.fields.lock,
+				// lock:         tt.fields.lock,
 			}
 			if got := c.CalcDifficulty(tt.args.chain, tt.args.time, tt.args.parent); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Dpor.CalcDifficulty(%v, %v, %v) = %v, want %v", tt.args.chain, tt.args.time, tt.args.parent, got, tt.want)
