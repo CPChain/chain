@@ -28,6 +28,7 @@ import (
 type API struct {
 	chain consensus.ChainReader
 	dpor  *Dpor
+	dh    *dporHelper
 }
 
 // GetSnapshot retrieves the state snapshot at a given block.
@@ -43,7 +44,7 @@ func (api *API) GetSnapshot(number *rpc.BlockNumber) (*Snapshot, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	return api.dpor.snapshot(api.chain, header.Number.Uint64(), header.Hash(), nil)
+	return api.dpor.dh.snapshot(api.dpor, api.chain, header.Number.Uint64(), header.Hash(), nil)
 }
 
 // GetSnapshotAtHash retrieves the state snapshot at a given block.
@@ -52,7 +53,7 @@ func (api *API) GetSnapshotAtHash(hash common.Hash) (*Snapshot, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	return api.dpor.snapshot(api.chain, header.Number.Uint64(), header.Hash(), nil)
+	return api.dpor.dh.snapshot(api.dpor, api.chain, header.Number.Uint64(), header.Hash(), nil)
 }
 
 // GetSigners retrieves the list of authorized signers at the specified block.
@@ -68,7 +69,7 @@ func (api *API) GetSigners(number *rpc.BlockNumber) ([]common.Address, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	snap, err := api.dpor.snapshot(api.chain, header.Number.Uint64(), header.Hash(), nil)
+	snap, err := api.dpor.dh.snapshot(api.dpor, api.chain, header.Number.Uint64(), header.Hash(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +83,7 @@ func (api *API) GetSignersAtHash(hash common.Hash) ([]common.Address, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	snap, err := api.dpor.snapshot(api.chain, header.Number.Uint64(), header.Hash(), nil)
+	snap, err := api.dpor.dh.snapshot(api.dpor, api.chain, header.Number.Uint64(), header.Hash(), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -166,7 +166,7 @@ func TestSnapshot_store(t *testing.T) {
 func TestSnapshot_copy(t *testing.T) {
 	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
 	snap.Candidates = getCandidates()
-	snap.Recents = getRecents()
+	snap.Recents = recents()
 
 	cpySnap := snap.copy()
 
