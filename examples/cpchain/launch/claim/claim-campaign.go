@@ -25,17 +25,18 @@ type keystorePair struct {
 
 var (
 	endPoint  = "http://localhost:8501"
+	dataDir   = "./data/"
 	keystores = []keystorePair{
 		{
-			"../../data/dd1/keystore/",
+			"dd1/keystore/",
 			"password",
 		},
 		{
-			"../../data/dd2/keystore/",
+			"dd2/keystore/",
 			"password",
 		},
 		{
-			"../../data/dd3/keystore/",
+			"dd3/keystore/",
 			"pwdnode1",
 		},
 	}
@@ -43,7 +44,7 @@ var (
 
 func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
 	// Load account.
-	file, err := os.Open(keyStoreFilePath)
+	file, err := os.Open(dataDir + keyStoreFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,8 +101,8 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 
 	baseDeposit := 50
 	gasLimit := 3000000
-	numOfCampaign := 100
-	myRpt := 100
+	numOfCampaign := 10
+	myRpt := 60
 
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(int64(baseDeposit * numOfCampaign))
@@ -123,6 +124,9 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 
 	fmt.Printf("tx mining take time:%s\n", time.Since(startTime))
 	fmt.Println("receipt.Status:", receipt.Status)
+
+	noc, deposit, timestamp, err := instance.CandidateInfoOf(nil, address)
+	fmt.Println("candidate info of", address.Hex(), ":", noc, deposit, timestamp)
 }
 
 func main() {

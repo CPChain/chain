@@ -20,7 +20,7 @@ import (
 
 var (
 	endPoint         = "http://localhost:8501"
-	keyStoreFilePath = "../../data/dd1/keystore/"
+	keyStoreFilePath = "./data/dd1/keystore/"
 )
 
 func deployCampaign() {
