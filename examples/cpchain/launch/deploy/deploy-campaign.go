@@ -60,7 +60,7 @@ func deployCampaign() {
 
 	// Get address.
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	fmt.Println("from address:", fromAddress.Hex()) // 0x96216849c49358B10257cb55b28eA603c874b05E
+	fmt.Println("from address:", fromAddress.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
 
 	// Check balance.
 	bal, err := client.BalanceAt(context.Background(), fromAddress, nil)
