@@ -276,7 +276,10 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 				traced += uint64(len(txs))
 			}
 			// Generate the next state snapshot fast without tracing
-			_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, vm.Config{})
+			// TODO: test if below statement is correct.
+			privStateDb, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), statedb.Database())
+			// TODO: Pass real ipfs database
+			_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{})
 			if err != nil {
 				failed = err
 				break
@@ -388,7 +391,7 @@ func (api *PrivateDebugAPI) TraceBlockFromFile(ctx context.Context, file string,
 
 // traceBlock configures a new tracer according to the provided configuration, and
 // executes all the transactions contained within. The return value will be one item
-// per transaction, dependent on the requestd tracer.
+// per transaction, dependent on the requested tracer.
 func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, config *TraceConfig) ([]*txTraceResult, error) {
 	// Create the parent state database
 	if err := api.eth.engine.VerifyHeader(api.eth.blockchain, block.Header(), true, block.RefHeader()); err != nil {
@@ -513,7 +516,11 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		if block = api.eth.blockchain.GetBlockByNumber(block.NumberU64() + 1); block == nil {
 			return nil, fmt.Errorf("block #%d not found", block.NumberU64()+1)
 		}
-		_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, vm.Config{})
+
+		// TODO: check if below statement is correct.
+		privStateDb, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), statedb.Database())
+		// TODO: pass real ipfs database.
+		_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{})
 		if err != nil {
 			return nil, err
 		}
@@ -532,6 +539,17 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 	nodes, imgs := database.TrieDB().Size()
 	log.Info("Historical state regenerated", "block", block.NumberU64(), "elapsed", time.Since(start), "nodes", nodes, "preimages", imgs)
 	return statedb, nil
+}
+
+// computeStatePrivDB retrieves the private state database associated with a certain block.
+func (api *PrivateDebugAPI) computeStatePrivDB(block *types.Block) (*state.StateDB, error) {
+	// If we have the state fully available, use that
+	privStatedb, err := api.eth.blockchain.StatePrivAt(block.Root())
+	if err == nil {
+		return privStatedb, nil
+	}
+	// TODO: Otherwise try to reexec blocks until we find a state or reach our limit
+	panic(err)
 }
 
 // TraceTransaction returns the structured logs created during the execution of EVM
@@ -640,6 +658,16 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 		if idx == txIndex {
 			return msg, context, statedb, nil
 		}
+
+		if ((*types.PrivateTransaction)(tx)).IsPrivate() {
+			statePrivDb, err := api.computeStatePrivDB(parent)
+			if err != nil {
+				// TODO: log the fatal error
+				panic(err)
+			}
+			statedb = statePrivDb // replace with private database.
+		}
+
 		// Not yet the searched for transaction, execute on top of the current state
 		vmenv := vm.NewEVM(context, statedb, api.config, vm.Config{})
 		if _, _, _, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(tx.Gas())); err != nil {

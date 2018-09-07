@@ -66,12 +66,14 @@ type Work struct {
 	config *params.ChainConfig
 	signer types.Signer
 
-	state     *state.StateDB // apply state changes here
-	ancestors *set.Set       // ancestor set (used for checking uncle parent validity)
-	family    *set.Set       // family set (used for checking uncle invalidity)
-	uncles    *set.Set       // uncle set
-	tcount    int            // tx count in cycle
-	gasPool   *core.GasPool  // available gas used to pack transactions
+	privState *state.StateDB      // apply public state changes here
+	pubState  *state.StateDB      // apply private state changes here
+	ipfsDb    *ethdb.IpfsDatabase // ipfs database used for private tx processing
+	ancestors *set.Set            // ancestor set (used for checking uncle parent validity)
+	family    *set.Set            // family set (used for checking uncle invalidity)
+	uncles    *set.Set            // uncle set
+	tcount    int                 // tx count in cycle
+	gasPool   *core.GasPool       // available gas used to pack transactions
 
 	Block *types.Block // the new block
 
@@ -185,7 +187,7 @@ func (self *worker) pending() (*types.Block, *state.StateDB) {
 
 	self.currentMu.Lock()
 	defer self.currentMu.Unlock()
-	return self.current.Block, self.current.state.Copy()
+	return self.current.Block, self.current.pubState.Copy()
 }
 
 func (self *worker) pendingBlock() *types.Block {
@@ -313,10 +315,17 @@ func (self *worker) wait() {
 					l.BlockHash = block.Hash()
 				}
 			}
-			for _, log := range work.state.Logs() {
+			for _, log := range append(work.pubState.Logs(), work.privState.Logs()...) {
 				log.BlockHash = block.Hash()
 			}
-			stat, err := self.chain.WriteBlockWithState(block, work.receipts, work.state)
+
+			// write private transaction
+			privateState, _ := work.privState.Commit(true)
+			core.WritePrivateStateRoot(self.chainDb, block.Root(), privateState)
+			// TODO: if need to merge receipts
+			// TODO: if need to WriteBlockWithState
+
+			stat, err := self.chain.WriteBlockWithState(block, work.receipts, work.pubState)
 			if err != nil {
 				log.Error("Failed writing block to chain", "err", err)
 				continue
@@ -325,7 +334,7 @@ func (self *worker) wait() {
 			self.mux.Post(core.NewMinedBlockEvent{Block: block})
 			var (
 				events []interface{}
-				logs   = work.state.Logs()
+				logs   = append(work.pubState.Logs(), work.privState.Logs()...)
 			)
 			events = append(events, core.ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
 			if stat == core.CanonStatTy {
@@ -354,14 +363,21 @@ func (self *worker) push(work *Work) {
 
 // makeCurrent creates a new environment for the current cycle.
 func (self *worker) makeCurrent(parent *types.Block, header *types.Header) error {
-	state, err := self.chain.StateAt(parent.Root())
+	pubState, err := self.chain.StateAt(parent.Root())
 	if err != nil {
 		return err
 	}
+
+	privState, err := self.chain.StatePrivAt(parent.Root())
+	if err != nil {
+		return err
+	}
+
 	work := &Work{
 		config:    self.config,
 		signer:    types.NewPrivTxSupportEIP155Signer(self.config.ChainID),
-		state:     state,
+		pubState:  pubState,
+		privState: privState,
 		ancestors: set.New(),
 		family:    set.New(),
 		uncles:    set.New(),
@@ -444,7 +460,7 @@ func (self *worker) commitNewWork() {
 	// Create the current work task and check any fork transitions needed
 	work := self.current
 	if self.config.DAOForkSupport && self.config.DAOForkBlock != nil && self.config.DAOForkBlock.Cmp(header.Number) == 0 {
-		misc.ApplyDAOHardFork(work.state)
+		misc.ApplyDAOHardFork(work.pubState)
 	}
 	pending, err := self.eth.TxPool().Pending()
 	if err != nil {
@@ -477,7 +493,7 @@ func (self *worker) commitNewWork() {
 		delete(self.possibleUncles, hash)
 	}
 	// Create the new block to seal with the consensus engine
-	if work.Block, err = self.engine.Finalize(self.chain, header, work.state, work.txs, uncles, work.receipts); err != nil {
+	if work.Block, err = self.engine.Finalize(self.chain, header, work.pubState, work.txs, uncles, work.receipts); err != nil {
 		log.Error("Failed to finalize block for sealing", "err", err)
 		return
 	}
@@ -515,7 +531,8 @@ func (self *worker) updateSnapshot() {
 		nil,
 		self.current.receipts,
 	)
-	self.snapshotState = self.current.state.Copy()
+	self.snapshotState = self.current.pubState.Copy()
+	// TODO: if need to snapshot private state?
 }
 
 func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByPriceAndNonce, bc *core.BlockChain, coinbase common.Address) {
@@ -542,15 +559,16 @@ func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsB
 		// We use the eip155 signer regardless of the current hf.
 		from, _ := types.Sender(env.signer, tx)
 		// Check whether the tx is replay protected. If we're not in the EIP155 hf
-		// phase, start ignoring the sender until we do.
-		if tx.Protected() && !env.config.IsEIP155(env.header.Number) {
+		// phase or Cpchain, start ignoring the sender until we do.
+		if tx.Protected() && !env.config.IsEIP155(env.header.Number) && !env.config.IsCpchain() {
 			log.Trace("Ignoring reply protected transaction", "hash", tx.Hash(), "eip155", env.config.EIP155Block)
 
 			txs.Pop()
 			continue
 		}
 		// Start executing the transaction
-		env.state.Prepare(tx.Hash(), common.Hash{}, env.tcount)
+		env.pubState.Prepare(tx.Hash(), common.Hash{}, env.tcount)
+		env.privState.Prepare(tx.Hash(), common.Hash{}, env.tcount)
 
 		err, logs := env.commitTransaction(tx, bc, coinbase, env.gasPool)
 		switch err {
@@ -604,11 +622,13 @@ func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsB
 }
 
 func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, coinbase common.Address, gp *core.GasPool) (error, []*types.Log) {
-	snap := env.state.Snapshot()
+	snap := env.pubState.Snapshot()
+	snapPriv := env.privState.Snapshot()
 
-	receipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.state, env.header, tx, &env.header.GasUsed, vm.Config{})
+	receipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.ipfsDb, env.header, tx, &env.header.GasUsed, vm.Config{})
 	if err != nil {
-		env.state.RevertToSnapshot(snap)
+		env.pubState.RevertToSnapshot(snap)
+		env.privState.RevertToSnapshot(snapPriv)
 		return err, nil
 	}
 	env.txs = append(env.txs, tx)

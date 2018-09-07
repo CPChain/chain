@@ -132,6 +132,8 @@ type BlockChain struct {
 
 	badBlocks              *lru.Cache // Bad block cache
 	waitingSignatureBlocks *lru.Cache // not enough signatures block cache
+
+	privateStateCache state.Database // State database to reuse between imports (contains state cache)
 }
 
 // WaitingSignatureBlocks returns waitingSignatureBlocks
@@ -172,6 +174,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 		vmConfig:               vmConfig,
 		badBlocks:              badBlocks,
 		waitingSignatureBlocks: waitingSignatureBlocks,
+		privateStateCache:      state.NewDatabase(db),
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
@@ -235,6 +238,13 @@ func (bc *BlockChain) loadLastState() error {
 			return err
 		}
 	}
+
+	// Make sure the private state associated with the block is available
+	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
+		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
+		return bc.Reset()
+	}
+
 	// Everything seems to be fine, set as the head block
 	bc.currentBlock.Store(currentBlock)
 
@@ -387,14 +397,23 @@ func (bc *BlockChain) Processor() Processor {
 	return bc.processor
 }
 
-// State returns a new mutable state based on the current HEAD block.
+// State returns a new mutable state(public) based on the current HEAD block.
 func (bc *BlockChain) State() (*state.StateDB, error) {
+	return bc.StateAt(bc.CurrentBlock().Root())
+}
+
+// StatePriv returns a new mutable private state based on the current HEAD block.
+func (bc *BlockChain) StatePriv() (*state.StateDB, error) {
 	return bc.StateAt(bc.CurrentBlock().Root())
 }
 
 // StateAt returns a new mutable state based on a particular point in time.
 func (bc *BlockChain) StateAt(root common.Hash) (*state.StateDB, error) {
 	return state.New(root, bc.stateCache)
+}
+
+func (bc *BlockChain) StatePrivAt(root common.Hash) (*state.StateDB, error) {
+	return state.New(GetPrivateStateRoot(bc.db, root), bc.privateStateCache)
 }
 
 // Reset purges the entire blockchain, restoring it to its genesis state.
@@ -1158,26 +1177,41 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		} else {
 			parent = chain[i-1]
 		}
-		state, err := state.New(parent.Root(), bc.stateCache)
+		pubState, err := state.New(parent.Root(), bc.stateCache)
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
+		privState, err := state.New(GetPrivateStateRoot(bc.db, parent.Root()), bc.privateStateCache)
+		if err != nil {
+			return i, events, coalescedLogs, err
+		}
+
 		// Process block using the parent state as reference point.
-		receipts, logs, usedGas, err := bc.processor.Process(block, state, bc.vmConfig)
+		// TODO: Pass a real IPFS database parameter to below function call.
+		receipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, nil, bc.vmConfig)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)
 			return i, events, coalescedLogs, err
 		}
 		// Validate the state using the default validator
-		err = bc.Validator().ValidateState(block, parent, state, receipts, usedGas)
+		err = bc.Validator().ValidateState(block, parent, pubState, receipts, usedGas)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)
 			return i, events, coalescedLogs, err
 		}
 		proctime := time.Since(bstart)
 
+		privStateRoot, err := privState.Commit(true)
+		if err != nil {
+			bc.reportBlock(block, receipts, err)
+			return i, events, coalescedLogs, err
+		}
+		if err := WritePrivateStateRoot(bc.db, block.Root(), privStateRoot); err != nil {
+			return i, events, coalescedLogs, err
+		}
+
 		// Write the block to the chain and get the status.
-		status, err := bc.WriteBlockWithState(block, receipts, state)
+		status, err := bc.WriteBlockWithState(block, receipts, pubState)
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
