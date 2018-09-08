@@ -120,7 +120,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, genesisErr
 	}
 	log.Info("Initialised chain configuration", "config", chainConfig)
-	ipfsDb := ethdb.NewIpfsDb("localhost:5001")
+	ipfsDb := ethdb.NewIpfsDb(config.PrivateTx.IpfsURL)
 
 	eth := &Ethereum{
 		config:         config,
