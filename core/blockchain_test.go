@@ -154,7 +154,7 @@ func testBlockChainImport(chain types.Blocks, blockchain *BlockChain) error {
 		}
 		// TODO: check if below statement is correct.
 		privStateDb, _ := state.New(GetPrivateStateRoot(blockchain.db, blockchain.GetBlockByHash(block.ParentHash()).Root()), statedb.Database())
-		receipts, _, usedGas, err := blockchain.Processor().Process(block, statedb, privStateDb, vm.Config{})
+		receipts, _, usedGas, err := blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{})
 		if err != nil {
 			blockchain.reportBlock(block, receipts, err)
 			return err
