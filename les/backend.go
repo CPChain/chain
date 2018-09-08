@@ -95,7 +95,7 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 	peers := newPeerSet()
 	quitSync := make(chan struct{})
 
-	ipfsDb := ethdb.NewIpfsDb("localhost:5001")
+	ipfsDb := ethdb.NewIpfsDb(config.PrivateTx.IpfsURL)
 
 	leth := &LightEthereum{
 		config:           config,
