@@ -23,6 +23,7 @@ import (
 	"io"
 	"math/big"
 	mrand "math/rand"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -53,12 +54,13 @@ var (
 )
 
 const (
-	bodyCacheLimit      = 256
-	blockCacheLimit     = 256
-	maxFutureBlocks     = 256
-	maxTimeFutureBlocks = 30
-	badBlockLimit       = 10
-	triesInMemory       = 128
+	bodyCacheLimit             = 256
+	blockCacheLimit            = 256
+	maxFutureBlocks            = 256
+	maxTimeFutureBlocks        = 30
+	badBlockLimit              = 10
+	waitingSignatureBlockLimit = 10
+	triesInMemory              = 128
 
 	// BlockChainVersion ensures that an incompatible database forces a resync from scratch.
 	BlockChainVersion = 3
@@ -128,7 +130,13 @@ type BlockChain struct {
 	validator Validator // block and state validator interface
 	vmConfig  vm.Config
 
-	badBlocks *lru.Cache // Bad block cache
+	badBlocks              *lru.Cache // Bad block cache
+	waitingSignatureBlocks *lru.Cache // not enough signatures block cache
+}
+
+// WaitingSignatureBlocks returns waitingSignatureBlocks
+func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
+	return bc.waitingSignatureBlocks
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -147,20 +155,23 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 	futureBlocks, _ := lru.New(maxFutureBlocks)
 	badBlocks, _ := lru.New(badBlockLimit)
 
+	waitingSignatureBlocks, _ := lru.New(waitingSignatureBlockLimit)
+
 	bc := &BlockChain{
-		chainConfig:  chainConfig,
-		cacheConfig:  cacheConfig,
-		db:           db,
-		triegc:       prque.New(),
-		stateCache:   state.NewDatabase(db),
-		quit:         make(chan struct{}),
-		bodyCache:    bodyCache,
-		bodyRLPCache: bodyRLPCache,
-		blockCache:   blockCache,
-		futureBlocks: futureBlocks,
-		engine:       engine,
-		vmConfig:     vmConfig,
-		badBlocks:    badBlocks,
+		chainConfig:            chainConfig,
+		cacheConfig:            cacheConfig,
+		db:                     db,
+		triegc:                 prque.New(),
+		stateCache:             state.NewDatabase(db),
+		quit:                   make(chan struct{}),
+		bodyCache:              bodyCache,
+		bodyRLPCache:           bodyRLPCache,
+		blockCache:             blockCache,
+		futureBlocks:           futureBlocks,
+		engine:                 engine,
+		vmConfig:               vmConfig,
+		badBlocks:              badBlocks,
+		waitingSignatureBlocks: waitingSignatureBlocks,
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
@@ -1038,13 +1049,15 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	)
 	// Start the parallel header verifier
 	headers := make([]*types.Header, len(chain))
+	refHeaders := make([]*types.Header, len(chain))
 	seals := make([]bool, len(chain))
 
 	for i, block := range chain {
 		headers[i] = block.Header()
+		refHeaders[i] = block.RefHeader()
 		seals[i] = true
 	}
-	abort, results := bc.engine.VerifyHeaders(bc, headers, seals)
+	abort, results := bc.engine.VerifyHeaders(bc, headers, seals, refHeaders)
 	defer close(abort)
 
 	// Start a parallel signature recovery (signer will fluke on fork transition, minimal perf loss)
@@ -1127,6 +1140,12 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 				return i, events, coalescedLogs, err
 			}
 
+		case err == consensus.ErrNotEnoughSigs:
+			err := err.(*consensus.ErrNotEnoughSigsType)
+			err.NotEnoughSigsBlockHash = block.Hash()
+			bc.waitingSignatureBlocks.Add(block.Hash(), block)
+			return i, events, coalescedLogs, err
+
 		case err != nil:
 			bc.reportBlock(block, nil, err)
 			return i, events, coalescedLogs, err
@@ -1186,6 +1205,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		stats.usedGas += usedGas
 
 		cache, _ := bc.stateCache.TrieDB().Size()
+		log.Info("Imported new block: " + strconv.Itoa(int(chain[i].Number().Int64())) + " hash: " + chain[i].Hash().Hex())
 		stats.report(chain, i, cache)
 	}
 	// Append a single chain head event if we've progressed the chain

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"os"
+	"path/filepath"
 
 	"testing"
 
@@ -14,6 +16,7 @@ import (
 	"bytes"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -23,14 +26,21 @@ func TestCampaign(t *testing.T) {
 	t.Skip("we shall use a simulated backend.")
 
 	// create client.
-	client, err := ethclient.Dial("https://rinkeby.infura.io")
-	// client, err := ethclient.Dial("http://localhost:8545") // local
+	// client, err := ethclient.Dial("https://rinkeby.infura.io")
+	client, err := ethclient.Dial("http://localhost:8501") // local
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// create account.
-	privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
+	// privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
+	file, _ := os.Open("../../../examples/cpchain/data/dd1/keystore/")
+	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
+	kst := keystore.NewKeyStore(keyPath, 2, 1)
+	account := kst.Accounts()[0]
+	account, key, err := kst.GetDecryptedKey(account, "password")
+	privateKey := key.PrivateKey
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,6 +54,8 @@ func TestCampaign(t *testing.T) {
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 	fmt.Println("from address:", fromAddress.Hex()) // 0x96216849c49358B10257cb55b28eA603c874b05E
 
+	bal, err := client.BalanceAt(context.Background(), fromAddress, nil)
+	fmt.Println("bal:", bal)
 	gasLimit := 3000000
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	fmt.Println("gasPrice:", gasPrice)

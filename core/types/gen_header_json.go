@@ -13,6 +13,7 @@ import (
 
 var _ = (*headerMarshaling)(nil)
 
+// MarshalJSON marshals as JSON.
 func (h Header) MarshalJSON() ([]byte, error) {
 	type Header struct {
 		ParentHash  common.Hash    `json:"parentHash"       gencodec:"required"`
@@ -28,6 +29,7 @@ func (h Header) MarshalJSON() ([]byte, error) {
 		GasUsed     hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time        *hexutil.Big   `json:"timestamp"        gencodec:"required"`
 		Extra       hexutil.Bytes  `json:"extraData"        gencodec:"required"`
+		Extra2      hexutil.Bytes  `json:"extraData2"       gencodec:"required"`
 		MixDigest   common.Hash    `json:"mixHash"          gencodec:"required"`
 		Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
 		Hash        common.Hash    `json:"hash"`
@@ -46,12 +48,14 @@ func (h Header) MarshalJSON() ([]byte, error) {
 	enc.GasUsed = hexutil.Uint64(h.GasUsed)
 	enc.Time = (*hexutil.Big)(h.Time)
 	enc.Extra = h.Extra
+	enc.Extra2 = h.Extra2
 	enc.MixDigest = h.MixDigest
 	enc.Nonce = h.Nonce
 	enc.Hash = h.Hash()
 	return json.Marshal(&enc)
 }
 
+// UnmarshalJSON unmarshals from JSON.
 func (h *Header) UnmarshalJSON(input []byte) error {
 	type Header struct {
 		ParentHash  *common.Hash    `json:"parentHash"       gencodec:"required"`
@@ -67,6 +71,7 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		GasUsed     *hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time        *hexutil.Big    `json:"timestamp"        gencodec:"required"`
 		Extra       *hexutil.Bytes  `json:"extraData"        gencodec:"required"`
+		Extra2      *hexutil.Bytes  `json:"extraData2"       gencodec:"required"`
 		MixDigest   *common.Hash    `json:"mixHash"          gencodec:"required"`
 		Nonce       *BlockNonce     `json:"nonce"            gencodec:"required"`
 	}
@@ -126,6 +131,10 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'extraData' for Header")
 	}
 	h.Extra = *dec.Extra
+	if dec.Extra2 == nil {
+		return errors.New("missing required field 'extraData2' for Header")
+	}
+	h.Extra2 = *dec.Extra2
 	if dec.MixDigest == nil {
 		return errors.New("missing required field 'mixHash' for Header")
 	}

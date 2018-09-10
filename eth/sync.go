@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/log"
@@ -198,8 +199,24 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 
 	// Run the sync cycle, and disable fast sync if we've went past the pivot block
 	if err := pm.downloader.Synchronise(peer.id, pHead, pTd, mode); err != nil {
+
+		// TODO: check if there is any security problems!
+		if err == consensus.ErrNotEnoughSigs {
+
+			log.Debug("--------I am in sync.Synchronise start--------")
+			log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
+			log.Debug("--------I am in sync.Synchronise end--------")
+
+			err := err.(*consensus.ErrNotEnoughSigsType)
+			hash := err.NotEnoughSigsBlockHash
+			if waitingSignatureBlock, known := pm.downloader.Blockchain.WaitingSignatureBlocks().Get(hash); known {
+				waitingSignatureBlock := waitingSignatureBlock.(*types.Block)
+				go pm.BroadcastBlock(waitingSignatureBlock, true)
+			}
+		}
 		return
 	}
+
 	if atomic.LoadUint32(&pm.fastSync) == 1 {
 		log.Info("Fast sync complete, auto disabling")
 		atomic.StoreUint32(&pm.fastSync, 0)

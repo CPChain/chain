@@ -118,7 +118,7 @@ func testFork(t *testing.T, LightChain *LightChain, i, n int, comparator func(td
 func testHeaderChainImport(chain []*types.Header, lightchain *LightChain) error {
 	for _, header := range chain {
 		// Try and validate the header
-		if err := lightchain.engine.VerifyHeader(lightchain.hc, header, true); err != nil {
+		if err := lightchain.engine.VerifyHeader(lightchain.hc, header, true, nil); err != nil {
 			return err
 		}
 		// Manually insert the header into the database, but don't reorganize (allows subsequent testing)

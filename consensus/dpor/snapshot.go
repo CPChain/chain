@@ -17,43 +17,35 @@
 package dpor
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus/dpor/election"
+	"github.com/ethereum/go-ethereum/consensus/dpor/rpt"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
 	lru "github.com/hashicorp/golang-lru"
 )
 
-// Vote represents a single vote that an authorized signer made to modify the
-// list of authorizations.
-type Vote struct {
-	Signer    common.Address `json:"signer"`    // Authorized signer that cast this vote
-	Block     uint64         `json:"block"`     // Block number the vote was cast in (expire old votes)
-	Address   common.Address `json:"address"`   // Account being voted on to change its authorization
-	Authorize bool           `json:"authorize"` // Whether to authorize or deauthorize the voted account
-}
-
-// Tally is a simple vote tally to keep the current score of votes. Votes that
-// go against the proposal aren't counted since it's equivalent to not voting.
-type Tally struct {
-	Authorize bool `json:"authorize"` // Whether the vote is about authorizing or kicking someone
-	Votes     int  `json:"votes"`     // Number of votes until now wanting to pass the proposal
-}
+var (
+	errSignerNotInCommittee = errors.New("signer not in committee")
+	errGenesisBlockNumber   = errors.New("Genesis block has no leader")
+)
 
 // Snapshot is the state of the authorization voting at a given point in time.
 type Snapshot struct {
 	config   *params.DporConfig // Consensus engine parameters to fine tune behavior
 	sigcache *lru.ARCCache      // Cache of recent block signatures to speed up ecrecover
 
-	Number  uint64                      `json:"number"`  // Block number where the snapshot was created
-	Hash    common.Hash                 `json:"hash"`    // Block hash where the snapshot was created
-	Signers map[common.Address]struct{} `json:"signers"` // Set of authorized signers at this moment
-	Recents map[uint64]common.Address   `json:"recents"` // Set of recent signers for spam protections
-	Votes   []*Vote                     `json:"votes"`   // List of votes cast in chronological order
-	Tally   map[common.Address]Tally    `json:"tally"`   // Current vote tally to avoid recalculating
+	Number uint64      `json:"number"` // Block number where the snapshot was created
+	Hash   common.Hash `json:"hash"`   // Block hash where the snapshot was created
+
+	Signers    []common.Address          `json:"signers"`    // Set of authorized signers at this moment
+	Candidates []common.Address          `json:"candidates"` // Set of candidates read from campaign contract
+	Recents    map[uint64]common.Address `json:"recents"`    // Set of recent signers for spam protections
 }
 
 // newSnapshot creates a new snapshot with the specified startup parameters. This
@@ -65,13 +57,10 @@ func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint6
 		sigcache: sigcache,
 		Number:   number,
 		Hash:     hash,
-		Signers:  make(map[common.Address]struct{}),
+		Signers:  make([]common.Address, config.Epoch),
 		Recents:  make(map[uint64]common.Address),
-		Tally:    make(map[common.Address]Tally),
 	}
-	for _, signer := range signers {
-		snap.Signers[signer] = struct{}{}
-	}
+	copy(snap.Signers, signers)
 	return snap
 }
 
@@ -103,71 +92,20 @@ func (s *Snapshot) store(db ethdb.Database) error {
 // copy creates a deep copy of the snapshot, though not the individual votes.
 func (s *Snapshot) copy() *Snapshot {
 	cpy := &Snapshot{
-		config:   s.config,
-		sigcache: s.sigcache,
-		Number:   s.Number,
-		Hash:     s.Hash,
-		Signers:  make(map[common.Address]struct{}),
-		Recents:  make(map[uint64]common.Address),
-		Votes:    make([]*Vote, len(s.Votes)),
-		Tally:    make(map[common.Address]Tally),
+		config:     s.config,
+		sigcache:   s.sigcache,
+		Number:     s.Number,
+		Hash:       s.Hash,
+		Signers:    make([]common.Address, s.config.Epoch),
+		Candidates: make([]common.Address, len(s.Candidates)),
+		Recents:    make(map[uint64]common.Address),
 	}
-	for signer := range s.Signers {
-		cpy.Signers[signer] = struct{}{}
-	}
+	copy(cpy.Signers, s.Signers)
+	copy(cpy.Candidates, s.Candidates)
 	for block, signer := range s.Recents {
 		cpy.Recents[block] = signer
 	}
-	for address, tally := range s.Tally {
-		cpy.Tally[address] = tally
-	}
-	copy(cpy.Votes, s.Votes)
-
 	return cpy
-}
-
-// validVote returns whether it makes sense to cast the specified vote in the
-// given snapshot context (e.g. don't try to add an already authorized signer).
-func (s *Snapshot) validVote(address common.Address, authorize bool) bool {
-	_, signer := s.Signers[address]
-	return (signer && !authorize) || (!signer && authorize)
-}
-
-// cast adds a new vote into the tally.
-func (s *Snapshot) cast(address common.Address, authorize bool) bool {
-	// Ensure the vote is meaningful
-	if !s.validVote(address, authorize) {
-		return false
-	}
-	// Cast the vote into an existing or new tally
-	if old, ok := s.Tally[address]; ok {
-		old.Votes++
-		s.Tally[address] = old
-	} else {
-		s.Tally[address] = Tally{Authorize: authorize, Votes: 1}
-	}
-	return true
-}
-
-// uncast removes a previously cast vote from the tally.
-func (s *Snapshot) uncast(address common.Address, authorize bool) bool {
-	// If there's no tally, it's a dangling vote, just drop
-	tally, ok := s.Tally[address]
-	if !ok {
-		return false
-	}
-	// Ensure we only revert counted votes
-	if tally.Authorize != authorize {
-		return false
-	}
-	// Otherwise revert the vote
-	if tally.Votes > 1 {
-		tally.Votes--
-		s.Tally[address] = tally
-	} else {
-		delete(s.Tally, address)
-	}
-	return true
 }
 
 // apply creates a new authorization snapshot by applying the given headers to
@@ -183,6 +121,7 @@ func (s *Snapshot) apply(headers []*types.Header) (*Snapshot, error) {
 			return nil, errInvalidVotingChain
 		}
 	}
+
 	if headers[0].Number.Uint64() != s.Number+1 {
 		return nil, errInvalidVotingChain
 	}
@@ -190,121 +129,130 @@ func (s *Snapshot) apply(headers []*types.Header) (*Snapshot, error) {
 	snap := s.copy()
 
 	for _, header := range headers {
-		// Remove any votes on checkpoint blocks
-		number := header.Number.Uint64()
-		if number%s.config.Epoch == 0 {
-			snap.Votes = nil
-			snap.Tally = make(map[common.Address]Tally)
-		}
-		// Delete the oldest signer from the recent list to allow it signing again
-		if limit := uint64(len(snap.Signers)/2 + 1); number >= limit {
-			delete(snap.Recents, number-limit)
-		}
-		// Resolve the authorization key and check against signers
-		signer, err := ecrecover(header, s.sigcache)
+		err := snap.applyHeader(header)
 		if err != nil {
+			log.Warn("Snapshot apply header error.", err)
 			return nil, err
 		}
-		if _, ok := snap.Signers[signer]; !ok {
-			return nil, errUnauthorized
-		}
-		for _, recent := range snap.Recents {
-			if recent == signer {
-				return nil, errUnauthorized
-			}
-		}
-		snap.Recents[number] = signer
-
-		// Header authorized, discard any previous votes from the signer
-		for i, vote := range snap.Votes {
-			if vote.Signer == signer && vote.Address == header.Coinbase {
-				// Uncast the vote from the cached tally
-				snap.uncast(vote.Address, vote.Authorize)
-
-				// Uncast the vote from the chronological list
-				snap.Votes = append(snap.Votes[:i], snap.Votes[i+1:]...)
-				break // only one vote allowed
-			}
-		}
-		// Tally up the new vote from the signer
-		var authorize bool
-		switch {
-		case bytes.Equal(header.Nonce[:], nonceAuthVote):
-			authorize = true
-		case bytes.Equal(header.Nonce[:], nonceDropVote):
-			authorize = false
-		default:
-			return nil, errInvalidVote
-		}
-		if snap.cast(header.Coinbase, authorize) {
-			snap.Votes = append(snap.Votes, &Vote{
-				Signer:    signer,
-				Block:     number,
-				Address:   header.Coinbase,
-				Authorize: authorize,
-			})
-		}
-		// If the vote passed, update the list of signers
-		if tally := snap.Tally[header.Coinbase]; tally.Votes > len(snap.Signers)/2 {
-			if tally.Authorize {
-				snap.Signers[header.Coinbase] = struct{}{}
-			} else {
-				delete(snap.Signers, header.Coinbase)
-
-				// Signer list shrunk, delete any leftover recent caches
-				if limit := uint64(len(snap.Signers)/2 + 1); number >= limit {
-					delete(snap.Recents, number-limit)
-				}
-				// Discard any previous votes the deauthorized signer cast
-				for i := 0; i < len(snap.Votes); i++ {
-					if snap.Votes[i].Signer == header.Coinbase {
-						// Uncast the vote from the cached tally
-						snap.uncast(snap.Votes[i].Address, snap.Votes[i].Authorize)
-
-						// Uncast the vote from the chronological list
-						snap.Votes = append(snap.Votes[:i], snap.Votes[i+1:]...)
-
-						i--
-					}
-				}
-			}
-			// Discard any previous votes around the just changed account
-			for i := 0; i < len(snap.Votes); i++ {
-				if snap.Votes[i].Address == header.Coinbase {
-					snap.Votes = append(snap.Votes[:i], snap.Votes[i+1:]...)
-					i--
-				}
-			}
-			delete(snap.Tally, header.Coinbase)
-		}
 	}
-	snap.Number += uint64(len(headers))
+
+	snap.Number = headers[len(headers)-1].Number.Uint64()
 	snap.Hash = headers[len(headers)-1].Hash()
 
 	return snap, nil
 }
 
-// signers retrieves the list of authorized signers in ascending order.
-func (s *Snapshot) signers() []common.Address {
-	signers := make([]common.Address, 0, len(s.Signers))
-	for signer := range s.Signers {
-		signers = append(signers, signer)
+// TODO: finish this func to apply header to snapshot to calculate reputations of candidates fetched from candidate contract.
+func (s *Snapshot) applyHeader(header *types.Header) error {
+	// update snapshot attributes.
+	s.Number = header.Number.Uint64()
+	s.Hash = header.Hash()
+
+	s.updateCandidates(header)
+
+	if s.Number%checkpointInterval == 0 {
+		rpts, err := s.updateRpts(header)
+		if err != nil {
+			return err
+		}
+
+		seed := header.Hash().Big().Int64()
+		viewLength := int(s.config.Epoch)
+		s.updateView(rpts, seed, viewLength)
 	}
-	for i := 0; i < len(signers); i++ {
-		for j := i + 1; j < len(signers); j++ {
-			if bytes.Compare(signers[i][:], signers[j][:]) > 0 {
-				signers[i], signers[j] = signers[j], signers[i]
-			}
+	return nil
+}
+
+// TODO: fix this logic.
+func (s *Snapshot) updateCandidates(header *types.Header) error {
+	// TODO: delete this.
+	candidates := []common.Address{
+		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+	}
+	// TODO: above is wrong.
+
+	s.Candidates = candidates
+	return nil
+}
+
+// TODO: implement this func to get rpts for candidates. maybe save it as a map.
+func (s *Snapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
+
+	// TODO: fix this.
+	/*
+		collector := rpt.BasicCollector{}
+		rpts := collector.GetRpts(&candidates, header.Number.Uint64())
+	*/
+
+	rpts := rpt.RPTs{
+		rpt.RPT{
+			Address: common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+			Rpt:     50,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+			Rpt:     100,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+			Rpt:     20,
+		},
+	}
+	// TODO: above is wrong.
+
+	return rpts, nil
+}
+
+// updateView use rpt and election result to get new committee(signers).
+func (s *Snapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
+	signers := election.Elect(rpts, seed, viewLength)
+
+	s.Signers = signers
+	return nil
+}
+
+// Signers retrieves all signers in the committee.
+func (s *Snapshot) signers() []common.Address {
+	return s.Signers
+}
+
+func (s *Snapshot) signerRound(signer common.Address) (int, error) {
+	for round, s := range s.signers() {
+		if s == signer {
+			return round, nil
 		}
 	}
-	return signers
+	return -1, errSignerNotInCommittee
+}
+
+func (s *Snapshot) isSigner(signer common.Address) bool {
+	_, err := s.signerRound(signer)
+	return err == nil
+}
+
+func (s *Snapshot) isLeader(signer common.Address, number uint64) (bool, error) {
+	if number == 0 {
+		return false, errGenesisBlockNumber
+	}
+	round, err := s.signerRound(signer)
+	if err != nil {
+		return false, err
+	}
+	return round == int((number-1)%s.config.Epoch), nil
+}
+
+// Candidates retrieves all candidates recorded in the campaign contract.
+func (s *Snapshot) candidates() []common.Address {
+	return s.Candidates
 }
 
 // inturn returns if a signer at a given block height is in-turn or not.
 func (s *Snapshot) inturn(number uint64, signer common.Address) bool {
-	signers, offset := s.signers(), 0
-	for offset < len(signers) && signers[offset] != signer {
-		offset++
+	ok, err := s.isLeader(signer, number)
+	if err != nil {
+		return false
 	}
-	return (number % uint64(len(signers))) == uint64(offset)
+	return ok
 }
