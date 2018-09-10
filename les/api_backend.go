@@ -198,7 +198,7 @@ func (b *LesApiBackend) ServiceFilter(ctx context.Context, session *bloombits.Ma
 	}
 }
 
-// IpfsDb returns IPFS database instance.
+// IpfsDB returns IPFS database instance.
 func (b *LesApiBackend) IpfsDb() *ethdb.IpfsDatabase {
 	return b.eth.IpfsDb()
 }

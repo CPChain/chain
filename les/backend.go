@@ -64,7 +64,7 @@ type LightEthereum struct {
 	retriever       *retrieveManager
 	// DB interfaces
 	chainDb ethdb.Database // Block chain database
-	ipfsDb  *ethdb.IpfsDatabase
+	ipfsDB  *ethdb.IpfsDatabase
 
 	bloomRequests                              chan chan *bloombits.Retrieval // Channel receiving bloom data retrieval requests
 	bloomIndexer, chtIndexer, bloomTrieIndexer *core.ChainIndexer
@@ -95,7 +95,7 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 	peers := newPeerSet()
 	quitSync := make(chan struct{})
 
-	ipfsDb := ethdb.NewIpfsDb(config.PrivateTx.IpfsURL)
+	ipfsDb := ethdb.NewIpfsDB(config.PrivateTx.IpfsURL)
 
 	leth := &LightEthereum{
 		config:           config,
@@ -112,7 +112,7 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 		bloomIndexer:     eth.NewBloomIndexer(chainDb, light.BloomTrieFrequency),
 		chtIndexer:       light.NewChtIndexer(chainDb, true),
 		bloomTrieIndexer: light.NewBloomTrieIndexer(chainDb, true),
-		ipfsDb:           ipfsDb,
+		ipfsDB:           ipfsDb,
 	}
 
 	leth.relay = NewLesTxRelay(peers, leth.reqDist)
@@ -262,7 +262,7 @@ func (s *LightEthereum) Stop() error {
 	return nil
 }
 
-// IpfsDb returns an IPFS database instance.
+// IpfsDB returns an IPFS database instance.
 func (s *LightEthereum) IpfsDb() *ethdb.IpfsDatabase {
-	return s.ipfsDb
+	return s.ipfsDB
 }

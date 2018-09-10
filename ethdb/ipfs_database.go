@@ -26,8 +26,8 @@ type IpfsAdapter interface {
 	Add(r io.Reader) (string, error)
 }
 
-// NewIpfsDb creates a new IpfsDatabase instance with given url which is the IPFS node's API url.
-func NewIpfsDb(url string) *IpfsDatabase {
+// NewIpfsDB creates a new IpfsDatabase instance with given url which is the IPFS node's API url.
+func NewIpfsDB(url string) *IpfsDatabase {
 	s := IpfsAdapter(shell.NewShell(url))
 	return NewIpfsDbWithAdapter(s)
 }

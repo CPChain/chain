@@ -51,7 +51,7 @@ func TestIpfsDbGetPutWithEmptyValue(t *testing.T) {
 
 // TestIpfsDbWithWrongUrl tests new IPFS database with wrong URL.
 func TestIpfsDbWithWrongUrl(t *testing.T) {
-	wrongDb := NewIpfsDb(testDbWrongURL)
+	wrongDb := NewIpfsDB(testDbWrongURL)
 	_, err := wrongDb.Put(normalContent)
 	if err == nil {
 		t.Errorf("Wrong url should cause an error.")
