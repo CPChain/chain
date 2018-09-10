@@ -644,10 +644,17 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 	if parent == nil {
 		return nil, vm.Context{}, nil, fmt.Errorf("parent %x not found", block.ParentHash())
 	}
-	statedb, err := api.computeStateDB(parent, reexec)
+	pubStateDB, err := api.computeStateDB(parent, reexec)
 	if err != nil {
 		return nil, vm.Context{}, nil, err
 	}
+
+	privStateDB, err := api.computeStatePrivDB(parent)
+	if err != nil {
+		// TODO: log the fatal error
+		panic(err)
+	}
+
 	// Recompute transactions up to the target index.
 	signer := types.MakeSigner(api.config, block.Number())
 
@@ -655,17 +662,16 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 		// Assemble the transaction call message and return if the requested offset
 		msg, _ := tx.AsMessage(signer)
 		context := core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
-		if idx == txIndex {
-			return msg, context, statedb, nil
+
+		var statedb *state.StateDB
+		if ((*types.PrivateTransaction)(tx)).IsPrivate() {
+			statedb = privStateDB // replace with private database.
+		} else {
+			statedb = pubStateDB
 		}
 
-		if ((*types.PrivateTransaction)(tx)).IsPrivate() {
-			statePrivDb, err := api.computeStatePrivDB(parent)
-			if err != nil {
-				// TODO: log the fatal error
-				panic(err)
-			}
-			statedb = statePrivDb // replace with private database.
+		if idx == txIndex {
+			return msg, context, statedb, nil
 		}
 
 		// Not yet the searched for transaction, execute on top of the current state

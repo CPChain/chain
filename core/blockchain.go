@@ -242,6 +242,7 @@ func (bc *BlockChain) loadLastState() error {
 	// Make sure the private state associated with the block is available
 	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
 		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
+		// TODO: use repair instead.
 		return bc.Reset()
 	}
 
@@ -404,14 +405,15 @@ func (bc *BlockChain) State() (*state.StateDB, error) {
 
 // StatePriv returns a new mutable private state based on the current HEAD block.
 func (bc *BlockChain) StatePriv() (*state.StateDB, error) {
-	return bc.StateAt(bc.CurrentBlock().Root())
+	return bc.StatePrivAt(bc.CurrentBlock().Root())
 }
 
-// StateAt returns a new mutable state based on a particular point in time.
+// StateAt returns a new mutable state(public) based on a particular point in time.
 func (bc *BlockChain) StateAt(root common.Hash) (*state.StateDB, error) {
 	return state.New(root, bc.stateCache)
 }
 
+// StatePrivAt returns a new mutable private state based on a particular point in time.
 func (bc *BlockChain) StatePrivAt(root common.Hash) (*state.StateDB, error) {
 	return state.New(GetPrivateStateRoot(bc.db, root), bc.privateStateCache)
 }
@@ -1201,15 +1203,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 		proctime := time.Since(bstart)
 
-		privStateRoot, err := privState.Commit(true)
-		if err != nil {
-			bc.reportBlock(block, receipts, err)
-			return i, events, coalescedLogs, err
-		}
-		if err := WritePrivateStateRoot(bc.db, block.Root(), privStateRoot); err != nil {
-			return i, events, coalescedLogs, err
-		}
-
 		// Write the block to the chain and get the status.
 		status, err := bc.WriteBlockWithState(block, receipts, pubState)
 		if err != nil {
@@ -1237,6 +1230,16 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 		stats.processed++
 		stats.usedGas += usedGas
+
+		// Commit private state and write private state root after writing block with public state.
+		privStateRoot, err := privState.Commit(true)
+		if err != nil {
+			bc.reportBlock(block, receipts, err)
+			return i, events, coalescedLogs, err
+		}
+		if err := WritePrivateStateRoot(bc.db, block.Root(), privStateRoot); err != nil {
+			return i, events, coalescedLogs, err
+		}
 
 		cache, _ := bc.stateCache.TrieDB().Size()
 		log.Info("Imported new block: " + strconv.Itoa(int(chain[i].Number().Int64())) + " hash: " + chain[i].Hash().Hex())

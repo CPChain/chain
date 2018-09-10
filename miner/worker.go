@@ -315,8 +315,15 @@ func (self *worker) wait() {
 					l.BlockHash = block.Hash()
 				}
 			}
-			for _, log := range append(work.pubState.Logs(), work.privState.Logs()...) {
+			// TODO: try merging private logs
+			for _, log := range work.pubState.Logs() {
 				log.BlockHash = block.Hash()
+			}
+
+			stat, err := self.chain.WriteBlockWithState(block, work.receipts, work.pubState)
+			if err != nil {
+				log.Error("Failed writing block to chain", "err", err)
+				continue
 			}
 
 			// write private transaction
@@ -325,16 +332,12 @@ func (self *worker) wait() {
 			// TODO: if need to merge receipts
 			// TODO: if need to WriteBlockWithState
 
-			stat, err := self.chain.WriteBlockWithState(block, work.receipts, work.pubState)
-			if err != nil {
-				log.Error("Failed writing block to chain", "err", err)
-				continue
-			}
 			// Broadcast the block and announce chain insertion event
 			self.mux.Post(core.NewMinedBlockEvent{Block: block})
 			var (
 				events []interface{}
-				logs   = append(work.pubState.Logs(), work.privState.Logs()...)
+				// TODO: try merging private logs
+				logs = work.pubState.Logs()
 			)
 			events = append(events, core.ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
 			if stat == core.CanonStatTy {
