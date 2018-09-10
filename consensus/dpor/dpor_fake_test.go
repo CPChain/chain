@@ -28,54 +28,23 @@ import (
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/hashicorp/golang-lru"
 )
 
 type FakeReader struct {
+	consensus.ChainReader
 }
 
 func (*FakeReader) Config() *params.ChainConfig {
 	return &params.ChainConfig{EIP150Block: big.NewInt(777)}
 }
 
-func (*FakeReader) CurrentHeader() *types.Header {
-	panic("implement me")
-}
-
-func (*FakeReader) GetHeader(hash common.Hash, number uint64) *types.Header {
-	panic("implement me")
-}
-
 func (*FakeReader) GetHeaderByNumber(number uint64) *types.Header {
 	return &types.Header{Number: big.NewInt(0), Time: big.NewInt(0).Sub(big.NewInt(time.Now().Unix()), big.NewInt(100))}
 }
 
-func (*FakeReader) GetHeaderByHash(hash common.Hash) *types.Header {
-	panic("implement me")
-}
-
-func (*FakeReader) GetBlock(hash common.Hash, number uint64) *types.Block {
-	panic("implement me")
-}
-
 type fakeDporUtil struct {
+	IDporUtil
 	success bool
-}
-
-func (*fakeDporUtil) sigHash(header *types.Header) (hash common.Hash) {
-	panic("implement me")
-}
-
-func (*fakeDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
-	panic("implement me")
-}
-
-func (*fakeDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
-	panic("implement me")
-}
-
-func (*fakeDporUtil) percentagePBFT(n uint, N uint) bool {
-	panic("implement me")
 }
 
 func (f *fakeDporUtil) calcDifficulty(snap *Snapshot, signer common.Address) *big.Int {
@@ -100,19 +69,14 @@ func (f *fakeDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, head
 	}
 }
 
-func (*fakeDporHelper) verifyCascadingFields(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
-	panic("implement me")
-}
-
 func (f *fakeDporHelper) snapshot(c *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*Snapshot, error) {
 	if f.snapshotSuccess {
 		return &Snapshot{}, nil
 	} else {
 		return nil, errors.New("err")
 	}
-
 }
 
-func (*fakeDporHelper) verifySeal(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
-	panic("implement me")
+type fakeSnapshot struct {
+	ISnapshot
 }

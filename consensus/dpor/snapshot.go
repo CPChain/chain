@@ -35,6 +35,26 @@ var (
 	errGenesisBlockNumber   = errors.New("Genesis block has no leader")
 )
 
+type ISnapshot interface {
+	store(db ethdb.Database) error
+
+	clone(snapshot *ISnapshot) error
+	applySnapshot(headers []*types.Header, snapshot *ISnapshot) error
+
+	copy() *ISnapshot
+	apply(headers []*types.Header) (*ISnapshot, error)
+	applyHeader(header *types.Header) error
+	updateCandidates(header *types.Header) error
+	updateRpts(header *types.Header) (rpt.RPTs, error)
+	updateView(rpts rpt.RPTs, seed int64, viewLength int) error
+	signers() []common.Address
+	signerRound(signer common.Address) (int, error)
+	isSigner(signer common.Address) bool
+	isLeader(signer common.Address, number uint64) (bool, error)
+	candidates() []common.Address
+	inturn(number uint64, signer common.Address) bool
+}
+
 // Snapshot is the state of the authorization voting at a given point in time.
 type Snapshot struct {
 	config   *params.DporConfig // Consensus engine parameters to fine tune behavior
