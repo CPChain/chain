@@ -351,6 +351,7 @@ func DefaultCpchainGenesisBlock() *Genesis {
 		Alloc: map[common.Address]GenesisAccount{
 			common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"): {Balance: big.NewInt(math.MaxInt64)},
 			common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0xEF3dd127DE235F15ffB4FC0D71469d1339DF6465"): {Balance: big.NewInt(math.MaxInt64)},
 			common.HexToAddress("0x0000000000000000000000000000000000000000"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000001"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000002"): {Balance: big.NewInt(0x00000000000000000)},
