@@ -69,7 +69,7 @@ func Test_sigHash(t *testing.T) {
 		{"sigHash", args{newHeader}, common.HexToHash("0x8842a173b6a10d45d1705bedcb1644755075e2a78258bd7bca4011719d0d91b4")},
 	}
 
-	dporUtil := &DporUtil{}
+	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if gotHash := dporUtil.sigHash(tt.args.header); !reflect.DeepEqual(gotHash, tt.wantHash) {
@@ -179,7 +179,7 @@ func Test_ecrecover(t *testing.T) {
 	existingCache, _ := lru.NewARC(10)
 	fmt.Println("newHeader.Hash():", newHeader.Hash().Hex())
 	existingCache.Add(newHeader.Hash(), sigs)
-	dporUtil := &DporUtil{}
+	dporUtil := &defaultDporUtil{}
 	// get extra2sig for test
 	//privateKey, _, loadedAddr := getAccount("$project_dir/src/github.com/ethereum/go-ethereum/examples/cpchain/data/dd1/keystore/", "password")
 	//extra2Sig, _ := crypto.Sign(dporUtil.sigHash(newHeader).Bytes(), privateKey)
@@ -271,7 +271,7 @@ func Test_acceptSigs(t *testing.T) {
 		{"should be true when signer in cache", args{header, cache, getSignerAddress()}, true, false},
 	}
 
-	dporUtil := &DporUtil{}
+	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers)
@@ -293,7 +293,7 @@ func Test_calcDifficulty(t *testing.T) {
 	snapshot := newSnapshot(config, cache, 1, common.Hash{}, signers)
 
 	type args struct {
-		snap   *Snapshot
+		snap   *DporSnapshot
 		signer common.Address
 	}
 	tests := []struct {
@@ -304,7 +304,7 @@ func Test_calcDifficulty(t *testing.T) {
 		{name: "WhenSnapshotIsNotLeader", args: args{snapshot, signers[0]}, want: big.NewInt(1)},
 		{name: "WhenSnapshotIsLeader", args: args{snapshot, signers[1]}, want: big.NewInt(2)},
 	}
-	dporUtil := &DporUtil{}
+	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := dporUtil.calcDifficulty(tt.args.snap, tt.args.signer); !reflect.DeepEqual(got, tt.want) {

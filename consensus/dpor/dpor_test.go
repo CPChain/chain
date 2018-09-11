@@ -69,7 +69,7 @@ func Test_percentagePBFT(t *testing.T) {
 		{"3*21>21*2", args{21, 21}, true},
 		{"3*1000>21*2", args{1000, 21}, true},
 	}
-	dporUtil := &DporUtil{}
+	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := dporUtil.percentagePBFT(tt.args.n, tt.args.N); got != tt.want {

@@ -224,7 +224,7 @@ func TestDpor_CalcDifficulty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Dpor{
-				dh:     &fakeDporHelper{verifySuccess: tt.verifySuccess, snapshotSuccess: tt.snapshotSuccess, IDporUtil: &fakeDporUtil{success: tt.verifySuccess}},
+				dh:     &fakeDporHelper{verifySuccess: tt.verifySuccess, snapshotSuccess: tt.snapshotSuccess, dporUtil: &fakeDporUtil{success: tt.verifySuccess}},
 				signer: addr1,
 			}
 

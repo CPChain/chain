@@ -35,14 +35,14 @@ var (
 	errGenesisBlockNumber   = errors.New("Genesis block has no leader")
 )
 
-type ISnapshot interface {
+type Snapshot interface {
 	store(db ethdb.Database) error
 
-	clone(snapshot *ISnapshot) error
-	applySnapshot(headers []*types.Header, snapshot *ISnapshot) error
+	//clone(snapshot *Snapshot) error
+	//applySnapshot(headers []*types.Header, snapshot *Snapshot) error
 
-	copy() *ISnapshot
-	apply(headers []*types.Header) (*ISnapshot, error)
+	copy() *Snapshot
+	apply(headers []*types.Header) (*Snapshot, error)
 	applyHeader(header *types.Header) error
 	updateCandidates(header *types.Header) error
 	updateRpts(header *types.Header) (rpt.RPTs, error)
@@ -55,24 +55,24 @@ type ISnapshot interface {
 	inturn(number uint64, signer common.Address) bool
 }
 
-// Snapshot is the state of the authorization voting at a given point in time.
-type Snapshot struct {
+// DporSnapshot is the state of the authorization voting at a given point in time.
+type DporSnapshot struct {
 	config   *params.DporConfig // Consensus engine parameters to fine tune behavior
 	sigcache *lru.ARCCache      // Cache of recent block signatures to speed up ecrecover
 
-	Number uint64      `json:"number"` // Block number where the snapshot was created
-	Hash   common.Hash `json:"hash"`   // Block hash where the snapshot was created
+	Number uint64      `json:"number"` // Block number where the Snapshot was created
+	Hash   common.Hash `json:"hash"`   // Block hash where the Snapshot was created
 
 	Signers    []common.Address          `json:"signers"`    // Set of authorized signers at this moment
 	Candidates []common.Address          `json:"candidates"` // Set of candidates read from campaign contract
 	Recents    map[uint64]common.Address `json:"recents"`    // Set of recent signers for spam protections
 }
 
-// newSnapshot creates a new snapshot with the specified startup parameters. This
+// newSnapshot creates a new Snapshot with the specified startup parameters. This
 // method does not initialize the set of recent signers, so only ever use if for
 // the genesis block.
-func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint64, hash common.Hash, signers []common.Address) *Snapshot {
-	snap := &Snapshot{
+func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
+	snap := &DporSnapshot{
 		config:   config,
 		sigcache: sigcache,
 		Number:   number,
@@ -84,13 +84,13 @@ func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint6
 	return snap
 }
 
-// loadSnapshot loads an existing snapshot from the database.
-func loadSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, db ethdb.Database, hash common.Hash) (*Snapshot, error) {
+// loadSnapshot loads an existing Snapshot from the database.
+func loadSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, db ethdb.Database, hash common.Hash) (*DporSnapshot, error) {
 	blob, err := db.Get(append([]byte("dpor-"), hash[:]...))
 	if err != nil {
 		return nil, err
 	}
-	snap := new(Snapshot)
+	snap := new(DporSnapshot)
 	if err := json.Unmarshal(blob, snap); err != nil {
 		return nil, err
 	}
@@ -100,8 +100,8 @@ func loadSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, db ethdb.Da
 	return snap, nil
 }
 
-// store inserts the snapshot into the database.
-func (s *Snapshot) store(db ethdb.Database) error {
+// store inserts the Snapshot into the database.
+func (s *DporSnapshot) store(db ethdb.Database) error {
 	blob, err := json.Marshal(s)
 	if err != nil {
 		return err
@@ -109,9 +109,9 @@ func (s *Snapshot) store(db ethdb.Database) error {
 	return db.Put(append([]byte("dpor-"), s.Hash[:]...), blob)
 }
 
-// copy creates a deep copy of the snapshot, though not the individual votes.
-func (s *Snapshot) copy() *Snapshot {
-	cpy := &Snapshot{
+// copy creates a deep copy of the Snapshot, though not the individual votes.
+func (s *DporSnapshot) copy() *DporSnapshot {
+	cpy := &DporSnapshot{
 		config:     s.config,
 		sigcache:   s.sigcache,
 		Number:     s.Number,
@@ -128,9 +128,9 @@ func (s *Snapshot) copy() *Snapshot {
 	return cpy
 }
 
-// apply creates a new authorization snapshot by applying the given headers to
+// apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *Snapshot) apply(headers []*types.Header) (*Snapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
@@ -145,13 +145,13 @@ func (s *Snapshot) apply(headers []*types.Header) (*Snapshot, error) {
 	if headers[0].Number.Uint64() != s.Number+1 {
 		return nil, errInvalidVotingChain
 	}
-	// Iterate through the headers and create a new snapshot
+	// Iterate through the headers and create a new Snapshot
 	snap := s.copy()
 
 	for _, header := range headers {
 		err := snap.applyHeader(header)
 		if err != nil {
-			log.Warn("Snapshot apply header error.", err)
+			log.Warn("DporSnapshot apply header error.", err)
 			return nil, err
 		}
 	}
@@ -162,9 +162,9 @@ func (s *Snapshot) apply(headers []*types.Header) (*Snapshot, error) {
 	return snap, nil
 }
 
-// TODO: finish this func to apply header to snapshot to calculate reputations of candidates fetched from candidate contract.
-func (s *Snapshot) applyHeader(header *types.Header) error {
-	// update snapshot attributes.
+// TODO: finish this func to apply header to Snapshot to calculate reputations of candidates fetched from candidate contract.
+func (s *DporSnapshot) applyHeader(header *types.Header) error {
+	// update Snapshot attributes.
 	s.Number = header.Number.Uint64()
 	s.Hash = header.Hash()
 
@@ -184,7 +184,7 @@ func (s *Snapshot) applyHeader(header *types.Header) error {
 }
 
 // TODO: fix this logic.
-func (s *Snapshot) updateCandidates(header *types.Header) error {
+func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 	// TODO: delete this.
 	candidates := []common.Address{
 		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
@@ -198,7 +198,7 @@ func (s *Snapshot) updateCandidates(header *types.Header) error {
 }
 
 // TODO: implement this func to get rpts for candidates. maybe save it as a map.
-func (s *Snapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
+func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 
 	// TODO: fix this.
 	/*
@@ -226,7 +226,7 @@ func (s *Snapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 }
 
 // updateView use rpt and election result to get new committee(signers).
-func (s *Snapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
+func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
 	signers := election.Elect(rpts, seed, viewLength)
 
 	s.Signers = signers
@@ -234,11 +234,11 @@ func (s *Snapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
 }
 
 // Signers retrieves all signers in the committee.
-func (s *Snapshot) signers() []common.Address {
+func (s *DporSnapshot) signers() []common.Address {
 	return s.Signers
 }
 
-func (s *Snapshot) signerRound(signer common.Address) (int, error) {
+func (s *DporSnapshot) signerRound(signer common.Address) (int, error) {
 	for round, s := range s.signers() {
 		if s == signer {
 			return round, nil
@@ -247,12 +247,12 @@ func (s *Snapshot) signerRound(signer common.Address) (int, error) {
 	return -1, errSignerNotInCommittee
 }
 
-func (s *Snapshot) isSigner(signer common.Address) bool {
+func (s *DporSnapshot) isSigner(signer common.Address) bool {
 	_, err := s.signerRound(signer)
 	return err == nil
 }
 
-func (s *Snapshot) isLeader(signer common.Address, number uint64) (bool, error) {
+func (s *DporSnapshot) isLeader(signer common.Address, number uint64) (bool, error) {
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
@@ -264,12 +264,12 @@ func (s *Snapshot) isLeader(signer common.Address, number uint64) (bool, error) 
 }
 
 // Candidates retrieves all candidates recorded in the campaign contract.
-func (s *Snapshot) candidates() []common.Address {
+func (s *DporSnapshot) candidates() []common.Address {
 	return s.Candidates
 }
 
 // inturn returns if a signer at a given block height is in-turn or not.
-func (s *Snapshot) inturn(number uint64, signer common.Address) bool {
+func (s *DporSnapshot) inturn(number uint64, signer common.Address) bool {
 	ok, err := s.isLeader(signer, number)
 	if err != nil {
 		return false

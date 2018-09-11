@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	checkpointInterval = 3    // Number of blocks after which to save the vote snapshot to the database
+	checkpointInterval = 3    // Number of blocks after which to save the vote Snapshot to the database
 	inmemorySnapshots  = 1000 // Number of recent vote snapshots to keep in memory
 	inmemorySignatures = 1000 // Number of recent block signatures to keep in memory
 
@@ -40,9 +40,9 @@ const (
 // Dpor is the proof-of-reputation consensus engine proposed to support the
 // cpchain testnet.
 type Dpor struct {
-	dh     IdporHelper
+	dh     dporHelper
 	config *params.DporConfig // Consensus engine configuration parameters
-	db     ethdb.Database     // Database to store and retrieve snapshot checkpoints
+	db     ethdb.Database     // Database to store and retrieve Snapshot checkpoints
 
 	recents    *lru.ARCCache // Snapshots for recent block to speed up reorgs
 	signatures *lru.ARCCache // Signatures of recent blocks to speed up mining
@@ -62,14 +62,14 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 	if conf.Epoch == 0 {
 		conf.Epoch = uint64(epochLength)
 	}
-	// Allocate the snapshot caches and create the engine
+	// Allocate the Snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	signatures, _ := lru.NewARC(inmemorySignatures)
 
 	signedBlocks := make(map[uint64]common.Hash)
 
 	return &Dpor{
-		dh:           &dporHelper{&DporUtil{}},
+		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
 		db:           db,
 		recents:      recents,

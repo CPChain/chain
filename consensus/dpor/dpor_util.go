@@ -32,15 +32,15 @@ import (
 	"github.com/hashicorp/golang-lru"
 )
 
-type IDporUtil interface {
+type dporUtil interface {
 	sigHash(header *types.Header) (hash common.Hash)
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)
 	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error)
 	percentagePBFT(n uint, N uint) bool
-	calcDifficulty(snap *Snapshot, signer common.Address) *big.Int
+	calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int
 }
 
-type DporUtil struct {
+type defaultDporUtil struct {
 }
 
 // sigHash returns the hash which is used as input for the proof-of-authority
@@ -50,7 +50,7 @@ type DporUtil struct {
 // Note, the method requires the extra data to be at least 65 bytes, otherwise it
 // panics. This is done to avoid accidentally using both forms (signature present
 // or not), which could be abused to produce different hashes for the same header.
-func (d *DporUtil) sigHash(header *types.Header) (hash common.Hash) {
+func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 	hasher := sha3.NewKeccak256()
 
 	rlp.Encode(hasher, []interface{}{
@@ -76,7 +76,7 @@ func (d *DporUtil) sigHash(header *types.Header) (hash common.Hash) {
 
 // ecrecover extracts the Ethereum account address from a signed header.
 // the return value is (leader_address, signer_addresses, error)
-func (d *DporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
+func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
 
 	hash := header.Hash()
 
@@ -147,7 +147,7 @@ func (d *DporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (comm
 }
 
 // acceptSigs checks that signatures have enough signatures to accept the block.
-func (d *DporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
+func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
 	numSigs := uint(0)
 	accept := false
 	hash := header.Hash()
@@ -171,14 +171,14 @@ func (d *DporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, sign
 }
 
 // percentagePBFT returns n is large than pctPBFT * N.
-func (d *DporUtil) percentagePBFT(n uint, N uint) bool {
+func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 	return uint(pctB)*n > uint(pctA)*N
 }
 
 // CalcDifficulty is the difficulty adjustment algorithm. It returns the difficulty
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
-func (d *DporUtil) calcDifficulty(snap *Snapshot, signer common.Address) *big.Int {
+func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
 	if ok, _ := snap.isLeader(signer, snap.Number+1); ok {
 		return new(big.Int).Set(diffInTurn)
 	}

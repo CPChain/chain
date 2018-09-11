@@ -48,7 +48,7 @@ func (*fakeDb) Delete(key []byte) error {
 func (f *fakeDb) Get(key []byte) ([]byte, error) {
 	fmt.Println("executing db put")
 	if f.dbType == 1 {
-		snap := new(Snapshot)
+		snap := new(DporSnapshot)
 		blob, err := json.Marshal(snap)
 		return blob, err
 	}
@@ -96,7 +96,7 @@ func Test_loadSnapshot(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *Snapshot
+		want    *DporSnapshot
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -147,7 +147,7 @@ func TestSnapshot_store(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Snapshot{
+			s := &DporSnapshot{
 				config:     tt.fields.config,
 				sigcache:   tt.fields.sigcache,
 				Number:     tt.fields.Number,
@@ -157,7 +157,7 @@ func TestSnapshot_store(t *testing.T) {
 				Recents:    tt.fields.Recents,
 			}
 			if err := s.store(tt.args.db); (err != nil) != tt.wantErr {
-				t.Errorf("Snapshot.store(%v) error = %v, wantErr %v", tt.args.db, err, tt.wantErr)
+				t.Errorf("DporSnapshot.store(%v) error = %v, wantErr %v", tt.args.db, err, tt.wantErr)
 			}
 		})
 	}
@@ -203,14 +203,14 @@ func TestSnapshot_apply(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *Snapshot
+		want    *DporSnapshot
 		wantErr bool
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Snapshot{
+			s := &DporSnapshot{
 				config:     tt.fields.config,
 				sigcache:   tt.fields.sigcache,
 				Number:     tt.fields.Number,
@@ -221,11 +221,11 @@ func TestSnapshot_apply(t *testing.T) {
 			}
 			got, err := s.apply(tt.args.headers)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Snapshot.apply(%v) error = %v, wantErr %v", tt.args.headers, err, tt.wantErr)
+				t.Errorf("DporSnapshot.apply(%v) error = %v, wantErr %v", tt.args.headers, err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Snapshot.apply(%v) = %v, want %v", tt.args.headers, got, tt.want)
+				t.Errorf("DporSnapshot.apply(%v) = %v, want %v", tt.args.headers, got, tt.want)
 			}
 		})
 	}
@@ -254,7 +254,7 @@ func TestSnapshot_applyHeader(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Snapshot{
+			s := &DporSnapshot{
 				config:     tt.fields.config,
 				sigcache:   tt.fields.sigcache,
 				Number:     tt.fields.Number,
@@ -264,7 +264,7 @@ func TestSnapshot_applyHeader(t *testing.T) {
 				Recents:    tt.fields.Recents,
 			}
 			if err := s.applyHeader(tt.args.header); (err != nil) != tt.wantErr {
-				t.Errorf("Snapshot.applyHeader(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
+				t.Errorf("DporSnapshot.applyHeader(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 			}
 		})
 	}
@@ -293,7 +293,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Snapshot{
+			s := &DporSnapshot{
 				config:     tt.fields.config,
 				sigcache:   tt.fields.sigcache,
 				Number:     tt.fields.Number,
@@ -303,7 +303,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 				Recents:    tt.fields.Recents,
 			}
 			if err := s.updateCandidates(tt.args.header); (err != nil) != tt.wantErr {
-				t.Errorf("Snapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
+				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 			}
 		})
 	}
@@ -333,7 +333,7 @@ func TestSnapshot_updateRpts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Snapshot{
+			s := &DporSnapshot{
 				config:     tt.fields.config,
 				sigcache:   tt.fields.sigcache,
 				Number:     tt.fields.Number,
@@ -344,11 +344,11 @@ func TestSnapshot_updateRpts(t *testing.T) {
 			}
 			got, err := s.updateRpts(tt.args.header)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Snapshot.updateRpts(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
+				t.Errorf("DporSnapshot.updateRpts(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Snapshot.updateRpts(%v) = %v, want %v", tt.args.header, got, tt.want)
+				t.Errorf("DporSnapshot.updateRpts(%v) = %v, want %v", tt.args.header, got, tt.want)
 			}
 		})
 	}
@@ -379,7 +379,7 @@ func TestSnapshot_updateView(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Snapshot{
+			s := &DporSnapshot{
 				config:     tt.fields.config,
 				sigcache:   tt.fields.sigcache,
 				Number:     tt.fields.Number,
@@ -389,7 +389,7 @@ func TestSnapshot_updateView(t *testing.T) {
 				Recents:    tt.fields.Recents,
 			}
 			if err := s.updateView(tt.args.rpts, tt.args.seed, tt.args.viewLength); (err != nil) != tt.wantErr {
-				t.Errorf("Snapshot.updateView(%v, %v, %v) error = %v, wantErr %v", tt.args.rpts, tt.args.seed, tt.args.viewLength, err, tt.wantErr)
+				t.Errorf("DporSnapshot.updateView(%v, %v, %v) error = %v, wantErr %v", tt.args.rpts, tt.args.seed, tt.args.viewLength, err, tt.wantErr)
 			}
 		})
 	}
@@ -428,7 +428,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Snapshot{
+			s := &DporSnapshot{
 				config:     tt.fields.config,
 				sigcache:   tt.fields.sigcache,
 				Number:     tt.fields.Number,
@@ -439,11 +439,11 @@ func TestSnapshot_signerRound(t *testing.T) {
 			}
 			got, err := s.signerRound(tt.args.signer)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Snapshot.signerRound(%v) error = %v, wantErr %v", tt.args.signer, err, tt.wantErr)
+				t.Errorf("DporSnapshot.signerRound(%v) error = %v, wantErr %v", tt.args.signer, err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Snapshot.signerRound(%v) = %v, want %v", tt.args.signer, got, tt.want)
+				t.Errorf("DporSnapshot.signerRound(%v) = %v, want %v", tt.args.signer, got, tt.want)
 			}
 		})
 	}
@@ -527,7 +527,7 @@ func TestSnapshot_signerRoundOk(t *testing.T) {
 	}
 }
 
-func createSnapshot() *Snapshot {
+func createSnapshot() *DporSnapshot {
 	signers := getSignerAddress()
 	config := &params.DporConfig{Period: 3, Epoch: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
@@ -554,7 +554,7 @@ func TestSnapshot_candidates(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Snapshot{
+			s := &DporSnapshot{
 				config:     tt.fields.config,
 				sigcache:   tt.fields.sigcache,
 				Number:     tt.fields.Number,
@@ -564,7 +564,7 @@ func TestSnapshot_candidates(t *testing.T) {
 				Recents:    tt.fields.Recents,
 			}
 			if got := s.candidates(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Snapshot.candidates() = %v, want %v", got, tt.want)
+				t.Errorf("DporSnapshot.candidates() = %v, want %v", got, tt.want)
 			}
 		})
 	}

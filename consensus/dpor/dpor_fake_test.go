@@ -43,28 +43,11 @@ func (*FakeReader) GetHeaderByNumber(number uint64) *types.Header {
 }
 
 type fakeDporUtil struct {
-	IDporUtil
+	dporUtil
 	success bool
 }
 
-//
-//func (*fakeDporUtil) sigHash(header *types.Header) (hash common.Hash) {
-//	panic("implement me")
-//}
-//
-//func (*fakeDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
-//	panic("implement me")
-//}
-//
-//func (*fakeDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
-//	panic("implement me")
-//}
-//
-//func (*fakeDporUtil) percentagePBFT(n uint, N uint) bool {
-//	panic("implement me")
-//}
-
-func (f *fakeDporUtil) calcDifficulty(snap *Snapshot, signer common.Address) *big.Int {
+func (f *fakeDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
 	if f.success {
 		return big.NewInt(10)
 	} else {
@@ -73,7 +56,7 @@ func (f *fakeDporUtil) calcDifficulty(snap *Snapshot, signer common.Address) *bi
 }
 
 type fakeDporHelper struct {
-	IDporUtil
+	dporUtil
 	verifySuccess   bool
 	snapshotSuccess bool
 }
@@ -90,9 +73,9 @@ func (*fakeDporHelper) verifyCascadingFields(c *Dpor, chain consensus.ChainReade
 	panic("implement me")
 }
 
-func (f *fakeDporHelper) snapshot(c *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*Snapshot, error) {
+func (f *fakeDporHelper) snapshot(c *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error) {
 	if f.snapshotSuccess {
-		return &Snapshot{}, nil
+		return &DporSnapshot{}, nil
 	} else {
 		return nil, errors.New("err")
 	}
@@ -104,5 +87,5 @@ func (*fakeDporHelper) verifySeal(c *Dpor, chain consensus.ChainReader, header *
 }
 
 type fakeSnapshot struct {
-	ISnapshot
+	Snapshot
 }

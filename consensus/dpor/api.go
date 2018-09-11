@@ -28,11 +28,11 @@ import (
 type API struct {
 	chain consensus.ChainReader
 	dpor  *Dpor
-	dh    *dporHelper
+	dh    *defaultDporHelper
 }
 
-// GetSnapshot retrieves the state snapshot at a given block.
-func (api *API) GetSnapshot(number *rpc.BlockNumber) (*Snapshot, error) {
+// GetSnapshot retrieves the state Snapshot at a given block.
+func (api *API) GetSnapshot(number *rpc.BlockNumber) (*DporSnapshot, error) {
 	// Retrieve the requested block number (or current if none requested)
 	var header *types.Header
 	if number == nil || *number == rpc.LatestBlockNumber {
@@ -40,15 +40,15 @@ func (api *API) GetSnapshot(number *rpc.BlockNumber) (*Snapshot, error) {
 	} else {
 		header = api.chain.GetHeaderByNumber(uint64(number.Int64()))
 	}
-	// Ensure we have an actually valid block and return its snapshot
+	// Ensure we have an actually valid block and return its Snapshot
 	if header == nil {
 		return nil, errUnknownBlock
 	}
 	return api.dpor.dh.snapshot(api.dpor, api.chain, header.Number.Uint64(), header.Hash(), nil)
 }
 
-// GetSnapshotAtHash retrieves the state snapshot at a given block.
-func (api *API) GetSnapshotAtHash(hash common.Hash) (*Snapshot, error) {
+// GetSnapshotAtHash retrieves the state Snapshot at a given block.
+func (api *API) GetSnapshotAtHash(hash common.Hash) (*DporSnapshot, error) {
 	header := api.chain.GetHeaderByHash(hash)
 	if header == nil {
 		return nil, errUnknownBlock
@@ -65,7 +65,7 @@ func (api *API) GetSigners(number *rpc.BlockNumber) ([]common.Address, error) {
 	} else {
 		header = api.chain.GetHeaderByNumber(uint64(number.Int64()))
 	}
-	// Ensure we have an actually valid block and return the signers from its snapshot
+	// Ensure we have an actually valid block and return the signers from its Snapshot
 	if header == nil {
 		return nil, errUnknownBlock
 	}
@@ -77,7 +77,7 @@ func (api *API) GetSigners(number *rpc.BlockNumber) ([]common.Address, error) {
 	return snap.signers(), nil
 }
 
-// GetSignersAtHash retrieves the state snapshot at a given block.
+// GetSignersAtHash retrieves the state Snapshot at a given block.
 func (api *API) GetSignersAtHash(hash common.Hash) ([]common.Address, error) {
 	header := api.chain.GetHeaderByHash(hash)
 	if header == nil {

@@ -35,7 +35,7 @@ import (
 )
 
 func Test_dporHelper_verifyHeader(t *testing.T) {
-	dh := &dporHelper{}
+	dh := &defaultDporHelper{}
 
 	extra := "0x00000000000000000000000000000000"
 	fmt.Println("extra:", extra)
@@ -59,7 +59,7 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		d       *dporHelper
+		d       *defaultDporHelper
 		args    args
 		wantErr bool
 	}{
@@ -117,16 +117,16 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 					Number: big.NewInt(0), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
 					MixDigest: common.Hash{}, UncleHash: types.CalcUncleHash(nil),
 					Difficulty: big.NewInt(2)},
-				c:       &Dpor{config: &params.DporConfig{Epoch: 3}, dh: &dporHelper{}},
+				c:       &Dpor{config: &params.DporConfig{Epoch: 3}, dh: &defaultDporHelper{}},
 				chain:   &FakeReader{},
 				parents: []*types.Header{},
 			}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dh := &dporHelper{}
+			dh := &defaultDporHelper{}
 			if err := dh.verifyHeader(tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader); (err != nil) != tt.wantErr {
-				t.Errorf("dporHelper.verifyHeader(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
+				t.Errorf("defaultDporHelper.verifyHeader(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
 			}
 		})
 	}
@@ -139,7 +139,7 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 	time2 := big.NewInt(time.Now().Unix() + 100)
 	header := &types.Header{Number: big.NewInt(0), Time: time1}
 	parentHash := header.Hash()
-	recents.Add(parentHash, &Snapshot{})
+	recents.Add(parentHash, &DporSnapshot{})
 	type args struct {
 		d         *Dpor
 		chain     consensus.ChainReader
@@ -149,28 +149,28 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		d       *dporHelper
+		d       *defaultDporHelper
 		args    args
 		wantErr bool
 	}{
-		{"success when block 0", &dporHelper{},
+		{"success when block 0", &defaultDporHelper{},
 			args{d: &Dpor{recents: recents},
 				header: &types.Header{Number: big.NewInt(0), ParentHash: parentHash}}, false},
-		{"fail with parent block", &dporHelper{},
+		{"fail with parent block", &defaultDporHelper{},
 			args{d: &Dpor{recents: recents, config: &params.DporConfig{Period: 3}},
 				header:  &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time1},
 				parents: []*types.Header{header}}, true},
-		{"errInvalidSigners", &dporHelper{},
-			args{d: &Dpor{recents: recents, config: &params.DporConfig{Period: 3}, dh: &dporHelper{}},
+		{"errInvalidSigners", &defaultDporHelper{},
+			args{d: &Dpor{recents: recents, config: &params.DporConfig{Period: 3}, dh: &defaultDporHelper{}},
 				header: &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time2,
 					Extra: hexutil.MustDecode(rightExtra)},
 				parents: []*types.Header{header}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &dporHelper{}
+			d := &defaultDporHelper{}
 			if err := d.verifyCascadingFields(tt.args.d, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader); (err != nil) != tt.wantErr {
-				t.Errorf("dporHelper.verifyCascadingFields(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.d, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
+				t.Errorf("defaultDporHelper.verifyCascadingFields(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.d, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
 			}
 		})
 	}
@@ -186,23 +186,23 @@ func Test_dporHelper_snapshot(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		d       *dporHelper
+		d       *defaultDporHelper
 		args    args
-		want    *Snapshot
+		want    *DporSnapshot
 		wantErr bool
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &dporHelper{}
+			d := &defaultDporHelper{}
 			got, err := d.snapshot(tt.args.c, tt.args.chain, tt.args.number, tt.args.hash, tt.args.parents)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("dporHelper.snapshot(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.c, tt.args.chain, tt.args.number, tt.args.hash, tt.args.parents, err, tt.wantErr)
+				t.Errorf("defaultDporHelper.Snapshot(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.c, tt.args.chain, tt.args.number, tt.args.hash, tt.args.parents, err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("dporHelper.snapshot(%v, %v, %v, %v, %v) = %v, want %v", tt.args.c, tt.args.chain, tt.args.number, tt.args.hash, tt.args.parents, got, tt.want)
+				t.Errorf("defaultDporHelper.Snapshot(%v, %v, %v, %v, %v) = %v, want %v", tt.args.c, tt.args.chain, tt.args.number, tt.args.hash, tt.args.parents, got, tt.want)
 			}
 		})
 	}
@@ -217,7 +217,7 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 	header := &types.Header{Number: big.NewInt(0), Time: time1}
 	parentHash := header.Hash()
 	recents, _ := lru.NewARC(10)
-	recents.Add(parentHash, &Snapshot{})
+	recents.Add(parentHash, &DporSnapshot{})
 	//rightExtra2 := "0x00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"
 
 	type args struct {
@@ -229,17 +229,17 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		d       *dporHelper
+		d       *defaultDporHelper
 		args    args
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{"fail when block number is 0", &dporHelper{},
+		{"fail when block number is 0", &defaultDporHelper{},
 			args{
 				c: &Dpor{
 					config:  &params.DporConfig{Period: 3},
 					db:      &fakeDb{1},
-					recents: recents, dh: &dporHelper{}},
+					recents: recents, dh: &defaultDporHelper{}},
 				chain: &FakeReader{},
 				header: &types.Header{
 					Number:     big.NewInt(0),
@@ -250,7 +250,7 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 					Difficulty: big.NewInt(2)}},
 			true},
 
-		//{"fail when block number is 1", &dporHelper{},
+		//{"fail when block number is 1", &defaultDporHelper{},
 		//	args{
 		//		c: &Dpor{
 		//			config:  &params.DporConfig{Period: 3},
@@ -272,7 +272,7 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.d.verifySeal(tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader); (err != nil) != tt.wantErr {
-				t.Errorf("dporHelper.verifySeal(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
+				t.Errorf("defaultDporHelper.verifySeal(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
 			}
 		})
 	}

@@ -180,7 +180,7 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	header.Nonce = types.BlockNonce{}
 
 	number := header.Number.Uint64()
-	// Assemble the voting snapshot to check which votes make sense
+	// Assemble the voting Snapshot to check which votes make sense
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
 	if err != nil {
 		return err

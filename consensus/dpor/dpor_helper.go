@@ -31,23 +31,23 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-type IdporHelper interface {
-	IDporUtil
+type dporHelper interface {
+	dporUtil
 	verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	verifyCascadingFields(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
-	snapshot(c *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*Snapshot, error)
+	snapshot(c *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error)
 	verifySeal(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 }
 
-type dporHelper struct {
-	IDporUtil
+type defaultDporHelper struct {
+	dporUtil
 }
 
 // verifyHeader checks whether a header conforms to the consensus rules.The
 // caller may optionally pass in a batch of parents (ascending order) to avoid
 // looking those up from the database. This is useful for concurrently verifying
 // a batch of new headers.
-func (dh *dporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	if header.Number == nil {
 		return errUnknownBlock
 	}
@@ -108,7 +108,7 @@ func (dh *dporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header 
 // rather depend on a batch of previous headers. The caller may optionally pass
 // in a batch of parents (ascending order) to avoid looking those up from the
 // database. This is useful for concurrently verifying a batch of new headers.
-func (dh *dporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	// The genesis block is the always valid dead-end
 	number := header.Number.Uint64()
 	if number == 0 {
@@ -127,7 +127,7 @@ func (dh *dporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.ChainRea
 	if parent.Time.Uint64()+dpor.config.Period > header.Time.Uint64() {
 		return ErrInvalidTimestamp
 	}
-	// Retrieve the snapshot needed to verify this header and cache it
+	// Retrieve the Snapshot needed to verify this header and cache it
 	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
@@ -145,28 +145,28 @@ func (dh *dporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.ChainRea
 	return dh.verifySeal(dpor, chain, header, parents, refHeader)
 }
 
-// snapshot retrieves the authorization snapshot at a given point in time.
-func (dh *dporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*Snapshot, error) {
-	// Search for a snapshot in memory or on disk for checkpoints
+// Snapshot retrieves the authorization Snapshot at a given point in time.
+func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error) {
+	// Search for a Snapshot in memory or on disk for checkpoints
 	var (
 		headers []*types.Header
-		snap    *Snapshot
+		snap    *DporSnapshot
 	)
 	for snap == nil {
-		// If an in-memory snapshot was found, use that
+		// If an in-memory Snapshot was found, use that
 		if s, ok := dpor.recents.Get(hash); ok {
-			snap = s.(*Snapshot)
+			snap = s.(*DporSnapshot)
 			break
 		}
-		// If an on-disk checkpoint snapshot can be found, use that
+		// If an on-disk checkpoint Snapshot can be found, use that
 		if number%checkpointInterval == 0 {
 			if s, err := loadSnapshot(dpor.config, dpor.signatures, dpor.db, hash); err == nil {
-				log.Trace("Loaded voting snapshot from disk", "number", number, "hash", hash)
+				log.Trace("Loaded voting Snapshot from disk", "number", number, "hash", hash)
 				snap = s
 				break
 			}
 		}
-		// If we're at block zero, make a snapshot
+		// If we're at block zero, make a Snapshot
 		if number == 0 {
 			genesis := chain.GetHeaderByNumber(0)
 			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil); err != nil {
@@ -180,10 +180,10 @@ func (dh *dporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number u
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}
-			log.Trace("Stored genesis voting snapshot to disk")
+			log.Trace("Stored genesis voting Snapshot to disk")
 			break
 		}
-		// No snapshot for this header, gather the header and move backward
+		// No Snapshot for this header, gather the header and move backward
 		var header *types.Header
 		if len(parents) > 0 {
 			// If we have explicit parents, pick from there (enforced)
@@ -202,7 +202,7 @@ func (dh *dporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number u
 		headers = append(headers, header)
 		number, hash = number-1, header.ParentHash
 	}
-	// Previous snapshot found, apply any pending headers on top of it
+	// Previous Snapshot found, apply any pending headers on top of it
 	for i := 0; i < len(headers)/2; i++ {
 		headers[i], headers[len(headers)-1-i] = headers[len(headers)-1-i], headers[i]
 	}
@@ -212,12 +212,12 @@ func (dh *dporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number u
 	}
 	dpor.recents.Add(snap.Hash, snap)
 
-	// If we've generated a new checkpoint snapshot, save to disk
+	// If we've generated a new checkpoint Snapshot, save to disk
 	if snap.Number%checkpointInterval == 0 && len(headers) > 0 {
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
-		log.Trace("Stored voting snapshot to disk", "number", snap.Number, "hash", snap.Hash)
+		log.Trace("Stored voting Snapshot to disk", "number", snap.Number, "hash", snap.Hash)
 	}
 	return snap, err
 }
@@ -226,7 +226,7 @@ func (dh *dporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number u
 // consensus protocol requirements. The method accepts an optional list of parent
 // headers that aren't yet part of the local blockchain to generate the snapshots
 // from.
-func (dh *dporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	hash := header.Hash()
 	number := header.Number.Uint64()
 
@@ -235,7 +235,7 @@ func (dh *dporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader, header
 		return errUnknownBlock
 	}
 
-	// Retrieve the snapshot needed to verify this header and cache it
+	// Retrieve the Snapshot needed to verify this header and cache it
 	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
