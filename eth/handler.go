@@ -135,6 +135,14 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 			Length:  ProtocolLengths[i],
 			Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
 				peer := manager.newPeer(int(version), p, rw)
+
+				if e, ok := engine.(consensus.Engine1); ok {
+					_ = e
+
+					// TODO: fix this, check if this peer is a signer, if true, register him to committee.
+					// isSigner, err := engine.IsSigner(pm.blockchain, p.Peer.address, number)
+				}
+
 				select {
 				case manager.newPeerCh <- peer:
 					manager.wg.Add(1)
@@ -276,6 +284,11 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		return err
 	}
 	defer pm.removePeer(p.id)
+
+	// if p.isSigner {
+	// pm.peers.RegisterSigner(p)
+	// defer pm.peers.UnregisterSigner(p.id)
+	// }
 
 	// Register the peer in the downloader. If the downloader considers it banned, we disconnect
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {

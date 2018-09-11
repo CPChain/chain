@@ -336,3 +336,14 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 		Public:    false,
 	}}
 }
+
+// IsSigner implements Engine1.
+func (d *Dpor) IsSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	snap, err := d.dh.snapshot(d, chain, number, chain.GetHeaderByNumber(number).Hash(), nil)
+	if err != nil {
+		return false, err
+	}
+	return snap.isSigner(address), nil
+}

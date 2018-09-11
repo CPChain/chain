@@ -99,6 +99,11 @@ type Engine interface {
 	APIs(chain ChainReader) []rpc.API
 }
 
+// Engine1 is used to determine whether an address is in the committee.
+type Engine1 interface {
+	IsSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
+}
+
 // PoW is a consensus engine based on proof-of-work.
 type PoW interface {
 	Engine

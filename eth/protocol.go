@@ -62,6 +62,11 @@ const (
 	NodeDataMsg    = 0x0e
 	GetReceiptsMsg = 0x0f
 	ReceiptsMsg    = 0x10
+
+	// Protocol messages belonging to cpc/01
+	NewBlockGeneratedMsg       = 0x42
+	NewBlockGeneratedHashesMsg = 0x43
+	NewSignedHeaderMsg         = 0x44
 )
 
 type errCode int
