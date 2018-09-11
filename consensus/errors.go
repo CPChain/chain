@@ -16,7 +16,11 @@
 
 package consensus
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/ethereum/go-ethereum/common"
+)
 
 var (
 	// ErrUnknownAncestor is returned when validating a block requires an ancestor
@@ -34,4 +38,19 @@ var (
 	// ErrInvalidNumber is returned if a block's number doesn't equal it's parent's
 	// plus one.
 	ErrInvalidNumber = errors.New("invalid block number")
+
+	// ErrNotEnoughSigs is returned if there is not enough signatures for a block.
+	ErrNotEnoughSigs = &ErrNotEnoughSigsType{NotEnoughSigsBlockHash: common.Hash{}}
+
+	// ErrUnauthorized is returned if a header is signed by a non-authorized entity.
+	ErrUnauthorized = errors.New("unauthorized leader")
 )
+
+// ErrNotEnoughSigsType is returned if there is not enough signatures for a block.
+type ErrNotEnoughSigsType struct {
+	NotEnoughSigsBlockHash common.Hash
+}
+
+func (e *ErrNotEnoughSigsType) Error() string {
+	return "not enough sigs: block hash: " + e.NotEnoughSigsBlockHash.Hex()
+}

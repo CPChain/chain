@@ -5,15 +5,17 @@ package rpt
 
 import (
 	"context"
-	"fmt"
 	"math/big"
+
+	"github.com/ethereum/go-ethereum/rpc"
+
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
 )
 
 var (
@@ -64,10 +66,18 @@ type CollectorConfig struct {
 	DporConfig   *params.DporConfig
 }
 
+// ClientBackend is the client operation interface
+type ClientBackend interface {
+	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
+	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
+	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
+}
+
 // BasicCollector is the default rpt collector
 type BasicCollector struct {
 	// TODO: backend here.
-	*ethclient.Client
+	//*ethclient.Client
+	ClientBackend
 	Config CollectorConfig
 }
 
@@ -91,19 +101,23 @@ type Info struct {
 	ContractInfo ContractRptInfo
 }
 
-// NewBasicCollector returns a new BasicCollector object.
-func NewBasicCollector(endpoint string, config *CollectorConfig) (*BasicCollector, error) {
+func NewEthClient(endpoint string) (*ethclient.Client, error) {
 	log.Info("connecting to RPT API", "url", endpoint)
 	client, err := rpc.Dial(endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("error connecting to RPT API %s: %s", endpoint, err)
+		return nil, err
 	}
-	ethClient := ethclient.NewClient(client)
+	return ethclient.NewClient(client), nil
+
+}
+
+// NewBasicCollector returns a new BasicCollector object.
+func NewBasicCollector(ethClient ClientBackend, config *CollectorConfig) (*BasicCollector, error) {
 	bc := &BasicCollector{
-		Client: ethClient,
-		Config: *config,
+		ClientBackend: ethClient,
+		Config:        *config,
 	}
-	return bc, err
+	return bc, nil
 }
 
 // GetRpt returns reputation of the given address.
@@ -150,9 +164,24 @@ func (bc *BasicCollector) calcRptInfo(address common.Address, number uint64) RPT
 func (bc *BasicCollector) getChainRptInfo(address common.Address, number uint64) ChainRptInfo {
 	coinAge, txVolume, ifLeader := 0., 0., 0.
 	for i := number; i >= 0 && i >= number-bc.Config.WindowSize; i-- {
-		coinAge += bc.getCoinAge(address, i)
-		txVolume += bc.getTxVolume(address, i)
-		ifLeader += bc.getIfLeader(address, i)
+		ca, err := bc.getCoinAge(address, i)
+		if err != nil {
+			log.Warn("getCoinAge error", address, err)
+			continue
+		}
+		tv, err := bc.getTxVolume(address, i)
+		if err != nil {
+			log.Warn("getTxVolume error", address, err)
+			continue
+		}
+		isLeader, err := bc.getIfLeader(address, i)
+		if err != nil {
+			log.Warn("getIfLeader error", address, err)
+			continue
+		}
+		coinAge += ca
+		txVolume += tv
+		ifLeader += isLeader
 	}
 	return ChainRptInfo{
 		CoinAge:  coinAge,
@@ -163,9 +192,14 @@ func (bc *BasicCollector) getChainRptInfo(address common.Address, number uint64)
 
 func (bc *BasicCollector) getContractRptInfo(address common.Address, number uint64) ContractRptInfo {
 	uploadReward, proxyReward := 0., 0.
-	for i := number; i >= 0 && i >= number-bc.Config.WindowSize; i-- {
-		uploadReward += bc.getUploadReward(address, i)
-		proxyReward += bc.getProxyReward(address, i)
+	if number == 0 {
+		uploadReward += bc.getUploadReward(address, 0)
+		proxyReward += bc.getProxyReward(address, 0)
+	} else {
+		for i := number; i > 0 && i >= number-bc.Config.WindowSize; i-- {
+			uploadReward += bc.getUploadReward(address, i)
+			proxyReward += bc.getProxyReward(address, i)
+		}
 	}
 	return ContractRptInfo{
 		UploadReward: uploadReward,
@@ -173,18 +207,19 @@ func (bc *BasicCollector) getContractRptInfo(address common.Address, number uint
 	}
 }
 
-func (bc *BasicCollector) getCoinAge(address common.Address, number uint64) float64 {
+func (bc *BasicCollector) getCoinAge(address common.Address, number uint64) (float64, error) {
 	balance, err := bc.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with bc.getCoinAge", "error", err)
 	}
-	return float64(balance.Uint64())
+	return float64(balance.Uint64()), err
 }
 
-func (bc *BasicCollector) getTxVolume(address common.Address, number uint64) float64 {
+func (bc *BasicCollector) getTxVolume(address common.Address, number uint64) (float64, error) {
 	block, err := bc.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with bc.getTxVolume", "error", err)
+		return 0, err
 	}
 	txvs := float64(0)
 	signer := types.NewPrivTxSupportEIP155Signer(bc.Config.ChainConfig.ChainID)
@@ -198,24 +233,28 @@ func (bc *BasicCollector) getTxVolume(address common.Address, number uint64) flo
 			txvs += float64(tx.Value().Uint64())
 		}
 	}
-	return txvs
+	return txvs, nil
 }
 
-func (bc *BasicCollector) getIfLeader(address common.Address, number uint64) float64 {
+func (bc *BasicCollector) getIfLeader(address common.Address, number uint64) (float64, error) {
 	if bc.Config.ChainConfig.ChainID.Uint64() == uint64(4) {
-		return 0
+		return 0, nil
 	}
 	header, err := bc.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with bc.getIfLeader", "error", err)
+		return 0, err
 	}
 	number = number%bc.Config.DporConfig.Epoch - 1
 	leaderBytes := header.Extra[uint64(extraVanity)+number*common.AddressLength : uint64(extraVanity)+(number+1)*common.AddressLength]
 	leader := common.BytesToAddress(leaderBytes)
+
+	fmt.Println("leader.Hex():", leader.Hex())
+
 	if leader == address {
-		return bc.Config.LeaderReward
+		return bc.Config.LeaderReward, err
 	}
-	return 0
+	return 0, err
 }
 
 func (bc *BasicCollector) getUploadReward(address common.Address, number uint64) float64 {

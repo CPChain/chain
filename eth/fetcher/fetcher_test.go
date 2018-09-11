@@ -107,7 +107,7 @@ func (f *fetcherTester) getBlock(hash common.Hash) *types.Block {
 }
 
 // verifyHeader is a nop placeholder for the block header verification.
-func (f *fetcherTester) verifyHeader(header *types.Header) error {
+func (f *fetcherTester) verifyHeader(header *types.Header, refHeader *types.Header) error {
 	return nil
 }
 

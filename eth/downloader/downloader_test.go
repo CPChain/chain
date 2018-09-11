@@ -34,6 +34,7 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/trie"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -350,6 +351,11 @@ func (dl *downloadTester) InsertChain(blocks types.Blocks) (int, error) {
 		dl.ownChainTd[block.Hash()] = new(big.Int).Add(dl.ownChainTd[block.ParentHash()], block.Difficulty())
 	}
 	return len(blocks), nil
+}
+
+// WaitingSignatureBlocks returns waitingSignatureBlocks
+func (dl *downloadTester) WaitingSignatureBlocks() *lru.Cache {
+	return &lru.Cache{}
 }
 
 // InsertReceiptChain injects a new batch of receipts into the simulated chain.

@@ -17,390 +17,591 @@
 package dpor
 
 import (
-	"bytes"
-	"crypto/ecdsa"
-	"math/big"
+	"reflect"
 	"testing"
 
+	"fmt"
+
+	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/rawdb"
+	"github.com/ethereum/go-ethereum/consensus/dpor/rpt"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/params"
+	lru "github.com/hashicorp/golang-lru"
 )
 
-type testerVote struct {
-	signer string
-	voted  string
-	auth   bool
+type fakeDb struct {
+	dbType uint64
 }
 
-// testerAccountPool is a pool to maintain currently active tester accounts,
-// mapped from textual names used in the tests below to actual Ethereum private
-// keys capable of signing transactions.
-type testerAccountPool struct {
-	accounts map[string]*ecdsa.PrivateKey
+func (*fakeDb) Put(key []byte, value []byte) error {
+	fmt.Println("executing db put")
+	return nil
 }
 
-func newTesterAccountPool() *testerAccountPool {
-	return &testerAccountPool{
-		accounts: make(map[string]*ecdsa.PrivateKey),
+func (*fakeDb) Delete(key []byte) error {
+	panic("implement me 1")
+}
+
+func (f *fakeDb) Get(key []byte) ([]byte, error) {
+	fmt.Println("executing db put")
+	if f.dbType == 1 {
+		snap := new(DporSnapshot)
+		blob, err := json.Marshal(snap)
+		return blob, err
+	}
+	return []byte("ssss"), nil
+
+}
+
+func (*fakeDb) Has(key []byte) (bool, error) {
+	panic("implement me3")
+}
+
+func (*fakeDb) Close() {
+	panic("implement me4")
+}
+
+func (*fakeDb) NewBatch() ethdb.Batch {
+	panic("implement me5")
+}
+
+func Test_newSnapshot(t *testing.T) {
+	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	equal := reflect.DeepEqual(snap.signers(), getSignerAddress())
+	if !equal {
+		t.Errorf("expect %v,get %v", true, equal)
+	}
+
+	recents := snap.Recents
+	if len(recents) != 0 {
+		t.Errorf("expect 0 recents,get %v", len(recents))
+	}
+
+	candidates := snap.candidates()
+	if len(candidates) != 0 {
+		t.Errorf("expect 0 candidates,get %v", len(candidates))
 	}
 }
 
-func (ap *testerAccountPool) sign(header *types.Header, signer string) {
-	// Ensure we have a persistent key for the signer
-	if ap.accounts[signer] == nil {
-		ap.accounts[signer], _ = crypto.GenerateKey()
+func Test_loadSnapshot(t *testing.T) {
+	type args struct {
+		config   *params.DporConfig
+		sigcache *lru.ARCCache
+		db       ethdb.Database
+		hash     common.Hash
 	}
-	// Sign the header and embed the signature in extra data
-	sig, _ := crypto.Sign(sigHash(header).Bytes(), ap.accounts[signer])
-	copy(header.Extra[len(header.Extra)-65:], sig)
-}
-
-func (ap *testerAccountPool) address(account string) common.Address {
-	// Ensure we have a persistent key for the account
-	if ap.accounts[account] == nil {
-		ap.accounts[account], _ = crypto.GenerateKey()
-	}
-	// Resolve and return the Ethereum address
-	return crypto.PubkeyToAddress(ap.accounts[account].PublicKey)
-}
-
-// testerChainReader implements consensus.ChainReader to access the genesis
-// block. All other methods and requests will panic.
-type testerChainReader struct {
-	db ethdb.Database
-}
-
-func (r *testerChainReader) Config() *params.ChainConfig                 { return params.AllCpchainProtocolChanges }
-func (r *testerChainReader) CurrentHeader() *types.Header                { panic("not supported") }
-func (r *testerChainReader) GetHeader(common.Hash, uint64) *types.Header { panic("not supported") }
-func (r *testerChainReader) GetBlock(common.Hash, uint64) *types.Block   { panic("not supported") }
-func (r *testerChainReader) GetHeaderByHash(common.Hash) *types.Header   { panic("not supported") }
-func (r *testerChainReader) GetHeaderByNumber(number uint64) *types.Header {
-	if number == 0 {
-		return rawdb.ReadHeader(r.db, rawdb.ReadCanonicalHash(r.db, 0), 0)
-	}
-	panic("not supported")
-}
-
-// Tests that voting is evaluated correctly for various simple and complex scenarios.
-func TestVoting(t *testing.T) {
-	// Define the various voting scenarios to test
 	tests := []struct {
-		epoch   uint64
-		signers []string
-		votes   []testerVote
-		results []string
+		name    string
+		args    args
+		want    *DporSnapshot
+		wantErr bool
 	}{
-		{
-			// Single signer, no votes cast
-			signers: []string{"A"},
-			votes:   []testerVote{{signer: "A"}},
-			results: []string{"A"},
-		}, {
-			// Single signer, voting to add two others (only accept first, second needs 2 votes)
-			signers: []string{"A"},
-			votes: []testerVote{
-				{signer: "A", voted: "B", auth: true},
-				{signer: "B"},
-				{signer: "A", voted: "C", auth: true},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Two signers, voting to add three others (only accept first two, third needs 3 votes already)
-			signers: []string{"A", "B"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: true},
-				{signer: "B", voted: "C", auth: true},
-				{signer: "A", voted: "D", auth: true},
-				{signer: "B", voted: "D", auth: true},
-				{signer: "C"},
-				{signer: "A", voted: "E", auth: true},
-				{signer: "B", voted: "E", auth: true},
-			},
-			results: []string{"A", "B", "C", "D"},
-		}, {
-			// Single signer, dropping itself (weird, but one less cornercase by explicitly allowing this)
-			signers: []string{"A"},
-			votes: []testerVote{
-				{signer: "A", voted: "A", auth: false},
-			},
-			results: []string{},
-		}, {
-			// Two signers, actually needing mutual consent to drop either of them (not fulfilled)
-			signers: []string{"A", "B"},
-			votes: []testerVote{
-				{signer: "A", voted: "B", auth: false},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Two signers, actually needing mutual consent to drop either of them (fulfilled)
-			signers: []string{"A", "B"},
-			votes: []testerVote{
-				{signer: "A", voted: "B", auth: false},
-				{signer: "B", voted: "B", auth: false},
-			},
-			results: []string{"A"},
-		}, {
-			// Three signers, two of them deciding to drop the third
-			signers: []string{"A", "B", "C"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: false},
-				{signer: "B", voted: "C", auth: false},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Four signers, consensus of two not being enough to drop anyone
-			signers: []string{"A", "B", "C", "D"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: false},
-				{signer: "B", voted: "C", auth: false},
-			},
-			results: []string{"A", "B", "C", "D"},
-		}, {
-			// Four signers, consensus of three already being enough to drop someone
-			signers: []string{"A", "B", "C", "D"},
-			votes: []testerVote{
-				{signer: "A", voted: "D", auth: false},
-				{signer: "B", voted: "D", auth: false},
-				{signer: "C", voted: "D", auth: false},
-			},
-			results: []string{"A", "B", "C"},
-		}, {
-			// Authorizations are counted once per signer per target
-			signers: []string{"A", "B"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: true},
-				{signer: "B"},
-				{signer: "A", voted: "C", auth: true},
-				{signer: "B"},
-				{signer: "A", voted: "C", auth: true},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Authorizing multiple accounts concurrently is permitted
-			signers: []string{"A", "B"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: true},
-				{signer: "B"},
-				{signer: "A", voted: "D", auth: true},
-				{signer: "B"},
-				{signer: "A"},
-				{signer: "B", voted: "D", auth: true},
-				{signer: "A"},
-				{signer: "B", voted: "C", auth: true},
-			},
-			results: []string{"A", "B", "C", "D"},
-		}, {
-			// Deauthorizations are counted once per signer per target
-			signers: []string{"A", "B"},
-			votes: []testerVote{
-				{signer: "A", voted: "B", auth: false},
-				{signer: "B"},
-				{signer: "A", voted: "B", auth: false},
-				{signer: "B"},
-				{signer: "A", voted: "B", auth: false},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Deauthorizing multiple accounts concurrently is permitted
-			signers: []string{"A", "B", "C", "D"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: false},
-				{signer: "B"},
-				{signer: "C"},
-				{signer: "A", voted: "D", auth: false},
-				{signer: "B"},
-				{signer: "C"},
-				{signer: "A"},
-				{signer: "B", voted: "D", auth: false},
-				{signer: "C", voted: "D", auth: false},
-				{signer: "A"},
-				{signer: "B", voted: "C", auth: false},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Votes from deauthorized signers are discarded immediately (deauth votes)
-			signers: []string{"A", "B", "C"},
-			votes: []testerVote{
-				{signer: "C", voted: "B", auth: false},
-				{signer: "A", voted: "C", auth: false},
-				{signer: "B", voted: "C", auth: false},
-				{signer: "A", voted: "B", auth: false},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Votes from deauthorized signers are discarded immediately (auth votes)
-			signers: []string{"A", "B", "C"},
-			votes: []testerVote{
-				{signer: "C", voted: "B", auth: false},
-				{signer: "A", voted: "C", auth: false},
-				{signer: "B", voted: "C", auth: false},
-				{signer: "A", voted: "B", auth: false},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Cascading changes are not allowed, only the account being voted on may change
-			signers: []string{"A", "B", "C", "D"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: false},
-				{signer: "B"},
-				{signer: "C"},
-				{signer: "A", voted: "D", auth: false},
-				{signer: "B", voted: "C", auth: false},
-				{signer: "C"},
-				{signer: "A"},
-				{signer: "B", voted: "D", auth: false},
-				{signer: "C", voted: "D", auth: false},
-			},
-			results: []string{"A", "B", "C"},
-		}, {
-			// Changes reaching consensus out of bounds (via a deauth) execute on touch
-			signers: []string{"A", "B", "C", "D"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: false},
-				{signer: "B"},
-				{signer: "C"},
-				{signer: "A", voted: "D", auth: false},
-				{signer: "B", voted: "C", auth: false},
-				{signer: "C"},
-				{signer: "A"},
-				{signer: "B", voted: "D", auth: false},
-				{signer: "C", voted: "D", auth: false},
-				{signer: "A"},
-				{signer: "C", voted: "C", auth: true},
-			},
-			results: []string{"A", "B"},
-		}, {
-			// Changes reaching consensus out of bounds (via a deauth) may go out of consensus on first touch
-			signers: []string{"A", "B", "C", "D"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: false},
-				{signer: "B"},
-				{signer: "C"},
-				{signer: "A", voted: "D", auth: false},
-				{signer: "B", voted: "C", auth: false},
-				{signer: "C"},
-				{signer: "A"},
-				{signer: "B", voted: "D", auth: false},
-				{signer: "C", voted: "D", auth: false},
-				{signer: "A"},
-				{signer: "B", voted: "C", auth: true},
-			},
-			results: []string{"A", "B", "C"},
-		}, {
-			// Ensure that pending votes don't survive authorization status changes. This
-			// corner case can only appear if a signer is quickly added, removed and then
-			// readded (or the inverse), while one of the original voters dropped. If a
-			// past vote is left cached in the system somewhere, this will interfere with
-			// the final signer outcome.
-			signers: []string{"A", "B", "C", "D", "E"},
-			votes: []testerVote{
-				{signer: "A", voted: "F", auth: true}, // Authorize F, 3 votes needed
-				{signer: "B", voted: "F", auth: true},
-				{signer: "C", voted: "F", auth: true},
-				{signer: "D", voted: "F", auth: false}, // Deauthorize F, 4 votes needed (leave A's previous vote "unchanged")
-				{signer: "E", voted: "F", auth: false},
-				{signer: "B", voted: "F", auth: false},
-				{signer: "C", voted: "F", auth: false},
-				{signer: "D", voted: "F", auth: true}, // Almost authorize F, 2/3 votes needed
-				{signer: "E", voted: "F", auth: true},
-				{signer: "B", voted: "A", auth: false}, // Deauthorize A, 3 votes needed
-				{signer: "C", voted: "A", auth: false},
-				{signer: "D", voted: "A", auth: false},
-				{signer: "B", voted: "F", auth: true}, // Finish authorizing F, 3/3 votes needed
-			},
-			results: []string{"B", "C", "D", "E", "F"},
-		}, {
-			// Epoch transitions reset all votes to allow chain checkpointing
-			epoch:   3,
-			signers: []string{"A", "B"},
-			votes: []testerVote{
-				{signer: "A", voted: "C", auth: true},
-				{signer: "B"},
-				{signer: "A"}, // Checkpoint block, (don't vote here, it's validated outside of snapshots)
-				{signer: "B", voted: "C", auth: true},
-			},
-			results: []string{"A", "B"},
-		},
+		// TODO: Add test cases.
 	}
-	// Run through the scenarios and test them
-	for i, tt := range tests {
-		// Create the account pool and generate the initial set of signers
-		accounts := newTesterAccountPool()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := loadSnapshot(tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("loadSnapshot(%v, %v, %v, %v) error = %v, wantErr %v", tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash, err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("loadSnapshot(%v, %v, %v, %v) = %v, want %v", tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash, got, tt.want)
+			}
+		})
+	}
+}
 
-		signers := make([]common.Address, len(tt.signers))
-		for j, signer := range tt.signers {
-			signers[j] = accounts.address(signer)
-		}
-		for j := 0; j < len(signers); j++ {
-			for k := j + 1; k < len(signers); k++ {
-				if bytes.Compare(signers[j][:], signers[k][:]) > 0 {
-					signers[j], signers[k] = signers[k], signers[j]
-				}
-			}
-		}
-		// Create the genesis block with the initial set of signers
-		genesis := &core.Genesis{
-			ExtraData: make([]byte, extraVanity+common.AddressLength*len(signers)+extraSeal),
-		}
-		for j, signer := range signers {
-			copy(genesis.ExtraData[extraVanity+j*common.AddressLength:], signer[:])
-		}
-		// Create a pristine blockchain with the genesis injected
-		db := ethdb.NewMemDatabase()
-		genesis.Commit(db)
+func TestSnapshot_store(t *testing.T) {
 
-		// Assemble a chain of headers from the cast votes
-		headers := make([]*types.Header, len(tt.votes))
-		for j, vote := range tt.votes {
-			headers[j] = &types.Header{
-				Number:   big.NewInt(int64(j) + 1),
-				Time:     big.NewInt(int64(j) * int64(blockPeriod)),
-				Coinbase: accounts.address(vote.voted),
-				Extra:    make([]byte, extraVanity+extraSeal),
-			}
-			if j > 0 {
-				headers[j].ParentHash = headers[j-1].Hash()
-			}
-			if vote.auth {
-				copy(headers[j].Nonce[:], nonceAuthVote)
-			}
-			accounts.sign(headers[j], vote.signer)
-		}
-		// Pass all the headers through dpor and ensure tallying succeeds
-		head := headers[len(headers)-1]
+	type fields struct {
+		config     *params.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Signers    []common.Address
+		Candidates []common.Address
+		Recents    map[uint64]common.Address
+	}
+	type args struct {
+		db ethdb.Database
+	}
 
-		snap, err := New(&params.DporConfig{Epoch: tt.epoch}, db).snapshot(&testerChainReader{db: db}, head.Number.Uint64(), head.Hash(), headers)
-		if err != nil {
-			t.Errorf("test %d: failed to create voting snapshot: %v", i, err)
-			continue
-		}
-		// Verify the final list of signers against the expected ones
-		signers = make([]common.Address, len(tt.results))
-		for j, signer := range tt.results {
-			signers[j] = accounts.address(signer)
-		}
-		for j := 0; j < len(signers); j++ {
-			for k := j + 1; k < len(signers); k++ {
-				if bytes.Compare(signers[j][:], signers[k][:]) > 0 {
-					signers[j], signers[k] = signers[k], signers[j]
-				}
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	config := &params.DporConfig{Period: 3, Epoch: 3}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"store ok",
+			fields{config, cache, 1, common.Hash{},
+				getSignerAddress(), getSignerAddress(), make(map[uint64]common.Address)},
+			args{&fakeDb{}},
+			false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config:     tt.fields.config,
+				sigcache:   tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Signers:    tt.fields.Signers,
+				Candidates: tt.fields.Candidates,
+				Recents:    tt.fields.Recents,
 			}
-		}
-		result := snap.signers()
-		if len(result) != len(signers) {
-			t.Errorf("test %d: signers mismatch: have %x, want %x", i, result, signers)
-			continue
-		}
-		for j := 0; j < len(result); j++ {
-			if !bytes.Equal(result[j][:], signers[j][:]) {
-				t.Errorf("test %d, signer %d: signer mismatch: have %x, want %x", i, j, result[j], signers[j])
+			if err := s.store(tt.args.db); (err != nil) != tt.wantErr {
+				t.Errorf("DporSnapshot.store(%v) error = %v, wantErr %v", tt.args.db, err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func TestSnapshot_copy(t *testing.T) {
+	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	snap.Candidates = getCandidates()
+	snap.Recents = recents()
+
+	cpySnap := snap.copy()
+
+	equal := reflect.DeepEqual(cpySnap.signers(), getSignerAddress())
+	if !equal {
+		t.Errorf("expect %v,get %v", true, equal)
+	}
+
+	recents := cpySnap.Recents
+	if len(recents) != 2 {
+		t.Errorf("expect 2 recents,get %v", len(recents))
+	}
+
+	candidates := cpySnap.candidates()
+	if len(candidates) != 3 {
+		t.Errorf("expect 3 candidates,get %v", len(candidates))
+	}
+}
+
+func TestSnapshot_apply(t *testing.T) {
+	type fields struct {
+		config     *params.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Signers    []common.Address
+		Candidates []common.Address
+		Recents    map[uint64]common.Address
+	}
+	type args struct {
+		headers []*types.Header
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *DporSnapshot
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config:     tt.fields.config,
+				sigcache:   tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Signers:    tt.fields.Signers,
+				Candidates: tt.fields.Candidates,
+				Recents:    tt.fields.Recents,
+			}
+			got, err := s.apply(tt.args.headers)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DporSnapshot.apply(%v) error = %v, wantErr %v", tt.args.headers, err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DporSnapshot.apply(%v) = %v, want %v", tt.args.headers, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSnapshot_applyHeader(t *testing.T) {
+	type fields struct {
+		config     *params.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Signers    []common.Address
+		Candidates []common.Address
+		Recents    map[uint64]common.Address
+	}
+	type args struct {
+		header *types.Header
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config:     tt.fields.config,
+				sigcache:   tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Signers:    tt.fields.Signers,
+				Candidates: tt.fields.Candidates,
+				Recents:    tt.fields.Recents,
+			}
+			if err := s.applyHeader(tt.args.header); (err != nil) != tt.wantErr {
+				t.Errorf("DporSnapshot.applyHeader(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSnapshot_updateCandidates(t *testing.T) {
+	type fields struct {
+		config     *params.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Signers    []common.Address
+		Candidates []common.Address
+		Recents    map[uint64]common.Address
+	}
+	type args struct {
+		header *types.Header
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config:     tt.fields.config,
+				sigcache:   tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Signers:    tt.fields.Signers,
+				Candidates: tt.fields.Candidates,
+				Recents:    tt.fields.Recents,
+			}
+			if err := s.updateCandidates(tt.args.header); (err != nil) != tt.wantErr {
+				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSnapshot_updateRpts(t *testing.T) {
+	type fields struct {
+		config     *params.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Signers    []common.Address
+		Candidates []common.Address
+		Recents    map[uint64]common.Address
+	}
+	type args struct {
+		header *types.Header
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    rpt.RPTs
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config:     tt.fields.config,
+				sigcache:   tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Signers:    tt.fields.Signers,
+				Candidates: tt.fields.Candidates,
+				Recents:    tt.fields.Recents,
+			}
+			got, err := s.updateRpts(tt.args.header)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DporSnapshot.updateRpts(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DporSnapshot.updateRpts(%v) = %v, want %v", tt.args.header, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSnapshot_updateView(t *testing.T) {
+	type fields struct {
+		config     *params.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Signers    []common.Address
+		Candidates []common.Address
+		Recents    map[uint64]common.Address
+	}
+	type args struct {
+		rpts       rpt.RPTs
+		seed       int64
+		viewLength int
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config:     tt.fields.config,
+				sigcache:   tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Signers:    tt.fields.Signers,
+				Candidates: tt.fields.Candidates,
+				Recents:    tt.fields.Recents,
+			}
+			if err := s.updateView(tt.args.rpts, tt.args.seed, tt.args.viewLength); (err != nil) != tt.wantErr {
+				t.Errorf("DporSnapshot.updateView(%v, %v, %v) error = %v, wantErr %v", tt.args.rpts, tt.args.seed, tt.args.viewLength, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSnapshot_signers(t *testing.T) {
+	snap := createSnapshot()
+	signers := snap.signers()
+	equalSigner := reflect.DeepEqual(signers, getSignerAddress())
+	if !equalSigner {
+		t.Errorf("expected isEqualSigner is %v,get %v", true, equalSigner)
+	}
+}
+
+func TestSnapshot_signerRound(t *testing.T) {
+	type fields struct {
+		config     *params.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Signers    []common.Address
+		Candidates []common.Address
+		Recents    map[uint64]common.Address
+	}
+	type args struct {
+		signer common.Address
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    int
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config:     tt.fields.config,
+				sigcache:   tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Signers:    tt.fields.Signers,
+				Candidates: tt.fields.Candidates,
+				Recents:    tt.fields.Recents,
+			}
+			got, err := s.signerRound(tt.args.signer)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DporSnapshot.signerRound(%v) error = %v, wantErr %v", tt.args.signer, err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DporSnapshot.signerRound(%v) = %v, want %v", tt.args.signer, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSnapshot_isSigner(t *testing.T) {
+	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress()[1:2])
+	isSinger := snap.isSigner(addr1)
+	if isSinger {
+		t.Errorf("expected isSinger %v,get %v", false, isSinger)
+	}
+	isSinger = snap.isSigner(addr2)
+	if !isSinger {
+		t.Errorf("expected isSinger %v,get %v", true, isSinger)
+	}
+}
+
+func TestSnapshot_isLeaderErrorWhenBlockNumberIsZero(t *testing.T) {
+	snap := createSnapshot()
+	isLeader, err := snap.isLeader(addr1, 0)
+	if err == nil {
+		t.Errorf("expect isLeader Error, get %v", isLeader)
+	}
+}
+
+func TestSnapshot_isLeader(t *testing.T) {
+	snap := createSnapshot()
+	isLeader, err := snap.isLeader(addr1, 1)
+	if !isLeader || err != nil {
+		t.Errorf("expect isLeader true, get %v", isLeader)
+	}
+	isLeader, err = snap.isLeader(addr2, 2)
+	if !isLeader || err != nil {
+		t.Errorf("expect isLeader true, get %v", isLeader)
+	}
+	isLeader, err = snap.isLeader(addr3, 3)
+	if !isLeader || err != nil {
+		t.Errorf("expect isLeader true, get %v", isLeader)
+	}
+}
+
+func TestSnapshot_isNotLeader(t *testing.T) {
+	snap := createSnapshot()
+	isLeader, _ := snap.isLeader(addr2, 1)
+	if isLeader {
+		t.Errorf("expect isLeader false get %v", isLeader)
+	}
+	isLeader, _ = snap.isLeader(addr1, 2)
+	if isLeader {
+		t.Errorf("expect isLeader false get %v", isLeader)
+	}
+	isLeader, _ = snap.isLeader(addr1, 3)
+	if isLeader {
+		t.Errorf("expect isLeader false get %v", isLeader)
+	}
+}
+
+func TestSnapshot_signerRoundFail(t *testing.T) {
+	snap := createSnapshot()
+	round, err := snap.signerRound(addr4)
+	if err == nil || round != -1 {
+		t.Errorf("expect round %v, get %v", -1, round)
+	}
+}
+
+func TestSnapshot_signerRoundOk(t *testing.T) {
+	snap := createSnapshot()
+	round, err := snap.signerRound(addr1)
+	if err != nil || round != 0 {
+		t.Errorf("expect round %v, get %v", 0, round)
+	}
+
+	round, err = snap.signerRound(addr2)
+	if err != nil || round != 1 {
+		t.Errorf("expect round %v, get %v", 1, round)
+	}
+
+	round, err = snap.signerRound(addr3)
+	if err != nil || round != 2 {
+		t.Errorf("expect round %v, get %v", 2, round)
+	}
+}
+
+func createSnapshot() *DporSnapshot {
+	signers := getSignerAddress()
+	config := &params.DporConfig{Period: 3, Epoch: 3}
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	snap := newSnapshot(config, cache, 1, common.Hash{}, signers)
+	return snap
+}
+
+func TestSnapshot_candidates(t *testing.T) {
+	type fields struct {
+		config     *params.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Signers    []common.Address
+		Candidates []common.Address
+		Recents    map[uint64]common.Address
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []common.Address
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config:     tt.fields.config,
+				sigcache:   tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Signers:    tt.fields.Signers,
+				Candidates: tt.fields.Candidates,
+				Recents:    tt.fields.Recents,
+			}
+			if got := s.candidates(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DporSnapshot.candidates() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSnapshot_inturn(t *testing.T) {
+	signers := getSignerAddress()
+	config := &params.DporConfig{Period: 3, Epoch: 3}
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	snap := newSnapshot(config, cache, 1, common.Hash{}, signers)
+
+	tests := []struct {
+		number         uint64
+		addr           common.Address
+		expectedResult bool
+	}{
+		{1, addr1, true},
+		{1, addr2, false},
+		{1, addr3, false},
+		{2, addr1, false},
+		{2, addr2, true},
+		{2, addr3, false},
+		{3, addr1, false},
+		{3, addr2, false},
+		{3, addr3, true},
+		{4, addr1, true},
+		{4, addr2, false},
+		{4, addr3, false},
+		{5, addr1, false},
+		{5, addr2, true},
+		{5, addr3, false},
+	}
+
+	for _, tt := range tests {
+		inturn := snap.inturn(tt.number, tt.addr)
+		if inturn != tt.expectedResult {
+			t.Errorf("expected result is %v,get %v,number:%v,addr:%v", tt.expectedResult, inturn, tt.number, tt.addr)
 		}
 	}
 }

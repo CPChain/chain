@@ -138,7 +138,7 @@ func printChain(bc *BlockChain) {
 func testBlockChainImport(chain types.Blocks, blockchain *BlockChain) error {
 	for _, block := range chain {
 		// Try and process the block
-		err := blockchain.engine.VerifyHeader(blockchain, block.Header(), true)
+		err := blockchain.engine.VerifyHeader(blockchain, block.Header(), true, nil)
 		if err == nil {
 			err = blockchain.validator.ValidateBody(block)
 		}
@@ -152,7 +152,11 @@ func testBlockChainImport(chain types.Blocks, blockchain *BlockChain) error {
 		if err != nil {
 			return err
 		}
-		receipts, _, usedGas, err := blockchain.Processor().Process(block, statedb, vm.Config{})
+		// TODO: check if below statement is correct.
+		privStateDB, _ := state.New(GetPrivateStateRoot(blockchain.db,
+			blockchain.GetBlockByHash(block.ParentHash()).Root()), blockchain.privateStateCache)
+		// TODO: ipfsDB is not used as there are no private tx here, add a concrete ipfsDb if test private tx in future.
+		receipts, _, usedGas, err := blockchain.Processor().Process(block, statedb, privStateDB, nil, vm.Config{})
 		if err != nil {
 			blockchain.reportBlock(block, receipts, err)
 			return err
@@ -176,7 +180,7 @@ func testBlockChainImport(chain types.Blocks, blockchain *BlockChain) error {
 func testHeaderChainImport(chain []*types.Header, blockchain *BlockChain) error {
 	for _, header := range chain {
 		// Try and validate the header
-		if err := blockchain.engine.VerifyHeader(blockchain, header, false); err != nil {
+		if err := blockchain.engine.VerifyHeader(blockchain, header, false, nil); err != nil {
 			return err
 		}
 		// Manually insert the header into the database, but don't reorganise (allows subsequent testing)

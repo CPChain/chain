@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -161,8 +161,8 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 	// Construct the different synchronisation mechanisms
 	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
-	validator := func(header *types.Header) error {
-		return engine.VerifyHeader(blockchain, header, true)
+	validator := func(header *types.Header, refHeader *types.Header) error {
+		return engine.VerifyHeader(blockchain, header, true, refHeader)
 	}
 	heighter := func() uint64 {
 		return blockchain.CurrentBlock().NumberU64()
@@ -692,7 +692,18 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 // will only announce it's availability (depending what's requested).
 func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 	hash := block.Hash()
+
 	peers := pm.peers.PeersWithoutBlock(hash)
+
+	// TODO: fix this.
+	log.Debug("--------I am in handler.BroadcastBlock start--------")
+	log.Debug("--------dpor:" + strconv.FormatBool(pm.chainconfig.Dpor != nil) + "--------")
+	if pm.chainconfig.Dpor != nil {
+		peers = pm.peers.AllPeers()
+		log.Debug("got all peers.")
+	}
+
+	log.Debug("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
 
 	// If propagation is requested, send to a subset of the peer
 	if propagate {
@@ -704,8 +715,12 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash)
 			return
 		}
+		// TODO: fix this.
+		log.Debug("propagating block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex() + "td: " + strconv.Itoa(int(td.Int64())))
+		log.Debug("--------I am in handler.BroadcastBlock end--------")
 		// Send the block to a subset of our peers
-		transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		// transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		transfer := peers[:]
 		for _, peer := range transfer {
 			peer.AsyncSendNewBlock(block, td)
 		}
