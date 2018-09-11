@@ -54,7 +54,7 @@ type PayloadReplacement struct {
 
 // SealPrivatePayload encrypts private tx's payload and sends it to IPFS, then replaces the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
-func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, ipfsDb *ethdb.IpfsDatabase) (PayloadReplacement, error) {
+func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, remoteDB ethdb.RemoteDatabase) (PayloadReplacement, error) {
 	// Encrypt payload
 	// use tx's nonce as gcm nonce
 	nonce := make([]byte, 12)
@@ -72,7 +72,7 @@ func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, i
 
 	// Put to IPFS
 	bytesToPut, _ := sealed.toBytes()
-	ipfsAddr, err := ipfsDb.Put(bytesToPut)
+	ipfsAddr, err := remoteDB.Put(bytesToPut)
 	if err != nil {
 		return PayloadReplacement{}, err
 	}

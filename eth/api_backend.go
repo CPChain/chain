@@ -228,7 +228,7 @@ func (b *EthAPIBackend) ServiceFilter(ctx context.Context, session *bloombits.Ma
 	}
 }
 
-// IpfsDB returns IPFS database instance.
-func (b *EthAPIBackend) IpfsDb() *ethdb.IpfsDatabase {
-	return b.eth.IpfsDB()
+// RemoteDB returns remote database instance.
+func (b *EthAPIBackend) RemoteDB() ethdb.RemoteDatabase {
+	return b.eth.RemoteDB()
 }

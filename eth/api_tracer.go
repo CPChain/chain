@@ -278,7 +278,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			// Generate the next state snapshot fast without tracing
 			// TODO: test if below statement is correct.
 			privStateDb, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), statedb.Database())
-			// TODO: Pass real ipfs database
+			// TODO: Pass real remote database
 			_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{})
 			if err != nil {
 				failed = err
@@ -519,7 +519,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 
 		// TODO: check if below statement is correct.
 		privStateDb, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), statedb.Database())
-		// TODO: pass real ipfs database.
+		// TODO: pass real remote database.
 		_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{})
 		if err != nil {
 			return nil, err

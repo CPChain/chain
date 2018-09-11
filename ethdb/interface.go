@@ -50,3 +50,17 @@ type Batch interface {
 	// Reset resets the batch for reuse
 	Reset()
 }
+
+// RemoteDatabase represents the database interface that be able to maintain a huge amount of data. Distributed P2P database
+// such as IPFS is the classic implementation of the interface.
+type RemoteDatabase interface {
+	// Get gets data from database with given key.
+	Get(key []byte) ([]byte, error)
+	// Put puts data to database and returns an address(key/identifier).
+	Put(value []byte) ([]byte, error)
+	// Discard discards data from database with given key. As remote database system such as IPFS doesn't have explicit
+	// data deleting function as its own implementation mechanism, we adopt 'discard' instead of 'delete'.
+	Discard(key []byte) error
+	// Has checks if the given address/key points to an existent data.
+	Has(key []byte) bool
+}

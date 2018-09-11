@@ -66,14 +66,14 @@ type Work struct {
 	config *params.ChainConfig
 	signer types.Signer
 
-	privState *state.StateDB      // apply public state changes here
-	pubState  *state.StateDB      // apply private state changes here
-	ipfsDb    *ethdb.IpfsDatabase // ipfs database used for private tx processing
-	ancestors *set.Set            // ancestor set (used for checking uncle parent validity)
-	family    *set.Set            // family set (used for checking uncle invalidity)
-	uncles    *set.Set            // uncle set
-	tcount    int                 // tx count in cycle
-	gasPool   *core.GasPool       // available gas used to pack transactions
+	privState *state.StateDB       // apply public state changes here
+	pubState  *state.StateDB       // apply private state changes here
+	remoteDB  ethdb.RemoteDatabase // ipfs database used for private tx processing
+	ancestors *set.Set             // ancestor set (used for checking uncle parent validity)
+	family    *set.Set             // family set (used for checking uncle invalidity)
+	uncles    *set.Set             // uncle set
+	tcount    int                  // tx count in cycle
+	gasPool   *core.GasPool        // available gas used to pack transactions
 
 	Block *types.Block // the new block
 
@@ -628,7 +628,7 @@ func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, c
 	snap := env.pubState.Snapshot()
 	snapPriv := env.privState.Snapshot()
 
-	receipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.ipfsDb, env.header, tx, &env.header.GasUsed, vm.Config{})
+	receipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.remoteDB, env.header, tx, &env.header.GasUsed, vm.Config{})
 	if err != nil {
 		env.pubState.RevertToSnapshot(snap)
 		env.privState.RevertToSnapshot(snapPriv)

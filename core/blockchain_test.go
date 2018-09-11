@@ -155,7 +155,7 @@ func testBlockChainImport(chain types.Blocks, blockchain *BlockChain) error {
 		// TODO: check if below statement is correct.
 		privStateDB, _ := state.New(GetPrivateStateRoot(blockchain.db,
 			blockchain.GetBlockByHash(block.ParentHash()).Root()), blockchain.privateStateCache)
-		// TODO: ipfsDB is not used as there are no private tx here, add a concrete ipfsDb if test private tx in future.
+		// TODO: remoteDB is not used as there are no private tx here, add a concrete remoteDB if test private tx in future.
 		receipts, _, usedGas, err := blockchain.Processor().Process(block, statedb, privStateDB, nil, vm.Config{})
 		if err != nil {
 			blockchain.reportBlock(block, receipts, err)
