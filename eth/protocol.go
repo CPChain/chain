@@ -64,9 +64,10 @@ const (
 	ReceiptsMsg    = 0x10
 
 	// Protocol messages belonging to cpc/01
-	NewBlockGeneratedMsg       = 0x42
-	NewBlockGeneratedHashesMsg = 0x43
-	NewSignedHeaderMsg         = 0x44
+	NewSignerMsg               = 0x42
+	NewBlockGeneratedMsg       = 0x43
+	NewBlockGeneratedHashesMsg = 0x44
+	NewSignedHeaderMsg         = 0x45
 )
 
 type errCode int

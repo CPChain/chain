@@ -188,6 +188,10 @@ func (p *peer) signerBroadcast() {
 	}
 }
 
+func (p *peer) SendNewSignerMsg() error {
+	return p2p.Send(p.rw, NewSignerMsg, "Hello World! TongZhi NiHao!")
+}
+
 // SendNewWait sends new generated block, waiting for signatures.
 func (p *peer) SendNewWait(block *types.Block) error {
 	p.knownWaitBlocks.Add(block.Hash())

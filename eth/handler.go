@@ -136,13 +136,6 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 			Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
 				peer := manager.newPeer(int(version), p, rw)
 
-				if e, ok := engine.(consensus.Engine1); ok {
-					_ = e
-
-					// TODO: fix this, check if this peer is a signer, if true, register him to committee.
-					// isSigner, err := engine.IsSigner(pm.blockchain, p.Peer.address, number)
-				}
-
 				select {
 				case manager.newPeerCh <- peer:
 					manager.wg.Add(1)
@@ -694,6 +687,35 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			p.MarkTransaction(tx.Hash())
 		}
 		pm.txpool.AddRemotes(txs)
+
+	// TODO: fix this.
+	case msg.Code == NewSignerMsg:
+
+		// if e, ok := engine.(consensus.Engine1); ok {
+		// 	_ = e
+
+		// 	// TODO: fix this, check if this peer is a signer, if true, register him to committee.
+		// 	// isSigner, err := engine.IsSigner(pm.blockchain, p.Peer.address, number)
+		// }
+
+		// register peer as signer.
+		// send NewSignerMsg too.
+		if err := pm.peers.RegisterSigner(p); err != nil {
+			return errors.New("registering peer as signer failed")
+		}
+		if err := p.SendNewSignerMsg(); err != nil {
+			return errors.New("sending NewSignerMsg to peer failed")
+		}
+	case msg.Code == NewBlockGeneratedMsg:
+		// sign the block.
+		// send the signed header with NewSignedHeaderMsg.
+	case msg.Code == NewBlockGeneratedHashesMsg:
+		// fetch the block with the hash from remote peer.
+		// sign the block.
+		// send the signed hash with NewSignedHeaderMsg.
+	case msg.Code == NewSignedHeaderMsg:
+		// collect the sigs in the header.
+		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
 
 	default:
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
