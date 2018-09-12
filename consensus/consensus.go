@@ -99,8 +99,8 @@ type Engine interface {
 	APIs(chain ChainReader) []rpc.API
 }
 
-// Engine1 is used to determine whether an address is in the committee.
-type Engine1 interface {
+// Validator is used to determine whether an address is in the committee.
+type Validator interface {
 	IsSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
 }
 

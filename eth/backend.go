@@ -202,7 +202,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 
 // SignerHandShake handshakes with remote signer.
 func (s *Ethereum) SignerHandShake(p *peer, address common.Address) error {
-	e, ok := s.engine.(consensus.Engine1)
+	e, ok := s.engine.(consensus.Validator)
 	if !ok {
 		return errors.New("bad engine")
 	}

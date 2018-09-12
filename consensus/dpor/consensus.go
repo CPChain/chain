@@ -337,7 +337,7 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 	}}
 }
 
-// IsSigner implements Engine1.
+// IsSigner implements Validator.
 func (d *Dpor) IsSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
