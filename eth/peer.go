@@ -188,8 +188,8 @@ func (p *peer) signerBroadcast() {
 	}
 }
 
-func (p *peer) SendNewSignerMsg() error {
-	return p2p.Send(p.rw, NewSignerMsg, "Hello World! TongZhi NiHao!")
+func (p *peer) SendNewSignerMsg(eb common.Address) error {
+	return p2p.Send(p.rw, NewSignerMsg, eb)
 }
 
 // SendNewWait sends new generated block, waiting for signatures.
@@ -673,6 +673,17 @@ func (ps *peerSet) AllPeers() []*peer {
 		list = append(list, p)
 	}
 	return list
+}
+
+// APeers retrieves a list of peers.
+func (ps *peerSet) APeers() *peer {
+	ps.lock.RLock()
+	defer ps.lock.RUnlock()
+
+	for _, peer := range ps.peers {
+		return peer
+	}
+	return nil
 }
 
 // PeersWithoutTx retrieves a list of peers that do not have a given transaction

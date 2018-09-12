@@ -22,8 +22,6 @@ import (
 
 	"math/big"
 
-	"fmt"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -104,7 +102,6 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	var leader common.Address
 	copy(leader[:], crypto.Keccak256(leaderPubkey[1:])[12:])
 
-	fmt.Println("hash hex:", hash.Hex())
 	// Cache leader signature.
 	if sigs, known := sigcache.Get(hash); known {
 		sigs.(map[common.Address][]byte)[leader] = leaderSig

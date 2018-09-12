@@ -63,6 +63,8 @@ func errResp(code errCode, format string, v ...interface{}) error {
 	return fmt.Errorf("%v - %v", code, fmt.Sprintf(format, v...))
 }
 
+type P2PSignerHandshake func(p *peer, address common.Address) error
+
 type ProtocolManager struct {
 	networkID uint64
 
@@ -91,6 +93,8 @@ type ProtocolManager struct {
 	quitSync    chan struct{}
 	noMorePeers chan struct{}
 
+	p2pSignerHandshake P2PSignerHandshake
+
 	// wait group is used for graceful shutdowns during downloading
 	// and processing
 	wg sync.WaitGroup
@@ -98,7 +102,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the Ethereum network.
-func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database) (*ProtocolManager, error) {
+func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, p2pSignerHandshake P2PSignerHandshake) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -178,6 +182,8 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 		return manager.blockchain.InsertChain(blocks)
 	}
 	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, heighter, inserter, manager.removePeer)
+
+	manager.p2pSignerHandshake = p2pSignerHandshake
 
 	return manager, nil
 }
@@ -322,6 +328,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 // handleMsg is invoked whenever an inbound message is received from a remote
 // peer. The remote connection is torn down upon returning any error.
 func (pm *ProtocolManager) handleMsg(p *peer) error {
+
 	// Read the next message from the remote peer, and ensure it's fully consumed
 	msg, err := p.rw.ReadMsg()
 	if err != nil {
@@ -690,22 +697,20 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 	// TODO: fix this.
 	case msg.Code == NewSignerMsg:
-
-		// if e, ok := engine.(consensus.Engine1); ok {
-		// 	_ = e
-
-		// 	// TODO: fix this, check if this peer is a signer, if true, register him to committee.
-		// 	// isSigner, err := engine.IsSigner(pm.blockchain, p.Peer.address, number)
-		// }
-
-		// register peer as signer.
+		// handshake
 		// send NewSignerMsg too.
-		if err := pm.peers.RegisterSigner(p); err != nil {
-			return errors.New("registering peer as signer failed")
+		// register peer as signer.
+		log.Debug("################## received NewSignerMsg ################")
+		var signerAddress common.Address
+
+		if err := msg.Decode(&signerAddress); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
-		if err := p.SendNewSignerMsg(); err != nil {
-			return errors.New("sending NewSignerMsg to peer failed")
+		if err := pm.p2pSignerHandshake(p, signerAddress); err != nil {
+			log.Info("handshake err", "err", err)
+			return err
 		}
+
 	case msg.Code == NewBlockGeneratedMsg:
 		// sign the block.
 		// send the signed header with NewSignedHeaderMsg.
@@ -737,6 +742,18 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		peers = pm.peers.AllPeers()
 		log.Debug("got all peers.")
 	}
+
+	// // TODO: this is wrong, delete this.
+	// // add peer
+	// addr := common.HexToAddress("0xE94B7b6C5A0e526A4D97f9768AD6097bdE25c62a")
+	// // addr := s.etherbase
+	// peer := pm.peers.APeers()
+	// if peer != nil {
+	// 	if err := peer.SendNewSignerMsg(addr); err != nil {
+	// 		log.Info("err when send SendNewSignerMsg", "err", err)
+	// 	}
+	// }
+	// // TODO: this is wrong, delete this.
 
 	log.Debug("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
 
@@ -800,6 +817,7 @@ func (pm *ProtocolManager) minedBroadcastLoop() {
 			pm.BroadcastBlock(ev.Block, false) // Only then announce to the rest
 		}
 	}
+
 }
 
 func (pm *ProtocolManager) txBroadcastLoop() {

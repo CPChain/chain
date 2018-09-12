@@ -179,7 +179,12 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
 
-	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb); err != nil {
+	// TODO: fix this.
+	p2pSignerHandshaker := func(p *peer, address common.Address) error {
+		return eth.SignerHandShake(p, address)
+	}
+
+	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, p2pSignerHandshaker); err != nil {
 		return nil, err
 	}
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
@@ -193,6 +198,34 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
 	return eth, nil
+}
+
+// SignerHandShake handshakes with remote signer.
+func (s *Ethereum) SignerHandShake(p *peer, address common.Address) error {
+	e, ok := s.engine.(consensus.Engine1)
+	if !ok {
+		return errors.New("bad engine")
+	}
+
+	isSigner, err := e.IsSigner(s.protocolManager.blockchain, address, s.blockchain.CurrentHeader().Number.Uint64())
+	if !isSigner {
+		return errors.New("not signer")
+	}
+	if err != nil {
+		return errors.New("isSigner failed")
+	}
+
+	// send NewSignerMsg too.
+	log.Debug("################## resending NewSignerMsg ################")
+	if err := p.SendNewSignerMsg(s.etherbase); err != nil {
+		return errors.New("sending NewSignerMsg to peer failed")
+	}
+
+	// register peer as signer.
+	if err := s.protocolManager.peers.RegisterSigner(p); err != nil {
+		return errors.New("registering peer as signer failed")
+	}
+	return nil
 }
 
 func makeExtraData(extra []byte) []byte {
@@ -431,6 +464,7 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	if s.lesServer != nil {
 		s.lesServer.Start(srvr)
 	}
+
 	return nil
 }
 
