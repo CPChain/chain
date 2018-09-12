@@ -151,6 +151,9 @@ func (n *Node) Start() error {
 	// discovery databases.
 	n.serverConfig = n.config.P2P
 	n.serverConfig.PrivateKey = n.config.NodeKey()
+
+	n.serverConfig.RsaPrivateKey, n.serverConfig.RsaPublicKey, _ = n.config.RsaKey()
+
 	n.serverConfig.Name = n.config.NodeName()
 	n.serverConfig.Logger = n.log
 	if n.serverConfig.StaticNodes == nil {
