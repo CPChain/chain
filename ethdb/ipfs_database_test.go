@@ -4,7 +4,10 @@ import (
 	"testing"
 )
 
-const testDbWrongURL = "localhost:5002"
+const (
+	testDbWrongURL  = "localhost:5002"
+	unexistIpfsAddr = "QmPam2fqFP7eTmnUJn2BX1GSBXpVZ5zqDpVjWQ3T88AEd3"
+)
 
 var normalContent = []byte("this is a placeholder for private tx payload.")
 
@@ -67,5 +70,32 @@ func TestIpfsDatabase_Get(t *testing.T) {
 	}
 	if v != nil {
 		t.Error("The value should be nil when error occurs.")
+	}
+}
+
+func TestIpfsDatabase_Has(t *testing.T) {
+	db := NewIpfsDbWithAdapter(NewFakeIpfsAdapter())
+
+	key, _ := db.Put([]byte{1, 2, 3, 4, 5, 6, 7, 8})
+	if !db.Has([]byte(key)) {
+		t.Error("The result of Has() should be true when the data to retrieve does exist.")
+	}
+
+	if db.Has([]byte(unexistIpfsAddr)) {
+		t.Error("The result of Has() should be false when the data to retrieve does not exist.")
+	}
+
+}
+
+func TestIpfsDatabase_Discard(t *testing.T) {
+	db := NewIpfsDbWithAdapter(NewFakeIpfsAdapter())
+	key, _ := db.Put([]byte{1, 2, 3, 4, 5, 6, 7, 8})
+
+	if db.Discard(key) != nil {
+		t.Error("Discard should not throw error when the data to discard does exist.")
+	}
+
+	if db.Has(key) {
+		t.Error("The data should not exist after discard.")
 	}
 }

@@ -94,7 +94,7 @@ type Ethereum struct {
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 
-	ipfsDB *ethdb.IpfsDatabase // ipfsDB represents an IPFS database
+	remoteDB ethdb.RemoteDatabase // remoteDB represents an remote distributed database.
 }
 
 func (s *Ethereum) AddLesServer(ls LesServer) {
@@ -120,7 +120,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, genesisErr
 	}
 	log.Info("Initialised chain configuration", "config", chainConfig)
-	ipfsDB := ethdb.NewIpfsDB(config.PrivateTx.IpfsURL)
+	remoteDB := ethdb.NewIpfsDB(config.PrivateTx.IpfsURL)
 
 	eth := &Ethereum{
 		config:         config,
@@ -135,7 +135,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		etherbase:      config.Etherbase,
 		bloomRequests:  make(chan chan *bloombits.Retrieval),
 		bloomIndexer:   NewBloomIndexer(chainDb, params.BloomBitsBlocks),
-		ipfsDB:         ipfsDB,
+		remoteDB:       remoteDB,
 	}
 
 	log.Info("Initialising Ethereum protocol", "versions", ProtocolVersions, "network", config.NetworkId)
@@ -387,7 +387,7 @@ func (s *Ethereum) IsListening() bool                  { return true } // Always
 func (s *Ethereum) EthVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *Ethereum) NetVersion() uint64                 { return s.networkID }
 func (s *Ethereum) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
-func (s *Ethereum) IpfsDB() *ethdb.IpfsDatabase        { return s.ipfsDB }
+func (s *Ethereum) RemoteDB() ethdb.RemoteDatabase     { return s.remoteDB }
 
 // Protocols implements node.Service, returning all the currently configured
 // network protocols to start.

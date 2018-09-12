@@ -1189,7 +1189,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 
 		// Process block using the parent state as reference point.
-		// TODO: Pass a real IPFS database parameter to below function call.
+		// TODO: Pass a real remote database parameter to below function call.
 		receipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, nil, bc.vmConfig)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)

@@ -15,7 +15,7 @@ import (
 
 // Read tx's payload replacement, retrieve encrypted payload from IPFS and decrypt it.
 // Return decrypted payload, a flag indicating if the node has enough permission and error if there is.
-func RetrieveAndDecryptPayload(data []byte, txNonce uint64, ipfsDb *ethdb.IpfsDatabase) (payload []byte, hasPermission bool, error error) {
+func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB ethdb.RemoteDatabase) (payload []byte, hasPermission bool, error error) {
 	replacement := PayloadReplacement{}
 	err := rlp.DecodeBytes(data, &replacement)
 	if err != nil {
@@ -27,7 +27,7 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, ipfsDb *ethdb.IpfsDa
 
 	// Check if the current node is in the participant group by comparing is public key and decrypt with its private
 	// key and return result.
-	sealed := getDataFromIpfs(replacement.TxPayloadUri, ipfsDb)
+	sealed := getDataFromRemote(replacement.TxPayloadUri, remoteDB)
 	sp := SealedPrivatePayload{}
 	err = rlp.DecodeBytes(sealed, &sp)
 	if err != nil {
@@ -46,8 +46,8 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, ipfsDb *ethdb.IpfsDa
 	return []byte{}, false, nil
 }
 
-func getDataFromIpfs(ipfsAddress []byte, ipfsDb *ethdb.IpfsDatabase) []byte {
-	content, err := ipfsDb.Get(ipfsAddress)
+func getDataFromRemote(ipfsAddress []byte, remoteDB ethdb.RemoteDatabase) []byte {
+	content, err := remoteDB.Get(ipfsAddress)
 	if err != nil {
 		return []byte{}
 	}
