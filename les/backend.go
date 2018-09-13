@@ -43,6 +43,7 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discv5"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/private"
 	rpc "github.com/ethereum/go-ethereum/rpc"
 )
 
@@ -95,7 +96,17 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 	peers := newPeerSet()
 	quitSync := make(chan struct{})
 
-	remoteDB := ethdb.NewIpfsDB(config.PrivateTx.IpfsURL)
+	// TODO: think about how to use remote database in light-weight client.
+	var remoteDB ethdb.RemoteDatabase
+	switch config.PrivateTx.RemoteDBType {
+	case private.IPFS:
+		remoteDB = ethdb.NewIpfsDB(config.PrivateTx.RemoteDBParams)
+	case private.Swarm:
+		// TODO: implement it
+		panic("implement it.")
+	default:
+		remoteDB = ethdb.NewIpfsDB(private.DefaultIpfsUrl)
+	}
 
 	leth := &LightEthereum{
 		config:           config,

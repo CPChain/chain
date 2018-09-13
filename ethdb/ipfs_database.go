@@ -2,19 +2,18 @@ package ethdb
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"io"
 	"io/ioutil"
-
-	"crypto/sha256"
-
 	"sync"
-
 	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ipfs/go-ipfs-api"
 	"github.com/pkg/errors"
 )
+
+const ipfsTimeout = 3
 
 // IpfsAdapter represents an adapter for IPFS access.
 // It also makes a room for weaving fake IPFS in unit test.
@@ -39,7 +38,7 @@ type IpfsDatabase struct {
 func NewIpfsDB(url string) *IpfsDatabase {
 	s := shell.NewShell(url)
 	// In our case, the retrieving of data from IPFS should be fast, otherwise we regard it as 'not exist'.
-	s.SetTimeout(5 * time.Second)
+	s.SetTimeout(ipfsTimeout * time.Second)
 	return NewIpfsDbWithAdapter(IpfsAdapter(s))
 }
 
@@ -60,8 +59,8 @@ func (db *IpfsDatabase) Get(key []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer reader.Close()
+
 	return ioutil.ReadAll(reader)
 }
 
