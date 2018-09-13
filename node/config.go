@@ -265,6 +265,13 @@ var isOldGethResource = map[string]bool{
 	"trusted-nodes.json": true,
 }
 
+func (c *Config) rsaDir() string {
+	if c.DataDir == "" {
+		return ""
+	}
+	return filepath.Join(c.DataDir, datadirDefaultRsa)
+}
+
 // resolvePath resolves path in the instance directory.
 func (c *Config) resolvePath(path string) string {
 	if filepath.IsAbs(path) {
@@ -334,7 +341,7 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 }
 
 func (c *Config) RsaKey() ([]byte, []byte, error) {
-	rsadir := filepath.Join(c.DataDir, datadirDefaultRsa)
+	rsadir := c.rsaDir()
 	if err := os.MkdirAll(rsadir, 0700); err != nil {
 		return nil, nil, err
 	}
