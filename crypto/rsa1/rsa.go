@@ -1,4 +1,4 @@
-package utils
+package rsa1
 
 import (
 	"crypto/rand"
@@ -9,29 +9,12 @@ import (
 	"os"
 )
 
-func RsaEncrypt(origData []byte, publicKey []byte) ([]byte, error) {
-	block, _ := pem.Decode(publicKey)
-	if block == nil {
-		return nil, errors.New("public key error")
-	}
-	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-	pub := pubInterface.(*rsa.PublicKey)
-	return rsa.EncryptPKCS1v15(rand.Reader, pub, origData)
+func RsaEncrypt(origData []byte, publicKey *rsa.PublicKey) ([]byte, error) {
+	return rsa.EncryptPKCS1v15(rand.Reader, publicKey, origData)
 }
 
-func RsaDecrypt(cipherText []byte, privateKey []byte) ([]byte, error) {
-	block, _ := pem.Decode(privateKey)
-	if block == nil {
-		return nil, errors.New("private key error")
-	}
-	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-	return rsa.DecryptPKCS1v15(rand.Reader, priv, cipherText)
+func RsaDecrypt(cipherText []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
+	return rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherText)
 }
 
 func GenerateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {
@@ -49,6 +32,7 @@ func GenerateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	err = pem.Encode(file, block)
 	if err != nil {
 		return err
@@ -67,18 +51,39 @@ func GenerateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	err = pem.Encode(file, block)
 	return err
 }
 
-func LoadRsaKey(pubPath, priPath string) ([]byte, []byte, error) {
+func LoadRsaKey(pubPath, priPath string) (*rsa.PublicKey, *rsa.PrivateKey, error) {
 	pub, pubErr := LoadFile(pubPath)
 	if pubErr != nil {
 		return nil, nil, errors.New("load public key file [" + pubPath + "] failed")
 	}
+	block, _ := pem.Decode(pub)
+	if block == nil {
+		return nil, nil, errors.New("decode public key error")
+	}
+	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pubKey := pubInterface.(*rsa.PublicKey)
+
 	pri, priErr := LoadFile(priPath)
 	if priErr != nil {
 		return nil, nil, errors.New("load private key file [" + priPath + "] failed")
 	}
-	return pub, pri, nil
+	priBlock, _ := pem.Decode(pri)
+	if block == nil {
+		return nil, nil, errors.New("private key error")
+	}
+	privKey, err := x509.ParsePKCS1PrivateKey(priBlock.Bytes)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return pubKey, privKey, nil
 }
