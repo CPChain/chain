@@ -25,6 +25,8 @@ import (
 	"sync"
 	"time"
 
+	"crypto/rsa"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/event"
@@ -141,6 +143,12 @@ type Config struct {
 
 	// Logger is a custom logger to use with the p2p.Server.
 	Logger log.Logger `toml:",omitempty"`
+
+	//Rsa private key
+	RsaPrivateKey *rsa.PrivateKey
+
+	//Rsa public key
+	RsaPublicKey *rsa.PublicKey
 }
 
 // Server manages all peer connections.

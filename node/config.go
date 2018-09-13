@@ -25,19 +25,24 @@ import (
 	"runtime"
 	"strings"
 
+	"crypto/rsa"
+
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/rsa1"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/pkg/errors"
 )
 
 const (
 	datadirPrivateKey      = "nodekey"            // Path within the datadir to the node's private key
 	datadirDefaultKeyStore = "keystore"           // Path within the datadir to the keystore
+	datadirDefaultRsa      = "rsa"                // Path within the datadir to the rsa key
 	datadirStaticNodes     = "static-nodes.json"  // Path within the datadir to the static node list
 	datadirTrustedNodes    = "trusted-nodes.json" // Path within the datadir to the trusted node list
 	datadirNodeDatabase    = "nodes"              // Path within the datadir to store the node infos
@@ -262,6 +267,13 @@ var isOldGethResource = map[string]bool{
 	"trusted-nodes.json": true,
 }
 
+func (c *Config) rsaDir() string {
+	if c.DataDir == "" {
+		return ""
+	}
+	return filepath.Join(c.DataDir, datadirDefaultRsa)
+}
+
 // resolvePath resolves path in the instance directory.
 func (c *Config) resolvePath(path string) string {
 	if filepath.IsAbs(path) {
@@ -328,6 +340,32 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 		log.Error(fmt.Sprintf("Failed to persist node key: %v", err))
 	}
 	return key
+}
+
+func (c *Config) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, error) {
+	rsadir := c.rsaDir()
+	if err := os.MkdirAll(rsadir, 0700); err != nil {
+		return nil, nil, err
+	}
+
+	// Load RSA key
+	rsaPubPath := filepath.Join(c.DataDir, datadirDefaultRsa, "rsa_pub.pem")
+	rsaPriPath := filepath.Join(c.DataDir, datadirDefaultRsa, "rsa_pri.pem")
+	if pub, pri, err := rsa1.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+		return pub, pri, nil
+	}
+	// No persistent key found, generate and store a new one.
+	log.Info(fmt.Sprintf("file not found.rsaPubPath:%v,rsaPriPath:%v", rsaPubPath, rsaPriPath))
+	err := rsa1.GenerateRsaKey(rsaPubPath, rsaPriPath, 2048)
+	if err != nil {
+		log.Error(fmt.Sprintf("Failed to persist rsa key: %v", err))
+		return nil, nil, err
+	}
+	if pub, pri, err := rsa1.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+		return pub, pri, nil
+	}
+	log.Error(fmt.Sprintf("load rsa key fail:%v", err))
+	return nil, nil, errors.New("load rsa key fail")
 }
 
 // StaticNodes returns a list of node enode URLs configured as static nodes.
