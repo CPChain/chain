@@ -96,6 +96,7 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 	peers := newPeerSet()
 	quitSync := make(chan struct{})
 
+	// TODO: think about how to use remote database in light-weight client.
 	var remoteDB ethdb.RemoteDatabase
 	switch config.PrivateTx.RemoteDBType {
 	case private.IPFS:
