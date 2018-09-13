@@ -743,18 +743,6 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		log.Debug("got all peers.")
 	}
 
-	// // TODO: this is wrong, delete this.
-	// // add peer
-	// addr := common.HexToAddress("0xE94B7b6C5A0e526A4D97f9768AD6097bdE25c62a")
-	// // addr := s.etherbase
-	// peer := pm.peers.APeers()
-	// if peer != nil {
-	// 	if err := peer.SendNewSignerMsg(addr); err != nil {
-	// 		log.Info("err when send SendNewSignerMsg", "err", err)
-	// 	}
-	// }
-	// // TODO: this is wrong, delete this.
-
 	log.Debug("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
 
 	// If propagation is requested, send to a subset of the peer

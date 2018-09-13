@@ -55,9 +55,11 @@ const (
 	// above some healthy uncle limit, so use that.
 	maxQueuedAnns = 4
 
-	maxQueuedWaits    = 21
-	maxQueuedWaitAnns = 21
-	maxQueuedSigs     = 21
+	maxKnownPendingBlocks = 21
+
+	maxQueuedPendingBlocks      = 8
+	maxQueuedPendingBlockHashes = 8
+	maxQueuedSigs               = 8
 
 	handshakeTimeout = 5 * time.Second
 )
@@ -92,15 +94,15 @@ type peer struct {
 	knownTxs    *set.Set // Set of transaction hashes known to be known by this peer
 	knownBlocks *set.Set // Set of block hashes known to be known by this peer
 
-	knownWaitBlocks *set.Set // Set of waiting block hashes known to be known by this peer
+	knownPendingBlocks *set.Set // Set of waiting block hashes known to be known by this peer
 
 	queuedTxs   chan []*types.Transaction // Queue of transactions to broadcast to the peer
 	queuedProps chan *propEvent           // Queue of blocks to broadcast to the peer
 	queuedAnns  chan *types.Block         // Queue of blocks to announce to the peer
 
-	queuedWaits    chan *types.Block  // Queue of blocks to broadcast to the signer
-	queuedWaitAnns chan *types.Block  // Queue of blocks to announce to the signer
-	queuedSigs     chan *types.Header // Queue of signatures to broadcast to the signer
+	queuedPendingBlocks      chan *types.Block  // Queue of blocks to broadcast to the signer
+	queuedPendingBlockHashes chan *types.Block  // Queue of blocks to announce to the signer
+	queuedSigs               chan *types.Header // Queue of signatures to broadcast to the signer
 
 	term chan struct{} // Termination channel to stop the broadcaster
 }
@@ -114,15 +116,15 @@ func newPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) *peer {
 		knownTxs:    set.New(),
 		knownBlocks: set.New(),
 
-		knownWaitBlocks: set.New(),
+		knownPendingBlocks: set.New(),
 
 		queuedTxs:   make(chan []*types.Transaction, maxQueuedTxs),
 		queuedProps: make(chan *propEvent, maxQueuedProps),
 		queuedAnns:  make(chan *types.Block, maxQueuedAnns),
 
-		queuedWaits:    make(chan *types.Block, maxQueuedWaits),
-		queuedWaitAnns: make(chan *types.Block, maxQueuedWaitAnns),
-		queuedSigs:     make(chan *types.Header, maxQueuedSigs),
+		queuedPendingBlocks:      make(chan *types.Block, maxQueuedPendingBlocks),
+		queuedPendingBlockHashes: make(chan *types.Block, maxQueuedPendingBlockHashes),
+		queuedSigs:               make(chan *types.Header, maxQueuedSigs),
 
 		term: make(chan struct{}),
 	}
@@ -164,18 +166,21 @@ func (p *peer) broadcast() {
 func (p *peer) signerBroadcast() {
 	for {
 		select {
-		case prop := <-p.queuedWaits:
-			if err := p.SendNewWait(prop); err != nil {
+		// blocks waiting for signatures
+		case block := <-p.queuedPendingBlocks:
+			if err := p.SendNewPendingBlock(block); err != nil {
 				return
 			}
-			p.Log().Trace("Propagated generated block", "number", prop.Number(), "hash", prop.Hash())
+			p.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
 
-		case block := <-p.queuedWaitAnns:
-			if err := p.SendNewWaitHashes([]common.Hash{block.Hash()}, []uint64{block.NumberU64()}); err != nil {
+		//	send block hashes
+		case block := <-p.queuedPendingBlockHashes:
+			if err := p.SendNewPendingBlockHashes([]common.Hash{block.Hash()}, []uint64{block.NumberU64()}); err != nil {
 				return
 			}
 			p.Log().Trace("Announced generated block", "number", block.Number(), "hash", block.Hash())
 
+		// send signatures only
 		case header := <-p.queuedSigs:
 			if err := p.SendNewSignedHeader(header); err != nil {
 				return
@@ -192,16 +197,19 @@ func (p *peer) SendNewSignerMsg(eb common.Address) error {
 	return p2p.Send(p.rw, NewSignerMsg, eb)
 }
 
-// SendNewWait sends new generated block, waiting for signatures.
-func (p *peer) SendNewWait(block *types.Block) error {
-	p.knownWaitBlocks.Add(block.Hash())
-	return p2p.Send(p.rw, NewBlockGeneratedMsg, []interface{}{block})
+// SendNewPendingBlocks sends new generated block, waiting for signatures.
+func (p *peer) SendNewPendingBlock(block *types.Block) error {
+	err := p2p.Send(p.rw, NewBlockGeneratedMsg, []interface{}{block})
+	if err == nil {
+		p.MarkPendingBlock(block.Hash())
+	}
+	return err
 }
 
-func (p *peer) AsyncSendNewWait(block *types.Block) {
+func (p *peer) AsyncSendNewPendingBlock(block *types.Block) {
 	select {
-	case p.queuedWaits <- block:
-		p.knownWaitBlocks.Add(block.Hash())
+	case p.queuedPendingBlocks <- block:
+		p.MarkPendingBlock(block.Hash())
 	default:
 		p.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	}
@@ -209,22 +217,26 @@ func (p *peer) AsyncSendNewWait(block *types.Block) {
 
 // SendNewWaitHashes announces the availability of a number of blocks waiting for signatures through
 // a hash notification.
-func (p *peer) SendNewWaitHashes(hashes []common.Hash, numbers []uint64) error {
-	for _, hash := range hashes {
-		p.knownWaitBlocks.Add(hash)
-	}
+func (p *peer) SendNewPendingBlockHashes(hashes []common.Hash, numbers []uint64) error {
 	request := make(newBlockHashesData, len(hashes))
 	for i := 0; i < len(hashes); i++ {
 		request[i].Hash = hashes[i]
 		request[i].Number = numbers[i]
 	}
-	return p2p.Send(p.rw, NewBlockGeneratedHashesMsg, request)
+
+	err := p2p.Send(p.rw, NewBlockGeneratedHashesMsg, request)
+	if err == nil {
+		for _, hash := range hashes {
+			p.MarkPendingBlock(hash)
+		}
+	}
+	return err
 }
 
-func (p *peer) AsyncSendNewWaitAnns(block *types.Block) {
+func (p *peer) AsyncSendNewPendingBlockHashes(block *types.Block) {
 	select {
-	case p.queuedWaitAnns <- block:
-		p.knownWaitBlocks.Add(block.Hash())
+	case p.queuedPendingBlockHashes <- block:
+		p.MarkPendingBlock(block.Hash())
 	default:
 		p.Log().Debug("Dropping block announcement", "number", block.NumberU64(), "hash", block.Hash())
 	}
@@ -232,14 +244,17 @@ func (p *peer) AsyncSendNewWaitAnns(block *types.Block) {
 
 // SendNewSignedHeader sends new signed block header.
 func (p *peer) SendNewSignedHeader(header *types.Header) error {
-	p.knownWaitBlocks.Add(header.Hash())
-	return p2p.Send(p.rw, NewSignedHeaderMsg, []interface{}{header})
+	err := p2p.Send(p.rw, NewSignedHeaderMsg, []interface{}{header})
+	if err == nil {
+		p.MarkPendingBlock(header.Hash())
+	}
+	return err
 }
 
 func (p *peer) AsyncSendNewSignedHeader(header *types.Header) {
 	select {
 	case p.queuedSigs <- header:
-		p.knownWaitBlocks.Add(header.Hash())
+		p.MarkPendingBlock(header.Hash())
 	default:
 		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
 	}
@@ -288,6 +303,16 @@ func (p *peer) MarkBlock(hash common.Hash) {
 		p.knownBlocks.Pop()
 	}
 	p.knownBlocks.Add(hash)
+}
+
+// MarkPendingBlock marks a block as known for the signer, ensuring that the block will
+// never be propagated to this particular peer.
+func (p *peer) MarkPendingBlock(hash common.Hash) {
+	// If we reached the memory allowance, drop a previously known block hash
+	for p.knownPendingBlocks.Size() >= maxKnownPendingBlocks {
+		p.knownPendingBlocks.Pop()
+	}
+	p.knownPendingBlocks.Add(hash)
 }
 
 // MarkTransaction marks a transaction as known for the peer, ensuring that it
@@ -546,9 +571,6 @@ func (ps *peerSet) RegisterSigner(p *peer) error {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	// if !ps.isSigner(p) {
-	// return errors.New("Not Signer")
-	// }
 	if ps.closed {
 		return errClosed
 	}
@@ -576,11 +598,6 @@ func (ps *peerSet) UnregisterSigner(id string) error {
 
 	return nil
 }
-
-// func (ps *peerSet) isSigner(p *peer) bool {
-// TODO: fix this.
-// return true
-// }
 
 // Unregister removes a remote peer from the active set, disabling any further
 // actions to/from that particular entity.
@@ -638,13 +655,13 @@ func (ps *peerSet) PeersWithoutBlock(hash common.Hash) []*peer {
 
 // PeersWithoutWaitBlock retrieves a list of peers that do not have a given block in
 // their set of known hashes.
-func (ps *peerSet) PeersWithoutWaitBlock(hash common.Hash) []*peer {
+func (ps *peerSet) PeersWithoutPendingBlock(hash common.Hash) []*peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 
 	list := make([]*peer, 0, len(ps.committee))
 	for _, p := range ps.committee {
-		if !p.knownWaitBlocks.Has(hash) {
+		if !p.knownPendingBlocks.Has(hash) {
 			list = append(list, p)
 		}
 	}
@@ -673,17 +690,6 @@ func (ps *peerSet) AllPeers() []*peer {
 		list = append(list, p)
 	}
 	return list
-}
-
-// APeers retrieves a list of peers.
-func (ps *peerSet) APeers() *peer {
-	ps.lock.RLock()
-	defer ps.lock.RUnlock()
-
-	for _, peer := range ps.peers {
-		return peer
-	}
-	return nil
 }
 
 // PeersWithoutTx retrieves a list of peers that do not have a given transaction
