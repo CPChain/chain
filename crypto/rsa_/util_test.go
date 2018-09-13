@@ -1,4 +1,4 @@
-package rsa1
+package rsa_
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestLoadFile(t *testing.T) {
-	bytes, err := LoadFile("/tmp/notexist")
+	bytes, err := LoadFile("/_30mbkeaetmp/notexist")
 	assert.Nil(t, bytes)
 	assert.NotNil(t, err)
 }
