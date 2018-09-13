@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const IpfsTimeout = 3
+const ipfsTimeout = 3
 
 // IpfsAdapter represents an adapter for IPFS access.
 // It also makes a room for weaving fake IPFS in unit test.
@@ -38,7 +38,7 @@ type IpfsDatabase struct {
 func NewIpfsDB(url string) *IpfsDatabase {
 	s := shell.NewShell(url)
 	// In our case, the retrieving of data from IPFS should be fast, otherwise we regard it as 'not exist'.
-	s.SetTimeout(IpfsTimeout * time.Second)
+	s.SetTimeout(ipfsTimeout * time.Second)
 	return NewIpfsDbWithAdapter(IpfsAdapter(s))
 }
 
