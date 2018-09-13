@@ -32,7 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/rsa1"
+	"github.com/ethereum/go-ethereum/crypto/rsa_"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -351,17 +351,17 @@ func (c *Config) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, error) {
 	// Load RSA key
 	rsaPubPath := filepath.Join(c.DataDir, datadirDefaultRsa, "rsa_pub.pem")
 	rsaPriPath := filepath.Join(c.DataDir, datadirDefaultRsa, "rsa_pri.pem")
-	if pub, pri, err := rsa1.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+	if pub, pri, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
 		return pub, pri, nil
 	}
 	// No persistent key found, generate and store a new one.
 	log.Info(fmt.Sprintf("file not found.rsaPubPath:%v,rsaPriPath:%v", rsaPubPath, rsaPriPath))
-	err := rsa1.GenerateRsaKey(rsaPubPath, rsaPriPath, 2048)
+	err := rsa_.GenerateRsaKey(rsaPubPath, rsaPriPath, 2048)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to persist rsa key: %v", err))
 		return nil, nil, err
 	}
-	if pub, pri, err := rsa1.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+	if pub, pri, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
 		return pub, pri, nil
 	}
 	log.Error(fmt.Sprintf("load rsa key fail:%v", err))
