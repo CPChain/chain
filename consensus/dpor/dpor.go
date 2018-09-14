@@ -51,12 +51,17 @@ type Dpor struct {
 
 	signer common.Address // Ethereum address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
-	lock   sync.RWMutex   // Protects the signer fields
+
+	overlayCallback OverlayCallback
+
+	lock sync.RWMutex // Protects the signer fields
 }
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
 func New(config *params.DporConfig, db ethdb.Database) *Dpor {
+	// func New(config *params.DporConfig, db ethdb.Database, overlayCallback OverlayCallback) *Dpor {
+
 	// Set any missing consensus parameters to their defaults
 	conf := *config
 	if conf.Epoch == 0 {
@@ -75,5 +80,6 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 		recents:      recents,
 		signatures:   signatures,
 		signedBlocks: signedBlocks,
+		// overlayCallback: overlayCallback,
 	}
 }

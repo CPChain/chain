@@ -30,6 +30,11 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
+const (
+	// EpochGapBetweenElectionAndMining is the the epoch gap between election and mining.
+	EpochGapBetweenElectionAndMining = 1
+)
+
 var (
 	errSignerNotInCommittee = errors.New("signer not in committee")
 	errGenesisBlockNumber   = errors.New("Genesis block has no leader")
@@ -63,9 +68,10 @@ type DporSnapshot struct {
 	Number uint64      `json:"number"` // Block number where the Snapshot was created
 	Hash   common.Hash `json:"hash"`   // Block hash where the Snapshot was created
 
-	Signers    []common.Address          `json:"signers"`    // Set of authorized signers at this moment
-	Candidates []common.Address          `json:"candidates"` // Set of candidates read from campaign contract
-	Recents    map[uint64]common.Address `json:"recents"`    // Set of recent signers for spam protections
+	Signers       []common.Address          `json:"signers"`       // Set of authorized signers at this moment
+	FutureSigners []common.Address          `json:"futureSigners"` // Set of future signers
+	Candidates    []common.Address          `json:"candidates"`    // Set of candidates read from campaign contract
+	Recents       map[uint64]common.Address `json:"recents"`       // Set of recent signers for spam protections
 }
 
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
@@ -73,12 +79,13 @@ type DporSnapshot struct {
 // the genesis block.
 func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
 	snap := &DporSnapshot{
-		config:   config,
-		sigcache: sigcache,
-		Number:   number,
-		Hash:     hash,
-		Signers:  make([]common.Address, config.Epoch),
-		Recents:  make(map[uint64]common.Address),
+		config:        config,
+		sigcache:      sigcache,
+		Number:        number,
+		Hash:          hash,
+		Signers:       make([]common.Address, config.Epoch),
+		FutureSigners: make([]common.Address, config.Epoch),
+		Recents:       make(map[uint64]common.Address),
 	}
 	copy(snap.Signers, signers)
 	return snap
@@ -112,15 +119,17 @@ func (s *DporSnapshot) store(db ethdb.Database) error {
 // copy creates a deep copy of the Snapshot, though not the individual votes.
 func (s *DporSnapshot) copy() *DporSnapshot {
 	cpy := &DporSnapshot{
-		config:     s.config,
-		sigcache:   s.sigcache,
-		Number:     s.Number,
-		Hash:       s.Hash,
-		Signers:    make([]common.Address, s.config.Epoch),
-		Candidates: make([]common.Address, len(s.Candidates)),
-		Recents:    make(map[uint64]common.Address),
+		config:        s.config,
+		sigcache:      s.sigcache,
+		Number:        s.Number,
+		Hash:          s.Hash,
+		Signers:       make([]common.Address, s.config.Epoch),
+		FutureSigners: make([]common.Address, s.config.Epoch),
+		Candidates:    make([]common.Address, len(s.Candidates)),
+		Recents:       make(map[uint64]common.Address),
 	}
 	copy(cpy.Signers, s.Signers)
+	copy(cpy.FutureSigners, s.FutureSigners)
 	copy(cpy.Candidates, s.Candidates)
 	for block, signer := range s.Recents {
 		cpy.Recents[block] = signer
@@ -275,4 +284,8 @@ func (s *DporSnapshot) inturn(number uint64, signer common.Address) bool {
 		return false
 	}
 	return ok
+}
+
+func (s *DporSnapshot) isFutureSigner(signer common.Address, number uint64) bool {
+	return false
 }
