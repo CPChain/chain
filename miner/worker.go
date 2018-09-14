@@ -386,7 +386,7 @@ func (self *worker) makeCurrent(parent *types.Block, header *types.Header) error
 		uncles:    set.New(),
 		header:    header,
 		createdAt: time.Now(),
-		remoteDB:  self.chain.GetRemoteDB(),
+		remoteDB:  self.chain.RemoteDB(),
 	}
 
 	// when 08 is processed ancestors contain 07 (quick block)

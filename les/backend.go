@@ -273,7 +273,7 @@ func (s *LightEthereum) Stop() error {
 	return nil
 }
 
-// GetRemoteDB returns an remote database instance.
+// RemoteDB returns an remote database instance.
 func (s *LightEthereum) GetRemoteDB() ethdb.RemoteDatabase {
 	return s.remoteDB
 }

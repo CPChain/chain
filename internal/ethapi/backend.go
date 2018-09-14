@@ -70,7 +70,7 @@ type Backend interface {
 	ChainConfig() *params.ChainConfig
 	CurrentBlock() *types.Block
 
-	RemoteDB() ethdb.RemoteDatabase // GetRemoteDB returns remote database instance.
+	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

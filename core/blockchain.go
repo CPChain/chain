@@ -243,9 +243,9 @@ func (bc *BlockChain) loadLastState() error {
 
 	// Make sure the private state associated with the block is available
 	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
-		//log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
+		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
 		// TODO: use repair instead.
-		//return bc.Reset()
+		return bc.Reset()
 	}
 
 	// Everything seems to be fine, set as the head block
@@ -1635,7 +1635,7 @@ func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscript
 	return bc.scope.Track(bc.logsFeed.Subscribe(ch))
 }
 
-// GetRemoteDB returns remote database if it has, otherwise return nil.
-func (bc *BlockChain) GetRemoteDB() ethdb.RemoteDatabase {
+// RemoteDB returns remote database if it has, otherwise return nil.
+func (bc *BlockChain) RemoteDB() ethdb.RemoteDatabase {
 	return bc.remoteDB
 }
