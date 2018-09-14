@@ -133,7 +133,8 @@ type BlockChain struct {
 	badBlocks              *lru.Cache // Bad block cache
 	waitingSignatureBlocks *lru.Cache // not enough signatures block cache
 
-	privateStateCache state.Database // State database to reuse between imports (contains state cache)
+	privateStateCache state.Database       // State database to reuse between imports (contains state cache)
+	remoteDB          ethdb.RemoteDatabase // Remote database for huge amount data storage
 }
 
 // WaitingSignatureBlocks returns waitingSignatureBlocks
@@ -144,7 +145,7 @@ func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
-func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config) (*BlockChain, error) {
+func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config, remoteDB ethdb.RemoteDatabase) (*BlockChain, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
 			TrieNodeLimit: 256 * 1024 * 1024,
@@ -175,6 +176,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 		badBlocks:              badBlocks,
 		waitingSignatureBlocks: waitingSignatureBlocks,
 		privateStateCache:      state.NewDatabase(db),
+		remoteDB:               remoteDB,
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
@@ -241,9 +243,9 @@ func (bc *BlockChain) loadLastState() error {
 
 	// Make sure the private state associated with the block is available
 	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
-		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
+		//log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
 		// TODO: use repair instead.
-		return bc.Reset()
+		//return bc.Reset()
 	}
 
 	// Everything seems to be fine, set as the head block
@@ -1631,4 +1633,9 @@ func (bc *BlockChain) SubscribeChainSideEvent(ch chan<- ChainSideEvent) event.Su
 // SubscribeLogsEvent registers a subscription of []*types.Log.
 func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscription {
 	return bc.scope.Track(bc.logsFeed.Subscribe(ch))
+}
+
+// GetRemoteDB returns remote database if it has, otherwise return nil.
+func (bc *BlockChain) GetRemoteDB() ethdb.RemoteDatabase {
+	return bc.remoteDB
 }

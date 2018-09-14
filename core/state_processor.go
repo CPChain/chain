@@ -99,21 +99,27 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	context := NewEVMContext(msg, header, bc, author)
 	// Create a new environment which holds all relevant information
 	// about the transaction and calling mechanisms.
-	var evmStateDB *state.StateDB
+	evmStateDB := pubStateDb
 	if (*types.PrivateTransaction)(tx).IsPrivate() {
-		payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
-		if hasPermission {
-			// Replace with the real payload decrypted from IPFS storage.
-			msg.SetData(payload)
+		if remoteDB != nil {
+			payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
+			if hasPermission {
+				// Replace with the real payload decrypted from IPFS storage.
+				msg.SetData(payload)
+				msg.GasPrice().SetUint64(0)
+				evmStateDB = privateStateDb
+			} else {
+				// TODO: investigate more on the replacement logic.
+				// Make the transaction does nothing.
+				msg.SetData([]byte{})
+			}
 		} else {
 			// TODO: investigate more on the replacement logic.
+			// Make the transaction does nothing.
 			msg.SetData([]byte{})
 		}
-
-		evmStateDB = privateStateDb
-	} else {
-		evmStateDB = pubStateDb
 	}
+
 	vmenv := vm.NewEVM(context, evmStateDB, config, cfg)
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
@@ -132,16 +138,25 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 
 	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
 	// based on the eip phase, we're passing wether the root touch-delete accounts.
-	receipt := types.NewReceipt(root, failed, *usedGas)
-	receipt.TxHash = tx.Hash()
-	receipt.GasUsed = gas
-	// if the transaction created a contract, store the creation address in the receipt.
-	if msg.To() == nil {
-		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
+	var receipt *types.Receipt
+	if (*types.PrivateTransaction)(tx).IsPrivate() {
+		// Use a specific receipt to public chain.
+		// TODO: private tx receipt store in another place.
+		receipt := types.NewReceipt(pubStateDb.IntermediateRoot(true).Bytes(), failed, *usedGas)
+		receipt.TxHash = tx.Hash()
+		receipt.GasUsed = 0
+	} else {
+		receipt := types.NewReceipt(root, failed, *usedGas)
+		receipt.TxHash = tx.Hash()
+		receipt.GasUsed = gas
+		// if the transaction created a contract, store the creation address in the receipt.
+		if msg.To() == nil {
+			receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
+		}
+		// Set the receipt logs and create a bloom for filtering
+		receipt.Logs = evmStateDB.GetLogs(tx.Hash())
+		receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 	}
-	// Set the receipt logs and create a bloom for filtering
-	receipt.Logs = evmStateDB.GetLogs(tx.Hash())
-	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
 	return receipt, gas, err
 }
