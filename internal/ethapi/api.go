@@ -1180,8 +1180,9 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 	} else {
 		tx = types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
+
 	isPrivate := len(args.Participants) != 0 && args.Data != nil
-	((*types.PrivateTransaction)(tx)).SetPrivate(isPrivate)
+	tx.SetPrivate(isPrivate)
 
 	return tx
 }

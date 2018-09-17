@@ -74,15 +74,17 @@ type txdataMarshaling struct {
 	S            *hexutil.Big
 }
 
+// TODO: add new parameter 'isPrivate'.
 func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data)
+	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data, false)
 }
 
+// TODO: add new parameter 'isPrivate'.
 func NewContractCreation(nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data)
+	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data, false)
 }
 
-func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
+func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, isPrivate bool) *Transaction {
 	if len(data) > 0 {
 		data = common.CopyBytes(data)
 	}
@@ -96,6 +98,7 @@ func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit 
 		V:            new(big.Int),
 		R:            new(big.Int),
 		S:            new(big.Int),
+		IsPrivate:    isPrivate,
 	}
 	if amount != nil {
 		d.Amount.Set(amount)
@@ -252,6 +255,16 @@ func (tx *Transaction) Cost() *big.Int {
 
 func (tx *Transaction) RawSignatureValues() (*big.Int, *big.Int, *big.Int) {
 	return tx.data.V, tx.data.R, tx.data.S
+}
+
+// IsPrivate checks if the tx is private.
+func (tx *Transaction) IsPrivate() bool {
+	return tx.data.IsPrivate
+}
+
+// SetPrivate sets the tx as private.
+func (tx *Transaction) SetPrivate(isPrivate bool) {
+	tx.data.IsPrivate = isPrivate
 }
 
 // Transactions is a Transaction slice type for basic sorting.

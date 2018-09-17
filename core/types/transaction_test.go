@@ -218,3 +218,17 @@ func TestTransactionJSON(t *testing.T) {
 		}
 	}
 }
+
+// TestTxIsPrivate tests Transaction's SetPrivate() and IsPrivate() functions.
+func TestTxIsPrivate(t *testing.T) {
+	tx := NewTransaction(0, common.HexToAddress("0xb794f5ea0ba39494ce83a213fffba74279579268"), new(big.Int), 0, new(big.Int), nil)
+	tx.SetPrivate(true)
+	if !tx.IsPrivate() {
+		t.Fatal("The IsPrivate state should be true.")
+	}
+
+	tx.SetPrivate(false)
+	if tx.IsPrivate() {
+		t.Fatal("The IsPrivate state should be false.")
+	}
+}

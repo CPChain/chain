@@ -664,7 +664,7 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 		context := core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
 
 		var statedb *state.StateDB
-		if ((*types.PrivateTransaction)(tx)).IsPrivate() {
+		if tx.IsPrivate() {
 			statedb = privStateDB // replace with private database.
 		} else {
 			statedb = pubStateDB

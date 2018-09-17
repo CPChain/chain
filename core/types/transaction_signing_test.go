@@ -156,7 +156,7 @@ func TestSigningPrivateTx(t *testing.T) {
 
 	signer := NewPrivTxSupportEIP155Signer(big.NewInt(42))
 	testTx := NewTransaction(0, addr, new(big.Int), 0, new(big.Int), nil)
-	((*PrivateTransaction)(testTx)).SetPrivate(true)
+	testTx.SetPrivate(true)
 	tx, err := SignTx(testTx, signer, key)
 	if err != nil {
 		t.Fatal(err)

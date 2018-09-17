@@ -85,22 +85,11 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 	return receipts, allLogs, *usedGas, nil
 }
 
-// ApplyTransaction attempts to apply a transaction to the given state database
-// and uses the input parameters for its environment. It returns the receipt
-// for the transaction, gas used and an error if the transaction failed,
-// indicating the block was invalid.
-func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, pubStateDb *state.StateDB, privateStateDb *state.StateDB,
-	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
-	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
-	if err != nil {
-		return nil, 0, err
-	}
-	// Create a new context to be used in the EVM environment
-	context := NewEVMContext(msg, header, bc, author)
-	// Create a new environment which holds all relevant information
-	// about the transaction and calling mechanisms.
+// applyPrivateTx attempts to apply a private transaction to the given state database
+func applyPrivateTx() {
 	evmStateDB := pubStateDb
-	if (*types.PrivateTransaction)(tx).IsPrivate() {
+	if tx.IsPrivate() {
+		// remoteDB being nil means that the node has not the capability to handle private tx, so skip it.
 		if remoteDB != nil {
 			payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
 			if hasPermission {
@@ -119,7 +108,22 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 			msg.SetData([]byte{})
 		}
 	}
+}
 
+// ApplyTransaction attempts to apply a transaction to the given state database
+// and uses the input parameters for its environment. It returns the receipt
+// for the transaction, gas used and an error if the transaction failed,
+// indicating the block was invalid.
+func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, pubStateDb *state.StateDB, privateStateDb *state.StateDB,
+	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
+	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
+	if err != nil {
+		return nil, 0, err
+	}
+	// Create a new context to be used in the EVM environment
+	context := NewEVMContext(msg, header, bc, author)
+	// Create a new environment which holds all relevant information
+	// about the transaction and calling mechanisms.
 	vmenv := vm.NewEVM(context, evmStateDB, config, cfg)
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
