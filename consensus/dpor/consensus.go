@@ -266,7 +266,8 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	}
 
 	if snap.isFutureSigner(d.signer, number) {
-		d.overlayCallback.Callback()
+		// TODO: fix this.
+		// d.overlayCallback.Callback()
 	}
 
 	ok, err := snap.isLeader(d.signer, number)

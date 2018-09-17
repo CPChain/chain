@@ -1,85 +1,47 @@
 package eth
 
 import (
-	"context"
-	"math/big"
-	"reflect"
+	"errors"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/log"
 )
 
-// ContractCaller is used to call the contract with given key and client.
-type ContractCaller struct {
-	key    *keystore.Key
-	client *ethclient.Client
-}
+const (
+	// RSAPubkeyLength is the length of the RSA public key used to encrypt nodeID.
+	RSAPubkeyLength = 512
+)
 
-// NewContractCaller returns a ContractCaller.
-func NewContractCaller(key *keystore.Key, ethClient *ethclient.Client) (*ContractCaller, error) {
-	return &ContractCaller{
-		key:    key,
-		client: ethClient,
-	}, nil
-}
-
-// CheckBalance returns balance of the account.
-func (cc *ContractCaller) CheckBalance(number int64) (uint64, error) {
-	address := cc.key.Address
-	balance, err := cc.client.BalanceAt(context.Background(), address, big.NewInt(number))
-	return balance.Uint64(), err
-}
-
-// NewContract makes a new contract with given newContractFunc.
-func (cc *ContractCaller) NewContract(contract interface{}, newContractFuncName string, contractAddress common.Address) (contractInstance interface{}) {
-	m := reflect.ValueOf(contract).MethodByName(newContractFuncName)
-	in := []reflect.Value{
-		reflect.ValueOf(contractAddress),
-		reflect.ValueOf(cc.client),
-	}
-	contractInstance = m.Call(in)
-	return contractInstance
-}
-
-func (cc *ContractCaller) NewAuth(value uint64, gasLimit uint64) (opts *bind.TransactOpts, err error) {
-	gasPrice, err := cc.client.SuggestGasPrice(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	auth := bind.NewKeyedTransactor(cc.key.PrivateKey)
-	auth.Value = big.NewInt(int64(value))
-	auth.GasLimit = gasLimit
-	auth.GasPrice = gasPrice
-
-	return auth, nil
-}
-
-func (cc *ContractCaller) CallContractFunc(contractInstance interface{}, contractFuncName string, parameters ...interface{}) (callResult interface{}) {
-
-	m := reflect.ValueOf(contractInstance).MethodByName(contractFuncName)
-	in := []reflect.Value{}
-	for _, p := range parameters {
-		in = append(in, reflect.ValueOf(p))
-	}
-	callResult = m.CallSlice(in)
-
-	return callResult
-}
-
+// NodeID is a string of the rawurl of enodeid, an example is
+// "enode://a979fb575495b8d6db44f750317d0f4622bf4c2aa3365d6af7c284339968eef29b69ad0dce72a4d8db5ebb4968de0e3bec910127f134779fbcb0cb6d3331163c@52.16.188.185:30303"
 type NodeID string
-type Pubkey []byte
 
+// Pubkey is a byte array to represents a RSA public key.
+type Pubkey [RSAPubkeyLength]byte
+
+// RemoteSigner represents a remote signer waiting to be connected and communicate with.
 type RemoteSigner struct {
-	pubkey  Pubkey
-	nodeID  NodeID
-	address common.Address
+	viewIdx   uint64
+	pubkey    Pubkey
+	nodeID    NodeID
+	address   common.Address
+	updated   bool // bool to show if i updated my nodeid encrypted with this signer's pubkey to the contract.
+	connected bool // bool to show if i already connected to this signer.
+}
+
+// NewRemoteSigner creates a new NewRemoteSigner with given view idx and address.
+func NewRemoteSigner(viewIdx uint64, address common.Address) *RemoteSigner {
+	return &RemoteSigner{
+		viewIdx:   viewIdx,
+		address:   address,
+		updated:   false,
+		connected: false,
+	}
 }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.
-func (rs *RemoteSigner) fetchPubkey(ethClient *ethclient.Client) (Pubkey, error) {
+func (rs *RemoteSigner) fetchPubkey() (Pubkey, error) {
 	panic("not implemented")
 }
 
@@ -95,7 +57,9 @@ func (rs *RemoteSigner) updateNodeID(nodeID NodeID) error {
 
 // BasicOverlayCallback implements OverlayCallback
 type BasicOverlayCallback struct {
-	*peerSet
+	peers *peerSet
+
+	viewIdx uint64
 
 	ownNodeID  NodeID
 	ownPubkey  Pubkey
@@ -104,42 +68,122 @@ type BasicOverlayCallback struct {
 	remoteSigners []*RemoteSigner
 }
 
-func NewBasicOverlayCallback(peers *peerSet, ownNodeID NodeID, ownPubkey Pubkey, ownAddress common.Address)
+// NewBasicOverlayCallback creates a BasicOverlayCallback instance
+func NewBasicOverlayCallback(peers *peerSet, viewIdx uint64, epochLength uint64, ownNodeID NodeID, ownPubkey Pubkey, ownAddress common.Address) *BasicOverlayCallback {
+	return &BasicOverlayCallback{
+		peers:         peers,
+		viewIdx:       viewIdx,
+		ownNodeID:     ownNodeID,
+		ownPubkey:     ownPubkey,
+		ownAddress:    ownAddress,
+		remoteSigners: make([]*RemoteSigner, epochLength-1),
+	}
+}
+
+// UpdateRemoteSigners updates BasicOverlayCallback's remoteSigners.
+func (oc *BasicOverlayCallback) UpdateRemoteSigners(viewIdx uint64, signers []common.Address) error {
+	oc.viewIdx = viewIdx
+
+	if len(signers) != len(oc.remoteSigners) {
+		return errors.New("error length of signer")
+	}
+	for _, signer := range signers {
+		s := NewRemoteSigner(viewIdx, signer)
+		oc.remoteSigners = append(oc.remoteSigners, s)
+	}
+	return nil
+}
 
 // Callback implements OverlayCallback.Callback
-func (oc *BasicOverlayCallback) Callback(ethClient *ethclient.Client) (err error) {
+func (oc *BasicOverlayCallback) Callback(ethClient *ethclient.Client) {
 
-	// fetchpubkey
-	// oc.FetchPubKey()
+	err := oc.FetchPubKey()
+	if err != nil {
+		log.Warn("error when fetching remote signers' pubkey", "err", "err")
+	}
 
-	// updatenodeid
-	// oc.UpdateNodeID()
+	oc.UpdateNodeID()
+	if err != nil {
+		log.Warn("error when updating self nodeID encrypted with remote signers' pubkey", "err", "err")
+	}
 
-	// fetchnodeid
-	// oc.FetchNodeID()
+	oc.FetchNodeID()
+	if err != nil {
+		log.Warn("error when fetching remote signers' nodeIDs", "err", "err")
+	}
 
-	// dialremote
-	// oc.DialRemote()
-
-	panic("not implemented")
+	oc.DialRemote()
+	if err != nil {
+		log.Warn("error when dialing to remote signers", "err", "err")
+	}
 }
 
 // FetchPubKey implements OverlayCallback.FetchPubKey
-func (oc *BasicOverlayCallback) FetchPubKey(remoteAddress common.Address) (pubkey []byte, err error) {
-	panic("not implemented")
+func (oc *BasicOverlayCallback) FetchPubKey() error {
+
+	for idx, signer := range oc.remoteSigners {
+		if len(signer.pubkey) > 0 {
+			log.Debug("already fetched pubkey of", "address", signer.address)
+			log.Debug("already fetched pubkey ", "pubkey", signer.pubkey)
+			continue
+		}
+		pubkey, err := signer.fetchPubkey()
+		if err != nil {
+			log.Warn("error when fetch pubkey of", "address", signer.address)
+			log.Warn("error when fetch pubkey ", "error", err)
+			continue
+			// return err
+		}
+		oc.remoteSigners[idx].pubkey = pubkey
+		log.Debug("fetched pubkey of", "address", signer.address)
+		log.Debug("fetched pubkey ", "pubkey", signer.pubkey)
+	}
+	return nil
 }
 
 // UpdateNodeID implements OverlayCallback.UpdateNodeID
-func (oc *BasicOverlayCallback) UpdateNodeID(ownNodeID string) error {
-	panic("not implemented")
+func (oc *BasicOverlayCallback) UpdateNodeID() error {
+	for idx, signer := range oc.remoteSigners {
+		if len(signer.pubkey) == 0 {
+			continue
+		}
+		if signer.updated {
+			continue
+		}
+		err := signer.updateNodeID(oc.ownNodeID)
+		if err != nil {
+			log.Warn("error when update self nodeID encrypted with remote signer's public", "address", signer.address)
+			log.Warn("error", "error", err)
+			continue
+			// return err
+		}
+		oc.remoteSigners[idx].updated = true
+	}
+
+	return nil
 }
 
 // FetchNodeID implements OverlayCallback.FetchNodeID
-func (oc *BasicOverlayCallback) FetchNodeID() (remoteNodeID string, err error) {
-	panic("not implemented")
+func (oc *BasicOverlayCallback) FetchNodeID() error {
+	for idx, signer := range oc.remoteSigners {
+		if len(signer.nodeID) > 0 {
+			continue
+		}
+		nodeID, err := signer.fetchNodeID()
+		if err != nil {
+			log.Warn("error when update self nodeID encrypted with remote signer's public", "address", signer.address)
+			log.Warn("error", "error", err)
+			continue
+			// return err
+
+		}
+		oc.remoteSigners[idx].nodeID = nodeID
+	}
+
+	return nil
 }
 
 // DialRemote implements OverlayCallback.DialRemote
-func (oc *BasicOverlayCallback) DialRemote(remoteNodeID string, ownAddress common.Address) (err error) {
+func (oc *BasicOverlayCallback) DialRemote() (err error) {
 	panic("not implemented")
 }

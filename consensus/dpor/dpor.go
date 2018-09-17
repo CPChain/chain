@@ -60,7 +60,6 @@ type Dpor struct {
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
 func New(config *params.DporConfig, db ethdb.Database) *Dpor {
-	// func New(config *params.DporConfig, db ethdb.Database, overlayCallback OverlayCallback) *Dpor {
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config
@@ -82,4 +81,12 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 		signedBlocks: signedBlocks,
 		// overlayCallback: overlayCallback,
 	}
+}
+
+// SetOverlayCallback sets dpor.overlayCallback
+func (d *Dpor) SetOverlayCallback(overlayCallback OverlayCallback) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	d.overlayCallback = overlayCallback
+	return nil
 }

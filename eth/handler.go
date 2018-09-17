@@ -94,6 +94,7 @@ type ProtocolManager struct {
 	noMorePeers chan struct{}
 
 	p2pSignerHandshake P2PSignerHandshake
+	overlayCallback    *BasicOverlayCallback
 
 	// wait group is used for graceful shutdowns during downloading
 	// and processing
@@ -186,6 +187,10 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 	manager.p2pSignerHandshake = p2pSignerHandshake
 
 	return manager, nil
+}
+
+func (pm *ProtocolManager) newOverlayCallback() {
+	// NewBasicOverlayCallback(pm.peers)
 }
 
 func (pm *ProtocolManager) removePeer(id string) {
@@ -283,11 +288,6 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		return err
 	}
 	defer pm.removePeer(p.id)
-
-	// if p.isSigner {
-	// pm.peers.RegisterSigner(p)
-	// defer pm.peers.UnregisterSigner(p.id)
-	// }
 
 	// Register the peer in the downloader. If the downloader considers it banned, we disconnect
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {

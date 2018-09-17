@@ -272,6 +272,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	}
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
+		// TODO: fix this. Liu Qian
 		return dpor.New(chainConfig.Dpor, db)
 	}
 	// Otherwise assume proof-of-work
