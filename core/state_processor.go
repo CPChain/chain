@@ -99,27 +99,21 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	context := NewEVMContext(msg, header, bc, author)
 	// Create a new environment which holds all relevant information
 	// about the transaction and calling mechanisms.
-	evmStateDB := pubStateDb
+	var evmStateDB *state.StateDB
 	if (*types.PrivateTransaction)(tx).IsPrivate() {
-		if remoteDB != nil {
-			payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
-			if hasPermission {
-				// Replace with the real payload decrypted from IPFS storage.
-				msg.SetData(payload)
-				msg.GasPrice().SetUint64(0)
-				evmStateDB = privateStateDb
-			} else {
-				// TODO: investigate more on the replacement logic.
-				// Make the transaction does nothing.
-				msg.SetData([]byte{})
-			}
+		payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
+		if hasPermission {
+			// Replace with the real payload decrypted from IPFS storage.
+			msg.SetData(payload)
 		} else {
 			// TODO: investigate more on the replacement logic.
-			// Make the transaction does nothing.
 			msg.SetData([]byte{})
 		}
-	}
 
+		evmStateDB = privateStateDb
+	} else {
+		evmStateDB = pubStateDb
+	}
 	vmenv := vm.NewEVM(context, evmStateDB, config, cfg)
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
