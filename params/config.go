@@ -84,7 +84,14 @@ var (
 
 	// CpchainChainConfig contains the chain parameters to run a node on the Cpchain network.
 	CpchainChainConfig = &ChainConfig{
-		ChainID: big.NewInt(42),
+		ChainID:        big.NewInt(42),
+		HomesteadBlock: big.NewInt(1),
+		EIP150Block:    big.NewInt(2),
+		EIP150Hash:     common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		EIP155Block:    big.NewInt(3),
+		EIP158Block:    big.NewInt(4),
+		ByzantiumBlock: big.NewInt(0), // Byzantium switch block (nil = no fork, 0 = already on byzantium)
+
 		Dpor: &DporConfig{
 			Period: 3,
 			Epoch:  3,
