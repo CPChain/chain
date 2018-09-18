@@ -342,30 +342,30 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 	return key
 }
 
-func (c *Config) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, error) {
+func (c *Config) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
 	rsadir := c.rsaDir()
 	if err := os.MkdirAll(rsadir, 0700); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	// Load RSA key
 	rsaPubPath := filepath.Join(c.DataDir, datadirDefaultRsa, "rsa_pub.pem")
 	rsaPriPath := filepath.Join(c.DataDir, datadirDefaultRsa, "rsa_pri.pem")
-	if pub, pri, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
-		return pub, pri, nil
+	if pub, pri, pubBytes, priBytes, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+		return pub, pri, pubBytes, priBytes, nil
 	}
 	// No persistent key found, generate and store a new one.
 	log.Info(fmt.Sprintf("file not found.rsaPubPath:%v,rsaPriPath:%v", rsaPubPath, rsaPriPath))
 	err := rsa_.GenerateRsaKey(rsaPubPath, rsaPriPath, 2048)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to persist rsa key: %v", err))
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	if pub, pri, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
-		return pub, pri, nil
+	if pub, pri, pubBytes, priBytes, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+		return pub, pri, pubBytes, priBytes, nil
 	}
 	log.Error(fmt.Sprintf("load rsa key fail:%v", err))
-	return nil, nil, errors.New("load rsa key fail")
+	return nil, nil, nil, nil, errors.New("load rsa key fail")
 }
 
 // StaticNodes returns a list of node enode URLs configured as static nodes.

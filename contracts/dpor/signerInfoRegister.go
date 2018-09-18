@@ -19,10 +19,14 @@ package dpor
 import (
 	"math/big"
 
+	"crypto/rsa"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/contracts/dpor/contract"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto/rsa_"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 //go:generate abigen --sol contract/signerRegister.sol --pkg contract --out contract/signerRegister.go
@@ -60,18 +64,47 @@ func DeploySignerConnectionRegister(transactOpts *bind.TransactOpts, contractBac
 	return contractAddr, register, err
 }
 
-func (self *SignerConnectionRegister) GetPublicKey(addr common.Address) ([]byte, error) {
-	return self.Contract.GetPublicKey(&self.CallOpts, addr)
+func (self *SignerConnectionRegister) GetPublicKey(addr common.Address) (*rsa.PublicKey, error) {
+	publicKeyBytes, err := self.Contract.GetPublicKey(&self.CallOpts, addr)
+	if err != nil {
+		return nil, err
+	}
+	log.Info("address:%v,publicKeyBytes:%v", addr, publicKeyBytes)
+
+	publicKey, err := rsa_.Bytes2PublicKey(publicKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+	return publicKey, err
 }
 
-func (self *SignerConnectionRegister) GetNodeInfo(viewIndex *big.Int, otherAddress common.Address) ([]byte, error) {
-	return self.Contract.GetNodeInfo(&self.CallOpts, viewIndex, otherAddress)
+func (self *SignerConnectionRegister) GetNodeInfo(viewIndex *big.Int, privateKey *rsa.PrivateKey, otherAddress common.Address) (string, error) {
+	encryptedNodeInfoBytesOnChain, err := self.Contract.GetNodeInfo(&self.CallOpts, viewIndex, otherAddress)
+	if err != nil {
+		return "", err
+	}
+	enode, err := rsa_.RsaDecrypt(encryptedNodeInfoBytesOnChain, privateKey)
+	if err != nil {
+		return "", err
+	}
+	return string(enode), nil
 }
 
 func (self *SignerConnectionRegister) RegisterPublicKey(rsaPublicKey []byte) (*types.Transaction, error) {
+
 	return self.Contract.RegisterPublicKey(&self.TransactOpts, rsaPublicKey)
 }
 
-func (self *SignerConnectionRegister) AddNodeInfo(viewIndex *big.Int, otherAddress common.Address, encrpytedNodeInfo []byte) (*types.Transaction, error) {
+func (self *SignerConnectionRegister) AddNodeInfo(viewIndex *big.Int, otherAddress common.Address, enode string) (*types.Transaction, error) {
+	//  encrypt nodeInfo with other's RSA public key
+	enodeBytes := []byte(enode)
+	publicKey, err := self.GetPublicKey(otherAddress)
+	if err != nil {
+		return nil, err
+	}
+	encrpytedNodeInfo, err := rsa_.RsaEncrypt(enodeBytes, publicKey)
+	if err != nil {
+		return nil, err
+	}
 	return self.Contract.AddNodeInfo(&self.TransactOpts, viewIndex, otherAddress, encrpytedNodeInfo)
 }

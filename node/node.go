@@ -152,7 +152,7 @@ func (n *Node) Start() error {
 	n.serverConfig = n.config.P2P
 	n.serverConfig.PrivateKey = n.config.NodeKey()
 
-	n.serverConfig.RsaPublicKey, n.serverConfig.RsaPrivateKey, _ = n.config.RsaKey()
+	n.serverConfig.RsaPublicKey, n.serverConfig.RsaPrivateKey, n.serverConfig.RsaPublicKeyBytes, n.serverConfig.RsaPrivateKeyBytes, _ = n.config.RsaKey()
 
 	n.serverConfig.Name = n.config.NodeName()
 	n.serverConfig.Logger = n.log
