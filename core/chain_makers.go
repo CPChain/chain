@@ -38,7 +38,8 @@ type BlockGen struct {
 	chain       []*types.Block
 	chainReader consensus.ChainReader
 	header      *types.Header
-	statedb     *state.StateDB
+	pubStateDB  *state.StateDB
+	privStateDB *state.StateDB
 
 	gasPool  *GasPool
 	txs      []*types.Transaction
@@ -91,9 +92,9 @@ func (b *BlockGen) AddTxWithChain(bc *BlockChain, tx *types.Transaction) {
 	if b.gasPool == nil {
 		b.SetCoinbase(common.Address{})
 	}
-	b.statedb.Prepare(tx.Hash(), common.Hash{}, len(b.txs))
-	// TODO: get correct private stateDB.
-	receipt, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.statedb, nil, nil, b.header, tx, &b.header.GasUsed, vm.Config{})
+	b.pubStateDB.Prepare(tx.Hash(), common.Hash{}, len(b.txs))
+	b.privStateDB.Prepare(tx.Hash(), common.Hash{}, len(b.txs))
+	receipt, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.pubStateDB, b.privStateDB, bc.remoteDB, b.header, tx, &b.header.GasUsed, vm.Config{})
 	if err != nil {
 		panic(err)
 	}
@@ -118,10 +119,10 @@ func (b *BlockGen) AddUncheckedReceipt(receipt *types.Receipt) {
 // TxNonce returns the next valid transaction nonce for the
 // account at addr. It panics if the account does not exist.
 func (b *BlockGen) TxNonce(addr common.Address) uint64 {
-	if !b.statedb.Exist(addr) {
+	if !b.pubStateDB.Exist(addr) {
 		panic("account does not exist")
 	}
-	return b.statedb.GetNonce(addr)
+	return b.pubStateDB.GetNonce(addr)
 }
 
 // AddUncle adds an uncle header to the generated block.
@@ -170,14 +171,14 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		config = params.TestChainConfig
 	}
 	blocks, receipts := make(types.Blocks, n), make([]types.Receipts, n)
-	genblock := func(i int, parent *types.Block, statedb *state.StateDB) (*types.Block, types.Receipts) {
+	genblock := func(i int, parent *types.Block, pubStatedb *state.StateDB, privStateDB *state.StateDB) (*types.Block, types.Receipts) {
 		// TODO(karalabe): This is needed for clique, which depends on multiple blocks.
 		// It's nonetheless ugly to spin up a blockchain here. Get rid of this somehow.
 		blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB)
 		defer blockchain.Stop()
 
-		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, statedb: statedb, config: config, engine: engine}
-		b.header = makeHeader(b.chainReader, parent, statedb, b.engine)
+		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, config: config, engine: engine}
+		b.header = makeHeader(b.chainReader, parent, pubStatedb, b.engine)
 
 		// Mutate the state and block according to any hard-fork specs
 		if daoBlock := config.DAOForkBlock; daoBlock != nil {
@@ -189,7 +190,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 			}
 		}
 		if config.DAOForkSupport && config.DAOForkBlock != nil && config.DAOForkBlock.Cmp(b.header.Number) == 0 {
-			misc.ApplyDAOHardFork(statedb)
+			misc.ApplyDAOHardFork(pubStatedb)
 		}
 		// Execute any user modifications to the block and finalize it
 		if gen != nil {
@@ -197,13 +198,13 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		}
 
 		if b.engine != nil {
-			block, _ := b.engine.Finalize(b.chainReader, b.header, statedb, b.txs, b.uncles, b.receipts)
+			block, _ := b.engine.Finalize(b.chainReader, b.header, pubStatedb, b.txs, b.uncles, b.receipts)
 			// Write state changes to db
-			root, err := statedb.Commit(config.IsEIP158(b.header.Number))
+			root, err := pubStatedb.Commit(config.IsEIP158(b.header.Number))
 			if err != nil {
 				panic(fmt.Sprintf("state write error: %v", err))
 			}
-			if err := statedb.Database().TrieDB().Commit(root, false); err != nil {
+			if err := pubStatedb.Database().TrieDB().Commit(root, false); err != nil {
 				panic(fmt.Sprintf("trie write error: %v", err))
 			}
 			return block, b.receipts
@@ -211,11 +212,15 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		return nil, nil
 	}
 	for i := 0; i < n; i++ {
-		statedb, err := state.New(parent.Root(), state.NewDatabase(db))
+		pubStatedb, err := state.New(parent.Root(), state.NewDatabase(db))
 		if err != nil {
 			panic(err)
 		}
-		block, receipt := genblock(i, parent, statedb)
+		privStateDB, err := state.New(GetPrivateStateRoot(db, parent.Root()), state.NewDatabase(db))
+		if err != nil {
+			panic(err)
+		}
+		block, receipt := genblock(i, parent, pubStatedb, privStateDB)
 		blocks[i] = block
 		receipts[i] = receipt
 		parent = block

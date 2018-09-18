@@ -1173,7 +1173,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			bc.reportBlock(block, nil, err)
 			return i, events, coalescedLogs, err
 		}
-		// Create a new statedb using the parent block and report an
+		// Create a new pubStateDB using the parent block and report an
 		// error if it fails.
 		var parent *types.Block
 		if i == 0 {
@@ -1192,7 +1192,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		// Process block using the parent state as reference point.
 		// TODO: Pass a real remote database parameter to below function call.
-		receipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, nil, bc.vmConfig)
+		receipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB, bc.vmConfig)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)
 			return i, events, coalescedLogs, err

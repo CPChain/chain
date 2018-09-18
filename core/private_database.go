@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 )
@@ -43,5 +44,6 @@ func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db *trie.Da
 	storageReceipt := (*types.ReceiptForStorage)(receipt)
 	bytesToWrite, _ := rlp.EncodeToBytes(storageReceipt)
 	db.InsertBlob(hash, bytesToWrite)
+	log.Info("Write private transaction receipt", "hash", hash, "content", bytesToWrite)
 	return nil
 }

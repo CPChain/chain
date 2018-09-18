@@ -52,7 +52,7 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 }
 
 // Process processes the state changes according to the Ethereum rules by running
-// the transaction messages using the statedb and applying any rewards to both
+// the transaction messages using the pubStateDB and applying any rewards to both
 // the processor (coinbase) and any included uncles.
 //
 // Process returns the receipts and logs accumulated during the process and
@@ -169,6 +169,7 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 	// Replace with the real payload decrypted from IPFS storage.
 	msg.SetData(payload)
 	msg.GasPrice().SetUint64(0)
+	privateStateDb.SetNonce(msg.From(), msg.Nonce())
 
 	// Create a new context to be used in the EVM environment
 	context := NewEVMContext(msg, header, bc, author)
