@@ -314,6 +314,26 @@ func (srv *Server) RemovePeer(node *discover.Node) {
 	}
 }
 
+// AddPeerFromURL connects to a peer with given url.
+func (srv *Server) AddPeerFromURL(rawurl string) error {
+	node, err := discover.ParseNode(rawurl)
+	if err != nil {
+		return err
+	}
+	srv.AddPeer(node)
+	return nil
+}
+
+// RemovePeerFromURL removes a peer with given url.
+func (srv *Server) RemovePeerFromURL(rawurl string) error {
+	node, err := discover.ParseNode(rawurl)
+	if err != nil {
+		return err
+	}
+	srv.RemovePeer(node)
+	return nil
+}
+
 // SubscribePeers subscribes the given channel to peer events
 func (srv *Server) SubscribeEvents(ch chan *PeerEvent) event.Subscription {
 	return srv.peerFeed.Subscribe(ch)

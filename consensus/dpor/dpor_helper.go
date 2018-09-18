@@ -316,6 +316,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 				return err
 			}
 
+			// TODO: fix this. return special error to  post to pm.signedHeaderSub in handler.go. Liu Qian
 		} else {
 			return consensus.ErrNotEnoughSigs
 		}
@@ -330,5 +331,11 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	if !inturn && header.Difficulty.Cmp(diffNoTurn) != 0 {
 		return errInvalidDifficulty
 	}
+
+	if snap.isFutureSigner(dpor.signer, number) {
+		// TODO: fix this.
+		// dpor.overlayHandler.Handle()
+	}
+
 	return nil
 }

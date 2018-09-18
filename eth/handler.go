@@ -87,6 +87,8 @@ type ProtocolManager struct {
 	txsSub        event.Subscription
 	minedBlockSub *event.TypeMuxSubscription
 
+	// TODO: add signedHeaderSub *event.TypeMuxSubscription here. Liu Qian
+
 	// channels for fetcher, syncer, txsyncLoop
 	newPeerCh   chan *peer
 	txsyncCh    chan *txsync
@@ -94,7 +96,7 @@ type ProtocolManager struct {
 	noMorePeers chan struct{}
 
 	p2pSignerHandshake P2PSignerHandshake
-	overlayCallback    *BasicOverlayCallback
+	overlayHandler     *BasicOverlayHandler
 
 	// wait group is used for graceful shutdowns during downloading
 	// and processing
@@ -797,6 +799,8 @@ func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions) {
 
 // Mined broadcast loop
 func (pm *ProtocolManager) minedBroadcastLoop() {
+	// TODO: fix this. just broadcast to my peers.committee. Liu Qian
+
 	// automatically stops if unsubscribe
 	for obj := range pm.minedBlockSub.Chan() {
 		switch ev := obj.Data.(type) {

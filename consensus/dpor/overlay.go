@@ -4,13 +4,13 @@ import "github.com/ethereum/go-ethereum/common"
 
 // overlay network
 
-// OverlayCallback is an interface used to do network building and related thing.
-type OverlayCallback interface {
+// OverlayHandler is an interface used to do network building and related thing.
+type OverlayHandler interface {
 
-	// Callback handles all.
-	Callback()
+	// Handle handles all.
+	Handle()
 
-	// UpdateRemoteSigners updates OverlayCallback's remoteSigners.
+	// UpdateRemoteSigners updates OverlayHandler's remoteSigners.
 	UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error
 
 	// FetchPubKey fetches remote peers' public keys.

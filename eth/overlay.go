@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -55,8 +54,8 @@ func (rs *RemoteSigner) updateNodeID(nodeID NodeID) error {
 	panic("not implemented")
 }
 
-// BasicOverlayCallback implements OverlayCallback
-type BasicOverlayCallback struct {
+// BasicOverlayHandler implements OverlayHandler
+type BasicOverlayHandler struct {
 	peers *peerSet
 
 	epochIdx uint64
@@ -68,9 +67,9 @@ type BasicOverlayCallback struct {
 	remoteSigners []*RemoteSigner
 }
 
-// NewBasicOverlayCallback creates a BasicOverlayCallback instance
-func NewBasicOverlayCallback(peers *peerSet, epochIdx uint64, epochLength uint64, ownNodeID NodeID, ownPubkey Pubkey, ownAddress common.Address) *BasicOverlayCallback {
-	return &BasicOverlayCallback{
+// NewBasicOverlayHandler creates a BasicOverlayHandler instance
+func NewBasicOverlayHandler(peers *peerSet, epochIdx uint64, epochLength uint64, ownNodeID NodeID, ownPubkey Pubkey, ownAddress common.Address) *BasicOverlayHandler {
+	return &BasicOverlayHandler{
 		peers:         peers,
 		epochIdx:      epochIdx,
 		ownNodeID:     ownNodeID,
@@ -80,8 +79,8 @@ func NewBasicOverlayCallback(peers *peerSet, epochIdx uint64, epochLength uint64
 	}
 }
 
-// UpdateRemoteSigners updates BasicOverlayCallback's remoteSigners.
-func (oc *BasicOverlayCallback) UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error {
+// UpdateRemoteSigners updates BasicOverlayHandler's remoteSigners.
+func (oc *BasicOverlayHandler) UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error {
 	oc.epochIdx = epochIdx
 
 	if len(signers) != len(oc.remoteSigners) {
@@ -94,8 +93,8 @@ func (oc *BasicOverlayCallback) UpdateRemoteSigners(epochIdx uint64, signers []c
 	return nil
 }
 
-// Callback implements OverlayCallback.Callback
-func (oc *BasicOverlayCallback) Callback(ethClient *ethclient.Client) {
+// Handle implements OverlayHandler.Handle
+func (oc *BasicOverlayHandler) Handle() {
 
 	// TODO: add lock, go rountine this! Liu Qian
 	err := oc.FetchPubKey()
@@ -119,8 +118,8 @@ func (oc *BasicOverlayCallback) Callback(ethClient *ethclient.Client) {
 	}
 }
 
-// FetchPubKey implements OverlayCallback.FetchPubKey
-func (oc *BasicOverlayCallback) FetchPubKey() error {
+// FetchPubKey implements OverlayHandler.FetchPubKey
+func (oc *BasicOverlayHandler) FetchPubKey() error {
 
 	for idx, signer := range oc.remoteSigners {
 		if len(signer.pubkey) > 0 {
@@ -142,8 +141,8 @@ func (oc *BasicOverlayCallback) FetchPubKey() error {
 	return nil
 }
 
-// UpdateNodeID implements OverlayCallback.UpdateNodeID
-func (oc *BasicOverlayCallback) UpdateNodeID() error {
+// UpdateNodeID implements OverlayHandler.UpdateNodeID
+func (oc *BasicOverlayHandler) UpdateNodeID() error {
 	for idx, signer := range oc.remoteSigners {
 		if len(signer.pubkey) == 0 {
 			continue
@@ -164,8 +163,8 @@ func (oc *BasicOverlayCallback) UpdateNodeID() error {
 	return nil
 }
 
-// FetchNodeID implements OverlayCallback.FetchNodeID
-func (oc *BasicOverlayCallback) FetchNodeID() error {
+// FetchNodeID implements OverlayHandler.FetchNodeID
+func (oc *BasicOverlayHandler) FetchNodeID() error {
 	for idx, signer := range oc.remoteSigners {
 		if len(signer.nodeID) > 0 {
 			continue
@@ -184,7 +183,7 @@ func (oc *BasicOverlayCallback) FetchNodeID() error {
 	return nil
 }
 
-// DialRemote implements OverlayCallback.DialRemote
-func (oc *BasicOverlayCallback) DialRemote() (err error) {
+// DialRemote implements OverlayHandler.DialRemote
+func (oc *BasicOverlayHandler) DialRemote() (err error) {
 	panic("not implemented")
 }
