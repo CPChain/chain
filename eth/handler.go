@@ -190,7 +190,7 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 }
 
 func (pm *ProtocolManager) newOverlayCallback() {
-	// NewBasicOverlayCallback(pm.peers)
+	// TODO: fix this. Liu Qian
 }
 
 func (pm *ProtocolManager) removePeer(id string) {

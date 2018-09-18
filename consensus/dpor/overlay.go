@@ -11,7 +11,7 @@ type OverlayCallback interface {
 	Callback()
 
 	// UpdateRemoteSigners updates OverlayCallback's remoteSigners.
-	UpdateRemoteSigners(viewIdx uint64, signers []common.Address) error
+	UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error
 
 	// FetchPubKey fetches remote peers' public keys.
 	FetchPubKey() error

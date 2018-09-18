@@ -22,7 +22,7 @@ type Pubkey [RSAPubkeyLength]byte
 
 // RemoteSigner represents a remote signer waiting to be connected and communicate with.
 type RemoteSigner struct {
-	viewIdx   uint64
+	epochIdx  uint64
 	pubkey    Pubkey
 	nodeID    NodeID
 	address   common.Address
@@ -31,9 +31,9 @@ type RemoteSigner struct {
 }
 
 // NewRemoteSigner creates a new NewRemoteSigner with given view idx and address.
-func NewRemoteSigner(viewIdx uint64, address common.Address) *RemoteSigner {
+func NewRemoteSigner(epochIdx uint64, address common.Address) *RemoteSigner {
 	return &RemoteSigner{
-		viewIdx:   viewIdx,
+		epochIdx:  epochIdx,
 		address:   address,
 		updated:   false,
 		connected: false,
@@ -59,7 +59,7 @@ func (rs *RemoteSigner) updateNodeID(nodeID NodeID) error {
 type BasicOverlayCallback struct {
 	peers *peerSet
 
-	viewIdx uint64
+	epochIdx uint64
 
 	ownNodeID  NodeID
 	ownPubkey  Pubkey
@@ -69,10 +69,10 @@ type BasicOverlayCallback struct {
 }
 
 // NewBasicOverlayCallback creates a BasicOverlayCallback instance
-func NewBasicOverlayCallback(peers *peerSet, viewIdx uint64, epochLength uint64, ownNodeID NodeID, ownPubkey Pubkey, ownAddress common.Address) *BasicOverlayCallback {
+func NewBasicOverlayCallback(peers *peerSet, epochIdx uint64, epochLength uint64, ownNodeID NodeID, ownPubkey Pubkey, ownAddress common.Address) *BasicOverlayCallback {
 	return &BasicOverlayCallback{
 		peers:         peers,
-		viewIdx:       viewIdx,
+		epochIdx:      epochIdx,
 		ownNodeID:     ownNodeID,
 		ownPubkey:     ownPubkey,
 		ownAddress:    ownAddress,
@@ -81,14 +81,14 @@ func NewBasicOverlayCallback(peers *peerSet, viewIdx uint64, epochLength uint64,
 }
 
 // UpdateRemoteSigners updates BasicOverlayCallback's remoteSigners.
-func (oc *BasicOverlayCallback) UpdateRemoteSigners(viewIdx uint64, signers []common.Address) error {
-	oc.viewIdx = viewIdx
+func (oc *BasicOverlayCallback) UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error {
+	oc.epochIdx = epochIdx
 
 	if len(signers) != len(oc.remoteSigners) {
 		return errors.New("error length of signer")
 	}
 	for _, signer := range signers {
-		s := NewRemoteSigner(viewIdx, signer)
+		s := NewRemoteSigner(epochIdx, signer)
 		oc.remoteSigners = append(oc.remoteSigners, s)
 	}
 	return nil
@@ -97,22 +97,23 @@ func (oc *BasicOverlayCallback) UpdateRemoteSigners(viewIdx uint64, signers []co
 // Callback implements OverlayCallback.Callback
 func (oc *BasicOverlayCallback) Callback(ethClient *ethclient.Client) {
 
+	// TODO: add lock, go rountine this! Liu Qian
 	err := oc.FetchPubKey()
 	if err != nil {
 		log.Warn("error when fetching remote signers' pubkey", "err", "err")
 	}
 
-	oc.UpdateNodeID()
+	err = oc.UpdateNodeID()
 	if err != nil {
 		log.Warn("error when updating self nodeID encrypted with remote signers' pubkey", "err", "err")
 	}
 
-	oc.FetchNodeID()
+	err = oc.FetchNodeID()
 	if err != nil {
 		log.Warn("error when fetching remote signers' nodeIDs", "err", "err")
 	}
 
-	oc.DialRemote()
+	err = oc.DialRemote()
 	if err != nil {
 		log.Warn("error when dialing to remote signers", "err", "err")
 	}
