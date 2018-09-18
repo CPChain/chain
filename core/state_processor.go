@@ -17,6 +17,8 @@
 package core
 
 import (
+	"errors"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/consensus/misc"
@@ -27,6 +29,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/private"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning
@@ -85,31 +88,6 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 	return receipts, allLogs, *usedGas, nil
 }
 
-// applyPrivateTx attempts to apply a private transaction to the given state database
-func applyPrivateTx() {
-	evmStateDB := pubStateDb
-	if tx.IsPrivate() {
-		// remoteDB being nil means that the node has not the capability to handle private tx, so skip it.
-		if remoteDB != nil {
-			payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
-			if hasPermission {
-				// Replace with the real payload decrypted from IPFS storage.
-				msg.SetData(payload)
-				msg.GasPrice().SetUint64(0)
-				evmStateDB = privateStateDb
-			} else {
-				// TODO: investigate more on the replacement logic.
-				// Make the transaction does nothing.
-				msg.SetData([]byte{})
-			}
-		} else {
-			// TODO: investigate more on the replacement logic.
-			// Make the transaction does nothing.
-			msg.SetData([]byte{})
-		}
-	}
-}
-
 // ApplyTransaction attempts to apply a transaction to the given state database
 // and uses the input parameters for its environment. It returns the receipt
 // for the transaction, gas used and an error if the transaction failed,
@@ -120,11 +98,18 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if err != nil {
 		return nil, 0, err
 	}
+
+	// For private tx, its payload is a replacement which cannot be executed as normal tx payload, thus set it to be empty to skip execution.
+	// This around of execution generates stuff stored in public blockchain.
+	if tx.IsPrivate() {
+		msg.SetData([]byte{})
+	}
+
 	// Create a new context to be used in the EVM environment
 	context := NewEVMContext(msg, header, bc, author)
 	// Create a new environment which holds all relevant information
 	// about the transaction and calling mechanisms.
-	vmenv := vm.NewEVM(context, evmStateDB, config, cfg)
+	vmenv := vm.NewEVM(context, pubStateDb, config, cfg)
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
 	if err != nil {
@@ -134,31 +119,94 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	var root []byte
 	// TODO: investigate whether root is empty and everything seems good when IsByzantium returns false.
 	if config.IsByzantium(header.Number) {
-		evmStateDB.Finalise(true)
+		pubStateDb.Finalise(true)
 	} else {
-		root = evmStateDB.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
+		root = pubStateDb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
 	}
 	*usedGas += gas
 
-	var receipt *types.Receipt
-	if (*types.PrivateTransaction)(tx).IsPrivate() {
-		// Use a specific receipt to public chain.
-		// TODO: private tx receipt store in another place.
-		receipt := types.NewReceipt(pubStateDb.IntermediateRoot(true).Bytes(), failed, *usedGas)
-		receipt.TxHash = tx.Hash()
-		gas = 0
-		receipt.GasUsed = 0
-	} else {
-		receipt := types.NewReceipt(root, failed, *usedGas)
-		receipt.TxHash = tx.Hash()
-		receipt.GasUsed = gas
-		// if the transaction created a contract, store the creation address in the receipt.
-		if msg.To() == nil {
-			receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
-		}
-		// Set the receipt logs and create a bloom for filtering
-		receipt.Logs = evmStateDB.GetLogs(tx.Hash())
-		receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
+	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
+	// based on the eip phase, we're passing wether the root touch-delete accounts.
+	receipt := types.NewReceipt(root, failed, *usedGas)
+	receipt.TxHash = tx.Hash()
+	receipt.GasUsed = gas
+	// if the transaction created a contract, store the creation address in the receipt.
+	if msg.To() == nil {
+		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
 	}
+	// Set the receipt logs and create a bloom for filtering
+	receipt.Logs = pubStateDb.GetLogs(tx.Hash())
+	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
+
+	// For private tx, it should process its real private tx payload in participant's node.
+	if tx.IsPrivate() {
+		privReceipt, err := tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg)
+		if err == nil {
+			processPrivateReceipts(tx, types.Receipts{privReceipt}, privateStateDb.Database().TrieDB())
+		}
+	}
+
 	return receipt, gas, err
+}
+
+// applyPrivateTx attempts to apply a private transaction to the given state database
+func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, privateStateDb *state.StateDB,
+	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, cfg vm.Config) (*types.Receipt, error) {
+	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
+	if err != nil {
+		return nil, err
+	}
+
+	if remoteDB == nil {
+		return nil, errors.New("RemoteDB is not set, no capacibility of processing private transaction.")
+	}
+
+	payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
+	if !hasPermission {
+		return nil, errors.New("The node doesn't have the permission/responsibility to process the private tx.")
+	}
+
+	// Replace with the real payload decrypted from IPFS storage.
+	msg.SetData(payload)
+	msg.GasPrice().SetUint64(0)
+
+	// Create a new context to be used in the EVM environment
+	context := NewEVMContext(msg, header, bc, author)
+	// Create a new environment which holds all relevant information
+	// about the transaction and calling mechanisms.
+	vmenv := vm.NewEVM(context, privateStateDb, config, cfg)
+	// Apply the transaction to the current state (included in the env)
+	_, _, failed, err := ApplyMessage(vmenv, msg, gp)
+	if err != nil {
+		return nil, err
+	}
+
+	root := privateStateDb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
+
+	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
+	// based on the eip phase, we're passing wether the root touch-delete accounts.
+	receipt := types.NewReceipt(root, failed, 0)
+	receipt.TxHash = tx.Hash()
+	receipt.GasUsed = 0 // for private tx, consume no gas.
+	// if the transaction created a contract, store the creation address in the receipt.
+	if msg.To() == nil {
+		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
+	}
+	// Set the receipt logs and create a bloom for filtering
+	receipt.Logs = privateStateDb.GetLogs(tx.Hash())
+	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
+
+	return receipt, err
+}
+
+// processPrivateReceipts processes the private tx's receipts.
+func processPrivateReceipts(tx *types.Transaction, receipts types.Receipts, trieDB *trie.Database) error {
+	txHash := tx.Hash()
+	for _, receipt := range receipts {
+		err := WritePrivateReceipt(receipt, txHash, trieDB)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
