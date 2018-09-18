@@ -200,5 +200,5 @@ func (b *LesApiBackend) ServiceFilter(ctx context.Context, session *bloombits.Ma
 
 // RemoteDB returns remote database instance.
 func (b *LesApiBackend) RemoteDB() ethdb.RemoteDatabase {
-	return b.eth.GetRemoteDB()
+	return b.eth.RemoteDB()
 }
