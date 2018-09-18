@@ -149,6 +149,12 @@ type Config struct {
 
 	//Rsa public key
 	RsaPublicKey *rsa.PublicKey
+
+	//Rsa private key
+	RsaPrivateKeyBytes []byte
+
+	//Rsa public key
+	RsaPublicKeyBytes []byte
 }
 
 // Server manages all peer connections.
