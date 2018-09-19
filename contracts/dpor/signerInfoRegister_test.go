@@ -34,16 +34,16 @@ import (
 	"github.com/ethereum/go-ethereum/crypto/rsa_"
 )
 
-func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *SignerConnectionRegister, error) {
+func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *SignerConnectionRegister, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, instance, err := DeploySignerConnectionRegister(deployTransactor, backend)
+	addr, tx, instance, err := DeploySignerConnectionRegister(deployTransactor, backend)
 
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
-		return common.Address{}, nil, err
+		return common.Address{}, nil, nil, err
 	}
 	backend.Commit()
-	return addr, instance, nil
+	return addr, tx, instance, nil
 }
 
 func printReceipt(backend *backends.SimulatedBackend, tx *types.Transaction, msg string) {
@@ -61,7 +61,7 @@ func printReceipt(backend *backends.SimulatedBackend, tx *types.Transaction, msg
 
 func TestSignerRegister(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-	contractAddr, register, err := deployRegister(key, big.NewInt(0), contractBackend)
+	contractAddr, _, register, err := deployRegister(key, big.NewInt(0), contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = contractAddr
 	contractBackend.Commit()

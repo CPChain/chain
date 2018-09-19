@@ -51,17 +51,17 @@ func NewSignerConnectionRegister(transactOpts *bind.TransactOpts, contractAddr c
 	}, nil
 }
 
-func DeploySignerConnectionRegister(transactOpts *bind.TransactOpts, contractBackend Backend) (common.Address, *SignerConnectionRegister, error) {
-	contractAddr, _, _, err := contract.DeploySignerConnectionRegister(transactOpts, contractBackend)
+func DeploySignerConnectionRegister(transactOpts *bind.TransactOpts, contractBackend Backend) (common.Address, *types.Transaction, *SignerConnectionRegister, error) {
+	contractAddr, tx, _, err := contract.DeploySignerConnectionRegister(transactOpts, contractBackend)
 	if err != nil {
-		return contractAddr, nil, err
+		return contractAddr, tx, nil, err
 	}
 	register, err := NewSignerConnectionRegister(transactOpts, contractAddr, contractBackend)
 	if err != nil {
-		return contractAddr, nil, err
+		return contractAddr, tx, nil, err
 	}
 
-	return contractAddr, register, err
+	return contractAddr, tx, register, err
 }
 
 func (self *SignerConnectionRegister) GetPublicKey(addr common.Address) (*rsa.PublicKey, error) {
@@ -91,7 +91,8 @@ func (self *SignerConnectionRegister) GetNodeInfo(viewIndex *big.Int, privateKey
 }
 
 func (self *SignerConnectionRegister) RegisterPublicKey(rsaPublicKey []byte) (*types.Transaction, error) {
-
+	self.TransactOpts.GasLimit = 300000
+	self.TransactOpts.Value = big.NewInt(500)
 	return self.Contract.RegisterPublicKey(&self.TransactOpts, rsaPublicKey)
 }
 
