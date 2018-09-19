@@ -31,6 +31,7 @@ func WritePrivateStateRoot(db ethdb.Database, blockRoot, root common.Hash) error
 // WritePrivateReceipt writes private receipt associated with specified transaction.
 func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db *trie.Database) error {
 	// Generate hash combining tx hash and private receipt prefix.
+	// It aims at avoiding conflict.
 	contentToHash := bytes.Join([][]byte{
 		privateReceiptPrefix,
 		txHash.Bytes(),

@@ -32,6 +32,11 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 )
 
+var (
+	RemoteDBAbsenceError = errors.New("RemoteDB is not set, no capacibility of processing private transaction.")
+	NoPermissionError    = errors.New("The node doesn't have the permission/responsibility to process the private tx.")
+)
+
 // StateProcessor is a basic Processor, which takes care of transitioning
 // state from one point to another.
 //
@@ -125,18 +130,18 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	}
 	*usedGas += gas
 
-	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
+	// Create a new pubReceipt for the transaction, storing the intermediate root and gas used by the tx
 	// based on the eip phase, we're passing wether the root touch-delete accounts.
-	receipt := types.NewReceipt(root, failed, *usedGas)
-	receipt.TxHash = tx.Hash()
-	receipt.GasUsed = gas
-	// if the transaction created a contract, store the creation address in the receipt.
+	pubReceipt := types.NewReceipt(root, failed, *usedGas)
+	pubReceipt.TxHash = tx.Hash()
+	pubReceipt.GasUsed = gas
+	// if the transaction created a contract, store the creation address in the pubReceipt.
 	if msg.To() == nil {
-		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
+		pubReceipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
 	}
-	// Set the receipt logs and create a bloom for filtering
-	receipt.Logs = pubStateDb.GetLogs(tx.Hash())
-	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
+	// Set the pubReceipt logs and create a bloom for filtering
+	pubReceipt.Logs = pubStateDb.GetLogs(tx.Hash())
+	pubReceipt.Bloom = types.CreateBloom(types.Receipts{pubReceipt})
 
 	// For private tx, it should process its real private tx payload in participant's node.
 	if tx.IsPrivate() {
@@ -146,7 +151,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		}
 	}
 
-	return receipt, gas, err
+	return pubReceipt, gas, err
 }
 
 // applyPrivateTx attempts to apply a private transaction to the given state database
@@ -158,12 +163,12 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 	}
 
 	if remoteDB == nil {
-		return nil, errors.New("RemoteDB is not set, no capacibility of processing private transaction.")
+		return nil, RemoteDBAbsenceError
 	}
 
 	payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
 	if !hasPermission {
-		return nil, errors.New("The node doesn't have the permission/responsibility to process the private tx.")
+		return nil, NoPermissionError
 	}
 
 	// Replace with the real payload decrypted from remote database.
