@@ -22,11 +22,11 @@ import (
 
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/sha3"
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/crypto/sha3"
+	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/hashicorp/golang-lru"
 )
 

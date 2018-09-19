@@ -21,9 +21,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/params"
 	"github.com/stretchr/testify/assert"
 )
 

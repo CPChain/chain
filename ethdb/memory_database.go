@@ -20,7 +20,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
+	"bitbucket.org/cpchain/chain/common"
 )
 
 /*

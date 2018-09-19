@@ -27,13 +27,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/cmd/utils"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/common/hexutil"
+	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/rlp"
 )
 
 //Used for testing

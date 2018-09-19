@@ -27,14 +27,14 @@ import (
 
 	"crypto/rsa"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/p2p/discv5"
-	"github.com/ethereum/go-ethereum/p2p/nat"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/common/mclock"
+	"bitbucket.org/cpchain/chain/event"
+	"bitbucket.org/cpchain/chain/log"
+	"bitbucket.org/cpchain/chain/p2p/discover"
+	"bitbucket.org/cpchain/chain/p2p/discv5"
+	"bitbucket.org/cpchain/chain/p2p/nat"
+	"bitbucket.org/cpchain/chain/p2p/netutil"
 )
 
 const (

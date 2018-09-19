@@ -8,7 +8,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/log"
 )
 
 func RsaEncrypt(origData []byte, publicKey *rsa.PublicKey) ([]byte, error) {

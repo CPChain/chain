@@ -22,11 +22,11 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/rpc"
 )
 
 var maxPrice = big.NewInt(500 * params.Shannon)

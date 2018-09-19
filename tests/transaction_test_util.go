@@ -22,12 +22,12 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/common/hexutil"
+	"bitbucket.org/cpchain/chain/common/math"
+	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/rlp"
 )
 
 // TransactionTest checks RLP decoding and sender derivation of transactions.

@@ -19,14 +19,14 @@ package eth
 import (
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/bitutil"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/bloombits"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/params"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/common/bitutil"
+	"bitbucket.org/cpchain/chain/core"
+	"bitbucket.org/cpchain/chain/core/bloombits"
+	"bitbucket.org/cpchain/chain/core/rawdb"
+	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/params"
 )
 
 const (

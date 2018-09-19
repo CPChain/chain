@@ -22,12 +22,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/signer/core"
-	"github.com/ethereum/go-ethereum/signer/rules/deps"
-	"github.com/ethereum/go-ethereum/signer/storage"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/log"
+	"bitbucket.org/cpchain/chain/signer/core"
+	"bitbucket.org/cpchain/chain/signer/rules/deps"
+	"bitbucket.org/cpchain/chain/signer/storage"
 	"github.com/robertkrimen/otto"
 )
 

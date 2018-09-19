@@ -22,8 +22,8 @@ import (
 	"io"
 	"net"
 
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/rlp"
 )
 
 // Entry is implemented by known node record entry types.

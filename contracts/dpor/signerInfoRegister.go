@@ -21,12 +21,12 @@ import (
 
 	"crypto/rsa"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/contracts/dpor/contract"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto/rsa_"
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contract"
+	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/crypto/rsa_"
+	"bitbucket.org/cpchain/chain/log"
 )
 
 //go:generate abigen --sol contract/signerRegister.sol --pkg contract --out contract/signerRegister.go

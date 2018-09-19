@@ -34,7 +34,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/rlp"
 )
 
 const SizeLimit = 300 // maximum encoded size of a node record in bytes

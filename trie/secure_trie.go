@@ -19,8 +19,8 @@ package trie
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/log"
 )
 
 // SecureTrie wraps a trie with key hashing. In a secure trie, all

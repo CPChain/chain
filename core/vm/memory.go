@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common/math"
+	"bitbucket.org/cpchain/chain/common/math"
 )
 
 // Memory implements a simple memory model for the ethereum virtual machine.

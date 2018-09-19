@@ -16,7 +16,7 @@
 
 package ethclient
 
-import "github.com/ethereum/go-ethereum"
+import "bitbucket.org/cpchain/chain"
 
 // Verify that Client implements the ethereum interfaces.
 var (

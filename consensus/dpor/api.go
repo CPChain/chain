@@ -17,10 +17,10 @@
 package dpor
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rpc"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/rpc"
 )
 
 // API is a user facing RPC API to allow controlling the signer and voting

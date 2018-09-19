@@ -13,7 +13,7 @@ import (
 
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/stretchr/testify/assert"
 )
 

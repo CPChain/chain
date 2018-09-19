@@ -28,8 +28,8 @@ import (
 	"strings"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p/discover"
+	"bitbucket.org/cpchain/chain/node"
+	"bitbucket.org/cpchain/chain/p2p/discover"
 )
 
 var (

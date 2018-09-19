@@ -27,9 +27,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/log"
 	"gopkg.in/fatih/set.v0"
 )
 
