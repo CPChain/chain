@@ -33,6 +33,8 @@ import (
 const (
 	// EpochGapBetweenElectionAndMining is the the epoch gap between election and mining.
 	EpochGapBetweenElectionAndMining = 1
+	// MaxSizeOfRecentSigners is the size of the RecentSigners.
+	MaxSizeOfRecentSigners = 10
 )
 
 var (
@@ -68,10 +70,8 @@ type DporSnapshot struct {
 	Number uint64      `json:"number"` // Block number where the Snapshot was created
 	Hash   common.Hash `json:"hash"`   // Block hash where the Snapshot was created
 
-	Signers       []common.Address          `json:"signers"`       // Set of authorized signers at this moment
-	FutureSigners []common.Address          `json:"futureSigners"` // Set of future signers
-	Candidates    []common.Address          `json:"candidates"`    // Set of candidates read from campaign contract
-	Recents       map[uint64]common.Address `json:"recents"`       // Set of recent signers for spam protections
+	Candidates    []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
+	RecentSigners map[uint64][]common.Address `json:"signers"`    // Set of recent signers
 }
 
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
@@ -83,11 +83,10 @@ func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint6
 		sigcache:      sigcache,
 		Number:        number,
 		Hash:          hash,
-		Signers:       make([]common.Address, config.Epoch),
-		FutureSigners: make([]common.Address, config.Epoch),
-		Recents:       make(map[uint64]common.Address),
+		RecentSigners: make(map[uint64][]common.Address),
 	}
-	copy(snap.Signers, signers)
+	snap.RecentSigners[snap.EpochIdx()] = signers
+
 	return snap
 }
 
@@ -123,16 +122,12 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 		sigcache:      s.sigcache,
 		Number:        s.Number,
 		Hash:          s.Hash,
-		Signers:       make([]common.Address, s.config.Epoch),
-		FutureSigners: make([]common.Address, s.config.Epoch),
 		Candidates:    make([]common.Address, len(s.Candidates)),
-		Recents:       make(map[uint64]common.Address),
+		RecentSigners: make(map[uint64][]common.Address),
 	}
-	copy(cpy.Signers, s.Signers)
-	copy(cpy.FutureSigners, s.FutureSigners)
 	copy(cpy.Candidates, s.Candidates)
-	for block, signer := range s.Recents {
-		cpy.Recents[block] = signer
+	for epochIdx, committee := range s.RecentSigners {
+		cpy.RecentSigners[epochIdx] = committee
 	}
 	return cpy
 }
@@ -238,13 +233,44 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
 	signers := election.Elect(rpts, seed, viewLength)
 
-	s.Signers = signers
+	// TODO: fix this.
+
+	epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
+	s.RecentSigners[epochIdx] = signers
+
+	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
+		delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
+	}
+
 	return nil
+}
+
+// EpochIdx returns the epoch index of current block number.
+func (s *DporSnapshot) EpochIdx() uint64 {
+	if s.Number == 0 {
+		return 0
+	}
+
+	return (s.Number - 1) / uint64(epochLength)
+}
+
+// EpochIdxOf returns the epoch index of given block number.
+func (s *DporSnapshot) EpochIdxOf(blockNum uint64) uint64 {
+	if blockNum == 0 {
+		return 0
+	}
+
+	return (blockNum - 1) / uint64(epochLength)
 }
 
 // Signers retrieves all signers in the committee.
 func (s *DporSnapshot) signers() []common.Address {
-	return s.Signers
+	return s.RecentSigners[s.EpochIdx()]
+}
+
+// SignersOf retrieves all signers in the committee
+func (s *DporSnapshot) SignersOf(blockNum uint64) []common.Address {
+	return s.RecentSigners[s.EpochIdxOf(blockNum)]
 }
 
 func (s *DporSnapshot) signerRound(signer common.Address) (int, error) {

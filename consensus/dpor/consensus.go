@@ -32,7 +32,7 @@ import (
 )
 
 // Dpor proof-of-reputation protocol constants.
-var (
+const (
 	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
 	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
@@ -41,11 +41,12 @@ var (
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
+)
 
-	uncleHash = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
-
-	diffInTurn = big.NewInt(2) // Block difficulty for in-turn signatures
-	diffNoTurn = big.NewInt(1) // Block difficulty for out-of-turn signatures
+var (
+	uncleHash  = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
+	diffInTurn = big.NewInt(2)            // Block difficulty for in-turn signatures
+	diffNoTurn = big.NewInt(1)            // Block difficulty for out-of-turn signatures
 )
 
 // Various error messages to mark blocks invalid. These should be private to
