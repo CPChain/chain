@@ -121,7 +121,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if config.IsByzantium(header.Number) {
 		pubStateDb.Finalise(true)
 	} else {
-		root = pubStateDb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
+		root = pubStateDb.IntermediateRoot(true).Bytes()
 	}
 	*usedGas += gas
 
@@ -142,7 +142,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if tx.IsPrivate() {
 		privReceipt, err := tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg)
 		if err == nil {
-			processPrivateReceipts(tx, types.Receipts{privReceipt}, privateStateDb.Database().TrieDB())
+			processPrivateReceipts(tx.Hash(), types.Receipts{privReceipt}, privateStateDb.Database().TrieDB())
 		}
 	}
 
@@ -166,7 +166,7 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 		return nil, errors.New("The node doesn't have the permission/responsibility to process the private tx.")
 	}
 
-	// Replace with the real payload decrypted from IPFS storage.
+	// Replace with the real payload decrypted from remote database.
 	msg.SetData(payload)
 	msg.GasPrice().SetUint64(0)
 	privateStateDb.SetNonce(msg.From(), msg.Nonce())
@@ -182,7 +182,7 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 		return nil, err
 	}
 
-	root := privateStateDb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
+	root := privateStateDb.IntermediateRoot(true).Bytes()
 
 	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
 	// based on the eip phase, we're passing wether the root touch-delete accounts.
@@ -201,8 +201,7 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 }
 
 // processPrivateReceipts processes the private tx's receipts.
-func processPrivateReceipts(tx *types.Transaction, receipts types.Receipts, trieDB *trie.Database) error {
-	txHash := tx.Hash()
+func processPrivateReceipts(txHash common.Hash, receipts types.Receipts, trieDB *trie.Database) error {
 	for _, receipt := range receipts {
 		err := WritePrivateReceipt(receipt, txHash, trieDB)
 		if err != nil {
