@@ -122,6 +122,7 @@ func tmpDirName(t *testing.T) string {
 }
 
 func setup(t *testing.T) (*SignerAPI, chan string) {
+	t.Skip("clef is not supported.")
 
 	controller := make(chan string, 10)
 

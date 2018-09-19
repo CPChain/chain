@@ -175,6 +175,8 @@ func TestCalldataDecoding(t *testing.T) {
 }
 
 func TestSelectorUnmarshalling(t *testing.T) {
+	t.Skip("clef is currently not supported.")
+
 	var (
 		db        *AbiDb
 		err       error
@@ -212,6 +214,8 @@ func TestSelectorUnmarshalling(t *testing.T) {
 }
 
 func TestCustomABI(t *testing.T) {
+	t.Skip("clef is currently not supported.")
+
 	d, err := ioutil.TempDir("", "signer-4byte-test")
 	if err != nil {
 		t.Fatal(err)
