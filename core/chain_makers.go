@@ -94,7 +94,12 @@ func (b *BlockGen) AddTxWithChain(bc *BlockChain, tx *types.Transaction) {
 	}
 	b.pubStateDB.Prepare(tx.Hash(), common.Hash{}, len(b.txs))
 	b.privStateDB.Prepare(tx.Hash(), common.Hash{}, len(b.txs))
-	receipt, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.pubStateDB, b.privStateDB, bc.remoteDB, b.header, tx, &b.header.GasUsed, vm.Config{})
+
+	var remoteDB ethdb.RemoteDatabase
+	if bc != nil {
+		remoteDB = bc.remoteDB
+	}
+	receipt, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.pubStateDB, b.privStateDB, remoteDB, b.header, tx, &b.header.GasUsed, vm.Config{})
 	if err != nil {
 		panic(err)
 	}
@@ -177,7 +182,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB)
 		defer blockchain.Stop()
 
-		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, config: config, engine: engine}
+		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, privStateDB: privStateDB, config: config, engine: engine}
 		b.header = makeHeader(b.chainReader, parent, pubStatedb, b.engine)
 
 		// Mutate the state and block according to any hard-fork specs
