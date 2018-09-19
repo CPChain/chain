@@ -2,10 +2,10 @@ package dpor
 
 import "github.com/ethereum/go-ethereum/common"
 
-// overlay network
+// committee network
 
-// OverlayHandler is an interface used to do network building and related thing.
-type OverlayHandler interface {
+// CommitteeNetworkHandler is an interface used to do network building and related thing.
+type CommitteeNetworkHandler interface {
 
 	// Handle handles all.
 	Handle()

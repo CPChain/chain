@@ -95,8 +95,8 @@ type ProtocolManager struct {
 	quitSync    chan struct{}
 	noMorePeers chan struct{}
 
-	p2pSignerHandshake P2PSignerHandshake
-	overlayHandler     *BasicOverlayHandler
+	p2pSignerHandshake      P2PSignerHandshake
+	committeeNetworkHandler *BasicCommitteeNetworkHandler
 
 	// wait group is used for graceful shutdowns during downloading
 	// and processing
@@ -191,7 +191,7 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 	return manager, nil
 }
 
-func (pm *ProtocolManager) newOverlayCallback() {
+func (pm *ProtocolManager) newCommitteeNetworkHandler() {
 	// TODO: fix this. Liu Qian
 }
 

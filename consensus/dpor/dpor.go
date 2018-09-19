@@ -52,7 +52,7 @@ type Dpor struct {
 	signer common.Address // Ethereum address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
-	overlayHandler OverlayHandler
+	committeeNetworkHandler CommitteeNetworkHandler
 
 	lock sync.RWMutex // Protects the signer fields
 }
@@ -82,10 +82,10 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 	}
 }
 
-// SetOverlayHandler sets dpor.overlayHandler
-func (d *Dpor) SetOverlayHandler(overlayHandler OverlayHandler) error {
+// SetCommitteeNetworkHandler sets dpor.committeeNetworkHandler
+func (d *Dpor) SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeNetworkHandler) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-	d.overlayHandler = overlayHandler
+	d.committeeNetworkHandler = committeeNetworkHandler
 	return nil
 }
