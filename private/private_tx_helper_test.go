@@ -5,8 +5,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/rlp"
 )
 
 // FakeIpfsAdapter is a fake IPFS for unit test.

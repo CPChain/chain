@@ -22,8 +22,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
+	"bitbucket.org/cpchain/chain/accounts/abi"
+	"bitbucket.org/cpchain/chain/common"
 
 	"bytes"
 	"os"

@@ -19,7 +19,7 @@
 package downloader
 
 import (
-	"github.com/ethereum/go-ethereum/metrics"
+	"bitbucket.org/cpchain/chain/metrics"
 )
 
 var (

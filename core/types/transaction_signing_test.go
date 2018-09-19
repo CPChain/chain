@@ -22,10 +22,10 @@ import (
 
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/rlp"
 )
 
 func TestEIP155Signing(t *testing.T) {

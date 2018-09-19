@@ -24,7 +24,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/core/types"
+	"bitbucket.org/cpchain/chain/core/types"
 )
 
 // Tests that ethash works correctly in test mode.

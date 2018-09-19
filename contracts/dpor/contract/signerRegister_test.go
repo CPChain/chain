@@ -15,12 +15,12 @@ import (
 
 	"bytes"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/rsa_"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/crypto/rsa_"
+	"bitbucket.org/cpchain/chain/ethclient"
 )
 
 func TestSignerRegister(t *testing.T) {

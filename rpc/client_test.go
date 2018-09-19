@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/log"
 )
 
 func TestClientRequest(t *testing.T) {

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
+	"bitbucket.org/cpchain/chain/common"
 )
 
 const CpchainChainId = 42

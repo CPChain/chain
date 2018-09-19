@@ -5,8 +5,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/dpor/rpt"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 )
 
 func TestElect(t *testing.T) {

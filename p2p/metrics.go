@@ -21,7 +21,7 @@ package p2p
 import (
 	"net"
 
-	"github.com/ethereum/go-ethereum/metrics"
+	"bitbucket.org/cpchain/chain/metrics"
 )
 
 var (

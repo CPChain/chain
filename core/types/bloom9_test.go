@@ -54,7 +54,7 @@ func TestBloom(t *testing.T) {
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/core/state"
+	"bitbucket.org/cpchain/chain/core/state"
 )
 
 func TestBloom9(t *testing.T) {

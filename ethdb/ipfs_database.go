@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"bitbucket.org/cpchain/chain/common/hexutil"
 	"github.com/ipfs/go-ipfs-api"
 	"github.com/pkg/errors"
 )

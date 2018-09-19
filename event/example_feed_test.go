@@ -19,7 +19,7 @@ package event_test
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/event"
+	"bitbucket.org/cpchain/chain/event"
 )
 
 func ExampleFeed_acknowledgedEvents() {

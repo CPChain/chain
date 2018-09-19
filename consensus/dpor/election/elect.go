@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"sort"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/dpor/rpt"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 )
 
 // randRange returns a random integer between [ min(i,j), max(i,j) )

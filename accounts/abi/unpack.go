@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"reflect"
 
-	"github.com/ethereum/go-ethereum/common"
+	"bitbucket.org/cpchain/chain/common"
 )
 
 // reads the integer based on its kind

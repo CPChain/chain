@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/params"
+	"bitbucket.org/cpchain/chain/params"
 )
 
 const (

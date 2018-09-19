@@ -8,9 +8,9 @@ import (
 	"crypto/cipher"
 	"encoding/binary"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/rlp"
+	"bitbucket.org/cpchain/chain/common/hexutil"
+	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/rlp"
 )
 
 // Read tx's payload replacement, retrieve encrypted payload from IPFS and decrypt it.

@@ -58,7 +58,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/internal/build"
+	"bitbucket.org/cpchain/chain/internal/build"
 )
 
 var (
