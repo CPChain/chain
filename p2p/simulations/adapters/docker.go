@@ -27,9 +27,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/docker/docker/pkg/reexec"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/p2p/discover"
+	"github.com/docker/docker/pkg/reexec"
 )
 
 var (
