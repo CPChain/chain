@@ -1,9 +1,16 @@
 package admission
 
 import (
+	"math/big"
+	"os"
+	"path/filepath"
 	"sync"
 
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contract"
+	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/rpc"
 )
 
@@ -13,6 +20,7 @@ type AdmissionControl struct {
 	config    Config
 	address   common.Address
 	proofInfo ProofInfo
+	client    *ethclient.Client
 
 	mutex  *sync.Mutex
 	status workStatus
@@ -127,12 +135,43 @@ func (ac *AdmissionControl) waitSendCampaignMsg(proofWorks []ProofWorkBackend, w
 	ac.sendCampaignProofInfo()
 }
 
-// waitSendCampaignProofInfo sends proof info to campaign contract
+// sendCampaignProofInfo sends proof info to campaign contract
 func (ac *AdmissionControl) sendCampaignProofInfo() {
-	// TODO
+	instance, err := contract.NewCampaign(common.HexToAddress(ac.config.CampaignContractAddress), ac.client)
+	if err != nil {
+		ac.err = err
+		return
+	}
+
+	file, _ := os.Open(keystonePath)
+	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
+	if err != nil {
+		ac.err = err
+		return
+	}
+	kst := keystore.NewKeyStore(keyPath, 2, 1)
+	account := kst.Accounts()[0]
+	account, key, err := kst.GetDecryptedKey(account, "passwd")
+	if err != nil {
+		ac.err = err
+		return
+	}
+
+	auth := bind.NewKeyedTransactor(key.PrivateKey)
+	if err != nil {
+		ac.err = err
+		return
+	}
+
+	_, err = instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), big.NewInt(int64(myRpt)))
+	if err != nil {
+		ac.err = err
+		return
+	}
 }
 
 // RegisterInProcHander registers the rpc.Server, handles RPC request to process the API requests in process
 func (ac *AdmissionControl) RegisterInProcHander(localRcpServer *rpc.Server) {
-	// TODO
+	client := rpc.DialInProc(localRcpServer)
+	ac.client = ethclient.NewClient(client)
 }
