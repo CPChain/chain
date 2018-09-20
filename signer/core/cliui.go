@@ -24,10 +24,10 @@ import (
 
 	"sync"
 
-	"github.com/davecgh/go-spew/spew"
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/log"
+	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/crypto/ssh/terminal"
 )
 

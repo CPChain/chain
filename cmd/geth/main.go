@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/elastic/gosigar"
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/utils"
@@ -39,6 +38,7 @@ import (
 	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/node"
+	"github.com/elastic/gosigar"
 	"gopkg.in/urfave/cli.v1"
 )
 

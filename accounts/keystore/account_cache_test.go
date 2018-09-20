@@ -27,10 +27,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cespare/cp"
-	"github.com/davecgh/go-spew/spew"
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/common"
+	"github.com/cespare/cp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 var (

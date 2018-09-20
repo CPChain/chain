@@ -34,12 +34,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/docker/docker/pkg/reexec"
 	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/docker/docker/pkg/reexec"
 	"golang.org/x/net/websocket"
 )
 

@@ -25,10 +25,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func init() {

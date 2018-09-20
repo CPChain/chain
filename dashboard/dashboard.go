@@ -32,12 +32,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/elastic/gosigar"
 	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/elastic/gosigar"
 	"golang.org/x/net/websocket"
 )
 

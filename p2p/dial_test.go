@@ -23,9 +23,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/p2p/netutil"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func init() {
