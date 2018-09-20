@@ -7,6 +7,8 @@ import (
 	"bitbucket.org/cpchain/chain/rpc"
 )
 
+//go:generate abigen --sol contract/admission/campaign.sol --pkg contract --out contract/admission/campaign.go
+
 //Backend interface provides the common JSON-RPC API.
 type Backend interface {
 	CurrentBlock() *types.Block
