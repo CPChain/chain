@@ -77,6 +77,8 @@ type Ethereum struct {
 	protocolManager *ProtocolManager
 	lesServer       LesServer
 
+	server *p2p.Server
+
 	// DB interfaces
 	chainDb ethdb.Database // Block chain database
 
@@ -233,6 +235,11 @@ func (s *Ethereum) SignerHandShake(p *peer, address common.Address) error {
 		return errors.New("registering peer as signer failed")
 	}
 	return nil
+}
+
+func (s *Ethereum) newCommitteeNetworkHandler() {
+	// TODO: fix this. Liu Qian
+	// committeeNetworkHandler, err := NewBasicCommitteeNetworkHandler(s.protocolManager.peers, s.chainConfig.Dpor.Epoch, s.etherbase, s.chainConfig.Dpor., contractCaller, s.server)
 }
 
 func makeExtraData(extra []byte) []byte {
@@ -461,6 +468,9 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 
 	// Start the RPC service
 	s.netRPCService = ethapi.NewPublicNetAPI(srvr, s.NetVersion())
+
+	// TODO: check security. Liu Qian
+	s.server = srvr
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers

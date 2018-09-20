@@ -191,10 +191,6 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 	return manager, nil
 }
 
-func (pm *ProtocolManager) newCommitteeNetworkHandler() {
-	// TODO: fix this. Liu Qian
-}
-
 func (pm *ProtocolManager) removePeer(id string) {
 	// Short circuit if the peer was already removed
 	peer := pm.peers.Peer(id)

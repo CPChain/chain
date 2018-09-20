@@ -8,15 +8,13 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-
-	"github.com/ethereum/go-ethereum/crypto/rsa_"
-
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/dpor"
-	"github.com/ethereum/go-ethereum/contracts/dpor/contract"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contract"
+	"bitbucket.org/cpchain/chain/crypto/rsa_"
+	"bitbucket.org/cpchain/chain/log"
+	"bitbucket.org/cpchain/chain/p2p"
 )
 
 // RemoteSigner represents a remote signer waiting to be connected and communicate with.
@@ -76,19 +74,13 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 	}
 	ctx := context.Background()
 	_, err = bind.WaitMined(ctx, client, transaction)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // dial dials the signer.
 func (rs *RemoteSigner) dial(server *p2p.Server) error {
-	err := server.AddPeerFromURL(string(rs.nodeID))
-	if err != nil {
-		return err
-	}
-	return nil
+	err := server.AddPeerFromURL(rs.nodeID)
+	return err
 }
 
 // BasicCommitteeNetworkHandler implements CommitteeNetworkHandler
@@ -112,13 +104,12 @@ type BasicCommitteeNetworkHandler struct {
 }
 
 // NewBasicCommitteeNetworkHandler creates a BasicCommitteeNetworkHandler instance
-func NewBasicCommitteeNetworkHandler(peers *peerSet, epochIdx uint64, epochLength uint64, ownNodeID string, ownPubkey []byte, ownAddress common.Address, server *p2p.Server, contractAddress common.Address, contractCaller *dpor.ContractCaller) (*BasicCommitteeNetworkHandler, error) {
+func NewBasicCommitteeNetworkHandler(peers *peerSet, epochLength uint64, ownAddress common.Address, contractAddress common.Address, server *p2p.Server, contractCaller *dpor.ContractCaller) (*BasicCommitteeNetworkHandler, error) {
 	bc := &BasicCommitteeNetworkHandler{
 		peers:      peers,
 		server:     server,
-		epochIdx:   epochIdx,
-		ownNodeID:  ownNodeID,
-		ownPubkey:  ownPubkey,
+		ownNodeID:  server.Self().String(),
+		ownPubkey:  server.RsaPublicKeyBytes,
 		ownAddress: ownAddress,
 
 		contractAddress: contractAddress,

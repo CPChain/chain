@@ -334,7 +334,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	if snap.isFutureSigner(dpor.signer, number) {
 		// TODO: fix this.
-		// dpor.overlayHandler.Handle()
+		// go dpor.committeeNetworkHandler.Handle()
 	}
 
 	return nil

@@ -74,12 +74,6 @@ func Test_newSnapshot(t *testing.T) {
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
-
-	recents := snap.Recents
-	if len(recents) != 0 {
-		t.Errorf("expect 0 recents,get %v", len(recents))
-	}
-
 	candidates := snap.candidates()
 	if len(candidates) != 0 {
 		t.Errorf("expect 0 candidates,get %v", len(candidates))
@@ -118,13 +112,12 @@ func Test_loadSnapshot(t *testing.T) {
 func TestSnapshot_store(t *testing.T) {
 
 	type fields struct {
-		config     *params.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Signers    []common.Address
-		Candidates []common.Address
-		Recents    map[uint64]common.Address
+		config        *params.DporConfig
+		sigcache      *lru.ARCCache
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		db ethdb.Database
@@ -140,21 +133,26 @@ func TestSnapshot_store(t *testing.T) {
 		wantErr bool
 	}{
 		{"store ok",
-			fields{config, cache, 1, common.Hash{},
-				getSignerAddress(), getSignerAddress(), make(map[uint64]common.Address)},
+			fields{
+				config,
+				cache,
+				1,
+				common.Hash{},
+				getSignerAddress(),
+				map[uint64][]common.Address{0: getSignerAddress()},
+			},
 			args{&fakeDb{}},
 			false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config:     tt.fields.config,
-				sigcache:   tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Signers:    tt.fields.Signers,
-				Candidates: tt.fields.Candidates,
-				Recents:    tt.fields.Recents,
+				config:        tt.fields.config,
+				sigcache:      tt.fields.sigcache,
+				Number:        tt.fields.Number,
+				Hash:          tt.fields.Hash,
+				Candidates:    tt.fields.Candidates,
+				RecentSigners: tt.fields.RecentSigners,
 			}
 			if err := s.store(tt.args.db); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.store(%v) error = %v, wantErr %v", tt.args.db, err, tt.wantErr)
@@ -166,18 +164,12 @@ func TestSnapshot_store(t *testing.T) {
 func TestSnapshot_copy(t *testing.T) {
 	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
 	snap.Candidates = getCandidates()
-	snap.Recents = recents()
 
 	cpySnap := snap.copy()
 
 	equal := reflect.DeepEqual(cpySnap.signers(), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
-	}
-
-	recents := cpySnap.Recents
-	if len(recents) != 2 {
-		t.Errorf("expect 2 recents,get %v", len(recents))
 	}
 
 	candidates := cpySnap.candidates()
@@ -188,13 +180,12 @@ func TestSnapshot_copy(t *testing.T) {
 
 func TestSnapshot_apply(t *testing.T) {
 	type fields struct {
-		config     *params.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Signers    []common.Address
-		Candidates []common.Address
-		Recents    map[uint64]common.Address
+		config        *params.DporConfig
+		sigcache      *lru.ARCCache
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		headers []*types.Header
@@ -211,13 +202,12 @@ func TestSnapshot_apply(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config:     tt.fields.config,
-				sigcache:   tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Signers:    tt.fields.Signers,
-				Candidates: tt.fields.Candidates,
-				Recents:    tt.fields.Recents,
+				config:        tt.fields.config,
+				sigcache:      tt.fields.sigcache,
+				Number:        tt.fields.Number,
+				Hash:          tt.fields.Hash,
+				Candidates:    tt.fields.Candidates,
+				RecentSigners: tt.fields.RecentSigners,
 			}
 			got, err := s.apply(tt.args.headers)
 			if (err != nil) != tt.wantErr {
@@ -233,13 +223,12 @@ func TestSnapshot_apply(t *testing.T) {
 
 func TestSnapshot_applyHeader(t *testing.T) {
 	type fields struct {
-		config     *params.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Signers    []common.Address
-		Candidates []common.Address
-		Recents    map[uint64]common.Address
+		config        *params.DporConfig
+		sigcache      *lru.ARCCache
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		header *types.Header
@@ -255,13 +244,12 @@ func TestSnapshot_applyHeader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config:     tt.fields.config,
-				sigcache:   tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Signers:    tt.fields.Signers,
-				Candidates: tt.fields.Candidates,
-				Recents:    tt.fields.Recents,
+				config:        tt.fields.config,
+				sigcache:      tt.fields.sigcache,
+				Number:        tt.fields.Number,
+				Hash:          tt.fields.Hash,
+				Candidates:    tt.fields.Candidates,
+				RecentSigners: tt.fields.RecentSigners,
 			}
 			if err := s.applyHeader(tt.args.header); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.applyHeader(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
@@ -272,13 +260,12 @@ func TestSnapshot_applyHeader(t *testing.T) {
 
 func TestSnapshot_updateCandidates(t *testing.T) {
 	type fields struct {
-		config     *params.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Signers    []common.Address
-		Candidates []common.Address
-		Recents    map[uint64]common.Address
+		config        *params.DporConfig
+		sigcache      *lru.ARCCache
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		header *types.Header
@@ -294,13 +281,12 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config:     tt.fields.config,
-				sigcache:   tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Signers:    tt.fields.Signers,
-				Candidates: tt.fields.Candidates,
-				Recents:    tt.fields.Recents,
+				config:        tt.fields.config,
+				sigcache:      tt.fields.sigcache,
+				Number:        tt.fields.Number,
+				Hash:          tt.fields.Hash,
+				Candidates:    tt.fields.Candidates,
+				RecentSigners: tt.fields.RecentSigners,
 			}
 			if err := s.updateCandidates(tt.args.header); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
@@ -311,13 +297,12 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 
 func TestSnapshot_updateRpts(t *testing.T) {
 	type fields struct {
-		config     *params.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Signers    []common.Address
-		Candidates []common.Address
-		Recents    map[uint64]common.Address
+		config        *params.DporConfig
+		sigcache      *lru.ARCCache
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		header *types.Header
@@ -334,13 +319,12 @@ func TestSnapshot_updateRpts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config:     tt.fields.config,
-				sigcache:   tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Signers:    tt.fields.Signers,
-				Candidates: tt.fields.Candidates,
-				Recents:    tt.fields.Recents,
+				config:        tt.fields.config,
+				sigcache:      tt.fields.sigcache,
+				Number:        tt.fields.Number,
+				Hash:          tt.fields.Hash,
+				Candidates:    tt.fields.Candidates,
+				RecentSigners: tt.fields.RecentSigners,
 			}
 			got, err := s.updateRpts(tt.args.header)
 			if (err != nil) != tt.wantErr {
@@ -356,13 +340,12 @@ func TestSnapshot_updateRpts(t *testing.T) {
 
 func TestSnapshot_updateView(t *testing.T) {
 	type fields struct {
-		config     *params.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Signers    []common.Address
-		Candidates []common.Address
-		Recents    map[uint64]common.Address
+		config        *params.DporConfig
+		sigcache      *lru.ARCCache
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		rpts       rpt.RPTs
@@ -380,13 +363,12 @@ func TestSnapshot_updateView(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config:     tt.fields.config,
-				sigcache:   tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Signers:    tt.fields.Signers,
-				Candidates: tt.fields.Candidates,
-				Recents:    tt.fields.Recents,
+				config:        tt.fields.config,
+				sigcache:      tt.fields.sigcache,
+				Number:        tt.fields.Number,
+				Hash:          tt.fields.Hash,
+				Candidates:    tt.fields.Candidates,
+				RecentSigners: tt.fields.RecentSigners,
 			}
 			if err := s.updateView(tt.args.rpts, tt.args.seed, tt.args.viewLength); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateView(%v, %v, %v) error = %v, wantErr %v", tt.args.rpts, tt.args.seed, tt.args.viewLength, err, tt.wantErr)
@@ -406,13 +388,12 @@ func TestSnapshot_signers(t *testing.T) {
 
 func TestSnapshot_signerRound(t *testing.T) {
 	type fields struct {
-		config     *params.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Signers    []common.Address
-		Candidates []common.Address
-		Recents    map[uint64]common.Address
+		config        *params.DporConfig
+		sigcache      *lru.ARCCache
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		signer common.Address
@@ -429,13 +410,12 @@ func TestSnapshot_signerRound(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config:     tt.fields.config,
-				sigcache:   tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Signers:    tt.fields.Signers,
-				Candidates: tt.fields.Candidates,
-				Recents:    tt.fields.Recents,
+				config:        tt.fields.config,
+				sigcache:      tt.fields.sigcache,
+				Number:        tt.fields.Number,
+				Hash:          tt.fields.Hash,
+				Candidates:    tt.fields.Candidates,
+				RecentSigners: tt.fields.RecentSigners,
 			}
 			got, err := s.signerRound(tt.args.signer)
 			if (err != nil) != tt.wantErr {
@@ -537,13 +517,12 @@ func createSnapshot() *DporSnapshot {
 
 func TestSnapshot_candidates(t *testing.T) {
 	type fields struct {
-		config     *params.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Signers    []common.Address
-		Candidates []common.Address
-		Recents    map[uint64]common.Address
+		config        *params.DporConfig
+		sigcache      *lru.ARCCache
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
 	tests := []struct {
 		name   string
@@ -555,13 +534,12 @@ func TestSnapshot_candidates(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config:     tt.fields.config,
-				sigcache:   tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Signers:    tt.fields.Signers,
-				Candidates: tt.fields.Candidates,
-				Recents:    tt.fields.Recents,
+				config:        tt.fields.config,
+				sigcache:      tt.fields.sigcache,
+				Number:        tt.fields.Number,
+				Hash:          tt.fields.Hash,
+				Candidates:    tt.fields.Candidates,
+				RecentSigners: tt.fields.RecentSigners,
 			}
 			if got := s.candidates(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DporSnapshot.candidates() = %v, want %v", got, tt.want)

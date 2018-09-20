@@ -1,6 +1,6 @@
 package dpor
 
-import "github.com/ethereum/go-ethereum/common"
+import "bitbucket.org/cpchain/chain/common"
 
 // committee network
 
