@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ethereum/go-ethereum/cmd/smartcontract/deploy"
+	"bitbucket.org/cpchain/chain/cmd/smartcontract/deploy"
 )
 
 func main() {

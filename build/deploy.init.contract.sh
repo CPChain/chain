@@ -21,4 +21,4 @@ cd ${cur_dir}
 echo "" >> /tmp/init_contract.log
 echo "" >> /tmp/init_contract.log
 echo "Current time : $now" >> /tmp/init_contract.log
-go run ${GOPATH}/src/github.com/ethereum/go-ethereum/cmd/smartcontract/main.go >> /tmp/init_contract.log
+go run ${GOPATH}/src/bitbucket.org/cpchain/chain/cmd/smartcontract/main.go >> /tmp/init_contract.log

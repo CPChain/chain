@@ -12,7 +12,7 @@ deploy init smart contract
 ```shell
 export GOPATH=${gopath}
 cd ../../
-go run ${gopath}/src/github.com/ethereum/go-ethereum/cmd/smartcontract/main.go
+go run ${gopath}/src/bitbucket.org/cpchain/chain/cmd/smartcontract/main.go
 ```
 
 replace ${gopath} with real env path. ex:/home/${user}/workspace/chain_dev
