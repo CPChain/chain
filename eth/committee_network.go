@@ -104,34 +104,36 @@ type BasicCommitteeNetworkHandler struct {
 }
 
 // NewBasicCommitteeNetworkHandler creates a BasicCommitteeNetworkHandler instance
-func NewBasicCommitteeNetworkHandler(peers *peerSet, epochLength uint64, ownAddress common.Address, contractAddress common.Address, server *p2p.Server, contractCaller *dpor.ContractCaller) (*BasicCommitteeNetworkHandler, error) {
+func NewBasicCommitteeNetworkHandler(peers *peerSet, epochLength uint64, ownAddress common.Address, contractAddress common.Address, server *p2p.Server) (*BasicCommitteeNetworkHandler, error) {
 	bc := &BasicCommitteeNetworkHandler{
-		peers:      peers,
-		server:     server,
-		ownNodeID:  server.Self().String(),
-		ownPubkey:  server.RsaPublicKeyBytes,
-		ownAddress: ownAddress,
-
+		peers:           peers,
+		server:          server,
+		ownNodeID:       server.Self().String(),
+		ownPubkey:       server.RsaPublicKeyBytes,
+		ownAddress:      ownAddress,
 		contractAddress: contractAddress,
-		contractCaller:  contractCaller,
-
-		remoteSigners: make([]*RemoteSigner, epochLength-1),
+		remoteSigners:   make([]*RemoteSigner, epochLength-1),
 	}
-
-	contractInstance, err := contract.NewSignerConnectionRegister(bc.contractAddress, bc.contractCaller.Client)
-	if err != nil {
-		return nil, err
-	}
-	bc.contractInstance = contractInstance
-
-	auth := bind.NewKeyedTransactor(bc.server.PrivateKey)
-	auth.Value = big.NewInt(0)
-	auth.GasLimit = bc.contractCaller.GasLimit
-	auth.GasPrice = big.NewInt(int64(bc.contractCaller.GasPrice))
-
-	bc.contractTransacter = auth
-
 	return bc, nil
+}
+
+// UpdateContractCaller updates contractcaller.
+func (oc *BasicCommitteeNetworkHandler) UpdateContractCaller(contractCaller *dpor.ContractCaller) error {
+	oc.contractCaller = contractCaller
+	contractInstance, err := contract.NewSignerConnectionRegister(oc.contractAddress, oc.contractCaller.Client)
+	if err != nil {
+		return err
+	}
+	oc.contractInstance = contractInstance
+
+	auth := bind.NewKeyedTransactor(oc.contractCaller.Key.PrivateKey)
+	auth.Value = big.NewInt(0)
+	auth.GasLimit = oc.contractCaller.GasLimit
+	auth.GasPrice = big.NewInt(int64(oc.contractCaller.GasPrice))
+
+	oc.contractTransacter = auth
+
+	return nil
 }
 
 // UpdateRemoteSigners updates BasicCommitteeNetworkHandler's remoteSigners.

@@ -77,7 +77,8 @@ type Ethereum struct {
 	protocolManager *ProtocolManager
 	lesServer       LesServer
 
-	server *p2p.Server
+	server                  *p2p.Server
+	committeeNetworkHandler *BasicCommitteeNetworkHandler
 
 	// DB interfaces
 	chainDb ethdb.Database // Block chain database
@@ -237,9 +238,14 @@ func (s *Ethereum) SignerHandShake(p *peer, address common.Address) error {
 	return nil
 }
 
-func (s *Ethereum) newCommitteeNetworkHandler() {
+func (s *Ethereum) newCommitteeNetworkHandler() error {
 	// TODO: fix this. Liu Qian
-	// committeeNetworkHandler, err := NewBasicCommitteeNetworkHandler(s.protocolManager.peers, s.chainConfig.Dpor.Epoch, s.etherbase, s.chainConfig.Dpor., contractCaller, s.server)
+	committeeNetworkHandler, err := NewBasicCommitteeNetworkHandler(s.protocolManager.peers, s.chainConfig.Dpor.Epoch, s.etherbase, s.chainConfig.Dpor.Contracts["SignerConnectionRegister"], s.server)
+	if err != nil {
+		return err
+	}
+	s.committeeNetworkHandler = committeeNetworkHandler
+	return nil
 }
 
 func makeExtraData(extra []byte) []byte {
@@ -416,6 +422,12 @@ func (s *Ethereum) StartMining(local bool) error {
 			return fmt.Errorf("signer missing: %v", err)
 		}
 		dpor.Authorize(eb, wallet.SignHash)
+
+		s.newCommitteeNetworkHandler()
+
+		// TODO: fix this, update contract caller with private key here. Liu Qian
+		// s.committeeNetworkHandler.UpdateContractCaller()
+
 	} else if clique, ok := s.engine.(*clique.Clique); ok {
 		wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 		if wallet == nil || err != nil {
