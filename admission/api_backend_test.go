@@ -101,6 +101,8 @@ func TestCampaign(t *testing.T) {
 	if status != AcRunning || !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("start Campaign then GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", AcRunning, wantErr, status, err)
 	}
+
+	ac.Abort()
 }
 
 // TestCampaign_Timeout timeout when campaign
@@ -113,6 +115,8 @@ func TestCampaign_Timeout(t *testing.T) {
 	if status != wantStatus || !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("start Campaign, want(status:%d,err:%v), but(status:%d, err:%v)", AcIdle, wantErr, status, err)
 	}
+
+	ac.Abort()
 }
 
 // TestAbort_Twice twice campaign
@@ -130,6 +134,8 @@ func TestCampaign_Twice(t *testing.T) {
 	if status != AcRunning || !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("start Campaign then GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", AcRunning, wantErr, status, err)
 	}
+
+	ac.Abort()
 }
 
 // TestAbort_TimeoutAndAbort tests abort when no campaign starts
@@ -199,4 +205,6 @@ func TestGetProofInfo(t *testing.T) {
 	if !reflect.DeepEqual(wantInfo, info) {
 		t.Fatalf("campaign, want(info: %+v), bug(info: %+v)", wantInfo, info)
 	}
+
+	ac.Abort()
 }
