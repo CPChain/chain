@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"sync"
@@ -63,6 +64,8 @@ func errResp(code errCode, format string, v ...interface{}) error {
 	return fmt.Errorf("%v - %v", code, fmt.Sprintf(format, v...))
 }
 
+type SignerFunc func(header *types.Header) error
+
 type P2PSignerHandshake func(p *peer, address common.Address) error
 
 type ProtocolManager struct {
@@ -81,6 +84,8 @@ type ProtocolManager struct {
 	peers      *peerSet
 
 	SubProtocols []p2p.Protocol
+
+	signerFunc SignerFunc
 
 	eventMux      *event.TypeMux
 	txsCh         chan core.NewTxsEvent
@@ -105,7 +110,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the Ethereum network.
-func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, p2pSignerHandshake P2PSignerHandshake) (*ProtocolManager, error) {
+func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, p2pSignerHandshake P2PSignerHandshake, signerFunc SignerFunc) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -184,7 +189,8 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 		atomic.StoreUint32(&manager.acceptTxs, 1) // Mark initial sync done on any fetcher import
 		return manager.blockchain.InsertChain(blocks)
 	}
-	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, heighter, inserter, manager.removePeer)
+
+	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, manager.BroadcastSignedHeader, heighter, inserter, manager.removePeer)
 
 	manager.p2pSignerHandshake = p2pSignerHandshake
 
@@ -277,11 +283,18 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		p.Log().Debug("Ethereum handshake failed", "err", err)
 		return err
 	}
+
+	if err := p.SendNewSignerMsg(common.Address{}); err != nil {
+		log.Info("sending new signer msg")
+		return errors.New("sending NewSignerMsg to peer failed")
+	}
+
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
 		rw.Init(p.version)
 	}
 	// Register the peer locally
 	if err := pm.peers.Register(p); err != nil {
+		log.Info("register new peer ")
 		p.Log().Error("Ethereum peer registration failed", "err", err)
 		return err
 	}
@@ -706,19 +719,101 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		}
 		if err := pm.p2pSignerHandshake(p, signerAddress); err != nil {
 			log.Info("handshake err", "err", err)
-			return err
+			// return err
 		}
 
-	case msg.Code == NewBlockGeneratedMsg:
-		// sign the block.
-		// send the signed header with NewSignedHeaderMsg.
-	case msg.Code == NewBlockGeneratedHashesMsg:
-		// fetch the block with the hash from remote peer.
-		// sign the block.
-		// send the signed hash with NewSignedHeaderMsg.
+	// case msg.Code == NewBlockGeneratedMsg:
+	// 	// if received a new generated block, perform as to verify a normal block
+	// 	// do signing in dpor, return consensus.ErrNewSignedHeader
+	// 	// then broadcast to remote committee.
+
+	// 	// Retrieve and decode the propagated block
+	// 	var request newBlockData
+	// 	if err := msg.Decode(&request); err != nil {
+	// 		return errResp(ErrDecode, "%v: %v", msg, err)
+	// 	}
+	// 	request.Block.ReceivedAt = msg.ReceivedAt
+	// 	request.Block.ReceivedFrom = p
+
+	// 	// Mark the peer as owning the block and schedule it for import
+	// 	p.MarkPendingBlock(request.Block.Hash())
+	// 	pm.fetcher.Enqueue(p.id, request.Block)
+
+	// 	// Assuming the block is importable by the peer, but possibly not yet done so,
+	// 	// calculate the head hash and TD that the peer truly must have.
+	// 	var (
+	// 		trueHead = request.Block.ParentHash()
+	// 		trueTD   = new(big.Int).Sub(request.TD, request.Block.Difficulty())
+	// 	)
+	// 	// Update the peers total difficulty if better than the previous
+	// 	if _, td := p.Head(); trueTD.Cmp(td) > 0 {
+	// 		p.SetHead(trueHead, trueTD)
+
+	// 		// Schedule a sync if above ours. Note, this will not fire a sync for a gap of
+	// 		// a singe block (as the true TD is below the propagated block), however this
+	// 		// scenario should easily be covered by the fetcher.
+	// 		currentBlock := pm.blockchain.CurrentBlock()
+	// 		if trueTD.Cmp(pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())) > 0 {
+	// 			go pm.synchronise(p)
+	// 		}
+	// 	}
+
+	// case msg.Code == NewBlockGeneratedHashesMsg:
+	// 	// if received a new generated header of block,
+	// 	// notify the fetcher to fetch the block
+
+	// 	var announces newBlockHashesData
+	// 	if err := msg.Decode(&announces); err != nil {
+	// 		return errResp(ErrDecode, "%v: %v", msg, err)
+	// 	}
+	// 	// Mark the hashes as present at the remote node
+	// 	for _, block := range announces {
+	// 		p.MarkPendingBlock(block.Hash)
+	// 	}
+	// 	// Schedule all the unknown hashes for retrieval
+	// 	unknown := make(newBlockHashesData, 0, len(announces))
+	// 	for _, block := range announces {
+	// 		if !pm.blockchain.HasBlock(block.Hash, block.Number) {
+	// 			unknown = append(unknown, block)
+	// 		}
+	// 	}
+	// 	for _, block := range unknown {
+	// 		pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+	// 	}
+
 	case msg.Code == NewSignedHeaderMsg:
 		// collect the sigs in the header.
 		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
+		var header types.Header
+		if err := msg.Decode(&header); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+
+		switch err := pm.signerFunc(&header); err {
+		case nil:
+			hash := header.Hash()
+			number := header.Number.Uint64()
+
+			// accept the header and the block, if does not have the block, ask for the block.
+			if !pm.blockchain.HasBlock(header.Hash(), header.Number.Uint64()) {
+				// ask for the block from remote peer.
+
+				// Mark the hashes as present at the remote node
+				p.MarkPendingBlock(header.Hash())
+
+				// Schedule all the unknown hashes for retrieval
+				pm.fetcher.Notify(p.id, hash, number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+
+			} else {
+				block := pm.blockchain.GetBlockByHash(hash)
+				go pm.BroadcastBlock(block, true)
+			}
+
+		case consensus.ErrNewSignedHeader:
+			go pm.BroadcastSignedHeader(&header)
+		default:
+			return err
+		}
 
 	default:
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
@@ -726,21 +821,30 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 	return nil
 }
 
+// BroadcastSignedHeader broadcasts signed header to remote committee.
+func (pm *ProtocolManager) BroadcastSignedHeader(header *types.Header) {
+	committee := pm.peers.committee
+	for _, peer := range committee {
+		peer.AsyncSendNewSignedHeader(header)
+	}
+}
+
 // BroadcastBlock will either propagate a block to a subset of it's peers, or
 // will only announce it's availability (depending what's requested).
 func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
-	hash := block.Hash()
+	pm.broadcastBlock(block, propagate, false)
+}
 
+func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, ifMined bool) {
+	hash := block.Hash()
 	peers := pm.peers.PeersWithoutBlock(hash)
+
+	if ifMined {
+		peers = pm.peers.CommitteeWithoutBlock(hash)
+	}
 
 	// TODO: fix this.
 	log.Debug("--------I am in handler.BroadcastBlock start--------")
-	log.Debug("--------dpor:" + strconv.FormatBool(pm.chainconfig.Dpor != nil) + "--------")
-	if pm.chainconfig.Dpor != nil {
-		peers = pm.peers.AllPeers()
-		log.Debug("got all peers.")
-	}
-
 	log.Debug("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
 
 	// If propagation is requested, send to a subset of the peer
@@ -753,18 +857,18 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash)
 			return
 		}
-		// TODO: fix this.
-		log.Debug("propagating block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex() + "td: " + strconv.Itoa(int(td.Int64())))
-		log.Debug("--------I am in handler.BroadcastBlock end--------")
+
 		// Send the block to a subset of our peers
-		// transfer := peers[:int(math.Sqrt(float64(len(peers))))]
-		transfer := peers[:]
+		transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+
 		for _, peer := range transfer {
 			peer.AsyncSendNewBlock(block, td)
 		}
+
 		log.Trace("Propagated block", "hash", hash, "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 		return
 	}
+
 	// Otherwise if the block is indeed in out own chain, announce it
 	if pm.blockchain.HasBlock(hash, block.NumberU64()) {
 		for _, peer := range peers {
@@ -795,14 +899,13 @@ func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions) {
 
 // Mined broadcast loop
 func (pm *ProtocolManager) minedBroadcastLoop() {
-	// TODO: fix this. just broadcast to my peers.committee. Liu Qian
 
 	// automatically stops if unsubscribe
 	for obj := range pm.minedBlockSub.Chan() {
 		switch ev := obj.Data.(type) {
 		case core.NewMinedBlockEvent:
-			pm.BroadcastBlock(ev.Block, true)  // First propagate block to peers
-			pm.BroadcastBlock(ev.Block, false) // Only then announce to the rest
+			pm.broadcastBlock(ev.Block, true, true)  // First propagate block to peers
+			pm.broadcastBlock(ev.Block, false, true) // Only then announce to the rest
 		}
 	}
 

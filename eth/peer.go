@@ -25,6 +25,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
 	"gopkg.in/fatih/set.v0"
@@ -571,6 +572,7 @@ func (ps *peerSet) RegisterSigner(p *peer) error {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
+	log.Info("register peer", "peer", p.id)
 	if ps.closed {
 		return errClosed
 	}
@@ -653,9 +655,9 @@ func (ps *peerSet) PeersWithoutBlock(hash common.Hash) []*peer {
 	return list
 }
 
-// PeersWithoutWaitBlock retrieves a list of peers that do not have a given block in
+// CommitteeWithoutWaitBlock retrieves a list of peers that do not have a given block in
 // their set of known hashes.
-func (ps *peerSet) PeersWithoutPendingBlock(hash common.Hash) []*peer {
+func (ps *peerSet) CommitteeWithoutBlock(hash common.Hash) []*peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 

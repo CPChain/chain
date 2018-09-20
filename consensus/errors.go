@@ -20,6 +20,7 @@ import (
 	"errors"
 
 	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/core/types"
 )
 
 var (
@@ -44,6 +45,10 @@ var (
 
 	// ErrUnauthorized is returned if a header is signed by a non-authorized entity.
 	ErrUnauthorized = errors.New("unauthorized leader")
+
+	// ErrNewSignedHeader is returned if i sign the block, but not accept the block yet.
+	ErrNewSignedHeader = &ErrNewSignedHeaderType{SignedHeader: &types.Header{}}
+	// ErrNewSignedHeader = errors.New("new signed header")
 )
 
 // ErrNotEnoughSigsType is returned if there is not enough signatures for a block.
@@ -53,4 +58,13 @@ type ErrNotEnoughSigsType struct {
 
 func (e *ErrNotEnoughSigsType) Error() string {
 	return "not enough sigs: block hash: " + e.NotEnoughSigsBlockHash.Hex()
+}
+
+// ErrNewSignedHeaderType is type for ErrNewSignedHeader.
+type ErrNewSignedHeaderType struct {
+	SignedHeader *types.Header
+}
+
+func (e *ErrNewSignedHeaderType) Error() string {
+	return "signed the header: header hash: " + e.SignedHeader.Hash().Hex()
 }

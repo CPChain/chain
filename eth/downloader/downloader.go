@@ -339,6 +339,11 @@ func (d *Downloader) Synchronise(id string, head common.Hash, td *big.Int, mode 
 		// TODO: he will broadcast the blocks.
 		log.Debug("Not enough signatures, waiting", "err", err)
 
+	case consensus.ErrNewSignedHeader:
+		// TODO: he will broadcast the header in err
+		err := err.(*consensus.ErrNewSignedHeaderType)
+		_ = err.SignedHeader
+
 	default:
 		log.Warn("Synchronisation failed, retrying", "err", err)
 	}
@@ -1372,6 +1377,9 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 		// TODO: fix this.
 		if err == consensus.ErrNotEnoughSigs {
 			err := err.(*consensus.ErrNotEnoughSigsType)
+			return err
+		}
+		if err == consensus.ErrNewSignedHeader {
 			return err
 		}
 		return errInvalidChain

@@ -316,10 +316,11 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 				return err
 			}
 
+			return consensus.ErrNewSignedHeader
 			// TODO: fix this. return special error to  post to pm.signedHeaderSub in handler.go. Liu Qian
-		} else {
-			return consensus.ErrNotEnoughSigs
 		}
+		return consensus.ErrNotEnoughSigs
+
 	}
 	// --- our check ends ---
 

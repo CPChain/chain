@@ -1191,6 +1191,11 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			bc.waitingSignatureBlocks.Add(block.Hash(), block)
 			return i, events, coalescedLogs, err
 
+		case err == consensus.ErrNewSignedHeader:
+			err := err.(*consensus.ErrNewSignedHeaderType)
+			err.SignedHeader = block.RefHeader()
+			return i, events, coalescedLogs, err
+
 		case err != nil:
 			bc.reportBlock(block, nil, err)
 			return i, events, coalescedLogs, err
