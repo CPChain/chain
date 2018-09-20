@@ -170,8 +170,10 @@ func (c *CliqueConfig) String() string {
 
 // DporConfig is the consensus engine configs for proof-of-authority based sealing.
 type DporConfig struct {
-	Period uint64 `json:"period"` // Number of seconds between blocks to enforce
-	Epoch  uint64 `json:"epoch"`  // Epoch length to reset votes and checkpoint
+	Period             uint64                    `json:"period"` // Number of seconds between blocks to enforce
+	Epoch              uint64                    `json:"epoch"`  // Epoch length to reset votes and checkpoint
+	MaxInitBlockNumber uint64                    `json:"maxInitBlockNumber"`
+	Contracts          map[string]common.Address `json:"contracts"`
 }
 
 // String implements the stringer interface, returning the consensus engine details.
