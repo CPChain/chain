@@ -27,6 +27,7 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/internal/debug"
@@ -287,6 +288,10 @@ func (n *Node) startInProc(apis []rpc.API) error {
 	// Register all the APIs exposed by the services
 	handler := rpc.NewServer()
 	for _, api := range apis {
+		if api.Namespace == "admission" {
+			api.Service.(*admission.AdmissionControl).RegisterInProcHander(handler)
+		}
+
 		if err := handler.RegisterName(api.Namespace, api.Service); err != nil {
 			return err
 		}

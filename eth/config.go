@@ -24,6 +24,7 @@ import (
 	"runtime"
 	"time"
 
+	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
@@ -56,6 +57,7 @@ var DefaultConfig = Config{
 		Blocks:     20,
 		Percentile: 60,
 	},
+	Admission: admission.DefaultConfig,
 	PrivateTx: private.DefaultConfig(),
 }
 
@@ -104,6 +106,9 @@ type Config struct {
 
 	// Ethash options
 	Ethash ethash.Config
+
+	// Admission options
+	Admission admission.Config
 
 	// Transaction pool options
 	TxPool core.TxPoolConfig

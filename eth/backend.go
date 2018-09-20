@@ -26,6 +26,7 @@ import (
 	"sync/atomic"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -84,7 +85,8 @@ type Ethereum struct {
 	bloomRequests chan chan *bloombits.Retrieval // Channel receiving bloom data retrieval requests
 	bloomIndexer  *core.ChainIndexer             // Bloom indexer operating during block imports
 
-	APIBackend *EthAPIBackend
+	APIBackend          *EthAPIBackend
+	AdmissionAPIBackend admission.APIBackend
 
 	miner     *miner.Miner
 	gasPrice  *big.Int
@@ -196,6 +198,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		gpoParams.Default = config.GasPrice
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
+	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.APIBackend, eth.etherbase, eth.config.Admission)
 
 	return eth, nil
 }
@@ -299,6 +302,9 @@ func (s *Ethereum) APIs() []rpc.API {
 
 	// Append any APIs exposed explicitly by the consensus engine
 	apis = append(apis, s.engine.APIs(s.BlockChain())...)
+
+	// Append any APIs exposed explicitly by the admission control
+	apis = append(apis, s.AdmissionAPIBackend.APIs()...)
 
 	// Append all the local APIs and return
 	return append(apis, []rpc.API{
