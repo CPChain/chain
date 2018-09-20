@@ -9,10 +9,6 @@ type workStatus = uint32
 
 const maxNonce = math.MaxUint64
 
-var numOfCampaign = 10
-var myRpt = 60
-var keystonePath = "../examples/cpchain/data/dd1/keystore/"
-
 const (
 	// AcIdle status done.
 	AcIdle workStatus = iota + 1
