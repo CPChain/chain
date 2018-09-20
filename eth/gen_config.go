@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"time"
 
+	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
@@ -36,6 +37,7 @@ func (c Config) MarshalTOML() (interface{}, error) {
 		ExtraData               hexutil.Bytes  `toml:",omitempty"`
 		GasPrice                *big.Int
 		Ethash                  ethash.Config
+		Admission               admission.Config
 		TxPool                  core.TxPoolConfig
 		GPO                     gasprice.Config
 		EnablePreimageRecording bool
@@ -59,6 +61,7 @@ func (c Config) MarshalTOML() (interface{}, error) {
 	enc.ExtraData = c.ExtraData
 	enc.GasPrice = c.GasPrice
 	enc.Ethash = c.Ethash
+	enc.Admission = c.Admission
 	enc.TxPool = c.TxPool
 	enc.GPO = c.GPO
 	enc.EnablePreimageRecording = c.EnablePreimageRecording
@@ -86,6 +89,7 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		ExtraData               *hexutil.Bytes  `toml:",omitempty"`
 		GasPrice                *big.Int
 		Ethash                  *ethash.Config
+		Admission               *admission.Config
 		TxPool                  *core.TxPoolConfig
 		GPO                     *gasprice.Config
 		EnablePreimageRecording *bool
@@ -143,6 +147,9 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	}
 	if dec.Ethash != nil {
 		c.Ethash = *dec.Ethash
+	}
+	if dec.Admission != nil {
+		c.Admission = *dec.Admission
 	}
 	if dec.TxPool != nil {
 		c.TxPool = *dec.TxPool
