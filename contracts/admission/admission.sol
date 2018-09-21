@@ -33,7 +33,7 @@ contract Admission {
       @return true returns true if all is ok
     */
     function verify(uint64 _cpuNonce, uint _cpuBlockNumber, uint64 _memoryNonce, uint _memoryBlockNumber) public constant returns (bool) {
-	return verifyCPU(_cpuNonce, _cpuBlockNumber) && verifyMemory(_memoryNonce, _memoryBlockNumber);
+        return verifyCPU(_cpuNonce, _cpuBlockNumber) && verifyMemory(_memoryNonce, _memoryBlockNumber);
     }
 
     /** @dev verifyMemory verifies the given memory proof
@@ -42,7 +42,7 @@ contract Admission {
       @return true returns true if memory proof is ok
     */
     function verifyMemory(uint64 _nonce, uint _blockNumber) public constant returns (bool) {
-	return true;
+        return true;
     }
 
     /** @dev verifyCPU verifies the given cpu proof
@@ -51,8 +51,9 @@ contract Admission {
       @return true returns true if cpu proof is ok
     */
     function verifyCPU(uint64 _nonce, uint _blockNumber) public constant returns (bool) {
-	require((block.number-_blockNumber) <= 20 && (block.number-_blockNumber) >= 0, "must within 20 block");
-	return  sha256(block.coinbase, blockhash(_blockNumber), bytes32(_nonce)) <= bytes32(cpuTarget);
+        require((block.number-_blockNumber) <= 20 && (block.number-_blockNumber) >= 0, "must within 20 block");
+        return sha256(abi.encodePacked(block.coinbase, blockhash(_blockNumber), _nonce)) <=  bytes32(cpuTarget);
     }
 }
+
 
