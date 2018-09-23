@@ -245,7 +245,8 @@ func (p *peer) AsyncSendNewPendingBlockHashes(block *types.Block) {
 
 // SendNewSignedHeader sends new signed block header.
 func (p *peer) SendNewSignedHeader(header *types.Header) error {
-	err := p2p.Send(p.rw, NewSignedHeaderMsg, []interface{}{header})
+	// err := p2p.Send(p.rw, NewSignedHeaderMsg, []*types.Header{header})
+	err := p2p.Send(p.rw, NewSignedHeaderMsg, header)
 	if err == nil {
 		p.MarkPendingBlock(header.Hash())
 	}

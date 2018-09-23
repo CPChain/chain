@@ -95,6 +95,8 @@ var (
 	errTooOld                  = errors.New("peer doesn't speak recent enough protocol version (need version >= 62)")
 )
 
+type signedHeaderBroadcasterFn func(header *types.Header)
+
 type Downloader struct {
 	mode SyncMode       // Synchronisation mode defining the strategy used (per sync cycle)
 	mux  *event.TypeMux // Event multiplexer to announce sync operation events
@@ -114,6 +116,8 @@ type Downloader struct {
 
 	lightchain LightChain
 	Blockchain BlockChain
+
+	broadcastSignedHeader signedHeaderBroadcasterFn // Broadcasts a signed header to connected committee
 
 	// Callbacks
 	dropPeer peerDropFn // Drops a peer for misbehaving
@@ -203,7 +207,7 @@ type BlockChain interface {
 }
 
 // New creates a new downloader to fetch hashes and blocks from remote peers.
-func New(mode SyncMode, stateDb ethdb.Database, mux *event.TypeMux, chain BlockChain, lightchain LightChain, dropPeer peerDropFn) *Downloader {
+func New(mode SyncMode, stateDb ethdb.Database, mux *event.TypeMux, chain BlockChain, lightchain LightChain, dropPeer peerDropFn, broadcastSignedHeader signedHeaderBroadcasterFn) *Downloader {
 	if lightchain == nil {
 		lightchain = chain
 	}
@@ -232,6 +236,8 @@ func New(mode SyncMode, stateDb ethdb.Database, mux *event.TypeMux, chain BlockC
 			processed: rawdb.ReadFastTrieProgress(stateDb),
 		},
 		trackStateReq: make(chan *stateReq),
+
+		broadcastSignedHeader: broadcastSignedHeader,
 	}
 	go dl.qosTuner()
 	go dl.stateFetcher()
@@ -339,10 +345,17 @@ func (d *Downloader) Synchronise(id string, head common.Hash, td *big.Int, mode 
 		// TODO: he will broadcast the blocks.
 		log.Debug("Not enough signatures, waiting", "err", err)
 
+		return nil
+
 	case consensus.ErrNewSignedHeader:
 		// TODO: he will broadcast the header in err
 		err := err.(*consensus.ErrNewSignedHeaderType)
-		_ = err.SignedHeader
+		header := err.SignedHeader
+
+		log.Info("accept failed, but signed, broadcasting...", "header", header)
+		go d.broadcastSignedHeader(header)
+
+		return nil
 
 	default:
 		log.Warn("Synchronisation failed, retrying", "err", err)
@@ -1372,6 +1385,7 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 	for i, result := range results {
 		blocks[i] = types.NewBlockWithHeader(result.Header).WithBody(result.Transactions, result.Uncles)
 	}
+	log.Info("inserting ...")
 	if index, err := d.Blockchain.InsertChain(blocks); err != nil {
 		log.Debug("Downloaded item processing failed", "number", results[index].Header.Number, "hash", results[index].Header.Hash(), "err", err)
 		// TODO: fix this.
@@ -1380,6 +1394,7 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 			return err
 		}
 		if err == consensus.ErrNewSignedHeader {
+			log.Info("ErrNewSignedHeader err in downloader.importBlockResults.")
 			return err
 		}
 		return errInvalidChain

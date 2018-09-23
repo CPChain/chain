@@ -33,7 +33,7 @@ const (
 	eth62 = 62
 	eth63 = 63
 
-	cpc01 = 42
+	cpc01 = 64
 )
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.
@@ -44,7 +44,7 @@ var ProtocolVersions = []uint{cpc01, eth63, eth62}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
 // var ProtocolLengths = []uint64{17, 8}
-var ProtocolLengths = []uint64{70, 17, 8} // TODO: this is wrong, fix this.
+var ProtocolLengths = []uint64{70, 16, 8} // TODO: this is wrong, fix this.
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 

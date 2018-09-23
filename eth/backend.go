@@ -193,6 +193,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 
 	signerFunc := func(header *types.Header) error {
+		log.Info("verify with signerFunc")
 		return eth.engine.VerifyHeader(eth.blockchain, header, true, header)
 	}
 
@@ -228,13 +229,19 @@ func (s *Ethereum) SignerHandShake(p *peer, address common.Address) error {
 	// if err != nil {
 	// 	return errors.New("isSigner failed")
 	// }
-	// register peer as signer.
-	if err := s.protocolManager.peers.RegisterSigner(p); err != nil {
+	// // register peer as signer.
+	err := s.protocolManager.peers.RegisterSigner(p)
+	if err != nil && err != errAlreadyRegistered {
 		return errors.New("registering peer as signer failed")
 	}
+
+	if err == errAlreadyRegistered {
+		return nil
+	}
+
 	// send NewSignerMsg too.
-	log.Debug("################## resending NewSignerMsg ################")
 	if err := p.SendNewSignerMsg(s.etherbase); err != nil {
+		log.Info("err when sending NewSignerMsg in backend", "err", err)
 		return errors.New("sending NewSignerMsg to peer failed")
 	}
 

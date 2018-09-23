@@ -85,14 +85,14 @@ type ProtocolManager struct {
 
 	SubProtocols []p2p.Protocol
 
-	signerFunc SignerFunc
-
 	eventMux      *event.TypeMux
 	txsCh         chan core.NewTxsEvent
 	txsSub        event.Subscription
 	minedBlockSub *event.TypeMuxSubscription
 
 	// TODO: add signedHeaderSub *event.TypeMuxSubscription here. Liu Qian
+	engine     consensus.Engine
+	signerFunc SignerFunc
 
 	// channels for fetcher, syncer, txsyncLoop
 	newPeerCh   chan *peer
@@ -123,6 +123,9 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 		noMorePeers: make(chan struct{}),
 		txsyncCh:    make(chan *txsync),
 		quitSync:    make(chan struct{}),
+
+		engine:     engine,
+		signerFunc: signerFunc,
 	}
 	// Figure out whether to allow fast sync or not
 	if mode == downloader.FastSync && blockchain.CurrentBlock().NumberU64() > 0 {
@@ -172,7 +175,7 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 		return nil, errIncompatibleConfig
 	}
 	// Construct the different synchronisation mechanisms
-	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
+	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer, manager.BroadcastSignedHeader)
 
 	validator := func(header *types.Header, refHeader *types.Header) error {
 		return engine.VerifyHeader(blockchain, header, true, refHeader)
@@ -284,9 +287,20 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		return err
 	}
 
-	if err := p.SendNewSignerMsg(common.Address{}); err != nil {
-		log.Info("sending new signer msg")
-		return errors.New("sending NewSignerMsg to peer failed")
+	// e, ok := pm.engine.(consensus.Validator)
+	// if !ok {
+	// 	return errors.New("bad engine")
+	// }
+
+	// isSigner, err := e.IsSigner(pm.blockchain, address, s.blockchain.CurrentHeader().Number.Uint64())
+	isSigner := true
+
+	if isSigner {
+		// register peer as signer.
+		err := pm.peers.RegisterSigner(p)
+		if err != nil && err != errAlreadyRegistered {
+			return errors.New("registering peer as signer failed")
+		}
 	}
 
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
@@ -784,13 +798,19 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 	case msg.Code == NewSignedHeaderMsg:
 		// collect the sigs in the header.
 		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
-		var header types.Header
+
+		log.Info("received NewSignedHeaderMsg, decoding...")
+
+		var header *types.Header
 		if err := msg.Decode(&header); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
-		switch err := pm.signerFunc(&header); err {
+		log.Info("received NewSignedHeaderMsg, verifying...")
+
+		switch err := pm.signerFunc(header); err {
 		case nil:
+			log.Info("verify succeed, accepting...")
 			hash := header.Hash()
 			number := header.Number.Uint64()
 
@@ -798,8 +818,8 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			if !pm.blockchain.HasBlock(header.Hash(), header.Number.Uint64()) {
 				// ask for the block from remote peer.
 
-				// Mark the hashes as present at the remote node
-				p.MarkPendingBlock(header.Hash())
+				// // Mark the hashes as present at the remote node
+				// p.MarkPendingBlock(header.Hash())
 
 				// Schedule all the unknown hashes for retrieval
 				pm.fetcher.Notify(p.id, hash, number, time.Now(), p.RequestOneHeader, p.RequestBodies)
@@ -810,7 +830,8 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			}
 
 		case consensus.ErrNewSignedHeader:
-			go pm.BroadcastSignedHeader(&header)
+			log.Info("verify failed, but signed it, broadcast...")
+			go pm.BroadcastSignedHeader(header)
 		default:
 			return err
 		}
@@ -824,6 +845,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 // BroadcastSignedHeader broadcasts signed header to remote committee.
 func (pm *ProtocolManager) BroadcastSignedHeader(header *types.Header) {
 	committee := pm.peers.committee
+	log.Info("broadcasting to committee", "c", committee)
 	for _, peer := range committee {
 		peer.AsyncSendNewSignedHeader(header)
 	}
