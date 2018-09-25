@@ -137,6 +137,8 @@ type BlockChain struct {
 	privateStateCache state.Database       // State database to reuse between imports (contains state cache)
 	remoteDB          ethdb.RemoteDatabase // Remote database for huge amount data storage
 	rsaPrivateKey     *rsa.PrivateKey      // Private RSA key used for many features such as private tx
+
+	ErrChan chan error
 }
 
 // WaitingSignatureBlocks returns waitingSignatureBlocks
@@ -182,6 +184,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 		privateStateCache:      state.NewDatabase(db),
 		remoteDB:               remoteDB,
 		rsaPrivateKey:          rsaPrivKey,
+		ErrChan:                make(chan error),
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
@@ -744,12 +747,15 @@ func (bc *BlockChain) procFutureBlocks() {
 			blocks = append(blocks, block.(*types.Block))
 		}
 	}
+
 	if len(blocks) > 0 {
 		types.BlockBy(types.Number).Sort(blocks)
 
 		// Insert one by one as chain insertion needs contiguous ancestry between blocks
 		for i := range blocks {
-			bc.InsertChain(blocks[i : i+1])
+			_, err := bc.InsertChain(blocks[i : i+1])
+			bc.ErrChan <- err
+			log.Debug("err of future insert, go to bc.ErrChan", "err", err)
 		}
 	}
 }
@@ -1108,8 +1114,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	// Start a parallel signature recovery (signer will fluke on fork transition, minimal perf loss)
 	senderCacher.recoverFromBlocks(types.MakeSigner(bc.chainConfig, chain[0].Number()), chain)
 
-	log.Info("length of the chain", "len", len(chain))
-
 	// Iterate over the blocks and insert when the verifier permits
 	for i, block := range chain {
 		// If the chain is terminating, stop processing blocks
@@ -1188,7 +1192,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			}
 
 		case err == consensus.ErrNotEnoughSigs:
-			log.Info("ErrNotEnoughSigs err in blockchain.insertChain.")
+			log.Debug("ErrNotEnoughSigs err in blockchain.insertChain.")
 			err := err.(*consensus.ErrNotEnoughSigsType)
 			err.NotEnoughSigsBlockHash = block.Hash()
 			bc.waitingSignatureBlocks.Add(block.Hash(), block)
@@ -1196,8 +1200,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		case err == consensus.ErrNewSignedHeader:
 
-			log.Info("ErrNewSignedHeader err in blockchain.insertChain.")
-			log.Info("err block", "block", block.NumberU64(), block.Hash().Hex(), block.Extra2())
+			log.Debug("ErrNewSignedHeader err in blockchain.insertChain.")
+			log.Debug("err block", "block", block.NumberU64(), block.Hash().Hex(), block.Extra2())
 			err := err.(*consensus.ErrNewSignedHeaderType)
 			err.SignedHeader = block.RefHeader()
 			return i, events, coalescedLogs, err

@@ -210,6 +210,10 @@ func (pm *ProtocolManager) removePeer(id string) {
 
 	// Unregister the peer from the downloader and Ethereum peer set
 	pm.downloader.UnregisterPeer(id)
+
+	if err := pm.peers.UnregisterSigner(id); err != nil {
+		log.Error("Signer Peer removal failed", "peer", id, "err", err)
+	}
 	if err := pm.peers.Unregister(id); err != nil {
 		log.Error("Peer removal failed", "peer", id, "err", err)
 	}
@@ -230,6 +234,8 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	// broadcast mined blocks
 	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent{})
 	go pm.minedBroadcastLoop()
+
+	go pm.waitForSignedHeader()
 
 	// start sync handlers
 	go pm.syncer()
@@ -308,7 +314,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	}
 	// Register the peer locally
 	if err := pm.peers.Register(p); err != nil {
-		log.Info("register new peer ")
+		log.Debug("register new peer ")
 		p.Log().Error("Ethereum peer registration failed", "err", err)
 		return err
 	}
@@ -799,18 +805,18 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// collect the sigs in the header.
 		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
 
-		log.Info("received NewSignedHeaderMsg, decoding...")
+		log.Debug("received NewSignedHeaderMsg, decoding...")
 
 		var header *types.Header
 		if err := msg.Decode(&header); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
-		log.Info("received NewSignedHeaderMsg, verifying...")
+		log.Debug("received NewSignedHeaderMsg, verifying...")
 
 		switch err := pm.signerFunc(header); err {
 		case nil:
-			log.Info("verify succeed, accepting...")
+			log.Debug("verify succeed, accepting...")
 			hash := header.Hash()
 			number := header.Number.Uint64()
 
@@ -822,6 +828,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 				// p.MarkPendingBlock(header.Hash())
 
 				// Schedule all the unknown hashes for retrieval
+				log.Info("notify fetcher to fetch block")
 				pm.fetcher.Notify(p.id, hash, number, time.Now(), p.RequestOneHeader, p.RequestBodies)
 
 			} else {
@@ -830,10 +837,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			}
 
 		case consensus.ErrNewSignedHeader:
-			log.Info("verify failed, but signed it, broadcast...")
+			log.Debug("verify failed, but signed it, broadcast...")
 			go pm.BroadcastSignedHeader(header)
 		default:
-			return err
+			// return err
 		}
 
 	default:
@@ -842,10 +849,25 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 	return nil
 }
 
+func (pm *ProtocolManager) waitForSignedHeader() {
+	var err error
+	for {
+		select {
+		case err = <-pm.blockchain.ErrChan:
+			log.Debug("received err from blockchain.ErrChan", "err", err)
+			if err, ok := err.(*consensus.ErrNewSignedHeaderType); ok {
+				header := err.SignedHeader
+				log.Debug("header", "header", header)
+				go pm.BroadcastSignedHeader(header)
+			}
+		}
+	}
+}
+
 // BroadcastSignedHeader broadcasts signed header to remote committee.
 func (pm *ProtocolManager) BroadcastSignedHeader(header *types.Header) {
 	committee := pm.peers.committee
-	log.Info("broadcasting to committee", "c", committee)
+	log.Debug("broadcasting to committee", "c", committee)
 	for _, peer := range committee {
 		peer.AsyncSendNewSignedHeader(header)
 	}

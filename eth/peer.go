@@ -592,12 +592,11 @@ func (ps *peerSet) UnregisterSigner(id string) error {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	p, ok := ps.committee[id]
+	_, ok := ps.committee[id]
 	if !ok {
 		return errNotRegistered
 	}
 	delete(ps.committee, id)
-	p.close()
 
 	return nil
 }
