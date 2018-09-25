@@ -15,7 +15,7 @@ func DeployCampaignVerify() common.Address {
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
 	auth := bind.NewKeyedTransactor(privateKey)
-	contractAddress, tx, _, err := campaignVerify.DeployAdmission(auth, client, new(big.Int).SetUint64(config.DefautCPUDifficulty), new(big.Int).SetUint64(config.DefautMemoryDifficulty))
+	contractAddress, tx, _, err := campaignVerify.DeployAdmission(auth, client, new(big.Int).SetUint64(config.DefaultCPUDifficulty), new(big.Int).SetUint64(config.DefaultMemoryDifficulty))
 	if err != nil {
 		log.Fatal(err)
 	}
