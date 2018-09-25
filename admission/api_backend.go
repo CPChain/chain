@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/rpc"
 )
 
@@ -13,6 +14,7 @@ type AdmissionControl struct {
 	config    Config
 	address   common.Address
 	proofInfo ProofInfo
+	client    *ethclient.Client
 
 	mutex  *sync.Mutex
 	status workStatus
@@ -127,12 +129,13 @@ func (ac *AdmissionControl) waitSendCampaignMsg(proofWorks []ProofWorkBackend, w
 	ac.sendCampaignProofInfo()
 }
 
-// waitSendCampaignProofInfo sends proof info to campaign contract
+// sendCampaignProofInfo sends proof info to campaign contract
 func (ac *AdmissionControl) sendCampaignProofInfo() {
-	// TODO
+	// TODO: implement it
 }
 
 // RegisterInProcHander registers the rpc.Server, handles RPC request to process the API requests in process
 func (ac *AdmissionControl) RegisterInProcHander(localRcpServer *rpc.Server) {
-	// TODO
+	client := rpc.DialInProc(localRcpServer)
+	ac.client = ethclient.NewClient(client)
 }
