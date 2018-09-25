@@ -6,7 +6,16 @@ contract Admission {
     uint cpuTarget;
     uint memoryTarget;
 
+    uint public cpuDifficulty;
+    uint public memoryDifficulty;
+
     constructor (uint _cpuDifficulty, uint _memoryDifficulty) public {
+	require(_cpuDifficulty <= 256 && _cpuDifficulty >= 0, "Difficulty must less than 256");
+	require(_memoryDifficulty <= 256 && _memoryDifficulty >= 0, "Difficulty must less than 256");
+
+	cpuDifficulty = _cpuDifficulty;
+	memoryDifficulty = _memoryDifficulty;
+
         memoryTarget = 1 << (256 - _memoryDifficulty);
         cpuTarget = 1 << (256 - _cpuDifficulty);
     }
@@ -15,6 +24,8 @@ contract Admission {
     * @param _difficulty the new cpu difficulty
     */
     function updateCPUDifficulty(uint _difficulty) public {
+	require(_difficulty <= 256 && _difficulty >= 0, "Difficulty must less than 256");
+	cpuDifficulty = _difficulty;
         cpuTarget = 1 << (256 - _difficulty);
     }
 
@@ -22,6 +33,8 @@ contract Admission {
     * @param _difficulty the new memory difficulty
     */
     function updateMemoryDifficulty(uint _difficulty) public {
+	require(_difficulty <= 256 && _difficulty >= 0, "Difficulty must less than 256");
+	memoryDifficulty = _difficulty;
         memoryTarget = 1 << (256 - _difficulty);
     }
 

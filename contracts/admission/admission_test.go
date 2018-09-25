@@ -1,4 +1,4 @@
-package admissionContract
+package campaignVerify
 
 import (
 	"crypto/ecdsa"
@@ -63,8 +63,11 @@ func TestVerifyCPU(t *testing.T) {
 }
 
 func TestUpdateCPUDifficulty(t *testing.T) {
+	defaultDifficulty := uint64(5)
+	newCPUDifficulty := uint64(15)
+
 	backend := newTestBackend()
-	addr0, err := deploy(key0, 5, 5, backend)
+	addr0, err := deploy(key0, defaultDifficulty, defaultDifficulty, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
@@ -76,8 +79,19 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 
 	auth := bind.NewKeyedTransactor(key0)
 
-	_, err = instance.UpdateCPUDifficulty(auth, new(big.Int).SetUint64(15))
+	_, err = instance.UpdateCPUDifficulty(auth, new(big.Int).SetUint64(newCPUDifficulty))
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
+	}
+
+	backend.Commit()
+
+	v, err := instance.CpuDifficulty(nil)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if v.Uint64() != newCPUDifficulty {
+		t.Fatalf("expected %d, got %v", newCPUDifficulty, v.Uint64())
 	}
 }
