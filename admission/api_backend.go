@@ -131,7 +131,7 @@ func (ac *AdmissionControl) waitSendCampaignMsg(proofWorks []ProofWorkBackend, w
 
 // sendCampaignProofInfo sends proof info to campaign contract
 func (ac *AdmissionControl) sendCampaignProofInfo() {
-	// TODO:
+	// TODO: implement it
 }
 
 // RegisterInProcHander registers the rpc.Server, handles RPC request to process the API requests in process
