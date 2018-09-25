@@ -34,6 +34,7 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/light"
+	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rpc"
 )
@@ -72,7 +73,12 @@ func (b *LesApiBackend) BlockByNumber(ctx context.Context, blockNr rpc.BlockNumb
 	return b.GetBlock(ctx, header.Hash())
 }
 
-func (b *LesApiBackend) StateAndHeaderByNumber(ctx context.Context, blockNr rpc.BlockNumber) (*state.StateDB, *types.Header, error) {
+func (b *LesApiBackend) StateAndHeaderByNumber(ctx context.Context, blockNr rpc.BlockNumber, isPrivate bool) (*state.StateDB, *types.Header, error) {
+	if isPrivate {
+		// TODO: consider whether and how to handle private tx (i.e. isPrivate == true)
+		log.Warn("Les does not support private transaction at the moment.")
+	}
+
 	header, err := b.HeaderByNumber(ctx, blockNr)
 	if header == nil || err != nil {
 		return nil, nil, err
