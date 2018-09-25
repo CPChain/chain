@@ -61,7 +61,7 @@ func TestDeployCampaign(t *testing.T) {
 
 	//maximumNoc
 	maximumNoc, err := campaign.MaximumNoc()
-	checkError(t, "maximumNoc error: %v", erGenesisAllocr)
+	checkError(t, "maximumNoc error: %v", err)
 	fmt.Println("maximumNoc:", maximumNoc)
 
 	//viewIdx
