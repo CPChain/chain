@@ -27,7 +27,7 @@ activate B
 CT --> B: items for sale
 B --> CE: send money for escrow
 B -> CT: order
-deactivate Bsssssss
+deactivate B
 
 CT --> A: notify the order
 activate A
