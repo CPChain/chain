@@ -732,16 +732,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// handshake
 		// send NewSignerMsg too.
 		// register peer as signer.
-		log.Debug("################## received NewSignerMsg ################")
-		var signerAddress common.Address
-
-		if err := msg.Decode(&signerAddress); err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
-		}
-		if err := pm.p2pSignerHandshake(p, signerAddress); err != nil {
-			log.Info("handshake err", "err", err)
-			// return err
-		}
 
 	case msg.Code == NewBlockGeneratedMsg:
 		// if received a new generated block, perform as to verify a normal block
