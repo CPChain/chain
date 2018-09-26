@@ -214,6 +214,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 				go pm.BroadcastBlock(waitingSignatureBlock, true)
 			}
 		}
+
 		log.Info("err in syncer", "e", err)
 
 		if err == consensus.ErrNewSignedHeader {

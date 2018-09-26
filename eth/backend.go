@@ -187,20 +187,10 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
 
-	// TODO: fix this.
-	p2pSignerHandshaker := func(p *peer, address common.Address) error {
-		return eth.SignerHandShake(p, address)
-	}
-
-	signerFunc := func(header *types.Header) error {
-		log.Info("verify with signerFunc")
-		return eth.engine.VerifyHeader(eth.blockchain, header, true, header)
-	}
-
 	eth.Etherbase()
 	log.Debug("etherbase in backend", "eb", eth.etherbase)
 
-	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, p2pSignerHandshaker, eth.SignerValidator, signerFunc, eth.etherbase); err != nil {
+	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, eth.etherbase); err != nil {
 		return nil, err
 	}
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
@@ -229,48 +219,6 @@ func (s *Ethereum) AddCommittee() {
 			log.Debug("err when adding committee", "err", err)
 		}
 	}
-}
-
-// SignerHandShake handshakes with remote signer.
-func (s *Ethereum) SignerHandShake(p *peer, address common.Address) error {
-	// e, ok := s.engine.(consensus.Validator)
-	// if !ok {
-	// 	return errors.New("bad engine")
-	// }
-
-	// isSigner, err := e.IsSigner(s.protocolManager.blockchain, address, s.blockchain.CurrentHeader().Number.Uint64())
-	// if !isSigner {
-	// 	return errors.New("not signer")
-	// }
-	// if err != nil {
-	// 	return errors.New("isSigner failed")
-	// }
-	// // register peer as signer.
-	err := s.protocolManager.peers.RegisterSigner(p)
-	if err != nil && err != errAlreadyRegistered {
-		return errors.New("registering peer as signer failed")
-	}
-
-	if err == errAlreadyRegistered {
-		return nil
-	}
-
-	// send NewSignerMsg too.
-	if err := p.SendNewSignerMsg(s.etherbase); err != nil {
-		log.Info("err when sending NewSignerMsg in backend", "err", err)
-		return errors.New("sending NewSignerMsg to peer failed")
-	}
-
-	return nil
-}
-
-func (s *Ethereum) SignerValidator(address common.Address) (isSigner bool, err error) {
-	e, ok := s.engine.(consensus.Validator)
-	if !ok {
-		return false, errors.New("bad engine")
-	}
-	isSigner, err = e.IsSigner(s.protocolManager.blockchain, address, s.blockchain.CurrentHeader().Number.Uint64())
-	return isSigner, err
 }
 
 func (s *Ethereum) newCommitteeNetworkHandler() error {

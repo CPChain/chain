@@ -63,10 +63,6 @@ func errResp(code errCode, format string, v ...interface{}) error {
 	return fmt.Errorf("%v - %v", code, fmt.Sprintf(format, v...))
 }
 
-type SignerFunc func(header *types.Header) error
-
-type P2PSignerHandshake func(p *peer, address common.Address) error
-
 type ProtocolManager struct {
 	networkID uint64
 
@@ -90,8 +86,7 @@ type ProtocolManager struct {
 	minedBlockSub *event.TypeMuxSubscription
 
 	// TODO: add signedHeaderSub *event.TypeMuxSubscription here. Liu Qian
-	engine     consensus.Engine
-	signerFunc SignerFunc
+	engine consensus.Engine
 
 	// channels for fetcher, syncer, txsyncLoop
 	newPeerCh   chan *peer
@@ -100,8 +95,6 @@ type ProtocolManager struct {
 	noMorePeers chan struct{}
 
 	etherbase               common.Address
-	signerValidator         ValidateSigner
-	p2pSignerHandshake      P2PSignerHandshake
 	committeeNetworkHandler *BasicCommitteeNetworkHandler
 
 	// wait group is used for graceful shutdowns during downloading
@@ -111,7 +104,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the Ethereum network.
-func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, p2pSignerHandshake P2PSignerHandshake, signerValidator ValidateSigner, signerFunc SignerFunc, etherbase common.Address) (*ProtocolManager, error) {
+func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, etherbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -125,10 +118,8 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 		txsyncCh:    make(chan *txsync),
 		quitSync:    make(chan struct{}),
 
-		engine:          engine,
-		signerFunc:      signerFunc,
-		signerValidator: signerValidator,
-		etherbase:       etherbase,
+		engine:    engine,
+		etherbase: etherbase,
 	}
 	// Figure out whether to allow fast sync or not
 	if mode == downloader.FastSync && blockchain.CurrentBlock().NumberU64() > 0 {
@@ -178,7 +169,7 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 		return nil, errIncompatibleConfig
 	}
 	// Construct the different synchronisation mechanisms
-	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer, manager.BroadcastSignedHeader)
+	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
 	validator := func(header *types.Header, refHeader *types.Header) error {
 		return engine.VerifyHeader(blockchain, header, true, refHeader)
@@ -197,8 +188,6 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 	}
 
 	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, manager.BroadcastSignedHeader, heighter, inserter, manager.removePeer)
-
-	manager.p2pSignerHandshake = p2pSignerHandshake
 
 	return manager, nil
 }
@@ -274,6 +263,15 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 	return newPeer(pv, p, newMeteredMsgWriter(rw))
 }
 
+func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner bool, err error) {
+	e, ok := pm.engine.(consensus.Validator)
+	if !ok {
+		return false, errors.New("bad engine")
+	}
+	isSigner, err = e.IsSigner(pm.blockchain, address, pm.blockchain.CurrentHeader().Number.Uint64())
+	return isSigner, err
+}
+
 // handle is the callback invoked to manage the life cycle of an eth peer. When
 // this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) handle(p *peer) error {
@@ -294,7 +292,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 
 	log.Debug("my etherbase", "address", pm.etherbase)
 
-	isSigner, err := p.Handshake(pm.networkID, td, hash, genesis.Hash(), pm.etherbase, pm.signerValidator)
+	isSigner, err := p.Handshake(pm.networkID, td, hash, genesis.Hash(), pm.etherbase, pm.SignerValidator)
 	if err != nil {
 		p.Log().Debug("Ethereum handshake failed", "err", err)
 		return err
@@ -353,6 +351,10 @@ func (pm *ProtocolManager) handle(p *peer) error {
 			return err
 		}
 	}
+}
+
+func (pm *ProtocolManager) VerifyAndSign(header *types.Header) error {
+	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
 }
 
 // handleMsg is invoked whenever an inbound message is received from a remote
@@ -741,64 +743,14 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			// return err
 		}
 
-	// case msg.Code == NewBlockGeneratedMsg:
-	// 	// if received a new generated block, perform as to verify a normal block
-	// 	// do signing in dpor, return consensus.ErrNewSignedHeader
-	// 	// then broadcast to remote committee.
+	case msg.Code == NewBlockGeneratedMsg:
+		// if received a new generated block, perform as to verify a normal block
+		// do signing in dpor, return consensus.ErrNewSignedHeader
+		// then broadcast to remote committee.
 
-	// 	// Retrieve and decode the propagated block
-	// 	var request newBlockData
-	// 	if err := msg.Decode(&request); err != nil {
-	// 		return errResp(ErrDecode, "%v: %v", msg, err)
-	// 	}
-	// 	request.Block.ReceivedAt = msg.ReceivedAt
-	// 	request.Block.ReceivedFrom = p
-
-	// 	// Mark the peer as owning the block and schedule it for import
-	// 	p.MarkPendingBlock(request.Block.Hash())
-	// 	pm.fetcher.Enqueue(p.id, request.Block)
-
-	// 	// Assuming the block is importable by the peer, but possibly not yet done so,
-	// 	// calculate the head hash and TD that the peer truly must have.
-	// 	var (
-	// 		trueHead = request.Block.ParentHash()
-	// 		trueTD   = new(big.Int).Sub(request.TD, request.Block.Difficulty())
-	// 	)
-	// 	// Update the peers total difficulty if better than the previous
-	// 	if _, td := p.Head(); trueTD.Cmp(td) > 0 {
-	// 		p.SetHead(trueHead, trueTD)
-
-	// 		// Schedule a sync if above ours. Note, this will not fire a sync for a gap of
-	// 		// a singe block (as the true TD is below the propagated block), however this
-	// 		// scenario should easily be covered by the fetcher.
-	// 		currentBlock := pm.blockchain.CurrentBlock()
-	// 		if trueTD.Cmp(pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())) > 0 {
-	// 			go pm.synchronise(p)
-	// 		}
-	// 	}
-
-	// case msg.Code == NewBlockGeneratedHashesMsg:
-	// 	// if received a new generated header of block,
-	// 	// notify the fetcher to fetch the block
-
-	// 	var announces newBlockHashesData
-	// 	if err := msg.Decode(&announces); err != nil {
-	// 		return errResp(ErrDecode, "%v: %v", msg, err)
-	// 	}
-	// 	// Mark the hashes as present at the remote node
-	// 	for _, block := range announces {
-	// 		p.MarkPendingBlock(block.Hash)
-	// 	}
-	// 	// Schedule all the unknown hashes for retrieval
-	// 	unknown := make(newBlockHashesData, 0, len(announces))
-	// 	for _, block := range announces {
-	// 		if !pm.blockchain.HasBlock(block.Hash, block.Number) {
-	// 			unknown = append(unknown, block)
-	// 		}
-	// 	}
-	// 	for _, block := range unknown {
-	// 		pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
-	// 	}
+	case msg.Code == NewBlockGeneratedHashesMsg:
+		// if received a new generated header of block,
+		// notify the fetcher to fetch the block
 
 	case msg.Code == NewSignedHeaderMsg:
 		// collect the sigs in the header.
@@ -813,7 +765,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 		log.Debug("received NewSignedHeaderMsg, verifying...")
 
-		switch err := pm.signerFunc(header); err {
+		switch err := pm.VerifyAndSign(header); err {
 		case nil:
 			log.Debug("verify succeed, accepting...")
 			hash := header.Hash()
