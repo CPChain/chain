@@ -30,6 +30,36 @@ func WritePrivateStateRoot(db ethdb.Database, blockRoot, root common.Hash) error
 
 // WritePrivateReceipt writes private receipt associated with specified transaction.
 func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db *trie.Database) error {
+	hash := getPrivateReceiptKey(txHash)
+	// Write receipt to trie db.
+	storageReceipt := (*types.ReceiptForStorage)(receipt)
+	bytesToWrite, _ := rlp.EncodeToBytes(storageReceipt)
+	db.InsertBlob(hash, bytesToWrite)
+	log.Info("Write private transaction receipt", "hash", hash, "receipt", receipt)
+	return nil
+}
+
+// ReadPrivateReceipt reads private receipt associated with specified transaction.
+func ReadPrivateReceipt(txHash common.Hash, db *trie.Database) (*types.Receipt, error) {
+	hash := getPrivateReceiptKey(txHash)
+	// Read private receipt data
+	data, err := db.Node(hash)
+	if err != nil {
+		return nil, err
+	}
+	// Decode receipt
+	storageReceipt := types.ReceiptForStorage{}
+	rlp.DecodeBytes(data, &storageReceipt)
+	receipt := (*types.Receipt)(&storageReceipt)
+	// TODO: workaround for a suspected bug on RLP of Receipt.
+	if len(receipt.PostState) != 0 {
+		receipt.Status = types.ReceiptStatusSuccessful
+	}
+
+	return (*types.Receipt)(&storageReceipt), nil
+}
+
+func getPrivateReceiptKey(txHash common.Hash) common.Hash {
 	// Generate hash combining tx hash and private receipt prefix.
 	// It aims at avoiding conflict.
 	contentToHash := bytes.Join([][]byte{
@@ -39,12 +69,5 @@ func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db *trie.Da
 	hasher := sha3.NewKeccak256()
 	hasher.Write(contentToHash)
 	hashBytes := hasher.Sum(nil)
-	hash := common.BytesToHash(hashBytes)
-
-	// Write receipt to trie db.
-	storageReceipt := (*types.ReceiptForStorage)(receipt)
-	bytesToWrite, _ := rlp.EncodeToBytes(storageReceipt)
-	db.InsertBlob(hash, bytesToWrite)
-	log.Info("Write private transaction receipt", "hash", hash, "receipt", receipt)
-	return nil
+	return common.BytesToHash(hashBytes)
 }

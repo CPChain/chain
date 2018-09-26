@@ -5,10 +5,13 @@ import (
 	"reflect"
 	"testing"
 
+	"fmt"
+
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/trie"
 	"github.com/pkg/errors"
 )
@@ -150,8 +153,69 @@ func TestWritePrivateReceipt(t *testing.T) {
 	}
 }
 
+func TestReadPrivateReceipt(t *testing.T) {
+	type args struct {
+		txHash common.Hash
+		db     *trie.Database
+	}
+
+	db := getTestTrieDB()
+	receipt := getTestReceipt()
+
+	WritePrivateReceipt(receipt, common.Hash{}, db)
+	r, _ := ReadPrivateReceipt(common.Hash{}, db)
+	fmt.Println(r)
+
+	tests := []struct {
+		name    string
+		args    args
+		want    *types.Receipt
+		wantErr bool
+	}{
+		{
+			name: "Read private transaction receipt",
+			args: args{
+				txHash: common.Hash{},
+				db:     db,
+			},
+			want:    receipt,
+			wantErr: false,
+		},
+		{
+			name: "Read a non-existed private transaction receipt",
+			args: args{
+				txHash: common.BytesToHash([]byte{1, 1, 1, 1, 1, 1, 1, 1}),
+				db:     db,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ReadPrivateReceipt(tt.args.txHash, tt.args.db)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ReadPrivateReceipt() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			var gotBytes, wantBytes []byte
+			if got != nil {
+				gotBytes, err = rlp.EncodeToBytes(got)
+
+			}
+			if tt.want != nil {
+				wantBytes, err = rlp.EncodeToBytes(tt.want)
+			}
+			if !reflect.DeepEqual(gotBytes, wantBytes) {
+				t.Errorf("ReadPrivateReceipt() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func getTestReceipt() *types.Receipt {
-	return types.NewReceipt(common.Hash{}.Bytes(), false, 1000)
+	return types.NewReceipt(common.Hash{}.Bytes(), false, 3000)
 }
 
 func getTestTrieDB() *trie.Database {

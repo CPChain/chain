@@ -1052,14 +1052,20 @@ func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, ha
 	if tx == nil {
 		return nil, nil
 	}
-	receipts, err := s.b.GetReceipts(ctx, blockHash)
-	if err != nil {
-		return nil, err
+
+	var receipt *types.Receipt
+	if tx.IsPrivate() {
+		receipt, _ = s.b.GetPrivateReceipt(ctx, tx.Hash())
+	} else {
+		receipts, err := s.b.GetReceipts(ctx, blockHash)
+		if err != nil {
+			return nil, err
+		}
+		if len(receipts) <= int(index) {
+			return nil, nil
+		}
+		receipt = receipts[index]
 	}
-	if len(receipts) <= int(index) {
-		return nil, nil
-	}
-	receipt := receipts[index]
 
 	var signer types.Signer = types.FrontierSigner{}
 	if tx.Protected() {

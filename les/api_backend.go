@@ -97,6 +97,11 @@ func (b *LesApiBackend) GetReceipts(ctx context.Context, hash common.Hash) (type
 	return nil, nil
 }
 
+func (b *LesApiBackend) GetPrivateReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
+	// TODO: consider whether and how to support private tx
+	return nil, nil
+}
+
 func (b *LesApiBackend) GetLogs(ctx context.Context, hash common.Hash) ([][]*types.Log, error) {
 	if number := rawdb.ReadHeaderNumber(b.eth.chainDb, hash); number != nil {
 		return light.GetBlockLogs(ctx, b.eth.odr, hash, *number)
