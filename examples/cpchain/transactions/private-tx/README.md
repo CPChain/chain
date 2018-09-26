@@ -10,9 +10,9 @@ Public contract CE as trading escrow has been deployed by agent P.
 # 3. User Scenario Steps
     1. Seller A registers an item via the private contract CT. An item includes name, ipfs_cid, price, description and so on.
 
-    2. Buyer B pays money to the escrow contract CE.
+    2. Buyer B checked the registered items on contract CT and choose some items to buy.
 
-    3. Buyer B checked the registered items on contract CT and choose some items to buy.
+    3. Buyer B pays money to the escrow contract CE.
 
     4. Buyer B sends contract CT an order about which item to buy and his public key, which is used to encrypt the item's symmetric key(e.g. AES).
 
@@ -23,6 +23,8 @@ Public contract CE as trading escrow has been deployed by agent P.
     7. Buyer B received the encrypted symmetric key, and then decrypt it. With the symmetric key, the buyer B can decrypt the data on IPFS and then confirm that it is what they need.
 
     8. The agent P notice the confirmation and transfer money to seller A.
+
+![Process](process.png)
 
 # 4. Conclusion
 Buyers and sellers have completed the data trading transaction in a secure and private way.
