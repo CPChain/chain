@@ -2,16 +2,21 @@ package admission
 
 import (
 	"errors"
+	"math/big"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
 
 	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/core"
 )
 
 func newCPU() *cpuWork {
-	mock := newMockBackend()
+	alloc := core.GenesisAlloc{
+		addr: {Balance: big.NewInt(1000000000)},
+	}
+	mock := newMockBackend(alloc)
 	return newCPUWork(5, common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"), mock.CurrentBlock(), 60*time.Second)
 }
 
@@ -25,8 +30,8 @@ func TestProve(t *testing.T) {
 	cpu.prove(abort, wg)
 	wg.Wait()
 
-	if cpu.nonce != 8 {
-		t.Fatalf("want 8, but %d", cpu.nonce)
+	if cpu.nonce != 71 {
+		t.Fatalf("want 71, but %d", cpu.nonce)
 	}
 }
 

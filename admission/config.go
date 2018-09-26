@@ -9,6 +9,8 @@ type workStatus = uint32
 
 const maxNonce = math.MaxUint64
 
+var password = "password"
+
 const (
 	// AcIdle status done.
 	AcIdle workStatus = iota + 1
@@ -16,7 +18,7 @@ const (
 	AcRunning
 )
 
-//Config admission control's configuration.
+// Config admission control's configuration.
 type Config struct {
 	// CampaignContractAddress public campaign's contract address.
 	// common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290")
@@ -50,17 +52,7 @@ var DefaultConfig = Config{
 
 // ProofInfo is used to send to contract
 type ProofInfo struct {
-	CPUProofInfo
-	MemoryProofInfo
-}
-
-// CPUProofInfo pow result of cpu
-type CPUProofInfo struct {
-	// Nonce the result of pow
-	Nonce uint64 `json:"nonce"`
-	// BlockNumber input block number for pow
 	BlockNumber uint64 `json:"block_number"`
+	CPUNonce    uint64 `json:"cpu_nonce"`
+	MemoryNonce uint64 `json:"memory_nonce"`
 }
-
-// MemoryProofInfo pow result of memory
-type MemoryProofInfo CPUProofInfo
