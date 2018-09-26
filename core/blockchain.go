@@ -131,8 +131,8 @@ type BlockChain struct {
 	validator Validator // block and state validator interface
 	vmConfig  vm.Config
 
-	badBlocks              *lru.Cache // Bad block cache
-	waitingSignatureBlocks *lru.Cache // not enough signatures block cache
+	badBlocks     *lru.Cache // Bad block cache
+	pendingBlocks *lru.Cache // not enough signatures block cache
 
 	privateStateCache state.Database       // State database to reuse between imports (contains state cache)
 	remoteDB          ethdb.RemoteDatabase // Remote database for huge amount data storage
@@ -143,7 +143,7 @@ type BlockChain struct {
 
 // WaitingSignatureBlocks returns waitingSignatureBlocks
 func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
-	return bc.waitingSignatureBlocks
+	return bc.pendingBlocks
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -167,24 +167,24 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 	waitingSignatureBlocks, _ := lru.New(waitingSignatureBlockLimit)
 
 	bc := &BlockChain{
-		chainConfig:            chainConfig,
-		cacheConfig:            cacheConfig,
-		db:                     db,
-		triegc:                 prque.New(),
-		stateCache:             state.NewDatabase(db),
-		quit:                   make(chan struct{}),
-		bodyCache:              bodyCache,
-		bodyRLPCache:           bodyRLPCache,
-		blockCache:             blockCache,
-		futureBlocks:           futureBlocks,
-		engine:                 engine,
-		vmConfig:               vmConfig,
-		badBlocks:              badBlocks,
-		waitingSignatureBlocks: waitingSignatureBlocks,
-		privateStateCache:      state.NewDatabase(db),
-		remoteDB:               remoteDB,
-		rsaPrivateKey:          rsaPrivKey,
-		ErrChan:                make(chan error),
+		chainConfig:       chainConfig,
+		cacheConfig:       cacheConfig,
+		db:                db,
+		triegc:            prque.New(),
+		stateCache:        state.NewDatabase(db),
+		quit:              make(chan struct{}),
+		bodyCache:         bodyCache,
+		bodyRLPCache:      bodyRLPCache,
+		blockCache:        blockCache,
+		futureBlocks:      futureBlocks,
+		engine:            engine,
+		vmConfig:          vmConfig,
+		badBlocks:         badBlocks,
+		pendingBlocks:     waitingSignatureBlocks,
+		privateStateCache: state.NewDatabase(db),
+		remoteDB:          remoteDB,
+		rsaPrivateKey:     rsaPrivKey,
+		ErrChan:           make(chan error),
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
@@ -760,6 +760,26 @@ func (bc *BlockChain) procFutureBlocks() {
 	}
 }
 
+func (bc *BlockChain) procPendingBlocks() {
+	blocks := make([]*types.Block, 0, bc.pendingBlocks.Len())
+	for _, hash := range bc.pendingBlocks.Keys() {
+		if block, exist := bc.pendingBlocks.Peek(hash); exist {
+			blocks = append(blocks, block.(*types.Block))
+		}
+	}
+
+	if len(blocks) > 0 {
+		types.BlockBy(types.Number).Sort(blocks)
+
+		// Insert one by one as chain insertion needs contiguous ancestry between blocks
+		for i := range blocks {
+			_, err := bc.InsertChain(blocks[i : i+1])
+			bc.ErrChan <- err
+			log.Debug("err of future insert, go to bc.ErrChan", "err", err)
+		}
+	}
+}
+
 // WriteStatus status of write
 type WriteStatus byte
 
@@ -1048,6 +1068,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		bc.insert(block)
 	}
 	bc.futureBlocks.Remove(block.Hash())
+	bc.pendingBlocks.Remove(block.Hash())
 	return status, nil
 }
 
@@ -1195,7 +1216,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			log.Debug("ErrNotEnoughSigs err in blockchain.insertChain.")
 			err := err.(*consensus.ErrNotEnoughSigsType)
 			err.NotEnoughSigsBlockHash = block.Hash()
-			bc.waitingSignatureBlocks.Add(block.Hash(), block)
+			bc.pendingBlocks.Add(block.Hash(), block)
 			return i, events, coalescedLogs, err
 
 		case err == consensus.ErrNewSignedHeader:
@@ -1204,6 +1225,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			log.Debug("err block", "block", block.NumberU64(), block.Hash().Hex(), block.Extra2())
 			err := err.(*consensus.ErrNewSignedHeaderType)
 			err.SignedHeader = block.RefHeader()
+			bc.pendingBlocks.Add(block.Hash(), block)
 			return i, events, coalescedLogs, err
 
 		case err != nil:
@@ -1484,6 +1506,7 @@ func (bc *BlockChain) update() {
 		select {
 		case <-futureTimer.C:
 			bc.procFutureBlocks()
+			bc.procPendingBlocks()
 		case <-bc.quit:
 			return
 		}

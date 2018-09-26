@@ -197,7 +197,10 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return eth.engine.VerifyHeader(eth.blockchain, header, true, header)
 	}
 
-	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, p2pSignerHandshaker, signerFunc); err != nil {
+	eth.Etherbase()
+	log.Debug("etherbase in backend", "eb", eth.etherbase)
+
+	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, p2pSignerHandshaker, eth.SignerValidator, signerFunc, eth.etherbase); err != nil {
 		return nil, err
 	}
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
@@ -213,6 +216,19 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.APIBackend, eth.etherbase, ks, eth.chainConfig.ChainID, eth.config.Admission)
 
 	return eth, nil
+}
+
+func (s *Ethereum) AddCommittee() {
+	committeeIDs := []string{
+		"enode://b0f99585ab63eb3047389fd863497526e62ae9553beca47bb6bbe67ab9c19ef38329f8487aa425f9dfb26e767b469584a5ddb963594efb6fcd73cccd2b2f3961@192.168.0.117:30311",
+		"enode://506ab2351961387d22f84d34528b545168e111ce43996867a7fdff48c5124801048beee5b5630e97534d6e89be6f737f5f9bb7610a17567b63c94be715c30368@192.168.0.117:30312",
+		"enode://97fb497bbc2fb0fd3adde076cf999b595d6ab6aa2bc47a8fcbc45cb62f2795c90afcdb5c7f2178183ac47411d2cd1685dbdf61dedccf943cd257e5be21318840@192.168.0.117:30313",
+	}
+	for _, id := range committeeIDs {
+		if err := s.server.AddPeerFromURL(id); err != nil {
+			log.Debug("err when adding committee", "err", err)
+		}
+	}
 }
 
 // SignerHandShake handshakes with remote signer.
@@ -246,6 +262,15 @@ func (s *Ethereum) SignerHandShake(p *peer, address common.Address) error {
 	}
 
 	return nil
+}
+
+func (s *Ethereum) SignerValidator(address common.Address) (isSigner bool, err error) {
+	e, ok := s.engine.(consensus.Validator)
+	if !ok {
+		return false, errors.New("bad engine")
+	}
+	isSigner, err = e.IsSigner(s.protocolManager.blockchain, address, s.blockchain.CurrentHeader().Number.Uint64())
+	return isSigner, err
 }
 
 func (s *Ethereum) newCommitteeNetworkHandler() error {
@@ -454,6 +479,9 @@ func (s *Ethereum) StartMining(local bool) error {
 		atomic.StoreUint32(&s.protocolManager.acceptTxs, 1)
 	}
 	go s.miner.Start(eb)
+
+	go s.AddCommittee()
+
 	return nil
 }
 

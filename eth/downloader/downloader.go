@@ -532,6 +532,7 @@ func (d *Downloader) spawnSync(fetchers []func() error) error {
 // not wait for the running download goroutines to finish. This method should be
 // used when cancelling the downloads from inside the downloader.
 func (d *Downloader) cancel() {
+	log.Debug("canceling ...")
 	// Close the current cancel channel
 	d.cancelLock.Lock()
 	if d.cancelCh != nil {
@@ -1618,6 +1619,12 @@ func (d *Downloader) qosTuner() {
 
 		// Log the new QoS values and sleep until the next RTT
 		log.Debug("Recalculated downloader QoS values", "rtt", rtt, "confidence", float64(conf)/1000000.0, "ttl", d.requestTTL())
+
+		log.Debug("downloader.peers", "peers", d.peers)
+		for peer := range d.peers.peers {
+			log.Debug("peer", "id", peer)
+		}
+
 		select {
 		case <-d.quitCh:
 			return

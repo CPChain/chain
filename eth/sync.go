@@ -224,7 +224,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			go pm.BroadcastSignedHeader(header)
 
 		}
-		return
+		// return
 	}
 
 	if atomic.LoadUint32(&pm.fastSync) == 1 {
@@ -240,5 +240,6 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		// degenerate connectivity, but it should be healthy for the mainnet too to
 		// more reliably update peers or the local TD state.
 		go pm.BroadcastBlock(head, false)
+		go pm.BroadcastBlock(head, true)
 	}
 }

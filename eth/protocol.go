@@ -124,6 +124,7 @@ type statusData struct {
 	TD              *big.Int
 	CurrentBlock    common.Hash
 	GenesisBlock    common.Hash
+	Address         common.Address
 }
 
 // newBlockHashesData is the network packet for the block announcements.

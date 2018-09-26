@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"strconv"
 	"sync"
@@ -100,6 +99,8 @@ type ProtocolManager struct {
 	quitSync    chan struct{}
 	noMorePeers chan struct{}
 
+	etherbase               common.Address
+	signerValidator         ValidateSigner
 	p2pSignerHandshake      P2PSignerHandshake
 	committeeNetworkHandler *BasicCommitteeNetworkHandler
 
@@ -110,7 +111,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the Ethereum network.
-func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, p2pSignerHandshake P2PSignerHandshake, signerFunc SignerFunc) (*ProtocolManager, error) {
+func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, p2pSignerHandshake P2PSignerHandshake, signerValidator ValidateSigner, signerFunc SignerFunc, etherbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -124,8 +125,10 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 		txsyncCh:    make(chan *txsync),
 		quitSync:    make(chan struct{}),
 
-		engine:     engine,
-		signerFunc: signerFunc,
+		engine:          engine,
+		signerFunc:      signerFunc,
+		signerValidator: signerValidator,
+		etherbase:       etherbase,
 	}
 	// Figure out whether to allow fast sync or not
 	if mode == downloader.FastSync && blockchain.CurrentBlock().NumberU64() > 0 {
@@ -288,18 +291,18 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		number  = head.Number.Uint64()
 		td      = pm.blockchain.GetTd(hash, number)
 	)
-	if err := p.Handshake(pm.networkID, td, hash, genesis.Hash()); err != nil {
+
+	log.Debug("my etherbase", "address", pm.etherbase)
+
+	isSigner, err := p.Handshake(pm.networkID, td, hash, genesis.Hash(), pm.etherbase, pm.signerValidator)
+	if err != nil {
 		p.Log().Debug("Ethereum handshake failed", "err", err)
 		return err
 	}
 
-	// e, ok := pm.engine.(consensus.Validator)
-	// if !ok {
-	// 	return errors.New("bad engine")
-	// }
-
-	// isSigner, err := e.IsSigner(pm.blockchain, address, s.blockchain.CurrentHeader().Number.Uint64())
-	isSigner := true
+	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
+		rw.Init(p.version)
+	}
 
 	if isSigner {
 		// register peer as signer.
@@ -308,17 +311,13 @@ func (pm *ProtocolManager) handle(p *peer) error {
 			return errors.New("registering peer as signer failed")
 		}
 	}
-
-	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
-		rw.Init(p.version)
-	}
 	// Register the peer locally
 	if err := pm.peers.Register(p); err != nil {
 		log.Debug("register new peer ")
 		p.Log().Error("Ethereum peer registration failed", "err", err)
 		return err
 	}
-	defer pm.removePeer(p.id)
+	// defer pm.removePeer(p.id)
 
 	// Register the peer in the downloader. If the downloader considers it banned, we disconnect
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {
@@ -828,12 +827,19 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 				// p.MarkPendingBlock(header.Hash())
 
 				// Schedule all the unknown hashes for retrieval
-				log.Info("notify fetcher to fetch block")
-				pm.fetcher.Notify(p.id, hash, number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+				// log.Info("notify fetcher to fetch block")
+				// pm.fetcher.Notify(p.id, hash, number, time.Now(), p.RequestOneHeader, p.RequestBodies)
 
 			} else {
 				block := pm.blockchain.GetBlockByHash(hash)
-				go pm.BroadcastBlock(block, true)
+				go pm.BroadcastBlock(block.WithSeal(header), true)
+
+				if number < pm.blockchain.CurrentBlock().NumberU64() {
+
+					for i := number; i <= pm.blockchain.CurrentBlock().NumberU64(); i++ {
+						go pm.BroadcastBlock(pm.blockchain.GetBlockByNumber(i), true)
+					}
+				}
 			}
 
 		case consensus.ErrNewSignedHeader:
@@ -903,7 +909,8 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 		}
 
 		// Send the block to a subset of our peers
-		transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		// transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		transfer := peers[:]
 
 		for _, peer := range transfer {
 			peer.AsyncSendNewBlock(block, td)
