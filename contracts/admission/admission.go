@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package admissionContract
+package campaignVerify
 
 import (
 	"math/big"
@@ -14,10 +14,10 @@ import (
 )
 
 // AdmissionABI is the input ABI used to generate the binding from.
-const AdmissionABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"verifyCPU\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"verifyMemory\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"}],\"name\":\"verify\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateCPUDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateMemoryDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_cpuDifficulty\",\"type\":\"uint256\"},{\"name\":\"_memoryDifficulty\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
+const AdmissionABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"memoryDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"verifyCPU\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"verifyMemory\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"}],\"name\":\"verify\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"cpuDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateCPUDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateMemoryDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_cpuDifficulty\",\"type\":\"uint256\"},{\"name\":\"_memoryDifficulty\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
 
 // AdmissionBin is the compiled bytecode used for deploying new contracts.
-const AdmissionBin = `0x608060405234801561001057600080fd5b5060405160408061036a833981016040528051602090910151610100908103600290810a600155919003900a60005561031c8061004e6000396000f30060806040526004361061006c5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663502e7f4881146100715780635e0870b2146100aa578063702656af146100cf578063be981db8146100fe578063e171894614610118575b600080fd5b34801561007d57600080fd5b5061009667ffffffffffffffff60043516602435610130565b604080519115158252519081900360200190f35b3480156100b657600080fd5b5061009667ffffffffffffffff600435166024356102aa565b3480156100db57600080fd5b5061009667ffffffffffffffff60043581169060243590604435166064356102b2565b34801561010a57600080fd5b506101166004356102d8565b005b34801561012457600080fd5b506101166004356102e4565b60006014824303111580156101485750600082430310155b15156101b557604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601460248201527f6d7573742077697468696e20323020626c6f636b000000000000000000000000604482015290519081900360640190fd5b600054604080516c01000000000000000000000000410260208083019190915285406034830152780100000000000000000000000000000000000000000000000067ffffffffffffffff88160260548301528251603c818403018152605c909201928390528151600293918291908401908083835b602083106102495780518252601f19909201916020918201910161022a565b51815160209384036101000a600019018019909216911617905260405191909301945091925050808303816000865af115801561028a573d6000803e3d6000fd5b5050506040513d602081101561029f57600080fd5b505111159392505050565b600192915050565b60006102be8585610130565b80156102cf57506102cf83836102aa565b95945050505050565b6101000360020a600055565b6101000360020a6001555600a165627a7a72305820004245be6173ddc5d197056ba366f4fa6cdc3cfcbf4abaad8029d8a18242a6620029`
+const AdmissionBin = `0x608060405234801561001057600080fd5b506040516040806106e5833981016040528051602090910151610100821180159061003c575060008210155b151561009757604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201526000805160206106c5833981519152604482015290519081900360640190fd5b61010081111580156100aa575060008110155b151561010557604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201526000805160206106c5833981519152604482015290519081900360640190fd5b61011782640100000000610130810204565b610129816401000000006101b1810204565b5050610230565b6101008111158015610143575060008110155b151561019e57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201526000805160206106c5833981519152604482015290519081900360640190fd5b600281815561010091909103900a600055565b61010081111580156101c4575060008110155b151561021f57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201526000805160206106c5833981519152604482015290519081900360640190fd5b60038190556101000360020a600155565b6104868061023f6000396000f3006080604052600436106100825763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166317e6b9668114610087578063502e7f48146100ae5780635e0870b2146100e7578063702656af1461010c5780638b6546131461013b578063be981db814610150578063e17189461461016a575b600080fd5b34801561009357600080fd5b5061009c610182565b60408051918252519081900360200190f35b3480156100ba57600080fd5b506100d367ffffffffffffffff60043516602435610188565b604080519115158252519081900360200190f35b3480156100f357600080fd5b506100d367ffffffffffffffff60043516602435610302565b34801561011857600080fd5b506100d367ffffffffffffffff600435811690602435906044351660643561030a565b34801561014757600080fd5b5061009c610330565b34801561015c57600080fd5b50610168600435610336565b005b34801561017657600080fd5b506101686004356103c9565b60035481565b60006014824303111580156101a05750600082430310155b151561020d57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601460248201527f6d7573742077697468696e20323020626c6f636b000000000000000000000000604482015290519081900360640190fd5b600054604080516c01000000000000000000000000410260208083019190915285406034830152780100000000000000000000000000000000000000000000000067ffffffffffffffff88160260548301528251603c818403018152605c909201928390528151600293918291908401908083835b602083106102a15780518252601f199092019160209182019101610282565b51815160209384036101000a600019018019909216911617905260405191909301945091925050808303816000865af11580156102e2573d6000803e3d6000fd5b5050506040513d60208110156102f757600080fd5b505111159392505050565b600192915050565b60006103168585610188565b801561032757506103278383610302565b95945050505050565b60025481565b6101008111158015610349575060008110155b15156103b657604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b61010081111580156103dc575060008110155b151561044957604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60038190556101000360020a6001555600a165627a7a72305820e278017fb2299a383924ef6d3526cdbabd7c5a7d4d6037bdd5a710620cb7ff570029446966666963756c7479206d757374206c657373207468616e20323536000000`
 
 // DeployAdmission deploys a new Ethereum contract, binding an instance of Admission to it.
 func DeployAdmission(auth *bind.TransactOpts, backend bind.ContractBackend, _cpuDifficulty *big.Int, _memoryDifficulty *big.Int) (common.Address, *types.Transaction, *Admission, error) {
@@ -172,6 +172,58 @@ func (_Admission *AdmissionTransactorRaw) Transfer(opts *bind.TransactOpts) (*ty
 // Transact invokes the (paid) contract method with params as input values.
 func (_Admission *AdmissionTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _Admission.Contract.contract.Transact(opts, method, params...)
+}
+
+// CpuDifficulty is a free data retrieval call binding the contract method 0x8b654613.
+//
+// Solidity: function cpuDifficulty() constant returns(uint256)
+func (_Admission *AdmissionCaller) CpuDifficulty(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _Admission.contract.Call(opts, out, "cpuDifficulty")
+	return *ret0, err
+}
+
+// CpuDifficulty is a free data retrieval call binding the contract method 0x8b654613.
+//
+// Solidity: function cpuDifficulty() constant returns(uint256)
+func (_Admission *AdmissionSession) CpuDifficulty() (*big.Int, error) {
+	return _Admission.Contract.CpuDifficulty(&_Admission.CallOpts)
+}
+
+// CpuDifficulty is a free data retrieval call binding the contract method 0x8b654613.
+//
+// Solidity: function cpuDifficulty() constant returns(uint256)
+func (_Admission *AdmissionCallerSession) CpuDifficulty() (*big.Int, error) {
+	return _Admission.Contract.CpuDifficulty(&_Admission.CallOpts)
+}
+
+// MemoryDifficulty is a free data retrieval call binding the contract method 0x17e6b966.
+//
+// Solidity: function memoryDifficulty() constant returns(uint256)
+func (_Admission *AdmissionCaller) MemoryDifficulty(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _Admission.contract.Call(opts, out, "memoryDifficulty")
+	return *ret0, err
+}
+
+// MemoryDifficulty is a free data retrieval call binding the contract method 0x17e6b966.
+//
+// Solidity: function memoryDifficulty() constant returns(uint256)
+func (_Admission *AdmissionSession) MemoryDifficulty() (*big.Int, error) {
+	return _Admission.Contract.MemoryDifficulty(&_Admission.CallOpts)
+}
+
+// MemoryDifficulty is a free data retrieval call binding the contract method 0x17e6b966.
+//
+// Solidity: function memoryDifficulty() constant returns(uint256)
+func (_Admission *AdmissionCallerSession) MemoryDifficulty() (*big.Int, error) {
+	return _Admission.Contract.MemoryDifficulty(&_Admission.CallOpts)
 }
 
 // Verify is a free data retrieval call binding the contract method 0x702656af.

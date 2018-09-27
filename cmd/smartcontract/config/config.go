@@ -14,8 +14,10 @@ import (
 )
 
 var (
-	endPoint         = "http://localhost:8501"
-	keyStoreFilePath = "./examples/cpchain/data/dd1/keystore/"
+	endPoint                = "http://localhost:8501"
+	keyStoreFilePath        = "./examples/cpchain/data/dd1/keystore/"
+	DefaultCPUDifficulty    = uint64(25)
+	DefaultMemoryDifficulty = uint64(25)
 )
 
 func Connect() (*ethclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
