@@ -120,7 +120,7 @@ type BlockChain struct {
 	blockCache   *lru.Cache     // Cache for the most recent entire blocks
 	futureBlocks *lru.Cache     // future blocks are blocks added for later processing
 
-	quit    chan struct{} // blockchain quit channel
+	Quit    chan struct{} // blockchain quit channel
 	running int32         // running must be called atomically
 	// procInterrupt must be atomically called
 	procInterrupt int32          // interrupt signaler for block processing
@@ -172,7 +172,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 		db:                db,
 		triegc:            prque.New(),
 		stateCache:        state.NewDatabase(db),
-		quit:              make(chan struct{}),
+		Quit:              make(chan struct{}),
 		bodyCache:         bodyCache,
 		bodyRLPCache:      bodyRLPCache,
 		blockCache:        blockCache,
@@ -696,7 +696,7 @@ func (bc *BlockChain) Stop() {
 	}
 	// Unsubscribe all subscriptions registered from blockchain
 	bc.scope.Close()
-	close(bc.quit)
+	close(bc.Quit)
 	atomic.StoreInt32(&bc.procInterrupt, 1)
 
 	bc.wg.Wait()
@@ -1507,7 +1507,7 @@ func (bc *BlockChain) update() {
 		case <-futureTimer.C:
 			bc.procFutureBlocks()
 			bc.procPendingBlocks()
-		case <-bc.quit:
+		case <-bc.Quit:
 			return
 		}
 	}

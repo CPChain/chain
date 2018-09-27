@@ -801,6 +801,7 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 	var err error
 	for {
 		select {
+
 		case err = <-pm.blockchain.ErrChan:
 			log.Debug("received err from blockchain.ErrChan", "err", err)
 			if err, ok := err.(*consensus.ErrNewSignedHeaderType); ok {
@@ -808,6 +809,8 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 				log.Debug("header", "header", header)
 				go pm.BroadcastSignedHeader(header)
 			}
+		case <-pm.blockchain.Quit:
+			return
 		}
 	}
 }
