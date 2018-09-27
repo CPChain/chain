@@ -24,7 +24,7 @@ import (
 )
 
 func TestSignerRegister(t *testing.T) {
-	// t.Skip("we shall use a simulated backend.")
+	t.Skip("we shall use a simulated backend.")
 
 	client, privateKey, fromAddress, gasLimit, gasPrice, instance, ctx := deployContract()
 

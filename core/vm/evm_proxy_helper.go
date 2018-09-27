@@ -25,33 +25,38 @@ import (
 )
 
 var (
-	// TODO contract address that register proxy contract to real contract mapping,read from config file later
-	mappingContractAddr = common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335")
-	emptyAddress        = common.Address{}
+	emptyAddress = common.Address{}
 )
 
 // get real logic contract address by proxy contract address
 func GetRealContractAddress(evm *EVM, caller ContractRef, proxyContractAddress common.Address, gas uint64) common.Address {
 	log.Debug("GetRealContractAddress", "proxyContractAddress", proxyContractAddress.Hex())
 	realAddress := proxyContractAddress
-	// setup param from #getContractInput(methodSignature,proxyAddress)
-	paramBytes := getContractInput(proxyContractAddress)
-	if ret, _, err := evm.StaticCall(caller, mappingContractAddr, paramBytes, gas); err == nil {
-		// get real contract address parse from ret
-		address := common.BytesToAddress(ret)
-		log.Debug("GetRealContractAddress ", "hex(address)", common.Bytes2Hex(ret), "address", address.Hex())
 
-		if address != emptyAddress {
-			log.Debug("parseAddress ok", "realAddress", realAddress.Hex())
-			realAddress = address
+	if dc := evm.chainConfig.Dpor; dc != nil {
+		if proxyRegister := dc.ProxyContractRegister; proxyRegister != emptyAddress {
+			// setup param from #getContractInput(methodSignature,proxyAddress)
+			paramBytes := getContractInput(proxyContractAddress)
+			if ret, _, err := evm.StaticCall(caller, proxyRegister, paramBytes, gas); err == nil {
+				// get real contract address parse from ret
+				address := common.BytesToAddress(ret)
+				log.Debug("GetRealContractAddress ", "hex(address)", common.Bytes2Hex(ret), "address", address.Hex())
+
+				if address != emptyAddress {
+					log.Debug("parseAddress ok", "realAddress", realAddress.Hex())
+					realAddress = address
+				}
+			} else {
+				log.Warn("GetRealContractAddress", "err", err)
+			}
 		}
-	} else {
-		log.Warn("GetRealContractAddress", "err", err)
 	}
+
 	log.Debug("GetRealContractAddress", "realAddress", realAddress.Hex())
 	return realAddress
 }
 
+// invoke contract method in proxyContractRegister.sol#getRealContract
 func getContractInput(proxyContract common.Address) []byte {
 	methodSignBytes := []byte("getRealContract(address)")
 	bytes := crypto.Keccak256(methodSignBytes)

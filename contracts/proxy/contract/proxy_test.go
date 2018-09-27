@@ -18,6 +18,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contract"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 )
@@ -67,12 +68,12 @@ func TestSignerRegisterProxyContractRegister(t *testing.T) {
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
 
-	campaignIns, err := NewCampaign(realAddr, client)
+	campaignIns, err := contract.NewCampaign(realAddr, client)
 	newMaxNoc, err := campaignIns.MaximumNoc(nil)
 	fmt.Println("newMaxNoc:", newMaxNoc)
 
 	// 5. replace real contract address with proxy contract
-	proxyCampaignIns, err := NewCampaign(proxyAddress, client)
+	proxyCampaignIns, err := contract.NewCampaign(proxyAddress, client)
 	proxyNewMaxNoc, err := proxyCampaignIns.MaximumNoc(nil)
 	fmt.Println("proxy newMaxNoc:", proxyNewMaxNoc)
 

@@ -21,8 +21,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"fmt"
-
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/params"
@@ -144,7 +142,6 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	// query addr from statedb,check if some proxy flag exist.
 	// if is proxy contract ,get real contract address,replace addr with real contract address
 	realAddress := GetRealContractAddress(evm, caller, addr, gas)
-	fmt.Println("Call realAddress:", realAddress.Hex())
 	return evm.call(caller, realAddress, input, gas, value)
 }
 
@@ -218,7 +215,6 @@ func (evm *EVM) call(caller ContractRef, addr common.Address, input []byte, gas 
 
 func (evm *EVM) CallCode(caller ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int) (ret []byte, leftOverGas uint64, err error) {
 	realAddress := GetRealContractAddress(evm, caller, addr, gas)
-	fmt.Println("CallCode realAddress:", realAddress.Hex())
 	return evm.callCode(caller, realAddress, input, gas, value)
 }
 
@@ -265,7 +261,6 @@ func (evm *EVM) callCode(caller ContractRef, addr common.Address, input []byte, 
 
 func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []byte, gas uint64) (ret []byte, leftOverGas uint64, err error) {
 	realAddress := GetRealContractAddress(evm, caller, addr, gas)
-	fmt.Println("DelegateCall realAddress:", realAddress.Hex())
 	return evm.delegateCall(caller, realAddress, input, gas)
 }
 

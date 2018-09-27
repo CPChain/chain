@@ -14,6 +14,21 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package dpor
+package proxy
+
+import (
+	"context"
+	"math/big"
+
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/core/types"
+)
 
 //go:generate abigen --sol contract/proxy.sol --pkg contract --out contract/proxy.go
+// Backend wraps all methods required for chequebook operation.
+type Backend interface {
+	bind.ContractBackend
+	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
+	BalanceAt(ctx context.Context, address common.Address, blockNum *big.Int) (*big.Int, error)
+}
