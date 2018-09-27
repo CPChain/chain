@@ -103,16 +103,24 @@ type BasicCommitteeNetworkHandler struct {
 	remoteSigners []*RemoteSigner
 }
 
+func getRemoteSigners() []*RemoteSigner {
+	return []*RemoteSigner{
+		&RemoteSigner{
+			nodeID: "enode://f0946da077761c7dcbdcdbbf0d1587a5e36373150c02afb1bfadbd5713f2e894798d8c924d76874bb408ed56acf2a2112a8ae23e2730588bbc7f133a74748a45@192.168.0.117:30311",
+		},
+	}
+}
+
 // NewBasicCommitteeNetworkHandler creates a BasicCommitteeNetworkHandler instance
 func NewBasicCommitteeNetworkHandler(peers *peerSet, epochLength uint64, ownAddress common.Address, contractAddress common.Address, server *p2p.Server) (*BasicCommitteeNetworkHandler, error) {
 	bc := &BasicCommitteeNetworkHandler{
-		peers:           peers,
-		server:          server,
-		ownNodeID:       server.Self().String(),
-		ownPubkey:       server.RsaPublicKeyBytes,
-		ownAddress:      ownAddress,
-		contractAddress: contractAddress,
-		remoteSigners:   make([]*RemoteSigner, epochLength-1),
+		// peers:           peers,
+		// server:          server,
+		// ownNodeID:       server.Self().String(),
+		// ownPubkey:       server.RsaPublicKeyBytes,
+		// ownAddress:      ownAddress,
+		// contractAddress: contractAddress,
+		// remoteSigners:   make([]*RemoteSigner, epochLength-1),
 	}
 	return bc, nil
 }
@@ -148,6 +156,13 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 		oc.remoteSigners = append(oc.remoteSigners, s)
 	}
 	return nil
+}
+
+func (oc *BasicCommitteeNetworkHandler) Connect() {
+	log.Info("connecting...")
+}
+func (oc *BasicCommitteeNetworkHandler) Disconnect() {
+	log.Info("disconnecting...")
 }
 
 // Handle implements CommitteeNetworkHandler.Handle

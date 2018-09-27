@@ -683,3 +683,7 @@ func (c *Clique) APIs(chain consensus.ChainReader) []rpc.API {
 		Public:    false,
 	}}
 }
+
+func (c *Clique) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.CommitteeNetworkHandler) error {
+	return nil
+}

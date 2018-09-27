@@ -1,4 +1,4 @@
-package dpor
+package consensus
 
 import "bitbucket.org/cpchain/chain/common"
 
@@ -6,9 +6,9 @@ import "bitbucket.org/cpchain/chain/common"
 
 // CommitteeNetworkHandler is an interface used to do network building and related thing.
 type CommitteeNetworkHandler interface {
+	Connect()
 
-	// Handle handles all.
-	Handle()
+	Disconnect()
 
 	// UpdateRemoteSigners updates OverlayHandler's remoteSigners.
 	UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error

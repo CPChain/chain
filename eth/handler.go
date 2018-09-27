@@ -171,6 +171,9 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 	// Construct the different synchronisation mechanisms
 	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
+	manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(nil, 0, manager.etherbase, common.Address{}, nil)
+	manager.engine.SetCommitteeNetworkHandler(manager.committeeNetworkHandler)
+
 	validator := func(header *types.Header, refHeader *types.Header) error {
 		return engine.VerifyHeader(blockchain, header, true, refHeader)
 	}
@@ -315,7 +318,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		p.Log().Error("Ethereum peer registration failed", "err", err)
 		return err
 	}
-	// defer pm.removePeer(p.id)
+	defer pm.removePeer(p.id)
 
 	// Register the peer in the downloader. If the downloader considers it banned, we disconnect
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {

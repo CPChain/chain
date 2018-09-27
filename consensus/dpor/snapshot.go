@@ -223,9 +223,13 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 			Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
 			Rpt:     20,
 		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x6E31e5B68A98dcD17264bd1ba547D0B3E874dA1E"),
+			Rpt:     1000,
+		},
 		// rpt.RPT{
-		// 	Address: common.HexToAddress("0x6E31e5B68A98dcD17264bd1ba547D0B3E874dA1E"),
-		// 	Rpt:     1000,
+		// 	Address: common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
+		// 	Rpt:     300,
 		// },
 	}
 	// TODO: above is wrong.
@@ -312,5 +316,10 @@ func (s *DporSnapshot) inturn(number uint64, signer common.Address) bool {
 }
 
 func (s *DporSnapshot) isFutureSigner(signer common.Address, number uint64) bool {
+	for _, sn := range s.RecentSigners[s.EpochIdxOf(number)+EpochGapBetweenElectionAndMining] {
+		if sn == signer {
+			return true
+		}
+	}
 	return false
 }
