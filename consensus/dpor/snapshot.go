@@ -223,6 +223,10 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 			Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
 			Rpt:     20,
 		},
+		// rpt.RPT{
+		// 	Address: common.HexToAddress("0x6E31e5B68A98dcD17264bd1ba547D0B3E874dA1E"),
+		// 	Rpt:     1000,
+		// },
 	}
 	// TODO: above is wrong.
 
@@ -263,18 +267,13 @@ func (s *DporSnapshot) EpochIdxOf(blockNum uint64) uint64 {
 	return (blockNum - 1) / uint64(epochLength)
 }
 
-// Signers retrieves all signers in the committee.
-func (s *DporSnapshot) signers() []common.Address {
-	return s.RecentSigners[s.EpochIdx()]
+// Signers retrieves all signersOf in the committee.
+func (s *DporSnapshot) signersOf(number uint64) []common.Address {
+	return s.RecentSigners[s.EpochIdxOf(number)]
 }
 
-// SignersOf retrieves all signers in the committee
-func (s *DporSnapshot) SignersOf(blockNum uint64) []common.Address {
-	return s.RecentSigners[s.EpochIdxOf(blockNum)]
-}
-
-func (s *DporSnapshot) signerRound(signer common.Address) (int, error) {
-	for round, s := range s.signers() {
+func (s *DporSnapshot) signerRoundOf(signer common.Address, number uint64) (int, error) {
+	for round, s := range s.signersOf(number) {
 		if s == signer {
 			return round, nil
 		}
@@ -282,8 +281,8 @@ func (s *DporSnapshot) signerRound(signer common.Address) (int, error) {
 	return -1, errSignerNotInCommittee
 }
 
-func (s *DporSnapshot) isSigner(signer common.Address) bool {
-	_, err := s.signerRound(signer)
+func (s *DporSnapshot) isSigner(signer common.Address, number uint64) bool {
+	_, err := s.signerRoundOf(signer, number)
 	return err == nil
 }
 
@@ -291,7 +290,7 @@ func (s *DporSnapshot) isLeader(signer common.Address, number uint64) (bool, err
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
-	round, err := s.signerRound(signer)
+	round, err := s.signerRoundOf(signer, number)
 	if err != nil {
 		return false, err
 	}
