@@ -7,22 +7,22 @@ import (
 	"bitbucket.org/cpchain/chain/rpc"
 )
 
-//go:generate abigen --sol contract/admission/campaign.sol --pkg contract --out contract/admission/campaign.go
+// go:generate abigen --sol contract/admission/campaign.sol --pkg contract --out contract/admission/campaign.go
 
-//Backend interface provides the common JSON-RPC API.
+// Backend interface provides the common JSON-RPC API.
 type Backend interface {
 	CurrentBlock() *types.Block
 }
 
-//APIBackend interface provides the common JSON-RPC API.
+// APIBackend interface provides the common JSON-RPC API.
 type APIBackend interface {
-	//APIs returns the collection of RPC services the admission package offers.
+	// APIs returns the collection of RPC services the admission package offers.
 	APIs() []rpc.API
 
-	//Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
+	// Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
 	Campaign()
 
-	//Abort cancels all the proof work associated to the workType.
+	// Abort cancels all the proof work associated to the workType.
 	Abort()
 
 	// GetStatus gets status of campaign
@@ -32,9 +32,9 @@ type APIBackend interface {
 	GetProofInfo() ProofInfo
 }
 
-//ProofWorkBackend common API for proof work.
+// ProofWorkBackend common API for proof work.
 type ProofWorkBackend interface {
-	//prove starts memory pow work.
+	// prove starts memory pow work.
 	prove(abort chan struct{}, wg *sync.WaitGroup)
 
 	// isOk returns true if work successful
@@ -44,5 +44,5 @@ type ProofWorkBackend interface {
 	getError() error
 
 	// proof returns the work proof result
-	getProofInfo() interface{}
+	getProofInfo() uint64
 }
