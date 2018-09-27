@@ -64,6 +64,14 @@ contract Trading {
         return (_item.name, _item.price, _item.description);
     }
 
+    function getItemName() public view returns (string){
+        return _item.name;
+    }
+
+    function getItemPrice() public view returns (uint){
+        return _item.price;
+    }
+
     /**
      * @dev Set item for sale.
      */
@@ -87,7 +95,6 @@ contract Trading {
      */
     function buy(string pubkey) public {
         require(_order.available == false && _item.available == true);
-        require(msg.sender != _item.seller);
 
         _order = Order(true, _item.price, _item.seller, msg.sender, pubkey);
         emit OrderCreated(_item.price, _item.seller, msg.sender, pubkey);
