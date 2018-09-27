@@ -21,8 +21,8 @@ import (
 	"sync"
 
 	ethereum "bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // PublicDownloaderAPI provides an API which gives information about the current synchronisation status.

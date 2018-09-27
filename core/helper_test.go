@@ -21,7 +21,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Implement our EthTest Manager

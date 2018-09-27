@@ -36,11 +36,11 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/eth"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/les"
 	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/event"
 	"golang.org/x/net/websocket"
 )
 

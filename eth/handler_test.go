@@ -32,9 +32,9 @@ import (
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/eth/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Tests that protocol versions and modes of operations are matched up properly.

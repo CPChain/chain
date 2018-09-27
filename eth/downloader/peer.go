@@ -30,8 +30,8 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 const (

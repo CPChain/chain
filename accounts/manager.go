@@ -21,7 +21,7 @@ import (
 	"sort"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/event"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Manager is an overarching account manager that can communicate with various

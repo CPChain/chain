@@ -105,6 +105,16 @@
 			"revisionTime": "2018-01-22T22:25:45Z"
 		},
 		{
+			"checksumSHA1": "TUAAxnHql8XSYnC157Y5iqyL6FQ=",
+			"path": "github.com/ethereum/go-ethereum/common/mclock",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "egyKJ+8B2RjmvMz0xqkVGY0B6Ig=",
+			"path": "github.com/ethereum/go-ethereum/event",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "7oFpbmDfGobwKsFLIf6wMUvVoKw=",
 			"path": "github.com/fatih/color",
 			"revision": "5ec5d9d3c2cf82e9688b34e9bc27a94d616a7193",
