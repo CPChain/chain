@@ -13,7 +13,7 @@ func main() {
 	contractAddress = deploy.DeployCampaign()
 	deploy.PrintContract(contractAddress)
 
-	deploy.FormatPrint("DeployCampaign")
+	deploy.FormatPrint("DeployCampaignVerify")
 	contractAddress = deploy.DeployCampaignVerify()
 	deploy.PrintContract(contractAddress)
 }
