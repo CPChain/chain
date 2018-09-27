@@ -167,7 +167,12 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 		return nil, RemoteDBAbsenceError
 	}
 
-	payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB)
+	pub, prv, err := private.GetKeyForPrivateTx("./rsa")
+	if err != nil {
+		return nil, err
+	}
+
+	payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB, pub, prv)
 	if !hasPermission {
 		return nil, NoPermissionError
 	}
