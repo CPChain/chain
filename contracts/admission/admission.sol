@@ -13,11 +13,8 @@ contract Admission {
 	require(_cpuDifficulty <= 256 && _cpuDifficulty >= 0, "Difficulty must less than 256");
 	require(_memoryDifficulty <= 256 && _memoryDifficulty >= 0, "Difficulty must less than 256");
 
-	cpuDifficulty = _cpuDifficulty;
-	memoryDifficulty = _memoryDifficulty;
-
-        memoryTarget = 1 << (256 - _memoryDifficulty);
-        cpuTarget = 1 << (256 - _cpuDifficulty);
+	updateCPUDifficulty(_cpuDifficulty);
+	updateMemoryDifficulty(_memoryDifficulty);
     }
 
     /** @dev updateCPUDifficulty updates cpu difficulty
