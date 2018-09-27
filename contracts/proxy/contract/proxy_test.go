@@ -24,7 +24,7 @@ import (
 )
 
 func TestSignerRegisterProxyContractRegister(t *testing.T) {
-	// t.Skip("we shall use a simulated backend.")
+	t.Skip("we shall use a simulated backend.")
 
 	fmt.Println("*******************************************************")
 	// 1. deploy proxy contract
