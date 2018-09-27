@@ -114,16 +114,13 @@ func (b *EthAPIBackend) GetReceipts(ctx context.Context, hash common.Hash) (type
 	return nil, nil
 }
 
-func (b *EthAPIBackend) GetPrivateReceipt(ctx context.Context, hash common.Hash) (*types.Receipt, error) {
-	if number := rawdb.ReadHeaderNumber(b.eth.chainDb, hash); number != nil {
-		stateDB := state.NewDatabase(b.eth.chainDb)
-		receipt, err := core.ReadPrivateReceipt(hash, stateDB.TrieDB())
-		if err != nil {
-			return nil, err
-		}
-		return receipt, nil
+func (b *EthAPIBackend) GetPrivateReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
+	stateDB := state.NewDatabase(b.eth.chainDb)
+	receipt, err := core.ReadPrivateReceipt(txHash, stateDB.TrieDB())
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+	return receipt, nil
 }
 
 func (b *EthAPIBackend) GetLogs(ctx context.Context, hash common.Hash) ([][]*types.Log, error) {

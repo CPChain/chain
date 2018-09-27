@@ -1056,6 +1056,9 @@ func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, ha
 	var receipt *types.Receipt
 	if tx.IsPrivate() {
 		receipt, _ = s.b.GetPrivateReceipt(ctx, tx.Hash())
+		if receipt == nil {
+			return nil, nil
+		}
 	} else {
 		receipts, err := s.b.GetReceipts(ctx, blockHash)
 		if err != nil {
