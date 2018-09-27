@@ -45,6 +45,6 @@ func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db *trie.Da
 	storageReceipt := (*types.ReceiptForStorage)(receipt)
 	bytesToWrite, _ := rlp.EncodeToBytes(storageReceipt)
 	db.InsertBlob(hash, bytesToWrite)
-	log.Info("Write private transaction receipt", "hash", hash, "content", bytesToWrite)
+	log.Info("Write private transaction receipt", "hash", hash, "receipt", receipt)
 	return nil
 }

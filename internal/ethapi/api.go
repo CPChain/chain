@@ -51,6 +51,10 @@ const (
 	defaultGasPrice = 50 * params.Shannon
 )
 
+var (
+	InvalidPrivateTxErr = errors.New("Private transaction should have participants defined and payload data.")
+)
+
 // PublicEthereumAPI provides an API to access Ethereum related information.
 // It offers only methods that operate on public data that is freely available to anyone.
 type PublicEthereumAPI struct {
@@ -496,7 +500,7 @@ func (s *PublicBlockChainAPI) BlockNumber() hexutil.Uint64 {
 // given block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta
 // block numbers are also allowed.
 func (s *PublicBlockChainAPI) GetBalance(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (*hexutil.Big, error) {
-	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
+	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr, false)
 	if state == nil || err != nil {
 		return nil, err
 	}
@@ -582,7 +586,7 @@ func (s *PublicBlockChainAPI) GetUncleCountByBlockHash(ctx context.Context, bloc
 
 // GetCode returns the code stored at the given address in the state for the given block number.
 func (s *PublicBlockChainAPI) GetCode(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (hexutil.Bytes, error) {
-	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
+	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr, false)
 	if state == nil || err != nil {
 		return nil, err
 	}
@@ -594,7 +598,7 @@ func (s *PublicBlockChainAPI) GetCode(ctx context.Context, address common.Addres
 // block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta block
 // numbers are also allowed.
 func (s *PublicBlockChainAPI) GetStorageAt(ctx context.Context, address common.Address, key string, blockNr rpc.BlockNumber) (hexutil.Bytes, error) {
-	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
+	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr, false)
 	if state == nil || err != nil {
 		return nil, err
 	}
@@ -604,18 +608,19 @@ func (s *PublicBlockChainAPI) GetStorageAt(ctx context.Context, address common.A
 
 // CallArgs represents the arguments for a call.
 type CallArgs struct {
-	From     common.Address  `json:"from"`
-	To       *common.Address `json:"to"`
-	Gas      hexutil.Uint64  `json:"gas"`
-	GasPrice hexutil.Big     `json:"gasPrice"`
-	Value    hexutil.Big     `json:"value"`
-	Data     hexutil.Bytes   `json:"data"`
+	From      common.Address  `json:"from"`
+	To        *common.Address `json:"to"`
+	Gas       hexutil.Uint64  `json:"gas"`
+	GasPrice  hexutil.Big     `json:"gasPrice"`
+	Value     hexutil.Big     `json:"value"`
+	Data      hexutil.Bytes   `json:"data"`
+	IsPrivate bool            `json:"isPrivate"`
 }
 
 func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr rpc.BlockNumber, vmCfg vm.Config, timeout time.Duration) ([]byte, uint64, bool, error) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
+	state, header, err := s.b.StateAndHeaderByNumber(ctx, blockNr, args.IsPrivate)
 
-	state, header, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
 	if state == nil || err != nil {
 		return nil, 0, false, err
 	}
@@ -671,6 +676,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 	if err := vmError(); err != nil {
 		return nil, 0, false, err
 	}
+
 	return res, gas, failed, err
 }
 
@@ -1003,7 +1009,7 @@ func (s *PublicTransactionPoolAPI) GetRawTransactionByBlockHashAndIndex(ctx cont
 
 // GetTransactionCount returns the number of transactions the given address has sent for the given block number
 func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (*hexutil.Uint64, error) {
-	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
+	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr, false)
 	if state == nil || err != nil {
 		return nil, err
 	}
@@ -1122,6 +1128,7 @@ type SendTxArgs struct {
 	Input *hexutil.Bytes `json:"input"`
 
 	// Private Tx Implementation
+	IsPrivate    bool     `json:"isPrivate"`
 	Participants []string `json:"participants"`
 }
 
@@ -1180,8 +1187,7 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 		tx = types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
 
-	isPrivate := len(args.Participants) != 0 && args.Data != nil
-	tx.SetPrivate(isPrivate)
+	tx.SetPrivate(args.IsPrivate)
 
 	return tx
 }
@@ -1208,7 +1214,6 @@ func submitTransaction(ctx context.Context, b Backend, tx *types.Transaction) (c
 // SendTransaction creates a transaction for the given argument, sign it and submit it to the
 // transaction pool.
 func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args SendTxArgs) (common.Hash, error) {
-
 	// Look up the wallet containing the requested signer
 	account := accounts.Account{Address: args.From}
 
@@ -1229,9 +1234,12 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		return common.Hash{}, err
 	}
 
-	// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
-	isPrivate := len(args.Participants) != 0 && args.Data != nil
-	if isPrivate {
+	if args.IsPrivate {
+		// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
+		if len(args.Participants) == 0 || args.Data == nil {
+			return common.Hash{}, InvalidPrivateTxErr
+		}
+
 		payloadReplace, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants, s.b.RemoteDB())
 		if err != nil {
 			panic(err)
