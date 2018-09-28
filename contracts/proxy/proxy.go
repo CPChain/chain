@@ -26,7 +26,7 @@ import (
 )
 
 //go:generate abigen --sol contract/proxy.sol --pkg contract --out contract/proxy.go
-// Backend wraps all methods required for chequebook operation.
+
 type Backend interface {
 	bind.ContractBackend
 	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)

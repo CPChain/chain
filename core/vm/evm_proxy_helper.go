@@ -58,6 +58,7 @@ func GetRealContractAddress(evm *EVM, caller ContractRef, proxyContractAddress c
 
 // invoke contract method in proxyContractRegister.sol#getRealContract
 func getContractInput(proxyContract common.Address) []byte {
+	// the name is in line with the one in the contract
 	methodSignBytes := []byte("getRealContract(address)")
 	bytes := crypto.Keccak256(methodSignBytes)
 	methodSignature := fmt.Sprintf("%v", common.Bytes2Hex(bytes)[0:8])
