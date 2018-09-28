@@ -21,6 +21,8 @@ $proj_dir/build/bin/bootnode -nodekey boot.key -verbosity 9 -addr :30310 2>data/
 
 data_dir=`pwd`
 
+echo "Please check the IPFS daemon running on localhost."
+
 $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd1 --ipcpath ${ipc_path_base}1 --rpcport 8501 --port 30311 --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --mine --minerthreads 1 --cpchain --password conf/password 2>data/logs/1.log &
 $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd2 --ipcpath ${ipc_path_base}2 --rpcport 8502 --port 30312 --unlock "0xc05302acebd0730e3a18a058d7d1cb1204c4a092" --mine --minerthreads 1 --cpchain --password conf/password 2>data/logs/2.log &
 $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd3 --ipcpath ${ipc_path_base}3 --rpcport 8503 --port 30313 --unlock "0xef3dd127de235f15ffb4fc0d71469d1339df6465" --mine --minerthreads 1 --cpchain --password conf/password1 2>data/logs/3.log &
@@ -34,7 +36,7 @@ $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd5 --ipcpath ${ipc_path
 # $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd9 --ipcpath ${ipc_path_base}9 --rpcport 8509 --port 30319 --unlock "0xe4d51117832e84f1d082e9fc12439b771a57e7b2"  --cpchain --password conf/password 2>data/logs/9.log &
 # $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd10 --ipcpath ${ipc_path_base}10 --rpcport 8510 --port 30320 --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --cpchain --password conf/password 2>data/logs/10.log &
 
-# dlv --headless --listen=:2345 --api-version=2 debug github.com/ethereum/go-ethereum/cmd/geth -- $ARGS  --datadir $data_dir/data/dd3 --ipcpath ${ipc_path_base}3 --rpcport 8503 --port 30313 --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --mine --minerthreads 1 --password conf/password 
+# dlv --headless --listen=:2345 --api-version=2 debug github.com/ethereum/go-ethereum/cmd/geth -- $ARGS  --datadir $data_dir/data/dd3 --ipcpath ${ipc_path_base}3 --rpcport 8503 --port 30313 --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --mine --minerthreads 1 --password conf/password
 
 
 echo ""
