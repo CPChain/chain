@@ -19,6 +19,8 @@ package core
 import (
 	"errors"
 
+	"crypto/rsa"
+
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/misc"
@@ -64,7 +66,7 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
 func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, statePrivDB *state.StateDB,
-	remoteDB ethdb.RemoteDatabase, cfg vm.Config) (types.Receipts, []*types.Log, uint64, error) {
+	remoteDB ethdb.RemoteDatabase, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (types.Receipts, []*types.Log, uint64, error) {
 	var (
 		receipts types.Receipts
 		usedGas  = new(uint64)
@@ -81,7 +83,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
 		statePrivDB.Prepare(tx.Hash(), block.Hash(), i)
 		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, statePrivDB, remoteDB, header, tx,
-			usedGas, cfg)
+			usedGas, cfg, rsaPrivKey)
 		if err != nil {
 			return nil, nil, 0, err
 		}
@@ -98,8 +100,9 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 // and uses the input parameters for its environment. It returns the receipt
 // for the transaction, gas used and an error if the transaction failed,
 // indicating the block was invalid.
-func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, pubStateDb *state.StateDB, privateStateDb *state.StateDB,
-	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
+func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, pubStateDb *state.StateDB,
+	privateStateDb *state.StateDB, remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64,
+	cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, uint64, error) {
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
 	if err != nil {
 		return nil, 0, err
@@ -146,7 +149,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 
 	// For private tx, it should process its real private tx payload in participant's node.
 	if tx.IsPrivate() {
-		privReceipt, err := tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg)
+		privReceipt, err := tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, rsaPrivKey)
 		if err == nil {
 			processPrivateReceipts(tx.Hash(), types.Receipts{privReceipt}, privateStateDb.Database().TrieDB())
 		}
@@ -157,7 +160,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 
 // applyPrivateTx attempts to apply a private transaction to the given state database
 func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, privateStateDb *state.StateDB,
-	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, cfg vm.Config) (*types.Receipt, error) {
+	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, error) {
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
 	if err != nil {
 		return nil, err

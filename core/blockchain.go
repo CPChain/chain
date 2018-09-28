@@ -28,6 +28,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"crypto/rsa"
+
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/common/mclock"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -135,6 +137,7 @@ type BlockChain struct {
 
 	privateStateCache state.Database       // State database to reuse between imports (contains state cache)
 	remoteDB          ethdb.RemoteDatabase // Remote database for huge amount data storage
+	rsaPrivateKey     *rsa.PrivateKey      // Private RSA key used for many features such as private tx
 }
 
 // WaitingSignatureBlocks returns waitingSignatureBlocks
@@ -1192,7 +1195,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		// Process block using the parent state as reference point.
 		// TODO: Pass a real remote database parameter to below function call.
-		receipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB, bc.vmConfig)
+		receipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB, bc.vmConfig, bc.rsaPrivateKey)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)
 			return i, events, coalescedLogs, err
@@ -1638,4 +1641,8 @@ func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscript
 // RemoteDB returns remote database if it has, otherwise return nil.
 func (bc *BlockChain) RemoteDB() ethdb.RemoteDatabase {
 	return bc.remoteDB
+}
+
+func (bc *BlockChain) RsaPrivateKey() *rsa.PrivateKey {
+	return bc.rsaPrivateKey
 }
