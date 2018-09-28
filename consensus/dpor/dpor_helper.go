@@ -299,6 +299,8 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// We haven't reached the 2/3 rule.
 	if !accept {
 		// Sign the block if self is in the committee.
+		log.Debug("snap.issigner(dpor.signer, number)", "bool", snap.isSigner(dpor.signer, number))
+		log.Debug("signer", "s", dpor.signer.Hex())
 		if snap.isSigner(dpor.signer, number) {
 			// NOTE: only sign a block once.
 			if signedHash, signed := dpor.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {

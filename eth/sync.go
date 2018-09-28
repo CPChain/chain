@@ -203,16 +203,16 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		// TODO: check if there is any security problems!
 		if err == consensus.ErrNotEnoughSigs {
 
-			log.Debug("--------I am in sync.Synchronise start--------")
-			log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
-			log.Debug("--------I am in sync.Synchronise end--------")
+			// log.Debug("--------I am in sync.Synchronise start--------")
+			// log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
+			// log.Debug("--------I am in sync.Synchronise end--------")
 
-			err := err.(*consensus.ErrNotEnoughSigsType)
-			hash := err.NotEnoughSigsBlockHash
-			if waitingSignatureBlock, known := pm.downloader.Blockchain.WaitingSignatureBlocks().Get(hash); known {
-				waitingSignatureBlock := waitingSignatureBlock.(*types.Block)
-				go pm.BroadcastBlock(waitingSignatureBlock, true)
-			}
+			// err := err.(*consensus.ErrNotEnoughSigsType)
+			// hash := err.NotEnoughSigsBlockHash
+			// if waitingSignatureBlock, known := pm.downloader.Blockchain.WaitingSignatureBlocks().Get(hash); known {
+			// 	waitingSignatureBlock := waitingSignatureBlock.(*types.Block)
+			// 	go pm.BroadcastBlock(waitingSignatureBlock, true)
+			// }
 		}
 
 		log.Info("err in syncer", "e", err)
@@ -221,7 +221,9 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			err := err.(*consensus.ErrNewSignedHeaderType)
 			header := err.SignedHeader
 
-			log.Info("in syncer accept failed, but signed, broadcasting...", "header", header)
+			log.Debug("--------I am in sync.Synchronise start--------")
+			log.Debug("I am in sync Synchronise, now with not enough sigs, but signed the new block, I'll broadcast it to my peers...")
+			log.Debug("--------I am in sync.Synchronise end--------")
 			go pm.BroadcastSignedHeader(header)
 
 		}

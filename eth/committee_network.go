@@ -193,25 +193,25 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 
 func (oc *BasicCommitteeNetworkHandler) Connect() {
 	log.Info("connecting...")
-	if oc.disconnected {
-		for _, s := range oc.remoteSigners {
-			err := s.dial(oc.server)
-			log.Info("err when connect", "e", err)
-		}
-	}
-	oc.disconnected = false
-	oc.connected = true
+	// if oc.disconnected {
+	// 	for _, s := range oc.remoteSigners {
+	// 		err := s.dial(oc.server)
+	// 		log.Info("err when connect", "e", err)
+	// 	}
+	// }
+	// oc.disconnected = false
+	// oc.connected = true
 }
 func (oc *BasicCommitteeNetworkHandler) Disconnect() {
 	log.Info("disconnecting...")
-	if oc.connected {
-		for _, s := range oc.remoteSigners {
-			err := s.disconnect(oc.server)
-			log.Info("err when disconnect", "e", err)
-		}
-	}
-	oc.disconnected = true
-	oc.connected = false
+	// if oc.connected {
+	// 	for _, s := range oc.remoteSigners {
+	// 		err := s.disconnect(oc.server)
+	// 		log.Info("err when disconnect", "e", err)
+	// 	}
+	// }
+	// oc.disconnected = true
+	// oc.connected = false
 }
 
 // Handle implements CommitteeNetworkHandler.Handle

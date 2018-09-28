@@ -19,6 +19,7 @@ package core
 
 import (
 	"crypto/rsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -1302,6 +1303,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 
 		cache, _ := bc.stateCache.TrieDB().Size()
+
+		log.Debug("block sigs of ", "n", chain[i].NumberU64())
+		log.Debug("\n" + hex.Dump(chain[i].Extra2()))
+
 		log.Info("Imported new block: " + strconv.Itoa(int(chain[i].Number().Int64())) + " hash: " + chain[i].Hash().Hex())
 		stats.report(chain, i, cache)
 	}

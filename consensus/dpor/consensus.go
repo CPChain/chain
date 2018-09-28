@@ -350,5 +350,5 @@ func (d *Dpor) IsSigner(chain consensus.ChainReader, address common.Address, num
 	if err != nil {
 		return false, err
 	}
-	return snap.isSigner(address, number), nil
+	return snap.isFutureSigner(address, number), nil
 }

@@ -780,6 +780,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			} else {
 				block := pm.blockchain.GetBlockByHash(hash)
 				go pm.BroadcastBlock(block.WithSeal(header), true)
+				go pm.BroadcastBlock(block, true)
 
 				if number < pm.blockchain.CurrentBlock().NumberU64() {
 
@@ -846,6 +847,7 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 	// TODO: fix this.
 	log.Debug("--------I am in handler.BroadcastBlock start--------")
 	log.Debug("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
+	log.Debug("--------I am in handler.BroadcastBlock end--------")
 
 	// If propagation is requested, send to a subset of the peer
 	if propagate {

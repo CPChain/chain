@@ -217,7 +217,7 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 		},
 		rpt.RPT{
 			Address: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-			Rpt:     100,
+			Rpt:     60,
 		},
 		rpt.RPT{
 			Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
@@ -225,12 +225,12 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 		},
 		rpt.RPT{
 			Address: common.HexToAddress("0x6E31e5B68A98dcD17264bd1ba547D0B3E874dA1E"),
-			Rpt:     1000,
+			Rpt:     40,
 		},
-		// rpt.RPT{
-		// 	Address: common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
-		// 	Rpt:     300,
-		// },
+		rpt.RPT{
+			Address: common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
+			Rpt:     70,
+		},
 	}
 	// TODO: above is wrong.
 
@@ -245,7 +245,7 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 
 	epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
 	s.RecentSigners[epochIdx] = signers
-
+	s.RecentSigners[epochIdx+1] = signers
 	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
 		delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
 	}
@@ -316,7 +316,7 @@ func (s *DporSnapshot) inturn(number uint64, signer common.Address) bool {
 }
 
 func (s *DporSnapshot) isFutureSigner(signer common.Address, number uint64) bool {
-	for _, sn := range s.RecentSigners[s.EpochIdxOf(number)] {
+	for _, sn := range s.RecentSigners[s.EpochIdxOf(number)+EpochGapBetweenElectionAndMining] {
 		log.Info("future signers:", "s", sn.Hex())
 		if sn == signer {
 			return true

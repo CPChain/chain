@@ -12,7 +12,8 @@ ipc_path_base=/tmp/go-ethereum-ipc
 
 echo "[*] Starting Ethereum nodes"
 # ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 "
-ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 "
+ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --verbosity 4 "
+# ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --verbosity 4 --maxpeers 5"
 # ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --maxpeers 8"
 
 #start bootnode service
@@ -26,7 +27,7 @@ echo "Please check the IPFS daemon running on localhost."
 $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd1 --ipcpath ${ipc_path_base}1 --rpcport 8501 --port 30311 --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --mine --minerthreads 1 --cpchain --password conf/password 2>data/logs/1.log &
 $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd2 --ipcpath ${ipc_path_base}2 --rpcport 8502 --port 30312 --unlock "0xc05302acebd0730e3a18a058d7d1cb1204c4a092" --mine --minerthreads 1 --cpchain --password conf/password 2>data/logs/2.log &
 $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd3 --ipcpath ${ipc_path_base}3 --rpcport 8503 --port 30313 --unlock "0xef3dd127de235f15ffb4fc0d71469d1339df6465" --mine --minerthreads 1 --cpchain --password conf/password1 2>data/logs/3.log &
-$proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd4 --ipcpath ${ipc_path_base}4 --rpcport 8504 --port 30314 --unlock "0x3a18598184ef84198db90c28fdfdfdf56544f747"  --cpchain --password conf/password2 2>data/logs/4.log &
+$proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd4 --ipcpath ${ipc_path_base}4 --rpcport 8504 --port 30314 --unlock "0x3a18598184ef84198db90c28fdfdfdf56544f747" --mine --minerthreads 1 --cpchain --password conf/password2 2>data/logs/4.log &
 
 
 $proj_dir/build/bin/geth $ARGS --datadir $data_dir/data/dd5 --ipcpath ${ipc_path_base}5 --rpcport 8505 --port 30315 --unlock "0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"  --mine --minerthreads 1 --cpchain --password conf/password 2>data/logs/5.log &
