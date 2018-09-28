@@ -35,8 +35,8 @@ import (
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/p2p/simulations/pipes"
-	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 func TestSharedSecret(t *testing.T) {

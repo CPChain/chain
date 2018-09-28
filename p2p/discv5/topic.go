@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/common/mclock"
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const (

@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 func generateMessageParams() (*MessageParams, error) {

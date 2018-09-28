@@ -24,11 +24,11 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/p2p/simulations/adapters"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var DialBanTimeout = 200 * time.Millisecond

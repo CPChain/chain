@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // SecureTrie wraps a trie with key hashing. In a secure trie, all

@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 	duktape "gopkg.in/olebedev/go-duktape.v3"
 )
 

@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 	set "gopkg.in/fatih/set.v0"
 )
 

@@ -26,7 +26,7 @@ import (
 	"strings"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const (

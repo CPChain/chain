@@ -23,7 +23,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // WaitMined waits for tx to be mined on the blockchain.

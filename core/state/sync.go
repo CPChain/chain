@@ -20,8 +20,8 @@ import (
 	"bytes"
 
 	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/trie"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // NewStateSync create a new state trie download scheduler.

@@ -22,7 +22,7 @@ import (
 	"errors"
 
 	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // Iterator is a key-value trie iterator that traverses a Trie.

@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/mattn/go-colorable"
 )
 

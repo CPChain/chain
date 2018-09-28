@@ -33,10 +33,10 @@ import (
 	"unsafe"
 
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/rpc"
 	mmap "github.com/edsrzf/mmap-go"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/hashicorp/golang-lru/simplelru"
 )
 

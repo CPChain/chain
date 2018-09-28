@@ -22,8 +22,8 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 type StdIOUI struct {

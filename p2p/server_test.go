@@ -27,8 +27,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p/discover"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 func init() {

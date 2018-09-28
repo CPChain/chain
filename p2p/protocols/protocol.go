@@ -36,9 +36,9 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // error codes used by this  protocol scheme
