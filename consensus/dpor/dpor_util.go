@@ -164,7 +164,7 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 			}
 		}
 	} else {
-		return false, errNotSigsInCache
+		return false, errNoSigsInCache
 	}
 
 	// num of sigs must > 2/3 * epochLength, leader must be in the sigs.

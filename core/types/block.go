@@ -44,7 +44,8 @@ type EncoderAndDecoder struct {
 }
 
 var (
-	UNKNOWN_EXTRA2_TYPE = errors.New("unknown extra2 type")
+	errTooShortExtra2    = errors.New("too short extra2")
+	errUnknownExtra2Type = errors.New("unknown extra2 type")
 
 	EmptyRootHash         = DeriveSha(Transactions{})
 	EmptyUncleHash        = CalcUncleHash(nil)
@@ -141,7 +142,7 @@ func (h *Header) DecodedExtra2(decoder Extra2Decoder) (Extra2Struct, error) {
 	dataType := extra2[0]
 	encoderAndDecoder, ok := Extra2RegisterMapping[dataType]
 	if !ok {
-		return Extra2Struct{}, UNKNOWN_EXTRA2_TYPE
+		return Extra2Struct{}, errUnknownExtra2Type
 	}
 	return encoderAndDecoder.Decoder(extra2)
 }
@@ -151,7 +152,7 @@ func (h *Header) EncodeToExtra2(data Extra2Struct) error {
 	dataType := data.Type
 	encoderAndDecoder, ok := Extra2RegisterMapping[dataType]
 	if !ok {
-		return UNKNOWN_EXTRA2_TYPE
+		return errUnknownExtra2Type
 	}
 	extra2, err := encoderAndDecoder.Encoder(data)
 	if err != nil {
@@ -164,7 +165,7 @@ func (h *Header) EncodeToExtra2(data Extra2Struct) error {
 // TypeExtra2SignaturesDecoder implements Extra2Decoder.
 func TypeExtra2SignaturesDecoder(extra2 []byte) (Extra2Struct, error) {
 	if n := len(extra2); n < 1 {
-		return Extra2Struct{}, errors.New("too short extra2")
+		return Extra2Struct{}, errTooShortExtra2
 	}
 	data := Extra2Struct{Type: TypeExtra2Signatures, Data: make([]byte, len(extra2)-1)}
 	copy(data.Data[:], extra2[1:])

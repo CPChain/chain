@@ -17,6 +17,10 @@ import (
 	"bitbucket.org/cpchain/chain/p2p"
 )
 
+var (
+	errLengthOfSigners = errors.New("error length of signers")
+)
+
 // RemoteSigner represents a remote signer waiting to be connected and communicate with.
 type RemoteSigner struct {
 	epochIdx uint64
@@ -181,7 +185,7 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 	oc.epochIdx = epochIdx
 
 	if len(signers) != len(oc.remoteSigners) {
-		return errors.New("error length of signer")
+		return errLengthOfSigners
 	}
 	for _, signer := range signers {
 		s := NewRemoteSigner(epochIdx, signer)

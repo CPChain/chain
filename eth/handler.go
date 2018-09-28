@@ -55,9 +55,14 @@ var (
 	daoChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the DAO handshake challenge
 )
 
-// errIncompatibleConfig is returned if the requested protocols and configs are
-// not compatible (low protocol version restrictions and high requirements).
-var errIncompatibleConfig = errors.New("incompatible configuration")
+var (
+
+	// errIncompatibleConfig is returned if the requested protocols and configs are
+	// not compatible (low protocol version restrictions and high requirements).
+	errIncompatibleConfig = errors.New("incompatible configuration")
+
+	errBadEngine = errors.New("bad engine")
+)
 
 func errResp(code errCode, format string, v ...interface{}) error {
 	return fmt.Errorf("%v - %v", code, fmt.Sprintf(format, v...))
@@ -271,7 +276,7 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner bool, err error) {
 	e, ok := pm.engine.(consensus.Validator)
 	if !ok {
-		return false, errors.New("bad engine")
+		return false, errBadEngine
 	}
 	isSigner, err = e.IsSigner(pm.blockchain, address, pm.blockchain.CurrentHeader().Number.Uint64())
 	return isSigner, err
@@ -311,7 +316,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		// register peer as signer.
 		err := pm.peers.RegisterSigner(p)
 		if err != nil && err != errAlreadyRegistered {
-			return errors.New("registering peer as signer failed")
+			return err
 		}
 	}
 	// Register the peer locally

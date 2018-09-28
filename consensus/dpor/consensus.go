@@ -110,10 +110,13 @@ var (
 	// errInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	errInvalidSigners = errors.New("invalid signer list on checkpoint block")
 
-	// errNotSigsInCache is returned if the cache is unable to store and return sigs.
-	errNotSigsInCache = errors.New("signatures not found in cache")
+	// errNoSigsInCache is returned if the cache is unable to store and return sigs.
+	errNoSigsInCache = errors.New("signatures not found in cache")
 
 	// --- our new error types ---
+
+	// errVerifyUncleNotAllowed is returned when verify uncle block.
+	errVerifyUncleNotAllowed = errors.New("uncles not allowed")
 
 	// errWaitTransactions is returned if an empty block is attempted to be sealed
 	// on an instant chain (0 second period). It's important to refuse these as the
@@ -162,7 +165,7 @@ func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Heade
 // uncles as this consensus mechanism doesn't permit uncles.
 func (d *Dpor) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
 	if len(block.Uncles()) > 0 {
-		return errors.New("uncles not allowed")
+		return errVerifyUncleNotAllowed
 	}
 	return nil
 }
