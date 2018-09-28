@@ -107,8 +107,8 @@ type BasicCommitteeNetworkHandler struct {
 
 	remoteSigners []*RemoteSigner
 
-	connected    bool
-	disconnected bool
+	connected bool
+	lock      sync.RWMutex
 }
 
 func getRemoteSigners() []*RemoteSigner {
@@ -152,7 +152,6 @@ func NewBasicCommitteeNetworkHandler(peers *peerSet, epochLength uint64, ownAddr
 		// contractAddress: contractAddress,
 		// remoteSigners:   make([]*RemoteSigner, epochLength-1),
 		remoteSigners: getRemoteSigners(),
-		disconnected:  false,
 		connected:     true,
 	}
 	return bc, nil
@@ -192,26 +191,28 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 }
 
 func (oc *BasicCommitteeNetworkHandler) Connect() {
-	log.Info("connecting...")
-	// if oc.disconnected {
-	// 	for _, s := range oc.remoteSigners {
-	// 		err := s.dial(oc.server)
-	// 		log.Info("err when connect", "e", err)
-	// 	}
-	// }
-	// oc.disconnected = false
-	// oc.connected = true
+	oc.lock.Lock()
+	defer oc.lock.Unlock()
+	if !oc.connected {
+		log.Info("connecting...")
+		// 	for _, s := range oc.remoteSigners {
+		// 		err := s.dial(oc.server)
+		// 		log.Info("err when connect", "e", err)
+		// 	}
+		oc.connected = true
+	}
 }
 func (oc *BasicCommitteeNetworkHandler) Disconnect() {
-	log.Info("disconnecting...")
-	// if oc.connected {
-	// 	for _, s := range oc.remoteSigners {
-	// 		err := s.disconnect(oc.server)
-	// 		log.Info("err when disconnect", "e", err)
-	// 	}
-	// }
-	// oc.disconnected = true
-	// oc.connected = false
+	oc.lock.Lock()
+	defer oc.lock.Unlock()
+	if oc.connected {
+		log.Info("disconnecting...")
+		// 	for _, s := range oc.remoteSigners {
+		// 		err := s.disconnect(oc.server)
+		// 		log.Info("err when disconnect", "e", err)
+		// 	}
+		oc.connected = false
+	}
 }
 
 // Handle implements CommitteeNetworkHandler.Handle

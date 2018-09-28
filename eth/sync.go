@@ -215,8 +215,6 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			// }
 		}
 
-		log.Info("err in syncer", "e", err)
-
 		if err == consensus.ErrNewSignedHeader {
 			err := err.(*consensus.ErrNewSignedHeaderType)
 			header := err.SignedHeader

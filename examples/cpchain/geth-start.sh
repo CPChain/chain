@@ -12,7 +12,8 @@ ipc_path_base=/tmp/go-ethereum-ipc
 
 echo "[*] Starting Ethereum nodes"
 # ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 "
-ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --verbosity 4 "
+ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --verbosity 3 "
+# ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --verbosity 4 "
 # ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --verbosity 4 --maxpeers 5"
 # ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --maxpeers 8"
 

@@ -1375,7 +1375,6 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 	for i, result := range results {
 		blocks[i] = types.NewBlockWithHeader(result.Header).WithBody(result.Transactions, result.Uncles)
 	}
-	log.Info("inserting ...")
 	if index, err := d.Blockchain.InsertChain(blocks); err != nil {
 		log.Debug("Downloaded item processing failed", "number", results[index].Header.Number, "hash", results[index].Header.Hash(), "err", err)
 		// TODO: fix this.
@@ -1384,7 +1383,7 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 			return err
 		}
 		if err == consensus.ErrNewSignedHeader {
-			log.Info("ErrNewSignedHeader err in downloader.importBlockResults.")
+			log.Debug("ErrNewSignedHeader err in downloader.importBlockResults.")
 			return err
 		}
 		return errInvalidChain
