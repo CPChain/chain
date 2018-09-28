@@ -34,7 +34,7 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/light"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 type odrTestFn func(ctx context.Context, db ethdb.Database, config *params.ChainConfig, bc *core.BlockChain, lc *light.LightChain, bhash common.Hash) []byte

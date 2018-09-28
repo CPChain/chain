@@ -21,8 +21,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // ReadDatabaseVersion retrieves the version number of the database.

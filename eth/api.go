@@ -35,10 +35,10 @@ import (
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/miner"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/trie"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // PublicEthereumAPI provides an API to access Ethereum full node-related

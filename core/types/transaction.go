@@ -26,7 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go

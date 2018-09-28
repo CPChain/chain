@@ -32,8 +32,8 @@ import (
 	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // ExternalAPI defines the external API through which signing requests are made.

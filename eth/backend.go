@@ -48,10 +48,10 @@ import (
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/private"
-	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 type LesServer interface {

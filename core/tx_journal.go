@@ -23,8 +23,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // errNoActiveJournal is returned if a transaction is attempted to be inserted

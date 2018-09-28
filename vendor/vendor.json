@@ -125,6 +125,11 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "zrskypwp1RbmLX2f/47diH1vxQc=",
+			"path": "github.com/ethereum/go-ethereum/rlp",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "7oFpbmDfGobwKsFLIf6wMUvVoKw=",
 			"path": "github.com/fatih/color",
 			"revision": "5ec5d9d3c2cf82e9688b34e9bc27a94d616a7193",

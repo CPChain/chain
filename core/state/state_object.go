@@ -24,7 +24,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 var emptyCodeHash = crypto.Keccak256(nil)

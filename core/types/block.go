@@ -30,7 +30,7 @@ import (
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 const (

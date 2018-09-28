@@ -1,4 +1,4 @@
-// Copyright 2015 The go-ethereum Authors
+// Copyright 2014 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
@@ -14,28 +14,20 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package state
+/*
+Package rlp implements the RLP serialization format.
 
-import (
-	"bytes"
+The purpose of RLP (Recursive Linear Prefix) is to encode arbitrarily
+nested arrays of binary data, and RLP is the main encoding method used
+to serialize objects in Ethereum. The only purpose of RLP is to encode
+structure; encoding specific atomic data types (eg. strings, ints,
+floats) is left up to higher-order protocols; in Ethereum integers
+must be represented in big endian binary form with no leading zeroes
+(thus making the integer value zero equivalent to the empty byte
+array).
 
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/trie"
-	"github.com/ethereum/go-ethereum/rlp"
-)
-
-// NewStateSync create a new state trie download scheduler.
-func NewStateSync(root common.Hash, database trie.DatabaseReader) *trie.Sync {
-	var syncer *trie.Sync
-	callback := func(leaf []byte, parent common.Hash) error {
-		var obj Account
-		if err := rlp.Decode(bytes.NewReader(leaf), &obj); err != nil {
-			return err
-		}
-		syncer.AddSubTrie(obj.Root, 64, parent, nil)
-		syncer.AddRawEntry(common.BytesToHash(obj.CodeHash), 64, parent)
-		return nil
-	}
-	syncer = trie.NewSync(root, database, callback)
-	return syncer
-}
+RLP values are distinguished by a type tag. The type tag precedes the
+value in the input stream and defines the size and kind of the bytes
+that follow.
+*/
+package rlp

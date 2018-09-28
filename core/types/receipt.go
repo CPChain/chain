@@ -24,7 +24,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/common/hexutil"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 //go:generate gencodec -type Receipt -field-override receiptMarshaling -out gen_receipt_json.go

@@ -32,7 +32,7 @@ import (
 	"bitbucket.org/cpchain/chain/les/flowcontrol"
 	"bitbucket.org/cpchain/chain/light"
 	"bitbucket.org/cpchain/chain/p2p"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 var (

@@ -36,9 +36,9 @@ import (
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
 )
 

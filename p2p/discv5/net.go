@@ -29,8 +29,8 @@ import (
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/p2p/netutil"
-	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 var (

@@ -37,9 +37,9 @@ import (
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 const (

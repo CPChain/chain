@@ -19,8 +19,8 @@ package rawdb
 import (
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/rlp"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // ReadTxLookupEntry retrieves the positional metadata associated with a transaction

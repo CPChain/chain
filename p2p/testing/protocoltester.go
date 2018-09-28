@@ -37,9 +37,9 @@ import (
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/p2p/simulations"
 	"bitbucket.org/cpchain/chain/p2p/simulations/adapters"
-	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // ProtocolTester is the tester environment used for unit testing protocol

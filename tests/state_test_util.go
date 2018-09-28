@@ -34,7 +34,7 @@ import (
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // StateTest checks transaction processing without block context.
