@@ -270,3 +270,26 @@ func tmpdir(t *testing.T) string {
 	}
 	return dir
 }
+
+func TestGetKeyForPrivateTx2(t *testing.T) {
+	dir := "/Users/xincheng/depot/chain/src/bitbucket.org/cpchain/chain/examples/cpchain/data/dd1/rsa/"
+	pub, prv, _, _, _ := rsa_.LoadRsaKey(dir+"rsa_pub.pem", dir+"rsa_pri.pem")
+	t.Log("pubic key1", hexutil.Encode(x509.MarshalPKCS1PublicKey(pub)))
+	t.Log("private key1", hexutil.Encode(x509.MarshalPKCS1PrivateKey(prv)))
+
+	dir = "/Users/xincheng/depot/chain/src/bitbucket.org/cpchain/chain/examples/cpchain/data/dd2/rsa/"
+	pub, prv, _, _, _ = rsa_.LoadRsaKey(dir+"rsa_pub.pem", dir+"rsa_pri.pem")
+	t.Log("pubic key2", hexutil.Encode(x509.MarshalPKCS1PublicKey(pub)))
+	t.Log("private key2", hexutil.Encode(x509.MarshalPKCS1PrivateKey(prv)))
+
+	dir = "/Users/xincheng/depot/chain/src/bitbucket.org/cpchain/chain/examples/cpchain/data/dd3/rsa/"
+	pub, prv, _, _, _ = rsa_.LoadRsaKey(dir+"rsa_pub.pem", dir+"rsa_pri.pem")
+	t.Log("pubic key3", hexutil.Encode(x509.MarshalPKCS1PublicKey(pub)))
+	t.Log("private key3", hexutil.Encode(x509.MarshalPKCS1PrivateKey(prv)))
+
+	dir = "/Users/xincheng/depot/chain/src/bitbucket.org/cpchain/chain/examples/cpchain/data/dd4/rsa/"
+	pub, prv, _, _, _ = rsa_.LoadRsaKey(dir+"rsa_pub.pem", dir+"rsa_pri.pem")
+	t.Log("pubic key4", hexutil.Encode(x509.MarshalPKCS1PublicKey(pub)))
+	t.Log("private key4", hexutil.Encode(x509.MarshalPKCS1PrivateKey(prv)))
+
+}

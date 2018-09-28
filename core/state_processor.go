@@ -37,6 +37,7 @@ import (
 var (
 	RemoteDBAbsenceError = errors.New("RemoteDB is not set, no capacibility of processing private transaction.")
 	NoPermissionError    = errors.New("The node doesn't have the permission/responsibility to process the private tx.")
+	RSAKeyAbsenceError   = errors.New("RSA private key is not set, no capacibility of processing private transaction.")
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning
@@ -170,12 +171,16 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 		return nil, RemoteDBAbsenceError
 	}
 
-	pub, prv, err := private.GetKeyForPrivateTx("./rsa")
+	if rsaPrivKey == nil {
+		return nil, RSAKeyAbsenceError
+	}
+
+	pub := rsaPrivKey.PublicKey
 	if err != nil {
 		return nil, err
 	}
 
-	payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB, pub, prv)
+	payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB, &pub, rsaPrivKey)
 	if !hasPermission {
 		return nil, NoPermissionError
 	}

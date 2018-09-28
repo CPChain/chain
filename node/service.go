@@ -19,6 +19,8 @@ package node
 import (
 	"reflect"
 
+	"crypto/rsa"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/event"
@@ -65,6 +67,11 @@ func (ctx *ServiceContext) Service(service interface{}) error {
 		return nil
 	}
 	return ErrServiceUnknown
+}
+
+// RsaKey gets RSA key pair.
+func (ctx *ServiceContext) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
+	return ctx.config.RsaKey()
 }
 
 // ServiceConstructor is the function signature of the constructors needed to be

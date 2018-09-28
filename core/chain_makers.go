@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"crypto/rsa"
+
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/misc"
@@ -96,10 +98,13 @@ func (b *BlockGen) AddTxWithChain(bc *BlockChain, tx *types.Transaction) {
 	b.privStateDB.Prepare(tx.Hash(), common.Hash{}, len(b.txs))
 
 	var remoteDB ethdb.RemoteDatabase
+	var rsaPrivKey *rsa.PrivateKey
 	if bc != nil {
 		remoteDB = bc.remoteDB
+		rsaPrivKey = bc.rsaPrivateKey
 	}
-	receipt, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.pubStateDB, b.privStateDB, remoteDB, b.header, tx, &b.header.GasUsed, vm.Config{})
+	receipt, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.pubStateDB, b.privStateDB, remoteDB,
+		b.header, tx, &b.header.GasUsed, vm.Config{}, rsaPrivKey)
 	if err != nil {
 		panic(err)
 	}
@@ -179,7 +184,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 	genblock := func(i int, parent *types.Block, pubStatedb *state.StateDB, privStateDB *state.StateDB) (*types.Block, types.Receipts) {
 		// TODO(karalabe): This is needed for clique, which depends on multiple blocks.
 		// It's nonetheless ugly to spin up a blockchain here. Get rid of this somehow.
-		blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB)
+		blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB, nil)
 		defer blockchain.Stop()
 
 		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, privStateDB: privStateDB, config: config, engine: engine}

@@ -148,7 +148,8 @@ func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
-func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config, remoteDB ethdb.RemoteDatabase) (*BlockChain, error) {
+func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine,
+	vmConfig vm.Config, remoteDB ethdb.RemoteDatabase, rsaPrivKey *rsa.PrivateKey) (*BlockChain, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
 			TrieNodeLimit: 256 * 1024 * 1024,
@@ -180,6 +181,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 		waitingSignatureBlocks: waitingSignatureBlocks,
 		privateStateCache:      state.NewDatabase(db),
 		remoteDB:               remoteDB,
+		rsaPrivateKey:          rsaPrivKey,
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
@@ -1194,7 +1196,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 
 		// Process block using the parent state as reference point.
-		// TODO: Pass a real remote database parameter to below function call.
 		receipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB, bc.vmConfig, bc.rsaPrivateKey)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)

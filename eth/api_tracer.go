@@ -279,7 +279,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			// TODO: test if below statement is correct.
 			privStateDb, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), statedb.Database())
 			// TODO: Pass real remote database
-			_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{})
+			_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
 			if err != nil {
 				failed = err
 				break
@@ -520,7 +520,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		// TODO: check if below statement is correct.
 		privStateDb, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), statedb.Database())
 		// TODO: pass real remote database.
-		_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{})
+		_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
 		if err != nil {
 			return nil, err
 		}

@@ -70,7 +70,7 @@ func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	genesis := core.Genesis{Config: params.AllEthashProtocolChanges, Alloc: alloc}
 	genesis.MustCommit(database)
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
-	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB)
+	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
 
 	backend := &SimulatedBackend{
 		database:   database,
@@ -90,7 +90,7 @@ func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	genesis.MustCommit(database)
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 	// TODO we need our own NewFaker(), `ethash.NewFaker' does nothing.
-	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB)
+	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
 
 	backend := &SimulatedBackend{
 		database:   database,

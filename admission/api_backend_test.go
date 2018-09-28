@@ -30,7 +30,7 @@ func newMockBackend() *MockBackend {
 		config        = &params.ChainConfig{DAOForkBlock: big.NewInt(1), DAOForkSupport: false}
 		gspec         = &core.Genesis{Config: config}
 		genesis       = gspec.MustCommit(db)
-		blockChain, _ = core.NewBlockChain(db, nil, config, pow, vm.Config{}, nil)
+		blockChain, _ = core.NewBlockChain(db, nil, config, pow, vm.Config{}, nil, nil)
 	)
 
 	core.GenerateChain(&params.ChainConfig{}, genesis, pow, db, nil, 1, nil)

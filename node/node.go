@@ -26,6 +26,8 @@ import (
 	"strings"
 	"sync"
 
+	"crypto/rsa"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/ethdb"
@@ -614,4 +616,9 @@ func (n *Node) apis() []rpc.API {
 			Public:    true,
 		},
 	}
+}
+
+// getRSAKey gets RSA key pair from config.
+func (n *Node) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
+	return n.config.RsaKey()
 }

@@ -629,7 +629,8 @@ func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, c
 	snap := env.pubState.Snapshot()
 	snapPriv := env.privState.Snapshot()
 
-	receipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.remoteDB, env.header, tx, &env.header.GasUsed, vm.Config{})
+	receipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.remoteDB,
+		env.header, tx, &env.header.GasUsed, vm.Config{}, bc.RsaPrivateKey())
 	if err != nil {
 		env.pubState.RevertToSnapshot(snap)
 		env.privState.RevertToSnapshot(snapPriv)
