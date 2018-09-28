@@ -31,7 +31,7 @@ var (
 	addr    common.Address
 	key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-	keyPath = "../examples/cpchain/data/dd1/keystore/"
+	keyPath = "../examples/cpchain/keys/"
 )
 
 func init() {
