@@ -3,7 +3,7 @@ package rsa_
 import (
 	"io/ioutil"
 
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 func LoadFile(path string) ([]byte, error) {

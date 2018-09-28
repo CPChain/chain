@@ -23,9 +23,9 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/log"
 	set "gopkg.in/fatih/set.v0"
 )
 

@@ -21,7 +21,7 @@ package dashboard
 import (
 	"syscall"
 
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // getProcessCPUTime retrieves the process' CPU time since program startup.

@@ -37,7 +37,6 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/light"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/p2p/discv5"
@@ -45,6 +44,7 @@ import (
 	"bitbucket.org/cpchain/chain/private"
 	rpc "bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 type LightEthereum struct {

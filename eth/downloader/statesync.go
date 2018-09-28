@@ -27,8 +27,8 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/trie"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // stateReq represents a batch of state fetch requests grouped together into

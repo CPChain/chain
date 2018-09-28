@@ -28,10 +28,10 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/trie"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const (

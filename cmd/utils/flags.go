@@ -48,7 +48,6 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/ethstats"
 	"bitbucket.org/cpchain/chain/les"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/metrics/influxdb"
 	"bitbucket.org/cpchain/chain/node"
@@ -59,6 +58,7 @@ import (
 	"bitbucket.org/cpchain/chain/p2p/netutil"
 	"bitbucket.org/cpchain/chain/params"
 	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
+	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

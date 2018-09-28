@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/common/bitutil"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const (
