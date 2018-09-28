@@ -3,13 +3,10 @@ package private
 import (
 	"crypto/rsa"
 	"crypto/x509"
-	"io/ioutil"
-	"path/filepath"
 	"reflect"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/common/hexutil"
-	"bitbucket.org/cpchain/chain/crypto/rsa_"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/rlp"
 )
@@ -243,53 +240,4 @@ func getTestParticipants() []string {
 func getOtherParticipants() []string {
 	return []string{"0x3082010a0282010100c4e45de3f773a0dedf24cfb0b3e3944e64794d0c98134e0adc7c197ee23d85d768816280000eb048f09761ca38697f4c24e186d07ff4d797e221f697568496fe07cd329442b3783b1ffb1261dd9e33b7f5001275f1bbc25f77f1b693c640e6478fea87ec3a0675b8a45370c178d6e538a6e3ec53ede5fcfe7689c3b003b6cafb6545133ed90725a2a6f886d8bf9294bd683f563a16f9f30fedb528243e777acec8231160e07c08c55c894d55bc4d78d94b8abf33654494753ee210343e4f9f541b58de72713a34606092cb8f3d299c73e03ed3ae972bda36807180e0fde3720d8c2e196a526e2d643005ec08bcc9511202102b64a74ae9f2413aa532542645170203010001",
 		"0x3082010a0282010100c41b896062c93243e178e11d146bdecdcacf06b7e561d57a245cebfbf8572864fb6b68556eb453bd66a5c9fef4247692ea3bd9dbb2ee8c1cc252ea3dff518fec37d9b240369bfc0d9708e776f0e3fc907a67f3c950839ffcb5f942114408efc9d931babcaef330106e3db1ec6fdc32ff3a8e2713b5ecc66efb786f857cb3f490093728f4262fbbaf800d55fda578331cfb4e4fde45a7770287498dc41af8efcacf9c7f892ef2933db57c76d7ab94d2d32c2edd18eb98bb5334110188565805d7b6438feb638d4a16d0fd8c24f869da373248e5b0cf8216d69715b5b164dcda884bdec9c7c74f4f1b8fc9f4b5973b8027590c67f410f5f41504bcb7e448edb7bb0203010001"}
-}
-
-// TestGetKeyForPrivateTx tests retrieving rsa key from files.
-func TestGetKeyForPrivateTx(t *testing.T) {
-	keyDir := tmpdir(t)
-	pubKeyPath := filepath.Join(keyDir, "rsa_pub.pem")
-	privKeyPath := filepath.Join(keyDir, "rsa_pri.pem")
-	err := rsa_.GenerateRsaKey(pubKeyPath, privKeyPath, 2048)
-
-	pub, prv, err := GetKeyForPrivateTx(keyDir)
-	if pub == nil || prv == nil || err != nil {
-		t.Error("RSA keys should be loaded properly.")
-	}
-
-	pub, prv, err = GetKeyForPrivateTx("./not_exist")
-	if err == nil {
-		t.Error("An error should be raised when no .pem file found.")
-	}
-}
-
-func tmpdir(t *testing.T) string {
-	dir, err := ioutil.TempDir("", "geth-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return dir
-}
-
-func TestGetKeyForPrivateTx2(t *testing.T) {
-	dir := "/Users/xincheng/depot/chain/src/bitbucket.org/cpchain/chain/examples/cpchain/data/dd1/rsa/"
-	pub, prv, _, _, _ := rsa_.LoadRsaKey(dir+"rsa_pub.pem", dir+"rsa_pri.pem")
-	t.Log("pubic key1", hexutil.Encode(x509.MarshalPKCS1PublicKey(pub)))
-	t.Log("private key1", hexutil.Encode(x509.MarshalPKCS1PrivateKey(prv)))
-
-	dir = "/Users/xincheng/depot/chain/src/bitbucket.org/cpchain/chain/examples/cpchain/data/dd2/rsa/"
-	pub, prv, _, _, _ = rsa_.LoadRsaKey(dir+"rsa_pub.pem", dir+"rsa_pri.pem")
-	t.Log("pubic key2", hexutil.Encode(x509.MarshalPKCS1PublicKey(pub)))
-	t.Log("private key2", hexutil.Encode(x509.MarshalPKCS1PrivateKey(prv)))
-
-	dir = "/Users/xincheng/depot/chain/src/bitbucket.org/cpchain/chain/examples/cpchain/data/dd3/rsa/"
-	pub, prv, _, _, _ = rsa_.LoadRsaKey(dir+"rsa_pub.pem", dir+"rsa_pri.pem")
-	t.Log("pubic key3", hexutil.Encode(x509.MarshalPKCS1PublicKey(pub)))
-	t.Log("private key3", hexutil.Encode(x509.MarshalPKCS1PrivateKey(prv)))
-
-	dir = "/Users/xincheng/depot/chain/src/bitbucket.org/cpchain/chain/examples/cpchain/data/dd4/rsa/"
-	pub, prv, _, _, _ = rsa_.LoadRsaKey(dir+"rsa_pub.pem", dir+"rsa_pri.pem")
-	t.Log("pubic key4", hexutil.Encode(x509.MarshalPKCS1PublicKey(pub)))
-	t.Log("private key4", hexutil.Encode(x509.MarshalPKCS1PrivateKey(prv)))
-
 }

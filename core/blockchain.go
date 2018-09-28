@@ -18,6 +18,7 @@
 package core
 
 import (
+	"crypto/rsa"
 	"errors"
 	"fmt"
 	"io"
@@ -27,8 +28,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"crypto/rsa"
 
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/common/mclock"

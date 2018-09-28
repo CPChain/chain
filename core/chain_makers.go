@@ -17,10 +17,9 @@
 package core
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"math/big"
-
-	"crypto/rsa"
 
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/consensus"

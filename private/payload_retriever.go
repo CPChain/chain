@@ -1,19 +1,14 @@
 package private
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
-
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/binary"
 
-	"path/filepath"
-
 	"bitbucket.org/cpchain/chain/common/hexutil"
-	"bitbucket.org/cpchain/chain/crypto/rsa_"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/rlp"
 )
 
@@ -56,20 +51,6 @@ func getDataFromRemote(ipfsAddress []byte, remoteDB ethdb.RemoteDatabase) []byte
 		return []byte{}
 	}
 	return content
-}
-
-// TODO: 1. figure out the performance due to I/O; 2. merge with node/config.go/RsaKey() function.
-func GetKeyForPrivateTx(keyfolder string) (*rsa.PublicKey, *rsa.PrivateKey, error) {
-	rsaPubPath := filepath.Join(keyfolder, "./rsa_pub.pem")
-	rsaPriPath := filepath.Join(keyfolder, "./rsa_pri.pem")
-	pubKey, priKey, _, _, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath)
-	if err != nil {
-		log.Error("Cannot load RSA key.", err)
-		return nil, nil, err
-	} else {
-		log.Info("Obtain private/public RSA keypair.", hexutil.Encode(x509.MarshalPKCS1PublicKey(pubKey)))
-		return pubKey, priKey, nil
-	}
 }
 
 func decryptSymKey(data []byte, privateKey *rsa.PrivateKey) []byte {
