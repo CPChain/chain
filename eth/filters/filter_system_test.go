@@ -33,9 +33,9 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 type testBackend struct {

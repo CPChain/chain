@@ -34,12 +34,12 @@ import (
 	"bitbucket.org/cpchain/chain/eth/downloader"
 	"bitbucket.org/cpchain/chain/eth/fetcher"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 const (

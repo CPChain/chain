@@ -24,8 +24,8 @@ import (
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Constants to match up protocol versions and messages

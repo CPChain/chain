@@ -35,7 +35,6 @@ import (
 	"bitbucket.org/cpchain/chain/eth/filters"
 	"bitbucket.org/cpchain/chain/eth/gasprice"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/light"
 	"bitbucket.org/cpchain/chain/log"
@@ -45,6 +44,7 @@ import (
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/private"
 	rpc "bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 type LightEthereum struct {

@@ -30,8 +30,8 @@ import (
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 func makeReceipt(addr common.Address) *types.Receipt {

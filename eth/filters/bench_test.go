@@ -29,8 +29,8 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/node"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 func BenchmarkBloomBits512(b *testing.B) {

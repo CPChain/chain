@@ -31,9 +31,9 @@ import (
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/trie"
+	"github.com/ethereum/go-ethereum/event"
 	lru "github.com/hashicorp/golang-lru"
 )
 

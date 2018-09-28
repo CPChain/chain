@@ -29,9 +29,9 @@ import (
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/eth/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Backend interface provides the common API services (that are provided by

@@ -29,9 +29,9 @@ import (
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/eth/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Backend wraps all methods required for mining.

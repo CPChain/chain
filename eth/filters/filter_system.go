@@ -30,9 +30,9 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Type determines the kind of filter and is used to put the filter in to

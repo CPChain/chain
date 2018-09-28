@@ -26,10 +26,10 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/common/mclock"
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 var (

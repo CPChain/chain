@@ -27,7 +27,7 @@ import (
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/event"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // SignerFn is a signer function callback when a contract requires a method to

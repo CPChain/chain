@@ -27,12 +27,12 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/event"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/p2p/simulations/adapters"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // testService implements the node.Service interface and provides protocols

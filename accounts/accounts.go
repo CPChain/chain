@@ -23,7 +23,7 @@ import (
 	ethereum "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/event"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Account represents an Ethereum account located at a specific location defined
