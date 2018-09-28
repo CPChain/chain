@@ -316,7 +316,8 @@ func (s *DporSnapshot) inturn(number uint64, signer common.Address) bool {
 }
 
 func (s *DporSnapshot) isFutureSigner(signer common.Address, number uint64) bool {
-	for _, sn := range s.RecentSigners[s.EpochIdxOf(number)+EpochGapBetweenElectionAndMining] {
+	for _, sn := range s.RecentSigners[s.EpochIdxOf(number)] {
+		log.Info("future signers:", "s", sn.Hex())
 		if sn == signer {
 			return true
 		}

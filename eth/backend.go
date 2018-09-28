@@ -470,6 +470,8 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	// TODO: check security. Liu Qian
 	s.server = srvr
 
+	s.protocolManager.updateServer(srvr)
+
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers
 	if s.config.LightServ > 0 {

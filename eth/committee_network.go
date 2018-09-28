@@ -83,6 +83,11 @@ func (rs *RemoteSigner) dial(server *p2p.Server) error {
 	return err
 }
 
+func (rs *RemoteSigner) disconnect(server *p2p.Server) error {
+	err := server.RemovePeerFromURL(rs.nodeID)
+	return err
+}
+
 // BasicCommitteeNetworkHandler implements CommitteeNetworkHandler
 type BasicCommitteeNetworkHandler struct {
 	peers *peerSet
@@ -101,12 +106,37 @@ type BasicCommitteeNetworkHandler struct {
 	contractTransacter *bind.TransactOpts
 
 	remoteSigners []*RemoteSigner
+
+	connected    bool
+	disconnected bool
 }
 
 func getRemoteSigners() []*RemoteSigner {
 	return []*RemoteSigner{
 		&RemoteSigner{
-			nodeID: "enode://f0946da077761c7dcbdcdbbf0d1587a5e36373150c02afb1bfadbd5713f2e894798d8c924d76874bb408ed56acf2a2112a8ae23e2730588bbc7f133a74748a45@192.168.0.117:30311",
+			nodeID:  "enode://f0946da077761c7dcbdcdbbf0d1587a5e36373150c02afb1bfadbd5713f2e894798d8c924d76874bb408ed56acf2a2112a8ae23e2730588bbc7f133a74748a45@192.168.0.117:30311",
+			address: common.HexToAddress("0xE94B7b6C5A0e526A4D97f9768AD6097bdE25c62a"),
+			dialed:  false,
+		},
+		&RemoteSigner{
+			nodeID:  "enode://69038abcb206772ae36a8c04499dbc8517237d7dde23794f8f0f915f79e4b93541c4c7f8984bdc1f06f62175b89e7c019b75a7f998d191adf2d0495f1f203e95@192.168.0.117:30312",
+			address: common.HexToAddress("0xc05302AceBd0730E3A18A058d7d1CB1204C4a092"),
+			dialed:  false,
+		},
+		&RemoteSigner{
+			nodeID:  "enode://18d38b205a421f78731474d64355239fc4ea75d6b768bef3db76d8275446f28a99218b51ea637817346d87d457b49d35c21cafe981f65b494ba5638298c400da@192.168.0.117:30313",
+			address: common.HexToAddress("0xEF3dd127DE235F15ffB4FC0D71469d1339DF6465"),
+			dialed:  false,
+		},
+		&RemoteSigner{
+			nodeID:  "enode://2eb4b8b71e95037e35e1e7a1e86fb00ebfced18dd84f82a092bf9392969db319cfd47fdbc96f03ca989f489482ee626b95eac85839613597904b99792f4af661@192.168.0.117:30314",
+			address: common.HexToAddress("0x3A18598184eF84198Db90C28FdfDfDF56544f747"),
+			dialed:  false,
+		},
+		&RemoteSigner{
+			nodeID:  "enode://21223195c1e1dfede63be02083067c3454d3ed8ad13bee948e11f6f440031631fca92911f743d16a3a5bf18882fbbb15f1d5929cfa08b8539963584c82beae02@192.168.0.117:30315",
+			address: common.HexToAddress("0x6E31e5B68A98dcD17264bd1ba547D0B3E874dA1E"),
+			dialed:  false,
 		},
 	}
 }
@@ -115,12 +145,15 @@ func getRemoteSigners() []*RemoteSigner {
 func NewBasicCommitteeNetworkHandler(peers *peerSet, epochLength uint64, ownAddress common.Address, contractAddress common.Address, server *p2p.Server) (*BasicCommitteeNetworkHandler, error) {
 	bc := &BasicCommitteeNetworkHandler{
 		// peers:           peers,
-		// server:          server,
+		server: server,
 		// ownNodeID:       server.Self().String(),
 		// ownPubkey:       server.RsaPublicKeyBytes,
 		// ownAddress:      ownAddress,
 		// contractAddress: contractAddress,
 		// remoteSigners:   make([]*RemoteSigner, epochLength-1),
+		remoteSigners: getRemoteSigners(),
+		disconnected:  false,
+		connected:     true,
 	}
 	return bc, nil
 }
@@ -160,9 +193,25 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 
 func (oc *BasicCommitteeNetworkHandler) Connect() {
 	log.Info("connecting...")
+	if oc.disconnected {
+		for _, s := range oc.remoteSigners {
+			err := s.dial(oc.server)
+			log.Info("err when connect", "e", err)
+		}
+	}
+	oc.disconnected = false
+	oc.connected = true
 }
 func (oc *BasicCommitteeNetworkHandler) Disconnect() {
 	log.Info("disconnecting...")
+	if oc.connected {
+		for _, s := range oc.remoteSigners {
+			err := s.disconnect(oc.server)
+			log.Info("err when disconnect", "e", err)
+		}
+	}
+	oc.disconnected = true
+	oc.connected = false
 }
 
 // Handle implements CommitteeNetworkHandler.Handle

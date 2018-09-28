@@ -85,21 +85,26 @@ type ProtocolManager struct {
 	txsSub        event.Subscription
 	minedBlockSub *event.TypeMuxSubscription
 
-	// TODO: add signedHeaderSub *event.TypeMuxSubscription here. Liu Qian
-	engine consensus.Engine
-
 	// channels for fetcher, syncer, txsyncLoop
 	newPeerCh   chan *peer
 	txsyncCh    chan *txsync
 	quitSync    chan struct{}
 	noMorePeers chan struct{}
 
+	server                  *p2p.Server
+	engine                  consensus.Engine
 	etherbase               common.Address
 	committeeNetworkHandler *BasicCommitteeNetworkHandler
 
 	// wait group is used for graceful shutdowns during downloading
 	// and processing
 	wg sync.WaitGroup
+}
+
+func (pm *ProtocolManager) updateServer(server *p2p.Server) {
+	pm.server = server
+	pm.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(nil, 0, pm.etherbase, common.Address{}, pm.server)
+	pm.engine.SetCommitteeNetworkHandler(pm.committeeNetworkHandler)
 }
 
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
@@ -170,9 +175,6 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 	}
 	// Construct the different synchronisation mechanisms
 	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
-
-	manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(nil, 0, manager.etherbase, common.Address{}, nil)
-	manager.engine.SetCommitteeNetworkHandler(manager.committeeNetworkHandler)
 
 	validator := func(header *types.Header, refHeader *types.Header) error {
 		return engine.VerifyHeader(blockchain, header, true, refHeader)
