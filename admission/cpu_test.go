@@ -30,8 +30,8 @@ func TestProve(t *testing.T) {
 	cpu.prove(abort, wg)
 	wg.Wait()
 
-	if cpu.nonce != 71 {
-		t.Fatalf("want 71, but %d", cpu.nonce)
+	if cpu.nonce != 17 {
+		t.Fatalf("want 17, but %d", cpu.nonce)
 	}
 }
 

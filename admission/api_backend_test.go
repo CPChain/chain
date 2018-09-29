@@ -2,9 +2,7 @@ package admission
 
 import (
 	"crypto/ecdsa"
-	"encoding/hex"
 	"errors"
-	"fmt"
 	"math/big"
 	"reflect"
 	"testing"
@@ -27,23 +25,32 @@ import (
 )
 
 var (
-	key     *ecdsa.PrivateKey
-	addr    common.Address
-	key1, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	addr1   = crypto.PubkeyToAddress(key1.PublicKey)
-	keyPath = "../examples/cpchain/data/dd1/keystore/"
+	key      *ecdsa.PrivateKey
+	addr     common.Address
+	key1, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	addr1    = crypto.PubkeyToAddress(key1.PublicKey)
+	keyPath  = "../examples/cpchain/data/dd1/keystore/"
+	password = "password"
+	ks       *keystore.KeyStore
+
+	alloc = core.GenesisAlloc{
+		addr:  {Balance: big.NewInt(1000000000)},
+		addr1: {Balance: big.NewInt(1000000000)},
+	}
+	genesis = core.Genesis{Config: params.AllEthashProtocolChanges, Alloc: alloc}
 )
 
 func init() {
-	keyStore := keystore.NewKeyStore(keyPath, 2, 1)
-	account := keyStore.Accounts()[0]
-	account, key0, err := keyStore.GetDecryptedKey(account, password)
+	ks = keystore.NewKeyStore(keyPath, 2, 1)
+	account := ks.Accounts()[0]
+	account, key0, err := ks.GetDecryptedKey(account, password)
 	if err != nil {
-		fmt.Println(err.Error())
+		new(testing.T).Fatal(err.Error())
 	}
 
+	ks.Unlock(account, password)
+
 	key = key0.PrivateKey
-	fmt.Println(hex.EncodeToString(crypto.FromECDSA(key)))
 	addr = crypto.PubkeyToAddress(key.PublicKey)
 }
 
@@ -53,7 +60,6 @@ type MockBackend struct {
 
 func newMockBackend(alloc core.GenesisAlloc) *MockBackend {
 	database := ethdb.NewMemDatabase()
-	genesis := core.Genesis{Config: params.AllEthashProtocolChanges, Alloc: alloc}
 	genesis.MustCommit(database)
 	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, nil)
 
@@ -104,13 +110,9 @@ func newAC(cpuDifficulty, cpuLifeTime, memoryDifficulty, memoryLifeTime int64) *
 	config.MemoryDifficulty = memoryDifficulty
 	config.CPUDifficulty = cpuDifficulty
 	config.MemoryLifeTime = time.Duration(memoryLifeTime) * time.Millisecond
-	alloc := core.GenesisAlloc{
-		addr:  {Balance: big.NewInt(1000000000)},
-		addr1: {Balance: big.NewInt(1000000000)},
-	}
 
-	keyStore := keystore.NewKeyStore(keyPath, 2, 1)
-	return NewAdmissionControl(newMockBackend(alloc), addr, keyStore, config)
+	return NewAdmissionControl(newMockBackend(alloc), addr, ks, genesis.Config.ChainID, config)
+	// return NewAdmissionControl(newMockBackend(alloc), addr, ks, nil, config)
 }
 
 // TestAPIs test apis
@@ -253,7 +255,7 @@ func TestSendCampaignProofInfo_ContractBackendNil(t *testing.T) {
 	ac.sendCampaignProofInfo()
 
 	_, err := ac.GetStatus()
-	wantErr := errors.New("ethclient is nil")
+	wantErr := errors.New("contractBackend is nil")
 	if !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("expected %v, but %v", wantErr, err)
 	}
@@ -298,14 +300,13 @@ func TestSendCampaignProofInfo_ContractNil(t *testing.T) {
 	backend.Commit()
 }
 
-func TestSendCampaignProofInfo_Ok(t *testing.T) {
+func TestSendCampaignProofInfoOk(t *testing.T) {
 	ac := newAC(5, 0, 5, 0)
 
 	backend := newTestBackend()
 	ac.contractBackend = backend
 
 	transactorOpts := bind.NewKeyedTransactor(key)
-	transactorOpts.Value = big.NewInt(0)
 
 	_, _, err := dpor.DeployCampaign(transactorOpts, ac.contractBackend)
 	if err != nil {

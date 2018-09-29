@@ -9,8 +9,6 @@ type workStatus = uint32
 
 const maxNonce = math.MaxUint64
 
-var password = "password"
-
 const (
 	// AcIdle status done.
 	AcIdle workStatus = iota + 1
@@ -31,6 +29,12 @@ type Config struct {
 	MemoryLifeTime time.Duration
 	// CPULifeTime cpu pow work max time to live.
 	CPULifeTime time.Duration
+	// Desposit to motage
+	Desposit int64
+	// MinimumRpt minimum rpt
+	MinimumRpt int64
+	// NumberOfCampaign wants to campaign times
+	NumberOfCampaignTimes int64
 }
 
 var (
@@ -39,6 +43,9 @@ var (
 	defaultCPULifeTime             = 1 * 60 * time.Second
 	defaultMemoryLifeTime          = 1 * 60 * time.Second
 	defaultCampaignContractAddress = "0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"
+	defaultDesposit                = int64(50)
+	defaultMinimumRpt              = int64(50)
+	defaultNumberOfCampaignTimes   = int64(1)
 )
 
 // DefaultConfig default admission config.
@@ -48,6 +55,9 @@ var DefaultConfig = Config{
 	MemoryDifficulty:        defaultMemoryDifficulty,
 	MemoryLifeTime:          defaultMemoryLifeTime,
 	CPULifeTime:             defaultCPULifeTime,
+	Desposit:                defaultDesposit,
+	MinimumRpt:              defaultMinimumRpt,
+	NumberOfCampaignTimes:   defaultNumberOfCampaignTimes,
 }
 
 // ProofInfo is used to send to contract

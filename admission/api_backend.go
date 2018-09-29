@@ -5,11 +5,12 @@ import (
 	"math/big"
 	"sync"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/contracts/dpor"
-
 	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/contracts/dpor"
+	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/rpc"
 )
@@ -21,6 +22,7 @@ type AdmissionControl struct {
 	address         common.Address
 	proofInfo       ProofInfo
 	keyStore        *keystore.KeyStore
+	chainID         *big.Int
 	contractBackend dpor.Backend
 
 	mutex  *sync.Mutex
@@ -30,12 +32,13 @@ type AdmissionControl struct {
 }
 
 // NewAdmissionControl returns a new Control instance.
-func NewAdmissionControl(backend Backend, address common.Address, keyStore *keystore.KeyStore, config Config) *AdmissionControl {
+func NewAdmissionControl(backend Backend, address common.Address, keyStore *keystore.KeyStore, chainID *big.Int, config Config) *AdmissionControl {
 	control := &AdmissionControl{
 		backend:  backend,
 		address:  address,
 		config:   config,
 		keyStore: keyStore,
+		chainID:  chainID,
 
 		abort:  make(chan struct{}),
 		mutex:  new(sync.Mutex),
@@ -145,26 +148,29 @@ func (ac *AdmissionControl) waitSendCampaignMsg(proofWorks []ProofWorkBackend, w
 // sendCampaignProofInfo sends proof info to campaign contract
 func (ac *AdmissionControl) sendCampaignProofInfo() {
 	if ac.contractBackend == nil {
-		ac.err = errors.New("ethclient is nil")
+		ac.err = errors.New("contractBackend is nil")
 		return
 	}
 
-	account := ac.keyStore.Accounts()[0]
-	account, key, err := ac.keyStore.GetDecryptedKey(account, password)
-	if err != nil {
-		ac.err = err
-		return
+	auth := &bind.TransactOpts{
+		From: ac.address,
+		Signer: func(signer types.Signer, address common.Address, tx *types.Transaction) (*types.Transaction, error) {
+			if address != ac.address {
+				return nil, errors.New("not authorized to sign this account")
+			}
+			// chainID test with all signer
+			return ac.keyStore.SignTx(accounts.Account{Address: ac.address}, tx, nil)
+		},
 	}
 
-	auth := bind.NewKeyedTransactor(key.PrivateKey)
-	auth.Value = big.NewInt(1 * 50)
+	auth.Value = big.NewInt(ac.config.Desposit)
 	instance, err := dpor.NewCampaign(auth, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
 	if err != nil {
 		ac.err = err
 		return
 	}
 
-	_, err = instance.ClaimCampaign(big.NewInt(1), big.NewInt(60))
+	_, err = instance.ClaimCampaign(big.NewInt(ac.config.NumberOfCampaignTimes), big.NewInt(ac.config.MinimumRpt))
 	if err != nil {
 		ac.err = err
 		return
