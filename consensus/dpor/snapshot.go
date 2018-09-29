@@ -213,23 +213,45 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 	rpts := rpt.RPTs{
 		rpt.RPT{
 			Address: common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-			Rpt:     50,
-		},
-		rpt.RPT{
-			Address: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-			Rpt:     60,
-		},
-		rpt.RPT{
-			Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-			Rpt:     20,
-		},
-		rpt.RPT{
-			Address: common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
 			Rpt:     10,
 		},
 		rpt.RPT{
-			Address: common.HexToAddress("0x6E31e5B68A98dcD17264bd1ba547D0B3E874dA1E"),
+			Address: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+			Rpt:     20,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+			Rpt:     30,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
 			Rpt:     40,
+		},
+
+		rpt.RPT{
+			Address: common.HexToAddress("0x6E31e5B68A98dcD17264bd1ba547D0B3E874dA1E"),
+			Rpt:     50,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"),
+			Rpt:     60,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
+			Rpt:     70,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
+			Rpt:     80,
+		},
+
+		rpt.RPT{
+			Address: common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
+			Rpt:     90,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
+			Rpt:     100,
 		},
 	}
 	// TODO: above is wrong.

@@ -195,8 +195,6 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 }
 
 func (oc *BasicCommitteeNetworkHandler) Connect() {
-	oc.lock.Lock()
-	defer oc.lock.Unlock()
 	if !oc.connected {
 		log.Info("connecting...")
 		// 	for _, s := range oc.remoteSigners {
@@ -207,8 +205,6 @@ func (oc *BasicCommitteeNetworkHandler) Connect() {
 	}
 }
 func (oc *BasicCommitteeNetworkHandler) Disconnect() {
-	oc.lock.Lock()
-	defer oc.lock.Unlock()
 	if oc.connected {
 		log.Info("disconnecting...")
 		// 	for _, s := range oc.remoteSigners {
