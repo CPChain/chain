@@ -23,7 +23,7 @@ import (
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/contracts/proxy/contract"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 //go:generate abigen --sol contract/proxyContractRegister.sol --pkg contract --out contract/proxyContractRegister.go
