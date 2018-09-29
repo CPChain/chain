@@ -302,11 +302,14 @@ func (pm *ProtocolManager) handle(p *peer) error {
 
 	log.Debug("my etherbase", "address", pm.etherbase)
 
-	isSigner, err := p.Handshake(pm.networkID, td, hash, genesis.Hash(), pm.etherbase, pm.SignerValidator)
+	err := p.Handshake(pm.networkID, td, hash, genesis.Hash())
+
 	if err != nil {
 		p.Log().Debug("Ethereum handshake failed", "err", err)
 		return err
 	}
+
+	isSigner, err := p.CommitteeHandshake(pm.etherbase, pm.SignerValidator)
 
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
 		rw.Init(p.version)
@@ -319,6 +322,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 			return err
 		}
 	}
+
 	// Register the peer locally
 	if err := pm.peers.Register(p); err != nil {
 		log.Debug("register new peer ")

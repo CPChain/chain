@@ -461,16 +461,12 @@ func (p *peer) RequestReceipts(hashes []common.Hash) error {
 	return p2p.Send(p.rw, GetReceiptsMsg, hashes)
 }
 
-type ValidateSigner func(signer common.Address) (bool, error)
-
 // Handshake executes the eth protocol handshake, negotiating version number,
 // network IDs, difficulties, head and genesis blocks.
-func (p *peer) Handshake(network uint64, td *big.Int, head common.Hash, genesis common.Hash, etherbase common.Address, signerValidator ValidateSigner) (isSigner bool, err error) {
+func (p *peer) Handshake(network uint64, td *big.Int, head common.Hash, genesis common.Hash) error {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var status statusData // safe to read after two values have been received from errc
-
-	log.Debug("my etherbase", "address", etherbase)
 
 	go func() {
 		errc <- p2p.Send(p.rw, StatusMsg, &statusData{
@@ -479,11 +475,73 @@ func (p *peer) Handshake(network uint64, td *big.Int, head common.Hash, genesis 
 			TD:              td,
 			CurrentBlock:    head,
 			GenesisBlock:    genesis,
+		})
+	}()
+	go func() {
+		errc <- p.readStatus(network, &status, genesis)
+	}()
+	timeout := time.NewTimer(handshakeTimeout)
+	defer timeout.Stop()
+	for i := 0; i < 2; i++ {
+		select {
+		case err := <-errc:
+			if err != nil {
+				return err
+			}
+		case <-timeout.C:
+			return p2p.DiscReadTimeout
+		}
+	}
+	p.td, p.head = status.TD, status.CurrentBlock
+	return nil
+}
+
+func (p *peer) readStatus(network uint64, status *statusData, genesis common.Hash) (err error) {
+	msg, err := p.rw.ReadMsg()
+	if err != nil {
+		return err
+	}
+	if msg.Code != StatusMsg {
+		return errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, StatusMsg)
+	}
+	if msg.Size > ProtocolMaxMsgSize {
+		return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+	}
+	// Decode the handshake and make sure everything matches
+	if err := msg.Decode(&status); err != nil {
+		return errResp(ErrDecode, "msg %v: %v", msg, err)
+	}
+	if status.GenesisBlock != genesis {
+		return errResp(ErrGenesisBlockMismatch, "%x (!= %x)", status.GenesisBlock[:8], genesis[:8])
+	}
+	if status.NetworkId != network {
+		return errResp(ErrNetworkIdMismatch, "%d (!= %d)", status.NetworkId, network)
+	}
+	if int(status.ProtocolVersion) != p.version {
+		return errResp(ErrProtocolVersionMismatch, "%d (!= %d)", status.ProtocolVersion, p.version)
+	}
+	return nil
+}
+
+type ValidateSigner func(signer common.Address) (bool, error)
+
+// Handshake executes the eth protocol handshake, negotiating version number,
+// network IDs, difficulties, head and genesis blocks.
+func (p *peer) CommitteeHandshake(etherbase common.Address, signerValidator ValidateSigner) (isSigner bool, err error) {
+	// Send out own handshake in a new thread
+	errc := make(chan error, 2)
+	var signerStatus signerStatusData // safe to read after two values have been received from errc
+
+	log.Debug("my etherbase", "address", etherbase)
+
+	go func() {
+		errc <- p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
+			ProtocolVersion: uint32(p.version),
 			Address:         etherbase,
 		})
 	}()
 	go func() {
-		isSigner, err = p.readStatus(network, &status, genesis, signerValidator)
+		isSigner, err = p.readSignerStatus(&signerStatus, signerValidator)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -498,37 +556,30 @@ func (p *peer) Handshake(network uint64, td *big.Int, head common.Hash, genesis 
 			return false, p2p.DiscReadTimeout
 		}
 	}
-	p.td, p.head = status.TD, status.CurrentBlock
 	return isSigner, nil
 }
 
-func (p *peer) readStatus(network uint64, status *statusData, genesis common.Hash, signerValidator ValidateSigner) (isSigner bool, err error) {
+func (p *peer) readSignerStatus(signerStatus *signerStatusData, signerValidator ValidateSigner) (isSigner bool, err error) {
 	msg, err := p.rw.ReadMsg()
 	if err != nil {
 		return false, err
 	}
-	if msg.Code != StatusMsg {
-		return false, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, StatusMsg)
+	if msg.Code != NewSignerMsg {
+		return false, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
 	}
 	if msg.Size > ProtocolMaxMsgSize {
 		return false, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 	}
 	// Decode the handshake and make sure everything matches
-	if err := msg.Decode(&status); err != nil {
+	if err := msg.Decode(&signerStatus); err != nil {
 		return false, errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
-	if status.GenesisBlock != genesis {
-		return false, errResp(ErrGenesisBlockMismatch, "%x (!= %x)", status.GenesisBlock[:8], genesis[:8])
+	if int(signerStatus.ProtocolVersion) != p.version {
+		return false, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
 	}
-	if status.NetworkId != network {
-		return false, errResp(ErrNetworkIdMismatch, "%d (!= %d)", status.NetworkId, network)
-	}
-	if int(status.ProtocolVersion) != p.version {
-		return false, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", status.ProtocolVersion, p.version)
-	}
-	isSigner, err = signerValidator(status.Address)
-	log.Debug("handshaking...")
-	log.Debug("peer is signer", "peer", status.Address, isSigner)
+	isSigner, err = signerValidator(signerStatus.Address)
+	log.Debug("cpchain committee network handshaking...")
+	log.Debug("peer is signer", "peer", signerStatus.Address, isSigner)
 	return isSigner, err
 }
 

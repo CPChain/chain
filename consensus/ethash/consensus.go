@@ -556,3 +556,7 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 func (ethash *Ethash) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.CommitteeNetworkHandler) error {
 	return nil
 }
+
+func (ethash *Ethash) IsSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
+	return true, nil
+}

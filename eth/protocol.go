@@ -124,6 +124,9 @@ type statusData struct {
 	TD              *big.Int
 	CurrentBlock    common.Hash
 	GenesisBlock    common.Hash
+}
+type signerStatusData struct {
+	ProtocolVersion uint32
 	Address         common.Address
 }
 
