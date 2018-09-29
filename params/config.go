@@ -94,7 +94,7 @@ var (
 
 		Dpor: &DporConfig{
 			Period:                3,
-			Epoch:                 3,
+			Epoch:                 4,
 			MaxInitBlockNumber:    8,
 			ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
 		},
