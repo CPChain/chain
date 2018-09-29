@@ -25,6 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"bitbucket.org/cpchain/chain/accounts/keystore"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/common"
@@ -198,7 +200,8 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		gpoParams.Default = config.GasPrice
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
-	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.APIBackend, eth.etherbase, eth.config.Admission)
+	ks := eth.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.APIBackend, eth.etherbase, ks, eth.chainConfig.ChainID, eth.config.Admission)
 
 	return eth, nil
 }
