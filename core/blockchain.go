@@ -248,32 +248,8 @@ func (bc *BlockChain) loadLastState() error {
 	// Make sure the private state associated with the block is available
 	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
 		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
-		log.Error("Error", err.Error())
-
-		// 查查上个
-		bi := bc.GetBlockByHash(currentBlock.ParentHash())
-		for {
-			sr := bi.Root()
-			log.Info("block state root", sr.String())
-			bn := bi.NumberU64()
-			log.Info("block number", fmt.Sprint(bn))
-			psr := GetPrivateStateRoot(bc.db, bi.Root())
-			log.Info("block private state root", psr.String())
-			_, err := state.New(psr, bc.privateStateCache)
-			if err != nil {
-				log.Error("Error", err.Error())
-			}
-			if bi.ParentHash() == (common.Hash{}) {
-				log.Info("Reached genesis block")
-				break
-			}
-			bi = bc.GetBlockByHash(bi.ParentHash())
-			fmt.Println()
-		}
-		log.Info("Finished.")
-
 		// TODO: use repair instead.
-		//return bc.Reset()
+		return bc.Reset()
 	}
 
 	// Everything seems to be fine, set as the head block
