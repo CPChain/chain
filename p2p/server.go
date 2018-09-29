@@ -145,16 +145,16 @@ type Config struct {
 	Logger log.Logger `toml:",omitempty"`
 
 	//Rsa private key
-	RsaPrivateKey *rsa.PrivateKey
+	RsaPrivateKey *rsa.PrivateKey `toml:"-"`
 
 	//Rsa public key
-	RsaPublicKey *rsa.PublicKey
+	RsaPublicKey *rsa.PublicKey `toml:"-"`
 
 	//Rsa private key
-	RsaPrivateKeyBytes []byte
+	RsaPrivateKeyBytes []byte `toml:"-"`
 
 	//Rsa public key
-	RsaPublicKeyBytes []byte
+	RsaPublicKeyBytes []byte `toml:"-"`
 }
 
 // Server manages all peer connections.
