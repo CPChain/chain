@@ -24,10 +24,10 @@ import (
 	"os"
 	"runtime"
 
-	"bitbucket.org/cpchain/chain/log"
-	"bitbucket.org/cpchain/chain/log/term"
 	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/metrics/exp"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/log/term"
 	"github.com/fjl/memsize/memsizeui"
 	colorable "github.com/mattn/go-colorable"
 	"gopkg.in/urfave/cli.v1"

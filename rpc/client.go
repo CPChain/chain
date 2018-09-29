@@ -33,7 +33,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"bitbucket.org/cpchain/chain/log"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var (

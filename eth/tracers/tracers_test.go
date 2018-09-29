@@ -32,8 +32,8 @@ import (
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/tests"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // To generate a new callTracer test, copy paste the makeTest method below into

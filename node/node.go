@@ -32,10 +32,10 @@ import (
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/debug"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/prometheus/prometheus/util/flock"
 )
 

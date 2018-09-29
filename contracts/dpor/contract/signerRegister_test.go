@@ -28,6 +28,14 @@ func TestSignerRegister(t *testing.T) {
 
 	client, privateKey, fromAddress, gasLimit, gasPrice, instance, ctx := deployContract()
 
+	realAddress := "0x0bd6a2b982fc58e80a50beac02349871e2d016df"
+	proxyAddress := "0x419a4dd52761c8272a700af72618e0e5e1ef3693"
+
+	_ = proxyAddress
+	_ = realAddress
+
+	instance, _ = NewSignerConnectionRegister(common.HexToAddress(proxyAddress), client)
+
 	fmt.Println("*******************************************************")
 	registerSignerAndGet(t, privateKey, gasLimit, gasPrice, instance, ctx, client, fromAddress)
 	fmt.Println("*******************************************************")

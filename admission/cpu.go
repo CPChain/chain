@@ -25,7 +25,7 @@ func newCPUWork(difficulty int64, address common.Address, block *types.Block, li
 	}
 }
 
-//tryOnce tries the nonce.
+// tryOnce tries the nonce.
 func (cpu *cpuWork) tryOnce() bool {
 	target := big.NewInt(1)
 	target.Lsh(target, 256-uint(cpu.difficulty))
@@ -38,7 +38,7 @@ func (cpu *cpuWork) tryOnce() bool {
 	return new(big.Int).SetBytes(hash[:]).Cmp(target) <= 0
 }
 
-//makeData wrappers the nonce.
+// makeData wrappers the nonce.
 func (cpu *cpuWork) makeData() []byte {
 	nonceBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(nonceBytes, cpu.nonce)
@@ -80,9 +80,6 @@ search:
 }
 
 // getProofInfo return the cpu pow result
-func (cpu *cpuWork) getProofInfo() interface{} {
-	return CPUProofInfo{
-		Nonce:       cpu.nonce,
-		BlockNumber: cpu.block.NumberU64(),
-	}
+func (cpu *cpuWork) getProofInfo() uint64 {
+	return cpu.nonce
 }

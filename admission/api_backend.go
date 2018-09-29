@@ -1,20 +1,29 @@
 package admission
 
 import (
+	"errors"
+	"math/big"
 	"sync"
 
+	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/contracts/dpor"
+	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/rpc"
 )
 
 // AdmissionControl implements APIBackend API.
 type AdmissionControl struct {
-	backend   Backend
-	config    Config
-	address   common.Address
-	proofInfo ProofInfo
-	client    *ethclient.Client
+	backend         Backend
+	config          Config
+	address         common.Address
+	proofInfo       ProofInfo
+	keyStore        *keystore.KeyStore
+	chainID         *big.Int
+	contractBackend dpor.Backend
 
 	mutex  *sync.Mutex
 	status workStatus
@@ -23,11 +32,13 @@ type AdmissionControl struct {
 }
 
 // NewAdmissionControl returns a new Control instance.
-func NewAdmissionControl(backend Backend, address common.Address, config Config) *AdmissionControl {
+func NewAdmissionControl(backend Backend, address common.Address, keyStore *keystore.KeyStore, chainID *big.Int, config Config) *AdmissionControl {
 	control := &AdmissionControl{
-		backend: backend,
-		address: address,
-		config:  config,
+		backend:  backend,
+		address:  address,
+		config:   config,
+		keyStore: keyStore,
+		chainID:  chainID,
 
 		abort:  make(chan struct{}),
 		mutex:  new(sync.Mutex),
@@ -39,9 +50,11 @@ func NewAdmissionControl(backend Backend, address common.Address, config Config)
 
 // registerProofWork returns all proof work
 func (ac *AdmissionControl) getProofWorks() []ProofWorkBackend {
+	block := ac.backend.CurrentBlock()
 	proofWork := make([]ProofWorkBackend, 0, 2)
-	proofWork = append(proofWork, newCPUWork(ac.config.CPUDifficulty, ac.address, ac.backend.CurrentBlock(), ac.config.CPULifeTime))
-	proofWork = append(proofWork, newMemoryWork(ac.config.MemoryDifficulty, ac.address, ac.backend.CurrentBlock(), ac.config.MemoryLifeTime))
+	proofWork = append(proofWork, newCPUWork(ac.config.CPUDifficulty, ac.address, block, ac.config.CPULifeTime))
+	proofWork = append(proofWork, newMemoryWork(ac.config.MemoryDifficulty, ac.address, block, ac.config.MemoryLifeTime))
+	ac.proofInfo.BlockNumber = block.NumberU64()
 
 	return proofWork
 }
@@ -66,6 +79,9 @@ func (ac *AdmissionControl) Campaign() {
 	if ac.status == AcRunning {
 		return
 	}
+	ac.proofInfo.BlockNumber = 0
+	ac.proofInfo.CPUNonce = 0
+	ac.proofInfo.MemoryNonce = 0
 	ac.status = AcRunning
 	ac.err = nil
 
@@ -121,9 +137,9 @@ func (ac *AdmissionControl) waitSendCampaignMsg(proofWorks []ProofWorkBackend, w
 		}
 		switch work.(type) {
 		case *cpuWork:
-			ac.proofInfo.CPUProofInfo = work.getProofInfo().(CPUProofInfo)
+			ac.proofInfo.CPUNonce = work.getProofInfo()
 		case *memoryWork:
-			ac.proofInfo.MemoryProofInfo = work.getProofInfo().(MemoryProofInfo)
+			ac.proofInfo.MemoryNonce = work.getProofInfo()
 		}
 	}
 	ac.sendCampaignProofInfo()
@@ -131,11 +147,39 @@ func (ac *AdmissionControl) waitSendCampaignMsg(proofWorks []ProofWorkBackend, w
 
 // sendCampaignProofInfo sends proof info to campaign contract
 func (ac *AdmissionControl) sendCampaignProofInfo() {
-	// TODO: implement it
+	if ac.contractBackend == nil {
+		ac.err = errors.New("contractBackend is nil")
+		return
+	}
+
+	auth := &bind.TransactOpts{
+		From: ac.address,
+		Signer: func(signer types.Signer, address common.Address, tx *types.Transaction) (*types.Transaction, error) {
+			if address != ac.address {
+				return nil, errors.New("not authorized to sign this account")
+			}
+			// chainID test with all signer
+			// FIXME for the current, we use `nil' as the chainId.
+			return ac.keyStore.SignTx(accounts.Account{Address: ac.address}, tx, nil)
+		},
+	}
+
+	auth.Value = big.NewInt(ac.config.Deposit)
+	instance, err := dpor.NewCampaign(auth, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
+	if err != nil {
+		ac.err = err
+		return
+	}
+
+	_, err = instance.ClaimCampaign(big.NewInt(ac.config.NumberOfCampaignTimes), big.NewInt(ac.config.MinimumRpt))
+	if err != nil {
+		ac.err = err
+		return
+	}
 }
 
 // RegisterInProcHander registers the rpc.Server, handles RPC request to process the API requests in process
-func (ac *AdmissionControl) RegisterInProcHander(localRcpServer *rpc.Server) {
-	client := rpc.DialInProc(localRcpServer)
-	ac.client = ethclient.NewClient(client)
+func (ac *AdmissionControl) RegisterInProcHander(localRPCServer *rpc.Server) {
+	client := rpc.DialInProc(localRPCServer)
+	ac.contractBackend = ethclient.NewClient(client)
 }

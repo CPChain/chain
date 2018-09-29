@@ -23,7 +23,7 @@ import (
 	"net"
 
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // Entry is implemented by known node record entry types.

@@ -35,10 +35,10 @@ import (
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/debug"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/elastic/gosigar"
+	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

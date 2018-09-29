@@ -9,7 +9,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // FakeIpfsAdapter is a fake IPFS for unit test.

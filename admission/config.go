@@ -16,7 +16,7 @@ const (
 	AcRunning
 )
 
-//Config admission control's configuration.
+// Config admission control's configuration.
 type Config struct {
 	// CampaignContractAddress public campaign's contract address.
 	// common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290")
@@ -29,6 +29,12 @@ type Config struct {
 	MemoryLifeTime time.Duration
 	// CPULifeTime cpu pow work max time to live.
 	CPULifeTime time.Duration
+	// Deposit to mortgage
+	Deposit int64
+	// MinimumRpt minimum rpt
+	MinimumRpt int64
+	// NumberOfCampaign wants to campaign times
+	NumberOfCampaignTimes int64
 }
 
 var (
@@ -37,6 +43,9 @@ var (
 	defaultCPULifeTime             = 1 * 60 * time.Second
 	defaultMemoryLifeTime          = 1 * 60 * time.Second
 	defaultCampaignContractAddress = "0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"
+	defaultDeposit                 = int64(50)
+	defaultMinimumRpt              = int64(50)
+	defaultNumberOfCampaignTimes   = int64(1)
 )
 
 // DefaultConfig default admission config.
@@ -46,21 +55,14 @@ var DefaultConfig = Config{
 	MemoryDifficulty:        defaultMemoryDifficulty,
 	MemoryLifeTime:          defaultMemoryLifeTime,
 	CPULifeTime:             defaultCPULifeTime,
+	Deposit:                 defaultDeposit,
+	MinimumRpt:              defaultMinimumRpt,
+	NumberOfCampaignTimes:   defaultNumberOfCampaignTimes,
 }
 
 // ProofInfo is used to send to contract
 type ProofInfo struct {
-	CPUProofInfo
-	MemoryProofInfo
-}
-
-// CPUProofInfo pow result of cpu
-type CPUProofInfo struct {
-	// Nonce the result of pow
-	Nonce uint64 `json:"nonce"`
-	// BlockNumber input block number for pow
 	BlockNumber uint64 `json:"block_number"`
+	CPUNonce    uint64 `json:"cpu_nonce"`
+	MemoryNonce uint64 `json:"memory_nonce"`
 }
-
-// MemoryProofInfo pow result of memory
-type MemoryProofInfo CPUProofInfo

@@ -25,6 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"bitbucket.org/cpchain/chain/accounts/keystore"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/common"
@@ -43,15 +45,15 @@ import (
 	"bitbucket.org/cpchain/chain/eth/gasprice"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/miner"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/private"
-	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 type LesServer interface {
@@ -199,7 +201,8 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		gpoParams.Default = config.GasPrice
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
-	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.APIBackend, eth.etherbase, eth.config.Admission)
+	ks := eth.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.APIBackend, eth.etherbase, ks, eth.chainConfig.ChainID, eth.config.Admission)
 
 	return eth, nil
 }

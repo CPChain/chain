@@ -5,8 +5,8 @@ import (
 	uurl "net/url"
 	"time"
 
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/metrics"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/influxdata/influxdb/client"
 )
 

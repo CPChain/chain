@@ -40,7 +40,7 @@ import (
 	"bitbucket.org/cpchain/chain/crypto/secp256k1"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/p2p/discover"
-	"bitbucket.org/cpchain/chain/rlp"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/golang/snappy"
 )
 

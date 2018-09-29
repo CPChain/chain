@@ -14,41 +14,20 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package rlp
+package vm
 
 import (
-	"fmt"
-	"io"
+	"testing"
+
+	"bitbucket.org/cpchain/chain/common"
 )
 
-type MyCoolType struct {
-	Name string
-	a, b uint
-}
-
-// EncodeRLP writes x as RLP list [a, b] that omits the Name field.
-func (x *MyCoolType) EncodeRLP(w io.Writer) (err error) {
-	// Note: the receiver can be a nil pointer. This allows you to
-	// control the encoding of nil, but it also means that you have to
-	// check for a nil receiver.
-	if x == nil {
-		err = Encode(w, []uint{0, 0})
-	} else {
-		err = Encode(w, []uint{x.a, x.b})
+func TestGetContractInput(t *testing.T) {
+	addr := common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335")
+	expected := "8099b6810000000000000000000000007900dd1d71fc5c57ba56e4b768de3c2264253335"
+	b1 := getContractInput(addr)
+	bh := common.Bytes2Hex(b1)
+	if bh != expected {
+		t.Errorf("result error expected:%v,got:%v", expected, bh)
 	}
-	return err
-}
-
-func ExampleEncoder() {
-	var t *MyCoolType // t is nil pointer to MyCoolType
-	bytes, _ := EncodeToBytes(t)
-	fmt.Printf("%v → %X\n", t, bytes)
-
-	t = &MyCoolType{Name: "foobar", a: 5, b: 6}
-	bytes, _ = EncodeToBytes(t)
-	fmt.Printf("%v → %X\n", t, bytes)
-
-	// Output:
-	// <nil> → C28080
-	// &{foobar 5 6} → C20506
 }

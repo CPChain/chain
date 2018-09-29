@@ -21,8 +21,8 @@ import (
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/rlp"
 	"bitbucket.org/cpchain/chain/trie"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 type DumpAccount struct {

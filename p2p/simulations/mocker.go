@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/log"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/p2p/simulations/adapters"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 //a map of mocker names to its function
