@@ -248,8 +248,32 @@ func (bc *BlockChain) loadLastState() error {
 	// Make sure the private state associated with the block is available
 	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
 		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
+		log.Error("Error", err.Error())
+
+		// 查查上个
+		bi := bc.GetBlockByHash(currentBlock.ParentHash())
+		for {
+			sr := bi.Root()
+			log.Info("block state root", sr.String())
+			bn := bi.NumberU64()
+			log.Info("block number", fmt.Sprint(bn))
+			psr := GetPrivateStateRoot(bc.db, bi.Root())
+			log.Info("block private state root", psr.String())
+			_, err := state.New(psr, bc.privateStateCache)
+			if err != nil {
+				log.Error("Error", err.Error())
+			}
+			if bi.ParentHash() == (common.Hash{}) {
+				log.Info("Reached genesis block")
+				break
+			}
+			bi = bc.GetBlockByHash(bi.ParentHash())
+			fmt.Println()
+		}
+		log.Info("Finished.")
+
 		// TODO: use repair instead.
-		return bc.Reset()
+		//return bc.Reset()
 	}
 
 	// Everything seems to be fine, set as the head block
@@ -315,6 +339,10 @@ func (bc *BlockChain) SetHead(head uint64) error {
 	}
 	if currentBlock := bc.CurrentBlock(); currentBlock != nil {
 		if _, err := state.New(currentBlock.Root(), bc.stateCache); err != nil {
+			// Rewound state missing, rolled back to before pivot, reset to genesis
+			bc.currentBlock.Store(bc.genesisBlock)
+		}
+		if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
 			// Rewound state missing, rolled back to before pivot, reset to genesis
 			bc.currentBlock.Store(bc.genesisBlock)
 		}
@@ -465,8 +493,10 @@ func (bc *BlockChain) repair(head **types.Block) error {
 	for {
 		// Abort if we've rewound to a head block that does have associated state
 		if _, err := state.New((*head).Root(), bc.stateCache); err == nil {
-			log.Info("Rewound blockchain to past state", "number", (*head).Number(), "hash", (*head).Hash())
-			return nil
+			if _, err = state.New(GetPrivateStateRoot(bc.db, (*head).Root()), bc.privateStateCache); err == nil {
+				log.Info("Rewound blockchain to past state", "number", (*head).Number(), "hash", (*head).Hash())
+				return nil
+			}
 		}
 		// Otherwise rewind one block and recheck state availability there
 		(*head) = bc.GetBlock((*head).ParentHash(), (*head).NumberU64()-1)
@@ -698,6 +728,7 @@ func (bc *BlockChain) Stop() {
 	//  - HEAD-127: So we have a hard limit on the number of blocks reexecuted
 	if !bc.cacheConfig.Disabled {
 		triedb := bc.stateCache.TrieDB()
+		privTriedb := bc.privateStateCache.TrieDB()
 
 		for _, offset := range []uint64{0, 1, triesInMemory - 1} {
 			if number := bc.CurrentBlock().NumberU64(); number > offset {
@@ -707,13 +738,23 @@ func (bc *BlockChain) Stop() {
 				if err := triedb.Commit(recent.Root(), true); err != nil {
 					log.Error("Failed to commit recent state trie", "err", err)
 				}
+
+				log.Info("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash(), "root", recent.Root())
+				if err := privTriedb.Commit(GetPrivateStateRoot(bc.db, recent.Root()), true); err != nil {
+					log.Error("Failed to commit recent private state trie", "err", err)
+				}
 			}
 		}
 		for !bc.triegc.Empty() {
 			triedb.Dereference(bc.triegc.PopItem().(common.Hash))
+			privTriedb.Dereference(bc.triegc.PopItem().(common.Hash))
 		}
 		if size, _ := triedb.Size(); size != 0 {
 			log.Error("Dangling trie nodes after full cleanup")
+		}
+
+		if size, _ := privTriedb.Size(); size != 0 {
+			log.Error("Dangling trie nodes(private statedb) after full cleanup")
 		}
 	}
 	log.Info("Blockchain manager stopped")

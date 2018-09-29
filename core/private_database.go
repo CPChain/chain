@@ -19,8 +19,12 @@ var (
 
 // GetPrivateStateRoot gets the root(hash) for private state associated with the root of Merkle tree in public chain.
 func GetPrivateStateRoot(db ethdb.Database, blockRoot common.Hash) common.Hash {
-	root, _ := db.Get(append(privateRootPrefix, blockRoot[:]...))
-	return common.BytesToHash(root)
+	exist, _ := db.Has(append(privateRootPrefix, blockRoot[:]...))
+	if exist {
+		root, _ := db.Get(append(privateRootPrefix, blockRoot[:]...))
+		return common.BytesToHash(root)
+	}
+	return common.Hash{}
 }
 
 // WritePrivateStateRoot writes the root(hash) for private state associated with the root of Merkle tree in public chain.
