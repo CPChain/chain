@@ -159,11 +159,12 @@ func (ac *AdmissionControl) sendCampaignProofInfo() {
 				return nil, errors.New("not authorized to sign this account")
 			}
 			// chainID test with all signer
+			// FIXME for the current, we use `nil' as the chainId.
 			return ac.keyStore.SignTx(accounts.Account{Address: ac.address}, tx, nil)
 		},
 	}
 
-	auth.Value = big.NewInt(ac.config.Desposit)
+	auth.Value = big.NewInt(ac.config.Deposit)
 	instance, err := dpor.NewCampaign(auth, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
 	if err != nil {
 		ac.err = err
