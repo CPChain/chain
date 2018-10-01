@@ -197,9 +197,13 @@ func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, ne
 		return manager.blockchain.InsertChain(blocks)
 	}
 
-	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, manager.BroadcastSignedHeader, heighter, inserter, manager.removePeer)
+	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, manager.BroadcastSignedHeader, heighter, inserter, manager.removePeer, manager.peerSendSignedHeader)
 
 	return manager, nil
+}
+
+func (pm *ProtocolManager) peerSendSignedHeader(id string, header *types.Header) {
+	go pm.peers.peers[id].AsyncSendNewSignedHeader(header)
 }
 
 func (pm *ProtocolManager) removePeer(id string) {
@@ -801,7 +805,8 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 		case consensus.ErrNewSignedHeader:
 			log.Debug("verify failed, but signed it, broadcast...")
-			go pm.BroadcastSignedHeader(header)
+			// go pm.BroadcastSignedHeader(header)
+			go p.AsyncSendNewSignedHeader(header)
 		default:
 			// return err
 		}
@@ -835,6 +840,7 @@ func (pm *ProtocolManager) BroadcastSignedHeader(header *types.Header) {
 	committee := pm.peers.committee
 	log.Debug("broadcasting to committee", "c", committee)
 	for _, peer := range committee {
+		log.Debug("broadcast to signer", "s", peer)
 		peer.AsyncSendNewSignedHeader(header)
 	}
 }

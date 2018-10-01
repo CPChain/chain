@@ -222,7 +222,8 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			log.Debug("--------I am in sync.Synchronise start--------")
 			log.Debug("I am in sync Synchronise, now with not enough sigs, but signed the new block, I'll broadcast it to my peers...")
 			log.Debug("--------I am in sync.Synchronise end--------")
-			go pm.BroadcastSignedHeader(header)
+			// go pm.BroadcastSignedHeader(header)
+			go peer.AsyncSendNewSignedHeader(header)
 
 		}
 		// return
