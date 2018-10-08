@@ -21,8 +21,8 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/hexutil"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 func hexAddr(a string) common.Address { return common.BytesToAddress(common.FromHex(a)) }

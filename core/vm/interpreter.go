@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 // Config are the configuration options for the Interpreter

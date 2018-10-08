@@ -25,7 +25,7 @@ import (
 	"reflect"
 	"strings"
 
-	"bitbucket.org/cpchain/chain/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 )
 

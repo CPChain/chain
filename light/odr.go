@@ -22,11 +22,11 @@ import (
 	"context"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // NoOdr is the default context passed to an ODR capable function when the ODR

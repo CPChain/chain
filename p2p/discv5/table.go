@@ -29,7 +29,7 @@ import (
 	"net"
 	"sort"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const (

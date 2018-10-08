@@ -19,7 +19,7 @@ package vm
 import (
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func TestGetContractInput(t *testing.T) {

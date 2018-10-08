@@ -23,9 +23,6 @@ import (
 	"math/big"
 	"strings"
 
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/hexutil"
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/types"
@@ -34,6 +31,9 @@ import (
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 

@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/metrics"
 	"github.com/ethereum/go-ethereum/log"

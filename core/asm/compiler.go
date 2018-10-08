@@ -22,8 +22,8 @@ import (
 	"os"
 	"strings"
 
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/core/vm"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 // Compiler contains information about the parsed source

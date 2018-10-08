@@ -30,8 +30,8 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/pborman/uuid"
 )
 

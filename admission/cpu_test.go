@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func newCPU() *cpuWork {

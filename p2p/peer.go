@@ -25,8 +25,8 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common/mclock"
 	"bitbucket.org/cpchain/chain/p2p/discover"
+	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"

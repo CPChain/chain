@@ -7,10 +7,10 @@ import (
 	"errors"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/hexutil"
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 var _ = (*genesisSpecMarshaling)(nil)

@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // The validation package contains validation checks for transactions

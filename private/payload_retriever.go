@@ -7,8 +7,8 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 
-	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 

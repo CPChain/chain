@@ -19,8 +19,8 @@ package consensus
 import (
 	"errors"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var (

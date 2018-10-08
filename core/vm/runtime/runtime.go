@@ -21,12 +21,12 @@ import (
 	"math/big"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Config is a basic type specifying certain configuration flags for running

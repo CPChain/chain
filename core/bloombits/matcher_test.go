@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const testSectionSize = 4096

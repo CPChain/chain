@@ -36,7 +36,7 @@ import (
 	"math/big"
 	"unsafe"
 
-	"bitbucket.org/cpchain/chain/common/math"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 /*

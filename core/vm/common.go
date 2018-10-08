@@ -19,8 +19,8 @@ package vm
 import (
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/math"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 // calculates the memory size required for a step

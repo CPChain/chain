@@ -22,12 +22,12 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/mclock"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/light"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/log"
 )
 

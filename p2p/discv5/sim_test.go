@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // In this test, nodes try to randomly resolve each other.

@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common/math"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 func TestBlockNumberJSONUnmarshal(t *testing.T) {

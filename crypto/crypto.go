@@ -28,9 +28,9 @@ import (
 	"math/big"
 	"os"
 
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 

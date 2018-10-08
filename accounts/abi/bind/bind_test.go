@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 	"golang.org/x/tools/imports"
 )
 

@@ -23,9 +23,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 type diffTest struct {

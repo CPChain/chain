@@ -21,8 +21,8 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 //go:generate abigen --sol contract/proxy.sol --pkg contract --out contract/proxy.go

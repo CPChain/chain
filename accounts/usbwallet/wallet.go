@@ -27,8 +27,8 @@ import (
 
 	ethereum "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/karalabe/hid"
 )

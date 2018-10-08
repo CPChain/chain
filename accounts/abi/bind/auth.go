@@ -23,9 +23,9 @@ import (
 	"io/ioutil"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // NewTransactor is a utility method to easily create a transaction signer from

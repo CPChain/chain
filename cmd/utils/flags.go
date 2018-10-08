@@ -31,8 +31,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/fdlimit"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/clique"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
@@ -58,6 +56,8 @@ import (
 	"bitbucket.org/cpchain/chain/p2p/netutil"
 	"bitbucket.org/cpchain/chain/params"
 	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/urfave/cli.v1"
 )

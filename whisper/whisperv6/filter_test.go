@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var seed int64

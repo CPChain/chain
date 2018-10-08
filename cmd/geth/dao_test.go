@@ -23,10 +23,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Genesis block for nodes which don't care about the DAO fork (i.e. not configured)

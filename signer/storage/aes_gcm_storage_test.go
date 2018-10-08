@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/mattn/go-colorable"
 )

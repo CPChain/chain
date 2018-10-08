@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
 	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const powRequirement = 0.00001

@@ -19,9 +19,9 @@ package misc
 import (
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // VerifyForkHashes verifies that blocks conforming to network hard-forks do have

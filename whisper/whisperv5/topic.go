@@ -19,8 +19,8 @@
 package whisperv5
 
 import (
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/hexutil"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 // TopicType represents a cryptographically secure, probabilistic partial

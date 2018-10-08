@@ -27,8 +27,8 @@ import (
 	"testing/quick"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func ExampleNewNode() {

@@ -19,8 +19,8 @@ package runtime_test
 import (
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/vm/runtime"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func ExampleExecute() {

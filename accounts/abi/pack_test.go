@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func TestPack(t *testing.T) {

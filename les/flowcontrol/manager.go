@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common/mclock"
+	"github.com/ethereum/go-ethereum/common/mclock"
 )
 
 const rcConst = 1000000

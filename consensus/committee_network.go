@@ -1,6 +1,6 @@
 package consensus
 
-import "bitbucket.org/cpchain/chain/common"
+import "github.com/ethereum/go-ethereum/common"
 
 // committee network
 

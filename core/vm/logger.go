@@ -23,10 +23,10 @@ import (
 	"math/big"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/hexutil"
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 // Storage represents a contract's storage.

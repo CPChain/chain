@@ -20,8 +20,8 @@ import (
 	"bytes"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Tests that the node iterator indeed walks over the entire database contents.

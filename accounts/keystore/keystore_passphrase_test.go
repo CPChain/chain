@@ -20,7 +20,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const (

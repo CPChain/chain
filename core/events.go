@@ -17,8 +17,8 @@
 package core
 
 import (
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // NewTxsEvent is posted when a batch of transactions enter the transaction pool.

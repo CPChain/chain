@@ -20,9 +20,9 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
 	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/syndtr/goleveldb/leveldb"

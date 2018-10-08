@@ -20,9 +20,9 @@ import (
 	"context"
 
 	"bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/common/hexutil"
 	"bitbucket.org/cpchain/chain/rpc"
 	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 // Client defines typed wrappers for the Whisper v6 RPC API.

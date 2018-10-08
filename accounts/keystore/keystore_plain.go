@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type keyStorePlain struct {

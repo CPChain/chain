@@ -21,8 +21,8 @@ import (
 	"math/big"
 
 	ethereum "bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 )
 

@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"bitbucket.org/cpchain/chain/accounts/abi"
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 
 	"bytes"
 	"os"

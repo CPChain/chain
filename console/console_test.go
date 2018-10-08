@@ -26,12 +26,12 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/internal/jsre"
 	"bitbucket.org/cpchain/chain/node"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const (

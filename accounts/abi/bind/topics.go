@@ -23,8 +23,8 @@ import (
 	"reflect"
 
 	"bitbucket.org/cpchain/chain/accounts/abi"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // makeTopics converts a filter query argument list into a filter topic set.

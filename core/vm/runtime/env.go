@@ -17,9 +17,9 @@
 package runtime
 
 import (
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func NewEnv(cfg *Config) *vm.EVM {

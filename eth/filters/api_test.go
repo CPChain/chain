@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func TestUnmarshalJSONNewFilterArgs(t *testing.T) {

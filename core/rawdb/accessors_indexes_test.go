@@ -20,9 +20,9 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Tests that positional lookup metadata can be stored and retrieved.

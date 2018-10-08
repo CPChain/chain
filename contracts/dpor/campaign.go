@@ -25,9 +25,9 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contract"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Backend wraps all methods required for chequebook operation.

@@ -23,7 +23,7 @@ import (
 	"math/rand"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common/mclock"
+	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/log"
 )
 

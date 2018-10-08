@@ -24,8 +24,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/crypto/randentropy"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 const TestCount = 1000

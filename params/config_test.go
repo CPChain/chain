@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func TestCheckCompatible(t *testing.T) {

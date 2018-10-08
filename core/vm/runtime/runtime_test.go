@@ -22,10 +22,10 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/accounts/abi"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func TestDefaults(t *testing.T) {

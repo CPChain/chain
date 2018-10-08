@@ -20,10 +20,10 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var dumper = spew.ConfigState{Indent: "    "}

@@ -29,7 +29,7 @@ import (
 	"testing"
 	"testing/quick"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"github.com/davecgh/go-spew/spew"

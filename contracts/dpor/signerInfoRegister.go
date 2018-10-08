@@ -22,10 +22,10 @@ import (
 	"crypto/rsa"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contract"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto/rsa_"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )
 

@@ -30,9 +30,9 @@ import (
 
 	check "gopkg.in/check.v1"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Tests that updating a state trie does not leak any database writes prior to

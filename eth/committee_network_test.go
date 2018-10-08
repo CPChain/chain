@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // launch the chain

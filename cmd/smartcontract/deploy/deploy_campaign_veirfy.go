@@ -6,8 +6,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/cmd/smartcontract/config"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/contracts/admission"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func DeployCampaignVerify() common.Address {

@@ -105,6 +105,31 @@
 			"revisionTime": "2018-01-22T22:25:45Z"
 		},
 		{
+			"checksumSHA1": "ND3Uzik9fBMhPJ2cONJz7FqSuXs=",
+			"path": "github.com/ethereum/go-ethereum/common",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "ZHiU5+5SfOMryI5MkCSXErdz0EU=",
+			"path": "github.com/ethereum/go-ethereum/common/bitutil",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "VfQBQZL87++ZpC7Pn6dJQxjdA7M=",
+			"path": "github.com/ethereum/go-ethereum/common/fdlimit",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "2EkKilu0Q1uuX7XoHks8qnW/LXo=",
+			"path": "github.com/ethereum/go-ethereum/common/hexutil",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "BP3m/oEeoC9ustdCYzAVS/gabqg=",
+			"path": "github.com/ethereum/go-ethereum/common/math",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "TUAAxnHql8XSYnC157Y5iqyL6FQ=",
 			"path": "github.com/ethereum/go-ethereum/common/mclock",
 			"revision": ""

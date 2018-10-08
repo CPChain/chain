@@ -17,10 +17,10 @@
 package clique
 
 import (
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // API is a user facing RPC API to allow controlling the signer and voting

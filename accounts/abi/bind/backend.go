@@ -22,8 +22,8 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var (

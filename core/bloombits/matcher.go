@@ -26,8 +26,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"bitbucket.org/cpchain/chain/common/bitutil"
 	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/common/bitutil"
 )
 
 // bloomIndexes represents the bit indexes inside the bloom filter that belong

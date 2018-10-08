@@ -20,8 +20,8 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type dummyContractRef struct {

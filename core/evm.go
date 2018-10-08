@@ -19,10 +19,10 @@ package core
 import (
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // ChainContext supports retrieving headers and consensus parameters from the

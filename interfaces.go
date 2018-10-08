@@ -22,8 +22,8 @@ import (
 	"errors"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // NotFound is returned by API methods if the requested item does not exist.

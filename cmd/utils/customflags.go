@@ -27,7 +27,7 @@ import (
 	"path"
 	"strings"
 
-	"bitbucket.org/cpchain/chain/common/math"
+	"github.com/ethereum/go-ethereum/common/math"
 	"gopkg.in/urfave/cli.v1"
 )
 

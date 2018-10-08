@@ -17,9 +17,9 @@
 package vm
 
 import (
-	"bitbucket.org/cpchain/chain/common"
-	"bitbucket.org/cpchain/chain/common/math"
 	"bitbucket.org/cpchain/chain/params"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 // memoryGasCosts calculates the quadratic gas for memory expansion. It does so

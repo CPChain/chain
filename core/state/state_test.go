@@ -21,9 +21,9 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"github.com/ethereum/go-ethereum/common"
 	checker "gopkg.in/check.v1"
 )
 

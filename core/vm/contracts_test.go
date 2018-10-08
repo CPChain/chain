@@ -21,7 +21,7 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/common"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // precompiledTest defines the input/output pairs for precompiled contract tests.
