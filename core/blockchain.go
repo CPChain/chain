@@ -147,6 +147,7 @@ func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
+// TODO chengx the key should be accessed with keystore.
 func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine,
 	vmConfig vm.Config, remoteDB ethdb.RemoteDatabase, rsaPrivKey *rsa.PrivateKey) (*BlockChain, error) {
 	if cacheConfig == nil {

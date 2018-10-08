@@ -1335,7 +1335,7 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 	}
 	vmcfg := vm.Config{EnablePreimageRecording: ctx.GlobalBool(VMEnableDebugFlag.Name)}
 	_, privKey, _, _, _ := stack.RsaKey()
-	// TODO: give a fake or real RemoteDB and private key if need.
+	// TODO chengx: give a fake or real RemoteDB and private key if need.
 	chain, err = core.NewBlockChain(chainDb, cache, config, engine, vmcfg, nil, privKey)
 	if err != nil {
 		Fatalf("Can't create BlockChain: %v", err)
