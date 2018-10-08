@@ -5,7 +5,7 @@ accounts/abi/bind/backends
 accounts/keystore
 accounts/usbwallet
 accounts/usbwallet/internal/trezor
-#admission
+admission
 #cmd/geth
 cmd/internal/browser
 cmd/smartcontract
