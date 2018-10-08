@@ -189,7 +189,7 @@ func ExpandPackagesNoVendor(patterns []string) []string {
 	return patterns
 }
 
-// Read package list from build/race.test.dirs
+// Read package list from build/race_test_dirs
 func ReadPackagesList(path string) []string {
 	// TestDirPrefix
 	packages := []string{TestDirPrefix}
