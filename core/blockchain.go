@@ -704,7 +704,7 @@ func (bc *BlockChain) Stop() {
 	//  - HEAD-127: So we have a hard limit on the number of blocks reexecuted
 	if !bc.cacheConfig.Disabled {
 		triedb := bc.stateCache.TrieDB()
-		privTriedb := bc.privateStateCache.TrieDB()
+		privTrieDB := bc.privateStateCache.TrieDB()
 
 		for _, offset := range []uint64{0, 1, triesInMemory - 1} {
 			if number := bc.CurrentBlock().NumberU64(); number > offset {
@@ -716,20 +716,20 @@ func (bc *BlockChain) Stop() {
 				}
 
 				log.Info("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash(), "root", recent.Root())
-				if err := privTriedb.Commit(GetPrivateStateRoot(bc.db, recent.Root()), true); err != nil {
+				if err := privTrieDB.Commit(GetPrivateStateRoot(bc.db, recent.Root()), true); err != nil {
 					log.Error("Failed to commit recent private state trie", "err", err)
 				}
 			}
 		}
 		for !bc.triegc.Empty() {
 			triedb.Dereference(bc.triegc.PopItem().(common.Hash))
-			privTriedb.Dereference(bc.triegc.PopItem().(common.Hash))
+			// TODO: process GC on privTrieDB
 		}
 		if size, _ := triedb.Size(); size != 0 {
 			log.Error("Dangling trie nodes after full cleanup")
 		}
 
-		if size, _ := privTriedb.Size(); size != 0 {
+		if size, _ := privTrieDB.Size(); size != 0 {
 			log.Error("Dangling trie nodes(private statedb) after full cleanup")
 		}
 	}
