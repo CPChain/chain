@@ -17,6 +17,7 @@
 package build
 
 import (
+	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
@@ -32,6 +33,7 @@ import (
 	"text/template"
 )
 
+var TestDirPrefix = "bitbucket.org/cpchain/chain/"
 var DryRunFlag = flag.Bool("n", false, "dry run, don't execute commands")
 
 // MustRun executes the given command and exits the host process for
@@ -185,4 +187,33 @@ func ExpandPackagesNoVendor(patterns []string) []string {
 		return packages
 	}
 	return patterns
+}
+
+// Read package list from build/race_test_dirs
+func ReadPackagesList(path string) []string {
+	// TestDirPrefix
+	packages := []string{TestDirPrefix}
+	fi, err := os.Open(path)
+	defer fi.Close()
+	if err != nil {
+		log.Fatal(err)
+		return packages
+	}
+
+	br := bufio.NewReader(fi)
+	for {
+		packageName, _, c := br.ReadLine()
+		if c == io.EOF {
+			break
+		}
+		packageNameString := string(packageName)
+		line := strings.TrimSpace(packageNameString)
+		if line == "" || line[0] == '#' {
+			continue
+		}
+
+		fmt.Println(packageNameString)
+		packages = append(packages, TestDirPrefix+packageNameString)
+	}
+	return packages
 }
