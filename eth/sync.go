@@ -200,7 +200,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	// Run the sync cycle, and disable fast sync if we've went past the pivot block
 	if err := pm.downloader.Synchronise(peer.id, pHead, pTd, mode); err != nil {
 
-		// TODO: check if there is any security problems!
+		// TODO: @liuq check if there is any security problems!
 		if err == consensus.ErrNotEnoughSigs {
 
 			// log.Debug("--------I am in sync.Synchronise start--------")
@@ -222,6 +222,8 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			log.Debug("--------I am in sync.Synchronise start--------")
 			log.Debug("I am in sync Synchronise, now with not enough sigs, but signed the new block, I'll broadcast it to my peers...")
 			log.Debug("--------I am in sync.Synchronise end--------")
+
+			// TODO: @liuq fix this.
 			// go pm.BroadcastSignedHeader(header)
 			go peer.AsyncSendNewSignedHeader(header)
 

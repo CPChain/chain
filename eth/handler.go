@@ -803,6 +803,8 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 		case consensus.ErrNewSignedHeader:
 			log.Debug("verify failed, but signed it, broadcast...")
+
+			// TODO: @liuq fix this.
 			// go pm.BroadcastSignedHeader(header)
 			go p.AsyncSendNewSignedHeader(header)
 		default:

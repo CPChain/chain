@@ -671,6 +671,8 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 			return
 		case consensus.ErrNewSignedHeader:
 			// broadcast the signed header to peers.
+
+			// TODO: @liuq fix this.
 			// go f.broadcastSignedHeader(block.RefHeader())
 			go f.sendSignedHeaderToPeer(peer, block.RefHeader())
 

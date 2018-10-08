@@ -346,12 +346,12 @@ func (d *Dpor) IsSigner(chain consensus.ChainReader, address common.Address, num
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	if number < d.config.MaxInitBlockNumber {
-		return true, nil
-	}
-	snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
-	if err != nil {
-		return false, err
-	}
-	return snap.isFutureSigner(address, number), nil
+	// TODO: @liuq this is wrong, fix this.
+	return true, nil
+
+	// snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// return snap.isFutureSigner(address, number), nil
 }
