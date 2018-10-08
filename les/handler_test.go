@@ -34,8 +34,8 @@ import (
 	"bitbucket.org/cpchain/chain/light"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/trie"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 func expectResponse(r p2p.MsgReader, msgcode, reqID, bv uint64, data interface{}) error {

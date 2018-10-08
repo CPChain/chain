@@ -36,9 +36,9 @@ import (
 	"bitbucket.org/cpchain/chain/eth/tracers"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/rpc"
-	"bitbucket.org/cpchain/chain/trie"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 const (

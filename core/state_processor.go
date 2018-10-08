@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/private"
-	"bitbucket.org/cpchain/chain/trie"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 var (

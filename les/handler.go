@@ -40,10 +40,10 @@ import (
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/p2p/discv5"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/trie"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 const (

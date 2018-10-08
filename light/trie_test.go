@@ -28,8 +28,8 @@ import (
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
-	"bitbucket.org/cpchain/chain/trie"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 func TestNodeIterator(t *testing.T) {
