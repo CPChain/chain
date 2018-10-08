@@ -25,7 +25,7 @@ type AdmissionControl struct {
 	chainID         *big.Int
 	contractBackend dpor.Backend
 
-	mutex  *sync.Mutex
+	mutex  *sync.RWMutex
 	status workStatus
 	err    error
 	abort  chan struct{}
@@ -41,7 +41,7 @@ func NewAdmissionControl(backend Backend, address common.Address, keyStore *keys
 		chainID:  chainID,
 
 		abort:  make(chan struct{}),
-		mutex:  new(sync.Mutex),
+		mutex:  new(sync.RWMutex),
 		status: AcIdle,
 	}
 
@@ -97,8 +97,8 @@ func (ac *AdmissionControl) Campaign() {
 
 // Abort cancels all the proof work associated to the workType.
 func (ac *AdmissionControl) Abort() {
-	ac.mutex.Lock()
-	defer ac.mutex.Unlock()
+	ac.mutex.RLock()
+	defer ac.mutex.RUnlock()
 	if ac.status != AcRunning {
 		return
 	}
@@ -111,11 +111,17 @@ func (ac *AdmissionControl) Abort() {
 
 // GetProofInfo gets all work proofInfo
 func (ac *AdmissionControl) GetProofInfo() ProofInfo {
+	ac.mutex.RLock()
+	defer ac.mutex.RUnlock()
+
 	return ac.proofInfo
 }
 
 // GetStatus gets status of campaign
 func (ac *AdmissionControl) GetStatus() (workStatus, error) {
+	ac.mutex.RLock()
+	defer ac.mutex.RUnlock()
+
 	return ac.status, ac.err
 }
 
