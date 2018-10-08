@@ -19,6 +19,7 @@ package core
 
 import (
 	"crypto/rsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -120,7 +121,7 @@ type BlockChain struct {
 	blockCache   *lru.Cache     // Cache for the most recent entire blocks
 	futureBlocks *lru.Cache     // future blocks are blocks added for later processing
 
-	quit    chan struct{} // blockchain quit channel
+	Quit    chan struct{} // blockchain quit channel
 	running int32         // running must be called atomically
 	// procInterrupt must be atomically called
 	procInterrupt int32          // interrupt signaler for block processing
@@ -131,17 +132,19 @@ type BlockChain struct {
 	validator Validator // block and state validator interface
 	vmConfig  vm.Config
 
-	badBlocks              *lru.Cache // Bad block cache
-	waitingSignatureBlocks *lru.Cache // not enough signatures block cache
+	badBlocks     *lru.Cache // Bad block cache
+	pendingBlocks *lru.Cache // not enough signatures block cache
 
 	privateStateCache state.Database       // State database to reuse between imports (contains state cache)
 	remoteDB          ethdb.RemoteDatabase // Remote database for huge amount data storage
 	rsaPrivateKey     *rsa.PrivateKey      // Private RSA key used for many features such as private tx
+
+	ErrChan chan error
 }
 
 // WaitingSignatureBlocks returns waitingSignatureBlocks
 func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
-	return bc.waitingSignatureBlocks
+	return bc.pendingBlocks
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -165,23 +168,24 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 	waitingSignatureBlocks, _ := lru.New(waitingSignatureBlockLimit)
 
 	bc := &BlockChain{
-		chainConfig:            chainConfig,
-		cacheConfig:            cacheConfig,
-		db:                     db,
-		triegc:                 prque.New(),
-		stateCache:             state.NewDatabase(db),
-		quit:                   make(chan struct{}),
-		bodyCache:              bodyCache,
-		bodyRLPCache:           bodyRLPCache,
-		blockCache:             blockCache,
-		futureBlocks:           futureBlocks,
-		engine:                 engine,
-		vmConfig:               vmConfig,
-		badBlocks:              badBlocks,
-		waitingSignatureBlocks: waitingSignatureBlocks,
-		privateStateCache:      state.NewDatabase(db),
-		remoteDB:               remoteDB,
-		rsaPrivateKey:          rsaPrivKey,
+		chainConfig:       chainConfig,
+		cacheConfig:       cacheConfig,
+		db:                db,
+		triegc:            prque.New(),
+		stateCache:        state.NewDatabase(db),
+		Quit:              make(chan struct{}),
+		bodyCache:         bodyCache,
+		bodyRLPCache:      bodyRLPCache,
+		blockCache:        blockCache,
+		futureBlocks:      futureBlocks,
+		engine:            engine,
+		vmConfig:          vmConfig,
+		badBlocks:         badBlocks,
+		pendingBlocks:     waitingSignatureBlocks,
+		privateStateCache: state.NewDatabase(db),
+		remoteDB:          remoteDB,
+		rsaPrivateKey:     rsaPrivKey,
+		ErrChan:           make(chan error),
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
@@ -693,7 +697,7 @@ func (bc *BlockChain) Stop() {
 	}
 	// Unsubscribe all subscriptions registered from blockchain
 	bc.scope.Close()
-	close(bc.quit)
+	close(bc.Quit)
 	atomic.StoreInt32(&bc.procInterrupt, 1)
 
 	bc.wg.Wait()
@@ -744,12 +748,35 @@ func (bc *BlockChain) procFutureBlocks() {
 			blocks = append(blocks, block.(*types.Block))
 		}
 	}
+
 	if len(blocks) > 0 {
 		types.BlockBy(types.Number).Sort(blocks)
 
 		// Insert one by one as chain insertion needs contiguous ancestry between blocks
 		for i := range blocks {
-			bc.InsertChain(blocks[i : i+1])
+			_, err := bc.InsertChain(blocks[i : i+1])
+			bc.ErrChan <- err
+			log.Debug("err of future insert, go to bc.ErrChan", "err", err)
+		}
+	}
+}
+
+func (bc *BlockChain) procPendingBlocks() {
+	blocks := make([]*types.Block, 0, bc.pendingBlocks.Len())
+	for _, hash := range bc.pendingBlocks.Keys() {
+		if block, exist := bc.pendingBlocks.Peek(hash); exist {
+			blocks = append(blocks, block.(*types.Block))
+		}
+	}
+
+	if len(blocks) > 0 {
+		types.BlockBy(types.Number).Sort(blocks)
+
+		// Insert one by one as chain insertion needs contiguous ancestry between blocks
+		for i := range blocks {
+			_, err := bc.InsertChain(blocks[i : i+1])
+			bc.ErrChan <- err
+			log.Debug("err of future insert, go to bc.ErrChan", "err", err)
 		}
 	}
 }
@@ -1042,6 +1069,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		bc.insert(block)
 	}
 	bc.futureBlocks.Remove(block.Hash())
+	bc.pendingBlocks.Remove(block.Hash())
 	return status, nil
 }
 
@@ -1186,9 +1214,19 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			}
 
 		case err == consensus.ErrNotEnoughSigs:
+			log.Debug("ErrNotEnoughSigs err in blockchain.insertChain.")
 			err := err.(*consensus.ErrNotEnoughSigsType)
 			err.NotEnoughSigsBlockHash = block.Hash()
-			bc.waitingSignatureBlocks.Add(block.Hash(), block)
+			bc.pendingBlocks.Add(block.Hash(), block)
+			return i, events, coalescedLogs, err
+
+		case err == consensus.ErrNewSignedHeader:
+
+			log.Debug("ErrNewSignedHeader err in blockchain.insertChain.")
+			log.Debug("err block", "block", block.NumberU64(), block.Hash().Hex(), block.Extra2())
+			err := err.(*consensus.ErrNewSignedHeaderType)
+			err.SignedHeader = block.RefHeader()
+			bc.pendingBlocks.Add(block.Hash(), block)
 			return i, events, coalescedLogs, err
 
 		case err != nil:
@@ -1265,6 +1303,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 
 		cache, _ := bc.stateCache.TrieDB().Size()
+
+		log.Debug("block sigs of ", "n", chain[i].NumberU64())
+		log.Debug("\n" + hex.Dump(chain[i].Extra2()))
+
 		log.Info("Imported new block: " + strconv.Itoa(int(chain[i].Number().Int64())) + " hash: " + chain[i].Hash().Hex())
 		stats.report(chain, i, cache)
 	}
@@ -1469,7 +1511,8 @@ func (bc *BlockChain) update() {
 		select {
 		case <-futureTimer.C:
 			bc.procFutureBlocks()
-		case <-bc.quit:
+			bc.procPendingBlocks()
+		case <-bc.Quit:
 			return
 		}
 	}

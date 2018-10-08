@@ -30,6 +30,13 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
+const (
+	// EpochGapBetweenElectionAndMining is the the epoch gap between election and mining.
+	EpochGapBetweenElectionAndMining = 1
+	// MaxSizeOfRecentSigners is the size of the RecentSigners.
+	MaxSizeOfRecentSigners = 10
+)
+
 var (
 	errSignerNotInCommittee = errors.New("signer not in committee")
 	errGenesisBlockNumber   = errors.New("Genesis block has no leader")
@@ -63,9 +70,8 @@ type DporSnapshot struct {
 	Number uint64      `json:"number"` // Block number where the Snapshot was created
 	Hash   common.Hash `json:"hash"`   // Block hash where the Snapshot was created
 
-	Signers    []common.Address          `json:"signers"`    // Set of authorized signers at this moment
-	Candidates []common.Address          `json:"candidates"` // Set of candidates read from campaign contract
-	Recents    map[uint64]common.Address `json:"recents"`    // Set of recent signers for spam protections
+	Candidates    []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
+	RecentSigners map[uint64][]common.Address `json:"signers"`    // Set of recent signers
 }
 
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
@@ -73,14 +79,14 @@ type DporSnapshot struct {
 // the genesis block.
 func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
 	snap := &DporSnapshot{
-		config:   config,
-		sigcache: sigcache,
-		Number:   number,
-		Hash:     hash,
-		Signers:  make([]common.Address, config.Epoch),
-		Recents:  make(map[uint64]common.Address),
+		config:        config,
+		sigcache:      sigcache,
+		Number:        number,
+		Hash:          hash,
+		RecentSigners: make(map[uint64][]common.Address),
 	}
-	copy(snap.Signers, signers)
+	snap.RecentSigners[snap.EpochIdx()] = signers
+
 	return snap
 }
 
@@ -112,18 +118,16 @@ func (s *DporSnapshot) store(db ethdb.Database) error {
 // copy creates a deep copy of the Snapshot, though not the individual votes.
 func (s *DporSnapshot) copy() *DporSnapshot {
 	cpy := &DporSnapshot{
-		config:     s.config,
-		sigcache:   s.sigcache,
-		Number:     s.Number,
-		Hash:       s.Hash,
-		Signers:    make([]common.Address, s.config.Epoch),
-		Candidates: make([]common.Address, len(s.Candidates)),
-		Recents:    make(map[uint64]common.Address),
+		config:        s.config,
+		sigcache:      s.sigcache,
+		Number:        s.Number,
+		Hash:          s.Hash,
+		Candidates:    make([]common.Address, len(s.Candidates)),
+		RecentSigners: make(map[uint64][]common.Address),
 	}
-	copy(cpy.Signers, s.Signers)
 	copy(cpy.Candidates, s.Candidates)
-	for block, signer := range s.Recents {
-		cpy.Recents[block] = signer
+	for epochIdx, committee := range s.RecentSigners {
+		cpy.RecentSigners[epochIdx] = committee
 	}
 	return cpy
 }
@@ -209,15 +213,45 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 	rpts := rpt.RPTs{
 		rpt.RPT{
 			Address: common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-			Rpt:     50,
+			Rpt:     10,
 		},
 		rpt.RPT{
 			Address: common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-			Rpt:     100,
+			Rpt:     20,
 		},
 		rpt.RPT{
 			Address: common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-			Rpt:     20,
+			Rpt:     30,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
+			Rpt:     40,
+		},
+
+		rpt.RPT{
+			Address: common.HexToAddress("0x6E31e5B68A98dcD17264bd1ba547D0B3E874dA1E"),
+			Rpt:     50,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"),
+			Rpt:     60,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
+			Rpt:     70,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
+			Rpt:     80,
+		},
+
+		rpt.RPT{
+			Address: common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
+			Rpt:     90,
+		},
+		rpt.RPT{
+			Address: common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
+			Rpt:     100,
 		},
 	}
 	// TODO: above is wrong.
@@ -229,17 +263,43 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
 	signers := election.Elect(rpts, seed, viewLength)
 
-	s.Signers = signers
+	// TODO: fix this.
+
+	epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
+	s.RecentSigners[epochIdx] = signers
+	s.RecentSigners[epochIdx+1] = signers
+	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
+		delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
+	}
+
 	return nil
 }
 
-// Signers retrieves all signers in the committee.
-func (s *DporSnapshot) signers() []common.Address {
-	return s.Signers
+// EpochIdx returns the epoch index of current block number.
+func (s *DporSnapshot) EpochIdx() uint64 {
+	if s.Number == 0 {
+		return 0
+	}
+
+	return (s.Number - 1) / uint64(epochLength)
 }
 
-func (s *DporSnapshot) signerRound(signer common.Address) (int, error) {
-	for round, s := range s.signers() {
+// EpochIdxOf returns the epoch index of given block number.
+func (s *DporSnapshot) EpochIdxOf(blockNum uint64) uint64 {
+	if blockNum == 0 {
+		return 0
+	}
+
+	return (blockNum - 1) / uint64(epochLength)
+}
+
+// Signers retrieves all signersOf in the committee.
+func (s *DporSnapshot) signersOf(number uint64) []common.Address {
+	return s.RecentSigners[s.EpochIdxOf(number)]
+}
+
+func (s *DporSnapshot) signerRoundOf(signer common.Address, number uint64) (int, error) {
+	for round, s := range s.signersOf(number) {
 		if s == signer {
 			return round, nil
 		}
@@ -247,8 +307,8 @@ func (s *DporSnapshot) signerRound(signer common.Address) (int, error) {
 	return -1, errSignerNotInCommittee
 }
 
-func (s *DporSnapshot) isSigner(signer common.Address) bool {
-	_, err := s.signerRound(signer)
+func (s *DporSnapshot) isSigner(signer common.Address, number uint64) bool {
+	_, err := s.signerRoundOf(signer, number)
 	return err == nil
 }
 
@@ -256,7 +316,7 @@ func (s *DporSnapshot) isLeader(signer common.Address, number uint64) (bool, err
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
-	round, err := s.signerRound(signer)
+	round, err := s.signerRoundOf(signer, number)
 	if err != nil {
 		return false, err
 	}
@@ -275,4 +335,14 @@ func (s *DporSnapshot) inturn(number uint64, signer common.Address) bool {
 		return false
 	}
 	return ok
+}
+
+func (s *DporSnapshot) isFutureSigner(signer common.Address, number uint64) bool {
+	for _, sn := range s.RecentSigners[s.EpochIdxOf(number)+EpochGapBetweenElectionAndMining] {
+		log.Debug("future signers:", "s", sn.Hex())
+		if sn == signer {
+			return true
+		}
+	}
+	return false
 }

@@ -21,13 +21,14 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/common"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
 	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
-	checkpointInterval = 3    // Number of blocks after which to save the vote Snapshot to the database
+	checkpointInterval = 4    // Number of blocks after which to save the vote Snapshot to the database
 	inmemorySnapshots  = 1000 // Number of recent vote snapshots to keep in memory
 	inmemorySignatures = 1000 // Number of recent block signatures to keep in memory
 
@@ -51,12 +52,16 @@ type Dpor struct {
 
 	signer common.Address // Ethereum address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
-	lock   sync.RWMutex   // Protects the signer fields
+
+	committeeNetworkHandler consensus.CommitteeNetworkHandler
+
+	lock sync.RWMutex // Protects the signer fields
 }
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
 func New(config *params.DporConfig, db ethdb.Database) *Dpor {
+
 	// Set any missing consensus parameters to their defaults
 	conf := *config
 	if conf.Epoch == 0 {
@@ -76,4 +81,12 @@ func New(config *params.DporConfig, db ethdb.Database) *Dpor {
 		signatures:   signatures,
 		signedBlocks: signedBlocks,
 	}
+}
+
+// SetCommitteeNetworkHandler sets dpor.committeeNetworkHandler
+func (d *Dpor) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.CommitteeNetworkHandler) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	d.committeeNetworkHandler = committeeNetworkHandler
+	return nil
 }

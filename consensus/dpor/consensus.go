@@ -32,20 +32,21 @@ import (
 )
 
 // Dpor proof-of-reputation protocol constants.
-var (
+const (
 	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
 	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
-	epochLength = uint(3) // Default number of signers, also the number of blocks after which to launch election.
+	epochLength = uint(4) // Default number of signers, also the number of blocks after which to launch election.
 	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
+)
 
-	uncleHash = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
-
-	diffInTurn = big.NewInt(2) // Block difficulty for in-turn signatures
-	diffNoTurn = big.NewInt(1) // Block difficulty for out-of-turn signatures
+var (
+	uncleHash  = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
+	diffInTurn = big.NewInt(2)            // Block difficulty for in-turn signatures
+	diffNoTurn = big.NewInt(1)            // Block difficulty for out-of-turn signatures
 )
 
 // Various error messages to mark blocks invalid. These should be private to
@@ -109,10 +110,13 @@ var (
 	// errInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	errInvalidSigners = errors.New("invalid signer list on checkpoint block")
 
-	// errNotSigsInCache is returned if the cache is unable to store and return sigs.
-	errNotSigsInCache = errors.New("signatures not found in cache")
+	// errNoSigsInCache is returned if the cache is unable to store and return sigs.
+	errNoSigsInCache = errors.New("signatures not found in cache")
 
 	// --- our new error types ---
+
+	// errVerifyUncleNotAllowed is returned when verify uncle block.
+	errVerifyUncleNotAllowed = errors.New("uncles not allowed")
 
 	// errWaitTransactions is returned if an empty block is attempted to be sealed
 	// on an instant chain (0 second period). It's important to refuse these as the
@@ -161,7 +165,7 @@ func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Heade
 // uncles as this consensus mechanism doesn't permit uncles.
 func (d *Dpor) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
 	if len(block.Uncles()) > 0 {
-		return errors.New("uncles not allowed")
+		return errVerifyUncleNotAllowed
 	}
 	return nil
 }
@@ -196,7 +200,7 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	header.Extra = header.Extra[:extraVanity]
 
 	// if number%d.config.Epoch == 0 {
-	for _, signer := range snap.signers() {
+	for _, signer := range snap.signersOf(number) {
 		header.Extra = append(header.Extra, signer[:]...)
 	}
 	// }
@@ -304,7 +308,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	allSigs := make([]byte, int(d.config.Epoch)*extraSeal)
 
 	// Copy signature to the right position in allSigs.
-	round, _ := snap.signerRound(signer)
+	round, _ := snap.signerRoundOf(signer, number)
 	copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
 
 	// Encode it to header.extra2.
@@ -341,9 +345,13 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 func (d *Dpor) IsSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-	snap, err := d.dh.snapshot(d, chain, number, chain.GetHeaderByNumber(number).Hash(), nil)
-	if err != nil {
-		return false, err
-	}
-	return snap.isSigner(address), nil
+
+	// TODO: @liuq this is wrong, fix this.
+	return true, nil
+
+	// snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// return snap.isFutureSigner(address, number), nil
 }

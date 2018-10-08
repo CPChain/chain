@@ -19,6 +19,7 @@ package dpor
 
 import (
 	"bytes"
+	"sync"
 
 	"math/big"
 
@@ -39,6 +40,7 @@ type dporUtil interface {
 }
 
 type defaultDporUtil struct {
+	lock sync.RWMutex
 }
 
 // sigHash returns the hash which is used as input for the proof-of-authority
@@ -75,6 +77,8 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 // ecrecover extracts the Ethereum account address from a signed header.
 // the return value is (leader_address, signer_addresses, error)
 func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
 
 	hash := header.Hash()
 
@@ -145,6 +149,9 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 // acceptSigs checks that signatures have enough signatures to accept the block.
 func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
 	numSigs := uint(0)
 	accept := false
 	hash := header.Hash()
@@ -157,7 +164,7 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 			}
 		}
 	} else {
-		return false, errNotSigsInCache
+		return false, errNoSigsInCache
 	}
 
 	// num of sigs must > 2/3 * epochLength, leader must be in the sigs.

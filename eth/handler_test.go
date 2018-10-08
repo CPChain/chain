@@ -474,7 +474,7 @@ func testDAOChallenge(t *testing.T, localForked, remoteForked bool, timeout bool
 		genesis       = gspec.MustCommit(db)
 		blockchain, _ = core.NewBlockChain(db, nil, config, pow, vm.Config{}, nil, nil)
 	)
-	pm, err := NewProtocolManager(config, downloader.FullSync, DefaultConfig.NetworkId, evmux, new(testTxPool), pow, blockchain, db, nil)
+	pm, err := NewProtocolManager(config, downloader.FullSync, DefaultConfig.NetworkId, evmux, new(testTxPool), pow, blockchain, db, common.Address{})
 	if err != nil {
 		t.Fatalf("failed to start test protocol manager: %v", err)
 	}

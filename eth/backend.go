@@ -77,6 +77,9 @@ type Ethereum struct {
 	protocolManager *ProtocolManager
 	lesServer       LesServer
 
+	server                  *p2p.Server
+	committeeNetworkHandler *BasicCommitteeNetworkHandler
+
 	// DB interfaces
 	chainDb ethdb.Database // Block chain database
 
@@ -184,12 +187,10 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
 
-	// TODO: fix this.
-	p2pSignerHandshaker := func(p *peer, address common.Address) error {
-		return eth.SignerHandShake(p, address)
-	}
+	eth.Etherbase()
+	log.Debug("etherbase in backend", "eb", eth.etherbase)
 
-	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, p2pSignerHandshaker); err != nil {
+	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, eth.etherbase); err != nil {
 		return nil, err
 	}
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
@@ -207,31 +208,26 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	return eth, nil
 }
 
-// SignerHandShake handshakes with remote signer.
-func (s *Ethereum) SignerHandShake(p *peer, address common.Address) error {
-	e, ok := s.engine.(consensus.Validator)
-	if !ok {
-		return errors.New("bad engine")
-	}
+// func (s *Ethereum) AddCommittee() {
+// 	committeeIDs := []string{
+// 		"enode://b0f99585ab63eb3047389fd863497526e62ae9553beca47bb6bbe67ab9c19ef38329f8487aa425f9dfb26e767b469584a5ddb963594efb6fcd73cccd2b2f3961@192.168.0.117:30311",
+// 		"enode://506ab2351961387d22f84d34528b545168e111ce43996867a7fdff48c5124801048beee5b5630e97534d6e89be6f737f5f9bb7610a17567b63c94be715c30368@192.168.0.117:30312",
+// 		"enode://97fb497bbc2fb0fd3adde076cf999b595d6ab6aa2bc47a8fcbc45cb62f2795c90afcdb5c7f2178183ac47411d2cd1685dbdf61dedccf943cd257e5be21318840@192.168.0.117:30313",
+// 	}
+// 	for _, id := range committeeIDs {
+// 		if err := s.server.AddPeerFromURL(id); err != nil {
+// 			log.Debug("err when adding committee", "err", err)
+// 		}
+// 	}
+// }
 
-	isSigner, err := e.IsSigner(s.protocolManager.blockchain, address, s.blockchain.CurrentHeader().Number.Uint64())
-	if !isSigner {
-		return errors.New("not signer")
-	}
+func (s *Ethereum) newCommitteeNetworkHandler() error {
+	// TODO: fix this. Liu Qian
+	committeeNetworkHandler, err := NewBasicCommitteeNetworkHandler(s.protocolManager.peers, s.chainConfig.Dpor.Epoch, s.etherbase, s.chainConfig.Dpor.Contracts["SignerConnectionRegister"], s.server)
 	if err != nil {
-		return errors.New("isSigner failed")
+		return err
 	}
-
-	// send NewSignerMsg too.
-	log.Debug("################## resending NewSignerMsg ################")
-	if err := p.SendNewSignerMsg(s.etherbase); err != nil {
-		return errors.New("sending NewSignerMsg to peer failed")
-	}
-
-	// register peer as signer.
-	if err := s.protocolManager.peers.RegisterSigner(p); err != nil {
-		return errors.New("registering peer as signer failed")
-	}
+	s.committeeNetworkHandler = committeeNetworkHandler
 	return nil
 }
 
@@ -272,6 +268,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	}
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
+		// TODO: fix this. Liu Qian
 		return dpor.New(chainConfig.Dpor, db)
 	}
 	// Otherwise assume proof-of-work
@@ -408,6 +405,12 @@ func (s *Ethereum) StartMining(local bool) error {
 			return fmt.Errorf("signer missing: %v", err)
 		}
 		dpor.Authorize(eb, wallet.SignHash)
+
+		s.newCommitteeNetworkHandler()
+
+		// TODO: fix this, update contract caller with private key here. Liu Qian
+		// s.committeeNetworkHandler.UpdateContractCaller()
+
 	} else if clique, ok := s.engine.(*clique.Clique); ok {
 		wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 		if wallet == nil || err != nil {
@@ -424,6 +427,9 @@ func (s *Ethereum) StartMining(local bool) error {
 		atomic.StoreUint32(&s.protocolManager.acceptTxs, 1)
 	}
 	go s.miner.Start(eb)
+
+	// go s.AddCommittee()
+
 	return nil
 }
 
@@ -460,6 +466,11 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 
 	// Start the RPC service
 	s.netRPCService = ethapi.NewPublicNetAPI(srvr, s.NetVersion())
+
+	// TODO: check security. Liu Qian
+	s.server = srvr
+
+	s.protocolManager.updateServer(srvr)
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers

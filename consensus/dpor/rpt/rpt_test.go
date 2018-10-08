@@ -16,6 +16,10 @@ import (
 )
 
 var (
+	errUnknownBlock = errors.New("unknown block")
+)
+
+var (
 	endpoint = "http://localhost:8501"
 	//endpoint = "https://rinkeby.infura.io"
 	blockNum      = uint64(0)
@@ -74,14 +78,14 @@ type fakeErrorClientBackend struct {
 
 func (b *fakeErrorClientBackend) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error) {
 	if b.errorType == 1 {
-		return big.NewInt(110), errors.New("unknown block")
+		return big.NewInt(110), errUnknownBlock
 	}
 	return big.NewInt(110), nil
 }
 
 func (b *fakeErrorClientBackend) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
 	if b.errorType == 2 {
-		return nil, errors.New("unknown block")
+		return nil, errUnknownBlock
 	}
 
 	tx1 := types.NewTransaction(0, address, big.NewInt(10), 50000, big.NewInt(10), nil)
@@ -97,7 +101,7 @@ func (b *fakeErrorClientBackend) BlockByNumber(ctx context.Context, number *big.
 
 func (b *fakeErrorClientBackend) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
 	if b.errorType == 3 {
-		return nil, errors.New("unknown block")
+		return nil, errUnknownBlock
 	}
 	return newHeader(), nil
 }

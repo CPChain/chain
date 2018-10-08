@@ -97,10 +97,14 @@ type Engine interface {
 
 	// APIs returns the RPC APIs this consensus engine provides.
 	APIs(chain ChainReader) []rpc.API
+
+	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeNetworkHandler) error
 }
 
 // Validator is used to determine whether an address is in the committee.
 type Validator interface {
+	// TODO: change this to or add IsFutureSigner.
+
 	IsSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
 }
 

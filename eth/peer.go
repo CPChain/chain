@@ -26,6 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/common"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 	"gopkg.in/fatih/set.v0"
 )
@@ -244,7 +245,8 @@ func (p *peer) AsyncSendNewPendingBlockHashes(block *types.Block) {
 
 // SendNewSignedHeader sends new signed block header.
 func (p *peer) SendNewSignedHeader(header *types.Header) error {
-	err := p2p.Send(p.rw, NewSignedHeaderMsg, []interface{}{header})
+	// err := p2p.Send(p.rw, NewSignedHeaderMsg, []*types.Header{header})
+	err := p2p.Send(p.rw, NewSignedHeaderMsg, header)
 	if err == nil {
 		p.MarkPendingBlock(header.Hash())
 	}
@@ -521,6 +523,66 @@ func (p *peer) readStatus(network uint64, status *statusData, genesis common.Has
 	return nil
 }
 
+type ValidateSigner func(signer common.Address) (bool, error)
+
+// Handshake executes the eth protocol handshake, negotiating version number,
+// network IDs, difficulties, head and genesis blocks.
+func (p *peer) CommitteeHandshake(etherbase common.Address, signerValidator ValidateSigner) (isSigner bool, err error) {
+	// Send out own handshake in a new thread
+	errc := make(chan error, 2)
+	var signerStatus signerStatusData // safe to read after two values have been received from errc
+
+	log.Debug("my etherbase", "address", etherbase)
+
+	go func() {
+		errc <- p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
+			ProtocolVersion: uint32(p.version),
+			Address:         etherbase,
+		})
+	}()
+	go func() {
+		isSigner, err = p.readSignerStatus(&signerStatus, signerValidator)
+		errc <- err
+	}()
+	timeout := time.NewTimer(handshakeTimeout)
+	defer timeout.Stop()
+	for i := 0; i < 2; i++ {
+		select {
+		case err := <-errc:
+			if err != nil {
+				return false, err
+			}
+		case <-timeout.C:
+			return false, p2p.DiscReadTimeout
+		}
+	}
+	return isSigner, nil
+}
+
+func (p *peer) readSignerStatus(signerStatus *signerStatusData, signerValidator ValidateSigner) (isSigner bool, err error) {
+	msg, err := p.rw.ReadMsg()
+	if err != nil {
+		return false, err
+	}
+	if msg.Code != NewSignerMsg {
+		return false, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
+	}
+	if msg.Size > ProtocolMaxMsgSize {
+		return false, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+	}
+	// Decode the handshake and make sure everything matches
+	if err := msg.Decode(&signerStatus); err != nil {
+		return false, errResp(ErrDecode, "msg %v: %v", msg, err)
+	}
+	if int(signerStatus.ProtocolVersion) != p.version {
+		return false, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
+	}
+	isSigner, err = signerValidator(signerStatus.Address)
+	log.Debug("cpchain committee network handshaking...")
+	log.Debug("peer is signer", "peer", signerStatus.Address, isSigner)
+	return isSigner, err
+}
+
 // String implements fmt.Stringer.
 func (p *peer) String() string {
 	return fmt.Sprintf("Peer %s [%s]", p.id,
@@ -571,6 +633,7 @@ func (ps *peerSet) RegisterSigner(p *peer) error {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
+	log.Info("register peer", "peer", p.id)
 	if ps.closed {
 		return errClosed
 	}
@@ -589,12 +652,11 @@ func (ps *peerSet) UnregisterSigner(id string) error {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	p, ok := ps.committee[id]
+	_, ok := ps.committee[id]
 	if !ok {
 		return errNotRegistered
 	}
 	delete(ps.committee, id)
-	p.close()
 
 	return nil
 }
@@ -653,9 +715,9 @@ func (ps *peerSet) PeersWithoutBlock(hash common.Hash) []*peer {
 	return list
 }
 
-// PeersWithoutWaitBlock retrieves a list of peers that do not have a given block in
+// CommitteeWithoutWaitBlock retrieves a list of peers that do not have a given block in
 // their set of known hashes.
-func (ps *peerSet) PeersWithoutPendingBlock(hash common.Hash) []*peer {
+func (ps *peerSet) CommitteeWithoutBlock(hash common.Hash) []*peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 

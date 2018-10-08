@@ -200,21 +200,35 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	// Run the sync cycle, and disable fast sync if we've went past the pivot block
 	if err := pm.downloader.Synchronise(peer.id, pHead, pTd, mode); err != nil {
 
-		// TODO: check if there is any security problems!
+		// TODO: @liuq check if there is any security problems!
 		if err == consensus.ErrNotEnoughSigs {
 
+			// log.Debug("--------I am in sync.Synchronise start--------")
+			// log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
+			// log.Debug("--------I am in sync.Synchronise end--------")
+
+			// err := err.(*consensus.ErrNotEnoughSigsType)
+			// hash := err.NotEnoughSigsBlockHash
+			// if waitingSignatureBlock, known := pm.downloader.Blockchain.WaitingSignatureBlocks().Get(hash); known {
+			// 	waitingSignatureBlock := waitingSignatureBlock.(*types.Block)
+			// 	go pm.BroadcastBlock(waitingSignatureBlock, true)
+			// }
+		}
+
+		if err == consensus.ErrNewSignedHeader {
+			err := err.(*consensus.ErrNewSignedHeaderType)
+			header := err.SignedHeader
+
 			log.Debug("--------I am in sync.Synchronise start--------")
-			log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
+			log.Debug("I am in sync Synchronise, now with not enough sigs, but signed the new block, I'll broadcast it to my peers...")
 			log.Debug("--------I am in sync.Synchronise end--------")
 
-			err := err.(*consensus.ErrNotEnoughSigsType)
-			hash := err.NotEnoughSigsBlockHash
-			if waitingSignatureBlock, known := pm.downloader.Blockchain.WaitingSignatureBlocks().Get(hash); known {
-				waitingSignatureBlock := waitingSignatureBlock.(*types.Block)
-				go pm.BroadcastBlock(waitingSignatureBlock, true)
-			}
+			// TODO: @liuq fix this.
+			// go pm.BroadcastSignedHeader(header)
+			go peer.AsyncSendNewSignedHeader(header)
+
 		}
-		return
+		// return
 	}
 
 	if atomic.LoadUint32(&pm.fastSync) == 1 {
@@ -230,5 +244,6 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		// degenerate connectivity, but it should be healthy for the mainnet too to
 		// more reliably update peers or the local TD state.
 		go pm.BroadcastBlock(head, false)
+		go pm.BroadcastBlock(head, true)
 	}
 }

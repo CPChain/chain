@@ -93,8 +93,9 @@ var (
 		ByzantiumBlock: big.NewInt(0), // Byzantium switch block (nil = no fork, 0 = already on byzantium)
 
 		Dpor: &DporConfig{
-			Period: 3,
-			Epoch:  3,
+			Period:                3,
+			Epoch:                 4,
+			MaxInitBlockNumber:    8,
 			ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
 		},
 	}
@@ -114,7 +115,7 @@ var (
 	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}, nil}
 
 	// FIXME add to genesis.go
-	AllCpchainProtocolChanges = &ChainConfig{big.NewInt(CpchainChainId), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, &DporConfig{Period: 0, Epoch: 3}}
+	AllCpchainProtocolChanges = &ChainConfig{big.NewInt(CpchainChainId), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, &DporConfig{Period: 0, Epoch: 4}}
 
 	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil, nil}
 
