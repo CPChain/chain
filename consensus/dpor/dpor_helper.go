@@ -339,11 +339,18 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return errInvalidDifficulty
 	}
 
+	number = chain.CurrentHeader().Number.Uint64()
+	hash = chain.CurrentHeader().Hash()
+	snap, err = dh.snapshot(dpor, chain, number, hash, nil)
+	if err != nil {
+		return err
+	}
+
 	if snap.isFutureSigner(dpor.signer, number) {
 		// TODO: fix this.
-		go dpor.committeeNetworkHandler.Connect()
+		// go dpor.committeeNetworkHandler.Connect()
 	} else {
-		go dpor.committeeNetworkHandler.Disconnect()
+		// go dpor.committeeNetworkHandler.Disconnect()
 	}
 
 	return nil

@@ -783,17 +783,15 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			if !pm.blockchain.HasBlock(header.Hash(), header.Number.Uint64()) {
 				// ask for the block from remote peer.
 
-				// // Mark the hashes as present at the remote node
-				// p.MarkPendingBlock(header.Hash())
+				// Mark the hashes as present at the remote node
+				p.MarkPendingBlock(header.Hash())
 
-				// Schedule all the unknown hashes for retrieval
-				// log.Info("notify fetcher to fetch block")
-				// pm.fetcher.Notify(p.id, hash, number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+				go pm.synchronise(p)
 
 			} else {
 				block := pm.blockchain.GetBlockByHash(hash)
+				// go pm.BroadcastBlock(block, true)
 				go pm.BroadcastBlock(block.WithSeal(header), true)
-				go pm.BroadcastBlock(block, true)
 
 				if number < pm.blockchain.CurrentBlock().NumberU64() {
 
