@@ -40,6 +40,9 @@ test: all
 test-coverage: all
 	build/env.sh go run build/ci.go test -coverage
 
+test-race: all
+	build/env.sh go run build/ci.go raceTest
+
 lint: ## Run linters.
 	build/env.sh go run build/ci.go lint
 

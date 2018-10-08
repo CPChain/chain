@@ -148,6 +148,8 @@ func main() {
 		doInstall(os.Args[2:])
 	case "test":
 		doTest(os.Args[2:])
+	case "raceTest":
+		doRaceTest(os.Args[2:])
 	case "lint":
 		doLint(os.Args[2:])
 	case "archive":
@@ -309,6 +311,25 @@ func doTest(cmdline []string) {
 	if *coverage {
 		gotest.Args = append(gotest.Args, "-covermode=atomic", "-cover")
 	}
+
+	gotest.Args = append(gotest.Args, packages...)
+	build.MustRun(gotest)
+}
+
+func doRaceTest(cmdline []string) {
+	flag.CommandLine.Parse(cmdline)
+	env := build.Env()
+	packages := build.ReadPackagesList("build/race.test.dirs")
+
+	// Run analysis tools before the tests.
+	build.MustRun(goTool("vet", packages...))
+
+	// Run the actual tests.
+	gotest := goTool("test", buildFlags(env)...)
+	// Test a single package at a time. CI builders are slow
+	// and some tests run into timeouts under load.
+	gotest.Args = append(gotest.Args, "-p", "1")
+	gotest.Args = append(gotest.Args, "-race")
 
 	gotest.Args = append(gotest.Args, packages...)
 	build.MustRun(gotest)
