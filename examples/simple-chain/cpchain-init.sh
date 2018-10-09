@@ -14,10 +14,10 @@ proj_dir=../..
 for i in {1..7}
 do
     echo "[*] Configuring node $i"
-    mkdir -p data/dd$i/{keystore,geth}
+    mkdir -p data/dd$i/{keystore,cpchani}
     cp conf/nodes.json data/dd$i/static-nodes.json
     cp conf/nodes.json data/dd$i/
     cp keys/key$i data/dd$i/keystore
-    cp geth/nodekey$i data/dd$i/geth/nodekey
-    $proj_dir/build/bin/geth --datadir data/dd$i init conf/genesis.json
+    cp cpchani/nodekey$i data/dd$i/cpchani/nodekey
+    $proj_dir/build/bin/cpchani --datadir data/dd$i init conf/genesis.json
 done
