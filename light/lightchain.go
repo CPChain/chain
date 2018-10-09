@@ -521,3 +521,9 @@ func (self *LightChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscri
 func (self *LightChain) SubscribeRemovedLogsEvent(ch chan<- core.RemovedLogsEvent) event.Subscription {
 	return self.scope.Track(new(event.Feed).Subscribe(ch))
 }
+
+// VerifyEthash returns true if ethash's nonce is valid
+func (self *LightChain) VerifyEthash(number, nonce uint64, signer common.Address) bool {
+	// TODO: @sangh Verifies ethash nonce in lightchain
+	return true
+}

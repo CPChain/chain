@@ -62,6 +62,28 @@ func TestVerifyCPU(t *testing.T) {
 
 }
 
+func TestVerifyMemory(t *testing.T) {
+	backend := newTestBackend()
+	addr0, err := deploy(key0, 15, 15, backend)
+	if err != nil {
+		t.Fatalf("deploy contract: expected no error, got %v", err)
+	}
+
+	instance, err := NewAdmission(addr0, backend)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	ok, err := instance.VerifyMemory(nil, 5, new(big.Int).SetUint64(1))
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if !ok {
+		t.Fatalf("expected %v, got not %v", true, ok)
+	}
+}
+
 func TestUpdateCPUDifficulty(t *testing.T) {
 	defaultDifficulty := uint64(5)
 	newCPUDifficulty := uint64(15)

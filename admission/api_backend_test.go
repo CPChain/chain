@@ -10,15 +10,15 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/contracts/dpor"
+	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
+	contractDpor "bitbucket.org/cpchain/chain/contracts/dpor"
+	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rpc"
@@ -37,7 +37,10 @@ var (
 		addr:  {Balance: big.NewInt(1000000000)},
 		addr1: {Balance: big.NewInt(1000000000)},
 	}
-	genesis = core.Genesis{Config: params.AllEthashProtocolChanges, Alloc: alloc}
+	// gspec   = core.Genesis{Config: params.TestChainConfig, Alloc: alloc}
+	gspec   = core.Genesis{Config: params.AllEthashProtocolChanges, Alloc: alloc}
+	testdb  = ethdb.NewMemDatabase()
+	genesis = gspec.MustCommit(testdb)
 )
 
 func init() {
@@ -54,24 +57,11 @@ func init() {
 	addr = crypto.PubkeyToAddress(key.PublicKey)
 }
 
-type MockBackend struct {
-	blockChain *core.BlockChain
-}
+func newChainReader(alloc core.GenesisAlloc) consensus.ChainReader {
+	_, _ = core.GenerateChain(params.TestChainConfig, genesis, dpor.New(&params.DporConfig{}, testdb), testdb, nil, 8, nil)
+	chain, _ := core.NewBlockChain(testdb, nil, params.TestChainConfig, dpor.New(&params.DporConfig{}, testdb), vm.Config{}, nil, nil)
 
-func newMockBackend(alloc core.GenesisAlloc) *MockBackend {
-	database := ethdb.NewMemDatabase()
-	genesis.MustCommit(database)
-	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, nil, nil)
-
-	core.GenerateChain(&params.ChainConfig{}, blockchain.CurrentBlock(), ethash.NewFaker(), database, nil, 1, func(int, *core.BlockGen) {})
-
-	return &MockBackend{
-		blockChain: blockchain,
-	}
-}
-
-func (b *MockBackend) CurrentBlock() *types.Block {
-	return b.blockChain.CurrentBlock()
+	return chain
 }
 
 func getStatus(ac *AdmissionControl) (workStatus, error) {
@@ -106,13 +96,12 @@ func newAC(cpuDifficulty, cpuLifeTime, memoryDifficulty, memoryLifeTime int64) *
 		memoryLifeTime = 255
 	}
 
-	config.CPULifeTime = time.Duration(cpuLifeTime) * time.Millisecond
-	config.MemoryDifficulty = memoryDifficulty
-	config.CPUDifficulty = cpuDifficulty
-	config.MemoryLifeTime = time.Duration(memoryLifeTime) * time.Millisecond
+	config.CPUConfig.LifeTime = time.Duration(cpuLifeTime) * time.Millisecond
+	config.EthashConfig.LifeTime = time.Duration(memoryLifeTime) * time.Millisecond
+	config.EthashConfig.Difficulty = memoryDifficulty
+	config.CPUConfig.Difficulty = cpuDifficulty
 
-	return NewAdmissionControl(newMockBackend(alloc), addr, ks, genesis.Config.ChainID, config)
-	// return NewAdmissionControl(newMockBackend(alloc), addr, ks, nil, config)
+	return NewAdmissionControl(newChainReader(alloc), addr, ks, config)
 }
 
 // TestAPIs test apis
@@ -136,7 +125,7 @@ func TestAPIs(t *testing.T) {
 // TestCampaign tests campaign, check status, abort and check status
 func TestCampaign(t *testing.T) {
 	ac := newAC(0, 0, 0, 0)
-	ac.Campaign()
+	ac.FakeCampaign()
 	status, err := getStatus(ac)
 	var wantErr error
 	if status != AcRunning || !reflect.DeepEqual(err, wantErr) {
@@ -149,7 +138,7 @@ func TestCampaign(t *testing.T) {
 // TestCampaign_Timeout timeout when campaign
 func TestCampaign_Timeout(t *testing.T) {
 	ac := newAC(0, 10, 0, 10)
-	ac.Campaign()
+	ac.FakeCampaign()
 
 	status, err := getStatus(ac)
 	wantStatus, wantErr := AcIdle, errors.New("proof work timeout")
@@ -163,14 +152,14 @@ func TestCampaign_Timeout(t *testing.T) {
 // TestAbort_Twice twice campaign
 func TestCampaign_Twice(t *testing.T) {
 	ac := newAC(0, 0, 0, 0)
-	ac.Campaign()
+	ac.FakeCampaign()
 	status, err := getStatus(ac)
 	var wantErr error
 	if status != AcRunning || !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("start Campaign then GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", AcRunning, wantErr, status, err)
 	}
 
-	ac.Campaign()
+	ac.FakeCampaign()
 	status, err = getStatus(ac)
 	if status != AcRunning || !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("start Campaign then GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", AcRunning, wantErr, status, err)
@@ -192,7 +181,7 @@ func TestAbort_NoCampaign(t *testing.T) {
 // TestAbort aborts the task, check status
 func TestAbort(t *testing.T) {
 	ac := newAC(0, 0, 0, 0)
-	ac.Campaign()
+	ac.FakeCampaign()
 	status, err := getStatus(ac)
 	var wantErr error
 	if status != AcRunning || !reflect.DeepEqual(err, wantErr) {
@@ -210,7 +199,7 @@ func TestAbort(t *testing.T) {
 // TestAbort aborts the task, check status
 func TestAbort_Twice(t *testing.T) {
 	ac := newAC(0, 0, 0, 0)
-	ac.Campaign()
+	ac.FakeCampaign()
 	status, err := getStatus(ac)
 	var wantErr error
 	if status != AcRunning || !reflect.DeepEqual(err, wantErr) {
@@ -235,7 +224,7 @@ func TestAbort_Twice(t *testing.T) {
 // TestGetProofInfo test get proofinfo
 func TestGetProofInfo(t *testing.T) {
 	ac := newAC(5, 1000, 5, 1000)
-	ac.Campaign()
+	ac.FakeCampaign()
 	info := ac.GetProofInfo()
 
 	wantInfo := ProofInfo{}
@@ -285,7 +274,7 @@ func TestSendCampaignProofInfo_AuthNil(t *testing.T) {
 // TestSendCampaignProofInfo
 func TestSendCampaignProofInfo_ContractNil(t *testing.T) {
 	ac := newAC(5, 0, 5, 0)
-	defaultCampaignContractAddress = "0x0000000000000000000000000000000000000000"
+	DefaultCampaignContractAddress = "0x0000000000000000000000000000000000000000"
 	backend := newTestBackend()
 	ac.contractBackend = backend
 
@@ -308,7 +297,7 @@ func TestSendCampaignProofInfoOk(t *testing.T) {
 
 	transactorOpts := bind.NewKeyedTransactor(key)
 
-	_, _, err := dpor.DeployCampaign(transactorOpts, ac.contractBackend)
+	_, _, err := contractDpor.DeployCampaign(transactorOpts, ac.contractBackend)
 	if err != nil {
 		t.Fatalf("expect no err, but %v", err.Error())
 	}
@@ -323,5 +312,16 @@ func TestSendCampaignProofInfoOk(t *testing.T) {
 	_, err = ac.GetStatus()
 	if err != nil {
 		t.Fatalf("exceped error nil, but %v", err.Error())
+	}
+}
+
+func TestVerifyEthash(t *testing.T) {
+	ac := newAC(5, 5, 5, 5)
+
+	result := ac.VerifyEthash(0, 5, addr)
+	want := true
+
+	if result != want {
+		t.Fatalf("want %v, but %v", want, result)
 	}
 }

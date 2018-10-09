@@ -2,8 +2,8 @@ package admission
 
 import (
 	"sync"
-	"time"
 
+	"bitbucket.org/cpchain/chain/admission/ethash"
 	"bitbucket.org/cpchain/chain/core/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -11,19 +11,22 @@ import (
 // memoryWork memory proof work
 type memoryWork struct {
 	*pow
+	ethash *ethash.Ethash
 }
 
 // newMemoryWork returns a new memoryWork instance
-func newMemoryWork(difficulty int64, address common.Address, block *types.Block, lifeTime time.Duration) *memoryWork {
+func newMemoryWork(config ethash.Config, address common.Address, header *types.Header, ethashClient *ethash.Ethash) *memoryWork {
+	pow := newPow(config.Difficulty, config.LifeTime, address, header)
 	return &memoryWork{
-		pow: newPow(difficulty, address, block, lifeTime),
+		pow:    pow,
+		ethash: ethashClient,
 	}
 }
 
 // prove implements ProveBackend, generate the campaign information.
 // starts memory pow work.
 func (memory *memoryWork) prove(abort chan struct{}, wg *sync.WaitGroup) {
-	defer wg.Done()
+	memory.nonce, memory.err = memory.ethash.Seal(memory.header, abort, memory.lifeTime)
 }
 
 // getProofInfo return the cpu pow result

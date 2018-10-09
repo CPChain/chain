@@ -8,6 +8,8 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/admission/ethash"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethclient"
@@ -17,28 +19,28 @@ import (
 
 // AdmissionControl implements APIBackend API.
 type AdmissionControl struct {
-	backend         Backend
 	config          Config
 	address         common.Address
-	proofInfo       ProofInfo
+	chain           consensus.ChainReader
 	keyStore        *keystore.KeyStore
-	chainID         *big.Int
 	contractBackend dpor.Backend
+	ethash          *ethash.Ethash
 
-	mutex  *sync.RWMutex
-	status workStatus
-	err    error
-	abort  chan struct{}
+	mutex     *sync.RWMutex
+	proofInfo ProofInfo
+	status    workStatus
+	err       error
+	abort     chan struct{}
 }
 
 // NewAdmissionControl returns a new Control instance.
-func NewAdmissionControl(backend Backend, address common.Address, keyStore *keystore.KeyStore, chainID *big.Int, config Config) *AdmissionControl {
+func NewAdmissionControl(chain consensus.ChainReader, address common.Address, keyStore *keystore.KeyStore, config Config) *AdmissionControl {
 	control := &AdmissionControl{
-		backend:  backend,
-		address:  address,
 		config:   config,
+		chain:    chain,
+		address:  address,
 		keyStore: keyStore,
-		chainID:  chainID,
+		ethash:   ethash.New(config.EthashConfig, chain),
 
 		abort:  make(chan struct{}),
 		mutex:  new(sync.RWMutex),
@@ -50,11 +52,11 @@ func NewAdmissionControl(backend Backend, address common.Address, keyStore *keys
 
 // registerProofWork returns all proof work
 func (ac *AdmissionControl) getProofWorks() []ProofWorkBackend {
-	block := ac.backend.CurrentBlock()
+	header := ac.chain.CurrentHeader()
 	proofWork := make([]ProofWorkBackend, 0, 2)
-	proofWork = append(proofWork, newCPUWork(ac.config.CPUDifficulty, ac.address, block, ac.config.CPULifeTime))
-	proofWork = append(proofWork, newMemoryWork(ac.config.MemoryDifficulty, ac.address, block, ac.config.MemoryLifeTime))
-	ac.proofInfo.BlockNumber = block.NumberU64()
+	proofWork = append(proofWork, newCPUWork(ac.config.CPUConfig, ac.address, header))
+	proofWork = append(proofWork, newMemoryWork(ac.config.EthashConfig, ac.address, header, ac.ethash))
+	ac.proofInfo.BlockNumber = header.Number.Uint64()
 
 	return proofWork
 }
@@ -69,6 +71,40 @@ func (ac *AdmissionControl) APIs() []rpc.API {
 			Public:    false,
 		},
 	}
+}
+
+// registerProofWork returns all proof work
+func (ac *AdmissionControl) getFakeProofWorks() []ProofWorkBackend {
+	header := ac.chain.CurrentHeader()
+	proofWork := make([]ProofWorkBackend, 0, 2)
+	proofWork = append(proofWork, newCPUWork(ac.config.CPUConfig, ac.address, header))
+	ac.proofInfo.BlockNumber = header.Number.Uint64()
+
+	return proofWork
+}
+
+// FakeCampaign for test, skip memoryWork
+func (ac *AdmissionControl) FakeCampaign() {
+	ac.mutex.Lock()
+	defer ac.mutex.Unlock()
+
+	if ac.status == AcRunning {
+		return
+	}
+	ac.proofInfo.BlockNumber = 0
+	ac.proofInfo.CPUNonce = 0
+	ac.proofInfo.MemoryNonce = 0
+	ac.status = AcRunning
+	ac.err = nil
+
+	proofWorks := ac.getFakeProofWorks()
+	wg := new(sync.WaitGroup)
+	wg.Add(len(proofWorks))
+	for _, work := range proofWorks {
+		go work.prove(ac.abort, wg)
+	}
+
+	go ac.waitSendCampaignMsg(proofWorks, wg)
 }
 
 // Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
@@ -188,4 +224,9 @@ func (ac *AdmissionControl) sendCampaignProofInfo() {
 func (ac *AdmissionControl) RegisterInProcHander(localRPCServer *rpc.Server) {
 	client := rpc.DialInProc(localRPCServer)
 	ac.contractBackend = ethclient.NewClient(client)
+}
+
+// VerifyEthash verify ethash nonce
+func (ac *AdmissionControl) VerifyEthash(number, nonce uint64, signer common.Address) bool {
+	return ac.ethash.Verify(number, nonce, signer)
 }

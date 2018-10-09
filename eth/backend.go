@@ -203,7 +203,8 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 	ks := eth.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.APIBackend, eth.etherbase, ks, eth.chainConfig.ChainID, eth.config.Admission)
+	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.blockchain, eth.etherbase, ks, eth.config.Admission)
+	eth.blockchain.SetVerifyEthashFunc(eth.AdmissionAPIBackend.VerifyEthash)
 
 	return eth, nil
 }

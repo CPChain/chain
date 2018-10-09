@@ -13,8 +13,8 @@ type pow struct {
 	difficulty int64
 	// address this node's address.
 	address common.Address
-	// blockHash the special block's hash.
-	block *types.Block
+	// header the header used for POW
+	header *types.Header
 	// lifeTime time limitation of pow.
 	lifeTime time.Duration
 	// nonce the number tries to find.
@@ -24,11 +24,11 @@ type pow struct {
 }
 
 // newPow returns struct pow.
-func newPow(difficulty int64, address common.Address, block *types.Block, lifeTime time.Duration) *pow {
+func newPow(difficulty int64, lifeTime time.Duration, address common.Address, header *types.Header) *pow {
 	return &pow{
 		difficulty: difficulty,
 		address:    address,
-		block:      block,
+		header:     header,
 		lifeTime:   lifeTime,
 	}
 }
