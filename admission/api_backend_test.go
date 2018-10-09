@@ -316,12 +316,5 @@ func TestSendCampaignProofInfoOk(t *testing.T) {
 }
 
 func TestVerifyEthash(t *testing.T) {
-	ac := newAC(5, 5, 5, 5)
-
-	result := ac.VerifyEthash(0, 5, addr)
-	want := true
-
-	if result != want {
-		t.Fatalf("want %v, but %v", want, result)
-	}
+	// TODO: @sangh verifyethash
 }
