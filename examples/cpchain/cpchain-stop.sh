@@ -2,6 +2,6 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-pkill cpchani
+pkill cpchain
 
 pkill bootnode

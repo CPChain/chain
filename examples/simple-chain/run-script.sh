@@ -6,4 +6,4 @@ scriptfile="./transactions/$1"
 
 proj_dir=../..
 
-$proj_dir/build/bin/cpchani --exec "loadScript(\"$scriptfile\")" attach ipc:data/dd1/cpchani.ipc
+$proj_dir/build/bin/cpchain --exec "loadScript(\"$scriptfile\")" attach ipc:data/dd1/cpchain.ipc

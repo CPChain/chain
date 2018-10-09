@@ -3,6 +3,6 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 
-./cpchani-stop.sh 
-./cpchani-init.sh
-./cpchani-start.sh 
+./cpchain-stop.sh 
+./cpchain-init.sh
+./cpchain-start.sh 
