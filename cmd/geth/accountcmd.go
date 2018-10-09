@@ -23,8 +23,8 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/utils"
-	"bitbucket.org/cpchain/chain/console"
 	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/console"
 	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/urfave/cli.v1"
 )

@@ -25,9 +25,9 @@ import (
 	"syscall"
 
 	"bitbucket.org/cpchain/chain/cmd/utils"
-	"bitbucket.org/cpchain/chain/console"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/console"
 	"gopkg.in/urfave/cli.v1"
 )
 

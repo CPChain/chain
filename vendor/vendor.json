@@ -135,6 +135,11 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "MykAUDqayHuZO41J8ZCHpowJZW4=",
+			"path": "github.com/ethereum/go-ethereum/console",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "egyKJ+8B2RjmvMz0xqkVGY0B6Ig=",
 			"path": "github.com/ethereum/go-ethereum/event",
 			"revision": ""

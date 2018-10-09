@@ -5,7 +5,7 @@ accounts/abi/bind/backends
 accounts/keystore
 accounts/usbwallet
 accounts/usbwallet/internal/trezor
-admission
+#admission
 #cmd/geth
 cmd/internal/browser
 cmd/smartcontract
@@ -19,7 +19,7 @@ consensus/dpor/election
 consensus/dpor/rpt
 consensus/ethash
 consensus/misc
-console
+#console
 contracts/admission
 contracts/dpor
 contracts/dpor/contract
