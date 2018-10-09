@@ -957,7 +957,8 @@ func (bc *BlockChain) WriteBlockWithoutState(block *types.Block, td *big.Int) (e
 }
 
 // WriteBlockWithState writes the block and all associated state to the database.
-func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.Receipt, state *state.StateDB) (status WriteStatus, err error) {
+func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*types.Receipt, privReceipts []*types.Receipt,
+	pubState *state.StateDB, privState *state.StateDB) (status WriteStatus, err error) {
 	bc.wg.Add(1)
 	defer bc.wg.Done()
 
@@ -966,7 +967,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	if ptd == nil {
 		return NonStatTy, consensus.ErrUnknownAncestor
 	}
-	// Make sure no inconsistent state is leaked during insertion
+	// Make sure no inconsistent pubState is leaked during insertion
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
@@ -982,12 +983,21 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	batch := bc.db.NewBatch()
 	rawdb.WriteBlock(batch, block)
 
-	root, err := state.Commit(bc.chainConfig.IsEIP158(block.Number()))
+	root, err := pubState.Commit(bc.chainConfig.IsEIP158(block.Number()))
 	if err != nil {
 		return NonStatTy, err
 	}
-	triedb := bc.stateCache.TrieDB()
+	// write private transaction
+	privStateRoot, err := privState.Commit(true)
+	if err != nil {
+		return NonStatTy, err
+	}
+	err = WritePrivateStateRoot(bc.db, block.Root(), privStateRoot)
+	if err != nil {
+		return NonStatTy, err
+	}
 
+	triedb := bc.stateCache.TrieDB()
 	// If we're running an archive node, always flush
 	if bc.cacheConfig.Disabled {
 		if err := triedb.Commit(root, false); err != nil {
@@ -1007,7 +1017,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 			if nodes > limit || imgs > 4*1024*1024 {
 				triedb.Cap(limit - ethdb.IdealBatchSize)
 			}
-			// Find the next state trie we need to commit
+			// Find the next pubState trie we need to commit
 			header := bc.GetHeaderByNumber(current - triesInMemory)
 			chosen := header.Number.Uint64()
 
@@ -1034,7 +1044,11 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 			}
 		}
 	}
-	rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receipts)
+	rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), pubReceipts)
+	// Write private receipts
+	for _, r := range privReceipts {
+		WritePrivateReceipt(r, r.TxHash, bc.db)
+	}
 
 	// If the total difficulty is higher than our known, add it to the canonical chain
 	// Second clause in the if statement reduces the vulnerability to selfish mining.
@@ -1054,7 +1068,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		}
 		// Write the positional metadata for transaction/receipt lookups and preimages
 		rawdb.WriteTxLookupEntries(batch, block)
-		rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
+		rawdb.WritePreimages(batch, block.NumberU64(), pubState.Preimages())
 
 		status = CanonStatTy
 	} else {
@@ -1251,21 +1265,22 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 
 		// Process block using the parent state as reference point.
-		receipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB, bc.vmConfig, bc.rsaPrivateKey)
+		pubReceipts, privReceipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB,
+			bc.vmConfig, bc.rsaPrivateKey)
 		if err != nil {
-			bc.reportBlock(block, receipts, err)
+			bc.reportBlock(block, pubReceipts, err)
 			return i, events, coalescedLogs, err
 		}
 		// Validate the state using the default validator
-		err = bc.Validator().ValidateState(block, parent, pubState, receipts, usedGas)
+		err = bc.Validator().ValidateState(block, parent, pubState, pubReceipts, usedGas)
 		if err != nil {
-			bc.reportBlock(block, receipts, err)
+			bc.reportBlock(block, pubReceipts, err)
 			return i, events, coalescedLogs, err
 		}
 		proctime := time.Since(bstart)
 
 		// Write the block to the chain and get the status.
-		status, err := bc.WriteBlockWithState(block, receipts, pubState)
+		status, err := bc.WriteBlockWithState(block, pubReceipts, privReceipts, pubState, privState)
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
@@ -1291,16 +1306,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 		stats.processed++
 		stats.usedGas += usedGas
-
-		// Commit private state and write private state root after writing block with public state.
-		privStateRoot, err := privState.Commit(true)
-		if err != nil {
-			bc.reportBlock(block, receipts, err)
-			return i, events, coalescedLogs, err
-		}
-		if err := WritePrivateStateRoot(bc.db, block.Root(), privStateRoot); err != nil {
-			return i, events, coalescedLogs, err
-		}
 
 		cache, _ := bc.stateCache.TrieDB().Size()
 

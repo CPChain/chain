@@ -115,8 +115,7 @@ func (b *EthAPIBackend) GetReceipts(ctx context.Context, hash common.Hash) (type
 }
 
 func (b *EthAPIBackend) GetPrivateReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
-	stateDB := state.NewDatabase(b.eth.chainDb)
-	receipt, err := core.ReadPrivateReceipt(txHash, stateDB.TrieDB())
+	receipt, err := core.ReadPrivateReceipt(txHash, b.ChainDb())
 	if err != nil {
 		return nil, err
 	}

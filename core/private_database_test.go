@@ -12,7 +12,6 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
 	"github.com/pkg/errors"
 )
 
@@ -96,10 +95,10 @@ func TestWritePrivateReceipt(t *testing.T) {
 	type args struct {
 		receipt *types.Receipt
 		txHash  common.Hash
-		db      *trie.Database
+		db      ethdb.Database
 	}
 
-	db := getTestTrieDB()
+	db := getTestDB()
 	receipt := getTestReceipt()
 
 	tests := []struct {
@@ -117,8 +116,8 @@ func TestWritePrivateReceipt(t *testing.T) {
 			},
 			wantErr: false,
 			check: func() error {
-				nodes := db.Nodes()
-				if len(nodes) == 0 {
+				keys := db.Keys()
+				if len(keys) == 0 {
 					return errors.New("No data is written into db.")
 				}
 
@@ -131,7 +130,7 @@ func TestWritePrivateReceipt(t *testing.T) {
 				hashBytes := hasher.Sum(nil)
 				hash := common.BytesToHash(hashBytes)
 
-				content, err := db.Node(hash)
+				content, err := db.Get(hash.Bytes())
 				if err != nil || len(content) == 0 {
 					return errors.New("The data written has wrong hash and content.")
 				}
@@ -156,10 +155,10 @@ func TestWritePrivateReceipt(t *testing.T) {
 func TestReadPrivateReceipt(t *testing.T) {
 	type args struct {
 		txHash common.Hash
-		db     *trie.Database
+		db     ethdb.Database
 	}
 
-	db := getTestTrieDB()
+	db := getTestDB()
 	receipt := getTestReceipt()
 
 	WritePrivateReceipt(receipt, common.Hash{}, db)
@@ -218,6 +217,6 @@ func getTestReceipt() *types.Receipt {
 	return types.NewReceipt(common.Hash{}.Bytes(), false, 3000)
 }
 
-func getTestTrieDB() *trie.Database {
-	return trie.NewDatabase(ethdb.NewMemDatabase())
+func getTestDB() *ethdb.MemDatabase {
+	return ethdb.NewMemDatabase()
 }

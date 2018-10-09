@@ -46,5 +46,5 @@ type Validator interface {
 // failed.
 type Processor interface {
 	Process(block *types.Block, statedb *state.StateDB, statePrivDB *state.StateDB, remoteDB ethdb.RemoteDatabase,
-		cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (types.Receipts, []*types.Log, uint64, error)
+		cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (types.Receipts, types.Receipts, []*types.Log, uint64, error)
 }

@@ -102,7 +102,7 @@ func (b *BlockGen) AddTxWithChain(bc *BlockChain, tx *types.Transaction) {
 		remoteDB = bc.remoteDB
 		rsaPrivKey = bc.rsaPrivateKey
 	}
-	receipt, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.pubStateDB, b.privStateDB, remoteDB,
+	receipt, _, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.pubStateDB, b.privStateDB, remoteDB,
 		b.header, tx, &b.header.GasUsed, vm.Config{}, rsaPrivKey)
 	if err != nil {
 		panic(err)

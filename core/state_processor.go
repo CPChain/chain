@@ -31,7 +31,6 @@ import (
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/private"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/trie"
 )
 
 var (
@@ -63,17 +62,18 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 // the transaction messages using the pubStateDB and applying any rewards to both
 // the processor (coinbase) and any included uncles.
 //
-// Process returns the receipts and logs accumulated during the process and
+// Process returns the public receipts, private receipts(if have) and logs accumulated during the process and
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
 func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, statePrivDB *state.StateDB,
-	remoteDB ethdb.RemoteDatabase, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (types.Receipts, []*types.Log, uint64, error) {
+	remoteDB ethdb.RemoteDatabase, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (types.Receipts, types.Receipts, []*types.Log, uint64, error) {
 	var (
-		receipts types.Receipts
-		usedGas  = new(uint64)
-		header   = block.Header()
-		allLogs  []*types.Log
-		gp       = new(GasPool).AddGas(block.GasLimit())
+		pubReceipts  types.Receipts
+		privReceipts types.Receipts
+		usedGas      = new(uint64)
+		header       = block.Header()
+		allLogs      []*types.Log
+		gp           = new(GasPool).AddGas(block.GasLimit())
 	)
 	// Mutate the the block and state according to any hard-fork specs
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
@@ -83,18 +83,23 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
 		statePrivDB.Prepare(tx.Hash(), block.Hash(), i)
-		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, statePrivDB, remoteDB, header, tx,
+		pubReceipt, privReceipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, statePrivDB, remoteDB, header, tx,
 			usedGas, cfg, rsaPrivKey)
 		if err != nil {
-			return nil, nil, 0, err
+			return nil, nil, nil, 0, err
 		}
-		receipts = append(receipts, receipt)
-		allLogs = append(allLogs, receipt.Logs...)
+		pubReceipts = append(pubReceipts, pubReceipt)
+		if privReceipt != nil {
+			privReceipts = append(privReceipts, privReceipt)
+		}
+		allLogs = append(allLogs, pubReceipt.Logs...) // not include private receipt's logs.
+		// TODO: if need to add private receipt's logs to allLogs variable.
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
-	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles(), receipts)
+	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles(), pubReceipts)
 
-	return receipts, allLogs, *usedGas, nil
+	// TODO: if return private logs separately or merge them together as a whole logs collection?
+	return pubReceipts, privReceipts, allLogs, *usedGas, nil
 }
 
 // ApplyTransaction attempts to apply a transaction to the given state database
@@ -103,10 +108,10 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 // indicating the block was invalid.
 func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, pubStateDb *state.StateDB,
 	privateStateDb *state.StateDB, remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64,
-	cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, uint64, error) {
+	cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, *types.Receipt, uint64, error) {
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
 	if err != nil {
-		return nil, 0, err
+		return nil, nil, 0, err
 	}
 
 	// For private tx, its payload is a replacement which cannot be executed as normal tx payload, thus set it to be empty to skip execution.
@@ -123,7 +128,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
 	if err != nil {
-		return nil, 0, err
+		return nil, nil, 0, err
 	}
 	// Update the state with pending changes
 	var root []byte
@@ -148,15 +153,13 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	pubReceipt.Logs = pubStateDb.GetLogs(tx.Hash())
 	pubReceipt.Bloom = types.CreateBloom(types.Receipts{pubReceipt})
 
+	var privReceipt *types.Receipt
 	// For private tx, it should process its real private tx payload in participant's node.
 	if tx.IsPrivate() {
-		privReceipt, err := tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, rsaPrivKey)
-		if err == nil {
-			processPrivateReceipts(tx.Hash(), types.Receipts{privReceipt}, privateStateDb.Database().TrieDB())
-		}
+		privReceipt, _ = tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, rsaPrivKey)
 	}
 
-	return pubReceipt, gas, err
+	return pubReceipt, privReceipt, gas, err
 }
 
 // applyPrivateTx attempts to apply a private transaction to the given state database
@@ -217,15 +220,4 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
 	return receipt, err
-}
-
-// processPrivateReceipts processes the private tx's receipts.
-func processPrivateReceipts(txHash common.Hash, receipts types.Receipts, trieDB *trie.Database) error {
-	for _, receipt := range receipts {
-		err := WritePrivateReceipt(receipt, txHash, trieDB)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

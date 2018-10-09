@@ -143,7 +143,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			return nil, fmt.Errorf("parent block #%d not found", number-1)
 		}
 	}
-	statedb, err := state.New(start.Root(), database)
+	pubStateDB, err := state.New(start.Root(), database)
 	if err != nil {
 		// If the starting state is missing, allow some number of blocks to be reexecuted
 		reexec := defaultTraceReexec
@@ -156,7 +156,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			if start == nil {
 				break
 			}
-			if statedb, err = state.New(start.Root(), database); err == nil {
+			if pubStateDB, err = state.New(start.Root(), database); err == nil {
 				break
 			}
 		}
@@ -269,7 +269,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 				txs := block.Transactions()
 
 				select {
-				case tasks <- &blockTraceTask{statedb: statedb.Copy(), block: block, rootref: proot, results: make([]*txTraceResult, len(txs))}:
+				case tasks <- &blockTraceTask{statedb: pubStateDB.Copy(), block: block, rootref: proot, results: make([]*txTraceResult, len(txs))}:
 				case <-notifier.Closed():
 					return
 				}
@@ -277,20 +277,20 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			}
 			// Generate the next state snapshot fast without tracing
 			// TODO: test if below statement is correct.
-			privStateDb, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), statedb.Database())
+			privStateDB, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), pubStateDB.Database())
 			// TODO: Pass real remote database
-			_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
+			_, _, _, _, err := api.eth.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
 			if err != nil {
 				failed = err
 				break
 			}
 			// Finalize the state so any modifications are written to the trie
-			root, err := statedb.Commit(true)
+			root, err := pubStateDB.Commit(true)
 			if err != nil {
 				failed = err
 				break
 			}
-			if err := statedb.Reset(root); err != nil {
+			if err := pubStateDB.Reset(root); err != nil {
 				failed = err
 				break
 			}
@@ -475,9 +475,9 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 // attempted to be reexecuted to generate the desired state.
 func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*state.StateDB, error) {
 	// If we have the state fully available, use that
-	statedb, err := api.eth.blockchain.StateAt(block.Root())
+	pubStateDB, err := api.eth.blockchain.StateAt(block.Root())
 	if err == nil {
-		return statedb, nil
+		return pubStateDB, nil
 	}
 	// Otherwise try to reexec blocks until we find a state or reach our limit
 	origin := block.NumberU64()
@@ -488,7 +488,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		if block == nil {
 			break
 		}
-		if statedb, err = state.New(block.Root(), database); err == nil {
+		if pubStateDB, err = state.New(block.Root(), database); err == nil {
 			break
 		}
 	}
@@ -518,18 +518,18 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		}
 
 		// TODO: check if below statement is correct.
-		privStateDb, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), statedb.Database())
+		privStateDB, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), pubStateDB.Database())
 		// TODO: pass real remote database.
-		_, _, _, err := api.eth.blockchain.Processor().Process(block, statedb, privStateDb, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
+		_, _, _, _, err := api.eth.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
 		if err != nil {
 			return nil, err
 		}
 		// Finalize the state so any modifications are written to the trie
-		root, err := statedb.Commit(true)
+		root, err := pubStateDB.Commit(true)
 		if err != nil {
 			return nil, err
 		}
-		if err := statedb.Reset(root); err != nil {
+		if err := pubStateDB.Reset(root); err != nil {
 			return nil, err
 		}
 		database.TrieDB().Reference(root, common.Hash{})
@@ -538,7 +538,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 	}
 	nodes, imgs := database.TrieDB().Size()
 	log.Info("Historical state regenerated", "block", block.NumberU64(), "elapsed", time.Since(start), "nodes", nodes, "preimages", imgs)
-	return statedb, nil
+	return pubStateDB, nil
 }
 
 // computeStatePrivDB retrieves the private state database associated with a certain block.

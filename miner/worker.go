@@ -77,9 +77,10 @@ type Work struct {
 
 	Block *types.Block // the new block
 
-	header   *types.Header
-	txs      []*types.Transaction
-	receipts []*types.Receipt
+	header       *types.Header
+	txs          []*types.Transaction
+	pubReceipts  []*types.Receipt
+	privReceipts []*types.Receipt
 
 	createdAt time.Time
 }
@@ -310,27 +311,20 @@ func (self *worker) wait() {
 
 			// Update the block hash in all logs since it is now available and not when the
 			// receipt/log of individual transactions were created.
-			for _, r := range work.receipts {
+			for _, r := range append(work.pubReceipts, work.privReceipts...) {
 				for _, l := range r.Logs {
 					l.BlockHash = block.Hash()
 				}
 			}
-			// TODO: try merging private logs
-			for _, log := range work.pubState.Logs() {
+			for _, log := range append(work.pubState.Logs(), work.privState.Logs()...) {
 				log.BlockHash = block.Hash()
 			}
 
-			stat, err := self.chain.WriteBlockWithState(block, work.receipts, work.pubState)
+			stat, err := self.chain.WriteBlockWithState(block, work.pubReceipts, work.privReceipts, work.pubState, work.privState)
 			if err != nil {
 				log.Error("Failed writing block to chain", "err", err)
 				continue
 			}
-
-			// write private transaction
-			privateState, _ := work.privState.Commit(true)
-			core.WritePrivateStateRoot(self.chainDb, block.Root(), privateState)
-			// TODO: if need to merge receipts
-			// TODO: if need to WriteBlockWithState
 
 			// Broadcast the block and announce chain insertion event
 			self.mux.Post(core.NewMinedBlockEvent{Block: block})
@@ -496,8 +490,9 @@ func (self *worker) commitNewWork() {
 	for _, hash := range badUncles {
 		delete(self.possibleUncles, hash)
 	}
-	// Create the new block to seal with the consensus engine
-	if work.Block, err = self.engine.Finalize(self.chain, header, work.pubState, work.txs, uncles, work.receipts); err != nil {
+	// Create the new block to seal with the consensus engine. Private tx's receipts are not involved computing block's
+	// receipts hash and receipts bloom as they are private and not guaranteeing identical in different nodes.
+	if work.Block, err = self.engine.Finalize(self.chain, header, work.pubState, work.txs, uncles, work.pubReceipts); err != nil {
 		log.Error("Failed to finalize block for sealing", "err", err)
 		return
 	}
@@ -533,7 +528,7 @@ func (self *worker) updateSnapshot() {
 		self.current.header,
 		self.current.txs,
 		nil,
-		self.current.receipts,
+		self.current.pubReceipts,
 	)
 	self.snapshotState = self.current.pubState.Copy()
 	// TODO: if need to snapshot private state?
@@ -629,7 +624,7 @@ func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, c
 	snap := env.pubState.Snapshot()
 	snapPriv := env.privState.Snapshot()
 
-	receipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.remoteDB,
+	pubReceipt, privReceipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.remoteDB,
 		env.header, tx, &env.header.GasUsed, vm.Config{}, bc.RsaPrivateKey())
 	if err != nil {
 		env.pubState.RevertToSnapshot(snap)
@@ -637,7 +632,11 @@ func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, c
 		return err, nil
 	}
 	env.txs = append(env.txs, tx)
-	env.receipts = append(env.receipts, receipt)
+	env.pubReceipts = append(env.pubReceipts, pubReceipt)
+	if privReceipt != nil {
+		env.privReceipts = append(env.privReceipts, privReceipt)
+	}
 
-	return nil, receipt.Logs
+	// TODO: consider whether append private logs to returned logs together.
+	return nil, pubReceipt.Logs
 }

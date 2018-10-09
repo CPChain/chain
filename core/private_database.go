@@ -2,14 +2,15 @@ package core
 
 import (
 	"bytes"
+	"fmt"
 
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/ethdb"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
 )
 
 var (
@@ -33,21 +34,21 @@ func WritePrivateStateRoot(db ethdb.Database, blockRoot, root common.Hash) error
 }
 
 // WritePrivateReceipt writes private receipt associated with specified transaction.
-func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db *trie.Database) error {
+func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db ethdb.Database) error {
 	hash := getPrivateReceiptKey(txHash)
 	// Write receipt to trie db.
 	storageReceipt := (*types.ReceiptForStorage)(receipt)
 	bytesToWrite, _ := rlp.EncodeToBytes(storageReceipt)
-	db.InsertBlob(hash, bytesToWrite)
-	log.Info("Write private transaction receipt", "hash", hash, "receipt", receipt)
+	db.Put(hash.Bytes(), bytesToWrite)
+	log.Info("Write private transaction receipt", "hash", hash.String(), "receipt", fmt.Sprintf("%+v", receipt))
 	return nil
 }
 
 // ReadPrivateReceipt reads private receipt associated with specified transaction.
-func ReadPrivateReceipt(txHash common.Hash, db *trie.Database) (*types.Receipt, error) {
+func ReadPrivateReceipt(txHash common.Hash, db ethdb.Database) (*types.Receipt, error) {
 	hash := getPrivateReceiptKey(txHash)
 	// Read private receipt data
-	data, err := db.Node(hash)
+	data, err := db.Get(hash.Bytes())
 	if err != nil {
 		return nil, err
 	}
