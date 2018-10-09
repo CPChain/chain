@@ -12,13 +12,6 @@ cmd/smartcontract
 cmd/smartcontract/config
 cmd/smartcontract/deploy
 cmd/utils
-#common
-#common/bitutil
-#common/compiler
-#common/fdlimit
-#common/hexutil
-#common/math
-#common/mclock
 consensus
 consensus/clique
 consensus/dpor
@@ -99,7 +92,6 @@ signer/rules
 signer/rules/deps
 signer/storage
 tests
-#trie
 whisper/mailserver
 whisper/shhclient
 whisper/whisperv5
