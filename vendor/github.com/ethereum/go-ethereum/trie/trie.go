@@ -23,7 +23,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/metrics"
+	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/log"
 )
 

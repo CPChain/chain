@@ -26,9 +26,9 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/metrics"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/metrics"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 )
 

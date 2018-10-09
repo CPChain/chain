@@ -32,11 +32,11 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 var (

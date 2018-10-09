@@ -42,7 +42,7 @@ crypto/randentropy
 crypto/rsa_
 crypto/secp256k1
 crypto/sha3
-dashboard
+#dashboard
 #eth
 #eth/downloader
 eth/fetcher
@@ -52,7 +52,7 @@ eth/tracers
 eth/tracers/internal/tracers
 ethclient
 ethdb
-ethstats
+#ethstats
 examples/cpchain/launch/claim
 examples/cpchain/launch/deploy
 internal/build
@@ -66,10 +66,10 @@ internal/web3ext
 #les
 les/flowcontrol
 light
-metrics
-metrics/exp
-metrics/influxdb
-metrics/librato
+#metrics
+#metrics/exp
+#metrics/influxdb
+#metrics/librato
 miner
 node
 p2p

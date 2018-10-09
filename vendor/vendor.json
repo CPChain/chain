@@ -140,6 +140,16 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "bHbDsq9e0GkhGGA+ME/DrxPkEGY=",
+			"path": "github.com/ethereum/go-ethereum/dashboard",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "pyuh5M3p43OIfEDaMzMMec0rrfs=",
+			"path": "github.com/ethereum/go-ethereum/ethstats",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "egyKJ+8B2RjmvMz0xqkVGY0B6Ig=",
 			"path": "github.com/ethereum/go-ethereum/event",
 			"revision": ""
@@ -152,6 +162,11 @@
 		{
 			"checksumSHA1": "Sm6JjHTDnKAOy2DIvz7U1HJ8jiI=",
 			"path": "github.com/ethereum/go-ethereum/log/term",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "s9MU+4bIlbOJxv1gdMtYGgERM08=",
+			"path": "github.com/ethereum/go-ethereum/metrics",
 			"revision": ""
 		},
 		{

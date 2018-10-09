@@ -19,7 +19,7 @@
 package fetcher
 
 import (
-	"bitbucket.org/cpchain/chain/metrics"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 var (

@@ -28,11 +28,11 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 
 	"bitbucket.org/cpchain/chain/cmd/utils"
-	"bitbucket.org/cpchain/chain/dashboard"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/params"
 	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
+	"github.com/ethereum/go-ethereum/dashboard"
 	"github.com/naoina/toml"
 )
 

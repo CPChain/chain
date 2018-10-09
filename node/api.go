@@ -23,11 +23,11 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/metrics"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 // PrivateAdminAPI is the collection of administrative API methods exposed only

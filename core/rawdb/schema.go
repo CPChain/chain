@@ -20,8 +20,8 @@ package rawdb
 import (
 	"encoding/binary"
 
-	"bitbucket.org/cpchain/chain/metrics"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 // The fields below define the low level database schema prefixing.
