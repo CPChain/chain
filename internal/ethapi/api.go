@@ -1251,7 +1251,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 
 		payloadReplace, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants, s.b.RemoteDB())
 		if err != nil {
-			panic(err)
+			return common.Hash{}, err
 		}
 
 		// Replace original content with security one.

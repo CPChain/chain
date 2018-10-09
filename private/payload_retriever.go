@@ -26,7 +26,11 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB ethdb.Remot
 
 	// Check if the current node is in the participant group by comparing is public key and decrypt with its private
 	// key and return result.
-	sealed := getDataFromRemote(replacement.TxPayloadUri, remoteDB)
+	sealed, err := getDataFromRemote(replacement.TxPayloadUri, remoteDB)
+	if err != nil {
+		return []byte{}, false, err
+	}
+
 	sp := SealedPrivatePayload{}
 	err = rlp.DecodeBytes(sealed, &sp)
 	if err != nil {
@@ -45,12 +49,12 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB ethdb.Remot
 	return []byte{}, false, nil
 }
 
-func getDataFromRemote(ipfsAddress []byte, remoteDB ethdb.RemoteDatabase) []byte {
+func getDataFromRemote(ipfsAddress []byte, remoteDB ethdb.RemoteDatabase) ([]byte, error) {
 	content, err := remoteDB.Get(ipfsAddress)
 	if err != nil {
-		return []byte{}
+		return []byte{}, err
 	}
-	return content
+	return content, nil
 }
 
 func decryptSymKey(data []byte, privateKey *rsa.PrivateKey) []byte {

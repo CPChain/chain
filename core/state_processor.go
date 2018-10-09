@@ -17,9 +17,8 @@
 package core
 
 import (
-	"errors"
-
 	"crypto/rsa"
+	"errors"
 
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/misc"
@@ -30,7 +29,9 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/private"
+
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var (
@@ -156,7 +157,15 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	var privReceipt *types.Receipt
 	// For private tx, it should process its real private tx payload in participant's node.
 	if tx.IsPrivate() {
-		privReceipt, _ = tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, rsaPrivKey)
+		privReceipt, err = tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, rsaPrivKey)
+		if err != nil {
+			if err == NoPermissionError {
+				log.Info("No permission to process the transaction.")
+			} else {
+				log.Error("Cannot process the transaction.", err)
+				return nil, nil, 0, err
+			}
+		}
 	}
 
 	return pubReceipt, privReceipt, gas, err
@@ -183,7 +192,10 @@ func tryApplyPrivateTx(config *params.ChainConfig, bc ChainContext, author *comm
 		return nil, err
 	}
 
-	payload, hasPermission, _ := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB, &pub, rsaPrivKey)
+	payload, hasPermission, err := private.RetrieveAndDecryptPayload(tx.Data(), tx.Nonce(), remoteDB, &pub, rsaPrivKey)
+	if err != nil {
+		return nil, err
+	}
 	if !hasPermission {
 		return nil, NoPermissionError
 	}
