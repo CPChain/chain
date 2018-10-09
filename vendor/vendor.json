@@ -180,6 +180,11 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "A/86ouuFixcQafcrd2WqHiud/cU=",
+			"path": "github.com/ethereum/go-ethereum/whisper/whisperv6",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "7oFpbmDfGobwKsFLIf6wMUvVoKw=",
 			"path": "github.com/fatih/color",
 			"revision": "5ec5d9d3c2cf82e9688b34e9bc27a94d616a7193",

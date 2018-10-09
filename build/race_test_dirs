@@ -92,7 +92,7 @@ signer/rules
 signer/rules/deps
 signer/storage
 tests
-whisper/mailserver
-whisper/shhclient
-whisper/whisperv5
-whisper/whisperv6
+#whisper/mailserver
+#whisper/shhclient
+#whisper/whisperv5
+#whisper/whisperv6

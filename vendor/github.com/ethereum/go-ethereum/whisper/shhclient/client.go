@@ -21,7 +21,7 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/rpc"
-	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
+	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 

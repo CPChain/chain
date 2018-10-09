@@ -31,8 +31,8 @@ import (
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/params"
-	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
 	"github.com/ethereum/go-ethereum/dashboard"
+	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 	"github.com/naoina/toml"
 )
 

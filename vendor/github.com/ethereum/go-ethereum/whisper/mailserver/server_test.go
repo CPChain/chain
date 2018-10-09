@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/crypto"
-	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
+	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 	"github.com/ethereum/go-ethereum/common"
 )
 

@@ -51,7 +51,6 @@ import (
 	"bitbucket.org/cpchain/chain/p2p/nat"
 	"bitbucket.org/cpchain/chain/p2p/netutil"
 	"bitbucket.org/cpchain/chain/params"
-	whisper "bitbucket.org/cpchain/chain/whisper/whisperv6"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/dashboard"
@@ -59,6 +58,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/metrics/influxdb"
+	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 	"gopkg.in/urfave/cli.v1"
 )
 
