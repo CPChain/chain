@@ -35,8 +35,5 @@ func (ethash *Ethash) Verify(number, nonce uint64, signer common.Address) bool {
 	runtime.KeepAlive(cache)
 
 	target := new(big.Int).Div(maxUint256, new(big.Int).SetInt64(ethash.config.Difficulty))
-	if new(big.Int).SetBytes(result).Cmp(target) > 0 {
-		return false
-	}
-	return true
+	return new(big.Int).SetBytes(result).Cmp(target) > 0
 }
