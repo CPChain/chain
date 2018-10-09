@@ -49,16 +49,16 @@ func NewEVMContext(msg Message, header *types.Header, chain ChainContext, author
 	}
 	return vm.Context{
 		VerifyEthash: chain.VerifyEthash,
-		CanTransfer: CanTransfer,
-		Transfer:    Transfer,
-		GetHash:     GetHashFn(header, chain),
-		Origin:      msg.From(),
-		Coinbase:    beneficiary,
-		BlockNumber: new(big.Int).Set(header.Number),
-		Time:        new(big.Int).Set(header.Time),
-		Difficulty:  new(big.Int).Set(header.Difficulty),
-		GasLimit:    header.GasLimit,
-		GasPrice:    new(big.Int).Set(msg.GasPrice()),
+		CanTransfer:  CanTransfer,
+		Transfer:     Transfer,
+		GetHash:      GetHashFn(header, chain),
+		Origin:       msg.From(),
+		Coinbase:     beneficiary,
+		BlockNumber:  new(big.Int).Set(header.Number),
+		Time:         new(big.Int).Set(header.Time),
+		Difficulty:   new(big.Int).Set(header.Difficulty),
+		GasLimit:     header.GasLimit,
+		GasPrice:     new(big.Int).Set(msg.GasPrice()),
 	}
 }
 
