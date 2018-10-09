@@ -2,7 +2,6 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+pkill cpchani
 
-./geth-stop.sh 
-./geth-init.sh
-./geth-start.sh 
+pkill bootnode
