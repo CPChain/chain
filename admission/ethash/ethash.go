@@ -39,6 +39,7 @@ import (
 	"github.com/hashicorp/golang-lru/simplelru"
 )
 
+// ErrInvalidDumpMagic invalid dump magic
 var ErrInvalidDumpMagic = errors.New("invalid dump magic")
 
 var (
