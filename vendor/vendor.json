@@ -105,6 +105,11 @@
 			"revisionTime": "2018-01-22T22:25:45Z"
 		},
 		{
+			"checksumSHA1": "l+j3lTA0RNADknis0xezQbVwids=",
+			"path": "github.com/ethereum/go-ethereum/accounts/usbwallet",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "ND3Uzik9fBMhPJ2cONJz7FqSuXs=",
 			"path": "github.com/ethereum/go-ethereum/common",
 			"revision": ""
