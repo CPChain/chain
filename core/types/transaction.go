@@ -35,6 +35,12 @@ var (
 	ErrInvalidSig = errors.New("invalid transaction v, r, s values")
 )
 
+const (
+	TxTypePrivate = 1 << iota
+
+	BasicTx = 0
+)
+
 type Transaction struct {
 	data txdata
 	// caches
@@ -44,12 +50,15 @@ type Transaction struct {
 }
 
 type txdata struct {
+	// Types indicates the features assigned to the tx, e.g. private tx.
+	Types        uint64          `json:"type" gencodec:"required"`
 	AccountNonce uint64          `json:"nonce"    gencodec:"required"`
 	Price        *big.Int        `json:"gasPrice" gencodec:"required"`
 	GasLimit     uint64          `json:"gas"      gencodec:"required"`
 	Recipient    *common.Address `json:"to"       rlp:"nil"` // nil means contract creation
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
+	Extra        []byte          `json:"extra"    gencodec:"required"`
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -58,17 +67,16 @@ type txdata struct {
 
 	// This is only used when marshaling to JSON.
 	Hash *common.Hash `json:"hash" rlp:"-"`
-
-	// IsPrivate indicates if the transaction is private.
-	IsPrivate bool `json:"private" gencodec:"required"`
 }
 
 type txdataMarshaling struct {
+	Types        hexutil.Uint64
 	AccountNonce hexutil.Uint64
 	Price        *hexutil.Big
 	GasLimit     hexutil.Uint64
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
+	Extra        hexutil.Bytes
 	V            *hexutil.Big
 	R            *hexutil.Big
 	S            *hexutil.Big
@@ -76,19 +84,20 @@ type txdataMarshaling struct {
 
 // TODO: add new parameter 'isPrivate'.
 func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data, false)
+	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data, BasicTx)
 }
 
 // TODO: add new parameter 'isPrivate'.
 func NewContractCreation(nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data, false)
+	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data, BasicTx)
 }
 
-func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, isPrivate bool) *Transaction {
+func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, types uint64) *Transaction {
 	if len(data) > 0 {
 		data = common.CopyBytes(data)
 	}
 	d := txdata{
+		Types:        types,
 		AccountNonce: nonce,
 		Recipient:    to,
 		Payload:      data,
@@ -98,7 +107,6 @@ func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit 
 		V:            new(big.Int),
 		R:            new(big.Int),
 		S:            new(big.Int),
-		IsPrivate:    isPrivate,
 	}
 	if amount != nil {
 		d.Amount.Set(amount)
@@ -257,14 +265,38 @@ func (tx *Transaction) RawSignatureValues() (*big.Int, *big.Int, *big.Int) {
 	return tx.data.V, tx.data.R, tx.data.S
 }
 
+func (tx *Transaction) Types() uint64 {
+	return tx.data.Types
+}
+
+// CheckType checks the transaction's type.
+func (tx *Transaction) CheckType(t uint64) bool {
+	return tx.data.Types&t != 0
+}
+
+// SetType sets the type to the transaction.
+func (tx *Transaction) SetType(t uint64) {
+	tx.data.Types |= t
+}
+
+// UnsetType clears the given type setting from the transaction.
+func (tx *Transaction) UnsetType(t uint64) {
+	tx.data.Types &= ^t
+}
+
 // IsPrivate checks if the tx is private.
 func (tx *Transaction) IsPrivate() bool {
-	return tx.data.IsPrivate
+	return tx.CheckType(TxTypePrivate)
 }
 
 // SetPrivate sets the tx as private.
 func (tx *Transaction) SetPrivate(isPrivate bool) {
-	tx.data.IsPrivate = isPrivate
+	if isPrivate {
+		tx.SetType(TxTypePrivate)
+	} else {
+		tx.UnsetType(TxTypePrivate)
+	}
+
 }
 
 // Transactions is a Transaction slice type for basic sorting.
