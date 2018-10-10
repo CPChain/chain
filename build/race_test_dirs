@@ -3,6 +3,7 @@ accounts/abi
 accounts/abi/bind
 accounts/abi/bind/backends
 accounts/keystore
+accounts/rsa_
 #accounts/usbwallet
 #accounts/usbwallet/internal/trezor
 #admission
@@ -39,7 +40,6 @@ crypto/bn256/cloudflare
 crypto/bn256/google
 crypto/ecies
 crypto/randentropy
-crypto/rsa_
 crypto/secp256k1
 crypto/sha3
 #dashboard
