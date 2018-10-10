@@ -64,7 +64,7 @@ internal/jsre
 internal/jsre/deps
 internal/web3ext
 #les
-les/flowcontrol
+#les/flowcontrol
 light
 #metrics
 #metrics/exp

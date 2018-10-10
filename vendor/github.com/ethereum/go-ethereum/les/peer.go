@@ -28,7 +28,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/eth"
-	"bitbucket.org/cpchain/chain/les/flowcontrol"
+	"github.com/ethereum/go-ethereum/les/flowcontrol"
 	"bitbucket.org/cpchain/chain/light"
 	"bitbucket.org/cpchain/chain/p2p"
 	"github.com/ethereum/go-ethereum/common"
