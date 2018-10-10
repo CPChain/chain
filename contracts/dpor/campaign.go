@@ -30,14 +30,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// Backend wraps all methods required for chequebook operation.
+// Backend wraps all methods required for campaign operation.
 type Backend interface {
 	bind.ContractBackend
 	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
 	BalanceAt(ctx context.Context, address common.Address, blockNum *big.Int) (*big.Int, error)
 }
 
-// swarm domain name registry and resolver
 type Campaign struct {
 	*contract.CampaignSession
 	contractBackend bind.ContractBackend

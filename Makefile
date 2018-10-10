@@ -2,7 +2,7 @@
 # with Go source code. If you know what GOPATH is then you probably
 # don't need to bother with make.
 
-.PHONY: cpchain android ios cpchain-cross swarm evm all test clean
+.PHONY: cpchain android ios cpchain-cross evm all test clean
 .PHONY: cpchain-linux cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-mips64 cpchain-linux-mips64le
 .PHONY: cpchain-linux-arm cpchain-linux-arm-5 cpchain-linux-arm-6 cpchain-linux-arm-7 cpchain-linux-arm64
 .PHONY: cpchain-darwin cpchain-darwin-386 cpchain-darwin-amd64
@@ -15,11 +15,6 @@ cpchain:
 	build/env.sh go run build/ci.go install ./cmd/cpchain
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/cpchain\" to launch cpchain."
-
-swarm:
-	build/env.sh go run build/ci.go install ./cmd/swarm
-	@echo "Done building."
-	@echo "Run \"$(GOBIN)/swarm\" to launch swarm."
 
 all:
 	build/env.sh go run build/ci.go install

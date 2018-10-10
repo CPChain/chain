@@ -131,9 +131,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	switch config.PrivateTx.RemoteDBType {
 	case private.IPFS:
 		remoteDB = ethdb.NewIpfsDB(config.PrivateTx.RemoteDBParams)
-	case private.Swarm:
-		// TODO: implement it
-		panic("implement it.")
 	default:
 		remoteDB = ethdb.NewIpfsDB(private.DefaultIpfsUrl)
 	}

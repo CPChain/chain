@@ -77,7 +77,6 @@ var (
 		executablePath("cpchain"),
 		executablePath("puppeth"),
 		executablePath("rlpdump"),
-		executablePath("swarm"),
 		executablePath("wnode"),
 	}
 
@@ -106,10 +105,6 @@ var (
 		{
 			Name:        "rlpdump",
 			Description: "Developer utility tool that prints RLP structures.",
-		},
-		{
-			Name:        "swarm",
-			Description: "Ethereum Swarm daemon and tools",
 		},
 		{
 			Name:        "wnode",
@@ -343,6 +338,8 @@ func doLint(cmdline []string) {
 	if len(flag.CommandLine.Args()) > 0 {
 		packages = flag.CommandLine.Args()
 	}
+	packages = build.ExpandPackagesNoVendor(packages)
+
 	// Get metalinter and install all supported linters
 	build.MustRun(goTool("get", "gopkg.in/alecthomas/gometalinter.v2"))
 	build.MustRunCommand(filepath.Join(GOBIN, "gometalinter.v2"), "--install")
