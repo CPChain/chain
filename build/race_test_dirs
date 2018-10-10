@@ -79,7 +79,7 @@ p2p/enr
 p2p/nat
 p2p/netutil
 p2p/protocols
-p2p/simulations
+#p2p/simulations
 p2p/simulations/adapters
 p2p/simulations/examples
 p2p/simulations/pipes
