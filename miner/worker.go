@@ -282,7 +282,7 @@ func (self *worker) update() {
 				self.currentMu.Unlock()
 			} else {
 				// If we're mining, but nothing is being processed, wake on new transactions
-				if self.config.Clique != nil && self.config.Clique.Period == 0 {
+				if self.config.Dpor != nil && self.config.Dpor.Period == 0 {
 					self.commitNewWork()
 				}
 			}

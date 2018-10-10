@@ -13,7 +13,6 @@ cmd/smartcontract/config
 cmd/smartcontract/deploy
 cmd/utils
 consensus
-consensus/clique
 consensus/dpor
 consensus/dpor/election
 consensus/dpor/rpt
@@ -77,7 +76,7 @@ p2p
 p2p/discover
 p2p/discv5
 p2p/enr
-p2p/nat
+#p2p/nat
 p2p/netutil
 p2p/protocols
 #p2p/simulations
