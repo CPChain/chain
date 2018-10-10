@@ -164,28 +164,12 @@ func init() {
 	app.Commands = []cli.Command{
 		// See chaincmd.go:
 		initCommand,
-		importCommand,
-		exportCommand,
-		importPreimagesCommand,
-		exportPreimagesCommand,
-		copydbCommand,
-		removedbCommand,
-		dumpCommand,
-		// See monitorcmd.go:
-		monitorCommand,
+		cleanDbCommand,
 		// See accountcmd.go:
 		accountCommand,
 		walletCommand,
-		// See consolecmd.go:
-		consoleCommand,
-		attachCommand,
-		javascriptCommand,
 		// See misccmd.go:
-		makecacheCommand,
-		makedagCommand,
 		versionCommand,
-		bugCommand,
-		licenseCommand,
 		// See config.go
 		dumpConfigCommand,
 	}
@@ -193,7 +177,6 @@ func init() {
 
 	app.Flags = append(app.Flags, nodeFlags...)
 	app.Flags = append(app.Flags, rpcFlags...)
-	app.Flags = append(app.Flags, consoleFlags...)
 	app.Flags = append(app.Flags, debug.Flags...)
 	app.Flags = append(app.Flags, whisperFlags...)
 	app.Flags = append(app.Flags, metricsFlags...)
