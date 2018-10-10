@@ -1,3 +1,5 @@
+// Copyright 2018 The cpchain Authors
+
 // Copyright 2014 The go-ethereum Authors
 // This file is part of go-ethereum.
 //
@@ -14,32 +16,24 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-// cpchain is the official command-line client for Ethereum.
 package main
 
 import (
-	"fmt"
-	"math"
-	"os"
-	"runtime"
-	godebug "runtime/debug"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/cmd/utils"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/debug"
 	"bitbucket.org/cpchain/chain/node"
-	"github.com/elastic/gosigar"
-	"github.com/ethereum/go-ethereum/console"
+	"fmt"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
 	"gopkg.in/urfave/cli.v1"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"sort"
+	"strings"
+	"syscall"
 )
 
 const (
@@ -47,176 +41,45 @@ const (
 )
 
 var (
-	// Git SHA1 commit hash of the release (set via linker flags)
-	gitCommit = ""
-	// The app that holds all commands and flags.
-	app = utils.NewApp(gitCommit, "the go-ethereum command line interface")
-	// flags that configure the node
-	nodeFlags = []cli.Flag{
-		utils.IdentityFlag,
-		utils.UnlockedAccountFlag,
-		utils.PasswordFileFlag,
-		utils.BootnodesFlag,
-		utils.BootnodesV4Flag,
-		utils.BootnodesV5Flag,
-		utils.DataDirFlag,
-		utils.KeyStoreDirFlag,
-		utils.NoUSBFlag,
-		utils.DashboardEnabledFlag,
-		utils.DashboardAddrFlag,
-		utils.DashboardPortFlag,
-		utils.DashboardRefreshFlag,
-		utils.EthashCacheDirFlag,
-		utils.EthashCachesInMemoryFlag,
-		utils.EthashCachesOnDiskFlag,
-		utils.EthashDatasetDirFlag,
-		utils.EthashDatasetsInMemoryFlag,
-		utils.EthashDatasetsOnDiskFlag,
-		utils.TxPoolNoLocalsFlag,
-		utils.TxPoolJournalFlag,
-		utils.TxPoolRejournalFlag,
-		utils.TxPoolPriceLimitFlag,
-		utils.TxPoolPriceBumpFlag,
-		utils.TxPoolAccountSlotsFlag,
-		utils.TxPoolGlobalSlotsFlag,
-		utils.TxPoolAccountQueueFlag,
-		utils.TxPoolGlobalQueueFlag,
-		utils.TxPoolLifetimeFlag,
-		utils.FastSyncFlag,
-		utils.LightModeFlag,
-		utils.SyncModeFlag,
-		utils.GCModeFlag,
-		utils.LightServFlag,
-		utils.LightPeersFlag,
-		utils.LightKDFFlag,
-		utils.CacheFlag,
-		utils.CacheDatabaseFlag,
-		utils.CacheGCFlag,
-		utils.TrieCacheGenFlag,
-		utils.ListenPortFlag,
-		utils.MaxPeersFlag,
-		utils.MaxPendingPeersFlag,
-		utils.EtherbaseFlag,
-		utils.GasPriceFlag,
-		utils.MinerThreadsFlag,
-		utils.MiningEnabledFlag,
-		utils.TargetGasLimitFlag,
-		utils.NATFlag,
-		utils.NoDiscoverFlag,
-		utils.DiscoveryV5Flag,
-		utils.NetrestrictFlag,
-		utils.NodeKeyFileFlag,
-		utils.NodeKeyHexFlag,
-		utils.DeveloperFlag,
-		utils.DeveloperPeriodFlag,
-		utils.TestnetFlag,
-		utils.RinkebyFlag,
-		utils.VMEnableDebugFlag,
-		utils.NetworkIdFlag,
-		utils.RPCCORSDomainFlag,
-		utils.RPCVirtualHostsFlag,
-		utils.EthStatsURLFlag,
-		utils.MetricsEnabledFlag,
-		utils.FakePoWFlag,
-		utils.NoCompactionFlag,
-		utils.GpoBlocksFlag,
-		utils.GpoPercentileFlag,
-		utils.ExtraDataFlag,
-		utils.CpchainFlag,
-		configFileFlag,
-	}
-
-	rpcFlags = []cli.Flag{
-		utils.RPCEnabledFlag,
-		utils.RPCListenAddrFlag,
-		utils.RPCPortFlag,
-		utils.RPCApiFlag,
-		utils.WSEnabledFlag,
-		utils.WSListenAddrFlag,
-		utils.WSPortFlag,
-		utils.WSApiFlag,
-		utils.WSAllowedOriginsFlag,
-		utils.IPCDisabledFlag,
-		utils.IPCPathFlag,
-	}
-
-	whisperFlags = []cli.Flag{
-		utils.WhisperEnabledFlag,
-		utils.WhisperMaxMessageSizeFlag,
-		utils.WhisperMinPOWFlag,
-	}
-
-	metricsFlags = []cli.Flag{
-		utils.MetricsEnableInfluxDBFlag,
-		utils.MetricsInfluxDBEndpointFlag,
-		utils.MetricsInfluxDBDatabaseFlag,
-		utils.MetricsInfluxDBUsernameFlag,
-		utils.MetricsInfluxDBPasswordFlag,
-		utils.MetricsInfluxDBHostTagFlag,
-	}
+	// urfave/cli app
+	app = newApp()
 )
 
-func init() {
-	// Initialize the CLI app and start Geth
-	app.Action = geth
-	app.HideVersion = true // we have a command to print the version
-	app.Copyright = "Copyright 2013-2018 The go-ethereum Authors"
+func newApp() *cli.App {
+	app := cli.NewApp()
+	app.Name = filepath.Base(os.Args[0])
+	app.Action = runChain
+	app.Author = "cpchain authors"
+	app.Email = ""
+	// TODO @masy params and version
+	// app.Version = params.Version
+	app.Usage = "executable for the cpchain blockchain network"
+	// app.Copyright = "LGPL"
+	app.HideVersion = true
 	app.Commands = []cli.Command{
-		// See chaincmd.go:
 		initCommand,
 		cleanDbCommand,
-		// See accountcmd.go:
 		accountCommand,
 		walletCommand,
-		// See misccmd.go:
 		versionCommand,
-		// See config.go
 		dumpConfigCommand,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
-
 	app.Flags = append(app.Flags, nodeFlags...)
 	app.Flags = append(app.Flags, rpcFlags...)
 	app.Flags = append(app.Flags, debug.Flags...)
-	app.Flags = append(app.Flags, whisperFlags...)
-	app.Flags = append(app.Flags, metricsFlags...)
 
 	app.Before = func(ctx *cli.Context) error {
-		runtime.GOMAXPROCS(runtime.NumCPU())
-		if err := debug.Setup(ctx); err != nil {
-			return err
-		}
-		// Cap the cache allowance and tune the garbage colelctor
-		var mem gosigar.Mem
-		if err := mem.Get(); err == nil {
-			allowance := int(mem.Total / 1024 / 1024 / 3)
-			if cache := ctx.GlobalInt(utils.CacheFlag.Name); cache > allowance {
-				log.Warn("Sanitizing cache to Go's GC limits", "provided", cache, "updated", allowance)
-				ctx.GlobalSet(utils.CacheFlag.Name, strconv.Itoa(allowance))
-			}
-		}
-		// Ensure Go's GC ignores the database cache for trigger percentage
-		cache := ctx.GlobalInt(utils.CacheFlag.Name)
-		gogc := math.Max(20, math.Min(100, 100/(float64(cache)/1024)))
-
-		log.Debug("Sanitizing Go's GC trigger", "percent", int(gogc))
-		godebug.SetGCPercent(int(gogc))
-
-		// Start metrics export if enabled
-		utils.SetupMetrics(ctx)
-
-		// Start system runtime metrics collection
-		go metrics.CollectProcessMetrics(3 * time.Second)
-
-		utils.SetupNetwork(ctx)
+		// placeholder
 		return nil
 	}
 
 	app.After = func(ctx *cli.Context) error {
-		debug.Exit()
-		console.Stdin.Close() // Resets terminal mode.
+		// placeholder
 		return nil
 	}
+
+	return app
 }
 
 func main() {
@@ -229,11 +92,33 @@ func main() {
 // cpchain is the main entry point into the system if no special subcommand is ran.
 // It creates a default node based on the command line arguments and runs it in
 // blocking mode, waiting for it to be shut down.
-func geth(ctx *cli.Context) error {
+func runChain(ctx *cli.Context) error {
 	node := makeFullNode(ctx)
 	startNode(ctx, node)
 	node.Wait()
 	return nil
+}
+
+func StartNode(stack *node.Node) {
+	if err := stack.Start(); err != nil {
+		Fatalf("Error starting protocol stack: %v", err)
+	}
+	go func() {
+		sigc := make(chan os.Signal, 1)
+		signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
+		defer signal.Stop(sigc)
+		<-sigc
+		log.Info("Got interrupt, shutting down...")
+		go stack.Stop()
+		for i := 10; i > 0; i-- {
+			<-sigc
+			if i > 1 {
+				log.Warn("Already shutting down, interrupt more to panic.", "times", i-1)
+			}
+		}
+		debug.Exit() // ensure trace and CPU profile data is flushed.
+		debug.LoudPanic("boom")
+	}()
 }
 
 // startNode boots up the system node and all registered protocols, after which
@@ -243,13 +128,13 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 	debug.Memsize.Add("node", stack)
 
 	// Start up the node itself
-	utils.StartNode(stack)
+	StartNode(stack)
 
 	// Unlock any account specifically requested
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
-	passwords := utils.MakePasswordList(ctx)
-	unlocks := strings.Split(ctx.GlobalString(utils.UnlockedAccountFlag.Name), ",")
+	passwords := MakePasswordList(ctx)
+	unlocks := strings.Split(ctx.GlobalString(UnlockedAccountFlag.Name), ",")
 	for i, account := range unlocks {
 		if trimmed := strings.TrimSpace(account); trimmed != "" {
 			unlockAccount(ctx, ks, trimmed, i, passwords)
@@ -263,7 +148,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		// Create a chain state reader for self-derivation
 		rpcClient, err := stack.Attach()
 		if err != nil {
-			utils.Fatalf("Failed to attach to self: %v", err)
+			Fatalf("Failed to attach to self: %v", err)
 		}
 		stateReader := ethclient.NewClient(rpcClient)
 
@@ -297,17 +182,13 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		}
 	}()
 	// Start auxiliary services if enabled
-	if ctx.GlobalBool(utils.MiningEnabledFlag.Name) || ctx.GlobalBool(utils.DeveloperFlag.Name) {
-		// Mining only makes sense if a full Ethereum node is running
-		if ctx.GlobalBool(utils.LightModeFlag.Name) || ctx.GlobalString(utils.SyncModeFlag.Name) == "light" {
-			utils.Fatalf("Light clients do not support mining")
-		}
+	if ctx.GlobalBool(MiningEnabledFlag.Name) {
 		var ethereum *eth.Ethereum
 		if err := stack.Service(&ethereum); err != nil {
-			utils.Fatalf("Ethereum service not running: %v", err)
+			Fatalf("Ethereum service not running: %v", err)
 		}
 		// Use a reduced number of threads if requested
-		if threads := ctx.GlobalInt(utils.MinerThreadsFlag.Name); threads > 0 {
+		if threads := ctx.GlobalInt(MinerThreadsFlag.Name); threads > 0 {
 			type threaded interface {
 				SetThreads(threads int)
 			}
@@ -316,10 +197,10 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 			}
 		}
 		// Set the gas price to the limits from the CLI and start mining
-		ethereum.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
+		ethereum.TxPool().SetGasPrice(GlobalBig(ctx, GasPriceFlag.Name))
 
 		if err := ethereum.StartMining(true); err != nil {
-			utils.Fatalf("Failed to start mining: %v", err)
+			Fatalf("Failed to start mining: %v", err)
 		}
 	}
 }

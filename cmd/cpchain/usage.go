@@ -24,7 +24,6 @@ import (
 
 	"strings"
 
-	"bitbucket.org/cpchain/chain/cmd/utils"
 	"bitbucket.org/cpchain/chain/internal/debug"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -32,8 +31,6 @@ import (
 // AppHelpTemplate is the test template for the default, global app help topic.
 var AppHelpTemplate = `NAME:
    {{.App.Name}} - {{.App.Usage}}
-
-   Copyright 2013-2018 The go-ethereum Authors
 
 USAGE:
    {{.App.HelpName}} [options]{{if .App.Commands}} command [command options]{{end}} {{if .App.ArgsUsage}}{{.App.ArgsUsage}}{{else}}[arguments...]{{end}}
@@ -68,171 +65,128 @@ var AppHelpFlagGroups = []flagGroup{
 		Name: "ETHEREUM",
 		Flags: []cli.Flag{
 			configFileFlag,
-			utils.DataDirFlag,
-			utils.KeyStoreDirFlag,
-			utils.NoUSBFlag,
-			utils.NetworkIdFlag,
-			utils.TestnetFlag,
-			utils.RinkebyFlag,
-			utils.SyncModeFlag,
-			utils.GCModeFlag,
-			utils.EthStatsURLFlag,
-			utils.IdentityFlag,
-			utils.LightServFlag,
-			utils.LightPeersFlag,
-			utils.LightKDFFlag,
-			utils.CpchainFlag,
-		},
-	},
-	{Name: "DEVELOPER CHAIN",
-		Flags: []cli.Flag{
-			utils.DeveloperFlag,
-			utils.DeveloperPeriodFlag,
+			DataDirFlag,
+			KeyStoreDirFlag,
+			NetworkIdFlag,
+			SyncModeFlag,
+			GCModeFlag,
+			IdentityFlag,
+			LightServFlag,
+			CpchainFlag,
 		},
 	},
 	{
 		Name: "ETHASH",
 		Flags: []cli.Flag{
-			utils.EthashCacheDirFlag,
-			utils.EthashCachesInMemoryFlag,
-			utils.EthashCachesOnDiskFlag,
-			utils.EthashDatasetDirFlag,
-			utils.EthashDatasetsInMemoryFlag,
-			utils.EthashDatasetsOnDiskFlag,
+			EthashCacheDirFlag,
+			EthashCachesInMemoryFlag,
+			EthashCachesOnDiskFlag,
+			EthashDatasetDirFlag,
+			EthashDatasetsInMemoryFlag,
+			EthashDatasetsOnDiskFlag,
 		},
 	},
-	//{
-	//	Name: "DASHBOARD",
-	//	Flags: []cli.Flag{
-	//		utils.DashboardEnabledFlag,
-	//		utils.DashboardAddrFlag,
-	//		utils.DashboardPortFlag,
-	//		utils.DashboardRefreshFlag,
-	//		utils.DashboardAssetsFlag,
-	//	},
-	//},
+
 	{
 		Name: "TRANSACTION POOL",
 		Flags: []cli.Flag{
-			utils.TxPoolNoLocalsFlag,
-			utils.TxPoolJournalFlag,
-			utils.TxPoolRejournalFlag,
-			utils.TxPoolPriceLimitFlag,
-			utils.TxPoolPriceBumpFlag,
-			utils.TxPoolAccountSlotsFlag,
-			utils.TxPoolGlobalSlotsFlag,
-			utils.TxPoolAccountQueueFlag,
-			utils.TxPoolGlobalQueueFlag,
-			utils.TxPoolLifetimeFlag,
+			TxPoolNoLocalsFlag,
+			TxPoolJournalFlag,
+			TxPoolRejournalFlag,
+			TxPoolPriceLimitFlag,
+			TxPoolPriceBumpFlag,
+			TxPoolAccountSlotsFlag,
+			TxPoolGlobalSlotsFlag,
+			TxPoolAccountQueueFlag,
+			TxPoolGlobalQueueFlag,
+			TxPoolLifetimeFlag,
 		},
 	},
+
 	{
 		Name: "PERFORMANCE TUNING",
 		Flags: []cli.Flag{
-			utils.CacheFlag,
-			utils.CacheDatabaseFlag,
-			utils.CacheGCFlag,
-			utils.TrieCacheGenFlag,
+			CacheFlag,
+			CacheDatabaseFlag,
+			CacheGCFlag,
+			TrieCacheGenFlag,
 		},
 	},
 	{
 		Name: "ACCOUNT",
 		Flags: []cli.Flag{
-			utils.UnlockedAccountFlag,
-			utils.PasswordFileFlag,
+			UnlockedAccountFlag,
+			PasswordFileFlag,
 		},
 	},
 	{
 		Name: "API AND CONSOLE",
 		Flags: []cli.Flag{
-			utils.RPCEnabledFlag,
-			utils.RPCListenAddrFlag,
-			utils.RPCPortFlag,
-			utils.RPCApiFlag,
-			utils.WSEnabledFlag,
-			utils.WSListenAddrFlag,
-			utils.WSPortFlag,
-			utils.WSApiFlag,
-			utils.WSAllowedOriginsFlag,
-			utils.IPCDisabledFlag,
-			utils.IPCPathFlag,
-			utils.RPCCORSDomainFlag,
-			utils.RPCVirtualHostsFlag,
-			utils.JSpathFlag,
-			utils.ExecFlag,
-			utils.PreloadJSFlag,
+			RPCEnabledFlag,
+			RPCListenAddrFlag,
+			RPCPortFlag,
+			RPCApiFlag,
+			WSEnabledFlag,
+			WSListenAddrFlag,
+			WSPortFlag,
+			WSApiFlag,
+			WSAllowedOriginsFlag,
+			IPCDisabledFlag,
+			IPCPathFlag,
+			RPCCORSDomainFlag,
+			RPCVirtualHostsFlag,
+			JSpathFlag,
+			ExecFlag,
+			PreloadJSFlag,
 		},
 	},
 	{
 		Name: "NETWORKING",
 		Flags: []cli.Flag{
-			utils.BootnodesFlag,
-			utils.BootnodesV4Flag,
-			utils.BootnodesV5Flag,
-			utils.ListenPortFlag,
-			utils.MaxPeersFlag,
-			utils.MaxPendingPeersFlag,
-			utils.NATFlag,
-			utils.NoDiscoverFlag,
-			utils.DiscoveryV5Flag,
-			utils.NetrestrictFlag,
-			utils.NodeKeyFileFlag,
-			utils.NodeKeyHexFlag,
+			BootnodesFlag,
+			BootnodesV4Flag,
+			BootnodesV5Flag,
+			ListenPortFlag,
+			MaxPeersFlag,
+			MaxPendingPeersFlag,
+			NATFlag,
+			NoDiscoverFlag,
+			DiscoveryV5Flag,
+			NetrestrictFlag,
+			NodeKeyFileFlag,
+			NodeKeyHexFlag,
 		},
 	},
 	{
 		Name: "MINER",
 		Flags: []cli.Flag{
-			utils.MiningEnabledFlag,
-			utils.MinerThreadsFlag,
-			utils.EtherbaseFlag,
-			utils.TargetGasLimitFlag,
-			utils.GasPriceFlag,
-			utils.ExtraDataFlag,
+			MiningEnabledFlag,
+			MinerThreadsFlag,
+			EtherbaseFlag,
+			TargetGasLimitFlag,
+			GasPriceFlag,
+			ExtraDataFlag,
 		},
 	},
 	{
 		Name: "GAS PRICE ORACLE",
 		Flags: []cli.Flag{
-			utils.GpoBlocksFlag,
-			utils.GpoPercentileFlag,
+			GpoBlocksFlag,
+			GpoPercentileFlag,
 		},
 	},
 	{
 		Name: "VIRTUAL MACHINE",
 		Flags: []cli.Flag{
-			utils.VMEnableDebugFlag,
+			VMEnableDebugFlag,
 		},
 	},
 	{
 		Name: "LOGGING AND DEBUGGING",
 		Flags: append([]cli.Flag{
-			utils.FakePoWFlag,
-			utils.NoCompactionFlag,
+			FakePoWFlag,
+			NoCompactionFlag,
 		}, debug.Flags...),
-	},
-	{
-		Name: "METRICS AND STATS",
-		Flags: []cli.Flag{
-			utils.MetricsEnabledFlag,
-			utils.MetricsEnableInfluxDBFlag,
-			utils.MetricsInfluxDBEndpointFlag,
-			utils.MetricsInfluxDBDatabaseFlag,
-			utils.MetricsInfluxDBUsernameFlag,
-			utils.MetricsInfluxDBPasswordFlag,
-			utils.MetricsInfluxDBHostTagFlag,
-		},
-	},
-	{
-		Name:  "WHISPER (EXPERIMENTAL)",
-		Flags: whisperFlags,
-	},
-	{
-		Name: "DEPRECATED",
-		Flags: []cli.Flag{
-			utils.FastSyncFlag,
-			utils.LightModeFlag,
-		},
 	},
 	{
 		Name: "MISC",
@@ -314,7 +268,7 @@ func init() {
 			}
 			// Render out custom usage screen
 			originalHelpPrinter(w, tmpl, helpData{data, AppHelpFlagGroups})
-		} else if tmpl == utils.CommandHelpTemplate {
+		} else if tmpl == CommandHelpTemplate {
 			// Iterate over all command specific flags and categorize them
 			categorized := make(map[string][]cli.Flag)
 			for _, flag := range data.(cli.Command).Flags {

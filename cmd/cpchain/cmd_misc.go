@@ -17,22 +17,19 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"runtime"
-	"strconv"
-	"strings"
-
-	"bitbucket.org/cpchain/chain/cmd/utils"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/params"
+	"fmt"
 	"gopkg.in/urfave/cli.v1"
+	"os"
+	"runtime"
+	"strconv"
 )
 
 var (
 	versionCommand = cli.Command{
-		Action:    utils.MigrateFlags(version),
+		Action:    MigrateFlags(version),
 		Name:      "version",
 		Usage:     "Print version numbers",
 		ArgsUsage: " ",
@@ -47,11 +44,11 @@ The output of this command is supposed to be machine-readable.
 func makecache(ctx *cli.Context) error {
 	args := ctx.Args()
 	if len(args) != 2 {
-		utils.Fatalf(`Usage: cpchain makecache <block number> <outputdir>`)
+		Fatalf(`Usage: cpchain makecache <block number> <outputdir>`)
 	}
 	block, err := strconv.ParseUint(args[0], 0, 64)
 	if err != nil {
-		utils.Fatalf("Invalid block number: %v", err)
+		Fatalf("Invalid block number: %v", err)
 	}
 	ethash.MakeCache(block, args[1])
 
@@ -62,11 +59,11 @@ func makecache(ctx *cli.Context) error {
 func makedag(ctx *cli.Context) error {
 	args := ctx.Args()
 	if len(args) != 2 {
-		utils.Fatalf(`Usage: cpchain makedag <block number> <outputdir>`)
+		Fatalf(`Usage: cpchain makedag <block number> <outputdir>`)
 	}
 	block, err := strconv.ParseUint(args[0], 0, 64)
 	if err != nil {
-		utils.Fatalf("Invalid block number: %v", err)
+		Fatalf("Invalid block number: %v", err)
 	}
 	ethash.MakeDataset(block, args[1])
 
@@ -74,11 +71,7 @@ func makedag(ctx *cli.Context) error {
 }
 
 func version(ctx *cli.Context) error {
-	fmt.Println(strings.Title(clientIdentifier))
 	fmt.Println("Version:", params.Version)
-	if gitCommit != "" {
-		fmt.Println("Git Commit:", gitCommit)
-	}
 	fmt.Println("Architecture:", runtime.GOARCH)
 	fmt.Println("Protocol Versions:", eth.ProtocolVersions)
 	fmt.Println("Network Id:", eth.DefaultConfig.NetworkId)
