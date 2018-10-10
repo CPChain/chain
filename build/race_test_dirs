@@ -20,11 +20,12 @@ consensus/dpor/rpt
 consensus/ethash
 consensus/misc
 #console
-contracts/admission
-contracts/dpor
-contracts/dpor/contract
-contracts/proxy
+contracts/dpor/contract/admission
+contracts/dpor/contract/campaign
 contracts/proxy/contract
+contracts/proxy
+contracts/dpor/contract/signerRegister
+#contracts/proxy/contract
 #core
 core/asm
 core/bloombits

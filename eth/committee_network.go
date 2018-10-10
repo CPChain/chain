@@ -9,7 +9,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contract"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto/rsa_"
 	"bitbucket.org/cpchain/chain/p2p"
 	"github.com/ethereum/go-ethereum/common"
