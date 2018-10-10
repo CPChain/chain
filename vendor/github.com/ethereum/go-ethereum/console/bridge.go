@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/cpchain/chain/accounts/usbwallet"
+	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/robertkrimen/otto"

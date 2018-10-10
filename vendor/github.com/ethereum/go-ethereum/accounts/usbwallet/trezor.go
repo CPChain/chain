@@ -28,7 +28,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/usbwallet/internal/trezor"
+	"github.com/ethereum/go-ethereum/accounts/usbwallet/internal/trezor"
 	"bitbucket.org/cpchain/chain/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"

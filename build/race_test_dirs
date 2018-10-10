@@ -3,8 +3,8 @@ accounts/abi
 accounts/abi/bind
 accounts/abi/bind/backends
 accounts/keystore
-accounts/usbwallet
-accounts/usbwallet/internal/trezor
+#accounts/usbwallet
+#accounts/usbwallet/internal/trezor
 #admission
 #cmd/geth
 cmd/internal/browser
