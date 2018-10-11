@@ -1,6 +1,16 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -21,19 +31,10 @@ import (
 	"bitbucket.org/cpchain/chain/p2p/nat"
 	"bitbucket.org/cpchain/chain/p2p/netutil"
 	"bitbucket.org/cpchain/chain/params"
-	"crypto/ecdsa"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/urfave/cli.v1"
-	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
 )
 
 // Fatalf formats a message to standard error and exits the program.

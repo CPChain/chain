@@ -17,14 +17,15 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/consensus/ethash"
-	"bitbucket.org/cpchain/chain/eth"
-	"bitbucket.org/cpchain/chain/params"
 	"fmt"
-	"gopkg.in/urfave/cli.v1"
 	"os"
 	"runtime"
 	"strconv"
+
+	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/eth"
+	"bitbucket.org/cpchain/chain/params"
+	"gopkg.in/urfave/cli.v1"
 )
 
 var (

@@ -17,11 +17,6 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/eth"
-	"bitbucket.org/cpchain/chain/node"
-	"bitbucket.org/cpchain/chain/params"
 	"encoding"
 	"errors"
 	"flag"
@@ -33,6 +28,11 @@ import (
 	"runtime"
 	"strings"
 
+	"bitbucket.org/cpchain/chain/core"
+	"bitbucket.org/cpchain/chain/core/state"
+	"bitbucket.org/cpchain/chain/eth"
+	"bitbucket.org/cpchain/chain/node"
+	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common/math"
 	"gopkg.in/urfave/cli.v1"
 )

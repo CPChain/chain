@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/cmd/utils"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"github.com/ethereum/go-ethereum/common"
@@ -128,7 +127,8 @@ func setup(t *testing.T) (*SignerAPI, chan string) {
 
 	db, err := NewAbiDBFromFile("../../cmd/clef/4byte.json")
 	if err != nil {
-		utils.Fatalf(err.Error())
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 	var (
 		ui  = &HeadlessUI{controller}
