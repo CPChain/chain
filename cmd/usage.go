@@ -16,7 +16,7 @@
 
 // Contains the cpchain command usage template and generator.
 
-package main
+package cmd
 
 import (
 	"io"
