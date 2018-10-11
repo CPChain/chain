@@ -314,7 +314,7 @@ func doTest(cmdline []string) {
 func doRaceTest(cmdline []string) {
 	flag.CommandLine.Parse(cmdline)
 	env := build.Env()
-	packages := build.ReadPackagesList("build/race_test_dirs")
+	packages := build.ReadExcludedPackagesList("build/race_test_dirs")
 
 	// Run analysis tools before the tests.
 	build.MustRun(goTool("vet", packages...))

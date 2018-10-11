@@ -190,30 +190,44 @@ func ExpandPackagesNoVendor(patterns []string) []string {
 }
 
 // Read package list from build/race_test_dirs
-func ReadPackagesList(path string) []string {
+func ReadExcludedPackagesList(excludePath string) []string {
 	// TestDirPrefix
-	packages := []string{TestDirPrefix}
-	fi, err := os.Open(path)
+	packages := []string{}
+	fi, err := os.Open(excludePath)
 	defer fi.Close()
+
+	// Exclude package set
+	excludeSet := map[string]bool{}
 	if err != nil {
-		log.Fatal(err)
-		return packages
+		log.Println("Warning: can't find " + excludePath)
+	} else {
+		br := bufio.NewReader(fi)
+		for {
+			packageName, _, c := br.ReadLine()
+			if c == io.EOF {
+				break
+			}
+			packageNameString := string(packageName)
+			line := strings.TrimSpace(packageNameString)
+			if line == "" || line[0] == '#' {
+				continue
+			}
+			excludeSet[TestDirPrefix+packageNameString] = true
+		}
 	}
 
-	br := bufio.NewReader(fi)
-	for {
-		packageName, _, c := br.ReadLine()
-		if c == io.EOF {
-			break
-		}
-		packageNameString := string(packageName)
-		line := strings.TrimSpace(packageNameString)
-		if line == "" || line[0] == '#' {
+	// filter exclude path
+	cmd := GoTool("list", "./...")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf("package listing failed: %v\n%s", err, string(out))
+	}
+	for _, line := range strings.Split(string(out), "\n") {
+		_, isExcluded := excludeSet[line]
+		if isExcluded {
 			continue
 		}
-
-		fmt.Println(packageNameString)
-		packages = append(packages, TestDirPrefix+packageNameString)
+		packages = append(packages, strings.TrimSpace(line))
 	}
 	return packages
 }
