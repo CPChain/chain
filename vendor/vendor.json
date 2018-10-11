@@ -160,11 +160,6 @@
 			"revision": ""
 		},
 		{
-			"checksumSHA1": "s/rFAfH1BQYBdcYfV9Pzdi6/SYs=",
-			"path": "github.com/ethereum/go-ethereum/les",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "KSRJC/V4LkGTakqzakXY/Ces0sw=",
 			"path": "github.com/ethereum/go-ethereum/log",
 			"revision": ""
