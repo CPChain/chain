@@ -3,6 +3,8 @@ package admission
 import (
 	"math"
 	"time"
+
+	"bitbucket.org/cpchain/chain/admission/ethash"
 )
 
 type workStatus = uint32
@@ -18,17 +20,11 @@ const (
 
 // Config admission control's configuration.
 type Config struct {
+	EthashConfig ethash.Config
+	CPUConfig    CPUConfig
 	// CampaignContractAddress public campaign's contract address.
 	// common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290")
 	CampaignContractAddress string
-	// MemoryDifficulty memory minimum requirements.
-	MemoryDifficulty int64
-	// CPUDifficulty cpu minimum requirements.
-	CPUDifficulty int64
-	// MemoryLifeTime memory pow work max time to live.
-	MemoryLifeTime time.Duration
-	// CPULifeTime cpu pow work max time to live.
-	CPULifeTime time.Duration
 	// Deposit to mortgage
 	Deposit int64
 	// MinimumRpt minimum rpt
@@ -37,27 +33,40 @@ type Config struct {
 	NumberOfCampaignTimes int64
 }
 
-var (
-	defaultCPUDifficulty           = int64(55)
-	defaultMemoryDifficulty        = int64(55)
-	defaultCPULifeTime             = 1 * 60 * time.Second
-	defaultMemoryLifeTime          = 1 * 60 * time.Second
-	defaultCampaignContractAddress = "0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"
-	defaultDeposit                 = int64(50)
-	defaultMinimumRpt              = int64(50)
-	defaultNumberOfCampaignTimes   = int64(1)
-)
+// CPUConfig cpu pow config
+type CPUConfig struct {
+	Difficulty int64
+	LifeTime   time.Duration
+}
+
+// DefaultCampaignContractAddress default campaign contract address
+var DefaultCampaignContractAddress = "0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"
+
+// DefaultEthashConfig default ethash config
+var DefaultEthashConfig = ethash.Config{
+	Difficulty:     int64(55),
+	LifeTime:       1 * 60 * time.Second,
+	CacheDir:       "ethash",
+	CachesInMem:    2,
+	CachesOnDisk:   3,
+	DatasetsInMem:  1,
+	DatasetsOnDisk: 2,
+}
+
+// DefaultCPUConfig default cpu config
+var DefaultCPUConfig = CPUConfig{
+	Difficulty: int64(55),
+	LifeTime:   1 * 60 * time.Second,
+}
 
 // DefaultConfig default admission config.
 var DefaultConfig = Config{
-	CampaignContractAddress: defaultCampaignContractAddress,
-	CPUDifficulty:           defaultCPUDifficulty,
-	MemoryDifficulty:        defaultMemoryDifficulty,
-	MemoryLifeTime:          defaultMemoryLifeTime,
-	CPULifeTime:             defaultCPULifeTime,
-	Deposit:                 defaultDeposit,
-	MinimumRpt:              defaultMinimumRpt,
-	NumberOfCampaignTimes:   defaultNumberOfCampaignTimes,
+	CPUConfig:               DefaultCPUConfig,
+	EthashConfig:            DefaultEthashConfig,
+	CampaignContractAddress: DefaultCampaignContractAddress,
+	Deposit:                 int64(50),
+	MinimumRpt:              int64(50),
+	NumberOfCampaignTimes:   int64(1),
 }
 
 // ProofInfo is used to send to contract

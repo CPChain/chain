@@ -16,12 +16,16 @@ func newCPU() *cpuWork {
 	alloc := core.GenesisAlloc{
 		addr: {Balance: big.NewInt(1000000000)},
 	}
-	mock := newMockBackend(alloc)
-	return newCPUWork(5, common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"), mock.CurrentBlock(), 60*time.Second)
+	chain := newChainReader(alloc)
+	config := CPUConfig{
+		Difficulty: 5,
+		LifeTime:   1 * 60 * time.Second,
+	}
+	return newCPUWork(config, common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"), chain.CurrentHeader())
 }
 
-// TestProve tests cpu sub work prove
-func TestProve(t *testing.T) {
+// TestCPUProve tests cpu sub work prove
+func TestCPUProve(t *testing.T) {
 	cpu := newCPU()
 	abort := make(chan struct{})
 	wg := new(sync.WaitGroup)
@@ -30,13 +34,13 @@ func TestProve(t *testing.T) {
 	cpu.prove(abort, wg)
 	wg.Wait()
 
-	if cpu.nonce != 17 {
-		t.Fatalf("want 17, but %d", cpu.nonce)
+	if cpu.nonce != 1 {
+		t.Fatalf("want 1, but %d", cpu.nonce)
 	}
 }
 
-// TestProveAbort tests cpu sub work when sends abort signal
-func TestProveAbort(t *testing.T) {
+// TestCPUProveAbort tests cpu sub work when sends abort signal
+func TestCPUProveAbort(t *testing.T) {
 	cpu := newCPU()
 
 	abort := make(chan struct{})
@@ -52,8 +56,8 @@ func TestProveAbort(t *testing.T) {
 	}
 }
 
-// TestProveTimeOut tests prove when timeout
-func TestProveTimeout(t *testing.T) {
+// TestCPUProveTimeOut tests prove when timeout
+func TestCPUProveTimeout(t *testing.T) {
 	cpu := newCPU()
 	abort := make(chan struct{})
 	wg := new(sync.WaitGroup)

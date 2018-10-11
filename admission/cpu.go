@@ -19,9 +19,9 @@ type cpuWork struct {
 }
 
 // newCPUWork returns a new instance of cpuWork
-func newCPUWork(difficulty int64, address common.Address, block *types.Block, lifeTime time.Duration) *cpuWork {
+func newCPUWork(config CPUConfig, address common.Address, header *types.Header) *cpuWork {
 	return &cpuWork{
-		pow: newPow(difficulty, address, block, lifeTime),
+		pow: newPow(config.Difficulty, config.LifeTime, address, header),
 	}
 }
 
@@ -46,7 +46,7 @@ func (cpu *cpuWork) makeData() []byte {
 	return bytes.Join(
 		[][]byte{
 			cpu.address.Bytes(),
-			cpu.block.Hash().Bytes(),
+			cpu.header.HashNoNonce().Bytes(),
 			nonceBytes,
 		},
 		nil,

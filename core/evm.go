@@ -31,6 +31,9 @@ type ChainContext interface {
 	// Engine retrieves the chain's consensus engine.
 	Engine() consensus.Engine
 
+	// VerifyEthash return true if the memory nonce is valid
+	VerifyEthash(uint64, uint64, common.Address) bool
+
 	// GetHeader returns the hash corresponding to their hash.
 	GetHeader(common.Hash, uint64) *types.Header
 }
@@ -45,16 +48,17 @@ func NewEVMContext(msg Message, header *types.Header, chain ChainContext, author
 		beneficiary = *author
 	}
 	return vm.Context{
-		CanTransfer: CanTransfer,
-		Transfer:    Transfer,
-		GetHash:     GetHashFn(header, chain),
-		Origin:      msg.From(),
-		Coinbase:    beneficiary,
-		BlockNumber: new(big.Int).Set(header.Number),
-		Time:        new(big.Int).Set(header.Time),
-		Difficulty:  new(big.Int).Set(header.Difficulty),
-		GasLimit:    header.GasLimit,
-		GasPrice:    new(big.Int).Set(msg.GasPrice()),
+		VerifyEthash: chain.VerifyEthash,
+		CanTransfer:  CanTransfer,
+		Transfer:     Transfer,
+		GetHash:      GetHashFn(header, chain),
+		Origin:       msg.From(),
+		Coinbase:     beneficiary,
+		BlockNumber:  new(big.Int).Set(header.Number),
+		Time:         new(big.Int).Set(header.Time),
+		Difficulty:   new(big.Int).Set(header.Difficulty),
+		GasLimit:     header.GasLimit,
+		GasPrice:     new(big.Int).Set(msg.GasPrice()),
 	}
 }
 

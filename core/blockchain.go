@@ -55,6 +55,8 @@ var (
 	ErrNoGenesis = errors.New("Genesis not found in chain")
 )
 
+type VerifyEthashFunc func(uint64, uint64, common.Address) bool
+
 const (
 	bodyCacheLimit             = 256
 	blockCacheLimit            = 256
@@ -127,10 +129,11 @@ type BlockChain struct {
 	procInterrupt int32          // interrupt signaler for block processing
 	wg            sync.WaitGroup // chain processing wait group for shutting down
 
-	engine    consensus.Engine
-	processor Processor // block processor interface
-	validator Validator // block and state validator interface
-	vmConfig  vm.Config
+	verifyEthash VerifyEthashFunc
+	engine       consensus.Engine
+	processor    Processor // block processor interface
+	validator    Validator // block and state validator interface
+	vmConfig     vm.Config
 
 	badBlocks     *lru.Cache // Bad block cache
 	pendingBlocks *lru.Cache // not enough signatures block cache
@@ -1711,4 +1714,12 @@ func (bc *BlockChain) RemoteDB() ethdb.RemoteDatabase {
 
 func (bc *BlockChain) RsaPrivateKey() *rsa.PrivateKey {
 	return bc.rsaPrivateKey
+}
+
+func (bc *BlockChain) SetVerifyEthashFunc(verifyEthash VerifyEthashFunc) {
+	bc.verifyEthash = verifyEthash
+}
+
+func (bc *BlockChain) VerifyEthash(number, nonce uint64, signer common.Address) bool {
+	return bc.verifyEthash(number, nonce, signer)
 }

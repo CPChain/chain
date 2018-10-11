@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/miner"
+	"bitbucket.org/cpchain/chain/node/miner"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/common"

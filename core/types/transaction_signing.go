@@ -120,7 +120,7 @@ func (s PrivTxSupportEIP155Signer) Hash(tx *Transaction) common.Hash {
 		tx.data.Recipient,
 		tx.data.Amount,
 		tx.data.Payload,
-		tx.data.IsPrivate,
+		tx.data.Types,
 		s.chainId, uint(0), uint(0),
 	})
 }

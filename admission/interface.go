@@ -3,16 +3,11 @@ package admission
 import (
 	"sync"
 
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // go:generate abigen --sol contract/admission/campaign.sol --pkg contract --out contract/admission/campaign.go
-
-// Backend interface provides the common JSON-RPC API.
-type Backend interface {
-	CurrentBlock() *types.Block
-}
 
 // APIBackend interface provides the common JSON-RPC API.
 type APIBackend interface {
@@ -30,6 +25,9 @@ type APIBackend interface {
 
 	// GetProofInfo gets all work proofInfo
 	GetProofInfo() ProofInfo
+
+	// VerifyEthash returns true if memory's nonce is valid
+	VerifyEthash(number, nonce uint64, signer common.Address) bool
 }
 
 // ProofWorkBackend common API for proof work.

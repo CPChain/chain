@@ -16,52 +16,59 @@ var _ = (*txdataMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (t txdata) MarshalJSON() ([]byte, error) {
 	type txdata struct {
+		Types        hexutil.Uint64  `json:"type" gencodec:"required"`
 		AccountNonce hexutil.Uint64  `json:"nonce"    gencodec:"required"`
 		Price        *hexutil.Big    `json:"gasPrice" gencodec:"required"`
 		GasLimit     hexutil.Uint64  `json:"gas"      gencodec:"required"`
 		Recipient    *common.Address `json:"to"       rlp:"nil"`
 		Amount       *hexutil.Big    `json:"value"    gencodec:"required"`
 		Payload      hexutil.Bytes   `json:"input"    gencodec:"required"`
+		Extra        hexutil.Bytes   `json:"extra"    gencodec:"required"`
 		V            *hexutil.Big    `json:"v" gencodec:"required"`
 		R            *hexutil.Big    `json:"r" gencodec:"required"`
 		S            *hexutil.Big    `json:"s" gencodec:"required"`
 		Hash         *common.Hash    `json:"hash" rlp:"-"`
-		IsPrivate    bool            `json:"private" gencodec:"required"`
 	}
 	var enc txdata
+	enc.Types = hexutil.Uint64(t.Types)
 	enc.AccountNonce = hexutil.Uint64(t.AccountNonce)
 	enc.Price = (*hexutil.Big)(t.Price)
 	enc.GasLimit = hexutil.Uint64(t.GasLimit)
 	enc.Recipient = t.Recipient
 	enc.Amount = (*hexutil.Big)(t.Amount)
 	enc.Payload = t.Payload
+	enc.Extra = t.Extra
 	enc.V = (*hexutil.Big)(t.V)
 	enc.R = (*hexutil.Big)(t.R)
 	enc.S = (*hexutil.Big)(t.S)
 	enc.Hash = t.Hash
-	enc.IsPrivate = t.IsPrivate
 	return json.Marshal(&enc)
 }
 
 // UnmarshalJSON unmarshals from JSON.
 func (t *txdata) UnmarshalJSON(input []byte) error {
 	type txdata struct {
+		Types        *hexutil.Uint64 `json:"type" gencodec:"required"`
 		AccountNonce *hexutil.Uint64 `json:"nonce"    gencodec:"required"`
 		Price        *hexutil.Big    `json:"gasPrice" gencodec:"required"`
 		GasLimit     *hexutil.Uint64 `json:"gas"      gencodec:"required"`
 		Recipient    *common.Address `json:"to"       rlp:"nil"`
 		Amount       *hexutil.Big    `json:"value"    gencodec:"required"`
 		Payload      *hexutil.Bytes  `json:"input"    gencodec:"required"`
+		Extra        *hexutil.Bytes  `json:"extra"    gencodec:"required"`
 		V            *hexutil.Big    `json:"v" gencodec:"required"`
 		R            *hexutil.Big    `json:"r" gencodec:"required"`
 		S            *hexutil.Big    `json:"s" gencodec:"required"`
 		Hash         *common.Hash    `json:"hash" rlp:"-"`
-		IsPrivate    *bool           `json:"private" gencodec:"required"`
 	}
 	var dec txdata
 	if err := json.Unmarshal(input, &dec); err != nil {
 		return err
 	}
+	if dec.Types == nil {
+		return errors.New("missing required field 'type' for txdata")
+	}
+	t.Types = uint64(*dec.Types)
 	if dec.AccountNonce == nil {
 		return errors.New("missing required field 'nonce' for txdata")
 	}
@@ -85,6 +92,10 @@ func (t *txdata) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'input' for txdata")
 	}
 	t.Payload = *dec.Payload
+	if dec.Extra == nil {
+		return errors.New("missing required field 'extra' for txdata")
+	}
+	t.Extra = *dec.Extra
 	if dec.V == nil {
 		return errors.New("missing required field 'v' for txdata")
 	}
@@ -100,9 +111,5 @@ func (t *txdata) UnmarshalJSON(input []byte) error {
 	if dec.Hash != nil {
 		t.Hash = dec.Hash
 	}
-	if dec.IsPrivate == nil {
-		return errors.New("missing required field 'private' for txdata")
-	}
-	t.IsPrivate = *dec.IsPrivate
 	return nil
 }
