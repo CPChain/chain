@@ -12,7 +12,7 @@ GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
 cpchain:
-	build/env.sh go run build/ci.go install ./cmd/cpchain
+	build/env.sh go run build/ci.go install ./cmd
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/cpchain\" to launch cpchain."
 
