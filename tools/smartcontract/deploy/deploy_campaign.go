@@ -2,20 +2,19 @@ package deploy
 
 import (
 	"log"
-	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/cmd/smartcontract/config"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contract/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
+	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func DeployCampaignVerify() common.Address {
+func DeployCampaign() common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect()
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
 	auth := bind.NewKeyedTransactor(privateKey)
-	contractAddress, tx, _, err := campaignVerify.DeployAdmission(auth, client, new(big.Int).SetUint64(config.DefaultCPUDifficulty), new(big.Int).SetUint64(config.DefaultMemoryDifficulty))
+	contractAddress, tx, _, err := contract.DeployCampaign(auth, client)
 	if err != nil {
 		log.Fatal(err)
 	}

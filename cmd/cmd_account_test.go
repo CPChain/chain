@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package cmd
 
 import (
 	"io/ioutil"
@@ -35,7 +35,7 @@ import (
 func tmpDatadirWithKeystore(t *testing.T) string {
 	datadir := tmpdir(t)
 	keystore := filepath.Join(datadir, "keystore")
-	source := filepath.Join("..", "..", "accounts", "keystore", "testdata", "keystore")
+	source := filepath.Join("..", "accounts", "keystore", "testdata", "keystore")
 	if err := cp.CopyAll(keystore, source); err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ Account #2: {289d485d9771714cce91d3393d764e1311907acc} keystore://{{.Datadir}}/k
 }
 
 func TestAccountNew(t *testing.T) {
-	geth := runGeth(t, "account", "new", "--lightkdf")
+	geth := runGeth(t, "account", "new")
 	defer geth.ExpectExit()
 	geth.Expect(`
 Your new account is locked with a password. Please give a password. Do not forget this password.
@@ -79,7 +79,7 @@ Repeat passphrase: {{.InputLine "foobar"}}
 }
 
 func TestAccountNewBadRepeat(t *testing.T) {
-	geth := runGeth(t, "account", "new", "--lightkdf")
+	geth := runGeth(t, "account", "new")
 	defer geth.ExpectExit()
 	geth.Expect(`
 Your new account is locked with a password. Please give a password. Do not forget this password.
@@ -93,7 +93,7 @@ Fatal: Passphrases do not match
 func TestAccountUpdate(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
 	geth := runGeth(t, "account", "update",
-		"--datadir", datadir, "--lightkdf",
+		"--datadir", datadir,
 		"f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
 	geth.Expect(`
@@ -107,7 +107,7 @@ Repeat passphrase: {{.InputLine "foobar2"}}
 }
 
 func TestWalletImport(t *testing.T) {
-	geth := runGeth(t, "wallet", "import", "--lightkdf", "testdata/guswallet.json")
+	geth := runGeth(t, "wallet", "import", "testdata/guswallet.json")
 	defer geth.ExpectExit()
 	geth.Expect(`
 !! Unsupported terminal, password will be echoed.
@@ -122,7 +122,7 @@ Address: {d4584b5f6229b7be90727b0fc8c6b91bb427821f}
 }
 
 func TestWalletImportBadPassword(t *testing.T) {
-	geth := runGeth(t, "wallet", "import", "--lightkdf", "testdata/guswallet.json")
+	geth := runGeth(t, "wallet", "import", "testdata/guswallet.json")
 	defer geth.ExpectExit()
 	geth.Expect(`
 !! Unsupported terminal, password will be echoed.
@@ -233,7 +233,7 @@ Fatal: Failed to unlock account 0 (could not decrypt key with given passphrase)
 }
 
 func TestUnlockFlagAmbiguous(t *testing.T) {
-	store := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
+	store := filepath.Join("..", "accounts", "keystore", "testdata", "dupes")
 	geth := runGeth(t,
 		"--keystore", store, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a",
@@ -271,7 +271,7 @@ In order to avoid this warning, you need to remove the following duplicate key f
 }
 
 func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
-	store := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
+	store := filepath.Join("..", "accounts", "keystore", "testdata", "dupes")
 	geth := runGeth(t,
 		"--keystore", store, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")

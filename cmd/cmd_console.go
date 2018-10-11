@@ -14,31 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package cmd
 
 import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"syscall"
 
-	"bitbucket.org/cpchain/chain/cmd/utils"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/console"
 	"gopkg.in/urfave/cli.v1"
 )
 
+// js related flags
+
 var (
-	consoleFlags = []cli.Flag{utils.JSpathFlag, utils.ExecFlag, utils.PreloadJSFlag}
+	consoleFlags = []cli.Flag{JSpathFlag, ExecFlag, PreloadJSFlag}
 
 	consoleCommand = cli.Command{
-		Action:   utils.MigrateFlags(localConsole),
+		Action:   MigrateFlags(localConsole),
 		Name:     "console",
 		Usage:    "Start an interactive JavaScript environment",
-		Flags:    append(append(append(nodeFlags, rpcFlags...), consoleFlags...), whisperFlags...),
+		Flags:    append(append(append(nodeFlags, rpcFlags...), consoleFlags...)),
 		Category: "CONSOLE COMMANDS",
 		Description: `
 The Geth console is an interactive shell for the JavaScript runtime environment
@@ -47,21 +47,21 @@ See https://github.com/ethereum/go-ethereum/wiki/JavaScript-Console.`,
 	}
 
 	attachCommand = cli.Command{
-		Action:    utils.MigrateFlags(remoteConsole),
+		Action:    MigrateFlags(remoteConsole),
 		Name:      "attach",
 		Usage:     "Start an interactive JavaScript environment (connect to node)",
 		ArgsUsage: "[endpoint]",
-		Flags:     append(consoleFlags, utils.DataDirFlag),
+		Flags:     append(consoleFlags, DataDirFlag),
 		Category:  "CONSOLE COMMANDS",
 		Description: `
 The Geth console is an interactive shell for the JavaScript runtime environment
 which exposes a node admin interface as well as the Ðapp JavaScript API.
 See https://github.com/ethereum/go-ethereum/wiki/JavaScript-Console.
-This command allows to open a console on a running cpchain node.`,
+This command allows to open a console on a running geth node.`,
 	}
 
 	javascriptCommand = cli.Command{
-		Action:    utils.MigrateFlags(ephemeralConsole),
+		Action:    MigrateFlags(ephemeralConsole),
 		Name:      "js",
 		Usage:     "Execute the specified JavaScript files",
 		ArgsUsage: "<jsfile> [jsfile...]",
@@ -73,7 +73,7 @@ JavaScript API. See https://github.com/ethereum/go-ethereum/wiki/JavaScript-Cons
 	}
 )
 
-// localConsole starts a new cpchain node, attaching a JavaScript console to it at the
+// localConsole starts a new geth node, attaching a JavaScript console to it at the
 // same time.
 func localConsole(ctx *cli.Context) error {
 	// Create and start the node based on the CLI flags
@@ -84,23 +84,23 @@ func localConsole(ctx *cli.Context) error {
 	// Attach to the newly started node and start the JavaScript console
 	client, err := node.Attach()
 	if err != nil {
-		utils.Fatalf("Failed to attach to the inproc cpchain: %v", err)
+		Fatalf("Failed to attach to the inproc geth: %v", err)
 	}
 	config := console.Config{
-		DataDir: utils.MakeDataDir(ctx),
-		DocRoot: ctx.GlobalString(utils.JSpathFlag.Name),
+		DataDir: MakeDataDir(ctx),
+		DocRoot: ctx.GlobalString(JSpathFlag.Name),
 		Client:  client,
-		Preload: utils.MakeConsolePreloads(ctx),
+		Preload: MakeConsolePreloads(ctx),
 	}
 
 	console, err := console.New(config)
 	if err != nil {
-		utils.Fatalf("Failed to start the JavaScript console: %v", err)
+		Fatalf("Failed to start the JavaScript console: %v", err)
 	}
 	defer console.Stop(false)
 
 	// If only a short execution was requested, evaluate and return
-	if script := ctx.GlobalString(utils.ExecFlag.Name); script != "" {
+	if script := ctx.GlobalString(ExecFlag.Name); script != "" {
 		console.Evaluate(script)
 		return nil
 	}
@@ -111,45 +111,45 @@ func localConsole(ctx *cli.Context) error {
 	return nil
 }
 
-// remoteConsole will connect to a remote cpchain instance, attaching a JavaScript
+// remoteConsole will connect to a remote geth instance, attaching a JavaScript
 // console to it.
 func remoteConsole(ctx *cli.Context) error {
-	// Attach to a remotely running cpchain instance and start the JavaScript console
+	// Attach to a remotely running geth instance and start the JavaScript console
 	endpoint := ctx.Args().First()
 	if endpoint == "" {
 		path := node.DefaultDataDir()
-		if ctx.GlobalIsSet(utils.DataDirFlag.Name) {
-			path = ctx.GlobalString(utils.DataDirFlag.Name)
+		if ctx.GlobalIsSet(DataDirFlag.Name) {
+			path = ctx.GlobalString(DataDirFlag.Name)
 		}
 		if path != "" {
-			if ctx.GlobalBool(utils.TestnetFlag.Name) {
-				path = filepath.Join(path, "testnet")
-			} else if ctx.GlobalBool(utils.RinkebyFlag.Name) {
-				path = filepath.Join(path, "rinkeby")
-			} else if ctx.GlobalBool(utils.CpchainFlag.Name) {
-				path = filepath.Join(path, "cpchain")
-			}
+			// TODO
+			panic("TODO")
+			// if ctx.GlobalBool(TestnetFlag.Name) {
+			// 	path = filepath.Join(path, "testnet")
+			// } else if ctx.GlobalBool(RinkebyFlag.Name) {
+			// 	path = filepath.Join(path, "rinkeby")
+			// }
 		}
-		endpoint = fmt.Sprintf("%s/cpchain.ipc", path)
+		endpoint = fmt.Sprintf("%s/geth.ipc", path)
 	}
 	client, err := dialRPC(endpoint)
 	if err != nil {
-		utils.Fatalf("Unable to attach to remote cpchain: %v", err)
+		Fatalf("Unable to attach to remote geth: %v", err)
 	}
 	config := console.Config{
-		DataDir: utils.MakeDataDir(ctx),
-		DocRoot: ctx.GlobalString(utils.JSpathFlag.Name),
+		DataDir: MakeDataDir(ctx),
+		DocRoot: ctx.GlobalString(JSpathFlag.Name),
 		Client:  client,
-		Preload: utils.MakeConsolePreloads(ctx),
+		Preload: MakeConsolePreloads(ctx),
 	}
 
 	console, err := console.New(config)
 	if err != nil {
-		utils.Fatalf("Failed to start the JavaScript console: %v", err)
+		Fatalf("Failed to start the JavaScript console: %v", err)
 	}
 	defer console.Stop(false)
 
-	if script := ctx.GlobalString(utils.ExecFlag.Name); script != "" {
+	if script := ctx.GlobalString(ExecFlag.Name); script != "" {
 		console.Evaluate(script)
 		return nil
 	}
@@ -163,19 +163,19 @@ func remoteConsole(ctx *cli.Context) error {
 
 // dialRPC returns a RPC client which connects to the given endpoint.
 // The check for empty endpoint implements the defaulting logic
-// for "cpchain attach" and "cpchain monitor" with no argument.
+// for "geth attach" and "geth monitor" with no argument.
 func dialRPC(endpoint string) (*rpc.Client, error) {
 	if endpoint == "" {
 		endpoint = node.DefaultIPCEndpoint(clientIdentifier)
 	} else if strings.HasPrefix(endpoint, "rpc:") || strings.HasPrefix(endpoint, "ipc:") {
-		// Backwards compatibility with cpchain < 1.5 which required
+		// Backwards compatibility with geth < 1.5 which required
 		// these prefixes.
 		endpoint = endpoint[4:]
 	}
 	return rpc.Dial(endpoint)
 }
 
-// ephemeralConsole starts a new cpchain node, attaches an ephemeral JavaScript
+// ephemeralConsole starts a new geth node, attaches an ephemeral JavaScript
 // console to it, executes each of the files specified as arguments and tears
 // everything down.
 func ephemeralConsole(ctx *cli.Context) error {
@@ -187,25 +187,25 @@ func ephemeralConsole(ctx *cli.Context) error {
 	// Attach to the newly started node and start the JavaScript console
 	client, err := node.Attach()
 	if err != nil {
-		utils.Fatalf("Failed to attach to the inproc cpchain: %v", err)
+		Fatalf("Failed to attach to the inproc geth: %v", err)
 	}
 	config := console.Config{
-		DataDir: utils.MakeDataDir(ctx),
-		DocRoot: ctx.GlobalString(utils.JSpathFlag.Name),
+		DataDir: MakeDataDir(ctx),
+		DocRoot: ctx.GlobalString(JSpathFlag.Name),
 		Client:  client,
-		Preload: utils.MakeConsolePreloads(ctx),
+		Preload: MakeConsolePreloads(ctx),
 	}
 
 	console, err := console.New(config)
 	if err != nil {
-		utils.Fatalf("Failed to start the JavaScript console: %v", err)
+		Fatalf("Failed to start the JavaScript console: %v", err)
 	}
 	defer console.Stop(false)
 
 	// Evaluate each of the specified JavaScript files
 	for _, file := range ctx.Args() {
 		if err = console.Execute(file); err != nil {
-			utils.Fatalf("Failed to execute %s: %v", file, err)
+			Fatalf("Failed to execute %s: %v", file, err)
 		}
 	}
 	// Wait for pending callbacks, but stop for Ctrl-C.

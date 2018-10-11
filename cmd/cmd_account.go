@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package cmd
 
 import (
 	"fmt"
@@ -22,7 +22,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/cmd/utils"
 	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/console"
 	"github.com/ethereum/go-ethereum/log"
@@ -47,13 +46,12 @@ passwordfile as argument containing the wallet password in plaintext.`,
 				Name:      "import",
 				Usage:     "Import Ethereum presale wallet",
 				ArgsUsage: "<keyFile>",
-				Action:    utils.MigrateFlags(importWallet),
+				Action:    MigrateFlags(importWallet),
 				Category:  "ACCOUNT COMMANDS",
 				Flags: []cli.Flag{
-					utils.DataDirFlag,
-					utils.KeyStoreDirFlag,
-					utils.PasswordFileFlag,
-					utils.LightKDFFlag,
+					DataDirFlag,
+					KeyStoreDirFlag,
+					PasswordFileFlag,
 				},
 				Description: `
 	cpchain wallet [options] /path/to/my/presale.wallet
@@ -93,10 +91,10 @@ Make sure you backup your keys regularly.`,
 			{
 				Name:   "list",
 				Usage:  "Print summary of existing accounts",
-				Action: utils.MigrateFlags(accountList),
+				Action: MigrateFlags(accountList),
 				Flags: []cli.Flag{
-					utils.DataDirFlag,
-					utils.KeyStoreDirFlag,
+					DataDirFlag,
+					KeyStoreDirFlag,
 				},
 				Description: `
 Print a short summary of all accounts`,
@@ -104,12 +102,11 @@ Print a short summary of all accounts`,
 			{
 				Name:   "new",
 				Usage:  "Create a new account",
-				Action: utils.MigrateFlags(accountCreate),
+				Action: MigrateFlags(accountCreate),
 				Flags: []cli.Flag{
-					utils.DataDirFlag,
-					utils.KeyStoreDirFlag,
-					utils.PasswordFileFlag,
-					utils.LightKDFFlag,
+					DataDirFlag,
+					KeyStoreDirFlag,
+					PasswordFileFlag,
 				},
 				Description: `
     cpchain account new
@@ -129,12 +126,11 @@ password to file or expose in any other way.
 			{
 				Name:      "update",
 				Usage:     "Update an existing account",
-				Action:    utils.MigrateFlags(accountUpdate),
+				Action:    MigrateFlags(accountUpdate),
 				ArgsUsage: "<address>",
 				Flags: []cli.Flag{
-					utils.DataDirFlag,
-					utils.KeyStoreDirFlag,
-					utils.LightKDFFlag,
+					DataDirFlag,
+					KeyStoreDirFlag,
 				},
 				Description: `
     cpchain account update <address>
@@ -158,12 +154,11 @@ changing your password is only possible interactively.
 			{
 				Name:   "import",
 				Usage:  "Import a private key into a new account",
-				Action: utils.MigrateFlags(accountImport),
+				Action: MigrateFlags(accountImport),
 				Flags: []cli.Flag{
-					utils.DataDirFlag,
-					utils.KeyStoreDirFlag,
-					utils.PasswordFileFlag,
-					utils.LightKDFFlag,
+					DataDirFlag,
+					KeyStoreDirFlag,
+					PasswordFileFlag,
 				},
 				ArgsUsage: "<keyFile>",
 				Description: `
@@ -206,9 +201,9 @@ func accountList(ctx *cli.Context) error {
 
 // tries unlocking the specified account a few times.
 func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i int, passwords []string) (accounts.Account, string) {
-	account, err := utils.MakeAddress(ks, address)
+	account, err := MakeAddress(ks, address)
 	if err != nil {
-		utils.Fatalf("Could not list accounts: %v", err)
+		Fatalf("Could not list accounts: %v", err)
 	}
 	for trials := 0; trials < 3; trials++ {
 		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d", address, trials+1, 3)
@@ -228,7 +223,7 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i in
 		}
 	}
 	// All trials expended to unlock account, bail out
-	utils.Fatalf("Failed to unlock account %s (%v)", address, err)
+	Fatalf("Failed to unlock account %s (%v)", address, err)
 
 	return accounts.Account{}, ""
 }
@@ -249,15 +244,15 @@ func getPassPhrase(prompt string, confirmation bool, i int, passwords []string) 
 	}
 	password, err := console.Stdin.PromptPassword("Passphrase: ")
 	if err != nil {
-		utils.Fatalf("Failed to read passphrase: %v", err)
+		Fatalf("Failed to read passphrase: %v", err)
 	}
 	if confirmation {
 		confirm, err := console.Stdin.PromptPassword("Repeat passphrase: ")
 		if err != nil {
-			utils.Fatalf("Failed to read passphrase confirmation: %v", err)
+			Fatalf("Failed to read passphrase confirmation: %v", err)
 		}
 		if password != confirm {
-			utils.Fatalf("Passphrases do not match")
+			Fatalf("Passphrases do not match")
 		}
 	}
 	return password
@@ -277,7 +272,7 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 		}
 	}
 	if match == nil {
-		utils.Fatalf("None of the listed files could be unlocked.")
+		Fatalf("None of the listed files could be unlocked.")
 	}
 	fmt.Printf("Your passphrase unlocked %s\n", match.URL)
 	fmt.Println("In order to avoid this warning, you need to remove the following duplicate key files:")
@@ -295,22 +290,22 @@ func accountCreate(ctx *cli.Context) error {
 	// Load config file.
 	if file := ctx.GlobalString(configFileFlag.Name); file != "" {
 		if err := loadConfig(file, &cfg); err != nil {
-			utils.Fatalf("%v", err)
+			Fatalf("%v", err)
 		}
 	}
-	utils.SetNodeConfig(ctx, &cfg.Node)
+	SetNodeConfig(ctx, &cfg.Node)
 	scryptN, scryptP, keydir, err := cfg.Node.AccountConfig()
 
 	if err != nil {
-		utils.Fatalf("Failed to read configuration: %v", err)
+		Fatalf("Failed to read configuration: %v", err)
 	}
 
-	password := getPassPhrase("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, utils.MakePasswordList(ctx))
+	password := getPassPhrase("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, MakePasswordList(ctx))
 
 	address, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
 
 	if err != nil {
-		utils.Fatalf("Failed to create account: %v", err)
+		Fatalf("Failed to create account: %v", err)
 	}
 	fmt.Printf("Address: {%x}\n", address)
 	return nil
@@ -320,7 +315,7 @@ func accountCreate(ctx *cli.Context) error {
 // one, also providing the possibility to change the pass-phrase.
 func accountUpdate(ctx *cli.Context) error {
 	if len(ctx.Args()) == 0 {
-		utils.Fatalf("No accounts specified to update")
+		Fatalf("No accounts specified to update")
 	}
 	stack, _ := makeConfigNode(ctx)
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
@@ -329,7 +324,7 @@ func accountUpdate(ctx *cli.Context) error {
 		account, oldPassword := unlockAccount(ctx, ks, addr, 0, nil)
 		newPassword := getPassPhrase("Please give a new password. Do not forget this password.", true, 0, nil)
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
-			utils.Fatalf("Could not update the account: %v", err)
+			Fatalf("Could not update the account: %v", err)
 		}
 	}
 	return nil
@@ -338,20 +333,20 @@ func accountUpdate(ctx *cli.Context) error {
 func importWallet(ctx *cli.Context) error {
 	keyfile := ctx.Args().First()
 	if len(keyfile) == 0 {
-		utils.Fatalf("keyfile must be given as argument")
+		Fatalf("keyfile must be given as argument")
 	}
 	keyJSON, err := ioutil.ReadFile(keyfile)
 	if err != nil {
-		utils.Fatalf("Could not read wallet file: %v", err)
+		Fatalf("Could not read wallet file: %v", err)
 	}
 
 	stack, _ := makeConfigNode(ctx)
-	passphrase := getPassPhrase("", false, 0, utils.MakePasswordList(ctx))
+	passphrase := getPassPhrase("", false, 0, MakePasswordList(ctx))
 
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	acct, err := ks.ImportPreSaleKey(keyJSON, passphrase)
 	if err != nil {
-		utils.Fatalf("%v", err)
+		Fatalf("%v", err)
 	}
 	fmt.Printf("Address: {%x}\n", acct.Address)
 	return nil
@@ -360,19 +355,19 @@ func importWallet(ctx *cli.Context) error {
 func accountImport(ctx *cli.Context) error {
 	keyfile := ctx.Args().First()
 	if len(keyfile) == 0 {
-		utils.Fatalf("keyfile must be given as argument")
+		Fatalf("keyfile must be given as argument")
 	}
 	key, err := crypto.LoadECDSA(keyfile)
 	if err != nil {
-		utils.Fatalf("Failed to load the private key: %v", err)
+		Fatalf("Failed to load the private key: %v", err)
 	}
 	stack, _ := makeConfigNode(ctx)
-	passphrase := getPassPhrase("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, utils.MakePasswordList(ctx))
+	passphrase := getPassPhrase("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, MakePasswordList(ctx))
 
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	acct, err := ks.ImportECDSA(key, passphrase)
 	if err != nil {
-		utils.Fatalf("Could not create the account: %v", err)
+		Fatalf("Could not create the account: %v", err)
 	}
 	fmt.Printf("Address: {%x}\n", acct.Address)
 	return nil

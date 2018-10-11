@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/cmd/smartcontract/deploy"
+	"bitbucket.org/cpchain/chain/tools/smartcontract/deploy"
 )
 
 func main() {

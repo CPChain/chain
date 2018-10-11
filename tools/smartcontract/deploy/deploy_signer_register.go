@@ -4,17 +4,17 @@ import (
 	"log"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/cmd/smartcontract/config"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
+	"bitbucket.org/cpchain/chain/contracts/dpor"
+	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func DeployCampaign() common.Address {
+func DeploySignerConnectionRegister() common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect()
 	printBalance(client, fromAddress)
-	// Launch contract deploy transaction.
+	// launch contract deploy transaction.
 	auth := bind.NewKeyedTransactor(privateKey)
-	contractAddress, tx, _, err := contract.DeployCampaign(auth, client)
+	contractAddress, tx, _, err := dpor.DeploySignerConnectionRegister(auth, client)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -8,11 +8,9 @@ accounts/rsa_
 #accounts/usbwallet/internal/trezor
 #admission
 #cmd/geth
-cmd/internal/browser
-cmd/smartcontract
-cmd/smartcontract/config
-cmd/smartcontract/deploy
-cmd/utils
+tools/smartcontract
+tools/smartcontract/config
+tools/smartcontract/deploy
 consensus
 consensus/dpor
 consensus/dpor/election
@@ -92,7 +90,3 @@ signer/rules
 signer/rules/deps
 signer/storage
 tests
-#whisper/mailserver
-#whisper/shhclient
-#whisper/whisperv5
-#whisper/whisperv6
