@@ -33,6 +33,7 @@ import (
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/debug"
 	"bitbucket.org/cpchain/chain/node"
+	"github.com/ethereum/go-ethereum/console"
 	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -62,6 +63,7 @@ func newApp() *cli.App {
 		cleanDbCommand,
 		accountCommand,
 		walletCommand,
+		consoleCommand,
 		versionCommand,
 		dumpConfigCommand,
 	}
@@ -69,6 +71,7 @@ func newApp() *cli.App {
 	app.Flags = append(app.Flags, nodeFlags...)
 	app.Flags = append(app.Flags, rpcFlags...)
 	app.Flags = append(app.Flags, debug.Flags...)
+	app.Flags = append(app.Flags, consoleFlags...)
 
 	app.Before = func(ctx *cli.Context) error {
 		// placeholder
@@ -77,6 +80,7 @@ func newApp() *cli.App {
 
 	app.After = func(ctx *cli.Context) error {
 		// placeholder
+		console.Stdin.Close() // Resets terminal mode.
 		return nil
 	}
 
