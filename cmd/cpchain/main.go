@@ -64,6 +64,7 @@ func newApp() *cli.App {
 		accountCommand,
 		walletCommand,
 		consoleCommand,
+		attachCommand,
 		versionCommand,
 		dumpConfigCommand,
 	}
@@ -74,7 +75,10 @@ func newApp() *cli.App {
 	app.Flags = append(app.Flags, consoleFlags...)
 
 	app.Before = func(ctx *cli.Context) error {
-		// placeholder
+		// this sets up logging!
+		if err := debug.Setup(ctx); err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -121,8 +125,6 @@ func StartNode(stack *node.Node) {
 				log.Warn("Already shutting down, interrupt more to panic.", "times", i-1)
 			}
 		}
-		debug.Exit() // ensure trace and CPU profile data is flushed.
-		debug.LoudPanic("boom")
 	}()
 }
 
@@ -130,7 +132,6 @@ func StartNode(stack *node.Node) {
 // it unlocks any requested accounts, and starts the RPC/IPC interfaces and the
 // miner.
 func startNode(ctx *cli.Context, stack *node.Node) {
-	debug.Memsize.Add("node", stack)
 
 	// Start up the node itself
 	StartNode(stack)

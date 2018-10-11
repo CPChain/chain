@@ -30,8 +30,6 @@ import (
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/params"
-	"github.com/ethereum/go-ethereum/dashboard"
-	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 	"github.com/naoina/toml"
 )
 
@@ -69,16 +67,10 @@ var tomlSettings = toml.Config{
 	},
 }
 
-type ethstatsConfig struct {
-	URL string `toml:",omitempty"`
-}
 
 type gethConfig struct {
 	Eth       eth.Config
-	Shh       whisper.Config
 	Node      node.Config
-	Ethstats  ethstatsConfig
-	Dashboard dashboard.Config
 }
 
 func loadConfig(file string, cfg *gethConfig) error {
@@ -100,8 +92,8 @@ func defaultNodeConfig() node.Config {
 	cfg := node.DefaultConfig
 	cfg.Name = clientIdentifier
 	cfg.Version = params.VersionWithCommit("")
-	cfg.HTTPModules = append(cfg.HTTPModules, "eth", "shh")
-	cfg.WSModules = append(cfg.WSModules, "eth", "shh")
+	cfg.HTTPModules = append(cfg.HTTPModules, "eth")
+	cfg.WSModules = append(cfg.WSModules, "eth")
 	cfg.IPCPath = "cpchain.ipc"
 	return cfg
 }
@@ -110,9 +102,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 	// Load defaults.
 	cfg := gethConfig{
 		Eth:       eth.DefaultConfig,
-		Shh:       whisper.DefaultConfig,
 		Node:      defaultNodeConfig(),
-		Dashboard: dashboard.DefaultConfig,
 	}
 
 	// Load config file.
