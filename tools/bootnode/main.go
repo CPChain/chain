@@ -24,14 +24,35 @@ import (
 	"net"
 	"os"
 
-	"bitbucket.org/cpchain/chain/cmd"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/p2p/discv5"
 	"bitbucket.org/cpchain/chain/p2p/nat"
 	"bitbucket.org/cpchain/chain/p2p/netutil"
 	"github.com/ethereum/go-ethereum/log"
+	"io"
+	"runtime"
 )
+
+// Fatalf formats a message to standard error and exits the program.
+// The message is also printed to standard output if standard error
+// is redirected to a different file.
+func Fatalf(format string, args ...interface{}) {
+	w := io.MultiWriter(os.Stdout, os.Stderr)
+	if runtime.GOOS == "windows" {
+		// The SameFile check below doesn't work on Windows.
+		// stdout is unlikely to get redirected though, so just print there.
+		w = os.Stdout
+	} else {
+		outf, _ := os.Stdout.Stat()
+		errf, _ := os.Stderr.Stat()
+		if outf != nil && errf != nil && os.SameFile(outf, errf) {
+			w = os.Stderr
+		}
+	}
+	fmt.Fprintf(w, "Fatal: "+format+"\n", args...)
+	os.Exit(1)
+}
 
 func main() {
 	var (
@@ -58,29 +79,29 @@ func main() {
 
 	natm, err := nat.Parse(*natdesc)
 	if err != nil {
-		cmd.Fatalf("-nat: %v", err)
+		Fatalf("-nat: %v", err)
 	}
 	switch {
 	case *genKey != "":
 		nodeKey, err = crypto.GenerateKey()
 		if err != nil {
-			cmd.Fatalf("could not generate key: %v", err)
+			Fatalf("could not generate key: %v", err)
 		}
 		if err = crypto.SaveECDSA(*genKey, nodeKey); err != nil {
-			cmd.Fatalf("%v", err)
+			Fatalf("%v", err)
 		}
 		return
 	case *nodeKeyFile == "" && *nodeKeyHex == "":
-		cmd.Fatalf("Use -nodekey or -nodekeyhex to specify a private key")
+		Fatalf("Use -nodekey or -nodekeyhex to specify a private key")
 	case *nodeKeyFile != "" && *nodeKeyHex != "":
-		cmd.Fatalf("Options -nodekey and -nodekeyhex are mutually exclusive")
+		Fatalf("Options -nodekey and -nodekeyhex are mutually exclusive")
 	case *nodeKeyFile != "":
 		if nodeKey, err = crypto.LoadECDSA(*nodeKeyFile); err != nil {
-			cmd.Fatalf("-nodekey: %v", err)
+			Fatalf("-nodekey: %v", err)
 		}
 	case *nodeKeyHex != "":
 		if nodeKey, err = crypto.HexToECDSA(*nodeKeyHex); err != nil {
-			cmd.Fatalf("-nodekeyhex: %v", err)
+			Fatalf("-nodekeyhex: %v", err)
 		}
 	}
 
@@ -93,17 +114,17 @@ func main() {
 	if *netrestrict != "" {
 		restrictList, err = netutil.ParseNetlist(*netrestrict)
 		if err != nil {
-			cmd.Fatalf("-netrestrict: %v", err)
+			Fatalf("-netrestrict: %v", err)
 		}
 	}
 
 	addr, err := net.ResolveUDPAddr("udp", *listenAddr)
 	if err != nil {
-		cmd.Fatalf("-ResolveUDPAddr: %v", err)
+		Fatalf("-ResolveUDPAddr: %v", err)
 	}
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		cmd.Fatalf("-ListenUDP: %v", err)
+		Fatalf("-ListenUDP: %v", err)
 	}
 
 	realaddr := conn.LocalAddr().(*net.UDPAddr)
@@ -119,7 +140,7 @@ func main() {
 
 	if *runv5 {
 		if _, err := discv5.ListenUDP(nodeKey, conn, realaddr, "", restrictList); err != nil {
-			cmd.Fatalf("%v", err)
+			Fatalf("%v", err)
 		}
 	} else {
 		cfg := discover.Config{
@@ -128,7 +149,7 @@ func main() {
 			NetRestrict:  restrictList,
 		}
 		if _, err := discover.ListenUDP(conn, cfg); err != nil {
-			cmd.Fatalf("%v", err)
+			Fatalf("%v", err)
 		}
 	}
 
