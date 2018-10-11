@@ -67,6 +67,7 @@ func newApp() *cli.App {
 		attachCommand,
 		versionCommand,
 		dumpConfigCommand,
+		javascriptCommand,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 	app.Flags = append(app.Flags, nodeFlags...)
@@ -76,10 +77,8 @@ func newApp() *cli.App {
 
 	app.Before = func(ctx *cli.Context) error {
 		// this sets up logging!
-		if err := debug.Setup(ctx); err != nil {
-			return err
-		}
-		return nil
+		err := debug.Setup(ctx)
+		return err
 	}
 
 	app.After = func(ctx *cli.Context) error {

@@ -29,7 +29,6 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
-
 // js related flags
 
 var (
