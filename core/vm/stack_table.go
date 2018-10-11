@@ -19,7 +19,7 @@ package vm
 import (
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/configs"
 )
 
 func makeStackFunc(pop, push int) stackValidationFunc {
@@ -28,8 +28,8 @@ func makeStackFunc(pop, push int) stackValidationFunc {
 			return err
 		}
 
-		if stack.len()+push-pop > int(params.StackLimit) {
-			return fmt.Errorf("stack limit reached %d (%d)", stack.len(), params.StackLimit)
+		if stack.len()+push-pop > int(configs.StackLimit) {
+			return fmt.Errorf("stack limit reached %d (%d)", stack.len(), configs.StackLimit)
 		}
 		return nil
 	}

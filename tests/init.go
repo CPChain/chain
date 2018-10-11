@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/configs"
 )
 
 // Forks table defines supported forks and their chain config.
-var Forks = map[string]*params.ChainConfig{
+var Forks = map[string]*configs.ChainConfig{
 	"Frontier": {
 		ChainID: big.NewInt(1),
 	},

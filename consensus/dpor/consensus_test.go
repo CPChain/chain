@@ -24,10 +24,10 @@ import (
 
 	"fmt"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"
@@ -123,7 +123,7 @@ func TestDpor_APIs(t *testing.T) {
 
 func TestDpor_Prepare(t *testing.T) {
 	type fields struct {
-		config       *params.DporConfig
+		config       *configs.DporConfig
 		db           ethdb.Database
 		recents      *lru.ARCCache
 		signatures   *lru.ARCCache
@@ -163,7 +163,7 @@ func TestDpor_Prepare(t *testing.T) {
 
 func TestDpor_Seal(t *testing.T) {
 	type fields struct {
-		config       *params.DporConfig
+		config       *configs.DporConfig
 		db           ethdb.Database
 		recents      *lru.ARCCache
 		signatures   *lru.ARCCache

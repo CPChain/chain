@@ -21,12 +21,12 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -38,7 +38,7 @@ var (
 
 // makeHeaderChain creates a deterministic chain of headers rooted at parent.
 func makeHeaderChain(parent *types.Header, n int, db ethdb.Database, seed int) []*types.Header {
-	blocks, _ := core.GenerateChain(params.TestChainConfig, types.NewBlockWithHeader(parent), ethash.NewFaker(), db, nil, n, func(i int, b *core.BlockGen) {
+	blocks, _ := core.GenerateChain(configs.TestChainConfig, types.NewBlockWithHeader(parent), ethash.NewFaker(), db, nil, n, func(i int, b *core.BlockGen) {
 		b.SetCoinbase(common.Address{0: byte(seed), 19: byte(i)})
 	})
 	headers := make([]*types.Header, len(blocks))
@@ -53,7 +53,7 @@ func makeHeaderChain(parent *types.Header, n int, db ethdb.Database, seed int) [
 // header only chain.
 func newCanonical(n int) (ethdb.Database, *LightChain, error) {
 	db := ethdb.NewMemDatabase()
-	gspec := core.Genesis{Config: params.TestChainConfig}
+	gspec := core.Genesis{Config: configs.TestChainConfig}
 	genesis := gspec.MustCommit(db)
 	blockchain, _ := NewLightChain(&dummyOdr{db: db}, gspec.Config, ethash.NewFaker())
 
@@ -72,7 +72,7 @@ func newTestLightChain() *LightChain {
 	db := ethdb.NewMemDatabase()
 	gspec := &core.Genesis{
 		Difficulty: big.NewInt(1),
-		Config:     params.TestChainConfig,
+		Config:     configs.TestChainConfig,
 	}
 	gspec.MustCommit(db)
 	lc, err := NewLightChain(&dummyOdr{db: db}, gspec.Config, ethash.NewFullFaker())
@@ -339,7 +339,7 @@ func TestReorgBadHeaderHashes(t *testing.T) {
 	defer func() { delete(core.BadHashes, headers[3].Hash()) }()
 
 	// Create a new LightChain and check that it rolled back the state.
-	ncm, err := NewLightChain(&dummyOdr{db: bc.chainDb}, params.TestChainConfig, ethash.NewFaker())
+	ncm, err := NewLightChain(&dummyOdr{db: bc.chainDb}, configs.TestChainConfig, ethash.NewFaker())
 	if err != nil {
 		t.Fatalf("failed to create new chain manager: %v", err)
 	}

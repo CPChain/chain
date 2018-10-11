@@ -22,8 +22,8 @@ import (
 
 	"fmt"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -172,29 +172,29 @@ func TestSigningPrivateTx(t *testing.T) {
 }
 
 func TestMakeSigner(t *testing.T) {
-	signer := MakeSigner(params.MainnetChainConfig, params.MainnetChainConfig.EIP158Block)
+	signer := MakeSigner(configs.MainnetChainConfig, configs.MainnetChainConfig.EIP158Block)
 	fmt.Printf("%T, %v", signer, signer)
 
 	if fmt.Sprintf("%T", signer) != "types.EIP155Signer" {
 		t.Error("The signer should be types.EIP155Signer, but got ", fmt.Sprintf("%T", signer))
 	}
 
-	signer = MakeSigner(params.MainnetChainConfig, params.MainnetChainConfig.EIP155Block)
+	signer = MakeSigner(configs.MainnetChainConfig, configs.MainnetChainConfig.EIP155Block)
 	if fmt.Sprintf("%T", signer) != "types.EIP155Signer" {
 		t.Error("The signer should be types.EIP155Signer, but got ", fmt.Sprintf("%T", signer))
 	}
 
-	signer = MakeSigner(params.MainnetChainConfig, params.MainnetChainConfig.DAOForkBlock)
+	signer = MakeSigner(configs.MainnetChainConfig, configs.MainnetChainConfig.DAOForkBlock)
 	if fmt.Sprintf("%T", signer) != "types.HomesteadSigner" {
 		t.Error("The signer should be types.HomesteadSigner, but got ", fmt.Sprintf("%T", signer))
 	}
 
-	signer = MakeSigner(params.MainnetChainConfig, new(big.Int).SetUint64(0))
+	signer = MakeSigner(configs.MainnetChainConfig, new(big.Int).SetUint64(0))
 	if fmt.Sprintf("%T", signer) != "types.FrontierSigner" {
 		t.Error("The signer should be types.FrontierSigner, but got ", fmt.Sprintf("%T", signer))
 	}
 
-	signer = MakeSigner(params.CpchainChainConfig, new(big.Int).SetUint64(1000))
+	signer = MakeSigner(configs.CpchainChainConfig, new(big.Int).SetUint64(1000))
 	if fmt.Sprintf("%T", signer) != "types.PrivTxSupportEIP155Signer" {
 		t.Error("The signer should be types.PrivTxSupportEIP155Signer, but got ", fmt.Sprintf("%T", signer))
 	}

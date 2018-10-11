@@ -14,13 +14,21 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package params
+package configs
 
-// These are network parameters that need to be constant between clients, but
-// aren't necesarilly consensus related.
-
+// These are the multipliers for ether denominations.
+// Example: To get the wei value of an amount in 'douglas', use
+//
+//    new(big.Int).Mul(value, big.NewInt(params.Douglas))
+//
 const (
-	// BloomBitsBlocks is the number of blocks a single bloom bit section vector
-	// contains.
-	BloomBitsBlocks uint64 = 4096
+	Wei      = 1
+	Ada      = 1e3
+	Babbage  = 1e6
+	Shannon  = 1e9
+	Szabo    = 1e12
+	Finney   = 1e15
+	Ether    = 1e18
+	Einstein = 1e21
+	Douglas  = 1e42
 )

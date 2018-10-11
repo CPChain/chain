@@ -11,9 +11,9 @@ import (
 
 	"fmt"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethclient"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )
@@ -62,8 +62,8 @@ type CollectorConfig struct {
 	Phi          float64 // leaderReward coefficient
 	Omega        float64 // txVolume coefficient
 	WindowSize   uint64  // window size, how many blocks to recall.
-	ChainConfig  *params.ChainConfig
-	DporConfig   *params.DporConfig
+	ChainConfig  *configs.ChainConfig
+	DporConfig   *configs.DporConfig
 }
 
 // ClientBackend is the client operation interface

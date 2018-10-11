@@ -1,4 +1,4 @@
-// Copyright 2016 The go-ethereum Authors
+// Copyright 2017 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
@@ -14,32 +14,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package params
+package configs
 
-import (
-	"fmt"
-)
+// These are network parameters that need to be constant between clients, but
+// aren't necesarilly consensus related.
 
 const (
-	VersionMajor = 1        // Major version component of the current release
-	VersionMinor = 8        // Minor version component of the current release
-	VersionPatch = 12       // Patch version component of the current release
-	VersionMeta  = "stable" // Version metadata to append to the version string
+	// BloomBitsBlocks is the number of blocks a single bloom bit section vector
+	// contains.
+	BloomBitsBlocks uint64 = 4096
 )
-
-// Version holds the textual version string.
-var Version = func() string {
-	v := fmt.Sprintf("%d.%d.%d", VersionMajor, VersionMinor, VersionPatch)
-	if VersionMeta != "" {
-		v += "-" + VersionMeta
-	}
-	return v
-}()
-
-func VersionWithCommit(gitCommit string) string {
-	vsn := Version
-	if len(gitCommit) >= 8 {
-		vsn += "-" + gitCommit[:8]
-	}
-	return vsn
-}

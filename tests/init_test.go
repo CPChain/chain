@@ -29,7 +29,7 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/configs"
 )
 
 var (
@@ -95,7 +95,7 @@ type testMatcher struct {
 
 type testConfig struct {
 	p      *regexp.Regexp
-	config params.ChainConfig
+	config configs.ChainConfig
 }
 
 type testFailure struct {
@@ -122,7 +122,7 @@ func (tm *testMatcher) fails(pattern string, reason string) {
 }
 
 // config defines chain config for tests matching the pattern.
-func (tm *testMatcher) config(pattern string, cfg params.ChainConfig) {
+func (tm *testMatcher) config(pattern string, cfg configs.ChainConfig) {
 	tm.configpat = append(tm.configpat, testConfig{regexp.MustCompile(pattern), cfg})
 }
 
@@ -144,14 +144,14 @@ func (tm *testMatcher) findSkip(name string) (reason string, skipload bool) {
 }
 
 // findConfig returns the chain config matching defined patterns.
-func (tm *testMatcher) findConfig(name string) *params.ChainConfig {
+func (tm *testMatcher) findConfig(name string) *configs.ChainConfig {
 	// TODO(fjl): name can be derived from testing.T when min Go version is 1.8
 	for _, m := range tm.configpat {
 		if m.p.MatchString(name) {
 			return &m.config
 		}
 	}
-	return new(params.ChainConfig)
+	return new(configs.ChainConfig)
 }
 
 // checkFailure checks whether a failure is expected.

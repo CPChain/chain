@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -67,7 +67,7 @@ type ttTransactionMarshaling struct {
 	V        *math.HexOrDecimal256
 }
 
-func (tt *TransactionTest) Run(config *params.ChainConfig) error {
+func (tt *TransactionTest) Run(config *configs.ChainConfig) error {
 	tx := new(types.Transaction)
 	if err := rlp.DecodeBytes(tt.json.RLP, tx); err != nil {
 		if tt.json.Transaction == nil {

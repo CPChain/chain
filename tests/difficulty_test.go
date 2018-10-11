@@ -21,12 +21,12 @@ import (
 
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 var (
-	mainnetChainConfig = params.ChainConfig{
+	mainnetChainConfig = configs.ChainConfig{
 		ChainID:        big.NewInt(1),
 		HomesteadBlock: big.NewInt(1150000),
 		DAOForkBlock:   big.NewInt(1920000),
@@ -56,26 +56,26 @@ func TestDifficulty(t *testing.T) {
 	dt.skipLoad("difficultyMorden\\.json")
 	dt.skipLoad("difficultyOlimpic\\.json")
 
-	dt.config("Ropsten", *params.TestnetChainConfig)
-	dt.config("Morden", *params.TestnetChainConfig)
-	dt.config("Frontier", params.ChainConfig{})
+	dt.config("Ropsten", *configs.TestnetChainConfig)
+	dt.config("Morden", *configs.TestnetChainConfig)
+	dt.config("Frontier", configs.ChainConfig{})
 
-	dt.config("Homestead", params.ChainConfig{
+	dt.config("Homestead", configs.ChainConfig{
 		HomesteadBlock: big.NewInt(0),
 	})
 
-	dt.config("Byzantium", params.ChainConfig{
+	dt.config("Byzantium", configs.ChainConfig{
 		ByzantiumBlock: big.NewInt(0),
 	})
 
-	dt.config("Frontier", *params.TestnetChainConfig)
+	dt.config("Frontier", *configs.TestnetChainConfig)
 	dt.config("MainNetwork", mainnetChainConfig)
 	dt.config("CustomMainNetwork", mainnetChainConfig)
 	dt.config("difficulty.json", mainnetChainConfig)
 
 	dt.walk(t, difficultyTestDir, func(t *testing.T, name string, test *DifficultyTest) {
 		cfg := dt.findConfig(name)
-		if test.ParentDifficulty.Cmp(params.MinimumDifficulty) < 0 {
+		if test.ParentDifficulty.Cmp(configs.MinimumDifficulty) < 0 {
 			t.Skip("difficulty below minimum")
 			return
 		}

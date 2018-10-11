@@ -24,10 +24,10 @@ import (
 
 	"encoding/json"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -69,7 +69,7 @@ func (*fakeDb) NewBatch() ethdb.Batch {
 }
 
 func Test_newSnapshot(t *testing.T) {
-	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
 	equal := reflect.DeepEqual(snap.signersOf(1), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
@@ -82,7 +82,7 @@ func Test_newSnapshot(t *testing.T) {
 
 func Test_loadSnapshot(t *testing.T) {
 	type args struct {
-		config   *params.DporConfig
+		config   *configs.DporConfig
 		sigcache *lru.ARCCache
 		db       ethdb.Database
 		hash     common.Hash
@@ -112,7 +112,7 @@ func Test_loadSnapshot(t *testing.T) {
 func TestSnapshot_store(t *testing.T) {
 
 	type fields struct {
-		config        *params.DporConfig
+		config        *configs.DporConfig
 		sigcache      *lru.ARCCache
 		Number        uint64
 		Hash          common.Hash
@@ -124,7 +124,7 @@ func TestSnapshot_store(t *testing.T) {
 	}
 
 	cache, _ := lru.NewARC(inmemorySnapshots)
-	config := &params.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, Epoch: 3}
 
 	tests := []struct {
 		name    string
@@ -162,7 +162,7 @@ func TestSnapshot_store(t *testing.T) {
 }
 
 func TestSnapshot_copy(t *testing.T) {
-	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
 	snap.Candidates = getCandidates()
 
 	cpySnap := snap.copy()
@@ -180,7 +180,7 @@ func TestSnapshot_copy(t *testing.T) {
 
 func TestSnapshot_apply(t *testing.T) {
 	type fields struct {
-		config        *params.DporConfig
+		config        *configs.DporConfig
 		sigcache      *lru.ARCCache
 		Number        uint64
 		Hash          common.Hash
@@ -223,7 +223,7 @@ func TestSnapshot_apply(t *testing.T) {
 
 func TestSnapshot_applyHeader(t *testing.T) {
 	type fields struct {
-		config        *params.DporConfig
+		config        *configs.DporConfig
 		sigcache      *lru.ARCCache
 		Number        uint64
 		Hash          common.Hash
@@ -260,7 +260,7 @@ func TestSnapshot_applyHeader(t *testing.T) {
 
 func TestSnapshot_updateCandidates(t *testing.T) {
 	type fields struct {
-		config        *params.DporConfig
+		config        *configs.DporConfig
 		sigcache      *lru.ARCCache
 		Number        uint64
 		Hash          common.Hash
@@ -297,7 +297,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 
 func TestSnapshot_updateRpts(t *testing.T) {
 	type fields struct {
-		config        *params.DporConfig
+		config        *configs.DporConfig
 		sigcache      *lru.ARCCache
 		Number        uint64
 		Hash          common.Hash
@@ -340,7 +340,7 @@ func TestSnapshot_updateRpts(t *testing.T) {
 
 func TestSnapshot_updateView(t *testing.T) {
 	type fields struct {
-		config        *params.DporConfig
+		config        *configs.DporConfig
 		sigcache      *lru.ARCCache
 		Number        uint64
 		Hash          common.Hash
@@ -388,7 +388,7 @@ func TestSnapshot_signers(t *testing.T) {
 
 func TestSnapshot_signerRound(t *testing.T) {
 	type fields struct {
-		config        *params.DporConfig
+		config        *configs.DporConfig
 		sigcache      *lru.ARCCache
 		Number        uint64
 		Hash          common.Hash
@@ -430,7 +430,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 }
 
 func TestSnapshot_isSigner(t *testing.T) {
-	snap := newSnapshot(&params.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress()[1:2])
+	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress()[1:2])
 	isSinger := snap.isSigner(addr1, 1)
 	if isSinger {
 		t.Errorf("expected isSinger %v,get %v", false, isSinger)
@@ -509,7 +509,7 @@ func TestSnapshot_signerRoundOk(t *testing.T) {
 
 func createSnapshot() *DporSnapshot {
 	signers := getSignerAddress()
-	config := &params.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, Epoch: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
 	snap := newSnapshot(config, cache, 1, common.Hash{}, signers)
 	return snap
@@ -517,7 +517,7 @@ func createSnapshot() *DporSnapshot {
 
 func TestSnapshot_candidates(t *testing.T) {
 	type fields struct {
-		config        *params.DporConfig
+		config        *configs.DporConfig
 		sigcache      *lru.ARCCache
 		Number        uint64
 		Hash          common.Hash
@@ -550,7 +550,7 @@ func TestSnapshot_candidates(t *testing.T) {
 
 func TestSnapshot_inturn(t *testing.T) {
 	signers := getSignerAddress()
-	config := &params.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, Epoch: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
 	snap := newSnapshot(config, cache, 1, common.Hash{}, signers)
 

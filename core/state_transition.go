@@ -23,8 +23,8 @@ import (
 
 	"fmt"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )
@@ -82,9 +82,9 @@ func IntrinsicGas(data []byte, contractCreation, homestead bool) (uint64, error)
 	// Set the starting gas for the raw transaction
 	var gas uint64
 	if contractCreation && homestead {
-		gas = params.TxGasContractCreation
+		gas = configs.TxGasContractCreation
 	} else {
-		gas = params.TxGas
+		gas = configs.TxGas
 	}
 	// Bump the required gas by the amount of transactional data
 	if len(data) > 0 {
@@ -96,16 +96,16 @@ func IntrinsicGas(data []byte, contractCreation, homestead bool) (uint64, error)
 			}
 		}
 		// Make sure we don't exceed uint64 for all data combinations
-		if (math.MaxUint64-gas)/params.TxDataNonZeroGas < nz {
+		if (math.MaxUint64-gas)/configs.TxDataNonZeroGas < nz {
 			return 0, vm.ErrOutOfGas
 		}
-		gas += nz * params.TxDataNonZeroGas
+		gas += nz * configs.TxDataNonZeroGas
 
 		z := uint64(len(data)) - nz
-		if (math.MaxUint64-gas)/params.TxDataZeroGas < z {
+		if (math.MaxUint64-gas)/configs.TxDataZeroGas < z {
 			return 0, vm.ErrOutOfGas
 		}
-		gas += z * params.TxDataZeroGas
+		gas += z * configs.TxDataZeroGas
 	}
 	return gas, nil
 }

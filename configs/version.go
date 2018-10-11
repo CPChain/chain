@@ -1,4 +1,4 @@
-// Copyright 2017 The go-ethereum Authors
+// Copyright 2016 The go-ethereum Authors
 // This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
@@ -14,21 +14,32 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package params
+package configs
 
-// These are the multipliers for ether denominations.
-// Example: To get the wei value of an amount in 'douglas', use
-//
-//    new(big.Int).Mul(value, big.NewInt(params.Douglas))
-//
-const (
-	Wei      = 1
-	Ada      = 1e3
-	Babbage  = 1e6
-	Shannon  = 1e9
-	Szabo    = 1e12
-	Finney   = 1e15
-	Ether    = 1e18
-	Einstein = 1e21
-	Douglas  = 1e42
+import (
+	"fmt"
 )
+
+const (
+	VersionMajor = 1        // Major version component of the current release
+	VersionMinor = 8        // Minor version component of the current release
+	VersionPatch = 12       // Patch version component of the current release
+	VersionMeta  = "stable" // Version metadata to append to the version string
+)
+
+// Version holds the textual version string.
+var Version = func() string {
+	v := fmt.Sprintf("%d.%d.%d", VersionMajor, VersionMinor, VersionPatch)
+	if VersionMeta != "" {
+		v += "-" + VersionMeta
+	}
+	return v
+}()
+
+func VersionWithCommit(gitCommit string) string {
+	vsn := Version
+	if len(gitCommit) >= 8 {
+		vsn += "-" + gitCommit[:8]
+	}
+	return vsn
+}

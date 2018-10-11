@@ -26,6 +26,7 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
@@ -35,7 +36,6 @@ import (
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/eth/filters"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -60,14 +60,14 @@ type SimulatedBackend struct {
 
 	events *filters.EventSystem // Event system for filtering log events live
 
-	config *params.ChainConfig
+	config *configs.ChainConfig
 }
 
 // NewSimulatedBackend creates a new binding backend using a simulated blockchain
 // for testing purposes.
 func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	database := ethdb.NewMemDatabase()
-	genesis := core.Genesis{Config: params.AllEthashProtocolChanges, Alloc: alloc}
+	genesis := core.Genesis{Config: configs.AllEthashProtocolChanges, Alloc: alloc}
 	genesis.MustCommit(database)
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
@@ -86,7 +86,7 @@ func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 // for testing purposes.
 func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	database := ethdb.NewMemDatabase()
-	genesis := core.Genesis{Config: params.AllCpchainProtocolChanges, Alloc: alloc}
+	genesis := core.Genesis{Config: configs.AllCpchainProtocolChanges, Alloc: alloc}
 	genesis.MustCommit(database)
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 	// TODO we need our own NewFaker(), `ethash.NewFaker' does nothing.
@@ -242,11 +242,11 @@ func (b *SimulatedBackend) EstimateGas(ctx context.Context, call ethereum.CallMs
 
 	// Determine the lowest and highest possible gas limits to binary search in between
 	var (
-		lo  uint64 = params.TxGas - 1
+		lo  uint64 = configs.TxGas - 1
 		hi  uint64
 		cap uint64
 	)
-	if call.Gas >= params.TxGas {
+	if call.Gas >= configs.TxGas {
 		hi = call.Gas
 	} else {
 		hi = b.pendingBlock.GasLimit()

@@ -44,7 +44,7 @@ type LesApiBackend struct {
 	gpo *gasprice.Oracle
 }
 
-func (b *LesApiBackend) ChainConfig() *params.ChainConfig {
+func (b *LesApiBackend) ChainConfig() *configs.ChainConfig {
 	return b.eth.chainConfig
 }
 

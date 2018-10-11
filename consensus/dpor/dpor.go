@@ -20,9 +20,9 @@ package dpor
 import (
 	"sync"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -42,8 +42,8 @@ const (
 // cpchain testnet.
 type Dpor struct {
 	dh     dporHelper
-	config *params.DporConfig // Consensus engine configuration parameters
-	db     ethdb.Database     // Database to store and retrieve Snapshot checkpoints
+	config *configs.DporConfig // Consensus engine configuration parameters
+	db     ethdb.Database      // Database to store and retrieve Snapshot checkpoints
 
 	recents    *lru.ARCCache // Snapshots for recent block to speed up reorgs
 	signatures *lru.ARCCache // Signatures of recent blocks to speed up mining
@@ -60,7 +60,7 @@ type Dpor struct {
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
-func New(config *params.DporConfig, db ethdb.Database) *Dpor {
+func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config

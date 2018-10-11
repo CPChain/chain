@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/configs"
 
 	"bitbucket.org/cpchain/chain/core/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -244,10 +244,10 @@ func getCollectorConfig(chainId int64) *CollectorConfig {
 		Phi:          0.2,
 		Omega:        0.2,
 		WindowSize:   5,
-		ChainConfig: &params.ChainConfig{
+		ChainConfig: &configs.ChainConfig{
 			ChainID: big.NewInt(chainId),
 		},
-		DporConfig: &params.DporConfig{
+		DporConfig: &configs.DporConfig{
 			Epoch:  3,
 			Period: 1,
 		},

@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 )
@@ -47,7 +47,7 @@ type difficultyTestMarshaling struct {
 	CurrentBlockNumber math.HexOrDecimal64
 }
 
-func (test *DifficultyTest) Run(config *params.ChainConfig) error {
+func (test *DifficultyTest) Run(config *configs.ChainConfig) error {
 	parentNumber := big.NewInt(int64(test.CurrentBlockNumber - 1))
 	parent := &types.Header{
 		Difficulty: test.ParentDifficulty,

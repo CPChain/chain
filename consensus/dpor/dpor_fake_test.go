@@ -24,9 +24,9 @@ import (
 
 	"errors"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -34,8 +34,8 @@ type FakeReader struct {
 	consensus.ChainReader
 }
 
-func (*FakeReader) Config() *params.ChainConfig {
-	return &params.ChainConfig{EIP150Block: big.NewInt(777)}
+func (*FakeReader) Config() *configs.ChainConfig {
+	return &configs.ChainConfig{EIP150Block: big.NewInt(777)}
 }
 
 func (*FakeReader) GetHeaderByNumber(number uint64) *types.Header {

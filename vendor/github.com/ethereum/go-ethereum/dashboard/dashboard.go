@@ -219,13 +219,13 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 	}()
 
 	versionMeta := ""
-	if len(params.VersionMeta) > 0 {
-		versionMeta = fmt.Sprintf(" (%s)", params.VersionMeta)
+	if len(configs.VersionMeta) > 0 {
+		versionMeta = fmt.Sprintf(" (%s)", configs.VersionMeta)
 	}
 	// Send the past data.
 	client.msg <- Message{
 		General: &GeneralMessage{
-			Version: fmt.Sprintf("v%d.%d.%d%s", params.VersionMajor, params.VersionMinor, params.VersionPatch, versionMeta),
+			Version: fmt.Sprintf("v%d.%d.%d%s", configs.VersionMajor, configs.VersionMinor, configs.VersionPatch, versionMeta),
 			Commit:  db.commit,
 		},
 		System: &SystemMessage{

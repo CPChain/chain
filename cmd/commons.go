@@ -1,18 +1,24 @@
 package cmd
 
 import (
+	"bufio"
 	"crypto/ecdsa"
+	"errors"
 	"fmt"
+	"github.com/naoina/toml"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
@@ -30,7 +36,6 @@ import (
 	"bitbucket.org/cpchain/chain/p2p/discv5"
 	"bitbucket.org/cpchain/chain/p2p/nat"
 	"bitbucket.org/cpchain/chain/p2p/netutil"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/log"
@@ -137,7 +142,7 @@ func setNodeUserIdent(ctx *cli.Context, cfg *node.Config) {
 // setBootstrapNodes creates a list of bootstrap nodes from the command line
 // flags, reverting to pre-configured ones if none have been specified.
 func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
-	urls := params.MainnetBootnodes
+	urls := configs.MainnetBootnodes
 	switch {
 	case ctx.GlobalIsSet(BootnodesFlag.Name) || ctx.GlobalIsSet(BootnodesV4Flag.Name):
 		if ctx.GlobalIsSet(BootnodesV4Flag.Name) {
@@ -146,7 +151,7 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 			urls = strings.Split(ctx.GlobalString(BootnodesFlag.Name), ",")
 		}
 	case ctx.GlobalBool(CpchainFlag.Name):
-		urls = params.CpchainBootnodes
+		urls = configs.CpchainBootnodes
 	case cfg.BootstrapNodes != nil:
 		return // already set, don't apply defaults.
 	}
@@ -165,7 +170,7 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 // setBootstrapNodesV5 creates a list of bootstrap nodes from the command line
 // flags, reverting to pre-configured ones if none have been specified.
 func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
-	urls := params.DiscoveryV5Bootnodes
+	urls := configs.DiscoveryV5Bootnodes
 	switch {
 	case ctx.GlobalIsSet(BootnodesFlag.Name) || ctx.GlobalIsSet(BootnodesV5Flag.Name):
 		if ctx.GlobalIsSet(BootnodesV5Flag.Name) {
@@ -174,7 +179,7 @@ func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 			urls = strings.Split(ctx.GlobalString(BootnodesFlag.Name), ",")
 		}
 	case ctx.GlobalBool(CpchainFlag.Name):
-		urls = params.CpchainBootnodes
+		urls = configs.CpchainBootnodes
 	case cfg.BootstrapNodesV5 != nil:
 		return // already set, don't apply defaults.
 	}
@@ -692,3 +697,88 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 		return action(ctx)
 	}
 }
+
+
+type gethConfig struct {
+	Eth  eth.Config
+	Node node.Config
+}
+
+// These settings ensure that TOML keys use the same names as Go struct fields.
+var tomlSettings = toml.Config{
+	NormFieldName: func(rt reflect.Type, key string) string {
+		return key
+	},
+	FieldToKey: func(rt reflect.Type, field string) string {
+		return field
+	},
+	MissingField: func(rt reflect.Type, field string) error {
+		link := ""
+		if unicode.IsUpper(rune(rt.Name()[0])) && rt.PkgPath() != "main" {
+			link = fmt.Sprintf(", see https://godoc.org/%s#%s for available fields", rt.PkgPath(), rt.Name())
+		}
+		return fmt.Errorf("field '%s' is not defined in %s%s", field, rt.String(), link)
+	},
+}
+
+func defaultNodeConfig() node.Config {
+	cfg := node.DefaultConfig
+	cfg.Name = clientIdentifier
+	cfg.Version = configs.VersionWithCommit("")
+	cfg.HTTPModules = append(cfg.HTTPModules, "eth")
+	cfg.WSModules = append(cfg.WSModules, "eth")
+	cfg.IPCPath = "cpchain.ipc"
+	return cfg
+}
+
+
+func loadConfig(file string, cfg *gethConfig) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = tomlSettings.NewDecoder(bufio.NewReader(f)).Decode(cfg)
+	// Add file name to errors that have a line number.
+	if _, ok := err.(*toml.LineError); ok {
+		err = errors.New(file + ", " + err.Error())
+	}
+	return err
+}
+
+
+func makeFullNode(ctx *cli.Context) *node.Node {
+	stack, cfg := makeConfigNode(ctx)
+
+	RegisterEthService(stack, &cfg.Eth)
+
+	return stack
+}
+
+
+func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
+	// Load defaults.
+	cfg := gethConfig{
+		Eth:  eth.DefaultConfig,
+		Node: defaultNodeConfig(),
+	}
+
+	// Load config file.
+	if file := ctx.GlobalString(configFileFlag.Name); file != "" {
+		if err := loadConfig(file, &cfg); err != nil {
+			Fatalf("%v", err)
+		}
+	}
+
+	// Apply flags.
+	SetNodeConfig(ctx, &cfg.Node)
+	stack, err := node.New(&cfg.Node)
+	if err != nil {
+		Fatalf("Failed to create the protocol stack: %v", err)
+	}
+	SetEthConfig(ctx, stack, &cfg.Eth)
+
+	return stack, cfg
+}
+

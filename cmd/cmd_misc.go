@@ -22,9 +22,9 @@ import (
 	"runtime"
 	"strconv"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/eth"
-	"bitbucket.org/cpchain/chain/params"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -72,7 +72,7 @@ func makedag(ctx *cli.Context) error {
 }
 
 func version(ctx *cli.Context) error {
-	fmt.Println("Version:", params.Version)
+	fmt.Println("Version:", configs.Version)
 	fmt.Println("Architecture:", runtime.GOARCH)
 	fmt.Println("Protocol Versions:", eth.ProtocolVersions)
 	fmt.Println("Network Id:", eth.DefaultConfig.NetworkId)

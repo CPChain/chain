@@ -18,9 +18,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/rpc"
 )
 
@@ -38,7 +38,7 @@ var (
 		addr1: {Balance: big.NewInt(1000000000)},
 	}
 	// gspec   = core.Genesis{Config: params.TestChainConfig, Alloc: alloc}
-	gspec   = core.Genesis{Config: params.AllEthashProtocolChanges, Alloc: alloc}
+	gspec   = core.Genesis{Config: configs.AllEthashProtocolChanges, Alloc: alloc}
 	testdb  = ethdb.NewMemDatabase()
 	genesis = gspec.MustCommit(testdb)
 )
@@ -58,8 +58,8 @@ func init() {
 }
 
 func newChainReader(alloc core.GenesisAlloc) consensus.ChainReader {
-	_, _ = core.GenerateChain(params.TestChainConfig, genesis, dpor.New(&params.DporConfig{}, testdb), testdb, nil, 8, nil)
-	chain, _ := core.NewBlockChain(testdb, nil, params.TestChainConfig, dpor.New(&params.DporConfig{}, testdb), vm.Config{}, nil, nil)
+	_, _ = core.GenerateChain(configs.TestChainConfig, genesis, dpor.New(&configs.DporConfig{}, testdb), testdb, nil, 8, nil)
+	chain, _ := core.NewBlockChain(testdb, nil, configs.TestChainConfig, dpor.New(&configs.DporConfig{}, testdb), vm.Config{}, nil, nil)
 
 	return chain
 }

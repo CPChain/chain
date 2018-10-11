@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"bitbucket.org/cpchain/chain/params"
+	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common/math"
 )
 
@@ -48,7 +48,7 @@ type Config struct {
 type Interpreter struct {
 	evm      *EVM
 	cfg      Config
-	gasTable params.GasTable
+	gasTable configs.GasTable
 	intPool  *intPool
 
 	readOnly   bool   // Whether to throw on stateful modifications

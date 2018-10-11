@@ -21,8 +21,8 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/types"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 )
@@ -100,6 +100,6 @@ func newHeader() *types.Header {
 }
 
 func TestNew(t *testing.T) {
-	dpor := New(&params.DporConfig{}, &fakeDb{})
+	dpor := New(&configs.DporConfig{}, &fakeDb{})
 	assert.NotNil(t, dpor)
 }

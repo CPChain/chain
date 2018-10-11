@@ -20,11 +20,11 @@ import (
 	"encoding/json"
 	"errors"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	lru "github.com/hashicorp/golang-lru"
@@ -64,8 +64,8 @@ type Snapshot interface {
 
 // DporSnapshot is the state of the authorization voting at a given point in time.
 type DporSnapshot struct {
-	config   *params.DporConfig // Consensus engine parameters to fine tune behavior
-	sigcache *lru.ARCCache      // Cache of recent block signatures to speed up ecrecover
+	config   *configs.DporConfig // Consensus engine parameters to fine tune behavior
+	sigcache *lru.ARCCache       // Cache of recent block signatures to speed up ecrecover
 
 	Number uint64      `json:"number"` // Block number where the Snapshot was created
 	Hash   common.Hash `json:"hash"`   // Block hash where the Snapshot was created
@@ -77,7 +77,7 @@ type DporSnapshot struct {
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
 // method does not initialize the set of recent signers, so only ever use if for
 // the genesis block.
-func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
+func newSnapshot(config *configs.DporConfig, sigcache *lru.ARCCache, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
 	snap := &DporSnapshot{
 		config:        config,
 		sigcache:      sigcache,
@@ -91,7 +91,7 @@ func newSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, number uint6
 }
 
 // loadSnapshot loads an existing Snapshot from the database.
-func loadSnapshot(config *params.DporConfig, sigcache *lru.ARCCache, db ethdb.Database, hash common.Hash) (*DporSnapshot, error) {
+func loadSnapshot(config *configs.DporConfig, sigcache *lru.ARCCache, db ethdb.Database, hash common.Hash) (*DporSnapshot, error) {
 	blob, err := db.Get(append([]byte("dpor-"), hash[:]...))
 	if err != nil {
 		return nil, err

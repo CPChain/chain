@@ -20,10 +20,10 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/params"
 )
 
 // Tests that DAO-fork enabled clients can properly filter out fork-commencing
@@ -36,13 +36,13 @@ func TestDAOForkRangeExtradata(t *testing.T) {
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 	gspec := new(Genesis)
 	genesis := gspec.MustCommit(db)
-	prefix, _ := GenerateChain(params.TestChainConfig, genesis, ethash.NewFaker(), db, remoteDB, int(forkBlock.Int64()-1), func(i int, gen *BlockGen) {})
+	prefix, _ := GenerateChain(configs.TestChainConfig, genesis, ethash.NewFaker(), db, remoteDB, int(forkBlock.Int64()-1), func(i int, gen *BlockGen) {})
 
 	// Create the concurrent, conflicting two nodes
 	proDb := ethdb.NewMemDatabase()
 	gspec.MustCommit(proDb)
 
-	proConf := *params.TestChainConfig
+	proConf := *configs.TestChainConfig
 	proConf.DAOForkBlock = forkBlock
 	proConf.DAOForkSupport = true
 
@@ -52,7 +52,7 @@ func TestDAOForkRangeExtradata(t *testing.T) {
 	conDb := ethdb.NewMemDatabase()
 	gspec.MustCommit(conDb)
 
-	conConf := *params.TestChainConfig
+	conConf := *configs.TestChainConfig
 	conConf.DAOForkBlock = forkBlock
 	conConf.DAOForkSupport = false
 
@@ -66,7 +66,7 @@ func TestDAOForkRangeExtradata(t *testing.T) {
 		t.Fatalf("con-fork: failed to import chain prefix: %v", err)
 	}
 	// Try to expand both pro-fork and non-fork chains iteratively with other camp's blocks
-	for i := int64(0); i < params.DAOForkExtraRange.Int64(); i++ {
+	for i := int64(0); i < configs.DAOForkExtraRange.Int64(); i++ {
 		// Create a pro-fork block, and try to feed into the no-fork chain
 		db = ethdb.NewMemDatabase()
 		gspec.MustCommit(db)

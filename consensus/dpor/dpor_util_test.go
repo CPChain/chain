@@ -29,9 +29,9 @@ import (
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/params"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/hashicorp/golang-lru"
@@ -288,7 +288,7 @@ func Test_acceptSigs(t *testing.T) {
 
 func Test_calcDifficulty(t *testing.T) {
 	signers := getSignerAddress()
-	config := &params.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, Epoch: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
 	snapshot := newSnapshot(config, cache, 1, common.Hash{}, signers)
 
