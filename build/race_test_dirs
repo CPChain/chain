@@ -70,8 +70,8 @@ light
 #metrics/exp
 #metrics/influxdb
 #metrics/librato
-miner
 node
+node/miner
 p2p
 p2p/discover
 p2p/discv5
