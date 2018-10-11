@@ -35,7 +35,7 @@ import (
 func tmpDatadirWithKeystore(t *testing.T) string {
 	datadir := tmpdir(t)
 	keystore := filepath.Join(datadir, "keystore")
-	source := filepath.Join("..", "..", "accounts", "keystore", "testdata", "keystore")
+	source := filepath.Join("..", "accounts", "keystore", "testdata", "keystore")
 	if err := cp.CopyAll(keystore, source); err != nil {
 		t.Fatal(err)
 	}
@@ -233,7 +233,7 @@ Fatal: Failed to unlock account 0 (could not decrypt key with given passphrase)
 }
 
 func TestUnlockFlagAmbiguous(t *testing.T) {
-	store := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
+	store := filepath.Join("..", "accounts", "keystore", "testdata", "dupes")
 	geth := runGeth(t,
 		"--keystore", store, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a",
@@ -271,7 +271,7 @@ In order to avoid this warning, you need to remove the following duplicate key f
 }
 
 func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
-	store := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
+	store := filepath.Join("..", "accounts", "keystore", "testdata", "dupes")
 	geth := runGeth(t,
 		"--keystore", store, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
