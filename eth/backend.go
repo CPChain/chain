@@ -25,12 +25,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"bitbucket.org/cpchain/chain/accounts/keystore"
-
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/clique"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
@@ -43,8 +41,8 @@ import (
 	"bitbucket.org/cpchain/chain/eth/gasprice"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/miner"
 	"bitbucket.org/cpchain/chain/node"
+	"bitbucket.org/cpchain/chain/node/miner"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/params"
 	"bitbucket.org/cpchain/chain/private"
@@ -133,9 +131,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	switch config.PrivateTx.RemoteDBType {
 	case private.IPFS:
 		remoteDB = ethdb.NewIpfsDB(config.PrivateTx.RemoteDBParams)
-	case private.Swarm:
-		// TODO: implement it
-		panic("implement it.")
 	default:
 		remoteDB = ethdb.NewIpfsDB(private.DefaultIpfsUrl)
 	}
@@ -263,10 +258,7 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Data
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Ethereum service
 func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chainConfig *params.ChainConfig, db ethdb.Database) consensus.Engine {
-	// If proof-of-authority is requested, set it up
-	if chainConfig.Clique != nil {
-		return clique.New(chainConfig.Clique, db)
-	}
+
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. Liu Qian
@@ -412,13 +404,6 @@ func (s *Ethereum) StartMining(local bool) error {
 		// TODO: fix this, update contract caller with private key here. Liu Qian
 		// s.committeeNetworkHandler.UpdateContractCaller()
 
-	} else if clique, ok := s.engine.(*clique.Clique); ok {
-		wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
-		if wallet == nil || err != nil {
-			log.Error("Etherbase account unavailable locally", "err", err)
-			return fmt.Errorf("signer missing: %v", err)
-		}
-		clique.Authorize(eb, wallet.SignHash)
 	}
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection
