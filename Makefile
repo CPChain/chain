@@ -17,8 +17,8 @@ cpchain:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/cpchain\" to launch cpchain."
 
-all:
-	build/env.sh go run build/ci.go install
+all: cpchain
+
 
 android:
 	build/env.sh go run build/ci.go aar --local
