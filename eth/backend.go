@@ -75,8 +75,7 @@ type Ethereum struct {
 	protocolManager *ProtocolManager
 	lesServer       LesServer
 
-	server                  *p2p.Server
-	committeeNetworkHandler *BasicCommitteeNetworkHandler
+	server *p2p.Server
 
 	// DB interfaces
 	chainDb ethdb.Database // Block chain database
@@ -216,16 +215,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 // 		}
 // 	}
 // }
-
-func (s *Ethereum) newCommitteeNetworkHandler() error {
-	// TODO: fix this. Liu Qian
-	committeeNetworkHandler, err := NewBasicCommitteeNetworkHandler(s.protocolManager.peers, s.chainConfig.Dpor.Epoch, s.etherbase, s.chainConfig.Dpor.Contracts["SignerConnectionRegister"], s.server)
-	if err != nil {
-		return err
-	}
-	s.committeeNetworkHandler = committeeNetworkHandler
-	return nil
-}
 
 func makeExtraData(extra []byte) []byte {
 	if len(extra) == 0 {
@@ -385,7 +374,7 @@ func (s *Ethereum) SetEtherbase(etherbase common.Address) {
 	s.miner.SetEtherbase(etherbase)
 }
 
-func (s *Ethereum) StartMining(local bool) error {
+func (s *Ethereum) StartMining(local bool, contractCaller *dpor.ContractCaller) error {
 	eb, err := s.Etherbase()
 	if err != nil {
 		log.Error("Cannot start mining without etherbase", "err", err)
@@ -399,10 +388,10 @@ func (s *Ethereum) StartMining(local bool) error {
 		}
 		dpor.Authorize(eb, wallet.SignHash)
 
-		s.newCommitteeNetworkHandler()
-
+		log.Info("I am in s.StartMining")
 		// TODO: fix this, update contract caller with private key here. Liu Qian
-		// s.committeeNetworkHandler.UpdateContractCaller()
+		log.Info("s.pm.committeeNetworkHandler in s.StartMining", "s.pm.committeeNetworkHandler", s.protocolManager.committeeNetworkHandler)
+		s.protocolManager.committeeNetworkHandler.UpdateContractCaller(contractCaller)
 
 	}
 	if local {
@@ -453,10 +442,11 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	// Start the RPC service
 	s.netRPCService = ethapi.NewPublicNetAPI(srvr, s.NetVersion())
 
-	// TODO: check security. Liu Qian
+	// TODO: @liuq check security.
 	s.server = srvr
 
 	s.protocolManager.updateServer(srvr)
+	log.Info("I am in s.Start")
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers

@@ -99,7 +99,8 @@ func (api *PublicMinerAPI) SubmitWork(nonce types.BlockNonce, solution, digest c
 // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
 func (api *PublicMinerAPI) GetWork() ([3]string, error) {
 	if !api.e.IsMining() {
-		if err := api.e.StartMining(false); err != nil {
+		// TODO: @liuq fix this.
+		if err := api.e.StartMining(false, nil); err != nil {
 			return [3]string{}, err
 		}
 	}
@@ -155,7 +156,8 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 		api.e.lock.RUnlock()
 
 		api.e.txPool.SetGasPrice(price)
-		return api.e.StartMining(true)
+		// TODO: @liuq fix this.
+		return api.e.StartMining(true, nil)
 	}
 	return nil
 }

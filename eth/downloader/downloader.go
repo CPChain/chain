@@ -343,6 +343,7 @@ func (d *Downloader) Synchronise(id string, head common.Hash, td *big.Int, mode 
 
 	case consensus.ErrNewSignedHeader:
 		// TODO: he will broadcast the header in err
+		log.Debug("Not enough signatures, signed it, waiting", "err", err)
 
 		return err
 

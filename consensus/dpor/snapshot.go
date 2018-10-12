@@ -264,10 +264,9 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 	signers := election.Elect(rpts, seed, viewLength)
 
 	// TODO: fix this.
-
 	epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
 	s.RecentSigners[epochIdx] = signers
-	s.RecentSigners[epochIdx+1] = signers
+	// s.RecentSigners[epochIdx+1] = signers
 	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
 		delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
 	}
@@ -304,6 +303,7 @@ func (s *DporSnapshot) signerRoundOf(signer common.Address, number uint64) (int,
 			return round, nil
 		}
 	}
+
 	return -1, errSignerNotInCommittee
 }
 
@@ -338,11 +338,19 @@ func (s *DporSnapshot) inturn(number uint64, signer common.Address) bool {
 }
 
 func (s *DporSnapshot) isFutureSigner(signer common.Address, number uint64) bool {
-	for _, sn := range s.RecentSigners[s.EpochIdxOf(number)+EpochGapBetweenElectionAndMining] {
-		log.Debug("future signers:", "s", sn.Hex())
-		if sn == signer {
-			return true
+	_, err := s.FuturesignerRoundOf(signer, number)
+	return err == nil
+}
+
+func (s *DporSnapshot) FutureSigners(number uint64) []common.Address {
+	return s.RecentSigners[s.EpochIdxOf(number)+EpochGapBetweenElectionAndMining]
+}
+
+func (s *DporSnapshot) FuturesignerRoundOf(signer common.Address, number uint64) (int, error) {
+	for round, s := range s.FutureSigners(number) {
+		if s == signer {
+			return round, nil
 		}
 	}
-	return false
+	return -1, errSignerNotInCommittee
 }

@@ -108,8 +108,10 @@ type ProtocolManager struct {
 
 func (pm *ProtocolManager) updateServer(server *p2p.Server) {
 	pm.server = server
-	pm.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(nil, 0, pm.etherbase, common.Address{}, pm.server)
-	pm.engine.SetCommitteeNetworkHandler(pm.committeeNetworkHandler)
+	if pm.chainconfig.Dpor != nil {
+		pm.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(pm.chainconfig.Dpor.Epoch, pm.etherbase, pm.chainconfig.Dpor.Contracts["signer"], pm.server)
+		pm.engine.SetCommitteeNetworkHandler(pm.committeeNetworkHandler)
+	}
 }
 
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
@@ -790,8 +792,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 			} else {
 				block := pm.blockchain.GetBlockByHash(hash)
-				// go pm.BroadcastBlock(block, true)
-				go pm.BroadcastBlock(block.WithSeal(header), true)
+				go pm.BroadcastBlock(block, true)
 
 				if number < pm.blockchain.CurrentBlock().NumberU64() {
 
@@ -824,6 +825,10 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 
 		case err = <-pm.blockchain.ErrChan:
 			log.Debug("received err from blockchain.ErrChan", "err", err)
+			if err == nil {
+				block := pm.blockchain.CurrentBlock()
+				pm.BroadcastBlock(block, true)
+			}
 			if err, ok := err.(*consensus.ErrNewSignedHeaderType); ok {
 				header := err.SignedHeader
 				log.Debug("header", "header", header)

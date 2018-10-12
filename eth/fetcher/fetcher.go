@@ -668,13 +668,12 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 			// log.Debug("Now without enough sigs, broadcasting the block...")
 			// go f.broadcastBlock(block, true)
 			// log.Debug("--------I am in fetcher.insert end--------")
-			return
 		case consensus.ErrNewSignedHeader:
 			// broadcast the signed header to peers.
 
 			// TODO: @liuq fix this.
-			// go f.broadcastSignedHeader(block.RefHeader())
-			go f.sendSignedHeaderToPeer(peer, block.RefHeader())
+			go f.broadcastSignedHeader(block.RefHeader())
+			// go f.sendSignedHeaderToPeer(peer, block.RefHeader())
 
 		case consensus.ErrFutureBlock:
 			// Weird future block, don't fail, but neither propagate

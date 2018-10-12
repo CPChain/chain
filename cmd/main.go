@@ -29,6 +29,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/debug"
@@ -149,6 +150,30 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 	events := make(chan accounts.WalletEvent, 16)
 	stack.AccountManager().Subscribe(events)
 
+	var contractCaller *dpor.ContractCaller
+	// TODO: @liuq fix this.
+	if len(ks.Accounts()) > 0 {
+		account := ks.Accounts()[0]
+		account, key, err := ks.GetDecryptedKey(account, passwords[0])
+		if err != nil {
+			log.Warn("err when get account", "err", err)
+		}
+		log.Warn("succeed when get unlock account", "key", key)
+
+		rpcClient, err := stack.Attach()
+		if err != nil {
+			Fatalf("Failed to attach to self: %v", err)
+		}
+		client := ethclient.NewClient(rpcClient)
+
+		contractCaller, err = dpor.NewContractCaller(key, client, 300000, 1)
+		if err != nil {
+			log.Warn("err when make contract call", "err", err)
+		}
+	}
+
+	// TODO: @liuq fix above.
+
 	go func() {
 		// Create a chain state reader for self-derivation
 		rpcClient, err := stack.Attach()
@@ -204,7 +229,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		// Set the gas price to the limits from the CLI and start mining
 		ethereum.TxPool().SetGasPrice(GlobalBig(ctx, GasPriceFlag.Name))
 
-		if err := ethereum.StartMining(true); err != nil {
+		if err := ethereum.StartMining(true, contractCaller); err != nil {
 			Fatalf("Failed to start mining: %v", err)
 		}
 	}

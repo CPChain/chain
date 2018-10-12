@@ -779,7 +779,7 @@ func (bc *BlockChain) procPendingBlocks() {
 		for i := range blocks {
 			_, err := bc.InsertChain(blocks[i : i+1])
 			bc.ErrChan <- err
-			log.Debug("err of future insert, go to bc.ErrChan", "err", err)
+			log.Debug("err of pending insert, go to bc.ErrChan", "err", err)
 		}
 	}
 }
@@ -1513,13 +1513,14 @@ func (bc *BlockChain) PostChainEvents(events []interface{}, logs []*types.Log) {
 }
 
 func (bc *BlockChain) update() {
-	futureTimer := time.NewTicker(5 * time.Second)
+	futureTimer := time.NewTicker(10 * time.Second)
 	defer futureTimer.Stop()
 	for {
 		select {
 		case <-futureTimer.C:
 			bc.procFutureBlocks()
 			bc.procPendingBlocks()
+
 		case <-bc.Quit:
 			return
 		}

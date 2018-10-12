@@ -224,11 +224,10 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			log.Debug("--------I am in sync.Synchronise end--------")
 
 			// TODO: @liuq fix this.
-			// go pm.BroadcastSignedHeader(header)
-			go peer.AsyncSendNewSignedHeader(header)
+			go pm.BroadcastSignedHeader(header)
+			// go peer.AsyncSendNewSignedHeader(header)
 
 		}
-		// return
 	}
 
 	if atomic.LoadUint32(&pm.fastSync) == 1 {

@@ -339,7 +339,17 @@ func DefaultCpchainGenesisBlock() *Genesis {
 		Alloc: map[common.Address]GenesisAccount{
 			common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"): {Balance: big.NewInt(math.MaxInt64)},
 			common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"): {Balance: big.NewInt(math.MaxInt64)},
-			common.HexToAddress("0xEF3dd127DE235F15ffB4FC0D71469d1339DF6465"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"): {Balance: big.NewInt(math.MaxInt64)},
+
+			common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"): {Balance: big.NewInt(math.MaxInt64)},
+
+			common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"): {Balance: big.NewInt(math.MaxInt64)},
+
 			common.HexToAddress("0x0000000000000000000000000000000000000000"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000001"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000002"): {Balance: big.NewInt(0x00000000000000000)},

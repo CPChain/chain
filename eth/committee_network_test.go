@@ -14,7 +14,6 @@ import (
 
 func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
 	type args struct {
-		peers           *peerSet
 		epochLength     uint64
 		ownAddress      common.Address
 		contractAddress common.Address
@@ -30,7 +29,7 @@ func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewBasicCommitteeNetworkHandler(tt.args.peers, tt.args.epochLength, tt.args.ownAddress, tt.args.contractAddress, tt.args.server)
+			got, err := NewBasicCommitteeNetworkHandler(tt.args.epochLength, tt.args.ownAddress, tt.args.contractAddress, tt.args.server)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBasicCommitteeNetworkHandler() error = %v, wantErr %v", err, tt.wantErr)
 				return

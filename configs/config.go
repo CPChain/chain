@@ -77,8 +77,12 @@ var (
 		Dpor: &DporConfig{
 			Period:                3,
 			Epoch:                 4,
-			MaxInitBlockNumber:    8,
+			MaxInitBlockNumber:    50,
 			ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
+			Contracts: map[string]common.Address{
+				"campaign": common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"),
+				"signer":   common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"),
+			},
 		},
 	}
 
