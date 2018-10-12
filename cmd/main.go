@@ -152,7 +152,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 
 	var contractCaller *dpor.ContractCaller
 	// TODO: @liuq fix this.
-	if len(ks.Accounts()) > 0 {
+	if len(ks.Accounts()) > 0 && len(passwords) > 0 {
 		account := ks.Accounts()[0]
 		account, key, err := ks.GetDecryptedKey(account, passwords[0])
 		if err != nil {
