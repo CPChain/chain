@@ -26,7 +26,9 @@ func newApp() *cli.App {
 	// be fair to the fish shell.
 	// app.EnableBashCompletion = true
 
-	app.Action = cli.ShowAppHelp
+	// TODO use the run command
+	// app.Action = cli.ShowAppHelp
+	app.Action = run
 
 	app.Commands = []cli.Command{
 		initCommand,
@@ -41,6 +43,13 @@ func newApp() *cli.App {
 	}
 
 	// global flags
+	// TODO delete them.  move under run command
+	app.Flags = append(app.Flags, nodeFlags...)
+	app.Flags = append(app.Flags, rpcFlags...)
+	app.Flags = append(app.Flags, debug.Flags...)
+	app.Flags = append(app.Flags, consoleFlags...)
+
+
 	// maintain order
 	sort.Sort(cli.CommandsByName(app.Commands))
 	sort.Sort(cli.FlagsByName(app.Flags))
