@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/log"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
@@ -29,18 +29,18 @@ func deploySigner() {
 	// Create client.
 	client, err := ethclient.Dial(endPoint)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	// Open keystore file.
 	file, err := os.Open(keyStoreFilePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	// Create keystore and get account.
@@ -48,7 +48,7 @@ func deploySigner() {
 	account := kst.Accounts()[0]
 	account, key, err := kst.GetDecryptedKey(account, "password")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	// Get private and public keys.
@@ -70,7 +70,7 @@ func deploySigner() {
 	// Get gas price.
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("gasPrice:", gasPrice)
 
@@ -86,7 +86,7 @@ func deploySigner() {
 	// Launch contract deploy transaction.
 	address, tx, _, err := signerRegister.DeploySignerConnectionRegister(auth, client)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	fmt.Println("Contract address: ", address.Hex())
@@ -114,18 +114,18 @@ func deployCampaign() {
 	// Create client.
 	client, err := ethclient.Dial(endPoint)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	// Open keystore file.
 	file, err := os.Open(keyStoreFilePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	// Create keystore and get account.
@@ -133,7 +133,7 @@ func deployCampaign() {
 	account := kst.Accounts()[0]
 	account, key, err := kst.GetDecryptedKey(account, "password")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	// Get private and public keys.
@@ -155,7 +155,7 @@ func deployCampaign() {
 	// Get gas price.
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("gasPrice:", gasPrice)
 
@@ -171,7 +171,7 @@ func deployCampaign() {
 	// Launch contract deploy transaction.
 	address, tx, _, err := campaign.DeployCampaign(auth, client)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	fmt.Println("Contract address: ", address.Hex())

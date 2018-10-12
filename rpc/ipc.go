@@ -20,8 +20,8 @@ import (
 	"context"
 	"net"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/p2p/netutil"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 // ServeListener accepts connections on l, serving JSON-RPC on them.
@@ -34,7 +34,7 @@ func (srv *Server) ServeListener(l net.Listener) error {
 		} else if err != nil {
 			return err
 		}
-		log.Trace("Accepted connection", "addr", conn.RemoteAddr())
+		log.Debug("Accepted connection", "addr", conn.RemoteAddr())
 		go srv.ServeCodec(NewJSONCodec(conn), OptionMethodInvocation|OptionSubscriptions)
 	}
 }

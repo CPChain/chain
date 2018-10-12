@@ -8,7 +8,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/commons/log"
 )
 
 func generateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {

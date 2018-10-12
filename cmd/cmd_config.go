@@ -39,7 +39,6 @@ var (
 	}
 )
 
-
 // dumpConfig is the dumpconfig command.
 func dumpConfig(ctx *cli.Context) error {
 	_, cfg := makeConfigNode(ctx)

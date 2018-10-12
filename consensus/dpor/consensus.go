@@ -272,9 +272,9 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
 			delay += time.Duration(rand.Int63n(int64(wiggle)))
 
-			log.Trace("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
+			log.Debug("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
 		}
-		log.Trace("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
+		log.Debug("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
 
 		select {
 		case <-stop:

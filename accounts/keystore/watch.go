@@ -21,7 +21,7 @@ package keystore
 import (
 	"time"
 
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/rjeczalik/notify"
 )
 
@@ -66,12 +66,12 @@ func (w *watcher) loop() {
 	logger := log.New("path", w.ac.keydir)
 
 	if err := notify.Watch(w.ac.keydir, w.ev, notify.All); err != nil {
-		logger.Trace("Failed to watch keystore folder", "err", err)
+		logger.Debug("Failed to watch keystore folder", "err", err)
 		return
 	}
 	defer notify.Stop(w.ev)
-	logger.Trace("Started watching keystore folder")
-	defer logger.Trace("Stopped watching keystore folder")
+	logger.Debug("Started watching keystore folder")
+	defer logger.Debug("Stopped watching keystore folder")
 
 	w.ac.mu.Lock()
 	w.running = true

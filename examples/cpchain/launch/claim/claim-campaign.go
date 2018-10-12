@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/log"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
@@ -99,12 +99,12 @@ func getAccount(keyStoreFilePath string, passphrase string, rsaPubkeyPath string
 	// Load account.
 	file, err := os.Open(dataDir + keyStoreFilePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	kst := keystore.NewKeyStore(keyPath, 2, 1)
@@ -113,7 +113,7 @@ func getAccount(keyStoreFilePath string, passphrase string, rsaPubkeyPath string
 	account := kst.Accounts()[0]
 	account, key, err := kst.GetDecryptedKey(account, passphrase)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	privateKey := key.PrivateKey
@@ -134,7 +134,7 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 	// Create client.
 	client, err := ethclient.Dial(endPoint)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("from address:", address.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
 
@@ -144,7 +144,7 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("gasPrice:", gasPrice)
 
@@ -167,7 +167,7 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 
 	tx, err := instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), big.NewInt(int64(myRpt)))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	fmt.Println("transaction hash: ", tx.Hash().Hex())
@@ -189,7 +189,7 @@ func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, addre
 	// Create client.
 	client, err := ethclient.Dial(endPoint)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("from address:", address.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
 
@@ -199,7 +199,7 @@ func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, addre
 
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("gasPrice:", gasPrice)
 
@@ -221,7 +221,7 @@ func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, addre
 
 	tx, err := instance.RegisterPublicKey(auth, rsaPubkey)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	fmt.Println("transaction hash: ", tx.Hash().Hex())

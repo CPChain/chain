@@ -18,11 +18,11 @@ package node_test
 
 import (
 	"fmt"
-	"log"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
-	"github.com/ethereum/go-ethereum/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // SampleService is a trivial network service that can be attached to a node for

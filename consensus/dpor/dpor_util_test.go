@@ -19,7 +19,6 @@ package dpor
 
 import (
 	"crypto/ecdsa"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -33,6 +32,7 @@ import (
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/types"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/hashicorp/golang-lru"
@@ -83,12 +83,12 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 	// Load account.
 	file, err := os.Open(keyStoreFilePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	kst := keystore.NewKeyStore(keyPath, 2, 1)
@@ -97,7 +97,7 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 	account := kst.Accounts()[0]
 	account, key, err := kst.GetDecryptedKey(account, passphrase)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	privateKey := key.PrivateKey

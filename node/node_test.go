@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/crypto"
-	"github.com/ethereum/go-ethereum/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 var (

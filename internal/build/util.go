@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -31,6 +30,8 @@ import (
 	"runtime"
 	"strings"
 	"text/template"
+
+	"bitbucket.org/cpchain/chain/commons/log"
 )
 
 var TestDirPrefix = "bitbucket.org/cpchain/chain/"
@@ -44,7 +45,7 @@ func MustRun(cmd *exec.Cmd) {
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
 		if err := cmd.Run(); err != nil {
-			log.Fatal(err)
+			log.Fatal(err.Error())
 		}
 	}
 }
@@ -66,7 +67,7 @@ func GOPATH() string {
 func VERSION() string {
 	version, err := ioutil.ReadFile("VERSION")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	return string(bytes.TrimSpace(version))
 }
@@ -114,39 +115,39 @@ func RenderString(templateContent, outputFile string, outputPerm os.FileMode, x 
 
 func render(tpl *template.Template, outputFile string, outputPerm os.FileMode, x interface{}) {
 	if err := os.MkdirAll(filepath.Dir(outputFile), 0755); err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	out, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY|os.O_EXCL, outputPerm)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	if err := tpl.Execute(out, x); err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	if err := out.Close(); err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 }
 
 // CopyFile copies a file.
 func CopyFile(dst, src string, mode os.FileMode) {
 	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	destFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	defer destFile.Close()
 
 	srcFile, err := os.Open(src)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	defer srcFile.Close()
 
 	if _, err := io.Copy(destFile, srcFile); err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 }
 

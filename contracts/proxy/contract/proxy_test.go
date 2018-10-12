@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
@@ -48,7 +48,7 @@ func TestSignerRegisterProxyContractRegister(t *testing.T) {
 	realAddr := common.HexToAddress("0x482fdcd02cd9bc79ccb69644cbdec46ff365f50b")
 	tx, err := proxyContractRegister.RegisterProxyContract(auth, proxyAddr, realAddr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("TX:", tx.Hash().Hex())
 	startTime := time.Now()
@@ -86,7 +86,7 @@ func deploySignerRegisterProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, 
 	client, err := ethclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	file, _ := os.Open("../../../examples/cpchain/data/dd1/keystore/")
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
@@ -95,7 +95,7 @@ func deploySignerRegisterProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, 
 	account, key, err := kst.GetDecryptedKey(account, "password")
 	privateKey := key.PrivateKey
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
@@ -110,7 +110,7 @@ func deploySignerRegisterProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, 
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	fmt.Println("gasPrice:", gasPrice)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(0)
@@ -118,7 +118,7 @@ func deploySignerRegisterProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, 
 	auth.GasPrice = gasPrice
 	address, tx, instance, err := DeployProxy(auth, client)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	ctx := context.Background()
 	receipt, err := bind.WaitMined(ctx, client, tx)
