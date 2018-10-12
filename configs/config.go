@@ -28,7 +28,7 @@ const CpchainChainId = 42
 // Genesis hashes to enforce below configs on.
 var (
 	// hash refers to default block.
-	MainnetGenesisHash = common.HexToHash("0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3")
+	MainnetGenesisHash = common.HexToHash("0x1016c25d1b029163a0a5c960733381f5db7710066ae3816c1768d24b72be1e8f")
 	// TODO
 	CpchainGenesisHash = common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000")
 )

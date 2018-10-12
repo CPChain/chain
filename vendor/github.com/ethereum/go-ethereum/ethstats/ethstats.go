@@ -32,7 +32,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
@@ -541,7 +541,7 @@ func (s *Service) assembleBlockStats(block *types.Block) *blockStats {
 		for i, tx := range block.Transactions() {
 			txs[i].Hash = tx.Hash()
 		}
-		uncles = block.Uncles()
+		uncles = []*types.Header{}
 	}
 	//else {
 	//	// Light nodes would need on-demand lookups for transactions/uncles, skip

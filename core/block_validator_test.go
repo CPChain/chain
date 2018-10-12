@@ -23,9 +23,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 // Tests that simple header verification works, for both good and bad blocks.

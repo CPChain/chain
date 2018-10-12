@@ -27,10 +27,9 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
-	"gopkg.in/fatih/set.v0"
 )
 
 // Ethash proof-of-work protocol constants.
@@ -48,8 +47,6 @@ var (
 var (
 	errLargeBlockTime    = errors.New("timestamp too big")
 	errZeroBlockTime     = errors.New("timestamp equals parent's")
-	errTooManyUncles     = errors.New("too many uncles")
-	errDuplicateUncle    = errors.New("duplicate uncle")
 	errUncleIsAncestor   = errors.New("uncle is ancestor")
 	errDanglingUncle     = errors.New("uncle's parent is not ancestor")
 	errInvalidDifficulty = errors.New("non-positive difficulty")
@@ -171,12 +168,8 @@ func (ethash *Ethash) VerifyUncles(chain consensus.ChainReader, block *types.Blo
 	if ethash.config.PowMode == ModeFullFake {
 		return nil
 	}
-	// Verify that there are at most 2 uncles included in this block
-	if len(block.Uncles()) > maxUncles {
-		return errTooManyUncles
-	}
 	// Gather the set of past uncles and ancestors
-	uncles, ancestors := set.New(), make(map[common.Hash]*types.Header)
+	ancestors := make(map[common.Hash]*types.Header)
 
 	number, parent := block.NumberU64()-1, block.ParentHash()
 	for i := 0; i < 7; i++ {
@@ -185,34 +178,10 @@ func (ethash *Ethash) VerifyUncles(chain consensus.ChainReader, block *types.Blo
 			break
 		}
 		ancestors[ancestor.Hash()] = ancestor.Header()
-		for _, uncle := range ancestor.Uncles() {
-			uncles.Add(uncle.Hash())
-		}
 		parent, number = ancestor.ParentHash(), number-1
 	}
 	ancestors[block.Hash()] = block.Header()
-	uncles.Add(block.Hash())
 
-	// Verify each of the uncles that it's recent, but not an ancestor
-	for _, uncle := range block.Uncles() {
-		// Make sure every uncle is rewarded only once
-		hash := uncle.Hash()
-		if uncles.Has(hash) {
-			return errDuplicateUncle
-		}
-		uncles.Add(hash)
-
-		// Make sure the uncle has a valid ancestry
-		if ancestors[hash] != nil {
-			return errUncleIsAncestor
-		}
-		if ancestors[uncle.ParentHash] == nil || uncle.ParentHash == block.ParentHash() {
-			return errDanglingUncle
-		}
-		if err := ethash.verifyHeader(chain, uncle, ancestors[uncle.ParentHash], true, true); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -329,11 +298,7 @@ func calcDifficultyByzantium(time uint64, parent *types.Header) *big.Int {
 	// (2 if len(parent_uncles) else 1) - (block_timestamp - parent_timestamp) // 9
 	x.Sub(bigTime, bigParentTime)
 	x.Div(x, big9)
-	if parent.UncleHash == types.EmptyUncleHash {
-		x.Sub(big1, x)
-	} else {
-		x.Sub(big2, x)
-	}
+	x.Sub(big1, x)
 	// max((2 if len(parent_uncles) else 1) - (block_timestamp - parent_timestamp) // 9, -99)
 	if x.Cmp(bigMinus99) < 0 {
 		x.Set(bigMinus99)
@@ -511,7 +476,7 @@ func (ethash *Ethash) Finalize(chain consensus.ChainReader, header *types.Header
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 
 	// Header seems complete, assemble into a block and return
-	return types.NewBlock(header, txs, uncles, receipts), nil
+	return types.NewBlock(header, txs, receipts), nil
 }
 
 // Some weird constants to avoid constant memory allocs for them.

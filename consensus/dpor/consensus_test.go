@@ -26,8 +26,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"
@@ -82,30 +83,6 @@ func TestDpor_VerifyHeaders(t *testing.T) {
 			fmt.Println("got:", got)
 			if tt.wantErr != (got == nil) {
 				t.Errorf("Dpor.VerifyHeaders() got = %v, want %v", got, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestDpor_VerifyUncles(t *testing.T) {
-	c := &Dpor{}
-	tx1 := types.NewTransaction(0, addr1, big.NewInt(10), 50000, big.NewInt(10), nil)
-	var trans []*types.Transaction = make([]*types.Transaction, 1)
-	trans[0] = tx1
-
-	tests := []struct {
-		name    string
-		uncls   []*types.Header
-		wantErr bool
-	}{
-		{"exist uncles should be error", []*types.Header{newHeader()}, true},
-		{"no uncles should be no error", []*types.Header{}, false},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			newBlock := types.NewBlock(newHeader(), trans, test.uncls, nil)
-			if err := c.VerifyUncles(nil, newBlock); (err != nil) != test.wantErr {
-				t.Errorf("Dpor.VerifyUncles(%v, %v) error = %v, wantErr %v", nil, test.uncls, err, test.wantErr)
 			}
 		})
 	}

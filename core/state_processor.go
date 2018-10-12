@@ -17,16 +17,17 @@
 package core
 
 import (
+	"crypto/rsa"
+	"errors"
+
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/private"
-	"crypto/rsa"
-	"errors"
+	"bitbucket.org/cpchain/chain/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
@@ -92,7 +93,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 		// TODO: if need to add private receipt's logs to allLogs variable.
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
-	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles(), pubReceipts)
+	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), []*types.Header{}, pubReceipts)
 
 	// TODO: if return private logs separately or merge them together as a whole logs collection?
 	return pubReceipts, privReceipts, allLogs, *usedGas, nil

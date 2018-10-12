@@ -20,9 +20,9 @@ import (
 	"crypto/rsa"
 
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 // Validator is an interface which defines the standard for block validation. It

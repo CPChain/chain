@@ -21,7 +21,7 @@ import (
 	"encoding/binary"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -330,7 +330,7 @@ func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block 
 	if body == nil {
 		return nil
 	}
-	return types.NewBlockWithHeader(header).WithBody(body.Transactions, body.Uncles)
+	return types.NewBlockWithHeader(header).WithBody(body.Transactions)
 }
 
 // WriteBlock serializes a block into the database, header and body separately.

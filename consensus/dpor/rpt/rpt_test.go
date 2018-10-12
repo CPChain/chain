@@ -9,9 +9,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +30,6 @@ var (
 func newHeader() *types.Header {
 	return &types.Header{
 		ParentHash:  common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),
-		UncleHash:   common.HexToHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"),
 		Coinbase:    common.HexToAddress("0x8888f1F195AFa192CfeE860698584c030f4c9dB1"),
 		Root:        common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxHash:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
@@ -62,9 +60,7 @@ func (b *fakeClientBackend) BlockByNumber(ctx context.Context, number *big.Int) 
 
 	var trans []*types.Transaction = make([]*types.Transaction, 1)
 	trans[0] = tx1
-	var uncls []*types.Header
-	rlp.DecodeBytes(common.Hex2Bytes("c0"), uncls)
-	newBlock := types.NewBlock(newHeader(), trans, uncls, nil)
+	newBlock := types.NewBlock(newHeader(), trans, nil)
 	return newBlock, nil
 }
 
@@ -93,9 +89,7 @@ func (b *fakeErrorClientBackend) BlockByNumber(ctx context.Context, number *big.
 
 	var trans []*types.Transaction = make([]*types.Transaction, 1)
 	trans[0] = tx1
-	var uncls []*types.Header
-	rlp.DecodeBytes(common.Hex2Bytes("c0"), uncls)
-	newBlock := types.NewBlock(newHeader(), trans, uncls, nil)
+	newBlock := types.NewBlock(newHeader(), trans, nil)
 	return newBlock, nil
 }
 

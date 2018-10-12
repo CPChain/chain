@@ -31,12 +31,12 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -537,51 +537,29 @@ func (s *PublicBlockChainAPI) GetBlockByHash(ctx context.Context, blockHash comm
 // GetUncleByBlockNumberAndIndex returns the uncle block for the given block hash and index. When fullTx is true
 // all transactions in the block are returned in full detail, otherwise only the transaction hash is returned.
 func (s *PublicBlockChainAPI) GetUncleByBlockNumberAndIndex(ctx context.Context, blockNr rpc.BlockNumber, index hexutil.Uint) (map[string]interface{}, error) {
-	block, err := s.b.BlockByNumber(ctx, blockNr)
-	if block != nil {
-		uncles := block.Uncles()
-		if index >= hexutil.Uint(len(uncles)) {
-			log.Debug("Requested uncle not found", "number", blockNr, "hash", block.Hash(), "index", index)
-			return nil, nil
-		}
-		block = types.NewBlockWithHeader(uncles[index])
-		return s.rpcOutputBlock(block, false, false)
-	}
-	return nil, err
+	// No uncles for dpor
+	return map[string]interface{}{}, nil
 }
 
 // GetUncleByBlockHashAndIndex returns the uncle block for the given block hash and index. When fullTx is true
 // all transactions in the block are returned in full detail, otherwise only the transaction hash is returned.
 func (s *PublicBlockChainAPI) GetUncleByBlockHashAndIndex(ctx context.Context, blockHash common.Hash, index hexutil.Uint) (map[string]interface{}, error) {
-	block, err := s.b.GetBlock(ctx, blockHash)
-	if block != nil {
-		uncles := block.Uncles()
-		if index >= hexutil.Uint(len(uncles)) {
-			log.Debug("Requested uncle not found", "number", block.Number(), "hash", blockHash, "index", index)
-			return nil, nil
-		}
-		block = types.NewBlockWithHeader(uncles[index])
-		return s.rpcOutputBlock(block, false, false)
-	}
-	return nil, err
+	// No uncles for dpor
+	return map[string]interface{}{}, nil
 }
 
 // GetUncleCountByBlockNumber returns number of uncles in the block for the given block number
 func (s *PublicBlockChainAPI) GetUncleCountByBlockNumber(ctx context.Context, blockNr rpc.BlockNumber) *hexutil.Uint {
-	if block, _ := s.b.BlockByNumber(ctx, blockNr); block != nil {
-		n := hexutil.Uint(len(block.Uncles()))
-		return &n
-	}
-	return nil
+	// No uncles for dpor
+	n := hexutil.Uint(0)
+	return &n
 }
 
 // GetUncleCountByBlockHash returns number of uncles in the block for the given block hash
 func (s *PublicBlockChainAPI) GetUncleCountByBlockHash(ctx context.Context, blockHash common.Hash) *hexutil.Uint {
-	if block, _ := s.b.GetBlock(ctx, blockHash); block != nil {
-		n := hexutil.Uint(len(block.Uncles()))
-		return &n
-	}
-	return nil
+	// No uncles for dpor
+	n := hexutil.Uint(0)
+	return &n
 }
 
 // GetCode returns the code stored at the given address in the state for the given block number.
@@ -808,7 +786,6 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (map[string]inter
 		"parentHash":       head.ParentHash,
 		"nonce":            head.Nonce,
 		"mixHash":          head.MixDigest,
-		"sha3Uncles":       head.UncleHash,
 		"logsBloom":        head.Bloom,
 		"stateRoot":        head.Root,
 		"miner":            head.Coinbase,
@@ -841,13 +818,6 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (map[string]inter
 		}
 		fields["transactions"] = transactions
 	}
-
-	uncles := b.Uncles()
-	uncleHashes := make([]common.Hash, len(uncles))
-	for i, uncle := range uncles {
-		uncleHashes[i] = uncle.Hash()
-	}
-	fields["uncles"] = uncleHashes
 
 	return fields, nil
 }

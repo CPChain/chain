@@ -19,7 +19,7 @@ package core
 import (
 	"runtime"
 
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 // senderCacher is a concurrent tranaction sender recoverer anc cacher.

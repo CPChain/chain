@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 // Tests that the account management snippets work correctly.

@@ -5,15 +5,13 @@ package rpt
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/rpc"
-
-	"fmt"
-
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethclient"
+	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )

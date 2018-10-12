@@ -26,8 +26,8 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -44,9 +44,8 @@ const (
 )
 
 var (
-	uncleHash  = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
-	diffInTurn = big.NewInt(2)            // Block difficulty for in-turn signatures
-	diffNoTurn = big.NewInt(1)            // Block difficulty for out-of-turn signatures
+	diffInTurn = big.NewInt(2) // Block difficulty for in-turn signatures
+	diffNoTurn = big.NewInt(1) // Block difficulty for out-of-turn signatures
 )
 
 // Various error messages to mark blocks invalid. These should be private to
@@ -161,15 +160,6 @@ func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Heade
 	return abort, results
 }
 
-// VerifyUncles implements consensus.Engine, always returning an error for any
-// uncles as this consensus mechanism doesn't permit uncles.
-func (d *Dpor) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
-	if len(block.Uncles()) > 0 {
-		return errVerifyUncleNotAllowed
-	}
-	return nil
-}
-
 // VerifySeal implements consensus.Engine, checking whether the signature contained
 // in the header satisfies the consensus protocol requirements.
 func (d *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, refHeader *types.Header) error {
@@ -228,10 +218,9 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
 	// No block rewards in PoA, so the state remains as is and uncles are dropped
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
-	header.UncleHash = types.CalcUncleHash(nil)
 
 	// Assemble and return the final block for sealing
-	return types.NewBlock(header, txs, nil, receipts), nil
+	return types.NewBlock(header, txs, receipts), nil
 }
 
 // Authorize injects a private key into the consensus engine to mint new blocks

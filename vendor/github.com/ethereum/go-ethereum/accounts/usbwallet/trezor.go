@@ -29,7 +29,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"github.com/ethereum/go-ethereum/accounts/usbwallet/internal/trezor"
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/log"

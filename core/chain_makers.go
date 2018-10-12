@@ -24,9 +24,10 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
+
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -44,7 +45,6 @@ type BlockGen struct {
 	gasPool  *GasPool
 	txs      []*types.Transaction
 	receipts []*types.Receipt
-	uncles   []*types.Header
 
 	config *configs.ChainConfig
 	engine consensus.Engine
@@ -133,11 +133,6 @@ func (b *BlockGen) TxNonce(addr common.Address) uint64 {
 	return b.pubStateDB.GetNonce(addr)
 }
 
-// AddUncle adds an uncle header to the generated block.
-func (b *BlockGen) AddUncle(h *types.Header) {
-	b.uncles = append(b.uncles, h)
-}
-
 // PrevBlock returns a previously generated block by number. It panics if
 // num is greater or equal to the number of the block being generated.
 // For index -1, PrevBlock returns the parent block given to GenerateChain.
@@ -195,7 +190,7 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		}
 
 		if b.engine != nil {
-			block, _ := b.engine.Finalize(b.chainReader, b.header, pubStatedb, b.txs, b.uncles, b.receipts)
+			block, _ := b.engine.Finalize(b.chainReader, b.header, pubStatedb, b.txs, []*types.Header{}, b.receipts)
 			// Write state changes to db
 			root, err := pubStatedb.Commit(config.IsEIP158(b.header.Number))
 			if err != nil {
@@ -241,7 +236,6 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 			Number:     parent.Number(),
 			Time:       new(big.Int).Sub(time, big.NewInt(10)),
 			Difficulty: parent.Difficulty(),
-			UncleHash:  parent.UncleHash(),
 		}),
 		GasLimit: CalcGasLimit(parent),
 		Number:   new(big.Int).Add(parent.Number(), common.Big1),

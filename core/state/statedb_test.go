@@ -30,8 +30,8 @@ import (
 
 	check "gopkg.in/check.v1"
 
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 

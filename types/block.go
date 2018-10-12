@@ -48,7 +48,6 @@ var (
 	errUnknownExtra2Type = errors.New("unknown extra2 type")
 
 	EmptyRootHash         = DeriveSha(Transactions{})
-	EmptyUncleHash        = CalcUncleHash(nil)
 	Extra2RegisterMapping = map[uint8]EncoderAndDecoder{
 		TypeExtra2Signatures: {TypeExtra2SignaturesEncoder, TypeExtra2SignaturesDecoder},
 	}
@@ -86,7 +85,6 @@ func (n *BlockNonce) UnmarshalText(input []byte) error {
 // Header represents a block header in the Ethereum blockchain.
 type Header struct {
 	ParentHash  common.Hash    `json:"parentHash"       gencodec:"required"`
-	UncleHash   common.Hash    `json:"sha3Uncles"       gencodec:"required"`
 	Coinbase    common.Address `json:"miner"            gencodec:"required"`
 	Root        common.Hash    `json:"stateRoot"        gencodec:"required"`
 	TxHash      common.Hash    `json:"transactionsRoot" gencodec:"required"`
@@ -186,7 +184,6 @@ func sigHash(header *Header) (hash common.Hash) {
 
 	rlp.Encode(hasher, []interface{}{
 		header.ParentHash,
-		header.UncleHash,
 		header.Coinbase,
 		header.Root,
 		header.TxHash,
@@ -209,7 +206,6 @@ func sigHash(header *Header) (hash common.Hash) {
 func (h *Header) HashNoNonce() common.Hash {
 	return rlpHash([]interface{}{
 		h.ParentHash,
-		h.UncleHash,
 		h.Coinbase,
 		h.Root,
 		h.TxHash,
@@ -241,13 +237,11 @@ func rlpHash(x interface{}) (h common.Hash) {
 // a block's data contents (transactions and uncles) together.
 type Body struct {
 	Transactions []*Transaction
-	Uncles       []*Header
 }
 
 // Block represents an entire block in the Ethereum blockchain.
 type Block struct {
 	header       *Header
-	uncles       []*Header
 	transactions Transactions
 
 	// caches
@@ -281,7 +275,6 @@ type StorageBlock Block
 type extblock struct {
 	Header *Header
 	Txs    []*Transaction
-	Uncles []*Header
 }
 
 // [deprecated by eth/63]
@@ -289,7 +282,6 @@ type extblock struct {
 type storageblock struct {
 	Header *Header
 	Txs    []*Transaction
-	Uncles []*Header
 	TD     *big.Int
 }
 
@@ -300,7 +292,7 @@ type storageblock struct {
 // The values of TxHash, UncleHash, ReceiptHash and Bloom in header
 // are ignored and set to values derived from the given txs, uncles
 // and receipts.
-func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*Receipt) *Block {
+func NewBlock(header *Header, txs []*Transaction, receipts []*Receipt) *Block {
 	b := &Block{header: CopyHeader(header), td: new(big.Int)}
 
 	// TODO: panic if len(txs) != len(receipts)
@@ -317,16 +309,6 @@ func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*
 	} else {
 		b.header.ReceiptHash = DeriveSha(Receipts(receipts))
 		b.header.Bloom = CreateBloom(receipts)
-	}
-
-	if len(uncles) == 0 {
-		b.header.UncleHash = EmptyUncleHash
-	} else {
-		b.header.UncleHash = CalcUncleHash(uncles)
-		b.uncles = make([]*Header, len(uncles))
-		for i := range uncles {
-			b.uncles[i] = CopyHeader(uncles[i])
-		}
 	}
 
 	return b
@@ -370,7 +352,7 @@ func (b *Block) DecodeRLP(s *rlp.Stream) error {
 	if err := s.Decode(&eb); err != nil {
 		return err
 	}
-	b.header, b.uncles, b.transactions = eb.Header, eb.Uncles, eb.Txs
+	b.header, b.transactions = eb.Header, eb.Txs
 	b.size.Store(common.StorageSize(rlp.ListSize(size)))
 	return nil
 }
@@ -380,7 +362,6 @@ func (b *Block) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, extblock{
 		Header: b.header,
 		Txs:    b.transactions,
-		Uncles: b.uncles,
 	})
 }
 
@@ -390,13 +371,12 @@ func (b *StorageBlock) DecodeRLP(s *rlp.Stream) error {
 	if err := s.Decode(&sb); err != nil {
 		return err
 	}
-	b.header, b.uncles, b.transactions, b.td = sb.Header, sb.Uncles, sb.Txs, sb.TD
+	b.header, b.transactions, b.td = sb.Header, sb.Txs, sb.TD
 	return nil
 }
 
 // TODO: copies
 
-func (b *Block) Uncles() []*Header          { return b.uncles }
 func (b *Block) Transactions() Transactions { return b.transactions }
 
 func (b *Block) Transaction(hash common.Hash) *Transaction {
@@ -423,7 +403,6 @@ func (b *Block) Root() common.Hash        { return b.header.Root }
 func (b *Block) ParentHash() common.Hash  { return b.header.ParentHash }
 func (b *Block) TxHash() common.Hash      { return b.header.TxHash }
 func (b *Block) ReceiptHash() common.Hash { return b.header.ReceiptHash }
-func (b *Block) UncleHash() common.Hash   { return b.header.UncleHash }
 func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Extra) }
 
 func (b *Block) Extra2() []byte { return common.CopyBytes(b.header.Extra2) }
@@ -432,7 +411,7 @@ func (b *Block) RefHeader() *Header { return b.header } // TODO: fix it.
 func (b *Block) Header() *Header    { return CopyHeader(b.header) }
 
 // Body returns the non-header content of the block.
-func (b *Block) Body() *Body { return &Body{b.transactions, b.uncles} }
+func (b *Block) Body() *Body { return &Body{b.transactions} }
 
 func (b *Block) HashNoNonce() common.Hash {
 	return b.header.HashNoNonce()
@@ -457,10 +436,6 @@ func (c *writeCounter) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func CalcUncleHash(uncles []*Header) common.Hash {
-	return rlpHash(uncles)
-}
-
 // WithSeal returns a new block with the data from b but the header replaced with
 // the sealed one.
 func (b *Block) WithSeal(header *Header) *Block {
@@ -469,21 +444,16 @@ func (b *Block) WithSeal(header *Header) *Block {
 	return &Block{
 		header:       &cpy,
 		transactions: b.transactions,
-		uncles:       b.uncles,
 	}
 }
 
 // WithBody returns a new block with the given transaction and uncle contents.
-func (b *Block) WithBody(transactions []*Transaction, uncles []*Header) *Block {
+func (b *Block) WithBody(transactions []*Transaction) *Block {
 	block := &Block{
 		header:       CopyHeader(b.header),
 		transactions: make([]*Transaction, len(transactions)),
-		uncles:       make([]*Header, len(uncles)),
 	}
 	copy(block.transactions, transactions)
-	for i := range uncles {
-		block.uncles[i] = CopyHeader(uncles[i])
-	}
 	return block
 }
 

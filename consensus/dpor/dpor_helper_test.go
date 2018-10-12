@@ -28,7 +28,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/hashicorp/golang-lru"
@@ -108,14 +109,14 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 			args{
 				header: &types.Header{
 					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
-					MixDigest: common.Hash{}, UncleHash: types.CalcUncleHash(nil)},
+					MixDigest: common.Hash{}},
 				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
 
 		{"success", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(0), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
-					MixDigest: common.Hash{}, UncleHash: types.CalcUncleHash(nil),
+					MixDigest:  common.Hash{},
 					Difficulty: big.NewInt(2)},
 				c:       &Dpor{config: &configs.DporConfig{Epoch: 3}, dh: &defaultDporHelper{}},
 				chain:   &FakeReader{},
@@ -246,7 +247,6 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 					Time:       time1,
 					Extra:      hexutil.MustDecode(string(rightExtra)),
 					MixDigest:  common.Hash{},
-					UncleHash:  types.CalcUncleHash(nil),
 					Difficulty: big.NewInt(2)}},
 			true},
 

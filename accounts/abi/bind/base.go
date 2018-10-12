@@ -24,8 +24,8 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 )

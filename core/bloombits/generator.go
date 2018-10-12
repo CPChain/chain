@@ -19,7 +19,7 @@ package bloombits
 import (
 	"errors"
 
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 // errSectionOutOfBounds is returned if the user tried to add more bloom filters

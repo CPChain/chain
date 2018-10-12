@@ -11,11 +11,11 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-var _ = (*headerMarshaling)(nil)
+var _ = (*headerOldMarshaling)(nil)
 
 // MarshalJSON marshals as JSON.
-func (h Header) MarshalJSON() ([]byte, error) {
-	type Header struct {
+func (h HeaderOld) MarshalJSON() ([]byte, error) {
+	type HeaderOld struct {
 		ParentHash  common.Hash    `json:"parentHash"       gencodec:"required"`
 		UncleHash   common.Hash    `json:"sha3Uncles"       gencodec:"required"`
 		Coinbase    common.Address `json:"miner"            gencodec:"required"`
@@ -34,7 +34,7 @@ func (h Header) MarshalJSON() ([]byte, error) {
 		Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
 		Hash        common.Hash    `json:"hash"`
 	}
-	var enc Header
+	var enc HeaderOld
 	enc.ParentHash = h.ParentHash
 	enc.UncleHash = h.UncleHash
 	enc.Coinbase = h.Coinbase
@@ -56,8 +56,8 @@ func (h Header) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals from JSON.
-func (h *Header) UnmarshalJSON(input []byte) error {
-	type Header struct {
+func (h *HeaderOld) UnmarshalJSON(input []byte) error {
+	type HeaderOld struct {
 		ParentHash  *common.Hash    `json:"parentHash"       gencodec:"required"`
 		UncleHash   *common.Hash    `json:"sha3Uncles"       gencodec:"required"`
 		Coinbase    *common.Address `json:"miner"            gencodec:"required"`
@@ -75,72 +75,72 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		MixDigest   *common.Hash    `json:"mixHash"          gencodec:"required"`
 		Nonce       *BlockNonce     `json:"nonce"            gencodec:"required"`
 	}
-	var dec Header
+	var dec HeaderOld
 	if err := json.Unmarshal(input, &dec); err != nil {
 		return err
 	}
 	if dec.ParentHash == nil {
-		return errors.New("missing required field 'parentHash' for Header")
+		return errors.New("missing required field 'parentHash' for HeaderOld")
 	}
 	h.ParentHash = *dec.ParentHash
 	if dec.UncleHash == nil {
-		return errors.New("missing required field 'sha3Uncles' for Header")
+		return errors.New("missing required field 'sha3Uncles' for HeaderOld")
 	}
 	h.UncleHash = *dec.UncleHash
 	if dec.Coinbase == nil {
-		return errors.New("missing required field 'miner' for Header")
+		return errors.New("missing required field 'miner' for HeaderOld")
 	}
 	h.Coinbase = *dec.Coinbase
 	if dec.Root == nil {
-		return errors.New("missing required field 'stateRoot' for Header")
+		return errors.New("missing required field 'stateRoot' for HeaderOld")
 	}
 	h.Root = *dec.Root
 	if dec.TxHash == nil {
-		return errors.New("missing required field 'transactionsRoot' for Header")
+		return errors.New("missing required field 'transactionsRoot' for HeaderOld")
 	}
 	h.TxHash = *dec.TxHash
 	if dec.ReceiptHash == nil {
-		return errors.New("missing required field 'receiptsRoot' for Header")
+		return errors.New("missing required field 'receiptsRoot' for HeaderOld")
 	}
 	h.ReceiptHash = *dec.ReceiptHash
 	if dec.Bloom == nil {
-		return errors.New("missing required field 'logsBloom' for Header")
+		return errors.New("missing required field 'logsBloom' for HeaderOld")
 	}
 	h.Bloom = *dec.Bloom
 	if dec.Difficulty == nil {
-		return errors.New("missing required field 'difficulty' for Header")
+		return errors.New("missing required field 'difficulty' for HeaderOld")
 	}
 	h.Difficulty = (*big.Int)(dec.Difficulty)
 	if dec.Number == nil {
-		return errors.New("missing required field 'number' for Header")
+		return errors.New("missing required field 'number' for HeaderOld")
 	}
 	h.Number = (*big.Int)(dec.Number)
 	if dec.GasLimit == nil {
-		return errors.New("missing required field 'gasLimit' for Header")
+		return errors.New("missing required field 'gasLimit' for HeaderOld")
 	}
 	h.GasLimit = uint64(*dec.GasLimit)
 	if dec.GasUsed == nil {
-		return errors.New("missing required field 'gasUsed' for Header")
+		return errors.New("missing required field 'gasUsed' for HeaderOld")
 	}
 	h.GasUsed = uint64(*dec.GasUsed)
 	if dec.Time == nil {
-		return errors.New("missing required field 'timestamp' for Header")
+		return errors.New("missing required field 'timestamp' for HeaderOld")
 	}
 	h.Time = (*big.Int)(dec.Time)
 	if dec.Extra == nil {
-		return errors.New("missing required field 'extraData' for Header")
+		return errors.New("missing required field 'extraData' for HeaderOld")
 	}
 	h.Extra = *dec.Extra
 	if dec.Extra2 == nil {
-		return errors.New("missing required field 'extraData2' for Header")
+		return errors.New("missing required field 'extraData2' for HeaderOld")
 	}
 	h.Extra2 = *dec.Extra2
 	if dec.MixDigest == nil {
-		return errors.New("missing required field 'mixHash' for Header")
+		return errors.New("missing required field 'mixHash' for HeaderOld")
 	}
 	h.MixDigest = *dec.MixDigest
 	if dec.Nonce == nil {
-		return errors.New("missing required field 'nonce' for Header")
+		return errors.New("missing required field 'nonce' for HeaderOld")
 	}
 	h.Nonce = *dec.Nonce
 	return nil

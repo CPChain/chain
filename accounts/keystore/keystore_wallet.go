@@ -21,7 +21,7 @@ import (
 
 	ethereum "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 // keystoreWallet implements the accounts.Wallet interface for the original

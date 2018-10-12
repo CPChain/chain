@@ -29,12 +29,12 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/eth/downloader"
 	"bitbucket.org/cpchain/chain/eth/fetcher"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/p2p/discover"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
@@ -567,19 +567,17 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		}
 		// Deliver them all to the downloader for queuing
 		transactions := make([][]*types.Transaction, len(request))
-		uncles := make([][]*types.Header, len(request))
 
 		for i, body := range request {
 			transactions[i] = body.Transactions
-			uncles[i] = body.Uncles
 		}
 		// Filter out any explicitly requested bodies, deliver the rest to the downloader
-		filter := len(transactions) > 0 || len(uncles) > 0
+		filter := len(transactions) > 0
 		if filter {
-			transactions, uncles = pm.fetcher.FilterBodies(p.id, transactions, uncles, time.Now())
+			transactions = pm.fetcher.FilterBodies(p.id, transactions, time.Now())
 		}
-		if len(transactions) > 0 || len(uncles) > 0 || !filter {
-			err := pm.downloader.DeliverBodies(p.id, transactions, uncles)
+		if len(transactions) > 0 || !filter {
+			err := pm.downloader.DeliverBodies(p.id, transactions)
 			if err != nil {
 				log.Debug("Failed to deliver bodies", "err", err)
 			}

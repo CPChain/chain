@@ -28,9 +28,9 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -226,9 +226,6 @@ func validateHeader(h *btHeader, h2 *types.Header) error {
 	}
 	if h.StateRoot != h2.Root {
 		return fmt.Errorf("State hash: want: %x have: %x", h.StateRoot, h2.Root)
-	}
-	if h.UncleHash != h2.UncleHash {
-		return fmt.Errorf("Uncle hash: want: %x have: %x", h.UncleHash, h2.UncleHash)
 	}
 	if !bytes.Equal(h.ExtraData, h2.Extra) {
 		return fmt.Errorf("Extra data: want: %x have: %x", h.ExtraData, h2.Extra)

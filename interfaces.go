@@ -22,7 +22,7 @@ import (
 	"errors"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 

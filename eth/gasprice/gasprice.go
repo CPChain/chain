@@ -23,9 +23,9 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 

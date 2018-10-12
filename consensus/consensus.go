@@ -22,8 +22,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -67,10 +67,6 @@ type Engine interface {
 	// a results channel to retrieve the async verifications (the order is that of
 	// the input slice).
 	VerifyHeaders(chain ChainReader, headers []*types.Header, seals []bool, refHeaders []*types.Header) (chan<- struct{}, <-chan error)
-
-	// VerifyUncles verifies that the given block's uncles conform to the consensus
-	// rules of a given engine.
-	VerifyUncles(chain ChainReader, block *types.Block) error
 
 	// VerifySeal checks whether the crypto seal on a header is valid according to
 	// the consensus rules of the given engine.

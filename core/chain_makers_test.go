@@ -22,10 +22,10 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 func ExampleGenerateChain() {
@@ -68,14 +68,6 @@ func ExampleGenerateChain() {
 			// Block 3 is empty but was mined by addr3.
 			gen.SetCoinbase(addr3)
 			gen.SetExtra([]byte("yeehaw"))
-		case 3:
-			// Block 4 includes blocks 2 and 3 as uncle headers (with modified extra data).
-			b2 := gen.PrevBlock(1).Header()
-			b2.Extra = []byte("foo")
-			gen.AddUncle(b2)
-			b3 := gen.PrevBlock(2).Header()
-			b3.Extra = []byte("foo")
-			gen.AddUncle(b3)
 		}
 	})
 
@@ -97,5 +89,5 @@ func ExampleGenerateChain() {
 	// last block: #5
 	// balance of addr1: 989000
 	// balance of addr2: 10000
-	// balance of addr3: 19687500000000001000
+	// balance of addr3: 15000000000000001000
 }

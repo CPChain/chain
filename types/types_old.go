@@ -28,14 +28,17 @@ import (
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // This file contains old Transaction, txdata, Block, extblock, for unit test updating their old serialization string.
 
 //go:generate gencodec -type txdataold -field-override txdataMarshalingOld -out gen_tx_json_old.go
+//go:generate gencodec -type HeaderOld -field-override headerOldMarshaling -out gen_header_json_old.go
 
 var (
 	ErrInvalidSigOld = errors.New("invalid transaction v, r, s values")
@@ -52,18 +55,114 @@ func example(oldHex string) {
 	fmt.Println(bb)
 }
 
+func ConvertOldBlockHexToNewBlockHex(oldBlockHex string) string {
+	var oldblock BlockOld
+	err := rlp.DecodeBytes(common.Hex2Bytes(oldBlockHex), &oldblock)
+	if err != nil {
+		log.Warn("Error when converting", err)
+		return ""
+	}
+
+	nb := oldblock.ToNewBlock()
+	b, _ := rlp.EncodeToBytes(nb)
+	return common.Bytes2Hex(b)
+}
+
+func ConvertOldTxHexToNewTxHex(oldTxHex string) string {
+	var oldtx TransactionOld
+	rlp.DecodeBytes(common.Hex2Bytes(oldTxHex), &oldtx)
+	nt := oldtx.ToNewTx()
+	b, _ := rlp.EncodeToBytes(nt)
+	return common.Bytes2Hex(b)
+}
+
+// Header represents a block header in the Ethereum blockchain.
+type HeaderOld struct {
+	ParentHash  common.Hash    `json:"parentHash"       gencodec:"required"`
+	UncleHash   common.Hash    `json:"sha3Uncles"       gencodec:"required"`
+	Coinbase    common.Address `json:"miner"            gencodec:"required"`
+	Root        common.Hash    `json:"stateRoot"        gencodec:"required"`
+	TxHash      common.Hash    `json:"transactionsRoot" gencodec:"required"`
+	ReceiptHash common.Hash    `json:"receiptsRoot"     gencodec:"required"`
+	Bloom       Bloom          `json:"logsBloom"        gencodec:"required"`
+	Difficulty  *big.Int       `json:"difficulty"       gencodec:"required"`
+	Number      *big.Int       `json:"number"           gencodec:"required"`
+	GasLimit    uint64         `json:"gasLimit"         gencodec:"required"`
+	GasUsed     uint64         `json:"gasUsed"          gencodec:"required"`
+	Time        *big.Int       `json:"timestamp"        gencodec:"required"`
+	Extra       []byte         `json:"extraData"        gencodec:"required"`
+	Extra2      []byte         `json:"extraData2"       gencodec:"required"`
+	MixDigest   common.Hash    `json:"mixHash"          gencodec:"required"`
+	Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
+}
+
+func (h *HeaderOld) ToNewType() *Header {
+	return &Header{
+		ParentHash:  h.ParentHash,
+		Coinbase:    h.Coinbase,
+		Root:        h.Root,
+		TxHash:      h.TxHash,
+		ReceiptHash: h.ReceiptHash,
+		Bloom:       h.Bloom,
+		Difficulty:  h.Difficulty,
+		Number:      h.Number,
+		GasLimit:    h.GasLimit,
+		GasUsed:     h.GasUsed,
+		Time:        h.Time,
+		Extra:       h.Extra,
+		Extra2:      h.Extra2,
+		MixDigest:   h.MixDigest,
+		Nonce:       h.Nonce,
+	}
+}
+
+func (header *HeaderOld) Hash() (hash common.Hash) {
+	hasher := sha3.NewKeccak256()
+
+	rlp.Encode(hasher, []interface{}{
+		header.ParentHash,
+		header.Coinbase,
+		header.Root,
+		header.TxHash,
+		header.ReceiptHash,
+		header.Bloom,
+		header.Difficulty,
+		header.Number,
+		header.GasLimit,
+		header.GasUsed,
+		header.Time,
+		header.Extra,
+		header.MixDigest,
+		header.Nonce,
+	})
+	hasher.Sum(hash[:0])
+	return hash
+}
+
+// field type overrides for gencodec
+type headerOldMarshaling struct {
+	Difficulty *hexutil.Big
+	Number     *hexutil.Big
+	GasLimit   hexutil.Uint64
+	GasUsed    hexutil.Uint64
+	Time       *hexutil.Big
+	Extra      hexutil.Bytes
+	Extra2     hexutil.Bytes
+	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
+}
+
 // "external" block encoding. used for eth protocol, etc.
 type extblockold struct {
-	Header *Header
-	Txs    []*TransactionOld
-	Uncles []*Header
+	Header *HeaderOld
+	Txs    []*Transaction
+	Uncles []*HeaderOld
 }
 
 // Block represents an entire block in the Ethereum blockchain.
 type BlockOld struct {
-	header       *Header
-	uncles       []*Header
-	transactions TransactionsOld
+	header       *HeaderOld
+	uncles       []*HeaderOld
+	transactions Transactions
 
 	// caches
 	hash atomic.Value
@@ -77,6 +176,19 @@ type BlockOld struct {
 	// inter-peer block relay.
 	ReceivedAt   time.Time
 	ReceivedFrom interface{}
+}
+
+func (b *BlockOld) ToNewBlock() *Block {
+	return &Block{
+		header:       b.header.ToNewType(),
+		transactions: b.transactions,
+		hash:         b.hash,
+		size:         b.size,
+		td:           b.td,
+
+		ReceivedAt:   b.ReceivedAt,
+		ReceivedFrom: b.ReceivedFrom,
+	}
 }
 
 // DecodeRLP decodes the Ethereum

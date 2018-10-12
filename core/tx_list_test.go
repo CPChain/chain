@@ -20,8 +20,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 // Tests that transactions can be added to strict lists and list contents and

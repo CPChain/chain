@@ -23,8 +23,8 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/p2p"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -405,6 +405,7 @@ func (p *peer) SendBlockBodies(bodies []*blockBody) error {
 // SendBlockBodiesRLP sends a batch of block contents to the remote peer from
 // an already RLP encoded format.
 func (p *peer) SendBlockBodiesRLP(bodies []rlp.RawValue) error {
+	println("send block bodies")
 	return p2p.Send(p.rw, BlockBodiesMsg, bodies)
 }
 

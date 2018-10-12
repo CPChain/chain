@@ -30,8 +30,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/types"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/hashicorp/golang-lru"
@@ -42,7 +43,6 @@ func Test_sigHash(t *testing.T) {
 	tx1, _ = tx1.WithSignature(types.HomesteadSigner{}, common.Hex2Bytes("9bea4c4daac7c7c52e093e6a4c35dbbcf8856f1af7b059ba20253e70848d094f8a8fae537ce25ed8cb5af9adac3f141af69bd515bd2ba031522df09b97dd72b100"))
 	newHeader := &types.Header{
 		ParentHash:  common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),
-		UncleHash:   common.HexToHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"),
 		Coinbase:    common.HexToAddress("0x8888f1F195AFa192CfeE860698584c030f4c9dB1"),
 		Root:        common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxHash:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
@@ -66,7 +66,7 @@ func Test_sigHash(t *testing.T) {
 		args     args
 		wantHash common.Hash
 	}{
-		{"sigHash", args{newHeader}, common.HexToHash("0x8842a173b6a10d45d1705bedcb1644755075e2a78258bd7bca4011719d0d91b4")},
+		{"sigHash", args{newHeader}, common.HexToHash("0xc6f2bbd217e8da9cd588950aec3a914fc5d288d171bfc2f2a370104996f49595")},
 	}
 
 	dporUtil := &defaultDporUtil{}
@@ -112,7 +112,7 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 }
 
 func Test_ecrecover(t *testing.T) {
-	addr := common.HexToAddress("0x22715b8982c08bb9CbCDB967de528f7D0d526585")
+	addr := common.HexToAddress("0x25E63B2d49Cf1EDcd0595c30cFC58CeB4e0Bd6d5")
 	//addr := common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")
 
 	tx1 := types.NewTransaction(0, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d87"), big.NewInt(10), 50000, big.NewInt(10), nil)
@@ -121,7 +121,6 @@ func Test_ecrecover(t *testing.T) {
 
 	newHeader := &types.Header{
 		ParentHash:  common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),
-		UncleHash:   common.HexToHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"),
 		Coinbase:    common.HexToAddress("0x8888f1F195AFa192CfeE860698584c030f4c9dB1"),
 		Root:        common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxHash:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
@@ -139,7 +138,6 @@ func Test_ecrecover(t *testing.T) {
 
 	errSigHeader := &types.Header{
 		ParentHash:  common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),
-		UncleHash:   common.HexToHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"),
 		Coinbase:    common.HexToAddress("0x8888f1F195AFa192CfeE860698584c030f4c9dB1"),
 		Root:        common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxHash:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
@@ -157,7 +155,6 @@ func Test_ecrecover(t *testing.T) {
 
 	errExtra2TypeHeader := &types.Header{
 		ParentHash:  common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),
-		UncleHash:   common.HexToHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"),
 		Coinbase:    common.HexToAddress("0x8888f1F195AFa192CfeE860698584c030f4c9dB1"),
 		Root:        common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxHash:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
@@ -228,7 +225,7 @@ func Test_ecrecover(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ecrecover got = %v, want %v", got.Hex(), tt.want)
+				t.Errorf("ecrecover got = %v, want %v", got.Hex(), tt.want.Hex())
 			}
 			if !reflect.DeepEqual(got1, tt.want1) {
 				t.Errorf("ecrecover got1 = %v, want %v", got1, tt.want1)
@@ -242,7 +239,6 @@ func Test_acceptSigs(t *testing.T) {
 		Coinbase:    addr1,
 		Number:      big.NewInt(1),
 		Difficulty:  big.NewInt(int64(1)),
-		UncleHash:   types.EmptyUncleHash,
 		TxHash:      types.EmptyRootHash,
 		ReceiptHash: types.EmptyRootHash,
 	}

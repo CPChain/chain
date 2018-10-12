@@ -27,9 +27,9 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
@@ -383,9 +383,6 @@ func (self *worker) makeCurrent(parent *types.Block, header *types.Header) error
 
 	// when 08 is processed ancestors contain 07 (quick block)
 	for _, ancestor := range self.chain.GetBlocksFromHash(parent.Hash(), 7) {
-		for _, uncle := range ancestor.Uncles() {
-			work.family.Add(uncle.Hash())
-		}
 		work.family.Add(ancestor.Hash())
 		work.ancestors.Add(ancestor.Hash())
 	}
@@ -510,7 +507,6 @@ func (self *worker) updateSnapshot() {
 	self.snapshotBlock = types.NewBlock(
 		self.current.header,
 		self.current.txs,
-		nil,
 		self.current.pubReceipts,
 	)
 	self.snapshotState = self.current.pubState.Copy()

@@ -22,7 +22,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 )
@@ -53,7 +53,6 @@ func (test *DifficultyTest) Run(config *configs.ChainConfig) error {
 		Difficulty: test.ParentDifficulty,
 		Time:       test.ParentTimestamp,
 		Number:     parentNumber,
-		UncleHash:  test.UncleHash,
 	}
 
 	actual := ethash.CalcDifficulty(config, test.CurrentTimestamp.Uint64(), parent)

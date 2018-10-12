@@ -21,8 +21,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -123,16 +123,14 @@ func (p *FakePeer) RequestHeadersByNumber(number uint64, amount int, skip int, r
 // corresponding to the specified block hashes.
 func (p *FakePeer) RequestBodies(hashes []common.Hash) error {
 	var (
-		txs    [][]*types.Transaction
-		uncles [][]*types.Header
+		txs [][]*types.Transaction
 	)
 	for _, hash := range hashes {
 		block := rawdb.ReadBlock(p.db, hash, *p.hc.GetBlockNumber(hash))
 
 		txs = append(txs, block.Transactions())
-		uncles = append(uncles, block.Uncles())
 	}
-	p.dl.DeliverBodies(p.id, txs, uncles)
+	p.dl.DeliverBodies(p.id, txs)
 	return nil
 }
 

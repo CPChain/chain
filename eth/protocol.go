@@ -22,7 +22,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -189,7 +189,6 @@ type newBlockData struct {
 // blockBody represents the data content of a single block.
 type blockBody struct {
 	Transactions []*types.Transaction // Transactions contained within a block
-	Uncles       []*types.Header      // Uncles contained within a block
 }
 
 // blockBodiesData is the network packet for block content distribution.

@@ -20,16 +20,18 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/eth/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/p2p"
-	"github.com/ethereum/go-ethereum/common"
+	"bitbucket.org/cpchain/chain/types"
+
 	"math"
 	"math/big"
 	"math/rand"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Tests that protocol versions and modes of operations are matched up properly.
@@ -271,7 +273,7 @@ func testGetBlockBodies(t *testing.T, protocol int) {
 					block := pm.blockchain.GetBlockByNumber(uint64(num))
 					hashes = append(hashes, block.Hash())
 					if len(bodies) < tt.expected {
-						bodies = append(bodies, &blockBody{Transactions: block.Transactions(), Uncles: block.Uncles()})
+						bodies = append(bodies, &blockBody{Transactions: block.Transactions()})
 					}
 					break
 				}
@@ -281,7 +283,7 @@ func testGetBlockBodies(t *testing.T, protocol int) {
 			hashes = append(hashes, hash)
 			if tt.available[j] && len(bodies) < tt.expected {
 				block := pm.blockchain.GetBlockByHash(hash)
-				bodies = append(bodies, &blockBody{Transactions: block.Transactions(), Uncles: block.Uncles()})
+				bodies = append(bodies, &blockBody{Transactions: block.Transactions()})
 			}
 		}
 		// Send the hash request and verify the response
@@ -321,14 +323,6 @@ func testGetNodeData(t *testing.T, protocol int) {
 			// Block 3 is empty but was mined by account #2.
 			block.SetCoinbase(acc2Addr)
 			block.SetExtra([]byte("yeehaw"))
-		case 3:
-			// Block 4 includes blocks 2 and 3 as uncle headers (with modified extra data).
-			b2 := block.PrevBlock(1).Header()
-			b2.Extra = []byte("foo")
-			block.AddUncle(b2)
-			b3 := block.PrevBlock(2).Header()
-			b3.Extra = []byte("foo")
-			block.AddUncle(b3)
 		}
 	}
 	// Assemble the test environment
@@ -413,14 +407,6 @@ func testGetReceipt(t *testing.T, protocol int) {
 			// Block 3 is empty but was mined by account #2.
 			block.SetCoinbase(acc2Addr)
 			block.SetExtra([]byte("yeehaw"))
-		case 3:
-			// Block 4 includes blocks 2 and 3 as uncle headers (with modified extra data).
-			b2 := block.PrevBlock(1).Header()
-			b2.Extra = []byte("foo")
-			block.AddUncle(b2)
-			b3 := block.PrevBlock(2).Header()
-			b3.Extra = []byte("foo")
-			block.AddUncle(b3)
 		}
 	}
 	// Assemble the test environment

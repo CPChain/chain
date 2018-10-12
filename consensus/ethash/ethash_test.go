@@ -24,7 +24,7 @@ import (
 	"sync"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/core/types"
+	"bitbucket.org/cpchain/chain/types"
 )
 
 // Tests that ethash works correctly in test mode.

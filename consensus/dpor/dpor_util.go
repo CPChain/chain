@@ -23,9 +23,9 @@ import (
 
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/hashicorp/golang-lru"
@@ -55,7 +55,6 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 
 	rlp.Encode(hasher, []interface{}{
 		header.ParentHash,
-		header.UncleHash,
 		header.Coinbase,
 		header.Root,
 		header.TxHash,
