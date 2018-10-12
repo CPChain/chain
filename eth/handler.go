@@ -28,7 +28,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/misc"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/eth/downloader"
@@ -520,11 +519,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 				p.forkDrop.Stop()
 				p.forkDrop = nil
 
-				// Validate the header and either drop the peer or continue
-				if err := misc.VerifyDAOHeaderExtraData(pm.chainconfig, headers[0]); err != nil {
-					p.Log().Debug("Verified to be on the other side of the DAO fork, dropping")
-					return err
-				}
 				p.Log().Debug("Verified to be on the same side of the DAO fork")
 				return nil
 			}

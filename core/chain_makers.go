@@ -23,7 +23,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/misc"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/types"
 	"bitbucket.org/cpchain/chain/core/vm"
@@ -189,18 +188,7 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, privStateDB: privStateDB, config: config, engine: engine}
 		b.header = makeHeader(b.chainReader, parent, pubStatedb, b.engine)
 
-		// Mutate the state and block according to any hard-fork specs
-		if daoBlock := config.DAOForkBlock; daoBlock != nil {
-			limit := new(big.Int).Add(daoBlock, configs.DAOForkExtraRange)
-			if b.header.Number.Cmp(daoBlock) >= 0 && b.header.Number.Cmp(limit) < 0 {
-				if config.DAOForkSupport {
-					b.header.Extra = common.CopyBytes(configs.DAOForkBlockExtra)
-				}
-			}
-		}
-		if config.DAOForkSupport && config.DAOForkBlock != nil && config.DAOForkBlock.Cmp(b.header.Number) == 0 {
-			misc.ApplyDAOHardFork(pubStatedb)
-		}
+
 		// Execute any user modifications to the block and finalize it
 		if gen != nil {
 			gen(i, b)
