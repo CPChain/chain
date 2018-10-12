@@ -17,7 +17,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsa_"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
@@ -113,8 +113,10 @@ func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit i
 	// 1. load RsaPublicKey/PrivateKey
 	fmt.Println("1.load RsaPublicKey/PrivateKey")
 	//publicKey1, privateKey1, pubBytes1, priBytes1, _ := rsa_.LoadRsaKey("./testdata/rsa_pub.pem", "./testdata/rsa_pri.pem")
-	publicKey2, privateKey2, pubBytes2, _, _ := rsa_.LoadRsaKey("../testdata/rsa_pub1.pem", "../testdata/rsa_pri1.pem")
-	_ = publicKey2
+	// publicKey2, privateKey2, pubBytes2, _, _ := rsakey.LoadRsaKey("../testdata/rsa_pub1.pem", "../testdata/rsa_pri1.pem")
+	// _ = publicKey2
+
+	rsaKey, err := rsakey.NewRsaKey("../testdata")
 
 	// 2. register node2 public key on chain (claim campaign)
 	fmt.Println("2.register node2 public key on chain")
@@ -124,7 +126,7 @@ func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit i
 	auth.GasLimit = uint64(gasLimit)
 	// in units
 	auth.GasPrice = gasPrice
-	transaction, err := instance.RegisterPublicKey(auth, pubBytes2)
+	transaction, err := instance.RegisterPublicKey(auth, rsaKey.PublicKey.RsaPublicKeyBytes)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -150,11 +152,11 @@ func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit i
 	fmt.Println("4.node1 encrypt enode with node2's public key")
 
 	enodeBytes := []byte("enode://abc:127.0.0.1:444")
-	publicKeyFromChain, _ := rsa_.Bytes2PublicKey(publicKeyBytes)
+	publicKeyFromChain, _ := rsakey.NewRsaPublicKey(publicKeyBytes)
 	//if publicKey2 != publicKeyFromChain {
 	//	t.Errorf("publicKey2 != publicKeyFromChain")
 	//}
-	encryptedEnodeBytes, err := rsa_.RsaEncrypt(enodeBytes, publicKeyFromChain)
+	encryptedEnodeBytes, err := publicKeyFromChain.RsaEncrypt(enodeBytes)
 	fmt.Println("hex(encryptedEnodeBytes):", common.Bytes2Hex(encryptedEnodeBytes))
 
 	// 5. node1 add encrypted enode(node2) on chain
@@ -190,7 +192,8 @@ func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit i
 
 	// 7. decrypt with node2 private key
 	fmt.Println("7.decrypt with node2 private key")
-	enode, err := rsa_.RsaDecrypt(rsaPublicKey, privateKey2)
+	enode, err := rsaKey.RsaDecrypt(rsaPublicKey)
+
 	fmt.Println("enode:", string(enode))
 
 	if !bytes.Equal(enodeBytes, enode) {

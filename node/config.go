@@ -25,18 +25,15 @@ import (
 	"runtime"
 	"strings"
 
-	"crypto/rsa"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsa_"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/p2p"
-	"bitbucket.org/cpchain/chain/p2p/discover"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -152,6 +149,8 @@ type Config struct {
 
 	// Logger is a custom logger to use with the p2p.Server.
 	Logger log.Logger `toml:",omitempty"`
+
+	RsaKeyStore *rsakey.RsaKey `toml:"-"`
 }
 
 // IPCEndpoint resolves an IPC endpoint based on a configured value, taking into
@@ -342,30 +341,18 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 	return key
 }
 
-func (c *Config) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
-	rsadir := c.rsaDir()
-	if err := os.MkdirAll(rsadir, 0700); err != nil {
-		return nil, nil, nil, nil, err
+func (c *Config) RsaKey() (*rsakey.RsaKey, error) {
+	rsaDir := c.rsaDir()
+	if err := os.MkdirAll(rsaDir, 0700); err != nil {
+		return nil, err
 	}
 
-	// Load RSA key
-	rsaPubPath := filepath.Join(c.DataDir, datadirDefaultRsa, "rsa_pub.pem")
-	rsaPriPath := filepath.Join(c.DataDir, datadirDefaultRsa, "rsa_pri.pem")
-	if pub, pri, pubBytes, priBytes, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
-		return pub, pri, pubBytes, priBytes, nil
-	}
-	// No persistent key found, generate and store a new one.
-	log.Info(fmt.Sprintf("file not found.rsaPubPath:%v,rsaPriPath:%v", rsaPubPath, rsaPriPath))
-	err := rsa_.GenerateRsaKey(rsaPubPath, rsaPriPath, 2048)
+	rsaKey, err := rsakey.NewRsaKey(rsaDir)
 	if err != nil {
-		log.Error(fmt.Sprintf("Failed to persist rsa key: %v", err))
-		return nil, nil, nil, nil, err
+		log.Error(fmt.Sprintf("Failed to new rsa key: %v", err))
+		return nil, err
 	}
-	if pub, pri, pubBytes, priBytes, err := rsa_.LoadRsaKey(rsaPubPath, rsaPriPath); err == nil {
-		return pub, pri, pubBytes, priBytes, nil
-	}
-	log.Error(fmt.Sprintf("load rsa key fail:%v", err))
-	return nil, nil, nil, nil, errors.New("load rsa key fail")
+	return rsaKey, nil
 }
 
 // StaticNodes returns a list of node enode URLs configured as static nodes.

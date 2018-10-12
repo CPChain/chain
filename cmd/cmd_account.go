@@ -308,6 +308,8 @@ func accountCreate(ctx *cli.Context) error {
 		Fatalf("Failed to create account: %v", err)
 	}
 	fmt.Printf("Address: {%x}\n", address)
+
+	// TODO create rsa key
 	return nil
 }
 

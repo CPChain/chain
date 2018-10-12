@@ -20,7 +20,7 @@ import (
 	"context"
 	"net"
 
-	"bitbucket.org/cpchain/chain/p2p/netutil"
+	"github.com/ethereum/go-ethereum/p2p/netutil"
 	"github.com/ethereum/go-ethereum/log"
 )
 

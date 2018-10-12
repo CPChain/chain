@@ -13,7 +13,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsa_"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
@@ -124,10 +124,10 @@ func getAccount(keyStoreFilePath string, passphrase string, rsaPubkeyPath string
 	}
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	_, _, pubBytes, _, err := rsa_.LoadRsaKey(dataDir+rsaPubkeyPath, dataDir+rsaPrivkeyPath)
+	rsaKey, err := rsakey.NewRsaKey(dataDir)
 	fmt.Println(err)
 
-	return privateKey, publicKeyECDSA, fromAddress, pubBytes
+	return privateKey, publicKeyECDSA, fromAddress, rsaKey.PublicKey.RsaPublicKeyBytes
 }
 
 func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address) {

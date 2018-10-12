@@ -19,10 +19,8 @@ package dpor
 import (
 	"math/big"
 
-	"crypto/rsa"
-
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/accounts/rsa_"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -64,26 +62,25 @@ func DeploySignerConnectionRegister(transactOpts *bind.TransactOpts, contractBac
 	return contractAddr, tx, register, err
 }
 
-func (self *SignerConnectionRegister) GetPublicKey(addr common.Address) (*rsa.PublicKey, error) {
+func (self *SignerConnectionRegister) GetPublicKey(addr common.Address) (*rsakey.RsaPublicKey, error) {
 	publicKeyBytes, err := self.Contract.GetPublicKey(&self.CallOpts, addr)
 	if err != nil {
 		return nil, err
 	}
 	log.Info("address:%v,publicKeyBytes:%v", addr, publicKeyBytes)
-
-	publicKey, err := rsa_.Bytes2PublicKey(publicKeyBytes)
+	publicKey, err := rsakey.NewRsaPublicKey(publicKeyBytes)
 	if err != nil {
 		return nil, err
 	}
 	return publicKey, err
 }
 
-func (self *SignerConnectionRegister) GetNodeInfo(viewIndex *big.Int, privateKey *rsa.PrivateKey, otherAddress common.Address) (string, error) {
+func (self *SignerConnectionRegister) GetNodeInfo(viewIndex *big.Int, rsaKey *rsakey.RsaKey, otherAddress common.Address) (string, error) {
 	encryptedNodeInfoBytesOnChain, err := self.Contract.GetNodeInfo(&self.CallOpts, viewIndex, otherAddress)
 	if err != nil {
 		return "", err
 	}
-	enode, err := rsa_.RsaDecrypt(encryptedNodeInfoBytesOnChain, privateKey)
+	enode, err := rsaKey.RsaDecrypt(encryptedNodeInfoBytesOnChain)
 	if err != nil {
 		return "", err
 	}
@@ -103,7 +100,7 @@ func (self *SignerConnectionRegister) AddNodeInfo(viewIndex *big.Int, otherAddre
 	if err != nil {
 		return nil, err
 	}
-	encrpytedNodeInfo, err := rsa_.RsaEncrypt(enodeBytes, publicKey)
+	encrpytedNodeInfo, err := publicKey.RsaEncrypt(enodeBytes)
 	if err != nil {
 		return nil, err
 	}

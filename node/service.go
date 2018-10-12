@@ -19,11 +19,10 @@ package node
 import (
 	"reflect"
 
-	"crypto/rsa"
-
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
 )
@@ -70,7 +69,7 @@ func (ctx *ServiceContext) Service(service interface{}) error {
 }
 
 // RsaKey gets RSA key pair.
-func (ctx *ServiceContext) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
+func (ctx *ServiceContext) RsaKey() (*rsakey.RsaKey, error) {
 	return ctx.config.RsaKey()
 }
 

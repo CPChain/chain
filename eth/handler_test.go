@@ -17,21 +17,20 @@
 package eth
 
 import (
+	"math"
+	"math/big"
+	"math/rand"
+	"testing"
+
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/eth/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/types"
-
-	"math"
-	"math/big"
-	"math/rand"
-	"testing"
-
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // Tests that protocol versions and modes of operations are matched up properly.

@@ -27,6 +27,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -43,7 +44,7 @@ import (
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/node/miner"
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -60,6 +61,8 @@ type LesServer interface {
 	Protocols() []p2p.Protocol
 	SetBloomBitsIndexer(bbIndexer *core.ChainIndexer)
 }
+
+type RSAReader func() (*rsakey.RsaKey, error)
 
 // Ethereum implements the Ethereum full node service.
 type Ethereum struct {
@@ -163,8 +166,8 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		vmConfig    = vm.Config{EnablePreimageRecording: config.EnablePreimageRecording}
 		cacheConfig = &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	)
-	_, privKey, _, _, _ := ctx.RsaKey()
-	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, privKey)
+	rsaKey, _ := ctx.RsaKey()
+	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, rsaKey.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -187,6 +190,13 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, eth.etherbase); err != nil {
 		return nil, err
 	}
+
+	if eth.protocolManager.committeeNetworkHandler != nil {
+		if err := eth.protocolManager.committeeNetworkHandler.SetRSAKeys(ctx.RsaKey); err != nil {
+			return nil, err
+		}
+	}
+
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
 	eth.miner.SetExtra(makeExtraData(config.ExtraData))
 
@@ -202,19 +212,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 
 	return eth, nil
 }
-
-// func (s *Ethereum) AddCommittee() {
-// 	committeeIDs := []string{
-// 		"enode://b0f99585ab63eb3047389fd863497526e62ae9553beca47bb6bbe67ab9c19ef38329f8487aa425f9dfb26e767b469584a5ddb963594efb6fcd73cccd2b2f3961@192.168.0.117:30311",
-// 		"enode://506ab2351961387d22f84d34528b545168e111ce43996867a7fdff48c5124801048beee5b5630e97534d6e89be6f737f5f9bb7610a17567b63c94be715c30368@192.168.0.117:30312",
-// 		"enode://97fb497bbc2fb0fd3adde076cf999b595d6ab6aa2bc47a8fcbc45cb62f2795c90afcdb5c7f2178183ac47411d2cd1685dbdf61dedccf943cd257e5be21318840@192.168.0.117:30313",
-// 	}
-// 	for _, id := range committeeIDs {
-// 		if err := s.server.AddPeerFromURL(id); err != nil {
-// 			log.Debug("err when adding committee", "err", err)
-// 		}
-// 	}
-// }
 
 func makeExtraData(extra []byte) []byte {
 	if len(extra) == 0 {
@@ -445,7 +442,11 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	// TODO: @liuq check security.
 	s.server = srvr
 
-	s.protocolManager.updateServer(srvr)
+	if s.protocolManager.committeeNetworkHandler != nil {
+		s.protocolManager.committeeNetworkHandler.UpdateServer(srvr)
+		s.protocolManager.engine.SetCommitteeNetworkHandler(s.protocolManager.committeeNetworkHandler)
+	}
+
 	log.Info("I am in s.Start")
 
 	// Figure out a max peers count based on the server limits

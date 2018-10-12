@@ -2,15 +2,17 @@ package eth
 
 import (
 	"context"
-	"crypto/rsa"
 	"math/big"
 	"sync"
 
+	"bitbucket.org/cpchain/chain/configs"
+	"github.com/ethereum/go-ethereum/p2p/discover"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/accounts/rsa_"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 )
@@ -59,18 +61,18 @@ func (rs *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionR
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRegister, privKey *rsa.PrivateKey) error {
+func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
 	epochIdx, address := rs.epochIdx, rs.address
 
 	log.Info("fetching nodeID of remote signer")
 	log.Info("epoch", "idx", epochIdx)
 	log.Info("signer", "addr", address)
 
-	encryptedNodeID, err := fetchNodeID(epochIdx, address, contractInstance, privKey)
-	nodeid, err := rsa_.RsaDecrypt(encryptedNodeID, privKey)
+	encryptedNodeID, err := fetchNodeID(epochIdx, address, contractInstance)
+	nodeid, err := rsaKey.RsaDecrypt(encryptedNodeID)
 	if err != nil {
 		log.Info("encryptedNodeID", "enode", encryptedNodeID)
-		log.Info("privKey", "privKey", privKey)
+		log.Info("privKey", "privKey", rsaKey.PrivateKey)
 		return err
 	}
 
@@ -83,7 +85,7 @@ func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionR
 	return nil
 }
 
-func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *contract.SignerConnectionRegister, privKey *rsa.PrivateKey) ([]byte, error) {
+func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *contract.SignerConnectionRegister) ([]byte, error) {
 	encryptedNodeID, err := contractInstance.GetNodeInfo(nil, big.NewInt(int64(epochIdx)), address)
 	if err != nil {
 		return nil, err
@@ -94,7 +96,8 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 // updateNodeID encrypts my node id with this remote signer's public key and update to the contract.
 func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend) error {
 	epochIdx, address := rs.epochIdx, rs.address
-	pubkey, err := rsa_.Bytes2PublicKey(rs.pubkey)
+
+	pubkey, err := rsakey.NewRsaPublicKey(rs.pubkey)
 
 	log.Info("updating self nodeID with remote signer's public key")
 	log.Info("epoch", "idx", epochIdx)
@@ -106,7 +109,7 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 		return err
 	}
 
-	encryptedNodeID, err := rsa_.RsaEncrypt([]byte(nodeID), pubkey)
+	encryptedNodeID, err := pubkey.RsaEncrypt([]byte(nodeID))
 	transaction, err := contractInstance.AddNodeInfo(auth, big.NewInt(int64(epochIdx)), address, encryptedNodeID)
 	if err != nil {
 		return err
@@ -126,7 +129,7 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 }
 
 // dial dials the signer.
-func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend) (bool, error) {
+func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 
@@ -141,7 +144,7 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 		}
 	}
 
-	nodeid, err := fetchNodeID(rs.epochIdx, address, contractInstance, server.RsaPrivateKey)
+	nodeid, err := fetchNodeID(rs.epochIdx, address, contractInstance)
 	if err != nil {
 		return false, err
 	}
@@ -157,7 +160,7 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 
 	// fetch the nodeID of the remote signer if not fetched yet.
 	if !rs.nodeIDFetched {
-		err := rs.fetchNodeID(contractInstance, server.RsaPrivateKey)
+		err := rs.fetchNodeID(contractInstance, rsaKey)
 		if err != nil {
 			log.Warn("err when fetching signer's nodeID from contract", "err", err)
 			return false, err
@@ -166,19 +169,21 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 
 	// dial the signer with his nodeID if not dialed yet.
 	if rs.nodeIDFetched && !rs.dialed {
-		err := server.AddPeerFromURL(rs.nodeID)
+		node, err := discover.ParseNode(rs.nodeID)
 		if err != nil {
 			log.Warn("err when dialing remote signer with his nodeID", "err", err)
 			return false, err
 		}
+		server.AddPeer(node)
+
 	}
 
 	return rs.dialed, nil
 }
 
-func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend) error {
+func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend, rsaKey *rsakey.RsaKey) error {
 
-	succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client)
+	succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 
 	log.Info("result of rs.dial", "succeed", succeed)
 	log.Info("result of rs.dial", "err", err)
@@ -194,8 +199,12 @@ func (rs *RemoteSigner) disconnect(server *p2p.Server) error {
 	nodeID := rs.nodeID
 	rs.lock.Unlock()
 
-	err := server.RemovePeerFromURL(nodeID)
-	return err
+	node, err := discover.ParseNode(nodeID)
+	if err != nil {
+		return err
+	}
+	server.RemovePeer(node)
+	return nil
 }
 
 // BasicCommitteeNetworkHandler implements consensus.CommitteeNetworkHandler
@@ -203,7 +212,6 @@ type BasicCommitteeNetworkHandler struct {
 	epochIdx uint64
 
 	ownNodeID  string
-	ownPubkey  []byte
 	ownAddress common.Address
 
 	server *p2p.Server
@@ -213,6 +221,8 @@ type BasicCommitteeNetworkHandler struct {
 	contractInstance   *contract.SignerConnectionRegister
 	contractTransactor *bind.TransactOpts
 
+	RsaKey *rsakey.RsaKey
+
 	remoteSigners []*RemoteSigner
 
 	connected bool
@@ -220,17 +230,33 @@ type BasicCommitteeNetworkHandler struct {
 }
 
 // NewBasicCommitteeNetworkHandler creates a BasicCommitteeNetworkHandler instance
-func NewBasicCommitteeNetworkHandler(epochLength uint64, ownAddress common.Address, contractAddress common.Address, server *p2p.Server) (*BasicCommitteeNetworkHandler, error) {
+func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, etherbase common.Address) (*BasicCommitteeNetworkHandler, error) {
 	bc := &BasicCommitteeNetworkHandler{
-		server:          server,
-		ownNodeID:       server.Self().String(),
-		ownPubkey:       server.RsaPublicKeyBytes,
-		ownAddress:      ownAddress,
-		contractAddress: contractAddress,
-		remoteSigners:   make([]*RemoteSigner, epochLength-1),
+		ownAddress:      etherbase,
+		contractAddress: config.Contracts["signer"],
+		remoteSigners:   make([]*RemoteSigner, config.Epoch-1),
 		connected:       false,
 	}
 	return bc, nil
+}
+
+func (oc *BasicCommitteeNetworkHandler) UpdateServer(server *p2p.Server) error {
+	oc.lock.Lock()
+	defer oc.lock.Unlock()
+	oc.server = server
+	oc.ownNodeID = server.Self().String()
+	return nil
+}
+
+func (oc *BasicCommitteeNetworkHandler) SetRSAKeys(rsaReader RSAReader) error {
+	oc.lock.Lock()
+	defer oc.lock.Unlock()
+
+	var err error
+
+	oc.RsaKey, err = rsaReader()
+
+	return err
 }
 
 // UpdateContractCaller updates contractcaller.
@@ -296,13 +322,14 @@ func (oc *BasicCommitteeNetworkHandler) Connect() {
 	oc.lock.Lock()
 	nodeID, address, contractInstance, auth, client := oc.ownNodeID, oc.ownAddress, oc.contractInstance, oc.contractTransactor, oc.contractCaller.Client
 	connected, remoteSigners, server := oc.connected, oc.remoteSigners, oc.server
+	rsaKey := oc.RsaKey
 	oc.lock.Unlock()
 
 	if !connected {
 		log.Info("connecting...")
 
 		for _, s := range remoteSigners {
-			err := s.Dial(server, nodeID, address, auth, contractInstance, client)
+			err := s.Dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 			log.Info("err when connect", "e", err)
 		}
 		connected = true

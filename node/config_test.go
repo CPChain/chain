@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // Tests that datadirs can be successfully created, be them manually configured

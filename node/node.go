@@ -26,13 +26,12 @@ import (
 	"strings"
 	"sync"
 
-	"crypto/rsa"
-
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/debug"
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
@@ -155,7 +154,7 @@ func (n *Node) Start() error {
 	n.serverConfig = n.config.P2P
 	n.serverConfig.PrivateKey = n.config.NodeKey()
 
-	n.serverConfig.RsaPublicKey, n.serverConfig.RsaPrivateKey, n.serverConfig.RsaPublicKeyBytes, n.serverConfig.RsaPrivateKeyBytes, _ = n.config.RsaKey()
+	n.config.RsaKeyStore, _ = n.config.RsaKey()
 
 	n.serverConfig.Name = n.config.NodeName()
 	n.serverConfig.Logger = n.log
@@ -619,6 +618,6 @@ func (n *Node) apis() []rpc.API {
 }
 
 // getRSAKey gets RSA key pair from config.
-func (n *Node) RsaKey() (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
+func (n *Node) RsaKey() (*rsakey.RsaKey, error) {
 	return n.config.RsaKey()
 }

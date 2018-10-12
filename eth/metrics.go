@@ -17,7 +17,7 @@
 package eth
 
 import (
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/metrics"
 )
 

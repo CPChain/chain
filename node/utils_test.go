@@ -22,7 +22,7 @@ package node
 import (
 	"reflect"
 
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
 )
 

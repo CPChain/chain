@@ -31,11 +31,11 @@ import (
 	"bitbucket.org/cpchain/chain/eth/gasprice"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/node"
-	"bitbucket.org/cpchain/chain/p2p"
-	"bitbucket.org/cpchain/chain/p2p/discover"
-	"bitbucket.org/cpchain/chain/p2p/discv5"
-	"bitbucket.org/cpchain/chain/p2p/nat"
-	"bitbucket.org/cpchain/chain/p2p/netutil"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/ethereum/go-ethereum/p2p/discv5"
+	"github.com/ethereum/go-ethereum/p2p/nat"
+	"github.com/ethereum/go-ethereum/p2p/netutil"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/log"
@@ -648,9 +648,9 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 		cache.TrieNodeLimit = ctx.GlobalInt(CacheFlag.Name) * ctx.GlobalInt(CacheGCFlag.Name) / 100
 	}
 	vmcfg := vm.Config{EnablePreimageRecording: ctx.GlobalBool(VMEnableDebugFlag.Name)}
-	_, privKey, _, _, _ := stack.RsaKey()
+	rsaKey, _ := stack.RsaKey()
 	// TODO chengx: give a fake or real RemoteDB and private key if need.
-	chain, err = core.NewBlockChain(chainDb, cache, config, engine, vmcfg, nil, privKey)
+	chain, err = core.NewBlockChain(chainDb, cache, config, engine, vmcfg, nil, rsaKey.PrivateKey)
 	if err != nil {
 		Fatalf("Can't create BlockChain: %v", err)
 	}
@@ -698,7 +698,6 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 	}
 }
 
-
 type gethConfig struct {
 	Eth  eth.Config
 	Node node.Config
@@ -731,7 +730,6 @@ func defaultNodeConfig() node.Config {
 	return cfg
 }
 
-
 func loadConfig(file string, cfg *gethConfig) error {
 	f, err := os.Open(file)
 	if err != nil {
@@ -747,7 +745,6 @@ func loadConfig(file string, cfg *gethConfig) error {
 	return err
 }
 
-
 func makeFullNode(ctx *cli.Context) *node.Node {
 	stack, cfg := makeConfigNode(ctx)
 
@@ -755,7 +752,6 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 
 	return stack
 }
-
 
 func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 	// Load defaults.
@@ -781,4 +777,3 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 
 	return stack, cfg
 }
-

@@ -28,7 +28,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
-	"bitbucket.org/cpchain/chain/accounts/rsa_"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -67,12 +67,12 @@ func TestSignerRegister(t *testing.T) {
 	contractBackend.Commit()
 
 	// ==============RegisterPublicKey====================
-	//rsa_.GenerateRsaKey("./testdata/rsa_pub1.pem", "./testdata/rsa_pri1.pem", 2048)
+	// rsa_.generateRsaKey("./testdata/rsa_pub1.pem", "./testdata/rsa_pri1.pem", 2048)
 
 	// 1. load RsaPublicKey/PrivateKey
 	fmt.Println("1.load RsaPublicKey/PrivateKey")
-	publicKey1, privateKey1, pubBytes1, _, _ := rsa_.LoadRsaKey("./testdata/rsa_pub1.pem", "./testdata/rsa_pri1.pem")
-	_ = publicKey1
+
+	rsaKey, err := rsakey.NewRsaKey("./testdata")
 	// 2. register node2 public key on chain (claim campaign)
 	fmt.Println("2.register node2 public key on chain")
 	register.TransactOpts = *bind.NewKeyedTransactor(key)
@@ -80,7 +80,7 @@ func TestSignerRegister(t *testing.T) {
 	register.TransactOpts.GasPrice = big.NewInt(0)
 	register.TransactOpts.Value = big.NewInt(1000)
 
-	tx, err := register.RegisterPublicKey(pubBytes1)
+	tx, err := register.RegisterPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
 	fmt.Println("RegisterPublicKey tx:", tx.Hash().Hex())
 	contractBackend.Commit()
 	printReceipt(contractBackend, tx, "ReceiptStatusFailed when RegisterPublicKey:%v")
@@ -102,7 +102,7 @@ func TestSignerRegister(t *testing.T) {
 
 	// 4.TODO node2 get enode from chain failed in simulated backend,now it's failed for unknown reason
 	fmt.Println("6.node2 get enode from chain")
-	enode, err := register.GetNodeInfo(big.NewInt(1), privateKey1, addr)
+	enode, err := register.GetNodeInfo(big.NewInt(1), rsaKey, addr)
 	//checkError(t, "GetNodeInfo error: %v", err)
 	// FIXME need to check why failed in simulatedbackend.this line should be removed,skip this error temporary.
 	_ = enode

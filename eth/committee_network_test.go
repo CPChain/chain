@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/p2p"
+	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -14,10 +14,8 @@ import (
 
 func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
 	type args struct {
-		epochLength     uint64
-		ownAddress      common.Address
-		contractAddress common.Address
-		server          *p2p.Server
+		config    *configs.DporConfig
+		etherbase common.Address
 	}
 	tests := []struct {
 		name    string
@@ -29,7 +27,7 @@ func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewBasicCommitteeNetworkHandler(tt.args.epochLength, tt.args.ownAddress, tt.args.contractAddress, tt.args.server)
+			got, err := NewBasicCommitteeNetworkHandler(tt.args.config, tt.args.etherbase)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBasicCommitteeNetworkHandler() error = %v, wantErr %v", err, tt.wantErr)
 				return

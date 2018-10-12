@@ -175,6 +175,12 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "xP9f8IxoD8dHSwKTuaacJEWG9Zk=",
+			"path": "github.com/ethereum/go-ethereum/p2p",
+			"revision": "",
+			"tree": true
+		},
+		{
 			"checksumSHA1": "zrskypwp1RbmLX2f/47diH1vxQc=",
 			"path": "github.com/ethereum/go-ethereum/rlp",
 			"revision": ""

@@ -21,7 +21,7 @@ import (
 	"log"
 
 	"bitbucket.org/cpchain/chain/node"
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 	"bitbucket.org/cpchain/chain/rpc"
 )
 

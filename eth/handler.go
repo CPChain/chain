@@ -32,12 +32,12 @@ import (
 	"bitbucket.org/cpchain/chain/eth/downloader"
 	"bitbucket.org/cpchain/chain/eth/fetcher"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/p2p"
-	"bitbucket.org/cpchain/chain/p2p/discover"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
@@ -105,14 +105,6 @@ type ProtocolManager struct {
 	wg sync.WaitGroup
 }
 
-func (pm *ProtocolManager) updateServer(server *p2p.Server) {
-	pm.server = server
-	if pm.chainconfig.Dpor != nil {
-		pm.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(pm.chainconfig.Dpor.Epoch, pm.etherbase, pm.chainconfig.Dpor.Contracts["signer"], pm.server)
-		pm.engine.SetCommitteeNetworkHandler(pm.committeeNetworkHandler)
-	}
-}
-
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the Ethereum network.
 func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, etherbase common.Address) (*ProtocolManager, error) {
@@ -132,6 +124,11 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		engine:    engine,
 		etherbase: etherbase,
 	}
+
+	if config.Dpor != nil {
+		manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(config.Dpor, etherbase)
+	}
+
 	// Figure out whether to allow fast sync or not
 	if mode == downloader.FastSync && blockchain.CurrentBlock().NumberU64() > 0 {
 		log.Warn("Blockchain not empty, fast sync disabled")

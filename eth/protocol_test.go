@@ -24,9 +24,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/eth/downloader"
-	"bitbucket.org/cpchain/chain/p2p"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
