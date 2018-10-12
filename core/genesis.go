@@ -197,7 +197,6 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 	if height == nil {
 		return newcfg, stored, fmt.Errorf("missing block number for head header hash")
 	}
-
 	compatErr := storedcfg.CheckCompatible(newcfg, *height)
 	if compatErr != nil && *height != 0 && compatErr.RewindTo != 0 {
 		return newcfg, stored, compatErr
@@ -212,8 +211,6 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 		return g.Config
 	case ghash == configs.MainnetGenesisHash:
 		return configs.MainnetChainConfig
-	case ghash == configs.TestnetGenesisHash:
-		return configs.TestnetChainConfig
 	case ghash == configs.CpchainGenesisHash:
 		// TODO
 		panic("not implemented.")
@@ -316,19 +313,6 @@ func DefaultGenesisBlock() *Genesis {
 	}
 }
 
-// DefaultTestnetGenesisBlock returns the Ropsten network genesis block.
-func DefaultTestnetGenesisBlock() *Genesis {
-	return &Genesis{
-		Config:     configs.TestnetChainConfig,
-		Nonce:      66,
-		ExtraData:  hexutil.MustDecode("0x3535353535353535353535353535353535353535353535353535353535353535"),
-		GasLimit:   16777216,
-		Difficulty: big.NewInt(1048576),
-		Alloc:      decodePrealloc(testnetAllocData),
-	}
-}
-
-// DefaultCpchainGenesisBlock returns the cpchain network genesis block.
 func DefaultCpchainGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     configs.CpchainChainConfig,
