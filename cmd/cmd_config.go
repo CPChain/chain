@@ -17,9 +17,10 @@
 package main
 
 import (
-	"gopkg.in/urfave/cli.v1"
 	"io"
 	"os"
+
+	"github.com/urfave/cli"
 )
 
 var (
@@ -38,7 +39,6 @@ var (
 		Usage: "TOML configuration file",
 	}
 )
-
 
 // dumpConfig is the dumpconfig command.
 func dumpConfig(ctx *cli.Context) error {

@@ -26,7 +26,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/console"
 	"github.com/ethereum/go-ethereum/log"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 )
 
 var (
@@ -48,7 +48,7 @@ It expects the genesis file as argument.`,
 	}
 	cleanDbCommand = cli.Command{
 		Action:    MigrateFlags(removeDB),
-		Name:      "cleanDb",
+		Name:      "cleandb",
 		Usage:     "Remove blockchain and state databases",
 		ArgsUsage: " ",
 		Flags: []cli.Flag{

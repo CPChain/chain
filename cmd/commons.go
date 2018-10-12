@@ -39,7 +39,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/log"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 )
 
 // Fatalf formats a message to standard error and exits the program.
@@ -539,9 +539,9 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 	}
 	cfg.DatabaseHandles = makeDatabaseHandles()
 
-	if gcmode := ctx.GlobalString(GCModeFlag.Name); gcmode != "full" && gcmode != "archive" {
-		Fatalf("--%s must be either 'full' or 'archive'", GCModeFlag.Name)
-	}
+	// if gcmode := ctx.GlobalString(GCModeFlag.Name); gcmode != "full" && gcmode != "archive" {
+	// 	Fatalf("--%s must be either 'full' or 'archive'", GCModeFlag.Name)
+	// }
 	cfg.NoPruning = ctx.GlobalString(GCModeFlag.Name) == "archive"
 
 	if ctx.GlobalIsSet(CacheFlag.Name) || ctx.GlobalIsSet(CacheGCFlag.Name) {
@@ -722,8 +722,8 @@ var tomlSettings = toml.Config{
 
 func defaultNodeConfig() node.Config {
 	cfg := node.DefaultConfig
-	cfg.Name = clientIdentifier
-	cfg.Version = configs.VersionWithCommit("")
+	cfg.Name = configs.ClientIdentifier
+	cfg.Version = configs.Version
 	cfg.HTTPModules = append(cfg.HTTPModules, "eth")
 	cfg.WSModules = append(cfg.WSModules, "eth")
 	cfg.IPCPath = "cpchain.ipc"

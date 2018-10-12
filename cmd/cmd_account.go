@@ -25,7 +25,7 @@ import (
 	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/console"
 	"github.com/ethereum/go-ethereum/log"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 )
 
 var (

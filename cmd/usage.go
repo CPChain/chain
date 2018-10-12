@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"bitbucket.org/cpchain/chain/internal/debug"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 )
 
 // AppHelpTemplate is the test template for the default, global app help topic.

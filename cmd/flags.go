@@ -34,7 +34,7 @@ import (
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/ethereum/go-ethereum/common/math"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 )
 
 // These are all the command line flags we support.
