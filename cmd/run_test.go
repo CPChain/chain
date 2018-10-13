@@ -45,7 +45,7 @@ type testgeth struct {
 func init() {
 	// Run the app if we've been exec'd as "cpchain-test" in runGeth.
 	reexec.Register("cpchain-test", func() {
-		if err := app.Run(os.Args); err != nil {
+		if err := newApp().Run(os.Args); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
