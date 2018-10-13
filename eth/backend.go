@@ -44,7 +44,6 @@ import (
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/node/miner"
-	"github.com/ethereum/go-ethereum/p2p"
 	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -52,6 +51,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
@@ -88,7 +88,7 @@ type Ethereum struct {
 	accountManager *accounts.Manager
 
 	bloomRequests chan chan *bloombits.Retrieval // Channel receiving bloom data retrieval requests
-	bloomIndexer  *core.ChainIndexer             // Bloom indexer operating during block imports
+	bloomIndexer  *core.ChainIndexer             // LogsBloom indexer operating during block imports
 
 	APIBackend          *EthAPIBackend
 	AdmissionAPIBackend admission.APIBackend

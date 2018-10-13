@@ -143,7 +143,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			return nil, fmt.Errorf("parent block #%d not found", number-1)
 		}
 	}
-	pubStateDB, err := state.New(start.Root(), database)
+	pubStateDB, err := state.New(start.StateRoot(), database)
 	if err != nil {
 		// If the starting state is missing, allow some number of blocks to be reexecuted
 		reexec := defaultTraceReexec
@@ -156,7 +156,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			if start == nil {
 				break
 			}
-			if pubStateDB, err = state.New(start.Root(), database); err == nil {
+			if pubStateDB, err = state.New(start.StateRoot(), database); err == nil {
 				break
 			}
 		}
@@ -277,7 +277,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			}
 			// Generate the next state snapshot fast without tracing
 			// TODO: test if below statement is correct.
-			privStateDB, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), pubStateDB.Database())
+			privStateDB, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.StateRoot()), pubStateDB.Database())
 			// TODO: Pass real remote database
 			_, _, _, _, err := api.eth.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
 			if err != nil {
@@ -475,7 +475,7 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 // attempted to be reexecuted to generate the desired state.
 func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*state.StateDB, error) {
 	// If we have the state fully available, use that
-	pubStateDB, err := api.eth.blockchain.StateAt(block.Root())
+	pubStateDB, err := api.eth.blockchain.StateAt(block.StateRoot())
 	if err == nil {
 		return pubStateDB, nil
 	}
@@ -488,7 +488,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		if block == nil {
 			break
 		}
-		if pubStateDB, err = state.New(block.Root(), database); err == nil {
+		if pubStateDB, err = state.New(block.StateRoot(), database); err == nil {
 			break
 		}
 	}
@@ -518,7 +518,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		}
 
 		// TODO: check if below statement is correct.
-		privStateDB, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.Root()), pubStateDB.Database())
+		privStateDB, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.StateRoot()), pubStateDB.Database())
 		// TODO: pass real remote database.
 		_, _, _, _, err := api.eth.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
 		if err != nil {
@@ -544,7 +544,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 // computeStatePrivDB retrieves the private state database associated with a certain block.
 func (api *PrivateDebugAPI) computeStatePrivDB(block *types.Block) (*state.StateDB, error) {
 	// If we have the state fully available, use that
-	privStatedb, err := api.eth.blockchain.StatePrivAt(block.Root())
+	privStatedb, err := api.eth.blockchain.StatePrivAt(block.StateRoot())
 	if err == nil {
 		return privStatedb, nil
 	}

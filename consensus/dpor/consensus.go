@@ -80,11 +80,8 @@ var (
 	// to contain a 65 byte secp256k1 signature.
 	errMissingSignature = errors.New("extra-data 65 byte suffix signature missing")
 
-	// errInvalidMixDigest is returned if a block's mix digest is non-zero.
-	errInvalidMixDigest = errors.New("non-zero mix digest")
-
-	// errInvalidUncleHash is returned if a block contains an non-empty uncle list.
-	errInvalidUncleHash = errors.New("non empty uncle hash")
+	// errInvalidMixHash is returned if a block's mix digest is non-zero.
+	errInvalidMixHash = errors.New("non-zero mix digest")
 
 	// errInvalidDifficulty is returned if the difficulty of a block is not either
 	// of 1 or 2, or if the value does not match the turn of the signer.
@@ -199,7 +196,7 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	header.Extra2 = make([]byte, extraSeal*int(d.config.Epoch)+1)
 
 	// Mix digest is reserved for now, set to empty
-	header.MixDigest = common.Hash{}
+	header.MixHash = common.Hash{}
 
 	// Ensure the timestamp has the correct delay
 	parent := chain.GetHeader(header.ParentHash, number-1)
@@ -217,7 +214,7 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 // rewards given, and returns the final block.
 func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
 	// No block rewards in PoA, so the state remains as is and uncles are dropped
-	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
+	header.StateRoot = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil

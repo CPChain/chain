@@ -248,9 +248,9 @@ func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 		GasLimit:   g.GasLimit,
 		GasUsed:    g.GasUsed,
 		Difficulty: g.Difficulty,
-		MixDigest:  g.Mixhash,
+		MixHash:    g.Mixhash,
 		Coinbase:   g.Coinbase,
-		Root:       root,
+		StateRoot:  root,
 	}
 	if g.GasLimit == 0 {
 		head.GasLimit = configs.GenesisGasLimit

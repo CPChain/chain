@@ -31,20 +31,20 @@ import (
 )
 
 type headerTest struct {
-	ParentHash  common.Hash
-	Coinbase    common.Address
-	Root        common.Hash
-	TxHash      common.Hash
-	ReceiptHash common.Hash
-	Bloom       types.Bloom
-	Difficulty  *big.Int
-	Number      *big.Int
-	GasLimit    uint64
-	GasUsed     uint64
-	Time        *big.Int
-	Extra       []byte
-	MixDigest   common.Hash
-	Nonce       types.BlockNonce
+	ParentHash   common.Hash
+	Coinbase     common.Address
+	StateRoot    common.Hash
+	TxsRoot      common.Hash
+	ReceiptsRoot common.Hash
+	LogsBloom    types.Bloom
+	Difficulty   *big.Int
+	Number       *big.Int
+	GasLimit     uint64
+	GasUsed      uint64
+	Time         *big.Int
+	Extra        []byte
+	MixHash      common.Hash
+	Nonce        types.BlockNonce
 }
 
 // Tests block header storage and retrieval operations.
@@ -75,17 +75,17 @@ func TestHeaderStorage(t *testing.T) {
 		tmpHeader := headerTest{
 			headerFromRLP.ParentHash,
 			headerFromRLP.Coinbase,
-			headerFromRLP.Root,
-			headerFromRLP.TxHash,
-			headerFromRLP.ReceiptHash,
-			headerFromRLP.Bloom,
+			headerFromRLP.StateRoot,
+			headerFromRLP.TxsRoot,
+			headerFromRLP.ReceiptsRoot,
+			headerFromRLP.LogsBloom,
 			headerFromRLP.Difficulty,
 			headerFromRLP.Number,
 			headerFromRLP.GasLimit,
 			headerFromRLP.GasUsed,
 			headerFromRLP.Time,
 			headerFromRLP.Extra,
-			headerFromRLP.MixDigest,
+			headerFromRLP.MixHash,
 			headerFromRLP.Nonce,
 		}
 		tmpHeaderBytes, _ := rlp.EncodeToBytes(tmpHeader)
@@ -148,9 +148,9 @@ func TestBlockStorage(t *testing.T) {
 
 	// Create a test block to move around the database and make sure it's really new
 	block := types.NewBlockWithHeader(&types.Header{
-		Extra:       []byte("test block"),
-		TxHash:      types.EmptyRootHash,
-		ReceiptHash: types.EmptyRootHash,
+		Extra:        []byte("test block"),
+		TxsRoot:      types.EmptyRootHash,
+		ReceiptsRoot: types.EmptyRootHash,
 	})
 	if entry := ReadBlock(db, block.Hash(), block.NumberU64()); entry != nil {
 		t.Fatalf("Non existent block returned: %v", entry)
@@ -195,9 +195,9 @@ func TestBlockStorage(t *testing.T) {
 func TestPartialBlockStorage(t *testing.T) {
 	db := ethdb.NewMemDatabase()
 	block := types.NewBlockWithHeader(&types.Header{
-		Extra:       []byte("test block"),
-		TxHash:      types.EmptyRootHash,
-		ReceiptHash: types.EmptyRootHash,
+		Extra:        []byte("test block"),
+		TxsRoot:      types.EmptyRootHash,
+		ReceiptsRoot: types.EmptyRootHash,
 	})
 	// Store a header and check that it's not recognized as a block
 	WriteHeader(db, block.Header())

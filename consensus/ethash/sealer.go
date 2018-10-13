@@ -36,7 +36,7 @@ func (ethash *Ethash) Seal(chain consensus.ChainReader, block *types.Block, stop
 	// If we're running a fake PoW, simply return a 0 nonce immediately
 	if ethash.config.PowMode == ModeFake || ethash.config.PowMode == ModeFullFake {
 		header := block.Header()
-		header.Nonce, header.MixDigest = types.BlockNonce{}, common.Hash{}
+		header.Nonce, header.MixHash = types.BlockNonce{}, common.Hash{}
 		return block.WithSeal(header), nil
 	}
 	// If we're running a shared PoW, delegate sealing to it
@@ -132,7 +132,7 @@ search:
 				// Correct nonce found, create a new header with it
 				header = types.CopyHeader(header)
 				header.Nonce = types.EncodeNonce(nonce)
-				header.MixDigest = common.BytesToHash(digest)
+				header.MixHash = common.BytesToHash(digest)
 
 				// Seal and return a block (if still needed)
 				select {

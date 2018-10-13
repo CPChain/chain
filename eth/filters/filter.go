@@ -187,7 +187,7 @@ func (f *Filter) unindexedLogs(ctx context.Context, end uint64) ([]*types.Log, e
 		if header == nil || err != nil {
 			return logs, err
 		}
-		if bloomFilter(header.Bloom, f.addresses, f.topics) {
+		if bloomFilter(header.LogsBloom, f.addresses, f.topics) {
 			found, err := f.checkMatches(ctx, header)
 			if err != nil {
 				return logs, err

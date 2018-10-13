@@ -183,7 +183,6 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, privStateDB: privStateDB, config: config, engine: engine}
 		b.header = makeHeader(b.chainReader, parent, pubStatedb, b.engine)
 
-
 		// Execute any user modifications to the block and finalize it
 		if gen != nil {
 			gen(i, b)
@@ -204,11 +203,11 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		return nil, nil
 	}
 	for i := 0; i < n; i++ {
-		pubStatedb, err := state.New(parent.Root(), state.NewDatabase(db))
+		pubStatedb, err := state.New(parent.StateRoot(), state.NewDatabase(db))
 		if err != nil {
 			panic(err)
 		}
-		privStateDB, err := state.New(GetPrivateStateRoot(db, parent.Root()), state.NewDatabase(db))
+		privStateDB, err := state.New(GetPrivateStateRoot(db, parent.StateRoot()), state.NewDatabase(db))
 		if err != nil {
 			panic(err)
 		}
@@ -229,7 +228,7 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 	}
 
 	return &types.Header{
-		Root:       state.IntermediateRoot(chain.Config().IsEIP158(parent.Number())),
+		StateRoot:  state.IntermediateRoot(chain.Config().IsEIP158(parent.Number())),
 		ParentHash: parent.Hash(),
 		Coinbase:   parent.Coinbase(),
 		Difficulty: engine.CalcDifficulty(chain, time.Uint64(), &types.Header{

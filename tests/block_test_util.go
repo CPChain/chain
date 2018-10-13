@@ -108,8 +108,8 @@ func (t *BlockTest) Run() error {
 	if gblock.Hash() != t.json.Genesis.Hash {
 		return fmt.Errorf("genesis block hash doesn't match test: computed=%x, test=%x", gblock.Hash().Bytes()[:6], t.json.Genesis.Hash[:6])
 	}
-	if gblock.Root() != t.json.Genesis.StateRoot {
-		return fmt.Errorf("genesis block state root does not match test: computed=%x, test=%x", gblock.Root().Bytes()[:6], t.json.Genesis.StateRoot[:6])
+	if gblock.StateRoot() != t.json.Genesis.StateRoot {
+		return fmt.Errorf("genesis block state root does not match test: computed=%x, test=%x", gblock.StateRoot().Bytes()[:6], t.json.Genesis.StateRoot[:6])
 	}
 
 	chain, err := core.NewBlockChain(db, nil, config, ethash.NewShared(), vm.Config{}, remoteDB, nil)
@@ -200,14 +200,14 @@ func (t *BlockTest) insertBlocks(blockchain *core.BlockChain) ([]btBlock, error)
 }
 
 func validateHeader(h *btHeader, h2 *types.Header) error {
-	if h.Bloom != h2.Bloom {
-		return fmt.Errorf("Bloom: want: %x have: %x", h.Bloom, h2.Bloom)
+	if h.Bloom != h2.LogsBloom {
+		return fmt.Errorf("LogsBloom: want: %x have: %x", h.Bloom, h2.LogsBloom)
 	}
 	if h.Coinbase != h2.Coinbase {
 		return fmt.Errorf("Coinbase: want: %x have: %x", h.Coinbase, h2.Coinbase)
 	}
-	if h.MixHash != h2.MixDigest {
-		return fmt.Errorf("MixHash: want: %x have: %x", h.MixHash, h2.MixDigest)
+	if h.MixHash != h2.MixHash {
+		return fmt.Errorf("MixHash: want: %x have: %x", h.MixHash, h2.MixHash)
 	}
 	if h.Nonce != h2.Nonce {
 		return fmt.Errorf("Nonce: want: %x have: %x", h.Nonce, h2.Nonce)
@@ -218,14 +218,14 @@ func validateHeader(h *btHeader, h2 *types.Header) error {
 	if h.ParentHash != h2.ParentHash {
 		return fmt.Errorf("Parent hash: want: %x have: %x", h.ParentHash, h2.ParentHash)
 	}
-	if h.ReceiptTrie != h2.ReceiptHash {
-		return fmt.Errorf("Receipt hash: want: %x have: %x", h.ReceiptTrie, h2.ReceiptHash)
+	if h.ReceiptTrie != h2.ReceiptsRoot {
+		return fmt.Errorf("Receipt hash: want: %x have: %x", h.ReceiptTrie, h2.ReceiptsRoot)
 	}
-	if h.TransactionsTrie != h2.TxHash {
-		return fmt.Errorf("Tx hash: want: %x have: %x", h.TransactionsTrie, h2.TxHash)
+	if h.TransactionsTrie != h2.TxsRoot {
+		return fmt.Errorf("Tx hash: want: %x have: %x", h.TransactionsTrie, h2.TxsRoot)
 	}
-	if h.StateRoot != h2.Root {
-		return fmt.Errorf("State hash: want: %x have: %x", h.StateRoot, h2.Root)
+	if h.StateRoot != h2.StateRoot {
+		return fmt.Errorf("State hash: want: %x have: %x", h.StateRoot, h2.StateRoot)
 	}
 	if !bytes.Equal(h.ExtraData, h2.Extra) {
 		return fmt.Errorf("Extra data: want: %x have: %x", h.ExtraData, h2.Extra)

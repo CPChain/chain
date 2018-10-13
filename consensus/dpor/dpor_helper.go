@@ -79,8 +79,8 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	}
 
 	// Ensure that the mix digest is zero as we don't have fork protection currently
-	if header.MixDigest != (common.Hash{}) {
-		return errInvalidMixDigest
+	if header.MixHash != (common.Hash{}) {
+		return errInvalidMixHash
 	}
 
 	// Ensure that the block's difficulty is meaningful (may not be correct at this point)

@@ -56,17 +56,17 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 	rlp.Encode(hasher, []interface{}{
 		header.ParentHash,
 		header.Coinbase,
-		header.Root,
-		header.TxHash,
-		header.ReceiptHash,
-		header.Bloom,
+		header.StateRoot,
+		header.TxsRoot,
+		header.ReceiptsRoot,
+		header.LogsBloom,
 		header.Difficulty,
 		header.Number,
 		header.GasLimit,
 		header.GasUsed,
 		header.Time,
 		header.Extra[:len(header.Extra)-65],
-		header.MixDigest,
+		header.MixHash,
 		header.Nonce,
 	})
 	hasher.Sum(hash[:0])
