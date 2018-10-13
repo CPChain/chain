@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/naoina/toml"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/naoina/toml"
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"

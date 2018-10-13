@@ -17,7 +17,12 @@ const (
 	DebugLevel = logrus.DebugLevel
 )
 
-type Level = logrus.Level
+type (
+	Level         = logrus.Level
+	Formatter     = logrus.Formatter
+	TextFormatter = logrus.TextFormatter
+	JSONFormatter = logrus.JSONFormatter
+)
 
 type Logger struct {
 	*logrus.Entry
@@ -29,9 +34,17 @@ func New(ctx ...interface{}) *Logger {
 		return nil
 	}
 
-	return &Logger{
+	l := &Logger{
 		logrus.WithFields(getFields(ctx)),
 	}
+
+	l.SetFormatter(&TextFormatter{
+		ForceColors:               true,
+		EnvironmentOverrideColors: true,
+		TimestampFormat:           termTimeFormat,
+	})
+
+	return l
 }
 
 // SetLevel sets the logger level.
@@ -50,7 +63,7 @@ func (logger *Logger) SetOutput(output io.Writer) {
 }
 
 // SetFormatter sets the logger formatter.
-func (logger *Logger) SetFormatter(formatter logrus.Formatter) {
+func (logger *Logger) SetFormatter(formatter Formatter) {
 	logger.Logger.SetFormatter(formatter)
 }
 

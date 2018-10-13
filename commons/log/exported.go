@@ -7,13 +7,26 @@ import (
 )
 
 var (
-	root = NewLogger()
+	root           = NewLogger()
+	termTimeFormat = "[01-02|15:04:05.000]"
 )
 
 func NewLogger() *Logger {
-	return &Logger{
+	l := &Logger{
 		logrus.NewEntry(logrus.New()),
 	}
+
+	l.SetFormatter(&TextFormatter{
+		ForceColors:               true,
+		EnvironmentOverrideColors: true,
+		TimestampFormat:           termTimeFormat,
+	})
+
+	return l
+}
+
+func Root() *Logger {
+	return root
 }
 
 func getFields(ctx ...interface{}) logrus.Fields {
