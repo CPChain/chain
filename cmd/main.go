@@ -13,6 +13,7 @@ import (
 
 func newApp() *cli.App {
 	app := cli.NewApp()
+	// the executable name
 	app.Name = filepath.Base(os.Args[0])
 	app.Authors = []cli.Author{
 		{
@@ -26,9 +27,7 @@ func newApp() *cli.App {
 	// be fair to the fish shell.
 	// app.EnableBashCompletion = true
 
-	// TODO use the run command
-	// app.Action = cli.ShowAppHelp
-	app.Action = run
+	app.Action = cli.ShowAppHelp
 
 	app.Commands = []cli.Command{
 		initCommand,
@@ -36,10 +35,10 @@ func newApp() *cli.App {
 		cleanDbCommand,
 		accountCommand,
 		walletCommand,
-		consoleCommand,
-		attachCommand,
+		// consoleCommand,
+		// attachCommand,
+		// javascriptCommand,
 		dumpConfigCommand,
-		javascriptCommand,
 	}
 
 	// global flags
@@ -47,13 +46,13 @@ func newApp() *cli.App {
 	app.Flags = append(app.Flags, nodeFlags...)
 	app.Flags = append(app.Flags, rpcFlags...)
 	app.Flags = append(app.Flags, debug.Flags...)
-	app.Flags = append(app.Flags, consoleFlags...)
-
+	// app.Flags = append(app.Flags, consoleFlags...)
 
 	// maintain order
 	sort.Sort(cli.CommandsByName(app.Commands))
-	sort.Sort(cli.FlagsByName(app.Flags))
+	// sort.Sort(cli.FlagsByName(app.Flags))
 
+	// put command specific stuff to command.before/after
 	app.Before = func(ctx *cli.Context) error {
 		// TODO remove this, this sets up logging.
 		err := debug.Setup(ctx)
