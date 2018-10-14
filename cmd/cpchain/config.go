@@ -7,6 +7,8 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/urfave/cli"
+	"os"
+	"path/filepath"
 )
 
 type config struct {
@@ -39,6 +41,7 @@ func updateConfigFromCli(ctx *cli.Context, cfg *config) {
 	updateChainConfig(ctx, &cfg.Eth)
 }
 
+
 // Returns a config merged from
 // - default config,
 // - --config file or sys default
@@ -51,15 +54,26 @@ func getConfig(ctx *cli.Context) config {
 	}
 
 	// --config
+	var path string
 	if ctx.GlobalIsSet("config") {
-		path := ctx.GlobalString("config")
+		p := ctx.GlobalString("config")
+		if _, err := os.Stat(p); os.IsNotExist(err) {
+			log.Fatalf("Config file doesn't exist: %v", p)
+		}
+		path = p
+	} else {
+		// try to read from the datadir/config.toml
+		 p := filepath.Join(cfg.Node.DataDir, "config.toml")
+		 if _, err := os.Stat(p); !os.IsNotExist(err) {
+			 path = p
+		 }
+	}
+
+	if path != "" {
+		log.Infof("Load config file from: %v", path)
 		if _, err := toml.DecodeFile(path, &cfg); err != nil {
-			// TODO
 			log.Fatalf("Invalid TOML config file: %v", err)
 		}
-	} else {
-		// TODO
-		// try to read from the .config in the default data dir
 	}
 
 	// command line

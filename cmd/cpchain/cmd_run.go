@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,22 +14,18 @@ import (
 var runCommand cli.Command
 
 func init() {
-	cmdFlags := append([]cli.Flag(nil), flags.RpcFlags...)
-	cmdFlags = append(cmdFlags, flags.GeneralFlags...)
+	runFlags := append([]cli.Flag(nil), flags.RpcFlags...)
+	runFlags = append(runFlags, flags.GeneralFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,
 		Name:   "run",
-		Flags:  cmdFlags,
+		Flags:  runFlags,
 		Usage:  "Run a cpchain node",
 	}
 }
 
 func run(ctx *cli.Context) error {
-	fmt.Println(ctx.IsSet("datadir"))
-	fmt.Println(ctx.String("datadir"))
-
-
 	n := createNode(ctx)
 	bootstrap(ctx, n)
 	// n.Wait()

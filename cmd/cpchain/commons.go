@@ -40,6 +40,9 @@ func registerService() {
 
 }
 
+
+
+
 func createNode(ctx *cli.Context) *node.Node {
 	cfg := getConfig(ctx)
 

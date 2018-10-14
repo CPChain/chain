@@ -1,36 +1,12 @@
 package flags
 
 import (
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
-	"fmt"
-	"io"
-	"os"
-	"runtime"
-
 	"github.com/urfave/cli"
 )
 
 var flagMap = make(map[string]cli.Flag)
-
-// Fatalf formats a message to standard error and exits the program.
-// The message is also printed to standard output if standard error
-// is redirected to a different file.
-func Fatalf(format string, args ...interface{}) {
-	w := io.MultiWriter(os.Stdout, os.Stderr)
-	if runtime.GOOS == "windows" {
-		// The SameFile check below doesn't work on Windows.
-		// stdout is unlikely to get redirected though, so just print there.
-		w = os.Stdout
-	} else {
-		outf, _ := os.Stdout.Stat()
-		errf, _ := os.Stderr.Stat()
-		if outf != nil && errf != nil && os.SameFile(outf, errf) {
-			w = os.Stderr
-		}
-	}
-	fmt.Fprintf(w, "Fatal: "+format+"\n", args...)
-	os.Exit(1)
-}
 
 func init() {
 	cli.VersionFlag = cli.BoolFlag{
@@ -53,7 +29,7 @@ func init() {
 func Register(flags ...cli.Flag) {
 	for _, flag := range flags {
 		if _, ok := flagMap[flag.GetName()]; ok {
-			Fatalf("Flag already exists: %v", flag.GetName())
+			log.Fatalf("Flag already exists: %v", flag.GetName())
 		}
 		flagMap[flag.GetName()] = flag
 	}
@@ -62,11 +38,10 @@ func Register(flags ...cli.Flag) {
 func GetByName(name string) cli.Flag {
 	flag, ok := flagMap[name]
 	if !ok {
-		Fatalf("Flag does not exist: %v", name)
+		log.Fatalf("Flag does not exist: %v", name)
 	}
 	return flag
 }
-
 
 // begin flags
 // **********************************************************************************************************
@@ -77,8 +52,6 @@ var ConfigFileFlag = cli.StringFlag{
 	Usage: "Location of the TOML format configuration file",
 }
 
-
-
 var GeneralFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "datadir",
@@ -87,13 +60,15 @@ var GeneralFlags = []cli.Flag{
 	},
 }
 
-
 // TODO @xumx  adjust the following
 var AccountFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "keystore",
-		Usage: "Directory for the keystore (default = inside the datadir)",
-	},
+	// i feel that the keystore path only causes confusion.
+	// let it reside in $datadir is fair enough.
+	// TODO do not marshal the keystore path in toml file.
+	// cli.StringFlag{
+	// 	Name:  "keystore",
+	// 	Usage: "Directory for the keystore (default = inside the datadir)",
+	// },
 
 	cli.StringFlag{
 		Name:  "unlock",
@@ -165,5 +140,4 @@ var P2pFlags = []cli.Flag{
 	},
 }
 
-var MiscFlags = []cli.Flag {
-}
+var MiscFlags = []cli.Flag{}
