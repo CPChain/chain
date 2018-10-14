@@ -17,9 +17,9 @@ func NewLogger() *Logger {
 	}
 
 	l.SetFormatter(&TextFormatter{
-		ForceColors:               true,
-		EnvironmentOverrideColors: true,
-		TimestampFormat:           termTimeFormat,
+		FullTimestamp:    true,
+		QuoteEmptyFields: true,
+		TimestampFormat:  termTimeFormat,
 	})
 
 	return l
@@ -68,7 +68,7 @@ func Info(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(logrus.InfoLevel, msg)
+		root.WithFields(getFields(ctx...)).Info(msg)
 	}
 }
 
@@ -79,7 +79,7 @@ func Print(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(logrus.InfoLevel, msg)
+		root.WithFields(getFields(ctx...)).Info(msg)
 	}
 }
 
@@ -90,7 +90,7 @@ func Debug(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(logrus.Debug, msg)
+		root.WithFields(getFields(ctx...)).Info(msg)
 	}
 }
 
@@ -101,7 +101,7 @@ func Warn(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(logrus.WarnLevel, msg)
+		root.WithFields(getFields(ctx...)).Info(msg)
 	}
 }
 
@@ -112,7 +112,7 @@ func Error(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(logrus.ErrorLevel, msg)
+		root.WithFields(getFields(ctx...)).Info(msg)
 	}
 }
 
@@ -123,7 +123,7 @@ func Panic(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(logrus.PanicLevel, msg)
+		root.WithFields(getFields(ctx...)).Info(msg)
 	}
 }
 
@@ -134,7 +134,7 @@ func Fatal(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(logrus.FatalLevel, msg)
+		root.WithFields(getFields(ctx...)).Info(msg)
 	}
 }
 

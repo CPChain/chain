@@ -39,9 +39,9 @@ func New(ctx ...interface{}) *Logger {
 	}
 
 	l.SetFormatter(&TextFormatter{
-		ForceColors:               true,
-		EnvironmentOverrideColors: true,
-		TimestampFormat:           termTimeFormat,
+		ForceColors:      true,
+		QuoteEmptyFields: true,
+		TimestampFormat:  termTimeFormat,
 	})
 
 	return l
