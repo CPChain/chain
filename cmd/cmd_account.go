@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bitbucket.org/cpchain/chain/commons/log"
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -39,12 +40,12 @@ func createAccount(ctx *cli.Context) error {
 	cfg := getConfig(ctx)
 	scryptN, scryptP, keydir, err := cfg.Node.AccountConfig()
 	if err != nil {
-		Fatalf("Failed to read configuration: %v", err)
+		log.Fatalf("Failed to read configuration: %v", err)
 	}
 	password := readPassword("Please input your password:", true)
 	address, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
 	if err != nil {
-		Fatalf("Failed to create account: %v", err)
+		log.Fatalf("Failed to create account: %v", err)
 	}
 	fmt.Printf("Address: {%x}\n", address)
 	return nil

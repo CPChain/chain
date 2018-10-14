@@ -3,6 +3,8 @@ package main
 import (
 	"path/filepath"
 
+	"bitbucket.org/cpchain/chain/commons/log"
+
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
@@ -68,7 +70,7 @@ func getConfig(ctx *cli.Context) config {
 		path := ctx.GlobalString("config")
 		if _, err := toml.DecodeFile(path, &cfg); err != nil {
 			// TODO
-			Fatalf("Invalid TOML config file: %v", err)
+			log.Fatalf("Invalid TOML config file: %v", err)
 		}
 	} else {
 		// TODO

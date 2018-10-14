@@ -17,9 +17,10 @@
 package main
 
 import (
-	"github.com/BurntSushi/toml"
 	"os"
 
+	"bitbucket.org/cpchain/chain/commons/log"
+	"github.com/BurntSushi/toml"
 	"github.com/urfave/cli"
 )
 
@@ -37,7 +38,7 @@ func dumpConfig(ctx *cli.Context) error {
 	cfg := getConfig(ctx)
 	err := toml.NewEncoder(os.Stdout).Encode(cfg)
 	if err != nil {
-		Fatalf("Encoding config to TOML failed: %v", err)
+		log.Fatalf("Encoding config to TOML failed: %v", err)
 	}
 	return nil
 }
