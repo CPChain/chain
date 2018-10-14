@@ -8,7 +8,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/cmd/flags"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/internal/debug"
 	"github.com/urfave/cli"
 )
 
@@ -50,14 +49,10 @@ func newApp() *cli.App {
 	// sort.Sort(cli.FlagsByName(app.Flags))
 
 	app.Before = func(ctx *cli.Context) error {
-		// TODO remove this, this sets up logging.
-		err := debug.Setup(ctx)
-		return err
+		return nil
 	}
 
 	app.After = func(ctx *cli.Context) error {
-		// TODO remove this.
-		debug.Exit()
 		return nil
 	}
 	return app

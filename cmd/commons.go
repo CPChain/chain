@@ -32,7 +32,7 @@ func readPassword(prompt string, needConfirm bool) string {
 			log.Fatalf("Password doesn't match")
 		}
 	}
-	// trailing newline is ignored
+	// trailing newline is by default ignored
 	return string(password)
 }
 
