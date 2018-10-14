@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/commons/log"
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/cmd/flags"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/urfave/cli"
 )
 

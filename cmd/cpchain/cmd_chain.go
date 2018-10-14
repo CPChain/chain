@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"bitbucket.org/cpchain/chain/cmd/flags"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"github.com/urfave/cli"
 )
 

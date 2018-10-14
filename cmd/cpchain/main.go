@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"bitbucket.org/cpchain/chain/cmd/flags"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/configs"
 	"github.com/urfave/cli"
 )

@@ -1,13 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"bitbucket.org/cpchain/chain/cmd/flags"
-	"github.com/ethereum/go-ethereum/log"
-
+	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/urfave/cli"
 )
@@ -15,17 +15,22 @@ import (
 var runCommand cli.Command
 
 func init() {
-	flags := append([]cli.Flag(nil), flags.RpcFlags...)
+	cmdFlags := append([]cli.Flag(nil), flags.RpcFlags...)
+	cmdFlags = append(cmdFlags, flags.GeneralFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,
 		Name:   "run",
-		Flags:  flags,
+		Flags:  cmdFlags,
 		Usage:  "Run a cpchain node",
 	}
 }
 
 func run(ctx *cli.Context) error {
+	fmt.Println(ctx.IsSet("datadir"))
+	fmt.Println(ctx.String("datadir"))
+
+
 	n := createNode(ctx)
 	bootstrap(ctx, n)
 	// n.Wait()

@@ -1,11 +1,7 @@
 package main
 
 import (
-	"path/filepath"
-
 	"bitbucket.org/cpchain/chain/commons/log"
-
-	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/BurntSushi/toml"
@@ -18,19 +14,8 @@ type config struct {
 	Node node.Config
 }
 
-// TODO @xumx this should be moved to somewhere in the node package
-func defaultNodeConfig() node.Config {
-	cfg := node.DefaultConfig
-	cfg.Name = configs.ClientIdentifier
-	cfg.Version = configs.Version
-	// cfg.HTTPModules = append(cfg.HTTPModules, "eth")
-	// cfg.WSModules = append(cfg.WSModules, "eth")
-	cfg.IPCPath = "cpchain.ipc"
-	return cfg
-}
-
 func updateGeneralConfig(ctx *cli.Context, cfg *node.Config) {
-	cfg.DataDir = filepath.Join(node.DefaultDataDir(), "cpchain")
+	// no need.  only create a subdirectory for testnet, etc.
 }
 
 func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
@@ -62,7 +47,7 @@ func getConfig(ctx *cli.Context) config {
 	// default
 	cfg := config{
 		Eth:  eth.DefaultConfig,
-		Node: defaultNodeConfig(),
+		Node: node.DefaultConfig,
 	}
 
 	// --config
