@@ -39,10 +39,10 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
@@ -246,7 +246,7 @@ func (bc *BlockChain) loadLastState() error {
 		return bc.Reset()
 	}
 	// Make sure the state associated with the block is available
-	if _, err := state.New(currentBlock.Root(), bc.stateCache); err != nil {
+	if _, err := state.New(currentBlock.StateRoot(), bc.stateCache); err != nil {
 		// Dangling block without a state associated, init from scratch
 		log.Warn("Head state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
 		if err := bc.repair(&currentBlock); err != nil {
@@ -255,7 +255,7 @@ func (bc *BlockChain) loadLastState() error {
 	}
 
 	// Make sure the private state associated with the block is available
-	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
+	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.StateRoot()), bc.privateStateCache); err != nil {
 		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
 		// TODO: use repair instead.
 		return bc.Reset()
@@ -323,11 +323,11 @@ func (bc *BlockChain) SetHead(head uint64) error {
 		bc.currentBlock.Store(bc.GetBlock(currentHeader.Hash(), currentHeader.Number.Uint64()))
 	}
 	if currentBlock := bc.CurrentBlock(); currentBlock != nil {
-		if _, err := state.New(currentBlock.Root(), bc.stateCache); err != nil {
+		if _, err := state.New(currentBlock.StateRoot(), bc.stateCache); err != nil {
 			// Rewound state missing, rolled back to before pivot, reset to genesis
 			bc.currentBlock.Store(bc.genesisBlock)
 		}
-		if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.Root()), bc.privateStateCache); err != nil {
+		if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.StateRoot()), bc.privateStateCache); err != nil {
 			// Rewound state missing, rolled back to before pivot, reset to genesis
 			bc.currentBlock.Store(bc.genesisBlock)
 		}
@@ -360,7 +360,7 @@ func (bc *BlockChain) FastSyncCommitHead(hash common.Hash) error {
 	if block == nil {
 		return fmt.Errorf("non existent block [%x…]", hash[:4])
 	}
-	if _, err := trie.NewSecure(block.Root(), bc.stateCache.TrieDB(), 0); err != nil {
+	if _, err := trie.NewSecure(block.StateRoot(), bc.stateCache.TrieDB(), 0); err != nil {
 		return err
 	}
 	// If all checks out, manually set the head block
@@ -419,12 +419,12 @@ func (bc *BlockChain) Processor() Processor {
 
 // State returns a new mutable state(public) based on the current HEAD block.
 func (bc *BlockChain) State() (*state.StateDB, error) {
-	return bc.StateAt(bc.CurrentBlock().Root())
+	return bc.StateAt(bc.CurrentBlock().StateRoot())
 }
 
 // StatePriv returns a new mutable private state based on the current HEAD block.
 func (bc *BlockChain) StatePriv() (*state.StateDB, error) {
-	return bc.StatePrivAt(bc.CurrentBlock().Root())
+	return bc.StatePrivAt(bc.CurrentBlock().StateRoot())
 }
 
 // StateAt returns a new mutable state(public) based on a particular point in time.
@@ -454,7 +454,7 @@ func (bc *BlockChain) ResetWithGenesisBlock(genesis *types.Block) error {
 
 	// Prepare the genesis block and reinitialise the chain
 	if err := bc.hc.WriteTd(genesis.Hash(), genesis.NumberU64(), genesis.Difficulty()); err != nil {
-		log.Crit("Failed to write genesis block TD", "err", err)
+		log.Fatal("Failed to write genesis block TD", "err", err)
 	}
 	rawdb.WriteBlock(bc.db, genesis)
 
@@ -477,8 +477,8 @@ func (bc *BlockChain) ResetWithGenesisBlock(genesis *types.Block) error {
 func (bc *BlockChain) repair(head **types.Block) error {
 	for {
 		// Abort if we've rewound to a head block that does have associated state
-		if _, err := state.New((*head).Root(), bc.stateCache); err == nil {
-			if _, err = state.New(GetPrivateStateRoot(bc.db, (*head).Root()), bc.privateStateCache); err == nil {
+		if _, err := state.New((*head).StateRoot(), bc.stateCache); err == nil {
+			if _, err = state.New(GetPrivateStateRoot(bc.db, (*head).StateRoot()), bc.privateStateCache); err == nil {
 				log.Info("Rewound blockchain to past state", "number", (*head).Number(), "hash", (*head).Hash())
 				return nil
 			}
@@ -610,7 +610,7 @@ func (bc *BlockChain) HasBlockAndState(hash common.Hash, number uint64) bool {
 	if block == nil {
 		return false
 	}
-	return bc.HasState(block.Root())
+	return bc.HasState(block.StateRoot())
 }
 
 // GetBlock retrieves a block from the database by hash and number,
@@ -708,13 +708,13 @@ func (bc *BlockChain) Stop() {
 			if number := bc.CurrentBlock().NumberU64(); number > offset {
 				recent := bc.GetBlockByNumber(number - offset)
 
-				log.Info("Writing cached state to disk", "block", recent.Number(), "hash", recent.Hash(), "root", recent.Root())
-				if err := triedb.Commit(recent.Root(), true); err != nil {
+				log.Info("Writing cached state to disk", "block", recent.Number(), "hash", recent.Hash(), "root", recent.StateRoot())
+				if err := triedb.Commit(recent.StateRoot(), true); err != nil {
 					log.Error("Failed to commit recent state trie", "err", err)
 				}
 
-				log.Info("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash(), "root", recent.Root())
-				if err := privTrieDB.Commit(GetPrivateStateRoot(bc.db, recent.Root()), true); err != nil {
+				log.Info("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash(), "root", recent.StateRoot())
+				if err := privTrieDB.Commit(GetPrivateStateRoot(bc.db, recent.StateRoot()), true); err != nil {
 					log.Error("Failed to commit recent private state trie", "err", err)
 				}
 			}
@@ -985,7 +985,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 	if err != nil {
 		return NonStatTy, err
 	}
-	err = WritePrivateStateRoot(bc.db, block.Root(), privStateRoot)
+	err = WritePrivateStateRoot(bc.db, block.StateRoot(), privStateRoot)
 	if err != nil {
 		return NonStatTy, err
 	}
@@ -1022,7 +1022,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 					log.Info("State in memory for too long, committing", "time", bc.gcproc, "allowance", bc.cacheConfig.TrieTimeLimit, "optimum", float64(chosen-lastWrite)/triesInMemory)
 				}
 				// Flush an entire trie and restart the counters
-				triedb.Commit(header.Root, true)
+				triedb.Commit(header.StateRoot, true)
 				lastWrite = chosen
 				bc.gcproc = 0
 			}
@@ -1203,7 +1203,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			var winner []*types.Block
 
 			parent := bc.GetBlock(block.ParentHash(), block.NumberU64()-1)
-			for !bc.HasState(parent.Root()) {
+			for !bc.HasState(parent.StateRoot()) {
 				winner = append(winner, parent)
 				parent = bc.GetBlock(parent.ParentHash(), parent.NumberU64()-1)
 			}
@@ -1248,11 +1248,11 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		} else {
 			parent = chain[i-1]
 		}
-		pubState, err := state.New(parent.Root(), bc.stateCache)
+		pubState, err := state.New(parent.StateRoot(), bc.stateCache)
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
-		privState, err := state.New(GetPrivateStateRoot(bc.db, parent.Root()), bc.privateStateCache)
+		privState, err := state.New(GetPrivateStateRoot(bc.db, parent.StateRoot()), bc.privateStateCache)
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}

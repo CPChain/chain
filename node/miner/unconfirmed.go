@@ -20,9 +20,9 @@ import (
 	"container/ring"
 	"sync"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 // headerRetriever is used by the unconfirmed block set to verify whether a previously

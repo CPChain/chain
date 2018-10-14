@@ -27,11 +27,11 @@ import (
 	"bytes"
 	"fmt"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
@@ -98,21 +98,21 @@ type HeaderOld struct {
 
 func (h *HeaderOld) ToNewType() *Header {
 	return &Header{
-		ParentHash:  h.ParentHash,
-		Coinbase:    h.Coinbase,
-		Root:        h.Root,
-		TxHash:      h.TxHash,
-		ReceiptHash: h.ReceiptHash,
-		Bloom:       h.Bloom,
-		Difficulty:  h.Difficulty,
-		Number:      h.Number,
-		GasLimit:    h.GasLimit,
-		GasUsed:     h.GasUsed,
-		Time:        h.Time,
-		Extra:       h.Extra,
-		Extra2:      h.Extra2,
-		MixDigest:   h.MixDigest,
-		Nonce:       h.Nonce,
+		ParentHash:   h.ParentHash,
+		Coinbase:     h.Coinbase,
+		StateRoot:    h.Root,
+		TxsRoot:      h.TxHash,
+		ReceiptsRoot: h.ReceiptHash,
+		LogsBloom:    h.Bloom,
+		Difficulty:   h.Difficulty,
+		Number:       h.Number,
+		GasLimit:     h.GasLimit,
+		GasUsed:      h.GasUsed,
+		Time:         h.Time,
+		Extra:        h.Extra,
+		Extra2:       h.Extra2,
+		MixHash:      h.MixDigest,
+		Nonce:        h.Nonce,
 	}
 }
 

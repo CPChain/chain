@@ -8,7 +8,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/commons/log"
 )
 
 func generateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {
@@ -87,7 +87,7 @@ func bytes2PublicKey(bs []byte) (*rsa.PublicKey, error) {
 
 func loadKeyFile(path string) (*pem.Block, error) {
 	keyBytes, pubErr := LoadFile(path)
-	log.Info("keyBytes length:", len(keyBytes))
+	log.Info("Load key file", "KeyBytes length:", len(keyBytes))
 	if pubErr != nil {
 		return nil, errors.New("load key file [" + path + "] failed")
 	}

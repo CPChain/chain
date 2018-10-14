@@ -24,10 +24,10 @@ import (
 	"runtime"
 	"sync"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 // Seal implements consensus.Engine, attempting to find a nonce that satisfies
@@ -36,7 +36,7 @@ func (ethash *Ethash) Seal(chain consensus.ChainReader, block *types.Block, stop
 	// If we're running a fake PoW, simply return a 0 nonce immediately
 	if ethash.config.PowMode == ModeFake || ethash.config.PowMode == ModeFullFake {
 		header := block.Header()
-		header.Nonce, header.MixDigest = types.BlockNonce{}, common.Hash{}
+		header.Nonce, header.MixHash = types.BlockNonce{}, common.Hash{}
 		return block.WithSeal(header), nil
 	}
 	// If we're running a shared PoW, delegate sealing to it
@@ -109,13 +109,13 @@ func (ethash *Ethash) mine(block *types.Block, id int, seed uint64, abort chan s
 		nonce    = seed
 	)
 	logger := log.New("miner", id)
-	logger.Trace("Started ethash search for new nonces", "seed", seed)
+	logger.Debug("Started ethash search for new nonces", "seed", seed)
 search:
 	for {
 		select {
 		case <-abort:
 			// Mining terminated, update stats and abort
-			logger.Trace("Ethash nonce search aborted", "attempts", nonce-seed)
+			logger.Debug("Ethash nonce search aborted", "attempts", nonce-seed)
 			ethash.hashrate.Mark(attempts)
 			break search
 
@@ -132,14 +132,14 @@ search:
 				// Correct nonce found, create a new header with it
 				header = types.CopyHeader(header)
 				header.Nonce = types.EncodeNonce(nonce)
-				header.MixDigest = common.BytesToHash(digest)
+				header.MixHash = common.BytesToHash(digest)
 
 				// Seal and return a block (if still needed)
 				select {
 				case found <- block.WithSeal(header):
-					logger.Trace("Ethash nonce found and reported", "attempts", nonce-seed, "nonce", nonce)
+					logger.Debug("Ethash nonce found and reported", "attempts", nonce-seed, "nonce", nonce)
 				case <-abort:
-					logger.Trace("Ethash nonce found but discarded", "attempts", nonce-seed, "nonce", nonce)
+					logger.Debug("Ethash nonce found but discarded", "attempts", nonce-seed, "nonce", nonce)
 				}
 				break search
 			}

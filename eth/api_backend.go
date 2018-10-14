@@ -96,9 +96,9 @@ func (b *EthAPIBackend) StateAndHeaderByNumber(ctx context.Context, blockNr rpc.
 	}
 	var stateDb *state.StateDB
 	if isPrivate {
-		stateDb, err = b.eth.BlockChain().StatePrivAt(header.Root)
+		stateDb, err = b.eth.BlockChain().StatePrivAt(header.StateRoot)
 	} else {
-		stateDb, err = b.eth.BlockChain().StateAt(header.Root)
+		stateDb, err = b.eth.BlockChain().StateAt(header.StateRoot)
 	}
 	return stateDb, header, err
 }

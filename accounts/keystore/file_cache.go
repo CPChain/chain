@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/log"
+	"bitbucket.org/cpchain/chain/commons/log"
 	set "gopkg.in/fatih/set.v0"
 )
 
@@ -59,7 +59,7 @@ func (fc *fileCache) scan(keyDir string) (set.Interface, set.Interface, set.Inte
 		// Skip any non-key files from the folder
 		path := filepath.Join(keyDir, fi.Name())
 		if skipKeyFile(fi) {
-			log.Trace("Ignoring file on account scan", "path", path)
+			log.Debug("Ignoring file on account scan", "path", path)
 			continue
 		}
 		// Gather the set of all and fresly modified files

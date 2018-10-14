@@ -17,9 +17,9 @@
 package rawdb
 
 import (
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
@@ -49,10 +49,10 @@ func WriteTxLookupEntries(db DatabaseWriter, block *types.Block) {
 		}
 		data, err := rlp.EncodeToBytes(entry)
 		if err != nil {
-			log.Crit("Failed to encode transaction lookup entry", "err", err)
+			log.Fatal("Failed to encode transaction lookup entry", "err", err)
 		}
 		if err := db.Put(txLookupKey(tx.Hash()), data); err != nil {
-			log.Crit("Failed to store transaction lookup entry", "err", err)
+			log.Fatal("Failed to store transaction lookup entry", "err", err)
 		}
 	}
 }
@@ -102,6 +102,6 @@ func ReadBloomBits(db DatabaseReader, bit uint, section uint64, head common.Hash
 // section and bit index.
 func WriteBloomBits(db DatabaseWriter, bit uint, section uint64, head common.Hash, bits []byte) {
 	if err := db.Put(bloomBitsKey(bit, section, head), bits); err != nil {
-		log.Crit("Failed to store bloom bits", "err", err)
+		log.Fatal("Failed to store bloom bits", "err", err)
 	}
 }

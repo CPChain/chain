@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
@@ -36,7 +36,7 @@ func deployProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address
 	client, err := ethclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	file, _ := os.Open("../../../examples/cpchain/data/dd1/keystore/")
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
@@ -45,7 +45,7 @@ func deployProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address
 	account, key, err := kst.GetDecryptedKey(account, "password")
 	privateKey := key.PrivateKey
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
@@ -60,7 +60,7 @@ func deployProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	fmt.Println("gasPrice:", gasPrice)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(0)
@@ -68,7 +68,7 @@ func deployProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address
 	auth.GasPrice = gasPrice
 	address, tx, instance, err := DeployProxyContractRegister(auth, client)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	ctx := context.Background()
 	receipt, err := bind.WaitMined(ctx, client, tx)
@@ -106,7 +106,7 @@ func registerProxyAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit in
 	realAddr := common.HexToAddress("0bd6a2b982fc58e80a50beac02349871e2d016df")
 	transaction, err := instance.RegisterProxyContract(auth, proxyAddr, realAddr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("TX:", transaction.Hash().Hex())
 	startTime := time.Now()
@@ -122,7 +122,7 @@ func registerProxyAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit in
 	realAddrOnChain, err := instance.GetRealContract(nil, proxyAddr)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("realAddr:", realAddrOnChain.Hex(),
 		" of proxyAddr:", proxyAddr.Hex())
@@ -136,7 +136,7 @@ func registerProxyAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit in
 	realAddr = common.HexToAddress("0bd6a2b982fc58e80a50beac02349871e2d016df")
 	transaction, err = instance.RegisterProxyContract(auth, proxyAddr, realAddr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("TX:", transaction.Hash().Hex())
 	startTime = time.Now()
@@ -152,7 +152,7 @@ func registerProxyAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit in
 	realAddrOnChain, err = instance.GetRealContract(nil, proxyAddr)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("realAddr:", realAddrOnChain.Hex(), "of proxyAddr:", proxyAddr.Hex())
 

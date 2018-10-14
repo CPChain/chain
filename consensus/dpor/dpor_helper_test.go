@@ -91,32 +91,32 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(errInvalidSignersExtra))},
 				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
 
-		{"errInvalidMixDigest", dh,
+		{"errInvalidMixHash", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
-					MixDigest: common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0")},
+					MixHash: common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0")},
 				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
 
 		{"errInvalidUncleHash", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
-					MixDigest: common.Hash{}},
+					MixHash: common.Hash{}},
 				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
 
 		{"errInvalidDifficulty", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
-					MixDigest: common.Hash{}},
+					MixHash: common.Hash{}},
 				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
 
 		{"success", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(0), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
-					MixDigest:  common.Hash{},
+					MixHash:    common.Hash{},
 					Difficulty: big.NewInt(2)},
 				c:       &Dpor{config: &configs.DporConfig{Epoch: 3}, dh: &defaultDporHelper{}},
 				chain:   &FakeReader{},
@@ -246,7 +246,7 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 					Number:     big.NewInt(0),
 					Time:       time1,
 					Extra:      hexutil.MustDecode(string(rightExtra)),
-					MixDigest:  common.Hash{},
+					MixHash:    common.Hash{},
 					Difficulty: big.NewInt(2)}},
 			true},
 
@@ -264,7 +264,7 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 		//			Time:       time1,
 		//			Extra:      hexutil.MustDecode(string(rightExtra)),
 		//			Extra2:     hexutil.MustDecode(rightExtra2),
-		//			MixDigest:  common.Hash{},
+		//			MixHash:  common.Hash{},
 		//			UncleHash:  types.CalcUncleHash(nil),
 		//			Difficulty: big.NewInt(2)}},
 		//	true},

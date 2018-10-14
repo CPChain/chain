@@ -26,13 +26,13 @@ import (
 	"time"
 
 	ethereum "bitbucket.org/cpchain/chain"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 // Type determines the kind of filter and is used to put the filter in to
@@ -140,7 +140,7 @@ func NewEventSystem(mux *event.TypeMux, backend Backend, lightMode bool) *EventS
 	// Make sure none of the subscriptions are empty
 	if m.txsSub == nil || m.logsSub == nil || m.rmLogsSub == nil || m.chainSub == nil ||
 		m.pendingLogSub.Closed() {
-		log.Crit("Subscribe for event system failed")
+		log.Fatal("Subscribe for event system failed")
 	}
 
 	go m.eventLoop()
@@ -407,7 +407,7 @@ func (es *EventSystem) lightFilterNewHead(newHeader *types.Header, callBack func
 
 // filter logs of a single header in light client mode
 func (es *EventSystem) lightFilterLogs(header *types.Header, addresses []common.Address, topics [][]common.Hash, remove bool) []*types.Log {
-	if bloomFilter(header.Bloom, addresses, topics) {
+	if bloomFilter(header.LogsBloom, addresses, topics) {
 		// Get the logs of the block
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()

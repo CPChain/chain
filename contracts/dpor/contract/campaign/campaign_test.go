@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
@@ -29,7 +29,7 @@ func TestCampaign(t *testing.T) {
 	// client, err := ethclient.Dial("https://rinkeby.infura.io")
 	client, err := ethclient.Dial("http://localhost:8501") // local
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	// create account.
@@ -42,7 +42,7 @@ func TestCampaign(t *testing.T) {
 	privateKey := key.PrivateKey
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	publicKey := privateKey.Public()
@@ -60,7 +60,7 @@ func TestCampaign(t *testing.T) {
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	fmt.Println("gasPrice:", gasPrice)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	auth := bind.NewKeyedTransactor(privateKey)
@@ -72,7 +72,7 @@ func TestCampaign(t *testing.T) {
 	// launch contract deploy transaction.
 	address, tx, instance, err := DeployCampaign(auth, client)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	fmt.Printf("Contract pending deploy: 0x%x\n", address)
@@ -114,7 +114,7 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 	auth.GasPrice = gasPrice
 	claimtx, err := instance.ClaimCampaign(auth, big.NewInt(int64(1)), big.NewInt(int64(60)))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("TX:", claimtx.Hash().Hex())
 	startTime = time.Now()
@@ -127,19 +127,19 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 	// test contract state variable call.
 	x, err := instance.MinimumRpt(nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("minimum reputation: ", x)
 	// test contract map variable call.
 	numOfCampaign, deposit, timestamp, err := instance.CandidateInfoOf(nil, fromAddress)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, deposit, timestamp)
 	// see candidates of view zero.
 	candidates, err := instance.CandidatesOf(nil, big.NewInt(0))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("candidates of first view:")
 	for i := 0; i < len(candidates); i++ {

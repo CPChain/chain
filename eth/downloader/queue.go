@@ -25,9 +25,9 @@ import (
 	"sync"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 )
@@ -452,7 +452,7 @@ func (q *queue) ReserveHeaders(p *peerConnection, count int) *fetchRequest {
 // returns a flag whether empty blocks were queued requiring processing.
 func (q *queue) ReserveBodies(p *peerConnection, count int) (*fetchRequest, bool, error) {
 	isNoop := func(header *types.Header) bool {
-		return header.TxHash == types.EmptyRootHash
+		return header.TxsRoot == types.EmptyRootHash
 	}
 	q.lock.Lock()
 	defer q.lock.Unlock()
@@ -465,7 +465,7 @@ func (q *queue) ReserveBodies(p *peerConnection, count int) (*fetchRequest, bool
 // also returns a flag whether empty receipts were queued requiring importing.
 func (q *queue) ReserveReceipts(p *peerConnection, count int) (*fetchRequest, bool, error) {
 	isNoop := func(header *types.Header) bool {
-		return header.ReceiptHash == types.EmptyRootHash
+		return header.ReceiptsRoot == types.EmptyRootHash
 	}
 	q.lock.Lock()
 	defer q.lock.Unlock()
@@ -694,10 +694,10 @@ func (q *queue) DeliverHeaders(id string, headers []*types.Header, headerProcCh 
 	accepted := len(headers) == MaxHeaderFetch
 	if accepted {
 		if headers[0].Number.Uint64() != request.From {
-			log.Trace("First header broke chain ordering", "peer", id, "number", headers[0].Number, "hash", headers[0].Hash(), request.From)
+			log.Debug("First header broke chain ordering", "peer", id, "number", headers[0].Number, "hash", headers[0].Hash(), request.From)
 			accepted = false
 		} else if headers[len(headers)-1].Hash() != target {
-			log.Trace("Last header broke skeleton structure ", "peer", id, "number", headers[len(headers)-1].Number, "hash", headers[len(headers)-1].Hash(), "expected", target)
+			log.Debug("Last header broke skeleton structure ", "peer", id, "number", headers[len(headers)-1].Number, "hash", headers[len(headers)-1].Hash(), "expected", target)
 			accepted = false
 		}
 	}
@@ -718,7 +718,7 @@ func (q *queue) DeliverHeaders(id string, headers []*types.Header, headerProcCh 
 	}
 	// If the batch of headers wasn't accepted, mark as unavailable
 	if !accepted {
-		log.Trace("Skeleton filling not accepted", "peer", id, "from", request.From)
+		log.Debug("Skeleton filling not accepted", "peer", id, "from", request.From)
 
 		miss := q.headerPeerMiss[id]
 		if miss == nil {
@@ -745,7 +745,7 @@ func (q *queue) DeliverHeaders(id string, headers []*types.Header, headerProcCh 
 
 		select {
 		case headerProcCh <- process:
-			log.Trace("Pre-scheduled new headers", "peer", id, "count", len(process), "from", process[0].Number)
+			log.Debug("Pre-scheduled new headers", "peer", id, "count", len(process), "from", process[0].Number)
 			q.headerProced += len(process)
 		default:
 		}
@@ -765,7 +765,7 @@ func (q *queue) DeliverBodies(id string, txLists [][]*types.Transaction) (int, e
 	defer q.lock.Unlock()
 
 	reconstruct := func(header *types.Header, index int, result *fetchResult) error {
-		if types.DeriveSha(types.Transactions(txLists[index])) != header.TxHash {
+		if types.DeriveSha(types.Transactions(txLists[index])) != header.TxsRoot {
 			return errInvalidBody
 		}
 		result.Transactions = txLists[index]
@@ -782,7 +782,7 @@ func (q *queue) DeliverReceipts(id string, receiptList [][]*types.Receipt) (int,
 	defer q.lock.Unlock()
 
 	reconstruct := func(header *types.Header, index int, result *fetchResult) error {
-		if types.DeriveSha(types.Receipts(receiptList[index])) != header.ReceiptHash {
+		if types.DeriveSha(types.Receipts(receiptList[index])) != header.ReceiptsRoot {
 			return errInvalidReceipt
 		}
 		result.Receipts = receiptList[index]

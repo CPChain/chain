@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/cmd/flags"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 
+	"bitbucket.org/cpchain/chain/cmd/flags"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/internal/debug"
 	"github.com/urfave/cli"

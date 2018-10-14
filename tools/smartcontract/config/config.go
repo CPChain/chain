@@ -3,11 +3,11 @@ package config
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
@@ -24,23 +24,23 @@ func Connect() (*ethclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, c
 	// Create client.
 	client, err := ethclient.Dial(endPoint)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	// Open keystore file.
 	file, err := os.Open(keyStoreFilePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	// Create keystore and get account.
 	kst := keystore.NewKeyStore(keyPath, 2, 1)
 	account := kst.Accounts()[0]
 	account, key, err := kst.GetDecryptedKey(account, "password")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	// Get private and public keys.
 	privateKey := key.PrivateKey

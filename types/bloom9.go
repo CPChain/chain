@@ -36,7 +36,7 @@ const (
 	BloomBitLength = 8 * BloomByteLength
 )
 
-// Bloom represents a 2048 bit bloom filter.
+// LogsBloom represents a 2048 bit bloom filter.
 type Bloom [BloomByteLength]byte
 
 // BytesToBloom converts a byte slice to a bloom filter.
@@ -88,7 +88,7 @@ func (b Bloom) MarshalText() ([]byte, error) {
 
 // UnmarshalText b as a hex string with 0x prefix.
 func (b *Bloom) UnmarshalText(input []byte) error {
-	return hexutil.UnmarshalFixedText("Bloom", input, b[:])
+	return hexutil.UnmarshalFixedText("LogsBloom", input, b[:])
 }
 
 func CreateBloom(receipts Receipts) Bloom {

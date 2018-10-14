@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/fatih/set.v0"
 )
 
@@ -250,7 +250,7 @@ func (ac *accountCache) scanAccounts() error {
 	readAccount := func(path string) *accounts.Account {
 		fd, err := os.Open(path)
 		if err != nil {
-			log.Trace("Failed to open keystore file", "path", path, "err", err)
+			log.Debug("Failed to open keystore file", "path", path, "err", err)
 			return nil
 		}
 		defer fd.Close()
@@ -293,6 +293,6 @@ func (ac *accountCache) scanAccounts() error {
 	case ac.notify <- struct{}{}:
 	default:
 	}
-	log.Trace("Handled keystore changes", "time", end.Sub(start))
+	log.Debug("Handled keystore changes", "time", end.Sub(start))
 	return nil
 }

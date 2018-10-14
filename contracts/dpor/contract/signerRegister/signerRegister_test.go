@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -18,6 +17,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
@@ -47,7 +47,7 @@ func deployContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int
 	client, err := ethclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	// create account.
 	// privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
@@ -58,7 +58,7 @@ func deployContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int
 	account, key, err := kst.GetDecryptedKey(account, "password")
 	privateKey := key.PrivateKey
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
@@ -74,7 +74,7 @@ func deployContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	fmt.Println("gasPrice:", gasPrice)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	auth := bind.NewKeyedTransactor(privateKey)
 	//auth.Nonce = big.NewInt(int64(nonce)) // not necessary
@@ -86,7 +86,7 @@ func deployContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int
 	// launch contract deploy transaction.
 	address, tx, instance, err := DeploySignerConnectionRegister(auth, client)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	ctx := context.Background()
 	receipt, err := bind.WaitMined(ctx, client, tx)
@@ -128,7 +128,7 @@ func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit i
 	auth.GasPrice = gasPrice
 	transaction, err := instance.RegisterPublicKey(auth, rsaKey.PublicKey.RsaPublicKeyBytes)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("TX:", transaction.Hash().Hex())
 	startTime := time.Now()
@@ -144,7 +144,7 @@ func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit i
 	publicKeyBytes, err := instance.GetPublicKey(nil, fromAddress)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("publicKeyBytes of", fromAddress.Hex(), ":", publicKeyBytes)
 
@@ -171,7 +171,7 @@ func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit i
 	transaction, err = instance.AddNodeInfo(auth, big.NewInt(1), fromAddress, encryptedEnodeBytes)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("TX:", transaction.Hash().Hex())
 	startTime = time.Now()
@@ -186,7 +186,7 @@ func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit i
 	fmt.Println("6.node2 get enode from chain")
 	rsaPublicKey, err := instance.GetNodeInfo(nil, big.NewInt(1), fromAddress)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 	fmt.Println("rsaPublicKey of", fromAddress.Hex(), ":", common.Bytes2Hex(rsaPublicKey))
 

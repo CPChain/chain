@@ -447,7 +447,7 @@ func (ethash *Ethash) VerifySeal(chain consensus.ChainReader, header *types.Head
 	// until after the call to hashimotoLight so it's not unmapped while being used.
 	runtime.KeepAlive(cache)
 
-	if !bytes.Equal(header.MixDigest[:], digest) {
+	if !bytes.Equal(header.MixHash[:], digest) {
 		return errInvalidMixDigest
 	}
 	target := new(big.Int).Div(maxUint256, header.Difficulty)
@@ -473,7 +473,7 @@ func (ethash *Ethash) Prepare(chain consensus.ChainReader, header *types.Header)
 func (ethash *Ethash) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
 	// Accumulate any block and uncle rewards and commit the final state root
 	accumulateRewards(chain.Config(), state, header, uncles)
-	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
+	header.StateRoot = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 
 	// Header seems complete, assemble into a block and return
 	return types.NewBlock(header, txs, receipts), nil

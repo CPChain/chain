@@ -27,8 +27,8 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 type dporHelper interface {
@@ -79,8 +79,8 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	}
 
 	// Ensure that the mix digest is zero as we don't have fork protection currently
-	if header.MixDigest != (common.Hash{}) {
-		return errInvalidMixDigest
+	if header.MixHash != (common.Hash{}) {
+		return errInvalidMixHash
 	}
 
 	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
@@ -151,7 +151,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		// If an on-disk checkpoint Snapshot can be found, use that
 		if number%checkpointInterval == 0 {
 			if s, err := loadSnapshot(dpor.config, dpor.signatures, dpor.db, hash); err == nil {
-				log.Trace("Loaded voting Snapshot from disk", "number", number, "hash", hash)
+				log.Debug("Loaded voting Snapshot from disk", "number", number, "hash", hash)
 				snap = s
 				break
 			}
@@ -170,7 +170,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}
-			log.Trace("Stored genesis voting Snapshot to disk")
+			log.Debug("Stored genesis voting Snapshot to disk")
 			break
 		}
 		// No Snapshot for this header, gather the header and move backward
@@ -207,7 +207,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
-		log.Trace("Stored voting Snapshot to disk", "number", snap.Number, "hash", snap.Hash)
+		log.Debug("Stored voting Snapshot to disk", "number", snap.Number, "hash", snap.Hash)
 	}
 	return snap, err
 }

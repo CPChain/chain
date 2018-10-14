@@ -65,7 +65,7 @@ func TestBloom9(t *testing.T) {
 	res := BloomLookup(bin, testCase)
 
 	if !res {
-		t.Errorf("Bloom lookup failed")
+		t.Errorf("LogsBloom lookup failed")
 	}
 }
 

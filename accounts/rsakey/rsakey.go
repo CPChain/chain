@@ -1,10 +1,10 @@
 package rsakey
 
 import (
+	"bitbucket.org/cpchain/chain/commons/log"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
-	"github.com/ethereum/go-ethereum/log"
 	"os"
 	"path/filepath"
 )

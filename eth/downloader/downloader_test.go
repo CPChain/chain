@@ -95,7 +95,7 @@ func newTester() *downloadTester {
 		peerMissingStates: make(map[string]map[common.Hash]bool),
 	}
 	tester.stateDb = ethdb.NewMemDatabase()
-	tester.stateDb.Put(genesis.Root().Bytes(), []byte{0x00})
+	tester.stateDb.Put(genesis.StateRoot().Bytes(), []byte{0x00})
 
 	tester.downloader = New(FullSync, tester.stateDb, new(event.TypeMux), tester, nil, tester.dropPeer)
 
@@ -256,7 +256,7 @@ func (dl *downloadTester) CurrentBlock() *types.Block {
 
 	for i := len(dl.ownHashes) - 1; i >= 0; i-- {
 		if block := dl.ownBlocks[dl.ownHashes[i]]; block != nil {
-			if _, err := dl.stateDb.Get(block.Root().Bytes()); err == nil {
+			if _, err := dl.stateDb.Get(block.StateRoot().Bytes()); err == nil {
 				return block
 			}
 		}
@@ -281,7 +281,7 @@ func (dl *downloadTester) CurrentFastBlock() *types.Block {
 func (dl *downloadTester) FastSyncCommitHead(hash common.Hash) error {
 	// For now only check that the state trie is correct
 	if block := dl.GetBlockByHash(hash); block != nil {
-		_, err := trie.NewSecure(block.Root(), trie.NewDatabase(dl.stateDb), 0)
+		_, err := trie.NewSecure(block.StateRoot(), trie.NewDatabase(dl.stateDb), 0)
 		return err
 	}
 	return fmt.Errorf("non existent block: %x", hash[:4])
@@ -332,15 +332,15 @@ func (dl *downloadTester) InsertChain(blocks types.Blocks) (int, error) {
 	for i, block := range blocks {
 		if parent, ok := dl.ownBlocks[block.ParentHash()]; !ok {
 			return i, errors.New("unknown parent")
-		} else if _, err := dl.stateDb.Get(parent.Root().Bytes()); err != nil {
-			return i, fmt.Errorf("unknown parent state %x: %v", parent.Root(), err)
+		} else if _, err := dl.stateDb.Get(parent.StateRoot().Bytes()); err != nil {
+			return i, fmt.Errorf("unknown parent state %x: %v", parent.StateRoot(), err)
 		}
 		if _, ok := dl.ownHeaders[block.Hash()]; !ok {
 			dl.ownHashes = append(dl.ownHashes, block.Hash())
 			dl.ownHeaders[block.Hash()] = block.Header()
 		}
 		dl.ownBlocks[block.Hash()] = block
-		dl.stateDb.Put(block.Root().Bytes(), []byte{0x00})
+		dl.stateDb.Put(block.StateRoot().Bytes(), []byte{0x00})
 		dl.ownChainTd[block.Hash()] = new(big.Int).Add(dl.ownChainTd[block.ParentHash()], block.Difficulty())
 	}
 	return len(blocks), nil
@@ -646,7 +646,7 @@ func assertOwnForkedChain(t *testing.T, tester *downloadTester, common int, leng
 			index = len(tester.ownHashes) - lengths[len(lengths)-1] + int(tester.downloader.queue.fastSyncPivot)
 		}
 		if index > 0 {
-			if statedb, err := state.New(tester.ownHeaders[tester.ownHashes[index]].Root, state.NewDatabase(trie.NewDatabase(tester.stateDb))); statedb == nil || err != nil {
+			if statedb, err := state.New(tester.ownHeaders[tester.ownHashes[index]].StateRoot, state.NewDatabase(trie.NewDatabase(tester.stateDb))); statedb == nil || err != nil {
 				t.Fatalf("state reconstruction failed: %v", err)
 			}
 		}
@@ -894,7 +894,7 @@ func testBoundedHeavyForkedSync(t *testing.T, protocol int, mode SyncMode) {
 	hashesA, hashesB, headersA, headersB, blocksA, blocksB, receiptsA, receiptsB := tester.makeChainFork(common+fork, fork, tester.genesis, nil, false)
 
 	tester.newPeer("original", protocol, hashesA, headersA, blocksA, receiptsA)
-	tester.newPeer("heavy-rewriter", protocol, hashesB[MaxForkAncestry-17:], headersB, blocksB, receiptsB) // Root the fork below the ancestor limit
+	tester.newPeer("heavy-rewriter", protocol, hashesB[MaxForkAncestry-17:], headersB, blocksB, receiptsB) // StateRoot the fork below the ancestor limit
 
 	// Synchronise with the peer and make sure all blocks were retrieved
 	if err := tester.sync("original", nil, mode); err != nil {

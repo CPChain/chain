@@ -21,17 +21,17 @@ import (
 	"crypto/ecdsa"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"runtime"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/ethereum/go-ethereum/p2p/discv5"
 	"github.com/ethereum/go-ethereum/p2p/nat"
 	"github.com/ethereum/go-ethereum/p2p/netutil"
-	"io"
-	"runtime"
 )
 
 // Fatalf formats a message to standard error and exits the program.
@@ -64,18 +64,15 @@ func main() {
 		natdesc     = flag.String("nat", "none", "port mapping mechanism (any|none|upnp|pmp|extip:<IP>)")
 		netrestrict = flag.String("netrestrict", "", "restrict network communication to the given IP networks (CIDR masks)")
 		runv5       = flag.Bool("v5", false, "run a v5 topic discovery bootnode")
-		verbosity   = flag.Int("verbosity", int(log.LvlInfo), "log verbosity (0-9)")
-		vmodule     = flag.String("vmodule", "", "log verbosity pattern")
+		verbosity   = flag.Int("verbosity", int(log.InfoLevel), "log verbosity (0-9)")
 
 		nodeKey *ecdsa.PrivateKey
 		err     error
 	)
 	flag.Parse()
 
-	glogger := log.NewGlogHandler(log.StreamHandler(os.Stderr, log.TerminalFormat(false)))
-	glogger.Verbosity(log.Lvl(*verbosity))
-	glogger.Vmodule(*vmodule)
-	log.Root().SetHandler(glogger)
+	log.SetLevel(log.Level(*verbosity))
+	log.SetOutput(os.Stderr)
 
 	natm, err := nat.Parse(*natdesc)
 	if err != nil {

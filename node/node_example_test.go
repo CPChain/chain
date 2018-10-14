@@ -18,8 +18,8 @@ package node_test
 
 import (
 	"fmt"
-	"log"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/p2p"

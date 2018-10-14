@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 // WaitMined waits for tx to be mined on the blockchain.
@@ -39,9 +39,9 @@ func WaitMined(ctx context.Context, b DeployBackend, tx *types.Transaction) (*ty
 			return receipt, nil
 		}
 		if err != nil {
-			logger.Trace("Receipt retrieval failed", "err", err)
+			logger.Debug("Receipt retrieval failed", "err", err)
 		} else {
-			logger.Trace("Transaction not yet mined")
+			logger.Debug("Transaction not yet mined")
 		}
 		// Wait for the next round.
 		select {

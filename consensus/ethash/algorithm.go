@@ -27,11 +27,11 @@ import (
 	"time"
 	"unsafe"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/bitutil"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 const (
@@ -146,7 +146,7 @@ func generateCache(dest []uint32, epoch uint64, seed []byte) {
 
 		logFn := logger.Debug
 		if elapsed > 3*time.Second {
-			logFn = logger.Info
+			logFn = logger.Debug
 		}
 		logFn("Generated ethash verification cache", "elapsed", common.PrettyDuration(elapsed))
 	}()
