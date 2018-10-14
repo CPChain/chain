@@ -17,7 +17,7 @@
 package main
 
 import (
-	"io"
+	"github.com/BurntSushi/toml"
 	"os"
 
 	"github.com/urfave/cli"
@@ -25,36 +25,19 @@ import (
 
 var (
 	dumpConfigCommand = cli.Command{
-		Action:      MigrateFlags(dumpConfig),
+		Action:      dumpConfig,
 		Name:        "dumpconfig",
 		Usage:       "Show configuration values",
 		ArgsUsage:   "",
-		Flags:       append(append(nodeFlags, rpcFlags...)),
-		Category:    "MISCELLANEOUS COMMANDS",
 		Description: `The dumpconfig command shows configuration values.`,
-	}
-
-	configFileFlag = cli.StringFlag{
-		Name:  "config",
-		Usage: "TOML configuration file",
 	}
 )
 
-// dumpConfig is the dumpconfig command.
 func dumpConfig(ctx *cli.Context) error {
-	_, cfg := makeConfigNode(ctx)
-	comment := ""
-
-	if cfg.Eth.Genesis != nil {
-		cfg.Eth.Genesis = nil
-		comment += "# Note: this config doesn't contain the genesis block.\n\n"
-	}
-
-	out, err := tomlSettings.Marshal(&cfg)
+	cfg := getConfig(ctx)
+	err := toml.NewEncoder(os.Stdout).Encode(cfg)
 	if err != nil {
-		return err
+		Fatalf("Encoding config to TOML failed: %v", err)
 	}
-	io.WriteString(os.Stdout, comment)
-	os.Stdout.Write(out)
 	return nil
 }

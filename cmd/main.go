@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bitbucket.org/cpchain/chain/cmd/flags"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -30,29 +31,24 @@ func newApp() *cli.App {
 	app.Action = cli.ShowAppHelp
 
 	app.Commands = []cli.Command{
-		initCommand,
-		runCommand,
-		cleanDbCommand,
 		accountCommand,
-		walletCommand,
+		runCommand,
+		dumpConfigCommand,
+		chainCommand,
+		// cleanDbCommand,
+		// walletCommand,
 		// consoleCommand,
 		// attachCommand,
 		// javascriptCommand,
-		dumpConfigCommand,
 	}
 
 	// global flags
-	// TODO delete them.  move under run command
-	app.Flags = append(app.Flags, nodeFlags...)
-	app.Flags = append(app.Flags, rpcFlags...)
-	app.Flags = append(app.Flags, debug.Flags...)
-	// app.Flags = append(app.Flags, consoleFlags...)
+	app.Flags = append(app.Flags, flags.ConfigFileFlag)
 
 	// maintain order
 	sort.Sort(cli.CommandsByName(app.Commands))
 	// sort.Sort(cli.FlagsByName(app.Flags))
 
-	// put command specific stuff to command.before/after
 	app.Before = func(ctx *cli.Context) error {
 		// TODO remove this, this sets up logging.
 		err := debug.Setup(ctx)
