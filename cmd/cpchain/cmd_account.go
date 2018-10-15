@@ -210,8 +210,7 @@ func accountImport(ctx *cli.Context) error {
 }
 
 func makeConfig(ctx *cli.Context) *node.Node {
-	_, stack := newConfigNode(ctx)
-	return stack
+	return createNode(ctx)
 }
 
 // MakeAddress converts an account specified directly as a hex encoded string
