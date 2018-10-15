@@ -18,6 +18,7 @@ func init() {
 	runFlags := append([]cli.Flag(nil), flags.RpcFlags...)
 	runFlags = append(runFlags, flags.GeneralFlags...)
 	runFlags = append(runFlags, flags.NodeFlags...)
+	runFlags = append(runFlags, flags.MinerFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,
