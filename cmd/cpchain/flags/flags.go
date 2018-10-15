@@ -57,7 +57,6 @@ var ConfigFileFlag = cli.StringFlag{
 var GeneralFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "datadir",
-		Usage: "Data directory for the databases and keystore",
 		Value: node.DefaultDataDir(),
 	},
 }

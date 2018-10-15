@@ -1,10 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/core"
 	"github.com/urfave/cli"
 )
 
@@ -13,13 +18,14 @@ var defaultGenesisPath = filepath.Join(flags.GetByName("datadir").(cli.StringFla
 var chainCommand = cli.Command{
 	Name:  "chain",
 	Usage: "Manage blockchain",
-	Flags: []cli.Flag{
-		flags.GetByName("datadir"),
-	},
 	Subcommands: []cli.Command{
 		{
-			Name:      "init",
-			Usage:     "Init the genesis block",
+			Name:     "init",
+			Usage:    "Bootstrap and initialize a new blockchain with genesis block",
+			Category: "BLOCKCHAIN COMMANDS",
+			Flags: []cli.Flag{
+				flags.GetByName("datadir"),
+			},
 			Action:    initChain,
 			ArgsUsage: "[/path/to/genesis.toml]",
 			Description: fmt.Sprintf(`The default genesis file path is: %v.
@@ -39,15 +45,35 @@ If no genesis file is found, the initialization is aborted.`, defaultGenesisPath
 // 	return cfg
 // }
 
-// create a genesis block from a toml format file
+// initChain creates a genesis block from a toml format file
 func initChain(ctx *cli.Context) error {
-	path := defaultGenesisPath
-	if ctx.NArg() > 0 {
-		path = ctx.Args().First()
+	// Make sure we have a valid genesis JSON.
+	genesisPath := ctx.Args().First()
+	if len(genesisPath) == 0 {
+		log.Fatal("Must supply path to genesis JSON file")
 	}
-	// test if the file exists
-	fmt.Println(path)
+	file, err := os.Open(genesisPath)
+	if err != nil {
+		log.Fatalf("Failed to read genesis file: %v", err)
+	}
+	defer file.Close()
 
+	genesis := new(core.Genesis)
+	if err := json.NewDecoder(file).Decode(genesis); err != nil {
+		log.Fatalf("invalid genesis file: %v", err)
+	}
+	// Intialize database.
+	_, node := newConfigNode(ctx)
+	name := configs.DatabaseName
+	chaindb, err := node.OpenDatabase(name, 0, 0)
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	_, hash, err := core.SetupGenesisBlock(chaindb, genesis)
+	if err != nil {
+		log.Fatalf("Failed to write genesis block: %v", err)
+	}
+	log.Info("Successfully wrote genesis state", "database", name, "hash", hash)
 	return nil
 }
 
