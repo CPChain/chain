@@ -8,13 +8,24 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
+
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func readPassword(prompt string, needConfirm bool) string {
+// readPassword retrieves the password associated with an account, either fetched
+// from a list of preloaded passphrases, or requested interactively from the user.
+func readPassword(prompt string, needConfirm bool, i int, passwords []string) string {
+	if len(passwords) > 0 {
+		if i < len(passwords) {
+			return passwords[i]
+		}
+		return passwords[len(passwords)-1]
+	}
 	// be cautious about whitespace
-	fmt.Println("If your password contains whitespaces, please be careful enough to avoid later confusion.")
-	fmt.Print(prompt)
+	if prompt != "" {
+		fmt.Println("If your password contains whitespaces, please be careful enough to avoid later confusion.")
+		fmt.Println(prompt)
+	}
 	password, err := terminal.ReadPassword(syscall.Stdin)
 	fmt.Println()
 	if err != nil {
@@ -27,7 +38,6 @@ func readPassword(prompt string, needConfirm bool) string {
 		if err != nil {
 			log.Fatalf("Failed to read password: %v", err)
 		}
-
 		if !bytes.Equal(password, p) {
 			log.Fatalf("Password doesn't match")
 		}
