@@ -174,11 +174,12 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		config = configs.TestChainConfig
 	}
 	blocks, receipts := make(types.Blocks, n), make([]types.Receipts, n)
+	blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB, nil)
+	defer blockchain.Stop()
+
 	genblock := func(i int, parent *types.Block, pubStatedb *state.StateDB, privStateDB *state.StateDB) (*types.Block, types.Receipts) {
 		// TODO(karalabe): This is needed for clique, which depends on multiple blocks.
 		// It's nonetheless ugly to spin up a blockchain here. Get rid of this somehow.
-		blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB, nil)
-		defer blockchain.Stop()
 
 		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, privStateDB: privStateDB, config: config, engine: engine}
 		b.header = makeHeader(b.chainReader, parent, pubStatedb, b.engine)
@@ -212,6 +213,11 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 			panic(err)
 		}
 		block, receipt := genblock(i, parent, pubStatedb, privStateDB)
+		_, err = blockchain.InsertChain(types.Blocks{block})
+		if err != nil {
+			panic(err)
+		}
+
 		blocks[i] = block
 		receipts[i] = receipt
 		parent = block

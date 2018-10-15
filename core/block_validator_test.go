@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
@@ -32,18 +32,25 @@ import (
 func TestHeaderVerification(t *testing.T) {
 	// Create a simple chain to verify
 	var (
-		testdb    = ethdb.NewMemDatabase()
-		remoteDB  = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
-		gspec     = &Genesis{Config: configs.TestChainConfig}
-		genesis   = gspec.MustCommit(testdb)
-		blocks, _ = GenerateChain(configs.TestChainConfig, genesis, ethash.NewFaker(), testdb, remoteDB, 8, nil)
+		testdb = ethdb.NewMemDatabase()
 	)
+
+	genesis := DefaultCpchainGenesisBlock()
+	genesisBlock := genesis.MustCommit(testdb)
+
+	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.NewFaker(config, testdb)
+
+	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)
+
 	headers := make([]*types.Header, len(blocks))
 	for i, block := range blocks {
 		headers[i] = block.Header()
 	}
 	// Run the header checker for blocks one-by-one, checking for both valid and invalid nonces
-	chain, _ := NewBlockChain(testdb, nil, configs.TestChainConfig, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
+	chain, _ := NewBlockChain(testdb, nil, genesis.Config, d, vm.Config{}, remoteDB, nil)
 	defer chain.Stop()
 
 	for i := 0; i < len(blocks); i++ {
@@ -51,11 +58,12 @@ func TestHeaderVerification(t *testing.T) {
 			var results <-chan error
 
 			if valid {
-				engine := ethash.NewFaker()
-				_, results = engine.VerifyHeaders(chain, []*types.Header{headers[i]}, []bool{true}, nil)
+				engine := dpor.NewFaker(config, testdb)
+				_, results = engine.VerifyHeaders(chain, []*types.Header{headers[i]}, []bool{true}, []*types.Header{headers[i]})
 			} else {
-				engine := ethash.NewFakeFailer(headers[i].Number.Uint64())
-				_, results = engine.VerifyHeaders(chain, []*types.Header{headers[i]}, []bool{true}, nil)
+				// engine := dpor.New(config, testdb)
+				engine := dpor.NewFakeFailer(config, testdb, headers[i].Number.Uint64())
+				_, results = engine.VerifyHeaders(chain, []*types.Header{headers[i]}, []bool{true}, []*types.Header{headers[i]})
 			}
 			// Wait for the verification result
 			select {
@@ -84,13 +92,21 @@ func TestHeaderConcurrentVerification32(t *testing.T) { testHeaderConcurrentVeri
 
 func testHeaderConcurrentVerification(t *testing.T, threads int) {
 	// Create a simple chain to verify
+
 	var (
-		testdb    = ethdb.NewMemDatabase()
-		remoteDB  = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
-		gspec     = &Genesis{Config: configs.TestChainConfig}
-		genesis   = gspec.MustCommit(testdb)
-		blocks, _ = GenerateChain(configs.TestChainConfig, genesis, ethash.NewFaker(), testdb, remoteDB, 8, nil)
+		testdb = ethdb.NewMemDatabase()
 	)
+
+	genesis := DefaultCpchainGenesisBlock()
+	genesisBlock := genesis.MustCommit(testdb)
+
+	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.NewFaker(config, testdb)
+
+	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)
+
 	headers := make([]*types.Header, len(blocks))
 	seals := make([]bool, len(blocks))
 
@@ -108,12 +124,14 @@ func testHeaderConcurrentVerification(t *testing.T, threads int) {
 		var results <-chan error
 
 		if valid {
-			chain, _ := NewBlockChain(testdb, nil, configs.TestChainConfig, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
-			_, results = chain.engine.VerifyHeaders(chain, headers, seals, nil)
+			engine := dpor.NewFaker(config, testdb)
+			chain, _ := NewBlockChain(testdb, nil, genesis.Config, engine, vm.Config{}, remoteDB, nil)
+			_, results = chain.engine.VerifyHeaders(chain, headers, seals, headers)
 			chain.Stop()
 		} else {
-			chain, _ := NewBlockChain(testdb, nil, configs.TestChainConfig, ethash.NewFakeFailer(uint64(len(headers)-1)), vm.Config{}, remoteDB, nil)
-			_, results = chain.engine.VerifyHeaders(chain, headers, seals, nil)
+			engine := dpor.NewFakeFailer(config, testdb, uint64(len(headers)-1))
+			chain, _ := NewBlockChain(testdb, nil, genesis.Config, engine, vm.Config{}, remoteDB, nil)
+			_, results = chain.engine.VerifyHeaders(chain, headers, seals, headers)
 			chain.Stop()
 		}
 		// Wait for all the verification results
@@ -157,13 +175,21 @@ func TestHeaderConcurrentAbortion32(t *testing.T) { testHeaderConcurrentAbortion
 
 func testHeaderConcurrentAbortion(t *testing.T, threads int) {
 	// Create a simple chain to verify
+
 	var (
-		testdb    = ethdb.NewMemDatabase()
-		remoteDB  = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
-		gspec     = &Genesis{Config: configs.TestChainConfig}
-		genesis   = gspec.MustCommit(testdb)
-		blocks, _ = GenerateChain(configs.TestChainConfig, genesis, ethash.NewFaker(), testdb, remoteDB, 1024, nil)
+		testdb = ethdb.NewMemDatabase()
 	)
+
+	genesis := DefaultCpchainGenesisBlock()
+	genesisBlock := genesis.MustCommit(testdb)
+
+	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.NewFaker(config, testdb)
+
+	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)
+
 	headers := make([]*types.Header, len(blocks))
 	seals := make([]bool, len(blocks))
 
@@ -175,11 +201,12 @@ func testHeaderConcurrentAbortion(t *testing.T, threads int) {
 	old := runtime.GOMAXPROCS(threads)
 	defer runtime.GOMAXPROCS(old)
 
+	engine := dpor.NewFakeDelayer(config, testdb, time.Millisecond)
 	// Start the verifications and immediately abort
-	chain, _ := NewBlockChain(testdb, nil, configs.TestChainConfig, ethash.NewFakeDelayer(time.Millisecond), vm.Config{}, remoteDB, nil)
+	chain, _ := NewBlockChain(testdb, nil, genesis.Config, engine, vm.Config{}, remoteDB, nil)
 	defer chain.Stop()
 
-	abort, results := chain.engine.VerifyHeaders(chain, headers, seals, nil)
+	abort, results := chain.engine.VerifyHeaders(chain, headers, seals, headers)
 	close(abort)
 
 	// Deplete the results channel

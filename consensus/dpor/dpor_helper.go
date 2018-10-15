@@ -47,10 +47,11 @@ type defaultDporHelper struct {
 // caller may optionally pass in a batch of parents (ascending order) to avoid
 // looking those up from the database. This is useful for concurrently verifying
 // a batch of new headers.
-func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	if header.Number == nil {
 		return errUnknownBlock
 	}
+
 	number := header.Number.Uint64()
 
 	// Don't waste time checking blocks from the future
@@ -59,7 +60,7 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	}
 
 	// Checkpoint blocks need to enforce zero beneficiary
-	checkpoint := (number % c.config.Epoch) == 0
+	checkpoint := (number % dpor.config.Epoch) == 0
 	if checkpoint && header.Coinbase != (common.Address{}) {
 		return errInvalidCheckpointBeneficiary
 	}
@@ -91,7 +92,7 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	}
 
 	// All basic checks passed, verify cascading fields
-	return c.dh.verifyCascadingFields(c, chain, header, parents, refHeader)
+	return dpor.dh.verifyCascadingFields(dpor, chain, header, parents, refHeader)
 }
 
 // verifyCascadingFields verifies all the header fields that are not standalone,
@@ -228,6 +229,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	// TODO: @liuq fix this!!!
 	if dpor.fake {
+		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
 			return errFakerFail
 		}

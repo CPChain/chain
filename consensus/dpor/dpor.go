@@ -19,6 +19,7 @@ package dpor
 
 import (
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -55,8 +56,9 @@ type Dpor struct {
 
 	committeeNetworkHandler consensus.CommitteeNetworkHandler
 
-	fake     bool // used for test, always accept a block.
-	fakeFail uint64
+	fake      bool // used for test, always accept a block.
+	fakeFail  uint64
+	fakeDelay time.Duration // Time delay to sleep for before returning from verify
 
 	lock sync.RWMutex // Protects the signer fields
 }
@@ -96,6 +98,12 @@ func NewFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
 func NewFakeFailer(config *configs.DporConfig, db ethdb.Database, fail uint64) *Dpor {
 	d := NewFaker(config, db)
 	d.fakeFail = fail
+	return d
+}
+
+func NewFakeDelayer(config *configs.DporConfig, db ethdb.Database, delay time.Duration) *Dpor {
+	d := NewFaker(config, db)
+	d.fakeDelay = delay
 	return d
 }
 
