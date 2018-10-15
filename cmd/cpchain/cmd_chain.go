@@ -85,28 +85,26 @@ func initChain(ctx *cli.Context) error {
 func cleanDB(ctx *cli.Context) error {
 	_, node := newConfigNode(ctx)
 
-	for _, name := range []string{"chaindata", "lightchaindata"} {
-		// Ensure the database exists in the first place
-		logger := log.New("database", name)
+	name := configs.DatabaseName
+	// Ensure the database exists in the first place
+	logger := log.New("database", name)
 
-		dbdir := node.ResolvePath(name)
-		if !common.FileExist(dbdir) {
-			logger.Info("Database doesn't exist, skipping", "path", dbdir)
-			continue
-		}
-		// Confirm removal and execute
-		fmt.Println(dbdir)
-		confirm, err := console.Stdin.PromptConfirm("Remove this database?")
-		switch {
-		case err != nil:
-			logger.Fatalf("%v", err)
-		case !confirm:
-			logger.Warn("Database deletion aborted")
-		default:
-			start := time.Now()
-			os.RemoveAll(dbdir)
-			logger.Info("Database successfully deleted", "elapsed", common.PrettyDuration(time.Since(start)))
-		}
+	dbdir := node.ResolvePath(name)
+	if !common.FileExist(dbdir) {
+		logger.Info("Database doesn't exist, skipping", "path", dbdir)
+	}
+	// Confirm removal and execute
+	fmt.Println(dbdir)
+	confirm, err := console.Stdin.PromptConfirm("Remove this database?")
+	switch {
+	case err != nil:
+		logger.Fatalf("%v", err)
+	case !confirm:
+		logger.Warn("Database deletion aborted")
+	default:
+		start := time.Now()
+		os.RemoveAll(dbdir)
+		logger.Info("Database successfully deleted", "elapsed", common.PrettyDuration(time.Since(start)))
 	}
 	return nil
 }
