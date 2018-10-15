@@ -109,6 +109,8 @@ var (
 	// errNoSigsInCache is returned if the cache is unable to store and return sigs.
 	errNoSigsInCache = errors.New("signatures not found in cache")
 
+	errFakerFail = errors.New("error fake fail")
+
 	// --- our new error types ---
 
 	// errVerifyUncleNotAllowed is returned when verify uncle block.

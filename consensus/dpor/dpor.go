@@ -55,6 +55,9 @@ type Dpor struct {
 
 	committeeNetworkHandler consensus.CommitteeNetworkHandler
 
+	fake     bool // used for test, always accept a block.
+	fakeFail uint64
+
 	lock sync.RWMutex // Protects the signer fields
 }
 
@@ -73,7 +76,7 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 
 	signedBlocks := make(map[uint64]common.Hash)
 
-	return &Dpor{
+	dpor := &Dpor{
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
 		db:           db,
@@ -81,6 +84,19 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 		signatures:   signatures,
 		signedBlocks: signedBlocks,
 	}
+	return dpor
+}
+
+func NewFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
+	d := New(config, db)
+	d.fake = true
+	return d
+}
+
+func NewFakeFailer(config *configs.DporConfig, db ethdb.Database, fail uint64) *Dpor {
+	d := NewFaker(config, db)
+	d.fakeFail = fail
+	return d
 }
 
 // SetCommitteeNetworkHandler sets dpor.committeeNetworkHandler

@@ -71,7 +71,7 @@ func getStatus(ac *AdmissionControl) (workStatus, error) {
 }
 
 func newTestBackend() *backends.SimulatedBackend {
-	return backends.NewSimulatedBackend(core.GenesisAlloc{
+	return backends.NewDporSimulatedBackend(core.GenesisAlloc{
 		addr:  {Balance: big.NewInt(1000000000)},
 		addr1: {Balance: big.NewInt(1000000000)},
 	})

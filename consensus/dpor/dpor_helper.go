@@ -131,6 +131,7 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
 		return errInvalidSigners
 	}
+
 	// All basic checks passed, verify the seal and return
 	return dh.verifySeal(dpor, chain, header, parents, refHeader)
 }
@@ -223,6 +224,14 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// Verifying the genesis block is not supported
 	if number == 0 {
 		return errUnknownBlock
+	}
+
+	// TODO: @liuq fix this!!!
+	if dpor.fake {
+		if dpor.fakeFail == number {
+			return errFakerFail
+		}
+		return nil
 	}
 
 	// Retrieve the Snapshot needed to verify this header and cache it

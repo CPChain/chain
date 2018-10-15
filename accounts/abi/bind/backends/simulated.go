@@ -27,7 +27,7 @@ import (
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -63,34 +63,41 @@ type SimulatedBackend struct {
 	config *configs.ChainConfig
 }
 
-// NewSimulatedBackend creates a new binding backend using a simulated blockchain
-// for testing purposes.
-func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
-	database := ethdb.NewMemDatabase()
-	genesis := core.Genesis{Config: configs.AllEthashProtocolChanges, Alloc: alloc}
-	genesis.MustCommit(database)
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
-	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
+// // NewSimulatedBackend creates a new binding backend using a simulated blockchain
+// // for testing purposes.
+// func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
+// 	database := ethdb.NewMemDatabase()
+// 	genesis := core.Genesis{Config: configs.AllEthashProtocolChanges, Alloc: alloc}
+// 	genesis.MustCommit(database)
+// 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+// 	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
 
-	backend := &SimulatedBackend{
-		database:   database,
-		blockchain: blockchain,
-		config:     genesis.Config,
-		events:     filters.NewEventSystem(new(event.TypeMux), &filterBackend{database, blockchain}, false),
-	}
-	backend.rollback()
-	return backend
-}
+// 	backend := &SimulatedBackend{
+// 		database:   database,
+// 		blockchain: blockchain,
+// 		config:     genesis.Config,
+// 		events:     filters.NewEventSystem(new(event.TypeMux), &filterBackend{database, blockchain}, false),
+// 	}
+// 	backend.rollback()
+// 	return backend
+// }
 
-// NewSimulatedBackend creates a new binding backend using a simulated blockchain
+// NewDporSimulatedBackend creates a new binding backend using a simulated blockchain
 // for testing purposes.
 func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	database := ethdb.NewMemDatabase()
-	genesis := core.Genesis{Config: configs.AllCpchainProtocolChanges, Alloc: alloc}
+
+	genesis := core.DefaultCpchainGenesisBlock()
+	genesis.Alloc = alloc
 	genesis.MustCommit(database)
+
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 	// TODO we need our own NewFaker(), `ethash.NewFaker' does nothing.
-	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
+
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.NewFaker(config, database)
+
+	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, d, vm.Config{}, remoteDB, nil)
 
 	backend := &SimulatedBackend{
 		database:   database,
@@ -123,7 +130,11 @@ func (b *SimulatedBackend) Rollback() {
 }
 
 func (b *SimulatedBackend) rollback() {
-	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), ethash.NewFaker(), b.database, nil, 1, func(int, *core.BlockGen) {})
+
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.NewFaker(config, b.database)
+
+	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), d, b.database, nil, 1, func(int, *core.BlockGen) {})
 	statedb, _ := b.blockchain.State()
 
 	b.pendingBlock = blocks[0]
@@ -327,7 +338,10 @@ func (b *SimulatedBackend) SendTransaction(ctx context.Context, tx *types.Transa
 		panic(fmt.Errorf("invalid transaction nonce: got %d, want %d", tx.Nonce(), nonce))
 	}
 
-	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), ethash.NewFaker(), b.database, nil, 1, func(number int, block *core.BlockGen) {
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.NewFaker(config, b.database)
+
+	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), d, b.database, nil, 1, func(number int, block *core.BlockGen) {
 		for _, tx := range b.pendingBlock.Transactions() {
 			block.AddTxWithChain(b.blockchain, tx)
 		}
@@ -406,7 +420,11 @@ func (b *SimulatedBackend) SubscribeFilterLogs(ctx context.Context, query ethere
 func (b *SimulatedBackend) AdjustTime(adjustment time.Duration) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), ethash.NewFaker(), b.database, nil, 1, func(number int, block *core.BlockGen) {
+
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.New(config, b.database)
+
+	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), d, b.database, nil, 1, func(number int, block *core.BlockGen) {
 		for _, tx := range b.pendingBlock.Transactions() {
 			block.AddTx(tx)
 		}
