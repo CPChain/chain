@@ -115,3 +115,8 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 	// handle user interrupt
 	go handleInterrupt(n)
 }
+
+func createNode(ctx *cli.Context) *node.Node {
+	_, node := newConfigNode(ctx)
+	return node
+}
