@@ -3,7 +3,9 @@ package flags
 import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
+	"fmt"
 	"github.com/urfave/cli"
+	"path/filepath"
 )
 
 var flagMap = make(map[string]cli.Flag)
@@ -48,9 +50,11 @@ func GetByName(name string) cli.Flag {
 
 // this should be a global option
 var ConfigFileFlag = cli.StringFlag{
-	Name:  "config",
-	Usage: "Location of the TOML format configuration file",
+	Name: "config",
+	Usage: fmt.Sprintf("Path to TOML configuration file (default %q)",
+		filepath.Join(node.DefaultDataDir(), "config.toml")),
 }
+
 
 var GeneralFlags = []cli.Flag{
 	cli.StringFlag{
