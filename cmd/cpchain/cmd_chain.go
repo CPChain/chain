@@ -39,6 +39,7 @@ If no genesis file is found, the initialization is aborted.`, defaultGenesisPath
 // 	return cfg
 // }
 
+
 // create a genesis block from a toml format file
 func initChain(ctx *cli.Context) error {
 	path := defaultGenesisPath

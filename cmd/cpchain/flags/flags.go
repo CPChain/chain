@@ -1,9 +1,10 @@
 package flags
 
 import (
+	"fmt"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
-	"fmt"
 	"github.com/urfave/cli"
 )
 
@@ -49,10 +50,9 @@ func GetByName(name string) cli.Flag {
 
 // this should be a global option
 var ConfigFileFlag = cli.StringFlag{
-	Name: "config",
+	Name:  "config",
 	Usage: fmt.Sprintf("Path to TOML configuration file (default \"<datadir>/config.toml\")"),
 }
-
 
 var GeneralFlags = []cli.Flag{
 	cli.StringFlag{
@@ -64,14 +64,16 @@ var GeneralFlags = []cli.Flag{
 
 // TODO @xumx  adjust the following
 var AccountFlags = []cli.Flag{
-	// i feel that the keystore path only causes confusion.
-	// let it reside in $datadir is fair enough.
 	// TODO do not marshal the keystore path in toml file.
-	// cli.StringFlag{
-	// 	Name:  "keystore",
-	// 	Usage: "Directory for the keystore (default = inside the datadir)",
-	// },
-
+	cli.StringFlag{
+		Name:  "password",
+		Usage: "Password file to use for non-interactive password input",
+		Value: "",
+	},
+	cli.BoolFlag{
+		Name:  "lightkdf",
+		Usage: "Reduce key-derivation RAM & CPU usage at some expense of KDF strength",
+	},
 	cli.StringFlag{
 		Name:  "unlock",
 		Usage: "Comma separated list of accounts to unlock",

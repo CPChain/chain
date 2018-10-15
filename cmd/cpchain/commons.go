@@ -11,23 +11,26 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func readPassword(prompt string, needConfirm bool) string {
-	// be cautious about whitespace
-	fmt.Println("If your password contains whitespaces, please be careful enough to avoid later confusion.")
+// readPassword retrieves the password associated with an account, either fetched
+// from a list of preloaded passphrases, or requested interactively from the user.
+func readPassword(prompt string, createPassword bool) string {
+	// be cautious about whitespace when creating new password
+	if createPassword {
+		fmt.Println("If your password contains whitespaces, please be careful enough to avoid later confusion.")
+	}
 	fmt.Print(prompt)
 	password, err := terminal.ReadPassword(syscall.Stdin)
 	fmt.Println()
 	if err != nil {
 		log.Fatalf("Failed to read password: %v", err)
 	}
-	if needConfirm {
+	if createPassword {
 		fmt.Print("Please repeat:")
 		p, err := terminal.ReadPassword(syscall.Stdin)
 		fmt.Println()
 		if err != nil {
 			log.Fatalf("Failed to read password: %v", err)
 		}
-
 		if !bytes.Equal(password, p) {
 			log.Fatalf("Password doesn't match")
 		}

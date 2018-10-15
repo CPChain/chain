@@ -61,14 +61,20 @@ func updateBaseAccount(ctx *cli.Context, ks *keystore.KeyStore, cfg *eth.Config)
 		account := accounts.Account{Address: common.HexToAddress(val)}
 		cfg.Etherbase = account.Address
 	} else {
+		isRunCommand := ctx.Command.Name == runCommand.Name
 		// fall back on the first account
 		accs := ks.Accounts()
 		if len(accs) > 0 {
 			account := accs[0].Address
 			cfg.Etherbase = account
-			log.Warnf("Use account %v as the default account.", account.String())
+			// only log if we are running
+			if isRunCommand {
+				log.Warnf("Use account %v as the default account.", account.String())
+			}
 		} else {
-			log.Warn("No default account to use.")
+			if isRunCommand {
+				log.Warn("No default account to use.")
+			}
 		}
 	}
 }
