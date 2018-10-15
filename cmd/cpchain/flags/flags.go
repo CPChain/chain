@@ -140,4 +140,11 @@ var P2pFlags = []cli.Flag{
 	},
 }
 
+var NodeFlags = []cli.Flag{
+	cli.StringFlag{
+		Name:  "identity",
+		Usage: "Custom node name",
+	},
+}
+
 var MiscFlags = []cli.Flag{}

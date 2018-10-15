@@ -19,7 +19,7 @@ var (
 )
 
 func dumpConfig(ctx *cli.Context) error {
-	cfg := getConfig(ctx)
+	cfg, _ := newConfigNode(ctx)
 	err := toml.NewEncoder(os.Stdout).Encode(cfg)
 	if err != nil {
 		log.Fatalf("Encoding config to TOML failed: %v", err)

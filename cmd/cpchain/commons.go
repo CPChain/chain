@@ -40,17 +40,9 @@ func registerService() {
 
 }
 
-
-
-
 func createNode(ctx *cli.Context) *node.Node {
-	cfg := getConfig(ctx)
-
-	n, err := node.New(&cfg.Node)
-	if err != nil {
-		log.Fatalf("Node creation failed: %v", err)
-	}
-	// TODO
-	// registerService()
+	_, n := newConfigNode(ctx)
+	// // TODO
+	// // registerService()
 	return n
 }

@@ -16,6 +16,7 @@ var runCommand cli.Command
 func init() {
 	runFlags := append([]cli.Flag(nil), flags.RpcFlags...)
 	runFlags = append(runFlags, flags.GeneralFlags...)
+	runFlags = append(runFlags, flags.NodeFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,

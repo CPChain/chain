@@ -37,7 +37,7 @@ You must remember this passphrase to unlock your account in the future.`,
 
 // accountCreate creates a new account into the keystore defined by the CLI flags
 func createAccount(ctx *cli.Context) error {
-	cfg := getConfig(ctx)
+	cfg, _ := newConfigNode(ctx)
 	scryptN, scryptP, keydir, err := cfg.Node.AccountConfig()
 	if err != nil {
 		log.Fatalf("Failed to read configuration: %v", err)
