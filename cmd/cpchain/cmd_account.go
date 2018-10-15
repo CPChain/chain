@@ -3,13 +3,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli"
 )
 
