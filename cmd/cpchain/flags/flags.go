@@ -1,9 +1,10 @@
 package flags
 
 import (
+	"fmt"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
-	"fmt"
 	"github.com/urfave/cli"
 )
 
@@ -49,10 +50,9 @@ func GetByName(name string) cli.Flag {
 
 // this should be a global option
 var ConfigFileFlag = cli.StringFlag{
-	Name: "config",
+	Name:  "config",
 	Usage: fmt.Sprintf("Path to TOML configuration file (default \"<datadir>/config.toml\")"),
 }
-
 
 var GeneralFlags = []cli.Flag{
 	cli.StringFlag{
@@ -74,7 +74,6 @@ var AccountFlags = []cli.Flag{
 		Name:  "lightkdf",
 		Usage: "Reduce key-derivation RAM & CPU usage at some expense of KDF strength",
 	},
-
 	cli.StringFlag{
 		Name:  "unlock",
 		Usage: "Comma separated list of accounts to unlock",
