@@ -62,13 +62,16 @@ var GeneralFlags = []cli.Flag{
 
 // TODO @xumx  adjust the following
 var AccountFlags = []cli.Flag{
-	// i feel that the keystore path only causes confusion.
-	// let it reside in $datadir is fair enough.
 	// TODO do not marshal the keystore path in toml file.
-	// cli.StringFlag{
-	// 	Name:  "keystore",
-	// 	Usage: "Directory for the keystore (default = inside the datadir)",
-	// },
+	cli.StringFlag{
+		Name:  "password",
+		Usage: "Password file to use for non-interactive password input",
+		Value: "",
+	},
+	cli.BoolFlag{
+		Name:  "lightkdf",
+		Usage: "Reduce key-derivation RAM & CPU usage at some expense of KDF strength",
+	},
 
 	cli.StringFlag{
 		Name:  "unlock",
