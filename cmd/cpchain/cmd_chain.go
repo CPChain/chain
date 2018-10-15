@@ -15,14 +15,13 @@ var chainCommand = cli.Command{
 	Usage: "Manage blockchain",
 	Flags: []cli.Flag{
 		flags.GetByName("datadir"),
-		flags.GetByName("keystore"),
 	},
 	Subcommands: []cli.Command{
 		{
 			Name:      "init",
 			Usage:     "Init the genesis block",
 			Action:    initChain,
-			ArgsUsage: "[path/to/genesis.toml]",
+			ArgsUsage: "[/path/to/genesis.toml]",
 			Description: fmt.Sprintf(`The default genesis file path is: %v.
 If no genesis file is found, the initialization is aborted.`, defaultGenesisPath),
 		},
