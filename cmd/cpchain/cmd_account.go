@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/node"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli"
 )
 
@@ -22,7 +22,7 @@ import a private key into a new account, create a new account or update an exist
 Make sure you remember the password you gave when creating a new account (with
 either new or import). Without it you are not able to unlock your account.
 
-Keys are stored under <DATADIR>/keystore.`,
+Keys are stored under <datadir>/keystore.`,
 		Subcommands: []cli.Command{
 			{
 				Name:   "list",
@@ -31,8 +31,7 @@ Keys are stored under <DATADIR>/keystore.`,
 				Flags: []cli.Flag{
 					flags.GetByName("datadir"),
 				},
-				Description: `
-Print a short summary of all accounts`,
+				Description: `Print a short summary of all accounts`,
 			},
 			{
 				Name:   "new",
@@ -56,8 +55,7 @@ You must remember this passphrase to unlock your account in the future.`,
 					flags.GetByName("datadir"),
 					flags.GetByName("lightkdf"),
 				},
-				Description: `
-    cpchain account update <address>
+				Description: `cpchain account update <address>
 
 Update an existing account.
 
@@ -72,8 +70,7 @@ For non-interactive use the passphrase can be specified with the --password flag
     cpchain account update [options] <address>
 
 Since only one password can be given, only format update can be performed,
-changing your password is only possible interactively.
-`,
+changing your password is only possible interactively.`,
 			},
 			{
 				Name:   "import",
@@ -85,8 +82,7 @@ changing your password is only possible interactively.
 					flags.GetByName("lightkdf"),
 				},
 				ArgsUsage: "<keyFile>",
-				Description: `
-    cpchain account import <keyfile>
+				Description: `cpchain account import <keyfile>
 
 Imports an unencrypted private key from <keyfile> and creates a new account.
 Prints the address.
@@ -97,25 +93,18 @@ The account is saved in encrypted format, you are prompted for a passphrase.
 
 You must remember this passphrase to unlock your account in the future.
 
-For non-interactive use the passphrase can be specified with the -password flag:
+For non-interactive use the passphrase can be specified with the --password flag:
 
-    cpchain account import [options] <keyfile>
-
-Note:
-As you can directly copy your encrypted accounts to another ethereum instance,
-this import mechanism is not needed when you transfer an account between
-nodes.
-`,
+    cpchain account import [options] <keyfile>`,
 			},
 		},
 	}
 )
 
 func accountList(ctx *cli.Context) error {
-	stack := makeConfig(ctx)
-
+	_, n := newConfigNode(ctx)
 	var index int
-	for _, wallet := range stack.AccountManager().Wallets() {
+	for _, wallet := range n.AccountManager().Wallets() {
 		for _, account := range wallet.Accounts() {
 			fmt.Printf("Account #%d: {%x} %s\n", index, account.Address, &account.URL)
 			index++
@@ -131,7 +120,7 @@ func createAccount(ctx *cli.Context) error {
 	if err != nil {
 		log.Fatalf("Failed to read configuration: %v", err)
 	}
-	password := readPassword("Please input your password:", true, 0, nil)
+	password := readPassword("Please input your password:", true)
 	address, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
 	if err != nil {
 		log.Fatalf("Failed to create account: %v", err)
@@ -146,12 +135,12 @@ func accountUpdate(ctx *cli.Context) error {
 	if len(ctx.Args()) == 0 {
 		log.Fatalf("No accounts specified to update")
 	}
-	stack := makeConfig(ctx)
-	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	_, n := newConfigNode(ctx)
+	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	for _, addr := range ctx.Args() {
-		account, oldPassword := unlockAccount(ctx, ks, addr, 0, nil)
-		newPassword := readPassword("Please give a new password. Do not forget this password.", true, 0, nil)
+		account, oldPassword := unlockAccount(ctx, ks, addr)
+		newPassword := readPassword("Please give a new password:", true)
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
 			log.Fatalf("Could not update the account: %v", err)
 		}
@@ -159,67 +148,8 @@ func accountUpdate(ctx *cli.Context) error {
 	return nil
 }
 
-// tries unlocking the specified account a few times.
-func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i int, passwords []string) (accounts.Account, string) {
-	account, err := MakeAddress(ks, address)
-	if err != nil {
-		log.Fatalf("Could not list accounts: %v", err)
-	}
-	for trials := 0; trials < 3; trials++ {
-		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d", address, trials+1, 3)
-		password := readPassword(prompt, false, i, passwords)
-		err = ks.Unlock(account, password)
-		if err == nil {
-			log.Info("Unlocked account", "address", account.Address.Hex())
-			return account, password
-		}
-		if err, ok := err.(*keystore.AmbiguousAddrError); ok {
-			log.Info("Unlocked account", "address", account.Address.Hex())
-			return ambiguousAddrRecovery(ks, err, password), password
-		}
-		if err != keystore.ErrDecrypt {
-			// No need to prompt again if the error is not decryption-related.
-			break
-		}
-	}
-	// All trials expended to unlock account, bail out
-	log.Fatalf("Failed to unlock account %s (%v)", address, err)
-
-	return accounts.Account{}, ""
-}
-
-func accountImport(ctx *cli.Context) error {
-	keyfile := ctx.Args().First()
-	if len(keyfile) == 0 {
-		log.Fatalf("keyfile must be given as argument")
-	}
-	key, err := crypto.LoadECDSA(keyfile)
-	if err != nil {
-		log.Fatalf("Failed to load the private key: %v", err)
-	}
-
-	stack := makeConfig(ctx)
-	passphrase := readPassword("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, nil)
-	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	acct, err := ks.ImportECDSA(key, passphrase)
-	if err != nil {
-		log.Fatalf("Could not create the account: %v", err)
-	}
-	fmt.Printf("Address: {%x}\n", acct.Address)
-	return nil
-}
-
-func makeConfig(ctx *cli.Context) *node.Node {
-	config := getConfig(ctx)
-	stack, err := node.New(&config.Node)
-	if err != nil {
-		log.Fatalf("Failed to create the protocol stack: %v", err)
-	}
-	return stack
-}
-
 // MakeAddress converts an account specified directly as a hex encoded string
-func MakeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error) {
+func makeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error) {
 	// If the specified account is a valid address, return it
 	if common.IsHexAddress(account) {
 		return accounts.Account{Address: common.HexToAddress(account)}, nil
@@ -251,4 +181,53 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 		}
 	}
 	return *match
+}
+
+// tries unlocking the specified account a few times.
+func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string) (accounts.Account, string) {
+	account, err := makeAddress(ks, address)
+	if err != nil {
+		log.Fatalf("Could not list accounts: %v", err)
+	}
+	for trials := 0; trials < 3; trials++ {
+		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d\nPassword:", address, trials+1, 3)
+		password := readPassword(prompt, false)
+		err = ks.Unlock(account, password)
+		if err == nil {
+			log.Info("Unlocked account", "address", account.Address.Hex())
+			return account, password
+		}
+		if err, ok := err.(*keystore.AmbiguousAddrError); ok {
+			log.Info("Unlocked account", "address", account.Address.Hex())
+			return ambiguousAddrRecovery(ks, err, password), password
+		}
+		if err != keystore.ErrDecrypt {
+			// No need to prompt again if the error is not decryption-related.
+			break
+		}
+	}
+	// All trials expended to unlock account, bail out
+	log.Fatalf("Failed to unlock account %s (%v)", address, err)
+	return accounts.Account{}, ""
+}
+
+func accountImport(ctx *cli.Context) error {
+	keyfile := ctx.Args().First()
+	if len(keyfile) == 0 {
+		log.Fatalf("keyfile must be given as argument")
+	}
+	key, err := crypto.LoadECDSA(keyfile)
+	if err != nil {
+		log.Fatalf("Failed to load the private key: %v", err)
+	}
+
+	_, n := newConfigNode(ctx)
+	passphrase := readPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:", true)
+	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	acct, err := ks.ImportECDSA(key, passphrase)
+	if err != nil {
+		log.Fatalf("Could not create the account: %v", err)
+	}
+	fmt.Printf("Address: {%x}\n", acct.Address)
+	return nil
 }
