@@ -83,12 +83,16 @@ var AccountFlags = []cli.Flag{
 var ChainFlags = []cli.Flag{
 	cli.Uint64Flag{
 		Name:  "networkid",
-		Usage: "Network identifier (integer, 1=Frontier, 2=Morden (disused), 3=Ropsten, 4=Rinkeby)",
+		Usage: "Network identifier (integer, mainnet=0, testnet=1)",
 	},
 	cli.StringFlag{
 		Name:  "password",
 		Usage: "Password file to use for non-interactive password input",
 		Value: "",
+	},
+	cli.StringFlag{
+		Name:  "account",
+		Usage: "Public address for block mining rewards. Use the first account if none is provided.",
 	},
 }
 
@@ -96,6 +100,11 @@ var MinerFlags = []cli.Flag{
 	cli.BoolFlag{
 		Name:  "mine",
 		Usage: "Enable mining",
+	},
+	cli.IntFlag{
+		Name:  "minethreads",
+		Usage: "Thread count for mining",
+		Value: 4,
 	},
 }
 
@@ -140,6 +149,13 @@ var P2pFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "nodekey",
 		Usage: "P2P node key file",
+	},
+}
+
+var NodeFlags = []cli.Flag{
+	cli.StringFlag{
+		Name:  "identity",
+		Usage: "Custom node name",
 	},
 }
 

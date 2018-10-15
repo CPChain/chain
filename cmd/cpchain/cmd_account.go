@@ -126,7 +126,7 @@ func accountList(ctx *cli.Context) error {
 
 // accountCreate creates a new account into the keystore defined by the CLI flags
 func createAccount(ctx *cli.Context) error {
-	cfg := getConfig(ctx)
+	cfg, _ := newConfigNode(ctx)
 	scryptN, scryptP, keydir, err := cfg.Node.AccountConfig()
 	if err != nil {
 		log.Fatalf("Failed to read configuration: %v", err)
@@ -210,11 +210,7 @@ func accountImport(ctx *cli.Context) error {
 }
 
 func makeConfig(ctx *cli.Context) *node.Node {
-	config := getConfig(ctx)
-	stack, err := node.New(&config.Node)
-	if err != nil {
-		log.Fatalf("Failed to create the protocol stack: %v", err)
-	}
+	_, stack := newConfigNode(ctx)
 	return stack
 }
 

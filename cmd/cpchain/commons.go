@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/node"
 	"bytes"
 	"fmt"
-	"github.com/urfave/cli"
-	"golang.org/x/crypto/ssh/terminal"
 	"syscall"
+
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/eth"
+	"bitbucket.org/cpchain/chain/node"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // readPassword retrieves the password associated with an account, either fetched
@@ -44,18 +45,23 @@ func readPassword(prompt string, needConfirm bool, i int, passwords []string) st
 	return string(password)
 }
 
-func registerService() {
+// Register chain services for a *full* node.
+func registerChainService(cfg *eth.Config, n *node.Node) {
+	// TODO adjust to the sync mode
+	// if cfg.SyncMode != downloader.FullSync {
+	// 	log.Fatalf("We only support full sync currently.")
+	// }
 
-}
-
-func createNode(ctx *cli.Context) *node.Node {
-	cfg := getConfig(ctx)
-
-	n, err := node.New(&cfg.Node)
+	err := n.Register(func(ctx *node.ServiceContext) (node.Service, error) {
+		fullNode, err := eth.New(ctx, cfg)
+		// no plan for les server.
+		// if fullNode != nil && cfg.LightServ > 0 {
+		// 	ls, _ := les.NewLesServer(fullNode, cfg)
+		// 	fullNode.AddLesServer(ls)
+		// }
+		return fullNode, err
+	})
 	if err != nil {
-		log.Fatalf("Node creation failed: %v", err)
+		log.Fatalf("Failed to register the chain service: %v", err)
 	}
-	// TODO
-	// registerService()
-	return n
 }
