@@ -6,8 +6,8 @@ import (
 	"syscall"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
-	"github.com/urfave/cli"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -36,13 +36,23 @@ func readPassword(prompt string, needConfirm bool) string {
 	return string(password)
 }
 
-func registerService() {
+// Register chain services for a *full* node.
+func registerChainService(cfg *eth.Config, n *node.Node) {
+	// TODO adjust to the sync mode
+	// if cfg.SyncMode != downloader.FullSync {
+	// 	log.Fatalf("We only support full sync currently.")
+	// }
 
-}
-
-func createNode(ctx *cli.Context) *node.Node {
-	_, n := newConfigNode(ctx)
-	// // TODO
-	// // registerService()
-	return n
+	err := n.Register(func(ctx *node.ServiceContext) (node.Service, error) {
+		fullNode, err := eth.New(ctx, cfg)
+		// no plan for les server.
+		// if fullNode != nil && cfg.LightServ > 0 {
+		// 	ls, _ := les.NewLesServer(fullNode, cfg)
+		// 	fullNode.AddLesServer(ls)
+		// }
+		return fullNode, err
+	})
+	if err != nil {
+		log.Fatalf("Failed to register the chain service: %v", err)
+	}
 }
