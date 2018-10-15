@@ -30,7 +30,6 @@ func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
 }
 
 func updateNodeGeneralConfig(ctx *cli.Context, cfg *node.Config) {
-	updateDataDirFlag(ctx, cfg)
 	// update identity
 	if ctx.IsSet("identity") {
 		cfg.UserIdent = ctx.String("identity")
@@ -79,17 +78,21 @@ func updateTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 
 }
 
-// Updates chain configuration
-func updateChainConfig(ctx *cli.Context, cfg *eth.Config, n *node.Node) {
-	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	updateBaseAccount(ctx, ks, cfg)
-	// setGPO(ctx, &cfg.GPO)
-	updateTxPool(ctx, &cfg.TxPool)
-
+func updateChainGeneralConfig(ctx *cli.Context, cfg *eth.Config) {
 	// network id setup
 	if ctx.IsSet("networkid") {
 		cfg.NetworkId = ctx.Uint64("networkid")
 	}
+}
+
+// Updates chain configuration
+func updateChainConfig(ctx *cli.Context, cfg *eth.Config, n *node.Node) {
+	updateChainGeneralConfig(ctx, cfg)
+	// passing in a node, all for this.  a pity.
+	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	updateBaseAccount(ctx, ks, cfg)
+	// setGPO(ctx, &cfg.GPO)
+	updateTxPool(ctx, &cfg.TxPool)
 }
 
 // Updates config from --config file
@@ -124,6 +127,9 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 		Eth:  eth.DefaultConfig,
 		Node: node.DefaultConfig,
 	}
+	// update data dir first
+	updateDataDirFlag(ctx, &cfg.Node)
+
 	updateConfigFromFile(ctx, &cfg)
 
 	// now update from command line arguments
