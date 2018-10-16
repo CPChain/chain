@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
@@ -110,14 +111,15 @@ func cleanDB(ctx *cli.Context) {
 	fmt.Println(dbdir)
 	fmt.Print("Remove this database? [y/N]")
 	rd := bufio.NewReader(os.Stdin)
-	input, _, err := rd.ReadRune()
-	confirm := input == 'Y' || input == 'y'
-
-	switch {
-	case err != nil:
+	input, err := rd.ReadString('\n')
+	if err != nil {
 		logger.Fatalf("%v", err)
+	}
+	input = strings.ToUpper(strings.TrimRight(input, "\r\n"))
+	confirm := input == "Y"
+	switch {
 	case !confirm:
-		logger.Warn("Database deletion aborted")
+		logger.Info("Database deletion aborted")
 	default:
 		start := time.Now()
 		os.RemoveAll(dbdir)
