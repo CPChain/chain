@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
@@ -47,7 +47,11 @@ var (
 // contains a transaction and every 5th an uncle to allow testing correct block
 // reassembly.
 func makeChain(n int, seed byte, parent *types.Block) ([]common.Hash, map[common.Hash]*types.Block) {
-	blocks, _ := core.GenerateChain(configs.TestChainConfig, parent, ethash.NewFaker(), testdb, testRemoteDB, n, func(i int, block *core.BlockGen) {
+
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.NewFaker(config, testdb)
+
+	blocks, _ := core.GenerateChain(configs.TestChainConfig, parent, d, testdb, testRemoteDB, n, func(i int, block *core.BlockGen) {
 		block.SetCoinbase(common.Address{seed})
 
 		// If the block number is multiple of 3, send a bonus transaction to the miner

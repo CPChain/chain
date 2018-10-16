@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
@@ -74,9 +74,12 @@ type downloadTester struct {
 	lock sync.RWMutex
 }
 
+var (
+	testdb = ethdb.NewMemDatabase()
+)
+
 // newTester creates a new downloader test mocker.
 func newTester() *downloadTester {
-	testdb := ethdb.NewMemDatabase()
 	genesis := core.GenesisBlockForTesting(testdb, testAddress, big.NewInt(1000000000))
 
 	tester := &downloadTester{
@@ -108,7 +111,10 @@ func newTester() *downloadTester {
 // reassembly.
 func (dl *downloadTester) makeChain(n int, seed byte, parent *types.Block, parentReceipts types.Receipts, heavy bool) ([]common.Hash, map[common.Hash]*types.Header, map[common.Hash]*types.Block, map[common.Hash]types.Receipts) {
 	// Generate the block chain
-	blocks, receipts := core.GenerateChain(configs.TestChainConfig, parent, ethash.NewFaker(), dl.peerDb, nil, n, func(i int, block *core.BlockGen) {
+
+	config := configs.CpchainChainConfig.Dpor
+	d := dpor.NewFaker(config, testdb)
+	blocks, receipts := core.GenerateChain(configs.TestChainConfig, parent, d, dl.peerDb, nil, n, func(i int, block *core.BlockGen) {
 		block.SetCoinbase(common.Address{seed})
 
 		// If a heavy chain is requested, delay blocks to raise difficulty
