@@ -30,43 +30,41 @@ import (
 
 // Constants to match up protocol versions and messages
 const (
-	eth62 = 62
-	eth63 = 63
+	// eth62 = 62
+	// eth63 = 63
 
-	cpc01 = 64
+	cpc01 = 36
 )
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.
-var ProtocolName = "eth"
+var ProtocolName = "cpc"
 
 // ProtocolVersions are the upported versions of the eth protocol (first is primary).
-var ProtocolVersions = []uint{cpc01, eth63, eth62}
+var ProtocolVersions = []uint{cpc01}
+
+// var ProtocolVersions = []uint{cpc01, eth63, eth62}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
-// var ProtocolLengths = []uint64{17, 8}
-var ProtocolLengths = []uint64{70, 16, 8} // TODO: this is wrong, fix this.
+var ProtocolLengths = []uint64{70} // TODO: this is wrong, fix this.
+
+// var ProtocolLengths = []uint64{70, 16, 8} // TODO: this is wrong, fix this.
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 
 // eth protocol message codes
 const (
-	// Protocol messages belonging to eth/62
-	StatusMsg          = 0x00
-	NewBlockHashesMsg  = 0x01
-	TxMsg              = 0x02
-	GetBlockHeadersMsg = 0x03
-	BlockHeadersMsg    = 0x04
-	GetBlockBodiesMsg  = 0x05
-	BlockBodiesMsg     = 0x06
-	NewBlockMsg        = 0x07
-
-	// Protocol messages belonging to eth/63
-	GetNodeDataMsg = 0x0d
-	NodeDataMsg    = 0x0e
-	GetReceiptsMsg = 0x0f
-	ReceiptsMsg    = 0x10
-
-	// Protocol messages belonging to cpc/01
+	StatusMsg                  = 0x00
+	NewBlockHashesMsg          = 0x01
+	TxMsg                      = 0x02
+	GetBlockHeadersMsg         = 0x03
+	BlockHeadersMsg            = 0x04
+	GetBlockBodiesMsg          = 0x05
+	BlockBodiesMsg             = 0x06
+	NewBlockMsg                = 0x07
+	GetNodeDataMsg             = 0x0d
+	NodeDataMsg                = 0x0e
+	GetReceiptsMsg             = 0x0f
+	ReceiptsMsg                = 0x10
 	NewSignerMsg               = 0x42
 	NewBlockGeneratedMsg       = 0x43
 	NewBlockGeneratedHashesMsg = 0x44
