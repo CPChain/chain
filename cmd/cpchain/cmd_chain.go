@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
@@ -12,7 +14,6 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/console"
 	"github.com/naoina/toml"
 	"github.com/urfave/cli"
 )
@@ -67,6 +68,7 @@ func initChain(ctx *cli.Context) error {
 	genesisPath := ctx.Args().First()
 	if len(genesisPath) == 0 {
 		log.Fatal("Must supply path to genesis TOML file")
+
 	}
 	file, err := os.Open(genesisPath)
 	if err != nil {
@@ -106,7 +108,14 @@ func cleanDB(ctx *cli.Context) error {
 	}
 	// Confirm removal and execute
 	fmt.Println(dbdir)
-	confirm, err := console.Stdin.PromptConfirm("Remove this database?")
+	fmt.Print("Remove this database? [y/N]")
+	rd := bufio.NewReader(os.Stdin)
+	input, err := rd.ReadString('\n')
+	confirm := false
+	if len(input) > 0 && strings.ToUpper(input[:1]) == "Y" {
+		confirm = true
+	}
+
 	switch {
 	case err != nil:
 		logger.Fatalf("%v", err)
