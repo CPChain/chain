@@ -293,13 +293,13 @@ func (s *DporSnapshot) EpochIdxOf(blockNum uint64) uint64 {
 	return (blockNum - 1) / uint64(epochLength)
 }
 
-// Signers retrieves all signersOf in the committee.
-func (s *DporSnapshot) signersOf(number uint64) []common.Address {
+// SignersOf retrieves all signersOf in the committee.
+func (s *DporSnapshot) SignersOf(number uint64) []common.Address {
 	return s.RecentSigners[s.EpochIdxOf(number)]
 }
 
-func (s *DporSnapshot) signerRoundOf(signer common.Address, number uint64) (int, error) {
-	for round, s := range s.signersOf(number) {
+func (s *DporSnapshot) SignerRoundOf(signer common.Address, number uint64) (int, error) {
+	for round, s := range s.SignersOf(number) {
 		if s == signer {
 			return round, nil
 		}
@@ -308,16 +308,16 @@ func (s *DporSnapshot) signerRoundOf(signer common.Address, number uint64) (int,
 	return -1, errSignerNotInCommittee
 }
 
-func (s *DporSnapshot) isSigner(signer common.Address, number uint64) bool {
-	_, err := s.signerRoundOf(signer, number)
+func (s *DporSnapshot) IsSigner(signer common.Address, number uint64) bool {
+	_, err := s.SignerRoundOf(signer, number)
 	return err == nil
 }
 
-func (s *DporSnapshot) isLeader(signer common.Address, number uint64) (bool, error) {
+func (s *DporSnapshot) IsLeader(signer common.Address, number uint64) (bool, error) {
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
-	round, err := s.signerRoundOf(signer, number)
+	round, err := s.SignerRoundOf(signer, number)
 	if err != nil {
 		return false, err
 	}
@@ -330,25 +330,25 @@ func (s *DporSnapshot) candidates() []common.Address {
 }
 
 // inturn returns if a signer at a given block height is in-turn or not.
-func (s *DporSnapshot) inturn(number uint64, signer common.Address) bool {
-	ok, err := s.isLeader(signer, number)
+func (s *DporSnapshot) Inturn(number uint64, signer common.Address) bool {
+	ok, err := s.IsLeader(signer, number)
 	if err != nil {
 		return false
 	}
 	return ok
 }
 
-func (s *DporSnapshot) isFutureSigner(signer common.Address, number uint64) bool {
-	_, err := s.FuturesignerRoundOf(signer, number)
+func (s *DporSnapshot) IsFutureSignerOf(signer common.Address, number uint64) bool {
+	_, err := s.FutureSignerRoundOf(signer, number)
 	return err == nil
 }
 
-func (s *DporSnapshot) FutureSigners(number uint64) []common.Address {
+func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
 	return s.RecentSigners[s.EpochIdxOf(number)+EpochGapBetweenElectionAndMining]
 }
 
-func (s *DporSnapshot) FuturesignerRoundOf(signer common.Address, number uint64) (int, error) {
-	for round, s := range s.FutureSigners(number) {
+func (s *DporSnapshot) FutureSignerRoundOf(signer common.Address, number uint64) (int, error) {
+	for round, s := range s.FutureSignersOf(number) {
 		if s == signer {
 			return round, nil
 		}

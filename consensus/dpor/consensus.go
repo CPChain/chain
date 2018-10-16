@@ -187,7 +187,7 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	header.Extra = header.Extra[:extraVanity]
 
 	// if number%d.config.Epoch == 0 {
-	for _, signer := range snap.signersOf(number) {
+	for _, signer := range snap.SignersOf(number) {
 		header.Extra = append(header.Extra, signer[:]...)
 	}
 	// }
@@ -255,7 +255,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 
-	ok, err := snap.isLeader(d.signer, number)
+	ok, err := snap.IsLeader(d.signer, number)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	allSigs := make([]byte, int(d.config.Epoch)*extraSeal)
 
 	// Copy signature to the right position in allSigs.
-	round, _ := snap.signerRoundOf(signer, number)
+	round, _ := snap.SignerRoundOf(signer, number)
 	copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
 
 	// Encode it to header.extra2.
