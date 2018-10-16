@@ -47,7 +47,6 @@ func TestFastSyncDisabling(t *testing.T) {
 
 	time.Sleep(250 * time.Millisecond)
 	pmEmpty.synchronise(pmEmpty.peers.BestPeer())
-
 	// Check that fast sync was disabled
 	if atomic.LoadUint32(&pmEmpty.fastSync) == 1 {
 		t.Fatalf("fast sync not disabled after successful synchronisation")

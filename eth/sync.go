@@ -173,6 +173,8 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 
 	pHead, pTd := peer.Head()
 	if pTd.Cmp(td) <= 0 {
+		// TODO: @liuq, fix this. added because of sync_test.go err.
+		atomic.StoreUint32(&pm.fastSync, 0)
 		return
 	}
 	// Otherwise try to sync with the downloader

@@ -321,7 +321,6 @@ func testGetNodeData(t *testing.T, protocol int) {
 		case 2:
 			// Block 3 is empty but was mined by account #2.
 			block.SetCoinbase(acc2Addr)
-			block.SetExtra([]byte("yeehaw"))
 		}
 	}
 	// Assemble the test environment
@@ -405,7 +404,6 @@ func testGetReceipt(t *testing.T, protocol int) {
 		case 2:
 			// Block 3 is empty but was mined by account #2.
 			block.SetCoinbase(acc2Addr)
-			block.SetExtra([]byte("yeehaw"))
 		}
 	}
 	// Assemble the test environment
