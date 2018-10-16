@@ -50,6 +50,17 @@ Remove blockchain and state databases`,
 	},
 }
 
+// // temporary usage
+// // sample func to update from ctx
+// func getConfigWorkaround(ctx *cli.Context) config {
+// 	cfg := getConfig(ctx)
+//
+// 	// update it here
+//
+// 	// use it somewhere
+// 	return cfg
+// }
+
 // initChain creates a genesis block from a toml format file
 func initChain(ctx *cli.Context) error {
 	// Make sure we have a valid genesis TOML.
