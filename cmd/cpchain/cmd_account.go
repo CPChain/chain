@@ -119,7 +119,7 @@ func createAccount(ctx *cli.Context) error {
 	if err != nil {
 		log.Fatalf("Failed to read configuration: %v", err)
 	}
-	password := readPassword("Please input your password:", true)
+	password := readPassword("Please input your password:\n", true)
 	address, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
 	if err != nil {
 		log.Fatalf("Failed to create account: %v", err)

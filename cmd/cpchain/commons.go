@@ -1,14 +1,12 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-	"syscall"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
-	"golang.org/x/crypto/ssh/terminal"
+	"bufio"
+	"fmt"
+	"os"
 )
 
 // readPassword retrieves the password associated with an account, either fetched
@@ -18,25 +16,80 @@ func readPassword(prompt string, createPassword bool) string {
 	if createPassword {
 		fmt.Println("If your password contains whitespaces, please be careful enough to avoid later confusion.")
 	}
-	fmt.Print(prompt)
-	password, err := terminal.ReadPassword(syscall.Stdin)
-	fmt.Println()
-	if err != nil {
-		log.Fatalf("Failed to read password: %v", err)
-	}
+	password, _ := ReadPassword(prompt)
+	// password, err := terminal.ReadPassword(syscall.Stdin)
+	// fmt.Println()
+	// if err != nil {
+	// 	log.Fatalf("Failed to read password: %v", err)
+	// }
 	if createPassword {
-		fmt.Print("Please repeat:")
-		p, err := terminal.ReadPassword(syscall.Stdin)
+		// fmt.Print("Please repeat:")
+		// p, err := terminal.ReadPassword(syscall.Stdin)
+		p, err := ReadPassword("Please repeat:")
 		fmt.Println()
 		if err != nil {
 			log.Fatalf("Failed to read password: %v", err)
 		}
-		if !bytes.Equal(password, p) {
-			log.Fatalf("Password doesn't match")
+
+		// fmt.Println("password:", password)
+		// fmt.Println("p:", p)
+		if password != p {
+			fmt.Println("Fatal: Password do not match")
+			// log.Fatalf("Password doesn't match")
 		}
 	}
 	// trailing newline is by default ignored
 	return string(password)
+}
+
+func readPassword_(prompt string, createPassword bool) string {
+	if prompt != "" {
+		fmt.Println(prompt)
+	}
+
+	fmt.Print("Please input your password:")
+	reader := bufio.NewReader(os.Stdin)
+	password, err := reader.ReadString('\n')
+	fmt.Println(password)
+
+	if err != nil {
+		log.Fatalf("Failed to read passphrase: %v", err)
+	}
+	if createPassword {
+		// confirm, err := console.Stdin.PromptPassword("Repeat passphrase: ")
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Please repeat:")
+		confirm, err := reader.ReadString('\n')
+		fmt.Println(confirm)
+
+		if err != nil {
+			log.Fatalf("Failed to read passphrase confirmation: %v", err)
+		}
+		if password != confirm {
+			log.Fatalf("Passphrases do not match")
+		}
+	}
+	return password
+}
+
+func ReadPassword(prompt string) (string, error) {
+	fmt.Print(prompt)
+	// password, _ := terminal.ReadPassword(syscall.Stdin)
+	// fmt.Print("SSS:", password)
+	// return string(password), nil
+
+	// reader := bufio.NewReader(os.Stdin)
+	// password, err := reader.ReadString('\n')
+	// if err != nil {
+	// 	log.Fatalf("Failed to read password: %v", err)
+	// 	return "", err
+	// }
+	// fmt.Print("SSS:", password)
+	// return password, nil
+	var input string
+	fmt.Scanf("%s", &input)
+	// fmt.Println("input:", input)
+	return input, nil
 }
 
 // Register chain services for a *full* node.
