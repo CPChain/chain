@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
@@ -111,11 +110,8 @@ func cleanDB(ctx *cli.Context) {
 	fmt.Println(dbdir)
 	fmt.Print("Remove this database? [y/N]")
 	rd := bufio.NewReader(os.Stdin)
-	input, err := rd.ReadString('\n')
-	confirm := false
-	if len(input) > 0 && strings.ToUpper(input[:1]) == "Y" {
-		confirm = true
-	}
+	input, _, err := rd.ReadRune()
+	confirm := input == 'Y' || input == 'y'
 
 	switch {
 	case err != nil:
