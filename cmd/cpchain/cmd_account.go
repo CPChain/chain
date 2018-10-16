@@ -139,7 +139,8 @@ func accountUpdate(ctx *cli.Context) error {
 
 	for _, addr := range ctx.Args() {
 		account, oldPassword := unlockAccount(ctx, ks, addr)
-		newPassword := readPassword("Please give a new password:", true)
+		fmt.Println("***************88ever runnnnnnnnnnnnnnnnnnnn.")
+		newPassword := readPassword("\nPlease give a new password:", true)
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
 			log.Fatalf("Could not update the account: %v", err)
 		}

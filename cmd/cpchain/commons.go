@@ -14,7 +14,7 @@ import (
 func readPassword(prompt string, createPassword bool) string {
 	// be cautious about whitespace when creating new password
 	if createPassword {
-		fmt.Println("If your password contains whitespaces, please be careful enough to avoid later confusion.")
+		// fmt.Println("If your password contains whitespaces, please be careful enough to avoid later confusion.")
 	}
 	password, _ := ReadPassword(prompt)
 	// password, err := terminal.ReadPassword(syscall.Stdin)
@@ -88,7 +88,7 @@ func ReadPassword(prompt string) (string, error) {
 	// return password, nil
 	var input string
 	fmt.Scanf("%s", &input)
-	// fmt.Println("input:", input)
+	fmt.Println("*************88input:", input)
 	return input, nil
 }
 

@@ -17,6 +17,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cespare/cp"
 	"path/filepath"
 	"runtime"
@@ -90,6 +91,7 @@ Fatal: Password do not match
 
 func TestAccountUpdate(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
+	fmt.Println(datadir)
 	geth := runGeth(t, "account", "update",
 		"--datadir", datadir, "--lightkdf",
 		"f466859ead1932d743d622cb74fc058882e8648a")
