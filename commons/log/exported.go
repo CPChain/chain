@@ -90,7 +90,7 @@ func Debug(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(msg)
+		root.WithFields(getFields(ctx...)).Debug(msg)
 	}
 }
 
@@ -101,7 +101,7 @@ func Warn(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(msg)
+		root.WithFields(getFields(ctx...)).Warn(msg)
 	}
 }
 
@@ -112,7 +112,7 @@ func Error(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(msg)
+		root.WithFields(getFields(ctx...)).Error(msg)
 	}
 }
 
@@ -123,7 +123,7 @@ func Panic(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(msg)
+		root.WithFields(getFields(ctx...)).Panic(msg)
 	}
 }
 
@@ -134,7 +134,7 @@ func Fatal(msg string, ctx ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		root.WithFields(getFields(ctx...)).Info(msg)
+		root.WithFields(getFields(ctx...)).Fatal(msg)
 	}
 }
 
