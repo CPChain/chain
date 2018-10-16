@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/console"
+	"github.com/naoina/toml"
 	"github.com/urfave/cli"
 )
 
@@ -52,10 +52,10 @@ Remove blockchain and state databases`,
 
 // initChain creates a genesis block from a toml format file
 func initChain(ctx *cli.Context) error {
-	// Make sure we have a valid genesis JSON.
+	// Make sure we have a valid genesis TOML.
 	genesisPath := ctx.Args().First()
 	if len(genesisPath) == 0 {
-		log.Fatal("Must supply path to genesis JSON file")
+		log.Fatal("Must supply path to genesis TOML file")
 	}
 	file, err := os.Open(genesisPath)
 	if err != nil {
@@ -64,7 +64,7 @@ func initChain(ctx *cli.Context) error {
 	defer file.Close()
 
 	genesis := new(core.Genesis)
-	if err := json.NewDecoder(file).Decode(genesis); err != nil {
+	if err := toml.NewDecoder(file).Decode(genesis); err != nil {
 		log.Fatalf("invalid genesis file: %v", err)
 	}
 	// Intialize database.

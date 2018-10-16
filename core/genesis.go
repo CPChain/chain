@@ -38,30 +38,30 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-//go:generate gencodec -type Genesis -field-override genesisSpecMarshaling -out gen_genesis.go
-//go:generate gencodec -type GenesisAccount -field-override genesisAccountMarshaling -out gen_genesis_account.go
+//go:generate gencodec -type Genesis -formats json,toml -field-override genesisSpecMarshaling -out gen_genesis.go
+//go:generate gencodec -type GenesisAccount -formats json,toml -field-override genesisAccountMarshaling -out gen_genesis_account.go
 
 var errGenesisNoConfig = errors.New("genesis has no chain configuration")
 
 // Genesis specifies the header fields, state of a genesis block. It also defines hard
 // fork switch-over blocks through the chain configuration.
 type Genesis struct {
-	Config     *configs.ChainConfig `json:"config"`
-	Nonce      uint64               `json:"nonce"`
-	Timestamp  uint64               `json:"timestamp"`
-	ExtraData  []byte               `json:"extraData"`
-	ExtraData2 []byte               `json:"extraData2"`
-	GasLimit   uint64               `json:"gasLimit"   gencodec:"required"`
-	Difficulty *big.Int             `json:"difficulty" gencodec:"required"`
-	Mixhash    common.Hash          `json:"mixHash"`
-	Coinbase   common.Address       `json:"coinbase"`
-	Alloc      GenesisAlloc         `json:"alloc"      gencodec:"required"`
+	Config     *configs.ChainConfig `json:"config"     toml:"config"`
+	Nonce      uint64               `json:"nonce"      toml:"nonce"`
+	Timestamp  uint64               `json:"timestamp"  toml:"timestamp"`
+	ExtraData  []byte               `json:"extraData"  toml:"extraData"`
+	ExtraData2 []byte               `json:"extraData2" toml:"extraData2"`
+	GasLimit   uint64               `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
+	Difficulty *big.Int             `json:"difficulty" toml:"difficulty" gencodec:"required"`
+	Mixhash    common.Hash          `json:"mixHash"    toml:"mixHash"`
+	Coinbase   common.Address       `json:"coinbase"   toml:"coinbase"`
+	Alloc      GenesisAlloc         `json:"alloc"      toml:"alloc"      gencodec:"required"`
 
 	// These fields are used for consensus tests. Please don't use them
 	// in actual genesis blocks.
-	Number     uint64      `json:"number"`
-	GasUsed    uint64      `json:"gasUsed"`
-	ParentHash common.Hash `json:"parentHash"`
+	Number     uint64      `json:"number"     toml:"number"`
+	GasUsed    uint64      `json:"gasUsed"    toml:"gasUsed"`
+	ParentHash common.Hash `json:"parentHash" toml:"parentHash"`
 }
 
 // GenesisAlloc specifies the initial state that is part of the genesis block.
@@ -81,11 +81,11 @@ func (ga *GenesisAlloc) UnmarshalJSON(data []byte) error {
 
 // GenesisAccount is an account in the state of the genesis block.
 type GenesisAccount struct {
-	Code       []byte                      `json:"code,omitempty"`
-	Storage    map[common.Hash]common.Hash `json:"storage,omitempty"`
-	Balance    *big.Int                    `json:"balance" gencodec:"required"`
-	Nonce      uint64                      `json:"nonce,omitempty"`
-	PrivateKey []byte                      `json:"secretKey,omitempty"` // for tests
+	Code       []byte                      `json:"code,omitempty"      toml:"code,omitempty"`
+	Storage    map[common.Hash]common.Hash `json:"storage,omitempty"   toml:"storage,omitempty"`
+	Balance    *big.Int                    `json:"balance"             toml:"balance"             gencodec:"required"`
+	Nonce      uint64                      `json:"nonce,omitempty"     toml:"nonce,omitempty"`
+	PrivateKey []byte                      `json:"secretKey,omitempty" toml:"secretKey,omitempty"` // for tests
 }
 
 // field type overrides for gencodec
@@ -93,10 +93,12 @@ type genesisSpecMarshaling struct {
 	Nonce      math.HexOrDecimal64
 	Timestamp  math.HexOrDecimal64
 	ExtraData  hexutil.Bytes
+	ExtraData2 hexutil.Bytes
 	GasLimit   math.HexOrDecimal64
 	GasUsed    math.HexOrDecimal64
 	Number     math.HexOrDecimal64
 	Difficulty *math.HexOrDecimal256
+	Mixhash    storageJSON
 	Alloc      map[common.UnprefixedAddress]GenesisAccount
 }
 
