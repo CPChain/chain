@@ -8,7 +8,6 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
-
 	"golang.org/x/crypto/ssh/terminal"
 )
 

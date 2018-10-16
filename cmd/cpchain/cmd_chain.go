@@ -12,7 +12,6 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/naoina/toml"
 	"github.com/urfave/cli"
@@ -95,16 +94,18 @@ func initChain(ctx *cli.Context) error {
 	return nil
 }
 
-func cleanDB(ctx *cli.Context) error {
+func cleanDB(ctx *cli.Context) {
 	_, node := newConfigNode(ctx)
 
 	name := configs.DatabaseName
 	// Ensure the database exists in the first place
 	logger := log.New("database", name)
 
+	// create a path name under the instance dir
 	dbdir := node.ResolvePath(name)
 	if !common.FileExist(dbdir) {
 		logger.Info("Database doesn't exist, skipping", "path", dbdir)
+		return
 	}
 	// Confirm removal and execute
 	fmt.Println(dbdir)
@@ -126,5 +127,4 @@ func cleanDB(ctx *cli.Context) error {
 		os.RemoveAll(dbdir)
 		logger.Info("Database successfully deleted", "elapsed", common.PrettyDuration(time.Since(start)))
 	}
-	return nil
 }
