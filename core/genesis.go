@@ -174,9 +174,11 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 	// Check whether the genesis block is already written.
 	if genesis != nil {
 		hash := genesis.ToBlock(nil).Hash()
-		if hash != stored {
-			return genesis.Config, hash, &GenesisMismatchError{stored, hash}
-		}
+		// TODO: temporarily comment out below code {AC}
+		fmt.Printf("%v", hash)
+		//if hash != stored {
+		//	return genesis.Config, hash, &GenesisMismatchError{stored, hash}
+		//}
 	}
 	// Get the existing chain configuration.
 	newcfg := genesis.configOrDefault(stored)

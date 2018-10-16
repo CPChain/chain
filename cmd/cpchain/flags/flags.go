@@ -24,6 +24,7 @@ func init() {
 	Register(ConfigFileFlag)
 	Register(GeneralFlags...)
 	Register(AccountFlags...)
+	Register(ChainFlags...)
 	Register(RpcFlags...)
 	Register(MiscFlags...)
 }
@@ -56,7 +57,7 @@ var ConfigFileFlag = cli.StringFlag{
 
 var GeneralFlags = []cli.Flag{
 	cli.StringFlag{
-		Name:  "datadir",
+		Name:  DataDirFlagName,
 		Usage: "Data directory for the database and keystore",
 		Value: node.DefaultDataDir(),
 	},
@@ -87,13 +88,32 @@ var ChainFlags = []cli.Flag{
 		Usage: "Network identifier (integer, mainnet=0, testnet=1)",
 	},
 	cli.StringFlag{
-		Name:  "password",
-		Usage: "Password file to use for non-interactive password input",
-		Value: "",
-	},
-	cli.StringFlag{
 		Name:  "account",
 		Usage: "Public address for block mining rewards. Use the first account if none is provided.",
+	},
+	cli.BoolFlag{
+		Name:  NoCompactionFlagName,
+		Usage: "Disables db compaction after import",
+	},
+	cli.IntFlag{
+		Name:  CacheFlagName,
+		Usage: "Megabytes of memory allocated to internal caching",
+		Value: 1024,
+	},
+	cli.StringFlag{
+		Name:  GCModeFlagName,
+		Usage: `Blockchain garbage collection mode ("full", "archive")`,
+		Value: "full",
+	},
+	cli.IntFlag{
+		Name:  CacheDatabaseFlagName,
+		Usage: "Percentage of cache memory allowance to use for database io",
+		Value: 75,
+	},
+	cli.IntFlag{
+		Name:  CacheGCFlagName,
+		Usage: "Percentage of cache memory allowance to use for trie pruning",
+		Value: 25,
 	},
 }
 
