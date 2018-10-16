@@ -21,7 +21,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
@@ -41,17 +41,17 @@ func ExampleGenerateChain() {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	gspec := &Genesis{
-		Config: &configs.ChainConfig{HomesteadBlock: new(big.Int)},
-		Alloc:  GenesisAlloc{addr1: {Balance: big.NewInt(1000000)}},
-	}
+	gspec := DefaultCpchainGenesisBlock()
+	gspec.Alloc = GenesisAlloc{addr1: {Balance: big.NewInt(1000000)}}
+	// Config: &configs.ChainConfig{HomesteadBlock: new(big.Int)},
 	genesis := gspec.MustCommit(db)
 
+	engine := dpor.NewFaker(configs.AllCpchainProtocolChanges.Dpor, db)
 	// This call generates a chain of 5 blocks. The function runs for
 	// each block and adds different features to gen based on the
 	// block index.
 	signer := types.HomesteadSigner{}
-	chain, _ := GenerateChain(gspec.Config, genesis, ethash.NewFaker(), db, remoteDB, 5, func(i int, gen *BlockGen) {
+	chain, _ := GenerateChain(gspec.Config, genesis, engine, db, remoteDB, 5, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
 			// In block 1, addr1 sends addr2 some ether.
@@ -67,12 +67,11 @@ func ExampleGenerateChain() {
 		case 2:
 			// Block 3 is empty but was mined by addr3.
 			gen.SetCoinbase(addr3)
-			gen.SetExtra([]byte("yeehaw"))
 		}
 	})
 
 	// Import the chain. This runs all block validation rules.
-	blockchain, _ := NewBlockChain(db, nil, gspec.Config, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
+	blockchain, _ := NewBlockChain(db, nil, gspec.Config, engine, vm.Config{}, remoteDB, nil)
 	defer blockchain.Stop()
 
 	if i, err := blockchain.InsertChain(chain); err != nil {
@@ -89,5 +88,5 @@ func ExampleGenerateChain() {
 	// last block: #5
 	// balance of addr1: 989000
 	// balance of addr2: 10000
-	// balance of addr3: 15000000000000001000
+	// balance of addr3: 1000
 }

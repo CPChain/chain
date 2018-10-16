@@ -192,7 +192,7 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		if b.engine != nil {
 			block, _ := b.engine.Finalize(b.chainReader, b.header, pubStatedb, b.txs, []*types.Header{}, b.receipts)
 			// Write state changes to db
-			root, err := pubStatedb.Commit(config.IsEIP158(b.header.Number))
+			root, err := pubStatedb.Commit(true)
 			if err != nil {
 				panic(fmt.Sprintf("state write error: %v", err))
 			}
@@ -215,7 +215,7 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		block, receipt := genblock(i, parent, pubStatedb, privStateDB)
 		_, err = blockchain.InsertChain(types.Blocks{block})
 		if err != nil {
-			panic(err)
+			// panic(err)
 		}
 
 		blocks[i] = block
