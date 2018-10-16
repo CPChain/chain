@@ -119,7 +119,11 @@ func createAccount(ctx *cli.Context) error {
 	if err != nil {
 		log.Fatalf("Failed to read configuration: %v", err)
 	}
-	password := readPassword("Please input your password:\n", true)
+	password, err := readPassword("Please input your password:\n", true)
+	if err != nil {
+		fmt.Println("Failed to readPassword")
+		return nil
+	}
 	address, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
 	if err != nil {
 		log.Fatalf("Failed to create account: %v", err)
@@ -139,8 +143,11 @@ func accountUpdate(ctx *cli.Context) error {
 
 	for _, addr := range ctx.Args() {
 		account, oldPassword := unlockAccount(ctx, ks, addr)
-		fmt.Println("***************88ever runnnnnnnnnnnnnnnnnnnn.")
-		newPassword := readPassword("\nPlease give a new password:", true)
+		newPassword, err := readPassword("Please give a new password:", true)
+		if err != nil {
+			log.Fatalf("Failed to readPassword: %v", err)
+		}
+
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
 			log.Fatalf("Could not update the account: %v", err)
 		}
@@ -191,10 +198,15 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string) (acc
 	}
 	for trials := 0; trials < 3; trials++ {
 		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d\nPassword:", address, trials+1, 3)
-		password := readPassword(prompt, false)
+		fmt.Println()
+		password, err := readPassword(prompt, false)
+		if err != nil {
+			log.Fatalf("Failed to readPassword: %v", err)
+		}
+
 		err = ks.Unlock(account, password)
 		if err == nil {
-			log.Info("Unlocked account", "address", account.Address.Hex())
+			// log.Info("Unlocked account", "address", account.Address.Hex())
 			return account, password
 		}
 		if err, ok := err.(*keystore.AmbiguousAddrError); ok {
@@ -222,7 +234,10 @@ func accountImport(ctx *cli.Context) error {
 	}
 
 	_, n := newConfigNode(ctx)
-	passphrase := readPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:", true)
+	passphrase, err := readPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:", true)
+	if err != nil {
+		log.Fatalf("Failed to readPassword: %v", err)
+	}
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	acct, err := ks.ImportECDSA(key, passphrase)
 	if err != nil {

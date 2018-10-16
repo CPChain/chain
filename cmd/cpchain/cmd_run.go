@@ -19,6 +19,7 @@ func init() {
 	runFlags = append(runFlags, flags.GeneralFlags...)
 	runFlags = append(runFlags, flags.NodeFlags...)
 	runFlags = append(runFlags, flags.MinerFlags...)
+	runFlags = append(runFlags, flags.ChainFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,
@@ -83,7 +84,6 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		}
 		// // Set the gas price to the limits from the CLI and start mining
 		// ethereum.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
-
 
 		// TODO dpor contract caller
 		if err := ethereum.StartMining(true, nil); err != nil {

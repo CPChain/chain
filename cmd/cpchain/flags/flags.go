@@ -122,6 +122,10 @@ var ChainFlags = []cli.Flag{
 		Usage: "Percentage of cache memory allowance to use for trie pruning",
 		Value: 25,
 	},
+	cli.StringFlag{
+		Name:  "unlock",
+		Usage: "Comma separated list of accounts to unlock",
+	},
 }
 
 var MinerFlags = []cli.Flag{
