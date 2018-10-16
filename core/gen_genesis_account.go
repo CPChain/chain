@@ -18,7 +18,7 @@ var _ = (*genesisAccountMarshaling)(nil)
 func (g GenesisAccount) MarshalJSON() ([]byte, error) {
 	type GenesisAccount struct {
 		Code       hexutil.Bytes               `json:"code,omitempty" toml:"code,omitempty"`
-		Storage    map[storageJSON]storageJSON `json:"storage,omitempty" toml:"storage,omitempty"`
+		Storage    map[marshalHash]marshalHash `json:"storage,omitempty" toml:"storage,omitempty"`
 		Balance    *math.HexOrDecimal256       `json:"balance" toml:"balance" gencodec:"required"`
 		Nonce      math.HexOrDecimal64         `json:"nonce,omitempty" toml:"nonce,omitempty"`
 		PrivateKey hexutil.Bytes               `json:"secretKey,omitempty" toml:"secretKey,omitempty"`
@@ -26,9 +26,9 @@ func (g GenesisAccount) MarshalJSON() ([]byte, error) {
 	var enc GenesisAccount
 	enc.Code = g.Code
 	if g.Storage != nil {
-		enc.Storage = make(map[storageJSON]storageJSON, len(g.Storage))
+		enc.Storage = make(map[marshalHash]marshalHash, len(g.Storage))
 		for k, v := range g.Storage {
-			enc.Storage[storageJSON(k)] = storageJSON(v)
+			enc.Storage[marshalHash(k)] = marshalHash(v)
 		}
 	}
 	enc.Balance = (*math.HexOrDecimal256)(g.Balance)
@@ -41,7 +41,7 @@ func (g GenesisAccount) MarshalJSON() ([]byte, error) {
 func (g *GenesisAccount) UnmarshalJSON(input []byte) error {
 	type GenesisAccount struct {
 		Code       *hexutil.Bytes              `json:"code,omitempty" toml:"code,omitempty"`
-		Storage    map[storageJSON]storageJSON `json:"storage,omitempty" toml:"storage,omitempty"`
+		Storage    map[marshalHash]marshalHash `json:"storage,omitempty" toml:"storage,omitempty"`
 		Balance    *math.HexOrDecimal256       `json:"balance" toml:"balance" gencodec:"required"`
 		Nonce      *math.HexOrDecimal64        `json:"nonce,omitempty" toml:"nonce,omitempty"`
 		PrivateKey *hexutil.Bytes              `json:"secretKey,omitempty" toml:"secretKey,omitempty"`
@@ -76,7 +76,7 @@ func (g *GenesisAccount) UnmarshalJSON(input []byte) error {
 func (g GenesisAccount) MarshalTOML() (interface{}, error) {
 	type GenesisAccount struct {
 		Code       hexutil.Bytes               `json:"code,omitempty" toml:"code,omitempty"`
-		Storage    map[storageJSON]storageJSON `json:"storage,omitempty" toml:"storage,omitempty"`
+		Storage    map[marshalHash]marshalHash `json:"storage,omitempty" toml:"storage,omitempty"`
 		Balance    *math.HexOrDecimal256       `json:"balance" toml:"balance" gencodec:"required"`
 		Nonce      math.HexOrDecimal64         `json:"nonce,omitempty" toml:"nonce,omitempty"`
 		PrivateKey hexutil.Bytes               `json:"secretKey,omitempty" toml:"secretKey,omitempty"`
@@ -84,9 +84,9 @@ func (g GenesisAccount) MarshalTOML() (interface{}, error) {
 	var enc GenesisAccount
 	enc.Code = g.Code
 	if g.Storage != nil {
-		enc.Storage = make(map[storageJSON]storageJSON, len(g.Storage))
+		enc.Storage = make(map[marshalHash]marshalHash, len(g.Storage))
 		for k, v := range g.Storage {
-			enc.Storage[storageJSON(k)] = storageJSON(v)
+			enc.Storage[marshalHash(k)] = marshalHash(v)
 		}
 	}
 	enc.Balance = (*math.HexOrDecimal256)(g.Balance)
@@ -99,7 +99,7 @@ func (g GenesisAccount) MarshalTOML() (interface{}, error) {
 func (g *GenesisAccount) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	type GenesisAccount struct {
 		Code       *hexutil.Bytes              `json:"code,omitempty" toml:"code,omitempty"`
-		Storage    map[storageJSON]storageJSON `json:"storage,omitempty" toml:"storage,omitempty"`
+		Storage    map[marshalHash]marshalHash `json:"storage,omitempty" toml:"storage,omitempty"`
 		Balance    *math.HexOrDecimal256       `json:"balance" toml:"balance" gencodec:"required"`
 		Nonce      *math.HexOrDecimal64        `json:"nonce,omitempty" toml:"nonce,omitempty"`
 		PrivateKey *hexutil.Bytes              `json:"secretKey,omitempty" toml:"secretKey,omitempty"`

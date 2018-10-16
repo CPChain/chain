@@ -25,7 +25,7 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 		ExtraData2 hexutil.Bytes                               `json:"extraData2" toml:"extraData2"`
 		GasLimit   math.HexOrDecimal64                         `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
-		Mixhash    storageJSON                                 `json:"mixHash"    toml:"mixHash"`
+		Mixhash    marshalHash                                 `json:"mixHash"    toml:"mixHash"`
 		Coinbase   common.Address                              `json:"coinbase"   toml:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      toml:"alloc"      gencodec:"required"`
 		Number     math.HexOrDecimal64                         `json:"number"     toml:"number"`
@@ -40,7 +40,7 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 	enc.ExtraData2 = g.ExtraData2
 	enc.GasLimit = math.HexOrDecimal64(g.GasLimit)
 	enc.Difficulty = (*math.HexOrDecimal256)(g.Difficulty)
-	enc.Mixhash = storageJSON(g.Mixhash)
+	enc.Mixhash = marshalHash(g.Mixhash)
 	enc.Coinbase = g.Coinbase
 	if g.Alloc != nil {
 		enc.Alloc = make(map[common.UnprefixedAddress]GenesisAccount, len(g.Alloc))
@@ -64,7 +64,7 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 		ExtraData2 *hexutil.Bytes                              `json:"extraData2" toml:"extraData2"`
 		GasLimit   *math.HexOrDecimal64                        `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
-		Mixhash    *storageJSON                                `json:"mixHash"    toml:"mixHash"`
+		Mixhash    *marshalHash                                `json:"mixHash"    toml:"mixHash"`
 		Coinbase   *common.Address                             `json:"coinbase"   toml:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      toml:"alloc"      gencodec:"required"`
 		Number     *math.HexOrDecimal64                        `json:"number"     toml:"number"`
@@ -133,7 +133,7 @@ func (g Genesis) MarshalTOML() (interface{}, error) {
 		ExtraData2 hexutil.Bytes                               `json:"extraData2" toml:"extraData2"`
 		GasLimit   math.HexOrDecimal64                         `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
-		Mixhash    storageJSON                                 `json:"mixHash"    toml:"mixHash"`
+		Mixhash    marshalHash                                 `json:"mixHash"    toml:"mixHash"`
 		Coinbase   common.Address                              `json:"coinbase"   toml:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      toml:"alloc"      gencodec:"required"`
 		Number     math.HexOrDecimal64                         `json:"number"     toml:"number"`
@@ -148,7 +148,7 @@ func (g Genesis) MarshalTOML() (interface{}, error) {
 	enc.ExtraData2 = g.ExtraData2
 	enc.GasLimit = math.HexOrDecimal64(g.GasLimit)
 	enc.Difficulty = (*math.HexOrDecimal256)(g.Difficulty)
-	enc.Mixhash = storageJSON(g.Mixhash)
+	enc.Mixhash = marshalHash(g.Mixhash)
 	enc.Coinbase = g.Coinbase
 	if g.Alloc != nil {
 		enc.Alloc = make(map[common.UnprefixedAddress]GenesisAccount, len(g.Alloc))
@@ -172,7 +172,7 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		ExtraData2 *hexutil.Bytes                              `json:"extraData2" toml:"extraData2"`
 		GasLimit   *math.HexOrDecimal64                        `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
-		Mixhash    *storageJSON                                `json:"mixHash"    toml:"mixHash"`
+		Mixhash    *marshalHash                                `json:"mixHash"    toml:"mixHash"`
 		Coinbase   *common.Address                             `json:"coinbase"   toml:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      toml:"alloc"      gencodec:"required"`
 		Number     *math.HexOrDecimal64                        `json:"number"     toml:"number"`

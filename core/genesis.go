@@ -98,7 +98,7 @@ type genesisSpecMarshaling struct {
 	GasUsed    math.HexOrDecimal64
 	Number     math.HexOrDecimal64
 	Difficulty *math.HexOrDecimal256
-	Mixhash    storageJSON
+	Mixhash    marshalHash
 	Alloc      map[common.UnprefixedAddress]GenesisAccount
 }
 
@@ -106,15 +106,15 @@ type genesisAccountMarshaling struct {
 	Code       hexutil.Bytes
 	Balance    *math.HexOrDecimal256
 	Nonce      math.HexOrDecimal64
-	Storage    map[storageJSON]storageJSON
+	Storage    map[marshalHash]marshalHash
 	PrivateKey hexutil.Bytes
 }
 
-// storageJSON represents a 256 bit byte array, but allows less than 256 bits when
+// marshalHash represents a 256 bit byte array, but allows less than 256 bits when
 // unmarshaling from hex.
-type storageJSON common.Hash
+type marshalHash common.Hash
 
-func (h *storageJSON) UnmarshalText(text []byte) error {
+func (h *marshalHash) UnmarshalText(text []byte) error {
 	text = bytes.TrimPrefix(text, []byte("0x"))
 	if len(text) > 64 {
 		return fmt.Errorf("too many hex characters in storage key/value %q", text)
@@ -127,7 +127,7 @@ func (h *storageJSON) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func (h storageJSON) MarshalText() ([]byte, error) {
+func (h marshalHash) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(h[:]).MarshalText()
 }
 
