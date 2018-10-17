@@ -227,9 +227,9 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 	}
 	key := crypto.ToECDSAUnsafe(keyBytes)
 
-	// TODO decode *rsakey.RsaKey from json file
-	fmt.Println("rsaKeyBytes=============:", rsaKeyBytes)
-	// rsaKey, err := rsakey.NewRsaPrivateKey(rsaKeyBytes)
+	// decode *rsakey.RsaKey from json file
+	rsaKey, err := rsakey.NewRsaPrivateKey(rsaKeyBytes)
+	_ = rsaKey
 	if err != nil {
 		return nil, err
 	}
@@ -271,6 +271,8 @@ func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byt
 		return nil, nil, nil, err
 	}
 
+	fmt.Println("================ decrypt keyProtected.Crypto.RsaCipherText:", keyProtected.Crypto.RsaCipherText)
+	fmt.Println("end")
 	rsaCipherText, err := hex.DecodeString(keyProtected.Crypto.RsaCipherText)
 	if err != nil {
 		return nil, nil, nil, err
@@ -284,7 +286,7 @@ func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byt
 	macSource := mergeBytes(cipherText, rsaCipherText)
 
 	calculatedMAC := crypto.Keccak256(derivedKey[16:32], macSource)
-	fmt.Println("********", hex.EncodeToString(calculatedMAC))
+	// fmt.Println("********", hex.EncodeToString(calculatedMAC))
 	if !bytes.Equal(calculatedMAC, mac) {
 		return nil, nil, nil, ErrDecrypt
 	}
@@ -294,13 +296,13 @@ func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byt
 		return nil, nil, nil, err
 	}
 	// rsaPlainText := rsaCipherText
-	rsaPlainText, err := aesCTRXOR(derivedKey[:16], rsaCipherText, iv)
-	if err != nil {
-		return nil, nil, nil, err
-	}
+	// rsaPlainText, err := aesCTRXOR(derivedKey[:16], rsaCipherText, iv)
+	// if err != nil {
+	// 	return nil, nil, nil, err
+	// }
 	// fmt.Println("rsaPlainText====================", hex.EncodeToString(rsaPlainText))
 
-	return plainText, keyId, rsaPlainText, err
+	return plainText, keyId, rsaCipherText, err
 }
 
 func decryptKeyV1(keyProtected *encryptedKeyJSONV1, auth string) (keyBytes []byte, keyId []byte, err error) {
