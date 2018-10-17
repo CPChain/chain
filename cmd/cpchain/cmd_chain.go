@@ -32,8 +32,7 @@ var chainCommand = cli.Command{
 	Subcommands: []cli.Command{
 		{
 			Name:     "init",
-			Usage:    "Bootstrap and initialize a new blockchain with genesis block",
-			Category: "BLOCKCHAIN COMMANDS",
+			Usage:    "Bootstrap and initialize a new genesis block",
 			Flags: []cli.Flag{
 				flags.GetByName("datadir"),
 			},
@@ -45,7 +44,6 @@ If no genesis file is found, the initialization is aborted.`, defaultGenesisPath
 		{
 			Name:     "cleandb",
 			Usage:    "Clean blockchain and state databases",
-			Category: "BLOCKCHAIN COMMANDS",
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 			},
@@ -66,7 +64,6 @@ Remove blockchain and state databases`,
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
 			},
-			Category: "BLOCKCHAIN COMMANDS",
 			Description: `
 The import command imports blocks from an RLP-encoded form. The form can be one file
 with several RLP-encoded blocks, or several files can be used.
@@ -83,7 +80,6 @@ processing will proceed even if an individual RLP-file import failure occurs.`,
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.CacheFlagName),
 			},
-			Category: "BLOCKCHAIN COMMANDS",
 			Description: `Requires a first argument of the file to write to.
 Optional second and third arguments control the first and
 last block to write. In this mode, the file will be appended
