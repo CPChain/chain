@@ -73,3 +73,11 @@ func NewRsaPublicKey(bs []byte) (*RsaPublicKey, error) {
 	}
 	return &RsaPublicKey{pubKey, bs}, err
 }
+
+func NewRsaPrivateKey(bs []byte) (*rsa.PrivateKey, error) {
+	priKey, err := bytes2PrivateKey(bs)
+	if err != nil {
+		return nil, err
+	}
+	return priKey, nil
+}
