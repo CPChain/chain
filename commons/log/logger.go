@@ -39,7 +39,7 @@ func New(ctx ...interface{}) *Logger {
 	}
 
 	l.SetFormatter(&TextFormatter{
-		ForceColors:      true,
+		FullTimestamp:    true,
 		QuoteEmptyFields: true,
 		TimestampFormat:  termTimeFormat,
 	})
