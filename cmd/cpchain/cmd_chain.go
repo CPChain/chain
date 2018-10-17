@@ -108,19 +108,20 @@ if already existing.`,
 func initChain(ctx *cli.Context) error {
 	// Make sure we have a valid genesis TOML.
 	genesisPath := ctx.Args().First()
+	var genesis *core.Genesis
 	if len(genesisPath) == 0 {
-		log.Fatal("Must supply path to genesis TOML file")
+		genesis = core.DefaultCpchainGenesisBlock()
+	} else {
+		file, err := os.Open(genesisPath)
+		if err != nil {
+			log.Fatalf("Failed to read genesis file: %v", err)
+		}
+		defer file.Close()
 
-	}
-	file, err := os.Open(genesisPath)
-	if err != nil {
-		log.Fatalf("Failed to read genesis file: %v", err)
-	}
-	defer file.Close()
-
-	genesis := new(core.Genesis)
-	if err := toml.NewDecoder(file).Decode(genesis); err != nil {
-		log.Fatalf("invalid genesis file: %v", err)
+		genesis = new(core.Genesis)
+		if err := toml.NewDecoder(file).Decode(genesis); err != nil {
+			log.Fatalf("invalid genesis file: %v", err)
+		}
 	}
 	// Intialize database.
 	_, node := newConfigNode(ctx)
