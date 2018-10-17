@@ -724,6 +724,14 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			}
 		}
 
+		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
+		if err == consensus.ErrNewSignedHeader {
+			err := err.(*consensus.ErrNewSignedHeaderType)
+			header := err.SignedHeader
+			go pm.BroadcastSignedHeader(header)
+
+		}
+
 	case msg.Code == TxMsg:
 		// Transactions arrived, make sure we have a valid and fresh chain to handle them
 		if atomic.LoadUint32(&pm.acceptTxs) == 0 {
@@ -753,6 +761,11 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// if received a new generated block, perform as to verify a normal block
 		// do signing in dpor, return consensus.ErrNewSignedHeader
 		// then broadcast to remote committee.
+		var request newBlockData
+		if err := msg.Decode(&request); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		go pm.blockchain.InsertChain(types.Blocks{request.Block})
 
 	case msg.Code == NewBlockGeneratedHashesMsg:
 		// if received a new generated header of block,
@@ -775,7 +788,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		case nil:
 			log.Debug("verify succeed, accepting...")
 			hash := header.Hash()
-			number := header.Number.Uint64()
+			// number := header.Number.Uint64()
 
 			// // accept the header and the block, if does not have the block, ask for the block.
 			// if !pm.blockchain.HasBlock(header.Hash(), header.Number.Uint64()) {
@@ -803,11 +816,12 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			if block, ok := pm.blockchain.WaitingSignatureBlocks().Get(hash); ok {
 				b := block.(*types.Block)
 				go pm.blockchain.InsertChain(types.Blocks{b.WithSeal(header)})
+				go pm.broadcastGeneratedBlock(b)
 			}
 
-			if pm.blockchain.CurrentHeader().Number.Uint64() <= number {
-				go p.AsyncSendNewSignedHeader(header)
-			}
+			// if pm.blockchain.CurrentHeader().Number.Uint64() <= number {
+			// go p.AsyncSendNewSignedHeader(header)
+			// }
 
 		case consensus.ErrNewSignedHeader:
 			log.Debug("verify failed, but signed it, broadcast...")
@@ -832,9 +846,8 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 		case err = <-pm.blockchain.ErrChan:
 			log.Debug("received err from blockchain.ErrChan", "err", err)
 			if err == nil {
-				// block := pm.blockchain.CurrentBlock()
-				// pm.BroadcastBlock(block, true)
-				// go pm.BroadcastSignedHeader(block.Header())
+				block := pm.blockchain.CurrentBlock()
+				go pm.broadcastGeneratedBlock(block)
 			}
 			if err, ok := err.(*consensus.ErrNewSignedHeaderType); ok {
 				header := err.SignedHeader
@@ -843,6 +856,13 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 		case <-pm.blockchain.Quit:
 			return
 		}
+	}
+}
+
+func (pm *ProtocolManager) broadcastGeneratedBlock(block *types.Block) {
+	committee := pm.peers.committee
+	for _, peer := range committee {
+		peer.AsyncSendNewPendingBlock(block)
 	}
 }
 
