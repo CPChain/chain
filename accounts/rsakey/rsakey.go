@@ -4,6 +4,8 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -74,10 +76,19 @@ func NewRsaPublicKey(bs []byte) (*RsaPublicKey, error) {
 	return &RsaPublicKey{pubKey, bs}, err
 }
 
-func NewRsaPrivateKey(bs []byte) (*rsa.PrivateKey, error) {
-	priKey, err := bytes2PrivateKey(bs)
+func NewRsaPrivateKey(priKeyBytes []byte) (*RsaKey, error) {
+	if len(priKeyBytes) == 0 {
+		return nil, nil
+	}
+	fmt.Println("========= NewRsaPrivateKey ========:", hex.EncodeToString(priKeyBytes))
+	priKey, err := bytes2PrivateKey(priKeyBytes)
 	if err != nil {
 		return nil, err
 	}
-	return priKey, nil
+	priBytes := x509.MarshalPKCS1PrivateKey(priKey)
+	pubBytes := x509.MarshalPKCS1PublicKey(&priKey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+	return &RsaKey{priKey, priBytes, &RsaPublicKey{&priKey.PublicKey, pubBytes}}, nil
 }

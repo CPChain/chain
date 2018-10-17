@@ -69,7 +69,8 @@ func loadRsaKey(pubPath, priPath string) (*rsa.PublicKey, *rsa.PrivateKey, []byt
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	return pubInterface, privateKey, publicBlock.Bytes, priBlock.Bytes, nil
+	pubBytes := x509.MarshalPKCS1PublicKey(pubInterface)
+	return pubInterface, privateKey, pubBytes, priBlock.Bytes, nil
 }
 
 func bytes2PrivateKey(bs []byte) (*rsa.PrivateKey, error) {

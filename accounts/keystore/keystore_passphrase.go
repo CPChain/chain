@@ -135,7 +135,7 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 		return nil, err
 	}
 
-	// TODO create rsakey
+	// TODO create or load? rsakey
 	rsaKey, err := rsakey.NewRsaKey("/tmp/rsa")
 
 	// get rsaClipherText
@@ -228,17 +228,17 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 	key := crypto.ToECDSAUnsafe(keyBytes)
 
 	// TODO decode *rsakey.RsaKey from json file
-	_ = rsaKeyBytes
-	// rsaPriKey, err := rsakey.NewRsaPrivateKey(rsaKeyBytes)
-	// _ = rsaPriKey
-	// if err != nil {
-	// 	return nil, err
-	// }
+	fmt.Println("rsaKeyBytes=============:", rsaKeyBytes)
+	// rsaKey, err := rsakey.NewRsaPrivateKey(rsaKeyBytes)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Key{
 		Id:         uuid.UUID(keyId),
 		Address:    crypto.PubkeyToAddress(key.PublicKey),
 		PrivateKey: key,
+		// RsaKey:     rsaKey,
 	}, nil
 }
 

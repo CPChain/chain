@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pborman/uuid"
@@ -46,6 +47,8 @@ type Key struct {
 	// we only store privkey as pubkey/address can be derived from it
 	// privkey in this struct is always in plaintext
 	PrivateKey *ecdsa.PrivateKey
+
+	RsaKey *rsakey.RsaKey
 }
 
 type keyStore interface {
@@ -90,6 +93,7 @@ type cryptoJSON struct {
 
 type cipherparamsJSON struct {
 	IV string `json:"iv"`
+	// RSAIV string `json:"rsaiv"`
 }
 
 func (k *Key) MarshalJSON() (j []byte, err error) {
