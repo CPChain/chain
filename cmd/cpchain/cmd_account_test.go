@@ -17,6 +17,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cespare/cp"
 	"path/filepath"
 	"runtime"
@@ -68,8 +69,11 @@ func TestAccountNew(t *testing.T) {
 	geth := runGeth(t, "account", "new", "--lightkdf", "--datadir", datadir)
 	defer geth.ExpectExit()
 	geth.Expect(`
-Please input your password:{{.InputLine "foobar"}}
-Please repeat:{{.InputLine "foobar"}}
+If your password contains whitespaces, please be careful enough to avoid later confusion.
+Please give a password.
+!! Unsupported terminal, password will be echoed.
+Password: {{.InputLine "foobar"}}
+Repeat password: {{.InputLine "foobar"}}
 `)
 	geth.ExpectRegexp(`Address: \{[0-9a-f]{40}\}\n`)
 }
@@ -79,23 +83,30 @@ func TestAccountNewBadRepeat(t *testing.T) {
 	geth := runGeth(t, "account", "new", "--lightkdf", "--datadir", datadir)
 	defer geth.ExpectExit()
 	geth.Expect(`
-Please input your password:{{.InputLine "something"}}
-Please repeat:{{.InputLine "something_else"}}
-Password doesn't match
-Failed to readPassword
+If your password contains whitespaces, please be careful enough to avoid later confusion.
+Please give a password.
+!! Unsupported terminal, password will be echoed.
+Password: {{.InputLine "something"}}
+Repeat password: {{.InputLine "something else"}}
+Fatal: Password do not match
 `)
 }
 
 func TestAccountUpdate(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
+	fmt.Println(datadir)
 	geth := runGeth(t, "account", "update",
 		"--datadir", datadir, "--lightkdf",
 		"f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
 	geth.Expect(`
-
 Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 1/3
-Password:{{.InputLine "foobar"}}Please give a new password:{{.InputLine "foobar"}}Please repeat:{{.InputLine "foobar"}}
+!! Unsupported terminal, password will be echoed.
+Password: {{.InputLine "foobar"}}
+If your password contains whitespaces, please be careful enough to avoid later confusion.
+Please give a new password.
+Password: {{.InputLine "foobar2"}}
+Repeat password: {{.InputLine "foobar2"}}
 `)
 }
 func TestUnlockFlagWrongPassword(t *testing.T) {
@@ -110,18 +121,18 @@ func TestUnlockFlagWrongPassword(t *testing.T) {
 	geth.Expect(`
 Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 1/3
 !! Unsupported terminal, password will be echoed.
-Passphrase: {{.InputLine "wrong1"}}
+Password: {{.InputLine "wrong1"}}
 Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 2/3
-Passphrase: {{.InputLine "wrong2"}}
+Password: {{.InputLine "wrong2"}}
 Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 3/3
-Passphrase: {{.InputLine "wrong3"}}
+Password: {{.InputLine "wrong3"}}
 Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could not decrypt key with given passphrase)
 `)
 }
 
 func TestUnlockFlagWrongPassword11(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t,
+	geth := runGeth(t, "run",
 		"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
@@ -150,7 +161,7 @@ func TestUnlockFlagWrongPassword11(t *testing.T) {
 
 func TestUnlockFlagPasswordFileWrongPassword(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t,
+	geth := runGeth(t, "run",
 		"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
 		"--password", "testdata/wrong-passwords.txt", "--unlock", "0,2")
 	defer geth.ExpectExit()
@@ -161,7 +172,7 @@ Fatal: Failed to unlock account 0 (could not decrypt key with given passphrase)
 
 func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
 	store := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
-	geth := runGeth(t,
+	geth := runGeth(t, "run",
 		"--keystore", store, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
@@ -174,7 +185,7 @@ func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
 	geth.Expect(`
 Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 1/3
 !! Unsupported terminal, password will be echoed.
-Passphrase: {{.InputLine "wrong"}}
+Password: {{.InputLine "wrong"}}
 Multiple key files exist for address f466859ead1932d743d622cb74fc058882e8648a:
    keystore://{{keypath "1"}}
    keystore://{{keypath "2"}}

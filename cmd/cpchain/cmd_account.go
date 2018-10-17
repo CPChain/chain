@@ -42,8 +42,8 @@ Keys are stored under <datadir>/keystore.`,
 					flags.GetByName("lightkdf"),
 				},
 				Description: `Creates a new account and prints the address.
-The account is saved in encrypted format, you are prompted for a passphrase.
-You must remember this passphrase to unlock your account in the future.`,
+The account is saved in encrypted format, you are prompted for a password.
+You must remember this password to unlock your account in the future.`,
 			},
 			{
 				Name:      "update",
@@ -59,12 +59,12 @@ You must remember this passphrase to unlock your account in the future.`,
 Update an existing account.
 
 The account is saved in the newest version in encrypted format, you are prompted
-for a passphrase to unlock the account and another to save the updated file.
+for a password to unlock the account and another to save the updated file.
 
 This same command can therefore be used to migrate an account of a deprecated
 format to the newest format or change the password for an account.
 
-For non-interactive use the passphrase can be specified with the --password flag:
+For non-interactive use the password can be specified with the --password flag:
 
     cpchain account update [options] <address>
 
@@ -88,11 +88,11 @@ Prints the address.
 
 The keyfile is assumed to contain an unencrypted private key in hexadecimal format.
 
-The account is saved in encrypted format, you are prompted for a passphrase.
+The account is saved in encrypted format, you are prompted for a password.
 
-You must remember this passphrase to unlock your account in the future.
+You must remember this password to unlock your account in the future.
 
-For non-interactive use the passphrase can be specified with the --password flag:
+For non-interactive use the password can be specified with the --password flag:
 
     cpchain account import [options] <keyfile>`,
 			},
@@ -117,16 +117,12 @@ func createAccount(ctx *cli.Context) error {
 	cfg, _ := newConfigNode(ctx)
 	scryptN, scryptP, keydir, err := cfg.Node.AccountConfig()
 	if err != nil {
-		log.Fatalf("Failed to read configuration: %v", err)
+		Fatalf("Failed to read configuration: %v", err)
 	}
-	password, err := readPassword("Please input your password:\n", true)
-	if err != nil {
-		fmt.Println("Failed to readPassword")
-		return nil
-	}
+	password, _ := readPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a password.", true)
 	address, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
 	if err != nil {
-		log.Fatalf("Failed to create account: %v", err)
+		Fatalf("Failed to create account: %v", err)
 	}
 	fmt.Printf("Address: {%x}\n", address)
 	return nil
@@ -143,13 +139,9 @@ func accountUpdate(ctx *cli.Context) error {
 
 	for _, addr := range ctx.Args() {
 		account, oldPassword := unlockAccount(ctx, ks, addr)
-		newPassword, err := readPassword("Please give a new password:", true)
-		if err != nil {
-			log.Fatalf("Failed to readPassword: %v", err)
-		}
-
+		newPassword, _ := readPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a new password.", true)
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
-			log.Fatalf("Could not update the account: %v", err)
+			Fatalf("Could not update the account: %v", err)
 		}
 	}
 	return nil
@@ -169,7 +161,7 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 	for _, a := range err.Matches {
 		fmt.Println("  ", a.URL)
 	}
-	fmt.Println("Testing your passphrase against all of them...")
+	fmt.Println("Testing your password against all of them...")
 	var match *accounts.Account
 	for _, a := range err.Matches {
 		if err := ks.Unlock(a, auth); err == nil {
@@ -180,7 +172,7 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 	if match == nil {
 		log.Fatalf("None of the listed files could be unlocked.")
 	}
-	fmt.Printf("Your passphrase unlocked %s\n", match.URL)
+	fmt.Printf("Your password unlocked %s\n", match.URL)
 	fmt.Println("In order to avoid this warning, you need to remove the following duplicate key files:")
 	for _, a := range err.Matches {
 		if a != *match {
@@ -194,19 +186,14 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string) (accounts.Account, string) {
 	account, err := makeAddress(ks, address)
 	if err != nil {
-		log.Fatalf("Could not list accounts: %v", err)
+		Fatalf("Could not list accounts: %v", err)
 	}
 	for trials := 0; trials < 3; trials++ {
-		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d\nPassword:", address, trials+1, 3)
-		fmt.Println()
-		password, err := readPassword(prompt, false)
-		if err != nil {
-			log.Fatalf("Failed to readPassword: %v", err)
-		}
-
+		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d", address, trials+1, 3)
+		password, _ := readPassword(prompt, false)
 		err = ks.Unlock(account, password)
 		if err == nil {
-			// log.Info("Unlocked account", "address", account.Address.Hex())
+			log.Info("Unlocked account", "address", account.Address.Hex())
 			return account, password
 		}
 		if err, ok := err.(*keystore.AmbiguousAddrError); ok {
@@ -219,7 +206,8 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string) (acc
 		}
 	}
 	// All trials expended to unlock account, bail out
-	log.Fatalf("Failed to unlock account %s (%v)", address, err)
+	Fatalf("Failed to unlock account %s (%v)", address, err)
+
 	return accounts.Account{}, ""
 }
 
@@ -234,12 +222,12 @@ func accountImport(ctx *cli.Context) error {
 	}
 
 	_, n := newConfigNode(ctx)
-	passphrase, err := readPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:", true)
+	password, err := readPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:", true)
 	if err != nil {
 		log.Fatalf("Failed to readPassword: %v", err)
 	}
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	acct, err := ks.ImportECDSA(key, passphrase)
+	acct, err := ks.ImportECDSA(key, password)
 	if err != nil {
 		log.Fatalf("Could not create the account: %v", err)
 	}
