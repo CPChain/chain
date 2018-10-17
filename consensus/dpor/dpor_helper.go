@@ -333,18 +333,18 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	snap, err = dh.snapshot(dpor, chain, number, header.Hash(), append(parents, header))
 
-	// log.Info("my address", "eb", dpor.signer.Hex())
-	// log.Info("ready to accept this block", "number", number)
-	// log.Info("current block number", "number", currentNum)
-	// log.Info("number%uint64(epochLength) == 0", "bool", number%uint64(epochLength) == 0)
-	// log.Info("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
-	// log.Info("epoch idx of block number", "block epochIdx", snap.EpochIdxOf(number))
+	// log.Debug("my address", "eb", dpor.signer.Hex())
+	// log.Debug("ready to accept this block", "number", number)
+	// log.Debug("current block number", "number", currentNum)
+	// log.Debug("number%uint64(epochLength) == 0", "bool", number%uint64(epochLength) == 0)
+	// log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
+	// log.Debug("epoch idx of block number", "block epochIdx", snap.EpochIdxOf(number))
 
 	// for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+3; i++ {
-	// 	log.Info("----------------------")
-	// 	log.Info("signers in snapshot of:", "epoch idx", i)
+	// 	log.Debug("----------------------")
+	// 	log.Debug("signers in snapshot of:", "epoch idx", i)
 	// 	for _, s := range snap.RecentSigners[i] {
-	// 		log.Info("signer", "s", s.Hex())
+	// 		log.Debug("signer", "s", s.Hex())
 	// 	}
 	// }
 

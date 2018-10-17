@@ -274,16 +274,16 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 
 	signers := GetDefaultSigners()
 	if s.Number < s.config.MaxInitBlockNumber {
-		// log.Info("< s.config.MaxInitBlockNumber, s.Number", "n", s.Number)
 		s.RecentSigners[s.EpochIdx()+1] = signers
-		// log.Info("signers in snapshot of:", "epoch idx", 0)
+		// log.Debug("< s.config.MaxInitBlockNumber, s.Number", "n", s.Number)
+		// log.Debug("signers in snapshot of:", "epoch idx", 0)
 		// for _, s := range s.RecentSigners[0] {
-		// 	log.Info("signer", "s", s.Hex())
+		// 	log.Debug("signer", "s", s.Hex())
 		// }
 	}
 	if s.Number >= s.config.MaxInitBlockNumber-s.config.Epoch*(EpochGapBetweenElectionAndMining-1) {
 		// TODO: fix this.
-		log.Info(">= s.config.MaxInitBlockNumber -s.config.Epoch*(EpochGapBetweenElectionAndMining-1), s.Number", "n", s.Number)
+		// log.Debug(">= s.config.MaxInitBlockNumber -s.config.Epoch*(EpochGapBetweenElectionAndMining-1), s.Number", "n", s.Number)
 		signers = election.Elect(rpts, seed, viewLength)
 		epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
 		s.RecentSigners[epochIdx] = signers
