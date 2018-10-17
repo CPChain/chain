@@ -331,23 +331,27 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	currentNum := chain.CurrentHeader().Number.Uint64()
 
-	log.Info("#######################################################")
-	log.Info("my address", "eb", dpor.signer.Hex())
-	log.Info("ready to accept this block", "number", number)
-	log.Info("current chain Head", "number", currentNum)
-	log.Info("signers in snapshot:")
-	for _, s := range snap.SignersOf(currentNum) {
-		log.Info("signer", "s", s.Hex())
-	}
-	log.Info("future signers in snapshot:")
-	for _, s := range snap.FutureSignersOf(currentNum) {
-		log.Info("future signer", "s", s.Hex())
-	}
-	log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	snap, err = dh.snapshot(dpor, chain, number, header.Hash(), append(parents, header))
 
-	if number%uint64(epochLength) == 0 && number > dpor.config.MaxInitBlockNumber && number > currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
+	// log.Info("my address", "eb", dpor.signer.Hex())
+	// log.Info("ready to accept this block", "number", number)
+	// log.Info("current block number", "number", currentNum)
+	// log.Info("number%uint64(epochLength) == 0", "bool", number%uint64(epochLength) == 0)
+	// log.Info("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
+	// log.Info("epoch idx of block number", "block epochIdx", snap.EpochIdxOf(number))
+
+	// for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+3; i++ {
+	// 	log.Info("----------------------")
+	// 	log.Info("signers in snapshot of:", "epoch idx", i)
+	// 	for _, s := range snap.RecentSigners[i] {
+	// 		log.Info("signer", "s", s.Hex())
+	// 	}
+	// }
+
+	if number%uint64(epochLength) == 0 && number >= dpor.config.MaxInitBlockNumber && number >= currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
 		// TODO: fix this.
 		log.Info("I am future signer, building the committee network")
+		log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
 		// round, err := snap.FuturesignerRoundOf(dpor.signer, number)
 		// if err != nil {
@@ -365,6 +369,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	} else {
 		log.Info("I am not future signer, doing nothing.")
+		log.Info("#######################################################")
 		// go dpor.committeeNetworkHandler.Disconnect()
 	}
 

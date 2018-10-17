@@ -33,7 +33,7 @@ import (
 
 const (
 	// EpochGapBetweenElectionAndMining is the the epoch gap between election and mining.
-	EpochGapBetweenElectionAndMining = 1
+	EpochGapBetweenElectionAndMining = 2
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
 	MaxSizeOfRecentSigners = 10
 )
@@ -260,14 +260,35 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 	return rpts, nil
 }
 
+func GetDefaultSigners() []common.Address {
+	return []common.Address{
+		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
+	}
+}
+
 // updateView use rpt and election result to get new committee(signers).
 func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
-	signers := election.Elect(rpts, seed, viewLength)
 
-	// TODO: fix this.
-	epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
-	s.RecentSigners[epochIdx] = signers
-	// s.RecentSigners[epochIdx+1] = signers
+	signers := GetDefaultSigners()
+	if s.Number < s.config.MaxInitBlockNumber {
+		// log.Info("< s.config.MaxInitBlockNumber, s.Number", "n", s.Number)
+		s.RecentSigners[s.EpochIdx()+1] = signers
+		// log.Info("signers in snapshot of:", "epoch idx", 0)
+		// for _, s := range s.RecentSigners[0] {
+		// 	log.Info("signer", "s", s.Hex())
+		// }
+	}
+	if s.Number >= s.config.MaxInitBlockNumber-s.config.Epoch*(EpochGapBetweenElectionAndMining-1) {
+		// TODO: fix this.
+		log.Info(">= s.config.MaxInitBlockNumber -s.config.Epoch*(EpochGapBetweenElectionAndMining-1), s.Number", "n", s.Number)
+		signers = election.Elect(rpts, seed, viewLength)
+		epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
+		s.RecentSigners[epochIdx] = signers
+	}
+
 	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
 		delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
 	}
