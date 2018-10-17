@@ -6,6 +6,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/eth"
@@ -99,6 +100,22 @@ func updateChainConfig(ctx *cli.Context, cfg *eth.Config, n *node.Node) {
 	updateBaseAccount(ctx, ks, cfg)
 	// setGPO(ctx, &cfg.GPO)
 	updateTxPool(ctx, &cfg.TxPool)
+	updateDatabaseCacheFlag(ctx, cfg)
+	updateTrieCacheFlag(ctx, cfg)
+}
+
+// updateDatabaseCacheFlag updates database cache.
+func updateDatabaseCacheFlag(ctx *cli.Context, cfg *eth.Config) {
+	if ctx.IsSet(flags.CacheFlagName) && ctx.IsSet(flags.CacheDatabaseFlagName) {
+		cfg.DatabaseCache = ctx.Int(flags.CacheFlagName) * ctx.Int(flags.CacheDatabaseFlagName) / 100
+	}
+}
+
+// updateTrieCacheFlag updates trie cache.
+func updateTrieCacheFlag(ctx *cli.Context, cfg *eth.Config) {
+	if ctx.IsSet(flags.CacheFlagName) && ctx.IsSet(flags.CacheGCFlagName) {
+		cfg.TrieCache = ctx.Int(flags.CacheFlagName) * ctx.Int(flags.CacheGCFlagName) / 100
+	}
 }
 
 // Updates config from --config file

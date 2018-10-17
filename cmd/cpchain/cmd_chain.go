@@ -16,7 +16,6 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/trie"
@@ -176,15 +175,9 @@ func importChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
 		log.Fatalf("This command requires an argument.")
 	}
-	_, node := newConfigNode(ctx)
-	dbCache := eth.DefaultConfig.DatabaseCache
-	if ctx.IsSet(flags.CacheFlagName) || ctx.IsSet(flags.CacheDatabaseFlagName) {
-		dbCache = ctx.Int(flags.CacheFlagName) * ctx.Int(flags.CacheDatabaseFlagName) / 100
-	}
-	trieCache := eth.DefaultConfig.TrieCache
-	if ctx.IsSet(flags.CacheFlagName) || ctx.IsSet(flags.CacheGCFlagName) {
-		trieCache = ctx.Int(flags.CacheFlagName) * ctx.Int(flags.CacheGCFlagName) / 100
-	}
+	cfg, node := newConfigNode(ctx)
+	dbCache := cfg.Eth.DatabaseCache
+	trieCache := cfg.Eth.TrieCache
 	chain, chainDb := chainutils.OpenOrMakeChain(ctx, node, dbCache, trieCache)
 	defer chainDb.Close()
 
@@ -278,15 +271,9 @@ func exportChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
 		log.Fatalf("This command requires an argument.")
 	}
-	_, node := newConfigNode(ctx)
-	dbCache := eth.DefaultConfig.DatabaseCache
-	if ctx.IsSet(flags.CacheFlagName) || ctx.IsSet(flags.CacheDatabaseFlagName) {
-		dbCache = ctx.Int(flags.CacheFlagName) * ctx.Int(flags.CacheDatabaseFlagName) / 100
-	}
-	trieCache := eth.DefaultConfig.TrieCache
-	if ctx.IsSet(flags.CacheFlagName) || ctx.IsSet(flags.CacheGCFlagName) {
-		trieCache = ctx.Int(flags.CacheFlagName) * ctx.Int(flags.CacheGCFlagName) / 100
-	}
+	cfg, node := newConfigNode(ctx)
+	dbCache := cfg.Eth.DatabaseCache
+	trieCache := cfg.Eth.TrieCache
 	chain, _ := chainutils.OpenOrMakeChain(ctx, node, dbCache, trieCache)
 	start := time.Now()
 
