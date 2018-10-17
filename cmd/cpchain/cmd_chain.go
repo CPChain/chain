@@ -177,7 +177,7 @@ func importChain(ctx *cli.Context) error {
 	cfg, node := newConfigNode(ctx)
 	dbCache := cfg.Eth.DatabaseCache
 	trieCache := cfg.Eth.TrieCache
-	chain, chainDb := chainutils.OpenOrMakeChain(ctx, node, dbCache, trieCache)
+	chain, chainDb := chainutils.OpenChain(ctx, node, dbCache, trieCache)
 	defer chainDb.Close()
 
 	// Start periodically gathering memory profiles
@@ -273,7 +273,7 @@ func exportChain(ctx *cli.Context) error {
 	cfg, node := newConfigNode(ctx)
 	dbCache := cfg.Eth.DatabaseCache
 	trieCache := cfg.Eth.TrieCache
-	chain, _ := chainutils.OpenOrMakeChain(ctx, node, dbCache, trieCache)
+	chain, _ := chainutils.OpenChain(ctx, node, dbCache, trieCache)
 	start := time.Now()
 
 	var err error

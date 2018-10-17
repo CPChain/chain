@@ -40,7 +40,11 @@ import (
 //go:generate gencodec -type Genesis -formats json,toml -field-override genesisSpecMarshaling -out gen_genesis.go
 //go:generate gencodec -type GenesisAccount -formats json,toml -field-override genesisAccountMarshaling -out gen_genesis_account.go
 
-var errGenesisNoConfig = errors.New("genesis has no chain configuration")
+var (
+	errGenesisNoConfig   = errors.New("genesis has no chain configuration")
+	errGenesisNoExist    = errors.New("genesis block does not exist")
+	errGenesisCfgNoExist = errors.New("genesis block configuration does not exist")
+)
 
 // Genesis specifies the header fields, state of a genesis block. It also defines hard
 // fork switch-over blocks through the chain configuration.
@@ -207,6 +211,21 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 	}
 	rawdb.WriteChainConfig(db, stored, newcfg)
 	return newcfg, stored, nil
+}
+
+// OpenGenesisBlock opens genesis block and returns its chain configuration and hash.
+// Return errors when genesis block not exist or genesis block configuration not exist.
+func OpenGenesisBlock(db ethdb.Database) (*configs.ChainConfig, common.Hash, error) {
+	stored := rawdb.ReadCanonicalHash(db, 0)
+	if (stored == common.Hash{}) {
+		return nil, common.Hash{}, errGenesisNoExist
+	}
+	storedcfg := rawdb.ReadChainConfig(db, stored)
+	if storedcfg != nil {
+		return storedcfg, stored, nil
+	} else {
+		return nil, stored, errGenesisCfgNoExist
+	}
 }
 
 func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {

@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
@@ -46,32 +47,36 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 	return core.DefaultCpchainGenesisBlock()
 }
 
-// OpenOrMakeChain creates a chain manager from set command line flags.
-func OpenOrMakeChain(ctx *cli.Context, stack *node.Node, databaseCache int, trieCache int) (chain *core.BlockChain, chainDb ethdb.Database) {
+// OpenChain opens a blockchain
+func OpenChain(ctx *cli.Context, stack *node.Node, databaseCache int, trieCache int) (chain *core.BlockChain, chainDb ethdb.Database) {
 	var err error
 	chainDb = MakeChainDatabase(ctx, stack, databaseCache)
 
-	config, _, err := core.SetupGenesisBlock(chainDb, MakeGenesis(ctx))
+	config, _, err := core.OpenGenesisBlock(chainDb)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
+	chain = newBlockChain(config, chainDb, trieCache, stack, chain, err)
+	return chain, chainDb
+}
+
+func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCache int, stack *node.Node, chain *core.BlockChain, err error) *core.BlockChain {
 	var engine consensus.Engine
 	engine = dpor.New(config.Dpor, chainDb)
-
 	cacheCfg := &core.CacheConfig{
 		Disabled:      false, // We always enable caching, not make users troublesome to consider how to choose enable/disable.
 		TrieNodeLimit: eth.DefaultConfig.TrieCache,
 		TrieTimeLimit: eth.DefaultConfig.TrieTimeout,
 	}
 	cacheCfg.TrieNodeLimit = trieCache
-
 	vmcfg := vm.Config{EnablePreimageRecording: false} // TODO: consider if add VMEnableDebugFlag {AC}
 	rsaKey, _ := stack.RsaKey()
-	chain, err = core.NewBlockChain(chainDb, cacheCfg, config, engine, vmcfg, nil, rsaKey.PrivateKey) // TODO: give a fake or real RemoteDB
+	// TODO: give a fake or real RemoteDB{AC}
+	chain, err = core.NewBlockChain(chainDb, cacheCfg, config, engine, vmcfg, nil, rsaKey.PrivateKey)
 	if err != nil {
 		log.Fatalf("Can't create BlockChain: %v", err)
 	}
-	return chain, chainDb
+	return chain
 }
 
 // makeDatabaseHandles raises out the number of allowed file handles per process
