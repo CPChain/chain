@@ -78,14 +78,13 @@ processing will proceed even if an individual RLP-file import failure occurs.`,
 			Action:    exportChain,
 			Name:      "export",
 			Usage:     "Export blockchain into file",
-			ArgsUsage: "<filename> [<blockNumFirst> <blockNumLast>]",
+			ArgsUsage: "<output file> [blockNumFirst blockNumLast]",
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.CacheFlagName),
 			},
 			Category: "BLOCKCHAIN COMMANDS",
-			Description: `
-Requires a first argument of the file to write to.
+			Description: `Requires a first argument of the file to write to.
 Optional second and third arguments control the first and
 last block to write. In this mode, the file will be appended
 if already existing.`,
