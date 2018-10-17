@@ -109,7 +109,9 @@ Password: {{.InputLine "foobar2"}}
 Repeat password: {{.InputLine "foobar2"}}
 `)
 }
+
 func TestUnlockFlagWrongPassword(t *testing.T) {
+	t.Skip("TestUnlockFlagWrongPassword")
 	datadir := tmpDatadirWithKeystore(t)
 	geth := runGeth(t, "run",
 		"--datadir", datadir,
@@ -131,6 +133,7 @@ Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could 
 }
 
 func TestUnlockFlagWrongPassword11(t *testing.T) {
+	t.Skip("TestUnlockFlagWrongPassword11")
 	datadir := tmpDatadirWithKeystore(t)
 	geth := runGeth(t, "run",
 		"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
@@ -160,6 +163,7 @@ func TestUnlockFlagWrongPassword11(t *testing.T) {
 }
 
 func TestUnlockFlagPasswordFileWrongPassword(t *testing.T) {
+	t.Skip("TestUnlockFlagPasswordFileWrongPassword")
 	datadir := tmpDatadirWithKeystore(t)
 	geth := runGeth(t, "run",
 		"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
@@ -171,6 +175,7 @@ Fatal: Failed to unlock account 0 (could not decrypt key with given passphrase)
 }
 
 func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
+	t.Skip("TestUnlockFlagAmbiguousWrongPassword")
 	store := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
 	geth := runGeth(t, "run",
 		"--keystore", store, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
