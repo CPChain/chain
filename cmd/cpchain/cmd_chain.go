@@ -134,7 +134,7 @@ func initChain(ctx *cli.Context) error {
 	if err != nil {
 		log.Fatalf("Failed to write genesis block: %v", err)
 	}
-	log.Info("Successfully wrote genesis state", "database", name, "hash", hash)
+	log.Info("Successfully wrote genesis state", "database", name, "hash", hash.Hex())
 	return nil
 }
 

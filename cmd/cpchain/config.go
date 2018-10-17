@@ -11,9 +11,9 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
-	"github.com/BurntSushi/toml"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/naoina/toml"
 	"github.com/urfave/cli"
 )
 
@@ -137,7 +137,13 @@ func updateConfigFromFile(ctx *cli.Context, cfg *config) {
 
 	if path != "" {
 		log.Infof("Load config file from: %v", path)
-		if _, err := toml.DecodeFile(path, &cfg); err != nil {
+		f, err := os.Open(path)
+		if err != nil {
+			log.Fatalf("Invalid TOML config file: %v", err)
+		}
+		defer f.Close()
+		decoder := toml.NewDecoder(f)
+		if err := decoder.Decode(cfg); err != nil {
 			log.Fatalf("Invalid TOML config file: %v", err)
 		}
 	}
