@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/contracts/proxy/contract"
+	"bitbucket.org/cpchain/chain/contracts/proxy/proxycontract"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )

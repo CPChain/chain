@@ -698,7 +698,6 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 	}
 }
 
-
 type gethConfig struct {
 	Eth  eth.Config
 	Node node.Config
@@ -731,7 +730,6 @@ func defaultNodeConfig() node.Config {
 	return cfg
 }
 
-
 func loadConfig(file string, cfg *gethConfig) error {
 	f, err := os.Open(file)
 	if err != nil {
@@ -747,7 +745,6 @@ func loadConfig(file string, cfg *gethConfig) error {
 	return err
 }
 
-
 func makeFullNode(ctx *cli.Context) *node.Node {
 	stack, cfg := makeConfigNode(ctx)
 
@@ -755,7 +752,6 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 
 	return stack
 }
-
 
 func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 	// Load defaults.
@@ -781,4 +777,3 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 
 	return stack, cfg
 }
-
