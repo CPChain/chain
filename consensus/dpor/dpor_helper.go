@@ -255,7 +255,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	log.Debug("--------I am in dpor.verifySeal end--------")
 
 	// Check if the leader is the real leader.
-	ok, err := snap.IsLeader(leader, number)
+	ok, err := snap.IsLeaderOf(leader, number)
 	if err != nil {
 		return err
 	}
@@ -289,9 +289,9 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// We haven't reached the 2/3 rule.
 	if !accept {
 		// Sign the block if self is in the committee.
-		log.Debug("snap.issigner(dpor.signer, number)", "bool", snap.IsSigner(dpor.signer, number))
+		log.Debug("snap.issigner(dpor.signer, number)", "bool", snap.IsSignerOf(dpor.signer, number))
 		log.Debug("signer", "s", dpor.signer.Hex())
-		if snap.IsSigner(dpor.signer, number) {
+		if snap.IsSignerOf(dpor.signer, number) {
 			// NOTE: only sign a block once.
 			if signedHash, signed := dpor.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {
 				return errMultiBlocksInOneHeight
@@ -321,7 +321,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// --- our check ends ---
 
 	// Ensure that the difficulty corresponds to the turn-ness of the signer
-	inturn, _ := snap.IsLeader(leader, header.Number.Uint64())
+	inturn, _ := snap.IsLeaderOf(leader, header.Number.Uint64())
 	if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
 		return errInvalidDifficulty
 	}

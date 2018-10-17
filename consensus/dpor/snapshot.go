@@ -308,12 +308,12 @@ func (s *DporSnapshot) SignerRoundOf(signer common.Address, number uint64) (int,
 	return -1, errSignerNotInCommittee
 }
 
-func (s *DporSnapshot) IsSigner(signer common.Address, number uint64) bool {
+func (s *DporSnapshot) IsSignerOf(signer common.Address, number uint64) bool {
 	_, err := s.SignerRoundOf(signer, number)
 	return err == nil
 }
 
-func (s *DporSnapshot) IsLeader(signer common.Address, number uint64) (bool, error) {
+func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, error) {
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
@@ -330,8 +330,8 @@ func (s *DporSnapshot) candidates() []common.Address {
 }
 
 // inturn returns if a signer at a given block height is in-turn or not.
-func (s *DporSnapshot) Inturn(number uint64, signer common.Address) bool {
-	ok, err := s.IsLeader(signer, number)
+func (s *DporSnapshot) InturnOf(number uint64, signer common.Address) bool {
+	ok, err := s.IsLeaderOf(signer, number)
 	if err != nil {
 		return false
 	}

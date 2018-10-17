@@ -255,7 +255,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 
-	ok, err := snap.IsLeader(d.signer, number)
+	ok, err := snap.IsLeaderOf(d.signer, number)
 	if err != nil {
 		return nil, err
 	}

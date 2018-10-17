@@ -17,12 +17,10 @@
 package dpor
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
-
-	"fmt"
-
-	"encoding/json"
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
@@ -71,7 +69,7 @@ func (*fakeDb) NewBatch() ethdb.Batch {
 
 func Test_newSnapshot(t *testing.T) {
 	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
-	equal := reflect.DeepEqual(snap.signersOf(1), getSignerAddress())
+	equal := reflect.DeepEqual(snap.SignersOf(1), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
@@ -168,7 +166,7 @@ func TestSnapshot_copy(t *testing.T) {
 
 	cpySnap := snap.copy()
 
-	equal := reflect.DeepEqual(cpySnap.signersOf(1), getSignerAddress())
+	equal := reflect.DeepEqual(cpySnap.SignersOf(1), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
@@ -380,7 +378,7 @@ func TestSnapshot_updateView(t *testing.T) {
 
 func TestSnapshot_signers(t *testing.T) {
 	snap := createSnapshot()
-	signers := snap.signersOf(snap.Number)
+	signers := snap.SignersOf(snap.Number)
 	equalSigner := reflect.DeepEqual(signers, getSignerAddress())
 	if !equalSigner {
 		t.Errorf("expected isEqualSigner is %v,get %v", true, equalSigner)
@@ -418,7 +416,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 				Candidates:    tt.fields.Candidates,
 				RecentSigners: tt.fields.RecentSigners,
 			}
-			got, err := s.signerRoundOf(tt.args.signer, tt.fields.Number)
+			got, err := s.SignerRoundOf(tt.args.signer, tt.fields.Number)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.signerRound(%v) error = %v, wantErr %v", tt.args.signer, err, tt.wantErr)
 				return
@@ -432,11 +430,11 @@ func TestSnapshot_signerRound(t *testing.T) {
 
 func TestSnapshot_isSigner(t *testing.T) {
 	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress()[1:2])
-	isSinger := snap.isSigner(addr1, 1)
+	isSinger := snap.IsSignerOf(addr1, 1)
 	if isSinger {
 		t.Errorf("expected isSinger %v,get %v", false, isSinger)
 	}
-	isSinger = snap.isSigner(addr2, 1)
+	isSinger = snap.IsSignerOf(addr2, 1)
 	if !isSinger {
 		t.Errorf("expected isSinger %v,get %v", true, isSinger)
 	}
@@ -444,7 +442,7 @@ func TestSnapshot_isSigner(t *testing.T) {
 
 func TestSnapshot_isLeaderErrorWhenBlockNumberIsZero(t *testing.T) {
 	snap := createSnapshot()
-	isLeader, err := snap.isLeader(addr1, 0)
+	isLeader, err := snap.IsLeaderOf(addr1, 0)
 	if err == nil {
 		t.Errorf("expect isLeader Error, get %v", isLeader)
 	}
@@ -452,15 +450,15 @@ func TestSnapshot_isLeaderErrorWhenBlockNumberIsZero(t *testing.T) {
 
 func TestSnapshot_isLeader(t *testing.T) {
 	snap := createSnapshot()
-	isLeader, err := snap.isLeader(addr1, 1)
+	isLeader, err := snap.IsLeaderOf(addr1, 1)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader, err = snap.isLeader(addr2, 2)
+	isLeader, err = snap.IsLeaderOf(addr2, 2)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader, err = snap.isLeader(addr3, 3)
+	isLeader, err = snap.IsLeaderOf(addr3, 3)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
@@ -468,15 +466,15 @@ func TestSnapshot_isLeader(t *testing.T) {
 
 func TestSnapshot_isNotLeader(t *testing.T) {
 	snap := createSnapshot()
-	isLeader, _ := snap.isLeader(addr2, 1)
+	isLeader, _ := snap.IsLeaderOf(addr2, 1)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
-	isLeader, _ = snap.isLeader(addr1, 2)
+	isLeader, _ = snap.IsLeaderOf(addr1, 2)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
-	isLeader, _ = snap.isLeader(addr1, 3)
+	isLeader, _ = snap.IsLeaderOf(addr1, 3)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
@@ -484,7 +482,7 @@ func TestSnapshot_isNotLeader(t *testing.T) {
 
 func TestSnapshot_signerRoundFail(t *testing.T) {
 	snap := createSnapshot()
-	round, err := snap.signerRoundOf(addr4, snap.Number)
+	round, err := snap.SignerRoundOf(addr4, snap.Number)
 	if err == nil || round != -1 {
 		t.Errorf("expect round %v, get %v", -1, round)
 	}
@@ -492,17 +490,17 @@ func TestSnapshot_signerRoundFail(t *testing.T) {
 
 func TestSnapshot_signerRoundOk(t *testing.T) {
 	snap := createSnapshot()
-	round, err := snap.signerRoundOf(addr1, snap.Number)
+	round, err := snap.SignerRoundOf(addr1, snap.Number)
 	if err != nil || round != 0 {
 		t.Errorf("expect round %v, get %v", 0, round)
 	}
 
-	round, err = snap.signerRoundOf(addr2, snap.Number)
+	round, err = snap.SignerRoundOf(addr2, snap.Number)
 	if err != nil || round != 1 {
 		t.Errorf("expect round %v, get %v", 1, round)
 	}
 
-	round, err = snap.signerRoundOf(addr3, snap.Number)
+	round, err = snap.SignerRoundOf(addr3, snap.Number)
 	if err != nil || round != 2 {
 		t.Errorf("expect round %v, get %v", 2, round)
 	}
@@ -572,7 +570,7 @@ func TestSnapshot_inturn(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		inturn := snap.inturn(tt.number, tt.addr)
+		inturn := snap.InturnOf(tt.number, tt.addr)
 		if inturn != tt.expectedResult {
 			t.Errorf("expected result is %v,get %v,number:%v,addr:%v", tt.expectedResult, inturn, tt.number, tt.addr.Hex())
 		}
