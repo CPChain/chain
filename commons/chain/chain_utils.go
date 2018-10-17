@@ -9,7 +9,6 @@ import (
 	"strings"
 	"syscall"
 
-	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
@@ -59,15 +58,8 @@ func OpenOrMakeChain(ctx *cli.Context, stack *node.Node, databaseCache int, trie
 	var engine consensus.Engine
 	engine = dpor.New(config.Dpor, chainDb)
 
-	gcmode := "full"
-	if ctx.IsSet(flags.GCModeFlagName) {
-		gcmode = ctx.String(flags.GCModeFlagName)
-		if gcmode != "full" && gcmode != "archive" {
-			log.Fatalf("--%s must be either 'full' or 'archive'", flags.GCModeFlagName)
-		}
-	}
 	cacheCfg := &core.CacheConfig{
-		Disabled:      gcmode == "archive",
+		Disabled:      false, // We always enable caching, not make users troublesome to consider how to choose enable/disable.
 		TrieNodeLimit: eth.DefaultConfig.TrieCache,
 		TrieTimeLimit: eth.DefaultConfig.TrieTimeout,
 	}

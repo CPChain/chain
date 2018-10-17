@@ -55,6 +55,10 @@ var ConfigFileFlag = cli.StringFlag{
 	Usage: fmt.Sprintf("Path to TOML configuration file (default \"<datadir>/config.toml\")"),
 }
 
+const (
+	DataDirFlagName = "datadir"
+)
+
 var GeneralFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  DataDirFlagName,
@@ -82,9 +86,17 @@ var AccountFlags = []cli.Flag{
 	},
 }
 
+const (
+	NetworkIDFlagName     = "networkid"
+	NoCompactionFlagName  = "nocompaction"
+	CacheFlagName         = "cache"
+	CacheDatabaseFlagName = "cache.database"
+	CacheGCFlagName       = "cache.gc"
+)
+
 var ChainFlags = []cli.Flag{
 	cli.Uint64Flag{
-		Name:  "networkid",
+		Name:  NetworkIDFlagName,
 		Usage: "Network identifier (integer, mainnet=0, testnet=1)",
 	},
 	cli.StringFlag{
@@ -99,11 +111,6 @@ var ChainFlags = []cli.Flag{
 		Name:  CacheFlagName,
 		Usage: "Megabytes of memory allocated to internal caching",
 		Value: 1024,
-	},
-	cli.StringFlag{
-		Name:  GCModeFlagName,
-		Usage: `Blockchain garbage collection mode ("full", "archive")`,
-		Value: "full",
 	},
 	cli.IntFlag{
 		Name:  CacheDatabaseFlagName,
