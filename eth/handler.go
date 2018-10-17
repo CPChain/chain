@@ -17,6 +17,7 @@
 package eth
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -694,6 +695,12 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		request.Block.ReceivedAt = msg.ReceivedAt
 		request.Block.ReceivedFrom = p
 
+		log.Debug("received propgrated block from", "peer", p)
+		log.Debug("received block number", "n", request.Block.NumberU64())
+		log.Debug("received block hash", "hash", request.Block.Hash())
+		log.Debug("received block extra2", "extra2", "\n")
+		log.Debug("\n" + hex.Dump(request.Block.Extra2()))
+
 		// Mark the peer as owning the block and schedule it for import
 		p.MarkBlock(request.Block.Hash())
 		pm.fetcher.Enqueue(p.id, request.Block)
@@ -770,33 +777,43 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			hash := header.Hash()
 			number := header.Number.Uint64()
 
-			// accept the header and the block, if does not have the block, ask for the block.
-			if !pm.blockchain.HasBlock(header.Hash(), header.Number.Uint64()) {
-				// ask for the block from remote peer.
+			// // accept the header and the block, if does not have the block, ask for the block.
+			// if !pm.blockchain.HasBlock(header.Hash(), header.Number.Uint64()) {
+			// 	// ask for the block from remote peer.
 
-				// Mark the hashes as present at the remote node
-				p.MarkPendingBlock(header.Hash())
+			// 	// Mark the hashes as present at the remote node
+			// 	p.MarkPendingBlock(header.Hash())
 
-				go pm.synchronise(p)
+			// 	go pm.synchronise(p)
 
-			} else {
-				block := pm.blockchain.GetBlockByHash(hash)
-				go pm.BroadcastBlock(block, true)
+			// } else {
+			// 	block := pm.blockchain.GetBlockByHash(hash)
+			// 	log.Debug(" received newsignedheadermsg, I got the block, broadcasting it")
+			// 	log.Debug("local extra2", "extra2", "\n"+hex.Dump(block.Extra2()))
+			// 	go pm.BroadcastBlock(block, true)
 
-				if number < pm.blockchain.CurrentBlock().NumberU64() {
+			// 	if number < pm.blockchain.CurrentBlock().NumberU64() {
 
-					for i := number; i <= pm.blockchain.CurrentBlock().NumberU64(); i++ {
-						go pm.BroadcastBlock(pm.blockchain.GetBlockByNumber(i), true)
-					}
-				}
+			// 		for i := number; i <= pm.blockchain.CurrentBlock().NumberU64(); i++ {
+			// 			go pm.BroadcastBlock(pm.blockchain.GetBlockByNumber(i), true)
+			// 		}
+			// 	}
+			// }
+
+			if block, ok := pm.blockchain.WaitingSignatureBlocks().Get(hash); ok {
+				b := block.(*types.Block)
+				go pm.blockchain.InsertChain(types.Blocks{b.WithSeal(header)})
+			}
+
+			if pm.blockchain.CurrentHeader().Number.Uint64() <= number {
+				go p.AsyncSendNewSignedHeader(header)
 			}
 
 		case consensus.ErrNewSignedHeader:
 			log.Debug("verify failed, but signed it, broadcast...")
 
 			// TODO: @liuq fix this.
-			// go pm.BroadcastSignedHeader(header)
-			go p.AsyncSendNewSignedHeader(header)
+			go pm.BroadcastSignedHeader(header)
 		default:
 			// return err
 		}
@@ -815,12 +832,12 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 		case err = <-pm.blockchain.ErrChan:
 			log.Debug("received err from blockchain.ErrChan", "err", err)
 			if err == nil {
-				block := pm.blockchain.CurrentBlock()
-				pm.BroadcastBlock(block, true)
+				// block := pm.blockchain.CurrentBlock()
+				// pm.BroadcastBlock(block, true)
+				// go pm.BroadcastSignedHeader(block.Header())
 			}
 			if err, ok := err.(*consensus.ErrNewSignedHeaderType); ok {
 				header := err.SignedHeader
-				log.Debug("header", "header", header)
 				go pm.BroadcastSignedHeader(header)
 			}
 		case <-pm.blockchain.Quit:
