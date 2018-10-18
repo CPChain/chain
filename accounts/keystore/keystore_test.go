@@ -33,6 +33,41 @@ import (
 
 var testSigData = make([]byte, 32)
 
+func TestKeyStoreNoPassword(t *testing.T) {
+	dir, ks := tmpKeyStore(t, true)
+	defer os.RemoveAll(dir)
+
+	a, err := ks.NewAccount("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(a.URL.Path, dir) {
+		t.Errorf("account file %s doesn't have dir prefix", a.URL)
+	}
+	stat, err := os.Stat(a.URL.Path)
+	if err != nil {
+		t.Fatalf("account file %s doesn't exist (%v)", a.URL, err)
+	}
+	if runtime.GOOS != "windows" && stat.Mode() != 0600 {
+		t.Fatalf("account file has wrong mode: got %o, want %o", stat.Mode(), 0600)
+	}
+	if !ks.HasAddress(a.Address) {
+		t.Errorf("HasAccount(%x) should've returned true", a.Address)
+	}
+	if err := ks.Update(a, "", "bar"); err != nil {
+		t.Errorf("Update error: %v", err)
+	}
+	if err := ks.Delete(a, "bar"); err != nil {
+		t.Errorf("Delete error: %v", err)
+	}
+	if common.FileExist(a.URL.Path) {
+		t.Errorf("account file %s should be gone after Delete", a.URL)
+	}
+	if ks.HasAddress(a.Address) {
+		t.Errorf("HasAccount(%x) should've returned true after Delete", a.Address)
+	}
+}
+
 func TestKeyStore(t *testing.T) {
 	dir, ks := tmpKeyStore(t, true)
 	defer os.RemoveAll(dir)

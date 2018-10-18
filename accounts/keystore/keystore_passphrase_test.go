@@ -66,7 +66,7 @@ func TestRsaKeyEncryptDecrypt(t *testing.T) {
 		t.Fatal(err)
 	}
 	password := ""
-	address := common.HexToAddress("90d5a779df4ea4c1230dc8d3253476a4177f40ec")
+	address := common.HexToAddress("7880e6b6ab3d6567f6d4ea7bc3f1eb56a349da82")
 
 	// Do a few rounds of decryption and encryption
 	for i := 0; i < 3; i++ {
@@ -86,6 +86,11 @@ func TestRsaKeyEncryptDecrypt(t *testing.T) {
 		password += "new data appended"
 		if keyjson, err = EncryptKey(key, password, veryLightScryptN, veryLightScryptP); err != nil {
 			t.Errorf("test %d: failed to recrypt key %v", i, err)
+		}
+
+		rsaKey := key.RsaKey
+		if rsaKey == nil {
+			t.Errorf("failed to decrypt rsaKey")
 		}
 	}
 }

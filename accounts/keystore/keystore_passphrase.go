@@ -130,7 +130,6 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	// 16
 	cipherText, err := aesCTRXOR(derivedKey[:16], keyBytes, iv)
 
-	fmt.Println("hex.EncodeToString(iv)", hex.EncodeToString(iv))
 	if err != nil {
 		return nil, err
 	}
@@ -139,13 +138,9 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	rsaKey, err := rsakey.NewRsaKey("/tmp/rsa")
 
 	// get rsaClipherText
-	rsaCipherRawText := rsaKey.PrivateKeyBytes
-	// rsaIv, rsaCipherText, err := getCipherText(rsaCipherRawText, key)
-	rsaCipherText := rsaCipherRawText
-	fmt.Println("rsaPlainText====================encode:", hex.EncodeToString(rsaCipherText))
-	// fmt.Println("rsa hex.EncodeToString(rsaIv)", hex.EncodeToString(rsaIv))
-	// TODO xxxx
-	// rsaCipherText := rsaCipherRawText
+	encodedRsaCipherRawText := PKCS5Padding(rsaKey.PrivateKeyBytes, 32)
+	rsaCipherText, err := aesCTRXOR(derivedKey[:16], encodedRsaCipherRawText, iv)
+
 	// mergeBytes cipherText and rsaCipherText
 	macSource := mergeBytes(cipherText, rsaCipherText)
 	mac := crypto.Keccak256(derivedKey[16:32], macSource)
@@ -159,7 +154,6 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 
 	cipherParamsJSON := cipherparamsJSON{
 		IV: hex.EncodeToString(iv),
-		// RSAIV: hex.EncodeToString(rsaIv),
 	}
 
 	cryptoStruct := cryptoJSON{
@@ -179,14 +173,6 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	}
 	return json.Marshal(encryptedKeyJSONV3)
 }
-
-// func getCipherText(encryptKey []byte, key *Key) ([]byte, []byte, error) {
-// 	keyBytes := math.PaddedBigBytes(key.PrivateKey.D, 32)
-// 	iv := randentropy.GetEntropyCSPRNG(aes.BlockSize)
-// 	// 16
-// 	cipherText, err := aesCTRXOR(encryptKey, keyBytes, iv)
-// 	return iv, cipherText, err
-// }
 
 // mergeBytes
 func mergeBytes(cipherText []byte, rsaCipherText []byte) []byte {
@@ -238,7 +224,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		Id:         uuid.UUID(keyId),
 		Address:    crypto.PubkeyToAddress(key.PublicKey),
 		PrivateKey: key,
-		// RsaKey:     rsaKey,
+		RsaKey:     rsaKey,
 	}, nil
 }
 
@@ -261,18 +247,12 @@ func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byt
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	// rsaiv, err := hex.DecodeString(keyProtected.Crypto.CipherParams.RSAIV)
-	// if err != nil {
-	// 	return nil, nil, nil, err
-	// }
 
 	cipherText, err := hex.DecodeString(keyProtected.Crypto.CipherText)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	fmt.Println("================ decrypt keyProtected.Crypto.RsaCipherText:", keyProtected.Crypto.RsaCipherText)
-	fmt.Println("end")
 	rsaCipherText, err := hex.DecodeString(keyProtected.Crypto.RsaCipherText)
 	if err != nil {
 		return nil, nil, nil, err
@@ -286,7 +266,6 @@ func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byt
 	macSource := mergeBytes(cipherText, rsaCipherText)
 
 	calculatedMAC := crypto.Keccak256(derivedKey[16:32], macSource)
-	// fmt.Println("********", hex.EncodeToString(calculatedMAC))
 	if !bytes.Equal(calculatedMAC, mac) {
 		return nil, nil, nil, ErrDecrypt
 	}
@@ -295,14 +274,27 @@ func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byt
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	// rsaPlainText := rsaCipherText
-	// rsaPlainText, err := aesCTRXOR(derivedKey[:16], rsaCipherText, iv)
-	// if err != nil {
-	// 	return nil, nil, nil, err
-	// }
-	// fmt.Println("rsaPlainText====================", hex.EncodeToString(rsaPlainText))
+	rsaPlainText, err := aesCTRXOR(derivedKey[:16], rsaCipherText, iv)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	rsaPlainText = PKCS5UnPadding(rsaPlainText)
+	return plainText, keyId, rsaPlainText, err
+}
 
-	return plainText, keyId, rsaCipherText, err
+func PKCS5UnPadding(origData []byte) []byte {
+	length := len(origData)
+	if length == 0 {
+		return origData
+	}
+	unpadding := int(origData[length-1])
+	return origData[:(length - unpadding)]
+}
+
+func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
 }
 
 func decryptKeyV1(keyProtected *encryptedKeyJSONV1, auth string) (keyBytes []byte, keyId []byte, err error) {
