@@ -190,7 +190,14 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string) (acc
 	}
 	for trials := 0; trials < 3; trials++ {
 		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d\nPassword:", address, trials+1, 3)
-		password := readPassword(prompt, false)
+		passwdList := makePasswordList(ctx)
+		var password string
+		if len(passwdList) > 0 {
+			password = passwdList[0]
+		} else {
+			password = readPassword(prompt, false)
+		}
+
 		err = ks.Unlock(account, password)
 		if err == nil {
 			log.Info("Unlocked account", "address", account.Address.Hex())

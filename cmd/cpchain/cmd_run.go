@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -13,6 +15,7 @@ import (
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/node"
+	"github.com/ethereum/go-ethereum/console"
 	"github.com/urfave/cli"
 )
 
@@ -58,15 +61,43 @@ func startNode(n *node.Node) {
 }
 
 func unlockAccounts(ctx *cli.Context, n *node.Node) {
-	// ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	//
-	// passwords := utils.MakePasswordList(ctx)
-	// unlocks := strings.Split(ctx.GlobalString(utils.UnlockedAccountFlag.Name), ",")
-	// for i, account := range unlocks {
-	// 	if trimmed := strings.TrimSpace(account); trimmed != "" {
-	// 		unlockAccount(ctx, ks, trimmed, i, passwords)
-	// 	}
-	// }
+	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	unlocks := strings.Split(ctx.String(flags.UnlockFlagName), ",")
+	for _, account := range unlocks {
+		if trimmed := strings.TrimSpace(account); trimmed != "" {
+			unlockAccount(ctx, ks, trimmed)
+		}
+	}
+}
+
+// getPassPhrase retrieves the password associated with an account, either fetched
+// from a list of preloaded passphrases, or requested interactively from the user.
+func getPassPhrase(prompt string, confirmation bool, i int, passwords []string) string {
+	// If a list of passwords was supplied, retrieve from them
+	if len(passwords) > 0 {
+		if i < len(passwords) {
+			return passwords[i]
+		}
+		return passwords[len(passwords)-1]
+	}
+	// Otherwise prompt the user for the password
+	if prompt != "" {
+		fmt.Println(prompt)
+	}
+	password, err := console.Stdin.PromptPassword("Passphrase: ")
+	if err != nil {
+		log.Fatalf("Failed to read passphrase: %v", err)
+	}
+	if confirmation {
+		confirm, err := console.Stdin.PromptPassword("Repeat passphrase: ")
+		if err != nil {
+			log.Fatalf("Failed to read passphrase confirmation: %v", err)
+		}
+		if password != confirm {
+			log.Fatalf("Passphrases do not match")
+		}
+	}
+	return password
 }
 
 func handleWallet(n *node.Node) {
