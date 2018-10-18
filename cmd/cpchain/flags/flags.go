@@ -67,20 +67,26 @@ var GeneralFlags = []cli.Flag{
 	},
 }
 
+const (
+	PasswordFlagName = "password"
+	LightKdfFlagName = "lightkdf"
+	UnlockFlagName   = "unlock"
+)
+
 // TODO @xumx  adjust the following
 var AccountFlags = []cli.Flag{
 	// TODO do not marshal the keystore path in toml file.
 	cli.StringFlag{
-		Name:  "password",
+		Name:  PasswordFlagName,
 		Usage: "Password file to use for non-interactive password input",
 		Value: "",
 	},
 	cli.BoolFlag{
-		Name:  "lightkdf",
+		Name:  LightKdfFlagName,
 		Usage: "Reduce key-derivation RAM & CPU usage at some expense of KDF strength",
 	},
 	cli.StringFlag{
-		Name:  "unlock",
+		Name:  UnlockFlagName,
 		Usage: "Comma separated list of accounts to unlock",
 		Value: "",
 	},
@@ -136,53 +142,71 @@ var MinerFlags = []cli.Flag{
 	},
 }
 
+const (
+	RpcFlagName     = "rpc"
+	RpcAddrFlagName = "rpcaddr"
+	RpcPortFlagName = "rpcport"
+)
+
 // TODO @sangh adjust these
 var RpcFlags = []cli.Flag{
 	cli.BoolFlag{
-		Name:  "rpc",
+		Name:  RpcFlagName,
 		Usage: "Enable the HTTP-RPC server",
 	},
 
 	cli.StringFlag{
-		Name:  "rpcaddr",
+		Name:  RpcAddrFlagName,
 		Usage: "HTTP-RPC server listening interface",
 	},
 	cli.IntFlag{
-		Name:  "rpcport",
+		Name:  RpcPortFlagName,
 		Usage: "HTTP-RPC server listening port",
 	},
 }
+
+const (
+	MaxPeersFlagName     = "maxpeers"
+	MaxPendPeersFlagName = "maxpendpeers"
+	PortFlagName         = "port"
+	BootNodesFlagName    = "bootnodes"
+	NodeKeyFlagName      = "nodekey"
+)
 
 // TODO @liuq  adjust the following
 // p2p flags
 var P2pFlags = []cli.Flag{
 	cli.IntFlag{
-		Name:  "maxpeers",
+		Name:  MaxPeersFlagName,
 		Usage: "Maximum number of network peers (network disabled if set to 0)",
 	},
 	cli.IntFlag{
-		Name:  "maxpendpeers",
+		Name:  MaxPendPeersFlagName,
 		Usage: "Maximum number of pending connection attempts (defaults used if set to 0)",
 	},
 	cli.IntFlag{
-		Name:  "port",
+		Name:  PortFlagName,
 		Usage: "Network listening port",
 		Value: 30303,
 	},
 	cli.StringFlag{
-		Name:  "bootnodes",
+		Name:  BootNodesFlagName,
 		Usage: "Comma separated enode URLs for P2P discovery bootstrap (set v4+v5 instead for light servers)",
 		Value: "",
 	},
 	cli.StringFlag{
-		Name:  "nodekey",
+		Name:  NodeKeyFlagName,
 		Usage: "P2P node key file",
 	},
 }
 
+const (
+	IdentityFlagName = "identity"
+)
+
 var NodeFlags = []cli.Flag{
 	cli.StringFlag{
-		Name:  "identity",
+		Name:  IdentityFlagName,
 		Usage: "Custom node name",
 	},
 }
