@@ -27,11 +27,53 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
+	"strconv"
 )
 
 var testSigData = make([]byte, 32)
+
+// TODO TestKeyFileUpgrade
+func TestKeyFileUpgrade(t *testing.T) {
+	tmpdir, err := ioutil.TempDir("", "upgrade-keyfile-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpdir)
+
+	password := "password"
+	for i := 1; i < 11; i++ {
+		switch i {
+		case 3:
+			password = "pwdnode1"
+		case 4:
+			password = "pwdnode2"
+		default:
+			password = "password"
+		}
+
+		// decode json, get Key
+		path := "testdata/keys/key" + strconv.Itoa(i)
+
+		fmt.Println("path:", path)
+		keyjson, err := ioutil.ReadFile(path)
+		fmt.Println("keyjson:", string(keyjson))
+		key, err := DecryptKey(keyjson, password)
+		if err != nil {
+			t.Fatalf("json:%v,failed to decrypt: %v", keyjson, err)
+		}
+
+		// build json
+		scryptN := StandardScryptN
+		scryptP := StandardScryptP
+		jsonByte, err := EncryptKey(key, password, scryptN, scryptP)
+		fmt.Println("jsonByte:", string(jsonByte))
+		fmt.Println("tmpdir:", tmpdir)
+		ioutil.WriteFile(tmpdir+"/key"+strconv.Itoa(i), jsonByte, 0666)
+	}
+}
 
 func TestKeyStoreNoPassword(t *testing.T) {
 	dir, ks := tmpKeyStore(t, true)
