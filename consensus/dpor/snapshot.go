@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"bitbucket.org/cpchain/chain/core"
+
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
@@ -261,19 +263,19 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 	return rpts, nil
 }
 
-func GetDefaultSigners() []common.Address {
-	return []common.Address{
-		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
+func (s *DporSnapshot) GetDefaultSigners() []common.Address {
+	extra := core.DefaultCpchainGenesisBlock().ExtraData
+	signers := make([]common.Address, (len(extra)-extraVanity-extraSeal)/common.AddressLength)
+	for i := 0; i < len(signers); i++ {
+		copy(signers[i][:], extra[extraVanity+i*common.AddressLength:])
 	}
+	return signers
 }
 
 // updateView use rpt and election result to get new committee(signers).
 func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
 
-	signers := GetDefaultSigners()
+	signers := s.GetDefaultSigners()
 
 	if s.Number < s.config.MaxInitBlockNumber {
 		s.RecentSigners[s.EpochIdx()+1] = signers
