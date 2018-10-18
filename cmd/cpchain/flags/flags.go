@@ -166,14 +166,14 @@ var RpcFlags = []cli.Flag{
 }
 
 const (
-	MaxPeersFlagName     = "maxpeers"
-	MaxPendPeersFlagName = "maxpendpeers"
-	PortFlagName         = "port"
-	BootNodesFlagName    = "bootnodes"
-	NodeKeyFlagName      = "nodekey"
+	MaxPeersFlagName        = "maxpeers"
+	MaxPendingPeersFlagName = "maxpendpeers"
+	PortFlagName            = "port"
+	BootnodesFlagName       = "bootnodes"
+	NodeKeyFlagName         = "nodekey"
 )
 
-// TODO @liuq  adjust the following
+// TODO @chengxin  adjust the following  {ac}
 // p2p flags
 var P2pFlags = []cli.Flag{
 	cli.IntFlag{
@@ -181,7 +181,7 @@ var P2pFlags = []cli.Flag{
 		Usage: "Maximum number of network peers (network disabled if set to 0)",
 	},
 	cli.IntFlag{
-		Name:  MaxPendPeersFlagName,
+		Name:  MaxPendingPeersFlagName,
 		Usage: "Maximum number of pending connection attempts (defaults used if set to 0)",
 	},
 	cli.IntFlag{
@@ -190,7 +190,7 @@ var P2pFlags = []cli.Flag{
 		Value: 30303,
 	},
 	cli.StringFlag{
-		Name:  BootNodesFlagName,
+		Name:  BootnodesFlagName,
 		Usage: "Comma separated enode URLs for P2P discovery bootstrap (set v4+v5 instead for light servers)",
 		Value: "",
 	},
