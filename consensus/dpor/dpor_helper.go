@@ -58,11 +58,11 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 		return consensus.ErrFutureBlock
 	}
 
-	// Checkpoint blocks need to enforce zero beneficiary
-	checkpoint := (number % c.config.Epoch) == 0
-	if checkpoint && header.Coinbase != (common.Address{}) {
-		return errInvalidCheckpointBeneficiary
-	}
+	// // Checkpoint blocks need to enforce zero beneficiary
+	// checkpoint := (number % c.config.Epoch) == 0
+	// if checkpoint && header.Coinbase != (common.Address{}) {
+	// 	return errInvalidCheckpointBeneficiary
+	// }
 
 	// Check that the extra-data contains both the vanity and signature
 	if len(header.Extra) < extraVanity {

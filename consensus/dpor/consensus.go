@@ -284,6 +284,8 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		case <-time.After(delay):
 		}
 	*/
+	// set coinbase
+	header.Coinbase = signer
 
 	// Sign all the things!
 	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header).Bytes())
