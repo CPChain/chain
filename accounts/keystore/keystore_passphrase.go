@@ -100,7 +100,6 @@ func StoreKey(dir, auth string, scryptN, scryptP int) (common.Address, error) {
 
 func (ks keyStorePassphrase) StoreKey(filename string, key *Key, auth string) error {
 	keyjson, err := EncryptKey(key, auth, ks.scryptN, ks.scryptP)
-	fmt.Println("===============:\n", string(keyjson))
 	if err != nil {
 		return err
 	}
