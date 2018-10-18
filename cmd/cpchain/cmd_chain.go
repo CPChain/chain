@@ -16,7 +16,9 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
+	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/naoina/toml"
@@ -82,12 +84,57 @@ processing will proceed even if an individual RLP-file import failure occurs.`,
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.CacheFlagName),
+				flags.GetByName(flags.CacheDatabaseFlagName),
+				flags.GetByName(flags.CacheGCFlagName),
 			},
 			Category: "BLOCKCHAIN COMMANDS",
 			Description: `Requires a first argument of the file to write to.
 Optional second and third arguments control the first and
 last block to write. In this mode, the file will be appended
 if already existing.`,
+		},
+		{
+			Action:    importPreimages,
+			Name:      "import-preimages",
+			Usage:     "Import the preimage database from an RLP stream",
+			ArgsUsage: "<datafile>",
+			Flags: []cli.Flag{
+				flags.GetByName(flags.DataDirFlagName),
+				flags.GetByName(flags.CacheFlagName),
+				flags.GetByName(flags.CacheDatabaseFlagName),
+				flags.GetByName(flags.CacheGCFlagName),
+			},
+			Category:    "BLOCKCHAIN COMMANDS",
+			Description: `The import-preimages command imports hash preimages from an RLP encoded stream.`,
+		},
+		{
+			Action:    exportPreimages,
+			Name:      "export-preimages",
+			Usage:     "Export the preimage database into an RLP stream",
+			ArgsUsage: "<dumpfile>",
+			Flags: []cli.Flag{
+				flags.GetByName(flags.DataDirFlagName),
+				flags.GetByName(flags.CacheFlagName),
+				flags.GetByName(flags.CacheDatabaseFlagName),
+				flags.GetByName(flags.CacheGCFlagName),
+			},
+			Category:    "BLOCKCHAIN COMMANDS",
+			Description: `The export-preimages command export hash preimages to an RLP encoded stream`,
+		},
+		{
+			Action:    dump,
+			Name:      "dump",
+			Usage:     "Dump a specific block from storage",
+			ArgsUsage: "<blockHash | blockNum> [blockHash | blockNum]...",
+			Flags: []cli.Flag{
+				flags.GetByName(flags.DataDirFlagName),
+				flags.GetByName(flags.CacheFlagName),
+				flags.GetByName(flags.CacheDatabaseFlagName),
+				flags.GetByName(flags.CacheGCFlagName),
+			},
+			Category: "BLOCKCHAIN COMMANDS",
+			Description: `The arguments are interpreted as block numbers or hashes.
+Use "ethereum dump 0" to dump the genesis block.`,
 		},
 	},
 }
@@ -175,9 +222,7 @@ func importChain(ctx *cli.Context) error {
 		log.Fatalf("This command requires an argument.")
 	}
 	cfg, node := newConfigNode(ctx)
-	dbCache := cfg.Eth.DatabaseCache
-	trieCache := cfg.Eth.TrieCache
-	chain, chainDb := chainutils.OpenChain(ctx, node, dbCache, trieCache)
+	chain, chainDb := chainutils.OpenChain(ctx, node, &cfg.Eth)
 	defer chainDb.Close()
 
 	// Start periodically gathering memory profiles
@@ -271,9 +316,7 @@ func exportChain(ctx *cli.Context) error {
 		log.Fatalf("This command requires an argument.")
 	}
 	cfg, node := newConfigNode(ctx)
-	dbCache := cfg.Eth.DatabaseCache
-	trieCache := cfg.Eth.TrieCache
-	chain, _ := chainutils.OpenChain(ctx, node, dbCache, trieCache)
+	chain, _ := chainutils.OpenChain(ctx, node, &cfg.Eth)
 	start := time.Now()
 
 	var err error
@@ -298,4 +341,73 @@ func exportChain(ctx *cli.Context) error {
 	}
 	fmt.Printf("Export done in %v\n", time.Since(start))
 	return nil
+}
+
+// importPreimages imports preimage data from the specified file.
+func importPreimages(ctx *cli.Context) error {
+	if len(ctx.Args()) < 1 {
+		log.Fatalf("This command requires an argument.")
+	}
+	cfg, stack := newConfigNode(ctx)
+	diskdb := chainutils.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*ethdb.LDBDatabase)
+
+	start := time.Now()
+	if err := chainutils.ImportPreimages(diskdb, ctx.Args().First()); err != nil {
+		log.Fatalf("Import error: %v\n", err)
+	}
+	fmt.Printf("Import done in %v\n", time.Since(start))
+	return nil
+}
+
+// exportPreimages dumps the preimage data to specified json file in streaming way.
+func exportPreimages(ctx *cli.Context) error {
+	if len(ctx.Args()) < 1 {
+		log.Fatal("This command requires an argument.")
+	}
+	cfg, stack := newConfigNode(ctx)
+	diskdb := chainutils.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*ethdb.LDBDatabase)
+
+	start := time.Now()
+	if err := chainutils.ExportPreimages(diskdb, ctx.Args().First()); err != nil {
+		log.Fatalf("Export error: %v\n", err)
+	}
+	fmt.Printf("Export done in %v\n", time.Since(start))
+	return nil
+}
+
+// dump outputs specified blocks from storage
+func dump(ctx *cli.Context) error {
+	if len(ctx.Args()) < 1 {
+		log.Fatal("This command requires an argument.")
+	}
+
+	cfg, stack := newConfigNode(ctx)
+	chain, chainDb := chainutils.OpenChain(ctx, stack, &cfg.Eth)
+	for _, arg := range ctx.Args() {
+		var block *types.Block
+		if hashish(arg) {
+			block = chain.GetBlockByHash(common.HexToHash(arg))
+		} else {
+			num, _ := strconv.Atoi(arg)
+			block = chain.GetBlockByNumber(uint64(num))
+		}
+		if block == nil {
+			fmt.Println("{}")
+			log.Fatalf("block not found")
+		} else {
+			state, err := state.New(block.StateRoot(), state.NewDatabase(chainDb))
+			if err != nil {
+				log.Fatalf("could not create new state: %v", err)
+			}
+			fmt.Printf("%s\n", state.Dump())
+		}
+	}
+	chainDb.Close()
+	return nil
+}
+
+// hashish returns true for strings that look like hashes.
+func hashish(x string) bool {
+	_, err := strconv.Atoi(x)
+	return err != nil
 }
