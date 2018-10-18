@@ -72,6 +72,8 @@ func TestSignerRegister(t *testing.T) {
 	fmt.Println("1.load RsaPublicKey/PrivateKey")
 
 	rsaKey, err := rsakey.NewRsaKey("./testdata")
+	fmt.Println("new rsa err:", err)
+
 	// 2. register node2 public key on chain (claim campaign)
 	fmt.Println("2.register node2 public key on chain")
 	register.TransactOpts = *bind.NewKeyedTransactor(key)
@@ -81,6 +83,14 @@ func TestSignerRegister(t *testing.T) {
 
 	tx, err := register.RegisterPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
 	fmt.Println("RegisterPublicKey tx:", tx.Hash().Hex())
+
+	// testme
+
+	rsaPublicKey, err := rsakey.NewRsaPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
+	fmt.Println("err:", err)
+	pubkey := rsaPublicKey.RsaPublicKey
+	fmt.Println(pubkey)
+
 	contractBackend.Commit()
 	printReceipt(contractBackend, tx, "ReceiptStatusFailed when RegisterPublicKey:%v")
 

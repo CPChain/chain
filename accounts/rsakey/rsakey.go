@@ -43,21 +43,20 @@ func NewRsaKey(rsaDir string) (*RsaKey, error) {
 	if err := os.MkdirAll(rsaDir, 0700); err != nil {
 		return nil, err
 	}
-	rsaPubPath := filepath.Join(rsaDir, "rsa_pub.pem")
 	rsaPriPath := filepath.Join(rsaDir, "rsa_pri.pem")
 
 	// Load RSA key
-	if pub, pri, pubBytes, priBytes, err := loadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+	if pub, pri, pubBytes, priBytes, err := loadRsaKey(rsaPriPath); err == nil {
 		return &RsaKey{pri, priBytes, &RsaPublicKey{pub, pubBytes}}, nil
 	}
 	// No persistent key found, generate and store a new one.
-	log.Info(fmt.Sprintf("file not found.rsaPubPath:%v,rsaPriPath:%v", rsaPubPath, rsaPriPath))
-	err := generateRsaKey(rsaPubPath, rsaPriPath, 2048)
+	log.Info(fmt.Sprintf("file not found. rsaPriPath:%v", rsaPriPath))
+	err := generateRsaKey(rsaPriPath, 2048)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to persist rsa key: %v", err))
 		return nil, err
 	}
-	if pub, pri, pubBytes, priBytes, err := loadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+	if pub, pri, pubBytes, priBytes, err := loadRsaKey(rsaPriPath); err == nil {
 		return &RsaKey{pri, priBytes, &RsaPublicKey{pub, pubBytes}}, nil
 	}
 	log.Error(fmt.Sprintf("load rsa key fail:%v", err))
@@ -94,6 +93,7 @@ func NewRsaPrivateKey(priKeyBytes []byte) (*RsaKey, error) {
 	}
 	priBytes := x509.MarshalPKCS1PrivateKey(priKey)
 	pubBytes := x509.MarshalPKCS1PublicKey(&priKey.PublicKey)
+	// pubBytes, err := x509.MarshalPKIXPublicKey(publicKey)
 	if err != nil {
 		return nil, err
 	}

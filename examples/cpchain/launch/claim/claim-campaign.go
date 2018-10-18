@@ -22,10 +22,8 @@ import (
 )
 
 type keystorePair struct {
-	keystorePath   string
-	passphrase     string
-	rsaPubkeyPath  string
-	rsaPrivKeyPath string
+	keystorePath string
+	passphrase   string
 }
 
 var (
@@ -35,67 +33,47 @@ var (
 		{
 			"dd1/keystore/",
 			"password",
-			"dd1/rsa/rsa_pub.pem",
-			"dd1/rsa/rsa_pri.pem",
 		},
 		{
 			"dd2/keystore/",
 			"password",
-			"dd2/rsa/rsa_pub.pem",
-			"dd2/rsa/rsa_pri.pem",
 		},
 		{
 			"dd3/keystore/",
 			"pwdnode1",
-			"dd3/rsa/rsa_pub.pem",
-			"dd3/rsa/rsa_pri.pem",
 		},
 		{
 			"dd4/keystore/",
 			"pwdnode2",
-			"dd4/rsa/rsa_pub.pem",
-			"dd4/rsa/rsa_pri.pem",
 		},
 		{
 			"dd5/keystore/",
 			"password",
-			"dd5/rsa/rsa_pub.pem",
-			"dd5/rsa/rsa_pri.pem",
 		},
 		{
 			"dd6/keystore/",
 			"password",
-			"dd6/rsa/rsa_pub.pem",
-			"dd6/rsa/rsa_pri.pem",
 		},
 		{
 			"dd7/keystore/",
 			"password",
-			"dd7/rsa/rsa_pub.pem",
-			"dd7/rsa/rsa_pri.pem",
 		},
 		{
 			"dd8/keystore/",
 			"password",
-			"dd8/rsa/rsa_pub.pem",
-			"dd8/rsa/rsa_pri.pem",
 		},
 		{
 			"dd9/keystore/",
 			"password",
-			"dd9/rsa/rsa_pub.pem",
-			"dd9/rsa/rsa_pri.pem",
 		},
 		{
 			"dd10/keystore/",
 			"password",
-			"dd10/rsa/rsa_pub.pem",
-			"dd10/rsa/rsa_pri.pem",
 		},
 	}
 )
 
-func getAccount(keyStoreFilePath string, passphrase string, rsaPubkeyPath string, rsaPrivkeyPath string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
+func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
 	// Load account.
 	file, err := os.Open(dataDir + keyStoreFilePath)
 	if err != nil {
@@ -246,8 +224,8 @@ func main() {
 
 	for i, kPair := range keystores {
 		fmt.Println(i)
-		keystoreFile, passphrase, rsaPubkeyPath, rsaPrivkeyPath := kPair.keystorePath, kPair.passphrase, kPair.rsaPubkeyPath, kPair.rsaPrivKeyPath
-		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase, rsaPubkeyPath, rsaPrivkeyPath)
+		keystoreFile, passphrase := kPair.keystorePath, kPair.passphrase
+		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase)
 		claimCampaign(privKey, pubKey, addr, campaignAddress)
 		claimSigner(privKey, pubKey, addr, signerAddress, rsaPubKey)
 	}

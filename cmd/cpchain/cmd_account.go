@@ -138,7 +138,7 @@ func accountUpdate(ctx *cli.Context) error {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	for _, addr := range ctx.Args() {
-		account, oldPassword := unlockAccount(ctx, ks, addr)
+		account, oldPassword := unlockAccount(ctx, ks, addr, 0, nil)
 		newPassword, _ := readPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a new password.", true)
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
 			Fatalf("Could not update the account: %v", err)
@@ -183,7 +183,7 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 }
 
 // tries unlocking the specified account a few times.
-func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string) (accounts.Account, string) {
+func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i int, passwords []string) (accounts.Account, string) {
 	account, err := makeAddress(ks, address)
 	if err != nil {
 		Fatalf("Could not list accounts: %v", err)

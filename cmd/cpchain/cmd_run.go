@@ -9,7 +9,13 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
+
+	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"fmt"
+
 	"github.com/urfave/cli"
+	"io/ioutil"
+	"strings"
 )
 
 var runCommand cli.Command
@@ -52,15 +58,38 @@ func startNode(n *node.Node) {
 }
 
 func unlockAccounts(ctx *cli.Context, n *node.Node) {
-	// ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	//
-	// passwords := utils.MakePasswordList(ctx)
-	// unlocks := strings.Split(ctx.GlobalString(utils.UnlockedAccountFlag.Name), ",")
-	// for i, account := range unlocks {
-	// 	if trimmed := strings.TrimSpace(account); trimmed != "" {
-	// 		unlockAccount(ctx, ks, trimmed, i, passwords)
-	// 	}
-	// }
+	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+
+	passwords := MakePasswordList(ctx)
+	unlock := flags.GetByName("unlock").String()
+	fmt.Println("unlock:", unlock)
+	unlocks := strings.Split(unlock, ",")
+	for i, account := range unlocks {
+		if trimmed := strings.TrimSpace(account); trimmed != "" {
+			unlockAccount(ctx, ks, trimmed, i, passwords)
+		}
+	}
+}
+
+// MakePasswordList reads password lines from the file specified by the global --password flag.
+func MakePasswordList(ctx *cli.Context) []string {
+	pathFlag := flags.GetByName("password")
+	path := pathFlag.String()
+	fmt.Println("path:", path)
+	// path := ctx.GlobalString(PasswordFileFlag.Name)
+	if path == "" {
+		return nil
+	}
+	text, err := ioutil.ReadFile(path)
+	if err != nil {
+		Fatalf("Failed to read password file: %v", err)
+	}
+	lines := strings.Split(string(text), "\n")
+	// Sanitise DOS line endings.
+	for i := range lines {
+		lines[i] = strings.TrimRight(lines[i], "\r")
+	}
+	return lines
 }
 
 func handleWallet() {

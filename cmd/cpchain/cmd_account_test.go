@@ -20,6 +20,7 @@ import (
 	"github.com/cespare/cp"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -158,6 +159,35 @@ func TestUnlockFlagWrongPassword11(t *testing.T) {
 		COPYRIGHT:
 		   LGPL
 `)
+}
+
+// https://github.com/ethereum/go-ethereum/issues/1785
+func TestUnlockFlagMultiIndex(t *testing.T) {
+	t.Skip("TestUnlockFlagMultiIndex")
+	datadir := tmpDatadirWithKeystore(t)
+	geth := runGeth(t,
+		"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
+		"--unlock", "0,2",
+		"js", "testdata/empty.js")
+	geth.Expect(`
+Unlocking account 0 | Attempt 1/3
+!! Unsupported terminal, password will be echoed.
+Passphrase: {{.InputLine "foobar"}}
+Unlocking account 2 | Attempt 1/3
+Passphrase: {{.InputLine "foobar"}}
+`)
+	geth.ExpectExit()
+
+	wantMessages := []string{
+		"Unlocked account",
+		"=0x7EF5A6135f1FD6a02593eEdC869c6D41D934aef8",
+		"=0x289d485D9771714CCe91D3393D764E1311907ACc",
+	}
+	for _, m := range wantMessages {
+		if !strings.Contains(geth.StderrText(), m) {
+			t.Errorf("stderr text does not contain %q", m)
+		}
+	}
 }
 
 func TestUnlockFlagPasswordFileWrongPassword(t *testing.T) {

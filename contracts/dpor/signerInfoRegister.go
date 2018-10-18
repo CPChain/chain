@@ -67,7 +67,7 @@ func (self *SignerConnectionRegister) GetPublicKey(addr common.Address) (*rsakey
 	if err != nil {
 		return nil, err
 	}
-	log.Info("address:%v,publicKeyBytes:%v", addr, publicKeyBytes)
+	log.Infof("address:%v,publicKeyBytes:%v", addr, publicKeyBytes)
 	publicKey, err := rsakey.NewRsaPublicKey(publicKeyBytes)
 	if err != nil {
 		return nil, err

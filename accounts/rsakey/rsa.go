@@ -17,11 +17,11 @@ func generateDerRsaKey(bits int) (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byt
 	priBytes := x509.MarshalPKCS1PrivateKey(privateKey)
 	// generate public key
 	publicKey := &privateKey.PublicKey
-	pubBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+	pubBytes := x509.MarshalPKCS1PublicKey(publicKey)
 	return publicKey, privateKey, pubBytes, priBytes, err
 }
 
-func generateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {
+func generateRsaKey(privateKeyPath string, bits int) error {
 	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		return err
@@ -40,36 +40,11 @@ func generateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {
 	if err != nil {
 		return err
 	}
-	// generate public key
-	publicKey := &privateKey.PublicKey
-	pubBytes, err := x509.MarshalPKIXPublicKey(publicKey)
-	if err != nil {
-		return err
-	}
-	block = &pem.Block{
-		Type:  "public key",
-		Bytes: pubBytes,
-	}
-	file, err = os.Create(pubKeyPath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	err = pem.Encode(file, block)
 	return err
 }
 
-func loadRsaKey(pubPath, priPath string) (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
-	publicBlock, err := loadKeyFile(pubPath)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+func loadRsaKey(priPath string) (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
 	priBlock, err := loadKeyFile(priPath)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
-
-	pubInterface, err := bytes2PublicKey(publicBlock.Bytes)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -78,8 +53,9 @@ func loadRsaKey(pubPath, priPath string) (*rsa.PublicKey, *rsa.PrivateKey, []byt
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	pubBytes := x509.MarshalPKCS1PublicKey(pubInterface)
-	return pubInterface, privateKey, pubBytes, priBlock.Bytes, nil
+	publicKey := &privateKey.PublicKey
+	pubBytes := x509.MarshalPKCS1PublicKey(publicKey)
+	return publicKey, privateKey, pubBytes, priBlock.Bytes, nil
 }
 
 func bytes2PrivateKey(bs []byte) (*rsa.PrivateKey, error) {
@@ -88,11 +64,11 @@ func bytes2PrivateKey(bs []byte) (*rsa.PrivateKey, error) {
 }
 
 func bytes2PublicKey(bs []byte) (*rsa.PublicKey, error) {
-	publicKey, err := x509.ParsePKIXPublicKey(bs)
+	publicKey, err := x509.ParsePKCS1PublicKey(bs)
 	if err != nil {
 		return nil, err
 	}
-	return publicKey.(*rsa.PublicKey), err
+	return publicKey, err
 }
 
 func loadKeyFile(path string) (*pem.Block, error) {
