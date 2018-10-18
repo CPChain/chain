@@ -25,8 +25,8 @@ type config struct {
 // begin node configs ********************************************************************88
 
 func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
-	if ctx.IsSet("datadir") {
-		cfg.DataDir = ctx.String("datadir")
+	if ctx.IsSet(flags.DataDirFlagName) {
+		cfg.DataDir = ctx.String(flags.DataDirFlagName)
 	}
 }
 
@@ -48,6 +48,12 @@ func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	updateNodeGeneralConfig(ctx, cfg)
 	updateP2pConfig(ctx, &cfg.P2P)
 	updateRpcConfig(ctx, cfg)
+
+	// Update UseLightweightKDF setting
+	if ctx.GlobalIsSet(flags.LightKdfFlagName) {
+		cfg.UseLightweightKDF = ctx.GlobalBool(flags.LightKdfFlagName)
+	}
+
 }
 
 // begin chain configs ********************************************************************88
@@ -100,19 +106,19 @@ func updateChainConfig(ctx *cli.Context, cfg *eth.Config, n *node.Node) {
 	updateBaseAccount(ctx, ks, cfg)
 	// setGPO(ctx, &cfg.GPO)
 	updateTxPool(ctx, &cfg.TxPool)
-	updateDatabaseCacheFlag(ctx, cfg)
-	updateTrieCacheFlag(ctx, cfg)
+	updateDatabaseCache(ctx, cfg)
+	updateTrieCache(ctx, cfg)
 }
 
-// updateDatabaseCacheFlag updates database cache.
-func updateDatabaseCacheFlag(ctx *cli.Context, cfg *eth.Config) {
+// updateDatabaseCache updates database cache.
+func updateDatabaseCache(ctx *cli.Context, cfg *eth.Config) {
 	if ctx.IsSet(flags.CacheFlagName) && ctx.IsSet(flags.CacheDatabaseFlagName) {
 		cfg.DatabaseCache = ctx.Int(flags.CacheFlagName) * ctx.Int(flags.CacheDatabaseFlagName) / 100
 	}
 }
 
-// updateTrieCacheFlag updates trie cache.
-func updateTrieCacheFlag(ctx *cli.Context, cfg *eth.Config) {
+// updateTrieCache updates trie cache.
+func updateTrieCache(ctx *cli.Context, cfg *eth.Config) {
 	if ctx.IsSet(flags.CacheFlagName) && ctx.IsSet(flags.CacheGCFlagName) {
 		cfg.TrieCache = ctx.Int(flags.CacheFlagName) * ctx.Int(flags.CacheGCFlagName) / 100
 	}
