@@ -155,9 +155,10 @@
 			"revision": ""
 		},
 		{
-			"checksumSHA1": "egyKJ+8B2RjmvMz0xqkVGY0B6Ig=",
+			"checksumSHA1": "etU53pFXkq9fqy+qGUctHuhSJ7M=",
 			"path": "github.com/ethereum/go-ethereum/event",
-			"revision": ""
+			"revision": "",
+			"tree": true
 		},
 		{
 			"checksumSHA1": "KSRJC/V4LkGTakqzakXY/Ces0sw=",
