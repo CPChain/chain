@@ -68,7 +68,7 @@ func (*fakeDb) NewBatch() ethdb.Batch {
 }
 
 func Test_newSnapshot(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3, View: 3}, nil, 1, common.Hash{}, getSignerAddress())
 	equal := reflect.DeepEqual(snap.SignersOf(1), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
@@ -161,7 +161,7 @@ func TestSnapshot_store(t *testing.T) {
 }
 
 func TestSnapshot_copy(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3, View: 3}, nil, 1, common.Hash{}, getSignerAddress())
 	snap.Candidates = getCandidates()
 
 	cpySnap := snap.copy()
@@ -429,7 +429,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 }
 
 func TestSnapshot_isSigner(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3}, nil, 1, common.Hash{}, getSignerAddress()[1:2])
+	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3, View: 3}, nil, 1, common.Hash{}, getSignerAddress()[1:2])
 	isSinger := snap.IsSignerOf(addr1, 1)
 	if isSinger {
 		t.Errorf("expected isSinger %v,get %v", false, isSinger)
@@ -454,11 +454,11 @@ func TestSnapshot_isLeader(t *testing.T) {
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader, err = snap.IsLeaderOf(addr2, 2)
+	isLeader, err = snap.IsLeaderOf(addr1, 2)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader, err = snap.IsLeaderOf(addr3, 3)
+	isLeader, err = snap.IsLeaderOf(addr1, 3)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
@@ -470,11 +470,7 @@ func TestSnapshot_isNotLeader(t *testing.T) {
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
-	isLeader, _ = snap.IsLeaderOf(addr1, 2)
-	if isLeader {
-		t.Errorf("expect isLeader false get %v", isLeader)
-	}
-	isLeader, _ = snap.IsLeaderOf(addr1, 3)
+	isLeader, _ = snap.IsLeaderOf(addr3, 1)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
 	}
@@ -508,7 +504,7 @@ func TestSnapshot_signerRoundOk(t *testing.T) {
 
 func createSnapshot() *DporSnapshot {
 	signers := getSignerAddress()
-	config := &configs.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
 	snap := newSnapshot(config, cache, 1, common.Hash{}, signers)
 	return snap
@@ -549,7 +545,7 @@ func TestSnapshot_candidates(t *testing.T) {
 
 func TestSnapshot_inturn(t *testing.T) {
 	signers := getSignerAddress()
-	config := &configs.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
 	snap := newSnapshot(config, cache, 1, common.Hash{}, signers)
 
@@ -561,12 +557,12 @@ func TestSnapshot_inturn(t *testing.T) {
 		{1, addr1, true},
 		{1, addr2, false},
 		{1, addr3, false},
-		{2, addr1, false},
-		{2, addr2, true},
+		{2, addr1, true},
+		{2, addr2, false},
 		{2, addr3, false},
-		{3, addr1, false},
+		{3, addr1, true},
 		{3, addr2, false},
-		{3, addr3, true},
+		{3, addr3, false},
 	}
 
 	for _, tt := range tests {

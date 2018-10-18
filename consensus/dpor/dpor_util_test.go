@@ -285,7 +285,7 @@ func Test_acceptSigs(t *testing.T) {
 
 func Test_calcDifficulty(t *testing.T) {
 	signers := getSignerAddress()
-	config := &configs.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
 	snapshot := newSnapshot(config, cache, 1, common.Hash{}, signers)
 
@@ -298,8 +298,8 @@ func Test_calcDifficulty(t *testing.T) {
 		args args
 		want *big.Int
 	}{
-		{name: "WhenSnapshotIsNotLeader", args: args{snapshot, signers[0]}, want: big.NewInt(1)},
-		{name: "WhenSnapshotIsLeader", args: args{snapshot, signers[1]}, want: big.NewInt(2)},
+		{name: "WhenSnapshotIsNotLeader", args: args{snapshot, signers[0]}, want: big.NewInt(2)},
+		{name: "WhenSnapshotIsLeader", args: args{snapshot, signers[1]}, want: big.NewInt(1)},
 	}
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {

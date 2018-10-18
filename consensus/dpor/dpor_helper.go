@@ -353,7 +353,6 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	if number%uint64(snap.config.Epoch) == 0 && number >= dpor.config.MaxInitBlockNumber && number >= currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
 		// TODO: fix this.
 		log.Info("I am future signer, building the committee network")
-		log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
 		// round, err := snap.FuturesignerRoundOf(dpor.signer, number)
 		// if err != nil {
@@ -370,8 +369,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		// }(epochIdx, signers)
 
 	} else {
-		log.Info("I am not future signer, doing nothing.")
-		log.Info("#######################################################")
+		// log.Info("I am not future signer, doing nothing.")
 		// go dpor.committeeNetworkHandler.Disconnect()
 	}
 

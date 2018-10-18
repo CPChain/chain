@@ -348,9 +348,9 @@ func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, e
 	// return round == int((number-1)%s.config.Epoch), nil
 	b := round == int(((number-1)%(s.config.Epoch*s.config.View))/s.config.View)
 
-	log.Info("round", "r", round)
-	log.Info("number", "n", number)
-	log.Info("int(((number-1)%(s.config.Epoch*s.config.View+1))/s.config.View)", "b", int(((number-1)%(s.config.Epoch*s.config.View))/s.config.View))
+	// log.Debug("round", "r", round)
+	// log.Debug("number", "n", number)
+	// log.Debug("int(((number-1)%(s.config.Epoch*s.config.View+1))/s.config.View)", "b", int(((number-1)%(s.config.Epoch*s.config.View))/s.config.View))
 
 	return b, nil
 }
