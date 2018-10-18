@@ -65,9 +65,6 @@ func TestSignerRegister(t *testing.T) {
 	_ = contractAddr
 	contractBackend.Commit()
 
-	// ==============RegisterPublicKey====================
-	// rsa_.generateRsaKey("./testdata/rsa_pub1.pem", "./testdata/rsa_pri1.pem", 2048)
-
 	// 1. load RsaPublicKey/PrivateKey
 	fmt.Println("1.load RsaPublicKey/PrivateKey")
 
@@ -83,8 +80,6 @@ func TestSignerRegister(t *testing.T) {
 
 	tx, err := register.RegisterPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
 	fmt.Println("RegisterPublicKey tx:", tx.Hash().Hex())
-
-	// testme
 
 	rsaPublicKey, err := rsakey.NewRsaPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
 	fmt.Println("err:", err)

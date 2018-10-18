@@ -32,14 +32,7 @@ func TestCreateRsaKey(t *testing.T) {
 }
 
 func TestNewRsaPublicKey(t *testing.T) {
-	// rsaKey, err := CreateRsaKey()
-	// assert.Nil(t, err)
-	// encrypted, err := rsaKey.RsaEncrypt([]byte("testme"))
-	// origData, err := rsaKey.RsaDecrypt(encrypted)
-	// assert.Equal(t, string(origData), "testme")
-
 	rsaKey, err := CreateRsaKey()
-	// rsaKey, err := NewRsaKey("./testdata")
 	assert.Nil(t, err)
 	rsaPublicKey, err := NewRsaPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
 	assert.Nil(t, err)

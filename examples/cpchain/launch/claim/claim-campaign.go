@@ -12,7 +12,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
@@ -28,7 +27,7 @@ type keystorePair struct {
 
 var (
 	endPoint  = "http://localhost:8501"
-	dataDir   = "./data/"
+	dataDir   = "/examples/cpchain/data/"
 	keystores = []keystorePair{
 		{
 			"dd1/keystore/",
@@ -74,8 +73,9 @@ var (
 )
 
 func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
+	ff, err := filepath.Abs(".")
 	// Load account.
-	file, err := os.Open(dataDir + keyStoreFilePath)
+	file, err := os.Open(ff + dataDir + keyStoreFilePath)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -101,11 +101,9 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 		log.Fatal("error casting public key to ECDSA")
 	}
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-
-	rsaKey, err := rsakey.NewRsaKey(dataDir)
 	fmt.Println(err)
 
-	return privateKey, publicKeyECDSA, fromAddress, rsaKey.PublicKey.RsaPublicKeyBytes
+	return privateKey, publicKeyECDSA, fromAddress, key.RsaKey.PublicKey.RsaPublicKeyBytes
 }
 
 func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address) {
