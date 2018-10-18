@@ -7,12 +7,21 @@ import (
 	"encoding/pem"
 	"errors"
 	"os"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 )
 
-func generateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {
+func generateDerRsaKey(bits int) (*rsa.PublicKey, *rsa.PrivateKey, []byte, []byte, error) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	priBytes := x509.MarshalPKCS1PrivateKey(privateKey)
 	// generate public key
+	publicKey := &privateKey.PublicKey
+	pubBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+	return publicKey, privateKey, pubBytes, priBytes, err
+}
+
+func generateRsaKey(pubKeyPath, privateKeyPath string, bits int) error {
 	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		return err
@@ -88,7 +97,6 @@ func bytes2PublicKey(bs []byte) (*rsa.PublicKey, error) {
 
 func loadKeyFile(path string) (*pem.Block, error) {
 	keyBytes, pubErr := LoadFile(path)
-	log.Info("Load key file", "KeyBytes length:", len(keyBytes))
 	if pubErr != nil {
 		return nil, errors.New("load key file [" + path + "] failed")
 	}

@@ -20,7 +20,7 @@ package accounts
 import (
 	"math/big"
 
-	ethereum "bitbucket.org/cpchain/chain"
+	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -126,6 +126,10 @@ type Wallet interface {
 	// It looks up the account specified either solely via its address contained within,
 	// or optionally with the aid of any location metadata from the embedded URL field.
 	SignTxWithPassphrase(account Account, passphrase string, tx *types.Transaction, chainID *big.Int) (*types.Transaction, error)
+
+	RsaEncrypt(a Account, password string, origData []byte) ([]byte, error)
+
+	RsaDecrypt(a Account, password string, cipherText []byte) ([]byte, error)
 }
 
 // Backend is a "wallet provider" that may contain a batch of accounts they can

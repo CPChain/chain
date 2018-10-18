@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,6 +27,15 @@ type RsaKey struct {
 
 	// Rsa public key
 	PublicKey *RsaPublicKey
+}
+
+// create new rsa key
+func CreateRsaKey() (*RsaKey, error) {
+	pub, pri, pubBytes, priBytes, err := generateDerRsaKey(2048)
+	if err == nil {
+		return &RsaKey{pri, priBytes, &RsaPublicKey{pub, pubBytes}}, nil
+	}
+	return nil, err
 }
 
 // NewRsaKey creates a keystore for the given directory.
@@ -80,7 +88,6 @@ func NewRsaPrivateKey(priKeyBytes []byte) (*RsaKey, error) {
 	if len(priKeyBytes) == 0 {
 		return nil, nil
 	}
-	fmt.Println("========= NewRsaPrivateKey ========:", hex.EncodeToString(priKeyBytes))
 	priKey, err := bytes2PrivateKey(priKeyBytes)
 	if err != nil {
 		return nil, err

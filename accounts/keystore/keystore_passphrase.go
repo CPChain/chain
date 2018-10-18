@@ -134,8 +134,8 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 		return nil, err
 	}
 
-	// TODO create or load? rsakey
-	rsaKey, err := rsakey.NewRsaKey("/tmp/rsa")
+	// create rsakey
+	rsaKey, err := rsakey.CreateRsaKey()
 
 	// get rsaClipherText
 	encodedRsaCipherRawText := PKCS5Padding(rsaKey.PrivateKeyBytes, 32)
@@ -199,7 +199,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		if err := json.Unmarshal(keyjson, k); err != nil {
 			return nil, err
 		}
-		keyBytes, keyId, err = decryptKeyV1(k, auth)
+		keyBytes, keyId, rsaKeyBytes, err = decryptKeyV1(k, auth)
 	} else {
 		k := new(encryptedKeyJSONV3)
 		if err := json.Unmarshal(keyjson, k); err != nil {
@@ -215,7 +215,6 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 
 	// decode *rsakey.RsaKey from json file
 	rsaKey, err := rsakey.NewRsaPrivateKey(rsaKeyBytes)
-	_ = rsaKey
 	if err != nil {
 		return nil, err
 	}
@@ -297,38 +296,50 @@ func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	return append(ciphertext, padtext...)
 }
 
-func decryptKeyV1(keyProtected *encryptedKeyJSONV1, auth string) (keyBytes []byte, keyId []byte, err error) {
+func decryptKeyV1(keyProtected *encryptedKeyJSONV1, auth string) (keyBytes []byte, keyId []byte, rsaKeyBytes []byte, err error) {
 	keyId = uuid.Parse(keyProtected.Id)
 	mac, err := hex.DecodeString(keyProtected.Crypto.MAC)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	iv, err := hex.DecodeString(keyProtected.Crypto.CipherParams.IV)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	cipherText, err := hex.DecodeString(keyProtected.Crypto.CipherText)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
+	}
+	rsaCipherText, err := hex.DecodeString(keyProtected.Crypto.RsaCipherText)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	derivedKey, err := getKDFKey(keyProtected.Crypto, auth)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	calculatedMAC := crypto.Keccak256(derivedKey[16:32], cipherText)
+	macSource := mergeBytes(cipherText, rsaCipherText)
+
+	calculatedMAC := crypto.Keccak256(derivedKey[16:32], macSource)
 	if !bytes.Equal(calculatedMAC, mac) {
-		return nil, nil, ErrDecrypt
+		return nil, nil, nil, ErrDecrypt
 	}
 
 	plainText, err := aesCBCDecrypt(crypto.Keccak256(derivedKey[:16])[:16], cipherText, iv)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return plainText, keyId, err
+
+	rsaPlainText, err := aesCTRXOR(derivedKey[:16], rsaCipherText, iv)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	rsaPlainText = PKCS5UnPadding(rsaPlainText)
+	return plainText, keyId, rsaPlainText, err
 }
 
 func getKDFKey(cryptoJSON cryptoJSON, auth string) ([]byte, error) {

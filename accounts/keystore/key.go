@@ -93,7 +93,6 @@ type cryptoJSON struct {
 
 type cipherparamsJSON struct {
 	IV string `json:"iv"`
-	// RSAIV string `json:"rsaiv"`
 }
 
 func (k *Key) MarshalJSON() (j []byte, err error) {

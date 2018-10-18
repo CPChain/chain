@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"bytes"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -82,6 +83,14 @@ func TestRsaKeyEncryptDecrypt(t *testing.T) {
 		if key.Address != address {
 			t.Errorf("test %d: key address mismatch: have %x, want %x", i, key.Address, address)
 		}
+		// encrypt/decrypt with rsa should be correct
+		testBytes := []byte("hello")
+		encodedBytes, err := key.RsaKey.RsaEncrypt(testBytes)
+		origBytes, err := key.RsaKey.RsaDecrypt(encodedBytes)
+		if bytes.Compare(testBytes, origBytes) != 0 {
+			t.Errorf("RsaEncrypt/RsaDecrypt result mismatch: have %x, want %x", origBytes, testBytes)
+		}
+
 		// Recrypt with a new password and start over
 		password += "new data appended"
 		if keyjson, err = EncryptKey(key, password, veryLightScryptN, veryLightScryptP); err != nil {
