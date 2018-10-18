@@ -47,7 +47,7 @@ func MakeChainDatabase(ctx *cli.Context, stack *node.Node, databaseCache int) et
 
 // MakeGenesis builds a genesis block object.
 func MakeGenesis(ctx *cli.Context) *core.Genesis {
-	return core.DefaultCpchainGenesisBlock()
+	return core.DefaultGenesisBlock()
 }
 
 // OpenChain opens a blockchain

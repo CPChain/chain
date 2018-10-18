@@ -33,8 +33,8 @@ var chainCommand = cli.Command{
 	Usage: "Manage blockchain",
 	Subcommands: []cli.Command{
 		{
-			Name:     "init",
-			Usage:    "Bootstrap and initialize a new genesis block",
+			Name:  "init",
+			Usage: "Bootstrap and initialize a new genesis block",
 			Flags: []cli.Flag{
 				flags.GetByName("datadir"),
 			},
@@ -44,8 +44,8 @@ var chainCommand = cli.Command{
 If no genesis file is found, the initialization is aborted.`, defaultGenesisPath),
 		},
 		{
-			Name:     "cleandb",
-			Usage:    "Clean blockchain and state databases",
+			Name:  "cleandb",
+			Usage: "Clean blockchain and state databases",
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 			},
@@ -152,7 +152,7 @@ func initChain(ctx *cli.Context) error {
 	genesisPath := ctx.Args().First()
 	var genesis *core.Genesis
 	if len(genesisPath) == 0 {
-		genesis = core.DefaultCpchainGenesisBlock()
+		genesis = core.DefaultGenesisBlock()
 	} else {
 		file, err := os.Open(genesisPath)
 		if err != nil {

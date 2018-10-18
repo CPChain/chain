@@ -20,6 +20,8 @@ func init() {
 	runFlags = append(runFlags, flags.NodeFlags...)
 	runFlags = append(runFlags, flags.MinerFlags...)
 	runFlags = append(runFlags, flags.P2pFlags...)
+	runFlags = append(runFlags, flags.AccountFlags...)
+	runFlags = append(runFlags, flags.ChainFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,

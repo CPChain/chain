@@ -232,10 +232,6 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 		return g.Config
 	case ghash == configs.MainnetGenesisHash:
 		return configs.MainnetChainConfig
-	case ghash == configs.CpchainGenesisHash:
-		// TODO
-		panic("not implemented.")
-		//return params.CpchainChainConfig
 	default:
 		return configs.AllEthashProtocolChanges
 		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
@@ -323,7 +319,7 @@ func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big
 }
 
 // DefaultGenesisBlock returns the Ethereum main net genesis block.
-func DefaultGenesisBlock() *Genesis {
+func DefaultOldGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     configs.MainnetChainConfig,
 		Nonce:      66,
@@ -334,9 +330,10 @@ func DefaultGenesisBlock() *Genesis {
 	}
 }
 
-func DefaultCpchainGenesisBlock() *Genesis {
+// DefaultGenesisBlock returns the CPChain main net genesis block.
+func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
-		Config:     configs.CpchainChainConfig,
+		Config:     configs.MainnetChainConfig,
 		Timestamp:  1492009146,
 		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000c05302acebd0730e3a18a058d7d1cb1204c4a092e94b7b6c5a0e526a4d97f9768ad6097bde25c62aef3dd127de235f15ffb4fc0d71469d1339df64656e31e5b68a98dcd17264bd1ba547d0b3e874da1e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
 		ExtraData2: hexutil.MustDecode("0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
