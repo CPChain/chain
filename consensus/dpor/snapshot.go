@@ -175,7 +175,8 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 
 	s.updateCandidates(header)
 
-	if s.Number%checkpointInterval == 0 {
+	if IsCheckPoint(s.Number, s.config.Epoch, s.config.View) {
+		// if s.Number%checkpointInterval == 0 {
 		rpts, err := s.updateRpts(header)
 		if err != nil {
 			return err
@@ -273,6 +274,7 @@ func GetDefaultSigners() []common.Address {
 func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
 
 	signers := GetDefaultSigners()
+
 	if s.Number < s.config.MaxInitBlockNumber {
 		s.RecentSigners[s.EpochIdx()+1] = signers
 		// log.Debug("< s.config.MaxInitBlockNumber, s.Number", "n", s.Number)
@@ -281,9 +283,10 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 		// 	log.Debug("signer", "s", s.Hex())
 		// }
 	}
-	if s.Number >= s.config.MaxInitBlockNumber-s.config.Epoch*(EpochGapBetweenElectionAndMining-1) {
-		// TODO: fix this.
-		// log.Debug(">= s.config.MaxInitBlockNumber -s.config.Epoch*(EpochGapBetweenElectionAndMining-1), s.Number", "n", s.Number)
+
+	if s.Number >= s.config.MaxInitBlockNumber-(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View) {
+		// 	// TODO: fix this.
+		// 	// log.Debug(">= s.config.MaxInitBlockNumber -s.config.Epoch*(EpochGapBetweenElectionAndMining-1), s.Number", "n", s.Number)
 		signers = election.Elect(rpts, seed, viewLength)
 		epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
 		s.RecentSigners[epochIdx] = signers
@@ -302,7 +305,7 @@ func (s *DporSnapshot) EpochIdx() uint64 {
 		return 0
 	}
 
-	return (s.Number - 1) / uint64(epochLength)
+	return (s.Number - 1) / ((s.config.Epoch) * (s.config.View))
 }
 
 // EpochIdxOf returns the epoch index of given block number.
@@ -311,7 +314,7 @@ func (s *DporSnapshot) EpochIdxOf(blockNum uint64) uint64 {
 		return 0
 	}
 
-	return (blockNum - 1) / uint64(epochLength)
+	return (blockNum - 1) / ((s.config.Epoch) * (s.config.View))
 }
 
 // SignersOf retrieves all signersOf in the committee.
@@ -342,7 +345,14 @@ func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, e
 	if err != nil {
 		return false, err
 	}
-	return round == int((number-1)%s.config.Epoch), nil
+	// return round == int((number-1)%s.config.Epoch), nil
+	b := round == int(((number-1)%(s.config.Epoch*s.config.View))/s.config.View)
+
+	log.Info("round", "r", round)
+	log.Info("number", "n", number)
+	log.Info("int(((number-1)%(s.config.Epoch*s.config.View+1))/s.config.View)", "b", int(((number-1)%(s.config.Epoch*s.config.View))/s.config.View))
+
+	return b, nil
 }
 
 // Candidates retrieves all candidates recorded in the campaign contract.

@@ -38,6 +38,13 @@ const (
 	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
+func IsCheckPoint(number uint64, epochL uint64, viewL uint64) bool {
+	if epochL == 0 || viewL == 0 {
+		return true
+	}
+	return number%(epochL*viewL) == 0
+}
+
 // Dpor is the proof-of-reputation consensus engine proposed to support the
 // cpchain testnet.
 type Dpor struct {
@@ -66,6 +73,9 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	conf := *config
 	if conf.Epoch == 0 {
 		conf.Epoch = uint64(epochLength)
+	}
+	if conf.View == 0 {
+		conf.View = uint64(viewLength)
 	}
 	// Allocate the Snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)

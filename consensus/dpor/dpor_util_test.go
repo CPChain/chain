@@ -255,6 +255,7 @@ func Test_acceptSigs(t *testing.T) {
 		header   *types.Header
 		sigcache *lru.ARCCache
 		signers  []common.Address
+		epochL   uint
 	}
 	tests := []struct {
 		name    string
@@ -262,15 +263,15 @@ func Test_acceptSigs(t *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		{"should be true when signer not in cache", args{header, cache, getSignerAddress()[1:2]}, false, false},
-		{"should be true when signer not in cache", args{header, emptyCache, getSignerAddress()}, false, true},
-		{"should be true when signer in cache", args{header, cache, getSignerAddress()}, true, false},
+		{"should be true when signer not in cache", args{header, cache, getSignerAddress()[1:2], 4}, false, false},
+		{"should be true when signer not in cache", args{header, emptyCache, getSignerAddress(), 4}, false, true},
+		{"should be true when signer in cache", args{header, cache, getSignerAddress(), 4}, true, false},
 	}
 
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers)
+			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers, tt.args.epochL)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("acceptSigs(%v, %v, %v) error = %v, wantErr %v", tt.args.header, tt.args.sigcache, tt.args.signers, err, tt.wantErr)
 				return

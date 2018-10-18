@@ -36,7 +36,9 @@ const (
 	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
 	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
-	epochLength = uint(4) // Default number of signers, also the number of blocks after which to launch election.
+	epochLength = uint(4) // Default number of signers.
+	viewLength  = uint(4) // Default number of blocks one signer can generate in one committee.
+
 	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity

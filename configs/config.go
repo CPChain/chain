@@ -77,6 +77,7 @@ var (
 		Dpor: &DporConfig{
 			Period:                1,
 			Epoch:                 4,
+			View:                  3,
 			MaxInitBlockNumber:    48,
 			ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
 			Contracts: map[string]common.Address{
@@ -141,6 +142,7 @@ func (c *EthashConfig) String() string {
 type DporConfig struct {
 	Period                uint64                    `json:"period"` // Number of seconds between blocks to enforce
 	Epoch                 uint64                    `json:"epoch"`  // Epoch length to reset votes and checkpoint
+	View                  uint64                    `json:"view"`   // View length of blocks one signer can seal in one committee
 	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"`
 	Contracts             map[string]common.Address `json:"contracts"`
 	ProxyContractRegister common.Address            `json:"proxyContractRegister"`

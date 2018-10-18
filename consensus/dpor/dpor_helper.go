@@ -149,7 +149,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			break
 		}
 		// If an on-disk checkpoint Snapshot can be found, use that
-		if number%checkpointInterval == 0 {
+		// if number%checkpointInterval == 0 {
+		if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) {
 			if s, err := loadSnapshot(dpor.config, dpor.signatures, dpor.db, hash); err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", number, "hash", hash)
 				snap = s
@@ -203,7 +204,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	dpor.recents.Add(snap.Hash, snap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if snap.Number%checkpointInterval == 0 && len(headers) > 0 {
+	if IsCheckPoint(snap.Number, dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
+		// if snap.Number%checkpointInterval == 0 && len(headers) > 0 {
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
@@ -264,7 +266,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Check if accept the sigs and if leader is in the sigs.
-	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.SignersOf(number))
+	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.SignersOf(number), uint(dpor.config.Epoch))
 	if err != nil {
 		return err
 	}
@@ -333,22 +335,22 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	snap, err = dh.snapshot(dpor, chain, number, header.Hash(), append(parents, header))
 
-	// log.Debug("my address", "eb", dpor.signer.Hex())
-	// log.Debug("ready to accept this block", "number", number)
-	// log.Debug("current block number", "number", currentNum)
-	// log.Debug("number%uint64(epochLength) == 0", "bool", number%uint64(epochLength) == 0)
-	// log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
-	// log.Debug("epoch idx of block number", "block epochIdx", snap.EpochIdxOf(number))
+	log.Debug("my address", "eb", dpor.signer.Hex())
+	log.Debug("ready to accept this block", "number", number)
+	log.Debug("current block number", "number", currentNum)
+	log.Debug("number%uint64(epochLength) == 0", "bool", number%uint64(epochLength) == 0)
+	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
+	log.Debug("epoch idx of block number", "block epochIdx", snap.EpochIdxOf(number))
 
-	// for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+3; i++ {
-	// 	log.Debug("----------------------")
-	// 	log.Debug("signers in snapshot of:", "epoch idx", i)
-	// 	for _, s := range snap.RecentSigners[i] {
-	// 		log.Debug("signer", "s", s.Hex())
-	// 	}
-	// }
+	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+3; i++ {
+		log.Debug("----------------------")
+		log.Debug("signers in snapshot of:", "epoch idx", i)
+		for _, s := range snap.RecentSigners[i] {
+			log.Debug("signer", "s", s.Hex())
+		}
+	}
 
-	if number%uint64(epochLength) == 0 && number >= dpor.config.MaxInitBlockNumber && number >= currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
+	if number%uint64(snap.config.Epoch) == 0 && number >= dpor.config.MaxInitBlockNumber && number >= currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
 		// TODO: fix this.
 		log.Info("I am future signer, building the committee network")
 		log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
