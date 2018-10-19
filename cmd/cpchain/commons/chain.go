@@ -1,4 +1,4 @@
-package chainutils
+package commons
 
 import (
 	"compress/gzip"
@@ -29,13 +29,12 @@ const (
 )
 
 // MakeChainDatabase open an LevelDB using the flags passed to the client and will hard crash if it fails.
-func MakeChainDatabase(ctx *cli.Context, stack *node.Node, databaseCache int) ethdb.Database {
-	var (
-		handles = makeDatabaseHandles()
-	)
+func MakeChainDatabase(ctx *cli.Context, n *node.Node, databaseCache int) ethdb.Database {
+	// TODO hardcoded name
 	name := "chaindata"
+	handles := makeDatabaseHandles()
 
-	chainDb, err := stack.OpenDatabase(name, databaseCache, handles)
+	chainDb, err := n.OpenDatabase(name, databaseCache, handles)
 	if err != nil {
 		log.Fatalf("Could not open database: %v", err)
 	}
@@ -48,19 +47,19 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 }
 
 // OpenChain opens a blockchain
-func OpenChain(ctx *cli.Context, stack *node.Node, databaseCache int, trieCache int) (chain *core.BlockChain, chainDb ethdb.Database) {
+func OpenChain(ctx *cli.Context, n *node.Node, databaseCache int, trieCache int) (chain *core.BlockChain, chainDb ethdb.Database) {
 	var err error
-	chainDb = MakeChainDatabase(ctx, stack, databaseCache)
+	chainDb = MakeChainDatabase(ctx, n, databaseCache)
 
 	config, _, err := core.OpenGenesisBlock(chainDb)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	chain = newBlockChain(config, chainDb, trieCache, stack, chain, err)
+	chain = newBlockChain(config, chainDb, trieCache, n, chain, err)
 	return chain, chainDb
 }
 
-func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCache int, stack *node.Node, chain *core.BlockChain, err error) *core.BlockChain {
+func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCache int, n *node.Node, chain *core.BlockChain, err error) *core.BlockChain {
 	var engine consensus.Engine
 	engine = dpor.New(config.Dpor, chainDb)
 	cacheCfg := &core.CacheConfig{
@@ -70,7 +69,7 @@ func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCach
 	}
 	cacheCfg.TrieNodeLimit = trieCache
 	vmcfg := vm.Config{EnablePreimageRecording: false} // TODO: consider if add VMEnableDebugFlag {AC}
-	rsaKey, _ := stack.RsaKey()
+	rsaKey, _ := n.RsaKey()
 	// TODO: give a fake or real RemoteDB{AC}
 	chain, err = core.NewBlockChain(chainDb, cacheCfg, config, engine, vmcfg, nil, rsaKey.PrivateKey)
 	if err != nil {
@@ -80,7 +79,7 @@ func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCach
 }
 
 // makeDatabaseHandles raises out the number of allowed file handles per process
-// for Geth and returns half of the allowance to assign to the database.
+// for cpchain and returns half of the allowance to assign to the database.
 func makeDatabaseHandles() int {
 	limit, err := fdlimit.Current()
 	if err != nil {
@@ -200,7 +199,7 @@ func missingBlocks(chain *core.BlockChain, blocks []*types.Block) []*types.Block
 
 // ExportChain exports a blockchain into the specified file, truncating any data
 // already present in the file.
-func ExportChain(blockchain *core.BlockChain, fn string) error {
+func ExportChainN(blockchain *core.BlockChain, fn string, first, last uint64) error {
 	log.Info("Exporting blockchain", "file", fn)
 
 	// Open the file handle and potentially wrap with a gzip stream
@@ -216,36 +215,11 @@ func ExportChain(blockchain *core.BlockChain, fn string) error {
 		defer writer.(*gzip.Writer).Close()
 	}
 	// Iterate over the blocks and export them
-	if err := blockchain.Export(writer); err != nil {
+	if err := blockchain.ExportN(writer, first, last); err != nil {
 		return err
 	}
 	log.Info("Exported blockchain", "file", fn)
 
-	return nil
-}
-
-// ExportAppendChain exports a blockchain into the specified file, appending to
-// the file if data already exists in it.
-func ExportAppendChain(blockchain *core.BlockChain, fn string, first uint64, last uint64) error {
-	log.Info("Exporting blockchain", "file", fn)
-
-	// Open the file handle and potentially wrap with a gzip stream
-	fh, err := os.OpenFile(fn, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer fh.Close()
-
-	var writer io.Writer = fh
-	if strings.HasSuffix(fn, ".gz") {
-		writer = gzip.NewWriter(writer)
-		defer writer.(*gzip.Writer).Close()
-	}
-	// Iterate over the blocks and export them
-	if err := blockchain.ExportN(writer, first, last); err != nil {
-		return err
-	}
-	log.Info("Exported blockchain to", "file", fn)
 	return nil
 }
 

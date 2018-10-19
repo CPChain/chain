@@ -11,8 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
-	"bitbucket.org/cpchain/chain/commons/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
@@ -31,8 +31,8 @@ var chainCommand = cli.Command{
 	Usage: "Manage blockchain",
 	Subcommands: []cli.Command{
 		{
-			Name:     "init",
-			Usage:    "Bootstrap and initialize a new genesis block",
+			Name:  "init",
+			Usage: "Bootstrap and initialize a new genesis block",
 			Flags: []cli.Flag{
 				flags.GetByName("datadir"),
 			},
@@ -42,15 +42,14 @@ var chainCommand = cli.Command{
 If no genesis file is found, the initialization is aborted.`, defaultGenesisPath),
 		},
 		{
-			Name:     "cleandb",
-			Usage:    "Clean blockchain and state databases",
+			Name:  "cleandb",
+			Usage: "Clean blockchain and state databases",
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 			},
-			Action:    cleanDB,
-			ArgsUsage: " ",
-			Description: `
-Remove blockchain and state databases`,
+			Action:      cleanDB,
+			ArgsUsage:   " ",
+			Description: `Remove blockchain and state databases`,
 		},
 		{
 			Action:    importChain,
@@ -64,8 +63,7 @@ Remove blockchain and state databases`,
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
 			},
-			Description: `
-The import command imports blocks from an RLP-encoded form. The form can be one file
+			Description: `The import command imports blocks from an RLP-encoded form. The form can be one file
 with several RLP-encoded blocks, or several files can be used.
 
 If only one file is used, import error will result in failure. If several files are used,
@@ -173,7 +171,7 @@ func importChain(ctx *cli.Context) error {
 	cfg, node := newConfigNode(ctx)
 	dbCache := cfg.Eth.DatabaseCache
 	trieCache := cfg.Eth.TrieCache
-	chain, chainDb := chainutils.OpenChain(ctx, node, dbCache, trieCache)
+	chain, chainDb := commons.OpenChain(ctx, node, dbCache, trieCache)
 	defer chainDb.Close()
 
 	// Start periodically gathering memory profiles
@@ -195,12 +193,12 @@ func importChain(ctx *cli.Context) error {
 	start := time.Now()
 
 	if len(ctx.Args()) == 1 {
-		if err := chainutils.ImportChain(chain, ctx.Args().First()); err != nil {
+		if err := commons.ImportChain(chain, ctx.Args().First()); err != nil {
 			log.Error("Import error", "err", err)
 		}
 	} else {
 		for _, arg := range ctx.Args() {
-			if err := chainutils.ImportChain(chain, arg); err != nil {
+			if err := commons.ImportChain(chain, arg); err != nil {
 				log.Error("Import error", "file", arg, "err", err)
 			}
 		}
@@ -263,19 +261,22 @@ func importChain(ctx *cli.Context) error {
 }
 
 func exportChain(ctx *cli.Context) error {
-	if len(ctx.Args()) < 1 {
-		log.Fatalf("This command requires an argument.")
+	argcnt := len(ctx.Args())
+	if argcnt != 1 && argcnt != 3 {
+		log.Fatal("Wrong number of arguments specified.")
 	}
 	cfg, node := newConfigNode(ctx)
 	dbCache := cfg.Eth.DatabaseCache
 	trieCache := cfg.Eth.TrieCache
-	chain, _ := chainutils.OpenChain(ctx, node, dbCache, trieCache)
+
+	chain, _ := commons.OpenChain(ctx, node, dbCache, trieCache)
 	start := time.Now()
 
 	var err error
 	fp := ctx.Args().First()
-	if len(ctx.Args()) < 3 {
-		err = chainutils.ExportChain(chain, fp)
+
+	if argcnt == 1 {
+		err = commons.ExportChainN(chain, fp, uint64(0), chain.CurrentBlock().NumberU64())
 	} else {
 		// This can be improved to allow for numbers larger than 9223372036854775807
 		first, ferr := strconv.ParseInt(ctx.Args().Get(1), 10, 64)
@@ -286,7 +287,7 @@ func exportChain(ctx *cli.Context) error {
 		if first < 0 || last < 0 {
 			log.Fatalf("Export error: block number must be greater than 0\n")
 		}
-		err = chainutils.ExportAppendChain(chain, fp, uint64(first), uint64(last))
+		err = commons.ExportChainN(chain, fp, uint64(first), uint64(last))
 	}
 
 	if err != nil {
