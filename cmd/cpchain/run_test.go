@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 // Copyright 2016 The go-ethereum Authors
 // This file is part of go-ethereum.
 //
@@ -16,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
->>>>>>> origin/CHAIN-185-add-account-management-test
 package main
 
 import (
@@ -27,10 +24,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/internal/cmdtest"
 	"github.com/docker/docker/pkg/reexec"
-<<<<<<< HEAD
-	"github.com/urfave/cli"
-=======
->>>>>>> origin/CHAIN-185-add-account-management-test
 )
 
 func tmpdir(t *testing.T) string {
