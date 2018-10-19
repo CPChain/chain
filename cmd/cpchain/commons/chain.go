@@ -1,4 +1,4 @@
-package chainutils
+package commons
 
 import (
 	"compress/gzip"
@@ -32,13 +32,13 @@ const (
 )
 
 // MakeChainDatabase open an LevelDB using the flags passed to the client and will hard crash if it fails.
-func MakeChainDatabase(ctx *cli.Context, stack *node.Node, databaseCache int) ethdb.Database {
-	var (
-		handles = makeDatabaseHandles()
-	)
+// It creates a new one if the database doesn't exist.
+func MakeChainDatabase(ctx *cli.Context, n *node.Node, databaseCache int) ethdb.Database {
+	// TODO hardcoded name
 	name := "chaindata"
+	handles := makeDatabaseHandles()
 
-	chainDb, err := stack.OpenDatabase(name, databaseCache, handles)
+	chainDb, err := n.OpenDatabase(name, databaseCache, handles)
 	if err != nil {
 		log.Fatalf("Could not open database: %v", err)
 	}
@@ -55,6 +55,7 @@ func OpenChain(ctx *cli.Context, stack *node.Node, cfg *eth.Config) (chain *core
 	var err error
 	chainDb = MakeChainDatabase(ctx, stack, cfg.DatabaseCache)
 
+	// genesis stores the chain configuration
 	config, _, err := core.OpenGenesisBlock(chainDb)
 	if err != nil {
 		log.Fatalf("%v", err)
@@ -63,7 +64,7 @@ func OpenChain(ctx *cli.Context, stack *node.Node, cfg *eth.Config) (chain *core
 	return chain, chainDb
 }
 
-func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCache int, stack *node.Node, chain *core.BlockChain, err error) *core.BlockChain {
+func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCache int, n *node.Node, chain *core.BlockChain, err error) *core.BlockChain {
 	var engine consensus.Engine
 	engine = dpor.New(config.Dpor, chainDb)
 	cacheCfg := &core.CacheConfig{
@@ -73,7 +74,7 @@ func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCach
 	}
 	cacheCfg.TrieNodeLimit = trieCache
 	vmcfg := vm.Config{EnablePreimageRecording: false} // TODO: consider if add VMEnableDebugFlag {AC}
-	rsaKey, _ := stack.RsaKey()
+	rsaKey, _ := n.RsaKey()
 	// TODO: give a fake or real RemoteDB{AC}
 	chain, err = core.NewBlockChain(chainDb, cacheCfg, config, engine, vmcfg, nil, rsaKey.PrivateKey)
 	if err != nil {
@@ -83,7 +84,7 @@ func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCach
 }
 
 // makeDatabaseHandles raises out the number of allowed file handles per process
-// for Geth and returns half of the allowance to assign to the database.
+// for cpchain and returns half of the allowance to assign to the database.
 func makeDatabaseHandles() int {
 	limit, err := fdlimit.Current()
 	if err != nil {
@@ -203,7 +204,7 @@ func missingBlocks(chain *core.BlockChain, blocks []*types.Block) []*types.Block
 
 // ExportChain exports a blockchain into the specified file, truncating any data
 // already present in the file.
-func ExportChain(blockchain *core.BlockChain, fn string) error {
+func ExportChainN(blockchain *core.BlockChain, fn string, first, last uint64) error {
 	log.Info("Exporting blockchain", "file", fn)
 
 	// Open the file handle and potentially wrap with a gzip stream
@@ -219,7 +220,7 @@ func ExportChain(blockchain *core.BlockChain, fn string) error {
 		defer writer.(*gzip.Writer).Close()
 	}
 	// Iterate over the blocks and export them
-	if err := blockchain.Export(writer); err != nil {
+	if err := blockchain.ExportN(writer, first, last); err != nil {
 		return err
 	}
 	log.Info("Exported blockchain", "file", fn)

@@ -214,6 +214,7 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 // OpenGenesisBlock opens genesis block and returns its chain configuration and hash.
 // Return errors when genesis block not exist or genesis block configuration not exist.
 func OpenGenesisBlock(db ethdb.Database) (*configs.ChainConfig, common.Hash, error) {
+	// the hash of the stored block
 	stored := rawdb.ReadCanonicalHash(db, 0)
 	if (stored == common.Hash{}) {
 		return nil, common.Hash{}, errGenesisNoExist
