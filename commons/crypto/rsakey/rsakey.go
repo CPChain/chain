@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,26 +29,35 @@ type RsaKey struct {
 	PublicKey *RsaPublicKey
 }
 
+// create new rsa key
+func CreateRsaKey() (*RsaKey, error) {
+	pub, pri, pubBytes, priBytes, err := generateDerRsaKey(2048)
+	if err == nil {
+		return &RsaKey{pri, priBytes, &RsaPublicKey{pub, pubBytes}}, nil
+	}
+	return nil, err
+}
+
+// TODO Remove this,Replace with NewRsaPrivateKey
 // NewRsaKey creates a keystore for the given directory.
 func NewRsaKey(rsaDir string) (*RsaKey, error) {
 	if err := os.MkdirAll(rsaDir, 0700); err != nil {
 		return nil, err
 	}
-	rsaPubPath := filepath.Join(rsaDir, "rsa_pub.pem")
 	rsaPriPath := filepath.Join(rsaDir, "rsa_pri.pem")
 
 	// Load RSA key
-	if pub, pri, pubBytes, priBytes, err := loadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+	if pub, pri, pubBytes, priBytes, err := loadRsaKey(rsaPriPath); err == nil {
 		return &RsaKey{pri, priBytes, &RsaPublicKey{pub, pubBytes}}, nil
 	}
 	// No persistent key found, generate and store a new one.
-	log.Info(fmt.Sprintf("file not found.rsaPubPath:%v,rsaPriPath:%v", rsaPubPath, rsaPriPath))
-	err := generateRsaKey(rsaPubPath, rsaPriPath, 2048)
+	log.Info(fmt.Sprintf("file not found. rsaPriPath:%v", rsaPriPath))
+	err := generateRsaKey(rsaPriPath, 2048)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to persist rsa key: %v", err))
 		return nil, err
 	}
-	if pub, pri, pubBytes, priBytes, err := loadRsaKey(rsaPubPath, rsaPriPath); err == nil {
+	if pub, pri, pubBytes, priBytes, err := loadRsaKey(rsaPriPath); err == nil {
 		return &RsaKey{pri, priBytes, &RsaPublicKey{pub, pubBytes}}, nil
 	}
 	log.Error(fmt.Sprintf("load rsa key fail:%v", err))
@@ -72,4 +82,20 @@ func NewRsaPublicKey(bs []byte) (*RsaPublicKey, error) {
 		return nil, err
 	}
 	return &RsaPublicKey{pubKey, bs}, err
+}
+
+func NewRsaPrivateKey(priKeyBytes []byte) (*RsaKey, error) {
+	if len(priKeyBytes) == 0 {
+		return nil, nil
+	}
+	priKey, err := bytes2PrivateKey(priKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+	priBytes := x509.MarshalPKCS1PrivateKey(priKey)
+	pubBytes := x509.MarshalPKCS1PublicKey(&priKey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+	return &RsaKey{priKey, priBytes, &RsaPublicKey{&priKey.PublicKey, pubBytes}}, nil
 }

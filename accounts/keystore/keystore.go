@@ -43,7 +43,7 @@ import (
 var (
 	ErrLocked  = accounts.NewAuthNeededError("password or unlock")
 	ErrNoMatch = errors.New("no key for given address or file")
-	ErrDecrypt = errors.New("could not decrypt key with given passphrase")
+	ErrDecrypt = errors.New("could not decrypt key with given password")
 )
 
 // KeyStoreType is the reflect type of a keystore backend.
@@ -496,4 +496,22 @@ func zeroKey(k *ecdsa.PrivateKey) {
 	for i := range b {
 		b[i] = 0
 	}
+}
+
+func (ks *KeyStore) EncryptWithRsa(account accounts.Account, passphrase string, plainText []byte) ([]byte, error) {
+	_, key, err := ks.getDecryptedKey(account, passphrase)
+	if err != nil {
+		return nil, err
+	}
+	defer zeroKey(key.PrivateKey)
+	return key.RsaKey.RsaEncrypt(plainText)
+}
+
+func (ks *KeyStore) DecryptWithRsa(account accounts.Account, passphrase string, cipherText []byte) ([]byte, error) {
+	_, key, err := ks.getDecryptedKey(account, passphrase)
+	if err != nil {
+		return nil, err
+	}
+	defer zeroKey(key.PrivateKey)
+	return key.RsaKey.RsaDecrypt(cipherText)
 }

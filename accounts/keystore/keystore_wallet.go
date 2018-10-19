@@ -19,7 +19,7 @@ package keystore
 import (
 	"math/big"
 
-	ethereum "bitbucket.org/cpchain/chain"
+	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/types"
 )
@@ -136,4 +136,12 @@ func (w *keystoreWallet) SignTxWithPassphrase(account accounts.Account, passphra
 	}
 	// Account seems valid, request the keystore to sign
 	return w.keystore.SignTxWithPassphrase(account, passphrase, tx, chainID)
+}
+
+func (w *keystoreWallet) EnryptWithRsa(account accounts.Account, password string, plainText []byte) ([]byte, error) {
+	return w.keystore.EncryptWithRsa(account, password, plainText)
+}
+
+func (w *keystoreWallet) DecryptWithRsa(account accounts.Account, password string, cipherText []byte) ([]byte, error) {
+	return w.keystore.DecryptWithRsa(account, password, cipherText)
 }

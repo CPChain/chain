@@ -13,23 +13,22 @@ import (
 
 	"math/big"
 
+	"bytes"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	rsaPubFilePath = "/tmp/rsa.pub"
 	rsaPriFilePath = "/tmp/rsa.pri"
 )
 
 func TestGenerateAndloadRsaKey(t *testing.T) {
 	// clean test file
 	os.Remove(rsaPriFilePath)
-	os.Remove(rsaPubFilePath)
 
 	var bits int
 	flag.IntVar(&bits, "b", 2048, "key length,default is 1024")
-	err := generateRsaKey(rsaPubFilePath, rsaPriFilePath, bits)
+	err := generateRsaKey(rsaPriFilePath, bits)
 	assert.Nil(t, err)
 
 	rsaKey, err := NewRsaKey("/tmp")
@@ -46,7 +45,7 @@ func TestGenerateAndloadRsaKey(t *testing.T) {
 }
 
 func TestLoadRsaKey(t *testing.T) {
-	publicKey, privateKey, pubBytes, priBytes, err := loadRsaKey("/tmp/notexist", "/tmp/notexist1")
+	publicKey, privateKey, pubBytes, priBytes, err := loadRsaKey("/tmp/notexist")
 	assert.Nil(t, publicKey)
 	assert.Nil(t, privateKey)
 	assert.Nil(t, pubBytes)
@@ -56,7 +55,7 @@ func TestLoadRsaKey(t *testing.T) {
 
 func TestLoadRsaKey1(t *testing.T) {
 	_, err := os.Create(rsaPriFilePath)
-	publicKey, privateKey, pubBytes, priBytes, err := loadRsaKey(rsaPubFilePath, "/tmp/notexist1")
+	publicKey, privateKey, pubBytes, priBytes, err := loadRsaKey("/tmp/notexist1")
 	assert.Nil(t, publicKey)
 	assert.Nil(t, privateKey)
 	assert.Nil(t, pubBytes)
@@ -66,7 +65,7 @@ func TestLoadRsaKey1(t *testing.T) {
 
 func TestLoadRsaKey2(t *testing.T) {
 	_, err := os.Create(rsaPriFilePath)
-	publicKey, privateKey, pubBytes, priBytes, err := loadRsaKey("/tmp/notexist1", rsaPriFilePath)
+	publicKey, privateKey, pubBytes, priBytes, err := loadRsaKey(rsaPriFilePath)
 	assert.Nil(t, publicKey)
 	assert.Nil(t, privateKey)
 	assert.Nil(t, pubBytes)
@@ -76,7 +75,7 @@ func TestLoadRsaKey2(t *testing.T) {
 
 func TestLoadRsaKey3(t *testing.T) {
 
-	publicKey, privateKey, pubBytes, priBytes, _ := loadRsaKey("./testdata/rsa_pub.pem", "./testdata/rsa_pri.pem")
+	publicKey, privateKey, pubBytes, priBytes, _ := loadRsaKey("./testdata/rsa_pri.pem")
 	assert.NotNil(t, publicKey)
 	assert.NotNil(t, privateKey)
 	assert.NotNil(t, pubBytes)
@@ -105,7 +104,7 @@ func TestLoadRsaKey3(t *testing.T) {
 
 func TestEncodeDecodeRsaPublicKey(t *testing.T) {
 
-	publicKey, privateKey, pubBytes, priBytes, _ := loadRsaKey("./testdata/rsa_pub.pem", "./testdata/rsa_pri.pem")
+	publicKey, privateKey, pubBytes, priBytes, _ := loadRsaKey("./testdata/rsa_pri.pem")
 	assert.NotNil(t, publicKey)
 	assert.NotNil(t, privateKey)
 	assert.NotNil(t, pubBytes)
@@ -129,4 +128,36 @@ func TestEncodeDecodeRsaPublicKey(t *testing.T) {
 	}
 	fmt.Println("pk:", pk)
 	assert.NotNil(t, pk)
+}
+
+func TestNewRsaPrivateKey(t *testing.T) {
+
+	publicKey, privateKey, pubBytes, priBytes, _ := loadRsaKey("./testdata/rsa_pri.pem")
+	assert.NotNil(t, publicKey)
+	assert.NotNil(t, privateKey)
+	assert.NotNil(t, pubBytes)
+	assert.NotNil(t, priBytes)
+
+	// bb := hex.EncodeToString(priBytes)
+	// fmt.Println(":::", bb)
+	// newPriBytes, err := hex.DecodeString(bb)
+	// priBytes = newPriBytes
+
+	rsaKey, err := NewRsaPrivateKey(priBytes)
+	assert.Nil(t, err)
+	assert.NotNil(t, rsaKey.PublicKey)
+	assert.NotNil(t, rsaKey.PublicKey.RsaPublicKeyBytes)
+	assert.NotNil(t, rsaKey.PublicKey.RsaPublicKey)
+	assert.NotNil(t, rsaKey.PrivateKey)
+	assert.NotNil(t, rsaKey.PrivateKeyBytes)
+
+	assert.Equal(t, priBytes, rsaKey.PrivateKeyBytes)
+	assert.Equal(t, publicKey, rsaKey.PublicKey.RsaPublicKey)
+	assert.Equal(t, 0, bytes.Compare(pubBytes, rsaKey.PublicKey.RsaPublicKeyBytes))
+}
+
+func TestLoadFile(t *testing.T) {
+	bytes, err := LoadFile("/_30mbkeaetmp/notexist")
+	assert.Nil(t, bytes)
+	assert.NotNil(t, err)
 }

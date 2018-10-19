@@ -1,10 +1,13 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
+	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
@@ -19,6 +22,8 @@ func init() {
 	runFlags = append(runFlags, flags.GeneralFlags...)
 	runFlags = append(runFlags, flags.NodeFlags...)
 	runFlags = append(runFlags, flags.MinerFlags...)
+	runFlags = append(runFlags, flags.ChainFlags...)
+	// runFlags = append(runFlags, flags.P2pFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,
@@ -51,15 +56,34 @@ func startNode(n *node.Node) {
 }
 
 func unlockAccounts(ctx *cli.Context, n *node.Node) {
-	// ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	//
-	// passwords := utils.MakePasswordList(ctx)
-	// unlocks := strings.Split(ctx.GlobalString(utils.UnlockedAccountFlag.Name), ",")
-	// for i, account := range unlocks {
-	// 	if trimmed := strings.TrimSpace(account); trimmed != "" {
-	// 		unlockAccount(ctx, ks, trimmed, i, passwords)
-	// 	}
-	// }
+	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	passwords := makePasswordList(ctx)
+	unlock := ctx.String("unlock")
+	unlocks := strings.Split(unlock, ",")
+	for i, account := range unlocks {
+		if i >= len(passwords) {
+			Fatalf("Not enough passwords provided for --password")
+		}
+		unlockAccountWithPassword(ks, account, passwords[i])
+	}
+}
+
+// MakePasswordList reads password lines from the file specified by the global --password flag.
+func makePasswordList(ctx *cli.Context) []string {
+	path := ctx.String("password")
+	if path == "" {
+		return nil
+	}
+	text, err := ioutil.ReadFile(path)
+	if err != nil {
+		Fatalf("Failed to read password file: %v", err)
+	}
+	lines := strings.Split(string(text), "\n")
+	// Sanitise DOS line endings.
+	for i := range lines {
+		lines[i] = strings.TrimRight(lines[i], "\r")
+	}
+	return lines
 }
 
 func handleWallet() {
@@ -83,7 +107,6 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		}
 		// // Set the gas price to the limits from the CLI and start mining
 		// ethereum.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
-
 
 		// TODO dpor contract caller
 		if err := ethereum.StartMining(true, nil); err != nil {
