@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -47,10 +48,9 @@ If no genesis file is found, the initialization is aborted.`, defaultGenesisPath
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 			},
-			Action:    cleanDB,
-			ArgsUsage: " ",
-			Description: `
-Remove blockchain and state databases`,
+			Action:      cleanDB,
+			ArgsUsage:   " ",
+			Description: `Remove blockchain and state databases`,
 		},
 		{
 			Action:    importChain,
@@ -258,30 +258,33 @@ func importChain(ctx *cli.Context) error {
 }
 
 func exportChain(ctx *cli.Context) error {
-	if len(ctx.Args()) < 1 {
-		log.Fatalf("This command requires an argument.")
+	argcnt := len(ctx.Args())
+	if argcnt != 1 && argcnt != 3 {
+		log.Fatal("Wrong number of arguments specified.")
 	}
 	cfg, node := newConfigNode(ctx)
 	dbCache := cfg.Eth.DatabaseCache
 	trieCache := cfg.Eth.TrieCache
-	chain, _ := chainutils.OpenChain(ctx, node, dbCache, trieCache)
+
+	chain, _ := commons.OpenChain(ctx, node, dbCache, trieCache)
 	start := time.Now()
 
 	var err error
 	fp := ctx.Args().First()
-	if len(ctx.Args()) < 3 {
-		err = chainutils.ExportChain(chain, fp)
+
+	if argcnt == 1 {
+		err = commons.ExportChainN(chain, fp, uint64(0), chain.CurrentBlock().NumberU64())
 	} else {
 		// This can be improved to allow for numbers larger than 9223372036854775807
 		first, ferr := strconv.ParseInt(ctx.Args().Get(1), 10, 64)
 		last, lerr := strconv.ParseInt(ctx.Args().Get(2), 10, 64)
 		if ferr != nil || lerr != nil {
-			log.Fatalf("Export error in parsing parameters: block number not an integer\n")
+			log.Fatal("Export error in parsing parameters: block number not an integer")
 		}
 		if first < 0 || last < 0 {
-			log.Fatalf("Export error: block number must be greater than 0\n")
+			log.Fatal("Export error: block number must be greater than 0")
 		}
-		err = chainutils.ExportAppendChain(chain, fp, uint64(first), uint64(last))
+		err = commons.ExportChainN(chain, fp, uint64(first), uint64(last))
 	}
 
 	if err != nil {
