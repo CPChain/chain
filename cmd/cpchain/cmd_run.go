@@ -60,11 +60,14 @@ func startNode(n *node.Node) {
 
 func unlockAccounts(ctx *cli.Context, n *node.Node) {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	unlocks := strings.Split(ctx.String(flags.UnlockFlagName), ",")
-	for _, account := range unlocks {
-		if trimmed := strings.TrimSpace(account); trimmed != "" {
-			unlockAccount(ctx, ks, trimmed)
+	passwords := makePasswordList(ctx)
+	unlock := ctx.String("unlock")
+	unlocks := strings.Split(unlock, ",")
+	for i, account := range unlocks {
+		if i >= len(passwords) {
+			Fatalf("Not enough passwords provided for --password")
 		}
+		unlockAccountWithPassword(ks, account, passwords[i])
 	}
 }
 

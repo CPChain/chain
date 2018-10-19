@@ -1,46 +1,60 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
+	"runtime"
 	"strings"
-	"syscall"
 
+	"bitbucket.org/cpchain/chain/cmd/cpchain/commons/inpututil"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/urfave/cli"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
-// readPassword retrieves the password associated with an account, either fetched
-// from a list of preloaded passphrases, or requested interactively from the user.
-func readPassword(prompt string, createPassword bool) string {
-	// be cautious about whitespace when creating new password
-	if createPassword {
-		fmt.Println("If your password contains whitespaces, please be careful enough to avoid later confusion.")
+// Fatalf formats a message to standard error and exits the program.
+// The message is also printed to standard output if standard error
+// is redirected to a different file.
+func Fatalf(format string, args ...interface{}) {
+	w := io.MultiWriter(os.Stdout, os.Stderr)
+	if runtime.GOOS == "windows" {
+		// The SameFile check below doesn't work on Windows.
+		// stdout is unlikely to get redirected though, so just print there.
+		w = os.Stdout
+	} else {
+		outf, _ := os.Stdout.Stat()
+		errf, _ := os.Stderr.Stat()
+		if outf != nil && errf != nil && os.SameFile(outf, errf) {
+			w = os.Stderr
+		}
 	}
-	fmt.Print(prompt)
-	password, err := terminal.ReadPassword(syscall.Stdin)
-	fmt.Println()
+	fmt.Fprintf(w, "Fatal: "+format+"\n", args...)
+	os.Exit(1)
+}
+
+func readPassword(prompt string, needConfirm bool) (string, error) {
+	// prompt the user for the password
+	if prompt != "" {
+		fmt.Println(prompt)
+	}
+	password, err := inpututil.Stdin.PromptPassword("Password: ")
 	if err != nil {
-		log.Fatalf("Failed to read password: %v", err)
+		Fatalf("Failed to read password: %v", err)
 	}
-	if createPassword {
-		fmt.Print("Please repeat:")
-		p, err := terminal.ReadPassword(syscall.Stdin)
-		fmt.Println()
+	if needConfirm {
+		confirm, err := inpututil.Stdin.PromptPassword("Repeat password: ")
 		if err != nil {
-			log.Fatalf("Failed to read password: %v", err)
+			Fatalf("Failed to read password confirmation: %v", err)
 		}
-		if !bytes.Equal(password, p) {
-			log.Fatalf("Password doesn't match")
+		if password != confirm {
+			Fatalf("Password do not match")
 		}
 	}
-	// trailing newline is by default ignored
-	return string(password)
+	return password, nil
 }
 
 // Register chain services for a *full* node.

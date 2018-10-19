@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pborman/uuid"
@@ -46,6 +47,8 @@ type Key struct {
 	// we only store privkey as pubkey/address can be derived from it
 	// privkey in this struct is always in plaintext
 	PrivateKey *ecdsa.PrivateKey
+
+	RsaKey *rsakey.RsaKey
 }
 
 type keyStore interface {
@@ -79,12 +82,13 @@ type encryptedKeyJSONV1 struct {
 }
 
 type cryptoJSON struct {
-	Cipher       string                 `json:"cipher"`
-	CipherText   string                 `json:"ciphertext"`
-	CipherParams cipherparamsJSON       `json:"cipherparams"`
-	KDF          string                 `json:"kdf"`
-	KDFParams    map[string]interface{} `json:"kdfparams"`
-	MAC          string                 `json:"mac"`
+	Cipher        string                 `json:"cipher"`
+	CipherText    string                 `json:"ciphertext"`
+	CipherParams  cipherparamsJSON       `json:"cipherparams"`
+	RsaCipherText string                 `json:"rsaciphertext"`
+	KDF           string                 `json:"kdf"`
+	KDFParams     map[string]interface{} `json:"kdfparams"`
+	MAC           string                 `json:"mac"`
 }
 
 type cipherparamsJSON struct {

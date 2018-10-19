@@ -26,7 +26,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
@@ -65,13 +65,12 @@ func TestSignerRegister(t *testing.T) {
 	_ = contractAddr
 	contractBackend.Commit()
 
-	// ==============RegisterPublicKey====================
-	// rsa_.generateRsaKey("./testdata/rsa_pub1.pem", "./testdata/rsa_pri1.pem", 2048)
-
 	// 1. load RsaPublicKey/PrivateKey
 	fmt.Println("1.load RsaPublicKey/PrivateKey")
 
 	rsaKey, err := rsakey.NewRsaKey("./testdata")
+	fmt.Println("new rsa err:", err)
+
 	// 2. register node2 public key on chain (claim campaign)
 	fmt.Println("2.register node2 public key on chain")
 	register.TransactOpts = *bind.NewKeyedTransactor(key)
@@ -81,6 +80,12 @@ func TestSignerRegister(t *testing.T) {
 
 	tx, err := register.RegisterPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
 	fmt.Println("RegisterPublicKey tx:", tx.Hash().Hex())
+
+	rsaPublicKey, err := rsakey.NewRsaPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
+	fmt.Println("err:", err)
+	pubkey := rsaPublicKey.RsaPublicKey
+	fmt.Println(pubkey)
+
 	contractBackend.Commit()
 	printReceipt(contractBackend, tx, "ReceiptStatusFailed when RegisterPublicKey:%v")
 
