@@ -64,8 +64,7 @@ If no genesis file is found, the initialization is aborted.`, defaultGenesisPath
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
 			},
-			Description: `
-The import command imports blocks from an RLP-encoded form. The form can be one file
+			Description: `The import command imports blocks from an RLP-encoded form. The form can be one file
 with several RLP-encoded blocks, or several files can be used.
 
 If only one file is used, import error will result in failure. If several files are used,
