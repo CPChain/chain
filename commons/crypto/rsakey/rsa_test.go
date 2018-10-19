@@ -155,3 +155,9 @@ func TestNewRsaPrivateKey(t *testing.T) {
 	assert.Equal(t, publicKey, rsaKey.PublicKey.RsaPublicKey)
 	assert.Equal(t, 0, bytes.Compare(pubBytes, rsaKey.PublicKey.RsaPublicKeyBytes))
 }
+
+func TestLoadFile(t *testing.T) {
+	bytes, err := LoadFile("/_30mbkeaetmp/notexist")
+	assert.Nil(t, bytes)
+	assert.NotNil(t, err)
+}

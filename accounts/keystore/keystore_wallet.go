@@ -138,10 +138,10 @@ func (w *keystoreWallet) SignTxWithPassphrase(account accounts.Account, passphra
 	return w.keystore.SignTxWithPassphrase(account, passphrase, tx, chainID)
 }
 
-func (w *keystoreWallet) RsaEncrypt(a accounts.Account, password string, origData []byte) ([]byte, error) {
+func (w *keystoreWallet) EnryptWithRsa(a accounts.Account, password string, origData []byte) ([]byte, error) {
 	return w.keystore.RsaEncrypt(a, password, origData)
 }
 
-func (w *keystoreWallet) RsaDecrypt(a accounts.Account, password string, encryptedData []byte) ([]byte, error) {
+func (w *keystoreWallet) DecryptWithRsa(a accounts.Account, password string, encryptedData []byte) ([]byte, error) {
 	return w.keystore.RsaDecrypt(a, password, encryptedData)
 }

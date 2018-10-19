@@ -28,7 +28,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"

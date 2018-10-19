@@ -20,7 +20,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/types"

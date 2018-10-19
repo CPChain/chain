@@ -1,11 +1,13 @@
 package rsakey
 
 import (
+	"bitbucket.org/cpchain/chain/commons/log"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"io/ioutil"
 	"os"
 )
 
@@ -81,4 +83,13 @@ func loadKeyFile(path string) (*pem.Block, error) {
 		return nil, errors.New("decode key error")
 	}
 	return block, pubErr
+}
+
+func LoadFile(path string) ([]byte, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Info("file ", path, " not found.")
+		return nil, err
+	}
+	return b, nil
 }

@@ -36,7 +36,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/randentropy"
 	"github.com/ethereum/go-ethereum/common"
