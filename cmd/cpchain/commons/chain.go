@@ -29,6 +29,7 @@ const (
 )
 
 // MakeChainDatabase open an LevelDB using the flags passed to the client and will hard crash if it fails.
+// It creates a new one if the database doesn't exist.
 func MakeChainDatabase(ctx *cli.Context, n *node.Node, databaseCache int) ethdb.Database {
 	// TODO hardcoded name
 	name := "chaindata"
@@ -51,6 +52,7 @@ func OpenChain(ctx *cli.Context, n *node.Node, databaseCache int, trieCache int)
 	var err error
 	chainDb = MakeChainDatabase(ctx, n, databaseCache)
 
+	// genesis stores the chain configuration
 	config, _, err := core.OpenGenesisBlock(chainDb)
 	if err != nil {
 		log.Fatalf("%v", err)
@@ -110,6 +112,7 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 		}
 		close(stop)
 	}()
+
 	checkInterrupt := func() bool {
 		select {
 		case <-stop:
@@ -144,6 +147,7 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 		if checkInterrupt() {
 			return fmt.Errorf("interrupted")
 		}
+
 		i := 0
 		for ; i < importBatchSize; i++ {
 			var b types.Block

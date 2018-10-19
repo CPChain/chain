@@ -165,10 +165,11 @@ func cleanDB(ctx *cli.Context) {
 }
 
 func importChain(ctx *cli.Context) error {
-	if len(ctx.Args()) < 1 {
+	if len(ctx.Args()) == 0 {
 		log.Fatalf("This command requires an argument.")
 	}
 	cfg, node := newConfigNode(ctx)
+
 	dbCache := cfg.Eth.DatabaseCache
 	trieCache := cfg.Eth.TrieCache
 	chain, chainDb := commons.OpenChain(ctx, node, dbCache, trieCache)
@@ -282,10 +283,10 @@ func exportChain(ctx *cli.Context) error {
 		first, ferr := strconv.ParseInt(ctx.Args().Get(1), 10, 64)
 		last, lerr := strconv.ParseInt(ctx.Args().Get(2), 10, 64)
 		if ferr != nil || lerr != nil {
-			log.Fatalf("Export error in parsing parameters: block number not an integer\n")
+			log.Fatal("Export error in parsing parameters: block number not an integer")
 		}
 		if first < 0 || last < 0 {
-			log.Fatalf("Export error: block number must be greater than 0\n")
+			log.Fatal("Export error: block number must be greater than 0")
 		}
 		err = commons.ExportChainN(chain, fp, uint64(first), uint64(last))
 	}
