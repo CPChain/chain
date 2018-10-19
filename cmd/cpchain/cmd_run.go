@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"bitbucket.org/cpchain/chain/internal/profile"
 	"os"
 	"os/signal"
 	"strings"
@@ -31,6 +32,21 @@ func init() {
 		Name:   "run",
 		Flags:  runFlags,
 		Usage:  "Run a cpchain node",
+		Before: func(ctx *cli.Context) error {
+			if ctx.Bool(flags.ProfileFlagName) {
+				if err:= profile.Start(ctx); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+		After: func(ctx *cli.Context) error {
+			if ctx.Bool(flags.ProfileFlagName) {
+				profile.Stop()
+			}
+			log.Info("Exit cpchain run command")
+			return nil
+		},
 	}
 }
 
@@ -108,6 +124,7 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		}
 		// // Set the gas price to the limits from the CLI and start mining
 		// ethereum.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
+
 
 		// TODO dpor contract caller
 		if err := ethereum.StartMining(true, nil); err != nil {
