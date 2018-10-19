@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"bitbucket.org/cpchain/chain/core"
+
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
@@ -33,7 +35,7 @@ import (
 
 const (
 	// EpochGapBetweenElectionAndMining is the the epoch gap between election and mining.
-	EpochGapBetweenElectionAndMining = 1
+	EpochGapBetweenElectionAndMining = 2
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
 	MaxSizeOfRecentSigners = 10
 )
@@ -175,7 +177,8 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 
 	s.updateCandidates(header)
 
-	if s.Number%checkpointInterval == 0 {
+	if IsCheckPoint(s.Number, s.config.Epoch, s.config.View) {
+		// if s.Number%checkpointInterval == 0 {
 		rpts, err := s.updateRpts(header)
 		if err != nil {
 			return err
@@ -260,14 +263,37 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 	return rpts, nil
 }
 
+func (s *DporSnapshot) GetDefaultSigners() []common.Address {
+	extra := core.DefaultCpchainGenesisBlock().ExtraData
+	signers := make([]common.Address, (len(extra)-extraVanity-extraSeal)/common.AddressLength)
+	for i := 0; i < len(signers); i++ {
+		copy(signers[i][:], extra[extraVanity+i*common.AddressLength:])
+	}
+	return signers
+}
+
 // updateView use rpt and election result to get new committee(signers).
 func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
-	signers := election.Elect(rpts, seed, viewLength)
 
-	// TODO: fix this.
-	epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
-	s.RecentSigners[epochIdx] = signers
-	// s.RecentSigners[epochIdx+1] = signers
+	signers := s.GetDefaultSigners()
+
+	if s.Number < s.config.MaxInitBlockNumber {
+		s.RecentSigners[s.EpochIdx()+1] = signers
+		// log.Debug("< s.config.MaxInitBlockNumber, s.Number", "n", s.Number)
+		// log.Debug("signers in snapshot of:", "epoch idx", 0)
+		// for _, s := range s.RecentSigners[0] {
+		// 	log.Debug("signer", "s", s.Hex())
+		// }
+	}
+
+	if s.Number >= s.config.MaxInitBlockNumber-(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View) {
+		// 	// TODO: fix this.
+		// 	// log.Debug(">= s.config.MaxInitBlockNumber -s.config.Epoch*(EpochGapBetweenElectionAndMining-1), s.Number", "n", s.Number)
+		signers = election.Elect(rpts, seed, viewLength)
+		epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
+		s.RecentSigners[epochIdx] = signers
+	}
+
 	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
 		delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
 	}
@@ -281,7 +307,7 @@ func (s *DporSnapshot) EpochIdx() uint64 {
 		return 0
 	}
 
-	return (s.Number - 1) / uint64(epochLength)
+	return (s.Number - 1) / ((s.config.Epoch) * (s.config.View))
 }
 
 // EpochIdxOf returns the epoch index of given block number.
@@ -290,7 +316,7 @@ func (s *DporSnapshot) EpochIdxOf(blockNum uint64) uint64 {
 		return 0
 	}
 
-	return (blockNum - 1) / uint64(epochLength)
+	return (blockNum - 1) / ((s.config.Epoch) * (s.config.View))
 }
 
 // SignersOf retrieves all signersOf in the committee.
@@ -308,12 +334,12 @@ func (s *DporSnapshot) SignerRoundOf(signer common.Address, number uint64) (int,
 	return -1, errSignerNotInCommittee
 }
 
-func (s *DporSnapshot) IsSigner(signer common.Address, number uint64) bool {
+func (s *DporSnapshot) IsSignerOf(signer common.Address, number uint64) bool {
 	_, err := s.SignerRoundOf(signer, number)
 	return err == nil
 }
 
-func (s *DporSnapshot) IsLeader(signer common.Address, number uint64) (bool, error) {
+func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, error) {
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
@@ -321,7 +347,14 @@ func (s *DporSnapshot) IsLeader(signer common.Address, number uint64) (bool, err
 	if err != nil {
 		return false, err
 	}
-	return round == int((number-1)%s.config.Epoch), nil
+	// return round == int((number-1)%s.config.Epoch), nil
+	b := round == int(((number-1)%(s.config.Epoch*s.config.View))/s.config.View)
+
+	// log.Debug("round", "r", round)
+	// log.Debug("number", "n", number)
+	// log.Debug("int(((number-1)%(s.config.Epoch*s.config.View+1))/s.config.View)", "b", int(((number-1)%(s.config.Epoch*s.config.View))/s.config.View))
+
+	return b, nil
 }
 
 // Candidates retrieves all candidates recorded in the campaign contract.
@@ -330,8 +363,8 @@ func (s *DporSnapshot) candidates() []common.Address {
 }
 
 // inturn returns if a signer at a given block height is in-turn or not.
-func (s *DporSnapshot) Inturn(number uint64, signer common.Address) bool {
-	ok, err := s.IsLeader(signer, number)
+func (s *DporSnapshot) InturnOf(number uint64, signer common.Address) bool {
+	ok, err := s.IsLeaderOf(signer, number)
 	if err != nil {
 		return false
 	}

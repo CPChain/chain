@@ -17,6 +17,7 @@
 package eth
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -384,6 +385,11 @@ func (p *peer) SendNewBlock(block *types.Block, td *big.Int) error {
 // AsyncSendNewBlock queues an entire block for propagation to a remote peer. If
 // the peer's broadcast queue is full, the event is silently dropped.
 func (p *peer) AsyncSendNewBlock(block *types.Block, td *big.Int) {
+	log.Debug("in peer.AsyncSendNewBlock")
+	log.Debug("async sending new block", "num", block.NumberU64())
+	log.Debug("async sending new block", "hash", block.Hash())
+	log.Debug("async sending new block", "extra", "\n"+hex.Dump(block.Extra2()))
+
 	select {
 	case p.queuedProps <- &propEvent{block: block, td: td}:
 		p.knownBlocks.Add(block.Hash())
@@ -405,7 +411,6 @@ func (p *peer) SendBlockBodies(bodies []*blockBody) error {
 // SendBlockBodiesRLP sends a batch of block contents to the remote peer from
 // an already RLP encoded format.
 func (p *peer) SendBlockBodiesRLP(bodies []rlp.RawValue) error {
-	println("send block bodies")
 	return p2p.Send(p.rw, BlockBodiesMsg, bodies)
 }
 

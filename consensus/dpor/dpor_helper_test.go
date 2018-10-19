@@ -140,7 +140,7 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 	time2 := big.NewInt(time.Now().Unix() + 100)
 	header := &types.Header{Number: big.NewInt(0), Time: time1}
 	parentHash := header.Hash()
-	recents.Add(parentHash, &DporSnapshot{})
+	recents.Add(parentHash, &DporSnapshot{config: &configs.DporConfig{Period: 3, View: 3, Epoch: 3}})
 	type args struct {
 		d         *Dpor
 		chain     consensus.ChainReader
@@ -155,14 +155,14 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 		wantErr bool
 	}{
 		{"success when block 0", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents},
+			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, View: 3, Epoch: 3}},
 				header: &types.Header{Number: big.NewInt(0), ParentHash: parentHash}}, false},
 		{"fail with parent block", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3}},
+			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, View: 3, Epoch: 3}},
 				header:  &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time1},
 				parents: []*types.Header{header}}, true},
 		{"errInvalidSigners", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3}, dh: &defaultDporHelper{}},
+			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, View: 3, Epoch: 3}, dh: &defaultDporHelper{}},
 				header: &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time2,
 					Extra: hexutil.MustDecode(rightExtra)},
 				parents: []*types.Header{header}}, true},

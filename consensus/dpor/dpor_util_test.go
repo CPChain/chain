@@ -255,6 +255,7 @@ func Test_acceptSigs(t *testing.T) {
 		header   *types.Header
 		sigcache *lru.ARCCache
 		signers  []common.Address
+		epochL   uint
 	}
 	tests := []struct {
 		name    string
@@ -262,15 +263,15 @@ func Test_acceptSigs(t *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		{"should be true when signer not in cache", args{header, cache, getSignerAddress()[1:2]}, false, false},
-		{"should be true when signer not in cache", args{header, emptyCache, getSignerAddress()}, false, true},
-		{"should be true when signer in cache", args{header, cache, getSignerAddress()}, true, false},
+		{"should be true when signer not in cache", args{header, cache, getSignerAddress()[1:2], 4}, false, false},
+		{"should be true when signer not in cache", args{header, emptyCache, getSignerAddress(), 4}, false, true},
+		{"should be true when signer in cache", args{header, cache, getSignerAddress(), 4}, true, false},
 	}
 
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers)
+			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers, tt.args.epochL)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("acceptSigs(%v, %v, %v) error = %v, wantErr %v", tt.args.header, tt.args.sigcache, tt.args.signers, err, tt.wantErr)
 				return
@@ -284,7 +285,7 @@ func Test_acceptSigs(t *testing.T) {
 
 func Test_calcDifficulty(t *testing.T) {
 	signers := getSignerAddress()
-	config := &configs.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
 	snapshot := newSnapshot(config, cache, 1, common.Hash{}, signers)
 
@@ -297,8 +298,8 @@ func Test_calcDifficulty(t *testing.T) {
 		args args
 		want *big.Int
 	}{
-		{name: "WhenSnapshotIsNotLeader", args: args{snapshot, signers[0]}, want: big.NewInt(1)},
-		{name: "WhenSnapshotIsLeader", args: args{snapshot, signers[1]}, want: big.NewInt(2)},
+		{name: "WhenSnapshotIsNotLeader", args: args{snapshot, signers[0]}, want: big.NewInt(2)},
+		{name: "WhenSnapshotIsLeader", args: args{snapshot, signers[1]}, want: big.NewInt(1)},
 	}
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {

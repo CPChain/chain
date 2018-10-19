@@ -31,9 +31,11 @@ type RPT struct {
 type RPTs []RPT
 
 // This is used for sorting.
-func (a RPTs) Len() int           { return len(a) }
-func (a RPTs) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a RPTs) Less(i, j int) bool { return a[i].Rpt < a[j].Rpt }
+func (a RPTs) Len() int      { return len(a) }
+func (a RPTs) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a RPTs) Less(i, j int) bool {
+	return a[i].Rpt < a[j].Rpt && a[i].Address.Big().Cmp(a[j].Address.Big()) < 0
+}
 
 // Collector collects all rpt related information from block txs and contracts.
 type Collector interface {
