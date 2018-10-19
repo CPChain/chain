@@ -217,7 +217,7 @@ func unlockAccountWithPassword(ks *keystore.KeyStore, address string, password s
 		return ambiguousAddrRecovery(ks, err, password)
 	}
 	// All trials expended to unlock account, bail out
-	log.Warnf("Failed to unlock account %s (%v)", address, err)
+	log.Fatalf("Failed to unlock account %s (%v)", address, err)
 	return accounts.Account{}
 }
 
