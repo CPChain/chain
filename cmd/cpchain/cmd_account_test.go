@@ -38,6 +38,16 @@ func tmpDatadirWithKeystore(t *testing.T) string {
 	return datadir
 }
 
+func tmpDatadirWithKeystore1(t *testing.T) string {
+	datadir := tmpdir(t)
+	keystore := filepath.Join(datadir, "keystore")
+	source := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
+	if err := cp.CopyAll(keystore, source); err != nil {
+		t.Fatal(err)
+	}
+	return datadir
+}
+
 func TestAccountListEmpty(t *testing.T) {
 	datadir := tmpdir(t) + "/notexist/"
 	geth := runGeth(t, "account", "list", "--datadir", datadir)
@@ -127,7 +137,7 @@ Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could 
 }
 
 func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
-	datadir := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
+	datadir := tmpDatadirWithKeystore1(t)
 	geth := runGeth(t, "run",
 		"--datadir", datadir, "--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
