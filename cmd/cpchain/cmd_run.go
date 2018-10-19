@@ -11,8 +11,6 @@ import (
 	"bitbucket.org/cpchain/chain/node"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"fmt"
-
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"strings"
@@ -26,6 +24,7 @@ func init() {
 	runFlags = append(runFlags, flags.NodeFlags...)
 	runFlags = append(runFlags, flags.MinerFlags...)
 	runFlags = append(runFlags, flags.ChainFlags...)
+	// runFlags = append(runFlags, flags.P2pFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,
@@ -59,10 +58,8 @@ func startNode(n *node.Node) {
 
 func unlockAccounts(ctx *cli.Context, n *node.Node) {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-
 	passwords := MakePasswordList(ctx)
-	unlock := flags.GetByName("unlock").String()
-	fmt.Println("unlock:", unlock)
+	unlock := ctx.String("unlock")
 	unlocks := strings.Split(unlock, ",")
 	for i, account := range unlocks {
 		if trimmed := strings.TrimSpace(account); trimmed != "" {
@@ -73,10 +70,7 @@ func unlockAccounts(ctx *cli.Context, n *node.Node) {
 
 // MakePasswordList reads password lines from the file specified by the global --password flag.
 func MakePasswordList(ctx *cli.Context) []string {
-	pathFlag := flags.GetByName("password")
-	path := pathFlag.String()
-	fmt.Println("path:", path)
-	// path := ctx.GlobalString(PasswordFileFlag.Name)
+	path := ctx.String("password")
 	if path == "" {
 		return nil
 	}

@@ -57,9 +57,9 @@ func TestKeyFileUpgrade(t *testing.T) {
 		// decode json, get Key
 		path := "testdata/keys/key" + strconv.Itoa(i)
 
-		fmt.Println("path:", path)
+		// fmt.Println("path:", path)
 		keyjson, err := ioutil.ReadFile(path)
-		fmt.Println("keyjson:", string(keyjson))
+		// fmt.Println("keyjson:", string(keyjson))
 		key, err := DecryptKey(keyjson, password)
 		if err != nil {
 			t.Fatalf("json:%v,failed to decrypt: %v", keyjson, err)

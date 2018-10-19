@@ -20,7 +20,6 @@ import (
 	"github.com/cespare/cp"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 )
 
@@ -110,14 +109,10 @@ Repeat password: {{.InputLine "foobar2"}}
 }
 
 func TestUnlockFlagWrongPassword(t *testing.T) {
-	t.Skip("TestUnlockFlagWrongPassword")
 	datadir := tmpDatadirWithKeystore(t)
 	geth := runGeth(t, "run",
 		"--datadir", datadir,
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
-	// geth := runGeth(t, "run",
-	// 	"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
-	// 	"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
 	geth.Expect(`
 Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 1/3
@@ -127,92 +122,19 @@ Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 2/3
 Password: {{.InputLine "wrong2"}}
 Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 3/3
 Password: {{.InputLine "wrong3"}}
-Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could not decrypt key with given passphrase)
-`)
-}
-
-func TestUnlockFlagWrongPassword11(t *testing.T) {
-	t.Skip("TestUnlockFlagWrongPassword11")
-	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t, "run",
-		"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
-		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
-	defer geth.ExpectExit()
-	geth.Expect(`
-		   0.0.1
-		
-		AUTHOR:
-		   The cpchain authors <info@cpchain.io>
-		
-		COMMANDS:
-		     account     Manage accounts
-		     chain       Manage blockchain
-		     dumpconfig  Show configuration values
-		     run         Run a cpchain node
-		     help, h     Shows a list of commands or help for one command
-		
-		GLOBAL OPTIONS:
-		   --config value  Path to TOML configuration file (default "<datadir>/config.toml")
-		   --help, -h      Show help
-		   --version, -v   Print the version
-		
-		COPYRIGHT:
-		   LGPL
-`)
-}
-
-// https://github.com/ethereum/go-ethereum/issues/1785
-func TestUnlockFlagMultiIndex(t *testing.T) {
-	t.Skip("TestUnlockFlagMultiIndex")
-	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t,
-		"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
-		"--unlock", "0,2",
-		"js", "testdata/empty.js")
-	geth.Expect(`
-Unlocking account 0 | Attempt 1/3
-!! Unsupported terminal, password will be echoed.
-Passphrase: {{.InputLine "foobar"}}
-Unlocking account 2 | Attempt 1/3
-Passphrase: {{.InputLine "foobar"}}
-`)
-	geth.ExpectExit()
-
-	wantMessages := []string{
-		"Unlocked account",
-		"=0x7EF5A6135f1FD6a02593eEdC869c6D41D934aef8",
-		"=0x289d485D9771714CCe91D3393D764E1311907ACc",
-	}
-	for _, m := range wantMessages {
-		if !strings.Contains(geth.StderrText(), m) {
-			t.Errorf("stderr text does not contain %q", m)
-		}
-	}
-}
-
-func TestUnlockFlagPasswordFileWrongPassword(t *testing.T) {
-	t.Skip("TestUnlockFlagPasswordFileWrongPassword")
-	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t, "run",
-		"--datadir", datadir, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
-		"--password", "testdata/wrong-passwords.txt", "--unlock", "0,2")
-	defer geth.ExpectExit()
-	geth.Expect(`
-Fatal: Failed to unlock account 0 (could not decrypt key with given passphrase)
+Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could not decrypt key with given password)
 `)
 }
 
 func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
-	t.Skip("TestUnlockFlagAmbiguousWrongPassword")
-	store := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
+	datadir := filepath.Join("..", "..", "accounts", "keystore", "testdata", "dupes")
 	geth := runGeth(t, "run",
-		"--keystore", store, "--nat", "none", "--nodiscover", "--maxpeers", "0", "--port", "0",
-		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
+		"--datadir", datadir, "--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
 
 	// Helper for the expect template, returns absolute keystore path.
 	geth.SetTemplateFunc("keypath", func(file string) string {
-		abs, _ := filepath.Abs(filepath.Join(store, file))
+		abs, _ := filepath.Abs(filepath.Join(datadir+"/keystore", file))
 		return abs
 	})
 	geth.Expect(`
@@ -222,7 +144,7 @@ Password: {{.InputLine "wrong"}}
 Multiple key files exist for address f466859ead1932d743d622cb74fc058882e8648a:
    keystore://{{keypath "1"}}
    keystore://{{keypath "2"}}
-Testing your passphrase against all of them...
+Testing your password against all of them...
 Fatal: None of the listed files could be unlocked.
 `)
 	geth.ExpectExit()

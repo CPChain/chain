@@ -129,7 +129,7 @@ func createAccount(ctx *cli.Context) error {
 }
 
 // accountUpdate transitions an account from a previous format to the current
-// one, also providing the possibility to change the pass-phrase.
+// one, also providing the possibility to change the password.
 func accountUpdate(ctx *cli.Context) error {
 	if len(ctx.Args()) == 0 {
 		log.Fatalf("No accounts specified to update")
@@ -170,7 +170,7 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 		}
 	}
 	if match == nil {
-		log.Fatalf("None of the listed files could be unlocked.")
+		Fatalf("None of the listed files could be unlocked.")
 	}
 	fmt.Printf("Your password unlocked %s\n", match.URL)
 	fmt.Println("In order to avoid this warning, you need to remove the following duplicate key files:")
@@ -190,7 +190,8 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i in
 	}
 	for trials := 0; trials < 3; trials++ {
 		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d", address, trials+1, 3)
-		password, _ := readPassword(prompt, false)
+
+		password := getPassword(prompt, i, passwords)
 		err = ks.Unlock(account, password)
 		if err == nil {
 			log.Info("Unlocked account", "address", account.Address.Hex())
@@ -207,8 +208,18 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i in
 	}
 	// All trials expended to unlock account, bail out
 	Fatalf("Failed to unlock account %s (%v)", address, err)
-
 	return accounts.Account{}, ""
+}
+
+func getPassword(prompt string, i int, passwords []string) string {
+	if len(passwords) > 0 {
+		if i < len(passwords) {
+			return passwords[i]
+		}
+		return passwords[len(passwords)-1]
+	}
+	password, _ := readPassword(prompt, false)
+	return password
 }
 
 func accountImport(ctx *cli.Context) error {
