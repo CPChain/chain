@@ -17,6 +17,7 @@
 package node
 
 import (
+	"bitbucket.org/cpchain/chain/apis"
 	"reflect"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -93,6 +94,8 @@ type Service interface {
 
 	// APIs retrieves the list of RPC descriptors the service provides
 	APIs() []rpc.API
+
+	GAPIs() []apis.API
 
 	// Start is called after all services have been constructed and the networking
 	// layer was also initialized to spawn any goroutines required by the service.

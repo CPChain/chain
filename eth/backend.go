@@ -25,6 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"bitbucket.org/cpchain/chain/apis"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/accounts/rsakey"
@@ -272,6 +274,17 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 		})
 		engine.SetThreads(-1) // Disable CPU mining
 		return engine
+	}
+}
+
+func (s *Ethereum) GAPIs() []apis.API {
+	return []apis.API{
+		NewPublicCpcAPIServer(s),
+		NewPublicMinerAPIServer(s),
+		NewPrivateMinerAPIServer(s),
+		NewPrivateAdminAPIServer(s),
+		NewPublicDebugAPIServer(s),
+		NewPrivateDebugAPIServer(s.chainConfig, s),
 	}
 }
 

@@ -18,6 +18,7 @@
 package dpor
 
 import (
+	"bitbucket.org/cpchain/chain/apis"
 	"bytes"
 	"errors"
 	"math/big"
@@ -325,6 +326,10 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 		Service:   &API{chain: chain, dpor: d},
 		Public:    false,
 	}}
+}
+
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []apis.API {
+	return []apis.API{}
 }
 
 // IsSigner implements Validator.

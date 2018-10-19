@@ -18,6 +18,7 @@
 package ethash
 
 import (
+	"bitbucket.org/cpchain/chain/apis"
 	"errors"
 	"fmt"
 	"math"
@@ -568,6 +569,10 @@ func (ethash *Ethash) Hashrate() float64 {
 // APIs implements consensus.Engine, returning the user facing RPC APIs. Currently
 // that is empty.
 func (ethash *Ethash) APIs(chain consensus.ChainReader) []rpc.API {
+	return nil
+}
+
+func (ethash *Ethash) GAPIs(chain consensus.ChainReader) []apis.API{
 	return nil
 }
 

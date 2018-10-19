@@ -18,6 +18,7 @@
 package ethapi
 
 import (
+	"bitbucket.org/cpchain/chain/apis"
 	"context"
 	"math/big"
 
@@ -72,6 +73,10 @@ type Backend interface {
 	CurrentBlock() *types.Block
 
 	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
+}
+
+func GetGAPIs(apiBackend Backend) []apis.API{
+	return nil
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

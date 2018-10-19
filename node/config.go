@@ -32,8 +32,8 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/accounts/usbwallet"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/ethereum/go-ethereum/p2p/nat"
@@ -104,6 +104,12 @@ type Config struct {
 	// default zero value is/ valid and will pick a port number randomly (useful
 	// for ephemeral nodes).
 	HTTPPort int `toml:",omitempty"`
+
+	ProxyHost string
+	ProxyPort int
+
+	GrpcHost string
+	GrpcPort int
 
 	// HTTPCors is the Cross-Origin Resource Sharing header to send to requesting
 	// clients. Please be aware that CORS is a browser enforced security, it's fully
@@ -201,6 +207,20 @@ func DefaultIPCEndpoint(clientIdentifier string) string {
 	return config.IPCEndpoint()
 }
 
+func (c *Config) GrpcEndpoint() string {
+	if c.GrpcHost == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s:%d", c.GrpcHost, c.GrpcPort)
+}
+
+func (c *Config) ProxyEndpoint() string {
+	if c.ProxyHost == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s:%d", c.ProxyHost, c.ProxyPort)
+}
+
 // HTTPEndpoint resolves an HTTP endpoint based on the configured host interface
 // and port parameters.
 func (c *Config) HTTPEndpoint() string {
@@ -208,6 +228,16 @@ func (c *Config) HTTPEndpoint() string {
 		return ""
 	}
 	return fmt.Sprintf("%s:%d", c.HTTPHost, c.HTTPPort)
+}
+
+func DefaultGrpcEndpoint() string {
+	config := &Config{GrpcHost: DefaultGrpcHost, GrpcPort: DefaultGrpcPort}
+	return config.GrpcEndpoint()
+}
+
+func DefaultProxyEndpoint() string {
+	config := &Config{ProxyHost: DefaultProxyHost, ProxyPort: DefaultProxyPort}
+	return config.ProxyEndpoint()
 }
 
 // DefaultHTTPEndpoint returns the HTTP endpoint used by default.
@@ -468,10 +498,14 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 // ************************************************************************************************
 
 const (
-	DefaultHTTPHost = "localhost" // Default host interface for the HTTP RPC server
-	DefaultHTTPPort = 8545        // Default TCP port for the HTTP RPC server
-	DefaultWSHost   = "localhost" // Default host interface for the websocket RPC server
-	DefaultWSPort   = 8546        // Default TCP port for the websocket RPC server
+	DefaultGrpcHost  = "localhost"
+	DefaultGrpcPort  = 8543
+	DefaultProxyHost = "localhost"
+	DefaultProxyPort = 8544
+	DefaultHTTPHost  = "localhost" // Default host interface for the HTTP RPC server
+	DefaultHTTPPort  = 8545        // Default TCP port for the HTTP RPC server
+	DefaultWSHost    = "localhost" // Default host interface for the websocket RPC server
+	DefaultWSPort    = 8546        // Default TCP port for the websocket RPC server
 )
 
 // DefaultConfig contains reasonable default settings.

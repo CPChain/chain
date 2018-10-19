@@ -20,11 +20,16 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
+
+	"bitbucket.org/cpchain/chain/apis"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/rsakey"
@@ -55,6 +60,13 @@ type Node struct {
 
 	rpcAPIs       []rpc.API   // List of APIs currently provided by the node
 	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
+
+	// GRPC Setting
+	grpcAPIs      []apis.API
+	grpcEndpoint  string
+	proxyEndpoint string
+	grpcHandler   *grpc.Server
+	grpcListner   net.Listener
 
 	ipcEndpoint string       // IPC endpoint to listen at (empty = IPC disabled)
 	ipcListener net.Listener // IPC RPC listener socket to serve API requests
@@ -115,6 +127,8 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
+		grpcEndpoint:      conf.GrpcEndpoint(),
+		proxyEndpoint:     conf.ProxyEndpoint(),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
@@ -224,6 +238,13 @@ func (n *Node) Start() error {
 		running.Stop()
 		return err
 	}
+	if err := n.startGRPC(services); err != nil {
+		for _, service := range services {
+			service.Stop()
+		}
+		running.Stop()
+		return err
+	}
 	// Finish initializing the startup
 	n.services = services
 	n.server = running
@@ -248,6 +269,26 @@ func (n *Node) openDataDir() error {
 		return convertFileLockError(err)
 	}
 	n.instanceDirLock = release
+	return nil
+}
+
+func (n *Node) startGRPC(services map[reflect.Type]Service) error {
+	gapis := n.gapis()
+	for _, service := range services {
+		gapis = append(gapis, service.GAPIs()...)
+	}
+
+	listener, err := net.Listen("tcp", n.grpcEndpoint)
+	if err != nil {
+		return err
+	}
+
+	n.grpcHandler = grpc.NewServer()
+	n.grpcListner = listener
+
+	go n.grpcHandler.Serve(n.httpListener)
+	go http.ListenAndServe(n.proxyEndpoint, runtime.NewServeMux())
+
 	return nil
 }
 
@@ -585,6 +626,11 @@ func (n *Node) OpenDatabase(name string, cache, handles int) (ethdb.Database, er
 // ResolvePath returns the absolute path of a resource in the instance directory.
 func (n *Node) ResolvePath(x string) string {
 	return n.config.resolvePath(x)
+}
+
+// TODO: @sangh if need blew apis
+func (n *Node) gapis() []apis.API {
+	return []apis.API{}
 }
 
 // apis returns the collection of RPC descriptors this node offers.

@@ -84,7 +84,6 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		// // Set the gas price to the limits from the CLI and start mining
 		// ethereum.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
 
-
 		// TODO dpor contract caller
 		if err := ethereum.StartMining(true, nil); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
