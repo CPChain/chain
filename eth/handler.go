@@ -761,11 +761,12 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// if received a new generated block, perform as to verify a normal block
 		// do signing in dpor, return consensus.ErrNewSignedHeader
 		// then broadcast to remote committee.
-		var request newBlockData
-		if err := msg.Decode(&request); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		go pm.blockchain.InsertChain(types.Blocks{request.Block})
+		// TODO: @Liuq fix this.
+		// var request newBlockData
+		// if err := msg.Decode(&request); err != nil {
+		// 	return errResp(ErrDecode, "%v: %v", msg, err)
+		// }
+		// go pm.blockchain.InsertChain(types.Blocks{request.Block})
 
 	case msg.Code == NewBlockGeneratedHashesMsg:
 		// if received a new generated header of block,
