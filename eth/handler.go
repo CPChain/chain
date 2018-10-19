@@ -863,7 +863,8 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 func (pm *ProtocolManager) broadcastGeneratedBlock(block *types.Block) {
 	committee := pm.peers.committee
 	for _, peer := range committee {
-		peer.AsyncSendNewPendingBlock(block)
+		// peer.AsyncSendNewPendingBlock(block)
+		peer.AsyncSendNewBlock(block, big.NewInt(0))
 	}
 }
 
