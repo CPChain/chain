@@ -280,19 +280,20 @@ func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byt
 	return plainText, keyId, rsaPlainText, err
 }
 
-func PKCS5UnPadding(origData []byte) []byte {
-	length := len(origData)
+func PKCS5UnPadding(data []byte) []byte {
+	length := len(data)
 	if length == 0 {
-		return origData
+		return data
 	}
-	unpadding := int(origData[length-1])
-	return origData[:(length - unpadding)]
+	unpadding := int(data[length-1])
+	return data[:(length - unpadding)]
 }
 
-func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
-	padding := blockSize - len(ciphertext)%blockSize
+func PKCS5Padding(data []byte, blockSize int) []byte {
+	padding := blockSize - len(data)%blockSize
+	// each padded byte has a numerical value of `padding'
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(ciphertext, padtext...)
+	return append(data, padtext...)
 }
 
 func decryptKeyV1(keyProtected *encryptedKeyJSONV1, auth string) (keyBytes []byte, keyId []byte, rsaKeyBytes []byte, err error) {

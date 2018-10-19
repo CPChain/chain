@@ -498,17 +498,17 @@ func zeroKey(k *ecdsa.PrivateKey) {
 	}
 }
 
-func (ks *KeyStore) RsaEncrypt(a accounts.Account, passphrase string, origData []byte) ([]byte, error) {
-	_, key, err := ks.getDecryptedKey(a, passphrase)
+func (ks *KeyStore) EncryptWithRsa(account accounts.Account, passphrase string, plainText []byte) ([]byte, error) {
+	_, key, err := ks.getDecryptedKey(account, passphrase)
 	if err != nil {
 		return nil, err
 	}
 	defer zeroKey(key.PrivateKey)
-	return key.RsaKey.RsaEncrypt(origData)
+	return key.RsaKey.RsaEncrypt(plainText)
 }
 
-func (ks *KeyStore) RsaDecrypt(a accounts.Account, passphrase string, cipherText []byte) ([]byte, error) {
-	_, key, err := ks.getDecryptedKey(a, passphrase)
+func (ks *KeyStore) DecryptWithRsa(account accounts.Account, passphrase string, cipherText []byte) ([]byte, error) {
+	_, key, err := ks.getDecryptedKey(account, passphrase)
 	if err != nil {
 		return nil, err
 	}

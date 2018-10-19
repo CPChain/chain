@@ -60,14 +60,10 @@ Update an existing account.
 
 The account is saved in the newest version in encrypted format, you are prompted
 for a password to unlock the account and another to save the updated file.
-
 This same command can therefore be used to migrate an account of a deprecated
 format to the newest format or change the password for an account.
-
 For non-interactive use the password can be specified with the --password flag:
-
     cpchain account update [options] <address>
-
 Since only one password can be given, only format update can be performed,
 changing your password is only possible interactively.`,
 			},
@@ -85,15 +81,10 @@ changing your password is only possible interactively.`,
 
 Imports an unencrypted private key from <keyfile> and creates a new account.
 Prints the address.
-
 The keyfile is assumed to contain an unencrypted private key in hexadecimal format.
-
 The account is saved in encrypted format, you are prompted for a password.
-
 You must remember this password to unlock your account in the future.
-
 For non-interactive use the password can be specified with the --password flag:
-
     cpchain account import [options] <keyfile>`,
 			},
 		},
@@ -138,7 +129,7 @@ func accountUpdate(ctx *cli.Context) error {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	for _, addr := range ctx.Args() {
-		account, oldPassword := unlockAccount(ctx, ks, addr, 0, nil)
+		account, oldPassword := unlockAccountWithPrompt(ks, addr)
 		newPassword, _ := readPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a new password.", true)
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
 			Fatalf("Could not update the account: %v", err)
@@ -183,7 +174,7 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 }
 
 // tries unlocking the specified account a few times.
-func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i int, passwords []string) (accounts.Account, string) {
+func unlockAccountWithPrompt(ks *keystore.KeyStore, address string) (accounts.Account, string) {
 	account, err := makeAddress(ks, address)
 	if err != nil {
 		Fatalf("Could not list accounts: %v", err)
@@ -191,7 +182,7 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i in
 	for trials := 0; trials < 3; trials++ {
 		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d", address, trials+1, 3)
 
-		password := getPassword(prompt, i, passwords)
+		password, _ := readPassword(prompt, false)
 		err = ks.Unlock(account, password)
 		if err == nil {
 			log.Info("Unlocked account", "address", account.Address.Hex())
@@ -211,15 +202,23 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i in
 	return accounts.Account{}, ""
 }
 
-func getPassword(prompt string, i int, passwords []string) string {
-	if len(passwords) > 0 {
-		if i < len(passwords) {
-			return passwords[i]
-		}
-		return passwords[len(passwords)-1]
+// tries unlocking the specified account a few times.
+func unlockAccountWithPassword(ks *keystore.KeyStore, address string, password string) accounts.Account {
+	account, err := makeAddress(ks, address)
+	if err != nil {
+		Fatalf("Could not list accounts: %v", err)
 	}
-	password, _ := readPassword(prompt, false)
-	return password
+	err = ks.Unlock(account, password)
+	if err == nil {
+		log.Info("Unlocked account", "address", account.Address.Hex())
+		return account
+	} else if err, ok := err.(*keystore.AmbiguousAddrError); ok {
+		log.Info("Unlocked account", "address", account.Address.Hex())
+		return ambiguousAddrRecovery(ks, err, password)
+	}
+	// All trials expended to unlock account, bail out
+	log.Warnf("Failed to unlock account %s (%v)", address, err)
+	return accounts.Account{}
 }
 
 func accountImport(ctx *cli.Context) error {

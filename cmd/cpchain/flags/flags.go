@@ -79,11 +79,6 @@ var AccountFlags = []cli.Flag{
 		Name:  "lightkdf",
 		Usage: "Reduce key-derivation RAM & CPU usage at some expense of KDF strength",
 	},
-	cli.StringFlag{
-		Name:  "unlock",
-		Usage: "Comma separated list of accounts to unlock",
-		Value: "",
-	},
 }
 
 const (

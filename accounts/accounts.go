@@ -127,9 +127,9 @@ type Wallet interface {
 	// or optionally with the aid of any location metadata from the embedded URL field.
 	SignTxWithPassphrase(account Account, passphrase string, tx *types.Transaction, chainID *big.Int) (*types.Transaction, error)
 
-	EnryptWithRsa(a Account, password string, origData []byte) ([]byte, error)
+	EnryptWithRsa(account Account, password string, plainText []byte) ([]byte, error)
 
-	DecryptWithRsa(a Account, password string, cipherText []byte) ([]byte, error)
+	DecryptWithRsa(account Account, password string, cipherText []byte) ([]byte, error)
 }
 
 // Backend is a "wallet provider" that may contain a batch of accounts they can

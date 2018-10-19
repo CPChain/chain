@@ -1,19 +1,18 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
+	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
-
-	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"github.com/urfave/cli"
-	"io/ioutil"
-	"strings"
 )
 
 var runCommand cli.Command
@@ -58,18 +57,19 @@ func startNode(n *node.Node) {
 
 func unlockAccounts(ctx *cli.Context, n *node.Node) {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	passwords := MakePasswordList(ctx)
+	passwords := makePasswordList(ctx)
 	unlock := ctx.String("unlock")
 	unlocks := strings.Split(unlock, ",")
 	for i, account := range unlocks {
-		if trimmed := strings.TrimSpace(account); trimmed != "" {
-			unlockAccount(ctx, ks, trimmed, i, passwords)
+		if i >= len(passwords) {
+			Fatalf("Not enough passwords provided for --password")
 		}
+		unlockAccountWithPassword(ks, account, passwords[i])
 	}
 }
 
 // MakePasswordList reads password lines from the file specified by the global --password flag.
-func MakePasswordList(ctx *cli.Context) []string {
+func makePasswordList(ctx *cli.Context) []string {
 	path := ctx.String("password")
 	if path == "" {
 		return nil

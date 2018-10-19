@@ -72,11 +72,6 @@ func updateBaseAccount(ctx *cli.Context, ks *keystore.KeyStore, cfg *eth.Config)
 			if isRunCommand {
 				log.Warnf("Use account %v as the default account.", account.String())
 			}
-
-			// xx, _ := ks.RsaEncrypt(accounts.Account{Address: account}, "password", []byte("password"))
-			// fmt.Println("===== xx:", xx)
-			// test, _ := ks.RsaDecrypt(accounts.Account{Address: account}, "password", xx)
-			// fmt.Println("===== test:", string(test))
 		} else {
 			if isRunCommand {
 				log.Warn("No default account to use.")

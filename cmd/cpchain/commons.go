@@ -1,14 +1,15 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/commons/inpututil"
-	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/eth"
-	"bitbucket.org/cpchain/chain/node"
 	"fmt"
 	"io"
 	"os"
 	"runtime"
+
+	"bitbucket.org/cpchain/chain/cmd/cpchain/commons/inpututil"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/eth"
+	"bitbucket.org/cpchain/chain/node"
 )
 
 // Fatalf formats a message to standard error and exits the program.
