@@ -125,37 +125,6 @@ func TestUnlockFlagWrongPassword(t *testing.T) {
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
 	geth.Expect(`
-Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 1/3
-!! Unsupported terminal, password will be echoed.
-Password: {{.InputLine "wrong1"}}
-Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 2/3
-Password: {{.InputLine "wrong2"}}
-Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 3/3
-Password: {{.InputLine "wrong3"}}
-Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could not decrypt key with given password)
+Fatal: Not enough passwords provided for --password
 `)
-}
-
-func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
-	datadir := tmpDatadirWithKeystore1(t)
-	geth := runGeth(t, "run",
-		"--datadir", datadir, "--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
-	defer geth.ExpectExit()
-
-	// Helper for the expect template, returns absolute keystore path.
-	geth.SetTemplateFunc("keypath", func(file string) string {
-		abs, _ := filepath.Abs(filepath.Join(datadir+"/keystore", file))
-		return abs
-	})
-	geth.Expect(`
-Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 1/3
-!! Unsupported terminal, password will be echoed.
-Password: {{.InputLine "wrong"}}
-Multiple key files exist for address f466859ead1932d743d622cb74fc058882e8648a:
-   keystore://{{keypath "1"}}
-   keystore://{{keypath "2"}}
-Testing your password against all of them...
-Fatal: None of the listed files could be unlocked.
-`)
-	geth.ExpectExit()
 }
