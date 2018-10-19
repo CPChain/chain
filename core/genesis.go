@@ -25,43 +25,42 @@ import (
 	"math/big"
 	"strings"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-//go:generate gencodec -type Genesis -field-override genesisSpecMarshaling -out gen_genesis.go
-//go:generate gencodec -type GenesisAccount -field-override genesisAccountMarshaling -out gen_genesis_account.go
+//go:generate gencodec -type Genesis -formats json,toml -field-override genesisSpecMarshaling -out gen_genesis.go
+//go:generate gencodec -type GenesisAccount -formats json,toml -field-override genesisAccountMarshaling -out gen_genesis_account.go
 
 var errGenesisNoConfig = errors.New("genesis has no chain configuration")
 
 // Genesis specifies the header fields, state of a genesis block. It also defines hard
 // fork switch-over blocks through the chain configuration.
 type Genesis struct {
-	Config     *configs.ChainConfig `json:"config"`
-	Nonce      uint64               `json:"nonce"`
-	Timestamp  uint64               `json:"timestamp"`
-	ExtraData  []byte               `json:"extraData"`
-	ExtraData2 []byte               `json:"extraData2"`
-	GasLimit   uint64               `json:"gasLimit"   gencodec:"required"`
-	Difficulty *big.Int             `json:"difficulty" gencodec:"required"`
-	Mixhash    common.Hash          `json:"mixHash"`
-	Coinbase   common.Address       `json:"coinbase"`
-	Alloc      GenesisAlloc         `json:"alloc"      gencodec:"required"`
+	Config     *configs.ChainConfig `json:"config"     toml:"config"`
+	Nonce      uint64               `json:"nonce"      toml:"nonce"`
+	Timestamp  uint64               `json:"timestamp"  toml:"timestamp"`
+	ExtraData  []byte               `json:"extraData"  toml:"extraData"`
+	ExtraData2 []byte               `json:"extraData2" toml:"extraData2"`
+	GasLimit   uint64               `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
+	Difficulty *big.Int             `json:"difficulty" toml:"difficulty" gencodec:"required"`
+	Mixhash    common.Hash          `json:"mixHash"    toml:"mixHash"`
+	Coinbase   common.Address       `json:"coinbase"   toml:"coinbase"`
+	Alloc      GenesisAlloc         `json:"alloc"      toml:"alloc"      gencodec:"required"`
 
 	// These fields are used for consensus tests. Please don't use them
 	// in actual genesis blocks.
-	Number     uint64      `json:"number"`
-	GasUsed    uint64      `json:"gasUsed"`
-	ParentHash common.Hash `json:"parentHash"`
+	Number     uint64      `json:"number"     toml:"number"`
+	GasUsed    uint64      `json:"gasUsed"    toml:"gasUsed"`
+	ParentHash common.Hash `json:"parentHash" toml:"parentHash"`
 }
 
 // GenesisAlloc specifies the initial state that is part of the genesis block.
@@ -81,11 +80,11 @@ func (ga *GenesisAlloc) UnmarshalJSON(data []byte) error {
 
 // GenesisAccount is an account in the state of the genesis block.
 type GenesisAccount struct {
-	Code       []byte                      `json:"code,omitempty"`
-	Storage    map[common.Hash]common.Hash `json:"storage,omitempty"`
-	Balance    *big.Int                    `json:"balance" gencodec:"required"`
-	Nonce      uint64                      `json:"nonce,omitempty"`
-	PrivateKey []byte                      `json:"secretKey,omitempty"` // for tests
+	Code       []byte                      `json:"code,omitempty"      toml:"code,omitempty"`
+	Storage    map[common.Hash]common.Hash `json:"storage,omitempty"   toml:"storage,omitempty"`
+	Balance    *big.Int                    `json:"balance"             toml:"balance"             gencodec:"required"`
+	Nonce      uint64                      `json:"nonce,omitempty"     toml:"nonce,omitempty"`
+	PrivateKey []byte                      `json:"secretKey,omitempty" toml:"secretKey,omitempty"` // for tests
 }
 
 // field type overrides for gencodec
@@ -93,10 +92,12 @@ type genesisSpecMarshaling struct {
 	Nonce      math.HexOrDecimal64
 	Timestamp  math.HexOrDecimal64
 	ExtraData  hexutil.Bytes
+	ExtraData2 hexutil.Bytes
 	GasLimit   math.HexOrDecimal64
 	GasUsed    math.HexOrDecimal64
 	Number     math.HexOrDecimal64
 	Difficulty *math.HexOrDecimal256
+	Mixhash    marshalHash
 	Alloc      map[common.UnprefixedAddress]GenesisAccount
 }
 
@@ -104,15 +105,15 @@ type genesisAccountMarshaling struct {
 	Code       hexutil.Bytes
 	Balance    *math.HexOrDecimal256
 	Nonce      math.HexOrDecimal64
-	Storage    map[storageJSON]storageJSON
+	Storage    map[marshalHash]marshalHash
 	PrivateKey hexutil.Bytes
 }
 
-// storageJSON represents a 256 bit byte array, but allows less than 256 bits when
+// marshalHash represents a 256 bit byte array, but allows less than 256 bits when
 // unmarshaling from hex.
-type storageJSON common.Hash
+type marshalHash common.Hash
 
-func (h *storageJSON) UnmarshalText(text []byte) error {
+func (h *marshalHash) UnmarshalText(text []byte) error {
 	text = bytes.TrimPrefix(text, []byte("0x"))
 	if len(text) > 64 {
 		return fmt.Errorf("too many hex characters in storage key/value %q", text)
@@ -125,7 +126,7 @@ func (h *storageJSON) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func (h storageJSON) MarshalText() ([]byte, error) {
+func (h marshalHash) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(h[:]).MarshalText()
 }
 

@@ -286,7 +286,7 @@ func (n *Node) startGRPC(services map[reflect.Type]Service) error {
 	n.grpcHandler = grpc.NewServer()
 	n.grpcListner = listener
 
-	go n.grpcHandler.Serve(n.httpListener)
+	go n.grpcHandler.Serve(n.grpcListner)
 	go http.ListenAndServe(n.proxyEndpoint, runtime.NewServeMux())
 
 	return nil

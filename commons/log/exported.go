@@ -17,8 +17,8 @@ func NewLogger() *Logger {
 	}
 
 	l.SetFormatter(&TextFormatter{
-		FullTimestamp:    true,
 		QuoteEmptyFields: true,
+		FullTimestamp:    true,
 		TimestampFormat:  termTimeFormat,
 	})
 

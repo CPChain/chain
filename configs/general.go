@@ -112,26 +112,26 @@ var (
 // that any network, identified by its genesis block, can have its own
 // set of configuration options.
 type ChainConfig struct {
-	ChainID *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
+	ChainID *big.Int `json:"chainId" toml:"chainId"` // chainId identifies the current chain and is used for replay protection
 
-	HomesteadBlock *big.Int `json:"homesteadBlock,omitempty"` // Homestead switch block (nil = no fork, 0 = already homestead)
+	HomesteadBlock *big.Int `json:"homesteadBlock,omitempty" toml:"homesteadBlock,omitempty"` // Homestead switch block (nil = no fork, 0 = already homestead)
 
-	DAOForkBlock   *big.Int `json:"daoForkBlock,omitempty"`   // TheDAO hard-fork switch block (nil = no fork)
-	DAOForkSupport bool     `json:"daoForkSupport,omitempty"` // Whether the nodes supports or opposes the DAO hard-fork
+	DAOForkBlock   *big.Int `json:"daoForkBlock,omitempty" toml:"daoForkBlock,omitempty"`     // TheDAO hard-fork switch block (nil = no fork)
+	DAOForkSupport bool     `json:"daoForkSupport,omitempty" toml:"daoForkSupport,omitempty"` // Whether the nodes supports or opposes the DAO hard-fork
 
 	// EIP150 implements the Gas price changes (https://github.com/ethereum/EIPs/issues/150)
-	EIP150Block *big.Int    `json:"eip150Block,omitempty"` // EIP150 HF block (nil = no fork)
-	EIP150Hash  common.Hash `json:"eip150Hash,omitempty"`  // EIP150 HF hash (needed for header only clients as only gas pricing changed)
+	EIP150Block *big.Int    `json:"eip150Block,omitempty" toml:"eip150Block,omitempty"` // EIP150 HF block (nil = no fork)
+	EIP150Hash  common.Hash `json:"eip150Hash,omitempty" toml:"eip150Hash,omitempty"`   // EIP150 HF hash (needed for header only clients as only gas pricing changed)
 
-	EIP155Block *big.Int `json:"eip155Block,omitempty"` // EIP155 HF block
-	EIP158Block *big.Int `json:"eip158Block,omitempty"` // EIP158 HF block
+	EIP155Block *big.Int `json:"eip155Block,omitempty" toml:"eip155Block,omitempty"` // EIP155 HF block
+	EIP158Block *big.Int `json:"eip158Block,omitempty" toml:"eip158Block,omitempty"` // EIP158 HF block
 
-	ByzantiumBlock      *big.Int `json:"byzantiumBlock,omitempty"`      // Byzantium switch block (nil = no fork, 0 = already on byzantium)
-	ConstantinopleBlock *big.Int `json:"constantinopleBlock,omitempty"` // Constantinople switch block (nil = no fork, 0 = already activated)
+	ByzantiumBlock      *big.Int `json:"byzantiumBlock,omitempty" toml:"byzantiumBlock,omitempty"`           // Byzantium switch block (nil = no fork, 0 = already on byzantium)
+	ConstantinopleBlock *big.Int `json:"constantinopleBlock,omitempty" toml:"constantinopleBlock,omitempty"` // Constantinople switch block (nil = no fork, 0 = already activated)
 
 	// Various consensus engines
-	Ethash *EthashConfig `json:"ethash,omitempty"`
-	Dpor   *DporConfig   `json:"dpor,omitempty"`
+	Ethash *EthashConfig `json:"ethash,omitempty" toml:"ethash,omitempty"`
+	Dpor   *DporConfig   `json:"dpor,omitempty" toml:"dpor,omitempty"`
 }
 
 // EthashConfig is the consensus engine configs for proof-of-work based sealing.
@@ -144,11 +144,11 @@ func (c *EthashConfig) String() string {
 
 // DporConfig is the consensus engine configs for proof-of-authority based sealing.
 type DporConfig struct {
-	Period                uint64                    `json:"period"` // Number of seconds between blocks to enforce
-	Epoch                 uint64                    `json:"epoch"`  // Epoch length to reset votes and checkpoint
-	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"`
-	Contracts             map[string]common.Address `json:"contracts"`
-	ProxyContractRegister common.Address            `json:"proxyContractRegister"`
+	Period                uint64                    `json:"period"                toml:"period"` // Number of seconds between blocks to enforce
+	Epoch                 uint64                    `json:"epoch"                 toml:"epoch"`  // Epoch length to reset votes and checkpoint
+	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"    toml:"maxInitBlockNumber"`
+	Contracts             map[string]common.Address `json:"contracts"             toml:"contracts"`
+	ProxyContractRegister common.Address            `json:"proxyContractRegister" toml:"proxyContractRegister"`
 }
 
 // String implements the stringer interface, returning the consensus engine details.

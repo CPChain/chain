@@ -74,7 +74,7 @@ func (logger *Logger) Info(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Info(logrus.InfoLevel, msg)
+		logger.WithFields(getFields(args...)).Info(msg)
 	}
 }
 
@@ -85,7 +85,7 @@ func (logger *Logger) Debug(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Debug(logrus.DebugLevel, msg)
+		logger.WithFields(getFields(args...)).Debug(msg)
 	}
 }
 
@@ -96,7 +96,7 @@ func (logger *Logger) Print(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Info(logrus.InfoLevel, msg)
+		logger.WithFields(getFields(args...)).Info(msg)
 	}
 }
 
@@ -107,7 +107,7 @@ func (logger *Logger) Warn(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Warn(logrus.WarnLevel, msg)
+		logger.WithFields(getFields(args...)).Warn(msg)
 	}
 }
 
@@ -118,7 +118,7 @@ func (logger *Logger) Error(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Error(logrus.ErrorLevel, msg)
+		logger.WithFields(getFields(args...)).Error(msg)
 	}
 }
 
@@ -129,7 +129,7 @@ func (logger *Logger) Panic(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Panic(logrus.PanicLevel, msg)
+		logger.WithFields(getFields(args...)).Panic(msg)
 	}
 }
 
@@ -140,6 +140,6 @@ func (logger *Logger) Fatal(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Fatal(logrus.FatalLevel, msg)
+		logger.WithFields(getFields(args...)).Fatal(msg)
 	}
 }

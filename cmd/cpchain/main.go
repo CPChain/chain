@@ -46,7 +46,7 @@ func newApp() *cli.App {
 
 	// maintain order
 	sort.Sort(cli.CommandsByName(app.Commands))
-	// sort.Sort(cli.FlagsByName(app.Flags))
+	//sort.Sort(cli.FlagsByName(app.Flags))
 
 	app.Before = func(ctx *cli.Context) error {
 		return nil
