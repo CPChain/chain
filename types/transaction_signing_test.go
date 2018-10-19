@@ -194,7 +194,7 @@ func TestMakeSigner(t *testing.T) {
 		t.Error("The signer should be types.FrontierSigner, but got ", fmt.Sprintf("%T", signer))
 	}
 
-	signer = MakeSigner(configs.CpchainChainConfig, new(big.Int).SetUint64(1000))
+	signer = MakeSigner(configs.MainnetChainConfig, new(big.Int).SetUint64(1000))
 	if fmt.Sprintf("%T", signer) != "types.PrivTxSupportEIP155Signer" {
 		t.Error("The signer should be types.PrivTxSupportEIP155Signer, but got ", fmt.Sprintf("%T", signer))
 	}
