@@ -13,7 +13,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
-	"bitbucket.org/cpchain/chain/commons/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
@@ -166,16 +165,13 @@ func cleanDB(ctx *cli.Context) {
 }
 
 func importChain(ctx *cli.Context) error {
-	if len(ctx.Args()) < 1 {
-		log.Fatalf("This command requires an argument.")
-	}
-	if len(ctx.Args()) > 1 {
-		log.Fatalf("This command can only import a single file.")
+	if len(ctx.Args()) != 1 {
+		log.Fatalf("This command requires a single argument for the imported file")
 	}
 	cfg, node := newConfigNode(ctx)
 	dbCache := cfg.Eth.DatabaseCache
 	trieCache := cfg.Eth.TrieCache
-	chain, chainDb := chainutils.OpenChain(ctx, node, dbCache, trieCache)
+	chain, chainDb := commons.OpenChain(ctx, node, dbCache, trieCache)
 	defer chainDb.Close()
 
 	// Start periodically gathering memory profiles
@@ -196,10 +192,12 @@ func importChain(ctx *cli.Context) error {
 	// Import the chain
 	start := time.Now()
 
-	if err := chainutils.ImportChain(chain, ctx.Args().First()); err != nil {
+	if err := commons.ImportChain(chain, ctx.Args().First()); err != nil {
 		log.Error("Import error", "err", err)
 	}
+	// flush the caches
 	chain.Stop()
+
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
 
 	// Output pre-compaction stats mostly to see the import trashing

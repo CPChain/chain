@@ -112,7 +112,6 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 		}
 		close(stop)
 	}()
-
 	checkInterrupt := func() bool {
 		select {
 		case <-stop:
@@ -147,7 +146,6 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 		if checkInterrupt() {
 			return fmt.Errorf("interrupted")
 		}
-
 		i := 0
 		for ; i < importBatchSize; i++ {
 			var b types.Block
