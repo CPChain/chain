@@ -215,8 +215,10 @@ func cleanDB(ctx *cli.Context) {
 
 func importChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
-		log.Fatalf("This command requires an argument.")
+		log.Fatal("This command requires an argument.")
 	}
+
+	fmt.Printf("begin import")
 	cfg, node := newConfigNode(ctx)
 	chain, chainDb := chainutils.OpenChain(ctx, node, &cfg.Eth)
 	defer chainDb.Close()

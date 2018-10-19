@@ -228,12 +228,15 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 
 	// now update from command line arguments
 	updateNodeConfig(ctx, &cfg.Node)
+
 	// create node
 	n, err := node.New(&cfg.Node)
 	if err != nil {
 		log.Fatalf("Node creation failed: %v", err)
 	}
+
 	// update chain config
 	updateChainConfig(ctx, &cfg.Eth, n)
+
 	return cfg, n
 }
