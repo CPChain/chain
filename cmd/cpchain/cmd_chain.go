@@ -11,8 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
-	"bitbucket.org/cpchain/chain/commons/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
@@ -33,8 +33,8 @@ var chainCommand = cli.Command{
 	Usage: "Manage blockchain",
 	Subcommands: []cli.Command{
 		{
-			Name:     "init",
-			Usage:    "Bootstrap and initialize a new genesis block",
+			Name:  "init",
+			Usage: "Bootstrap and initialize a new genesis block",
 			Flags: []cli.Flag{
 				flags.GetByName("datadir"),
 			},
@@ -44,21 +44,20 @@ var chainCommand = cli.Command{
 If no genesis file is found, the initialization is aborted.`, defaultGenesisPath),
 		},
 		{
-			Name:     "cleandb",
-			Usage:    "Clean blockchain and state databases",
+			Name:  "cleandb",
+			Usage: "Clean blockchain and state databases",
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 			},
-			Action:    cleanDB,
-			ArgsUsage: " ",
-			Description: `
-Remove blockchain and state databases`,
+			Action:      cleanDB,
+			ArgsUsage:   " ",
+			Description: `Remove blockchain and state databases`,
 		},
 		{
 			Action:    importChain,
 			Name:      "import",
 			Usage:     "Import a blockchain file",
-			ArgsUsage: "<filename> (<filename 2> ... <filename N>) ",
+			ArgsUsage: "<filename>",
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.NoCompactionFlagName),
@@ -66,8 +65,7 @@ Remove blockchain and state databases`,
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
 			},
-			Description: `
-The import command imports blocks from an RLP-encoded form. The form can be one file
+			Description: `The import command imports blocks from an RLP-encoded form. The form can be one file
 with several RLP-encoded blocks, or several files can be used.
 
 If only one file is used, import error will result in failure. If several files are used,
@@ -214,11 +212,13 @@ func cleanDB(ctx *cli.Context) {
 }
 
 func importChain(ctx *cli.Context) error {
-	if len(ctx.Args()) < 1 {
-		log.Fatalf("This command requires an argument.")
+	if len(ctx.Args()) != 1 {
+		log.Fatalf("This command requires a single argument for the imported file")
 	}
 	cfg, node := newConfigNode(ctx)
-	chain, chainDb := chainutils.OpenChain(ctx, node, &cfg.Eth)
+	dbCache := cfg.Eth.DatabaseCache
+	trieCache := cfg.Eth.TrieCache
+	chain, chainDb := commons.OpenChain(ctx, node, dbCache, trieCache)
 	defer chainDb.Close()
 
 	// Start periodically gathering memory profiles
@@ -239,18 +239,12 @@ func importChain(ctx *cli.Context) error {
 	// Import the chain
 	start := time.Now()
 
-	if len(ctx.Args()) == 1 {
-		if err := chainutils.ImportChain(chain, ctx.Args().First()); err != nil {
-			log.Error("Import error", "err", err)
-		}
-	} else {
-		for _, arg := range ctx.Args() {
-			if err := chainutils.ImportChain(chain, arg); err != nil {
-				log.Error("Import error", "file", arg, "err", err)
-			}
-		}
+	if err := commons.ImportChain(chain, ctx.Args().First()); err != nil {
+		log.Error("Import error", "err", err)
 	}
+	// flush the caches
 	chain.Stop()
+
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
 
 	// Output pre-compaction stats mostly to see the import trashing
@@ -308,28 +302,33 @@ func importChain(ctx *cli.Context) error {
 }
 
 func exportChain(ctx *cli.Context) error {
-	if len(ctx.Args()) < 1 {
-		log.Fatalf("This command requires an argument.")
+	argcnt := len(ctx.Args())
+	if argcnt != 1 && argcnt != 3 {
+		log.Fatal("Wrong number of arguments specified.")
 	}
 	cfg, node := newConfigNode(ctx)
-	chain, _ := chainutils.OpenChain(ctx, node, &cfg.Eth)
+	dbCache := cfg.Eth.DatabaseCache
+	trieCache := cfg.Eth.TrieCache
+
+	chain, _ := commons.OpenChain(ctx, node, dbCache, trieCache)
 	start := time.Now()
 
 	var err error
 	fp := ctx.Args().First()
-	if len(ctx.Args()) < 3 {
-		err = chainutils.ExportChain(chain, fp)
+
+	if argcnt == 1 {
+		err = commons.ExportChainN(chain, fp, uint64(0), chain.CurrentBlock().NumberU64())
 	} else {
 		// This can be improved to allow for numbers larger than 9223372036854775807
 		first, ferr := strconv.ParseInt(ctx.Args().Get(1), 10, 64)
 		last, lerr := strconv.ParseInt(ctx.Args().Get(2), 10, 64)
 		if ferr != nil || lerr != nil {
-			log.Fatalf("Export error in parsing parameters: block number not an integer\n")
+			log.Fatal("Export error in parsing parameters: block number not an integer")
 		}
 		if first < 0 || last < 0 {
-			log.Fatalf("Export error: block number must be greater than 0\n")
+			log.Fatal("Export error: block number must be greater than 0")
 		}
-		err = chainutils.ExportAppendChain(chain, fp, uint64(first), uint64(last))
+		err = commons.ExportChainN(chain, fp, uint64(first), uint64(last))
 	}
 
 	if err != nil {
@@ -345,10 +344,10 @@ func importPreimages(ctx *cli.Context) error {
 		log.Fatalf("This command requires an argument.")
 	}
 	cfg, stack := newConfigNode(ctx)
-	diskdb := chainutils.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*ethdb.LDBDatabase)
+	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*ethdb.LDBDatabase)
 
 	start := time.Now()
-	if err := chainutils.ImportPreimages(diskdb, ctx.Args().First()); err != nil {
+	if err := commons.ImportPreimages(diskdb, ctx.Args().First()); err != nil {
 		log.Fatalf("Import error: %v\n", err)
 	}
 	fmt.Printf("Import done in %v\n", time.Since(start))
@@ -361,10 +360,10 @@ func exportPreimages(ctx *cli.Context) error {
 		log.Fatal("This command requires an argument.")
 	}
 	cfg, stack := newConfigNode(ctx)
-	diskdb := chainutils.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*ethdb.LDBDatabase)
+	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*ethdb.LDBDatabase)
 
 	start := time.Now()
-	if err := chainutils.ExportPreimages(diskdb, ctx.Args().First()); err != nil {
+	if err := commons.ExportPreimages(diskdb, ctx.Args().First()); err != nil {
 		log.Fatalf("Export error: %v\n", err)
 	}
 	fmt.Printf("Export done in %v\n", time.Since(start))
@@ -378,7 +377,7 @@ func dump(ctx *cli.Context) error {
 	}
 
 	cfg, stack := newConfigNode(ctx)
-	chain, chainDb := chainutils.OpenChain(ctx, stack, &cfg.Eth)
+	chain, chainDb := commons.OpenChain(ctx, stack, &cfg.Eth)
 	for _, arg := range ctx.Args() {
 		var block *types.Block
 		if hashish(arg) {
