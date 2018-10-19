@@ -31,8 +31,8 @@ var chainCommand = cli.Command{
 	Usage: "Manage blockchain",
 	Subcommands: []cli.Command{
 		{
-			Name:     "init",
-			Usage:    "Bootstrap and initialize a new genesis block",
+			Name:  "init",
+			Usage: "Bootstrap and initialize a new genesis block",
 			Flags: []cli.Flag{
 				flags.GetByName("datadir"),
 			},
@@ -42,8 +42,8 @@ var chainCommand = cli.Command{
 If no genesis file is found, the initialization is aborted.`, defaultGenesisPath),
 		},
 		{
-			Name:     "cleandb",
-			Usage:    "Clean blockchain and state databases",
+			Name:  "cleandb",
+			Usage: "Clean blockchain and state databases",
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 			},
@@ -56,7 +56,7 @@ Remove blockchain and state databases`,
 			Action:    importChain,
 			Name:      "import",
 			Usage:     "Import a blockchain file",
-			ArgsUsage: "<filename> (<filename 2> ... <filename N>) ",
+			ArgsUsage: "<filename>",
 			Flags: []cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.NoCompactionFlagName),
@@ -170,6 +170,9 @@ func importChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
 		log.Fatalf("This command requires an argument.")
 	}
+	if len(ctx.Args()) > 1 {
+		log.Fatalf("This command can only import a single file.")
+	}
 	cfg, node := newConfigNode(ctx)
 	dbCache := cfg.Eth.DatabaseCache
 	trieCache := cfg.Eth.TrieCache
@@ -194,16 +197,8 @@ func importChain(ctx *cli.Context) error {
 	// Import the chain
 	start := time.Now()
 
-	if len(ctx.Args()) == 1 {
-		if err := chainutils.ImportChain(chain, ctx.Args().First()); err != nil {
-			log.Error("Import error", "err", err)
-		}
-	} else {
-		for _, arg := range ctx.Args() {
-			if err := chainutils.ImportChain(chain, arg); err != nil {
-				log.Error("Import error", "file", arg, "err", err)
-			}
-		}
+	if err := chainutils.ImportChain(chain, ctx.Args().First()); err != nil {
+		log.Error("Import error", "err", err)
 	}
 	chain.Stop()
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
