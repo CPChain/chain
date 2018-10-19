@@ -35,7 +35,7 @@ var (
 	// hash refers to default block.
 	OldMainnetGenesisHash = common.HexToHash("0x1016c25d1b029163a0a5c960733381f5db7710066ae3816c1768d24b72be1e8f")
 	// TODO
-	MainnetGenesisHash = common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000")
+	MainnetGenesisHash = common.HexToHash("0x6a1455819a218618d870ad9c84257d4917ec6c6e10f4c133004dd1f8a687612a")
 )
 
 var (
