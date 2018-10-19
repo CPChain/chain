@@ -180,10 +180,17 @@ var P2pFlags = []cli.Flag{
 	},
 }
 
+const (
+	ProfileFlagName = "profile"
+)
 var NodeFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "identity",
 		Usage: "Custom node name",
+	},
+	cli.BoolFlag{
+		Name:  ProfileFlagName,
+		Usage: "Profile the running cpchain instance",
 	},
 }
 
