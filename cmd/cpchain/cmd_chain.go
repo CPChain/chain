@@ -216,9 +216,7 @@ func importChain(ctx *cli.Context) error {
 		log.Fatalf("This command requires a single argument for the imported file")
 	}
 	cfg, node := newConfigNode(ctx)
-	dbCache := cfg.Eth.DatabaseCache
-	trieCache := cfg.Eth.TrieCache
-	chain, chainDb := commons.OpenChain(ctx, node, dbCache, trieCache)
+	chain, chainDb := commons.OpenChain(ctx, node, &cfg.Eth)
 	defer chainDb.Close()
 
 	// Start periodically gathering memory profiles
@@ -307,10 +305,8 @@ func exportChain(ctx *cli.Context) error {
 		log.Fatal("Wrong number of arguments specified.")
 	}
 	cfg, node := newConfigNode(ctx)
-	dbCache := cfg.Eth.DatabaseCache
-	trieCache := cfg.Eth.TrieCache
 
-	chain, _ := commons.OpenChain(ctx, node, dbCache, trieCache)
+	chain, _ := commons.OpenChain(ctx, node, &cfg.Eth)
 	start := time.Now()
 
 	var err error
