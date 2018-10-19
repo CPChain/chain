@@ -50,4 +50,3 @@ func Stop() {
 	Handler.StopCPUProfile()
 	Handler.StopGoTrace()
 }
-
