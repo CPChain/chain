@@ -139,7 +139,7 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 		}
 		var sss common.Address
 		for i := 0; i < len(signers); i++ {
-			copy(sss[:], header.Extra[extraVanity+i*common.AddressLength:])
+			copy(sss[:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
 			log.Info("signer in extra ", "s", sss.Hex())
 		}
 
