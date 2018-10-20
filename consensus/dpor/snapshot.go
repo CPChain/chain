@@ -35,7 +35,8 @@ import (
 
 const (
 	// EpochGapBetweenElectionAndMining is the the epoch gap between election and mining.
-	EpochGapBetweenElectionAndMining = 2
+	EpochGapBetweenElectionAndMining = 3
+	// EpochGapBetweenElectionAndMining = 2
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
 	MaxSizeOfRecentSigners = 10
 )

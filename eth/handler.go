@@ -228,6 +228,26 @@ func (pm *ProtocolManager) removePeer(id string) {
 	}
 }
 
+func (pm *ProtocolManager) update() {
+	futureTimer := time.NewTicker(time.Duration(5*int64(configs.CpchainChainConfig.Dpor.Period)) * time.Second)
+	defer futureTimer.Stop()
+	for {
+		blockHeight := pm.blockchain.CurrentBlock().NumberU64()
+		select {
+		case <-futureTimer.C:
+			if pm.blockchain.CurrentBlock().NumberU64() == blockHeight {
+
+				for p := range pm.peers.peers {
+					pm.removePeer(p)
+				}
+			}
+
+		case <-pm.quitSync:
+			return
+		}
+	}
+}
+
 func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.maxPeers = maxPeers
 
@@ -245,6 +265,9 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	// start sync handlers
 	go pm.syncer()
 	go pm.txsyncLoop()
+
+	// start an update goroutine to ensure network performance.
+	go pm.update()
 }
 
 func (pm *ProtocolManager) Stop() {
@@ -724,12 +747,18 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			}
 		}
 
+		// TODO @Liuq, fix this.
+		number := request.Block.NumberU64()
+		currentNum := pm.blockchain.CurrentBlock().NumberU64()
+		if number <= currentNum {
+			return nil
+		}
+
 		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
 		if err == consensus.ErrNewSignedHeader {
 			err := err.(*consensus.ErrNewSignedHeaderType)
 			header := err.SignedHeader
 			go pm.BroadcastSignedHeader(header)
-
 		}
 
 	case msg.Code == TxMsg:

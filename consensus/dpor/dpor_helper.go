@@ -19,6 +19,7 @@ package dpor
 
 import (
 	"bytes"
+	"encoding/hex"
 	"math/big"
 	"strconv"
 	"time"
@@ -72,9 +73,9 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 		return errMissingSignature
 	}
 
-	// Ensure that the extra-data contains a signer list on checkpoint, but none otherwise
 	signersBytes := len(header.Extra) - extraVanity - extraSeal
 	if signersBytes%common.AddressLength != 0 {
+		log.Fatal("fatal 2")
 		return errInvalidSigners
 	}
 
@@ -129,6 +130,20 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
+		log.Info("header.extra", "extra", "\n"+hex.Dump(header.Extra))
+		log.Info("header", "h", header)
+		log.Info("snapshot", "s", snap)
+		log.Info("signers")
+		for _, signer := range snap.SignersOf(number) {
+			log.Info("signer in snapshot ", "s", signer.Hex())
+		}
+		var sss common.Address
+		for i := 0; i < len(signers); i++ {
+			copy(sss[:], header.Extra[extraVanity+i*common.AddressLength:])
+			log.Info("signer in extra ", "s", sss.Hex())
+		}
+
+		log.Fatal("fatal 1")
 		return errInvalidSigners
 	}
 	// All basic checks passed, verify the seal and return
