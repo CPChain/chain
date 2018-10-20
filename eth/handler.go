@@ -229,7 +229,7 @@ func (pm *ProtocolManager) removePeer(id string) {
 }
 
 func (pm *ProtocolManager) update() {
-	futureTimer := time.NewTicker(time.Duration(5*int64(configs.CpchainChainConfig.Dpor.Period)) * time.Second)
+	futureTimer := time.NewTicker(time.Duration(30*int64(configs.CpchainChainConfig.Dpor.Period)) * time.Second)
 	defer futureTimer.Stop()
 	for {
 		blockHeight := pm.blockchain.CurrentBlock().NumberU64()
