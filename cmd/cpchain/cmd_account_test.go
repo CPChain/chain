@@ -51,22 +51,22 @@ func tmpDatadirWithKeystore1(t *testing.T) string {
 
 func TestAccountListEmpty(t *testing.T) {
 	datadir := tmpdir(t) + "/notexist/"
-	geth := runCpchain(t, "account", "list", "--datadir", datadir)
-	geth.ExpectExit()
+	cpchain := runCpchain(t, "account", "list", "--datadir", datadir)
+	cpchain.ExpectExit()
 }
 
 func TestAccountList(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runCpchain(t, "account", "list", "--datadir", datadir)
-	defer geth.ExpectExit()
+	cpchain := runCpchain(t, "account", "list", "--datadir", datadir)
+	defer cpchain.ExpectExit()
 	if runtime.GOOS == "windows" {
-		geth.Expect(`
+		cpchain.Expect(`
 Account #0: {7ef5a6135f1fd6a02593eedc869c6d41d934aef8} keystore://{{.Datadir}}\keystore\UTC--2016-03-22T12-57-55.920751759Z--7ef5a6135f1fd6a02593eedc869c6d41d934aef8
 Account #1: {f466859ead1932d743d622cb74fc058882e8648a} keystore://{{.Datadir}}\keystore\aaa
 Account #2: {289d485d9771714cce91d3393d764e1311907acc} keystore://{{.Datadir}}\keystore\zzz
 `)
 	} else {
-		geth.Expect(`
+		cpchain.Expect(`
 Account #0: {7ef5a6135f1fd6a02593eedc869c6d41d934aef8} keystore://{{.Datadir}}/keystore/UTC--2016-03-22T12-57-55.920751759Z--7ef5a6135f1fd6a02593eedc869c6d41d934aef8
 Account #1: {f466859ead1932d743d622cb74fc058882e8648a} keystore://{{.Datadir}}/keystore/aaa
 Account #2: {289d485d9771714cce91d3393d764e1311907acc} keystore://{{.Datadir}}/keystore/zzz
@@ -76,23 +76,23 @@ Account #2: {289d485d9771714cce91d3393d764e1311907acc} keystore://{{.Datadir}}/k
 
 func TestAccountNew(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runCpchain(t, "account", "new", "--lightkdf", "--datadir", datadir)
-	defer geth.ExpectExit()
-	geth.Expect(`
+	cpchain := runCpchain(t, "account", "new", "--lightkdf", "--datadir", datadir)
+	defer cpchain.ExpectExit()
+	cpchain.Expect(`
 If your password contains whitespaces, please be careful enough to avoid later confusion.
 Please give a password.
 !! Unsupported terminal, password will be echoed.
 Password: {{.InputLine "foobar"}}
 Repeat password: {{.InputLine "foobar"}}
 `)
-	geth.ExpectRegexp(`Address: \{[0-9a-f]{40}\}\n`)
+	cpchain.ExpectRegexp(`Address: \{[0-9a-f]{40}\}\n`)
 }
 
 func TestAccountNewBadRepeat(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runCpchain(t, "account", "new", "--lightkdf", "--datadir", datadir)
-	defer geth.ExpectExit()
-	geth.Expect(`
+	cpchain := runCpchain(t, "account", "new", "--lightkdf", "--datadir", datadir)
+	defer cpchain.ExpectExit()
+	cpchain.Expect(`
 If your password contains whitespaces, please be careful enough to avoid later confusion.
 Please give a password.
 !! Unsupported terminal, password will be echoed.
@@ -104,11 +104,11 @@ Fatal: Password do not match
 
 func TestAccountUpdate(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runCpchain(t, "account", "update",
+	cpchain := runCpchain(t, "account", "update",
 		"--datadir", datadir, "--lightkdf",
 		"f466859ead1932d743d622cb74fc058882e8648a")
-	defer geth.ExpectExit()
-	geth.Expect(`
+	defer cpchain.ExpectExit()
+	cpchain.Expect(`
 Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 1/3
 !! Unsupported terminal, password will be echoed.
 Password: {{.InputLine "foobar"}}
@@ -121,10 +121,10 @@ Repeat password: {{.InputLine "foobar2"}}
 
 func TestUnlockFlagWrongPassword(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runCpchain(t, "run",
+	cpchain := runCpchain(t, "run",
 		"--datadir", datadir,
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
-	defer geth.ExpectExit()
-	geth.Expect(`Fatal: Not enough passwords provided for --password
+	defer cpchain.ExpectExit()
+	cpchain.Expect(`Fatal: Not enough passwords provided for --password
 `)
 }

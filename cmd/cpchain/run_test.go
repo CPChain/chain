@@ -34,7 +34,7 @@ func tmpdir(t *testing.T) string {
 	return dir
 }
 
-type testgeth struct {
+type testcpchain struct {
 	*cmdtest.TestCmd
 
 	// template variables for expect
@@ -61,10 +61,10 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// spawns geth with the given command line args. If the args don't set --datadir, the
+// spawns cpchain with the given command line args. If the args don't set --datadir, the
 // child g gets a temporary data directory.
-func runCpchain(t *testing.T, args ...string) *testgeth {
-	tt := &testgeth{}
+func runCpchain(t *testing.T, args ...string) *testcpchain {
+	tt := &testcpchain{}
 	tt.TestCmd = cmdtest.NewTestCmd(t, tt)
 	for i, arg := range args {
 		switch {
@@ -90,7 +90,7 @@ func runCpchain(t *testing.T, args ...string) *testgeth {
 		}()
 	}
 
-	// Boot "geth". This actually runs the test binary but the TestMain
+	// Boot "cpchain". This actually runs the test binary but the TestMain
 	// function will prevent any tests from running.
 	tt.Run("cpchain-test", args...)
 
