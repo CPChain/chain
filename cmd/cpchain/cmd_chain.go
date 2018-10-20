@@ -213,7 +213,7 @@ func importChain(ctx *cli.Context) error {
 		log.Fatalf("This command requires a single argument for the imported file")
 	}
 
-	fmt.Printf("begin import")
+	log.Info("Begin import")
 	cfg, node := newConfigNode(ctx)
 	chain, chainDb := commons.OpenChain(ctx, node, &cfg.Eth)
 	defer chainDb.Close()

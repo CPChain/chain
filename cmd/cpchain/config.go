@@ -86,7 +86,7 @@ func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 // If neither flags were provided, this method returns nil and an emphemeral key is to be generated.
 func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	var (
-		file = ctx.GlobalString(flags.NodeKeyFlagName)
+		file = ctx.String(flags.NodeKeyFlagName)
 		key  *ecdsa.PrivateKey
 		err  error
 	)
@@ -109,7 +109,7 @@ func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	updateRpcConfig(ctx, cfg)
 
 	// Update UseLightweightKDF setting
-	if ctx.GlobalIsSet(flags.LightKdfFlagName) {
+	if ctx.IsSet(flags.LightKdfFlagName) {
 		cfg.UseLightweightKDF = ctx.GlobalBool(flags.LightKdfFlagName)
 	}
 

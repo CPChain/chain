@@ -87,6 +87,8 @@ func unlockAccounts(ctx *cli.Context, n *node.Node) {
 	}
 }
 
+// TODO @chengxin @xumx please be sure about the underlying logic.
+// cf. those in the keystore package.
 func handleWallet(n *node.Node) {
 	// Register wallet event handlers to open and auto-derive wallets
 	events := make(chan accounts.WalletEvent, 16)
@@ -156,6 +158,7 @@ func startMining(ctx *cli.Context, n *node.Node) {
 	}
 }
 
+// TODO to be removed.  do not add it here.
 func createContractCaller(ctx *cli.Context, n *node.Node) *dpor.ContractCaller {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	passwords := makePasswordList(ctx)
