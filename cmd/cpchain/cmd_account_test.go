@@ -121,10 +121,18 @@ Repeat password: {{.InputLine "foobar2"}}
 
 func TestUnlockFlagWrongPassword(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runCpchain(t, "run",
+	cpchain := runCpchain(t, "run",
 		"--datadir", datadir,
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
-	defer geth.ExpectExit()
-	geth.Expect(`Fatal: Not enough passwords provided for --password
+	defer cpchain.ExpectExit()
+	cpchain.Expect(`
+Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 1/3
+!! Unsupported terminal, password will be echoed.
+Password: {{.InputLine "wrong1"}}
+Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 2/3
+Password: {{.InputLine "wrong2"}}
+Unlocking account f466859ead1932d743d622cb74fc058882e8648a | Attempt 3/3
+Password: {{.InputLine "wrong3"}}
+Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could not decrypt key with given password)
 `)
 }
