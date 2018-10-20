@@ -170,7 +170,7 @@ const (
 	MaxPendingPeersFlagName = "maxpendpeers"
 	PortFlagName            = "port"
 	BootnodesFlagName       = "bootnodes"
-	NodeKeyFlagName         = "nodekey"
+	NodeKeyFileFlagName     = "nodekey"
 )
 
 // TODO @chengxin  adjust the following  {ac}
@@ -195,7 +195,7 @@ var P2pFlags = []cli.Flag{
 		Value: "",
 	},
 	cli.StringFlag{
-		Name:  NodeKeyFlagName,
+		Name:  NodeKeyFileFlagName,
 		Usage: "P2P node key file",
 	},
 }
@@ -208,7 +208,7 @@ const (
 var NodeFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  IdentityFlagName,
-		Usage: "Custom node name",
+		Usage: "Customized node name",
 	},
 	cli.BoolFlag{
 		Name:  ProfileFlagName,

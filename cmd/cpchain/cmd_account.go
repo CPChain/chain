@@ -5,6 +5,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
@@ -108,12 +109,12 @@ func createAccount(ctx *cli.Context) error {
 	cfg, _ := newConfigNode(ctx)
 	scryptN, scryptP, keydir, err := cfg.Node.AccountConfig()
 	if err != nil {
-		Fatalf("Failed to read configuration: %v", err)
+		commons.Fatalf("Failed to read configuration: %v", err)
 	}
-	password, _ := readPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a password.", true)
+	password, _ := commons.ReadPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a password.", true)
 	address, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
 	if err != nil {
-		Fatalf("Failed to create account: %v", err)
+		commons.Fatalf("Failed to create account: %v", err)
 	}
 	fmt.Printf("Address: {%x}\n", address)
 	return nil
@@ -130,9 +131,9 @@ func accountUpdate(ctx *cli.Context) error {
 
 	for _, addr := range ctx.Args() {
 		account, oldPassword := unlockAccountWithPrompt(ks, addr)
-		newPassword, _ := readPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a new password.", true)
+		newPassword, _ := commons.ReadPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a new password.", true)
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
-			Fatalf("Could not update the account: %v", err)
+			commons.Fatalf("Could not update the account: %v", err)
 		}
 	}
 	return nil
@@ -161,7 +162,7 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 		}
 	}
 	if match == nil {
-		Fatalf("None of the listed files could be unlocked.")
+		commons.Fatalf("None of the listed files could be unlocked.")
 	}
 	fmt.Printf("Your password unlocked %s\n", match.URL)
 	fmt.Println("In order to avoid this warning, you need to remove the following duplicate key files:")
@@ -177,12 +178,12 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 func unlockAccountWithPrompt(ks *keystore.KeyStore, address string) (accounts.Account, string) {
 	account, err := makeAddress(ks, address)
 	if err != nil {
-		Fatalf("Could not list accounts: %v", err)
+		commons.Fatalf("Could not list accounts: %v", err)
 	}
 	for trials := 0; trials < 3; trials++ {
 		prompt := fmt.Sprintf("Unlocking account %s | Attempt %d/%d", address, trials+1, 3)
 
-		password, _ := readPassword(prompt, false)
+		password, _ := commons.ReadPassword(prompt, false)
 		err = ks.Unlock(account, password)
 		if err == nil {
 			log.Info("Unlocked account", "address", account.Address.Hex())
@@ -198,7 +199,7 @@ func unlockAccountWithPrompt(ks *keystore.KeyStore, address string) (accounts.Ac
 		}
 	}
 	// All trials expended to unlock account, bail out
-	Fatalf("Failed to unlock account %s (%v)", address, err)
+	commons.Fatalf("Failed to unlock account %s (%v)", address, err)
 	return accounts.Account{}, ""
 }
 
@@ -206,7 +207,7 @@ func unlockAccountWithPrompt(ks *keystore.KeyStore, address string) (accounts.Ac
 func unlockAccountWithPassword(ks *keystore.KeyStore, address string, password string) accounts.Account {
 	account, err := makeAddress(ks, address)
 	if err != nil {
-		Fatalf("Could not list accounts: %v", err)
+		commons.Fatalf("Could not list accounts: %v", err)
 	}
 	err = ks.Unlock(account, password)
 	if err == nil {
@@ -232,7 +233,7 @@ func accountImport(ctx *cli.Context) error {
 	}
 
 	_, n := newConfigNode(ctx)
-	password, err := readPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:", true)
+	password, err := commons.ReadPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:", true)
 	if err != nil {
 		log.Fatalf("Failed to readPassword: %v", err)
 	}

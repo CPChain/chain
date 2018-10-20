@@ -28,8 +28,6 @@ type config struct {
 	Node node.Config
 }
 
-// begin node configs ********************************************************************88
-
 func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
 	if ctx.IsSet(flags.DataDirFlagName) {
 		cfg.DataDir = ctx.String(flags.DataDirFlagName)
@@ -37,28 +35,25 @@ func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
 }
 
 func updateNodeGeneralConfig(ctx *cli.Context, cfg *node.Config) {
-	// update identity
-	if ctx.IsSet("identity") {
-		cfg.UserIdent = ctx.String("identity")
+	// identity
+	if ctx.IsSet(flags.IdentityFlagName) {
+		cfg.UserIdent = ctx.String(flags.IdentityFlagName)
 	}
 }
 
 func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
-	// update max peers setting
+	// max peers
 	if ctx.IsSet(flags.MaxPeersFlagName) {
 		cfg.MaxPeers = ctx.Int(flags.MaxPeersFlagName)
 	}
-
-	// update max pending peers setting
+	// max pending peers
 	if ctx.IsSet(flags.MaxPendingPeersFlagName) {
 		cfg.MaxPendingPeers = ctx.Int(flags.MaxPendingPeersFlagName)
 	}
-
-	// update port setting
+	// port
 	if ctx.IsSet(flags.PortFlagName) {
 		cfg.ListenAddr = fmt.Sprintf(":%d", ctx.Int(flags.PortFlagName))
 	}
-
 	updateBootstrapNodes(ctx, cfg)
 	updateNodeKey(ctx, cfg)
 }
@@ -68,9 +63,10 @@ func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
 func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	urls := configs.CpchainBootnodes // TODO: CPChain boot nodes should be mainnet
 	if ctx.IsSet(flags.BootnodesFlagName) {
-		urls = strings.Split(ctx.GlobalString(flags.BootnodesFlagName), ",")
+		urls = strings.Split(ctx.String(flags.BootnodesFlagName), ",")
 	}
 
+	// TODO should we switch to disv5? @jason
 	cfg.BootstrapNodes = make([]*discover.Node, 0, len(urls))
 	for _, url := range urls {
 		node, err := discover.ParseNode(url)
@@ -82,18 +78,17 @@ func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-// updateNodeKey creates a node key from set command line flags, loading it from a file.
-// If neither flags were provided, this method returns nil and an emphemeral key is to be generated.
+// Update node key from a specified file
 func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	var (
-		file = ctx.String(flags.NodeKeyFlagName)
+		file = ctx.String(flags.NodeKeyFileFlagName)
 		key  *ecdsa.PrivateKey
 		err  error
 	)
 
 	if file != "" {
 		if key, err = crypto.LoadECDSA(file); err != nil {
-			log.Fatalf("Option %q: %v", flags.NodeKeyFlagName, err)
+			log.Fatalf("Option --%q: %v", flags.NodeKeyFileFlagName, err)
 		}
 		cfg.PrivateKey = key
 	}
@@ -108,11 +103,9 @@ func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	updateP2pConfig(ctx, &cfg.P2P)
 	updateRpcConfig(ctx, cfg)
 
-	// Update UseLightweightKDF setting
 	if ctx.IsSet(flags.LightKdfFlagName) {
-		cfg.UseLightweightKDF = ctx.GlobalBool(flags.LightKdfFlagName)
+		cfg.UseLightweightKDF = ctx.Bool(flags.LightKdfFlagName)
 	}
-
 }
 
 // begin chain configs ********************************************************************88
