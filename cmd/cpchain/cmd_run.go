@@ -9,7 +9,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
