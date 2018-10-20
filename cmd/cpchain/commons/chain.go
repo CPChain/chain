@@ -24,6 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/rlp"
+
 	"github.com/urfave/cli"
 )
 
@@ -51,16 +52,16 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 }
 
 // OpenChain opens a blockchain
-func OpenChain(ctx *cli.Context, stack *node.Node, cfg *eth.Config) (chain *core.BlockChain, chainDb ethdb.Database) {
+func OpenChain(ctx *cli.Context, n *node.Node, cfg *eth.Config) (chain *core.BlockChain, chainDb ethdb.Database) {
 	var err error
-	chainDb = MakeChainDatabase(ctx, stack, cfg.DatabaseCache)
+	chainDb = MakeChainDatabase(ctx, n, cfg.DatabaseCache)
 
 	// genesis stores the chain configuration
 	config, _, err := core.OpenGenesisBlock(chainDb)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	chain = newBlockChain(config, chainDb, cfg.TrieCache, stack, chain, err)
+	chain = newBlockChain(config, chainDb, cfg.TrieCache, n, chain, err)
 	return chain, chainDb
 }
 
@@ -225,31 +226,6 @@ func ExportChainN(blockchain *core.BlockChain, fn string, first, last uint64) er
 	}
 	log.Info("Exported blockchain", "file", fn)
 
-	return nil
-}
-
-// ExportAppendChain exports a blockchain into the specified file, appending to
-// the file if data already exists in it.
-func ExportAppendChain(blockchain *core.BlockChain, fn string, first uint64, last uint64) error {
-	log.Info("Exporting blockchain", "file", fn)
-
-	// Open the file handle and potentially wrap with a gzip stream
-	fh, err := os.OpenFile(fn, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer fh.Close()
-
-	var writer io.Writer = fh
-	if strings.HasSuffix(fn, ".gz") {
-		writer = gzip.NewWriter(writer)
-		defer writer.(*gzip.Writer).Close()
-	}
-	// Iterate over the blocks and export them
-	if err := blockchain.ExportN(writer, first, last); err != nil {
-		return err
-	}
-	log.Info("Exported blockchain to", "file", fn)
 	return nil
 }
 
