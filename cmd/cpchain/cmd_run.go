@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
@@ -59,6 +61,27 @@ func run(ctx *cli.Context) error {
 	return nil
 }
 
+// Register chain services for a *full* node.
+func registerChainService(cfg *eth.Config, n *node.Node) {
+	// TODO adjust to the sync mode
+	// if cfg.SyncMode != downloader.FullSync {
+	// 	log.Fatalf("We only support full sync currently.")
+	// }
+
+	err := n.Register(func(ctx *node.ServiceContext) (node.Service, error) {
+		fullNode, err := eth.New(ctx, cfg)
+		// no plan for les server.
+		// if fullNode != nil && cfg.LightServ > 0 {
+		// 	ls, _ := les.NewLesServer(fullNode, cfg)
+		// 	fullNode.AddLesServer(ls)
+		// }
+		return fullNode, err
+	})
+	if err != nil {
+		log.Fatalf("Failed to register the chain service: %v", err)
+	}
+}
+
 // Creates a node with chain services registered
 func createNode(ctx *cli.Context) *node.Node {
 	cfg, n := newConfigNode(ctx)
@@ -72,6 +95,24 @@ func startNode(n *node.Node) {
 	if err := n.Start(); err != nil {
 		log.Fatalf("Error starting protocol n: %v", err)
 	}
+}
+
+// makePasswordList reads password lines from the file specified by the global --password flag.
+func makePasswordList(ctx *cli.Context) []string {
+	path := ctx.String(flags.PasswordFlagName)
+	if path == "" {
+		return nil
+	}
+	text, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Failed to read password file: %v", err)
+	}
+	lines := strings.Split(string(text), "\n")
+	// Sanitise DOS line endings.
+	for i := range lines {
+		lines[i] = strings.TrimRight(lines[i], "\r")
+	}
+	return lines
 }
 
 func unlockAccounts(ctx *cli.Context, n *node.Node) {
