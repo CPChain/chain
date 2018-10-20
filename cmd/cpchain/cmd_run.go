@@ -78,12 +78,14 @@ func unlockAccounts(ctx *cli.Context, n *node.Node) {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	passwords := makePasswordList(ctx)
 	unlock := ctx.String("unlock")
-	unlocks := strings.Split(unlock, ",")
+	unlocks := strings.FieldsFunc(unlock, func(c rune) bool { return c == ',' })
 	for i, account := range unlocks {
-		if i >= len(passwords) {
-			Fatalf("Not enough passwords provided for --password")
+		log.Infof("%v, %v\n", i, account)
+		if i < len(passwords) {
+			unlockAccountWithPassword(ks, account, passwords[i])
+		} else {
+			unlockAccountWithPrompt(ks, account)
 		}
-		unlockAccountWithPassword(ks, account, passwords[i])
 	}
 }
 
