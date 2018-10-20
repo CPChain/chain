@@ -102,7 +102,7 @@ func TestCustomGenesis(t *testing.T) {
 		if err := ioutil.WriteFile(toml, []byte(tt.genesis), 0600); err != nil {
 			t.Fatalf("test %d: failed to write genesis file: %v", i, err)
 		}
-		runGeth(t, "chain", "init", toml, "--datadir", datadir).WaitExit()
+		runCpchain(t, "chain", "init", toml, "--datadir", datadir).WaitExit()
 
 		// Check result
 		checkGenesisNonceHex(t, datadir, tt.result, tt.success)

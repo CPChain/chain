@@ -50,13 +50,13 @@ func tmpDatadirWithKeystore1(t *testing.T) string {
 
 func TestAccountListEmpty(t *testing.T) {
 	datadir := tmpdir(t) + "/notexist/"
-	geth := runGeth(t, "account", "list", "--datadir", datadir)
+	geth := runCpchain(t, "account", "list", "--datadir", datadir)
 	geth.ExpectExit()
 }
 
 func TestAccountList(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t, "account", "list", "--datadir", datadir)
+	geth := runCpchain(t, "account", "list", "--datadir", datadir)
 	defer geth.ExpectExit()
 	if runtime.GOOS == "windows" {
 		geth.Expect(`
@@ -75,7 +75,7 @@ Account #2: {289d485d9771714cce91d3393d764e1311907acc} keystore://{{.Datadir}}/k
 
 func TestAccountNew(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t, "account", "new", "--lightkdf", "--datadir", datadir)
+	geth := runCpchain(t, "account", "new", "--lightkdf", "--datadir", datadir)
 	defer geth.ExpectExit()
 	geth.Expect(`
 If your password contains whitespaces, please be careful enough to avoid later confusion.
@@ -89,7 +89,7 @@ Repeat password: {{.InputLine "foobar"}}
 
 func TestAccountNewBadRepeat(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t, "account", "new", "--lightkdf", "--datadir", datadir)
+	geth := runCpchain(t, "account", "new", "--lightkdf", "--datadir", datadir)
 	defer geth.ExpectExit()
 	geth.Expect(`
 If your password contains whitespaces, please be careful enough to avoid later confusion.
@@ -103,7 +103,7 @@ Fatal: Password do not match
 
 func TestAccountUpdate(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t, "account", "update",
+	geth := runCpchain(t, "account", "update",
 		"--datadir", datadir, "--lightkdf",
 		"f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
@@ -120,7 +120,7 @@ Repeat password: {{.InputLine "foobar2"}}
 
 func TestUnlockFlagWrongPassword(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	geth := runGeth(t, "run",
+	geth := runCpchain(t, "run",
 		"--datadir", datadir,
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
@@ -138,7 +138,7 @@ Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could 
 
 func TestUnlockFlagAmbiguousWrongPassword(t *testing.T) {
 	datadir := tmpDatadirWithKeystore1(t)
-	geth := runGeth(t, "run",
+	geth := runCpchain(t, "run",
 		"--datadir", datadir, "--unlock", "f466859ead1932d743d622cb74fc058882e8648a")
 	defer geth.ExpectExit()
 
