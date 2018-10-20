@@ -31,9 +31,9 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
-	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/debug"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/ethereum/go-ethereum/console"
 	"gopkg.in/urfave/cli.v1"
@@ -213,7 +213,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 	}()
 	// Start auxiliary services if enabled
 	if ctx.GlobalBool(MiningEnabledFlag.Name) {
-		var ethereum *eth.Ethereum
+		var ethereum *cpc.Ethereum
 		if err := stack.Service(&ethereum); err != nil {
 			Fatalf("Ethereum service not running: %v", err)
 		}

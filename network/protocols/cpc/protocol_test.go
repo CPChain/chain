@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package eth
+package cpc
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/eth/downloader"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"

@@ -15,8 +15,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/naoina/toml"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -28,10 +26,10 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/eth"
-	"bitbucket.org/cpchain/chain/eth/downloader"
-	"bitbucket.org/cpchain/chain/eth/gasprice"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
@@ -40,6 +38,7 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/discv5"
 	"github.com/ethereum/go-ethereum/p2p/nat"
 	"github.com/ethereum/go-ethereum/p2p/netutil"
+	"github.com/naoina/toml"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -327,7 +326,7 @@ func MakeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error
 
 // setEtherbase retrieves the etherbase either from the directly specified
 // command line flags or from the keystore if CLI indexed.
-func setEtherbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *eth.Config) {
+func setEtherbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *cpc.Config) {
 	if ctx.GlobalIsSet(EtherbaseFlag.Name) {
 		account, err := MakeAddress(ks, ctx.GlobalString(EtherbaseFlag.Name))
 		if err != nil {
@@ -454,7 +453,7 @@ func setTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 	}
 }
 
-func setEthash(ctx *cli.Context, cfg *eth.Config) {
+func setEthash(ctx *cli.Context, cfg *cpc.Config) {
 	if ctx.GlobalIsSet(EthashCacheDirFlag.Name) {
 		cfg.Ethash.CacheDir = ctx.GlobalString(EthashCacheDirFlag.Name)
 	}
@@ -514,7 +513,7 @@ func checkExclusive(ctx *cli.Context, args ...interface{}) {
 }
 
 // SetEthConfig applies eth-related command line flags to the config.
-func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
+func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *cpc.Config) {
 	// Avoid conflicting network flags
 	checkExclusive(ctx, LightServFlag, SyncModeFlag, "light")
 
@@ -577,10 +576,10 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 }
 
 // RegisterEthService adds an Ethereum client to the stack.
-func RegisterEthService(stack *node.Node, cfg *eth.Config) {
+func RegisterEthService(stack *node.Node, cfg *cpc.Config) {
 	// currently, no downloader.LightSync
 	err := stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-		fullNode, err := eth.New(ctx, cfg)
+		fullNode, err := cpc.New(ctx, cfg)
 		return fullNode, err
 	})
 
@@ -628,12 +627,12 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 		engine = ethash.NewFaker()
 		if !ctx.GlobalBool(FakePoWFlag.Name) {
 			engine = ethash.New(ethash.Config{
-				CacheDir:       stack.ResolvePath(eth.DefaultConfig.Ethash.CacheDir),
-				CachesInMem:    eth.DefaultConfig.Ethash.CachesInMem,
-				CachesOnDisk:   eth.DefaultConfig.Ethash.CachesOnDisk,
-				DatasetDir:     stack.ResolvePath(eth.DefaultConfig.Ethash.DatasetDir),
-				DatasetsInMem:  eth.DefaultConfig.Ethash.DatasetsInMem,
-				DatasetsOnDisk: eth.DefaultConfig.Ethash.DatasetsOnDisk,
+				CacheDir:       stack.ResolvePath(cpc.DefaultConfig.Ethash.CacheDir),
+				CachesInMem:    cpc.DefaultConfig.Ethash.CachesInMem,
+				CachesOnDisk:   cpc.DefaultConfig.Ethash.CachesOnDisk,
+				DatasetDir:     stack.ResolvePath(cpc.DefaultConfig.Ethash.DatasetDir),
+				DatasetsInMem:  cpc.DefaultConfig.Ethash.DatasetsInMem,
+				DatasetsOnDisk: cpc.DefaultConfig.Ethash.DatasetsOnDisk,
 			})
 		}
 	}
@@ -642,8 +641,8 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 	}
 	cache := &core.CacheConfig{
 		Disabled:      ctx.GlobalString(GCModeFlag.Name) == "archive",
-		TrieNodeLimit: eth.DefaultConfig.TrieCache,
-		TrieTimeLimit: eth.DefaultConfig.TrieTimeout,
+		TrieNodeLimit: cpc.DefaultConfig.TrieCache,
+		TrieTimeLimit: cpc.DefaultConfig.TrieTimeout,
 	}
 	if ctx.GlobalIsSet(CacheFlag.Name) || ctx.GlobalIsSet(CacheGCFlag.Name) {
 		cache.TrieNodeLimit = ctx.GlobalInt(CacheFlag.Name) * ctx.GlobalInt(CacheGCFlag.Name) / 100
@@ -700,7 +699,7 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 }
 
 type gethConfig struct {
-	Eth  eth.Config
+	Eth  cpc.Config
 	Node node.Config
 }
 
@@ -757,7 +756,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 	// Load defaults.
 	cfg := gethConfig{
-		Eth:  eth.DefaultConfig,
+		Eth:  cpc.DefaultConfig,
 		Node: defaultNodeConfig(),
 	}
 

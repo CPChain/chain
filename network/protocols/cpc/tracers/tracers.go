@@ -21,7 +21,7 @@ import (
 	"strings"
 	"unicode"
 
-	"bitbucket.org/cpchain/chain/eth/tracers/internal/tracers"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/tracers/internal/tracers"
 )
 
 // all contains all the built in JavaScript tracers by name.

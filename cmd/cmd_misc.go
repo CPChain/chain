@@ -24,7 +24,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
-	"bitbucket.org/cpchain/chain/eth"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -74,8 +74,8 @@ func makedag(ctx *cli.Context) error {
 func version(ctx *cli.Context) error {
 	fmt.Println("Version:", configs.Version)
 	fmt.Println("Architecture:", runtime.GOARCH)
-	fmt.Println("Protocol Versions:", eth.ProtocolVersions)
-	fmt.Println("Network Id:", eth.DefaultConfig.NetworkId)
+	fmt.Println("Protocol Versions:", cpc.ProtocolVersions)
+	fmt.Println("Network Id:", cpc.DefaultConfig.NetworkId)
 	fmt.Println("Go Version:", runtime.Version())
 	fmt.Println("Operating System:", runtime.GOOS)
 	fmt.Printf("GOPATH=%s\n", os.Getenv("GOPATH"))

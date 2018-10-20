@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package eth
+package cpc
 
 import (
 	"encoding/hex"
@@ -31,8 +31,8 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/eth/downloader"
-	"bitbucket.org/cpchain/chain/eth/fetcher"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/fetcher"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"

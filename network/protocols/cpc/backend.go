@@ -15,7 +15,7 @@
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 // Package eth implements the Ethereum protocol.
-package eth
+package cpc
 
 import (
 	"errors"
@@ -38,11 +38,11 @@ import (
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/eth/downloader"
-	"bitbucket.org/cpchain/chain/eth/filters"
-	"bitbucket.org/cpchain/chain/eth/gasprice"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/filters"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/node/miner"
 	"bitbucket.org/cpchain/chain/private"
