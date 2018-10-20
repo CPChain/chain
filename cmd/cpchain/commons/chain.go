@@ -14,13 +14,17 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
+	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
+	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
 	"github.com/ethereum/go-ethereum/rlp"
+
 	"github.com/urfave/cli"
 )
 
@@ -44,20 +48,20 @@ func MakeChainDatabase(ctx *cli.Context, n *node.Node, databaseCache int) ethdb.
 
 // MakeGenesis builds a genesis block object.
 func MakeGenesis(ctx *cli.Context) *core.Genesis {
-	return core.DefaultCpchainGenesisBlock()
+	return core.DefaultGenesisBlock()
 }
 
 // OpenChain opens a blockchain
-func OpenChain(ctx *cli.Context, n *node.Node, databaseCache int, trieCache int) (chain *core.BlockChain, chainDb ethdb.Database) {
+func OpenChain(ctx *cli.Context, n *node.Node, cfg *eth.Config) (chain *core.BlockChain, chainDb ethdb.Database) {
 	var err error
-	chainDb = MakeChainDatabase(ctx, n, databaseCache)
+	chainDb = MakeChainDatabase(ctx, n, cfg.DatabaseCache)
 
 	// genesis stores the chain configuration
 	config, _, err := core.OpenGenesisBlock(chainDb)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	chain = newBlockChain(config, chainDb, trieCache, n, chain, err)
+	chain = newBlockChain(config, chainDb, cfg.TrieCache, n, chain, err)
 	return chain, chainDb
 }
 
@@ -222,6 +226,80 @@ func ExportChainN(blockchain *core.BlockChain, fn string, first, last uint64) er
 	}
 	log.Info("Exported blockchain", "file", fn)
 
+	return nil
+}
+
+// ImportPreimages imports a batch of exported hash preimages into the database.
+func ImportPreimages(db *ethdb.LDBDatabase, fn string) error {
+	log.Info("Importing preimages", "file", fn)
+
+	// Open the file handle and potentially unwrap the gzip stream
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer fh.Close()
+
+	var reader io.Reader = fh
+	if strings.HasSuffix(fn, ".gz") {
+		if reader, err = gzip.NewReader(reader); err != nil {
+			return err
+		}
+	}
+	stream := rlp.NewStream(reader, 0)
+
+	// Import the preimages in batches to prevent disk trashing
+	preimages := make(map[common.Hash][]byte)
+
+	for {
+		// Read the next entry and ensure it's not junk
+		var blob []byte
+
+		if err := stream.Decode(&blob); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+		// Accumulate the preimages and flush when enough ws gathered
+		preimages[crypto.Keccak256Hash(blob)] = common.CopyBytes(blob)
+		if len(preimages) > 1024 {
+			rawdb.WritePreimages(db, 0, preimages)
+			preimages = make(map[common.Hash][]byte)
+		}
+	}
+	// Flush the last batch preimage data
+	if len(preimages) > 0 {
+		rawdb.WritePreimages(db, 0, preimages)
+	}
+	return nil
+}
+
+// ExportPreimages exports all known hash preimages into the specified file,
+// truncating any data already present in the file.
+func ExportPreimages(db *ethdb.LDBDatabase, fn string) error {
+	log.Info("Exporting preimages", "file", fn)
+
+	// Open the file handle and potentially wrap with a gzip stream
+	fh, err := os.OpenFile(fn, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer fh.Close()
+
+	var writer io.Writer = fh
+	if strings.HasSuffix(fn, ".gz") {
+		writer = gzip.NewWriter(writer)
+		defer writer.(*gzip.Writer).Close()
+	}
+	// Iterate over the preimages and export them
+	it := db.NewIteratorWithPrefix([]byte("secure-key-"))
+	for it.Next() {
+		if err := rlp.Encode(writer, it.Value()); err != nil {
+			return err
+		}
+	}
+	log.Info("Exported preimages", "file", fn)
 	return nil
 }
 

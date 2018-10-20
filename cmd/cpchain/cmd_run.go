@@ -1,16 +1,19 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/eth"
+	"bitbucket.org/cpchain/chain/ethclient"
+	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/urfave/cli"
 )
@@ -22,14 +25,30 @@ func init() {
 	runFlags = append(runFlags, flags.GeneralFlags...)
 	runFlags = append(runFlags, flags.NodeFlags...)
 	runFlags = append(runFlags, flags.MinerFlags...)
+	runFlags = append(runFlags, flags.P2pFlags...)
+	runFlags = append(runFlags, flags.AccountFlags...)
 	runFlags = append(runFlags, flags.ChainFlags...)
-	// runFlags = append(runFlags, flags.P2pFlags...)
 	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,
 		Name:   "run",
 		Flags:  runFlags,
 		Usage:  "Run a cpchain node",
+		Before: func(ctx *cli.Context) error {
+			if ctx.Bool(flags.ProfileFlagName) {
+				if err := profile.Start(ctx); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+		After: func(ctx *cli.Context) error {
+			if ctx.Bool(flags.ProfileFlagName) {
+				profile.Stop()
+			}
+			log.Info("Exit cpchain run command")
+			return nil
+		},
 	}
 }
 
@@ -68,26 +87,50 @@ func unlockAccounts(ctx *cli.Context, n *node.Node) {
 	}
 }
 
-// MakePasswordList reads password lines from the file specified by the global --password flag.
-func makePasswordList(ctx *cli.Context) []string {
-	path := ctx.String("password")
-	if path == "" {
-		return nil
-	}
-	text, err := ioutil.ReadFile(path)
-	if err != nil {
-		Fatalf("Failed to read password file: %v", err)
-	}
-	lines := strings.Split(string(text), "\n")
-	// Sanitise DOS line endings.
-	for i := range lines {
-		lines[i] = strings.TrimRight(lines[i], "\r")
-	}
-	return lines
-}
+// TODO @chengxin @xumx please be sure about the underlying logic.
+// cf. those in the keystore package.
+func handleWallet(n *node.Node) {
+	// Register wallet event handlers to open and auto-derive wallets
+	events := make(chan accounts.WalletEvent, 16)
+	n.AccountManager().Subscribe(events)
 
-func handleWallet() {
-	// i am not sure what exactly it does, and if the functionality here is useful for us.
+	go func() {
+		// Create a chain state reader for self-derivation
+		rpcClient, err := n.Attach()
+		if err != nil {
+			log.Fatalf("Failed to attach to self: %v", err)
+		}
+		stateReader := ethclient.NewClient(rpcClient)
+
+		// Open any wallets already attached
+		for _, wallet := range n.AccountManager().Wallets() {
+			if err := wallet.Open(""); err != nil {
+				log.Warn("Failed to open wallet", "url", wallet.URL(), "err", err)
+			}
+		}
+		// Listen for wallet event till termination
+		for event := range events {
+			switch event.Kind {
+			case accounts.WalletArrived:
+				if err := event.Wallet.Open(""); err != nil {
+					log.Warn("New wallet appeared, failed to open", "url", event.Wallet.URL(), "err", err)
+				}
+			case accounts.WalletOpened:
+				status, _ := event.Wallet.Status()
+				log.Info("New wallet appeared", "url", event.Wallet.URL(), "status", status)
+
+				if event.Wallet.URL().Scheme == "ledger" {
+					event.Wallet.SelfDerive(accounts.DefaultLedgerBaseDerivationPath, stateReader)
+				} else {
+					event.Wallet.SelfDerive(accounts.DefaultBaseDerivationPath, stateReader)
+				}
+
+			case accounts.WalletDropped:
+				log.Info("Old wallet dropped", "url", event.Wallet.URL())
+				event.Wallet.Close()
+			}
+		}
+	}()
 }
 
 func startMining(ctx *cli.Context, n *node.Node) {
@@ -108,11 +151,39 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		// // Set the gas price to the limits from the CLI and start mining
 		// ethereum.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
 
-		// TODO dpor contract caller
-		if err := ethereum.StartMining(true, nil); err != nil {
+		contractCaller := createContractCaller(ctx, n)
+		if err := ethereum.StartMining(true, contractCaller); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
 		}
 	}
+}
+
+// TODO to be removed.  do not add it here.
+func createContractCaller(ctx *cli.Context, n *node.Node) *dpor.ContractCaller {
+	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	passwords := makePasswordList(ctx)
+	var contractCaller *dpor.ContractCaller
+	// TODO: @liuq fix this.
+	if len(ks.Accounts()) > 0 && len(passwords) > 0 {
+		account := ks.Accounts()[0]
+		account, key, err := ks.GetDecryptedKey(account, passwords[0])
+		if err != nil {
+			log.Warn("err when get account", "err", err)
+		}
+		log.Warn("succeed when get unlock account", "key", key)
+
+		rpcClient, err := n.Attach()
+		if err != nil {
+			log.Fatalf("Failed to attach to self: %v", err)
+		}
+		client := ethclient.NewClient(rpcClient)
+
+		contractCaller, err = dpor.NewContractCaller(key, client, 300000, 1)
+		if err != nil {
+			log.Warn("err when make contract call", "err", err)
+		}
+	}
+	return contractCaller
 }
 
 func handleInterrupt(n *node.Node) {
@@ -133,7 +204,7 @@ func handleInterrupt(n *node.Node) {
 func bootstrap(ctx *cli.Context, n *node.Node) {
 	startNode(n)
 	unlockAccounts(ctx, n)
-	handleWallet()
+	handleWallet(n)
 	startMining(ctx, n)
 	// handle user interrupt
 	go handleInterrupt(n)

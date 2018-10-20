@@ -3,13 +3,17 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
+	"strings"
 
 	"bitbucket.org/cpchain/chain/cmd/cpchain/commons/inpututil"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
 	"bitbucket.org/cpchain/chain/node"
+	"github.com/urfave/cli"
 )
 
 // Fatalf formats a message to standard error and exits the program.
@@ -72,4 +76,22 @@ func registerChainService(cfg *eth.Config, n *node.Node) {
 	if err != nil {
 		log.Fatalf("Failed to register the chain service: %v", err)
 	}
+}
+
+// makePasswordList reads password lines from the file specified by the global --password flag.
+func makePasswordList(ctx *cli.Context) []string {
+	path := ctx.String(flags.PasswordFlagName)
+	if path == "" {
+		return nil
+	}
+	text, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Failed to read password file: %v", err)
+	}
+	lines := strings.Split(string(text), "\n")
+	// Sanitise DOS line endings.
+	for i := range lines {
+		lines[i] = strings.TrimRight(lines[i], "\r")
+	}
+	return lines
 }

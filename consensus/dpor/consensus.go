@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/rpc"
@@ -257,6 +258,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 
 	ok, err := snap.isLeader(d.signer, number)
 	if err != nil {
+		log.Warn("Error occurs when seal block", err)
 		return nil, err
 	}
 	if !ok {
