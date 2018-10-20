@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/eth"
+	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/urfave/cli"
 )
@@ -31,21 +32,21 @@ func init() {
 		Name:   "run",
 		Flags:  runFlags,
 		Usage:  "Run a cpchain node",
-		// Before: func(ctx *cli.Context) error {
-		// 	if ctx.Bool(flags.ProfileFlagName) {
-		// 		if err := profile.Start(ctx); err != nil {
-		// 			return err
-		// 		}
-		// 	}
-		// 	return nil
-		// },
-		// After: func(ctx *cli.Context) error {
-		// 	if ctx.Bool(flags.ProfileFlagName) {
-		// 		profile.Stop()
-		// 	}
-		// 	log.Info("Exit cpchain run command")
-		// 	return nil
-		// },
+		Before: func(ctx *cli.Context) error {
+			if ctx.Bool(flags.ProfileFlagName) {
+				if err := profile.Start(ctx); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+		After: func(ctx *cli.Context) error {
+			if ctx.Bool(flags.ProfileFlagName) {
+				profile.Stop()
+			}
+			log.Info("Exit cpchain run command")
+			return nil
+		},
 	}
 }
 
