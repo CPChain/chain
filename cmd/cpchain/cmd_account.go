@@ -29,7 +29,7 @@ Keys are stored under <datadir>/keystore.`,
 				Usage:  "Print summary of existing accounts",
 				Action: accountList,
 				Flags: []cli.Flag{
-					flags.GetByName("datadir"),
+					flags.GetByName(flags.DataDirFlagName),
 				},
 				Description: `Print a short summary of all accounts`,
 			},
@@ -38,9 +38,9 @@ Keys are stored under <datadir>/keystore.`,
 				Usage:  "Create a new account",
 				Action: createAccount,
 				Flags: []cli.Flag{
-					flags.GetByName("datadir"),
-					flags.GetByName("password"),
-					flags.GetByName("lightkdf"),
+					flags.GetByName(flags.DataDirFlagName),
+					flags.GetByName(flags.PasswordFlagName),
+					flags.GetByName(flags.LightKdfFlagName),
 				},
 				Description: `Creates a new account and prints the address.
 The account is saved in encrypted format, you are prompted for a password.
@@ -52,8 +52,8 @@ You must remember this password to unlock your account in the future.`,
 				Action:    accountUpdate,
 				ArgsUsage: "<address>",
 				Flags: []cli.Flag{
-					flags.GetByName("datadir"),
-					flags.GetByName("lightkdf"),
+					flags.GetByName(flags.DataDirFlagName),
+					flags.GetByName(flags.LightKdfFlagName),
 				},
 				Description: `cpchain account update <address>
 
@@ -73,9 +73,9 @@ changing your password is only possible interactively.`,
 				Usage:  "Import a private key into a new account",
 				Action: accountImport,
 				Flags: []cli.Flag{
-					flags.GetByName("datadir"),
-					flags.GetByName("password"),
-					flags.GetByName("lightkdf"),
+					flags.GetByName(flags.DataDirFlagName),
+					flags.GetByName(flags.PasswordFlagName),
+					flags.GetByName(flags.LightKdfFlagName),
 				},
 				ArgsUsage: "<keyFile>",
 				Description: `cpchain account import <keyfile>

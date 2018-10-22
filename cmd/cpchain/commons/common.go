@@ -1,11 +1,12 @@
 package commons
 
 import (
-	"bitbucket.org/cpchain/chain/cmd/cpchain/commons/inpututil"
 	"fmt"
 	"io"
 	"os"
 	"runtime"
+
+	"bitbucket.org/cpchain/chain/cmd/cpchain/commons/inpututil"
 )
 
 // Fatalf formats a message to standard error and exits the program.
@@ -48,5 +49,3 @@ func ReadPassword(prompt string, needConfirm bool) (string, error) {
 	}
 	return password, nil
 }
-
-
