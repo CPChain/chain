@@ -182,7 +182,12 @@ func (h *HandlerT) StopBlockingProfile() error {
 	if h.blockingW == nil {
 		return ProfilingNotInProgressError
 	}
-	writeBlockProfile(h.blockingW)
+	if err := writeBlockProfile(h.blockingW); err == nil {
+		log.Info("Done writing blocking profile", "dump", h.blockingFile)
+	} else {
+		return &profilingDumpError{"block", err}
+	}
+
 	h.blockingW.Close()
 	h.blockingW = nil
 	h.blockingFile = ""
