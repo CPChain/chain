@@ -30,17 +30,20 @@ import (
 
 // Constants to match up protocol versions and messages
 const (
-	eth62 = 62
-	eth63 = 63
+	// eth62 = 62
+	// eth63 = 63
 
 	cpc01 = 64
 )
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.
-var ProtocolName = "eth"
+// var ProtocolName = "eth"
+var ProtocolName = "cpc"
 
 // ProtocolVersions are the upported versions of the eth protocol (first is primary).
-var ProtocolVersions = []uint{cpc01, eth63, eth62}
+var ProtocolVersions = []uint{cpc01}
+
+// var ProtocolVersions = []uint{cpc01, eth63, eth62}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
 // var ProtocolLengths = []uint64{17, 8}

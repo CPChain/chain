@@ -26,8 +26,8 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -42,7 +42,8 @@ func TestProtocolCompatibility(t *testing.T) {
 		compatible bool
 	}{
 		{61, downloader.FullSync, true}, {62, downloader.FullSync, true}, {63, downloader.FullSync, true},
-		{61, downloader.FastSync, false}, {62, downloader.FastSync, false}, {63, downloader.FastSync, true},
+		// {61, downloader.FastSync, false}, {62, downloader.FastSync, false}, {63, downloader.FastSync, true},
+
 	}
 	// Make sure anything we screw up is restored
 	backup := ProtocolVersions
