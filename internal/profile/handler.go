@@ -192,6 +192,8 @@ func (h *HandlerT) StopBlockingProfile() error {
 	h.blockingW = nil
 	h.blockingFile = ""
 
+	runtime.SetBlockProfileRate(0)
+
 	return nil
 }
 
@@ -229,6 +231,7 @@ func (h *HandlerT) StopMemHeapProfile() error {
 	h.memW = nil
 	h.memFile = ""
 
+	runtime.MemProfileRate = 0
 	return nil
 }
 
