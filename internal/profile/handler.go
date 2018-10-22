@@ -21,22 +21,16 @@
 package profile
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"os/user"
-	"path/filepath"
 	"runtime"
-	"runtime/debug"
 	"runtime/pprof"
 	"runtime/trace"
-	"strings"
 	"sync"
-	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 )
@@ -44,15 +38,33 @@ import (
 // Handler is the global debugging handler.
 var Handler = new(HandlerT)
 
+var (
+	ProfilingNotInProgressError = errors.New("CPU profiling not in progress")
+	BlockProfileNotExistError   = errors.New("Block profile does not exist")
+)
+
+type profilingDumpError struct {
+	profile string
+	error   error
+}
+
+func (df *profilingDumpError) Error() string {
+	return fmt.Sprintf("Dumping %s profile failed. %s", df.error.Error())
+}
+
 // HandlerT implements the debugging API.
 // Do not create values of this type, use the one
 // in the Handler variable instead.
 type HandlerT struct {
-	mu        sync.Mutex
-	cpuW      io.WriteCloser
-	cpuFile   string
-	traceW    io.WriteCloser
-	traceFile string
+	mu           sync.Mutex
+	cpuW         io.WriteCloser
+	cpuFile      string
+	memW         io.WriteCloser
+	memFile      string
+	blockingW    io.WriteCloser
+	blockingFile string
+	traceW       io.WriteCloser
+	traceFile    string
 }
 
 // MemStats returns detailed runtime memory statistics.
@@ -62,24 +74,6 @@ func (*HandlerT) MemStats() *runtime.MemStats {
 	return s
 }
 
-// GcStats returns GC statistics.
-func (*HandlerT) GcStats() *debug.GCStats {
-	s := new(debug.GCStats)
-	debug.ReadGCStats(s)
-	return s
-}
-
-// CpuProfile turns on CPU profiling for nsec seconds and writes
-// profile data to file.
-func (h *HandlerT) CpuProfile(file string, nsec uint) error {
-	if err := h.StartCPUProfile(file); err != nil {
-		return err
-	}
-	time.Sleep(time.Duration(nsec) * time.Second)
-	h.StopCPUProfile()
-	return nil
-}
-
 // StartCPUProfile turns on CPU profiling, writing to the given file.
 func (h *HandlerT) StartCPUProfile(file string) error {
 	h.mu.Lock()
@@ -87,7 +81,7 @@ func (h *HandlerT) StartCPUProfile(file string) error {
 	if h.cpuW != nil {
 		return errors.New("CPU profiling already in progress")
 	}
-	f, err := os.Create(expandHome(file))
+	f, err := os.Create(file)
 	if err != nil {
 		return err
 	}
@@ -107,90 +101,23 @@ func (h *HandlerT) StopCPUProfile() error {
 	defer h.mu.Unlock()
 	pprof.StopCPUProfile()
 	if h.cpuW == nil {
-		return errors.New("CPU profiling not in progress")
+		return ProfilingNotInProgressError
 	}
 	log.Info("Done writing CPU profile", "dump", h.cpuFile)
 	h.cpuW.Close()
 	h.cpuW = nil
 	h.cpuFile = ""
+
 	return nil
 }
 
-// GoTrace turns on tracing for nsec seconds and writes
-// trace data to file.
-func (h *HandlerT) GoTrace(file string, nsec uint) error {
-	if err := h.StartGoTrace(file); err != nil {
-		return err
+func writeBlockProfile(writer io.WriteCloser) error {
+	p := pprof.Lookup("block")
+	if p != nil {
+		return p.WriteTo(writer, 0)
+	} else {
+		return BlockProfileNotExistError
 	}
-	time.Sleep(time.Duration(nsec) * time.Second)
-	h.StopGoTrace()
-	return nil
-}
-
-// BlockProfile turns on goroutine profiling for nsec seconds and writes profile data to
-// file. It uses a profile rate of 1 for most accurate information. If a different rate is
-// desired, set the rate and write the profile manually.
-func (*HandlerT) BlockProfile(file string, nsec uint) error {
-	runtime.SetBlockProfileRate(1)
-	time.Sleep(time.Duration(nsec) * time.Second)
-	defer runtime.SetBlockProfileRate(0)
-	return writeProfile("block", file)
-}
-
-// SetBlockProfileRate sets the rate of goroutine block profile data collection.
-// rate 0 disables block profiling.
-func (*HandlerT) SetBlockProfileRate(rate int) {
-	runtime.SetBlockProfileRate(rate)
-}
-
-// WriteBlockProfile writes a goroutine blocking profile to the given file.
-func (*HandlerT) WriteBlockProfile(file string) error {
-	return writeProfile("block", file)
-}
-
-// MutexProfile turns on mutex profiling for nsec seconds and writes profile data to file.
-// It uses a profile rate of 1 for most accurate information. If a different rate is
-// desired, set the rate and write the profile manually.
-func (*HandlerT) MutexProfile(file string, nsec uint) error {
-	runtime.SetMutexProfileFraction(1)
-	time.Sleep(time.Duration(nsec) * time.Second)
-	defer runtime.SetMutexProfileFraction(0)
-	return writeProfile("mutex", file)
-}
-
-// SetMutexProfileFraction sets the rate of mutex profiling.
-func (*HandlerT) SetMutexProfileFraction(rate int) {
-	runtime.SetMutexProfileFraction(rate)
-}
-
-// WriteMutexProfile writes a goroutine blocking profile to the given file.
-func (*HandlerT) WriteMutexProfile(file string) error {
-	return writeProfile("mutex", file)
-}
-
-// WriteMemProfile writes an allocation profile to the given file.
-// Note that the profiling rate cannot be set through the API,
-// it must be set on the command line.
-func (*HandlerT) WriteMemProfile(file string) error {
-	return writeProfile("heap", file)
-}
-
-// Stacks returns a printed representation of the stacks of all goroutines.
-func (*HandlerT) Stacks() string {
-	buf := new(bytes.Buffer)
-	pprof.Lookup("goroutine").WriteTo(buf, 2)
-	return buf.String()
-}
-
-// FreeOSMemory returns unused memory to the OS.
-func (*HandlerT) FreeOSMemory() {
-	debug.FreeOSMemory()
-}
-
-// SetGCPercent sets the garbage collection target percentage. It returns the previous
-// setting. A negative value disables GC.
-func (*HandlerT) SetGCPercent(v int) int {
-	return debug.SetGCPercent(v)
 }
 
 // tracing
@@ -201,7 +128,7 @@ func (h *HandlerT) StartGoTrace(file string) error {
 	if h.traceW != nil {
 		return errors.New("trace already in progress")
 	}
-	f, err := os.Create(expandHome(file))
+	f, err := os.Create(file)
 	if err != nil {
 		return err
 	}
@@ -230,41 +157,81 @@ func (h *HandlerT) StopGoTrace() error {
 	return nil
 }
 
-func StartPProf(address string) {
-	// TODO
-	// exp.Exp()
+// StartBlockingProfile starts blocking profiling.
+// rate 0 disables block profiling.
+func (h *HandlerT) StartBlockingProfile(rate int, file string) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if h.blockingW != nil {
+		return errors.New("Blocking profiling already in progress")
+	}
+	f, err := os.Create(file)
+	if err != nil {
+		return err
+	}
+	h.blockingFile = file
+	h.blockingW = f
+
+	runtime.SetBlockProfileRate(rate)
+	return nil
+}
+
+// StopBlockProfile stops an ongoing blocking profile
+func (h *HandlerT) StopBlockingProfile() error {
+	if h.blockingW == nil {
+		return ProfilingNotInProgressError
+	}
+	writeBlockProfile(h.blockingW)
+	h.blockingW.Close()
+	h.blockingW = nil
+	h.blockingFile = ""
+
+	return nil
+}
+
+// StartMemProfile starts the memory profiling rate that controls the fraction of memory allocations
+// that are recorded and reported in the memory profile.
+func (h *HandlerT) StartMemProfile(rate int, file string) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if h.memW != nil {
+		return errors.New("Memory heap profiling already in progress")
+	}
+	f, err := os.Create(file)
+	if err != nil {
+		return err
+	}
+	h.memFile = file
+	h.memW = f
+
+	runtime.MemProfileRate = rate
+	return nil
+}
+
+// StopMemHeapProfile stops an ongoing memory heap profile
+func (h *HandlerT) StopMemHeapProfile() error {
+	if h.memW == nil {
+		return ProfilingNotInProgressError
+	}
+	if error := pprof.WriteHeapProfile(h.memW); error == nil {
+		log.Info("Done writing memory heap profile", "dump", h.memFile)
+	} else {
+		return &profilingDumpError{"heap", error}
+	}
+	h.memW.Close()
+	h.memW = nil
+	h.memFile = ""
+
+	return nil
+}
+
+func StartPProfWebUi(address string) {
 	log.Info("Starting pprof server", "addr", fmt.Sprintf("http://%s/debug/pprof", address))
 	go func() {
 		if err := http.ListenAndServe(address, nil); err != nil {
 			log.Error("Failure in running pprof server", "err", err)
 		}
 	}()
-}
-
-func writeProfile(name, file string) error {
-	p := pprof.Lookup(name)
-	log.Info("Writing profile records", "count", p.Count(), "type", name, "dump", file)
-	f, err := os.Create(expandHome(file))
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return p.WriteTo(f, 0)
-}
-
-// expands home directory in file paths.
-// ~someuser/tmp will not be expanded.
-func expandHome(p string) string {
-	if strings.HasPrefix(p, "~/") || strings.HasPrefix(p, "~\\") {
-		home := os.Getenv("HOME")
-		if home == "" {
-			if usr, err := user.Current(); err == nil {
-				home = usr.HomeDir
-			}
-		}
-		if home != "" {
-			p = home + p[1:]
-		}
-	}
-	return filepath.Clean(p)
 }
