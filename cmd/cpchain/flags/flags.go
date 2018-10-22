@@ -73,9 +73,8 @@ const (
 	UnlockFlagName   = "unlock"
 )
 
-// TODO @xumx  adjust the following
 var AccountFlags = []cli.Flag{
-	// TODO do not marshal the keystore path in toml file.
+	// do not marshal the keystore path in toml file.
 	cli.StringFlag{
 		Name:  PasswordFlagName,
 		Usage: "Password file to use for non-interactive password input",
