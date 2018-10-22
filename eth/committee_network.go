@@ -174,7 +174,7 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 			return false, err
 		}
 		server.AddPeer(node)
-
+		rs.dialed = true
 	}
 
 	return rs.dialed, nil
@@ -182,8 +182,8 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 
 func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend, rsaKey *rsakey.RsaKey) error {
 
-	// succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
-	succeed, err := func() (bool, error) { return true, nil }()
+	succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
+	// succeed, err := func() (bool, error) { return true, nil }()
 
 	log.Debug("result of rs.dial", "succeed", succeed)
 	log.Debug("result of rs.dial", "err", err)
