@@ -136,11 +136,11 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 		for _, signer := range snap.SignersOf(number) {
 			log.Debug("signer in snapshot ", "s", signer.Hex())
 		}
-		var sss common.Address
-		for i := 0; i < len(signers); i++ {
-			copy(sss[:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
-			log.Debug("signer in extra ", "s", sss.Hex())
-		}
+		// var sss common.Address
+		// for i := 0; i < len(signers); i++ {
+		// 	copy(sss[:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
+		// 	log.Debug("signer in extra ", "s", sss.Hex())
+		// }
 
 		log.Debug("errInvalidSigners 1")
 		return errInvalidSigners
