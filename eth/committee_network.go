@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"encoding/hex"
 	"math/big"
 	"sync"
 
@@ -65,12 +66,15 @@ func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionR
 
 	log.Debug("fetching nodeID of remote signer")
 	log.Debug("epoch", "idx", epochIdx)
-	log.Debug("signer", "addr", address)
+	log.Debug("signer", "addr", address.Hex())
 
 	encryptedNodeID, err := fetchNodeID(epochIdx, address, contractInstance)
 	nodeid, err := rsaKey.RsaDecrypt(encryptedNodeID)
 	if err != nil {
-		log.Debug("encryptedNodeID", "enode", encryptedNodeID)
+		log.Debug("encryptedNodeID")
+		log.Debug(hex.Dump(encryptedNodeID))
+		log.Debug("my pubkey")
+		log.Debug(hex.Dump(rsaKey.PublicKey.RsaPublicKeyBytes))
 		log.Debug("privKey", "privKey", rsaKey.PrivateKey)
 		return err
 	}
@@ -96,11 +100,14 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend) error {
 	epochIdx, address := rs.epochIdx, rs.address
 
+	log.Debug("fetched rsa pubkey")
+	log.Debug(hex.Dump(rs.pubkey))
+
 	pubkey, err := rsakey.NewRsaPublicKey(rs.pubkey)
 
 	log.Debug("updating self nodeID with remote signer's public key")
 	log.Debug("epoch", "idx", epochIdx)
-	log.Debug("signer", "addr", address)
+	log.Debug("signer", "addr", address.Hex())
 	log.Debug("nodeID", "nodeID", nodeID)
 	log.Debug("pubkey", "pubkey", pubkey)
 
@@ -109,6 +116,10 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 	}
 
 	encryptedNodeID, err := pubkey.RsaEncrypt([]byte(nodeID))
+
+	log.Debug("encryptedNodeID")
+	log.Debug(hex.Dump(encryptedNodeID))
+
 	transaction, err := contractInstance.AddNodeInfo(auth, big.NewInt(int64(epochIdx)), address, encryptedNodeID)
 	if err != nil {
 		return err
