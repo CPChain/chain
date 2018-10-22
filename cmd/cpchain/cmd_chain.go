@@ -26,7 +26,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var defaultGenesisPath = filepath.Join(flags.GetByName("datadir").(cli.StringFlag).Value, "genesis.toml")
+var defaultGenesisPath = filepath.Join(flags.GetByName(flags.DataDirFlagName).(cli.StringFlag).Value, "genesis.toml")
 
 var chainCommand = cli.Command{
 	Name:  "chain",
@@ -36,7 +36,7 @@ var chainCommand = cli.Command{
 			Name:  "init",
 			Usage: "Bootstrap and initialize a new genesis block",
 			Flags: []cli.Flag{
-				flags.GetByName("datadir"),
+				flags.GetByName(flags.DataDirFlagName),
 			},
 			Action:    initChain,
 			ArgsUsage: "[/path/to/genesis.toml]",
