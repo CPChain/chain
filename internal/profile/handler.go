@@ -49,7 +49,7 @@ type profilingDumpError struct {
 }
 
 func (df *profilingDumpError) Error() string {
-	return fmt.Sprintf("Dumping %s profile failed. %s", df.error.Error())
+	return fmt.Sprintf("Dumping %s profile failed. %s", df.profile, df.error.Error())
 }
 
 // HandlerT implements the debugging API.
