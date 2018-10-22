@@ -234,8 +234,9 @@ func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, etherbase commo
 	bc := &BasicCommitteeNetworkHandler{
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
-		remoteSigners:   make([]*RemoteSigner, config.Epoch-1),
-		connected:       false,
+		remoteSigners:   make([]*RemoteSigner, config.Epoch),
+		// remoteSigners:   make([]*RemoteSigner, config.Epoch-1),
+		connected: false,
 	}
 	return bc, nil
 }
@@ -300,10 +301,10 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 		// if remoteSigners[i] == nil || remoteSigners[i].address != signer {
 		if remoteSigners[i] == nil {
 
-			// omit self
-			if signer == oc.contractTransactor.From {
-				continue
-			}
+			// // omit self
+			// if signer == oc.contractTransactor.From {
+			// 	continue
+			// }
 			s := NewRemoteSigner(epochIdx, signer)
 			remoteSigners[i] = s
 		}
