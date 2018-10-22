@@ -5,16 +5,15 @@ import (
 	"math/big"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/configs"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/p2p/discover"
 )
 
 // RemoteSigner represents a remote signer waiting to be connected and communicate with.
@@ -44,8 +43,8 @@ func (rs *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionR
 
 	address := rs.address
 
-	log.Info("fetching public key of remote signer")
-	log.Info("signer", "addr", address)
+	log.Debug("fetching public key of remote signer")
+	log.Debug("signer", "addr", address)
 
 	pubkey, err := contractInstance.GetPublicKey(nil, address)
 	if err != nil {
@@ -55,7 +54,7 @@ func (rs *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionR
 	rs.pubkey = pubkey
 	rs.pubkeyFetched = true
 
-	log.Info("fetched public key of remote signer", "pubkey", pubkey)
+	log.Debug("fetched public key of remote signer", "pubkey", pubkey)
 
 	return nil
 }
@@ -64,15 +63,15 @@ func (rs *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionR
 func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
 	epochIdx, address := rs.epochIdx, rs.address
 
-	log.Info("fetching nodeID of remote signer")
-	log.Info("epoch", "idx", epochIdx)
-	log.Info("signer", "addr", address)
+	log.Debug("fetching nodeID of remote signer")
+	log.Debug("epoch", "idx", epochIdx)
+	log.Debug("signer", "addr", address)
 
 	encryptedNodeID, err := fetchNodeID(epochIdx, address, contractInstance)
 	nodeid, err := rsaKey.RsaDecrypt(encryptedNodeID)
 	if err != nil {
-		log.Info("encryptedNodeID", "enode", encryptedNodeID)
-		log.Info("privKey", "privKey", rsaKey.PrivateKey)
+		log.Debug("encryptedNodeID", "enode", encryptedNodeID)
+		log.Debug("privKey", "privKey", rsaKey.PrivateKey)
 		return err
 	}
 
@@ -80,7 +79,7 @@ func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionR
 	rs.nodeID = nodeID
 	rs.nodeIDFetched = true
 
-	log.Info("fetched nodeID of remote signer", "nodeID", nodeID)
+	log.Debug("fetched nodeID of remote signer", "nodeID", nodeID)
 
 	return nil
 }
@@ -99,11 +98,11 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 
 	pubkey, err := rsakey.NewRsaPublicKey(rs.pubkey)
 
-	log.Info("updating self nodeID with remote signer's public key")
-	log.Info("epoch", "idx", epochIdx)
-	log.Info("signer", "addr", address)
-	log.Info("nodeID", "nodeID", nodeID)
-	log.Info("pubkey", "pubkey", pubkey)
+	log.Debug("updating self nodeID with remote signer's public key")
+	log.Debug("epoch", "idx", epochIdx)
+	log.Debug("signer", "addr", address)
+	log.Debug("nodeID", "nodeID", nodeID)
+	log.Debug("pubkey", "pubkey", pubkey)
 
 	if err != nil {
 		return err
@@ -123,7 +122,7 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 
 	rs.nodeIDUpdated = true
 
-	log.Info("updated self nodeID")
+	log.Debug("updated self nodeID")
 
 	return nil
 }
@@ -133,7 +132,7 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 
-	log.Info("dialing to remote signer", "signer", rs)
+	log.Debug("dialing to remote signer", "signer", rs)
 
 	// fetch remtoe signer's public key if there is no one.
 	if !rs.pubkeyFetched {
@@ -185,8 +184,8 @@ func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.A
 
 	succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 
-	log.Info("result of rs.dial", "succeed", succeed)
-	log.Info("result of rs.dial", "err", err)
+	log.Debug("result of rs.dial", "succeed", succeed)
+	log.Debug("result of rs.dial", "err", err)
 
 	if succeed || err == nil {
 		return nil
@@ -293,8 +292,8 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 	remoteSigners := oc.remoteSigners
 	oc.lock.Unlock()
 
-	log.Info("remote signers", "signers", signers)
-	log.Info("oc.remoteSigners", "signers", remoteSigners)
+	log.Debug("remote signers", "signers", signers)
+	log.Debug("oc.remoteSigners", "signers", remoteSigners)
 
 	for i, signer := range signers {
 		// if remoteSigners[i] == nil || remoteSigners[i].address != signer {
@@ -326,11 +325,11 @@ func (oc *BasicCommitteeNetworkHandler) Connect() {
 	oc.lock.Unlock()
 
 	if !connected {
-		log.Info("connecting...")
+		log.Debug("connecting...")
 
 		for _, s := range remoteSigners {
 			err := s.Dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
-			log.Info("err when connect", "e", err)
+			log.Debug("err when connect", "e", err)
 		}
 		connected = true
 	}
@@ -348,11 +347,11 @@ func (oc *BasicCommitteeNetworkHandler) Disconnect() {
 	oc.lock.Unlock()
 
 	if connected {
-		log.Info("disconnecting...")
+		log.Debug("disconnecting...")
 
 		for _, s := range remoteSigners {
 			err := s.disconnect(server)
-			log.Info("err when disconnect", "e", err)
+			log.Debug("err when disconnect", "e", err)
 		}
 
 		oc.connected = false

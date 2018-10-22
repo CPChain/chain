@@ -388,7 +388,8 @@ func (p *peer) AsyncSendNewBlock(block *types.Block, td *big.Int) {
 	log.Debug("in peer.AsyncSendNewBlock")
 	log.Debug("async sending new block", "num", block.NumberU64())
 	log.Debug("async sending new block", "hash", block.Hash())
-	log.Debug("async sending new block", "extra", "\n"+hex.Dump(block.Extra2()))
+	log.Debug("async sending new block extra")
+	log.Debug("\n" + hex.Dump(block.Extra2()))
 
 	select {
 	case p.queuedProps <- &propEvent{block: block, td: td}:
