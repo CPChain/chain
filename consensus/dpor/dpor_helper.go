@@ -19,15 +19,15 @@ package dpor
 
 import (
 	"bytes"
+	"encoding/hex"
 	"math/big"
 	"strconv"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -72,9 +72,9 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 		return errMissingSignature
 	}
 
-	// Ensure that the extra-data contains a signer list on checkpoint, but none otherwise
 	signersBytes := len(header.Extra) - extraVanity - extraSeal
 	if signersBytes%common.AddressLength != 0 {
+		log.Debug("errInvalidSigners 2")
 		return errInvalidSigners
 	}
 
@@ -129,6 +129,20 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
+		log.Debug("header.extra", "extra", "\n"+hex.Dump(header.Extra))
+		log.Debug("header", "h", header)
+		log.Debug("snapshot", "s", snap)
+		log.Debug("signers")
+		for _, signer := range snap.SignersOf(number) {
+			log.Debug("signer in snapshot ", "s", signer.Hex())
+		}
+		var sss common.Address
+		for i := 0; i < len(signers); i++ {
+			copy(sss[:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
+			log.Debug("signer in extra ", "s", sss.Hex())
+		}
+
+		log.Debug("errInvalidSigners 1")
 		return errInvalidSigners
 	}
 	// All basic checks passed, verify the seal and return

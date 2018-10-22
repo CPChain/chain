@@ -35,7 +35,8 @@ import (
 
 const (
 	// EpochGapBetweenElectionAndMining is the the epoch gap between election and mining.
-	EpochGapBetweenElectionAndMining = 2
+	EpochGapBetweenElectionAndMining = 3
+	// EpochGapBetweenElectionAndMining = 2
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
 	MaxSizeOfRecentSigners = 10
 )
@@ -279,19 +280,29 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 
 	if s.Number < s.config.MaxInitBlockNumber {
 		s.RecentSigners[s.EpochIdx()+1] = signers
-		// log.Debug("< s.config.MaxInitBlockNumber, s.Number", "n", s.Number)
-		// log.Debug("signers in snapshot of:", "epoch idx", 0)
-		// for _, s := range s.RecentSigners[0] {
-		// 	log.Debug("signer", "s", s.Hex())
-		// }
+		log.Debug("< s.config.MaxInitBlockNumber, s.Number", "n", s.Number)
+		log.Debug("signers in snapshot of:", "epoch idx", 0)
+		for _, s := range s.RecentSigners[s.EpochIdx()+1] {
+			log.Debug("signer", "s", s.Hex())
+		}
 	}
 
 	if s.Number >= s.config.MaxInitBlockNumber-(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View) {
 		// 	// TODO: fix this.
-		// 	// log.Debug(">= s.config.MaxInitBlockNumber -s.config.Epoch*(EpochGapBetweenElectionAndMining-1), s.Number", "n", s.Number)
+		log.Debug(">= s.config.MaxInitBlockNumber -(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View), s.Number", "n", s.Number)
+
 		signers = election.Elect(rpts, seed, viewLength)
 		epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
 		s.RecentSigners[epochIdx] = signers
+
+		log.Debug("elected signers in snapshot of:", "epoch idx", 0)
+		for _, s := range s.RecentSigners[epochIdx] {
+			log.Debug("signer", "s", s.Hex())
+		}
+
+		log.Debug("seed", "s", seed)
+		log.Debug("viewLength", "vl", viewLength)
+
 	}
 
 	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
