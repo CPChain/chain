@@ -20,15 +20,13 @@ import (
 	"encoding/json"
 	"errors"
 
-	"bitbucket.org/cpchain/chain/core"
-
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
+	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -295,7 +293,7 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 		epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
 		s.RecentSigners[epochIdx] = signers
 
-		log.Debug("elected signers in snapshot of:", "epoch idx", 0)
+		log.Debug("elected signers in snapshot of:", "epoch idx", epochIdx)
 		for _, s := range s.RecentSigners[epochIdx] {
 			log.Debug("signer", "s", s.Hex())
 		}
@@ -328,6 +326,10 @@ func (s *DporSnapshot) EpochIdxOf(blockNum uint64) uint64 {
 	}
 
 	return (blockNum - 1) / ((s.config.Epoch) * (s.config.View))
+}
+
+func (s *DporSnapshot) FutureEpochIdxOf(blockNum uint64) uint64 {
+	return s.EpochIdxOf(blockNum) + EpochGapBetweenElectionAndMining
 }
 
 // SignersOf retrieves all signersOf in the committee.
@@ -388,7 +390,7 @@ func (s *DporSnapshot) IsFutureSignerOf(signer common.Address, number uint64) bo
 }
 
 func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
-	return s.RecentSigners[s.EpochIdxOf(number)+EpochGapBetweenElectionAndMining]
+	return s.RecentSigners[s.FutureEpochIdxOf(number)]
 }
 
 func (s *DporSnapshot) FutureSignerRoundOf(signer common.Address, number uint64) (int, error) {

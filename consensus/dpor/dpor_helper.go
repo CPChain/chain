@@ -352,11 +352,11 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	log.Debug("my address", "eb", dpor.signer.Hex())
 	log.Debug("ready to accept this block", "number", number)
 	log.Debug("current block number", "number", currentNum)
-	log.Debug("number%uint64(epochLength) == 0", "bool", number%uint64(epochLength) == 0)
+	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.Epoch, dpor.config.View))
 	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
 	log.Debug("epoch idx of block number", "block epochIdx", snap.EpochIdxOf(number))
 
-	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+3; i++ {
+	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
 		log.Debug("----------------------")
 		log.Debug("signers in snapshot of:", "epoch idx", i)
 		for _, s := range snap.RecentSigners[i] {
@@ -364,23 +364,23 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		}
 	}
 
-	if number%uint64(snap.config.Epoch) == 0 && number >= dpor.config.MaxInitBlockNumber && number >= currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
+	if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) && number >= dpor.config.MaxInitBlockNumber && number > currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
 		// TODO: fix this.
 		log.Info("I am future signer, building the committee network")
 
-		// round, err := snap.FuturesignerRoundOf(dpor.signer, number)
-		// if err != nil {
-		// 	return err
-		// }
+		epochIdx := snap.FutureEpochIdxOf(number)
+		signers := snap.FutureSignersOf(number)
+		// signers := snap.GetDefaultSigners()
 
-		// epochIdx := snap.EpochIdxOf(number) + EpochGapBetweenElectionAndMining
-		// signers = snap.FutureSigners(number)
-		// signers = append(signers[:round], signers[round+1:]...)
-
-		// go func(epochIdx uint64, signers []common.Address) {
-		// 	dpor.committeeNetworkHandler.UpdateRemoteSigners(epochIdx, signers)
-		// 	dpor.committeeNetworkHandler.Connect()
-		// }(epochIdx, signers)
+		log.Debug("epoch idx", "eIdx", epochIdx)
+		log.Debug("signers")
+		for _, s := range signers {
+			log.Debug("signer", "s", s.Hex())
+		}
+		go func(eIdx uint64, committee []common.Address) {
+			dpor.committeeNetworkHandler.UpdateRemoteSigners(eIdx, committee)
+			dpor.committeeNetworkHandler.Connect()
+		}(epochIdx, signers)
 
 	} else {
 		// log.Info("I am not future signer, doing nothing.")
