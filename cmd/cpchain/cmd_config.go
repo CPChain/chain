@@ -13,7 +13,7 @@ var (
 		Action:      dumpConfig,
 		Name:        "dumpconfig",
 		Usage:       "Show configuration values",
-		ArgsUsage:   "",
+		ArgsUsage:   " ",
 		Description: `The dumpconfig command shows configuration values.`,
 	}
 )
