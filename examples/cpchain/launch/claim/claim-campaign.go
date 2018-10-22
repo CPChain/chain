@@ -22,10 +22,9 @@ import (
 )
 
 type keystorePair struct {
-	keystorePath   string
-	passphrase     string
-	rsaPubkeyPath  string
-	rsaPrivKeyPath string
+	keystorePath string
+	passphrase   string
+	rsaPath      string
 }
 
 var (
@@ -35,67 +34,57 @@ var (
 		{
 			"dd1/keystore/",
 			"password",
-			"dd1/rsa/rsa_pub.pem",
-			"dd1/rsa/rsa_pri.pem",
+			"dd1/rsa/",
 		},
 		{
 			"dd2/keystore/",
 			"password",
-			"dd2/rsa/rsa_pub.pem",
-			"dd2/rsa/rsa_pri.pem",
+			"dd2/rsa/",
 		},
 		{
 			"dd3/keystore/",
 			"pwdnode1",
-			"dd3/rsa/rsa_pub.pem",
-			"dd3/rsa/rsa_pri.pem",
+			"dd3/rsa/",
 		},
 		{
 			"dd4/keystore/",
 			"pwdnode2",
-			"dd4/rsa/rsa_pub.pem",
-			"dd4/rsa/rsa_pri.pem",
+			"dd4/rsa/",
 		},
 		{
 			"dd5/keystore/",
 			"password",
-			"dd5/rsa/rsa_pub.pem",
-			"dd5/rsa/rsa_pri.pem",
+			"dd5/rsa/",
 		},
 		{
 			"dd6/keystore/",
 			"password",
-			"dd6/rsa/rsa_pub.pem",
-			"dd6/rsa/rsa_pri.pem",
+			"dd6/rsa/",
 		},
 		{
 			"dd7/keystore/",
 			"password",
-			"dd7/rsa/rsa_pub.pem",
-			"dd7/rsa/rsa_pri.pem",
+			"dd7/rsa/",
 		},
 		{
 			"dd8/keystore/",
 			"password",
-			"dd8/rsa/rsa_pub.pem",
-			"dd8/rsa/rsa_pri.pem",
+			"dd8/rsa/",
 		},
 		{
 			"dd9/keystore/",
 			"password",
-			"dd9/rsa/rsa_pub.pem",
-			"dd9/rsa/rsa_pri.pem",
+			"dd9/rsa/",
 		},
 		{
 			"dd10/keystore/",
 			"password",
-			"dd10/rsa/rsa_pub.pem",
-			"dd10/rsa/rsa_pri.pem",
+			"dd10/rsa/",
 		},
 	}
 )
 
-func getAccount(keyStoreFilePath string, passphrase string, rsaPubkeyPath string, rsaPrivkeyPath string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
+func getAccount(keyStoreFilePath string, passphrase string, rsaPath string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
 	// Load account.
 	file, err := os.Open(dataDir + keyStoreFilePath)
 	if err != nil {
@@ -124,7 +113,7 @@ func getAccount(keyStoreFilePath string, passphrase string, rsaPubkeyPath string
 	}
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	rsaKey, err := rsakey.NewRsaKey(dataDir)
+	rsaKey, err := rsakey.NewRsaKey(dataDir + rsaPath)
 	fmt.Println(err)
 
 	return privateKey, publicKeyECDSA, fromAddress, rsaKey.PublicKey.RsaPublicKeyBytes
@@ -246,8 +235,8 @@ func main() {
 
 	for i, kPair := range keystores {
 		fmt.Println(i)
-		keystoreFile, passphrase, rsaPubkeyPath, rsaPrivkeyPath := kPair.keystorePath, kPair.passphrase, kPair.rsaPubkeyPath, kPair.rsaPrivKeyPath
-		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase, rsaPubkeyPath, rsaPrivkeyPath)
+		keystoreFile, passphrase, rsaPath := kPair.keystorePath, kPair.passphrase, kPair.rsaPath
+		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase, rsaPath)
 		claimCampaign(privKey, pubKey, addr, campaignAddress)
 		claimSigner(privKey, pubKey, addr, signerAddress, rsaPubKey)
 	}
