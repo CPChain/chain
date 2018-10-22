@@ -9,30 +9,30 @@ import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 
-message PublicCpchainAPIReply{
+message PublicEthereumAPIReply{
      bytes address = 1;
      int64 rate = 2;
 }
 
 // PublicEthereumAPI provides an API to access Ethereum full node-related
 // information.
-service PublicCpchainAPI{
+service PublicEthereumAPI{
     // Etherbase is the address that mining rewards will be send to
-    rpc Etherbase(google.protobuf.Empty) returns (PublicCpchainAPIReply) {
+    rpc Etherbase(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
         option (google.api.http) = {
             post: "/v1/apis/public/etherbase"
             body: "*"
           };
     }
     // Coinbase is the address that mining rewards will be send to (alias for Etherbase)
-    rpc Coinbase(google.protobuf.Empty) returns (PublicCpchainAPIReply) {
+    rpc Coinbase(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
         option (google.api.http) = {
             post: "/v1/apis/public/coinbase"
             body: "*"
           };
     }
     // Hashrate returns the POW hashrate
-    rpc Hashrate(google.protobuf.Empty) returns (PublicCpchainAPIReply) {
+    rpc Hashrate(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
         option (google.api.http) = {
             post: "/v1/apis/public/hashrate"
             body: "*"

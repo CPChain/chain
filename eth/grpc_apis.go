@@ -1,16 +1,17 @@
 package eth
 
 import (
-	"bitbucket.org/cpchain/chain/core/state"
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 	"io"
 	"math/big"
 	"os"
 	"strings"
+
+	"bitbucket.org/cpchain/chain/core/state"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -27,36 +28,44 @@ import (
 	"golang.org/x/net/context"
 )
 
-type PublicCpcAPIServer struct {
+type PublicEthereumAPIServer struct {
 	e *Ethereum
 }
 
-func NewPublicCpcAPIServer(e *Ethereum) *PublicCpcAPIServer {
-	return &PublicCpcAPIServer{e}
+func NewPublicEthereumAPIServer(e *Ethereum) *PublicEthereumAPIServer {
+	return &PublicEthereumAPIServer{e}
 }
 
-func (api *PublicCpcAPIServer) RegisterServer(s *grpc.Server)  {
-	protos.RegisterPublicCpchainAPIServer(s, api)
+func (api *PublicEthereumAPIServer) RegisterServer(s *grpc.Server) {
+	protos.RegisterPublicEthereumAPIServer(s, api)
 }
 
-func (api *PublicCpcAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	protos.RegisterPublicCpchainAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+func (api *PublicEthereumAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	protos.RegisterPublicEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-func (api *PublicCpcAPIServer) Etherbase(ctx context.Context, e *empty.Empty) (*protos.PublicCpchainAPIReply, error) {
+func (api *PublicEthereumAPIServer) Namespace() string {
+	return "eth"
+}
+
+func (api *PublicEthereumAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PublicEthereumAPIServer) Etherbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
 	etherBase, err := api.e.Etherbase()
 	if err != nil {
 		return nil, err
 	}
-	return &protos.PublicCpchainAPIReply{Address: etherBase.Bytes()}, nil
+	return &protos.PublicEthereumAPIReply{Address: etherBase.Bytes()}, nil
 }
 
-func (api *PublicCpcAPIServer) Coinbase(ctx context.Context, e *empty.Empty) (*protos.PublicCpchainAPIReply, error) {
+func (api *PublicEthereumAPIServer) Coinbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
 	return api.Etherbase(ctx, e)
 }
 
-func (api *PublicCpcAPIServer) Hashrate(ctx context.Context, e *empty.Empty) (*protos.PublicCpchainAPIReply, error) {
-	return &protos.PublicCpchainAPIReply{Rate: api.e.Miner().HashRate()}, nil
+func (api *PublicEthereumAPIServer) Hashrate(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
+	return &protos.PublicEthereumAPIReply{Rate: api.e.Miner().HashRate()}, nil
 }
 
 type PublicMinerAPIServer struct {
@@ -71,12 +80,20 @@ func NewPublicMinerAPIServer(e *Ethereum) *PublicMinerAPIServer {
 	return &PublicMinerAPIServer{e: e, agent: agent}
 }
 
-func (api *PublicMinerAPIServer) RegisterServer(s *grpc.Server)  {
+func (api *PublicMinerAPIServer) RegisterServer(s *grpc.Server) {
 	protos.RegisterPublicMinerAPIServer(s, api)
 }
 
 func (api *PublicMinerAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	protos.RegisterPublicMinerAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+func (api *PublicMinerAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PublicMinerAPIServer) Namespace() string {
+	return "eth"
 }
 
 func (api *PublicMinerAPIServer) Mining(ctx context.Context, req *protos.PublicMinerAPIRequest) (*protos.PublicMinerAPIReply, error) {
@@ -117,7 +134,7 @@ func NewPrivateMinerAPIServer(e *Ethereum) *PrivateMinerAPIServer {
 	return &PrivateMinerAPIServer{e: e}
 }
 
-func (api *PrivateMinerAPIServer) RegisterServer(s *grpc.Server)  {
+func (api *PrivateMinerAPIServer) RegisterServer(s *grpc.Server) {
 	protos.RegisterPrivateMinerAPIServer(s, api)
 }
 
@@ -125,6 +142,13 @@ func (api *PrivateMinerAPIServer) RegisterProxy(ctx context.Context, mux *runtim
 	protos.RegisterPrivateMinerAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
+func (api *PrivateMinerAPIServer) IsPublic() bool {
+	return false
+}
+
+func (api *PrivateMinerAPIServer) Namespace() string {
+	return "eth"
+}
 
 // Start the miner with the given number of threads. If threads is nil the number
 // of workers started is equal to the number of logical CPUs that are usable by
@@ -208,12 +232,20 @@ func NewPrivateAdminAPIServer(e *Ethereum) *PrivateAdminAPIServer {
 	return &PrivateAdminAPIServer{e: e}
 }
 
-func (api *PrivateAdminAPIServer) RegisterServer(s *grpc.Server)  {
+func (api *PrivateAdminAPIServer) RegisterServer(s *grpc.Server) {
 	protos.RegisterPrivateAdminAPIServer(s, api)
 }
 
 func (api *PrivateAdminAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	protos.RegisterPrivateAdminAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+func (api *PrivateAdminAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PrivateAdminAPIServer) Namespace() string {
+	return "eth"
 }
 
 // NewPrivateAdminAPI creates a new API definition for the full node private
@@ -295,7 +327,7 @@ func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *protos.P
 		}
 		blocks = blocks[:0]
 	}
-	return &protos.PrivateAdminAPIReply{IsOk: true},nil
+	return &protos.PrivateAdminAPIReply{IsOk: true}, nil
 }
 
 // PublicDebugAPIServer is the collection of Ethereum full node APIs exposed
@@ -310,12 +342,20 @@ func NewPublicDebugAPIServer(e *Ethereum) *PublicDebugAPIServer {
 	return &PublicDebugAPIServer{e: e}
 }
 
-func (api *PublicDebugAPIServer) RegisterServer(s *grpc.Server)  {
+func (api *PublicDebugAPIServer) RegisterServer(s *grpc.Server) {
 	protos.RegisterPublicDebugAPIServer(s, api)
 }
 
 func (api *PublicDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	protos.RegisterPublicDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+func (api *PublicDebugAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PublicDebugAPIServer) Namespace() string {
+	return "eth"
 }
 
 // DumpBlock retrieves the entire state of the database at a given block.
@@ -337,7 +377,7 @@ func NewPrivateDebugAPIServer(config *configs.ChainConfig, eth *Ethereum) *Priva
 	return &PrivateDebugAPIServer{config: config, eth: eth}
 }
 
-func (api *PrivateDebugAPIServer) RegisterServer(s *grpc.Server)  {
+func (api *PrivateDebugAPIServer) RegisterServer(s *grpc.Server) {
 	protos.RegisterPrivateDebugAPIServer(s, api)
 }
 
@@ -345,11 +385,18 @@ func (api *PrivateDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtim
 	protos.RegisterPrivateDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
+func (api *PrivateDebugAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PrivateDebugAPIServer) Namespace() string {
+	return "ethk"
+}
 
 // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.
 func (api *PrivateDebugAPIServer) Preimage(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*protos.PrivateDebugAPIReply, error) {
 	if preimage := rawdb.ReadPreimage(api.eth.ChainDb(), common.BytesToHash(req.Hash)); preimage != nil {
-		return &protos.PrivateDebugAPIReply{Preimage:preimage}, nil
+		return &protos.PrivateDebugAPIReply{Preimage: preimage}, nil
 	}
 	return nil, errors.New("unknown preimage")
 }

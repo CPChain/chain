@@ -29,7 +29,7 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_PublicCpchainAPI_Etherbase_0(ctx context.Context, marshaler runtime.Marshaler, client PublicCpchainAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_PublicEthereumAPI_Etherbase_0(ctx context.Context, marshaler runtime.Marshaler, client PublicEthereumAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
@@ -42,7 +42,7 @@ func request_PublicCpchainAPI_Etherbase_0(ctx context.Context, marshaler runtime
 
 }
 
-func request_PublicCpchainAPI_Coinbase_0(ctx context.Context, marshaler runtime.Marshaler, client PublicCpchainAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_PublicEthereumAPI_Coinbase_0(ctx context.Context, marshaler runtime.Marshaler, client PublicEthereumAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
@@ -55,7 +55,7 @@ func request_PublicCpchainAPI_Coinbase_0(ctx context.Context, marshaler runtime.
 
 }
 
-func request_PublicCpchainAPI_Hashrate_0(ctx context.Context, marshaler runtime.Marshaler, client PublicCpchainAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_PublicEthereumAPI_Hashrate_0(ctx context.Context, marshaler runtime.Marshaler, client PublicEthereumAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
@@ -302,9 +302,9 @@ func request_PrivateDebugAPI_GetModifiedAccountsByHash_0(ctx context.Context, ma
 
 }
 
-// RegisterPublicCpchainAPIHandlerFromEndpoint is same as RegisterPublicCpchainAPIHandler but
+// RegisterPublicEthereumAPIHandlerFromEndpoint is same as RegisterPublicEthereumAPIHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterPublicCpchainAPIHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+func RegisterPublicEthereumAPIHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
 	conn, err := grpc.Dial(endpoint, opts...)
 	if err != nil {
 		return err
@@ -324,23 +324,23 @@ func RegisterPublicCpchainAPIHandlerFromEndpoint(ctx context.Context, mux *runti
 		}()
 	}()
 
-	return RegisterPublicCpchainAPIHandler(ctx, mux, conn)
+	return RegisterPublicEthereumAPIHandler(ctx, mux, conn)
 }
 
-// RegisterPublicCpchainAPIHandler registers the http handlers for service PublicCpchainAPI to "mux".
+// RegisterPublicEthereumAPIHandler registers the http handlers for service PublicEthereumAPI to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterPublicCpchainAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterPublicCpchainAPIHandlerClient(ctx, mux, NewPublicCpchainAPIClient(conn))
+func RegisterPublicEthereumAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterPublicEthereumAPIHandlerClient(ctx, mux, NewPublicEthereumAPIClient(conn))
 }
 
-// RegisterPublicCpchainAPIHandlerClient registers the http handlers for service PublicCpchainAPI
-// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "PublicCpchainAPIClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "PublicCpchainAPIClient"
+// RegisterPublicEthereumAPIHandlerClient registers the http handlers for service PublicEthereumAPI
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "PublicEthereumAPIClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "PublicEthereumAPIClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "PublicCpchainAPIClient" to call the correct interceptors.
-func RegisterPublicCpchainAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client PublicCpchainAPIClient) error {
+// "PublicEthereumAPIClient" to call the correct interceptors.
+func RegisterPublicEthereumAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client PublicEthereumAPIClient) error {
 
-	mux.Handle("POST", pattern_PublicCpchainAPI_Etherbase_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_PublicEthereumAPI_Etherbase_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -358,18 +358,18 @@ func RegisterPublicCpchainAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_PublicCpchainAPI_Etherbase_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_PublicEthereumAPI_Etherbase_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_PublicCpchainAPI_Etherbase_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_PublicEthereumAPI_Etherbase_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_PublicCpchainAPI_Coinbase_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_PublicEthereumAPI_Coinbase_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -387,18 +387,18 @@ func RegisterPublicCpchainAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_PublicCpchainAPI_Coinbase_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_PublicEthereumAPI_Coinbase_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_PublicCpchainAPI_Coinbase_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_PublicEthereumAPI_Coinbase_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_PublicCpchainAPI_Hashrate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_PublicEthereumAPI_Hashrate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -416,14 +416,14 @@ func RegisterPublicCpchainAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_PublicCpchainAPI_Hashrate_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_PublicEthereumAPI_Hashrate_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_PublicCpchainAPI_Hashrate_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_PublicEthereumAPI_Hashrate_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -431,19 +431,19 @@ func RegisterPublicCpchainAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 }
 
 var (
-	pattern_PublicCpchainAPI_Etherbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "etherbase"}, ""))
+	pattern_PublicEthereumAPI_Etherbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "etherbase"}, ""))
 
-	pattern_PublicCpchainAPI_Coinbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "coinbase"}, ""))
+	pattern_PublicEthereumAPI_Coinbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "coinbase"}, ""))
 
-	pattern_PublicCpchainAPI_Hashrate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "hashrate"}, ""))
+	pattern_PublicEthereumAPI_Hashrate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "hashrate"}, ""))
 )
 
 var (
-	forward_PublicCpchainAPI_Etherbase_0 = runtime.ForwardResponseMessage
+	forward_PublicEthereumAPI_Etherbase_0 = runtime.ForwardResponseMessage
 
-	forward_PublicCpchainAPI_Coinbase_0 = runtime.ForwardResponseMessage
+	forward_PublicEthereumAPI_Coinbase_0 = runtime.ForwardResponseMessage
 
-	forward_PublicCpchainAPI_Hashrate_0 = runtime.ForwardResponseMessage
+	forward_PublicEthereumAPI_Hashrate_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterPublicMinerAPIHandlerFromEndpoint is same as RegisterPublicMinerAPIHandler but

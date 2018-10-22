@@ -374,7 +374,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protosPublicCpchainAPIReply"
+              "$ref": "#/definitions/protosPublicEthereumAPIReply"
             }
           }
         },
@@ -389,7 +389,7 @@
           }
         ],
         "tags": [
-          "PublicCpchainAPI"
+          "PublicEthereumAPI"
         ]
       }
     },
@@ -428,7 +428,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protosPublicCpchainAPIReply"
+              "$ref": "#/definitions/protosPublicEthereumAPIReply"
             }
           }
         },
@@ -443,7 +443,7 @@
           }
         ],
         "tags": [
-          "PublicCpchainAPI"
+          "PublicEthereumAPI"
         ]
       }
     },
@@ -482,7 +482,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protosPublicCpchainAPIReply"
+              "$ref": "#/definitions/protosPublicEthereumAPIReply"
             }
           }
         },
@@ -497,7 +497,7 @@
           }
         ],
         "tags": [
-          "PublicCpchainAPI"
+          "PublicEthereumAPI"
         ]
       }
     },
@@ -777,7 +777,16 @@
         }
       }
     },
-    "protosPublicCpchainAPIReply": {
+    "protosPublicDebugAPIRequest": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "protosPublicEthereumAPIReply": {
       "type": "object",
       "properties": {
         "address": {
@@ -785,15 +794,6 @@
           "format": "byte"
         },
         "rate": {
-          "type": "string",
-          "format": "int64"
-        }
-      }
-    },
-    "protosPublicDebugAPIRequest": {
-      "type": "object",
-      "properties": {
-        "block_number": {
           "type": "string",
           "format": "int64"
         }

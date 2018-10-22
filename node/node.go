@@ -17,10 +17,10 @@
 package node
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -65,8 +65,16 @@ type Node struct {
 	grpcAPIs      []apis.API
 	grpcEndpoint  string
 	proxyEndpoint string
-	grpcHandler   *grpc.Server
-	grpcListner   net.Listener
+
+	grpcListner net.Listener
+	grpcHandler *grpc.Server
+
+	grpcIpcEndpoint string
+	grpcIPCListener net.Listener
+	grpcIPCHandler  *grpc.Server
+
+	grpcInprocListener net.Listener
+	grpcInprocHandler  *grpc.Server
 
 	ipcEndpoint string       // IPC endpoint to listen at (empty = IPC disabled)
 	ipcListener net.Listener // IPC RPC listener socket to serve API requests
@@ -273,22 +281,27 @@ func (n *Node) openDataDir() error {
 }
 
 func (n *Node) startGRPC(services map[reflect.Type]Service) error {
-	gapis := n.gapis()
+	apis := n.gapis()
 	for _, service := range services {
-		gapis = append(gapis, service.GAPIs()...)
+		apis = append(apis, service.GAPIs()...)
 	}
 
-	listener, err := net.Listen("tcp", n.grpcEndpoint)
-	if err != nil {
+	if err := n.startInProcWithGrpc(apis); err != nil {
 		return err
 	}
 
-	n.grpcHandler = grpc.NewServer()
-	n.grpcListner = listener
+	if err := n.startIPCWithGprc(apis); err != nil {
+		n.stopInProcWithGapis()
+		return err
+	}
 
-	go n.grpcHandler.Serve(n.grpcListner)
-	go http.ListenAndServe(n.proxyEndpoint, runtime.NewServeMux())
+	if err := n.startHTTPWithGprc(apis); err != nil {
+		n.stopInProcWithGapis()
+		n.stopIPCWithGrpc()
+		return err
+	}
 
+	n.grpcAPIs = apis
 	return nil
 }
 
@@ -325,6 +338,27 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 	return nil
 }
 
+func (n *Node) startInProcWithGrpc(apis []apis.API) error {
+	handler := grpc.NewServer()
+	for _, api := range apis {
+		api.RegisterServer(handler)
+		api.RegisterProxy(context.Background(), runtime.NewServeMux(), n.grpcEndpoint, []grpc.DialOption{})
+		grpc.WithInsecure()
+		n.log.Debug("InProc registered", "service")
+	}
+
+	n.grpcInprocHandler = handler
+	return nil
+}
+
+func (n *Node) stopInProcWithGapis() {
+	// TODO: @sangh when stop listener
+	if n.grpcInprocHandler != nil {
+		n.grpcInprocHandler.Stop()
+		n.inprocHandler = nil
+	}
+}
+
 // startInProc initializes an in-process RPC endpoint.
 func (n *Node) startInProc(apis []rpc.API) error {
 	// Register all the APIs exposed by the services
@@ -348,6 +382,36 @@ func (n *Node) stopInProc() {
 	if n.inprocHandler != nil {
 		n.inprocHandler.Stop()
 		n.inprocHandler = nil
+	}
+}
+
+func (n *Node) startIPCWithGprc(gapis []apis.API) error {
+	if n.grpcIpcEndpoint == "" {
+		return nil
+	}
+
+	listener, handler, err := apis.StartIPCEndpointWithGrpc(n.grpcIpcEndpoint, gapis)
+	if err != nil {
+		return err
+	}
+
+	n.grpcIPCListener = listener
+	n.grpcIPCHandler = handler
+	n.log.Info("grpc IPC endpoint opened", "url", n.grpcIpcEndpoint)
+	return nil
+}
+
+func (n *Node) stopIPCWithGrpc() {
+	if n.grpcIPCListener != nil {
+		n.grpcIPCListener.Close()
+		n.grpcIPCListener = nil
+
+		n.log.Info("grpc IPC endpoint closed", "endpoint", n.grpcEndpoint)
+	}
+
+	if n.grpcIPCHandler != nil {
+		n.grpcIPCHandler.Stop()
+		n.grpcIPCHandler = nil
 	}
 }
 
@@ -378,6 +442,39 @@ func (n *Node) stopIPC() {
 		n.ipcHandler.Stop()
 		n.ipcHandler = nil
 	}
+}
+
+func (n *Node) startHTTPWithGprc(gapis []apis.API) error {
+	if n.grpcEndpoint == "" {
+		return nil
+	}
+	listener, handler, err := apis.StartHTTPEndpoint(n.grpcEndpoint, gapis, n.config.HTTPModules)
+	if err != nil {
+		return err
+	}
+
+	n.log.Info("HTTP endpoint opened", "url", fmt.Sprintf("http://%s", n.grpcEndpoint))
+	// All listeners booted successfully
+	n.grpcHandler = handler
+	n.grpcListner = listener
+
+	return nil
+}
+
+func (n *Node) stopHttpWithGrpc() {
+	if n.grpcListner != nil {
+		n.grpcListner.Close()
+		n.grpcListner = nil
+
+		n.log.Info("grpc HTTP endpoint closed", "url", fmt.Sprintf("http://%s", n.grpcEndpoint))
+	}
+
+	if n.grpcHandler != nil {
+		n.grpcHandler.Stop()
+		n.grpcHandler = nil
+		n.log.Info("grpc handler stopped")
+	}
+
 }
 
 // startHTTP initializes and starts the HTTP RPC endpoint.
@@ -461,6 +558,11 @@ func (n *Node) Stop() error {
 	n.stopWS()
 	n.stopHTTP()
 	n.stopIPC()
+
+	// Terminate the grpc API
+	n.stopIPCWithGrpc()
+	n.stopInProcWithGapis()
+	n.stopHttpWithGrpc()
 	n.rpcAPIs = nil
 	failure := &StopError{
 		Services: make(map[reflect.Type]error),
@@ -524,6 +626,16 @@ func (n *Node) Restart() error {
 		return err
 	}
 	return nil
+}
+
+func (n *Node) AttachGrpc() (*grpc.ClientConn, error) {
+	n.lock.RLock()
+	defer n.lock.RUnlock()
+
+	if n.server == nil {
+		return nil, ErrNodeStopped
+	}
+	return apis.DialInProc(n.grpcInprocHandler)
 }
 
 // Attach creates an RPC client attached to an in-process API handler.

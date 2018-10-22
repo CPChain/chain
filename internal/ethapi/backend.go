@@ -18,9 +18,10 @@
 package ethapi
 
 import (
-	"bitbucket.org/cpchain/chain/apis"
 	"context"
 	"math/big"
+
+	"bitbucket.org/cpchain/chain/apis"
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/configs"
@@ -75,7 +76,7 @@ type Backend interface {
 	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
 }
 
-func GetGAPIs(apiBackend Backend) []apis.API{
+func GetGAPIs(apiBackend Backend) []apis.API {
 	return nil
 }
 
