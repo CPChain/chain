@@ -351,7 +351,9 @@ func (n *Node) startInProcWithGrpc(apis []gapis.API) error {
 }
 
 func (n *Node) stopInProcWithGapis() {
-	n.grpcInprocHandler.Stop()
+	if n.grpcInprocHandler != nil {
+		n.grpcInprocHandler.Stop()
+	}
 }
 
 // startInProc initializes an in-process RPC endpoint.
@@ -397,13 +399,6 @@ func (n *Node) startIPCWithGprc(apis []gapis.API) error {
 }
 
 func (n *Node) stopIPCWithGrpc() {
-	if n.grpcIPCListener != nil {
-		n.grpcIPCListener.Close()
-		n.grpcIPCListener = nil
-
-		n.log.Info("grpc IPC endpoint closed", "endpoint", n.grpcEndpoint)
-	}
-
 	if n.grpcIPCHandler != nil {
 		n.grpcIPCHandler.Stop()
 		n.grpcIPCHandler = nil
@@ -457,13 +452,6 @@ func (n *Node) startHTTPWithGprc(apis []gapis.API) error {
 }
 
 func (n *Node) stopHttpWithGrpc() {
-	if n.grpcListner != nil {
-		n.grpcListner.Close()
-		n.grpcListner = nil
-
-		n.log.Info("grpc HTTP endpoint closed", "url", fmt.Sprintf("http://%s", n.grpcEndpoint))
-	}
-
 	if n.grpcHandler != nil {
 		n.grpcHandler.Stop()
 		n.grpcHandler = nil
