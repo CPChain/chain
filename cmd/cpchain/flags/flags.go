@@ -212,7 +212,6 @@ var NodeFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  ProfileFlagName,
 		Usage: "Profile the running cpchain instance, output to the specified dir path",
-		Value: "",
 	},
 }
 
