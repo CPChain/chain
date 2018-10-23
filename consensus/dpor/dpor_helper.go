@@ -124,23 +124,25 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 	// Check signers bytes in extraData
 	signers := make([]byte, dpor.config.Epoch*common.AddressLength)
+	log.Debug("signers length", "sl", len(signers))
 	for round, signer := range snap.SignersOf(number) {
 		copy(signers[round*common.AddressLength:(round+1)*common.AddressLength], signer[:])
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
-		log.Debug("header.extra", "extra", "\n"+hex.Dump(header.Extra))
+		log.Debug("header.extra")
+		log.Debug("\n" + hex.Dump(header.Extra))
 		log.Debug("header", "h", header)
 		log.Debug("snapshot", "s", snap)
 		log.Debug("signers")
 		for _, signer := range snap.SignersOf(number) {
 			log.Debug("signer in snapshot ", "s", signer.Hex())
 		}
-		// var sss common.Address
-		// for i := 0; i < len(signers); i++ {
-		// 	copy(sss[:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
-		// 	log.Debug("signer in extra ", "s", sss.Hex())
-		// }
+		var sss common.Address
+		for i := 0; i < int(dpor.config.Epoch); i++ {
+			copy(sss[:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
+			log.Debug("signer in extra ", "s", sss.Hex())
+		}
 
 		log.Debug("errInvalidSigners 1")
 		return errInvalidSigners
@@ -347,10 +349,13 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	currentNum := chain.CurrentHeader().Number.Uint64()
 
-	snap, err = dh.snapshot(dpor, chain, number, header.Hash(), append(parents, header))
+	// snap, err = dh.snapshot(dpor, chain, number, header.Hash(), append(parents, header))
 
 	log.Debug("my address", "eb", dpor.signer.Hex())
 	log.Debug("ready to accept this block", "number", number)
+
+	number = currentNum
+
 	log.Debug("current block number", "number", currentNum)
 	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.Epoch, dpor.config.View))
 	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
@@ -364,7 +369,8 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		}
 	}
 
-	if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) && number >= dpor.config.MaxInitBlockNumber && number > currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
+	if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) && number >= dpor.config.MaxInitBlockNumber && snap.IsFutureSignerOf(dpor.signer, number) {
+		// if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) && number >= dpor.config.MaxInitBlockNumber && number > currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
 		// TODO: fix this.
 		log.Info("I am future signer, building the committee network")
 

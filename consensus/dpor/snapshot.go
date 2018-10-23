@@ -279,7 +279,7 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 	if s.Number < s.config.MaxInitBlockNumber {
 		s.RecentSigners[s.EpochIdx()+1] = signers
 		log.Debug("< s.config.MaxInitBlockNumber, s.Number", "n", s.Number)
-		log.Debug("signers in snapshot of:", "epoch idx", 0)
+		log.Debug("signers in snapshot of:", "epoch idx", s.EpochIdx()+1)
 		for _, s := range s.RecentSigners[s.EpochIdx()+1] {
 			log.Debug("signer", "s", s.Hex())
 		}
