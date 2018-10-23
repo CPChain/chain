@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/apis/admin/exportChain/v1": {
+    "/apis/v1/admin/exportChain": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "ExportChain",
@@ -42,7 +42,7 @@
         ]
       }
     },
-    "/apis/admin/importChain/v1": {
+    "/apis/v1/admin/importChain": {
       "post": {
         "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
         "operationId": "ImportChain",
@@ -69,7 +69,7 @@
         ]
       }
     },
-    "/apis/debug/dumpBlock/v1": {
+    "/apis/v1/debug/dumpBlock": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "DumpBlock",
@@ -96,7 +96,7 @@
         ]
       }
     },
-    "/apis/debug/getBadBlocks/v1": {
+    "/apis/v1/debug/getBadBlocks": {
       "post": {
         "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
         "operationId": "GetBadBlocks",
@@ -123,7 +123,7 @@
         ]
       }
     },
-    "/apis/debug/getModifiedAccountsByHash/v1": {
+    "/apis/v1/debug/getModifiedAccountsByHash": {
       "post": {
         "summary": "SetEtherbase sets the etherbase of the miner",
         "operationId": "GetModifiedAccountsByHash",
@@ -150,7 +150,7 @@
         ]
       }
     },
-    "/apis/debug/getModifiedAccountsByNumber/v1": {
+    "/apis/v1/debug/getModifiedAccountsByNumber": {
       "post": {
         "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
         "operationId": "GetModifiedAccountsByNumber",
@@ -177,7 +177,7 @@
         ]
       }
     },
-    "/apis/debug/preimage/v1": {
+    "/apis/v1/debug/preimage": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "Preimage",
@@ -204,7 +204,7 @@
         ]
       }
     },
-    "/apis/debug/storageRangeAt/v1": {
+    "/apis/v1/debug/storageRangeAt": {
       "post": {
         "summary": "Hashrate returns the POW hashrate",
         "operationId": "StorageRangeAt",
@@ -231,7 +231,7 @@
         ]
       }
     },
-    "/apis/eth/coinbase/v1": {
+    "/apis/v1/eth/coinbase": {
       "post": {
         "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
         "operationId": "Coinbase",
@@ -258,7 +258,7 @@
         ]
       }
     },
-    "/apis/eth/etherbase/v1": {
+    "/apis/v1/eth/etherbase": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "Etherbase",
@@ -285,7 +285,7 @@
         ]
       }
     },
-    "/apis/eth/getWork/v1": {
+    "/apis/v1/eth/getWork": {
       "post": {
         "summary": "Hashrate returns the POW hashrate",
         "operationId": "GetWork",
@@ -312,7 +312,7 @@
         ]
       }
     },
-    "/apis/eth/hashrate/v1": {
+    "/apis/v1/eth/hashrate": {
       "post": {
         "summary": "Hashrate returns the POW hashrate",
         "operationId": "Hashrate",
@@ -339,7 +339,7 @@
         ]
       }
     },
-    "/apis/eth/mining/v1": {
+    "/apis/v1/eth/mining": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "Mining",
@@ -366,7 +366,7 @@
         ]
       }
     },
-    "/apis/eth/submitHashrate/v1": {
+    "/apis/v1/eth/submitHashrate": {
       "post": {
         "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
         "operationId": "SubmitHashrate",
@@ -393,7 +393,7 @@
         ]
       }
     },
-    "/apis/eth/submitWork/v1": {
+    "/apis/v1/eth/submitWork": {
       "post": {
         "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
         "operationId": "SubmitWork",
@@ -420,7 +420,7 @@
         ]
       }
     },
-    "/apis/miner/setEtherbase/v1": {
+    "/apis/v1/miner/setEtherbase": {
       "post": {
         "summary": "SetEtherbase sets the etherbase of the miner",
         "operationId": "SetEtherbase",
@@ -447,7 +447,7 @@
         ]
       }
     },
-    "/apis/miner/setExtra/v1": {
+    "/apis/v1/miner/setExtra": {
       "post": {
         "summary": "Hashrate returns the POW hashrate",
         "operationId": "SetExtra",
@@ -474,7 +474,7 @@
         ]
       }
     },
-    "/apis/miner/setGasPrice/v1": {
+    "/apis/v1/miner/setGasPrice": {
       "post": {
         "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
         "operationId": "SetGasPrice",
@@ -501,7 +501,7 @@
         ]
       }
     },
-    "/apis/miner/setHashrate/v1": {
+    "/apis/v1/miner/setHashrate": {
       "post": {
         "summary": "GetHashrate returns the current hashrate of the miner.",
         "operationId": "GetHashrate",
@@ -528,7 +528,7 @@
         ]
       }
     },
-    "/apis/miner/start/v1": {
+    "/apis/v1/miner/start": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "Start",
@@ -555,7 +555,7 @@
         ]
       }
     },
-    "/apis/miner/stop/v1": {
+    "/apis/v1/miner/stop": {
       "post": {
         "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
         "operationId": "Stop",
