@@ -14,8 +14,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contract/pdash"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
+	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contract/pdash"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
@@ -364,8 +364,8 @@ func deployPdash() {
 	}
 }
 func main() {
-	//	deployCampaign()
-	//	deploySigner()
+	deployCampaign()
+	deploySigner()
 	deployPdash()
-	//	deployRegister()
+	deployRegister()
 }
