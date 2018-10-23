@@ -1,23 +1,22 @@
 package rpt
 
 import (
-	//	"bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	"context"
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/golang-lru"
 	"math/big"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contract/pdash"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/contract/Pdash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"
 )
 

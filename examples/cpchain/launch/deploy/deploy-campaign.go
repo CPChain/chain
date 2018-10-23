@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/contracts/dpor/contract/register"
 	"bytes"
 	"context"
 	"crypto/ecdsa"
@@ -14,8 +13,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contract/Pdash"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
-	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contract/pdash"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contract/register"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
