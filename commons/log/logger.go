@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/Sirupsen/logrus"
+	filename "github.com/keepeye/logrus-filename"
 )
 
 const errCtx = "Normalized odd number of arguments by adding nil"
@@ -45,6 +46,15 @@ func New(ctx ...interface{}) *Logger {
 	})
 
 	return l
+}
+
+// ShowFilename show filename and position
+func (logger *Logger) ShowFilename() {
+	filenameHook := filename.NewHook()
+	filenameHook.Field = "Line"
+	filenameHook.Skip += 3
+	// logger.Entry.Logger.Hooks
+	logger.Entry.Logger.AddHook(filenameHook)
 }
 
 // SetLevel sets the logger level.

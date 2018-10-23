@@ -29,7 +29,6 @@ func init() {
 	runFlags = append(runFlags, flags.P2pFlags...)
 	runFlags = append(runFlags, flags.AccountFlags...)
 	runFlags = append(runFlags, flags.ChainFlags...)
-	// flags = append(flags, consoleFlags...)
 	runCommand = cli.Command{
 		Action: run,
 		Name:   "run",
@@ -47,7 +46,7 @@ func init() {
 			if ctx.Bool(flags.ProfileFlagName) {
 				profile.Stop()
 			}
-			log.Info("Exit cpchain run command")
+			log.Info("Exit \"cpchain run\" command")
 			return nil
 		},
 	}
