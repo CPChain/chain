@@ -12,28 +12,26 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/rpc"
-	"github.com/golang/protobuf/ptypes/wrappers"
-
-	"bitbucket.org/cpchain/chain/core/state"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
+	"bitbucket.org/cpchain/chain/core/state"
+	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/node/miner"
 	"bitbucket.org/cpchain/chain/proto/cpc"
+	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 type PublicEthereumAPIServer struct {
