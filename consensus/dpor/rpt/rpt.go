@@ -4,8 +4,7 @@ package rpt
 // then calculates the reputations of candidates.
 
 import (
-	"bitbucket.org/cpchain/chain/contracts/dpor/contract/Pdash"
-	//	"bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contract/pdash"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contract/register"
 	"context"
 	"fmt"
@@ -27,6 +26,20 @@ import (
 var (
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
+)
+
+const (
+	Created = iota
+	SellerConfirmed
+	ProxyFetched
+	ProxyDelivered
+	BuyerConfirmed
+	Finished
+	SellerRated
+	BuyerRated
+	AllRated
+	Disputed
+	Withdrawn
 )
 
 // RPT defines the name and reputation pair.
@@ -180,7 +193,7 @@ func (bc *BasicCollector) GetRptInfos(addresses []common.Address, number uint64)
 func (bc *BasicCollector) calcRptInfo(address common.Address, addresses []common.Address, number uint64, rptcache *lru.ARCCache) RPT {
 	rpt := 0.0
 	alpha, beta, gamma, phi, omega := bc.Config.Alpha, bc.Config.Beta, bc.Config.Gamma, bc.Config.Phi, bc.Config.Omega
-	if number < 5 {
+	if number < bc.Config.WindowSize {
 		for i := int(number); i >= 0; i-- {
 			hash := sigHash(Rptitems{nodeaddress: address, key: uint64(i)})
 			chainInfo := bc.getChainRptInfo(address, addresses, uint64(i))
@@ -247,7 +260,7 @@ func (bc *BasicCollector) getChainRptInfo(address common.Address, addresses []co
 func (bc *BasicCollector) getContractRptInfo(address common.Address, addresses []common.Address, number uint64) ContractRptInfo {
 	uploadReward, proxyReward := 0., 0.
 	if number == 0 {
-		uploadReward += bc.getUploadReward(address,addresses, 0)
+		uploadReward += bc.getUploadReward(address, addresses, 0)
 		proxyReward += bc.getProxyReward(address, 0)
 	} else {
 		uploadReward += bc.getUploadReward(address, addresses, number)
@@ -390,19 +403,7 @@ func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) 
 	ProxyReward := 0.0
 	var proxyaddresses []common.Address
 	pdash, err := contract.NewPdash(bc.Config.proxycontractaddress, bc.Config.client)
-	const (
-		Created = iota
-		SellerConfirmed
-		ProxyFetched
-		ProxyDelivered
-		BuyerConfirmed
-		Finished
-		SellerRated
-		BuyerRated
-		AllRated
-		Disputed
-		Withdrawn
-	)
+
 	if err != nil {
 		log.Warn("NewPdash error", address, err)
 		return ProxyReward
@@ -438,9 +439,9 @@ func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) 
 			break
 		}
 		OrderRecord, err := pdash.OrderRecords(nil, id)
-		if OrderRecord.ProxyAddress==address&&OrderRecord.State==Finished{
-			ProxyReward+=5
-			if ProxyReward==100{
+		if OrderRecord.ProxyAddress == address && OrderRecord.State == Finished {
+			ProxyReward += 5
+			if ProxyReward == 100 {
 				break
 			}
 		}
@@ -448,6 +449,7 @@ func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) 
 
 	return ProxyReward
 }
+
 //
 //func (bc *BasicCollector)getProxyRecord(address common.Address,number uint64) ([]common.Address,error) {
 //	var proxyaddresses []common.Address
@@ -478,13 +480,13 @@ func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) 
 //
 //}
 
-func (bc *BasicCollector) getuploadRecord(addresses []common.Address, number uint64) ([]common.Address,error) {
+func (bc *BasicCollector) getuploadRecord(addresses []common.Address, number uint64) ([]common.Address, error) {
 	//TODO :add the real contract abi
 	var uploadadress []common.Address
 	upload, err := register.NewRegister(bc.Config.contractAddress, bc.Config.client)
 	if err != nil {
 		log.Warn("NewCampaign error", bc.Config.uploadcontractAddress, err)
-		return uploadadress,err
+		return uploadadress, err
 	}
 	for _, address := range addresses {
 		file, err := upload.UploadHistory(nil, address, big.NewInt(int64(number)))
@@ -495,7 +497,7 @@ func (bc *BasicCollector) getuploadRecord(addresses []common.Address, number uin
 			uploadadress = append(uploadadress, address)
 		}
 	}
-	return uploadadress,err
+	return uploadadress, err
 }
 func (bc *BasicCollector) getcommiteetmember(header *types.Header) []common.Address {
 	committee := make([]common.Address, (len(header.Extra)-extraVanity-extraSeal)/common.AddressLength)
@@ -504,4 +506,3 @@ func (bc *BasicCollector) getcommiteetmember(header *types.Header) []common.Addr
 	}
 	return committee
 }
-

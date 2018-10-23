@@ -14,8 +14,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contract/Pdash"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
@@ -196,8 +196,7 @@ func deployCampaign() {
 	}
 }
 
-
-func deployRegister(){
+func deployRegister() {
 	// Create client.
 	client, err := ethclient.Dial(endPoint)
 	if err != nil {
@@ -281,7 +280,7 @@ func deployRegister(){
 	}
 }
 
-func deployPdash(){
+func deployPdash() {
 	// Create client.
 	client, err := ethclient.Dial(endPoint)
 	if err != nil {
@@ -365,8 +364,8 @@ func deployPdash(){
 	}
 }
 func main() {
-//	deployCampaign()
-//	deploySigner()
+	//	deployCampaign()
+	//	deploySigner()
 	deployPdash()
-//	deployRegister()
+	//	deployRegister()
 }
