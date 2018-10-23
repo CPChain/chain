@@ -46,7 +46,7 @@ func init() {
 			if ctx.Bool(flags.ProfileFlagName) {
 				profile.Stop()
 			}
-			log.Info("Exit cpchain run command")
+			log.Info("Exit \"cpchain run\" command")
 			return nil
 		},
 	}
