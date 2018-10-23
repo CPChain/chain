@@ -1,8 +1,10 @@
 package profile
 
 import (
+	"path"
 	"runtime"
 
+	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"github.com/urfave/cli"
 )
 
@@ -16,14 +18,18 @@ type profileConfig struct {
 	pprofAddr               string
 }
 
-func getDefaultProfileConfig() profileConfig {
+func getProfileConfig(ctx *cli.Context) profileConfig {
+	dirPath := ""
+	if ctx.IsSet(flags.ProfileFlagName) {
+		dirPath = ctx.String(flags.ProfileFlagName)
+	}
 	return profileConfig{
 		memProfileRate:          runtime.MemProfileRate,
 		blockProfileRate:        1,
-		traceFileName:           "cpchain-trace.trace",
-		cpuFileName:             "cpchain-cpu.profile",
-		blockingProfileFileName: "cpchain-block.profile",
-		memProfileFileName:      "cpchain-heap.profile",
+		traceFileName:           path.Join(dirPath, "cpchain-trace.trace"),
+		cpuFileName:             path.Join(dirPath, "cpchain-cpu.profile"),
+		blockingProfileFileName: path.Join(dirPath, "cpchain-block.profile"),
+		memProfileFileName:      path.Join(dirPath, "cpchain-heap.profile"),
 		pprofAddr:               "localhost:8931",
 	}
 }
@@ -31,7 +37,7 @@ func getDefaultProfileConfig() profileConfig {
 // Start profiling
 func Start(ctx *cli.Context) error {
 	// start profiling, tracing
-	cfg := getDefaultProfileConfig()
+	cfg := getProfileConfig(ctx)
 
 	// enable tracing by default
 	if err := Handler.StartGoTrace(cfg.traceFileName); err != nil {

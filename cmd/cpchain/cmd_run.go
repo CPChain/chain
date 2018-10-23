@@ -35,7 +35,7 @@ func init() {
 		Flags:  runFlags,
 		Usage:  "Run a cpchain node",
 		Before: func(ctx *cli.Context) error {
-			if ctx.Bool(flags.ProfileFlagName) {
+			if ctx.IsSet(flags.ProfileFlagName) {
 				if err := profile.Start(ctx); err != nil {
 					return err
 				}
@@ -43,7 +43,7 @@ func init() {
 			return nil
 		},
 		After: func(ctx *cli.Context) error {
-			if ctx.Bool(flags.ProfileFlagName) {
+			if ctx.IsSet(flags.ProfileFlagName) {
 				profile.Stop()
 			}
 			log.Info("Exit \"cpchain run\" command")
