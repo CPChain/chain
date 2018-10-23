@@ -335,8 +335,8 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 	}}
 }
 
-func (d *Dpor) GAPIs(chain consensus.ChainReader) []gapis.API {
-	return []gapis.API{}
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []apis.API {
+	return []apis.API{}
 }
 
 // IsSigner implements Validator.

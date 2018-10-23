@@ -276,8 +276,8 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	}
 }
 
-func (s *CpchainService) GAPIs() []gapis.API {
-	return []gapis.API{
+func (s *CpchainService) GAPIs() []apis.API {
+	return []apis.API{
 		NewPublicEthereumAPIServer(s),
 		NewPublicMinerAPIServer(s),
 		NewPrivateMinerAPIServer(s),

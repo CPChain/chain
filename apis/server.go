@@ -1,4 +1,4 @@
-package gapis
+package apis
 
 import (
 	"crypto/tls"
@@ -134,4 +134,3 @@ func (s *Server) RegisterApi(api API) {
 	api.RegisterServer(s.server)
 	api.RegisterProxy(context.Background(), s.mux, s.endpoint, s.dialOpts)
 }
-
