@@ -20,6 +20,7 @@ package consensus
 import (
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/apis"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/rpc"
@@ -93,6 +94,9 @@ type Engine interface {
 
 	// APIs returns the RPC APIs this consensus engine provides.
 	APIs(chain ChainReader) []rpc.API
+
+	// GAPIs returns the GRPC APIs this consensus engine provides.
+	GAPIs(chain ChainReader) []gapis.API
 
 	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeNetworkHandler) error
 }

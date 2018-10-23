@@ -28,6 +28,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
+	"bitbucket.org/cpchain/chain/apis"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -272,6 +273,17 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 		})
 		engine.SetThreads(-1) // Disable CPU mining
 		return engine
+	}
+}
+
+func (s *Ethereum) GAPIs() []gapis.API {
+	return []gapis.API{
+		NewPublicEthereumAPIServer(s),
+		NewPublicMinerAPIServer(s),
+		NewPrivateMinerAPIServer(s),
+		NewPrivateAdminAPIServer(s),
+		NewPublicDebugAPIServer(s),
+		NewPrivateDebugAPIServer(s.chainConfig, s),
 	}
 }
 

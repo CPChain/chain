@@ -1,0 +1,1785 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "chain.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/apis/v1/debug/chaindbCompact": {
+      "post": {
+        "operationId": "ChaindbCompact",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateDebugAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateDebugAPI"
+        ]
+      }
+    },
+    "/apis/v1/debug/chaindbProperty": {
+      "post": {
+        "operationId": "ChaindbProperty",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateDebugAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateDebugAPI"
+        ]
+      }
+    },
+    "/apis/v1/debug/getBlockRlp": {
+      "post": {
+        "operationId": "GetBlockRlp",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicDebugAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicDebugAPI"
+        ]
+      }
+    },
+    "/apis/v1/debug/printBlock": {
+      "post": {
+        "operationId": "PrintBlock",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicDebugAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicDebugAPI"
+        ]
+      }
+    },
+    "/apis/v1/debug/seedHash": {
+      "post": {
+        "operationId": "SeedHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicDebugAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicDebugAPI"
+        ]
+      }
+    },
+    "/apis/v1/debug/setHead": {
+      "post": {
+        "operationId": "SetHead",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateDebugAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateDebugAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/accounts": {
+      "post": {
+        "operationId": "Accounts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/blockNumber": {
+      "post": {
+        "operationId": "BlockNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/call": {
+      "post": {
+        "operationId": "Call",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/deriveAccount": {
+      "post": {
+        "operationId": "DeriveAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/ecRecover": {
+      "post": {
+        "operationId": "EcRecover",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/estimateGas": {
+      "post": {
+        "operationId": "EstimateGas",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/gasPrice": {
+      "post": {
+        "operationId": "GasPrice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicEthereumAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicEthereumAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getBalance": {
+      "post": {
+        "operationId": "GetBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getBlockByHash": {
+      "post": {
+        "operationId": "GetBlockByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getBlockByNumber": {
+      "post": {
+        "operationId": "GetBlockByNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getBlockTransactionCountByHash": {
+      "post": {
+        "operationId": "GetBlockTransactionCountByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getBlockTransactionCountByNumber": {
+      "post": {
+        "operationId": "GetBlockTransactionCountByNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getCode": {
+      "post": {
+        "operationId": "GetCode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getRawTransactionByBlockHashAndIndex": {
+      "post": {
+        "operationId": "GetRawTransactionByBlockHashAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getRawTransactionByBlockNumberAndIndex": {
+      "post": {
+        "operationId": "GetRawTransactionByBlockNumberAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getRawTransactionByHash": {
+      "post": {
+        "operationId": "GetRawTransactionByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getStorageAt": {
+      "post": {
+        "operationId": "GetStorageAt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getTransactionByBlockHashAndIndex": {
+      "post": {
+        "operationId": "GetTransactionByBlockHashAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getTransactionByBlockNumberAndIndex": {
+      "post": {
+        "operationId": "GetTransactionByBlockNumberAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getTransactionByHash": {
+      "post": {
+        "operationId": "GetTransactionByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getTransactionCount": {
+      "post": {
+        "operationId": "GetTransactionCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getTransactionReceipt": {
+      "post": {
+        "operationId": "GetTransactionReceipt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getUncleByBlockHashAndIndex": {
+      "post": {
+        "operationId": "GetUncleByBlockHashAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getUncleByBlockNumberAndIndex": {
+      "post": {
+        "operationId": "GetUncleByBlockNumberAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getUncleCountByBlockHash": {
+      "post": {
+        "operationId": "GetUncleCountByBlockHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/getUncleCountByBlockNumber": {
+      "post": {
+        "operationId": "GetUncleCountByBlockNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/importRawKey": {
+      "post": {
+        "operationId": "ImportRawKey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/listAccounts": {
+      "post": {
+        "operationId": "ListAccounts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/listWallets": {
+      "post": {
+        "operationId": "ListWallets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/lockAccount": {
+      "post": {
+        "operationId": "LockAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/newAccount": {
+      "post": {
+        "operationId": "NewAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/openWallet": {
+      "post": {
+        "operationId": "OpenWallet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/pendingTransactions": {
+      "post": {
+        "operationId": "PendingTransactions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/protocolVersion": {
+      "post": {
+        "operationId": "ProtocolVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicEthereumAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicEthereumAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/resend": {
+      "post": {
+        "operationId": "Resend",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/sendRawTransaction": {
+      "post": {
+        "operationId": "SendRawTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/sendTransaction": {
+      "post": {
+        "operationId": "SendTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/sign": {
+      "post": {
+        "operationId": "Sign",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/signAndSendTransaction": {
+      "post": {
+        "operationId": "SignAndSendTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/signTransaction": {
+      "post": {
+        "operationId": "SignTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTransactionPoolAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTransactionPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/syncing": {
+      "post": {
+        "operationId": "Syncing",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicEthereumAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicEthereumAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/unlockAccount": {
+      "post": {
+        "operationId": "UnlockAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPrivateAccountAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAccountAPI"
+        ]
+      }
+    },
+    "/apis/v1/public/listening": {
+      "post": {
+        "operationId": "Listening",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicNetAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicNetAPI"
+        ]
+      }
+    },
+    "/apis/v1/public/peerCount": {
+      "post": {
+        "operationId": "PeerCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicNetAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicNetAPI"
+        ]
+      }
+    },
+    "/apis/v1/public/version": {
+      "post": {
+        "operationId": "Version",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicNetAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicNetAPI"
+        ]
+      }
+    },
+    "/apis/v1/txpool/content": {
+      "post": {
+        "operationId": "Content",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTxPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTxPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/txpool/inspect": {
+      "post": {
+        "operationId": "Inspect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTxPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTxPoolAPI"
+        ]
+      }
+    },
+    "/apis/v1/txpool/status": {
+      "post": {
+        "operationId": "Status",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicTxPoolAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicTxPoolAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
+    "protos_chainPrivateAccountAPIReply": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "account_addresses": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "raw_wallets": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "is_ok": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "tx_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "sign_tx_result": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "signature": {
+          "type": "string",
+          "format": "byte"
+        },
+        "address": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "protos_chainPrivateAccountAPIRequest": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "pin": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "sig": {
+          "type": "string",
+          "format": "byte"
+        },
+        "priv_key": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "addr": {
+          "type": "string",
+          "format": "byte"
+        },
+        "duration": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "send_tx_args": {
+          "$ref": "#/definitions/protobufAny"
+        }
+      }
+    },
+    "protos_chainPrivateDebugAPIReply": {
+      "type": "object",
+      "properties": {
+        "property": {
+          "type": "string"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "protos_chainPrivateDebugAPIRequest": {
+      "type": "object",
+      "properties": {
+        "property": {
+          "type": "string"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "protos_chainPublicAccountAPIReply": {
+      "type": "object",
+      "properties": {
+        "accounts": {
+          "$ref": "#/definitions/protobufAny"
+        }
+      }
+    },
+    "protos_chainPublicBlockChainAPIReply": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "payload": {
+          "type": "string",
+          "format": "byte"
+        },
+        "estimate_gas": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "balance": {
+          "type": "string",
+          "format": "byte"
+        },
+        "block_info": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "code": {
+          "type": "string",
+          "format": "byte"
+        },
+        "storage": {
+          "type": "string",
+          "format": "byte"
+        },
+        "uncle_count": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "result": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "protos_chainPublicBlockChainAPIRequest": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "$ref": "#/definitions/protobufAny",
+          "title": "CallArgs args = 1;"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "full_tx": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "key": {
+          "type": "string"
+        },
+        "block_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "index": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "protos_chainPublicDebugAPIReply": {
+      "type": "object",
+      "properties": {
+        "info": {
+          "type": "string"
+        },
+        "rlp": {
+          "type": "string"
+        }
+      }
+    },
+    "protos_chainPublicDebugAPIRequest": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "###################################################"
+    },
+    "protos_chainPublicEthereumAPIReply": {
+      "type": "object",
+      "properties": {
+        "gas_price": {
+          "type": "string",
+          "format": "byte"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "is_ok": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "sync_info": {
+          "$ref": "#/definitions/protobufAny"
+        }
+      }
+    },
+    "protos_chainPublicNetAPIReply": {
+      "type": "object",
+      "properties": {
+        "is_listening": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "version": {
+          "type": "string"
+        },
+        "peer_count": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "protos_chainPublicTransactionPoolAPIReply": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "payload": {
+          "type": "string",
+          "format": "byte"
+        },
+        "rpc_transaction": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "tx_receipt": {
+          "type": "string",
+          "format": "byte",
+          "title": "RPCTransaction rpc_transaction = 3;"
+        },
+        "tx_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "sign_tx_result": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "tx_bytes": {
+          "type": "string",
+          "format": "byte"
+        },
+        "fields": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "signature": {
+          "type": "string",
+          "format": "byte"
+        },
+        "pending_txs": {
+          "$ref": "#/definitions/protobufAny",
+          "title": "repeated RPCTransaction pending_txs = 10;"
+        }
+      }
+    },
+    "protos_chainPublicTransactionPoolAPIRequest": {
+      "type": "object",
+      "properties": {
+        "block_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "tx_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "send_tx_args": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "gas_price": {
+          "type": "string",
+          "format": "byte"
+        },
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "payload": {
+          "type": "string",
+          "format": "byte"
+        },
+        "encoded_tx": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "###################################################"
+    },
+    "protos_chainPublicTxPoolAPIReply": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "uint64"
+          }
+        },
+        "content": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "inspect": {
+          "$ref": "#/definitions/protobufAny"
+        }
+      }
+    }
+  }
+}
