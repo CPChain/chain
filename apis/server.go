@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -105,9 +106,18 @@ func NewServer(endpoint string, datadir string, useTls bool) (*Server, error) {
 func (s *Server) Serve(proxyEndpoint string, listener net.Listener) error {
 	s.listener = listener
 	// serve and listen
-	go s.server.Serve(listener)
+	go func() {
+		if err := s.server.Serve(listener); err != nil {
+			log.Error(err.Error())
+		}
+	}()
 
-	go http.ListenAndServe(proxyEndpoint, s.mux)
+	go func() {
+		if err := http.ListenAndServe(proxyEndpoint, s.mux); err != nil {
+			log.Error(err.Error())
+		}
+	}()
+
 	return nil
 }
 

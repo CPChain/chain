@@ -38,7 +38,7 @@ type SampleService struct{}
 
 func (s *SampleService) Protocols() []p2p.Protocol { return nil }
 func (s *SampleService) APIs() []rpc.API           { return nil }
-func (s *SampleService) GAPIs() []apis.API         { return nil }
+func (s *SampleService) GAPIs() []gapis.API        { return nil }
 func (s *SampleService) Start(*p2p.Server) error   { fmt.Println("Service starting..."); return nil }
 func (s *SampleService) Stop() error               { fmt.Println("Service stopping..."); return nil }
 
