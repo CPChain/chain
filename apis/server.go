@@ -27,6 +27,7 @@ type Server struct {
 
 	server   *grpc.Server
 	listener net.Listener
+	mux      *runtime.ServeMux
 
 	certPool      *x509.CertPool
 	certificate   tls.Certificate
@@ -53,6 +54,7 @@ func NewServer(endpoint string, datadir string, useTls bool) (*Server, error) {
 		endpoint:   endpoint,
 		dialOpts:   []grpc.DialOption{grpc.WithInsecure()},
 		serverOpts: []grpc.ServerOption{},
+		mux:        runtime.NewServeMux(),
 	}
 
 	var err error
@@ -105,7 +107,7 @@ func (s *Server) Serve(proxyEndpoint string, listener net.Listener) error {
 	// serve and listen
 	go s.server.Serve(listener)
 
-	go http.ListenAndServe(proxyEndpoint, runtime.NewServeMux())
+	go http.ListenAndServe(proxyEndpoint, s.mux)
 	return nil
 }
 
@@ -120,7 +122,7 @@ func (s *Server) Stop() {
 
 func (s *Server) RegisterApi(api API) {
 	api.RegisterServer(s.server)
-	api.RegisterProxy(context.Background(), runtime.NewServeMux(), s.endpoint, s.dialOpts)
+	api.RegisterProxy(context.Background(), s.mux, s.endpoint, s.dialOpts)
 }
 
 // Create a certificate pool from the certificate authority
