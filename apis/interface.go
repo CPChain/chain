@@ -1,4 +1,4 @@
-package gapis
+package apis
 
 import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

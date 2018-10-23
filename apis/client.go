@@ -1,4 +1,4 @@
-package gapis
+package apis
 
 import (
 	"bytes"
