@@ -74,6 +74,7 @@ func (s *InstrumentedService) APIs() []rpc.API {
 	return s.apis
 }
 
+// TODO @sangh test.
 func (s *InstrumentedService) GAPIs() []gapis.API {
 	return nil
 }

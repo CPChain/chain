@@ -25,9 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/golang/protobuf/ptypes/wrappers"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	pb "bitbucket.org/cpchain/chain/apis/proto/chain_reader"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -46,7 +43,9 @@ import (
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"

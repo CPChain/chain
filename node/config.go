@@ -104,11 +104,11 @@ type Config struct {
 	// for ephemeral nodes).
 	HTTPPort int `toml:",omitempty"`
 
-	ProxyHost string
-	ProxyPort int
+	GatewayHost string `toml:",omitempty"`
+	GatewayPort int `toml:",omitempty"`
 
-	GrpcHost string
-	GrpcPort int
+	GrpcHost string `toml:",omitempty"`
+	GrpcPort int `toml:",omitempty"`
 
 	// HTTPCors is the Cross-Origin Resource Sharing header to send to requesting
 	// clients. Please be aware that CORS is a browser enforced security, it's fully
@@ -213,11 +213,11 @@ func (c *Config) GrpcEndpoint() string {
 	return fmt.Sprintf("%s:%d", c.GrpcHost, c.GrpcPort)
 }
 
-func (c *Config) ProxyEndpoint() string {
-	if c.ProxyHost == "" {
+func (c *Config) GatewayEndpoint() string {
+	if c.GatewayHost == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s:%d", c.ProxyHost, c.ProxyPort)
+	return fmt.Sprintf("%s:%d", c.GatewayHost, c.GatewayPort)
 }
 
 // HTTPEndpoint resolves an HTTP endpoint based on the configured host interface
@@ -235,8 +235,8 @@ func DefaultGrpcEndpoint() string {
 }
 
 func DefaultProxyEndpoint() string {
-	config := &Config{ProxyHost: DefaultProxyHost, ProxyPort: DefaultProxyPort}
-	return config.ProxyEndpoint()
+	config := &Config{GatewayHost: DefaultGatewayHost, GatewayPort: DefaultGatewayPort}
+	return config.GatewayEndpoint()
 }
 
 // DefaultHTTPEndpoint returns the HTTP endpoint used by default.
@@ -483,14 +483,14 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 // ************************************************************************************************
 
 const (
-	DefaultGrpcHost  = "localhost"
-	DefaultGrpcPort  = 8543
-	DefaultProxyHost = "localhost"
-	DefaultProxyPort = 8544
-	DefaultHTTPHost  = "localhost" // Default host interface for the HTTP RPC server
-	DefaultHTTPPort  = 8545        // Default TCP port for the HTTP RPC server
-	DefaultWSHost    = "localhost" // Default host interface for the websocket RPC server
-	DefaultWSPort    = 8546        // Default TCP port for the websocket RPC server
+	DefaultGrpcHost    = "localhost"
+	DefaultGrpcPort    = 8543
+	DefaultGatewayHost = "localhost"
+	DefaultGatewayPort = 8544
+	DefaultHTTPHost    = "localhost" // Default host interface for the HTTP RPC server
+	DefaultHTTPPort    = 8545        // Default TCP port for the HTTP RPC server
+	DefaultWSHost      = "localhost" // Default host interface for the websocket RPC server
+	DefaultWSPort      = 8546        // Default TCP port for the websocket RPC server
 )
 
 // DefaultConfig contains reasonable default settings.

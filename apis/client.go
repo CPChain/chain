@@ -13,15 +13,13 @@ import (
 	"math/big"
 	"path/filepath"
 
-	"github.com/golang/protobuf/ptypes/any"
-
-	pb "bitbucket.org/cpchain/chain/apis/proto/chain_reader"
-
 	"bitbucket.org/cpchain/chain"
+	pb "bitbucket.org/cpchain/chain/apis/proto/chain_reader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -42,6 +40,7 @@ type Client struct {
 func NewClient(endpoint, datadir string, useTls bool) (*Client, error) {
 	var err error
 	opts := []grpc.DialOption{
+		// TODO remove this when we use trusted tls connection
 		grpc.WithInsecure(),
 	}
 	c := &Client{}
@@ -83,10 +82,7 @@ func NewClient(endpoint, datadir string, useTls bool) (*Client, error) {
 	return c, nil
 }
 
-func New(c *grpc.ClientConn) *Client {
-	return &Client{c: c}
-}
-
+// TODO currently, this is not used.
 func (c *Client) Close() {
 	c.c.Close()
 }

@@ -136,7 +136,7 @@ func New(conf *Config) (*Node, error) {
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
 		grpcEndpoint:      conf.GrpcEndpoint(),
-		proxyEndpoint:     conf.ProxyEndpoint(),
+		proxyEndpoint:     conf.GatewayEndpoint(),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
@@ -730,7 +730,7 @@ func (n *Node) ResolvePath(x string) string {
 	return n.config.resolvePath(x)
 }
 
-// TODO: @sangh if need blew apis
+// TODO: @sangh add builtin apis
 func (n *Node) gapis() []gapis.API {
 	return []gapis.API{}
 }

@@ -21,9 +21,8 @@ import (
 	"context"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/apis"
-
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/apis"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"

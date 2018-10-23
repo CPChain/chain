@@ -135,17 +135,3 @@ func (s *Server) RegisterApi(api API) {
 	api.RegisterProxy(context.Background(), s.mux, s.endpoint, s.dialOpts)
 }
 
-// Create a certificate pool from the certificate authority
-func createCertPool() (*x509.CertPool, error) {
-	certPool := x509.NewCertPool()
-	ca, err := ioutil.ReadFile(ca)
-	if err != nil {
-		return nil, err
-	}
-
-	if ok := certPool.AppendCertsFromPEM(ca); !ok {
-		return nil, errors.New("failed to append client certs")
-	}
-
-	return certPool, nil
-}
