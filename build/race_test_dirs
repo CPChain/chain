@@ -7,5 +7,6 @@ cmd/cpchain
 core
 les
 network/protocols/cpc
+network/protocols/cpc/fetcher
 network/protocols/cpc/downloader
 rpc
