@@ -8,7 +8,7 @@ import (
 
 var (
 	root           = NewLogger()
-	termTimeFormat = "[01-02|15:04:05.000]"
+	termTimeFormat = "01-02|15:04:05.000"
 )
 
 func NewLogger() *Logger {
@@ -17,13 +17,17 @@ func NewLogger() *Logger {
 	}
 
 	l.SetFormatter(&TextFormatter{
-		ForceColors:      true,
-		FullTimestamp:    true,
 		QuoteEmptyFields: true,
+		FullTimestamp:    true,
 		TimestampFormat:  termTimeFormat,
 	})
 
 	return l
+}
+
+// ShowFilename show filename and position
+func ShowFilename() {
+	root.ShowFilename()
 }
 
 func Root() *Logger {
@@ -44,99 +48,57 @@ func getFields(ctx ...interface{}) logrus.Fields {
 
 // SetLevel sets the logger level.
 func SetLevel(level logrus.Level) {
-	root.Logger.SetLevel(level)
+	root.SetLevel(level)
 }
 
 // GetLevel returns the logger level.
 func GetLevel() logrus.Level {
-	return root.Logger.GetLevel()
+	return root.GetLevel()
 }
 
 // SetOutput sets the logger output.
 func SetOutput(output io.Writer) {
-	root.Logger.SetOutput(output)
+	root.SetOutput(output)
 }
 
 // SetFormatter sets the logger formatter.
 func SetFormatter(formatter logrus.Formatter) {
-	root.Logger.SetFormatter(formatter)
+	root.SetFormatter(formatter)
 }
 
 // Info logs a message at level Info on the standard logger.
 func Info(msg string, ctx ...interface{}) {
-	if root.Logger.IsLevelEnabled(logrus.InfoLevel) {
-		if len(ctx)%2 != 0 {
-			root.Error(errCtx)
-			return
-		}
-		root.WithFields(getFields(ctx...)).Info(msg)
-	}
+	root.Info(msg, ctx...)
 }
 
 // Print logs a message at level Info on the standard logger.
 func Print(msg string, ctx ...interface{}) {
-	if root.Logger.IsLevelEnabled(logrus.InfoLevel) {
-		if len(ctx)%2 != 0 {
-			root.Error(errCtx)
-			return
-		}
-		root.WithFields(getFields(ctx...)).Info(msg)
-	}
+	root.Print(msg, ctx...)
 }
 
 // Debug logs a message at level Debug on the standard logger.
 func Debug(msg string, ctx ...interface{}) {
-	if root.Logger.IsLevelEnabled(logrus.DebugLevel) {
-		if len(ctx)%2 != 0 {
-			root.Error(errCtx)
-			return
-		}
-		root.WithFields(getFields(ctx...)).Debug(msg)
-	}
+	root.Debug(msg, ctx...)
 }
 
 // Warn logs a message at level Warn on the standard logger.
 func Warn(msg string, ctx ...interface{}) {
-	if root.Logger.IsLevelEnabled(logrus.WarnLevel) {
-		if len(ctx)%2 != 0 {
-			root.Error(errCtx)
-			return
-		}
-		root.WithFields(getFields(ctx...)).Warn(msg)
-	}
+	root.Warn(msg, ctx...)
 }
 
 // Error logs a message at level Error on the standard logger.
 func Error(msg string, ctx ...interface{}) {
-	if root.Logger.IsLevelEnabled(logrus.ErrorLevel) {
-		if len(ctx)%2 != 0 {
-			root.Error(errCtx)
-			return
-		}
-		root.WithFields(getFields(ctx...)).Error(msg)
-	}
+	root.Error(msg, ctx...)
 }
 
 // Panic logs a message at level Panic on the standard logger.
 func Panic(msg string, ctx ...interface{}) {
-	if root.Logger.IsLevelEnabled(logrus.PanicLevel) {
-		if len(ctx)%2 != 0 {
-			root.Error(errCtx)
-			return
-		}
-		root.WithFields(getFields(ctx...)).Panic(msg)
-	}
+	root.Panic(msg, ctx...)
 }
 
 // Fatal logs a message at level Fatal on the standard logger then the process will exit with status set to 1.
 func Fatal(msg string, ctx ...interface{}) {
-	if root.Logger.IsLevelEnabled(logrus.FatalLevel) {
-		if len(ctx)%2 != 0 {
-			root.Error(errCtx)
-			return
-		}
-		root.WithFields(getFields(ctx...)).Fatal(msg)
-	}
+	root.Fatal(msg, ctx...)
 }
 
 // Debugf logs a message at level Debug on the standard logger.

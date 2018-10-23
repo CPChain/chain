@@ -263,7 +263,7 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 }
 
 func (s *DporSnapshot) GetDefaultSigners() []common.Address {
-	extra := core.DefaultCpchainGenesisBlock().ExtraData
+	extra := core.DefaultGenesisBlock().ExtraData
 	signers := make([]common.Address, (len(extra)-extraVanity-extraSeal)/common.AddressLength)
 	for i := 0; i < len(signers); i++ {
 		copy(signers[i][:], extra[extraVanity+i*common.AddressLength:])

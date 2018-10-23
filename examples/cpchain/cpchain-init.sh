@@ -20,7 +20,6 @@ do
 
     mkdir data/dd$i/rsa
     cp keys/rsa_pri$i.pem data/dd$i/rsa/rsa_pri.pem
-    cp keys/rsa_pub$i.pem data/dd$i/rsa/rsa_pub.pem
 
     # not needed.
     # $proj_dir/build/bin/cpchain --datadir data/dd$i init conf/genesis.json

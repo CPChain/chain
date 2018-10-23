@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor"

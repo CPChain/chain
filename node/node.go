@@ -27,14 +27,13 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/debug"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
-	log2 "github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/prometheus/prometheus/util/flock"
 )
@@ -73,7 +72,7 @@ type Node struct {
 	stop chan struct{} // Channel to wait for termination notifications
 	lock sync.RWMutex
 
-	log *log.Logger
+	log log.Logger
 }
 
 // New creates a new P2P node, ready for protocol registration.
@@ -107,7 +106,7 @@ func New(conf *Config) (*Node, error) {
 		return nil, err
 	}
 	if conf.Logger == nil {
-		conf.Logger = log.New("", "")
+		conf.Logger = log.New()
 	}
 	// Note: any interaction with Config that would create/touch files
 	// in the data directory or instance directory is delayed until Start.
@@ -158,9 +157,7 @@ func (n *Node) Start() error {
 	n.config.RsaKeyStore, _ = n.config.RsaKey()
 
 	n.serverConfig.Name = n.config.NodeName()
-	// TODO: @sangh ethereum/p2p log module replace
-	// n.serverConfig.Logger = n.log
-	n.serverConfig.Logger = log2.New()
+	n.serverConfig.Logger = n.log
 	if n.serverConfig.StaticNodes == nil {
 		n.serverConfig.StaticNodes = n.config.StaticNodes()
 	}

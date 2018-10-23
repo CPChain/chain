@@ -16,7 +16,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
@@ -112,9 +112,6 @@ func deployContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int
 func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, instance *SignerConnectionRegister, ctx context.Context, client *ethclient.Client, fromAddress common.Address) {
 	// 1. load RsaPublicKey/PrivateKey
 	fmt.Println("1.load RsaPublicKey/PrivateKey")
-	//publicKey1, privateKey1, pubBytes1, priBytes1, _ := rsa_.LoadRsaKey("./testdata/rsa_pub.pem", "./testdata/rsa_pri.pem")
-	// publicKey2, privateKey2, pubBytes2, _, _ := rsakey.LoadRsaKey("../testdata/rsa_pub1.pem", "../testdata/rsa_pri1.pem")
-	// _ = publicKey2
 
 	rsaKey, err := rsakey.NewRsaKey("../testdata")
 

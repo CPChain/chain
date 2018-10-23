@@ -45,6 +45,12 @@
 			"revisionTime": "2017-02-15T19:58:14Z"
 		},
 		{
+			"checksumSHA1": "Pc2ORQp+VY3Un/dkh4QwLC7R6lE=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005",
+			"revisionTime": "2018-08-15T10:47:33Z"
+		},
+		{
 			"checksumSHA1": "IJfgr2GrcATr8H78epZaeoLzq+s=",
 			"path": "github.com/Sirupsen/logrus",
 			"revision": "458213699411cdceb6fd839a3178be49c01fba54",
@@ -408,6 +414,13 @@
 			"tree": true
 		},
 		{
+			"checksumSHA1": "s0yaGKhTG5JNDlJzDKUju1J+sCQ=",
+			"path": "github.com/keepeye/logrus-filename",
+			"revision": "2d8867388b066da992fac51340a39457c5160d10",
+			"revisionTime": "2018-05-04T03:03:40Z",
+			"tree": true
+		},
+		{
 			"checksumSHA1": "I7xWB38S+JurRIKlN1/SE/cVG7s=",
 			"path": "github.com/libp2p/go-flow-metrics",
 			"revision": "3b3bcfcf78f2dc0e85be13ef3c3adc64cc5a9347",
@@ -744,6 +757,12 @@
 			"revisionTime": "2018-05-02T07:23:49Z"
 		},
 		{
+			"checksumSHA1": "/IwLAWd+bVRFctg6wj1PEaONdjM=",
+			"path": "github.com/urfave/cli",
+			"revision": "934abfb2f102315b5794e15ebc7949e4ca253920",
+			"revisionTime": "2018-08-21T06:40:27Z"
+		},
+		{
 			"checksumSHA1": "BtK7hL0GNjhCUpNR/JD+9QY0ioo=",
 			"path": "github.com/whyrusleeping/go-logging",
 			"revision": "0457bb6b88fc1973573aaf6b5145d8d3ae972390",
@@ -1078,13 +1097,7 @@
 			"path": "gopkg.in/sourcemap.v1/base64vlq",
 			"revision": "6e83acea0053641eff084973fee085f0c193c61a",
 			"revisionTime": "2017-02-13T14:20:43Z"
-		},
-		{
-			"checksumSHA1": "Yx1MU40fyGe7hhqW9+dkv8kXa60=",
-			"path": "gopkg.in/urfave/cli.v1",
-			"revision": "cfb38830724cc34fedffe9a2a29fb54fa9169cd1",
-			"revisionTime": "2017-08-11T01:42:03Z"
 		}
 	],
-	"rootPath": "bitbucket.org/cpchain/chain"
+	"rootPath": "bitbucket.org/cpchain/_chain"
 }

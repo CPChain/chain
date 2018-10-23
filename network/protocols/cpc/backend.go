@@ -27,8 +27,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/admission"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -217,7 +217,7 @@ func makeExtraData(extra []byte) []byte {
 	if len(extra) == 0 {
 		// create default extradata
 		extra, _ = rlp.EncodeToBytes([]interface{}{
-			uint(configs.VersionMajor<<16 | configs.VersionMinor<<8 | configs.VersionPatch),
+			configs.Version,
 			"cpchain",
 			runtime.Version(),
 			runtime.GOOS,

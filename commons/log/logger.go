@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/Sirupsen/logrus"
+	filename "github.com/keepeye/logrus-filename"
 )
 
 const errCtx = "Normalized odd number of arguments by adding nil"
@@ -39,12 +40,21 @@ func New(ctx ...interface{}) *Logger {
 	}
 
 	l.SetFormatter(&TextFormatter{
-		ForceColors:      true,
 		QuoteEmptyFields: true,
+		FullTimestamp:    true,
 		TimestampFormat:  termTimeFormat,
 	})
 
 	return l
+}
+
+// ShowFilename show filename and position
+func (logger *Logger) ShowFilename() {
+	filenameHook := filename.NewHook()
+	filenameHook.Field = "Line"
+	filenameHook.Skip += 3
+	// logger.Entry.Logger.Hooks
+	logger.Entry.Logger.AddHook(filenameHook)
 }
 
 // SetLevel sets the logger level.
@@ -74,7 +84,7 @@ func (logger *Logger) Info(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Info(logrus.InfoLevel, msg)
+		logger.WithFields(getFields(args...)).Info(msg)
 	}
 }
 
@@ -85,7 +95,7 @@ func (logger *Logger) Debug(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Debug(logrus.DebugLevel, msg)
+		logger.WithFields(getFields(args...)).Debug(msg)
 	}
 }
 
@@ -96,7 +106,7 @@ func (logger *Logger) Print(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Info(logrus.InfoLevel, msg)
+		logger.WithFields(getFields(args...)).Info(msg)
 	}
 }
 
@@ -107,7 +117,7 @@ func (logger *Logger) Warn(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Warn(logrus.WarnLevel, msg)
+		logger.WithFields(getFields(args...)).Warn(msg)
 	}
 }
 
@@ -118,7 +128,7 @@ func (logger *Logger) Error(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Error(logrus.ErrorLevel, msg)
+		logger.WithFields(getFields(args...)).Error(msg)
 	}
 }
 
@@ -129,7 +139,7 @@ func (logger *Logger) Panic(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Panic(logrus.PanicLevel, msg)
+		logger.WithFields(getFields(args...)).Panic(msg)
 	}
 }
 
@@ -140,6 +150,6 @@ func (logger *Logger) Fatal(msg string, args ...interface{}) {
 			root.Error(errCtx)
 			return
 		}
-		logger.WithFields(getFields(args...)).Fatal(logrus.FatalLevel, msg)
+		logger.WithFields(getFields(args...)).Fatal(msg)
 	}
 }

@@ -12,7 +12,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
@@ -29,7 +29,7 @@ type keystorePair struct {
 
 var (
 	endPoint  = "http://localhost:8501"
-	dataDir   = "./data/"
+	dataDir   = "data/"
 	keystores = []keystorePair{
 		{
 			"dd1/keystore/",
@@ -86,7 +86,8 @@ var (
 
 func getAccount(keyStoreFilePath string, passphrase string, rsaPath string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
 	// Load account.
-	file, err := os.Open(dataDir + keyStoreFilePath)
+	ff, err := filepath.Abs(".")
+	file, err := os.Open(ff + "/" + dataDir + keyStoreFilePath)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

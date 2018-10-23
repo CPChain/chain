@@ -27,7 +27,7 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/metrics/exp"
 	"github.com/fjl/memsize/memsizeui"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 )
 
 var Memsize memsizeui.Handler

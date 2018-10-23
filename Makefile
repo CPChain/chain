@@ -11,13 +11,18 @@
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
+
+all: cpchain bootnode
+
 cpchain:
-	build/env.sh go run build/ci.go install ./cmd
-	@mv $(GOBIN)/cmd $(GOBIN)/cpchain
+	build/env.sh go run build/ci.go install ./cmd/cpchain
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/cpchain\" to launch cpchain."
 
-all: cpchain
+bootnode:
+	build/env.sh go run build/ci.go install ./tools/bootnode
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/bootnode\" to launch bootnode."
 
 
 android:
