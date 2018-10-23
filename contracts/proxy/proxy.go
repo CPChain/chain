@@ -25,7 +25,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-//go:generate abigen --sol contract/proxy.sol --pkg contract --out contract/proxy.go
+//go:generate abigen --sol proxycontract/proxy.sol --pkg contract --out proxycontract/proxy.go
+//need generate in dir:contracts/proxy/proxycontract.
 
 type Backend interface {
 	bind.ContractBackend
