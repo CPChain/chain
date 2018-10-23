@@ -81,6 +81,14 @@ func (api *PublicEthereumAPIServer) RegisterProxy(ctx context.Context, mux *runt
 	pb.RegisterPublicEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
+func (api *PublicEthereumAPIServer) Namespace() string {
+	return "eth"
+}
+
+func (api *PublicEthereumAPIServer) IsPublic() bool {
+	return true
+}
+
 // GasPrice returns a suggestion for a gas price.
 func (s *PublicEthereumAPIServer) GasPrice(ctx context.Context, in *empty.Empty) (*pb.PublicEthereumAPIReply, error) {
 	price, err := s.b.SuggestPrice(ctx)
@@ -153,6 +161,14 @@ func (api *PublicTxPoolAPIServer) RegisterServer(s *grpc.Server) {
 
 func (api *PublicTxPoolAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	pb.RegisterPublicTxPoolAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+func (api *PublicTxPoolAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PublicTxPoolAPIServer) Namespace() string{
+	return "txpool"
 }
 
 // Content returns the transactions contained within the transaction pool.
@@ -267,6 +283,14 @@ func (api *PublicAccountAPIServer) RegisterProxy(ctx context.Context, mux *runti
 	pb.RegisterPublicAccountAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
+func (api *PublicAccountAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PublicAccountAPIServer) Namespace() string {
+	return "eth"
+}
+
 // Accounts returns the collection of accounts this node manages
 func (s *PublicAccountAPIServer) Accounts(ctx context.Context, in *empty.Empty) (*pb.PublicAccountAPIReply, error) {
 	addresses := make([]common.Address, 0) // return [] instead of nil if empty
@@ -313,6 +337,14 @@ func (api *PrivateAccountAPIServer) RegisterServer(s *grpc.Server) {
 
 func (api *PrivateAccountAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	pb.RegisterPublicEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+func (api *PrivateAccountAPIServer) IsPublic() bool {
+	return false
+}
+
+func (api *PrivateAccountAPIServer) Namespace() string {
+	return "personal"
 }
 
 // ListAccounts will return a list of addresses for accounts this node manages.
@@ -644,6 +676,14 @@ func (api *PublicBlockChainAPIServer) RegisterProxy(ctx context.Context, mux *ru
 	pb.RegisterPublicBlockChainAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
+func (api *PublicBlockChainAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PublicBlockChainAPIServer) Namespace() string {
+	return "eth"
+}
+
 // BlockNumber returns the block number of the chain head.
 func (s *PublicBlockChainAPIServer) BlockNumber(ctx context.Context, in *empty.Empty) (reply *pb.PublicBlockChainAPIReply, err error) {
 	header, _ := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber) // latest header should always be available
@@ -944,6 +984,14 @@ func (api *PublicTransactionPoolAPIServer) RegisterServer(s *grpc.Server) {
 
 func (api *PublicTransactionPoolAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	pb.RegisterPublicTransactionPoolAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+func (api *PublicTransactionPoolAPIServer) IsPublic() bool {
+	return true
+}
+
+func (api *PublicTransactionPoolAPIServer) Namespace() string {
+	return "eth"
 }
 
 // GetBlockTransactionCountByNumber returns the number of transactions in the block with the given block number.
@@ -1458,6 +1506,14 @@ func (api *PublicDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtime
 	pb.RegisterPublicDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
+func (api *PublicDebugAPIServer) IsPublic()bool {
+	return true
+}
+
+func (api *PublicDebugAPIServer) Namespace() string{
+	return "debug"
+}
+
 // GetBlockRlp retrieves the RLP encoded for of a single block.
 func (api *PublicDebugAPIServer) GetBlockRlp(ctx context.Context, in *pb.PublicDebugAPIRequest) (*pb.PublicDebugAPIReply, error) {
 	block, _ := api.b.BlockByNumber(ctx, rpc.BlockNumber(in.BlockNumber))
@@ -1513,6 +1569,14 @@ func (api *PrivateDebugAPIServer) RegisterServer(s *grpc.Server) {
 
 func (api *PrivateDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	pb.RegisterPrivateDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+func (api *PrivateDebugAPIServer) IsPublic() bool {
+	return false
+}
+
+func (api *PrivateDebugAPIServer) Namespace() string {
+	return "debug"
 }
 
 // ChaindbProperty returns leveldb properties of the chain database.
@@ -1578,6 +1642,13 @@ func (api *PublicNetAPIServer) RegisterServer(s *grpc.Server) {
 
 func (api *PublicNetAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	pb.RegisterPublicNetAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+func (api *PublicNetAPIServer) IsPublic() bool {
+	return true
+}
+func (api *PublicNetAPIServer) Namespace() string{
+	return "net"
 }
 
 // Listening returns an indication if the node is listening for network connections.

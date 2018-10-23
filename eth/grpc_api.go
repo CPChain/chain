@@ -165,7 +165,7 @@ func (api *PrivateMinerAPIServer) IsPublic() bool {
 }
 
 func (api *PrivateMinerAPIServer) Namespace() string {
-	return "eth"
+	return "miner"
 }
 
 // Start the miner with the given number of threads. If threads is nil the number
@@ -265,7 +265,7 @@ func (api *PrivateAdminAPIServer) IsPublic() bool {
 }
 
 func (api *PrivateAdminAPIServer) Namespace() string {
-	return "eth"
+	return "admin"
 }
 
 // NewPrivateAdminAPI creates a new API definition for the full node private
@@ -365,7 +365,7 @@ func (api *PublicDebugAPIServer) IsPublic() bool {
 }
 
 func (api *PublicDebugAPIServer) Namespace() string {
-	return "eth"
+	return "debug"
 }
 
 // DumpBlock retrieves the entire state of the database at a given block.
@@ -431,7 +431,7 @@ func (api *PrivateDebugAPIServer) IsPublic() bool {
 }
 
 func (api *PrivateDebugAPIServer) Namespace() string {
-	return "ethk"
+	return "debug"
 }
 
 // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.

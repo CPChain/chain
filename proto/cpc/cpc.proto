@@ -21,21 +21,21 @@ service PublicEthereumAPI{
     // Etherbase is the address that mining rewards will be send to
     rpc Etherbase(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
         option (google.api.http) = {
-            post: "/apis/eth/etherbase/v1"
+            post: "/apis/v1/eth/etherbase"
             body: "*"
           };
     }
     // Coinbase is the address that mining rewards will be send to (alias for Etherbase)
     rpc Coinbase(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
         option (google.api.http) = {
-            post: "/apis/eth/coinbase/v1"
+            post: "/apis/v1/eth/coinbase"
             body: "*"
           };
     }
     // Hashrate returns the POW hashrate
     rpc Hashrate(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
         option (google.api.http) = {
-            post: "/apis/eth/hashrate/v1"
+            post: "/apis/v1/eth/hashrate"
             body: "*"
           };
     }
@@ -61,7 +61,7 @@ service PublicMinerAPI{
     // Mining returns an indication if this node is currently mining.
     rpc Mining(google.protobuf.Empty) returns (PublicMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/eth/mining/v1"
+            post: "/apis/v1/eth/mining"
             body: "*"
           };
     }
@@ -69,7 +69,7 @@ service PublicMinerAPI{
     // accepted. Note, this is not an indication if the provided work was valid!
     rpc SubmitWork(PublicMinerAPIRequest) returns (PublicMinerAPIReply){
         option (google.api.http) = {
-            post: "/apis/eth/submitWork/v1"
+            post: "/apis/v1/eth/submitWork"
             body: "*"
           };
     }
@@ -79,7 +79,7 @@ service PublicMinerAPI{
     // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
     rpc GetWork(google.protobuf.Empty) returns (PublicMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/eth/getWork/v1"
+            post: "/apis/v1/eth/getWork"
             body: "*"
           };
     }
@@ -88,7 +88,7 @@ service PublicMinerAPI{
     // must be unique between nodes.
     rpc SubmitHashrate(PublicMinerAPIRequest) returns (PublicMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/eth/submitHashrate/v1"
+            post: "/apis/v1/eth/submitHashrate"
             body: "*"
           };
     }
@@ -114,42 +114,42 @@ service PrivateMinerAPI {
     // threads allowed to use.
     rpc Start(PrivateMinerAPIRequest) returns (PrivateMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/miner/start/v1"
+            post: "/apis/v1/miner/start"
             body: "*"
           };
     }
     // Stop the miner
     rpc Stop(google.protobuf.Empty) returns (PrivateMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/miner/stop/v1"
+            post: "/apis/v1/miner/stop"
             body: "*"
           };
     }
     // SetExtra sets the extra data string that is included when this miner mines a block.
     rpc SetExtra(PrivateMinerAPIRequest) returns (PrivateMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/miner/setExtra/v1"
+            post: "/apis/v1/miner/setExtra"
             body: "*"
           };
     }
     // SetGasPrice sets the minimum accepted gas price for the miner.
     rpc SetGasPrice(PrivateMinerAPIRequest) returns (PrivateMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/miner/setGasPrice/v1"
+            post: "/apis/v1/miner/setGasPrice"
             body: "*"
           };
     }
     // SetEtherbase sets the etherbase of the miner
     rpc SetEtherbase(PrivateMinerAPIRequest) returns (PrivateMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/miner/setEtherbase/v1"
+            post: "/apis/v1/miner/setEtherbase"
             body: "*"
           };
     }
     // GetHashrate returns the current hashrate of the miner.
     rpc GetHashrate(google.protobuf.Empty) returns (PrivateMinerAPIReply) {
         option (google.api.http) = {
-            post: "/apis/miner/setHashrate/v1"
+            post: "/apis/v1/miner/setHashrate"
             body: "*"
           };
     }
@@ -168,14 +168,14 @@ service PrivateAdminAPI {
     // ExportChain exports the current blockchain into a local file.
     rpc ExportChain(PrivateAdminAPIRequest) returns (PrivateAdminAPIReply) {
         option (google.api.http) = {
-            post: "/apis/admin/exportChain/v1"
+            post: "/apis/v1/admin/exportChain"
             body: "*"
           };
     }
     // ImportChain imports a blockchain from a local file.
     rpc ImportChain(PrivateAdminAPIRequest) returns (PrivateAdminAPIReply) {
         option (google.api.http) = {
-            post: "/apis/admin/importChain/v1"
+            post: "/apis/v1/admin/importChain"
             body: "*"
           };
     }
@@ -191,7 +191,7 @@ service PublicDebugAPI {
     // DumpBlock retrieves the entire state of the database at a given block.
     rpc DumpBlock(PublicDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
-            post: "/apis/debug/dumpBlock/v1"
+            post: "/apis/v1/debug/dumpBlock"
             body: "*"
           };
     }
@@ -224,7 +224,7 @@ service PrivateDebugAPI {
     // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.
     rpc Preimage(PrivateDebugAPIRequest) returns (PrivateDebugAPIReply) {
         option (google.api.http) = {
-            post: "/apis/debug/preimage/v1"
+            post: "/apis/v1/debug/preimage"
             body: "*"
           };
     }
@@ -232,14 +232,14 @@ service PrivateDebugAPI {
     // and returns them as a JSON list of block-hashes
     rpc GetBadBlocks(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
-            post: "/apis/debug/getBadBlocks/v1"
+            post: "/apis/v1/debug/getBadBlocks"
             body: "*"
           };
     }
     // StorageRangeAt returns the storage at the given block height and transaction index.
     rpc StorageRangeAt(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
-            post: "/apis/debug/storageRangeAt/v1"
+            post: "/apis/v1/debug/storageRangeAt"
             body: "*"
           };
     }
@@ -250,7 +250,7 @@ service PrivateDebugAPI {
     // With one parameter, returns the list of accounts modified in the specified block.
     rpc GetModifiedAccountsByNumber(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
-            post: "/apis/debug/getModifiedAccountsByNumber/v1"
+            post: "/apis/v1/debug/getModifiedAccountsByNumber"
             body: "*"
           };
     }
@@ -261,7 +261,7 @@ service PrivateDebugAPI {
     // With one parameter, returns the list of accounts modified in the specified block.
     rpc GetModifiedAccountsByHash(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
-            post: "/apis/debug/getModifiedAccountsByHash/v1"
+            post: "/apis/v1/debug/getModifiedAccountsByHash"
             body: "*"
           };
     }
