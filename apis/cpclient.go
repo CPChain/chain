@@ -15,7 +15,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/any"
 
-	pb "bitbucket.org/cpchain/chain/proto/chain_reader"
+	pb "bitbucket.org/cpchain/chain/apis/proto/chain_reader"
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/types"

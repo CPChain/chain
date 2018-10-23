@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "bitbucket.org.cpchain.chain.protos";
+option java_package = "org.bitbucket.cpchain.chain.protos";
 option go_package = "protos";
 
 package protos;

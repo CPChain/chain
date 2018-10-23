@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "bitbucket.org.cpchain.chain.protos";
+option java_package = "org.bitbucket.cpchain.chain.protos";
 option go_package = "protos.chain";
 
 package protos_chain;
@@ -198,7 +198,6 @@ message PrivateAccountAPIReply {
   google.protobuf.Any account = 1;
   google.protobuf.Any account_addresses = 2;
   google.protobuf.Any raw_wallets = 3;
-  // repeated RawWallet raw_wallets = 3;
   bool is_ok = 4;
   bytes tx_hash = 5;
   google.protobuf.Any sign_tx_result= 6;
@@ -219,7 +218,7 @@ message RawWallet {
 service PublicBlockChainAPI {
   rpc BlockNumber(google.protobuf.Empty) returns (PublicBlockChainAPIReply) {
     option (google.api.http) = {
-post : "/apis/v1/eth/blocknumber"
+post : "/apis/v1/eth/blockNumber"
          body : "*"
     };
   }
@@ -232,14 +231,14 @@ post : "/apis/v1/eth/call"
   rpc EstimateGas(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/apis/v1/eth/estimategas"
+post : "/apis/v1/eth/estimateGas"
          body : "*"
       };
     }
   rpc GetBalance(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/apis/v1/eth/getbalance"
+post : "/apis/v1/eth/getBalance"
          body : "*"
       };
     }
@@ -362,19 +361,6 @@ message SignTransactionResult {
   bytes raw = 1;
   google.protobuf.Any tx = 2;
 }
-
-// message SendTxArgs {
-//   google.protobuf.BytesValue from = 1;
-//   google.protobuf.BytesValue to = 2;
-//   google.protobuf.UInt64Value gas = 3;
-//   google.protobuf.BytesValue gas_price = 4;
-//   google.protobuf.BytesValue value = 5;
-//   google.protobuf.UInt64Value nonce = 6;
-//   google.protobuf.BytesValue data = 7;
-//   google.protobuf.BytesValue input = 8;
-//   google.protobuf.BoolValue is_private = 9;
-//   repeated string participants = 10;
-// }
 
 service PublicTransactionPoolAPI {
   rpc GetBlockTransactionCountByHash(PublicTransactionPoolAPIRequest)

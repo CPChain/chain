@@ -29,6 +29,7 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	pb "bitbucket.org/cpchain/chain/apis/proto/chain_reader"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
@@ -37,7 +38,6 @@ import (
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/private"
-	pb "bitbucket.org/cpchain/chain/proto/chain_reader"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/davecgh/go-spew/spew"
@@ -167,7 +167,7 @@ func (api *PublicTxPoolAPIServer) IsPublic() bool {
 	return true
 }
 
-func (api *PublicTxPoolAPIServer) Namespace() string{
+func (api *PublicTxPoolAPIServer) Namespace() string {
 	return "txpool"
 }
 
@@ -1506,11 +1506,11 @@ func (api *PublicDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtime
 	pb.RegisterPublicDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-func (api *PublicDebugAPIServer) IsPublic()bool {
+func (api *PublicDebugAPIServer) IsPublic() bool {
 	return true
 }
 
-func (api *PublicDebugAPIServer) Namespace() string{
+func (api *PublicDebugAPIServer) Namespace() string {
 	return "debug"
 }
 
@@ -1647,7 +1647,7 @@ func (api *PublicNetAPIServer) RegisterProxy(ctx context.Context, mux *runtime.S
 func (api *PublicNetAPIServer) IsPublic() bool {
 	return true
 }
-func (api *PublicNetAPIServer) Namespace() string{
+func (api *PublicNetAPIServer) Namespace() string {
 	return "net"
 }
 

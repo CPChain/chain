@@ -899,11 +899,11 @@ func RegisterPublicEthereumAPIHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_PublicEthereumAPI_GasPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "gasPrice", "v1"}, ""))
+	pattern_PublicEthereumAPI_GasPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "gasPrice"}, ""))
 
-	pattern_PublicEthereumAPI_ProtocolVersion_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "protocolVersion", "v1"}, ""))
+	pattern_PublicEthereumAPI_ProtocolVersion_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "protocolVersion"}, ""))
 
-	pattern_PublicEthereumAPI_Syncing_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "syncing", "v1"}, ""))
+	pattern_PublicEthereumAPI_Syncing_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "syncing"}, ""))
 )
 
 var (
@@ -1043,11 +1043,11 @@ func RegisterPublicTxPoolAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_PublicTxPoolAPI_Content_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "txpool", "content", "v1"}, ""))
+	pattern_PublicTxPoolAPI_Content_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "txpool", "content"}, ""))
 
-	pattern_PublicTxPoolAPI_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "txpool", "inspect", "v1"}, ""))
+	pattern_PublicTxPoolAPI_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "txpool", "inspect"}, ""))
 
-	pattern_PublicTxPoolAPI_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "txpool", "status", "v1"}, ""))
+	pattern_PublicTxPoolAPI_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "txpool", "status"}, ""))
 )
 
 var (
@@ -1129,7 +1129,7 @@ func RegisterPublicAccountAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 }
 
 var (
-	pattern_PublicAccountAPI_Accounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "accounts", "v1"}, ""))
+	pattern_PublicAccountAPI_Accounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "accounts"}, ""))
 )
 
 var (
@@ -1555,31 +1555,31 @@ func RegisterPrivateAccountAPIHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_PrivateAccountAPI_DeriveAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "deriveAccount", "v1"}, ""))
+	pattern_PrivateAccountAPI_DeriveAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "deriveAccount"}, ""))
 
-	pattern_PrivateAccountAPI_EcRecover_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "ecRecover", "v1"}, ""))
+	pattern_PrivateAccountAPI_EcRecover_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "ecRecover"}, ""))
 
-	pattern_PrivateAccountAPI_ImportRawKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "importRawKey", "v1"}, ""))
+	pattern_PrivateAccountAPI_ImportRawKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "importRawKey"}, ""))
 
-	pattern_PrivateAccountAPI_ListAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "listAccounts", "v1"}, ""))
+	pattern_PrivateAccountAPI_ListAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "listAccounts"}, ""))
 
-	pattern_PrivateAccountAPI_ListWallets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "listWallets", "v1"}, ""))
+	pattern_PrivateAccountAPI_ListWallets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "listWallets"}, ""))
 
-	pattern_PrivateAccountAPI_LockAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "lockAccount", "v1"}, ""))
+	pattern_PrivateAccountAPI_LockAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "lockAccount"}, ""))
 
-	pattern_PrivateAccountAPI_NewAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "newAccount", "v1"}, ""))
+	pattern_PrivateAccountAPI_NewAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "newAccount"}, ""))
 
-	pattern_PrivateAccountAPI_OpenWallet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "openWallet", "v1"}, ""))
+	pattern_PrivateAccountAPI_OpenWallet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "openWallet"}, ""))
 
-	pattern_PrivateAccountAPI_SendTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "sendTransaction", "v1"}, ""))
+	pattern_PrivateAccountAPI_SendTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "sendTransaction"}, ""))
 
-	pattern_PrivateAccountAPI_Sign_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "sign", "v1"}, ""))
+	pattern_PrivateAccountAPI_Sign_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "sign"}, ""))
 
-	pattern_PrivateAccountAPI_SignAndSendTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "signAndSendTransaction", "v1"}, ""))
+	pattern_PrivateAccountAPI_SignAndSendTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "signAndSendTransaction"}, ""))
 
-	pattern_PrivateAccountAPI_SignTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "signTransaction", "v1"}, ""))
+	pattern_PrivateAccountAPI_SignTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "signTransaction"}, ""))
 
-	pattern_PrivateAccountAPI_UnlockAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "unlockAccount", "v1"}, ""))
+	pattern_PrivateAccountAPI_UnlockAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "unlockAccount"}, ""))
 )
 
 var (
@@ -2000,29 +2000,29 @@ func RegisterPublicBlockChainAPIHandlerClient(ctx context.Context, mux *runtime.
 }
 
 var (
-	pattern_PublicBlockChainAPI_BlockNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "blocknumber", "v1"}, ""))
+	pattern_PublicBlockChainAPI_BlockNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "blockNumber"}, ""))
 
-	pattern_PublicBlockChainAPI_Call_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "call", "v1"}, ""))
+	pattern_PublicBlockChainAPI_Call_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "call"}, ""))
 
-	pattern_PublicBlockChainAPI_EstimateGas_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "estimategas", "v1"}, ""))
+	pattern_PublicBlockChainAPI_EstimateGas_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "estimateGas"}, ""))
 
-	pattern_PublicBlockChainAPI_GetBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getbalance", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getBalance"}, ""))
 
-	pattern_PublicBlockChainAPI_GetBlockByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getBlockByHash", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetBlockByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getBlockByHash"}, ""))
 
-	pattern_PublicBlockChainAPI_GetBlockByNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getBlockByNumber", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetBlockByNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getBlockByNumber"}, ""))
 
-	pattern_PublicBlockChainAPI_GetCode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getCode", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetCode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getCode"}, ""))
 
-	pattern_PublicBlockChainAPI_GetStorageAt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getStorageAt", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetStorageAt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getStorageAt"}, ""))
 
-	pattern_PublicBlockChainAPI_GetUncleByBlockHashAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getUncleByBlockHashAndIndex", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetUncleByBlockHashAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getUncleByBlockHashAndIndex"}, ""))
 
-	pattern_PublicBlockChainAPI_GetUncleByBlockNumberAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getUncleByBlockNumberAndIndex", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetUncleByBlockNumberAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getUncleByBlockNumberAndIndex"}, ""))
 
-	pattern_PublicBlockChainAPI_GetUncleCountByBlockHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getUncleCountByBlockHash", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetUncleCountByBlockHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getUncleCountByBlockHash"}, ""))
 
-	pattern_PublicBlockChainAPI_GetUncleCountByBlockNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getUncleCountByBlockNumber", "v1"}, ""))
+	pattern_PublicBlockChainAPI_GetUncleCountByBlockNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getUncleCountByBlockNumber"}, ""))
 )
 
 var (
@@ -2557,37 +2557,37 @@ func RegisterPublicTransactionPoolAPIHandlerClient(ctx context.Context, mux *run
 }
 
 var (
-	pattern_PublicTransactionPoolAPI_GetBlockTransactionCountByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getBlockTransactionCountByHash", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetBlockTransactionCountByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getBlockTransactionCountByHash"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetBlockTransactionCountByNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getBlockTransactionCountByNumber", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetBlockTransactionCountByNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getBlockTransactionCountByNumber"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetRawTransactionByBlockHashAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getRawTransactionByBlockHashAndIndex", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetRawTransactionByBlockHashAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getRawTransactionByBlockHashAndIndex"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetRawTransactionByBlockNumberAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getRawTransactionByBlockNumberAndIndex", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetRawTransactionByBlockNumberAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getRawTransactionByBlockNumberAndIndex"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetRawTransactionByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getRawTransactionByHash", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetRawTransactionByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getRawTransactionByHash"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetTransactionByBlockHashAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getTransactionByBlockHashAndIndex", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetTransactionByBlockHashAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getTransactionByBlockHashAndIndex"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetTransactionByBlockNumberAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getTransactionByBlockNumberAndIndex", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetTransactionByBlockNumberAndIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getTransactionByBlockNumberAndIndex"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetTransactionByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getTransactionByHash", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetTransactionByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getTransactionByHash"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetTransactionCount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getTransactionCount", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetTransactionCount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getTransactionCount"}, ""))
 
-	pattern_PublicTransactionPoolAPI_GetTransactionReceipt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getTransactionReceipt", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_GetTransactionReceipt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "getTransactionReceipt"}, ""))
 
-	pattern_PublicTransactionPoolAPI_PendingTransactions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "pendingTransactions", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_PendingTransactions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "pendingTransactions"}, ""))
 
-	pattern_PublicTransactionPoolAPI_Resend_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "resend", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_Resend_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "resend"}, ""))
 
-	pattern_PublicTransactionPoolAPI_SendRawTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "sendRawTransaction", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_SendRawTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "sendRawTransaction"}, ""))
 
-	pattern_PublicTransactionPoolAPI_SendTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "sendTransaction", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_SendTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "sendTransaction"}, ""))
 
-	pattern_PublicTransactionPoolAPI_Sign_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "sign", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_Sign_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "sign"}, ""))
 
-	pattern_PublicTransactionPoolAPI_SignTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "signTransaction", "v1"}, ""))
+	pattern_PublicTransactionPoolAPI_SignTransaction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "eth", "signTransaction"}, ""))
 )
 
 var (
@@ -2753,11 +2753,11 @@ func RegisterPublicDebugAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_PublicDebugAPI_GetBlockRlp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "getBlockRlp", "v1"}, ""))
+	pattern_PublicDebugAPI_GetBlockRlp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "debug", "getBlockRlp"}, ""))
 
-	pattern_PublicDebugAPI_PrintBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "printBlock", "v1"}, ""))
+	pattern_PublicDebugAPI_PrintBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "debug", "printBlock"}, ""))
 
-	pattern_PublicDebugAPI_SeedHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "seedHash", "v1"}, ""))
+	pattern_PublicDebugAPI_SeedHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "debug", "seedHash"}, ""))
 )
 
 var (
@@ -2897,11 +2897,11 @@ func RegisterPrivateDebugAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_PrivateDebugAPI_ChaindbCompact_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "chaindbCompact", "v1"}, ""))
+	pattern_PrivateDebugAPI_ChaindbCompact_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "debug", "chaindbCompact"}, ""))
 
-	pattern_PrivateDebugAPI_ChaindbProperty_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "chaindbProperty", "v1"}, ""))
+	pattern_PrivateDebugAPI_ChaindbProperty_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "debug", "chaindbProperty"}, ""))
 
-	pattern_PrivateDebugAPI_SetHead_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "setHead", "v1"}, ""))
+	pattern_PrivateDebugAPI_SetHead_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "debug", "setHead"}, ""))
 )
 
 var (
@@ -3041,11 +3041,11 @@ func RegisterPublicNetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 }
 
 var (
-	pattern_PublicNetAPI_Listening_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "listening"}, ""))
+	pattern_PublicNetAPI_Listening_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "public", "listening"}, ""))
 
-	pattern_PublicNetAPI_PeerCount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "peerCount"}, ""))
+	pattern_PublicNetAPI_PeerCount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "public", "peerCount"}, ""))
 
-	pattern_PublicNetAPI_Version_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "version"}, ""))
+	pattern_PublicNetAPI_Version_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "v1", "public", "version"}, ""))
 )
 
 var (
