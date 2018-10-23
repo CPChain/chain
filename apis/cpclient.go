@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/big"
 
 	"github.com/golang/protobuf/ptypes/any"
@@ -32,12 +33,12 @@ var (
 )
 
 type CpcClient struct {
-	certificate *tls.Certificate
+	certificate tls.Certificate
 	certPool    *x509.CertPool
 	c           *grpc.ClientConn
 }
 
-func New() (*CpcClient, error) {
+func NewCpcClient(endpoint string) (*CpcClient, error) {
 	certPool, err := createCertPool()
 	if err != nil {
 		return nil, err
@@ -47,6 +48,11 @@ func New() (*CpcClient, error) {
 	certificate, err := tls.LoadX509KeyPair(crt, key)
 	if err != nil {
 		return nil, fmt.Errorf("could not load server key pair: %s", err.Error())
+	}
+
+	ca, err := ioutil.ReadFile(ca)
+	if err != nil {
+		return nil, fmt.Errorf("could not read ca certificate: %s", err)
 	}
 
 	if ok := certPool.AppendCertsFromPEM(ca); !ok {
@@ -60,7 +66,7 @@ func New() (*CpcClient, error) {
 		RootCAs:      certPool,
 	})
 
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds))
+	conn, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
