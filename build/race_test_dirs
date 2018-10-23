@@ -5,9 +5,7 @@ accounts/rsakey
 cmd
 cmd/cpchain
 core
-eth
-eth/downloader
 les
+network/protocols/cpc
+network/protocols/cpc/downloader
 rpc
-p2p
-p2p/simulations
