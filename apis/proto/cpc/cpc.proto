@@ -1,0 +1,268 @@
+syntax = "proto3";
+
+option java_package = "org.bitbucket.cpchain.chain.protos";
+option go_package = "protos";
+
+package protos;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+
+message PublicEthereumAPIReply{
+    google.protobuf.BytesValue address = 1;
+    google.protobuf.UInt64Value rate = 2;
+}
+
+// PublicEthereumAPI provides an API to access Ethereum full node-related
+// information.
+service PublicEthereumAPI{
+    // Etherbase is the address that mining rewards will be send to
+    rpc Etherbase(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/eth/etherbase"
+            body: "*"
+          };
+    }
+    // Coinbase is the address that mining rewards will be send to (alias for Etherbase)
+    rpc Coinbase(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/eth/coinbase"
+            body: "*"
+          };
+    }
+    // Hashrate returns the POW hashrate
+    rpc Hashrate(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/eth/hashrate"
+            body: "*"
+          };
+    }
+}
+
+
+message PublicMinerAPIRequest {
+    google.protobuf.BytesValue block_nonce = 1;
+    google.protobuf.BytesValue solution = 2;
+    google.protobuf.BytesValue digest = 3;
+    uint64 hashrate = 4;
+    bytes id = 5;
+}
+
+message PublicMinerAPIReply {
+    google.protobuf.BoolValue mining = 1;
+    bool is_accepting= 2;
+    repeated string works = 3;
+}
+// PublicMinerAPI provides an API to control the miner.
+// It offers only methods that operate on data that pose no security risk when it is publicly accessible.
+service PublicMinerAPI{
+    // Mining returns an indication if this node is currently mining.
+    rpc Mining(google.protobuf.Empty) returns (PublicMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/eth/mining"
+            body: "*"
+          };
+    }
+    // SubmitWork can be used by external miner to submit their POW solution. It returns an indication if the work was
+    // accepted. Note, this is not an indication if the provided work was valid!
+    rpc SubmitWork(PublicMinerAPIRequest) returns (PublicMinerAPIReply){
+        option (google.api.http) = {
+            post: "/apis/v1/eth/submitWork"
+            body: "*"
+          };
+    }
+    // GetWork returns a work package for external miner. The work package consists of 3 strings
+    // result[0], 32 bytes hex encoded current block header pow-hash
+    // result[1], 32 bytes hex encoded seed hash used for DAG
+    // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
+    rpc GetWork(google.protobuf.Empty) returns (PublicMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/eth/getWork"
+            body: "*"
+          };
+    }
+    // SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined
+    // hash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which
+    // must be unique between nodes.
+    rpc SubmitHashrate(PublicMinerAPIRequest) returns (PublicMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/eth/submitHashrate"
+            body: "*"
+          };
+    }
+}
+
+message PrivateMinerAPIRequest {
+    google.protobuf.Int32Value threads = 1;
+    string extra = 2;
+    bytes gas_price = 3;
+    bytes etherbase = 4;
+}
+
+message PrivateMinerAPIReply{
+    bool is_ok = 1;
+    uint64 hashrate = 2;
+}
+// PrivateMinerAPI provides private RPC methods to control the miner.
+// These methods can be abused by external users and must be considered insecure for use by untrusted users.
+service PrivateMinerAPI {
+    // Start the miner with the given number of threads. If threads is nil the number
+    // of workers started is equal to the number of logical CPUs that are usable by
+    // this process. If mining is already running, this method adjust the number of
+    // threads allowed to use.
+    rpc Start(PrivateMinerAPIRequest) returns (PrivateMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/miner/start"
+            body: "*"
+          };
+    }
+    // Stop the miner
+    rpc Stop(google.protobuf.Empty) returns (PrivateMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/miner/stop"
+            body: "*"
+          };
+    }
+    // SetExtra sets the extra data string that is included when this miner mines a block.
+    rpc SetExtra(PrivateMinerAPIRequest) returns (PrivateMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/miner/setExtra"
+            body: "*"
+          };
+    }
+    // SetGasPrice sets the minimum accepted gas price for the miner.
+    rpc SetGasPrice(PrivateMinerAPIRequest) returns (PrivateMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/miner/setGasPrice"
+            body: "*"
+          };
+    }
+    // SetEtherbase sets the etherbase of the miner
+    rpc SetEtherbase(PrivateMinerAPIRequest) returns (PrivateMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/miner/setEtherbase"
+            body: "*"
+          };
+    }
+    // GetHashrate returns the current hashrate of the miner.
+    rpc GetHashrate(google.protobuf.Empty) returns (PrivateMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/miner/setHashrate"
+            body: "*"
+          };
+    }
+}
+
+message PrivateAdminAPIRequest {
+    string file = 1;
+}
+
+message PrivateAdminAPIReply {
+    bool is_ok = 1;
+}
+// PrivateAdminAPI is the collection of Ethereum full node-related APIs
+// exposed over the private admin endpoint.
+service PrivateAdminAPI {
+    // ExportChain exports the current blockchain into a local file.
+    rpc ExportChain(PrivateAdminAPIRequest) returns (PrivateAdminAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/admin/exportChain"
+            body: "*"
+          };
+    }
+    // ImportChain imports a blockchain from a local file.
+    rpc ImportChain(PrivateAdminAPIRequest) returns (PrivateAdminAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/admin/importChain"
+            body: "*"
+          };
+    }
+}
+
+message PublicDebugAPIRequest {
+    int64 block_number = 1;
+}
+
+// PublicDebugAPI is the collection of Ethereum full node APIs exposed
+// over the public debugging endpoint.
+service PublicDebugAPI {
+    // DumpBlock retrieves the entire state of the database at a given block.
+    rpc DumpBlock(PublicDebugAPIRequest) returns (google.protobuf.Any) {
+        option (google.api.http) = {
+            post: "/apis/v1/debug/dumpBlock"
+            body: "*"
+          };
+    }
+}
+
+message PrivateDebugAPIRequest {
+    bytes hash = 1;
+    bytes block_hash = 2;
+    int32 tx_index = 3;
+    bytes contract_address = 4;
+    bytes key_start = 5;
+    int32 max_result = 6;
+    bytes start_hash = 7;
+    google.protobuf.BytesValue end_hash = 8;
+    uint64 start_num = 9;
+    google.protobuf.UInt64Value end_num = 10;
+
+}
+
+message PrivateDebugAPIReply {
+    bytes preimage = 1;
+    google.protobuf.Any bad_block_args = 2;
+    google.protobuf.Any storage_range_result = 3;
+    google.protobuf.Any accounts = 4;
+}
+
+// PrivateDebugAPI is the collection of Ethereum full node APIs exposed over
+// the private debugging endpoint.
+service PrivateDebugAPI {
+    // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.
+    rpc Preimage(PrivateDebugAPIRequest) returns (PrivateDebugAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/debug/preimage"
+            body: "*"
+          };
+    }
+    // GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network
+    // and returns them as a JSON list of block-hashes
+    rpc GetBadBlocks(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
+        option (google.api.http) = {
+            post: "/apis/v1/debug/getBadBlocks"
+            body: "*"
+          };
+    }
+    // StorageRangeAt returns the storage at the given block height and transaction index.
+    rpc StorageRangeAt(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
+        option (google.api.http) = {
+            post: "/apis/v1/debug/storageRangeAt"
+            body: "*"
+          };
+    }
+    // GetModifiedAccountsByNumber returns all accounts that have changed between the
+    // two blocks specified. A change is defined as a difference in nonce, balance,
+    // code hash, or storage hash.
+    //
+    // With one parameter, returns the list of accounts modified in the specified block.
+    rpc GetModifiedAccountsByNumber(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
+        option (google.api.http) = {
+            post: "/apis/v1/debug/getModifiedAccountsByNumber"
+            body: "*"
+          };
+    }
+    // GetModifiedAccountsByHash returns all accounts that have changed between the
+    // two blocks specified. A change is defined as a difference in nonce, balance,
+    // code hash, or storage hash.
+    //
+    // With one parameter, returns the list of accounts modified in the specified block.
+    rpc GetModifiedAccountsByHash(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
+        option (google.api.http) = {
+            post: "/apis/v1/debug/getModifiedAccountsByHash"
+            body: "*"
+          };
+    }
+}

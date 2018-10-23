@@ -32,6 +32,8 @@ import (
 	"time"
 	"unsafe"
 
+	"bitbucket.org/cpchain/chain/apis"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/rpc"
@@ -568,6 +570,10 @@ func (ethash *Ethash) Hashrate() float64 {
 // APIs implements consensus.Engine, returning the user facing RPC APIs. Currently
 // that is empty.
 func (ethash *Ethash) APIs(chain consensus.ChainReader) []rpc.API {
+	return nil
+}
+
+func (ethash *Ethash) GAPIs(chain consensus.ChainReader) []gapis.API {
 	return nil
 }
 

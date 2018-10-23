@@ -40,8 +40,8 @@ func New(ctx ...interface{}) *Logger {
 	}
 
 	l.SetFormatter(&TextFormatter{
-		QuoteEmptyFields: true,
 		FullTimestamp:    true,
+		QuoteEmptyFields: true,
 		TimestampFormat:  termTimeFormat,
 	})
 

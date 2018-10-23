@@ -142,9 +142,11 @@ var MinerFlags = []cli.Flag{
 }
 
 const (
-	RpcFlagName     = "rpc"
-	RpcAddrFlagName = "rpcaddr"
-	RpcPortFlagName = "rpcport"
+	RpcFlagName       = "rpc"
+	RpcAddrFlagName   = "rpcaddr"
+	RpcPortFlagName   = "rpcport"
+	RpcTlsFlagName    = "rpctls"
+	RpcVerifyFlagName = "rpcverify"
 )
 
 // TODO @sangh adjust these
@@ -161,6 +163,14 @@ var RpcFlags = []cli.Flag{
 	cli.IntFlag{
 		Name:  RpcPortFlagName,
 		Usage: "HTTP-RPC server listening port",
+	},
+	cli.BoolFlag{
+		Name:  RpcTlsFlagName,
+		Usage: "HTTP-RPC server is need tls transport",
+	},
+	cli.BoolFlag{
+		Name:  RpcVerifyFlagName,
+		Usage: "HTTP-RPC server if need verify client",
 	},
 }
 

@@ -23,6 +23,8 @@ import (
 	"math/big"
 	"time"
 
+	"bitbucket.org/cpchain/chain/apis"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -331,6 +333,10 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 		Service:   &API{chain: chain, dpor: d},
 		Public:    false,
 	}}
+}
+
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []gapis.API {
+	return []gapis.API{}
 }
 
 // IsSigner implements Validator.
