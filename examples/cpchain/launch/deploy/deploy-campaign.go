@@ -14,7 +14,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contract/Pdash"
+	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contract/pdash"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
