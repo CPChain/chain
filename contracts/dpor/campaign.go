@@ -17,6 +17,7 @@
 package dpor
 
 //go:generate abigen --sol contract/campaign.sol --pkg contract --out contract/campaign.go
+//need generate in dir:contracts/dpor
 
 import (
 	"context"

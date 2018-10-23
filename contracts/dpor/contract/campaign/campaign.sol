@@ -4,9 +4,9 @@ library Set {
     // We define a new struct datatype that will be used to
     // hold its data in the calling contract.
     struct Data {
-        mapping(address => bool) flags;
-        address[] values;
-    }
+             mapping(address => bool) flags;
+             address[] values;
+         }
 
     // Note that the first parameter is of type "storage
     // reference" and thus only its storage address and not
