@@ -1,4 +1,4 @@
-package apis
+package gapis
 
 import (
 	"bytes"
@@ -32,13 +32,13 @@ var (
 	ca     = "ca.crt"
 )
 
-type CpcClient struct {
+type Client struct {
 	certificate tls.Certificate
 	certPool    *x509.CertPool
 	c           *grpc.ClientConn
 }
 
-func NewCpcClient(endpoint string) (*CpcClient, error) {
+func NewClient(config *ClientConfig) (*Client, error) {
 	certPool, err := createCertPool()
 	if err != nil {
 		return nil, err
@@ -59,30 +59,36 @@ func NewCpcClient(endpoint string) (*CpcClient, error) {
 		return nil, errors.New("failed to append ca certs")
 	}
 
-	// Create the TLS credentials
-	creds := credentials.NewTLS(&tls.Config{
-		ServerName:   endpoint,
-		Certificates: []tls.Certificate{certificate},
-		RootCAs:      certPool,
-	})
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+	if config.useTLS {
+		// Create the TLS credentials
+		creds := credentials.NewTLS(&tls.Config{
+			ServerName:   config.endpoint,
+			Certificates: []tls.Certificate{certificate},
+			RootCAs:      certPool,
+		})
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	}
 
-	conn, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(creds))
+	conn, err := grpc.Dial(config.endpoint, opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	return &CpcClient{
+	return &Client{
 		certificate: certificate,
 		certPool:    certPool,
 		c:           conn,
 	}, nil
 }
 
-func NewClient(c *grpc.ClientConn) *CpcClient {
-	return &CpcClient{c: c}
+func New(c *grpc.ClientConn) *Client {
+	return &Client{c: c}
 }
 
-func (c *CpcClient) Close() {
+func (c *Client) Close() {
 	c.c.Close()
 }
 
@@ -92,7 +98,7 @@ func (c *CpcClient) Close() {
 //
 // Note that loading full blocks requires two requests. Use HeaderByHash
 // if you don't need all transactions or uncle headers.
-func (c *CpcClient) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
+func (c *Client) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
 	args := &pb.PublicBlockChainAPIRequest{
 		FullTx:    true,
 		BlockHash: hash.Bytes(),
@@ -105,7 +111,7 @@ func (c *CpcClient) BlockByHash(ctx context.Context, hash common.Hash) (*types.B
 //
 // Note that loading full blocks requires two requests. Use HeaderByNumber
 // if you don't need all transactions or uncle headers.
-func (c *CpcClient) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
+func (c *Client) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
 	args := &pb.PublicBlockChainAPIRequest{
 		FullTx:      true,
 		BlockNumber: number.Uint64(),
@@ -119,7 +125,7 @@ type rpcBlock struct {
 }
 
 // TODO: @sangh new instance
-func (c *CpcClient) getBlock(ctx context.Context, method string, args *pb.PublicBlockChainAPIRequest) (*types.Block, error) {
+func (c *Client) getBlock(ctx context.Context, method string, args *pb.PublicBlockChainAPIRequest) (*types.Block, error) {
 	var reply pb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, method, args, reply)
 	raw := json.RawMessage(reply.BlockInfo.GetValue())
@@ -157,7 +163,7 @@ func (c *CpcClient) getBlock(ctx context.Context, method string, args *pb.Public
 }
 
 // HeaderByHash returns the block header with the given hash.
-func (c *CpcClient) HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error) {
+func (c *Client) HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error) {
 	args := &pb.PublicBlockChainAPIRequest{
 		FullTx:    false,
 		BlockHash: hash.Bytes(),
@@ -180,7 +186,7 @@ func (c *CpcClient) HeaderByHash(ctx context.Context, hash common.Hash) (*types.
 
 // HeaderByNumber returns a block header from the current canonical chain. If number is
 // nil, the latest known header is returned.
-func (c *CpcClient) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
+func (c *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
 	args := &pb.PublicBlockChainAPIRequest{
 		BlockNumber: number.Uint64(),
 		FullTx:      false,
@@ -221,7 +227,7 @@ func (tx *rpcTransaction) UnmarshalJSON(msg []byte) error {
 }
 
 // TransactionByHash returns the transaction with the given hash.
-func (c *CpcClient) TransactionByHash(ctx context.Context, hash common.Hash) (tx *types.Transaction, isPending bool, err error) {
+func (c *Client) TransactionByHash(ctx context.Context, hash common.Hash) (tx *types.Transaction, isPending bool, err error) {
 	args := pb.PublicTransactionPoolAPIRequest{
 		BlockHash: hash.Bytes(),
 	}
@@ -254,7 +260,7 @@ func (c *CpcClient) TransactionByHash(ctx context.Context, hash common.Hash) (tx
 //
 // There is a fast-path for transactions retrieved by TransactionByHash and
 // TransactionInBlock. Getting their sender address can be done without an RPC interaction.
-func (c *CpcClient) TransactionSender(ctx context.Context, tx *types.Transaction, block common.Hash, index uint) (common.Address, error) {
+func (c *Client) TransactionSender(ctx context.Context, tx *types.Transaction, block common.Hash, index uint) (common.Address, error) {
 	// Try to load the address from the cache.
 	sender, err := types.Sender(&senderFromServer{blockhash: block}, tx)
 	if err == nil {
@@ -284,7 +290,7 @@ func (c *CpcClient) TransactionSender(ctx context.Context, tx *types.Transaction
 }
 
 // TransactionCount returns the total number of transactions in the given block.
-func (c *CpcClient) TransactionCount(ctx context.Context, blockHash common.Hash) (uint, error) {
+func (c *Client) TransactionCount(ctx context.Context, blockHash common.Hash) (uint, error) {
 	args := pb.PublicTransactionPoolAPIRequest{
 		BlockHash: blockHash.Bytes(),
 	}
@@ -294,7 +300,7 @@ func (c *CpcClient) TransactionCount(ctx context.Context, blockHash common.Hash)
 }
 
 // TransactionInBlock returns a single transaction at index in the given block.
-func (c *CpcClient) TransactionInBlock(ctx context.Context, blockHash common.Hash, index uint) (*types.Transaction, error) {
+func (c *Client) TransactionInBlock(ctx context.Context, blockHash common.Hash, index uint) (*types.Transaction, error) {
 	args := pb.PublicTransactionPoolAPIRequest{
 		BlockHash: blockHash.Bytes(),
 		Index:     uint64(index),
@@ -321,7 +327,7 @@ func (c *CpcClient) TransactionInBlock(ctx context.Context, blockHash common.Has
 
 // TransactionReceipt returns the receipt of a transaction by transaction hash.
 // Note that the receipt is not available for pending transactions.
-func (c *CpcClient) TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
+func (c *Client) TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
 	var r *types.Receipt
 	args := pb.PublicTransactionPoolAPIRequest{
 		TxHash: txHash.Bytes(),
@@ -359,7 +365,7 @@ type rpcProgress struct {
 
 // SyncProgress retrieves the current progress of the sync algorithm. If there's
 // no sync currently running, it returns nil.
-func (c *CpcClient) SyncProgress(ctx context.Context) (*ethereum.SyncProgress, error) {
+func (c *Client) SyncProgress(ctx context.Context) (*ethereum.SyncProgress, error) {
 	var reply *pb.PublicEthereumAPIReply
 	if err := c.c.Invoke(ctx, "/protos_chain.PublicEthereumAPI/Syncing", &empty.Empty{}, reply); err != nil {
 		return nil, err
@@ -390,14 +396,14 @@ func (c *CpcClient) SyncProgress(ctx context.Context) (*ethereum.SyncProgress, e
 // SubscribeNewHead subscribes to notifications about the current blockchain head
 // on the given channel.
 // TODO: @sangh
-// func (c *CpcClient) SubscribeNewHead(ctx context.Context, ch chan<- *types.Header) (ethereum.Subscription, error) {
+// func (c *Client) SubscribeNewHead(ctx context.Context, ch chan<- *types.Header) (ethereum.Subscription, error) {
 // 	return c.c.EthSubscribe(ctx, ch, "newHeads")
 // }
 
 // State Access
 
 // NetworkID returns the network ID (also known as the chain ID) for this chain.
-func (c *CpcClient) NetworkID(ctx context.Context) (*big.Int, error) {
+func (c *Client) NetworkID(ctx context.Context) (*big.Int, error) {
 	return nil, nil
 	// version := new(big.Int)
 	// var ver string
@@ -412,7 +418,7 @@ func (c *CpcClient) NetworkID(ctx context.Context) (*big.Int, error) {
 
 // BalanceAt returns the wei balance of the given account.
 // The block number can be nil, in which case the balance is taken from the latest known block.
-func (c *CpcClient) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error) {
+func (c *Client) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error) {
 	args := pb.PublicBlockChainAPIRequest{
 		Address:     account.Bytes(),
 		BlockNumber: blockNumber.Uint64(),
@@ -434,7 +440,7 @@ func (c *CpcClient) BalanceAt(ctx context.Context, account common.Address, block
 
 // StorageAt returns the value of key in the contract storage of the given account.
 // The block number can be nil, in which case the value is taken from the latest known block.
-func (c *CpcClient) StorageAt(ctx context.Context, account common.Address, key common.Hash, blockNumber *big.Int) ([]byte, error) {
+func (c *Client) StorageAt(ctx context.Context, account common.Address, key common.Hash, blockNumber *big.Int) ([]byte, error) {
 	args := &pb.PublicBlockChainAPIRequest{
 		Address:     account.Bytes(),
 		Key:         key.String(),
@@ -450,7 +456,7 @@ func (c *CpcClient) StorageAt(ctx context.Context, account common.Address, key c
 
 // CodeAt returns the contract code of the given account.
 // The block number can be nil, in which case the code is taken from the latest known block.
-func (c *CpcClient) CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error) {
+func (c *Client) CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error) {
 	args := pb.PublicBlockChainAPIRequest{
 		Address:     account.Bytes(),
 		BlockNumber: blockNumber.Uint64(),
@@ -465,7 +471,7 @@ func (c *CpcClient) CodeAt(ctx context.Context, account common.Address, blockNum
 
 // NonceAt returns the account nonce of the given account.
 // The block number can be nil, in which case the nonce is taken from the latest known block.
-func (c *CpcClient) NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error) {
+func (c *Client) NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error) {
 	args := pb.PublicTransactionPoolAPIRequest{
 		Address:     account.Bytes(),
 		BlockNumber: blockNumber.Uint64(),
@@ -478,7 +484,7 @@ func (c *CpcClient) NonceAt(ctx context.Context, account common.Address, blockNu
 // Filters
 
 // FilterLogs executes a filter query.
-func (c *CpcClient) FilterLogs(ctx context.Context, q ethereum.FilterQuery) ([]types.Log, error) {
+func (c *Client) FilterLogs(ctx context.Context, q ethereum.FilterQuery) ([]types.Log, error) {
 	// var result []types.Log
 	// err := c.c.Invoke(ctx, &result, "eth_getLogs", toFilterArg(q))
 	// return result, err
@@ -486,7 +492,7 @@ func (c *CpcClient) FilterLogs(ctx context.Context, q ethereum.FilterQuery) ([]t
 }
 
 // SubscribeFilterLogs subscribes to the results of a streaming filter query.
-// func (c *CpcClient) SubscribeFilterLogs(ctx context.Context, q ethereum.FilterQuery, ch chan<- types.Log) (ethereum.Subscription, error) {
+// func (c *Client) SubscribeFilterLogs(ctx context.Context, q ethereum.FilterQuery, ch chan<- types.Log) (ethereum.Subscription, error) {
 // return c.c.EthSubscribe(ctx, ch, "logs", toFilterArg(q))
 // }
 
@@ -506,7 +512,7 @@ func toFilterArg(q ethereum.FilterQuery) interface{} {
 // Pending State
 
 // PendingBalanceAt returns the wei balance of the given account in the pending state.
-func (c *CpcClient) PendingBalanceAt(ctx context.Context, account common.Address) (*big.Int, error) {
+func (c *Client) PendingBalanceAt(ctx context.Context, account common.Address) (*big.Int, error) {
 	// var result hexutil.Big
 	// args := pb.PublicBlockChainAPIRequest{
 	// 	Address:account.Bytes(),
@@ -517,7 +523,7 @@ func (c *CpcClient) PendingBalanceAt(ctx context.Context, account common.Address
 }
 
 // PendingStorageAt returns the value of key in the contract storage of the given account in the pending state.
-func (c *CpcClient) PendingStorageAt(ctx context.Context, account common.Address, key common.Hash) ([]byte, error) {
+func (c *Client) PendingStorageAt(ctx context.Context, account common.Address, key common.Hash) ([]byte, error) {
 	// var result hexutil.Bytes
 	// err := c.c.CallContext(ctx, "eth_getStorageAt", account, key, "pending")
 	// return result, err
@@ -525,7 +531,7 @@ func (c *CpcClient) PendingStorageAt(ctx context.Context, account common.Address
 }
 
 // PendingCodeAt returns the contract code of the given account in the pending state.
-func (c *CpcClient) PendingCodeAt(ctx context.Context, account common.Address) ([]byte, error) {
+func (c *Client) PendingCodeAt(ctx context.Context, account common.Address) ([]byte, error) {
 	// var result hexutil.Bytes
 	// err := ec.c.CallContext(ctx, "eth_getCode", account, "pending")
 	// return result, err
@@ -534,7 +540,7 @@ func (c *CpcClient) PendingCodeAt(ctx context.Context, account common.Address) (
 
 // PendingNonceAt returns the account nonce of the given account in the pending state.
 // This is the nonce that should be used for the next transaction.
-func (c *CpcClient) PendingNonceAt(ctx context.Context, account common.Address) (uint64, error) {
+func (c *Client) PendingNonceAt(ctx context.Context, account common.Address) (uint64, error) {
 	// var result hexutil.Uint64
 	// err := c.c.Invoke(ctx, "eth_getTransactionCount", account, "pending")
 	// return uint64(result), err
@@ -542,7 +548,7 @@ func (c *CpcClient) PendingNonceAt(ctx context.Context, account common.Address) 
 }
 
 // PendingTransactionCount returns the total number of transactions in the pending state.
-func (c *CpcClient) PendingTransactionCount(ctx context.Context) (uint, error) {
+func (c *Client) PendingTransactionCount(ctx context.Context) (uint, error) {
 	// var num hexutil.Uint
 	// err := ec.c.CallContext(ctx, &num, "eth_getBlockTransactionCountByNumber", "pending")
 	// return uint(num), err
@@ -559,7 +565,7 @@ func (c *CpcClient) PendingTransactionCount(ctx context.Context) (uint, error) {
 // blockNumber selects the block height at which the call runs. It can be nil, in which
 // case the code is taken from the latest known block. Note that state from very old
 // blocks might not be available.
-func (c *CpcClient) CallContract(ctx context.Context, msg ethereum.CallMsg, blockNumber *big.Int) ([]byte, error) {
+func (c *Client) CallContract(ctx context.Context, msg ethereum.CallMsg, blockNumber *big.Int) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(&msg); err != nil {
@@ -581,7 +587,7 @@ func (c *CpcClient) CallContract(ctx context.Context, msg ethereum.CallMsg, bloc
 
 // PendingCallContract executes a message call transaction using the EVM.
 // The state seen by the contract call is the pending state.
-func (c *CpcClient) PendingCallContract(ctx context.Context, msg ethereum.CallMsg) ([]byte, error) {
+func (c *Client) PendingCallContract(ctx context.Context, msg ethereum.CallMsg) ([]byte, error) {
 	// var hex hexutil.Bytes
 	// err := ec.c.CallContext(ctx, &hex, "eth_call", toCallArg(msg), "pending")
 	// if err != nil {
@@ -593,7 +599,7 @@ func (c *CpcClient) PendingCallContract(ctx context.Context, msg ethereum.CallMs
 
 // SuggestGasPrice retrieves the currently suggested gas price to allow a timely
 // execution of a transaction.
-func (c *CpcClient) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
+func (c *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	var reply pb.PublicEthereumAPIReply
 	if err := c.c.Invoke(ctx, "/protos_chain.PublicEthereumAPI/GasPrice", &empty.Empty{}, reply); err != nil {
 		return nil, err
@@ -612,7 +618,7 @@ func (c *CpcClient) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 // the current pending state of the backend blockchain. There is no guarantee that this is
 // the true gas limit requirement as other transactions may be added or removed by miners,
 // but it should provide a basis for setting a reasonable default.
-func (c *CpcClient) EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint64, error) {
+func (c *Client) EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint64, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(&msg); err != nil {
@@ -636,7 +642,7 @@ func (c *CpcClient) EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint
 //
 // If the transaction was a contract creation use the TransactionReceipt method to get the
 // contract address after the transaction has been mined.
-func (c *CpcClient) SendTransaction(ctx context.Context, tx *types.Transaction) error {
+func (c *Client) SendTransaction(ctx context.Context, tx *types.Transaction) error {
 	data, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		return err

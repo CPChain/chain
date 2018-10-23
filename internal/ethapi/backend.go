@@ -76,7 +76,7 @@ type Backend interface {
 	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
 }
 
-func GetGAPIs(apiBackend Backend) []apis.API {
+func GetGAPIs(apiBackend Backend) []gapis.API {
 	return nil
 }
 

@@ -1,4 +1,4 @@
-package apis
+package gapis
 
 import (
 	"crypto/tls"
@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net"
 
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -19,21 +21,20 @@ var (
 )
 
 type Server struct {
+	config *ServerConfig
+
 	server   *grpc.Server
 	listener net.Listener
-	endpoint string
 
-	// Key           []byte
-	// Crt           []byte
 	certPool      *x509.CertPool
 	certificate   tls.Certificate
 	clientRootCAs map[string]*x509.Certificate
 
-	useTLS           bool
-	RequireandVerify bool
+	dialOpts   []grpc.DialOption
+	serverOpts []grpc.ServerOption
 }
 
-func NewServer(endpoint string) (*Server, error) {
+func NewServer(cfg *ServerConfig) (*Server, error) {
 	certPool, err := createCertPool()
 	if err != nil {
 		return nil, err
@@ -57,25 +58,35 @@ func NewServer(endpoint string) (*Server, error) {
 	return &Server{
 		certPool:    certPool,
 		certificate: certificate,
-		endpoint:    endpoint,
+		config:      cfg,
+		dialOpts:    []grpc.DialOption{grpc.WithInsecure()},
+		serverOpts:  []grpc.ServerOption{},
 	}, nil
 }
 
-func (s *Server) Start() error {
-	listener, err := net.Listen("tcp", s.endpoint)
-	if err != nil {
-		return err
+func (s *Server) Serve(listener net.Listener) error {
+	s.listener = listener
+	if s.config.useTLS {
+		// Create the TLS credentials
+		creds := credentials.NewTLS(&tls.Config{
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			Certificates: []tls.Certificate{s.certificate},
+			ClientCAs:    s.certPool,
+		})
+
+		// Create the TLS credentials
+		dialCreds := credentials.NewTLS(&tls.Config{
+			ServerName:   s.config.endpoint,
+			Certificates: []tls.Certificate{s.certificate},
+			RootCAs:      s.certPool,
+		})
+
+		s.dialOpts = append(s.dialOpts, grpc.WithTransportCredentials(dialCreds))
+		s.serverOpts = append(s.serverOpts, grpc.Creds(creds))
+
 	}
 
-	// Create the TLS credentials
-	creds := credentials.NewTLS(&tls.Config{
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		Certificates: []tls.Certificate{s.certificate},
-		ClientCAs:    s.certPool,
-	})
-
-	s.listener = listener
-	s.server = grpc.NewServer(grpc.Creds(creds))
+	s.server = grpc.NewServer(s.serverOpts...)
 
 	// serve and listen
 	if err := s.server.Serve(listener); err != nil {
@@ -91,6 +102,11 @@ func (s *Server) Stop() {
 	if s.listener != nil {
 		s.listener.Close()
 	}
+}
+
+func (s *Server) RegisterApi(api API) {
+	api.RegisterServer(s.server)
+	api.RegisterProxy(context.Background(), runtime.NewServeMux(), s.config.endpoint, s.dialOpts)
 }
 
 // Create a certificate pool from the certificate authority

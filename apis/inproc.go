@@ -1,4 +1,4 @@
-package apis
+package gapis
 
 import (
 	"net"
@@ -14,6 +14,6 @@ func withDialer() grpc.DialOption {
 	})
 }
 
-func DialInProc(handler *grpc.Server) (*grpc.ClientConn, error) {
+func DialInProc(handler *Server) (*grpc.ClientConn, error) {
 	return grpc.Dial("", grpc.WithInsecure(), withDialer())
 }

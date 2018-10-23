@@ -18,11 +18,12 @@
 package dpor
 
 import (
-	"bitbucket.org/cpchain/chain/apis"
 	"bytes"
 	"errors"
 	"math/big"
 	"time"
+
+	"bitbucket.org/cpchain/chain/apis"
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -330,8 +331,8 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 	}}
 }
 
-func (d *Dpor) GAPIs(chain consensus.ChainReader) []apis.API {
-	return []apis.API{}
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []gapis.API {
+	return []gapis.API{}
 }
 
 // IsSigner implements Validator.

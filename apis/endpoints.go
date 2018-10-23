@@ -1,4 +1,4 @@
-package apis
+package gapis
 
 import (
 	"net"
@@ -6,9 +6,6 @@ import (
 	"path/filepath"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 )
 
 // ipcListen will create a Unix socket on the given endpoint.
@@ -26,12 +23,14 @@ func ipcListen(endpoint string) (net.Listener, error) {
 	return l, nil
 }
 
-func StartIPCEndpointWithGrpc(endpoint string, apis []API) (net.Listener, *grpc.Server, error) {
+func StartIPCEndpointWithGrpc(endpoint string, apis []API) (net.Listener, *Server, error) {
 	// Register all the grpc APIs exposed by the services.
-	handler := grpc.NewServer()
+	handler, err := NewServer(DefaultServerConfig)
+	if err != nil {
+		return nil, nil, err
+	}
 	for _, api := range apis {
-		api.RegisterServer(handler)
-		api.RegisterProxy(context.Background(), runtime.NewServeMux(), endpoint, []grpc.DialOption{grpc.WithInsecure()})
+		handler.RegisterApi(api)
 		log.Debug("IPC registered", "namespace", api.Namespace())
 	}
 
@@ -45,17 +44,19 @@ func StartIPCEndpointWithGrpc(endpoint string, apis []API) (net.Listener, *grpc.
 	return listener, handler, nil
 }
 
-func StartHTTPEndpoint(endpoint string, apis []API, modules []string) (net.Listener, *grpc.Server, error) {
+func StartHTTPEndpoint(endpoint string, apis []API, modules []string) (net.Listener, *Server, error) {
 	whitelist := make(map[string]bool)
 	for _, module := range modules {
 		whitelist[module] = true
 	}
 
-	handler := grpc.NewServer()
+	handler, err := NewServer(DefaultServerConfig)
+	if err != nil {
+		return nil, nil, err
+	}
 	for _, api := range apis {
 		if whitelist[api.Namespace()] || (len(whitelist) == 0 && api.IsPublic()) {
-			api.RegisterServer(handler)
-			api.RegisterProxy(context.Background(), runtime.NewServeMux(), endpoint, []grpc.DialOption{grpc.WithInsecure()})
+			handler.RegisterApi(api)
 			log.Debug("HTTP registered", "namespace", api.Namespace())
 		}
 	}
