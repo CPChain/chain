@@ -681,12 +681,6 @@
         "end_num": {
           "type": "string",
           "format": "uint64"
-        },
-        "start_block": {
-          "$ref": "#/definitions/protobufAny"
-        },
-        "end_block": {
-          "$ref": "#/definitions/protobufAny"
         }
       }
     },

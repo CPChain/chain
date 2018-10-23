@@ -68,37 +68,37 @@ func SetFormatter(formatter logrus.Formatter) {
 
 // Info logs a message at level Info on the standard logger.
 func Info(msg string, ctx ...interface{}) {
-	root.Info(msg, ctx)
+	root.Info(msg, ctx...)
 }
 
 // Print logs a message at level Info on the standard logger.
 func Print(msg string, ctx ...interface{}) {
-	root.Print(msg, ctx)
+	root.Print(msg, ctx...)
 }
 
 // Debug logs a message at level Debug on the standard logger.
 func Debug(msg string, ctx ...interface{}) {
-	root.Debug(msg, ctx)
+	root.Debug(msg, ctx...)
 }
 
 // Warn logs a message at level Warn on the standard logger.
 func Warn(msg string, ctx ...interface{}) {
-	root.Warn(msg, ctx)
+	root.Warn(msg, ctx...)
 }
 
 // Error logs a message at level Error on the standard logger.
 func Error(msg string, ctx ...interface{}) {
-	root.Error(msg, ctx)
+	root.Error(msg, ctx...)
 }
 
 // Panic logs a message at level Panic on the standard logger.
 func Panic(msg string, ctx ...interface{}) {
-	root.Panic(msg, ctx)
+	root.Panic(msg, ctx...)
 }
 
 // Fatal logs a message at level Fatal on the standard logger then the process will exit with status set to 1.
 func Fatal(msg string, ctx ...interface{}) {
-	root.Fatal(msg, ctx)
+	root.Fatal(msg, ctx...)
 }
 
 // Debugf logs a message at level Debug on the standard logger.

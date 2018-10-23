@@ -41,7 +41,7 @@
         ]
       }
     },
-    "/v1/apis/public/blockNumber": {
+    "/v1/apis/public/blocknumber": {
       "post": {
         "operationId": "BlockNumber",
         "responses": {
@@ -223,7 +223,7 @@
         ]
       }
     },
-    "/v1/apis/public/estimateGas": {
+    "/v1/apis/public/estimategas": {
       "post": {
         "operationId": "EstimateGas",
         "responses": {
@@ -272,32 +272,6 @@
         ],
         "tags": [
           "PublicEthereumAPI"
-        ]
-      }
-    },
-    "/v1/apis/public/getBalance": {
-      "post": {
-        "operationId": "GetBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
         ]
       }
     },
@@ -360,7 +334,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+              "$ref": "#/definitions/protos_chainPublicDebugAPIReply"
             }
           }
         },
@@ -795,6 +769,32 @@
         ]
       }
     },
+    "/v1/apis/public/getbalance": {
+      "post": {
+        "operationId": "GetBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protos_chainPublicBlockChainAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicBlockChainAPI"
+        ]
+      }
+    },
     "/v1/apis/public/importRawKey": {
       "post": {
         "operationId": "ImportRawKey",
@@ -1062,7 +1062,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+              "$ref": "#/definitions/protos_chainPublicDebugAPIReply"
             }
           }
         },
@@ -1140,7 +1140,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protos_chainPublicBlockChainAPIReply"
+              "$ref": "#/definitions/protos_chainPublicDebugAPIReply"
             }
           }
         },
@@ -1421,39 +1421,6 @@
     }
   },
   "definitions": {
-    "PublicBlockChainAPIRequestCallArgs": {
-      "type": "object",
-      "properties": {
-        "from": {
-          "type": "string",
-          "format": "byte"
-        },
-        "to": {
-          "type": "string",
-          "format": "byte"
-        },
-        "gas": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "gas_price": {
-          "type": "string",
-          "format": "byte"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
-        },
-        "data": {
-          "type": "string",
-          "format": "byte"
-        },
-        "is_private": {
-          "type": "boolean",
-          "format": "boolean"
-        }
-      }
-    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -1480,25 +1447,29 @@
         "account": {
           "$ref": "#/definitions/protobufAny"
         },
-        "address": {
-          "type": "string",
-          "format": "byte"
+        "account_addresses": {
+          "$ref": "#/definitions/protobufAny"
         },
-        "raw_wallet": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protos_chainRawWallet"
-          }
+        "raw_wallets": {
+          "$ref": "#/definitions/protobufAny"
         },
         "is_ok": {
           "type": "boolean",
-          "format": "boolean"
+          "format": "boolean",
+          "title": "repeated RawWallet raw_wallets = 3;"
         },
         "tx_hash": {
           "type": "string",
           "format": "byte"
         },
-        "signed_tx": {
+        "sign_tx_result": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "signature": {
+          "type": "string",
+          "format": "byte"
+        },
+        "address": {
           "type": "string",
           "format": "byte"
         }
@@ -1549,6 +1520,10 @@
       "properties": {
         "property": {
           "type": "string"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
         }
       }
     },
@@ -1558,7 +1533,7 @@
         "property": {
           "type": "string"
         },
-        "number": {
+        "block_number": {
           "type": "string",
           "format": "uint64"
         }
@@ -1568,11 +1543,7 @@
       "type": "object",
       "properties": {
         "accounts": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "byte"
-          }
+          "$ref": "#/definitions/protobufAny"
         }
       }
     },
@@ -1606,9 +1577,13 @@
           "type": "string",
           "format": "byte"
         },
-        "count": {
+        "uncle_count": {
           "type": "string",
           "format": "uint64"
+        },
+        "result": {
+          "type": "string",
+          "format": "byte"
         }
       }
     },
@@ -1616,11 +1591,12 @@
       "type": "object",
       "properties": {
         "args": {
-          "$ref": "#/definitions/PublicBlockChainAPIRequestCallArgs"
+          "$ref": "#/definitions/protobufAny",
+          "title": "CallArgs args = 1;"
         },
         "block_number": {
           "type": "string",
-          "format": "int64"
+          "format": "uint64"
         },
         "address": {
           "type": "string",
@@ -1643,6 +1619,17 @@
         }
       }
     },
+    "protos_chainPublicDebugAPIReply": {
+      "type": "object",
+      "properties": {
+        "info": {
+          "type": "string"
+        },
+        "rlp": {
+          "type": "string"
+        }
+      }
+    },
     "protos_chainPublicDebugAPIRequest": {
       "type": "object",
       "properties": {
@@ -1650,7 +1637,8 @@
           "type": "string",
           "format": "uint64"
         }
-      }
+      },
+      "title": "###################################################"
     },
     "protos_chainPublicEthereumAPIReply": {
       "type": "object",
@@ -1681,6 +1669,10 @@
         },
         "version": {
           "type": "string"
+        },
+        "peer_count": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -1696,21 +1688,34 @@
           "format": "byte"
         },
         "rpc_transaction": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protos_chainRPCTransaction"
-          }
+          "$ref": "#/definitions/protobufAny"
         },
         "tx_receipt": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "RPCTransaction rpc_transaction = 3;"
         },
         "tx_hash": {
           "type": "string",
           "format": "byte"
         },
         "sign_tx_result": {
-          "$ref": "#/definitions/protos_chainSignTransactionResult"
+          "$ref": "#/definitions/protobufAny"
+        },
+        "tx_bytes": {
+          "type": "string",
+          "format": "byte"
+        },
+        "fields": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "signature": {
+          "type": "string",
+          "format": "byte"
+        },
+        "pending_txs": {
+          "$ref": "#/definitions/protobufAny",
+          "title": "repeated RPCTransaction pending_txs = 10;"
         }
       }
     },
@@ -1723,7 +1728,7 @@
         },
         "block_number": {
           "type": "string",
-          "format": "int64"
+          "format": "uint64"
         },
         "index": {
           "type": "string",
@@ -1751,8 +1756,13 @@
         "payload": {
           "type": "string",
           "format": "byte"
+        },
+        "encoded_tx": {
+          "type": "string",
+          "format": "byte"
         }
-      }
+      },
+      "title": "###################################################"
     },
     "protos_chainPublicTxPoolAPIReply": {
       "type": "object",
@@ -1768,100 +1778,6 @@
           "$ref": "#/definitions/protobufAny"
         },
         "inspect": {
-          "$ref": "#/definitions/protobufAny"
-        }
-      }
-    },
-    "protos_chainRPCTransaction": {
-      "type": "object",
-      "properties": {
-        "blockHash": {
-          "type": "string",
-          "format": "byte"
-        },
-        "block_number": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "from": {
-          "type": "string",
-          "format": "byte"
-        },
-        "gas": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "gas_price": {
-          "type": "string",
-          "format": "byte"
-        },
-        "hash": {
-          "type": "string",
-          "format": "byte"
-        },
-        "input": {
-          "type": "string",
-          "format": "byte"
-        },
-        "nonce": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "to": {
-          "type": "string",
-          "format": "byte"
-        },
-        "trasaction_index": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
-        },
-        "v": {
-          "type": "string",
-          "format": "byte"
-        },
-        "r": {
-          "type": "string",
-          "format": "byte"
-        },
-        "s": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "protos_chainRawWallet": {
-      "type": "object",
-      "properties": {
-        "uRL": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "failure": {
-          "type": "string"
-        },
-        "accounts": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protobufAny"
-          }
-        }
-      },
-      "description": "rawWallet is a JSON representation of an accounts.Wallet interface, with its\ndata contents extracted into plain fields."
-    },
-    "protos_chainSignTransactionResult": {
-      "type": "object",
-      "properties": {
-        "raw": {
-          "type": "string",
-          "format": "byte"
-        },
-        "tx": {
           "$ref": "#/definitions/protobufAny"
         }
       }

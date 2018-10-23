@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
@@ -17,11 +20,10 @@ import (
 var (
 	crt = "server.crt"
 	key = "server.key"
-	// ca  = "ca.crt"
 )
 
 type Server struct {
-	config *ServerConfig
+	endpoint string
 
 	server   *grpc.Server
 	listener net.Listener
@@ -34,39 +36,47 @@ type Server struct {
 	serverOpts []grpc.ServerOption
 }
 
-func NewServer(cfg *ServerConfig) (*Server, error) {
-	certPool, err := createCertPool()
-	if err != nil {
-		return nil, err
+func dirNotExitCreate(datadir, file string) (bool, error) {
+	_, err := os.Stat(datadir)
+	if err == nil {
+		_, err = os.Stat(filepath.Join(datadir, file))
+		if err == nil {
+			return true, nil
+		}
 	}
 
-	// Load the certificates from disk
-	certificate, err := tls.LoadX509KeyPair(crt, key)
-	if err != nil {
-		return nil, fmt.Errorf("could not load server key pair: %s", err.Error())
-	}
-
-	ca, err := ioutil.ReadFile(ca)
-	if err != nil {
-		return nil, fmt.Errorf("could not read ca certificate: %s", err)
-	}
-
-	if ok := certPool.AppendCertsFromPEM(ca); !ok {
-		return nil, errors.New("failed to append ca certs")
-	}
-
-	return &Server{
-		certPool:    certPool,
-		certificate: certificate,
-		config:      cfg,
-		dialOpts:    []grpc.DialOption{grpc.WithInsecure()},
-		serverOpts:  []grpc.ServerOption{},
-	}, nil
+	return false, err
 }
 
-func (s *Server) Serve(listener net.Listener) error {
-	s.listener = listener
-	if s.config.useTLS {
+func NewServer(endpoint string, datadir string, useTls bool) (*Server, error) {
+	s := &Server{
+		endpoint:   endpoint,
+		dialOpts:   []grpc.DialOption{grpc.WithInsecure()},
+		serverOpts: []grpc.ServerOption{},
+	}
+
+	var err error
+	if useTls {
+		s.certPool, err = createCertPool()
+		if err != nil {
+			return nil, err
+		}
+
+		// Load the certificates from disk
+		s.certificate, err = tls.LoadX509KeyPair(crt, key)
+		if err != nil {
+			return nil, fmt.Errorf("could not load server key pair: %s", err.Error())
+		}
+
+		ca, err := ioutil.ReadFile(filepath.Join(datadir, ca))
+		if err != nil {
+			return nil, fmt.Errorf("could not read ca certificate: %s", err)
+		}
+
+		if ok := s.certPool.AppendCertsFromPEM(ca); !ok {
+			return nil, errors.New("failed to append ca certs")
+		}
+
 		// Create the TLS credentials
 		creds := credentials.NewTLS(&tls.Config{
 			ClientAuth:   tls.RequireAndVerifyClientCert,
@@ -76,7 +86,7 @@ func (s *Server) Serve(listener net.Listener) error {
 
 		// Create the TLS credentials
 		dialCreds := credentials.NewTLS(&tls.Config{
-			ServerName:   s.config.endpoint,
+			ServerName:   endpoint,
 			Certificates: []tls.Certificate{s.certificate},
 			RootCAs:      s.certPool,
 		})
@@ -87,11 +97,15 @@ func (s *Server) Serve(listener net.Listener) error {
 	}
 
 	s.server = grpc.NewServer(s.serverOpts...)
+	return s, nil
+}
 
+func (s *Server) Serve(proxyEndpoint string, listener net.Listener) error {
+	s.listener = listener
 	// serve and listen
-	if err := s.server.Serve(listener); err != nil {
-		return fmt.Errorf("grpc serve error: %s", err)
-	}
+	go s.server.Serve(listener)
+
+	go http.ListenAndServe(proxyEndpoint, runtime.NewServeMux())
 	return nil
 }
 
@@ -106,7 +120,7 @@ func (s *Server) Stop() {
 
 func (s *Server) RegisterApi(api API) {
 	api.RegisterServer(s.server)
-	api.RegisterProxy(context.Background(), runtime.NewServeMux(), s.config.endpoint, s.dialOpts)
+	api.RegisterProxy(context.Background(), runtime.NewServeMux(), s.endpoint, s.dialOpts)
 }
 
 // Create a certificate pool from the certificate authority

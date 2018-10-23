@@ -23,9 +23,9 @@ func ipcListen(endpoint string) (net.Listener, error) {
 	return l, nil
 }
 
-func StartIPCEndpointWithGrpc(endpoint string, apis []API) (net.Listener, *Server, error) {
+func StartIPCEndpointWithGrpc(endpoint, proxyEndpoint, datadir string, useTls bool, apis []API) (net.Listener, *Server, error) {
 	// Register all the grpc APIs exposed by the services.
-	handler, err := NewServer(DefaultServerConfig)
+	handler, err := NewServer(endpoint, datadir, useTls)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -40,17 +40,17 @@ func StartIPCEndpointWithGrpc(endpoint string, apis []API) (net.Listener, *Serve
 		return nil, nil, err
 	}
 
-	go handler.Serve(listener)
+	handler.Serve(proxyEndpoint, listener)
 	return listener, handler, nil
 }
 
-func StartHTTPEndpoint(endpoint string, apis []API, modules []string) (net.Listener, *Server, error) {
+func StartHTTPEndpoint(endpoint, proxyEndpoint, datadir string, useTls bool, apis []API, modules []string) (net.Listener, *Server, error) {
 	whitelist := make(map[string]bool)
 	for _, module := range modules {
 		whitelist[module] = true
 	}
 
-	handler, err := NewServer(DefaultServerConfig)
+	handler, err := NewServer(endpoint, datadir, useTls)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -67,6 +67,6 @@ func StartHTTPEndpoint(endpoint string, apis []API, modules []string) (net.Liste
 		return nil, nil, err
 	}
 
-	go handler.Serve(listener)
+	handler.Serve(proxyEndpoint, listener)
 	return listener, handler, nil
 }

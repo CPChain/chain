@@ -219,7 +219,7 @@ message RawWallet {
 service PublicBlockChainAPI {
   rpc BlockNumber(google.protobuf.Empty) returns (PublicBlockChainAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/blockNumber"
+post : "/v1/apis/public/blocknumber"
          body : "*"
     };
   }
@@ -232,14 +232,14 @@ post : "/v1/apis/public/call"
   rpc EstimateGas(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/estimateGas"
+post : "/v1/apis/public/estimategas"
          body : "*"
       };
     }
   rpc GetBalance(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getBalance"
+post : "/v1/apis/public/getbalance"
          body : "*"
       };
     }

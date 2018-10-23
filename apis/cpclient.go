@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/big"
+	"path/filepath"
 
 	"github.com/golang/protobuf/ptypes/any"
 
@@ -38,50 +39,48 @@ type Client struct {
 	c           *grpc.ClientConn
 }
 
-func NewClient(config *ClientConfig) (*Client, error) {
-	certPool, err := createCertPool()
-	if err != nil {
-		return nil, err
-	}
-
-	// Load the certificates from disk
-	certificate, err := tls.LoadX509KeyPair(crt, key)
-	if err != nil {
-		return nil, fmt.Errorf("could not load server key pair: %s", err.Error())
-	}
-
-	ca, err := ioutil.ReadFile(ca)
-	if err != nil {
-		return nil, fmt.Errorf("could not read ca certificate: %s", err)
-	}
-
-	if ok := certPool.AppendCertsFromPEM(ca); !ok {
-		return nil, errors.New("failed to append ca certs")
-	}
-
+func NewClient(endpoint, datadir string, useTls bool) (*Client, error) {
+	var err error
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 	}
-	if config.useTLS {
+	c := &Client{}
+
+	if useTls {
+		c.certPool, err = createCertPool()
+		if err != nil {
+			return nil, err
+		}
+
+		// Load the certificates from disk
+		c.certificate, err = tls.LoadX509KeyPair(crt, key)
+		if err != nil {
+			return nil, fmt.Errorf("could not load server key pair: %s", err.Error())
+		}
+
+		ca, err := ioutil.ReadFile(filepath.Join(datadir, ca))
+		if err != nil {
+			return nil, fmt.Errorf("could not read ca certificate: %s", err)
+		}
+
+		if ok := c.certPool.AppendCertsFromPEM(ca); !ok {
+			return nil, errors.New("failed to append ca certs")
+		}
+
 		// Create the TLS credentials
 		creds := credentials.NewTLS(&tls.Config{
-			ServerName:   config.endpoint,
-			Certificates: []tls.Certificate{certificate},
-			RootCAs:      certPool,
+			ServerName:   endpoint,
+			Certificates: []tls.Certificate{c.certificate},
+			RootCAs:      c.certPool,
 		})
 		opts = append(opts, grpc.WithTransportCredentials(creds))
 	}
 
-	conn, err := grpc.Dial(config.endpoint, opts...)
+	c.c, err = grpc.Dial(endpoint, opts...)
 	if err != nil {
 		return nil, err
 	}
-
-	return &Client{
-		certificate: certificate,
-		certPool:    certPool,
-		c:           conn,
-	}, nil
+	return c, nil
 }
 
 func New(c *grpc.ClientConn) *Client {

@@ -2000,13 +2000,13 @@ func RegisterPublicBlockChainAPIHandlerClient(ctx context.Context, mux *runtime.
 }
 
 var (
-	pattern_PublicBlockChainAPI_BlockNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "blockNumber"}, ""))
+	pattern_PublicBlockChainAPI_BlockNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "blocknumber"}, ""))
 
 	pattern_PublicBlockChainAPI_Call_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "call"}, ""))
 
-	pattern_PublicBlockChainAPI_EstimateGas_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "estimateGas"}, ""))
+	pattern_PublicBlockChainAPI_EstimateGas_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "estimategas"}, ""))
 
-	pattern_PublicBlockChainAPI_GetBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "getBalance"}, ""))
+	pattern_PublicBlockChainAPI_GetBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "getbalance"}, ""))
 
 	pattern_PublicBlockChainAPI_GetBlockByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "getBlockByHash"}, ""))
 
