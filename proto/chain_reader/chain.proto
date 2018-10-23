@@ -13,19 +13,19 @@ import "google/protobuf/wrappers.proto";
 service PublicEthereumAPI {
   rpc GasPrice(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/gasPrice"
+post : "/apis/eth/gasPrice/v1"
          body : "*"
     };
   }
   rpc ProtocolVersion(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/protocolVersion"
+post : "/apis/eth/protocolVersion/v1"
          body : "*"
     };
   }
   rpc Syncing(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
     option (google.api.http) = {
-        post : "/v1/apis/public/syncing"
+        post : "/apis/eth/syncing/v1"
          body : "*"
     };
   }
@@ -43,19 +43,19 @@ message PublicEthereumAPIReply {
 service PublicTxPoolAPI {
   rpc Content(google.protobuf.Empty) returns (PublicTxPoolAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/content"
+post : "/apis/txpool/content/v1"
          body : "*"
     };
   }
   rpc Inspect(google.protobuf.Empty) returns (PublicTxPoolAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/inspect"
+post : "/apis/txpool/inspect/v1"
          body : "*"
     };
   }
   rpc Status(google.protobuf.Empty) returns (PublicTxPoolAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/status"
+post : "/apis/txpool/status/v1"
          body : "*"
     };
   }
@@ -88,7 +88,7 @@ message PublicTxPoolAPIReply {
 service PublicAccountAPI {
   rpc Accounts(google.protobuf.Empty) returns (PublicAccountAPIReply) {
     option (google.api.http) = {
-post: "/v1/apis/public/accounts"
+post: "/apis/eth/accounts/v1"
         body : "*"
     };
   }
@@ -100,82 +100,82 @@ service PrivateAccountAPI {
   rpc DeriveAccount(PrivateAccountAPIRequest) returns (
     PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/deriveAccount"
+post : "/apis/eth/deriveAccount/v1"
          body : "*"
     };
   }
   rpc EcRecover(PrivateAccountAPIRequest) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/ecRecover"
+post : "/apis/eth/ecRecover/v1"
          body : "*"
     };
   }
   rpc ImportRawKey(PrivateAccountAPIRequest) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/importRawKey"
+post : "/apis/eth/importRawKey/v1"
          body : "*"
     };
   }
   rpc ListAccounts(google.protobuf.Empty) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/listAccounts"
+post : "/apis/eth/listAccounts/v1"
          body : "*"
     };
   }
   rpc ListWallets(google.protobuf.Empty) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/listWallets"
+post : "/apis/eth/listWallets/v1"
          body : "*"
     };
   }
   rpc LockAccount(PrivateAccountAPIRequest) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/lockAccount"
+post : "/apis/eth/lockAccount/v1"
          body : "*"
     };
   }
   rpc NewAccount(PrivateAccountAPIRequest) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/newAccount"
+post : "/apis/eth/newAccount/v1"
          body : "*"
     };
   }
   rpc OpenWallet(PrivateAccountAPIRequest) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/openWallet"
+post : "/apis/eth/openWallet/v1"
          body : "*"
     };
   }
   rpc SendTransaction(PrivateAccountAPIRequest) returns (
     PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/sendTransaction"
+post : "/apis/eth/sendTransaction/v1"
          body : "*"
     };
   }
   rpc Sign(PrivateAccountAPIRequest) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/sign"
+post : "/apis/eth/sign/v1"
          body : "*"
     };
   }
   rpc SignAndSendTransaction(PrivateAccountAPIRequest)
     returns (PrivateAccountAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/signAndSendTransaction"
+post : "/apis/eth/signAndSendTransaction/v1"
          body : "*"
       };
     }
   rpc SignTransaction(PrivateAccountAPIRequest) returns (
     PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/signTransaction"
+post : "/apis/eth/signTransaction/v1"
          body : "*"
     };
   }
   rpc UnlockAccount(PrivateAccountAPIRequest) returns (PrivateAccountAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/unlockAccount"
+post : "/apis/eth/unlockAccount/v1"
          body : "*"
     };
   }
@@ -219,82 +219,82 @@ message RawWallet {
 service PublicBlockChainAPI {
   rpc BlockNumber(google.protobuf.Empty) returns (PublicBlockChainAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/blocknumber"
+post : "/apis/eth/blocknumber/v1"
          body : "*"
     };
   }
   rpc Call(PublicBlockChainAPIRequest) returns (PublicBlockChainAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/call"
+post : "/apis/eth/call/v1"
          body : "*"
     };
   }
   rpc EstimateGas(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/estimategas"
+post : "/apis/eth/estimategas/v1"
          body : "*"
       };
     }
   rpc GetBalance(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getbalance"
+post : "/apis/eth/getbalance/v1"
          body : "*"
       };
     }
   rpc GetBlockByHash(PublicBlockChainAPIRequest) returns (
     PublicBlockChainAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/getBlockByHash"
+post : "/apis/eth/getBlockByHash/v1"
          body : "*"
     };
   }
   rpc GetBlockByNumber(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getBlockByNumber"
+post : "/apis/eth/getBlockByNumber/v1"
          body : "*"
       };
     }
   rpc GetCode(PublicBlockChainAPIRequest) returns (PublicBlockChainAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/getCode"
+post : "/apis/eth/getCode/v1"
          body : "*"
     };
   }
   rpc GetStorageAt(PublicBlockChainAPIRequest) returns (
     PublicBlockChainAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/getStorageAt"
+post : "/apis/eth/getStorageAt/v1"
          body : "*"
     };
   }
   rpc GetUncleByBlockHashAndIndex(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getUncleByBlockHashAndIndex"
+post : "/apis/eth/getUncleByBlockHashAndIndex/v1"
          body : "*"
       };
     }
   rpc GetUncleByBlockNumberAndIndex(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getUncleByBlockNumberAndIndex"
+post : "/apis/eth/getUncleByBlockNumberAndIndex/v1"
          body : "*"
       };
     }
   rpc GetUncleCountByBlockHash(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getUncleCountByBlockHash"
+post : "/apis/eth/getUncleCountByBlockHash/v1"
          body : "*"
       };
     }
   rpc GetUncleCountByBlockNumber(PublicBlockChainAPIRequest)
     returns (PublicBlockChainAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getUncleCountByBlockNumber"
+post : "/apis/eth/getUncleCountByBlockNumber/v1"
          body : "*"
       };
     }
@@ -380,112 +380,112 @@ service PublicTransactionPoolAPI {
   rpc GetBlockTransactionCountByHash(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getBlockTransactionCountByHash"
+post : "/apis/eth/getBlockTransactionCountByHash/v1"
          body : "*"
       };
     }
   rpc GetBlockTransactionCountByNumber(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getBlockTransactionCountByNumber"
+post : "/apis/eth/getBlockTransactionCountByNumber/v1"
          body : "*"
       };
     }
   rpc GetRawTransactionByBlockHashAndIndex(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getRawTransactionByBlockHashAndIndex"
+post : "/apis/eth/getRawTransactionByBlockHashAndIndex/v1"
          body : "*"
       };
     }
   rpc GetRawTransactionByBlockNumberAndIndex(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getRawTransactionByBlockNumberAndIndex"
+post : "/apis/eth/getRawTransactionByBlockNumberAndIndex/v1"
          body : "*"
       };
     }
   rpc GetRawTransactionByHash(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getRawTransactionByHash"
+post : "/apis/eth/getRawTransactionByHash/v1"
          body : "*"
       };
     }
   rpc GetTransactionByBlockHashAndIndex(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getTransactionByBlockHashAndIndex"
+post : "/apis/eth/getTransactionByBlockHashAndIndex/v1"
          body : "*"
       };
     }
   rpc GetTransactionByBlockNumberAndIndex(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getTransactionByBlockNumberAndIndex"
+post : "/apis/eth/getTransactionByBlockNumberAndIndex/v1"
          body : "*"
       };
     }
 rpc GetTransactionByHash(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getTransactionByHash"
+post : "/apis/eth/getTransactionByHash/v1"
          body : "*"
       };
     }
   rpc GetTransactionCount(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getTransactionCount"
+post : "/apis/eth/getTransactionCount/v1"
          body : "*"
       };
     }
   rpc GetTransactionReceipt(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/getTransactionReceipt"
+post : "/apis/eth/getTransactionReceipt/v1"
          body : "*"
       };
     }
   rpc PendingTransactions(google.protobuf.Empty)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/pendingTransactions"
+post : "/apis/eth/pendingTransactions/v1"
          body : "*"
       };
     }
   rpc Resend(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/resend"
+post : "/apis/eth/resend/v1"
          body : "*"
       };
     }
   rpc SendRawTransaction(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/sendRawTransaction"
+post : "/apis/eth/sendRawTransaction/v1"
          body : "*"
       };
     }
   rpc SendTransaction(PublicTransactionPoolAPIRequest) returns (
     PublicTransactionPoolAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/sendTransaction"
+post : "/apis/eth/sendTransaction/v1"
          body : "*"
     };
   }
   rpc Sign(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
-post : "/v1/apis/public/sign"
+post : "/apis/eth/sign/v1"
          body : "*"
       };
     }
   rpc SignTransaction(PublicTransactionPoolAPIRequest) returns (
     PublicTransactionPoolAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/signTransaction"
+post : "/apis/eth/signTransaction/v1"
          body : "*"
     };
   }
@@ -500,19 +500,19 @@ message PublicDebugAPIReply {
 service PublicDebugAPI {
   rpc GetBlockRlp(PublicDebugAPIRequest) returns (PublicDebugAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/getBlockRlp"
+post : "/apis/debug/getBlockRlp/v1"
          body : "*"
     };
   }
   rpc PrintBlock(PublicDebugAPIRequest) returns (PublicDebugAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/printBlock"
+post : "/apis/debug/printBlock/v1"
          body : "*"
     };
   }
   rpc SeedHash(PublicDebugAPIRequest) returns (PublicDebugAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/seedHash"
+post : "/apis/debug/seedHash/v1"
          body : "*"
     };
   }
@@ -520,21 +520,20 @@ post : "/v1/apis/public/seedHash"
 //###################################################
 service PrivateDebugAPI {
   rpc ChaindbCompact(google.protobuf.Empty) returns (PrivateDebugAPIReply) {
-    option (
-      google.api.http) = {
-post : "/v1/apis/public/chaindbCompact"
+    option (google.api.http) = {
+post : "/apis/debug/chaindbCompact/v1"
          body : "*"
     };
   }
   rpc ChaindbProperty(PrivateDebugAPIRequest) returns (PrivateDebugAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/chaindbProperty"
+post : "/apis/debug/chaindbProperty/v1"
          body : "*"
     };
   }
   rpc SetHead(PrivateDebugAPIRequest) returns (PrivateDebugAPIReply) {
     option (google.api.http) = {
-post : "/v1/apis/public/setHead"
+post : "/apis/debug/setHead/v1"
          body : "*"
     };
   }

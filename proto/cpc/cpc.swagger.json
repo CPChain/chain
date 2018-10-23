@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/apis/private/exportChain": {
+    "/apis/admin/exportChain/v1": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "ExportChain",
@@ -42,88 +42,7 @@
         ]
       }
     },
-    "/v1/apis/private/getBadBlocks": {
-      "post": {
-        "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
-        "operationId": "GetBadBlocks",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protobufAny"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateDebugAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/getModifiedAccountsByHash": {
-      "post": {
-        "summary": "SetEtherbase sets the etherbase of the miner",
-        "operationId": "GetModifiedAccountsByHash",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protobufAny"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateDebugAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/getModifiedAccountsByNumber": {
-      "post": {
-        "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
-        "operationId": "GetModifiedAccountsByNumber",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protobufAny"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateDebugAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/importChain": {
+    "/apis/admin/importChain/v1": {
       "post": {
         "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
         "operationId": "ImportChain",
@@ -150,250 +69,7 @@
         ]
       }
     },
-    "/v1/apis/private/preimage": {
-      "post": {
-        "summary": "Etherbase is the address that mining rewards will be send to",
-        "operationId": "Preimage",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protosPrivateDebugAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateDebugAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/setEtherbase": {
-      "post": {
-        "summary": "SetEtherbase sets the etherbase of the miner",
-        "operationId": "SetEtherbase",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateMinerAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/setExtra": {
-      "post": {
-        "summary": "Hashrate returns the POW hashrate",
-        "operationId": "SetExtra",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateMinerAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/setGasPrice": {
-      "post": {
-        "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
-        "operationId": "SetGasPrice",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateMinerAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/setHashrate": {
-      "post": {
-        "summary": "GetHashrate returns the current hashrate of the miner.",
-        "operationId": "GetHashrate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateMinerAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/start": {
-      "post": {
-        "summary": "Etherbase is the address that mining rewards will be send to",
-        "operationId": "Start",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateMinerAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/stop": {
-      "post": {
-        "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
-        "operationId": "Stop",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protosPrivateMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateMinerAPI"
-        ]
-      }
-    },
-    "/v1/apis/private/storageRangeAt": {
-      "post": {
-        "summary": "Hashrate returns the POW hashrate",
-        "operationId": "StorageRangeAt",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protobufAny"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateDebugAPI"
-        ]
-      }
-    },
-    "/v1/apis/public/coinbase": {
-      "post": {
-        "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
-        "operationId": "Coinbase",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protosPublicEthereumAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PublicEthereumAPI"
-        ]
-      }
-    },
-    "/v1/apis/public/dumpBlock": {
+    "/apis/debug/dumpBlock/v1": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "DumpBlock",
@@ -420,7 +96,169 @@
         ]
       }
     },
-    "/v1/apis/public/etherbase": {
+    "/apis/debug/getBadBlocks/v1": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
+        "operationId": "GetBadBlocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protobufAny"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateDebugAPI"
+        ]
+      }
+    },
+    "/apis/debug/getModifiedAccountsByHash/v1": {
+      "post": {
+        "summary": "SetEtherbase sets the etherbase of the miner",
+        "operationId": "GetModifiedAccountsByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protobufAny"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateDebugAPI"
+        ]
+      }
+    },
+    "/apis/debug/getModifiedAccountsByNumber/v1": {
+      "post": {
+        "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
+        "operationId": "GetModifiedAccountsByNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protobufAny"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateDebugAPI"
+        ]
+      }
+    },
+    "/apis/debug/preimage/v1": {
+      "post": {
+        "summary": "Etherbase is the address that mining rewards will be send to",
+        "operationId": "Preimage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPrivateDebugAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateDebugAPI"
+        ]
+      }
+    },
+    "/apis/debug/storageRangeAt/v1": {
+      "post": {
+        "summary": "Hashrate returns the POW hashrate",
+        "operationId": "StorageRangeAt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protobufAny"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateDebugAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateDebugAPI"
+        ]
+      }
+    },
+    "/apis/eth/coinbase/v1": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
+        "operationId": "Coinbase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPublicEthereumAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicEthereumAPI"
+        ]
+      }
+    },
+    "/apis/eth/etherbase/v1": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "Etherbase",
@@ -447,7 +285,7 @@
         ]
       }
     },
-    "/v1/apis/public/getWork": {
+    "/apis/eth/getWork/v1": {
       "post": {
         "summary": "Hashrate returns the POW hashrate",
         "operationId": "GetWork",
@@ -474,7 +312,7 @@
         ]
       }
     },
-    "/v1/apis/public/hashrate": {
+    "/apis/eth/hashrate/v1": {
       "post": {
         "summary": "Hashrate returns the POW hashrate",
         "operationId": "Hashrate",
@@ -501,7 +339,7 @@
         ]
       }
     },
-    "/v1/apis/public/mining": {
+    "/apis/eth/mining/v1": {
       "post": {
         "summary": "Etherbase is the address that mining rewards will be send to",
         "operationId": "Mining",
@@ -528,7 +366,7 @@
         ]
       }
     },
-    "/v1/apis/public/submitHashrate": {
+    "/apis/eth/submitHashrate/v1": {
       "post": {
         "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
         "operationId": "SubmitHashrate",
@@ -555,7 +393,7 @@
         ]
       }
     },
-    "/v1/apis/public/submitWork": {
+    "/apis/eth/submitWork/v1": {
       "post": {
         "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
         "operationId": "SubmitWork",
@@ -579,6 +417,168 @@
         ],
         "tags": [
           "PublicMinerAPI"
+        ]
+      }
+    },
+    "/apis/miner/setEtherbase/v1": {
+      "post": {
+        "summary": "SetEtherbase sets the etherbase of the miner",
+        "operationId": "SetEtherbase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/miner/setExtra/v1": {
+      "post": {
+        "summary": "Hashrate returns the POW hashrate",
+        "operationId": "SetExtra",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/miner/setGasPrice/v1": {
+      "post": {
+        "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
+        "operationId": "SetGasPrice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/miner/setHashrate/v1": {
+      "post": {
+        "summary": "GetHashrate returns the current hashrate of the miner.",
+        "operationId": "GetHashrate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/miner/start/v1": {
+      "post": {
+        "summary": "Etherbase is the address that mining rewards will be send to",
+        "operationId": "Start",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/miner/stop/v1": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to (alias for Etherbase)",
+        "operationId": "Stop",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
         ]
       }
     }

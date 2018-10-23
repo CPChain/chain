@@ -431,11 +431,11 @@ func RegisterPublicEthereumAPIHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_PublicEthereumAPI_Etherbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "etherbase"}, ""))
+	pattern_PublicEthereumAPI_Etherbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "etherbase", "v1"}, ""))
 
-	pattern_PublicEthereumAPI_Coinbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "coinbase"}, ""))
+	pattern_PublicEthereumAPI_Coinbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "coinbase", "v1"}, ""))
 
-	pattern_PublicEthereumAPI_Hashrate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "hashrate"}, ""))
+	pattern_PublicEthereumAPI_Hashrate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "hashrate", "v1"}, ""))
 )
 
 var (
@@ -604,13 +604,13 @@ func RegisterPublicMinerAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_PublicMinerAPI_Mining_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "mining"}, ""))
+	pattern_PublicMinerAPI_Mining_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "mining", "v1"}, ""))
 
-	pattern_PublicMinerAPI_SubmitWork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "submitWork"}, ""))
+	pattern_PublicMinerAPI_SubmitWork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "submitWork", "v1"}, ""))
 
-	pattern_PublicMinerAPI_GetWork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "getWork"}, ""))
+	pattern_PublicMinerAPI_GetWork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "getWork", "v1"}, ""))
 
-	pattern_PublicMinerAPI_SubmitHashrate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "submitHashrate"}, ""))
+	pattern_PublicMinerAPI_SubmitHashrate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "eth", "submitHashrate", "v1"}, ""))
 )
 
 var (
@@ -839,17 +839,17 @@ func RegisterPrivateMinerAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_PrivateMinerAPI_Start_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "start"}, ""))
+	pattern_PrivateMinerAPI_Start_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "miner", "start", "v1"}, ""))
 
-	pattern_PrivateMinerAPI_Stop_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "stop"}, ""))
+	pattern_PrivateMinerAPI_Stop_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "miner", "stop", "v1"}, ""))
 
-	pattern_PrivateMinerAPI_SetExtra_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "setExtra"}, ""))
+	pattern_PrivateMinerAPI_SetExtra_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "miner", "setExtra", "v1"}, ""))
 
-	pattern_PrivateMinerAPI_SetGasPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "setGasPrice"}, ""))
+	pattern_PrivateMinerAPI_SetGasPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "miner", "setGasPrice", "v1"}, ""))
 
-	pattern_PrivateMinerAPI_SetEtherbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "setEtherbase"}, ""))
+	pattern_PrivateMinerAPI_SetEtherbase_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "miner", "setEtherbase", "v1"}, ""))
 
-	pattern_PrivateMinerAPI_GetHashrate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "setHashrate"}, ""))
+	pattern_PrivateMinerAPI_GetHashrate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "miner", "setHashrate", "v1"}, ""))
 )
 
 var (
@@ -966,9 +966,9 @@ func RegisterPrivateAdminAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_PrivateAdminAPI_ExportChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "exportChain"}, ""))
+	pattern_PrivateAdminAPI_ExportChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "admin", "exportChain", "v1"}, ""))
 
-	pattern_PrivateAdminAPI_ImportChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "importChain"}, ""))
+	pattern_PrivateAdminAPI_ImportChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "admin", "importChain", "v1"}, ""))
 )
 
 var (
@@ -1048,7 +1048,7 @@ func RegisterPublicDebugAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_PublicDebugAPI_DumpBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "public", "dumpBlock"}, ""))
+	pattern_PublicDebugAPI_DumpBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "dumpBlock", "v1"}, ""))
 )
 
 var (
@@ -1242,15 +1242,15 @@ func RegisterPrivateDebugAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_PrivateDebugAPI_Preimage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "preimage"}, ""))
+	pattern_PrivateDebugAPI_Preimage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "preimage", "v1"}, ""))
 
-	pattern_PrivateDebugAPI_GetBadBlocks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "getBadBlocks"}, ""))
+	pattern_PrivateDebugAPI_GetBadBlocks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "getBadBlocks", "v1"}, ""))
 
-	pattern_PrivateDebugAPI_StorageRangeAt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "storageRangeAt"}, ""))
+	pattern_PrivateDebugAPI_StorageRangeAt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "storageRangeAt", "v1"}, ""))
 
-	pattern_PrivateDebugAPI_GetModifiedAccountsByNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "getModifiedAccountsByNumber"}, ""))
+	pattern_PrivateDebugAPI_GetModifiedAccountsByNumber_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "getModifiedAccountsByNumber", "v1"}, ""))
 
-	pattern_PrivateDebugAPI_GetModifiedAccountsByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "apis", "private", "getModifiedAccountsByHash"}, ""))
+	pattern_PrivateDebugAPI_GetModifiedAccountsByHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"apis", "debug", "getModifiedAccountsByHash", "v1"}, ""))
 )
 
 var (
