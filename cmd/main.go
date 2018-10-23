@@ -213,23 +213,23 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 	}()
 	// Start auxiliary services if enabled
 	if ctx.GlobalBool(MiningEnabledFlag.Name) {
-		var ethereum *cpc.Ethereum
-		if err := stack.Service(&ethereum); err != nil {
-			Fatalf("Ethereum service not running: %v", err)
+		var cpchainService *cpc.CpchainService
+		if err := stack.Service(&cpchainService); err != nil {
+			Fatalf("Cpchain service not running: %v", err)
 		}
 		// Use a reduced number of threads if requested
 		if threads := ctx.GlobalInt(MinerThreadsFlag.Name); threads > 0 {
 			type threaded interface {
 				SetThreads(threads int)
 			}
-			if th, ok := ethereum.Engine().(threaded); ok {
+			if th, ok := cpchainService.Engine().(threaded); ok {
 				th.SetThreads(threads)
 			}
 		}
 		// Set the gas price to the limits from the CLI and start mining
-		ethereum.TxPool().SetGasPrice(GlobalBig(ctx, GasPriceFlag.Name))
+		cpchainService.TxPool().SetGasPrice(GlobalBig(ctx, GasPriceFlag.Name))
 
-		if err := ethereum.StartMining(true, contractCaller); err != nil {
+		if err := cpchainService.StartMining(true, contractCaller); err != nil {
 			Fatalf("Failed to start mining: %v", err)
 		}
 	}
