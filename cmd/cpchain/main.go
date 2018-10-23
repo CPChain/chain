@@ -34,11 +34,6 @@ func newApp() *cli.App {
 		runCommand,
 		dumpConfigCommand,
 		chainCommand,
-		// cleanDbCommand,
-		// walletCommand,
-		// consoleCommand,
-		// attachCommand,
-		// javascriptCommand,
 	}
 
 	// global flags
@@ -46,15 +41,14 @@ func newApp() *cli.App {
 
 	// maintain order
 	sort.Sort(cli.CommandsByName(app.Commands))
-	//sort.Sort(cli.FlagsByName(app.Flags))
 
-	app.Before = func(ctx *cli.Context) error {
-		return nil
-	}
+	// app.Before = func(ctx *cli.Context) error {
+	// 	return nil
+	// }
+	// app.After = func(ctx *cli.Context) error {
+	// 	return nil
+	// }
 
-	app.After = func(ctx *cli.Context) error {
-		return nil
-	}
 	return app
 }
 

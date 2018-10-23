@@ -40,7 +40,11 @@ import (
 //go:generate gencodec -type Genesis -formats json,toml -field-override genesisSpecMarshaling -out gen_genesis.go
 //go:generate gencodec -type GenesisAccount -formats json,toml -field-override genesisAccountMarshaling -out gen_genesis_account.go
 
-var errGenesisNoConfig = errors.New("genesis has no chain configuration")
+var (
+	errGenesisNoConfig   = errors.New("genesis has no chain configuration")
+	errGenesisNoExist    = errors.New("genesis block does not exist")
+	errGenesisCfgNoExist = errors.New("genesis block configuration does not exist")
+)
 
 // Genesis specifies the header fields, state of a genesis block. It also defines hard
 // fork switch-over blocks through the chain configuration.
@@ -207,16 +211,28 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 	return newcfg, stored, nil
 }
 
+// OpenGenesisBlock opens genesis block and returns its chain configuration and hash.
+// Return errors when genesis block not exist or genesis block configuration not exist.
+func OpenGenesisBlock(db ethdb.Database) (*configs.ChainConfig, common.Hash, error) {
+	// the hash of the stored block
+	stored := rawdb.ReadCanonicalHash(db, 0)
+	if (stored == common.Hash{}) {
+		return nil, common.Hash{}, errGenesisNoExist
+	}
+	storedcfg := rawdb.ReadChainConfig(db, stored)
+	if storedcfg != nil {
+		return storedcfg, stored, nil
+	} else {
+		return nil, stored, errGenesisCfgNoExist
+	}
+}
+
 func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 	switch {
 	case g != nil:
 		return g.Config
 	case ghash == configs.MainnetGenesisHash:
 		return configs.MainnetChainConfig
-	case ghash == configs.CpchainGenesisHash:
-		// TODO
-		panic("not implemented.")
-		//return params.CpchainChainConfig
 	default:
 		return configs.AllEthashProtocolChanges
 		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
@@ -304,7 +320,7 @@ func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big
 }
 
 // DefaultGenesisBlock returns the Ethereum main net genesis block.
-func DefaultGenesisBlock() *Genesis {
+func DefaultOldGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     configs.MainnetChainConfig,
 		Nonce:      66,
@@ -315,9 +331,10 @@ func DefaultGenesisBlock() *Genesis {
 	}
 }
 
-func DefaultCpchainGenesisBlock() *Genesis {
+// DefaultGenesisBlock returns the CPChain main net genesis block.
+func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
-		Config:     configs.CpchainChainConfig,
+		Config:     configs.MainnetChainConfig,
 		Timestamp:  1492009146,
 		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000c05302acebd0730e3a18a058d7d1cb1204c4a092e94b7b6c5a0e526a4d97f9768ad6097bde25c62aef3dd127de235f15ffb4fc0d71469d1339df64656e31e5b68a98dcd17264bd1ba547d0b3e874da1e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
 		ExtraData2: hexutil.MustDecode("0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),

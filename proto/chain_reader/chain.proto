@@ -34,7 +34,7 @@ post : "/v1/apis/public/protocolVersion"
 message PublicEthereumAPIReply {
   bytes gas_price = 1;
   uint32 version = 2;
-  bool is_ok = 3;
+  google.protobuf.BoolValue is_ok = 3;
   google.protobuf.Any sync_info = 4;
 }
 
@@ -309,7 +309,8 @@ message PublicBlockChainAPIRequest {
     bytes data = 6;
     bool is_private = 7;
   }
-  CallArgs args = 1;
+  /* CallArgs args = 1; */
+  google.protobuf.Any args = 1;
   uint64 block_number = 2;
   bytes address = 3;
   bool full_tx = 4;
@@ -425,7 +426,7 @@ post : "/v1/apis/public/getTransactionByBlockNumberAndIndex"
          body : "*"
       };
     }
-  rpc GetTransactionByHash(PublicTransactionPoolAPIRequest)
+rpc GetTransactionByHash(PublicTransactionPoolAPIRequest)
     returns (PublicTransactionPoolAPIReply) {
       option (google.api.http) = {
 post : "/v1/apis/public/getTransactionByHash"

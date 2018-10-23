@@ -33,14 +33,14 @@ const CpchainChainId = 42
 // Genesis hashes to enforce below configs on.
 var (
 	// hash refers to default block.
-	MainnetGenesisHash = common.HexToHash("0x1016c25d1b029163a0a5c960733381f5db7710066ae3816c1768d24b72be1e8f")
+	OldMainnetGenesisHash = common.HexToHash("0x1016c25d1b029163a0a5c960733381f5db7710066ae3816c1768d24b72be1e8f")
 	// TODO
-	CpchainGenesisHash = common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000")
+	MainnetGenesisHash = common.HexToHash("0x6a1455819a218618d870ad9c84257d4917ec6c6e10f4c133004dd1f8a687612a")
 )
 
 var (
-	// MainnetChainConfig is the chain parameters to run a node on the main network.
-	MainnetChainConfig = &ChainConfig{
+	// OldMainnetChainConfig is the old ETH chain parameters to run a node on the main network.
+	OldMainnetChainConfig = &ChainConfig{
 		ChainID:             big.NewInt(1),
 		HomesteadBlock:      big.NewInt(1150000),
 		DAOForkBlock:        big.NewInt(1920000),
@@ -69,8 +69,8 @@ var (
 		Ethash:              new(EthashConfig),
 	}
 
-	// CpchainChainConfig contains the chain parameters to run a node on the Cpchain network.
-	CpchainChainConfig = &ChainConfig{
+	// 	// MainnetChainConfig is the chain parameters to run a node on the CPChain main network.
+	MainnetChainConfig = &ChainConfig{
 		ChainID:        big.NewInt(42),
 		HomesteadBlock: big.NewInt(1),
 		EIP150Block:    big.NewInt(2),

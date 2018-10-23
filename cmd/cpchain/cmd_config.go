@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"github.com/BurntSushi/toml"
+	"github.com/naoina/toml"
 	"github.com/urfave/cli"
 )
 

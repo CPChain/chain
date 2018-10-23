@@ -8,10 +8,11 @@ package protos;
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
 
 message PublicEthereumAPIReply{
-     bytes address = 1;
-     int64 rate = 2;
+    google.protobuf.BytesValue address = 1;
+    google.protobuf.UInt64Value rate = 2;
 }
 
 // PublicEthereumAPI provides an API to access Ethereum full node-related
@@ -40,24 +41,25 @@ service PublicEthereumAPI{
     }
 }
 
+
 message PublicMinerAPIRequest {
-  uint64 nonce = 1;
-  bytes solution = 2;
-  bytes digest = 3;
-  uint64 hashrate = 4;
-  bytes id = 5;
+    google.protobuf.BytesValue block_nonce = 1;
+    google.protobuf.BytesValue solution = 2;
+    google.protobuf.BytesValue digest = 3;
+    uint64 hashrate = 4;
+    bytes id = 5;
 }
 
 message PublicMinerAPIReply {
-  bool is_ok = 1;
-  repeated string works = 2;
+    google.protobuf.BoolValue mining = 1;
+    bool is_accepting= 2;
+    repeated string works = 3;
 }
-
 // PublicMinerAPI provides an API to control the miner.
 // It offers only methods that operate on data that pose no security risk when it is publicly accessible.
 service PublicMinerAPI{
     // Mining returns an indication if this node is currently mining.
-    rpc Mining(PublicMinerAPIRequest) returns (PublicMinerAPIReply) {
+    rpc Mining(google.protobuf.Empty) returns (PublicMinerAPIReply) {
         option (google.api.http) = {
             post: "/v1/apis/public/mining"
             body: "*"
@@ -75,7 +77,7 @@ service PublicMinerAPI{
     // result[0], 32 bytes hex encoded current block header pow-hash
     // result[1], 32 bytes hex encoded seed hash used for DAG
     // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
-    rpc GetWork(PublicMinerAPIRequest) returns (PublicMinerAPIReply) {
+    rpc GetWork(google.protobuf.Empty) returns (PublicMinerAPIReply) {
         option (google.api.http) = {
             post: "/v1/apis/public/getWork"
             body: "*"
@@ -92,8 +94,10 @@ service PublicMinerAPI{
     }
 }
 
+
+
 message PrivateMinerAPIRequest {
-    int32 threads = 1;
+    google.protobuf.Int32Value threads = 1;
     string extra = 2;
     bytes gas_price = 3;
     bytes etherbase = 4;
@@ -103,7 +107,6 @@ message PrivateMinerAPIReply{
     bool is_ok = 1;
     uint64 hashrate = 2;
 }
-
 // PrivateMinerAPI provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
 service PrivateMinerAPI {
@@ -153,6 +156,7 @@ service PrivateMinerAPI {
           };
     }
 }
+
 message PrivateAdminAPIRequest {
     string file = 1;
 }
@@ -160,7 +164,6 @@ message PrivateAdminAPIRequest {
 message PrivateAdminAPIReply {
     bool is_ok = 1;
 }
-
 // PrivateAdminAPI is the collection of Ethereum full node-related APIs
 // exposed over the private admin endpoint.
 service PrivateAdminAPI {
@@ -198,45 +201,23 @@ service PublicDebugAPI {
 
 message PrivateDebugAPIRequest {
     bytes hash = 1;
-    string block_hash = 2;
+    bytes block_hash = 2;
     int32 tx_index = 3;
-    string contract_address = 4;
+    bytes contract_address = 4;
     bytes key_start = 5;
     int32 max_result = 6;
-    uint64 start_num = 7;
-    google.protobuf.Any trie = 8;
-    bytes start = 9;
-    uint64 end_num = 10;
-    string start_hash = 11;
-    string end_hash = 12;
-    google.protobuf.Any start_block = 13;
-    google.protobuf.Any end_block = 14;
+    bytes start_hash = 7;
+    google.protobuf.BytesValue end_hash = 8;
+    uint64 start_num = 9;
+    google.protobuf.UInt64Value end_num = 10;
 
 }
 
 message PrivateDebugAPIReply {
-    // BadBlockArgs represents the entries in the list returned when bad blocks are queried.
-    message BadBlockArgs {
-        string hash = 1;
-        map<string,google.protobuf.Any> block = 2;
-        string rlp = 3;
-    }
-
-    message storageEntry {
-        string key = 1;
-        string value = 2;
-    }
-
-    // StorageRangeResult is the result of a debug_storageRangeAt API call.
-    message StorageRangeResult {
-        map<string,storageEntry> storage = 1;
-        string next_key = 2;
-    }
-
     bytes preimage = 1;
-    repeated BadBlockArgs bad_block_args = 2;
-    StorageRangeResult storage_range_result = 3;
-    repeated bytes accounts = 4;
+    google.protobuf.Any bad_block_args = 2;
+    google.protobuf.Any storage_range_result = 3;
+    google.protobuf.Any accounts = 4;
 }
 
 // PrivateDebugAPI is the collection of Ethereum full node APIs exposed over
@@ -251,14 +232,14 @@ service PrivateDebugAPI {
     }
     // GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network
     // and returns them as a JSON list of block-hashes
-    rpc GetBadBlocks(PrivateDebugAPIRequest) returns (PrivateDebugAPIReply) {
+    rpc GetBadBlocks(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
             post: "/v1/apis/private/getBadBlocks"
             body: "*"
           };
     }
     // StorageRangeAt returns the storage at the given block height and transaction index.
-    rpc StorageRangeAt(PrivateDebugAPIRequest) returns (PrivateDebugAPIReply) {
+    rpc StorageRangeAt(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
             post: "/v1/apis/private/storageRangeAt"
             body: "*"
@@ -269,7 +250,7 @@ service PrivateDebugAPI {
     // code hash, or storage hash.
     //
     // With one parameter, returns the list of accounts modified in the specified block.
-    rpc GetModifiedAccountsByNumber(PrivateDebugAPIRequest) returns (PrivateDebugAPIReply) {
+    rpc GetModifiedAccountsByNumber(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
             post: "/v1/apis/private/getModifiedAccountsByNumber"
             body: "*"
@@ -280,7 +261,7 @@ service PrivateDebugAPI {
     // code hash, or storage hash.
     //
     // With one parameter, returns the list of accounts modified in the specified block.
-    rpc GetModifiedAccountsByHash(PrivateDebugAPIRequest) returns (PrivateDebugAPIReply) {
+    rpc GetModifiedAccountsByHash(PrivateDebugAPIRequest) returns (google.protobuf.Any) {
         option (google.api.http) = {
             post: "/v1/apis/private/getModifiedAccountsByHash"
             body: "*"

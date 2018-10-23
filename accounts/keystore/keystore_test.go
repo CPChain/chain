@@ -27,11 +27,88 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
+	"strconv"
 )
 
 var testSigData = make([]byte, 32)
+
+// TODO TestKeyFileUpgrade
+func TestKeyFileUpgrade(t *testing.T) {
+	tmpdir, err := ioutil.TempDir("", "upgrade-keyfile-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpdir)
+
+	password := "password"
+	for i := 1; i < 11; i++ {
+		switch i {
+		case 3:
+			password = "pwdnode1"
+		case 4:
+			password = "pwdnode2"
+		default:
+			password = "password"
+		}
+
+		// decode json, get Key
+		path := "testdata/keys/key" + strconv.Itoa(i)
+
+		// fmt.Println("path:", path)
+		keyjson, err := ioutil.ReadFile(path)
+		// fmt.Println("keyjson:", string(keyjson))
+		key, err := DecryptKey(keyjson, password)
+		if err != nil {
+			t.Fatalf("json:%v,failed to decrypt: %v", keyjson, err)
+		}
+
+		// build json
+		scryptN := StandardScryptN
+		scryptP := StandardScryptP
+		jsonByte, err := EncryptKey(key, password, scryptN, scryptP)
+		fmt.Println("jsonByte:", string(jsonByte))
+		fmt.Println("tmpdir:", tmpdir)
+		ioutil.WriteFile(tmpdir+"/key"+strconv.Itoa(i), jsonByte, 0666)
+	}
+}
+
+func TestKeyStoreNoPassword(t *testing.T) {
+	dir, ks := tmpKeyStore(t, true)
+	defer os.RemoveAll(dir)
+
+	a, err := ks.NewAccount("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(a.URL.Path, dir) {
+		t.Errorf("account file %s doesn't have dir prefix", a.URL)
+	}
+	stat, err := os.Stat(a.URL.Path)
+	if err != nil {
+		t.Fatalf("account file %s doesn't exist (%v)", a.URL, err)
+	}
+	if runtime.GOOS != "windows" && stat.Mode() != 0600 {
+		t.Fatalf("account file has wrong mode: got %o, want %o", stat.Mode(), 0600)
+	}
+	if !ks.HasAddress(a.Address) {
+		t.Errorf("HasAccount(%x) should've returned true", a.Address)
+	}
+	if err := ks.Update(a, "", "bar"); err != nil {
+		t.Errorf("Update error: %v", err)
+	}
+	if err := ks.Delete(a, "bar"); err != nil {
+		t.Errorf("Delete error: %v", err)
+	}
+	if common.FileExist(a.URL.Path) {
+		t.Errorf("account file %s should be gone after Delete", a.URL)
+	}
+	if ks.HasAddress(a.Address) {
+		t.Errorf("HasAccount(%x) should've returned true after Delete", a.Address)
+	}
+}
 
 func TestKeyStore(t *testing.T) {
 	dir, ks := tmpKeyStore(t, true)
@@ -379,9 +456,9 @@ func tmpKeyStore(t *testing.T, encrypted bool) (string, *KeyStore) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	new := NewPlaintextKeyStore
+	newKeystore := NewPlaintextKeyStore
 	if encrypted {
-		new = func(kd string) *KeyStore { return NewKeyStore(kd, veryLightScryptN, veryLightScryptP) }
+		newKeystore = func(kd string) *KeyStore { return NewKeyStore(kd, veryLightScryptN, veryLightScryptP) }
 	}
-	return d, new(d)
+	return d, newKeystore(d)
 }

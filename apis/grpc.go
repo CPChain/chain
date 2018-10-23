@@ -4,8 +4,7 @@ package apis
 // 	address           string
 // 	Listener          net.Listener
 // 	ConnectionTimeout uint64
-// 	Certificate
-// 	UseTLS bool
+// 	UseTLS            bool
 // }
 
 // var (
@@ -32,7 +31,7 @@ package apis
 // 		grpc.Creds(credentials.NewClientTLSFromCert(CertPool, endpoint))}
 
 // 	grpcServer := grpc.NewServer(opts...)
-// 	pb.RegisterEchoServiceServer(grpcServer, newServer())
+// 	// pb.RegisterEchoServiceServer(grpcServer, newServer())
 // 	ctx := context.Background()
 
 // 	dcreds := credentials.NewClientTLSFromCert(CertPool, endpoint)
@@ -40,7 +39,7 @@ package apis
 // 	// dopts := []grpc.DialOption{grpc.WithTransportCredentials(dcreds)}
 // 	// register need
 
-// 	err = srv.Serve(tls.NewListener(conn, srv.TLSConfig))
+// 	err := srv.Serve(tls.NewListener(conn, srv.TLSConfig))
 
 // 	if err != nil {
 // 		log.Fatal("ListenAndServe: ", err)

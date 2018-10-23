@@ -1,13 +1,21 @@
 package eth
 
 import (
+	"bytes"
 	"compress/gzip"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"io"
 	"math/big"
 	"os"
 	"strings"
+	"time"
+
+	"bitbucket.org/cpchain/chain/core"
+	"bitbucket.org/cpchain/chain/core/vm"
+	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/golang/protobuf/ptypes/wrappers"
 
 	"bitbucket.org/cpchain/chain/core/state"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -57,7 +65,7 @@ func (api *PublicEthereumAPIServer) Etherbase(ctx context.Context, e *empty.Empt
 	if err != nil {
 		return nil, err
 	}
-	return &protos.PublicEthereumAPIReply{Address: etherBase.Bytes()}, nil
+	return &protos.PublicEthereumAPIReply{Address: &wrappers.BytesValue{Value: etherBase.Bytes()}}, nil
 }
 
 func (api *PublicEthereumAPIServer) Coinbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
@@ -65,7 +73,8 @@ func (api *PublicEthereumAPIServer) Coinbase(ctx context.Context, e *empty.Empty
 }
 
 func (api *PublicEthereumAPIServer) Hashrate(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
-	return &protos.PublicEthereumAPIReply{Rate: api.e.Miner().HashRate()}, nil
+	rate := api.e.Miner().HashRate()
+	return &protos.PublicEthereumAPIReply{Rate: &wrappers.UInt64Value{Value: uint64(rate)}}, nil
 }
 
 type PublicMinerAPIServer struct {
@@ -96,15 +105,24 @@ func (api *PublicMinerAPIServer) Namespace() string {
 	return "eth"
 }
 
-func (api *PublicMinerAPIServer) Mining(ctx context.Context, req *protos.PublicMinerAPIRequest) (*protos.PublicMinerAPIReply, error) {
-	return &protos.PublicMinerAPIReply{IsOk: api.e.IsMining()}, nil
+func (api *PublicMinerAPIServer) Mining(ctx context.Context, req *empty.Empty) (*protos.PublicMinerAPIReply, error) {
+	return &protos.PublicMinerAPIReply{Mining: &wrappers.BoolValue{Value: api.e.IsMining()}}, nil
 }
 
 func (api *PublicMinerAPIServer) SubmitWork(ctx context.Context, req *protos.PublicMinerAPIRequest) (*protos.PublicMinerAPIReply, error) {
-	return &protos.PublicMinerAPIReply{IsOk: api.agent.SubmitWork(types.EncodeNonce(req.Nonce), common.BytesToHash(req.Digest), common.BytesToHash(req.Solution))}, nil
+	var (
+		nonce    types.BlockNonce
+		digest   common.Hash
+		solution common.Hash
+	)
+	copy(nonce[:], req.BlockNonce.Value)
+	digest = common.BytesToHash(req.Digest.Value)
+	solution = common.BytesToHash(req.Solution.Value)
+	acceped := api.agent.SubmitWork(nonce, digest, solution)
+	return &protos.PublicMinerAPIReply{IsAccepting: acceped}, nil
 }
 
-func (api *PublicMinerAPIServer) GetWork(ctx context.Context, req *protos.PublicMinerAPIRequest) (*protos.PublicMinerAPIReply, error) {
+func (api *PublicMinerAPIServer) GetWork(ctx context.Context, req *empty.Empty) (*protos.PublicMinerAPIReply, error) {
 	if !api.e.IsMining() {
 		// TODO: @liuq fix this.
 		if err := api.e.StartMining(false, nil); err != nil {
@@ -120,7 +138,7 @@ func (api *PublicMinerAPIServer) GetWork(ctx context.Context, req *protos.Public
 
 func (api *PublicMinerAPIServer) SubmitHashrate(ctx context.Context, req *protos.PublicMinerAPIRequest) (*protos.PublicMinerAPIReply, error) {
 	api.agent.SubmitHashrate(common.BytesToHash(req.Id), req.Hashrate)
-	return &protos.PublicMinerAPIReply{IsOk: true}, nil
+	return &protos.PublicMinerAPIReply{IsAccepting: true}, nil
 }
 
 // PrivateMinerAPIServer provides private RPC methods to control the miner.
@@ -156,15 +174,17 @@ func (api *PrivateMinerAPIServer) Namespace() string {
 // threads allowed to use.
 func (api *PrivateMinerAPIServer) Start(ctx context.Context, req *protos.PrivateMinerAPIRequest) (*protos.PrivateMinerAPIReply, error) {
 	// Set the number of threads if the seal engine supports it
-	if req.Threads == 0 {
-		req.Threads = -1 // Disable the miner from within
+	if req.Threads == nil {
+		req.Threads = &wrappers.Int32Value{}
+	} else if req.Threads.Value == 0 {
+		req.Threads.Value = -1
 	}
 	type threaded interface {
 		SetThreads(threads int)
 	}
 	if th, ok := api.e.engine.(threaded); ok {
 		log.Info("Updated mining threads", "threads", req.Threads)
-		th.SetThreads(int(req.Threads))
+		th.SetThreads(int(req.Threads.Value))
 	}
 	// Start the miner and return
 	if !api.e.IsMining() {
@@ -271,16 +291,6 @@ func (api *PrivateAdminAPIServer) ExportChain(ctx context.Context, req *protos.P
 	return &protos.PrivateAdminAPIReply{IsOk: true}, err
 }
 
-// func hasAllBlocks(chain *core.BlockChain, bs []*types.Block) bool {
-// 	for _, b := range bs {
-// 		if !chain.HasBlock(b.Hash(), b.NumberU64()) {
-// 			return false
-// 		}
-// 	}
-//
-// 	return true
-// }
-
 // ExportChain exports the current blockchain into a local file.
 func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *protos.PrivateAdminAPIRequest) (*protos.PrivateAdminAPIReply, error) {
 	// Make sure the can access the file to import
@@ -361,7 +371,38 @@ func (api *PublicDebugAPIServer) Namespace() string {
 // DumpBlock retrieves the entire state of the database at a given block.
 // TODO: @sangh
 func (api *PublicDebugAPIServer) DumpBlock(ctx context.Context, req *protos.PublicDebugAPIRequest) (*any.Any, error) {
-	return nil, nil
+	f := func(dump *state.Dump) (*any.Any, error) {
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		if err := enc.Encode(&dump); err != nil {
+			return &any.Any{}, err
+		}
+		return &any.Any{Value: buf.Bytes()}, nil
+	}
+	blockNumber := rpc.BlockNumber(req.BlockNumber)
+	if blockNumber == rpc.PendingBlockNumber {
+		// If we're dumping the pending state, we need to request
+		// both the pending block as well as the pending state from
+		// the miner and operate on those
+		_, stateDb := api.e.miner.Pending()
+		dump := stateDb.RawDump()
+		return f(&dump)
+	}
+	var block *types.Block
+	if blockNumber == rpc.LatestBlockNumber {
+		block = api.e.blockchain.CurrentBlock()
+	} else {
+		block = api.e.blockchain.GetBlockByNumber(uint64(blockNumber))
+	}
+	if block == nil {
+		return &any.Any{}, fmt.Errorf("block #%d not found", blockNumber)
+	}
+	stateDb, err := api.e.BlockChain().StateAt(block.StateRoot())
+	if err != nil {
+		return &any.Any{}, err
+	}
+	dump := stateDb.RawDump()
+	return f(&dump)
 }
 
 // PrivateDebugAPI is the collection of Ethereum full node APIs exposed over
@@ -401,7 +442,7 @@ func (api *PrivateDebugAPIServer) Preimage(ctx context.Context, req *protos.Priv
 	return nil, errors.New("unknown preimage")
 }
 
-func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*protos.PrivateDebugAPIReply, error) {
+func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
 	blocks := api.eth.BlockChain().BadBlocks()
 	results := make([]*BadBlockArgs, len(blocks))
 
@@ -419,39 +460,36 @@ func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *protos.
 			results[i].Block = map[string]interface{}{"error": err.Error()}
 		}
 	}
-	// TODO: @sangh
-	// return &protos.PrivateDebugAPIReply{BadBlockArgs:results}, nil
-	return &protos.PrivateDebugAPIReply{}, nil
-}
-
-func storageRangeAt_grpc(st state.Trie, start []byte, maxResult int) (protos.PrivateDebugAPIReply_StorageRangeResult, error) {
-	it := trie.NewIterator(st.NodeIterator(start))
-	result := protos.PrivateDebugAPIReply_StorageRangeResult{}
-	result.Storage = make(map[string]*protos.PrivateDebugAPIReplyStorageEntry)
-	for i := 0; i < maxResult && it.Next(); i++ {
-		_, content, _, err := rlp.Split(it.Value)
-		if err != nil {
-			return protos.PrivateDebugAPIReply_StorageRangeResult{}, err
-		}
-		e := &protos.PrivateDebugAPIReplyStorageEntry{Value: common.BytesToHash(content).Hex()}
-		if preimage := st.GetKey(it.Key); preimage != nil {
-			preimage := common.BytesToHash(preimage)
-			e.Key = preimage.Hex()
-		}
-		result.Storage[common.BytesToHash(it.Key).Hex()] = e
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(results); err != nil {
+		return &any.Any{}, err
 	}
-	// Add the 'next key' so clients can continue downloading.
-	if it.Next() {
-		next := common.BytesToHash(it.Key)
-		result.NextKey = next.Hex()
-	}
-	return result, nil
+	return &any.Any{Value: buf.Bytes()}, nil
 }
 
 // StorageRangeAt returns the storage at the given block height and transaction index.
-// TODO: @sangh
-func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*protos.PrivateDebugAPIReply, error) {
-	return nil, nil
+func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
+	blockHash := common.BytesToHash(req.BlockHash)
+	_, _, statedb, err := api.computeTxEnv(blockHash, int(req.TxIndex), 0)
+	contractAddress := common.BytesToAddress(req.ContractAddress)
+	if err != nil {
+		return &any.Any{}, err
+	}
+	st := statedb.StorageTrie(contractAddress)
+	if st == nil {
+		return &any.Any{}, fmt.Errorf("account %x doesn't exist", contractAddress)
+	}
+	result, err := storageRangeAt(st, req.KeyStart, int(req.MaxResult))
+	if err != nil {
+		return &any.Any{}, err
+	}
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(&result); err != nil {
+		return &any.Any{}, err
+	}
+	return &any.Any{Value: buf.Bytes()}, nil
 }
 
 // GetModifiedAccountsByNumber returns all accounts that have changed between the
@@ -459,14 +497,199 @@ func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *proto
 // code hash, or storage hash.
 //
 // With one parameter, returns the list of accounts modified in the specified block.
-// TODO: @sangh
-func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*protos.PrivateDebugAPIReply, error) {
-	return nil, nil
+func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
+	var startBlock, endBlock *types.Block
+
+	startBlock = api.eth.blockchain.GetBlockByNumber(req.StartNum)
+	if startBlock == nil {
+		return nil, fmt.Errorf("start block %x not found", req.StartNum)
+	}
+
+	if req.EndNum == nil {
+		endBlock = startBlock
+		startBlock = api.eth.blockchain.GetBlockByHash(startBlock.ParentHash())
+		if startBlock == nil {
+			return nil, fmt.Errorf("block %x has no parent", endBlock.Number())
+		}
+	} else {
+		endBlock = api.eth.blockchain.GetBlockByNumber(req.EndNum.Value)
+		if endBlock == nil {
+			return nil, fmt.Errorf("end block %d not found", req.EndNum.Value)
+		}
+	}
+	accounts, err := api.getModifiedAccounts(startBlock, endBlock)
+	if err != nil {
+		return &any.Any{}, err
+	}
+
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(accounts); err != nil {
+		return &any.Any{}, nil
+	}
+	return &any.Any{Value: buf.Bytes()}, nil
 }
 
-// TOOD: @sangh
-func (api *PrivateDebugAPIServer) GetModifiedAccountsByHash(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*protos.PrivateDebugAPIReply, error) {
-	return nil, nil
+func (api *PrivateDebugAPIServer) GetModifiedAccountsByHash(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
+	var startBlock, endBlock *types.Block
+	startBlock = api.eth.blockchain.GetBlockByHash(common.BytesToHash(req.StartHash))
+	if startBlock == nil {
+		return nil, fmt.Errorf("start block %x not found", req.StartHash)
+	}
+
+	if req.EndHash == nil {
+		endBlock = startBlock
+		startBlock = api.eth.blockchain.GetBlockByHash(startBlock.ParentHash())
+		if startBlock == nil {
+			return nil, fmt.Errorf("block %x has no parent", endBlock.Number())
+		}
+	} else {
+		endBlock = api.eth.blockchain.GetBlockByHash(common.BytesToHash(req.EndHash.Value))
+		if endBlock == nil {
+			return nil, fmt.Errorf("end block %x not found", req.EndHash.Value)
+		}
+	}
+	accounts, err := api.getModifiedAccounts(startBlock, endBlock)
+	if err != nil {
+		return &any.Any{}, err
+	}
+
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(accounts); err != nil {
+		return &any.Any{}, nil
+	}
+	return &any.Any{Value: buf.Bytes()}, nil
+}
+
+func (api *PrivateDebugAPIServer) computeStateDB(block *types.Block, reexec uint64) (*state.StateDB, error) {
+	// If we have the state fully available, use that
+	pubStateDB, err := api.eth.blockchain.StateAt(block.StateRoot())
+	if err == nil {
+		return pubStateDB, nil
+	}
+	// Otherwise try to reexec blocks until we find a state or reach our limit
+	origin := block.NumberU64()
+	database := state.NewDatabase(api.eth.ChainDb())
+
+	for i := uint64(0); i < reexec; i++ {
+		block = api.eth.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1)
+		if block == nil {
+			break
+		}
+		if pubStateDB, err = state.New(block.StateRoot(), database); err == nil {
+			break
+		}
+	}
+	if err != nil {
+		switch err.(type) {
+		case *trie.MissingNodeError:
+			return nil, errors.New("required historical state unavailable")
+		default:
+			return nil, err
+		}
+	}
+	// State was available at historical point, regenerate
+	var (
+		start  = time.Now()
+		logged time.Time
+		proot  common.Hash
+	)
+	for block.NumberU64() < origin {
+		// Print progress logs if long enough time elapsed
+		if time.Since(logged) > 8*time.Second {
+			log.Info("Regenerating historical state", "block", block.NumberU64()+1, "target", origin, "elapsed", time.Since(start))
+			logged = time.Now()
+		}
+		// Retrieve the next block to regenerate and process it
+		if block = api.eth.blockchain.GetBlockByNumber(block.NumberU64() + 1); block == nil {
+			return nil, fmt.Errorf("block #%d not found", block.NumberU64()+1)
+		}
+
+		// TODO: check if below statement is correct.
+		privStateDB, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.StateRoot()), pubStateDB.Database())
+		// TODO: pass real remote database.
+		_, _, _, _, err := api.eth.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
+		if err != nil {
+			return nil, err
+		}
+		// Finalize the state so any modifications are written to the trie
+		root, err := pubStateDB.Commit(true)
+		if err != nil {
+			return nil, err
+		}
+		if err := pubStateDB.Reset(root); err != nil {
+			return nil, err
+		}
+		database.TrieDB().Reference(root, common.Hash{})
+		database.TrieDB().Dereference(proot)
+		proot = root
+	}
+	nodes, imgs := database.TrieDB().Size()
+	log.Info("Historical state regenerated", "block", block.NumberU64(), "elapsed", time.Since(start), "nodes", nodes, "preimages", imgs)
+	return pubStateDB, nil
+}
+
+// computeStatePrivDB retrieves the private state database associated with a certain block.
+func (api *PrivateDebugAPIServer) computeStatePrivDB(block *types.Block) (*state.StateDB, error) {
+	// If we have the state fully available, use that
+	privStatedb, err := api.eth.blockchain.StatePrivAt(block.StateRoot())
+	if err == nil {
+		return privStatedb, nil
+	}
+	// TODO: Otherwise try to reexec blocks until we find a state or reach our limit
+	panic(err)
+}
+
+func (api *PrivateDebugAPIServer) computeTxEnv(blockHash common.Hash, txIndex int, reexec uint64) (core.Message, vm.Context, *state.StateDB, error) {
+	// Create the parent state database
+	block := api.eth.blockchain.GetBlockByHash(blockHash)
+	if block == nil {
+		return nil, vm.Context{}, nil, fmt.Errorf("block %x not found", blockHash)
+	}
+	parent := api.eth.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1)
+	if parent == nil {
+		return nil, vm.Context{}, nil, fmt.Errorf("parent %x not found", block.ParentHash())
+	}
+	pubStateDB, err := api.computeStateDB(parent, reexec)
+	if err != nil {
+		return nil, vm.Context{}, nil, err
+	}
+
+	privStateDB, err := api.computeStatePrivDB(parent)
+	if err != nil {
+		// TODO: log the fatal error
+		panic(err)
+	}
+
+	// Recompute transactions up to the target index.
+	signer := types.MakeSigner(api.config, block.Number())
+
+	for idx, tx := range block.Transactions() {
+		// Assemble the transaction call message and return if the requested offset
+		msg, _ := tx.AsMessage(signer)
+		context := core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
+
+		var statedb *state.StateDB
+		if tx.IsPrivate() {
+			statedb = privStateDB // replace with private database.
+		} else {
+			statedb = pubStateDB
+		}
+
+		if idx == txIndex {
+			return msg, context, statedb, nil
+		}
+
+		// Not yet the searched for transaction, execute on top of the current state
+		vmenv := vm.NewEVM(context, statedb, api.config, vm.Config{})
+		if _, _, _, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(tx.Gas())); err != nil {
+			return nil, vm.Context{}, nil, fmt.Errorf("tx %x failed: %v", tx.Hash(), err)
+		}
+		// Ensure any modifications are committed to the state
+		statedb.Finalise(true)
+	}
+	return nil, vm.Context{}, nil, fmt.Errorf("tx index %d out of range for block %x", txIndex, blockHash)
 }
 
 func (api *PrivateDebugAPIServer) getModifiedAccounts(startBlock, endBlock *types.Block) ([]common.Address, error) {

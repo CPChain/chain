@@ -87,7 +87,12 @@ func (s *PublicEthereumAPIServer) GasPrice(ctx context.Context, in *empty.Empty)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.PublicEthereumAPIReply{GasPrice: price.Bytes()}, nil
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(price); err != nil {
+		return &pb.PublicEthereumAPIReply{}, nil
+	}
+	return &pb.PublicEthereumAPIReply{GasPrice: buf.Bytes()}, nil
 }
 
 // ProtocolVersion returns the current Ethereum protocol version this node supports
@@ -108,7 +113,7 @@ func (s *PublicEthereumAPIServer) Syncing(ctx context.Context, in *empty.Empty) 
 	// Return not syncing if the synchronisation already completed
 	if progress.CurrentBlock >= progress.HighestBlock {
 		return &pb.PublicEthereumAPIReply{
-			IsOk: false,
+			IsOk: &wrappers.BoolValue{Value: false},
 		}, nil
 	}
 
@@ -655,8 +660,16 @@ func (s *PublicBlockChainAPIServer) GetBalance(ctx context.Context, in *pb.Publi
 	if state == nil || err != nil {
 		return nil, err
 	}
+
+	balance := state.GetBalance(common.BytesToAddress(in.Address))
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(&balance); err != nil {
+		return nil, err
+	}
+
 	return &pb.PublicBlockChainAPIReply{
-		Balance: state.GetBalance(common.BytesToAddress(in.Address)).Bytes(),
+		Balance: buf.Bytes(),
 	}, state.Error()
 }
 

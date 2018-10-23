@@ -69,7 +69,7 @@ func request_PublicEthereumAPI_Hashrate_0(ctx context.Context, marshaler runtime
 }
 
 func request_PublicMinerAPI_Mining_0(ctx context.Context, marshaler runtime.Marshaler, client PublicMinerAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PublicMinerAPIRequest
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -95,7 +95,7 @@ func request_PublicMinerAPI_SubmitWork_0(ctx context.Context, marshaler runtime.
 }
 
 func request_PublicMinerAPI_GetWork_0(ctx context.Context, marshaler runtime.Marshaler, client PublicMinerAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PublicMinerAPIRequest
+	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
