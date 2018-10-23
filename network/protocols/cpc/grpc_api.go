@@ -1,4 +1,4 @@
-package eth
+package cpc
 
 import (
 	"bytes"
@@ -35,10 +35,10 @@ import (
 )
 
 type PublicEthereumAPIServer struct {
-	e *Ethereum
+	e *CpchainService
 }
 
-func NewPublicEthereumAPIServer(e *Ethereum) *PublicEthereumAPIServer {
+func NewPublicEthereumAPIServer(e *CpchainService) *PublicEthereumAPIServer {
 	return &PublicEthereumAPIServer{e}
 }
 
@@ -76,11 +76,11 @@ func (api *PublicEthereumAPIServer) Hashrate(ctx context.Context, e *empty.Empty
 }
 
 type PublicMinerAPIServer struct {
-	e     *Ethereum
+	e     *CpchainService
 	agent *miner.RemoteAgent
 }
 
-func NewPublicMinerAPIServer(e *Ethereum) *PublicMinerAPIServer {
+func NewPublicMinerAPIServer(e *CpchainService) *PublicMinerAPIServer {
 	agent := miner.NewRemoteAgent(e.BlockChain(), e.Engine())
 	e.Miner().Register(agent)
 
@@ -142,11 +142,11 @@ func (api *PublicMinerAPIServer) SubmitHashrate(ctx context.Context, req *protos
 // PrivateMinerAPIServer provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
 type PrivateMinerAPIServer struct {
-	e *Ethereum
+	e *CpchainService
 }
 
 // NewPrivateMinerAPIServer create a new RPC service which controls the miner of this node.
-func NewPrivateMinerAPIServer(e *Ethereum) *PrivateMinerAPIServer {
+func NewPrivateMinerAPIServer(e *CpchainService) *PrivateMinerAPIServer {
 	return &PrivateMinerAPIServer{e: e}
 }
 
@@ -243,10 +243,10 @@ func (api *PrivateMinerAPIServer) GetHashrate(ctx context.Context, req *empty.Em
 // PrivateAdminAPI is the collection of Ethereum full node-related APIs
 // exposed over the private admin endpoint.
 type PrivateAdminAPIServer struct {
-	e *Ethereum
+	e *CpchainService
 }
 
-func NewPrivateAdminAPIServer(e *Ethereum) *PrivateAdminAPIServer {
+func NewPrivateAdminAPIServer(e *CpchainService) *PrivateAdminAPIServer {
 	return &PrivateAdminAPIServer{e: e}
 }
 
@@ -341,12 +341,12 @@ func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *protos.P
 // PublicDebugAPIServer is the collection of Ethereum full node APIs exposed
 // over the public debugging endpoint.
 type PublicDebugAPIServer struct {
-	e *Ethereum
+	e *CpchainService
 }
 
 // NewPublicDebugAPIServer creates a new API definition for the full node-
 // related public debug methods of the Ethereum service.
-func NewPublicDebugAPIServer(e *Ethereum) *PublicDebugAPIServer {
+func NewPublicDebugAPIServer(e *CpchainService) *PublicDebugAPIServer {
 	return &PublicDebugAPIServer{e: e}
 }
 
@@ -407,12 +407,12 @@ func (api *PublicDebugAPIServer) DumpBlock(ctx context.Context, req *protos.Publ
 // the private debugging endpoint.
 type PrivateDebugAPIServer struct {
 	config *configs.ChainConfig
-	eth    *Ethereum
+	eth    *CpchainService
 }
 
 // NewPrivateDebugAPI creates a new API definition for the full node-related
 // private debug methods of the Ethereum service.
-func NewPrivateDebugAPIServer(config *configs.ChainConfig, eth *Ethereum) *PrivateDebugAPIServer {
+func NewPrivateDebugAPIServer(config *configs.ChainConfig, eth *CpchainService) *PrivateDebugAPIServer {
 	return &PrivateDebugAPIServer{config: config, eth: eth}
 }
 
