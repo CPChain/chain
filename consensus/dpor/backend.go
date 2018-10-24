@@ -35,15 +35,13 @@ type ContractCaller struct {
 	Client ClientBackend
 
 	GasLimit uint64
-	GasPrice uint64
 }
 
 // NewContractCaller returns a ContractCaller.
-func NewContractCaller(key *keystore.Key, client ClientBackend, gasLimit uint64, gasPrice uint64) (*ContractCaller, error) {
+func NewContractCaller(key *keystore.Key, client ClientBackend, gasLimit uint64) (*ContractCaller, error) {
 	return &ContractCaller{
 		Key:      key,
 		Client:   client,
 		GasLimit: gasLimit,
-		GasPrice: gasPrice,
 	}, nil
 }

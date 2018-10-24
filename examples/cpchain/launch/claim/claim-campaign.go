@@ -12,7 +12,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
@@ -24,7 +23,6 @@ import (
 type keystorePair struct {
 	keystorePath string
 	passphrase   string
-	rsaPath      string
 }
 
 var (
@@ -34,57 +32,47 @@ var (
 		{
 			"dd1/keystore/",
 			"password",
-			"dd1/rsa/",
 		},
 		{
 			"dd2/keystore/",
 			"password",
-			"dd2/rsa/",
 		},
 		{
 			"dd3/keystore/",
 			"pwdnode1",
-			"dd3/rsa/",
 		},
 		{
 			"dd4/keystore/",
 			"pwdnode2",
-			"dd4/rsa/",
 		},
 		{
 			"dd5/keystore/",
 			"password",
-			"dd5/rsa/",
 		},
 		{
 			"dd6/keystore/",
 			"password",
-			"dd6/rsa/",
 		},
 		{
 			"dd7/keystore/",
 			"password",
-			"dd7/rsa/",
 		},
 		{
 			"dd8/keystore/",
 			"password",
-			"dd8/rsa/",
 		},
 		{
 			"dd9/keystore/",
 			"password",
-			"dd9/rsa/",
 		},
 		{
 			"dd10/keystore/",
 			"password",
-			"dd10/rsa/",
 		},
 	}
 )
 
-func getAccount(keyStoreFilePath string, passphrase string, rsaPath string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
+func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
 	// Load account.
 	ff, err := filepath.Abs(".")
 	file, err := os.Open(ff + "/" + dataDir + keyStoreFilePath)
@@ -114,10 +102,7 @@ func getAccount(keyStoreFilePath string, passphrase string, rsaPath string) (*ec
 	}
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	rsaKey, err := rsakey.NewRsaKey(dataDir + rsaPath)
-	fmt.Println(err)
-
-	return privateKey, publicKeyECDSA, fromAddress, rsaKey.PublicKey.RsaPublicKeyBytes
+	return privateKey, publicKeyECDSA, fromAddress, key.RsaKey.PublicKey.RsaPublicKeyBytes
 }
 
 func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address) {
@@ -236,8 +221,8 @@ func main() {
 
 	for i, kPair := range keystores {
 		fmt.Println(i)
-		keystoreFile, passphrase, rsaPath := kPair.keystorePath, kPair.passphrase, kPair.rsaPath
-		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase, rsaPath)
+		keystoreFile, passphrase := kPair.keystorePath, kPair.passphrase
+		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase)
 		claimCampaign(privKey, pubKey, addr, campaignAddress)
 		claimSigner(privKey, pubKey, addr, signerAddress, rsaPubKey)
 	}

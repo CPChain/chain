@@ -219,7 +219,8 @@ func createContractCaller(ctx *cli.Context, n *node.Node) *dpor.ContractCaller {
 		}
 		client := ethclient.NewClient(rpcClient)
 
-		contractCaller, err = dpor.NewContractCaller(key, client, 300000, 1)
+		// TODO: @Liuq fix this.
+		contractCaller, err = dpor.NewContractCaller(key, client, 300000)
 		if err != nil {
 			log.Warn("err when make contract call", "err", err)
 		}

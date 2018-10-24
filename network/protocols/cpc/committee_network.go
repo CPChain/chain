@@ -184,7 +184,11 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 			log.Warn("err when dialing remote signer with his nodeID", "err", err)
 			return false, err
 		}
-		server.AddPeer(node)
+		if server != nil {
+			server.AddPeer(node)
+		} else {
+			log.Warn("invalid server", "server", server)
+		}
 		rs.dialed = true
 	}
 
@@ -283,9 +287,14 @@ func (oc *BasicCommitteeNetworkHandler) UpdateContractCaller(contractCaller *dpo
 	// creates a keyed transactor
 	auth := bind.NewKeyedTransactor(contractCaller.Key.PrivateKey)
 
+	gasPrice, err := contractCaller.Client.SuggestGasPrice(context.Background())
+	if err != nil {
+		return err
+	}
+
 	auth.Value = big.NewInt(0)
 	auth.GasLimit = contractCaller.GasLimit
-	auth.GasPrice = big.NewInt(int64(contractCaller.GasPrice))
+	auth.GasPrice = gasPrice
 
 	oc.lock.Lock()
 

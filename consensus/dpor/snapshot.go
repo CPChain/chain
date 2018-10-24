@@ -19,6 +19,7 @@ package dpor
 import (
 	"encoding/json"
 	"errors"
+	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -74,6 +75,8 @@ type DporSnapshot struct {
 
 	Candidates    []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
 	RecentSigners map[uint64][]common.Address `json:"signers"`    // Set of recent signers
+
+	lock sync.RWMutex
 }
 
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
@@ -273,6 +276,8 @@ func (s *DporSnapshot) GetDefaultSigners() []common.Address {
 
 // updateView use rpt and election result to get new committee(signers).
 func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	signers := s.GetDefaultSigners()
 
@@ -289,17 +294,21 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 		// 	// TODO: fix this.
 		log.Debug(">= s.config.MaxInitBlockNumber -(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View), s.Number", "n", s.Number)
 
-		signers = election.Elect(rpts, seed, viewLength)
 		epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
-		s.RecentSigners[epochIdx] = signers
+		signers := s.RecentSigners[epochIdx]
 
-		log.Debug("elected signers in snapshot of:", "epoch idx", epochIdx)
-		for _, s := range s.RecentSigners[epochIdx] {
-			log.Debug("signer", "s", s.Hex())
+		if len(signers) == 0 {
+
+			signers = election.Elect(rpts, seed, viewLength)
+			s.RecentSigners[epochIdx] = signers
+			log.Debug("elected signers in snapshot of:", "epoch idx", epochIdx)
+			for _, s := range s.RecentSigners[epochIdx] {
+				log.Debug("signer", "s", s.Hex())
+			}
+
+			log.Debug("seed", "s", seed)
+			log.Debug("viewLength", "vl", viewLength)
 		}
-
-		log.Debug("seed", "s", seed)
-		log.Debug("viewLength", "vl", viewLength)
 
 	}
 

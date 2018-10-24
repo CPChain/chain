@@ -27,7 +27,7 @@ data_dir=`pwd`
 
 echo "Please check the IPFS daemon running on localhost."
 
-$proj_dir/build/bin/cpchain $ARGS --datadir $data_dir/data/dd1  --rpcaddr 127.0.0.1:8501 --grpcaddr 127.0.0.1:8601 --gatewayaddr 127.0.0.1:8701 --port 30311 --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --mine  --password conf/password 2>data/logs/1.log &
+$proj_dir/build/bin/cpchain $ARGS --datadir $data_dir/data/dd1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --gatewayaddr 0.0.0.0:8701 --port 30311 --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --mine  --password conf/password 2>data/logs/1.log &
 $proj_dir/build/bin/cpchain $ARGS --datadir $data_dir/data/dd2  --rpcaddr 127.0.0.1:8502 --grpcaddr 127.0.0.1:8602 --gatewayaddr 127.0.0.1:8702 --port 30312 --unlock "0xc05302acebd0730e3a18a058d7d1cb1204c4a092" --mine  --password conf/password 2>data/logs/2.log &
 $proj_dir/build/bin/cpchain $ARGS --datadir $data_dir/data/dd3  --rpcaddr 127.0.0.1:8503 --grpcaddr 127.0.0.1:8603 --gatewayaddr 127.0.0.1:8703 --port 30313 --unlock "0xef3dd127de235f15ffb4fc0d71469d1339df6465" --mine  --password conf/password1 2>data/logs/3.log &
 $proj_dir/build/bin/cpchain $ARGS --datadir $data_dir/data/dd4  --rpcaddr 127.0.0.1:8504 --grpcaddr 127.0.0.1:8604 --gatewayaddr 127.0.0.1:8704 --port 30314 --unlock "0x3a18598184ef84198db90c28fdfdfdf56544f747" --mine  --password conf/password2 2>data/logs/4.log &
