@@ -30,43 +30,43 @@ var (
 	dataDir   = "data/"
 	keystores = []keystorePair{
 		{
-			"dd1/keystore/",
+			"data1/keystore/",
 			"password",
 		},
 		{
-			"dd2/keystore/",
+			"data2/keystore/",
 			"password",
 		},
 		{
-			"dd3/keystore/",
+			"data3/keystore/",
 			"pwdnode1",
 		},
 		{
-			"dd4/keystore/",
+			"data4/keystore/",
 			"pwdnode2",
 		},
 		{
-			"dd5/keystore/",
+			"data5/keystore/",
 			"password",
 		},
 		{
-			"dd6/keystore/",
+			"data6/keystore/",
 			"password",
 		},
 		{
-			"dd7/keystore/",
+			"data7/keystore/",
 			"password",
 		},
 		{
-			"dd8/keystore/",
+			"data8/keystore/",
 			"password",
 		},
 		{
-			"dd9/keystore/",
+			"data9/keystore/",
 			"password",
 		},
 		{
-			"dd10/keystore/",
+			"data10/keystore/",
 			"password",
 		},
 	}

@@ -38,7 +38,7 @@ func CreateRsaKey() (*RsaKey, error) {
 	return nil, err
 }
 
-// TODO Remove this,Replace with NewRsaPrivateKey
+// Deprecated: Replace with NewRsaPrivateKey
 // NewRsaKey creates a keystore for the given directory.
 func NewRsaKey(rsaDir string) (*RsaKey, error) {
 	if err := os.MkdirAll(rsaDir, 0700); err != nil {
