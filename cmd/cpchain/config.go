@@ -95,7 +95,6 @@ func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-
 func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 	// ipc setting
 	if ctx.IsSet(flags.IpcAddrFlagName) {
@@ -112,7 +111,6 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.HTTPPort, _ = strconv.Atoi(addr[1])
 	}
 	// ws is omitted for now
-
 
 	// grpc setting
 	if ctx.IsSet(flags.GRpcAddrFlagName) {
@@ -132,6 +130,9 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.GatewayHost = addr[0]
 		cfg.GatewayPort, _ = strconv.Atoi(addr[1])
 	}
+
+	// TODO: @AC hardcode for blockchain explorer
+	cfg.HTTPCors = []string{"http://localhost:8000", "https://localhost:8000"}
 }
 
 func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {

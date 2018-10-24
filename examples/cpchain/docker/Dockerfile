@@ -21,8 +21,10 @@ RUN apt-get install -y npm
 RUN ln -s /usr/bin/nodejs /usr/bin/node
 
 RUN npm config set registry https://registry.npm.taobao.org
+RUN npm install -g bower
 WORKDIR /explorer
 RUN npm install
+RUN bower install --allow-root
 
 CMD  /bin/sh -c "cd /explorer && npm start"
 
