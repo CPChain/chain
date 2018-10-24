@@ -26,11 +26,9 @@ import (
 	"strings"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/apis"
-	"google.golang.org/grpc"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
+	"bitbucket.org/cpchain/chain/apis"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/debug"
@@ -39,6 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/prometheus/prometheus/util/flock"
+	"google.golang.org/grpc"
 )
 
 // Node is a container on which services can be registered.
@@ -339,7 +338,8 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 }
 
 func (n *Node) startInProcWithGrpc(gapis []apis.API) error {
-	handler, err := apis.NewServer(DefaultGrpcEndpoint(), n.DataDir(), n.useTls)
+	handler, err := apis.NewServer(n.config.GrpcEndpoint(), n.DataDir(), n.useTls)
+	// handler, err := apis.NewServer(DefaultGrpcEndpoint(), n.DataDir(), n.useTls)
 	if err != nil {
 		return err
 	}
@@ -390,7 +390,8 @@ func (n *Node) startIPCWithGprc(gapis []apis.API) error {
 	// }
 
 	// TODO: @sangh flag
-	listener, handler, err := apis.StartIPCEndpointWithGrpc(DefaultGrpcEndpoint(), DefaultProxyEndpoint(), n.DataDir(), n.useTls, gapis)
+	listener, handler, err := apis.StartIPCEndpointWithGrpc(n.config.GrpcEndpoint(), n.config.GatewayEndpoint(), n.DataDir(), n.useTls, gapis)
+	// listener, handler, err := apis.StartIPCEndpointWithGrpc(DefaultGrpcEndpoint(), DefaultProxyEndpoint(), n.DataDir(), n.useTls, gapis)
 	if err != nil {
 		return err
 	}
@@ -441,7 +442,8 @@ func (n *Node) startHTTPWithGprc(gapis []apis.API) error {
 	// if n.grpcEndpoint == "" {
 	// 	return nil
 	// }
-	listener, handler, err := apis.StartHTTPEndpoint(DefaultGrpcEndpoint(), DefaultProxyEndpoint(), n.DataDir(), n.useTls, gapis, n.config.HTTPModules)
+	listener, handler, err := apis.StartHTTPEndpoint(n.config.GrpcEndpoint(), n.config.GatewayEndpoint(), n.DataDir(), n.useTls, gapis, n.config.HTTPModules)
+	// listener, handler, err := apis.StartHTTPEndpoint(DefaultGrpcEndpoint(), DefaultProxyEndpoint(), n.DataDir(), n.useTls, gapis, n.config.HTTPModules)
 	if err != nil {
 		return err
 	}
