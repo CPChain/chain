@@ -118,9 +118,10 @@ contract Pdash {
     mapping(uint => DisputeInfo) public disputeRecords;
 
     mapping(address => uint) public proxyCredits;
-
+    
     mapping(address => uint) public proxyDeposits;
     mapping(uint => uint[]) public blockOrders;
+    mapping(uint => uint) public blockOrdersLength;
 
     // Security Checks
     modifier onlyBefore(uint time) {require(now < time); _;}
@@ -136,7 +137,7 @@ contract Pdash {
     }
     modifier inState(uint id, State _state) {require(orderRecords[id].state == _state); _;}
     modifier inDisputeState(uint id, DisputeState _state) {require(disputeRecords[id].disputeState == _state); _;}
-
+    
     modifier onlyTrent() {require(msg.sender == trentAddress); _;}
 
     constructor() public {
@@ -194,6 +195,7 @@ contract Pdash {
             disputeId: 0
         });
         blockOrders[block.number].push(numOrders);
+        blockOrdersLength[block.number].add(1);
         emit OrderInitiated(msg.sender, numOrders, msg.value, now);
     }
 
@@ -296,7 +298,7 @@ contract Pdash {
         require(rate > 0 && rate < 10);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].add(rate);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].div(2);
-
+        
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].add(rate);
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
         if(orderRecords[id].state == State.Finished){
@@ -366,7 +368,7 @@ contract Pdash {
         require(rate > 0 && rate < 10);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].add(rate);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].div(2);
-
+        
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].add(rate);
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
         if(orderRecords[id].state == State.Finished){
