@@ -1,16 +1,10 @@
 import json
 import os.path as osp
 
-
 # cf. http://tinyurl.com/yd7mbzp3
 from solc import compile_standard
-from web3 import Web3, TestRPCProvider, HTTPProvider
+from web3 import Web3, HTTPProvider
 from web3.contract import ImplicitContract
-
-
-#from cpchain.chain.utils import default_w3 as w3
-#from cpchain import config
-#from cpchain.utils import join_with_root
 
 # solidity source code
 contract_source_code = '''
@@ -32,24 +26,17 @@ contract Greeter {
     }
 }
 '''
-w3 = None
-mode = ""
-http_provider = ""
 
-def _set_default_w3():
+w3 = None
+http_provider = "http://127.0.0.1:22000"
+
+def set_default_w3():
     global w3
-    global mode
     global http_provider
-    if mode == "test":
-        provider = TestRPCProvider()
-    elif mode == "falcon":
-        provider = HTTPProvider(http_provider)
-    elif mode == "local":
-        provider = HTTPProvider(http_provider)
-    else:
-        raise RuntimeError("No Provider Found.")
+    provider = HTTPProvider(http_provider)
     w3 = Web3(provider)
     w3.eth.defaultAccount = w3.eth.accounts[0]
+
     
 def compile_contract():
     #compiled_sol = compile_source(contract_source_code)
@@ -93,8 +80,7 @@ def deploy_contract(interface):
 
 
 def main():
-    global w3
-    _set_default_w3()
+    set_default_w3()
     interface = compile_contract()
     deploy_contract(interface)
 

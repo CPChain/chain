@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-
-set -u
-set -e
+set -ue
 
 echo "[*] Cleaning up temporary data directories"
 rm -rf data
