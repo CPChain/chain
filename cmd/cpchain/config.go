@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -94,8 +95,23 @@ func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-// TODO @sangh
+
 func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
+	// ipc setting
+	if ctx.IsSet(flags.IpcAddrFlagName) {
+		cfg.IPCPath = ctx.String(flags.IpcAddrFlagName)
+	}
+
+	// http setting
+	if ctx.IsSet(flags.RpcAddrFlagName) {
+		addr := strings.Split(ctx.String(flags.RpcAddrFlagName), ";")
+		if len(addr) != 2 {
+			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.RpcAddrFlagName)
+		}
+		cfg.HTTPHost = addr[0]
+		cfg.HTTPPort, _ = strconv.Atoi(addr[1])
+	}
+	// ws is omitted for now
 }
 
 func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {

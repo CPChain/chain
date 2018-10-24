@@ -141,36 +141,50 @@ var MinerFlags = []cli.Flag{
 	},
 }
 
+// const (
+// 	RpcFlagName       = "rpc"
+// 	RpcAddrFlagName   = "rpcaddr"
+// 	RpcPortFlagName   = "rpcport"
+// 	RpcTlsFlagName    = "rpctls"
+// 	RpcVerifyFlagName = "rpcverify"
+// )
+
 const (
-	RpcFlagName       = "rpc"
-	RpcAddrFlagName   = "rpcaddr"
-	RpcPortFlagName   = "rpcport"
-	RpcTlsFlagName    = "rpctls"
-	RpcVerifyFlagName = "rpcverify"
+	IpcAddrFlagName = "ipcaddr"
+	RpcAddrFlagName = "rpcaddr"
+	// RpcAddrFlagName = "rpcaddr",
 )
 
 // TODO @sangh adjust these
 var RpcFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  RpcFlagName,
-		Usage: "Enable the HTTP-RPC server",
-	},
-
+	// cli.BoolFlag{
+	// 	Name:  RpcFlagName,
+	// 	Usage: "Enable the HTTP-RPC server",
+	// },
+	//
+	// cli.StringFlag{
+	// 	Name:  RpcAddrFlagName,
+	// 	Usage: "HTTP-RPC server listening interface",
+	// },
+	// cli.IntFlag{
+	// 	Name:  RpcPortFlagName,
+	// 	Usage: "HTTP-RPC server listening port",
+	// },
+	// cli.BoolFlag{
+	// 	Name:  RpcTlsFlagName,
+	// 	Usage: "HTTP-RPC server is need tls transport",
+	// },
+	// cli.BoolFlag{
+	// 	Name:  RpcVerifyFlagName,
+	// 	Usage: "HTTP-RPC server if need verify client",
+	// },
 	cli.StringFlag{
-		Name:  RpcAddrFlagName,
-		Usage: "HTTP-RPC server listening interface",
+		Name:  IpcAddrFlagName,
+		Usage: "Local ipc path",
 	},
-	cli.IntFlag{
-		Name:  RpcPortFlagName,
-		Usage: "HTTP-RPC server listening port",
-	},
-	cli.BoolFlag{
-		Name:  RpcTlsFlagName,
-		Usage: "HTTP-RPC server is need tls transport",
-	},
-	cli.BoolFlag{
-		Name:  RpcVerifyFlagName,
-		Usage: "HTTP-RPC server if need verify client",
+	cli.StringFlag{
+		Name: RpcAddrFlagName,
+		Usage: "RPC address whose format is <host:port>",
 	},
 }
 
