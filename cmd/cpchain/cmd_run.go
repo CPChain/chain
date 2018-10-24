@@ -29,6 +29,7 @@ func init() {
 	runFlags = append(runFlags, flags.P2pFlags...)
 	runFlags = append(runFlags, flags.AccountFlags...)
 	runFlags = append(runFlags, flags.ChainFlags...)
+	runFlags = append(runFlags, flags.LogFlags...)
 	runCommand = cli.Command{
 		Action: run,
 		Name:   "run",

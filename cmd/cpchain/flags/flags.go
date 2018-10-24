@@ -250,3 +250,19 @@ var NodeFlags = []cli.Flag{
 }
 
 var MiscFlags = []cli.Flag{}
+
+const (
+	LogNumberFlagName = "lognumber"
+	VerbosityFlagName = "verbosity"
+)
+
+var LogFlags = []cli.Flag{
+	cli.BoolFlag{
+		Name:  LogNumberFlagName,
+		Usage: "Log show filename and line number",
+	},
+	cli.IntFlag{
+		Name:  VerbosityFlagName,
+		Usage: "Log Level Panic:0 Fatal:1 Error:2 Warn:3 Info:4 Debug:5",
+	},
+}

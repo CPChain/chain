@@ -96,6 +96,22 @@ func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 }
 
 
+func updateLogConfig(ctx *cli.Context) {
+	if ctx.IsSet(flags.VerbosityFlagName) {
+		verbosity := ctx.Uint(flags.VerbosityFlagName)
+		if verbosity > 5  {
+			log.Error("log level error, use default info level")
+		}
+		log.SetLevel(log.Level(verbosity))
+	}
+
+	if ctx.IsSet(flags.LogNumberFlagName) {
+		if ctx.Bool(flags.LogNumberFlagName) {
+			log.ShowFilename()
+		}
+	}
+}
+
 func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 	// ipc setting
 	if ctx.IsSet(flags.IpcAddrFlagName) {
@@ -138,6 +154,7 @@ func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	updateNodeGeneralConfig(ctx, cfg)
 	updateP2pConfig(ctx, &cfg.P2P)
 	updateRpcConfig(ctx, cfg)
+	updateLogConfig(ctx)
 
 	if ctx.IsSet(flags.LightKdfFlagName) {
 		cfg.UseLightweightKDF = ctx.Bool(flags.LightKdfFlagName)
