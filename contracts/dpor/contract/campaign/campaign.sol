@@ -210,7 +210,7 @@ contract Campaign {
     // update viewIdx called by function ClaimCampaign.
     function updateViewIdx() internal{
         uint blockNumber = block.number;
-        viewIdx = (blockNumber/numPerRound).add(1);
+        viewIdx = blockNumber / numPerRound;
     }
 
     // TODO QuitCampaign
