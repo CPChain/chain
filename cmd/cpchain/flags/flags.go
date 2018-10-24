@@ -152,7 +152,9 @@ var MinerFlags = []cli.Flag{
 const (
 	IpcAddrFlagName = "ipcaddr"
 	RpcAddrFlagName = "rpcaddr"
-	// RpcAddrFlagName = "rpcaddr",
+	// these two flags should be removed in the future
+	GRpcAddrFlagName = "grpcaddr"
+	GatewayAddrFlagName = "gatewayaddr"
 )
 
 // TODO @sangh adjust these
@@ -185,6 +187,14 @@ var RpcFlags = []cli.Flag{
 	cli.StringFlag{
 		Name: RpcAddrFlagName,
 		Usage: "RPC address whose format is <host:port>",
+	},
+	cli.StringFlag{
+		Name: GRpcAddrFlagName,
+		Usage: "GRPC address whose format is <host:port>",
+	},
+	cli.StringFlag{
+		Name: GatewayAddrFlagName,
+		Usage: "GRPC gateway address whose format is <host:port>",
 	},
 }
 

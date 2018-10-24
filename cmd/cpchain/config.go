@@ -104,7 +104,7 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 
 	// http setting
 	if ctx.IsSet(flags.RpcAddrFlagName) {
-		addr := strings.Split(ctx.String(flags.RpcAddrFlagName), ";")
+		addr := strings.Split(ctx.String(flags.RpcAddrFlagName), ":")
 		if len(addr) != 2 {
 			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.RpcAddrFlagName)
 		}
@@ -112,6 +112,26 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.HTTPPort, _ = strconv.Atoi(addr[1])
 	}
 	// ws is omitted for now
+
+
+	// grpc setting
+	if ctx.IsSet(flags.GRpcAddrFlagName) {
+		addr := strings.Split(ctx.String(flags.GRpcAddrFlagName), ":")
+		if len(addr) != 2 {
+			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GRpcAddrFlagName)
+		}
+		cfg.GrpcHost = addr[0]
+		cfg.GrpcPort, _ = strconv.Atoi(addr[1])
+	}
+
+	if ctx.IsSet(flags.GatewayAddrFlagName) {
+		addr := strings.Split(ctx.String(flags.GatewayAddrFlagName), ":")
+		if len(addr) != 2 {
+			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GatewayAddrFlagName)
+		}
+		cfg.GatewayHost = addr[0]
+		cfg.GatewayPort, _ = strconv.Atoi(addr[1])
+	}
 }
 
 func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
