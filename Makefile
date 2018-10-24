@@ -12,7 +12,7 @@ GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
 
-all: cpchain bootnode
+all: cpchain bootnode abigen
 
 cpchain:
 	build/env.sh go run build/ci.go install ./cmd/cpchain
@@ -24,6 +24,10 @@ bootnode:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/bootnode\" to launch bootnode."
 
+abigen:
+	build/env.sh go run build/ci.go install ./tools/abigen
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/abigen\" to launch abigen."
 
 android:
 	build/env.sh go run build/ci.go aar --local
