@@ -95,18 +95,17 @@ func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-
 func updateLogConfig(ctx *cli.Context) {
 	if ctx.IsSet(flags.VerbosityFlagName) {
 		verbosity := ctx.Uint(flags.VerbosityFlagName)
-		if verbosity > 5  {
+		if verbosity > 5 {
 			log.Error("log level error, use default info level")
 		}
 		log.SetLevel(log.Level(verbosity))
 	}
 
-	if ctx.IsSet(flags.LogNumberFlagName) {
-		if ctx.Bool(flags.LogNumberFlagName) {
+	if ctx.IsSet(flags.LogLineNumberFlagName) {
+		if ctx.Bool(flags.LogLineNumberFlagName) {
 			log.ShowFilename()
 		}
 	}
@@ -128,7 +127,6 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.HTTPPort, _ = strconv.Atoi(addr[1])
 	}
 	// ws is omitted for now
-
 
 	// grpc setting
 	if ctx.IsSet(flags.GRpcAddrFlagName) {

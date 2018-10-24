@@ -153,7 +153,7 @@ const (
 	IpcAddrFlagName = "ipcaddr"
 	RpcAddrFlagName = "rpcaddr"
 	// these two flags should be removed in the future
-	GRpcAddrFlagName = "grpcaddr"
+	GRpcAddrFlagName    = "grpcaddr"
 	GatewayAddrFlagName = "gatewayaddr"
 )
 
@@ -185,15 +185,15 @@ var RpcFlags = []cli.Flag{
 		Usage: "Local ipc path",
 	},
 	cli.StringFlag{
-		Name: RpcAddrFlagName,
+		Name:  RpcAddrFlagName,
 		Usage: "RPC address whose format is <host:port>",
 	},
 	cli.StringFlag{
-		Name: GRpcAddrFlagName,
+		Name:  GRpcAddrFlagName,
 		Usage: "GRPC address whose format is <host:port>",
 	},
 	cli.StringFlag{
-		Name: GatewayAddrFlagName,
+		Name:  GatewayAddrFlagName,
 		Usage: "GRPC gateway address whose format is <host:port>",
 	},
 }
@@ -252,17 +252,20 @@ var NodeFlags = []cli.Flag{
 var MiscFlags = []cli.Flag{}
 
 const (
-	LogNumberFlagName = "lognumber"
-	VerbosityFlagName = "verbosity"
+	LogLineNumberFlagName = "linenumber"
+	VerbosityFlagName     = "verbosity"
 )
 
 var LogFlags = []cli.Flag{
 	cli.BoolFlag{
-		Name:  LogNumberFlagName,
-		Usage: "Log show filename and line number",
+		Name:   LogLineNumberFlagName,
+		Usage:  "Log show filename and line number",
+		EnvVar: "CPC_LOG_LINENUMBER",
 	},
 	cli.IntFlag{
-		Name:  VerbosityFlagName,
-		Usage: "Log Level Panic:0 Fatal:1 Error:2 Warn:3 Info:4 Debug:5",
+		Name:   VerbosityFlagName,
+		Value:  int(log.InfoLevel),
+		Usage:  "Log Level Panic:0 Fatal:1 Error:2 Warn:3 Info:4 Debug:5",
+		EnvVar: "CPC_LOG_VERBOSITY",
 	},
 }
