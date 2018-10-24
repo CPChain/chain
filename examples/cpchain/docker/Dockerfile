@@ -13,7 +13,7 @@ RUN apt-get update; apt-get -y upgrade; apt-get -y install locales tzdata
 
 WORKDIR /
 RUN apt-get install -y git
-RUN git clone https://github.com/etherparty/explorer
+RUN git clone https://github.com/Alex-Cheng/explorer
 RUN apt-get install -y nodejs
 RUN apt-get install -y npm
 
