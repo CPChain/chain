@@ -35,6 +35,22 @@ func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
 	}
 }
 
+func updateLogConfig(ctx *cli.Context) {
+	if ctx.IsSet(flags.VerbosityFlagName) {
+		verbosity := ctx.Uint(flags.VerbosityFlagName)
+		if verbosity > 5 {
+			log.Error("log level error, use default info level")
+		}
+		log.SetLevel(log.Level(verbosity))
+	}
+
+	if ctx.IsSet(flags.LineNumberFlagName) {
+		if ctx.Bool(flags.LineNumberFlagName) {
+			log.ShowFilename()
+		}
+	}
+}
+
 func updateNodeGeneralConfig(ctx *cli.Context, cfg *node.Config) {
 	// log update
 	updateLogConfig(ctx)
@@ -98,22 +114,6 @@ func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-func updateLogConfig(ctx *cli.Context) {
-	if ctx.IsSet(flags.VerbosityFlagName) {
-		verbosity := ctx.Uint(flags.VerbosityFlagName)
-		if verbosity > 5 {
-			log.Error("log level error, use default info level")
-		}
-		log.SetLevel(log.Level(verbosity))
-	}
-
-	if ctx.IsSet(flags.LineNumberFlagName) {
-		if ctx.Bool(flags.LineNumberFlagName) {
-			log.ShowFilename()
-		}
-	}
-}
-
 func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 	// ipc setting
 	if ctx.IsSet(flags.IpcAddrFlagName) {
@@ -149,6 +149,9 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.GatewayHost = addr[0]
 		cfg.GatewayPort, _ = strconv.Atoi(addr[1])
 	}
+
+	// TODO: @AC hardcode for blockchain explorer
+	cfg.HTTPCors = []string{"http://localhost:8000", "https://localhost:8000"}
 }
 
 func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {

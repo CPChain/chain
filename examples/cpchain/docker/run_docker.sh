@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 
-docker run --name cpchain_blockchain_explorer -p 8545:8545 -p 8000:8000 cpchain_blockchain_explorer:latest
+docker container stop cpchain_blockchain_explorer
+docker container rm cpchain_blockchain_explorer
+
+docker build . -t cpchain_blockchain_explorer:latest
+docker run --name cpchain_blockchain_explorer -p 8000:8000 -d cpchain_blockchain_explorer:latest
 
