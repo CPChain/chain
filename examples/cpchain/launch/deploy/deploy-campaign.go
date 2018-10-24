@@ -13,10 +13,10 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contract/Pdash"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contract/register"
-	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
+	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 )

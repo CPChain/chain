@@ -11,8 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/configs"
-	contract "bitbucket.org/cpchain/chain/contracts/dpor/contract/Pdash"
-	"bitbucket.org/cpchain/chain/core"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -192,11 +191,11 @@ func TestCache(t *testing.T) {
 	var num uint64
 	num = 0
 	for i, address := range raddress1 {
-		hash := sigHash(Rptitems{nodeaddress: address, key: num})
+		hash := rptHash(RptItems{nodeaddress: address, key: num})
 		cache.Add(hash, RPT{Address: address, Rpt: 0 + float64(i)})
 		num++
 	}
-	assert.Equal(t, float64(55), bc.GetRpts(raddress1, 6, cache)[5].Rpt)
+	assert.Equal(t, float64(300), bc.GetRpts(raddress1, 6, cache)[5].Rpt)
 }
 func TestBasicCollector_GetRptInfos(t *testing.T) {
 	bc := createBasicCollector(t, 4)
@@ -269,10 +268,10 @@ func getCollectorConfig(chainId int64) *CollectorConfig {
 			Epoch:  3,
 			Period: 1,
 		},
-		committeenamber:       20,
-		client:                client,
-		proxycontractaddress:  common.HexToAddress(""),
-		uploadcontractAddress: common.HexToAddress(""),
+		committeeNamber:       20,
+		Client:                client,
+		proxyContractAddress:  common.HexToAddress(""),
+		uploadContractAddress: common.HexToAddress(""),
 	}
 	return config
 }
@@ -309,16 +308,13 @@ func TestGetIfLeaderIsLeader(t *testing.T) {
 
 func TestGetUploadReward(t *testing.T) {
 	bc := createBasicCollector(t, 5)
-	LeaderReward := bc.getUploadReward(address, raddress1, 10)
+	LeaderReward, _ := bc.getUploadReward(address, raddress1, 10)
 	assert.Equal(t, float64(0), LeaderReward)
 }
 
 func TestGetProxyReward(t *testing.T) {
-	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-	contractAddr, _ := deploy(key, big.NewInt(0), contractBackend)
 	bc := createBasicCollector(t, 5)
-	bc.Config.proxycontractaddress = contractAddr
-	ProxyReward := bc.getProxyReward(address, 10)
+	ProxyReward, _ := bc.getProxyReward(address, 10)
 	assert.Equal(t, float64(0), ProxyReward)
 }
 
