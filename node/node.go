@@ -339,7 +339,6 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 
 func (n *Node) startInProcWithGrpc(gapis []apis.API) error {
 	handler, err := apis.NewServer(n.config.GrpcEndpoint(), n.DataDir(), n.useTls)
-	// handler, err := apis.NewServer(DefaultGrpcEndpoint(), n.DataDir(), n.useTls)
 	if err != nil {
 		return err
 	}
@@ -385,13 +384,11 @@ func (n *Node) stopInProc() {
 }
 
 func (n *Node) startIPCWithGprc(gapis []apis.API) error {
-	// if n.grpcIpcEndpoint == "" {
-	// 	return nil
-	// }
+	if n.grpcIpcEndpoint == "" {
+		return nil
+	}
 
-	// TODO: @sangh flag
 	listener, handler, err := apis.StartIPCEndpointWithGrpc(n.config.GrpcEndpoint(), n.config.GatewayEndpoint(), n.DataDir(), n.useTls, gapis)
-	// listener, handler, err := apis.StartIPCEndpointWithGrpc(DefaultGrpcEndpoint(), DefaultProxyEndpoint(), n.DataDir(), n.useTls, gapis)
 	if err != nil {
 		return err
 	}
@@ -439,11 +436,10 @@ func (n *Node) stopIPC() {
 }
 
 func (n *Node) startHTTPWithGprc(gapis []apis.API) error {
-	// if n.grpcEndpoint == "" {
-	// 	return nil
-	// }
+	if n.grpcEndpoint == "" {
+		return nil
+	}
 	listener, handler, err := apis.StartHTTPEndpoint(n.config.GrpcEndpoint(), n.config.GatewayEndpoint(), n.DataDir(), n.useTls, gapis, n.config.HTTPModules)
-	// listener, handler, err := apis.StartHTTPEndpoint(DefaultGrpcEndpoint(), DefaultProxyEndpoint(), n.DataDir(), n.useTls, gapis, n.config.HTTPModules)
 	if err != nil {
 		return err
 	}
