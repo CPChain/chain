@@ -36,6 +36,9 @@ func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
 }
 
 func updateNodeGeneralConfig(ctx *cli.Context, cfg *node.Config) {
+	// log update
+	updateLogConfig(ctx)
+
 	// identity
 	if ctx.IsSet(flags.IdentityFlagName) {
 		cfg.UserIdent = ctx.String(flags.IdentityFlagName)
@@ -95,6 +98,21 @@ func updateNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
+func updateLogConfig(ctx *cli.Context) {
+	if ctx.IsSet(flags.VerbosityFlagName) {
+		verbosity := ctx.Uint(flags.VerbosityFlagName)
+		if verbosity > 5 {
+			log.Error("log level error, use default info level")
+		}
+		log.SetLevel(log.Level(verbosity))
+	}
+
+	if ctx.IsSet(flags.LineNumberFlagName) {
+		if ctx.Bool(flags.LineNumberFlagName) {
+			log.ShowFilename()
+		}
+	}
+}
 
 func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 	// ipc setting
@@ -112,7 +130,6 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.HTTPPort, _ = strconv.Atoi(addr[1])
 	}
 	// ws is omitted for now
-
 
 	// grpc setting
 	if ctx.IsSet(flags.GRpcAddrFlagName) {
