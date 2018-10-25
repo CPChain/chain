@@ -106,7 +106,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, pubStateDb *state.StateDB,
 	privateStateDb *state.StateDB, remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64,
 	cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, *types.Receipt, uint64, error) {
-	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
+	msg, err := tx.AsMessage(types.MakeSigner(config))
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -163,7 +163,7 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 // applyPrivateTx attempts to apply a private transaction to the given state database
 func tryApplyPrivateTx(config *configs.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, privateStateDb *state.StateDB,
 	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, error) {
-	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
+	msg, err := tx.AsMessage(types.MakeSigner(config))
 	if err != nil {
 		return nil, err
 	}

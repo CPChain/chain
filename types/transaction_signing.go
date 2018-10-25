@@ -39,7 +39,7 @@ type sigCache struct {
 }
 
 // MakeSigner returns a Signer based on the given chain config and block number.
-func MakeSigner(config *configs.ChainConfig, blockNumber *big.Int) Signer {
+func MakeSigner(config *configs.ChainConfig) Signer {
 	return NewPrivTxSupportEIP155Signer(config.ChainID)
 }
 

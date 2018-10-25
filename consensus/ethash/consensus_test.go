@@ -58,6 +58,7 @@ func (d *diffTest) UnmarshalJSON(b []byte) (err error) {
 }
 
 func TestCalcDifficulty(t *testing.T) {
+	// TODO: @AC the below path points to an absent file, need fixing.
 	file, err := os.Open(filepath.Join("..", "..", "tests", "testdata", "BasicTests", "difficulty.json"))
 	if err != nil {
 		t.Skip(err)
@@ -70,7 +71,7 @@ func TestCalcDifficulty(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	config := &configs.ChainConfig{HomesteadBlock: big.NewInt(1150000)}
+	config := &configs.ChainConfig{}
 
 	for name, test := range tests {
 		number := new(big.Int).Sub(test.CurrentBlocknumber, big.NewInt(1))
