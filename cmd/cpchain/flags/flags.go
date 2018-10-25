@@ -200,7 +200,6 @@ var RpcFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  RpcCorDomainFlagName,
 		Usage: "Comma separated list of domains from which to accept cross origin requests (browser enforced)",
-		Value: "http://localhost:8000,https://localhost:8000",
 	},
 }
 
