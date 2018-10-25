@@ -10,7 +10,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -97,7 +97,7 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 }
 
 // updateNodeID encrypts my node id with this remote signer's public key and update to the contract.
-func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend) error {
+func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend) error {
 	epochIdx, address := rs.epochIdx, rs.address
 
 	log.Debug("fetched rsa pubkey")
@@ -139,7 +139,7 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 }
 
 // dial dials the signer.
-func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
+func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 
@@ -195,7 +195,7 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 	return rs.dialed, nil
 }
 
-func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client dpor.ClientBackend, rsaKey *rsakey.RsaKey) error {
+func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) error {
 
 	succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 	// succeed, err := func() (bool, error) { return true, nil }()
@@ -232,7 +232,7 @@ type BasicCommitteeNetworkHandler struct {
 	server *p2p.Server
 
 	contractAddress    common.Address
-	contractCaller     *dpor.ContractCaller
+	contractCaller     *consensus.ContractCaller
 	contractInstance   *contract.SignerConnectionRegister
 	contractTransactor *bind.TransactOpts
 
@@ -276,7 +276,7 @@ func (oc *BasicCommitteeNetworkHandler) SetRSAKeys(rsaReader RSAReader) error {
 }
 
 // UpdateContractCaller updates contractcaller.
-func (oc *BasicCommitteeNetworkHandler) UpdateContractCaller(contractCaller *dpor.ContractCaller) error {
+func (oc *BasicCommitteeNetworkHandler) UpdateContractCaller(contractCaller *consensus.ContractCaller) error {
 
 	// creates an contract instance
 	contractInstance, err := contract.NewSignerConnectionRegister(oc.contractAddress, contractCaller.Client)

@@ -11,7 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/network/protocols/cpc"
@@ -201,10 +201,10 @@ func startMining(ctx *cli.Context, n *node.Node) {
 }
 
 // TODO to be removed.  do not add it here.
-func createContractCaller(ctx *cli.Context, n *node.Node) *dpor.ContractCaller {
+func createContractCaller(ctx *cli.Context, n *node.Node) *consensus.ContractCaller {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	passwords := makePasswordList(ctx)
-	var contractCaller *dpor.ContractCaller
+	var contractCaller *consensus.ContractCaller
 	// TODO: @liuq fix this.
 	if len(ks.Accounts()) > 0 && len(passwords) > 0 {
 		account := ks.Accounts()[0]
@@ -221,7 +221,7 @@ func createContractCaller(ctx *cli.Context, n *node.Node) *dpor.ContractCaller {
 		client := ethclient.NewClient(rpcClient)
 
 		// TODO: @Liuq fix this.
-		contractCaller, err = dpor.NewContractCaller(key, client, 300000)
+		contractCaller, err = consensus.NewContractCaller(key, client, 300000)
 		if err != nil {
 			log.Warn("err when make contract call", "err", err)
 		}

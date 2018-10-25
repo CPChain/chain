@@ -209,7 +209,13 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	for i := 0; i < len(headers)/2; i++ {
 		headers[i], headers[len(headers)-1-i] = headers[len(headers)-1-i], headers[i]
 	}
-	snap, err := snap.apply(headers)
+
+	dpor.lock.Lock()
+	contractCaller := dpor.contractCaller
+	dpor.lock.Unlock()
+
+	snap, err := snap.apply(headers, contractCaller)
+
 	if err != nil {
 		return nil, err
 	}

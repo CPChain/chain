@@ -63,9 +63,10 @@ type Dpor struct {
 
 	committeeNetworkHandler consensus.CommitteeNetworkHandler
 
-	fake      bool // used for test, always accept a block.
-	fakeFail  uint64
-	fakeDelay time.Duration // Time delay to sleep for before returning from verify
+	fake           bool // used for test, always accept a block.
+	fakeFail       uint64
+	fakeDelay      time.Duration // Time delay to sleep for before returning from verify
+	contractCaller *consensus.ContractCaller
 
 	lock sync.RWMutex // Protects the signer fields
 }
@@ -115,6 +116,13 @@ func NewFakeDelayer(config *configs.DporConfig, db ethdb.Database, delay time.Du
 	d := NewFaker(config, db)
 	d.fakeDelay = delay
 	return d
+}
+
+func (d *Dpor) SetContractCaller(contractCaller *consensus.ContractCaller) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	d.contractCaller = contractCaller
+	return nil
 }
 
 // SetCommitteeNetworkHandler sets dpor.committeeNetworkHandler
