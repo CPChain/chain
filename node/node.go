@@ -27,16 +27,17 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/apis"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/debug"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
-	log2 "github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/prometheus/prometheus/util/flock"
+	"google.golang.org/grpc"
 )
 
 // Node is a container on which services can be registered.
@@ -57,6 +58,23 @@ type Node struct {
 	rpcAPIs       []rpc.API   // List of APIs currently provided by the node
 	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
 
+	// GRPC Setting
+	grpcAPIs      []apis.API
+	grpcEndpoint  string
+	proxyEndpoint string
+
+	useTls bool
+
+	grpcListner net.Listener
+	grpcHandler *apis.Server
+
+	grpcIpcEndpoint string
+	grpcIPCListener net.Listener
+	grpcIPCHandler  *apis.Server
+
+	grpcInprocListener net.Listener
+	grpcInprocHandler  *apis.Server
+
 	ipcEndpoint string       // IPC endpoint to listen at (empty = IPC disabled)
 	ipcListener net.Listener // IPC RPC listener socket to serve API requests
 	ipcHandler  *rpc.Server  // IPC RPC request handler to process the API requests
@@ -73,7 +91,7 @@ type Node struct {
 	stop chan struct{} // Channel to wait for termination notifications
 	lock sync.RWMutex
 
-	log *log.Logger
+	log log.Logger
 }
 
 // New creates a new P2P node, ready for protocol registration.
@@ -107,7 +125,7 @@ func New(conf *Config) (*Node, error) {
 		return nil, err
 	}
 	if conf.Logger == nil {
-		conf.Logger = log.New("", "")
+		conf.Logger = log.New()
 	}
 	// Note: any interaction with Config that would create/touch files
 	// in the data directory or instance directory is delayed until Start.
@@ -116,6 +134,8 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
+		grpcEndpoint:      conf.GrpcEndpoint(),
+		proxyEndpoint:     conf.GatewayEndpoint(),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
@@ -158,9 +178,7 @@ func (n *Node) Start() error {
 	n.config.RsaKeyStore, _ = n.config.RsaKey()
 
 	n.serverConfig.Name = n.config.NodeName()
-	// TODO: @sangh ethereum/p2p log module replace
-	// n.serverConfig.Logger = n.log
-	n.serverConfig.Logger = log2.New()
+	n.serverConfig.Logger = n.log
 	if n.serverConfig.StaticNodes == nil {
 		n.serverConfig.StaticNodes = n.config.StaticNodes()
 	}
@@ -227,6 +245,13 @@ func (n *Node) Start() error {
 		running.Stop()
 		return err
 	}
+	if err := n.startGRPC(services); err != nil {
+		for _, service := range services {
+			service.Stop()
+		}
+		running.Stop()
+		return err
+	}
 	// Finish initializing the startup
 	n.services = services
 	n.server = running
@@ -251,6 +276,31 @@ func (n *Node) openDataDir() error {
 		return convertFileLockError(err)
 	}
 	n.instanceDirLock = release
+	return nil
+}
+
+func (n *Node) startGRPC(services map[reflect.Type]Service) error {
+	apis := n.gapis()
+	for _, service := range services {
+		apis = append(apis, service.GAPIs()...)
+	}
+
+	if err := n.startInProcWithGrpc(apis); err != nil {
+		return err
+	}
+
+	if err := n.startIPCWithGprc(apis); err != nil {
+		n.stopInProcWithGapis()
+		return err
+	}
+
+	if err := n.startHTTPWithGprc(apis); err != nil {
+		n.stopInProcWithGapis()
+		n.stopIPCWithGrpc()
+		return err
+	}
+
+	n.grpcAPIs = apis
 	return nil
 }
 
@@ -287,6 +337,26 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 	return nil
 }
 
+func (n *Node) startInProcWithGrpc(gapis []apis.API) error {
+	handler, err := apis.NewServer(n.config.GrpcEndpoint(), n.DataDir(), n.useTls)
+	if err != nil {
+		return err
+	}
+	for _, api := range gapis {
+		handler.RegisterApi(api)
+		n.log.Debug("InProc registered", "service")
+	}
+
+	n.grpcInprocHandler = handler
+	return nil
+}
+
+func (n *Node) stopInProcWithGapis() {
+	if n.grpcInprocHandler != nil {
+		n.grpcInprocHandler.Stop()
+	}
+}
+
 // startInProc initializes an in-process RPC endpoint.
 func (n *Node) startInProc(apis []rpc.API) error {
 	// Register all the APIs exposed by the services
@@ -310,6 +380,29 @@ func (n *Node) stopInProc() {
 	if n.inprocHandler != nil {
 		n.inprocHandler.Stop()
 		n.inprocHandler = nil
+	}
+}
+
+func (n *Node) startIPCWithGprc(gapis []apis.API) error {
+	if n.grpcIpcEndpoint == "" {
+		return nil
+	}
+
+	listener, handler, err := apis.StartIPCEndpointWithGrpc(n.config.GrpcEndpoint(), n.config.GatewayEndpoint(), n.DataDir(), n.useTls, gapis)
+	if err != nil {
+		return err
+	}
+
+	n.grpcIPCListener = listener
+	n.grpcIPCHandler = handler
+	n.log.Info("grpc IPC endpoint opened", "url", n.grpcIpcEndpoint)
+	return nil
+}
+
+func (n *Node) stopIPCWithGrpc() {
+	if n.grpcIPCHandler != nil {
+		n.grpcIPCHandler.Stop()
+		n.grpcIPCHandler = nil
 	}
 }
 
@@ -340,6 +433,32 @@ func (n *Node) stopIPC() {
 		n.ipcHandler.Stop()
 		n.ipcHandler = nil
 	}
+}
+
+func (n *Node) startHTTPWithGprc(gapis []apis.API) error {
+	if n.grpcEndpoint == "" {
+		return nil
+	}
+	listener, handler, err := apis.StartHTTPEndpoint(n.config.GrpcEndpoint(), n.config.GatewayEndpoint(), n.DataDir(), n.useTls, gapis, n.config.HTTPModules)
+	if err != nil {
+		return err
+	}
+
+	n.log.Info("HTTP endpoint opened", "url", fmt.Sprintf("http://%s", n.grpcEndpoint))
+	// All listeners booted successfully
+	n.grpcHandler = handler
+	n.grpcListner = listener
+
+	return nil
+}
+
+func (n *Node) stopHttpWithGrpc() {
+	if n.grpcHandler != nil {
+		n.grpcHandler.Stop()
+		n.grpcHandler = nil
+		n.log.Info("grpc handler stopped")
+	}
+
 }
 
 // startHTTP initializes and starts the HTTP RPC endpoint.
@@ -423,6 +542,11 @@ func (n *Node) Stop() error {
 	n.stopWS()
 	n.stopHTTP()
 	n.stopIPC()
+
+	// Terminate the grpc API
+	n.stopIPCWithGrpc()
+	n.stopInProcWithGapis()
+	n.stopHttpWithGrpc()
 	n.rpcAPIs = nil
 	failure := &StopError{
 		Services: make(map[reflect.Type]error),
@@ -486,6 +610,16 @@ func (n *Node) Restart() error {
 		return err
 	}
 	return nil
+}
+
+func (n *Node) AttachGrpc() (*grpc.ClientConn, error) {
+	n.lock.RLock()
+	defer n.lock.RUnlock()
+
+	if n.server == nil {
+		return nil, ErrNodeStopped
+	}
+	return apis.DialInProc(n.grpcInprocHandler)
 }
 
 // Attach creates an RPC client attached to an in-process API handler.
@@ -588,6 +722,11 @@ func (n *Node) OpenDatabase(name string, cache, handles int) (ethdb.Database, er
 // ResolvePath returns the absolute path of a resource in the instance directory.
 func (n *Node) ResolvePath(x string) string {
 	return n.config.resolvePath(x)
+}
+
+// TODO: @sangh add builtin apis
+func (n *Node) gapis() []apis.API {
+	return []apis.API{}
 }
 
 // apis returns the collection of RPC descriptors this node offers.

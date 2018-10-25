@@ -22,11 +22,12 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/apis"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/eth/downloader"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -72,6 +73,20 @@ type Backend interface {
 	CurrentBlock() *types.Block
 
 	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
+}
+
+func GetGAPIs(b Backend) []apis.API {
+	nonceLock := new(AddrLocker)
+	return []apis.API{
+		NewPublicEthereumAPIServer(b),
+		NewPublicBlockChainAPIServer(b),
+		NewPublicTransactionPoolAPIServer(b, nonceLock),
+		NewPublicTxPoolAPIServer(b),
+		NewPublicDebugAPIServer(b),
+		NewPrivateDebugAPIServer(b),
+		NewPublicAccountAPIServer(b.AccountManager()),
+		NewPrivateAccountAPIServer(b, nonceLock),
+	}
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

@@ -59,11 +59,11 @@ func TestElect(t *testing.T) {
 	}
 
 	expectedCommittee := []common.Address{
-		addresses[9],
-		addresses[4],
-		addresses[3],
-		addresses[2],
+		addresses[0],
 		addresses[1],
+		addresses[2],
+		addresses[3],
+		addresses[4],
 	}
 	for i := 0; i < viewLength; i++ {
 		if signers[uint64(i)] != expectedCommittee[i] {

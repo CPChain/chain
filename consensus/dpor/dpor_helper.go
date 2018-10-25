@@ -19,15 +19,15 @@ package dpor
 
 import (
 	"bytes"
+	"encoding/hex"
 	"math/big"
 	"strconv"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -73,9 +73,9 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		return errMissingSignature
 	}
 
-	// Ensure that the extra-data contains a signer list on checkpoint, but none otherwise
 	signersBytes := len(header.Extra) - extraVanity - extraSeal
 	if signersBytes%common.AddressLength != 0 {
+		log.Debug("errInvalidSigners 2")
 		return errInvalidSigners
 	}
 
@@ -125,11 +125,21 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 	// Check signers bytes in extraData
 	signers := make([]byte, dpor.config.Epoch*common.AddressLength)
-	for round, signer := range snap.signersOf(number) {
+	log.Debug("signers length", "sl", len(signers))
+	for round, signer := range snap.SignersOf(number) {
 		copy(signers[round*common.AddressLength:(round+1)*common.AddressLength], signer[:])
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
+		log.Debug("header.extra")
+		log.Debug("\n" + hex.Dump(header.Extra))
+		log.Debug("header", "h", header)
+		log.Debug("snapshot", "s", snap)
+		log.Debug("signers")
+		for _, signer := range snap.SignersOf(number) {
+			log.Debug("signer in snapshot ", "s", signer.Hex())
+		}
+		log.Debug("errInvalidSigners 1")
 		return errInvalidSigners
 	}
 
@@ -151,7 +161,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			break
 		}
 		// If an on-disk checkpoint Snapshot can be found, use that
-		if number%checkpointInterval == 0 {
+		// if number%checkpointInterval == 0 {
+		if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) {
 			if s, err := loadSnapshot(dpor.config, dpor.signatures, dpor.db, hash); err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", number, "hash", hash)
 				snap = s
@@ -205,7 +216,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	dpor.recents.Add(snap.Hash, snap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if snap.Number%checkpointInterval == 0 && len(headers) > 0 {
+	if IsCheckPoint(snap.Number, dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
+		// if snap.Number%checkpointInterval == 0 && len(headers) > 0 {
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
@@ -260,13 +272,13 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		log.Debug(strconv.Itoa(round) + ": " + signer.Hex())
 	}
 	log.Debug("signers in snapshot")
-	for round, signer := range snap.signersOf(number) {
+	for round, signer := range snap.SignersOf(number) {
 		log.Debug(strconv.Itoa(round) + ": " + signer.Hex())
 	}
 	log.Debug("--------I am in dpor.verifySeal end--------")
 
 	// Check if the leader is the real leader.
-	ok, err := snap.isLeader(leader, number)
+	ok, err := snap.IsLeaderOf(leader, number)
 	if err != nil {
 		return err
 	}
@@ -275,7 +287,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Check if accept the sigs and if leader is in the sigs.
-	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.signersOf(number))
+	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.SignersOf(number), uint(dpor.config.Epoch))
 	if err != nil {
 		return err
 	}
@@ -285,7 +297,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	// Copy all signatures recovered to allSigs.
 	allSigs := make([]byte, int(dpor.config.Epoch)*extraSeal)
-	for round, signer := range snap.signersOf(number) {
+	for round, signer := range snap.SignersOf(number) {
 		if sigHash, ok := sigs[signer]; ok {
 			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sigHash)
 		}
@@ -300,9 +312,9 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// We haven't reached the 2/3 rule.
 	if !accept {
 		// Sign the block if self is in the committee.
-		log.Debug("snap.issigner(dpor.signer, number)", "bool", snap.isSigner(dpor.signer, number))
+		log.Debug("snap.issigner(dpor.signer, number)", "bool", snap.IsSignerOf(dpor.signer, number))
 		log.Debug("signer", "s", dpor.signer.Hex())
-		if snap.isSigner(dpor.signer, number) {
+		if snap.IsSignerOf(dpor.signer, number) {
 			// NOTE: only sign a block once.
 			if signedHash, signed := dpor.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {
 				return errMultiBlocksInOneHeight
@@ -312,7 +324,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 			if err != nil {
 				return err
 			}
-			round, _ := snap.signerRoundOf(dpor.signer, number)
+			round, _ := snap.SignerRoundOf(dpor.signer, number)
 
 			// Copy signer's signature to the right position in the allSigs.
 			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
@@ -332,7 +344,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// --- our check ends ---
 
 	// Ensure that the difficulty corresponds to the turn-ness of the signer
-	inturn, _ := snap.isLeader(leader, header.Number.Uint64())
+	inturn, _ := snap.IsLeaderOf(leader, header.Number.Uint64())
 	if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
 		return errInvalidDifficulty
 	}
@@ -340,24 +352,49 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return errInvalidDifficulty
 	}
 
-	if number%uint64(epochLength) == 0 && number > dpor.config.MaxInitBlockNumber && snap.isFutureSigner(dpor.signer, number) {
+	currentNum := chain.CurrentHeader().Number.Uint64()
+
+	// snap, err = dh.snapshot(dpor, chain, number, header.Hash(), append(parents, header))
+
+	log.Debug("my address", "eb", dpor.signer.Hex())
+	log.Debug("ready to accept this block", "number", number)
+
+	number = currentNum
+
+	log.Debug("current block number", "number", currentNum)
+	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.Epoch, dpor.config.View))
+	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
+	log.Debug("epoch idx of block number", "block epochIdx", snap.EpochIdxOf(number))
+
+	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
+		log.Debug("----------------------")
+		log.Debug("signers in snapshot of:", "epoch idx", i)
+		for _, s := range snap.RecentSigners[i] {
+			log.Debug("signer", "s", s.Hex())
+		}
+	}
+
+	if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) && number >= dpor.config.MaxInitBlockNumber && snap.IsFutureSignerOf(dpor.signer, number) {
+		// if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) && number >= dpor.config.MaxInitBlockNumber && number > currentNum && snap.IsFutureSignerOf(dpor.signer, number) {
 		// TODO: fix this.
+		log.Info("I am future signer, building the committee network")
 
-		// round, err := snap.FuturesignerRoundOf(dpor.signer, number)
-		// if err != nil {
-		// 	return err
-		// }
+		epochIdx := snap.FutureEpochIdxOf(number)
+		signers := snap.FutureSignersOf(number)
+		// signers := snap.GetDefaultSigners()
 
-		// epochIdx := snap.EpochIdxOf(number) + EpochGapBetweenElectionAndMining
-		// signers = snap.FutureSigners(number)
-		// signers = append(signers[:round], signers[round+1:]...)
-
-		// go func(epochIdx uint64, signers []common.Address) {
-		// 	dpor.committeeNetworkHandler.UpdateRemoteSigners(epochIdx, signers)
-		// 	dpor.committeeNetworkHandler.Connect()
-		// }(epochIdx, signers)
+		log.Debug("epoch idx", "eIdx", epochIdx)
+		log.Debug("signers")
+		for _, s := range signers {
+			log.Debug("signer", "s", s.Hex())
+		}
+		go func(eIdx uint64, committee []common.Address) {
+			dpor.committeeNetworkHandler.UpdateRemoteSigners(eIdx, committee)
+			dpor.committeeNetworkHandler.Connect()
+		}(epochIdx, signers)
 
 	} else {
+		// log.Info("I am not future signer, doing nothing.")
 		// go dpor.committeeNetworkHandler.Disconnect()
 	}
 

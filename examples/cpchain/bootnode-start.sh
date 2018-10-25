@@ -8,6 +8,5 @@ set -e
 proj_dir=../..
 
 echo "[*] Starting bootnode"
-
-#start bootnode service
-$proj_dir/build/bin/bootnode -nodekey boot.key -verbosity 9 -addr :30310 2>data/logs/bootnode.log &
+bootnode=$proj_dir/build/bin/bootnode
+$bootnode -nodekey conf/boot.key -verbosity 9 -addr :30310

@@ -23,7 +23,10 @@ import (
 	"math/big"
 	"time"
 
+	"bitbucket.org/cpchain/chain/apis"
+
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/rpc"
@@ -36,7 +39,9 @@ const (
 	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
 	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
-	epochLength = uint(4) // Default number of signers, also the number of blocks after which to launch election.
+	epochLength = uint(4) // Default number of signers.
+	viewLength  = uint(4) // Default number of blocks one signer can generate in one committee.
+
 	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
@@ -189,7 +194,7 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	header.Extra = header.Extra[:extraVanity]
 
 	// if number%d.config.Epoch == 0 {
-	for _, signer := range snap.signersOf(number) {
+	for _, signer := range snap.SignersOf(number) {
 		header.Extra = append(header.Extra, signer[:]...)
 	}
 	// }
@@ -257,8 +262,9 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 
-	ok, err := snap.isLeader(d.signer, number)
+	ok, err := snap.IsLeaderOf(d.signer, number)
 	if err != nil {
+		log.Warn("Error occurs when seal block", err)
 		return nil, err
 	}
 	if !ok {
@@ -284,6 +290,8 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		case <-time.After(delay):
 		}
 	*/
+	// set coinbase
+	header.Coinbase = signer
 
 	// Sign all the things!
 	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header).Bytes())
@@ -296,7 +304,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	allSigs := make([]byte, int(d.config.Epoch)*extraSeal)
 
 	// Copy signature to the right position in allSigs.
-	round, _ := snap.signerRoundOf(signer, number)
+	round, _ := snap.SignerRoundOf(signer, number)
 	copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
 
 	// Encode it to header.extra2.
@@ -327,6 +335,10 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 		Service:   &API{chain: chain, dpor: d},
 		Public:    false,
 	}}
+}
+
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []apis.API {
+	return []apis.API{}
 }
 
 // IsSigner implements Validator.

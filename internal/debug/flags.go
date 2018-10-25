@@ -27,7 +27,7 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/metrics/exp"
 	"github.com/fjl/memsize/memsizeui"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 )
 
 var Memsize memsizeui.Handler
@@ -73,7 +73,8 @@ var Flags = []cli.Flag{
 }
 
 func init() {
-	log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 	log.SetOutput(os.Stderr)
 }
 

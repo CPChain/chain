@@ -34,7 +34,7 @@ import (
 type dporUtil interface {
 	sigHash(header *types.Header) (hash common.Hash)
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)
-	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error)
+	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, epochL uint) (bool, error)
 	percentagePBFT(n uint, N uint) bool
 	calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int
 }
@@ -147,7 +147,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 }
 
 // acceptSigs checks that signatures have enough signatures to accept the block.
-func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address) (bool, error) {
+func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, epochL uint) (bool, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -167,7 +167,7 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 	}
 
 	// num of sigs must > 2/3 * epochLength, leader must be in the sigs.
-	if d.percentagePBFT(numSigs, epochLength) {
+	if d.percentagePBFT(numSigs, epochL) {
 		accept = true
 	}
 	return accept, nil
@@ -182,7 +182,7 @@ func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
-	if ok, _ := snap.isLeader(signer, snap.Number+1); ok {
+	if ok, _ := snap.IsLeaderOf(signer, snap.Number+1); ok {
 		return new(big.Int).Set(diffInTurn)
 	}
 	return new(big.Int).Set(diffNoTurn)

@@ -12,92 +12,70 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contract/campaign"
-	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contract/signerRegister"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 type keystorePair struct {
-	keystorePath   string
-	passphrase     string
-	rsaPubkeyPath  string
-	rsaPrivKeyPath string
+	keystorePath string
+	passphrase   string
 }
 
 var (
 	endPoint  = "http://localhost:8501"
-	dataDir   = "./data/"
+	dataDir   = "data/"
 	keystores = []keystorePair{
 		{
-			"dd1/keystore/",
+			"data1/keystore/",
 			"password",
-			"dd1/rsa/rsa_pub.pem",
-			"dd1/rsa/rsa_pri.pem",
 		},
 		{
-			"dd2/keystore/",
+			"data2/keystore/",
 			"password",
-			"dd2/rsa/rsa_pub.pem",
-			"dd2/rsa/rsa_pri.pem",
 		},
 		{
-			"dd3/keystore/",
+			"data3/keystore/",
 			"pwdnode1",
-			"dd3/rsa/rsa_pub.pem",
-			"dd3/rsa/rsa_pri.pem",
 		},
 		{
-			"dd4/keystore/",
+			"data4/keystore/",
 			"pwdnode2",
-			"dd4/rsa/rsa_pub.pem",
-			"dd4/rsa/rsa_pri.pem",
 		},
 		{
-			"dd5/keystore/",
+			"data5/keystore/",
 			"password",
-			"dd5/rsa/rsa_pub.pem",
-			"dd5/rsa/rsa_pri.pem",
 		},
 		{
-			"dd6/keystore/",
+			"data6/keystore/",
 			"password",
-			"dd6/rsa/rsa_pub.pem",
-			"dd6/rsa/rsa_pri.pem",
 		},
 		{
-			"dd7/keystore/",
+			"data7/keystore/",
 			"password",
-			"dd7/rsa/rsa_pub.pem",
-			"dd7/rsa/rsa_pri.pem",
 		},
 		{
-			"dd8/keystore/",
+			"data8/keystore/",
 			"password",
-			"dd8/rsa/rsa_pub.pem",
-			"dd8/rsa/rsa_pri.pem",
 		},
 		{
-			"dd9/keystore/",
+			"data9/keystore/",
 			"password",
-			"dd9/rsa/rsa_pub.pem",
-			"dd9/rsa/rsa_pri.pem",
 		},
 		{
-			"dd10/keystore/",
+			"data10/keystore/",
 			"password",
-			"dd10/rsa/rsa_pub.pem",
-			"dd10/rsa/rsa_pri.pem",
 		},
 	}
 )
 
-func getAccount(keyStoreFilePath string, passphrase string, rsaPubkeyPath string, rsaPrivkeyPath string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
+func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, []byte) {
 	// Load account.
-	file, err := os.Open(dataDir + keyStoreFilePath)
+	ff, err := filepath.Abs(".")
+	file, err := os.Open(ff + "/" + dataDir + keyStoreFilePath)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -124,10 +102,7 @@ func getAccount(keyStoreFilePath string, passphrase string, rsaPubkeyPath string
 	}
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	rsaKey, err := rsakey.NewRsaKey(dataDir)
-	fmt.Println(err)
-
-	return privateKey, publicKeyECDSA, fromAddress, rsaKey.PublicKey.RsaPublicKeyBytes
+	return privateKey, publicKeyECDSA, fromAddress, key.RsaKey.PublicKey.RsaPublicKeyBytes
 }
 
 func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address) {
@@ -246,8 +221,8 @@ func main() {
 
 	for i, kPair := range keystores {
 		fmt.Println(i)
-		keystoreFile, passphrase, rsaPubkeyPath, rsaPrivkeyPath := kPair.keystorePath, kPair.passphrase, kPair.rsaPubkeyPath, kPair.rsaPrivKeyPath
-		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase, rsaPubkeyPath, rsaPrivkeyPath)
+		keystoreFile, passphrase := kPair.keystorePath, kPair.passphrase
+		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase)
 		claimCampaign(privKey, pubKey, addr, campaignAddress)
 		claimSigner(privKey, pubKey, addr, signerAddress, rsaPubKey)
 	}

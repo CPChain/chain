@@ -25,43 +25,46 @@ import (
 	"math/big"
 	"strings"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-//go:generate gencodec -type Genesis -field-override genesisSpecMarshaling -out gen_genesis.go
-//go:generate gencodec -type GenesisAccount -field-override genesisAccountMarshaling -out gen_genesis_account.go
+//go:generate gencodec -type Genesis -formats json,toml -field-override genesisSpecMarshaling -out gen_genesis.go
+//go:generate gencodec -type GenesisAccount -formats json,toml -field-override genesisAccountMarshaling -out gen_genesis_account.go
 
-var errGenesisNoConfig = errors.New("genesis has no chain configuration")
+var (
+	errGenesisNoConfig   = errors.New("genesis has no chain configuration")
+	errGenesisNoExist    = errors.New("genesis block does not exist")
+	errGenesisCfgNoExist = errors.New("genesis block configuration does not exist")
+)
 
 // Genesis specifies the header fields, state of a genesis block. It also defines hard
 // fork switch-over blocks through the chain configuration.
 type Genesis struct {
-	Config     *configs.ChainConfig `json:"config"`
-	Nonce      uint64               `json:"nonce"`
-	Timestamp  uint64               `json:"timestamp"`
-	ExtraData  []byte               `json:"extraData"`
-	ExtraData2 []byte               `json:"extraData2"`
-	GasLimit   uint64               `json:"gasLimit"   gencodec:"required"`
-	Difficulty *big.Int             `json:"difficulty" gencodec:"required"`
-	Mixhash    common.Hash          `json:"mixHash"`
-	Coinbase   common.Address       `json:"coinbase"`
-	Alloc      GenesisAlloc         `json:"alloc"      gencodec:"required"`
+	Config     *configs.ChainConfig `json:"config"     toml:"config"`
+	Nonce      uint64               `json:"nonce"      toml:"nonce"`
+	Timestamp  uint64               `json:"timestamp"  toml:"timestamp"`
+	ExtraData  []byte               `json:"extraData"  toml:"extraData"`
+	ExtraData2 []byte               `json:"extraData2" toml:"extraData2"`
+	GasLimit   uint64               `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
+	Difficulty *big.Int             `json:"difficulty" toml:"difficulty" gencodec:"required"`
+	Mixhash    common.Hash          `json:"mixHash"    toml:"mixHash"`
+	Coinbase   common.Address       `json:"coinbase"   toml:"coinbase"`
+	Alloc      GenesisAlloc         `json:"alloc"      toml:"alloc"      gencodec:"required"`
 
 	// These fields are used for consensus tests. Please don't use them
 	// in actual genesis blocks.
-	Number     uint64      `json:"number"`
-	GasUsed    uint64      `json:"gasUsed"`
-	ParentHash common.Hash `json:"parentHash"`
+	Number     uint64      `json:"number"     toml:"number"`
+	GasUsed    uint64      `json:"gasUsed"    toml:"gasUsed"`
+	ParentHash common.Hash `json:"parentHash" toml:"parentHash"`
 }
 
 // GenesisAlloc specifies the initial state that is part of the genesis block.
@@ -81,11 +84,11 @@ func (ga *GenesisAlloc) UnmarshalJSON(data []byte) error {
 
 // GenesisAccount is an account in the state of the genesis block.
 type GenesisAccount struct {
-	Code       []byte                      `json:"code,omitempty"`
-	Storage    map[common.Hash]common.Hash `json:"storage,omitempty"`
-	Balance    *big.Int                    `json:"balance" gencodec:"required"`
-	Nonce      uint64                      `json:"nonce,omitempty"`
-	PrivateKey []byte                      `json:"secretKey,omitempty"` // for tests
+	Code       []byte                      `json:"code,omitempty"      toml:"code,omitempty"`
+	Storage    map[common.Hash]common.Hash `json:"storage,omitempty"   toml:"storage,omitempty"`
+	Balance    *big.Int                    `json:"balance"             toml:"balance"             gencodec:"required"`
+	Nonce      uint64                      `json:"nonce,omitempty"     toml:"nonce,omitempty"`
+	PrivateKey []byte                      `json:"secretKey,omitempty" toml:"secretKey,omitempty"` // for tests
 }
 
 // field type overrides for gencodec
@@ -93,10 +96,12 @@ type genesisSpecMarshaling struct {
 	Nonce      math.HexOrDecimal64
 	Timestamp  math.HexOrDecimal64
 	ExtraData  hexutil.Bytes
+	ExtraData2 hexutil.Bytes
 	GasLimit   math.HexOrDecimal64
 	GasUsed    math.HexOrDecimal64
 	Number     math.HexOrDecimal64
 	Difficulty *math.HexOrDecimal256
+	Mixhash    marshalHash
 	Alloc      map[common.UnprefixedAddress]GenesisAccount
 }
 
@@ -104,15 +109,15 @@ type genesisAccountMarshaling struct {
 	Code       hexutil.Bytes
 	Balance    *math.HexOrDecimal256
 	Nonce      math.HexOrDecimal64
-	Storage    map[storageJSON]storageJSON
+	Storage    map[marshalHash]marshalHash
 	PrivateKey hexutil.Bytes
 }
 
-// storageJSON represents a 256 bit byte array, but allows less than 256 bits when
+// marshalHash represents a 256 bit byte array, but allows less than 256 bits when
 // unmarshaling from hex.
-type storageJSON common.Hash
+type marshalHash common.Hash
 
-func (h *storageJSON) UnmarshalText(text []byte) error {
+func (h *marshalHash) UnmarshalText(text []byte) error {
 	text = bytes.TrimPrefix(text, []byte("0x"))
 	if len(text) > 64 {
 		return fmt.Errorf("too many hex characters in storage key/value %q", text)
@@ -125,7 +130,7 @@ func (h *storageJSON) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func (h storageJSON) MarshalText() ([]byte, error) {
+func (h marshalHash) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(h[:]).MarshalText()
 }
 
@@ -206,16 +211,28 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 	return newcfg, stored, nil
 }
 
+// OpenGenesisBlock opens genesis block and returns its chain configuration and hash.
+// Return errors when genesis block not exist or genesis block configuration not exist.
+func OpenGenesisBlock(db ethdb.Database) (*configs.ChainConfig, common.Hash, error) {
+	// the hash of the stored block
+	stored := rawdb.ReadCanonicalHash(db, 0)
+	if (stored == common.Hash{}) {
+		return nil, common.Hash{}, errGenesisNoExist
+	}
+	storedcfg := rawdb.ReadChainConfig(db, stored)
+	if storedcfg != nil {
+		return storedcfg, stored, nil
+	} else {
+		return nil, stored, errGenesisCfgNoExist
+	}
+}
+
 func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 	switch {
 	case g != nil:
 		return g.Config
 	case ghash == configs.MainnetGenesisHash:
 		return configs.MainnetChainConfig
-	case ghash == configs.CpchainGenesisHash:
-		// TODO
-		panic("not implemented.")
-		//return params.CpchainChainConfig
 	default:
 		return configs.AllEthashProtocolChanges
 		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
@@ -304,7 +321,7 @@ func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big
 }
 
 // DefaultGenesisBlock returns the Ethereum main net genesis block.
-func DefaultGenesisBlock() *Genesis {
+func DefaultOldGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     configs.MainnetChainConfig,
 		Nonce:      66,
@@ -315,13 +332,15 @@ func DefaultGenesisBlock() *Genesis {
 	}
 }
 
-func DefaultCpchainGenesisBlock() *Genesis {
+// DefaultGenesisBlock returns the CPChain main net genesis block.
+func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
-		Config:     configs.CpchainChainConfig,
+		Config:     configs.MainnetChainConfig,
 		Timestamp:  1492009146,
 		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000c05302acebd0730e3a18a058d7d1cb1204c4a092e94b7b6c5a0e526a4d97f9768ad6097bde25c62aef3dd127de235f15ffb4fc0d71469d1339df64656e31e5b68a98dcd17264bd1ba547d0b3e874da1e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
 		ExtraData2: hexutil.MustDecode("0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
 		GasLimit:   4700000,
+		// GasLimit:   1000000000,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
 			common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"): {Balance: big.NewInt(math.MaxInt64)},

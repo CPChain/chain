@@ -74,7 +74,7 @@ func (api *API) GetSigners(number *rpc.BlockNumber) ([]common.Address, error) {
 		return nil, err
 	}
 
-	return snap.signersOf(header.Number.Uint64()), nil
+	return snap.SignersOf(header.Number.Uint64()), nil
 }
 
 // GetSignersAtHash retrieves the state Snapshot at a given block.
@@ -88,5 +88,5 @@ func (api *API) GetSignersAtHash(hash common.Hash) ([]common.Address, error) {
 	if err != nil {
 		return nil, err
 	}
-	return snap.signersOf(number), nil
+	return snap.SignersOf(number), nil
 }

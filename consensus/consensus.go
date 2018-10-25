@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.o                                                                                                                                                                                                                                                                                                             rg/licenses/>.
 
 // Package consensus implements different Ethereum consensus engines.
 package consensus
@@ -20,6 +20,7 @@ package consensus
 import (
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/apis"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/rpc"
@@ -93,6 +94,9 @@ type Engine interface {
 
 	// APIs returns the RPC APIs this consensus engine provides.
 	APIs(chain ChainReader) []rpc.API
+
+	// GAPIs returns the GRPC APIs this consensus engine provides.
+	GAPIs(chain ChainReader) []apis.API
 
 	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeNetworkHandler) error
 }

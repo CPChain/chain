@@ -21,8 +21,10 @@ import (
 	"crypto/ecdsa"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"runtime"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/crypto"
@@ -30,8 +32,6 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/discv5"
 	"github.com/ethereum/go-ethereum/p2p/nat"
 	"github.com/ethereum/go-ethereum/p2p/netutil"
-	"io"
-	"runtime"
 )
 
 // Fatalf formats a message to standard error and exits the program.

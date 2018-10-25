@@ -21,19 +21,21 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/accounts/rsakey"
-	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/crypto"
-	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/ethereum/go-ethereum/p2p/nat"
 )
 
 const (
@@ -102,6 +104,12 @@ type Config struct {
 	// for ephemeral nodes).
 	HTTPPort int `toml:",omitempty"`
 
+	GatewayHost string `toml:",omitempty"`
+	GatewayPort int `toml:",omitempty"`
+
+	GrpcHost string `toml:",omitempty"`
+	GrpcPort int `toml:",omitempty"`
+
 	// HTTPCors is the Cross-Origin Resource Sharing header to send to requesting
 	// clients. Please be aware that CORS is a browser enforced security, it's fully
 	// useless for custom HTTP clients.
@@ -148,7 +156,7 @@ type Config struct {
 	WSExposeAll bool `toml:",omitempty"`
 
 	// Logger is a custom logger to use with the p2p.Server.
-	Logger *log.Logger `toml:",omitempty"`
+	Logger log.Logger `toml:",omitempty"`
 
 	RsaKeyStore *rsakey.RsaKey `toml:"-"`
 }
@@ -198,6 +206,20 @@ func DefaultIPCEndpoint(clientIdentifier string) string {
 	return config.IPCEndpoint()
 }
 
+func (c *Config) GrpcEndpoint() string {
+	if c.GrpcHost == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s:%d", c.GrpcHost, c.GrpcPort)
+}
+
+func (c *Config) GatewayEndpoint() string {
+	if c.GatewayHost == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s:%d", c.GatewayHost, c.GatewayPort)
+}
+
 // HTTPEndpoint resolves an HTTP endpoint based on the configured host interface
 // and port parameters.
 func (c *Config) HTTPEndpoint() string {
@@ -205,6 +227,16 @@ func (c *Config) HTTPEndpoint() string {
 		return ""
 	}
 	return fmt.Sprintf("%s:%d", c.HTTPHost, c.HTTPPort)
+}
+
+func DefaultGrpcEndpoint() string {
+	config := &Config{GrpcHost: DefaultGrpcHost, GrpcPort: DefaultGrpcPort}
+	return config.GrpcEndpoint()
+}
+
+func DefaultProxyEndpoint() string {
+	config := &Config{GatewayHost: DefaultGatewayHost, GatewayPort: DefaultGatewayPort}
+	return config.GatewayEndpoint()
 }
 
 // DefaultHTTPEndpoint returns the HTTP endpoint used by default.
@@ -315,7 +347,7 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 	if c.DataDir == "" {
 		key, err := crypto.GenerateKey()
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to generate ephemeral node key: %v", err))
+			log.Crit(fmt.Sprintf("Failed to generate ephemeral node key: %v", err))
 		}
 		return key
 	}
@@ -327,7 +359,7 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 	// No persistent key found, generate and store a new one.
 	key, err := crypto.GenerateKey()
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to generate node key: %v", err))
+		log.Crit(fmt.Sprintf("Failed to generate node key: %v", err))
 	}
 	instanceDir := filepath.Join(c.DataDir, c.name())
 	if err := os.MkdirAll(instanceDir, 0700); err != nil {
@@ -444,19 +476,66 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 	backends := []accounts.Backend{
 		keystore.NewKeyStore(keydir, scryptN, scryptP),
 	}
-	if !conf.NoUSB {
-		// Start a USB hub for Ledger hardware wallets
-		if ledgerhub, err := usbwallet.NewLedgerHub(); err != nil {
-			log.Warn(fmt.Sprintf("Failed to start Ledger hub, disabling: %v", err))
+	return accounts.NewManager(backends...), ephemeral, nil
+}
+
+// begin defaults
+// ************************************************************************************************
+
+const (
+	DefaultGrpcHost    = "localhost"
+	DefaultGrpcPort    = 8543
+	DefaultGatewayHost = "localhost"
+	DefaultGatewayPort = 8544
+	DefaultHTTPHost    = "localhost" // Default host interface for the HTTP RPC server
+	DefaultHTTPPort    = 8545        // Default TCP port for the HTTP RPC server
+	DefaultWSHost      = "localhost" // Default host interface for the websocket RPC server
+	DefaultWSPort      = 8546        // Default TCP port for the websocket RPC server
+)
+
+// DefaultConfig contains reasonable default settings.
+var DefaultConfig = Config{
+	Name:             configs.ClientIdentifier,
+	Version:          configs.Version,
+	DataDir:          DefaultDataDir(),
+	IPCPath:          DefaultIPCEndpoint(configs.ClientIdentifier),
+	HTTPPort:         DefaultHTTPPort,
+	HTTPModules:      []string{"net", "web3", "eth"},
+	HTTPVirtualHosts: []string{"localhost"},
+	WSPort:           DefaultWSPort,
+	WSModules:        []string{"net", "web3", "eth"},
+	P2P: p2p.Config{
+		ListenAddr: ":30303",
+		MaxPeers:   25,
+		NAT:        nat.Any(),
+	},
+}
+
+// DefaultDataDir is the default data directory to use for the databases and other
+// persistence requirements.
+func DefaultDataDir() string {
+	// Try to place the data folder in the user's home dir
+	home := homeDir()
+	if home != "" {
+		if runtime.GOOS == "darwin" {
+			return filepath.Join(home, "Library", "Cpchain")
+		} else if runtime.GOOS == "windows" {
+			return filepath.Join(home, "AppData", "Roaming", "Cpchain")
 		} else {
-			backends = append(backends, ledgerhub)
-		}
-		// Start a USB hub for Trezor hardware wallets
-		if trezorhub, err := usbwallet.NewTrezorHub(); err != nil {
-			log.Warn(fmt.Sprintf("Failed to start Trezor hub, disabling: %v", err))
-		} else {
-			backends = append(backends, trezorhub)
+			return filepath.Join(home, ".cpchain")
 		}
 	}
-	return accounts.NewManager(backends...), ephemeral, nil
+	// As we cannot guess a stable location, return empty and handle later
+	return ""
+}
+
+func homeDir() string {
+	if home := os.Getenv("HOME"); home != "" {
+		return home
+	}
+	if usr, err := user.Current(); err == nil {
+		return usr.HomeDir
+	}
+	log.Error("No home directory found")
+	return ""
 }
