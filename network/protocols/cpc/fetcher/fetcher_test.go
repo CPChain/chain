@@ -48,7 +48,7 @@ var (
 // reassembly.
 func makeChain(n int, seed byte, parent *types.Block) ([]common.Hash, map[common.Hash]*types.Block) {
 
-	config := configs.CpchainChainConfig.Dpor
+	config := configs.MainnetChainConfig.Dpor
 	d := dpor.NewFaker(config, testdb)
 
 	blocks, _ := core.GenerateChain(configs.TestChainConfig, parent, d, testdb, testRemoteDB, n, func(i int, block *core.BlockGen) {

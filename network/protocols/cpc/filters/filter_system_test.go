@@ -162,7 +162,7 @@ func TestBlockSubscription(t *testing.T) {
 		backend     = &testBackend{mux, db, 0, txFeed, rmLogsFeed, logsFeed, chainFeed}
 		api         = NewPublicFilterAPI(backend, false)
 		genesis     = new(core.Genesis).MustCommit(db)
-		config      = configs.CpchainChainConfig.Dpor
+		config      = configs.MainnetChainConfig.Dpor
 		d           = dpor.NewFaker(config, db)
 		chain, _    = core.GenerateChain(configs.TestChainConfig, genesis, d, db, remoteDB, 10, func(i int, gen *core.BlockGen) {})
 		chainEvents = []core.ChainEvent{}

@@ -32,8 +32,8 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -55,7 +55,7 @@ func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func
 		db       = ethdb.NewMemDatabase()
 		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 	)
-	gspec := core.DefaultCpchainGenesisBlock()
+	gspec := core.DefaultGenesisBlock()
 	gspec.Alloc = core.GenesisAlloc{testBank: {Balance: big.NewInt(1000000)}}
 	genesis := gspec.MustCommit(db)
 

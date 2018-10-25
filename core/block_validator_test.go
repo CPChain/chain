@@ -35,12 +35,12 @@ func TestHeaderVerification(t *testing.T) {
 		testdb = ethdb.NewMemDatabase()
 	)
 
-	genesis := DefaultCpchainGenesisBlock()
+	genesis := DefaultGenesisBlock()
 	genesisBlock := genesis.MustCommit(testdb)
 
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 
-	config := configs.CpchainChainConfig.Dpor
+	config := configs.MainnetChainConfig.Dpor
 	d := dpor.NewFaker(config, testdb)
 
 	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)
@@ -97,12 +97,12 @@ func testHeaderConcurrentVerification(t *testing.T, threads int) {
 		testdb = ethdb.NewMemDatabase()
 	)
 
-	genesis := DefaultCpchainGenesisBlock()
+	genesis := DefaultGenesisBlock()
 	genesisBlock := genesis.MustCommit(testdb)
 
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 
-	config := configs.CpchainChainConfig.Dpor
+	config := configs.MainnetChainConfig.Dpor
 	d := dpor.NewFaker(config, testdb)
 
 	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)
@@ -180,12 +180,12 @@ func testHeaderConcurrentAbortion(t *testing.T, threads int) {
 		testdb = ethdb.NewMemDatabase()
 	)
 
-	genesis := DefaultCpchainGenesisBlock()
+	genesis := DefaultGenesisBlock()
 	genesisBlock := genesis.MustCommit(testdb)
 
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 
-	config := configs.CpchainChainConfig.Dpor
+	config := configs.MainnetChainConfig.Dpor
 	d := dpor.NewFaker(config, testdb)
 
 	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)

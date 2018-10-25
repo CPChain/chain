@@ -315,7 +315,7 @@ func (g *Genesis) MustCommit(db ethdb.Database) *types.Block {
 
 // GenesisBlockForTesting creates and writes a block in which addr has the given wei balance.
 func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big.Int) *types.Block {
-	g := DefaultCpchainGenesisBlock()
+	g := DefaultGenesisBlock()
 	g.Alloc = GenesisAlloc{addr: {Balance: balance}}
 	return g.MustCommit(db)
 }

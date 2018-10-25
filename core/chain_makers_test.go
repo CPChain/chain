@@ -41,7 +41,7 @@ func ExampleGenerateChain() {
 	)
 
 	// Ensure that key1 has some funds in the genesis block.
-	gspec := DefaultCpchainGenesisBlock()
+	gspec := DefaultGenesisBlock()
 	gspec.Alloc = GenesisAlloc{addr1: {Balance: big.NewInt(1000000)}}
 	// Config: &configs.ChainConfig{HomesteadBlock: new(big.Int)},
 	genesis := gspec.MustCommit(db)

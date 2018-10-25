@@ -2,16 +2,12 @@ package rpt
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"errors"
 	"fmt"
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -62,16 +58,16 @@ var (
 	addr   = crypto.PubkeyToAddress(key.PublicKey)
 )
 
-func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
-	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	deployTransactor.Value = amount
-	addr, _, _, err := contract.DeployPdash(deployTransactor, backend)
-	if err != nil {
-		return common.Address{}, err
-	}
-	backend.Commit()
-	return addr, nil
-}
+// func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
+// 	deployTransactor := bind.NewKeyedTransactor(prvKey)
+// 	deployTransactor.Value = amount
+// 	addr, _, _, err := contract.DeployPdash(deployTransactor, backend)
+// 	if err != nil {
+// 		return common.Address{}, err
+// 	}
+// 	backend.Commit()
+// 	return addr, nil
+// }
 
 func newHeader() *types.Header {
 	return &types.Header{

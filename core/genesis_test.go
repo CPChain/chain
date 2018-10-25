@@ -41,7 +41,7 @@ func TestSetupGenesis(t *testing.T) {
 		// customghash = common.HexToHash("0x7cf8e056f4c8152dc3b0c6d861094f2d8089d97b7a94d7a8e09aaa6661fb9342")
 	)
 
-	customg := DefaultCpchainGenesisBlock()
+	customg := DefaultGenesisBlock()
 	customg.Config = &configs.ChainConfig{HomesteadBlock: big.NewInt(3)}
 	customg.Alloc = GenesisAlloc{
 		{1}: {Balance: big.NewInt(1), Storage: map[common.Hash]common.Hash{{1}: {1}}},

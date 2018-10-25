@@ -24,17 +24,15 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/consensus/dpor"
-
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -590,7 +588,7 @@ func testInsertNonceError(t *testing.T, full bool) {
 			failAt = rand.Int() % len(blocks)
 			failNum = blocks[failAt].NumberU64()
 
-			config := configs.CpchainChainConfig.Dpor
+			config := configs.MainnetChainConfig.Dpor
 			d := dpor.NewFakeFailer(config, db, failNum)
 
 			blockchain.engine = d
@@ -601,7 +599,7 @@ func testInsertNonceError(t *testing.T, full bool) {
 			failAt = rand.Int() % len(headers)
 			failNum = headers[failAt].Number.Uint64()
 
-			config := configs.CpchainChainConfig.Dpor
+			config := configs.MainnetChainConfig.Dpor
 			d := dpor.NewFakeFailer(config, db, failNum)
 
 			blockchain.engine = d
@@ -1421,7 +1419,7 @@ func benchmarkLargeNumberOfValueToNonexisting(b *testing.B, numTxs, numBlocks in
 
 	// Generate the original common chain segment and the two competing forks
 	db := ethdb.NewMemDatabase()
-	gspec := DefaultCpchainGenesisBlock()
+	gspec := DefaultGenesisBlock()
 	gspec.Alloc = GenesisAlloc{
 		testBankAddress: {Balance: bankFunds},
 		common.HexToAddress("0xc0de"): {
