@@ -26,7 +26,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
 	"github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -208,7 +207,7 @@ func TestSnapshot_apply(t *testing.T) {
 				Candidates:    tt.fields.Candidates,
 				RecentSigners: tt.fields.RecentSigners,
 			}
-			got, err := s.apply(tt.args.headers)
+			got, err := s.apply(tt.args.headers, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.apply(%v) error = %v, wantErr %v", tt.args.headers, err, tt.wantErr)
 				return

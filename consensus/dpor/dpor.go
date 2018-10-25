@@ -62,6 +62,8 @@ type Dpor struct {
 
 	committeeNetworkHandler consensus.CommitteeNetworkHandler
 
+	contractCaller *consensus.ContractCaller
+
 	lock sync.RWMutex // Protects the signer fields
 }
 
@@ -91,6 +93,13 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 		signatures:   signatures,
 		signedBlocks: signedBlocks,
 	}
+}
+
+func (d *Dpor) SetContractCaller(contractCaller *consensus.ContractCaller) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	d.contractCaller = contractCaller
+	return nil
 }
 
 // SetCommitteeNetworkHandler sets dpor.committeeNetworkHandler

@@ -56,6 +56,10 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
+var (
+	errWrongRSAKey = errors.New("wrong RSAKey")
+)
+
 type LesServer interface {
 	Start(srvr *p2p.Server)
 	Stop()
@@ -192,11 +196,11 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		return nil, err
 	}
 
-	if eth.protocolManager.committeeNetworkHandler != nil {
-		if err := eth.protocolManager.committeeNetworkHandler.SetRSAKeys(ctx.RsaKey); err != nil {
-			return nil, err
-		}
-	}
+	// if eth.protocolManager.committeeNetworkHandler != nil {
+	// 	if err := eth.protocolManager.committeeNetworkHandler.SetRSAKeys(ctx.RsaKey); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
 
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
 	eth.miner.SetExtra(makeExtraData(config.ExtraData))
@@ -383,7 +387,7 @@ func (s *CpchainService) SetEtherbase(etherbase common.Address) {
 	s.miner.SetEtherbase(etherbase)
 }
 
-func (s *CpchainService) StartMining(local bool, contractCaller *dpor.ContractCaller) error {
+func (s *CpchainService) StartMining(local bool, contractCaller *consensus.ContractCaller) error {
 	eb, err := s.Etherbase()
 	if err != nil {
 		log.Error("Cannot start mining without etherbase", "err", err)
@@ -400,6 +404,16 @@ func (s *CpchainService) StartMining(local bool, contractCaller *dpor.ContractCa
 		log.Info("I am in s.StartMining")
 		// TODO: fix this, update contract caller with private key here. Liu Qian
 		log.Info("s.pm.committeeNetworkHandler in s.StartMining", "s.pm.committeeNetworkHandler", s.protocolManager.committeeNetworkHandler)
+
+		if s.protocolManager.committeeNetworkHandler != nil {
+			if err := s.protocolManager.committeeNetworkHandler.SetRSAKeys(
+				func() (*rsakey.RsaKey, error) {
+					return contractCaller.Key.RsaKey, nil
+				}); err != nil {
+				return errWrongRSAKey
+			}
+		}
+
 		s.protocolManager.committeeNetworkHandler.UpdateContractCaller(contractCaller)
 
 	}
