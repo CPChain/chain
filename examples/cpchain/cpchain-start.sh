@@ -24,7 +24,7 @@ echo "Please check the IPFS daemon running on localhost."
 cpchain=$proj_dir/build/bin/cpchain
 
 $cpchain $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --gatewayaddr 0.0.0.0:8701 --port 30311 --mine \
-         --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password 2>data/logs/1.log &
+         --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000" 2>data/logs/1.log &
 
 $cpchain $args --datadir data/data2  --rpcaddr 127.0.0.1:8502 --grpcaddr 127.0.0.1:8602 --gatewayaddr 127.0.0.1:8702 --port 30312 --mine \
          --unlock "0xc05302acebd0730e3a18a058d7d1cb1204c4a092" --password conf/password 2>data/logs/2.log &

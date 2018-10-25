@@ -150,21 +150,9 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.GatewayPort, _ = strconv.Atoi(addr[1])
 	}
 
-	if ctx.IsSet(flags.RpcCorDomainFlagName) {
-		cfg.HTTPCors = splitAndTrim(ctx.String(flags.RpcCorDomainFlagName), ",")
+	if ctx.IsSet(flags.RpcCorsDomainFlagName) {
+		cfg.HTTPCors = strings.Split(ctx.String(flags.RpcCorsDomainFlagName), ",")
 	}
-	// TODO: @AC hardcode for blockchain explorer
-	cfg.HTTPCors = []string{"http://localhost:8000", "https://localhost:8000"}
-}
-
-// splitAndTrim splits input separated by a comma
-// and trims excessive white space from the substrings.
-func splitAndTrim(input string, sep string) []string {
-	result := strings.Split(input, sep)
-	for i, r := range result {
-		result[i] = strings.TrimSpace(r)
-	}
-	return result
 }
 
 func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
