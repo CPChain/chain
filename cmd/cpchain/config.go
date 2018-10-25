@@ -35,7 +35,26 @@ func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
 	}
 }
 
+func updateLogConfig(ctx *cli.Context) {
+	if ctx.IsSet(flags.VerbosityFlagName) {
+		verbosity := ctx.Uint(flags.VerbosityFlagName)
+		if verbosity > 5 {
+			log.Error("log level error, use default info level")
+		}
+		log.SetLevel(log.Level(verbosity))
+	}
+
+	if ctx.IsSet(flags.LineNumberFlagName) {
+		if ctx.Bool(flags.LineNumberFlagName) {
+			log.ShowFilename()
+		}
+	}
+}
+
 func updateNodeGeneralConfig(ctx *cli.Context, cfg *node.Config) {
+	// log update
+	updateLogConfig(ctx)
+
 	// identity
 	if ctx.IsSet(flags.IdentityFlagName) {
 		cfg.UserIdent = ctx.String(flags.IdentityFlagName)
