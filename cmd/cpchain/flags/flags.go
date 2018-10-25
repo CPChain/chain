@@ -153,8 +153,9 @@ const (
 	IpcAddrFlagName = "ipcaddr"
 	RpcAddrFlagName = "rpcaddr"
 	// these two flags should be removed in the future
-	GRpcAddrFlagName = "grpcaddr"
-	GatewayAddrFlagName = "gatewayaddr"
+	GRpcAddrFlagName     = "grpcaddr"
+	GatewayAddrFlagName  = "gatewayaddr"
+	RpcCorDomainFlagName = "rpccorsdomain"
 )
 
 // TODO @sangh adjust these
@@ -185,16 +186,21 @@ var RpcFlags = []cli.Flag{
 		Usage: "Local ipc path",
 	},
 	cli.StringFlag{
-		Name: RpcAddrFlagName,
+		Name:  RpcAddrFlagName,
 		Usage: "RPC address whose format is <host:port>",
 	},
 	cli.StringFlag{
-		Name: GRpcAddrFlagName,
+		Name:  GRpcAddrFlagName,
 		Usage: "GRPC address whose format is <host:port>",
 	},
 	cli.StringFlag{
-		Name: GatewayAddrFlagName,
+		Name:  GatewayAddrFlagName,
 		Usage: "GRPC gateway address whose format is <host:port>",
+	},
+	cli.StringFlag{
+		Name:  RpcCorDomainFlagName,
+		Usage: "Comma separated list of domains from which to accept cross origin requests (browser enforced)",
+		Value: "http://localhost:8000,https://localhost:8000",
 	},
 }
 
