@@ -247,7 +247,7 @@ func (bc *BasicCollector) getChainRptInfo(address common.Address, addresses []co
 
 func (bc *BasicCollector) getContractRptInfo(address common.Address, addresses []common.Address, number uint64) ContractRptInfo {
 	uploadReward, proxyReward := 0., 0.
-	ur, err := bc.getUploadReward(address, addresses, 0)
+	ur, err := bc.getUploadReward(address, 0)
 	if err != nil {
 		log.Warn("getContractRptInfo getUploadReward error", address, err)
 	}
@@ -379,19 +379,21 @@ func (bc *BasicCollector) getMaintenance(address common.Address, number uint64) 
 	return 60, nil
 }
 
-func (bc *BasicCollector) getUploadReward(address common.Address, addresses []common.Address, number uint64) (float64, error) {
+func (bc *BasicCollector) getUploadReward(address common.Address, number uint64) (float64, error) {
 	// TODO: implement this.
-	upload, err := bc.getuploadRecord(addresses, number)
+	uploadReward := 0.0
+	upload, err := register.NewRegister(bc.Config.uploadContractAddress, bc.Config.Client)
+	fileNumber, err := upload.GetUploadCount(nil, address)
 	if err != nil {
-		log.Warn("getUploadReward error", address, err)
-		return 0, err
+		log.Warn("GetUploadCount error", address, err)
+		return uploadReward, err
 	}
-	for _, uploadaddress := range upload {
-		if uploadaddress == address {
-			return bc.Config.UploadReward, err
-		}
+	if fileNumber == nil {
+		return uploadReward, nil
+	} else {
+		uploadReward := float64(fileNumber.Int64() * 5)
+		return uploadReward, err
 	}
-	return 0, err
 }
 
 func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) (float64, error) {
@@ -446,25 +448,25 @@ func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) 
 	return ProxyReward, err
 }
 
-func (bc *BasicCollector) getuploadRecord(addresses []common.Address, number uint64) ([]common.Address, error) {
-	//TODO :add the real contracts abi
-	var uploadadress []common.Address
-	upload, err := register.NewRegister(bc.Config.contractAddress, bc.Config.Client)
-	if err != nil {
-		log.Warn("NewCampaign error", bc.Config.uploadAddress, err)
-		return uploadadress, err
-	}
-	for _, address := range addresses {
-		file, err := upload.UploadHistory(nil, address, big.NewInt(int64(number)))
-		if err != nil {
-			log.Warn("UploadHistory error", bc.Config.contractAddress, err)
-		}
-		if file.FileName != "" {
-			uploadadress = append(uploadadress, address)
-		}
-	}
-	return uploadadress, err
-}
+//func (bc *BasicCollector) getuploadRecord(addresses []common.Address, number uint64) ([]common.Address, error) {
+//	//TODO :add the real contracts abi
+//	var uploadadress []common.Address
+//	upload, err := register.NewRegister(bc.Config.contractAddress, bc.Config.Client)
+//	if err != nil {
+//		log.Warn("NewCampaign error", bc.Config.uploadAddress, err)
+//		return uploadadress, err
+//	}
+//	for _, address := range addresses {
+//		file, err := upload.UploadHistory(nil, address, big.NewInt(int64(number)))
+//		if err != nil {
+//			log.Warn("UploadHistory error", bc.Config.contractAddress, err)
+//		}
+//		if file.FileName != "" {
+//			uploadadress = append(uploadadress, address)
+//		}
+//	}
+//	return uploadadress, err
+//}
 func (bc *BasicCollector) getCommiteetmember(header *types.Header) []common.Address {
 	committee := make([]common.Address, (len(header.Extra)-extraVanity-extraSeal)/common.AddressLength)
 	for i := 0; i < len(committee); i++ {

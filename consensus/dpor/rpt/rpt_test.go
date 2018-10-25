@@ -308,7 +308,7 @@ func TestGetIfLeaderIsLeader(t *testing.T) {
 
 func TestGetUploadReward(t *testing.T) {
 	bc := createBasicCollector(t, 5)
-	LeaderReward, _ := bc.getUploadReward(address, raddress1, 10)
+	LeaderReward, _ := bc.getUploadReward(address, 10)
 	assert.Equal(t, float64(0), LeaderReward)
 }
 
