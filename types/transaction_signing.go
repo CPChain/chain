@@ -40,18 +40,7 @@ type sigCache struct {
 
 // MakeSigner returns a Signer based on the given chain config and block number.
 func MakeSigner(config *configs.ChainConfig, blockNumber *big.Int) Signer {
-	var signer Signer
-	switch {
-	case config.IsCpchain():
-		signer = NewPrivTxSupportEIP155Signer(config.ChainID)
-	case config.IsEIP155(blockNumber):
-		signer = NewEIP155Signer(config.ChainID)
-	case config.IsHomestead(blockNumber):
-		signer = HomesteadSigner{}
-	default:
-		signer = FrontierSigner{}
-	}
-	return signer
+	return NewPrivTxSupportEIP155Signer(config.ChainID)
 }
 
 // SignTx signs the transaction using the given signer and private key

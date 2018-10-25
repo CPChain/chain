@@ -976,7 +976,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 	batch := bc.db.NewBatch()
 	rawdb.WriteBlock(batch, block)
 
-	root, err := pubState.Commit(bc.chainConfig.IsEIP158(block.Number()))
+	root, err := pubState.Commit(true)
 	if err != nil {
 		return NonStatTy, err
 	}
