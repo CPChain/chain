@@ -252,20 +252,20 @@ var NodeFlags = []cli.Flag{
 var MiscFlags = []cli.Flag{}
 
 const (
-	LogLineNumberFlagName = "linenumber"
-	VerbosityFlagName     = "verbosity"
+	LineNumberFlagName = "linenumber"
+	VerbosityFlagName  = "verbosity"
 )
 
 var LogFlags = []cli.Flag{
 	cli.BoolFlag{
-		Name:   LogLineNumberFlagName,
-		Usage:  "Log show filename and line number",
-		EnvVar: "CPC_LOG_LINENUMBER",
+		Name:   LineNumberFlagName,
+		Usage:  "Show filename and line number in log",
+		EnvVar: "CPC_LINENUMBER",
 	},
 	cli.IntFlag{
 		Name:   VerbosityFlagName,
 		Value:  int(log.InfoLevel),
 		Usage:  "Log Level Panic:0 Fatal:1 Error:2 Warn:3 Info:4 Debug:5",
-		EnvVar: "CPC_LOG_VERBOSITY",
+		EnvVar: "CPC_VERBOSITY",
 	},
 }

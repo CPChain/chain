@@ -36,6 +36,9 @@ func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
 }
 
 func updateNodeGeneralConfig(ctx *cli.Context, cfg *node.Config) {
+	// log update
+	updateLogConfig(ctx)
+
 	// identity
 	if ctx.IsSet(flags.IdentityFlagName) {
 		cfg.UserIdent = ctx.String(flags.IdentityFlagName)
@@ -104,8 +107,8 @@ func updateLogConfig(ctx *cli.Context) {
 		log.SetLevel(log.Level(verbosity))
 	}
 
-	if ctx.IsSet(flags.LogLineNumberFlagName) {
-		if ctx.Bool(flags.LogLineNumberFlagName) {
+	if ctx.IsSet(flags.LineNumberFlagName) {
+		if ctx.Bool(flags.LineNumberFlagName) {
 			log.ShowFilename()
 		}
 	}
@@ -152,7 +155,6 @@ func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	updateNodeGeneralConfig(ctx, cfg)
 	updateP2pConfig(ctx, &cfg.P2P)
 	updateRpcConfig(ctx, cfg)
-	updateLogConfig(ctx)
 
 	if ctx.IsSet(flags.LightKdfFlagName) {
 		cfg.UseLightweightKDF = ctx.Bool(flags.LightKdfFlagName)
