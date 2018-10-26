@@ -301,7 +301,6 @@ func TestGetProxyReward(t *testing.T) {
 }
 
 func TestGetContractRptInfo4(t *testing.T) {
-	SetFakeOderInfo()
 	bc := createBasicCollector(t, 5)
 	contractRptInfo := bc.getContractRptInfo(leaderAddress, raddress1, 4)
 	assert.NotNil(t, contractRptInfo)
@@ -310,7 +309,6 @@ func TestGetContractRptInfo4(t *testing.T) {
 }
 
 func TestGetContractRptInfo5(t *testing.T) {
-	SetFakeOderInfo()
 	bc := createBasicCollector(t, 5)
 	contractRptInfo := bc.getContractRptInfo(address, raddress1, 5)
 	assert.NotNil(t, contractRptInfo)
@@ -319,7 +317,6 @@ func TestGetContractRptInfo5(t *testing.T) {
 }
 
 func TestGetContractRptInfo6(t *testing.T) {
-	SetFakeOderInfo()
 	bc := createBasicCollector(t, 5)
 	contractRptInfo := bc.getContractRptInfo(address, raddress1, 6)
 	assert.NotNil(t, contractRptInfo)
@@ -328,7 +325,6 @@ func TestGetContractRptInfo6(t *testing.T) {
 }
 
 func TestGetContractRptInfo10(t *testing.T) {
-	SetFakeOderInfo()
 	bc := createBasicCollector(t, 5)
 	contractRptInfo := bc.getContractRptInfo(address, raddress1, 10)
 	assert.NotNil(t, contractRptInfo)
