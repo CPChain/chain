@@ -1,0 +1,288 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "debug.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/debug/dumpBlock": {
+      "post": {
+        "operationId": "DumpBlock",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosDump"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosBlockNumber"
+            }
+          }
+        ],
+        "tags": [
+          "DebugDumper"
+        ]
+      }
+    },
+    "/api/v1/debug/getBadBlocks": {
+      "post": {
+        "operationId": "GetBadBlocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosBadBlockArgs"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "DebugManager"
+        ]
+      }
+    },
+    "/api/v1/debug/preimage": {
+      "post": {
+        "operationId": "Preimage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosPreimageValue"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosBlockHash"
+            }
+          }
+        ],
+        "tags": [
+          "DebugManager"
+        ]
+      }
+    },
+    "/api/v1/debug/storageRangeAt": {
+      "post": {
+        "operationId": "GetModifiedAccountsByNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosStorageRangeResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosDebugManagerRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DebugManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
+    "protosBadBlockArg": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "rlp": {
+          "type": "string"
+        },
+        "msg": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "protosBadBlockArgs": {
+      "type": "object",
+      "properties": {
+        "bad_block_args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protosBadBlockArg"
+          }
+        }
+      }
+    },
+    "protosBlockHash": {
+      "type": "object",
+      "properties": {
+        "block_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "protosBlockNumber": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "protosDebugManagerRequest": {
+      "type": "object",
+      "properties": {
+        "block_hash": {
+          "type": "string"
+        },
+        "tx_index": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "contract_address": {
+          "type": "string"
+        },
+        "key_start": {
+          "type": "string"
+        },
+        "max_result": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "start_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "end_number": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "protosDump": {
+      "type": "object",
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "accounts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/protosDumpAccount"
+          }
+        }
+      }
+    },
+    "protosDumpAccount": {
+      "type": "object",
+      "properties": {
+        "balance": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "root": {
+          "type": "string"
+        },
+        "code_hash": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "protosPreimageValue": {
+      "type": "object",
+      "properties": {
+        "preimage": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "protosStorageEntry": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "protosStorageMap": {
+      "type": "object",
+      "properties": {
+        "storage_map": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/protosStorageEntry"
+          }
+        }
+      }
+    },
+    "protosStorageRangeResult": {
+      "type": "object",
+      "properties": {
+        "storage_map": {
+          "$ref": "#/definitions/protosStorageMap"
+        },
+        "next_key": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

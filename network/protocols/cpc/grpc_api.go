@@ -1,82 +1,41 @@
 package cpc
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/gob"
-	"errors"
-	"fmt"
-	"io"
-	"math/big"
-	"os"
-	"strings"
-	"time"
+    "bitbucket.org/cpchain/chain/api/v1/admin"
+    "bitbucket.org/cpchain/chain/api/v1/debug"
+    "bitbucket.org/cpchain/chain/api/v1/miner"
+    "bytes"
+    "compress/gzip"
+    "encoding/gob"
+    "errors"
+    "fmt"
+    "io"
+    "math/big"
+    "os"
+    "strings"
+    "time"
 
-	"bitbucket.org/cpchain/chain/api/protos/v1/admin"
-	"bitbucket.org/cpchain/chain/api/protos/v1/debug"
-	"bitbucket.org/cpchain/chain/api/protos/v1/eth"
-	"bitbucket.org/cpchain/chain/api/protos/v1/miner"
-	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/core/rawdb"
-	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/node/miner"
-	"bitbucket.org/cpchain/chain/rpc"
-	"bitbucket.org/cpchain/chain/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/wrappers"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
+    "bitbucket.org/cpchain/chain/api/protos/v1/miner"
+    "bitbucket.org/cpchain/chain/commons/log"
+    "bitbucket.org/cpchain/chain/configs"
+    "bitbucket.org/cpchain/chain/core"
+    "bitbucket.org/cpchain/chain/core/rawdb"
+    "bitbucket.org/cpchain/chain/core/state"
+    "bitbucket.org/cpchain/chain/core/vm"
+    "bitbucket.org/cpchain/chain/internal/ethapi"
+    "bitbucket.org/cpchain/chain/node/miner"
+    "bitbucket.org/cpchain/chain/rpc"
+    "bitbucket.org/cpchain/chain/types"
+    "github.com/ethereum/go-ethereum/common"
+    "github.com/ethereum/go-ethereum/rlp"
+    "github.com/ethereum/go-ethereum/trie"
+    "github.com/golang/protobuf/ptypes/any"
+    "github.com/golang/protobuf/ptypes/empty"
+    "github.com/golang/protobuf/ptypes/wrappers"
+    "github.com/grpc-ecosystem/grpc-gateway/runtime"
+    "golang.org/x/net/context"
+    "google.golang.org/grpc"
 )
-
-type PublicEthereumAPIServer struct {
-	e *CpchainService
-}
-
-func NewPublicEthereumAPIServer(e *CpchainService) *PublicEthereumAPIServer {
-	return &PublicEthereumAPIServer{e}
-}
-
-func (api *PublicEthereumAPIServer) RegisterServer(s *grpc.Server) {
-	ethpb.RegisterPublicEthereumAPIServer(s, api)
-}
-
-func (api *PublicEthereumAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	ethpb.RegisterPublicEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
-}
-
-func (api *PublicEthereumAPIServer) Namespace() string {
-	return "eth"
-}
-
-func (api *PublicEthereumAPIServer) IsPublic() bool {
-	return true
-}
-
-func (api *PublicEthereumAPIServer) Etherbase(ctx context.Context, e *empty.Empty) (*ethpb.PublicEthereumAPIReply, error) {
-	etherBase, err := api.e.Etherbase()
-	if err != nil {
-		return nil, err
-	}
-	return &ethpb.PublicEthereumAPIReply{Address: &wrappers.BytesValue{Value: etherBase.Bytes()}}, nil
-}
-
-func (api *PublicEthereumAPIServer) Coinbase(ctx context.Context, e *empty.Empty) (*ethpb.PublicEthereumAPIReply, error) {
-	return api.Etherbase(ctx, e)
-}
-
-func (api *PublicEthereumAPIServer) Hashrate(ctx context.Context, e *empty.Empty) (*ethpb.PublicEthereumAPIReply, error) {
-	rate := api.e.Miner().HashRate()
-	return &ethpb.PublicEthereumAPIReply{Rate: &wrappers.UInt64Value{Value: uint64(rate)}}, nil
-}
 
 type PublicMinerAPIServer struct {
 	e     *CpchainService
@@ -142,30 +101,30 @@ func (api *PublicMinerAPIServer) SubmitHashrate(ctx context.Context, req *minerp
 	return &minerpb.PublicMinerAPIReply{IsAccepting: true}, nil
 }
 
-// PrivateMinerAPIServer provides private RPC methods to control the miner.
+// MineControlServer provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
-type PrivateMinerAPIServer struct {
+type MineControlServer struct {
 	e *CpchainService
 }
 
-// NewPrivateMinerAPIServer create a new RPC service which controls the miner of this node.
-func NewPrivateMinerAPIServer(e *CpchainService) *PrivateMinerAPIServer {
-	return &PrivateMinerAPIServer{e: e}
+// NewMineControlServer create a new RPC service which controls the miner of this node.
+func NewMineControlServer(e *CpchainService) *MineControlServer {
+	return &MineControlServer{e: e}
 }
 
-func (api *PrivateMinerAPIServer) RegisterServer(s *grpc.Server) {
-	minerpb.RegisterPrivateMinerAPIServer(s, api)
+func (api *MineControlServer) RegisterServer(s *grpc.Server) {
+	minerpb.RegisterMineControlServer(s, api)
 }
 
-func (api *PrivateMinerAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	minerpb.RegisterPrivateMinerAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+func (api *MineControlServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	minerpb.RegisterMineControlHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-func (api *PrivateMinerAPIServer) IsPublic() bool {
+func (api *MineControlServer) IsPublic() bool {
 	return false
 }
 
-func (api *PrivateMinerAPIServer) Namespace() string {
+func (api *MineControlServer) Namespace() string {
 	return "miner"
 }
 
@@ -173,7 +132,7 @@ func (api *PrivateMinerAPIServer) Namespace() string {
 // of workers started is equal to the number of logical CPUs that are usable by
 // this process. If mining is already running, this method adjust the number of
 // threads allowed to use.
-func (api *PrivateMinerAPIServer) Start(ctx context.Context, req *minerpb.PrivateMinerAPIRequest) (*minerpb.PrivateMinerAPIReply, error) {
+func (api *MineControlServer) Start(ctx context.Context, req *minerpb.MineControlRequest) (*minerpb.MineControlReply, error) {
 	// Set the number of threads if the seal engine supports it
 	if req.Threads == nil {
 		req.Threads = &wrappers.Int32Value{}
@@ -196,13 +155,13 @@ func (api *PrivateMinerAPIServer) Start(ctx context.Context, req *minerpb.Privat
 
 		api.e.txPool.SetGasPrice(price)
 		// TODO: @liuq fix this.
-		return &minerpb.PrivateMinerAPIReply{}, api.e.StartMining(true, nil)
+		return &minerpb.MineControlReply{}, api.e.StartMining(true, nil)
 	}
-	return &minerpb.PrivateMinerAPIReply{}, nil
+	return &minerpb.MineControlReply{}, nil
 }
 
 // Stop the miner
-func (api *PrivateMinerAPIServer) Stop(ctx context.Context, req *empty.Empty) (*minerpb.PrivateMinerAPIReply, error) {
+func (api *MineControlServer) Stop(ctx context.Context, req *empty.Empty) (*minerpb.MineControlReply, error) {
 	type threaded interface {
 		SetThreads(threads int)
 	}
@@ -210,72 +169,72 @@ func (api *PrivateMinerAPIServer) Stop(ctx context.Context, req *empty.Empty) (*
 		th.SetThreads(-1)
 	}
 	api.e.StopMining()
-	return &minerpb.PrivateMinerAPIReply{IsOk: true}, nil
+	return &minerpb.MineControlReply{IsOk: true}, nil
 }
 
 // SetExtra sets the extra data string that is included when this miner mines a block.
-func (api *PrivateMinerAPIServer) SetExtra(ctx context.Context, req *minerpb.PrivateMinerAPIRequest) (*minerpb.PrivateMinerAPIReply, error) {
+func (api *MineControlServer) SetExtra(ctx context.Context, req *minerpb.MineControlRequest) (*minerpb.MineControlReply, error) {
 	if err := api.e.Miner().SetExtra([]byte(req.Extra)); err != nil {
-		return &minerpb.PrivateMinerAPIReply{IsOk: false}, err
+		return &minerpb.MineControlReply{IsOk: false}, err
 	}
-	return &minerpb.PrivateMinerAPIReply{IsOk: true}, nil
+	return &minerpb.MineControlReply{IsOk: true}, nil
 }
 
 // SetGasPrice sets the minimum accepted gas price for the miner.
-func (api *PrivateMinerAPIServer) SetGasPrice(ctx context.Context, req *minerpb.PrivateMinerAPIRequest) (*minerpb.PrivateMinerAPIReply, error) {
+func (api *MineControlServer) SetGasPrice(ctx context.Context, req *minerpb.MineControlRequest) (*minerpb.MineControlReply, error) {
 	gasPrice := new(big.Int).SetBytes(req.GasPrice)
 	api.e.lock.Lock()
 	api.e.gasPrice = gasPrice
 	api.e.lock.Unlock()
 
 	api.e.txPool.SetGasPrice(gasPrice)
-	return &minerpb.PrivateMinerAPIReply{IsOk: true}, nil
+	return &minerpb.MineControlReply{IsOk: true}, nil
 }
 
 // SetEtherbase sets the etherbase of the miner
-func (api *PrivateMinerAPIServer) SetEtherbase(ctx context.Context, req *minerpb.PrivateMinerAPIRequest) (*minerpb.PrivateMinerAPIReply, error) {
+func (api *MineControlServer) SetEtherbase(ctx context.Context, req *minerpb.MineControlRequest) (*minerpb.MineControlReply, error) {
 	api.e.SetEtherbase(common.BytesToAddress(req.Etherbase))
-	return &minerpb.PrivateMinerAPIReply{IsOk: true}, nil
+	return &minerpb.MineControlReply{IsOk: true}, nil
 }
 
 // GetHashrate returns the current hashrate of the miner.
-func (api *PrivateMinerAPIServer) GetHashrate(ctx context.Context, req *empty.Empty) (*minerpb.PrivateMinerAPIReply, error) {
-	return &minerpb.PrivateMinerAPIReply{Hashrate: uint64(api.e.miner.HashRate())}, nil
+func (api *MineControlServer) GetHashrate(ctx context.Context, req *empty.Empty) (*minerpb.MineControlReply, error) {
+	return &minerpb.MineControlReply{Hashrate: uint64(api.e.miner.HashRate())}, nil
 }
 
-// PrivateAdminAPI is the collection of Ethereum full node-related APIs
+// ChainManager is the collection of Ethereum full node-related APIs
 // exposed over the private admin endpoint.
-type PrivateAdminAPIServer struct {
+type ChainManagerServer struct {
 	e *CpchainService
 }
 
-func NewPrivateAdminAPIServer(e *CpchainService) *PrivateAdminAPIServer {
-	return &PrivateAdminAPIServer{e: e}
+func NewChainManagerServer(e *CpchainService) *ChainManagerServer {
+	return &ChainManagerServer{e: e}
 }
 
-func (api *PrivateAdminAPIServer) RegisterServer(s *grpc.Server) {
-	adminpb.RegisterPrivateAdminAPIServer(s, api)
+func (api *ChainManagerServer) RegisterServer(s *grpc.Server) {
+	adminpb.RegisterChainManagerServer(s, api)
 }
 
-func (api *PrivateAdminAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	adminpb.RegisterPrivateAdminAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+func (api *ChainManagerServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	adminpb.RegisterChainManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-func (api *PrivateAdminAPIServer) IsPublic() bool {
+func (api *ChainManagerServer) IsPublic() bool {
 	return true
 }
 
-func (api *PrivateAdminAPIServer) Namespace() string {
+func (api *ChainManagerServer) Namespace() string {
 	return "admin"
 }
 
-// NewPrivateAdminAPI creates a new API definition for the full node private
+// NewChainManager creates a new API definition for the full node private
 // admin methods of the Ethereum service.
-func (api *PrivateAdminAPIServer) ExportChain(ctx context.Context, req *adminpb.PrivateAdminAPIRequest) (*adminpb.PrivateAdminAPIReply, error) {
+func (api *ChainManagerServer) ExportChain(ctx context.Context, req *adminpb.ChainManagerRequest) (*adminpb.ChainManagerReply, error) {
 	// Make sure we can create the file to export into
 	out, err := os.OpenFile(req.File, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
-		return &adminpb.PrivateAdminAPIReply{IsOk: false}, err
+		return &adminpb.ChainManagerReply{IsOk: false}, err
 	}
 	defer out.Close()
 
@@ -287,24 +246,24 @@ func (api *PrivateAdminAPIServer) ExportChain(ctx context.Context, req *adminpb.
 
 	// Export the blockchain
 	if err := api.e.BlockChain().Export(writer); err != nil {
-		return &adminpb.PrivateAdminAPIReply{IsOk: false}, err
+		return &adminpb.ChainManagerReply{IsOk: false}, err
 	}
-	return &adminpb.PrivateAdminAPIReply{IsOk: true}, err
+	return &adminpb.ChainManagerReply{IsOk: true}, err
 }
 
 // ExportChain exports the current blockchain into a local file.
-func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *adminpb.PrivateAdminAPIRequest) (*adminpb.PrivateAdminAPIReply, error) {
+func (api *ChainManagerServer) ImportChain(ctx context.Context, req *adminpb.ChainManagerRequest) (*adminpb.ChainManagerReply, error) {
 	// Make sure the can access the file to import
 	in, err := os.Open(req.File)
 	if err != nil {
-		return &adminpb.PrivateAdminAPIReply{IsOk: false}, err
+		return &adminpb.ChainManagerReply{IsOk: false}, err
 	}
 	defer in.Close()
 
 	var reader io.Reader = in
 	if strings.HasSuffix(req.File, ".gz") {
 		if reader, err = gzip.NewReader(reader); err != nil {
-			return &adminpb.PrivateAdminAPIReply{IsOk: false}, err
+			return &adminpb.ChainManagerReply{IsOk: false}, err
 		}
 	}
 
@@ -319,7 +278,7 @@ func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *adminpb.
 			if err := stream.Decode(block); err == io.EOF {
 				break
 			} else if err != nil {
-				return &adminpb.PrivateAdminAPIReply{IsOk: false}, fmt.Errorf("block %d: failed to parse: %v", index, err)
+				return &adminpb.ChainManagerReply{IsOk: false}, fmt.Errorf("block %d: failed to parse: %v", index, err)
 			}
 			blocks = append(blocks, block)
 			index++
@@ -334,11 +293,11 @@ func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *adminpb.
 		}
 		// Import the batch and reset the buffer
 		if _, err := api.e.BlockChain().InsertChain(blocks); err != nil {
-			return &adminpb.PrivateAdminAPIReply{IsOk: false}, fmt.Errorf("batch %d: failed to insert: %v", batch, err)
+			return &adminpb.ChainManagerReply{IsOk: false}, fmt.Errorf("batch %d: failed to insert: %v", batch, err)
 		}
 		blocks = blocks[:0]
 	}
-	return &adminpb.PrivateAdminAPIReply{IsOk: true}, nil
+	return &adminpb.ChainManagerReply{IsOk: true}, nil
 }
 
 // PublicDebugAPIServer is the collection of Ethereum full node APIs exposed
@@ -406,44 +365,44 @@ func (api *PublicDebugAPIServer) DumpBlock(ctx context.Context, req *debugpb.Pub
 	return f(&dump)
 }
 
-// PrivateDebugAPI is the collection of Ethereum full node APIs exposed over
+// DebugManager is the collection of Ethereum full node APIs exposed over
 // the private debugging endpoint.
-type PrivateDebugAPIServer struct {
+type DebugManagerServer struct {
 	config *configs.ChainConfig
 	eth    *CpchainService
 }
 
-// NewPrivateDebugAPI creates a new API definition for the full node-related
+// NewDebugManager creates a new API definition for the full node-related
 // private debug methods of the Ethereum service.
-func NewPrivateDebugAPIServer(config *configs.ChainConfig, eth *CpchainService) *PrivateDebugAPIServer {
-	return &PrivateDebugAPIServer{config: config, eth: eth}
+func NewDebugManagerServer(config *configs.ChainConfig, eth *CpchainService) *DebugManagerServer {
+	return &DebugManagerServer{config: config, eth: eth}
 }
 
-func (api *PrivateDebugAPIServer) RegisterServer(s *grpc.Server) {
-	debugpb.RegisterPrivateDebugAPIServer(s, api)
+func (api *DebugManagerServer) RegisterServer(s *grpc.Server) {
+	debugpb.RegisterDebugManagerServer(s, api)
 }
 
-func (api *PrivateDebugAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	debugpb.RegisterPrivateDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+func (api *DebugManagerServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	debugpb.RegisterDebugManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-func (api *PrivateDebugAPIServer) IsPublic() bool {
+func (api *DebugManagerServer) IsPublic() bool {
 	return true
 }
 
-func (api *PrivateDebugAPIServer) Namespace() string {
+func (api *DebugManagerServer) Namespace() string {
 	return "debug"
 }
 
 // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.
-func (api *PrivateDebugAPIServer) Preimage(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*debugpb.PrivateDebugAPIReply, error) {
+func (api *DebugManagerServer) Preimage(ctx context.Context, req *debugpb.DebugManagerRequest) (*debugpb.DebugManagerReply, error) {
 	if preimage := rawdb.ReadPreimage(api.eth.ChainDb(), common.BytesToHash(req.Hash)); preimage != nil {
-		return &debugpb.PrivateDebugAPIReply{Preimage: preimage}, nil
+		return &debugpb.DebugManagerReply{Preimage: preimage}, nil
 	}
 	return nil, errors.New("unknown preimage")
 }
 
-func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*any.Any, error) {
+func (api *DebugManagerServer) GetBadBlocks(ctx context.Context, req *debugpb.DebugManagerRequest) (*any.Any, error) {
 	blocks := api.eth.BlockChain().BadBlocks()
 	results := make([]*BadBlockArgs, len(blocks))
 
@@ -470,7 +429,7 @@ func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *debugpb
 }
 
 // StorageRangeAt returns the storage at the given block height and transaction index.
-func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*any.Any, error) {
+func (api *DebugManagerServer) StorageRangeAt(ctx context.Context, req *debugpb.DebugManagerRequest) (*any.Any, error) {
 	blockHash := common.BytesToHash(req.BlockHash)
 	_, _, statedb, err := api.computeTxEnv(blockHash, int(req.TxIndex), 0)
 	contractAddress := common.BytesToAddress(req.ContractAddress)
@@ -498,7 +457,7 @@ func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *debug
 // code hash, or storage hash.
 //
 // With one parameter, returns the list of accounts modified in the specified block.
-func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*any.Any, error) {
+func (api *DebugManagerServer) GetModifiedAccountsByNumber(ctx context.Context, req *debugpb.DebugManagerRequest) (*any.Any, error) {
 	var startBlock, endBlock *types.Block
 
 	startBlock = api.eth.blockchain.GetBlockByNumber(req.StartNum)
@@ -531,7 +490,7 @@ func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Contex
 	return &any.Any{Value: buf.Bytes()}, nil
 }
 
-func (api *PrivateDebugAPIServer) GetModifiedAccountsByHash(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*any.Any, error) {
+func (api *DebugManagerServer) GetModifiedAccountsByHash(ctx context.Context, req *debugpb.DebugManagerRequest) (*any.Any, error) {
 	var startBlock, endBlock *types.Block
 	startBlock = api.eth.blockchain.GetBlockByHash(common.BytesToHash(req.StartHash))
 	if startBlock == nil {
@@ -563,7 +522,7 @@ func (api *PrivateDebugAPIServer) GetModifiedAccountsByHash(ctx context.Context,
 	return &any.Any{Value: buf.Bytes()}, nil
 }
 
-func (api *PrivateDebugAPIServer) computeStateDB(block *types.Block, reexec uint64) (*state.StateDB, error) {
+func (api *DebugManagerServer) computeStateDB(block *types.Block, reexec uint64) (*state.StateDB, error) {
 	// If we have the state fully available, use that
 	pubStateDB, err := api.eth.blockchain.StateAt(block.StateRoot())
 	if err == nil {
@@ -632,7 +591,7 @@ func (api *PrivateDebugAPIServer) computeStateDB(block *types.Block, reexec uint
 }
 
 // computeStatePrivDB retrieves the private state database associated with a certain block.
-func (api *PrivateDebugAPIServer) computeStatePrivDB(block *types.Block) (*state.StateDB, error) {
+func (api *DebugManagerServer) computeStatePrivDB(block *types.Block) (*state.StateDB, error) {
 	// If we have the state fully available, use that
 	privStatedb, err := api.eth.blockchain.StatePrivAt(block.StateRoot())
 	if err == nil {
@@ -642,7 +601,7 @@ func (api *PrivateDebugAPIServer) computeStatePrivDB(block *types.Block) (*state
 	panic(err)
 }
 
-func (api *PrivateDebugAPIServer) computeTxEnv(blockHash common.Hash, txIndex int, reexec uint64) (core.Message, vm.Context, *state.StateDB, error) {
+func (api *DebugManagerServer) computeTxEnv(blockHash common.Hash, txIndex int, reexec uint64) (core.Message, vm.Context, *state.StateDB, error) {
 	// Create the parent state database
 	block := api.eth.blockchain.GetBlockByHash(blockHash)
 	if block == nil {
@@ -693,7 +652,7 @@ func (api *PrivateDebugAPIServer) computeTxEnv(blockHash common.Hash, txIndex in
 	return nil, vm.Context{}, nil, fmt.Errorf("tx index %d out of range for block %x", txIndex, blockHash)
 }
 
-func (api *PrivateDebugAPIServer) getModifiedAccounts(startBlock, endBlock *types.Block) ([]common.Address, error) {
+func (api *DebugManagerServer) getModifiedAccounts(startBlock, endBlock *types.Block) ([]common.Address, error) {
 	if startBlock.Number().Uint64() >= endBlock.Number().Uint64() {
 		return nil, fmt.Errorf("start block height (%d) must be less than end block height (%d)", startBlock.Number().Uint64(), endBlock.Number().Uint64())
 	}

@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+option java_package = "org.bitbucket.cpchain.chain.protos";
+option go_package = "protos";
+
+package protos;
+
+import "common.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+service DebugDumper {
+    rpc DumpBlock(BlockNumber) returns (Dump) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/dumpBlock"
+            body : "*"
+        };
+    }
+}
+
+message PreimageValue {
+    bytes preimage = 1;
+}
+
+message DebugManagerRequest {
+    string block_hash = 1;
+    int32 tx_index = 2;
+    string contract_address = 3;
+    string key_start = 4;
+    int32 max_result = 5;
+    uint64 start_number = 6;
+    uint64 end_number = 7;
+}
+
+message StorageEntry {
+    string key = 1;
+    string value = 2;
+}
+
+message StorageMap {
+    map<string, StorageEntry> storage_map = 1;
+}
+
+message StorageRangeResult {
+    StorageMap storage_map = 1;
+    string next_key = 2;
+}
+
+service DebugManager {
+    rpc Preimage(BlockHash) returns (PreimageValue) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/preimage"
+            body : "*"
+        };
+    }
+    rpc GetBadBlocks(google.protobuf.Empty) returns (BadBlockArgs) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/getBadBlocks"
+            body : "*"
+        };
+    }
+    rpc StorageRangeAt(google.protobuf.Empty) returns (StorageRangeResult) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/storageRangeAt"
+            body : "*"
+        };
+    }
+    rpc GetModifiedAccountsByNumber(DebugManagerRequest) returns (StorageRangeResult) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/getModifiedAccountsByNumber"
+            body : "*"
+        };
+    }
+    rpc GetModifiedAccountsByHash(DebugManagerRequest) returns (Addresses) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/getModifiedAccountsByHash"
+            body : "*"
+        };
+    }
+}

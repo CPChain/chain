@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option java_package = "org.bitbucket.cpchain.chain.netpb";
+option go_package = "netpb";
+
+package netpb;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+message PublicNetAPIReply{
+    bool listening = 1;
+    uint32 peer_count = 2;
+    string version = 3;
+}
+
+service PublicNetAPI {
+    rpc Listening(google.protobuf.Empty) returns (PublicNetAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/public/listening"
+         body : "*"
+    };
+    }
+    rpc PeerCount(google.protobuf.Empty) returns (PublicNetAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/public/peerCount"
+         body : "*"
+    };
+    }
+    rpc Version(google.protobuf.Empty) returns (PublicNetAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/public/version"
+         body : "*"
+    };
+    }
+}

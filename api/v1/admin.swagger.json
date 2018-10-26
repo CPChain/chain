@@ -1,0 +1,92 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "admin.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/admin/exportChain": {
+      "post": {
+        "summary": "ChainManager is the collection of Ethereum full node-related APIs\nexposed over the private admin endpoint.",
+        "operationId": "ExportChain",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosFile"
+            }
+          }
+        ],
+        "tags": [
+          "ChainManager"
+        ]
+      }
+    },
+    "/api/v1/admin/importChain": {
+      "post": {
+        "summary": "ImportChain imports a blockchain from a local file.",
+        "operationId": "ImportChain",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosFile"
+            }
+          }
+        ],
+        "tags": [
+          "ChainManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protosFile": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        }
+      }
+    },
+    "protosIsOk": {
+      "type": "object",
+      "properties": {
+        "is_ok": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    }
+  }
+}

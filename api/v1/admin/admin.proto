@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_package = "org.bitbucket.cpchain.chain.adminpb";
+option go_package = "adminpb";
+
+package adminpb;
+
+import "google/api/annotations.proto";
+
+
+message ChainManagerRequest {
+    string file = 1;
+}
+
+message ChainManagerReply {
+    bool is_ok = 1;
+}
+// ChainManager is the collection of Ethereum full node-related APIs
+// exposed over the private admin endpoint.
+service ChainManager {
+    // ExportChain exports the current blockchain into a local file.
+    rpc ExportChain(ChainManagerRequest) returns (ChainManagerReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/admin/exportChain"
+            body: "*"
+          };
+    }
+    // ImportChain imports a blockchain from a local file.
+    rpc ImportChain(ChainManagerRequest) returns (ChainManagerReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/admin/importChain"
+            body: "*"
+          };
+    }
+}

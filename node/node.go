@@ -624,7 +624,7 @@ func (n *Node) apis() []rpc.API {
 		{
 			Namespace: "admin",
 			Version:   "1.0",
-			Service:   NewPrivateAdminAPI(n),
+			Service:   NewChainManager(n),
 		}, {
 			Namespace: "admin",
 			Version:   "1.0",

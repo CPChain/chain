@@ -1,0 +1,408 @@
+syntax = "proto3";
+
+option java_package = "org.bitbucket.cpchain.chain.cpcpb";
+option go_package = "cpcpb";
+
+package cpcpb;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+
+
+message PublicInnerEthereumAPIReply {
+//    gas limit for trasaction
+    bytes gas_price = 1;
+    uint32 version = 2;
+    google.protobuf.BoolValue is_ok = 3;
+    google.protobuf.Any sync_info = 4;
+}
+
+service PublicInnerEthereumAPI {
+    rpc GasPrice(google.protobuf.Empty) returns (PublicInnerEthereumAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/cpc/gasPrice"
+         body : "*"
+    };
+    }
+    rpc ProtocolVersion(google.protobuf.Empty) returns (PublicInnerEthereumAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/cpc/protocolVersion"
+         body : "*"
+    };
+    }
+    rpc Syncing(google.protobuf.Empty) returns (PublicInnerEthereumAPIReply) {
+        option (google.api.http) = {
+        post : "/apis/v1/cpc/syncing"
+         body : "*"
+    };
+    }
+}
+
+
+message PublicEthereumAPIReply{
+    google.protobuf.BytesValue address = 1;
+    google.protobuf.UInt64Value rate = 2;
+}
+
+// PublicEthereumAPI provides an API to access Ethereum full node-related
+// information.
+service PublicEthereumAPI{
+    // Etherbase is the address that mining rewards will be send to
+    rpc Etherbase(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/personal/etherbase"
+            body: "*"
+          };
+    }
+    // Coinbase is the address that mining rewards will be send to (alias for Etherbase)
+    rpc Coinbase(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/personal/coinbase"
+            body: "*"
+          };
+    }
+    // Hashrate returns the POW hashrate
+    rpc Hashrate(google.protobuf.Empty) returns (PublicEthereumAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/personal/hashrate"
+            body: "*"
+          };
+    }
+}
+
+message PublicAccountAPIReply{
+    google.protobuf.Any accounts = 1;
+}
+service PublicAccountAPI {
+    rpc Accounts(google.protobuf.Empty) returns (PublicAccountAPIReply) {
+        option (google.api.http) = {
+post: "/apis/v1/cpc/accounts"
+        body : "*"
+    };
+    }
+}
+
+
+// rawWallet is a JSON representation of an accounts.Wallet interface, with its
+// data contents extracted into plain fields.
+message RawWallet {
+    string url = 1;
+    string status = 2;
+    string failure = 3;
+    repeated google.protobuf.Any accounts = 4;
+}
+
+service PublicBlockChainAPI {
+    rpc BlockNumber(google.protobuf.Empty) returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/blockNumber"
+         body : "*"
+    };
+    }
+    rpc Call(PublicBlockChainAPIRequest) returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/call"
+         body : "*"
+    };
+    }
+    rpc EstimateGas(PublicBlockChainAPIRequest)
+    returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/estimateGas"
+         body : "*"
+      };
+    }
+    rpc GetBalance(PublicBlockChainAPIRequest)
+    returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getBalance"
+         body : "*"
+      };
+    }
+    rpc GetBlockByHash(PublicBlockChainAPIRequest) returns (
+    PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getBlockByHash"
+         body : "*"
+    };
+    }
+    rpc GetBlockByNumber(PublicBlockChainAPIRequest)
+    returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getBlockByNumber"
+         body : "*"
+      };
+    }
+    rpc GetCode(PublicBlockChainAPIRequest) returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getCode"
+         body : "*"
+    };
+    }
+    rpc GetStorageAt(PublicBlockChainAPIRequest) returns (
+    PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getStorageAt"
+         body : "*"
+    };
+    }
+    rpc GetUncleByBlockHashAndIndex(PublicBlockChainAPIRequest)
+    returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getUncleByBlockHashAndIndex"
+         body : "*"
+      };
+    }
+    rpc GetUncleByBlockNumberAndIndex(PublicBlockChainAPIRequest)
+    returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getUncleByBlockNumberAndIndex"
+         body : "*"
+      };
+    }
+    rpc GetUncleCountByBlockHash(PublicBlockChainAPIRequest)
+    returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getUncleCountByBlockHash"
+         body : "*"
+      };
+    }
+    rpc GetUncleCountByBlockNumber(PublicBlockChainAPIRequest)
+    returns (PublicBlockChainAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getUncleCountByBlockNumber"
+         body : "*"
+      };
+    }
+}
+message PublicBlockChainAPIRequest {
+    message CallArgs {
+        bytes from = 1;
+        bytes to = 2;
+        uint64 gas = 3;
+        bytes gas_price = 4;
+        bytes value = 5;
+        bytes data = 6;
+        bool is_private = 7;
+    }
+    /* CallArgs args = 1; */
+    google.protobuf.Any args = 1;
+    uint64 block_number = 2;
+    bytes address = 3;
+    bool full_tx = 4;
+    string key = 5;
+    bytes block_hash = 6;
+    uint64 index = 7;
+}
+message PublicBlockChainAPIReply {
+    uint64 block_number = 1;
+    bytes payload = 2;
+    uint64 estimate_gas = 3;
+    bytes balance = 4;
+    google.protobuf.Any block_info = 5;
+    bytes code = 6;
+    bytes storage = 7;
+    uint64 uncle_count = 8;
+    bytes result = 9;
+}
+
+message PublicTransactionPoolAPIRequest {
+    bytes block_hash = 1;
+    uint64 block_number = 2;
+    uint64 index = 3;
+    bytes tx_hash = 4;
+    bytes address = 5;
+    google.protobuf.Any send_tx_args = 6;
+    bytes gas_price = 7;
+    google.protobuf.UInt64Value gas_limit = 8;
+    bytes payload = 9;
+    bytes encoded_tx = 10;
+}
+message PublicTransactionPoolAPIReply {
+    uint64 count = 1;
+    bytes payload = 2;
+    google.protobuf.Any rpc_transaction = 3;
+    // RPCTransaction rpc_transaction = 3;
+    bytes tx_receipt = 4;
+    bytes tx_hash = 5;
+    google.protobuf.Any sign_tx_result = 6;
+    bytes tx_bytes = 7;
+    google.protobuf.Any fields = 8;
+    bytes signature = 9;
+    // repeated RPCTransaction pending_txs = 10;
+    google.protobuf.Any pending_txs = 10;
+}
+
+message SignTransactionResult {
+    bytes raw = 1;
+    google.protobuf.Any tx = 2;
+}
+
+service PublicTransactionPoolAPI {
+    rpc GetBlockTransactionCountByHash(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getBlockTransactionCountByHash"
+         body : "*"
+      };
+    }
+    rpc GetBlockTransactionCountByNumber(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getBlockTransactionCountByNumber"
+         body : "*"
+      };
+    }
+    rpc GetRawTransactionByBlockHashAndIndex(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getRawTransactionByBlockHashAndIndex"
+         body : "*"
+      };
+    }
+    rpc GetRawTransactionByBlockNumberAndIndex(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getRawTransactionByBlockNumberAndIndex"
+         body : "*"
+      };
+    }
+    rpc GetRawTransactionByHash(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getRawTransactionByHash"
+         body : "*"
+      };
+    }
+    rpc GetTransactionByBlockHashAndIndex(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getTransactionByBlockHashAndIndex"
+         body : "*"
+      };
+    }
+    rpc GetTransactionByBlockNumberAndIndex(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getTransactionByBlockNumberAndIndex"
+         body : "*"
+      };
+    }
+    rpc GetTransactionByHash(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getTransactionByHash"
+         body : "*"
+      };
+    }
+    rpc GetTransactionCount(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getTransactionCount"
+         body : "*"
+      };
+    }
+    rpc GetTransactionReceipt(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/getTransactionReceipt"
+         body : "*"
+      };
+    }
+    rpc PendingTransactions(google.protobuf.Empty)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/pendingTransactions"
+         body : "*"
+      };
+    }
+    rpc Resend(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/resend"
+         body : "*"
+      };
+    }
+    rpc SendRawTransaction(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/sendRawTransaction"
+         body : "*"
+      };
+    }
+    rpc SendTransaction(PublicTransactionPoolAPIRequest) returns (
+    PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/sendTransaction"
+         body : "*"
+    };
+    }
+    rpc Sign(PublicTransactionPoolAPIRequest)
+    returns (PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/sign"
+         body : "*"
+      };
+    }
+    rpc SignTransaction(PublicTransactionPoolAPIRequest) returns (
+    PublicTransactionPoolAPIReply) {
+        option (google.api.http) = {
+post : "/apis/v1/personal/signTransaction"
+         body : "*"
+    };
+    }
+}
+
+message PublicMinerAPIRequest {
+    google.protobuf.BytesValue block_nonce = 1;
+    google.protobuf.BytesValue solution = 2;
+    google.protobuf.BytesValue digest = 3;
+    uint64 hashrate = 4;
+    bytes id = 5;
+}
+
+message PublicMinerAPIReply {
+    google.protobuf.BoolValue mining = 1;
+    bool is_accepting= 2;
+    repeated string works = 3;
+}
+// PublicMinerAPI provides an API to control the miner.
+// It offers only methods that operate on data that pose no security risk when it is publicly accessible.
+service PublicMinerAPI{
+    // Mining returns an indication if this node is currently mining.
+    rpc Mining(google.protobuf.Empty) returns (PublicMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/cpc/mining"
+            body: "*"
+          };
+    }
+    // SubmitWork can be used by external miner to submit their POW solution. It returns an indication if the work was
+    // accepted. Note, this is not an indication if the provided work was valid!
+    rpc SubmitWork(PublicMinerAPIRequest) returns (PublicMinerAPIReply){
+        option (google.api.http) = {
+            post: "/apis/v1/cpc/submitWork"
+            body: "*"
+          };
+    }
+    // GetWork returns a work package for external miner. The work package consists of 3 strings
+    // result[0], 32 bytes hex encoded current block header pow-hash
+    // result[1], 32 bytes hex encoded seed hash used for DAG
+    // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
+    rpc GetWork(google.protobuf.Empty) returns (PublicMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/cpc/getWork"
+            body: "*"
+          };
+    }
+    // SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined
+    // hash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which
+    // must be unique between nodes.
+    rpc SubmitHashrate(PublicMinerAPIRequest) returns (PublicMinerAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/cpc/submitHashrate"
+            body: "*"
+          };
+    }
+}

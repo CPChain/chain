@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+option java_package = "org.bitbucket.cpchain.chain.protos";
+option go_package = "protos";
+
+package protos;
+
+import "google/api/annotations.proto";
+
+message IsOk {
+    bool is_ok = 1;
+}
+
+message BlockNumber {
+    int64 block_number = 1;
+}
+
+message Address {
+    string address = 1;
+}
+
+message Addresses {
+    repeated string addresses = 1;
+}
+
+message BlockHash {
+    string block_hash = 1;
+}
+
+message Balance {
+    string balance = 1;
+}
+
+message GasPrice {
+    bytes gas_price = 1;
+}
+
+message IsFull {
+    bool is_full = 1;
+}
+
+message Block {
+    uint64 number = 1;
+    string hash = 2;
+    string parent_hash = 3;
+    uint64 nonce = 4;
+    string mix_hash = 5;
+    bytes logs_bloom = 6;
+    string state_root = 7;
+    string miner = 8;
+    uint64 difficulty = 9;
+    bytes extra_data = 10;
+    uint64 size = 11;
+    uint64 gas_limit = 12;
+    uint64 gas_used = 13;
+    string timestamp = 14;
+    string transactions_root = 15;
+    string receipts_root = 16;
+    repeated Transaction transactions = 17;
+}
+
+message Transaction {
+    string tx_hash = 1;
+    string block_hash = 2;
+    string from = 3;
+    string to = 4;
+    string hash = 5;
+    string value = 6;
+    string v = 7;
+    string r = 8;
+    string s = 9;
+    uint64 transaction_index = 10;
+    uint64 nonce = 11;
+    uint64 block_number = 12;
+    uint64 gas = 13;
+    uint64 gas_price = 14;
+    bytes input = 15;
+}
+
+message Receipt {
+    uint64 block_number = 1;
+    uint64 gas_used = 2;
+    uint64 cumulative_gas_used = 3;
+    uint64 transaction_index = 4;
+    string block_hash = 5;
+    string transaction_hash = 6;
+    string from = 7;
+    string to = 8;
+    string contract_address = 9;
+    uint64 status= 10;
+    bytes root = 11;
+    bytes logs_bloom = 12;
+    repeated Log logs = 13;
+}
+
+message Log {
+    bool removed = 1;
+    uint64 block_number = 2;
+    uint64 tx_index = 3;
+    string block_hash = 4;
+    uint32 index = 5;
+    string address = 6;
+    string tx_hash = 7;
+    bytes data = 8;
+    repeated string topics = 9;
+}
+
+message DumpAccount {
+    string balance = 1;
+    uint64 nonce = 2;
+    string root = 3;
+    string code_hash = 4;
+    string code = 5;
+    map<string, string> storage = 6;
+}
+
+message Dump {
+    string root = 1;
+    map<string, DumpAccount> accounts = 2;
+}
+
+message BadBlockArgs {
+    repeated BadBlockArg bad_block_args = 1;
+}
+
+message BadBlockArg {
+    string hash = 1;
+    string rlp = 2;
+    map<string, string> msg = 3;
+}

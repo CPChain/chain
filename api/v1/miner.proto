@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+option java_package = "org.bitbucket.cpchain.chain.protos";
+option go_package = "protos";
+
+package protos;
+
+import "common.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+message Threads {
+    uint32 threads = 1;
+}
+message Extra {
+    string extra = 1;
+}
+
+service MinerManager {
+    // Start the miner with the given number of threads. If threads is nil the number
+    // of workers started is equal to the number of logical CPUs that are usable by
+    // this process. If mining is already running, this method adjust the number of
+    // threads allowed to use.
+    rpc Start(Threads) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/start"
+            body: "*"
+          };
+    }
+    rpc Stop(google.protobuf.Empty) returns (IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/stop"
+            body: "*"
+          };
+    }
+    rpc SetExtra(Extra) returns (IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/setExtra"
+            body: "*"
+          };
+    }
+    rpc SetGasPrice(GasPrice) returns (IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/setGasPrice"
+            body: "*"
+          };
+    }
+    rpc SetCoinbase(Address) returns (IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/setCoinbase"
+            body: "*"
+          };
+    }
+}

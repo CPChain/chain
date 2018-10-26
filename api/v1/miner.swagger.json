@@ -1,0 +1,200 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "miner.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/miner/setCoinbase": {
+      "post": {
+        "operationId": "SetCoinbase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosAddress"
+            }
+          }
+        ],
+        "tags": [
+          "MinerManager"
+        ]
+      }
+    },
+    "/api/v1/miner/setExtra": {
+      "post": {
+        "operationId": "SetExtra",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosExtra"
+            }
+          }
+        ],
+        "tags": [
+          "MinerManager"
+        ]
+      }
+    },
+    "/api/v1/miner/setGasPrice": {
+      "post": {
+        "operationId": "SetGasPrice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosGasPrice"
+            }
+          }
+        ],
+        "tags": [
+          "MinerManager"
+        ]
+      }
+    },
+    "/api/v1/miner/start": {
+      "post": {
+        "summary": "Start the miner with the given number of threads. If threads is nil the number\nof workers started is equal to the number of logical CPUs that are usable by\nthis process. If mining is already running, this method adjust the number of\nthreads allowed to use.",
+        "operationId": "Start",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protosThreads"
+            }
+          }
+        ],
+        "tags": [
+          "MinerManager"
+        ]
+      }
+    },
+    "/api/v1/miner/stop": {
+      "post": {
+        "operationId": "Stop",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protosIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "MinerManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
+    "protosAddress": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "protosExtra": {
+      "type": "object",
+      "properties": {
+        "extra": {
+          "type": "string"
+        }
+      }
+    },
+    "protosGasPrice": {
+      "type": "object",
+      "properties": {
+        "gas_price": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "protosIsOk": {
+      "type": "object",
+      "properties": {
+        "is_ok": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "protosThreads": {
+      "type": "object",
+      "properties": {
+        "threads": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    }
+  }
+}

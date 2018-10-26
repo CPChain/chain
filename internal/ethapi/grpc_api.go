@@ -26,11 +26,11 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/api/protos/v1/debug"
-	"bitbucket.org/cpchain/chain/api/protos/v1/eth"
-	"bitbucket.org/cpchain/chain/api/protos/v1/net"
-	"bitbucket.org/cpchain/chain/api/protos/v1/personal"
-	"bitbucket.org/cpchain/chain/api/protos/v1/txpool"
+	"bitbucket.org/cpchain/chain/api/v1/debug"
+	"bitbucket.org/cpchain/chain/api/v1/cpc"
+	"bitbucket.org/cpchain/chain/api/v1/net"
+	"bitbucket.org/cpchain/chain/api/v1/personal"
+	"bitbucket.org/cpchain/chain/api/v1/txpool"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
@@ -69,11 +69,11 @@ func NewPublicInnerEthereumAPIServer(b Backend) *PublicInnerEthereumAPIServer {
 }
 
 func (api *PublicInnerEthereumAPIServer) RegisterServer(s *grpc.Server) {
-	ethpb.RegisterPublicInnerEthereumAPIServer(s, api)
+	cpcpb.RegisterPublicInnerEthereumAPIServer(s, api)
 }
 
 func (api *PublicInnerEthereumAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	ethpb.RegisterPublicInnerEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	cpcpb.RegisterPublicInnerEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PublicInnerEthereumAPIServer) Namespace() string {
@@ -85,7 +85,7 @@ func (api *PublicInnerEthereumAPIServer) IsPublic() bool {
 }
 
 // GasPrice returns a suggestion for a gas price.
-func (s *PublicInnerEthereumAPIServer) GasPrice(ctx context.Context, in *empty.Empty) (*ethpb.PublicInnerEthereumAPIReply, error) {
+func (s *PublicInnerEthereumAPIServer) GasPrice(ctx context.Context, in *empty.Empty) (*cpcpb.PublicInnerEthereumAPIReply, error) {
 	price, err := s.b.SuggestPrice(ctx)
 	if err != nil {
 		return nil, err
@@ -93,14 +93,14 @@ func (s *PublicInnerEthereumAPIServer) GasPrice(ctx context.Context, in *empty.E
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(price); err != nil {
-		return &ethpb.PublicInnerEthereumAPIReply{}, nil
+		return &cpcpb.PublicInnerEthereumAPIReply{}, nil
 	}
-	return &ethpb.PublicInnerEthereumAPIReply{GasPrice: buf.Bytes()}, nil
+	return &cpcpb.PublicInnerEthereumAPIReply{GasPrice: buf.Bytes()}, nil
 }
 
 // ProtocolVersion returns the current Ethereum protocol version this node supports
-func (s *PublicInnerEthereumAPIServer) ProtocolVersion(ctx context.Context, in *empty.Empty) (*ethpb.PublicInnerEthereumAPIReply, error) {
-	return &ethpb.PublicInnerEthereumAPIReply{Version: uint32(s.b.ProtocolVersion())}, nil
+func (s *PublicInnerEthereumAPIServer) ProtocolVersion(ctx context.Context, in *empty.Empty) (*cpcpb.PublicInnerEthereumAPIReply, error) {
+	return &cpcpb.PublicInnerEthereumAPIReply{Version: uint32(s.b.ProtocolVersion())}, nil
 }
 
 // Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not
@@ -110,12 +110,12 @@ func (s *PublicInnerEthereumAPIServer) ProtocolVersion(ctx context.Context, in *
 // - highestBlock:  block number of the highest block header this node has received from peers
 // - pulledStates:  number of state entries processed until now
 // - knownStates:   number of known state entries that still need to be pulled
-func (s *PublicInnerEthereumAPIServer) Syncing(ctx context.Context, in *empty.Empty) (*ethpb.PublicInnerEthereumAPIReply, error) {
+func (s *PublicInnerEthereumAPIServer) Syncing(ctx context.Context, in *empty.Empty) (*cpcpb.PublicInnerEthereumAPIReply, error) {
 	progress := s.b.Downloader().Progress()
 
 	// Return not syncing if the synchronisation already completed
 	if progress.CurrentBlock >= progress.HighestBlock {
-		return &ethpb.PublicInnerEthereumAPIReply{
+		return &cpcpb.PublicInnerEthereumAPIReply{
 			IsOk: &wrappers.BoolValue{Value: false},
 		}, nil
 	}
@@ -135,7 +135,7 @@ func (s *PublicInnerEthereumAPIServer) Syncing(ctx context.Context, in *empty.Em
 		return nil, err
 	}
 
-	return &ethpb.PublicInnerEthereumAPIReply{
+	return &cpcpb.PublicInnerEthereumAPIReply{
 		SyncInfo: &any.Any{Value: buf.Bytes()},
 	}, nil
 }
@@ -271,11 +271,11 @@ func NewPublicAccountAPIServer(am *accounts.Manager) *PublicAccountAPIServer {
 	return &PublicAccountAPIServer{am: am}
 }
 func (api *PublicAccountAPIServer) RegisterServer(s *grpc.Server) {
-	ethpb.RegisterPublicAccountAPIServer(s, api)
+	cpcpb.RegisterPublicAccountAPIServer(s, api)
 }
 
 func (api *PublicAccountAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	ethpb.RegisterPublicAccountAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	cpcpb.RegisterPublicAccountAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PublicAccountAPIServer) IsPublic() bool {
@@ -287,7 +287,7 @@ func (api *PublicAccountAPIServer) Namespace() string {
 }
 
 // Accounts returns the collection of accounts this node manages
-func (s *PublicAccountAPIServer) Accounts(ctx context.Context, in *empty.Empty) (*ethpb.PublicAccountAPIReply, error) {
+func (s *PublicAccountAPIServer) Accounts(ctx context.Context, in *empty.Empty) (*cpcpb.PublicAccountAPIReply, error) {
 	addresses := make([]common.Address, 0) // return [] instead of nil if empty
 	for _, wallet := range s.am.Wallets() {
 		for _, account := range wallet.Accounts() {
@@ -301,7 +301,7 @@ func (s *PublicAccountAPIServer) Accounts(ctx context.Context, in *empty.Empty) 
 		return nil, err
 	}
 
-	return &ethpb.PublicAccountAPIReply{
+	return &cpcpb.PublicAccountAPIReply{
 		Accounts: &any.Any{
 			Value: buf.Bytes(),
 		},
@@ -664,11 +664,11 @@ func NewPublicBlockChainAPIServer(b Backend) *PublicBlockChainAPIServer {
 }
 
 func (api *PublicBlockChainAPIServer) RegisterServer(s *grpc.Server) {
-	ethpb.RegisterPublicBlockChainAPIServer(s, api)
+	cpcpb.RegisterPublicBlockChainAPIServer(s, api)
 }
 
 func (api *PublicBlockChainAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	ethpb.RegisterPublicBlockChainAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	cpcpb.RegisterPublicBlockChainAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PublicBlockChainAPIServer) IsPublic() bool {
@@ -680,9 +680,9 @@ func (api *PublicBlockChainAPIServer) Namespace() string {
 }
 
 // BlockNumber returns the block number of the chain head.
-func (s *PublicBlockChainAPIServer) BlockNumber(ctx context.Context, in *empty.Empty) (reply *ethpb.PublicBlockChainAPIReply, err error) {
+func (s *PublicBlockChainAPIServer) BlockNumber(ctx context.Context, in *empty.Empty) (reply *cpcpb.PublicBlockChainAPIReply, err error) {
 	header, _ := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber) // latest header should always be available
-	return &ethpb.PublicBlockChainAPIReply{
+	return &cpcpb.PublicBlockChainAPIReply{
 		BlockNumber: header.Number.Uint64(),
 	}, nil
 }
@@ -690,7 +690,7 @@ func (s *PublicBlockChainAPIServer) BlockNumber(ctx context.Context, in *empty.E
 // GetBalance returns the amount of wei for the given address in the state of the
 // given block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta
 // block numbers are also allowed.
-func (s *PublicBlockChainAPIServer) GetBalance(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetBalance(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	state, _, err := s.b.StateAndHeaderByNumber(ctx, rpc.BlockNumber(in.BlockNumber), false)
 	if state == nil || err != nil {
 		return nil, err
@@ -703,7 +703,7 @@ func (s *PublicBlockChainAPIServer) GetBalance(ctx context.Context, in *ethpb.Pu
 		return nil, err
 	}
 
-	return &ethpb.PublicBlockChainAPIReply{
+	return &cpcpb.PublicBlockChainAPIReply{
 		Balance: buf.Bytes(),
 	}, state.Error()
 }
@@ -721,7 +721,7 @@ func (s *PublicBlockChainAPIServer) rpcOutputBlock(b *types.Block, inclTx bool, 
 
 // GetBlockByNumber returns the requested block. When blockNr is -1 the chain head is returned. When fullTx is true all
 // transactions in the block are returned in full detail, otherwise only the transaction hash is returned.
-func (s *PublicBlockChainAPIServer) GetBlockByNumber(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetBlockByNumber(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	block, err := s.b.BlockByNumber(ctx, rpc.BlockNumber(in.BlockNumber))
 	if block != nil {
 		response, err := s.rpcOutputBlock(block, true, in.FullTx)
@@ -737,7 +737,7 @@ func (s *PublicBlockChainAPIServer) GetBlockByNumber(ctx context.Context, in *et
 			return nil, err
 		}
 
-		return &ethpb.PublicBlockChainAPIReply{
+		return &cpcpb.PublicBlockChainAPIReply{
 			BlockInfo: &any.Any{
 				Value: buf.Bytes(),
 			},
@@ -748,7 +748,7 @@ func (s *PublicBlockChainAPIServer) GetBlockByNumber(ctx context.Context, in *et
 
 // GetBlockByHash returns the requested block. When fullTx is true all transactions in the block are returned in full
 // detail, otherwise only the transaction hash is returned.
-func (s *PublicBlockChainAPIServer) GetBlockByHash(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetBlockByHash(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	block, err := s.b.GetBlock(ctx, common.BytesToHash(in.BlockHash))
 	if block != nil {
 		blockInfo, err := s.rpcOutputBlock(block, true, in.FullTx)
@@ -760,7 +760,7 @@ func (s *PublicBlockChainAPIServer) GetBlockByHash(ctx context.Context, in *ethp
 		if err := enc.Encode(&blockInfo); err != nil {
 			return nil, err
 		}
-		return &ethpb.PublicBlockChainAPIReply{
+		return &cpcpb.PublicBlockChainAPIReply{
 			BlockInfo: &any.Any{
 				Value: buf.Bytes(),
 			},
@@ -771,7 +771,7 @@ func (s *PublicBlockChainAPIServer) GetBlockByHash(ctx context.Context, in *ethp
 
 // GetUncleByBlockNumberAndIndex returns the uncle block for the given block hash and index. When fullTx is true
 // all transactions in the block are returned in full detail, otherwise only the transaction hash is returned.
-func (s *PublicBlockChainAPIServer) GetUncleByBlockNumberAndIndex(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetUncleByBlockNumberAndIndex(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	// No uncles for dpor
 	// return map[string]interface{}{}, nil
 	return nil, nil
@@ -779,36 +779,36 @@ func (s *PublicBlockChainAPIServer) GetUncleByBlockNumberAndIndex(ctx context.Co
 
 // GetUncleByBlockHashAndIndex returns the uncle block for the given block hash and index. When fullTx is true
 // all transactions in the block are returned in full detail, otherwise only the transaction hash is returned.
-func (s *PublicBlockChainAPIServer) GetUncleByBlockHashAndIndex(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetUncleByBlockHashAndIndex(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	// No uncles for dpor
 	// return map[string]interface{}{}, nil
 	return nil, nil
 }
 
 // GetUncleCountByBlockNumber returns number of uncles in the block for the given block number
-func (s *PublicBlockChainAPIServer) GetUncleCountByBlockNumber(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetUncleCountByBlockNumber(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	// No uncles for dpor
-	return &ethpb.PublicBlockChainAPIReply{
+	return &cpcpb.PublicBlockChainAPIReply{
 		UncleCount: 0,
 	}, nil
 }
 
 // GetUncleCountByBlockHash returns number of uncles in the block for the given block hash
-func (s *PublicBlockChainAPIServer) GetUncleCountByBlockHash(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetUncleCountByBlockHash(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	// No uncles for dpor
-	return &ethpb.PublicBlockChainAPIReply{
+	return &cpcpb.PublicBlockChainAPIReply{
 		UncleCount: 0,
 	}, nil
 }
 
 // GetCode returns the code stored at the given address in the state for the given block number.
-func (s *PublicBlockChainAPIServer) GetCode(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetCode(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	state, _, err := s.b.StateAndHeaderByNumber(ctx, rpc.BlockNumber(in.BlockNumber), false)
 	if state == nil || err != nil {
 		return nil, err
 	}
 	code := state.GetCode(common.BytesToAddress(in.Address))
-	return &ethpb.PublicBlockChainAPIReply{
+	return &cpcpb.PublicBlockChainAPIReply{
 		Code: code,
 	}, state.Error()
 }
@@ -816,13 +816,13 @@ func (s *PublicBlockChainAPIServer) GetCode(ctx context.Context, in *ethpb.Publi
 // GetStorageAt returns the storage from the state at the given address, key and
 // block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta block
 // numbers are also allowed.
-func (s *PublicBlockChainAPIServer) GetStorageAt(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) GetStorageAt(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	state, _, err := s.b.StateAndHeaderByNumber(ctx, rpc.BlockNumber(in.BlockNumber), false)
 	if state == nil || err != nil {
 		return nil, err
 	}
 	res := state.GetState(common.BytesToAddress(in.Address), common.HexToHash(in.Key))
-	return &ethpb.PublicBlockChainAPIReply{
+	return &cpcpb.PublicBlockChainAPIReply{
 		Storage: res[:],
 	}, state.Error()
 }
@@ -892,7 +892,7 @@ func (s *PublicBlockChainAPIServer) doCall(ctx context.Context, args CallArgs, b
 
 // Call executes the given transaction on the state for the given block number.
 // It doesn't make and changes in the state/blockchain and is useful to execute and retrieve values.
-func (s *PublicBlockChainAPIServer) Call(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) Call(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	buf := bytes.NewBuffer(in.Args.Value)
 	dec := gob.NewDecoder(buf)
 	var args CallArgs
@@ -900,14 +900,14 @@ func (s *PublicBlockChainAPIServer) Call(ctx context.Context, in *ethpb.PublicBl
 		return nil, err
 	}
 	result, _, _, err := s.doCall(ctx, args, rpc.BlockNumber(in.BlockNumber), vm.Config{}, 5*time.Second)
-	return &ethpb.PublicBlockChainAPIReply{
+	return &cpcpb.PublicBlockChainAPIReply{
 		Result: result,
 	}, err
 }
 
 // EstimateGas returns an estimate of the amount of gas needed to execute the
 // given transaction against the current pending block.
-func (s *PublicBlockChainAPIServer) EstimateGas(ctx context.Context, in *ethpb.PublicBlockChainAPIRequest) (*ethpb.PublicBlockChainAPIReply, error) {
+func (s *PublicBlockChainAPIServer) EstimateGas(ctx context.Context, in *cpcpb.PublicBlockChainAPIRequest) (*cpcpb.PublicBlockChainAPIReply, error) {
 	buf := bytes.NewBuffer(in.Args.Value)
 	dec := gob.NewDecoder(buf)
 	var args CallArgs
@@ -957,7 +957,7 @@ func (s *PublicBlockChainAPIServer) EstimateGas(ctx context.Context, in *ethpb.P
 			return nil, fmt.Errorf("gas required exceeds allowance or always failing transaction")
 		}
 	}
-	return &ethpb.PublicBlockChainAPIReply{
+	return &cpcpb.PublicBlockChainAPIReply{
 		EstimateGas: hi,
 	}, nil
 }
@@ -974,11 +974,11 @@ func NewPublicTransactionPoolAPIServer(b Backend, nonceLock *AddrLocker) *Public
 }
 
 func (api *PublicTransactionPoolAPIServer) RegisterServer(s *grpc.Server) {
-	ethpb.RegisterPublicTransactionPoolAPIServer(s, api)
+	cpcpb.RegisterPublicTransactionPoolAPIServer(s, api)
 }
 
 func (api *PublicTransactionPoolAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	ethpb.RegisterPublicTransactionPoolAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	cpcpb.RegisterPublicTransactionPoolAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PublicTransactionPoolAPIServer) IsPublic() bool {
@@ -990,9 +990,9 @@ func (api *PublicTransactionPoolAPIServer) Namespace() string {
 }
 
 // GetBlockTransactionCountByNumber returns the number of transactions in the block with the given block number.
-func (s *PublicTransactionPoolAPIServer) GetBlockTransactionCountByNumber(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetBlockTransactionCountByNumber(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	if block, _ := s.b.BlockByNumber(ctx, rpc.BlockNumber(in.BlockNumber)); block != nil {
-		return &ethpb.PublicTransactionPoolAPIReply{
+		return &cpcpb.PublicTransactionPoolAPIReply{
 			Count: uint64(len(block.Transactions())),
 		}, nil
 	}
@@ -1000,9 +1000,9 @@ func (s *PublicTransactionPoolAPIServer) GetBlockTransactionCountByNumber(ctx co
 }
 
 // GetBlockTransactionCountByHash returns the number of transactions in the block with the given hash.
-func (s *PublicTransactionPoolAPIServer) GetBlockTransactionCountByHash(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetBlockTransactionCountByHash(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	if block, _ := s.b.GetBlock(ctx, common.BytesToHash(in.BlockHash)); block != nil {
-		return &ethpb.PublicTransactionPoolAPIReply{
+		return &cpcpb.PublicTransactionPoolAPIReply{
 			Count: uint64(len(block.Transactions())),
 		}, nil
 	}
@@ -1010,7 +1010,7 @@ func (s *PublicTransactionPoolAPIServer) GetBlockTransactionCountByHash(ctx cont
 }
 
 // GetTransactionByBlockNumberAndIndex returns the transaction for the given block number and index.
-func (s *PublicTransactionPoolAPIServer) GetTransactionByBlockNumberAndIndex(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetTransactionByBlockNumberAndIndex(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	if block, _ := s.b.BlockByNumber(ctx, rpc.BlockNumber(in.BlockNumber)); block != nil {
 		rpcTx := newRPCTransactionFromBlockIndex(block, in.Index)
 		var buf bytes.Buffer
@@ -1018,7 +1018,7 @@ func (s *PublicTransactionPoolAPIServer) GetTransactionByBlockNumberAndIndex(ctx
 		if err := enc.Encode(&rpcTx); err != nil {
 			return nil, err
 		}
-		return &ethpb.PublicTransactionPoolAPIReply{
+		return &cpcpb.PublicTransactionPoolAPIReply{
 			RpcTransaction: &any.Any{
 				Value: buf.Bytes(),
 			},
@@ -1028,7 +1028,7 @@ func (s *PublicTransactionPoolAPIServer) GetTransactionByBlockNumberAndIndex(ctx
 }
 
 // GetTransactionByBlockHashAndIndex returns the transaction for the given block hash and index.
-func (s *PublicTransactionPoolAPIServer) GetTransactionByBlockHashAndIndex(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetTransactionByBlockHashAndIndex(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	if block, _ := s.b.GetBlock(ctx, common.BytesToHash(in.BlockHash)); block != nil {
 		rpcTx := newRPCTransactionFromBlockIndex(block, in.Index)
 		var buf bytes.Buffer
@@ -1036,7 +1036,7 @@ func (s *PublicTransactionPoolAPIServer) GetTransactionByBlockHashAndIndex(ctx c
 		if err := enc.Encode(&rpcTx); err != nil {
 			return nil, err
 		}
-		return &ethpb.PublicTransactionPoolAPIReply{
+		return &cpcpb.PublicTransactionPoolAPIReply{
 			RpcTransaction: &any.Any{
 				Value: buf.Bytes(),
 			},
@@ -1046,7 +1046,7 @@ func (s *PublicTransactionPoolAPIServer) GetTransactionByBlockHashAndIndex(ctx c
 }
 
 // GetRawTransactionByBlockNumberAndIndex returns the bytes of the transaction for the given block number and index.
-func (s *PublicTransactionPoolAPIServer) GetRawTransactionByBlockNumberAndIndex(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetRawTransactionByBlockNumberAndIndex(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	if block, _ := s.b.BlockByNumber(ctx, rpc.BlockNumber(in.BlockNumber)); block != nil {
 		rpcTx := newRPCTransactionFromBlockIndex(block, in.Index)
 		var buf bytes.Buffer
@@ -1054,7 +1054,7 @@ func (s *PublicTransactionPoolAPIServer) GetRawTransactionByBlockNumberAndIndex(
 		if err := enc.Encode(&rpcTx); err != nil {
 			return nil, err
 		}
-		return &ethpb.PublicTransactionPoolAPIReply{
+		return &cpcpb.PublicTransactionPoolAPIReply{
 			RpcTransaction: &any.Any{
 				Value: buf.Bytes(),
 			},
@@ -1064,7 +1064,7 @@ func (s *PublicTransactionPoolAPIServer) GetRawTransactionByBlockNumberAndIndex(
 }
 
 // GetRawTransactionByBlockHashAndIndex returns the bytes of the transaction for the given block hash and index.
-func (s *PublicTransactionPoolAPIServer) GetRawTransactionByBlockHashAndIndex(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetRawTransactionByBlockHashAndIndex(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	if block, _ := s.b.GetBlock(ctx, common.BytesToHash(in.BlockHash)); block != nil {
 		rpcTx := newRPCTransactionFromBlockIndex(block, in.Index)
 		var buf bytes.Buffer
@@ -1072,7 +1072,7 @@ func (s *PublicTransactionPoolAPIServer) GetRawTransactionByBlockHashAndIndex(ct
 		if err := enc.Encode(&rpcTx); err != nil {
 			return nil, err
 		}
-		return &ethpb.PublicTransactionPoolAPIReply{
+		return &cpcpb.PublicTransactionPoolAPIReply{
 			RpcTransaction: &any.Any{
 				Value: buf.Bytes(),
 			},
@@ -1082,19 +1082,19 @@ func (s *PublicTransactionPoolAPIServer) GetRawTransactionByBlockHashAndIndex(ct
 }
 
 // GetTransactionCount returns the number of transactions the given address has sent for the given block number
-func (s *PublicTransactionPoolAPIServer) GetTransactionCount(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetTransactionCount(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	state, _, err := s.b.StateAndHeaderByNumber(ctx, rpc.BlockNumber(in.BlockNumber), false)
 	if state == nil || err != nil {
 		return nil, err
 	}
 	nonce := state.GetNonce(common.BytesToAddress(in.Address))
-	return &ethpb.PublicTransactionPoolAPIReply{
+	return &cpcpb.PublicTransactionPoolAPIReply{
 		Count: nonce,
 	}, state.Error()
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPIServer) GetTransactionByHash(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetTransactionByHash(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	// Try to return an already finalized transaction
 	if tx, blockHash, blockNumber, index := rawdb.ReadTransaction(s.b.ChainDb(), common.BytesToHash(in.TxHash)); tx != nil {
 		rpcTx := newRPCTransaction(tx, blockHash, blockNumber, index)
@@ -1103,7 +1103,7 @@ func (s *PublicTransactionPoolAPIServer) GetTransactionByHash(ctx context.Contex
 		if err := enc.Encode(&rpcTx); err != nil {
 			return nil, err
 		}
-		return &ethpb.PublicTransactionPoolAPIReply{
+		return &cpcpb.PublicTransactionPoolAPIReply{
 			RpcTransaction: &any.Any{
 				Value: buf.Bytes(),
 			},
@@ -1116,7 +1116,7 @@ func (s *PublicTransactionPoolAPIServer) GetTransactionByHash(ctx context.Contex
 		if err := enc.Encode(&tx); err != nil {
 			return nil, err
 		}
-		return &ethpb.PublicTransactionPoolAPIReply{
+		return &cpcpb.PublicTransactionPoolAPIReply{
 			RpcTransaction: &any.Any{
 				Value: buf.Bytes(),
 			},
@@ -1127,7 +1127,7 @@ func (s *PublicTransactionPoolAPIServer) GetTransactionByHash(ctx context.Contex
 }
 
 // GetRawTransactionByHash returns the bytes of the transaction for the given hash.
-func (s *PublicTransactionPoolAPIServer) GetRawTransactionByHash(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetRawTransactionByHash(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	var tx *types.Transaction
 
 	// Retrieve a finalized transaction, or a pooled otherwise
@@ -1142,13 +1142,13 @@ func (s *PublicTransactionPoolAPIServer) GetRawTransactionByHash(ctx context.Con
 		return nil, err
 	}
 	// Serialize to RLP and return
-	return &ethpb.PublicTransactionPoolAPIReply{
+	return &cpcpb.PublicTransactionPoolAPIReply{
 		TxBytes: txBytes,
 	}, nil
 }
 
 // GetTransactionReceipt returns the transaction receipt for the given transaction hash.
-func (s *PublicTransactionPoolAPIServer) GetTransactionReceipt(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) GetTransactionReceipt(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	tx, blockHash, blockNumber, index := rawdb.ReadTransaction(s.b.ChainDb(), common.BytesToHash(in.TxHash))
 	if tx == nil {
 		return nil, nil
@@ -1210,7 +1210,7 @@ func (s *PublicTransactionPoolAPIServer) GetTransactionReceipt(ctx context.Conte
 		return nil, err
 	}
 
-	return &ethpb.PublicTransactionPoolAPIReply{
+	return &cpcpb.PublicTransactionPoolAPIReply{
 		Fields: &any.Any{
 			Value: buf.Bytes(),
 		},
@@ -1234,7 +1234,7 @@ func (s *PublicTransactionPoolAPIServer) sign(addr common.Address, tx *types.Tra
 	return wallet.SignTx(account, tx, chainID)
 }
 
-func (s *PublicTransactionPoolAPIServer) SendTransaction(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) SendTransaction(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	var args SendTxArgs
 	buf := bytes.NewBuffer(in.SendTxArgs.Value)
 	dec := gob.NewDecoder(buf)
@@ -1294,14 +1294,14 @@ func (s *PublicTransactionPoolAPIServer) SendTransaction(ctx context.Context, in
 		return nil, err
 	}
 
-	return &ethpb.PublicTransactionPoolAPIReply{
+	return &cpcpb.PublicTransactionPoolAPIReply{
 		TxHash: hash.Bytes(),
 	}, nil
 }
 
 // SendRawTransaction will add the signed transaction to the transaction pool.
 // The sender is responsible for signing the transaction and using the correct nonce.
-func (s *PublicTransactionPoolAPIServer) SendRawTransaction(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) SendRawTransaction(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	tx := new(types.Transaction)
 	if err := rlp.DecodeBytes(hexutil.Bytes(in.EncodedTx), tx); err != nil {
 		return nil, err
@@ -1311,7 +1311,7 @@ func (s *PublicTransactionPoolAPIServer) SendRawTransaction(ctx context.Context,
 		return nil, err
 	}
 
-	return &ethpb.PublicTransactionPoolAPIReply{
+	return &cpcpb.PublicTransactionPoolAPIReply{
 		TxHash: hash.Bytes(),
 	}, nil
 }
@@ -1325,7 +1325,7 @@ func (s *PublicTransactionPoolAPIServer) SendRawTransaction(ctx context.Context,
 // The account associated with addr must be unlocked.
 //
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign
-func (s *PublicTransactionPoolAPIServer) Sign(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) Sign(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	// Look up the wallet containing the requested signer
 	account := accounts.Account{Address: common.BytesToAddress(in.Address)}
 
@@ -1338,7 +1338,7 @@ func (s *PublicTransactionPoolAPIServer) Sign(ctx context.Context, in *ethpb.Pub
 	if err == nil {
 		signature[64] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
 	}
-	return &ethpb.PublicTransactionPoolAPIReply{
+	return &cpcpb.PublicTransactionPoolAPIReply{
 		Signature: signature,
 	}, nil
 }
@@ -1346,7 +1346,7 @@ func (s *PublicTransactionPoolAPIServer) Sign(ctx context.Context, in *ethpb.Pub
 // SignTransaction will sign the given transaction with the from account.
 // The node needs to have the private key of the account corresponding with
 // the given from address and it needs to be unlocked.
-func (s *PublicTransactionPoolAPIServer) SignTransaction(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) SignTransaction(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	buf := bytes.NewBuffer(in.SendTxArgs.Value)
 	dec := gob.NewDecoder(buf)
 	var args SendTxArgs
@@ -1378,7 +1378,7 @@ func (s *PublicTransactionPoolAPIServer) SignTransaction(ctx context.Context, in
 		return nil, err
 	}
 
-	return &ethpb.PublicTransactionPoolAPIReply{
+	return &cpcpb.PublicTransactionPoolAPIReply{
 		SignTxResult: &any.Any{
 			Value: buf.Bytes(),
 		},
@@ -1387,7 +1387,7 @@ func (s *PublicTransactionPoolAPIServer) SignTransaction(ctx context.Context, in
 
 // PendingTransactions returns the transactions that are in the transaction pool
 // and have a from address that is one of the accounts this node manages.
-func (s *PublicTransactionPoolAPIServer) PendingTransactions(ctx context.Context, in *empty.Empty) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) PendingTransactions(ctx context.Context, in *empty.Empty) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	pending, err := s.b.GetPoolTransactions()
 	if err != nil {
 		return nil, err
@@ -1416,7 +1416,7 @@ func (s *PublicTransactionPoolAPIServer) PendingTransactions(ctx context.Context
 		return nil, err
 	}
 
-	return &ethpb.PublicTransactionPoolAPIReply{
+	return &cpcpb.PublicTransactionPoolAPIReply{
 		PendingTxs: &any.Any{
 			Value: buf.Bytes(),
 		},
@@ -1425,7 +1425,7 @@ func (s *PublicTransactionPoolAPIServer) PendingTransactions(ctx context.Context
 
 // Resend accepts an existing transaction and a new gas price and limit. It will remove
 // the given transaction from the pool and reinsert it with the new gas price and limit.
-func (s *PublicTransactionPoolAPIServer) Resend(ctx context.Context, in *ethpb.PublicTransactionPoolAPIRequest) (*ethpb.PublicTransactionPoolAPIReply, error) {
+func (s *PublicTransactionPoolAPIServer) Resend(ctx context.Context, in *cpcpb.PublicTransactionPoolAPIRequest) (*cpcpb.PublicTransactionPoolAPIReply, error) {
 	buf := bytes.NewBuffer(in.SendTxArgs.Value)
 	dec := gob.NewDecoder(buf)
 	var sendArgs SendTxArgs
@@ -1472,7 +1472,7 @@ func (s *PublicTransactionPoolAPIServer) Resend(ctx context.Context, in *ethpb.P
 			if err = s.b.SendTx(ctx, signedTx); err != nil {
 				return nil, err
 			}
-			return &ethpb.PublicTransactionPoolAPIReply{
+			return &cpcpb.PublicTransactionPoolAPIReply{
 				TxHash: signedTx.Hash().Bytes(),
 			}, nil
 		}
