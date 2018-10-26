@@ -12,7 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/cpchain/chain/apis/proto/cpc"
+	"bitbucket.org/cpchain/chain/apis/proto/v1/admin"
+	"bitbucket.org/cpchain/chain/apis/proto/v1/debug"
+	"bitbucket.org/cpchain/chain/apis/proto/v1/eth"
+
+	"bitbucket.org/cpchain/chain/apis/proto/v1/miner"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
@@ -43,11 +47,11 @@ func NewPublicEthereumAPIServer(e *CpchainService) *PublicEthereumAPIServer {
 }
 
 func (api *PublicEthereumAPIServer) RegisterServer(s *grpc.Server) {
-	protos.RegisterPublicEthereumAPIServer(s, api)
+	ethpb.RegisterPublicEthereumAPIServer(s, api)
 }
 
 func (api *PublicEthereumAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	protos.RegisterPublicEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	ethpb.RegisterPublicEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PublicEthereumAPIServer) Namespace() string {
@@ -58,21 +62,21 @@ func (api *PublicEthereumAPIServer) IsPublic() bool {
 	return true
 }
 
-func (api *PublicEthereumAPIServer) Etherbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
+func (api *PublicEthereumAPIServer) Etherbase(ctx context.Context, e *empty.Empty) (*ethpb.PublicEthereumAPIReply, error) {
 	etherBase, err := api.e.Etherbase()
 	if err != nil {
 		return nil, err
 	}
-	return &protos.PublicEthereumAPIReply{Address: &wrappers.BytesValue{Value: etherBase.Bytes()}}, nil
+	return &ethpb.PublicEthereumAPIReply{Address: &wrappers.BytesValue{Value: etherBase.Bytes()}}, nil
 }
 
-func (api *PublicEthereumAPIServer) Coinbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
+func (api *PublicEthereumAPIServer) Coinbase(ctx context.Context, e *empty.Empty) (*ethpb.PublicEthereumAPIReply, error) {
 	return api.Etherbase(ctx, e)
 }
 
-func (api *PublicEthereumAPIServer) Hashrate(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
+func (api *PublicEthereumAPIServer) Hashrate(ctx context.Context, e *empty.Empty) (*ethpb.PublicEthereumAPIReply, error) {
 	rate := api.e.Miner().HashRate()
-	return &protos.PublicEthereumAPIReply{Rate: &wrappers.UInt64Value{Value: uint64(rate)}}, nil
+	return &ethpb.PublicEthereumAPIReply{Rate: &wrappers.UInt64Value{Value: uint64(rate)}}, nil
 }
 
 type PublicMinerAPIServer struct {
@@ -88,11 +92,11 @@ func NewPublicMinerAPIServer(e *CpchainService) *PublicMinerAPIServer {
 }
 
 func (api *PublicMinerAPIServer) RegisterServer(s *grpc.Server) {
-	protos.RegisterPublicMinerAPIServer(s, api)
+	minerpb.RegisterPublicMinerAPIServer(s, api)
 }
 
 func (api *PublicMinerAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	protos.RegisterPublicMinerAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	minerpb.RegisterPublicMinerAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PublicMinerAPIServer) IsPublic() bool {
@@ -103,11 +107,11 @@ func (api *PublicMinerAPIServer) Namespace() string {
 	return "eth"
 }
 
-func (api *PublicMinerAPIServer) Mining(ctx context.Context, req *empty.Empty) (*protos.PublicMinerAPIReply, error) {
-	return &protos.PublicMinerAPIReply{Mining: &wrappers.BoolValue{Value: api.e.IsMining()}}, nil
+func (api *PublicMinerAPIServer) Mining(ctx context.Context, req *empty.Empty) (*minerpb.PublicMinerAPIReply, error) {
+	return &minerpb.PublicMinerAPIReply{Mining: &wrappers.BoolValue{Value: api.e.IsMining()}}, nil
 }
 
-func (api *PublicMinerAPIServer) SubmitWork(ctx context.Context, req *protos.PublicMinerAPIRequest) (*protos.PublicMinerAPIReply, error) {
+func (api *PublicMinerAPIServer) SubmitWork(ctx context.Context, req *minerpb.PublicMinerAPIRequest) (*minerpb.PublicMinerAPIReply, error) {
 	var (
 		nonce    types.BlockNonce
 		digest   common.Hash
@@ -117,26 +121,26 @@ func (api *PublicMinerAPIServer) SubmitWork(ctx context.Context, req *protos.Pub
 	digest = common.BytesToHash(req.Digest.Value)
 	solution = common.BytesToHash(req.Solution.Value)
 	acceped := api.agent.SubmitWork(nonce, digest, solution)
-	return &protos.PublicMinerAPIReply{IsAccepting: acceped}, nil
+	return &minerpb.PublicMinerAPIReply{IsAccepting: acceped}, nil
 }
 
-func (api *PublicMinerAPIServer) GetWork(ctx context.Context, req *empty.Empty) (*protos.PublicMinerAPIReply, error) {
+func (api *PublicMinerAPIServer) GetWork(ctx context.Context, req *empty.Empty) (*minerpb.PublicMinerAPIReply, error) {
 	if !api.e.IsMining() {
 		// TODO: @liuq fix this.
 		if err := api.e.StartMining(false, nil); err != nil {
-			return &protos.PublicMinerAPIReply{}, err
+			return &minerpb.PublicMinerAPIReply{}, err
 		}
 	}
 	work, err := api.agent.GetWork()
 	if err != nil {
-		return &protos.PublicMinerAPIReply{Works: work[:]}, fmt.Errorf("mining not ready: %v", err)
+		return &minerpb.PublicMinerAPIReply{Works: work[:]}, fmt.Errorf("mining not ready: %v", err)
 	}
-	return &protos.PublicMinerAPIReply{Works: work[:]}, nil
+	return &minerpb.PublicMinerAPIReply{Works: work[:]}, nil
 }
 
-func (api *PublicMinerAPIServer) SubmitHashrate(ctx context.Context, req *protos.PublicMinerAPIRequest) (*protos.PublicMinerAPIReply, error) {
+func (api *PublicMinerAPIServer) SubmitHashrate(ctx context.Context, req *minerpb.PublicMinerAPIRequest) (*minerpb.PublicMinerAPIReply, error) {
 	api.agent.SubmitHashrate(common.BytesToHash(req.Id), req.Hashrate)
-	return &protos.PublicMinerAPIReply{IsAccepting: true}, nil
+	return &minerpb.PublicMinerAPIReply{IsAccepting: true}, nil
 }
 
 // PrivateMinerAPIServer provides private RPC methods to control the miner.
@@ -151,11 +155,11 @@ func NewPrivateMinerAPIServer(e *CpchainService) *PrivateMinerAPIServer {
 }
 
 func (api *PrivateMinerAPIServer) RegisterServer(s *grpc.Server) {
-	protos.RegisterPrivateMinerAPIServer(s, api)
+	minerpb.RegisterPrivateMinerAPIServer(s, api)
 }
 
 func (api *PrivateMinerAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	protos.RegisterPrivateMinerAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	minerpb.RegisterPrivateMinerAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PrivateMinerAPIServer) IsPublic() bool {
@@ -170,7 +174,7 @@ func (api *PrivateMinerAPIServer) Namespace() string {
 // of workers started is equal to the number of logical CPUs that are usable by
 // this process. If mining is already running, this method adjust the number of
 // threads allowed to use.
-func (api *PrivateMinerAPIServer) Start(ctx context.Context, req *protos.PrivateMinerAPIRequest) (*protos.PrivateMinerAPIReply, error) {
+func (api *PrivateMinerAPIServer) Start(ctx context.Context, req *minerpb.PrivateMinerAPIRequest) (*minerpb.PrivateMinerAPIReply, error) {
 	// Set the number of threads if the seal engine supports it
 	if req.Threads == nil {
 		req.Threads = &wrappers.Int32Value{}
@@ -193,13 +197,13 @@ func (api *PrivateMinerAPIServer) Start(ctx context.Context, req *protos.Private
 
 		api.e.txPool.SetGasPrice(price)
 		// TODO: @liuq fix this.
-		return &protos.PrivateMinerAPIReply{}, api.e.StartMining(true, nil)
+		return &minerpb.PrivateMinerAPIReply{}, api.e.StartMining(true, nil)
 	}
-	return &protos.PrivateMinerAPIReply{}, nil
+	return &minerpb.PrivateMinerAPIReply{}, nil
 }
 
 // Stop the miner
-func (api *PrivateMinerAPIServer) Stop(ctx context.Context, req *empty.Empty) (*protos.PrivateMinerAPIReply, error) {
+func (api *PrivateMinerAPIServer) Stop(ctx context.Context, req *empty.Empty) (*minerpb.PrivateMinerAPIReply, error) {
 	type threaded interface {
 		SetThreads(threads int)
 	}
@@ -207,37 +211,37 @@ func (api *PrivateMinerAPIServer) Stop(ctx context.Context, req *empty.Empty) (*
 		th.SetThreads(-1)
 	}
 	api.e.StopMining()
-	return &protos.PrivateMinerAPIReply{IsOk: true}, nil
+	return &minerpb.PrivateMinerAPIReply{IsOk: true}, nil
 }
 
 // SetExtra sets the extra data string that is included when this miner mines a block.
-func (api *PrivateMinerAPIServer) SetExtra(ctx context.Context, req *protos.PrivateMinerAPIRequest) (*protos.PrivateMinerAPIReply, error) {
+func (api *PrivateMinerAPIServer) SetExtra(ctx context.Context, req *minerpb.PrivateMinerAPIRequest) (*minerpb.PrivateMinerAPIReply, error) {
 	if err := api.e.Miner().SetExtra([]byte(req.Extra)); err != nil {
-		return &protos.PrivateMinerAPIReply{IsOk: false}, err
+		return &minerpb.PrivateMinerAPIReply{IsOk: false}, err
 	}
-	return &protos.PrivateMinerAPIReply{IsOk: true}, nil
+	return &minerpb.PrivateMinerAPIReply{IsOk: true}, nil
 }
 
 // SetGasPrice sets the minimum accepted gas price for the miner.
-func (api *PrivateMinerAPIServer) SetGasPrice(ctx context.Context, req *protos.PrivateMinerAPIRequest) (*protos.PrivateMinerAPIReply, error) {
+func (api *PrivateMinerAPIServer) SetGasPrice(ctx context.Context, req *minerpb.PrivateMinerAPIRequest) (*minerpb.PrivateMinerAPIReply, error) {
 	gasPrice := new(big.Int).SetBytes(req.GasPrice)
 	api.e.lock.Lock()
 	api.e.gasPrice = gasPrice
 	api.e.lock.Unlock()
 
 	api.e.txPool.SetGasPrice(gasPrice)
-	return &protos.PrivateMinerAPIReply{IsOk: true}, nil
+	return &minerpb.PrivateMinerAPIReply{IsOk: true}, nil
 }
 
 // SetEtherbase sets the etherbase of the miner
-func (api *PrivateMinerAPIServer) SetEtherbase(ctx context.Context, req *protos.PrivateMinerAPIRequest) (*protos.PrivateMinerAPIReply, error) {
+func (api *PrivateMinerAPIServer) SetEtherbase(ctx context.Context, req *minerpb.PrivateMinerAPIRequest) (*minerpb.PrivateMinerAPIReply, error) {
 	api.e.SetEtherbase(common.BytesToAddress(req.Etherbase))
-	return &protos.PrivateMinerAPIReply{IsOk: true}, nil
+	return &minerpb.PrivateMinerAPIReply{IsOk: true}, nil
 }
 
 // GetHashrate returns the current hashrate of the miner.
-func (api *PrivateMinerAPIServer) GetHashrate(ctx context.Context, req *empty.Empty) (*protos.PrivateMinerAPIReply, error) {
-	return &protos.PrivateMinerAPIReply{Hashrate: uint64(api.e.miner.HashRate())}, nil
+func (api *PrivateMinerAPIServer) GetHashrate(ctx context.Context, req *empty.Empty) (*minerpb.PrivateMinerAPIReply, error) {
+	return &minerpb.PrivateMinerAPIReply{Hashrate: uint64(api.e.miner.HashRate())}, nil
 }
 
 // PrivateAdminAPI is the collection of Ethereum full node-related APIs
@@ -251,11 +255,11 @@ func NewPrivateAdminAPIServer(e *CpchainService) *PrivateAdminAPIServer {
 }
 
 func (api *PrivateAdminAPIServer) RegisterServer(s *grpc.Server) {
-	protos.RegisterPrivateAdminAPIServer(s, api)
+	adminpb.RegisterPrivateAdminAPIServer(s, api)
 }
 
 func (api *PrivateAdminAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	protos.RegisterPrivateAdminAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	adminpb.RegisterPrivateAdminAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PrivateAdminAPIServer) IsPublic() bool {
@@ -268,11 +272,11 @@ func (api *PrivateAdminAPIServer) Namespace() string {
 
 // NewPrivateAdminAPI creates a new API definition for the full node private
 // admin methods of the Ethereum service.
-func (api *PrivateAdminAPIServer) ExportChain(ctx context.Context, req *protos.PrivateAdminAPIRequest) (*protos.PrivateAdminAPIReply, error) {
+func (api *PrivateAdminAPIServer) ExportChain(ctx context.Context, req *adminpb.PrivateAdminAPIRequest) (*adminpb.PrivateAdminAPIReply, error) {
 	// Make sure we can create the file to export into
 	out, err := os.OpenFile(req.File, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
-		return &protos.PrivateAdminAPIReply{IsOk: false}, err
+		return &adminpb.PrivateAdminAPIReply{IsOk: false}, err
 	}
 	defer out.Close()
 
@@ -284,24 +288,24 @@ func (api *PrivateAdminAPIServer) ExportChain(ctx context.Context, req *protos.P
 
 	// Export the blockchain
 	if err := api.e.BlockChain().Export(writer); err != nil {
-		return &protos.PrivateAdminAPIReply{IsOk: false}, err
+		return &adminpb.PrivateAdminAPIReply{IsOk: false}, err
 	}
-	return &protos.PrivateAdminAPIReply{IsOk: true}, err
+	return &adminpb.PrivateAdminAPIReply{IsOk: true}, err
 }
 
 // ExportChain exports the current blockchain into a local file.
-func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *protos.PrivateAdminAPIRequest) (*protos.PrivateAdminAPIReply, error) {
+func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *adminpb.PrivateAdminAPIRequest) (*adminpb.PrivateAdminAPIReply, error) {
 	// Make sure the can access the file to import
 	in, err := os.Open(req.File)
 	if err != nil {
-		return &protos.PrivateAdminAPIReply{IsOk: false}, err
+		return &adminpb.PrivateAdminAPIReply{IsOk: false}, err
 	}
 	defer in.Close()
 
 	var reader io.Reader = in
 	if strings.HasSuffix(req.File, ".gz") {
 		if reader, err = gzip.NewReader(reader); err != nil {
-			return &protos.PrivateAdminAPIReply{IsOk: false}, err
+			return &adminpb.PrivateAdminAPIReply{IsOk: false}, err
 		}
 	}
 
@@ -316,7 +320,7 @@ func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *protos.P
 			if err := stream.Decode(block); err == io.EOF {
 				break
 			} else if err != nil {
-				return &protos.PrivateAdminAPIReply{IsOk: false}, fmt.Errorf("block %d: failed to parse: %v", index, err)
+				return &adminpb.PrivateAdminAPIReply{IsOk: false}, fmt.Errorf("block %d: failed to parse: %v", index, err)
 			}
 			blocks = append(blocks, block)
 			index++
@@ -331,11 +335,11 @@ func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *protos.P
 		}
 		// Import the batch and reset the buffer
 		if _, err := api.e.BlockChain().InsertChain(blocks); err != nil {
-			return &protos.PrivateAdminAPIReply{IsOk: false}, fmt.Errorf("batch %d: failed to insert: %v", batch, err)
+			return &adminpb.PrivateAdminAPIReply{IsOk: false}, fmt.Errorf("batch %d: failed to insert: %v", batch, err)
 		}
 		blocks = blocks[:0]
 	}
-	return &protos.PrivateAdminAPIReply{IsOk: true}, nil
+	return &adminpb.PrivateAdminAPIReply{IsOk: true}, nil
 }
 
 // PublicDebugAPIServer is the collection of Ethereum full node APIs exposed
@@ -351,11 +355,11 @@ func NewPublicDebugAPIServer(e *CpchainService) *PublicDebugAPIServer {
 }
 
 func (api *PublicDebugAPIServer) RegisterServer(s *grpc.Server) {
-	protos.RegisterPublicDebugAPIServer(s, api)
+	debugpb.RegisterPublicDebugAPIServer(s, api)
 }
 
 func (api *PublicDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	protos.RegisterPublicDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	debugpb.RegisterPublicDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PublicDebugAPIServer) IsPublic() bool {
@@ -368,7 +372,7 @@ func (api *PublicDebugAPIServer) Namespace() string {
 
 // DumpBlock retrieves the entire state of the database at a given block.
 // TODO: @sangh
-func (api *PublicDebugAPIServer) DumpBlock(ctx context.Context, req *protos.PublicDebugAPIRequest) (*any.Any, error) {
+func (api *PublicDebugAPIServer) DumpBlock(ctx context.Context, req *debugpb.PublicDebugAPIRequest) (*any.Any, error) {
 	f := func(dump *state.Dump) (*any.Any, error) {
 		var buf bytes.Buffer
 		enc := gob.NewEncoder(&buf)
@@ -417,11 +421,11 @@ func NewPrivateDebugAPIServer(config *configs.ChainConfig, eth *CpchainService) 
 }
 
 func (api *PrivateDebugAPIServer) RegisterServer(s *grpc.Server) {
-	protos.RegisterPrivateDebugAPIServer(s, api)
+	debugpb.RegisterPrivateDebugAPIServer(s, api)
 }
 
 func (api *PrivateDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	protos.RegisterPrivateDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	debugpb.RegisterPrivateDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 func (api *PrivateDebugAPIServer) IsPublic() bool {
@@ -433,14 +437,14 @@ func (api *PrivateDebugAPIServer) Namespace() string {
 }
 
 // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.
-func (api *PrivateDebugAPIServer) Preimage(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*protos.PrivateDebugAPIReply, error) {
+func (api *PrivateDebugAPIServer) Preimage(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*debugpb.PrivateDebugAPIReply, error) {
 	if preimage := rawdb.ReadPreimage(api.eth.ChainDb(), common.BytesToHash(req.Hash)); preimage != nil {
-		return &protos.PrivateDebugAPIReply{Preimage: preimage}, nil
+		return &debugpb.PrivateDebugAPIReply{Preimage: preimage}, nil
 	}
 	return nil, errors.New("unknown preimage")
 }
 
-func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
+func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*any.Any, error) {
 	blocks := api.eth.BlockChain().BadBlocks()
 	results := make([]*BadBlockArgs, len(blocks))
 
@@ -467,7 +471,7 @@ func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *protos.
 }
 
 // StorageRangeAt returns the storage at the given block height and transaction index.
-func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
+func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*any.Any, error) {
 	blockHash := common.BytesToHash(req.BlockHash)
 	_, _, statedb, err := api.computeTxEnv(blockHash, int(req.TxIndex), 0)
 	contractAddress := common.BytesToAddress(req.ContractAddress)
@@ -495,7 +499,7 @@ func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *proto
 // code hash, or storage hash.
 //
 // With one parameter, returns the list of accounts modified in the specified block.
-func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
+func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*any.Any, error) {
 	var startBlock, endBlock *types.Block
 
 	startBlock = api.eth.blockchain.GetBlockByNumber(req.StartNum)
@@ -528,7 +532,7 @@ func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Contex
 	return &any.Any{Value: buf.Bytes()}, nil
 }
 
-func (api *PrivateDebugAPIServer) GetModifiedAccountsByHash(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
+func (api *PrivateDebugAPIServer) GetModifiedAccountsByHash(ctx context.Context, req *debugpb.PrivateDebugAPIRequest) (*any.Any, error) {
 	var startBlock, endBlock *types.Block
 	startBlock = api.eth.blockchain.GetBlockByHash(common.BytesToHash(req.StartHash))
 	if startBlock == nil {

@@ -13,8 +13,9 @@ import (
 	"math/big"
 	"path/filepath"
 
+	"bitbucket.org/cpchain/chain/apis/proto/v1/eth"
+
 	"bitbucket.org/cpchain/chain"
-	pb "bitbucket.org/cpchain/chain/apis/proto/chain_reader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -94,7 +95,7 @@ func (c *Client) Close() {
 // Note that loading full blocks requires two requests. Use HeaderByHash
 // if you don't need all transactions or uncle headers.
 func (c *Client) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
-	args := &pb.PublicBlockChainAPIRequest{
+	args := &ethpb.PublicBlockChainAPIRequest{
 		FullTx:    true,
 		BlockHash: hash.Bytes(),
 	}
@@ -107,7 +108,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash common.Hash) (*types.Bloc
 // Note that loading full blocks requires two requests. Use HeaderByNumber
 // if you don't need all transactions or uncle headers.
 func (c *Client) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
-	args := &pb.PublicBlockChainAPIRequest{
+	args := &ethpb.PublicBlockChainAPIRequest{
 		FullTx:      true,
 		BlockNumber: number.Uint64(),
 	}
@@ -120,8 +121,8 @@ type rpcBlock struct {
 }
 
 // TODO: @sangh new instance
-func (c *Client) getBlock(ctx context.Context, method string, args *pb.PublicBlockChainAPIRequest) (*types.Block, error) {
-	var reply pb.PublicBlockChainAPIReply
+func (c *Client) getBlock(ctx context.Context, method string, args *ethpb.PublicBlockChainAPIRequest) (*types.Block, error) {
+	var reply ethpb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, method, args, reply)
 	raw := json.RawMessage(reply.BlockInfo.GetValue())
 	if err != nil {
@@ -159,11 +160,11 @@ func (c *Client) getBlock(ctx context.Context, method string, args *pb.PublicBlo
 
 // HeaderByHash returns the block header with the given hash.
 func (c *Client) HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error) {
-	args := &pb.PublicBlockChainAPIRequest{
+	args := &ethpb.PublicBlockChainAPIRequest{
 		FullTx:    false,
 		BlockHash: hash.Bytes(),
 	}
-	var reply pb.PublicBlockChainAPIReply
+	var reply ethpb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicBlockChainAPI/GetBlockByHash", args, reply)
 	var head *types.Header
 	if err != nil {
@@ -182,11 +183,11 @@ func (c *Client) HeaderByHash(ctx context.Context, hash common.Hash) (*types.Hea
 // HeaderByNumber returns a block header from the current canonical chain. If number is
 // nil, the latest known header is returned.
 func (c *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
-	args := &pb.PublicBlockChainAPIRequest{
+	args := &ethpb.PublicBlockChainAPIRequest{
 		BlockNumber: number.Uint64(),
 		FullTx:      false,
 	}
-	var reply pb.PublicBlockChainAPIReply
+	var reply ethpb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicBlockChainAPI/GetBlockByNumber", args, reply)
 	if err != nil {
 		return nil, err
@@ -223,10 +224,10 @@ func (tx *rpcTransaction) UnmarshalJSON(msg []byte) error {
 
 // TransactionByHash returns the transaction with the given hash.
 func (c *Client) TransactionByHash(ctx context.Context, hash common.Hash) (tx *types.Transaction, isPending bool, err error) {
-	args := pb.PublicTransactionPoolAPIRequest{
+	args := ethpb.PublicTransactionPoolAPIRequest{
 		BlockHash: hash.Bytes(),
 	}
-	var reply pb.PublicTransactionPoolAPIReply
+	var reply ethpb.PublicTransactionPoolAPIReply
 	err = c.c.Invoke(ctx, "/protos_chain.PublicTransactionPoolAPI/GetTransactionByHash(ctx)", args, reply)
 	if err != nil {
 		return nil, false, err
@@ -265,11 +266,11 @@ func (c *Client) TransactionSender(ctx context.Context, tx *types.Transaction, b
 		Hash common.Hash
 		From common.Address
 	}
-	args := pb.PublicTransactionPoolAPIRequest{
+	args := ethpb.PublicTransactionPoolAPIRequest{
 		BlockHash: block.Bytes(),
 		Index:     uint64(index),
 	}
-	var reply pb.PublicTransactionPoolAPIReply
+	var reply ethpb.PublicTransactionPoolAPIReply
 	if err = c.c.Invoke(ctx, "/protos_chain.PublicTransactionPoolAPI/GetTransactionByBlockHashAndIndex", args, reply); err != nil {
 		return common.Address{}, err
 	}
@@ -286,21 +287,21 @@ func (c *Client) TransactionSender(ctx context.Context, tx *types.Transaction, b
 
 // TransactionCount returns the total number of transactions in the given block.
 func (c *Client) TransactionCount(ctx context.Context, blockHash common.Hash) (uint, error) {
-	args := pb.PublicTransactionPoolAPIRequest{
+	args := ethpb.PublicTransactionPoolAPIRequest{
 		BlockHash: blockHash.Bytes(),
 	}
-	var reply pb.PublicTransactionPoolAPIReply
+	var reply ethpb.PublicTransactionPoolAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicTransactionPoolAPI/GetBlockTransactionCountByHash", args, reply)
 	return uint(reply.Count), err
 }
 
 // TransactionInBlock returns a single transaction at index in the given block.
 func (c *Client) TransactionInBlock(ctx context.Context, blockHash common.Hash, index uint) (*types.Transaction, error) {
-	args := pb.PublicTransactionPoolAPIRequest{
+	args := ethpb.PublicTransactionPoolAPIRequest{
 		BlockHash: blockHash.Bytes(),
 		Index:     uint64(index),
 	}
-	var reply pb.PublicTransactionPoolAPIReply
+	var reply ethpb.PublicTransactionPoolAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicTransactionPoolAPI/GetTransactionByBlockHashAndIndex", args, reply)
 	if err != nil {
 		return nil, err
@@ -324,10 +325,10 @@ func (c *Client) TransactionInBlock(ctx context.Context, blockHash common.Hash, 
 // Note that the receipt is not available for pending transactions.
 func (c *Client) TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
 	var r *types.Receipt
-	args := pb.PublicTransactionPoolAPIRequest{
+	args := ethpb.PublicTransactionPoolAPIRequest{
 		TxHash: txHash.Bytes(),
 	}
-	var reply *pb.PublicTransactionPoolAPIReply
+	var reply *ethpb.PublicTransactionPoolAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicTransactionPoolAPI/GetTransactionReceipt", args, reply)
 	if err != nil {
 		return nil, err
@@ -361,7 +362,7 @@ type rpcProgress struct {
 // SyncProgress retrieves the current progress of the sync algorithm. If there's
 // no sync currently running, it returns nil.
 func (c *Client) SyncProgress(ctx context.Context) (*ethereum.SyncProgress, error) {
-	var reply *pb.PublicEthereumAPIReply
+	var reply *ethpb.PublicInnerEthereumAPIReply
 	if err := c.c.Invoke(ctx, "/protos_chain.PublicEthereumAPI/Syncing", &empty.Empty{}, reply); err != nil {
 		return nil, err
 	}
@@ -414,11 +415,11 @@ func (c *Client) NetworkID(ctx context.Context) (*big.Int, error) {
 // BalanceAt returns the wei balance of the given account.
 // The block number can be nil, in which case the balance is taken from the latest known block.
 func (c *Client) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error) {
-	args := pb.PublicBlockChainAPIRequest{
+	args := ethpb.PublicBlockChainAPIRequest{
 		Address:     account.Bytes(),
 		BlockNumber: blockNumber.Uint64(),
 	}
-	var reply pb.PublicBlockChainAPIReply
+	var reply ethpb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicBlockChainAPIServer/GetBalance", args, reply)
 	if err != nil {
 		return nil, err
@@ -436,12 +437,12 @@ func (c *Client) BalanceAt(ctx context.Context, account common.Address, blockNum
 // StorageAt returns the value of key in the contract storage of the given account.
 // The block number can be nil, in which case the value is taken from the latest known block.
 func (c *Client) StorageAt(ctx context.Context, account common.Address, key common.Hash, blockNumber *big.Int) ([]byte, error) {
-	args := &pb.PublicBlockChainAPIRequest{
+	args := &ethpb.PublicBlockChainAPIRequest{
 		Address:     account.Bytes(),
 		Key:         key.String(),
 		BlockNumber: blockNumber.Uint64(),
 	}
-	var reply pb.PublicBlockChainAPIReply
+	var reply ethpb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicBlockChainAPI/GetStorageAt", args, reply)
 	if err != nil {
 		return nil, err
@@ -452,11 +453,11 @@ func (c *Client) StorageAt(ctx context.Context, account common.Address, key comm
 // CodeAt returns the contract code of the given account.
 // The block number can be nil, in which case the code is taken from the latest known block.
 func (c *Client) CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error) {
-	args := pb.PublicBlockChainAPIRequest{
+	args := ethpb.PublicBlockChainAPIRequest{
 		Address:     account.Bytes(),
 		BlockNumber: blockNumber.Uint64(),
 	}
-	var reply pb.PublicBlockChainAPIReply
+	var reply ethpb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicBlockChainAPI/GetCode", args, reply)
 	if err != nil {
 		return nil, err
@@ -467,11 +468,11 @@ func (c *Client) CodeAt(ctx context.Context, account common.Address, blockNumber
 // NonceAt returns the account nonce of the given account.
 // The block number can be nil, in which case the nonce is taken from the latest known block.
 func (c *Client) NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error) {
-	args := pb.PublicTransactionPoolAPIRequest{
+	args := ethpb.PublicTransactionPoolAPIRequest{
 		Address:     account.Bytes(),
 		BlockNumber: blockNumber.Uint64(),
 	}
-	var reply pb.PublicTransactionPoolAPIReply
+	var reply ethpb.PublicTransactionPoolAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicTransactionPoolAPI/GetTransactionCount", args, reply)
 	return reply.Count, err
 }
@@ -509,7 +510,7 @@ func toFilterArg(q ethereum.FilterQuery) interface{} {
 // PendingBalanceAt returns the wei balance of the given account in the pending state.
 func (c *Client) PendingBalanceAt(ctx context.Context, account common.Address) (*big.Int, error) {
 	// var result hexutil.Big
-	// args := pb.PublicBlockChainAPIRequest{
+	// args := ethpb.PublicBlockChainAPIRequest{
 	// 	Address:account.Bytes(),
 	// }
 	// err := c.c.Invoke(ctx, "/protos_chain.PublicBlockChainAPI/GetBalance", account, "pending")
@@ -566,13 +567,13 @@ func (c *Client) CallContract(ctx context.Context, msg ethereum.CallMsg, blockNu
 	if err := enc.Encode(&msg); err != nil {
 		return nil, nil
 	}
-	args := pb.PublicBlockChainAPIRequest{
+	args := ethpb.PublicBlockChainAPIRequest{
 		Args: &any.Any{
 			Value: buf.Bytes(),
 		},
 		BlockNumber: blockNumber.Uint64(),
 	}
-	var reply pb.PublicBlockChainAPIReply
+	var reply ethpb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicBlockChainAPI/Call", args, reply)
 	if err != nil {
 		return nil, err
@@ -595,7 +596,7 @@ func (c *Client) PendingCallContract(ctx context.Context, msg ethereum.CallMsg) 
 // SuggestGasPrice retrieves the currently suggested gas price to allow a timely
 // execution of a transaction.
 func (c *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
-	var reply pb.PublicEthereumAPIReply
+	var reply ethpb.PublicInnerEthereumAPIReply
 	if err := c.c.Invoke(ctx, "/protos_chain.PublicEthereumAPI/GasPrice", &empty.Empty{}, reply); err != nil {
 		return nil, err
 	}
@@ -620,12 +621,12 @@ func (c *Client) EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint64,
 		return 0, err
 	}
 
-	args := &pb.PublicBlockChainAPIRequest{
+	args := &ethpb.PublicBlockChainAPIRequest{
 		Args: &any.Any{
 			Value: buf.Bytes(),
 		},
 	}
-	var reply pb.PublicBlockChainAPIReply
+	var reply ethpb.PublicBlockChainAPIReply
 	err := c.c.Invoke(ctx, "/protos_chain.PublicBlockChainAPI/EstimateGas", args, reply)
 	if err != nil {
 		return 0, err
@@ -642,10 +643,10 @@ func (c *Client) SendTransaction(ctx context.Context, tx *types.Transaction) err
 	if err != nil {
 		return err
 	}
-	args := &pb.PublicTransactionPoolAPIRequest{
+	args := &ethpb.PublicTransactionPoolAPIRequest{
 		EncodedTx: data,
 	}
-	var reply pb.PublicTransactionPoolAPIReply
+	var reply ethpb.PublicTransactionPoolAPIReply
 	return c.c.Invoke(ctx, "/protos_chain.PublicTransactionPoolAPI/SendRawTransaction", args, reply)
 }
 

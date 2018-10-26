@@ -27,8 +27,8 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -78,12 +78,12 @@ type Backend interface {
 func GetGAPIs(b Backend) []apis.API {
 	nonceLock := new(AddrLocker)
 	return []apis.API{
-		NewPublicEthereumAPIServer(b),
+		NewPublicInnerEthereumAPIServer(b),
 		NewPublicBlockChainAPIServer(b),
 		NewPublicTransactionPoolAPIServer(b, nonceLock),
 		NewPublicTxPoolAPIServer(b),
-		NewPublicDebugAPIServer(b),
-		NewPrivateDebugAPIServer(b),
+		NewPublicInnerDebugAPIServer(b),
+		NewPrivateInnerDebugAPIServer(b),
 		NewPublicAccountAPIServer(b.AccountManager()),
 		NewPrivateAccountAPIServer(b, nonceLock),
 	}
