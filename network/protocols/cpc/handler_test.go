@@ -63,7 +63,7 @@ func TestProtocolCompatibility(t *testing.T) {
 
 // Tests that block headers can be retrieved from a remote chain based on user queries.
 func TestGetBlockHeaders64(t *testing.T) {
-	t.Skip("===TestGetBlockHeaders64")
+	t.Skip("===TestGetBlockHeaders64 invalid signer list on checkpoint block")
 	testGetBlockHeaders(t, 64)
 }
 
@@ -224,7 +224,7 @@ func testGetBlockHeaders(t *testing.T, protocol int) {
 
 // Tests that block contents can be retrieved from a remote chain based on their hashes.
 func TestGetBlockBodies64(t *testing.T) {
-	t.Skip("===TestGetBlockBodies64")
+	t.Skip("===TestGetBlockBodies64 invalid signer list on checkpoint block")
 	testGetBlockBodies(t, 64)
 }
 

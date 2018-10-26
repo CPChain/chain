@@ -36,7 +36,6 @@ func TestDefaultGenesisBlock(t *testing.T) {
 }
 
 func TestSetupGenesis(t *testing.T) {
-	t.Skip("===TestSetupGenesis")
 	var (
 		customghash = common.HexToHash("0x1e646ed42006d2a54592e4d10e0dd4fd15894269df431876a14e98d82766d98f")
 		// customghash = common.HexToHash("0x7cf8e056f4c8152dc3b0c6d861094f2d8089d97b7a94d7a8e09aaa6661fb9342")
