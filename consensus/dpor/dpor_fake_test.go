@@ -18,16 +18,13 @@
 package dpor
 
 import (
-	"math/big"
-
-	"time"
-
 	"errors"
+	"math/big"
+	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
-
 	"github.com/ethereum/go-ethereum/common"
 )
 

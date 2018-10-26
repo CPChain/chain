@@ -304,7 +304,7 @@ func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner boo
 	if !ok {
 		return false, errBadEngine
 	}
-	isSigner, err = e.IsSigner(pm.blockchain, address, pm.blockchain.CurrentHeader().Number.Uint64())
+	isSigner, err = e.IsFutureSigner(pm.blockchain, address, pm.blockchain.CurrentHeader().Number.Uint64())
 	return isSigner, err
 }
 

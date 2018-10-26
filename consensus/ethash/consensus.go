@@ -504,6 +504,6 @@ func (ethash *Ethash) SetCommitteeNetworkHandler(committeeNetworkHandler consens
 	return nil
 }
 
-func (ethash *Ethash) IsSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
+func (ethash *Ethash) IsFutureSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
 	return true, nil
 }
