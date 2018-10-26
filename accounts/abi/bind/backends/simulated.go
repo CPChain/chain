@@ -87,6 +87,7 @@ func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	database := ethdb.NewMemDatabase()
 	genesis := core.Genesis{Config: configs.AllCpchainProtocolChanges, Alloc: alloc}
+	//	genesis := core.Genesis{Config: configs.AllCpchainProtocolChanges, Alloc: alloc, GasLimit: 888888888888}
 	genesis.MustCommit(database)
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 	// TODO we need our own NewFaker(), `ethash.NewFaker' does nothing.

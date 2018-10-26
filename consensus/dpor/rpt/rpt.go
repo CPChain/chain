@@ -4,7 +4,7 @@ package rpt
 // then calculates the reputations of candidates.
 
 import (
-	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
@@ -90,7 +90,7 @@ type CollectorConfig struct {
 	Phi                   float64 // leaderReward coefficient
 	Omega                 float64 // txVolume coefficient
 	WindowSize            uint64  // window size, how many blocks to recall.
-	Client                *backends.SimulatedBackend
+	Client                bind.ContractBackend
 	Committeadress        []common.Address
 	ChainConfig           *configs.ChainConfig
 	DporConfig            *configs.DporConfig
@@ -248,11 +248,11 @@ func (bc *BasicCollector) getChainRptInfo(address common.Address, addresses []co
 
 func (bc *BasicCollector) getContractRptInfo(address common.Address, addresses []common.Address, number uint64) ContractRptInfo {
 	uploadReward, proxyReward := 0., 0.
-	ur, err := bc.getUploadReward(address, 0)
+	ur, err := bc.getUploadReward(address, number)
 	if err != nil {
 		log.Warn("getContractRptInfo getUploadReward error", address, err)
 	}
-	pr, err := bc.getProxyReward(address, 0)
+	pr, err := bc.getProxyReward(address, number)
 	if err != nil {
 		log.Warn("getContractRptInfo getProxyReward error", address, err)
 	}
