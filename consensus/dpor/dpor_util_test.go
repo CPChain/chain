@@ -19,20 +19,18 @@ package dpor
 
 import (
 	"crypto/ecdsa"
+	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
-	"fmt"
-
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/hashicorp/golang-lru"
@@ -170,8 +168,13 @@ func Test_ecrecover(t *testing.T) {
 		Nonce:        types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
 
-	sigs := make(map[common.Address][]byte)
-	sigs[addr] = hexutil.MustDecode("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00")
+	sigs := &Signatures{
+		sigs: make(map[common.Address][]byte),
+	}
+	sigs.SetSig(
+		addr,
+		hexutil.MustDecode("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+	)
 
 	existingCache, _ := lru.NewARC(10)
 	fmt.Println("newHeader.Hash():", newHeader.Hash().Hex())
@@ -242,9 +245,11 @@ func Test_acceptSigs(t *testing.T) {
 		TxsRoot:      types.EmptyRootHash,
 		ReceiptsRoot: types.EmptyRootHash,
 	}
-	sigs := make(map[common.Address][]byte)
+	sigs := &Signatures{
+		sigs: make(map[common.Address][]byte),
+	}
 	for _, signer := range getSignerAddress() {
-		sigs[signer] = []byte("ok")
+		sigs.SetSig(signer, []byte("ok"))
 	}
 
 	emptyCache, _ := lru.NewARC(inmemorySnapshots)

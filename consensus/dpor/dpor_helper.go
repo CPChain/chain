@@ -294,12 +294,11 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	// Retrieve signatures of the block in cache
 	s, _ := dpor.signatures.Get(hash)
-	sigs := s.(map[common.Address][]byte)
 
 	// Copy all signatures recovered to allSigs
 	allSigs := make([]byte, int(dpor.config.Epoch)*extraSeal)
 	for round, signer := range snap.SignersOf(number) {
-		if sigHash, ok := sigs[signer]; ok {
+		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
 			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sigHash)
 		}
 	}
