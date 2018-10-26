@@ -25,13 +25,12 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/cpchain/chain/apis/proto/v1/debug"
-	"bitbucket.org/cpchain/chain/apis/proto/v1/eth"
-	"bitbucket.org/cpchain/chain/apis/proto/v1/net"
-	"bitbucket.org/cpchain/chain/apis/proto/v1/personal"
-	"bitbucket.org/cpchain/chain/apis/proto/v1/txpool"
-
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/api/protos/v1/debug"
+	"bitbucket.org/cpchain/chain/api/protos/v1/eth"
+	"bitbucket.org/cpchain/chain/api/protos/v1/net"
+	"bitbucket.org/cpchain/chain/api/protos/v1/personal"
+	"bitbucket.org/cpchain/chain/api/protos/v1/txpool"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/ethash"
@@ -73,7 +72,7 @@ func (api *PublicInnerEthereumAPIServer) RegisterServer(s *grpc.Server) {
 	ethpb.RegisterPublicInnerEthereumAPIServer(s, api)
 }
 
-func (api *PublicInnerEthereumAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PublicInnerEthereumAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	ethpb.RegisterPublicInnerEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -155,7 +154,7 @@ func (api *PublicTxPoolAPIServer) RegisterServer(s *grpc.Server) {
 	txpoolpb.RegisterPublicTxPoolAPIServer(s, api)
 }
 
-func (api *PublicTxPoolAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PublicTxPoolAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	txpoolpb.RegisterPublicTxPoolAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -275,7 +274,7 @@ func (api *PublicAccountAPIServer) RegisterServer(s *grpc.Server) {
 	ethpb.RegisterPublicAccountAPIServer(s, api)
 }
 
-func (api *PublicAccountAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PublicAccountAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	ethpb.RegisterPublicAccountAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -331,7 +330,7 @@ func (api *PrivateAccountAPIServer) RegisterServer(s *grpc.Server) {
 	personalpb.RegisterPrivateAccountAPIServer(s, api)
 }
 
-func (api *PrivateAccountAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PrivateAccountAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	personalpb.RegisterPrivateAccountAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -668,7 +667,7 @@ func (api *PublicBlockChainAPIServer) RegisterServer(s *grpc.Server) {
 	ethpb.RegisterPublicBlockChainAPIServer(s, api)
 }
 
-func (api *PublicBlockChainAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PublicBlockChainAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	ethpb.RegisterPublicBlockChainAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -978,7 +977,7 @@ func (api *PublicTransactionPoolAPIServer) RegisterServer(s *grpc.Server) {
 	ethpb.RegisterPublicTransactionPoolAPIServer(s, api)
 }
 
-func (api *PublicTransactionPoolAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PublicTransactionPoolAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	ethpb.RegisterPublicTransactionPoolAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -1498,7 +1497,7 @@ func (api *PublicInnerDebugAPIServer) RegisterServer(s *grpc.Server) {
 	debugpb.RegisterPublicInnerDebugAPIServer(s, api)
 }
 
-func (api *PublicInnerDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PublicInnerDebugAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	debugpb.RegisterPublicInnerDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -1563,7 +1562,7 @@ func (api *PrivateInnerDebugAPIServer) RegisterServer(s *grpc.Server) {
 	debugpb.RegisterPrivateInnerDebugAPIServer(s, api)
 }
 
-func (api *PrivateInnerDebugAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PrivateInnerDebugAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	debugpb.RegisterPrivateInnerDebugAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -1636,7 +1635,7 @@ func (api *PublicNetAPIServer) RegisterServer(s *grpc.Server) {
 	netpb.RegisterPublicNetAPIServer(s, api)
 }
 
-func (api *PublicNetAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PublicNetAPIServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	netpb.RegisterPublicNetAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 

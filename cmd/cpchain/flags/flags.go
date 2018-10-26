@@ -153,9 +153,10 @@ const (
 	IpcAddrFlagName = "ipcaddr"
 	RpcAddrFlagName = "rpcaddr"
 	// these two flags should be removed in the future
-	GRpcAddrFlagName      = "grpcaddr"
-	GatewayAddrFlagName   = "gatewayaddr"
-	RpcCorsDomainFlagName = "rpccorsdomain"
+	GrpcAddrFlagName       = "grpcaddr"
+	GrpcGatewayFlagName    = "grpcgateway"
+	GrpcIpcDisableFlagName = "grpcipcdisable"
+	GrpcIpcAddrFlagName    = "grpcipcaddr"
 )
 
 // TODO @sangh adjust these
@@ -190,16 +191,20 @@ var RpcFlags = []cli.Flag{
 		Usage: "RPC address whose format is <host:port>",
 	},
 	cli.StringFlag{
-		Name:  GRpcAddrFlagName,
-		Usage: "GRPC address whose format is <host:port>",
+		Name:  GrpcAddrFlagName,
+		Usage: "GRPC address",
 	},
 	cli.StringFlag{
-		Name:  GatewayAddrFlagName,
-		Usage: "GRPC gateway address whose format is <host:port>",
+		Name:  GrpcGatewayFlagName,
+		Usage: "GRPC gateway address",
+	},
+	cli.BoolFlag{
+		Name:  GrpcIpcDisableFlagName,
+		Usage: "Disable the IPC-GRPC server",
 	},
 	cli.StringFlag{
-		Name:  RpcCorsDomainFlagName,
-		Usage: "Comma separated list of domains from which to accept cross origin requests (browser enforced)",
+		Name:  GrpcIpcAddrFlagName,
+		Usage: "Filename for IPC socket/pipe within the datadir (explicit paths escape it)",
 	},
 }
 

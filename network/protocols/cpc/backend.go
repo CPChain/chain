@@ -28,7 +28,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/apis"
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -280,8 +280,8 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	}
 }
 
-func (s *CpchainService) GAPIs() []apis.API {
-	return []apis.API{
+func (s *CpchainService) GAPIs() []api.API {
+	return []api.API{
 		NewPublicEthereumAPIServer(s),
 		NewPublicMinerAPIServer(s),
 		NewPrivateMinerAPIServer(s),
