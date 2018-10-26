@@ -759,7 +759,6 @@ func testThrottling(t *testing.T, protocol int, mode SyncMode) {
 // this test common ancestor lookup should *not* be short circuited, and a full
 // binary search should be executed.
 func TestForkedSync64Full(t *testing.T) {
-	// t.Skip("===TestForkedSync64Full")
 	testForkedSync(t, 64, FullSync)
 }
 
@@ -792,7 +791,6 @@ func testForkedSync(t *testing.T, protocol int, mode SyncMode) {
 // Tests that synchronising against a much shorter but much heavyer fork works
 // corrently and is not dropped.
 func TestHeavyForkedSync64Full(t *testing.T) {
-	// t.Skip("===TestHeavyForkedSync64Full")
 	testHeavyForkedSync(t, 64, FullSync)
 }
 
@@ -826,7 +824,6 @@ func testHeavyForkedSync(t *testing.T, protocol int, mode SyncMode) {
 // chain head, ensuring that malicious peers cannot waste resources by feeding
 // long dead chains.
 func TestBoundedForkedSync64Full(t *testing.T) {
-	// t.Skip("===TestBoundedForkedSync64Full")
 	testBoundedForkedSync(t, 64, FullSync)
 }
 
@@ -859,7 +856,6 @@ func testBoundedForkedSync(t *testing.T, protocol int, mode SyncMode) {
 // chain head for short but heavy forks too. These are a bit special because they
 // take different ancestor lookup paths.
 func TestBoundedHeavyForkedSync64Full(t *testing.T) {
-	// t.Skip("===TestBoundedHeavyForkedSync64Full")
 	testBoundedHeavyForkedSync(t, 64, FullSync)
 }
 
@@ -910,7 +906,6 @@ func TestInactiveDownloader(t *testing.T) {
 
 // Tests that a canceled download wipes all previously accumulated state.
 func TestCancel64Full(t *testing.T) {
-	// t.Skip("===TestCancel64Full")
 	testCancel(t, 64, FullSync)
 }
 
@@ -977,7 +972,6 @@ func testMultiSynchronisation(t *testing.T, protocol int, mode SyncMode) {
 // Tests that synchronisations behave well in multi-version protocol environments
 // and not wreak havoc on other nodes in the network.
 func TestMultiProtoSynchronisation64Full(t *testing.T) {
-	// t.Skip("===TestMultiProtoSynchronisation64Full")
 	testMultiProtoSync(t, 64, FullSync)
 }
 
@@ -1014,7 +1008,6 @@ func testMultiProtoSync(t *testing.T, protocol int, mode SyncMode) {
 // Tests that if a block is empty (e.g. header only), no body request should be
 // made, and instead the header should be assembled into a whole block in itself.
 func TestEmptyShortCircuit64Full(t *testing.T) {
-	// t.Skip("===TestEmptyShortCircuit64Full")
 	testEmptyShortCircuit(t, 64, FullSync)
 }
 
