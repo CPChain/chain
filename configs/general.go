@@ -1,18 +1,4 @@
 // Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package configs
 
@@ -28,7 +14,10 @@ const (
 	ClientIdentifier = "cpchain" // Client identifier to advertise over the network
 )
 
-const CpchainChainId = 42
+const (
+	CpchainChainId = 42
+	TestnetChainId = 43
+)
 
 // Genesis hashes to enforce below configs on.
 var (
@@ -38,15 +27,14 @@ var (
 
 var (
 	// TODO: @AC define testnet configuration
-	// TestnetChainConfig contains the chain parameters to run a node on the Ropsten test network.
 	TestnetChainConfig = &ChainConfig{
-		ChainID: big.NewInt(3),
+		ChainID: big.NewInt(TestnetChainId),
 		Ethash:  new(EthashConfig),
 	}
 
 	// 	// MainnetChainConfig is the chain parameters to run a node on the CPChain main network.
 	MainnetChainConfig = &ChainConfig{
-		ChainID: big.NewInt(42),
+		ChainID: big.NewInt(CpchainChainId),
 
 		Dpor: &DporConfig{
 			Period:                1,
@@ -154,31 +142,7 @@ func (c *ChainConfig) IsCpchain() bool {
 //
 // The returned GasTable's fields shouldn't, under any circumstances, be changed.
 func (c *ChainConfig) GasTable(num *big.Int) GasTable {
-	return GasTableEIP158
-}
-
-// isForkIncompatible returns true if a fork scheduled at s1 cannot be rescheduled to
-// block s2 because head is already past the fork.
-func isForkIncompatible(s1, s2, head *big.Int) bool {
-	return (isForked(s1, head) || isForked(s2, head)) && !configNumEqual(s1, s2)
-}
-
-// isForked returns whether a fork scheduled at block s is active at the given head block.
-func isForked(s, head *big.Int) bool {
-	if s == nil || head == nil {
-		return false
-	}
-	return s.Cmp(head) <= 0
-}
-
-func configNumEqual(x, y *big.Int) bool {
-	if x == nil {
-		return y == nil
-	}
-	if y == nil {
-		return x == nil
-	}
-	return x.Cmp(y) == 0
+	return GasTableCep0
 }
 
 // ConfigCompatError is raised if the locally-stored blockchain is initialised with a
@@ -189,23 +153,6 @@ type ConfigCompatError struct {
 	StoredConfig, NewConfig *big.Int
 	// the block number to which the local chain must be rewound to correct the error
 	RewindTo uint64
-}
-
-func newCompatError(what string, storedblock, newblock *big.Int) *ConfigCompatError {
-	var rew *big.Int
-	switch {
-	case storedblock == nil:
-		rew = newblock
-	case newblock == nil || storedblock.Cmp(newblock) < 0:
-		rew = storedblock
-	default:
-		rew = newblock
-	}
-	err := &ConfigCompatError{what, storedblock, newblock, 0}
-	if rew != nil && rew.Sign() > 0 {
-		err.RewindTo = rew.Uint64() - 1
-	}
-	return err
 }
 
 func (err *ConfigCompatError) Error() string {

@@ -36,6 +36,7 @@ type FakeReader struct {
 }
 
 func (*FakeReader) Config() *configs.ChainConfig {
+	// TODO @hmw populate this config
 	return &configs.ChainConfig{}
 }
 
