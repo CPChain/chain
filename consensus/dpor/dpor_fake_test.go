@@ -36,7 +36,8 @@ type FakeReader struct {
 }
 
 func (*FakeReader) Config() *configs.ChainConfig {
-	return &configs.ChainConfig{EIP150Block: big.NewInt(777)}
+	// TODO @hmw populate this config
+	return &configs.ChainConfig{}
 }
 
 func (*FakeReader) GetHeaderByNumber(number uint64) *types.Header {

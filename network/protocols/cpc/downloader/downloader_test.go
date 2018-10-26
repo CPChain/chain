@@ -117,7 +117,7 @@ func (dl *downloadTester) makeChain(n int, seed byte, parent *types.Block, paren
 		}
 		// If the block number is multiple of 3, send a bonus transaction to the miner
 		if parent == dl.genesis && i%3 == 0 {
-			signer := types.MakeSigner(configs.TestChainConfig, block.Number())
+			signer := types.MakeSigner(configs.TestChainConfig)
 			tx, err := types.SignTx(types.NewTransaction(block.TxNonce(testAddress), common.Address{seed}, big.NewInt(1000), configs.TxGas, nil, nil), signer, testKey)
 			if err != nil {
 				panic(err)

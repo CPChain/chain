@@ -42,7 +42,7 @@ func ExampleGenerateChain() {
 
 	// Ensure that key1 has some funds in the genesis block.
 	gspec := &Genesis{
-		Config: &configs.ChainConfig{HomesteadBlock: new(big.Int)},
+		Config: &configs.ChainConfig{ChainID: new(big.Int).SetUint64(42)},
 		Alloc:  GenesisAlloc{addr1: {Balance: big.NewInt(1000000)}},
 	}
 	genesis := gspec.MustCommit(db)
@@ -50,7 +50,7 @@ func ExampleGenerateChain() {
 	// This call generates a chain of 5 blocks. The function runs for
 	// each block and adds different features to gen based on the
 	// block index.
-	signer := types.HomesteadSigner{}
+	signer := types.NewPrivTxSupportEIP155Signer(gspec.Config.ChainID)
 	chain, _ := GenerateChain(gspec.Config, genesis, ethash.NewFaker(), db, remoteDB, 5, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
@@ -80,6 +80,7 @@ func ExampleGenerateChain() {
 		return
 	}
 
+	// TODO: @AC investigate if the expected results are correct. Addr3 got tokens by mining, check mining mechanism.
 	state, _ := blockchain.State()
 	fmt.Printf("last block: #%d\n", blockchain.CurrentBlock().Number())
 	fmt.Println("balance of addr1:", state.GetBalance(addr1))
@@ -89,5 +90,5 @@ func ExampleGenerateChain() {
 	// last block: #5
 	// balance of addr1: 989000
 	// balance of addr2: 10000
-	// balance of addr3: 15000000000000001000
+	// balance of addr3: 9000000000000001000
 }
