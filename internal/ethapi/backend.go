@@ -22,7 +22,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/apis"
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -75,9 +75,9 @@ type Backend interface {
 	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
 }
 
-func GetGAPIs(b Backend) []apis.API {
+func GetGAPIs(b Backend) []api.API {
 	nonceLock := new(AddrLocker)
-	return []apis.API{
+	return []api.API{
 		NewPublicInnerEthereumAPIServer(b),
 		NewPublicBlockChainAPIServer(b),
 		NewPublicTransactionPoolAPIServer(b, nonceLock),
