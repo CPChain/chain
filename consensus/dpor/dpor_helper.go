@@ -19,9 +19,7 @@ package dpor
 
 import (
 	"bytes"
-	"encoding/hex"
 	"math/big"
-	"strconv"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"

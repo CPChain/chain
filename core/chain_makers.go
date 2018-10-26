@@ -182,6 +182,7 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		// It's nonetheless ugly to spin up a blockchain here. Get rid of this somehow.
 
 		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, privStateDB: privStateDB, config: config, engine: engine}
+
 		b.header = makeHeader(b.chainReader, parent, pubStatedb, b.engine)
 
 		// Execute any user modifications to the block and finalize it
@@ -240,7 +241,7 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 
 	_ = engine.Prepare(chain, header)
 
-	header.StateRoot = state.IntermediateRoot(chain.Config().IsEIP158(parent.Number()))
+	header.StateRoot = state.IntermediateRoot(true)
 	header.Coinbase = parent.Coinbase()
 	header.GasLimit = CalcGasLimit(parent)
 

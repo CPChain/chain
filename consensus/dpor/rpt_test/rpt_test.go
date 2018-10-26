@@ -1,4 +1,4 @@
-package rpt
+package rpt_test
 
 import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
+	"bitbucket.org/cpchain/chain/consensus/dpor/uploadConfig"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -128,18 +130,18 @@ func (b *fakeErrorClientBackend) HeaderByNumber(ctx context.Context, number *big
 }
 
 func TestNewEthClient(t *testing.T) {
-	client, err := NewEthClient(endpoint)
+	client, err := rpt.NewEthClient(endpoint)
 	fmt.Println(client)
 	assert.Nil(t, err)
 	assert.NotNil(t, client)
 }
 
-func getClientBackend() (ClientBackend, error) {
+func getClientBackend() (rpt.ClientBackend, error) {
 	return &fakeClientBackend{}, nil
 	//return NewEthClient(endpoint)
 }
 
-func getErrorClientBackend(errorType uint64) (ClientBackend, error) {
+func getErrorClientBackend(errorType uint64) (rpt.ClientBackend, error) {
 	return &fakeErrorClientBackend{errorType}, nil
 }
 
@@ -172,8 +174,8 @@ func TestCache(t *testing.T) {
 	var num uint64
 	num = 0
 	for i, address := range raddress1 {
-		hash := rptHash(RptItems{nodeaddress: address, key: num})
-		cache.Add(hash, RPT{Address: address, Rpt: 0 + float64(i)})
+		hash := rpt.RptHash(rpt.RptItems{Nodeaddress: address, Key: num})
+		cache.Add(hash, rpt.RPT{Address: address, Rpt: 0 + float64(i)})
 		num++
 	}
 	assert.Equal(t, float64(300), bc.GetRpts(raddress1, 6, cache)[5].Rpt)
@@ -194,18 +196,18 @@ func TestBasicCollector_GetRptInfos(t *testing.T) {
 	assert.Equal(t, "0x0000000000000000000000000000000000000000", addresses[0].Hex())
 }
 
-func createErrorBasicCollector(t *testing.T, chainId int64, errorType uint64) *BasicCollector {
+func createErrorBasicCollector(t *testing.T, chainId int64, errorType uint64) *rpt.BasicCollector {
 	config := getCollectorConfig(chainId)
 	ethClient, _ := getErrorClientBackend(errorType)
-	bc, err := NewBasicCollector(ethClient, config)
+	bc, err := rpt.NewBasicCollector(ethClient, config)
 	assert.Nil(t, err)
 	return bc
 }
 
-func createBasicCollector(t *testing.T, chainId int64) *BasicCollector {
+func createBasicCollector(t *testing.T, chainId int64) *rpt.BasicCollector {
 	config := getCollectorConfig(chainId)
 	ethClient, _ := getClientBackend()
-	bc, err := NewBasicCollector(ethClient, config)
+	bc, err := rpt.NewBasicCollector(ethClient, config)
 	assert.Nil(t, err)
 	return bc
 }
@@ -229,9 +231,9 @@ func TestBasicCollector_GetRptInfosNew(t *testing.T) {
 	assert.NotNil(t, bc.GetRptInfos(addresses, blockNum)[addresses[0]])
 }
 
-func getCollectorConfig(chainId int64) *CollectorConfig {
-	client := backends.NewDporSimulatedBackend(core.GenesisAlloc{Addr: {Balance: big.NewInt(1000000000000)}})
-	config := &CollectorConfig{
+func getCollectorConfig(chainId int64) *rpt.CollectorConfig {
+	Client := backends.NewDporSimulatedBackend(core.GenesisAlloc{uploadConfig.Addr: {Balance: big.NewInt(1000000000000)}})
+	config := &rpt.CollectorConfig{
 		LeaderReward:   80,
 		ProxyReward:    0,
 		UploadReward:   0,
@@ -249,88 +251,84 @@ func getCollectorConfig(chainId int64) *CollectorConfig {
 			Epoch:  3,
 			Period: 1,
 		},
-		committeeNamber: 20,
-		Client:          client,
+		CommitteeNamber: 20,
+		Client:          Client,
 	}
 	return config
 }
 
 func TestGetCoinAge(t *testing.T) {
 	bc := createBasicCollector(t, 4)
-	balance, _ := bc.getCoinAge(address, raddress1, 10)
+	balance, _ := bc.GetCoinAge(address, raddress1, 10)
 	assert.Equal(t, float64(100), balance)
 }
 
 func TestGetTxVolume(t *testing.T) {
 	bc := createBasicCollector(t, 4)
-	balance, _ := bc.getTxVolume(address, 10)
+	balance, _ := bc.GetTxVolume(address, 10)
 	assert.Equal(t, float64(0), balance)
 }
 
 func TestGetMaintenance(t *testing.T) {
 	bc := createBasicCollector(t, 5)
-	Maintenance, _ := bc.getMaintenance(leaderAddress, 10)
+	Maintenance, _ := bc.GetMaintenance(leaderAddress, 10)
 	assert.Equal(t, float64(80), Maintenance)
 }
 
 func TestGetIfLeaderNotLeader(t *testing.T) {
 	bc := createBasicCollector(t, 4)
-	leaderReward, _ := bc.getIfLeader(address, 10)
+	leaderReward, _ := bc.GetIfLeader(address, 10)
 	assert.Equal(t, float64(0), leaderReward)
 }
 
 func TestGetIfLeaderIsLeader(t *testing.T) {
 	bc := createBasicCollector(t, 5)
-	LeaderReward, _ := bc.getIfLeader(leaderAddress, 10)
+	LeaderReward, _ := bc.GetIfLeader(leaderAddress, 10)
 	assert.Equal(t, float64(80), LeaderReward)
 }
 
 func TestGetUploadReward(t *testing.T) {
-	DeployRegister()
+	uploadConfig.DeployRegister()
 	bc := createBasicCollector(t, 5)
-	bc.Config.Client = ContractBackend
-	bc.Config.uploadContractAddress = RegisterContractAddr
-	LeaderReward, _ := bc.getUploadReward(Addr, 10)
+	bc.Config.Client = uploadConfig.ContractBackend
+	bc.Config.UploadContractAddress = uploadConfig.RegisterContractAddr
+	LeaderReward, _ := bc.GetUploadReward(uploadConfig.Addr, 10)
 	assert.Equal(t, float64(15), LeaderReward)
 }
 
 func TestGetProxyReward(t *testing.T) {
 	bc := createBasicCollector(t, 5)
-	ProxyReward, _ := bc.getProxyReward(address, 10)
+	ProxyReward, _ := bc.GetProxyReward(address, 10)
 	assert.Equal(t, float64(0), ProxyReward)
 }
 
 func TestGetContractRptInfo4(t *testing.T) {
-	SetFakeOderInfo()
 	bc := createBasicCollector(t, 5)
-	contractRptInfo := bc.getContractRptInfo(leaderAddress, raddress1, 4)
+	contractRptInfo := bc.GetContractRptInfo(leaderAddress, raddress1, 4)
 	assert.NotNil(t, contractRptInfo)
 	assert.Equal(t, float64(0), contractRptInfo.ProxyReward)
 	assert.Equal(t, float64(0), contractRptInfo.UploadReward)
 }
 
 func TestGetContractRptInfo5(t *testing.T) {
-	SetFakeOderInfo()
 	bc := createBasicCollector(t, 5)
-	contractRptInfo := bc.getContractRptInfo(address, raddress1, 5)
+	contractRptInfo := bc.GetContractRptInfo(address, raddress1, 5)
 	assert.NotNil(t, contractRptInfo)
 	assert.Equal(t, float64(0), contractRptInfo.ProxyReward)
 	assert.Equal(t, float64(0), contractRptInfo.UploadReward)
 }
 
 func TestGetContractRptInfo6(t *testing.T) {
-	SetFakeOderInfo()
 	bc := createBasicCollector(t, 5)
-	contractRptInfo := bc.getContractRptInfo(address, raddress1, 6)
+	contractRptInfo := bc.GetContractRptInfo(address, raddress1, 6)
 	assert.NotNil(t, contractRptInfo)
 	assert.Equal(t, float64(0), contractRptInfo.ProxyReward)
 	assert.Equal(t, float64(0), contractRptInfo.UploadReward)
 }
 
 func TestGetContractRptInfo10(t *testing.T) {
-	SetFakeOderInfo()
 	bc := createBasicCollector(t, 5)
-	contractRptInfo := bc.getContractRptInfo(address, raddress1, 10)
+	contractRptInfo := bc.GetContractRptInfo(address, raddress1, 10)
 	assert.NotNil(t, contractRptInfo)
 	assert.Equal(t, float64(0), contractRptInfo.ProxyReward)
 	assert.Equal(t, float64(0), contractRptInfo.UploadReward)
@@ -338,7 +336,7 @@ func TestGetContractRptInfo10(t *testing.T) {
 
 func TestGetChainRptInfo(t *testing.T) {
 	bc := createBasicCollector(t, 5)
-	chainRptInfo := bc.getChainRptInfo(leaderAddress, raddress1, 10)
+	chainRptInfo := bc.GetChainRptInfo(leaderAddress, raddress1, 10)
 	assert.NotNil(t, chainRptInfo)
 	assert.Equal(t, float64(100), chainRptInfo.CoinAge)
 	assert.Equal(t, float64(80), chainRptInfo.IfLeader)
@@ -347,7 +345,7 @@ func TestGetChainRptInfo(t *testing.T) {
 
 func TestGetChainRptInfoError1(t *testing.T) {
 	bc := createErrorBasicCollector(t, 5, 1)
-	chainRptInfo := bc.getChainRptInfo(leaderAddress, raddress1, 10)
+	chainRptInfo := bc.GetChainRptInfo(leaderAddress, raddress1, 10)
 	assert.NotNil(t, chainRptInfo)
 	assert.Equal(t, float64(0), chainRptInfo.CoinAge)
 	assert.Equal(t, float64(0), chainRptInfo.IfLeader)
@@ -356,7 +354,7 @@ func TestGetChainRptInfoError1(t *testing.T) {
 
 func TestGetChainRptInfoError2(t *testing.T) {
 	bc := createErrorBasicCollector(t, 5, 2)
-	chainRptInfo := bc.getChainRptInfo(leaderAddress, raddress1, 10)
+	chainRptInfo := bc.GetChainRptInfo(leaderAddress, raddress1, 10)
 	assert.NotNil(t, chainRptInfo)
 	assert.Equal(t, float64(0), chainRptInfo.CoinAge)
 	assert.Equal(t, float64(0), chainRptInfo.IfLeader)
@@ -365,7 +363,7 @@ func TestGetChainRptInfoError2(t *testing.T) {
 
 func TestGetChainRptInfoError3(t *testing.T) {
 	bc := createErrorBasicCollector(t, 5, 3)
-	chainRptInfo := bc.getChainRptInfo(leaderAddress, raddress1, 10)
+	chainRptInfo := bc.GetChainRptInfo(leaderAddress, raddress1, 10)
 	assert.NotNil(t, chainRptInfo)
 	assert.Equal(t, float64(0), chainRptInfo.CoinAge)
 	assert.Equal(t, float64(0), chainRptInfo.IfLeader)
