@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option java_package = "org.bitbucket.cpchain.chain.protos";
+option go_package = "adminpb";
+
+package adminpb;
+
+import "google/api/annotations.proto";
+
+
+message PrivateAdminAPIRequest {
+    string file = 1;
+}
+
+message PrivateAdminAPIReply {
+    bool is_ok = 1;
+}
+// PrivateAdminAPI is the collection of Ethereum full node-related APIs
+// exposed over the private admin endpoint.
+service PrivateAdminAPI {
+    // ExportChain exports the current blockchain into a local file.
+    rpc ExportChain(PrivateAdminAPIRequest) returns (PrivateAdminAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/admin/exportChain"
+            body: "*"
+          };
+    }
+    // ImportChain imports a blockchain from a local file.
+    rpc ImportChain(PrivateAdminAPIRequest) returns (PrivateAdminAPIReply) {
+        option (google.api.http) = {
+            post: "/apis/v1/admin/importChain"
+            body: "*"
+          };
+    }
+}
+
