@@ -1,0 +1,93 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "admin.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/apis/v1/admin/exportChain": {
+      "post": {
+        "summary": "ExportChain exports the current blockchain into a local file.",
+        "operationId": "ExportChain",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/adminpbPrivateAdminAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/adminpbPrivateAdminAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAdminAPI"
+        ]
+      }
+    },
+    "/apis/v1/admin/importChain": {
+      "post": {
+        "summary": "ImportChain imports a blockchain from a local file.",
+        "operationId": "ImportChain",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/adminpbPrivateAdminAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/adminpbPrivateAdminAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateAdminAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "adminpbPrivateAdminAPIReply": {
+      "type": "object",
+      "properties": {
+        "is_ok": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "adminpbPrivateAdminAPIRequest": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        }
+      },
+      "title": "###################################################"
+    }
+  }
+}

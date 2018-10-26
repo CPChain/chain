@@ -1,0 +1,374 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "miner.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/apis/v1/eth/getWork": {
+      "post": {
+        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "operationId": "GetWork",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPublicMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/mining": {
+      "post": {
+        "summary": "Mining returns an indication if this node is currently mining.",
+        "operationId": "Mining",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPublicMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PublicMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/submitHashrate": {
+      "post": {
+        "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
+        "operationId": "SubmitHashrate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPublicMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/minerpbPublicMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/eth/submitWork": {
+      "post": {
+        "summary": "SubmitWork can be used by external miner to submit their POW solution. It returns an indication if the work was\naccepted. Note, this is not an indication if the provided work was valid!",
+        "operationId": "SubmitWork",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPublicMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/minerpbPublicMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PublicMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/miner/setEtherbase": {
+      "post": {
+        "summary": "SetEtherbase sets the etherbase of the miner",
+        "operationId": "SetEtherbase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/miner/setExtra": {
+      "post": {
+        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "operationId": "SetExtra",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/miner/setGasPrice": {
+      "post": {
+        "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
+        "operationId": "SetGasPrice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/miner/setHashrate": {
+      "post": {
+        "summary": "GetHashrate returns the current hashrate of the miner.",
+        "operationId": "GetHashrate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/miner/start": {
+      "post": {
+        "summary": "Mining returns an indication if this node is currently mining.",
+        "operationId": "Start",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    },
+    "/apis/v1/miner/stop": {
+      "post": {
+        "summary": "SubmitWork can be used by external miner to submit their POW solution. It returns an indication if the work was\naccepted. Note, this is not an indication if the provided work was valid!",
+        "operationId": "Stop",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/minerpbPrivateMinerAPIReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "PrivateMinerAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "minerpbPrivateMinerAPIReply": {
+      "type": "object",
+      "properties": {
+        "is_ok": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "hashrate": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "minerpbPrivateMinerAPIRequest": {
+      "type": "object",
+      "properties": {
+        "threads": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "extra": {
+          "type": "string"
+        },
+        "gas_price": {
+          "type": "string",
+          "format": "byte"
+        },
+        "etherbase": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "###################################################"
+    },
+    "minerpbPublicMinerAPIReply": {
+      "type": "object",
+      "properties": {
+        "mining": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "is_accepting": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "works": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "minerpbPublicMinerAPIRequest": {
+      "type": "object",
+      "properties": {
+        "block_nonce": {
+          "type": "string",
+          "format": "byte"
+        },
+        "solution": {
+          "type": "string",
+          "format": "byte"
+        },
+        "digest": {
+          "type": "string",
+          "format": "byte"
+        },
+        "hashrate": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "id": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    }
+  }
+}
