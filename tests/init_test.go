@@ -182,6 +182,7 @@ func (tm *testMatcher) checkFailure(t *testing.T, name string, err error) error 
 func (tm *testMatcher) walk(t *testing.T, dir string, runTest interface{}) {
 	// Walk the directory.
 	dirinfo, err := os.Stat(dir)
+	// TODO: @AC the test has been skipped because of absence of test file located in /tests/testdata. Try fix it in future.
 	if os.IsNotExist(err) || !dirinfo.IsDir() {
 		fmt.Fprintf(os.Stderr, "can't find test files in %s, did you clone the tests submodule?\n", dir)
 		t.Skip("missing test files")

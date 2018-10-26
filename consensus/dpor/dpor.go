@@ -29,16 +29,15 @@ import (
 )
 
 const (
-	checkpointInterval = 4    // Number of blocks after which to save the vote Snapshot to the database
 	inmemorySnapshots  = 1000 // Number of recent vote snapshots to keep in memory
 	inmemorySignatures = 1000 // Number of recent block signatures to keep in memory
-
-	// wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
 
 	pctA = 2
 	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
+// IsCheckPoint returns if a given block number is in a checkpoint with given
+// epochLength and viewLength
 func IsCheckPoint(number uint64, epochL uint64, viewL uint64) bool {
 	if epochL == 0 || viewL == 0 {
 		return true
@@ -50,8 +49,8 @@ func IsCheckPoint(number uint64, epochL uint64, viewL uint64) bool {
 // cpchain testnet.
 type Dpor struct {
 	dh     dporHelper
-	config *configs.DporConfig // Consensus engine configuration parameters
 	db     ethdb.Database      // Database to store and retrieve Snapshot checkpoints
+	config *configs.DporConfig // Consensus engine configuration parameters
 
 	recents    *lru.ARCCache // Snapshots for recent block to speed up reorgs
 	signatures *lru.ARCCache // Signatures of recent blocks to speed up mining
@@ -83,13 +82,14 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	if conf.View == 0 {
 		conf.View = uint64(viewLength)
 	}
+
 	// Allocate the Snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	signatures, _ := lru.NewARC(inmemorySignatures)
 
 	signedBlocks := make(map[uint64]common.Hash)
 
-	dpor := &Dpor{
+	return &Dpor{
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
 		db:           db,
@@ -97,7 +97,6 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 		signatures:   signatures,
 		signedBlocks: signedBlocks,
 	}
-	return dpor
 }
 
 func NewFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
@@ -118,6 +117,7 @@ func NewFakeDelayer(config *configs.DporConfig, db ethdb.Database, delay time.Du
 	return d
 }
 
+// SetContractCaller sets dpor.contractCaller
 func (d *Dpor) SetContractCaller(contractCaller *consensus.ContractCaller) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()

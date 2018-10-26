@@ -150,7 +150,7 @@ func (e *GenesisMismatchError) Error() string {
 //                          genesis == nil       genesis != nil
 //                       +------------------------------------------
 //     db has no genesis |  main-net default  |  genesis
-//     db has genesis    |  from DB           |  genesis (if compatible)
+//     db has genesis    |  from DB           |  genesis (must match)
 //
 // The stored chain configuration will be updated if it is compatible (i.e. does not
 // specify a fork block below the local head block). In case of a conflict, the
@@ -162,9 +162,9 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 		return configs.AllCpchainProtocolChanges, common.Hash{}, errGenesisNoConfig
 	}
 
-	// Just commit the new block if there is no stored genesis block.
 	stored := rawdb.ReadCanonicalHash(db, 0)
 	if (stored == common.Hash{}) {
+		// Just commit the new block if there is no stored genesis block.
 		if genesis == nil {
 			log.Info("Writing default main-net genesis block")
 			genesis = DefaultGenesisBlock()
@@ -173,42 +173,39 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 		}
 		block, err := genesis.Commit(db)
 		return genesis.Config, block.Hash(), err
-	}
-
-	// Check whether the genesis block is already written.
-	if genesis != nil {
-		hash := genesis.ToBlock(nil).Hash()
-		if hash != stored {
-			return genesis.Config, hash, &GenesisMismatchError{stored, hash}
+	} else {
+		// Get the existing chain configuration.
+		storedCfg := rawdb.ReadChainConfig(db, stored)
+		newCfg := genesis.configOrDefault(stored)
+		var finalCfg *configs.ChainConfig
+		if genesis != nil {
+			// Check whether the genesis block is already written.
+			hash := genesis.ToBlock(nil).Hash()
+			if hash != stored {
+				return genesis.Config, hash, &GenesisMismatchError{stored, hash}
+			}
+			finalCfg = updateChainConfig(storedCfg, newCfg, db, stored)
+		} else {
+			// Special case: don't change the existing config of a non-mainnet chain if no new
+			// config is supplied. These chains would get AllProtocolChanges (and a compat error)
+			// if we just continued here.
+			if stored != configs.MainnetGenesisHash {
+				return storedCfg, stored, nil
+			} else {
+				finalCfg = updateChainConfig(storedCfg, newCfg, db, stored)
+			}
 		}
+		return finalCfg, stored, nil
 	}
-	// Get the existing chain configuration.
-	newcfg := genesis.configOrDefault(stored)
-	storedcfg := rawdb.ReadChainConfig(db, stored)
+}
+
+func updateChainConfig(storedcfg *configs.ChainConfig, newcfg *configs.ChainConfig, db ethdb.Database, stored common.Hash) *configs.ChainConfig {
 	if storedcfg == nil {
 		log.Warn("Found genesis block without chain config")
-		rawdb.WriteChainConfig(db, stored, newcfg)
-		return newcfg, stored, nil
 	}
-	// Special case: don't change the existing config of a non-mainnet chain if no new
-	// config is supplied. These chains would get AllProtocolChanges (and a compat error)
-	// if we just continued here.
-	if genesis == nil && stored != configs.MainnetGenesisHash {
-		return storedcfg, stored, nil
-	}
-
-	// Check config compatibility and write the config. Compatibility errors
-	// are returned to the caller unless we're already at block zero.
-	height := rawdb.ReadHeaderNumber(db, rawdb.ReadHeadHeaderHash(db))
-	if height == nil {
-		return newcfg, stored, fmt.Errorf("missing block number for head header hash")
-	}
-	compatErr := storedcfg.CheckCompatible(newcfg, *height)
-	if compatErr != nil && *height != 0 && compatErr.RewindTo != 0 {
-		return newcfg, stored, compatErr
-	}
+	// NOTICE: in future we may need to check the compatibility of old and new configurations.
 	rawdb.WriteChainConfig(db, stored, newcfg)
-	return newcfg, stored, nil
+	return newcfg
 }
 
 // OpenGenesisBlock opens genesis block and returns its chain configuration and hash.

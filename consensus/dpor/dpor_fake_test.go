@@ -18,16 +18,13 @@
 package dpor
 
 import (
-	"math/big"
-
-	"time"
-
 	"errors"
+	"math/big"
+	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
-
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -36,7 +33,8 @@ type FakeReader struct {
 }
 
 func (*FakeReader) Config() *configs.ChainConfig {
-	return &configs.ChainConfig{EIP150Block: big.NewInt(777)}
+	// TODO @hmw populate this config
+	return &configs.ChainConfig{}
 }
 
 func (*FakeReader) GetHeaderByNumber(number uint64) *types.Header {

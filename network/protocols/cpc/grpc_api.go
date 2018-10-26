@@ -661,7 +661,7 @@ func (api *PrivateDebugAPIServer) computeTxEnv(blockHash common.Hash, txIndex in
 	}
 
 	// Recompute transactions up to the target index.
-	signer := types.MakeSigner(api.config, block.Number())
+	signer := types.MakeSigner(api.config)
 
 	for idx, tx := range block.Transactions() {
 		// Assemble the transaction call message and return if the requested offset

@@ -103,9 +103,9 @@ type Engine interface {
 
 // Validator is used to determine whether an address is in the committee.
 type Validator interface {
-	// TODO: change this to or add IsFutureSigner.
 
-	IsSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
+	// IsFutureSigner returns if a given address is a future signer.
+	IsFutureSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
 }
 
 // PoW is a consensus engine based on proof-of-work.

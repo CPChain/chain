@@ -106,7 +106,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, pubStateDb *state.StateDB,
 	privateStateDb *state.StateDB, remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64,
 	cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, *types.Receipt, uint64, error) {
-	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
+	msg, err := tx.AsMessage(types.MakeSigner(config))
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -127,19 +127,12 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	// Update the state with pending changes
-	var root []byte
-	// TODO: investigate whether root is empty and everything seems good when IsByzantium returns false.
-	if config.IsByzantium(header.Number) {
-		pubStateDb.Finalise(true)
-	} else {
-		root = pubStateDb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
-	}
+	pubStateDb.Finalise(true)
 	*usedGas += gas
 
 	// Create a new pubReceipt for the transaction, storing the intermediate root and gas used by the tx
 	// based on the eip phase, we're passing wether the root touch-delete accounts.
-	pubReceipt := types.NewReceipt(root, failed, *usedGas)
+	pubReceipt := types.NewReceipt([]byte{}, failed, *usedGas)
 	pubReceipt.TxHash = tx.Hash()
 	pubReceipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the pubReceipt.
@@ -170,7 +163,7 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 // applyPrivateTx attempts to apply a private transaction to the given state database
 func tryApplyPrivateTx(config *configs.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, privateStateDb *state.StateDB,
 	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, error) {
-	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
+	msg, err := tx.AsMessage(types.MakeSigner(config))
 	if err != nil {
 		return nil, err
 	}

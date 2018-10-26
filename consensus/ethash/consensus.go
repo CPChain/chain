@@ -256,15 +256,7 @@ func (ethash *Ethash) CalcDifficulty(chain consensus.ChainReader, time uint64, p
 // the difficulty that a new block should have when created at time
 // given the parent block's time and difficulty.
 func CalcDifficulty(config *configs.ChainConfig, time uint64, parent *types.Header) *big.Int {
-	next := new(big.Int).Add(parent.Number, big1)
-	switch {
-	case config.IsByzantium(next):
-		return calcDifficultyByzantium(time, parent)
-	case config.IsHomestead(next):
-		return calcDifficultyHomestead(time, parent)
-	default:
-		return calcDifficultyFrontier(time, parent)
-	}
+	return calcDifficultyByzantium(time, parent)
 }
 
 // Some weird constants to avoid constant memory allocs for them.
@@ -473,7 +465,7 @@ func (ethash *Ethash) Prepare(chain consensus.ChainReader, header *types.Header)
 func (ethash *Ethash) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
 	// Accumulate any block and uncle rewards and commit the final state root
 	accumulateRewards(chain.Config(), state, header, uncles)
-	header.StateRoot = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
+	header.StateRoot = state.IntermediateRoot(true)
 
 	// Header seems complete, assemble into a block and return
 	return types.NewBlock(header, txs, receipts), nil
@@ -491,9 +483,7 @@ var (
 func accumulateRewards(config *configs.ChainConfig, state *state.StateDB, header *types.Header, uncles []*types.Header) {
 	// Select the correct block reward based on chain progression
 	blockReward := FrontierBlockReward
-	if config.IsByzantium(header.Number) {
-		blockReward = ByzantiumBlockReward
-	}
+	blockReward = ByzantiumBlockReward
 	// Accumulate the rewards for the miner and any included uncles
 	reward := new(big.Int).Set(blockReward)
 	r := new(big.Int)
@@ -514,6 +504,6 @@ func (ethash *Ethash) SetCommitteeNetworkHandler(committeeNetworkHandler consens
 	return nil
 }
 
-func (ethash *Ethash) IsSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
+func (ethash *Ethash) IsFutureSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
 	return true, nil
 }

@@ -66,17 +66,6 @@ var (
 	// block has a beneficiary set to non-zeroes.
 	errInvalidCheckpointBeneficiary = errors.New("beneficiary in checkpoint block non-zero")
 
-	// errInvalidCheckpointApplyNumber
-	// errInvalidCheckpointApplyNumber = errors.New("invalid checkpoint apply number")
-
-	// errInvalidVote is returned if a nonce value is something else that the two
-	// allowed constants of 0x00..0 or 0xff..f.
-	// errInvalidVote = errors.New("vote nonce not 0x00..0 or 0xff..f")
-
-	// errInvalidCheckpointVote is returned if a checkpoint/epoch transition block
-	// has a vote nonce set to non-zeroes.
-	// errInvalidCheckpointVote = errors.New("vote nonce in checkpoint block non-zero")
-
 	// errMissingVanity is returned if a block's extra-data section is shorter than
 	// 32 bytes, which is required to store the signer vanity.
 	errMissingVanity = errors.New("extra-data 32 byte vanity prefix missing")
@@ -96,11 +85,11 @@ var (
 	// the previous block's timestamp + the minimum block period.
 	ErrInvalidTimestamp = errors.New("invalid timestamp")
 
-	// errInvalidVotingChain is returned if an authorization list is attempted to
+	// errInvalidChain is returned if an authorization list is attempted to
 	// be modified via out-of-range or non-contiguous headers.
-	errInvalidVotingChain = errors.New("invalid voting chain")
+	errInvalidChain = errors.New("invalid voting chain")
 
-	// --- our new error types ---
+	// --- new error types ---
 
 	// errMultiBlocksInOneHeight is returned if there is multi blocks in one height in the chain.
 	errMultiBlocksInOneHeight = errors.New("multi blocks in one height")
@@ -221,7 +210,7 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 // rewards given, and returns the final block.
 func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
 	// No block rewards in PoA, so the state remains as is and uncles are dropped
-	header.StateRoot = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
+	header.StateRoot = state.IntermediateRoot(true)
 
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil
@@ -337,21 +326,22 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 	}}
 }
 
+// GAPIs is APIs for dpor.
 func (d *Dpor) GAPIs(chain consensus.ChainReader) []apis.API {
 	return []apis.API{}
 }
 
-// IsSigner implements Validator.
-func (d *Dpor) IsSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
+// IsFutureSigner implements Validator.
+func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	// TODO: @liuq this is wrong, fix this.
-	return true, nil
-
+	// TODO: remove comments.
 	// snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
 	// if err != nil {
 	// 	return false, err
 	// }
 	// return snap.isFutureSigner(address, number), nil
+
+	return true, nil
 }

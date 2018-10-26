@@ -19,9 +19,8 @@ package dpor
 
 import (
 	"bytes"
-	"sync"
-
 	"math/big"
+	"sync"
 
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
@@ -81,6 +80,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 	hash := header.Hash()
 
+	// If header.Extra format is invalid, return
 	if len(header.Extra) < extraSeal {
 		return common.Address{}, []common.Address{}, errMissingSignature
 	}
@@ -89,8 +89,10 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	// header.Extra[extraVanity:Committee:leader-sig]
 	// header.Extra2[signer1-sig:...:signerN-sig]
 
+	// Retrieve leader's signature
 	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
-	// signersSig := header.Extra2[:]
+
+	// Retrieve signers' signatures
 	ss, err := header.DecodedExtra2(types.TypeExtra2SignaturesDecoder)
 	if err != nil {
 		return common.Address{}, []common.Address{}, err
@@ -98,11 +100,11 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	signersSig := ss.Data
 
 	// Recover the public key and the Ethereum address of leader.
+	var leader common.Address
 	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig)
 	if err != nil {
 		return common.Address{}, []common.Address{}, err
 	}
-	var leader common.Address
 	copy(leader[:], crypto.Keccak256(leaderPubkey[1:])[12:])
 
 	// Cache leader signature.
@@ -119,9 +121,9 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		return leader, []common.Address{}, errInvalidSigBytes
 	}
 
+	// Recover the public key and the Ethereum address of signers one by one.
 	var signers []common.Address
 	for i := 0; i < len(signersSig)/extraSeal; i++ {
-		// Recover the public key and the Ethereum address of signers one by one.
 		signerSig := signersSig[i*extraSeal : (i+1)*extraSeal]
 
 		noSigner := bytes.Equal(signerSig, make([]byte, extraSeal))
@@ -134,8 +136,6 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 			var signer common.Address
 			copy(signer[:], crypto.Keccak256(signerPubkey[1:])[12:])
 
-			//fmt.Println("signer hex:", signer.Hex())
-			//fmt.Println("signerSig hex:", common.Bytes2Hex(signerSig))
 			// Cache it!
 			sigs, _ := sigcache.Get(hash)
 			sigs.(map[common.Address][]byte)[signer] = signerSig
@@ -155,6 +155,7 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 	accept := false
 	hash := header.Hash()
 
+	// Retrieve signatures of this header from cache
 	if sigs, known := sigcache.Get(hash); known {
 		s := sigs.(map[common.Address][]byte)
 		for _, signer := range signers {
@@ -170,6 +171,7 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 	if d.percentagePBFT(numSigs, epochL) {
 		accept = true
 	}
+
 	return accept, nil
 }
 
