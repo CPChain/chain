@@ -1,18 +1,15 @@
 package rpt
 
 import (
+	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"context"
-	"crypto/ecdsa"
 	"errors"
 	"fmt"
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
-	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/golang-lru"
@@ -56,22 +53,6 @@ var (
 		common.HexToAddress("0x3030303030303030303030303030303030303030"),
 	}
 )
-
-var (
-	key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	addr   = crypto.PubkeyToAddress(key.PublicKey)
-)
-
-func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
-	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	deployTransactor.Value = amount
-	addr, _, _, err := contract.DeployPdash(deployTransactor, backend)
-	if err != nil {
-		return common.Address{}, err
-	}
-	backend.Commit()
-	return addr, nil
-}
 
 func newHeader() *types.Header {
 	return &types.Header{
@@ -249,7 +230,7 @@ func TestBasicCollector_GetRptInfosNew(t *testing.T) {
 }
 
 func getCollectorConfig(chainId int64) *CollectorConfig {
-	client, _ := NewEthClient(endpoint)
+	client := backends.NewDporSimulatedBackend(core.GenesisAlloc{Addr: {Balance: big.NewInt(1000000000000)}})
 	config := &CollectorConfig{
 		LeaderReward:   80,
 		ProxyReward:    0,
@@ -268,10 +249,8 @@ func getCollectorConfig(chainId int64) *CollectorConfig {
 			Epoch:  3,
 			Period: 1,
 		},
-		committeeNamber:       20,
-		Client:                client,
-		proxyContractAddress:  common.HexToAddress(""),
-		uploadContractAddress: common.HexToAddress(""),
+		committeeNamber: 20,
+		Client:          client,
 	}
 	return config
 }
@@ -307,9 +286,12 @@ func TestGetIfLeaderIsLeader(t *testing.T) {
 }
 
 func TestGetUploadReward(t *testing.T) {
+	DeployRegister()
 	bc := createBasicCollector(t, 5)
-	LeaderReward, _ := bc.getUploadReward(address, 10)
-	assert.Equal(t, float64(0), LeaderReward)
+	bc.Config.Client = ContractBackend
+	bc.Config.uploadContractAddress = RegisterContractAddr
+	LeaderReward, _ := bc.getUploadReward(Addr, 10)
+	assert.Equal(t, float64(15), LeaderReward)
 }
 
 func TestGetProxyReward(t *testing.T) {
