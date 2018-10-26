@@ -335,10 +335,6 @@ func (q *queue) Schedule(headers []*types.Header, from uint64) []*types.Header {
 		q.blockTaskPool[hash] = header
 		q.blockTaskQueue.Push(header, -float32(header.Number.Uint64()))
 
-		if q.mode == FastSync {
-			q.receiptTaskPool[hash] = header
-			q.receiptTaskQueue.Push(header, -float32(header.Number.Uint64()))
-		}
 		inserts = append(inserts, header)
 		q.headerHead = hash
 		from++
@@ -510,9 +506,6 @@ func (q *queue) reserveHeaders(p *peerConnection, count int, taskPool map[common
 		}
 		if q.resultCache[index] == nil {
 			components := 1
-			if q.mode == FastSync {
-				components = 2
-			}
 			q.resultCache[index] = &fetchResult{
 				Pending: components,
 				Hash:    hash,
