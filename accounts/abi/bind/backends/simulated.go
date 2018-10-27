@@ -86,7 +86,6 @@ type SimulatedBackend struct {
 // for testing purposes.
 func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	database := ethdb.NewMemDatabase()
-
 	genesis := core.DefaultGenesisBlock()
 	genesis.Alloc = alloc
 	genesis.MustCommit(database)

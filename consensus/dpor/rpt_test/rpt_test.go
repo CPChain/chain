@@ -1,7 +1,6 @@
 package rpt_test
 
 import (
-	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"context"
 	"errors"
 	"fmt"
@@ -11,7 +10,6 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/consensus/dpor/uploadConfig"
-	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/golang-lru"
@@ -182,6 +180,7 @@ func TestCache(t *testing.T) {
 }
 func TestBasicCollector_GetRptInfos(t *testing.T) {
 	bc := createBasicCollector(t, 4)
+	bc.Config.Client = uploadConfig.ContractBackend
 	var addresses []common.Address
 
 	for i := 0; i < 6; i++ {
@@ -232,7 +231,7 @@ func TestBasicCollector_GetRptInfosNew(t *testing.T) {
 }
 
 func getCollectorConfig(chainId int64) *rpt.CollectorConfig {
-	Client := backends.NewDporSimulatedBackend(core.GenesisAlloc{uploadConfig.Addr: {Balance: big.NewInt(1000000000000)}})
+	Client := uploadConfig.ContractBackend
 	config := &rpt.CollectorConfig{
 		LeaderReward:   80,
 		ProxyReward:    0,

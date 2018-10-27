@@ -30,6 +30,36 @@ import (
 	"github.com/hashicorp/golang-lru"
 )
 
+// Signatures stores sigs in a block
+type Signatures struct {
+	lock sync.RWMutex
+	sigs map[common.Address][]byte
+}
+
+// GetSig gets addr's sig
+func (s *Signatures) GetSig(addr common.Address) (sig []byte, ok bool) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	sig, ok = s.sigs[addr]
+	return sig, ok
+}
+
+// SetSig sets addr's sig
+func (s *Signatures) SetSig(addr common.Address, sig []byte) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.sigs[addr] = sig
+}
+
+// IsCheckPoint returns if a given block number is in a checkpoint with given
+// epochLength and viewLength
+func IsCheckPoint(number uint64, epochL uint64, viewL uint64) bool {
+	if epochL == 0 || viewL == 0 {
+		return true
+	}
+	return number%(epochL*viewL) == 0
+}
+
 type dporUtil interface {
 	sigHash(header *types.Header) (hash common.Hash)
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)
@@ -109,10 +139,12 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 	// Cache leader signature.
 	if sigs, known := sigcache.Get(hash); known {
-		sigs.(map[common.Address][]byte)[leader] = leaderSig
+		sigs.(*Signatures).SetSig(leader, leaderSig)
 	} else {
-		sigs := make(map[common.Address][]byte)
-		sigs[leader] = leaderSig
+		sigs := &Signatures{
+			sigs: make(map[common.Address][]byte),
+		}
+		sigs.SetSig(leader, leaderSig)
 		sigcache.Add(hash, sigs)
 	}
 
@@ -138,8 +170,9 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 			// Cache it!
 			sigs, _ := sigcache.Get(hash)
-			sigs.(map[common.Address][]byte)[signer] = signerSig
+			sigs.(*Signatures).SetSig(signer, signerSig)
 
+			// Add signer to known signers
 			signers = append(signers, signer)
 		}
 	}
@@ -157,9 +190,8 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 
 	// Retrieve signatures of this header from cache
 	if sigs, known := sigcache.Get(hash); known {
-		s := sigs.(map[common.Address][]byte)
 		for _, signer := range signers {
-			if _, ok := s[signer]; ok {
+			if _, ok := sigs.(*Signatures).GetSig(signer); ok {
 				numSigs++
 			}
 		}
