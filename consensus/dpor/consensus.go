@@ -35,13 +35,10 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
-	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
-
 	epochLength = uint(4) // Default number of signers.
-	viewLength  = uint(4) // Default number of blocks one signer can generate in one committee.
+	viewLength  = uint(3) // Default number of blocks one signer can generate in one committee.
 
-	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
+	blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -65,17 +62,6 @@ var (
 	// block has a beneficiary set to non-zeroes.
 	errInvalidCheckpointBeneficiary = errors.New("beneficiary in checkpoint block non-zero")
 
-	// errInvalidCheckpointApplyNumber
-	// errInvalidCheckpointApplyNumber = errors.New("invalid checkpoint apply number")
-
-	// errInvalidVote is returned if a nonce value is something else that the two
-	// allowed constants of 0x00..0 or 0xff..f.
-	// errInvalidVote = errors.New("vote nonce not 0x00..0 or 0xff..f")
-
-	// errInvalidCheckpointVote is returned if a checkpoint/epoch transition block
-	// has a vote nonce set to non-zeroes.
-	// errInvalidCheckpointVote = errors.New("vote nonce in checkpoint block non-zero")
-
 	// errMissingVanity is returned if a block's extra-data section is shorter than
 	// 32 bytes, which is required to store the signer vanity.
 	errMissingVanity = errors.New("extra-data 32 byte vanity prefix missing")
@@ -95,11 +81,11 @@ var (
 	// the previous block's timestamp + the minimum block period.
 	ErrInvalidTimestamp = errors.New("invalid timestamp")
 
-	// errInvalidVotingChain is returned if an authorization list is attempted to
+	// errInvalidChain is returned if an authorization list is attempted to
 	// be modified via out-of-range or non-contiguous headers.
-	errInvalidVotingChain = errors.New("invalid voting chain")
+	errInvalidChain = errors.New("invalid voting chain")
 
-	// --- our new error types ---
+	// --- new error types ---
 
 	// errMultiBlocksInOneHeight is returned if there is multi blocks in one height in the chain.
 	errMultiBlocksInOneHeight = errors.New("multi blocks in one height")
@@ -113,7 +99,7 @@ var (
 	// errNoSigsInCache is returned if the cache is unable to store and return sigs.
 	errNoSigsInCache = errors.New("signatures not found in cache")
 
-	// --- our new error types ---
+	// --- new error types end ---
 
 	// errVerifyUncleNotAllowed is returned when verify uncle block.
 	errVerifyUncleNotAllowed = errors.New("uncles not allowed")
@@ -190,13 +176,11 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	}
 	header.Extra = header.Extra[:extraVanity]
 
-	// if number%d.config.Epoch == 0 {
+	// Set header.Extra and header.Extra2
 	for _, signer := range snap.SignersOf(number) {
 		header.Extra = append(header.Extra, signer[:]...)
 	}
-	// }
 	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
-	// We suppose each signer only produces one block.
 	header.Extra2 = make([]byte, extraSeal*int(d.config.Epoch)+1)
 
 	// Mix digest is reserved for now, set to empty
@@ -218,7 +202,7 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 // rewards given, and returns the final block.
 func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
 	// No block rewards in PoA, so the state remains as is and uncles are dropped
-	header.StateRoot = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
+	header.StateRoot = state.IntermediateRoot(true)
 
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil
@@ -268,26 +252,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, consensus.ErrUnauthorized
 	}
 
-	/*
-		// TODO: fix this logic.
-		// Sweet, the protocol permits us to sign the block, wait for our time
-		delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
-		if header.Difficulty.Cmp(diffNoTurn) == 0 {
-			// It's not our turn explicitly to sign, delay it a bit
-			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
-			delay += time.Duration(rand.Int63n(int64(wiggle)))
-
-			log.Debug("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
-		}
-		log.Debug("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
-
-		select {
-		case <-stop:
-			return nil, nil
-		case <-time.After(delay):
-		}
-	*/
-	// set coinbase
+	// Set coinbase, aka leader of this block.
 	header.Coinbase = signer
 
 	// Sign all the things!
@@ -338,17 +303,17 @@ func (d *Dpor) GAPIs(chain consensus.ChainReader) []api.API {
 	return []api.API{}
 }
 
-// IsSigner implements Validator.
-func (d *Dpor) IsSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
+// IsFutureSigner implements Validator.
+func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	// TODO: @liuq this is wrong, fix this.
-	return true, nil
-
+	// TODO: remove comments.
 	// snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
 	// if err != nil {
 	// 	return false, err
 	// }
 	// return snap.isFutureSigner(address, number), nil
+
+	return true, nil
 }

@@ -4,6 +4,7 @@ package rpt
 // then calculates the reputations of candidates.
 
 import (
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
@@ -89,7 +90,7 @@ type CollectorConfig struct {
 	Phi                   float64 // leaderReward coefficient
 	Omega                 float64 // txVolume coefficient
 	WindowSize            uint64  // window size, how many blocks to recall.
-	Client                *ethclient.Client
+	Client                bind.ContractBackend
 	Committeadress        []common.Address
 	ChainConfig           *configs.ChainConfig
 	DporConfig            *configs.DporConfig
@@ -247,11 +248,11 @@ func (bc *BasicCollector) getChainRptInfo(address common.Address, addresses []co
 
 func (bc *BasicCollector) getContractRptInfo(address common.Address, addresses []common.Address, number uint64) ContractRptInfo {
 	uploadReward, proxyReward := 0., 0.
-	ur, err := bc.getUploadReward(address, 0)
+	ur, err := bc.getUploadReward(address, number)
 	if err != nil {
 		log.Warn("getContractRptInfo getUploadReward error", address, err)
 	}
-	pr, err := bc.getProxyReward(address, 0)
+	pr, err := bc.getProxyReward(address, number)
 	if err != nil {
 		log.Warn("getContractRptInfo getProxyReward error", address, err)
 	}
@@ -380,24 +381,27 @@ func (bc *BasicCollector) getMaintenance(address common.Address, number uint64) 
 }
 
 func (bc *BasicCollector) getUploadReward(address common.Address, number uint64) (float64, error) {
-	// TODO: implement this.
+
 	uploadReward := 0.0
 	upload, err := register.NewRegister(bc.Config.uploadContractAddress, bc.Config.Client)
+	if err != nil {
+		log.Warn("NewRegister error", address, err)
+		return uploadReward, err
+	}
 	fileNumber, err := upload.GetUploadCount(nil, address)
 	if err != nil {
 		log.Warn("GetUploadCount error", address, err)
 		return uploadReward, err
 	}
-	if fileNumber == nil {
+	if float64(fileNumber.Int64()) == 0 {
 		return uploadReward, nil
 	} else {
-		uploadReward := float64(fileNumber.Int64() * 5)
+		uploadReward := float64(fileNumber.Int64()) * 5
 		return uploadReward, err
 	}
 }
 
 func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) (float64, error) {
-	// TODO: implement this need abi of contracts
 	ProxyReward := 0.0
 	var proxyaddresses []common.Address
 	pdash, err := contract.NewPdash(bc.Config.proxyContractAddress, bc.Config.Client)
@@ -448,25 +452,6 @@ func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) 
 	return ProxyReward, err
 }
 
-//func (bc *BasicCollector) getuploadRecord(addresses []common.Address, number uint64) ([]common.Address, error) {
-//	//TODO :add the real contracts abi
-//	var uploadadress []common.Address
-//	upload, err := register.NewRegister(bc.Config.contractAddress, bc.Config.Client)
-//	if err != nil {
-//		log.Warn("NewCampaign error", bc.Config.uploadAddress, err)
-//		return uploadadress, err
-//	}
-//	for _, address := range addresses {
-//		file, err := upload.UploadHistory(nil, address, big.NewInt(int64(number)))
-//		if err != nil {
-//			log.Warn("UploadHistory error", bc.Config.contractAddress, err)
-//		}
-//		if file.FileName != "" {
-//			uploadadress = append(uploadadress, address)
-//		}
-//	}
-//	return uploadadress, err
-//}
 func (bc *BasicCollector) getCommiteetmember(header *types.Header) []common.Address {
 	committee := make([]common.Address, (len(header.Extra)-extraVanity-extraSeal)/common.AddressLength)
 	for i := 0; i < len(committee); i++ {

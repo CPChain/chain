@@ -16,26 +16,6 @@
 
 package tracers
 
-import (
-	"encoding/json"
-	"io/ioutil"
-	"math/big"
-	"path/filepath"
-	"reflect"
-	"strings"
-	"testing"
-
-	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/tests"
-	"bitbucket.org/cpchain/chain/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/rlp"
-)
-
 // To generate a new callTracer test, copy paste the makeTest method below into
 // a Geth console and call it with a transaction hash you which to export.
 
@@ -86,6 +66,7 @@ var makeTest = function(tx, rewind) {
 }
 */
 
+/* TODO: Rewrite the unittest in future.
 // callTrace is the result of a callTracer run.
 type callTrace struct {
 	Type    string          `json:"type"`
@@ -145,7 +126,8 @@ func TestCallTracer(t *testing.T) {
 			if err := rlp.DecodeBytes(common.FromHex(test.Input), tx); err != nil {
 				t.Fatalf("failed to parse testcase input: %v", err)
 			}
-			signer := types.MakeSigner(test.Genesis.Config, new(big.Int).SetUint64(uint64(test.Context.Number)))
+
+			signer := types.MakeSigner(test.Genesis.Config)
 			origin, _ := signer.Sender(tx)
 
 			context := vm.Context{
@@ -191,3 +173,5 @@ func TestCallTracer(t *testing.T) {
 		})
 	}
 }
+
+*/

@@ -113,15 +113,15 @@ contract Pdash {
 
     uint public numOrders = 0;
     uint public numDisputes = 0;
-    // TODO let records to be public or only let relevant address to be a accessible
     mapping(uint => OrderInfo) public orderRecords;
     mapping(uint => DisputeInfo) public disputeRecords;
 
     mapping(address => uint) public proxyCredits;
-
+    
     mapping(address => uint) public proxyDeposits;
     mapping(uint => uint[]) public blockOrders;
     mapping(uint => uint) public blockOrdersLength;
+
     // Security Checks
     modifier onlyBefore(uint time) {require(now < time); _;}
     modifier onlyAfter(uint time) {require(now > time); _;}
@@ -136,7 +136,7 @@ contract Pdash {
     }
     modifier inState(uint id, State _state) {require(orderRecords[id].state == _state); _;}
     modifier inDisputeState(uint id, DisputeState _state) {require(disputeRecords[id].disputeState == _state); _;}
-
+    
     modifier onlyTrent() {require(msg.sender == trentAddress); _;}
 
     constructor() public {
@@ -228,7 +228,7 @@ contract Pdash {
         emit OrderWithdrawn(id, now);
     }
 
-
+//buyer confirm tx
     function buyerConfirmDeliver(uint id)
         public
         onlyBuyer(id)
@@ -247,7 +247,7 @@ contract Pdash {
 
         emit BuyerConfirmed(id, now);
     }
-
+//buyer dispute tx
     function buyerDispute(uint id)
         public
         onlyBuyer(id)
@@ -270,7 +270,7 @@ contract Pdash {
         emit BuyerDisputed(id, now);
 
     }
-
+//buyer agreee or not the tx
     function buyerAgreeOrNot(uint id, bool if_agree)
         public
         onlyBuyer(id)
@@ -288,7 +288,7 @@ contract Pdash {
         }
 
     }
-
+//buyer give a Score to buyer
     function buyerRateProxy(uint id, uint rate)
         public
         onlyBuyer(id)
@@ -297,7 +297,7 @@ contract Pdash {
         require(rate > 0 && rate < 10);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].add(rate);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].div(2);
-
+        
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].add(rate);
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
         if(orderRecords[id].state == State.Finished){
@@ -307,7 +307,7 @@ contract Pdash {
         }
 
     }
-
+//seller confirm the order
     function sellerConfirm(uint id)
         public
         onlySeller(id)
@@ -320,7 +320,7 @@ contract Pdash {
 
         emit SellerConfirmed(id, msg.value, now);
     }
-
+//seller agree oe not to the proxy
     function sellerAgreeOrNot(uint id, bool if_agree)
         public
         onlySeller(id)
@@ -358,7 +358,7 @@ contract Pdash {
 
         emit SellerClaimTimeout(id, now);
     }
-
+//seller score to proxy
     function sellerRateProxy(uint id, uint rate)
         public
         onlySeller(id)
@@ -367,7 +367,7 @@ contract Pdash {
         require(rate > 0 && rate < 10);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].add(rate);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].div(2);
-
+        
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].add(rate);
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
         if(orderRecords[id].state == State.Finished){
@@ -377,7 +377,7 @@ contract Pdash {
         }
 
     }
-
+/proxy deposit
     function proxyDeposit()
         public
         payable
@@ -397,7 +397,7 @@ contract Pdash {
 
         emit ProxyWithdrawn(msg.sender, value, now);
     }
-
+//proxy git the data
     function proxyFetched(uint id)
         public
         onlyProxy(id)
@@ -408,7 +408,7 @@ contract Pdash {
 
         emit ProxyFetched(id, now);
     }
-
+//proxy give buyer the data address
     function proxyDelivered(bytes32 deliverHash, uint id)
         public
         onlyProxy(id)
