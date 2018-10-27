@@ -377,7 +377,7 @@ contract Pdash {
         }
 
     }
-/proxy deposit
+    //proxy deposit
     function proxyDeposit()
         public
         payable
