@@ -36,15 +36,6 @@ const (
 	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
-// IsCheckPoint returns if a given block number is in a checkpoint with given
-// epochLength and viewLength
-func IsCheckPoint(number uint64, epochL uint64, viewL uint64) bool {
-	if epochL == 0 || viewL == 0 {
-		return true
-	}
-	return number%(epochL*viewL) == 0
-}
-
 // Dpor is the proof-of-reputation consensus engine proposed to support the
 // cpchain testnet.
 type Dpor struct {
