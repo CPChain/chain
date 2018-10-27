@@ -17,7 +17,6 @@
 package cpc
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -647,12 +646,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		request.Block.ReceivedAt = msg.ReceivedAt
 		request.Block.ReceivedFrom = p
 
-		log.Debug("received propgrated block from", "peer", p)
-		log.Debug("received block number", "n", request.Block.NumberU64())
-		log.Debug("received block hash", "hash", request.Block.Hash())
-		log.Debug("received block extra2", "extra2", "\n")
-		log.Debug("\n" + hex.Dump(request.Block.Extra2()))
-
 		// Mark the peer as owning the block and schedule it for import
 		p.MarkBlock(request.Block.Hash())
 		pm.fetcher.Enqueue(p.id, request.Block)
@@ -674,20 +667,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			if trueTD.Cmp(pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())) > 0 {
 				go pm.synchronise(p)
 			}
-		}
-
-		// TODO @Liuq, fix this.
-		number := request.Block.NumberU64()
-		currentNum := pm.blockchain.CurrentBlock().NumberU64()
-		if number <= currentNum {
-			return nil
-		}
-
-		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
-		if err == consensus.ErrNewSignedHeader {
-			err := err.(*consensus.ErrNewSignedHeaderType)
-			header := err.SignedHeader
-			go pm.BroadcastSignedHeader(header)
 		}
 
 	case msg.Code == TxMsg:
@@ -740,9 +719,50 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// do signing in dpor, return consensus.ErrNewSignedHeader
 		// then broadcast to remote committee.
 
+		var request newBlockData
+		if err := msg.Decode(&request); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		request.Block.ReceivedAt = msg.ReceivedAt
+		request.Block.ReceivedFrom = p
+
+		p.MarkPendingBlock(request.Block.Hash())
+		pm.fetcher.Enqueue(p.id, request.Block)
+
+		number := request.Block.NumberU64()
+		currentNum := pm.blockchain.CurrentBlock().NumberU64()
+		if number <= currentNum {
+			return nil
+		}
+
+		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
+		if err == consensus.ErrNewSignedHeader {
+			err := err.(*consensus.ErrNewSignedHeaderType)
+			header := err.SignedHeader
+			go pm.BroadcastSignedHeader(header)
+		}
+
 	case msg.Code == NewBlockGeneratedHashesMsg:
 		// if received a new generated header of block,
 		// notify the fetcher to fetch the block
+		var announces newBlockHashesData
+		if err := msg.Decode(&announces); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		// Mark the hashes as present at the remote node
+		for _, block := range announces {
+			p.MarkPendingBlock(block.Hash)
+		}
+		// Schedule all the unknown hashes for retrieval
+		unknown := make(newBlockHashesData, 0, len(announces))
+		for _, block := range announces {
+			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
+				unknown = append(unknown, block)
+			}
+		}
+		for _, block := range unknown {
+			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+		}
 
 	case msg.Code == NewSignedHeaderMsg:
 		// collect the sigs in the header.
@@ -805,7 +825,7 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 func (pm *ProtocolManager) broadcastGeneratedBlock(block *types.Block) {
 	committee := pm.peers.committee
 	for _, peer := range committee {
-		peer.AsyncSendNewBlock(block, big.NewInt(0))
+		peer.AsyncSendNewPendingBlock(block)
 	}
 }
 
@@ -828,7 +848,8 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 	peers := pm.peers.PeersWithoutBlock(hash)
 
 	if ifMined {
-		peers = pm.peers.CommitteeWithoutBlock(hash)
+		pm.broadcastGeneratedBlock(block)
+		return
 	}
 
 	// If propagation is requested, send to a subset of the peer
