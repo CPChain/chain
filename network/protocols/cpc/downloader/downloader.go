@@ -25,19 +25,17 @@ import (
 	"sync/atomic"
 	"time"
 
-	"bitbucket.org/cpchain/chain/consensus"
-	lru "github.com/hashicorp/golang-lru"
-
 	ethereum "bitbucket.org/cpchain/chain"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/metrics"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -1609,11 +1607,6 @@ func (d *Downloader) qosTuner() {
 
 		// Log the new QoS values and sleep until the next RTT
 		log.Debug("Recalculated downloader QoS values", "rtt", rtt, "confidence", float64(conf)/1000000.0, "ttl", d.requestTTL())
-
-		log.Debug("downloader.peers", "peers", d.peers)
-		for peer := range d.peers.peers {
-			log.Debug("peer", "id", peer)
-		}
 
 		select {
 		case <-d.quitCh:
