@@ -1425,20 +1425,20 @@ func (api *PublicDebugAPI) SeedHash(ctx context.Context, number uint64) (string,
 	return fmt.Sprintf("0x%x", ethash.SeedHash(number)), nil
 }
 
-// DebugManager is the collection of Ethereum APIs exposed over the private
+// PrivateDebugAPI is the collection of Ethereum APIs exposed over the private
 // debugging endpoint.
-type DebugManager struct {
+type PrivateDebugAPI struct {
 	b Backend
 }
 
-// NewDebugManager creates a new API definition for the private debug methods
+// NewPrivateDebugAPI creates a new API definition for the private debug methods
 // of the Ethereum service.
-func NewDebugManager(b Backend) *DebugManager {
-	return &DebugManager{b: b}
+func NewPrivateDebugAPI(b Backend) *PrivateDebugAPI {
+	return &PrivateDebugAPI{b: b}
 }
 
 // ChaindbProperty returns leveldb properties of the chain database.
-func (api *DebugManager) ChaindbProperty(property string) (string, error) {
+func (api *PrivateDebugAPI) ChaindbProperty(property string) (string, error) {
 	ldb, ok := api.b.ChainDb().(interface {
 		LDB() *leveldb.DB
 	})
@@ -1453,7 +1453,7 @@ func (api *DebugManager) ChaindbProperty(property string) (string, error) {
 	return ldb.LDB().GetProperty(property)
 }
 
-func (api *DebugManager) ChaindbCompact() error {
+func (api *PrivateDebugAPI) ChaindbCompact() error {
 	ldb, ok := api.b.ChainDb().(interface {
 		LDB() *leveldb.DB
 	})
@@ -1472,7 +1472,7 @@ func (api *DebugManager) ChaindbCompact() error {
 }
 
 // SetHead rewinds the head of the blockchain to a previous block.
-func (api *DebugManager) SetHead(number hexutil.Uint64) {
+func (api *PrivateDebugAPI) SetHead(number hexutil.Uint64) {
 	api.b.SetHead(uint64(number))
 }
 

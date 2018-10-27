@@ -281,14 +281,12 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 }
 
 func (s *CpchainService) GAPIs() []api.API {
-	gapis := ethapi.GetGAPIs(s.APIBackend)
-	return append(gapis, []api.API{
-		NewPublicEthereumAPIServer(s),
-		NewPublicMinerAPIServer(s),
-		NewMineControlServer(s),
-		NewChainManagerServer(s),
-		NewPublicDebugAPIServer(s),
-		NewDebugManagerServer(s.chainConfig, s),
+    apis := ethapi.GetGAPIs(s.APIBackend)
+    return append(apis, []api.API{
+        NewDebugDumper(s),
+        NewDebugManager(s.chainConfig, s),
+        NewMinerManager(s),
+        NewAdminManager(s),
 	}...)
 }
 
@@ -323,7 +321,7 @@ func (s *CpchainService) APIs() []rpc.API {
 		}, {
 			Namespace: "miner",
 			Version:   "1.0",
-			Service:   NewMinerManager(s),
+			Service:   NewPrivateMinerAPI(s),
 			Public:    false,
 		}, {
 			Namespace: "eth",
@@ -333,7 +331,7 @@ func (s *CpchainService) APIs() []rpc.API {
 		}, {
 			Namespace: "admin",
 			Version:   "1.0",
-			Service:   NewChainManager(s),
+			Service:   NewPrivateAdminAPI(s),
 		}, {
 			Namespace: "debug",
 			Version:   "1.0",
@@ -342,7 +340,7 @@ func (s *CpchainService) APIs() []rpc.API {
 		}, {
 			Namespace: "debug",
 			Version:   "1.0",
-			Service:   NewDebugManager(s.chainConfig, s),
+			Service:   NewPrivateDebugAPI(s.chainConfig, s),
 		}, {
 			Namespace: "net",
 			Version:   "1.0",

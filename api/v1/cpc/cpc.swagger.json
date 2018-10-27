@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "cpc.proto",
+    "title": "v1/cpc/cpc.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,14 +15,15 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1/cpc/accounts": {
+    "/api/v1/cpc/accounts": {
       "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
         "operationId": "Accounts",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicAccountAPIReply"
+              "$ref": "#/definitions/commonAddresses"
             }
           }
         },
@@ -37,252 +38,19 @@
           }
         ],
         "tags": [
-          "PublicAccountAPI"
+          "AccountReader"
         ]
       }
     },
-    "/apis/v1/cpc/gasPrice": {
+    "/api/v1/cpc/coinbase": {
       "post": {
-        "operationId": "GasPrice",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicInnerEthereumAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PublicInnerEthereumAPI"
-        ]
-      }
-    },
-    "/apis/v1/cpc/getWork": {
-      "post": {
-        "operationId": "GetWork",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PublicMinerAPI"
-        ]
-      }
-    },
-    "/apis/v1/cpc/mining": {
-      "post": {
-        "operationId": "Mining",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PublicMinerAPI"
-        ]
-      }
-    },
-    "/apis/v1/cpc/protocolVersion": {
-      "post": {
-        "operationId": "ProtocolVersion",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicInnerEthereumAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PublicInnerEthereumAPI"
-        ]
-      }
-    },
-    "/apis/v1/cpc/submitHashrate": {
-      "post": {
-        "operationId": "SubmitHashrate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicMinerAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicMinerAPI"
-        ]
-      }
-    },
-    "/apis/v1/cpc/submitWork": {
-      "post": {
-        "operationId": "SubmitWork",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicMinerAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicMinerAPI"
-        ]
-      }
-    },
-    "/apis/v1/cpc/syncing": {
-      "post": {
-        "operationId": "Syncing",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicInnerEthereumAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PublicInnerEthereumAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/blockNumber": {
-      "post": {
-        "operationId": "BlockNumber",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/call": {
-      "post": {
-        "operationId": "Call",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/coinbase": {
-      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
         "operationId": "Coinbase",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicEthereumAPIReply"
+              "$ref": "#/definitions/commonAddress"
             }
           }
         },
@@ -297,44 +65,19 @@
           }
         ],
         "tags": [
-          "PublicEthereumAPI"
+          "Coinbase"
         ]
       }
     },
-    "/apis/v1/personal/estimateGas": {
+    "/api/v1/cpc/gasPrice": {
       "post": {
-        "operationId": "EstimateGas",
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "GasPrice",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/etherbase": {
-      "post": {
-        "operationId": "Etherbase",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicEthereumAPIReply"
+              "$ref": "#/definitions/commonGasPrice"
             }
           }
         },
@@ -349,18 +92,19 @@
           }
         ],
         "tags": [
-          "PublicEthereumAPI"
+          "ChainStateReader"
         ]
       }
     },
-    "/apis/v1/personal/getBalance": {
+    "/api/v1/cpc/getBalance": {
       "post": {
+        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
         "operationId": "GetBalance",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
+              "$ref": "#/definitions/commonBalance"
             }
           }
         },
@@ -370,23 +114,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
+              "$ref": "#/definitions/cpcChainReaderRequest"
             }
           }
         ],
         "tags": [
-          "PublicBlockChainAPI"
+          "ChainReader"
         ]
       }
     },
-    "/apis/v1/personal/getBlockByHash": {
+    "/api/v1/cpc/getBlockByHash": {
       "post": {
+        "summary": "GetBlockByHash returns the requested block. When fullTx is true all transactions in the block are returned in full\ndetail, otherwise only the transaction hash is returned.",
         "operationId": "GetBlockByHash",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
+              "$ref": "#/definitions/commonBlock"
             }
           }
         },
@@ -396,23 +141,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
+              "$ref": "#/definitions/cpcChainReaderRequest"
             }
           }
         ],
         "tags": [
-          "PublicBlockChainAPI"
+          "ChainReader"
         ]
       }
     },
-    "/apis/v1/personal/getBlockByNumber": {
+    "/api/v1/cpc/getBlockByNumber": {
       "post": {
+        "summary": "Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not\nyet received the latest block headers from its pears. In case it is synchronizing:\n- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled",
         "operationId": "GetBlockByNumber",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
+              "$ref": "#/definitions/commonBlock"
             }
           }
         },
@@ -422,23 +168,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
+              "$ref": "#/definitions/cpcChainReaderRequest"
             }
           }
         ],
         "tags": [
-          "PublicBlockChainAPI"
+          "ChainReader"
         ]
       }
     },
-    "/apis/v1/personal/getBlockTransactionCountByHash": {
+    "/api/v1/cpc/getBlockCount": {
       "post": {
-        "operationId": "GetBlockTransactionCountByHash",
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "GetBlockCount",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/commonBlockNumber"
             }
           }
         },
@@ -448,101 +195,23 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/protobufEmpty"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "ChainReader"
         ]
       }
     },
-    "/apis/v1/personal/getBlockTransactionCountByNumber": {
-      "post": {
-        "operationId": "GetBlockTransactionCountByNumber",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicTransactionPoolAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/getCode": {
-      "post": {
-        "operationId": "GetCode",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/getRawTransactionByBlockHashAndIndex": {
-      "post": {
-        "operationId": "GetRawTransactionByBlockHashAndIndex",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicTransactionPoolAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/getRawTransactionByBlockNumberAndIndex": {
+    "/api/v1/cpc/getRawTransactionByBlockNumberAndIndex": {
       "post": {
         "operationId": "GetRawTransactionByBlockNumberAndIndex",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/cpcRawTransaction"
             }
           }
         },
@@ -552,75 +221,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/cpcTransactionPoolReaderRequest"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "TransactionPoolReader"
         ]
       }
     },
-    "/apis/v1/personal/getRawTransactionByHash": {
+    "/api/v1/cpc/getTransactionByBlockHashAndIndex": {
       "post": {
-        "operationId": "GetRawTransactionByHash",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicTransactionPoolAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/getStorageAt": {
-      "post": {
-        "operationId": "GetStorageAt",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/getTransactionByBlockHashAndIndex": {
-      "post": {
+        "summary": "GetBlockByHash returns the requested block. When fullTx is true all transactions in the block are returned in full\ndetail, otherwise only the transaction hash is returned.",
         "operationId": "GetTransactionByBlockHashAndIndex",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/commonTransaction"
             }
           }
         },
@@ -630,23 +248,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/cpcTransactionPoolReaderRequest"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "TransactionPoolReader"
         ]
       }
     },
-    "/apis/v1/personal/getTransactionByBlockNumberAndIndex": {
+    "/api/v1/cpc/getTransactionByBlockNumberAndIndex": {
       "post": {
+        "summary": "Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not\nyet received the latest block headers from its pears. In case it is synchronizing:\n- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled",
         "operationId": "GetTransactionByBlockNumberAndIndex",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/commonTransaction"
             }
           }
         },
@@ -656,23 +275,23 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/cpcTransactionPoolReaderRequest"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "TransactionPoolReader"
         ]
       }
     },
-    "/apis/v1/personal/getTransactionByHash": {
+    "/api/v1/cpc/getTransactionByHash": {
       "post": {
         "operationId": "GetTransactionByHash",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/commonTransaction"
             }
           }
         },
@@ -682,23 +301,23 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/cpcTransactionHash"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "TransactionPoolReader"
         ]
       }
     },
-    "/apis/v1/personal/getTransactionCount": {
+    "/api/v1/cpc/getTransactionCount": {
       "post": {
         "operationId": "GetTransactionCount",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/cpcTransactionCount"
             }
           }
         },
@@ -708,23 +327,77 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/cpcTransactionPoolReaderRequest"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "TransactionPoolReader"
         ]
       }
     },
-    "/apis/v1/personal/getTransactionReceipt": {
+    "/api/v1/cpc/getTransactionCountByBlockHash": {
+      "post": {
+        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "operationId": "GetTransactionCountByBlockHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionCount"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/commonBlockHash"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionCountByBlockNumber": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "GetTransactionCountByBlockNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionCount"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/commonBlockNumber"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionReceipt": {
       "post": {
         "operationId": "GetTransactionReceipt",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/commonReceipt"
             }
           }
         },
@@ -734,127 +407,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/cpcTransactionHash"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "TransactionPoolReader"
         ]
       }
     },
-    "/apis/v1/personal/getUncleByBlockHashAndIndex": {
+    "/api/v1/cpc/getWork": {
       "post": {
-        "operationId": "GetUncleByBlockHashAndIndex",
+        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "operationId": "GetWork",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/getUncleByBlockNumberAndIndex": {
-      "post": {
-        "operationId": "GetUncleByBlockNumberAndIndex",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/getUncleCountByBlockHash": {
-      "post": {
-        "operationId": "GetUncleCountByBlockHash",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/getUncleCountByBlockNumber": {
-      "post": {
-        "operationId": "GetUncleCountByBlockNumber",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicBlockChainAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicBlockChainAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/hashrate": {
-      "post": {
-        "operationId": "Hashrate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicEthereumAPIReply"
+              "$ref": "#/definitions/cpcWorks"
             }
           }
         },
@@ -869,18 +439,19 @@
           }
         ],
         "tags": [
-          "PublicEthereumAPI"
+          "MinerReader"
         ]
       }
     },
-    "/apis/v1/personal/pendingTransactions": {
+    "/api/v1/cpc/mining": {
       "post": {
-        "operationId": "PendingTransactions",
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "Mining",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/commonIsOk"
             }
           }
         },
@@ -895,18 +466,19 @@
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "MinerReader"
         ]
       }
     },
-    "/apis/v1/personal/resend": {
+    "/api/v1/cpc/protocolVersion": {
       "post": {
-        "operationId": "Resend",
+        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "operationId": "ProtocolVersion",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/protobufUInt32Value"
             }
           }
         },
@@ -916,23 +488,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/protobufEmpty"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
+          "ChainStateReader"
         ]
       }
     },
-    "/apis/v1/personal/sendRawTransaction": {
+    "/api/v1/cpc/syncing": {
       "post": {
-        "operationId": "SendRawTransaction",
+        "summary": "Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not\nyet received the latest block headers from its pears. In case it is synchronizing:\n- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled",
+        "operationId": "Syncing",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
+              "$ref": "#/definitions/commonSyncingInfo"
             }
           }
         },
@@ -942,221 +515,29 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
+              "$ref": "#/definitions/protobufEmpty"
             }
           }
         ],
         "tags": [
-          "PublicTransactionPoolAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/sendTransaction": {
-      "post": {
-        "operationId": "SendTransaction",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicTransactionPoolAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/sign": {
-      "post": {
-        "operationId": "Sign",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicTransactionPoolAPI"
-        ]
-      }
-    },
-    "/apis/v1/personal/signTransaction": {
-      "post": {
-        "operationId": "SignTransaction",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/cpcpbPublicTransactionPoolAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicTransactionPoolAPI"
+          "ChainStateReader"
         ]
       }
     }
   },
   "definitions": {
-    "cpcpbPublicAccountAPIReply": {
+    "commonAddress": {
       "type": "object",
       "properties": {
-        "accounts": {
-          "$ref": "#/definitions/protobufAny"
-        }
-      }
-    },
-    "cpcpbPublicBlockChainAPIReply": {
-      "type": "object",
-      "properties": {
-        "block_number": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "payload": {
-          "type": "string",
-          "format": "byte"
-        },
-        "estimate_gas": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "balance": {
-          "type": "string",
-          "format": "byte"
-        },
-        "block_info": {
-          "$ref": "#/definitions/protobufAny"
-        },
-        "code": {
-          "type": "string",
-          "format": "byte"
-        },
-        "storage": {
-          "type": "string",
-          "format": "byte"
-        },
-        "uncle_count": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "result": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "cpcpbPublicBlockChainAPIRequest": {
-      "type": "object",
-      "properties": {
-        "args": {
-          "$ref": "#/definitions/protobufAny",
-          "title": "CallArgs args = 1;"
-        },
-        "block_number": {
-          "type": "string",
-          "format": "uint64"
-        },
         "address": {
-          "type": "string",
-          "format": "byte"
-        },
-        "full_tx": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "key": {
           "type": "string"
-        },
-        "block_hash": {
-          "type": "string",
-          "format": "byte"
-        },
-        "index": {
-          "type": "string",
-          "format": "uint64"
         }
       }
     },
-    "cpcpbPublicEthereumAPIReply": {
+    "commonAddresses": {
       "type": "object",
       "properties": {
-        "address": {
-          "type": "string",
-          "format": "byte"
-        },
-        "rate": {
-          "type": "string",
-          "format": "uint64"
-        }
-      }
-    },
-    "cpcpbPublicInnerEthereumAPIReply": {
-      "type": "object",
-      "properties": {
-        "gas_price": {
-          "type": "string",
-          "format": "byte",
-          "title": "gas limit for trasaction"
-        },
-        "version": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "is_ok": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "sync_info": {
-          "$ref": "#/definitions/protobufAny"
-        }
-      }
-    },
-    "cpcpbPublicMinerAPIReply": {
-      "type": "object",
-      "properties": {
-        "mining": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "is_accepting": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "works": {
+        "addresses": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1164,81 +545,348 @@
         }
       }
     },
-    "cpcpbPublicMinerAPIRequest": {
+    "commonBalance": {
       "type": "object",
       "properties": {
-        "block_nonce": {
-          "type": "string",
-          "format": "byte"
-        },
-        "solution": {
-          "type": "string",
-          "format": "byte"
-        },
-        "digest": {
-          "type": "string",
-          "format": "byte"
-        },
-        "hashrate": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "id": {
-          "type": "string",
-          "format": "byte"
+        "balance": {
+          "type": "string"
         }
       }
     },
-    "cpcpbPublicTransactionPoolAPIReply": {
+    "commonBlock": {
       "type": "object",
       "properties": {
-        "count": {
+        "number": {
           "type": "string",
           "format": "uint64"
         },
-        "payload": {
+        "hash": {
+          "type": "string"
+        },
+        "parent_hash": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "mix_hash": {
+          "type": "string"
+        },
+        "logs_bloom": {
           "type": "string",
           "format": "byte"
         },
-        "rpc_transaction": {
-          "$ref": "#/definitions/protobufAny"
+        "state_root": {
+          "type": "string"
         },
-        "tx_receipt": {
+        "miner": {
+          "type": "string"
+        },
+        "difficulty": {
           "type": "string",
-          "format": "byte",
-          "title": "RPCTransaction rpc_transaction = 3;"
+          "format": "uint64"
         },
-        "tx_hash": {
-          "type": "string",
-          "format": "byte"
-        },
-        "sign_tx_result": {
-          "$ref": "#/definitions/protobufAny"
-        },
-        "tx_bytes": {
+        "extra_data": {
           "type": "string",
           "format": "byte"
         },
-        "fields": {
-          "$ref": "#/definitions/protobufAny"
-        },
-        "signature": {
+        "size": {
           "type": "string",
-          "format": "byte"
+          "format": "uint64"
         },
-        "pending_txs": {
-          "$ref": "#/definitions/protobufAny",
-          "title": "repeated RPCTransaction pending_txs = 10;"
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_used": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "transactions_root": {
+          "type": "string"
+        },
+        "receipts_root": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonTransaction"
+          }
         }
       }
     },
-    "cpcpbPublicTransactionPoolAPIRequest": {
+    "commonBlockHash": {
       "type": "object",
       "properties": {
         "block_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "commonBlockNumber": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "commonGasPrice": {
+      "type": "object",
+      "properties": {
+        "gas_price": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "commonIsOk": {
+      "type": "object",
+      "properties": {
+        "is_ok": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "commonLog": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "tx_index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "address": {
+          "type": "string"
+        },
+        "tx_hash": {
+          "type": "string"
+        },
+        "data": {
           "type": "string",
           "format": "byte"
         },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commonReceipt": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_used": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "cumulative_gas_used": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "transaction_index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "transaction_hash": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "contract_address": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "root": {
+          "type": "string",
+          "format": "byte"
+        },
+        "logs_bloom": {
+          "type": "string",
+          "format": "byte"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonLog"
+          }
+        }
+      }
+    },
+    "commonSyncingInfo": {
+      "type": "object",
+      "properties": {
+        "is_syncing": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "start_block": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "current_block": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "highest_block": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "pulled_states": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "known_states": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled"
+    },
+    "commonTransaction": {
+      "type": "object",
+      "properties": {
+        "tx_hash": {
+          "type": "string"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "v": {
+          "type": "string"
+        },
+        "r": {
+          "type": "string"
+        },
+        "s": {
+          "type": "string"
+        },
+        "transaction_index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_price": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "input": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "cpcChainReaderRequest": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "int64"
+        },
+        "is_full": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "ChainReaderRequest ChainReader request arguments"
+    },
+    "cpcRawTransaction": {
+      "type": "object",
+      "properties": {
+        "raw_transaction": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "cpcTransactionCount": {
+      "type": "object",
+      "properties": {
+        "transaction_count": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "cpcTransactionHash": {
+      "type": "object",
+      "properties": {
+        "transaction_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "cpcTransactionPoolReaderRequest": {
+      "type": "object",
+      "properties": {
         "block_number": {
           "type": "string",
           "format": "uint64"
@@ -1247,54 +895,41 @@
           "type": "string",
           "format": "uint64"
         },
-        "tx_hash": {
-          "type": "string",
-          "format": "byte"
+        "block_hash": {
+          "type": "string"
         },
         "address": {
-          "type": "string",
-          "format": "byte"
-        },
-        "send_tx_args": {
-          "$ref": "#/definitions/protobufAny"
-        },
-        "gas_price": {
-          "type": "string",
-          "format": "byte"
-        },
-        "gas_limit": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "payload": {
-          "type": "string",
-          "format": "byte"
-        },
-        "encoded_tx": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         }
       }
     },
-    "protobufAny": {
+    "cpcWorks": {
       "type": "object",
       "properties": {
-        "type_url": {
-          "type": "string",
-          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
-        },
-        "value": {
-          "type": "string",
-          "format": "byte",
-          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        "works": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "title": "Works a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty"
     },
     "protobufEmpty": {
       "type": "object",
       "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
       "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
+    "protobufUInt32Value": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The uint32 value."
+        }
+      },
+      "description": "Wrapper message for `uint32`.\n\nThe JSON representation for `UInt32Value` is JSON number."
     }
   }
 }

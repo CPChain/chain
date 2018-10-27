@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "miner.proto",
+    "title": "v1/miner/miner.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,15 +15,15 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1/cpc/getWork": {
+    "/api/v1/miner/setCoinbase": {
       "post": {
-        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
-        "operationId": "GetWork",
+        "summary": "SetCoinbase sets the coinbase of the miner",
+        "operationId": "SetCoinbase",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/minerpbPublicMinerAPIReply"
+              "$ref": "#/definitions/commonIsOk"
             }
           }
         },
@@ -33,132 +33,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/protobufEmpty"
+              "$ref": "#/definitions/commonAddress"
             }
           }
         ],
         "tags": [
-          "PublicMinerAPI"
+          "MinerManager"
         ]
       }
     },
-    "/apis/v1/cpc/mining": {
+    "/api/v1/miner/setExtra": {
       "post": {
-        "summary": "Mining returns an indication if this node is currently mining.",
-        "operationId": "Mining",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/minerpbPublicMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "PublicMinerAPI"
-        ]
-      }
-    },
-    "/apis/v1/cpc/submitHashrate": {
-      "post": {
-        "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
-        "operationId": "SubmitHashrate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/minerpbPublicMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/minerpbPublicMinerAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicMinerAPI"
-        ]
-      }
-    },
-    "/apis/v1/cpc/submitWork": {
-      "post": {
-        "summary": "SubmitWork can be used by external miner to submit their POW solution. It returns an indication if the work was\naccepted. Note, this is not an indication if the provided work was valid!",
-        "operationId": "SubmitWork",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/minerpbPublicMinerAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/minerpbPublicMinerAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicMinerAPI"
-        ]
-      }
-    },
-    "/apis/v1/miner/setEtherbase": {
-      "post": {
-        "summary": "SetEtherbase sets the etherbase of the miner",
-        "operationId": "SetEtherbase",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/minerpbMineControlReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/minerpbMineControlRequest"
-            }
-          }
-        ],
-        "tags": [
-          "MineControl"
-        ]
-      }
-    },
-    "/apis/v1/miner/setExtra": {
-      "post": {
-        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "summary": "SetExtra sets the extra data string that is included when this miner mines a block.",
         "operationId": "SetExtra",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/minerpbMineControlReply"
+              "$ref": "#/definitions/commonIsOk"
             }
           }
         },
@@ -168,24 +60,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/minerpbMineControlRequest"
+              "$ref": "#/definitions/minerExtra"
             }
           }
         ],
         "tags": [
-          "MineControl"
+          "MinerManager"
         ]
       }
     },
-    "/apis/v1/miner/setGasPrice": {
+    "/api/v1/miner/setGasPrice": {
       "post": {
-        "summary": "SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined\nhash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which\nmust be unique between nodes.",
+        "summary": "SetGasPrice sets the minimum accepted gas price for the miner.",
         "operationId": "SetGasPrice",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/minerpbMineControlReply"
+              "$ref": "#/definitions/commonIsOk"
             }
           }
         },
@@ -195,51 +87,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/minerpbMineControlRequest"
+              "$ref": "#/definitions/commonGasPrice"
             }
           }
         ],
         "tags": [
-          "MineControl"
+          "MinerManager"
         ]
       }
     },
-    "/apis/v1/miner/setHashrate": {
+    "/api/v1/miner/start": {
       "post": {
-        "summary": "GetHashrate returns the current hashrate of the miner.",
-        "operationId": "GetHashrate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/minerpbMineControlReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "MineControl"
-        ]
-      }
-    },
-    "/apis/v1/miner/start": {
-      "post": {
-        "summary": "Mining returns an indication if this node is currently mining.",
+        "summary": "Start the miner with the given number of threads. If threads is nil the number\nof workers started is equal to the number of logical CPUs that are usable by\nthis process. If mining is already running, this method adjust the number of\nthreads allowed to use.",
         "operationId": "Start",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/minerpbMineControlReply"
+              "$ref": "#/definitions/protobufEmpty"
             }
           }
         },
@@ -249,24 +114,24 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/minerpbMineControlRequest"
+              "$ref": "#/definitions/minerThreads"
             }
           }
         ],
         "tags": [
-          "MineControl"
+          "MinerManager"
         ]
       }
     },
-    "/apis/v1/miner/stop": {
+    "/api/v1/miner/stop": {
       "post": {
-        "summary": "SubmitWork can be used by external miner to submit their POW solution. It returns an indication if the work was\naccepted. Note, this is not an indication if the provided work was valid!",
+        "summary": "Stop the miner",
         "operationId": "Stop",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/minerpbMineControlReply"
+              "$ref": "#/definitions/commonIsOk"
             }
           }
         },
@@ -281,88 +146,56 @@
           }
         ],
         "tags": [
-          "MineControl"
+          "MinerManager"
         ]
       }
     }
   },
   "definitions": {
-    "minerpbMineControlReply": {
+    "commonAddress": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "commonGasPrice": {
+      "type": "object",
+      "properties": {
+        "gas_price": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "commonIsOk": {
       "type": "object",
       "properties": {
         "is_ok": {
           "type": "boolean",
           "format": "boolean"
-        },
-        "hashrate": {
-          "type": "string",
-          "format": "uint64"
         }
       }
     },
-    "minerpbMineControlRequest": {
+    "minerExtra": {
+      "type": "object",
+      "properties": {
+        "extra": {
+          "type": "string"
+        }
+      },
+      "description": "ExTra the extra data string that is included when this miner mines a block."
+    },
+    "minerThreads": {
       "type": "object",
       "properties": {
         "threads": {
           "type": "integer",
           "format": "int32"
-        },
-        "extra": {
-          "type": "string"
-        },
-        "gas_price": {
-          "type": "string",
-          "format": "byte"
-        },
-        "etherbase": {
-          "type": "string",
-          "format": "byte"
         }
-      }
-    },
-    "minerpbPublicMinerAPIReply": {
-      "type": "object",
-      "properties": {
-        "mining": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "is_accepting": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "works": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "minerpbPublicMinerAPIRequest": {
-      "type": "object",
-      "properties": {
-        "block_nonce": {
-          "type": "string",
-          "format": "byte"
-        },
-        "solution": {
-          "type": "string",
-          "format": "byte"
-        },
-        "digest": {
-          "type": "string",
-          "format": "byte"
-        },
-        "hashrate": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "id": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
+      },
+      "description": "Threads represents the number of threads opened."
     },
     "protobufEmpty": {
       "type": "object",

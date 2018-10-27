@@ -78,14 +78,10 @@ type Backend interface {
 func GetGAPIs(b Backend) []api.API {
 	nonceLock := new(AddrLocker)
 	return []api.API{
-		NewPublicInnerEthereumAPIServer(b),
-		NewPublicBlockChainAPIServer(b),
-		NewPublicTransactionPoolAPIServer(b, nonceLock),
-		NewPublicTxPoolAPIServer(b),
-		NewPublicInnerDebugAPIServer(b),
-		NewPrivateInnerDebugAPIServer(b),
-		NewPublicAccountAPIServer(b.AccountManager()),
-		NewPrivateAccountAPIServer(b, nonceLock),
+		NewChainStateReader(b),
+		NewChainReader(b),
+		NewTransactionReader(b, nonceLock),
+		NewAccountReader(b.AccountManager()),
 	}
 }
 
@@ -120,7 +116,7 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 		}, {
 			Namespace: "debug",
 			Version:   "1.0",
-			Service:   NewDebugManager(apiBackend),
+			Service:   NewPrivateDebugAPI(apiBackend),
 		}, {
 			Namespace: "eth",
 			Version:   "1.0",

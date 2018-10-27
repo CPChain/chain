@@ -1,11 +1,10 @@
 syntax = "proto3";
 
-option java_package = "org.bitbucket.cpchain.chain.protos";
-option go_package = "protos";
+import "google/protobuf/wrappers.proto";
 
-package protos;
+option go_package = "bitbucket.org/cpchain/chain/api/v1/commonpb" ;
 
-import "google/api/annotations.proto";
+package common;
 
 message IsOk {
     bool is_ok = 1;
@@ -27,12 +26,16 @@ message BlockHash {
     string block_hash = 1;
 }
 
+message Hash {
+    string hash = 1;
+}
+
 message Balance {
     string balance = 1;
 }
 
 message GasPrice {
-    bytes gas_price = 1;
+    int64 gas_price = 1;
 }
 
 message IsFull {
@@ -56,7 +59,8 @@ message Block {
     string timestamp = 14;
     string transactions_root = 15;
     string receipts_root = 16;
-    repeated Transaction transactions = 17;
+    string error = 17;
+    repeated Transaction transactions = 18;
 }
 
 message Transaction {
@@ -126,5 +130,36 @@ message BadBlockArgs {
 message BadBlockArg {
     string hash = 1;
     string rlp = 2;
-    map<string, string> msg = 3;
+    Block block = 3;
+}
+
+// - startingBlock: block number this node started to synchronise from
+// - currentBlock:  block number this node is currently importing
+// - highestBlock:  block number of the highest block header this node has received from peers
+// - pulledStates:  number of state entries processed until now
+// - knownStates:   number of known state entries that still need to be pulled
+message SyncingInfo {
+    bool is_syncing = 1;
+    uint64 start_block = 2;
+    uint64 current_block = 3;
+    uint64 highest_block = 4;
+    uint64 pulled_states = 5;
+    uint64 known_states = 6;
+}
+
+// RPCTransaction represents a transaction that will serialize to the RPC representation of a transaction
+message  RpcTransaction {
+    string block_hash = 1;
+    uint64 block_number = 2;
+    string from = 3;
+    uint64 gas = 4;
+    uint64 gas_price = 5;
+    string hash = 6;
+    bytes input = 7;
+    uint64 nonce = 8;
+    google.protobuf.StringValue to = 9;
+    uint32 transaction_index = 10;
+    bytes v = 11;
+    bytes r = 12;
+    bytes s = 13;
 }

@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "common.proto",
+    "title": "v1/commonpb/common.proto",
     "version": "version not set"
   },
   "schemes": [

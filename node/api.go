@@ -30,21 +30,21 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/discover"
 )
 
-// ChainManager is the collection of administrative API methods exposed only
+// PrivateAdminAPI is the collection of administrative API methods exposed only
 // over a secure RPC channel.
-type ChainManager struct {
+type PrivateAdminAPI struct {
 	node *Node // Node interfaced by this API
 }
 
-// NewChainManager creates a new API definition for the private admin methods
+// NewPrivateAdminAPI creates a new API definition for the private admin methods
 // of the node itself.
-func NewChainManager(node *Node) *ChainManager {
-	return &ChainManager{node: node}
+func NewPrivateAdminAPI(node *Node) *PrivateAdminAPI {
+	return &PrivateAdminAPI{node: node}
 }
 
 // AddPeer requests connecting to a remote node, and also maintaining the new
 // connection at all times, even reconnecting if it is lost.
-func (api *ChainManager) AddPeer(url string) (bool, error) {
+func (api *PrivateAdminAPI) AddPeer(url string) (bool, error) {
 	// Make sure the server is running, fail otherwise
 	server := api.node.Server()
 	if server == nil {
@@ -60,7 +60,7 @@ func (api *ChainManager) AddPeer(url string) (bool, error) {
 }
 
 // RemovePeer disconnects from a a remote node if the connection exists
-func (api *ChainManager) RemovePeer(url string) (bool, error) {
+func (api *PrivateAdminAPI) RemovePeer(url string) (bool, error) {
 	// Make sure the server is running, fail otherwise
 	server := api.node.Server()
 	if server == nil {
@@ -77,7 +77,7 @@ func (api *ChainManager) RemovePeer(url string) (bool, error) {
 
 // PeerEvents creates an RPC subscription which receives peer events from the
 // node's p2p.Server
-func (api *ChainManager) PeerEvents(ctx context.Context) (*rpc.Subscription, error) {
+func (api *PrivateAdminAPI) PeerEvents(ctx context.Context) (*rpc.Subscription, error) {
 	// Make sure the server is running, fail otherwise
 	server := api.node.Server()
 	if server == nil {
@@ -114,7 +114,7 @@ func (api *ChainManager) PeerEvents(ctx context.Context) (*rpc.Subscription, err
 }
 
 // StartRPC starts the HTTP RPC API server.
-func (api *ChainManager) StartRPC(host *string, port *int, cors *string, apis *string, vhosts *string) (bool, error) {
+func (api *PrivateAdminAPI) StartRPC(host *string, port *int, cors *string, apis *string, vhosts *string) (bool, error) {
 	api.node.lock.Lock()
 	defer api.node.lock.Unlock()
 
@@ -164,7 +164,7 @@ func (api *ChainManager) StartRPC(host *string, port *int, cors *string, apis *s
 }
 
 // StopRPC terminates an already running HTTP RPC API endpoint.
-func (api *ChainManager) StopRPC() (bool, error) {
+func (api *PrivateAdminAPI) StopRPC() (bool, error) {
 	api.node.lock.Lock()
 	defer api.node.lock.Unlock()
 
@@ -176,7 +176,7 @@ func (api *ChainManager) StopRPC() (bool, error) {
 }
 
 // StartWS starts the websocket RPC API server.
-func (api *ChainManager) StartWS(host *string, port *int, allowedOrigins *string, apis *string) (bool, error) {
+func (api *PrivateAdminAPI) StartWS(host *string, port *int, allowedOrigins *string, apis *string) (bool, error) {
 	api.node.lock.Lock()
 	defer api.node.lock.Unlock()
 
@@ -218,7 +218,7 @@ func (api *ChainManager) StartWS(host *string, port *int, allowedOrigins *string
 }
 
 // StopWS terminates an already running websocket RPC API endpoint.
-func (api *ChainManager) StopWS() (bool, error) {
+func (api *PrivateAdminAPI) StopWS() (bool, error) {
 	api.node.lock.Lock()
 	defer api.node.lock.Unlock()
 

@@ -1,29 +1,52 @@
 package cpc
 
 import (
-	"bitbucket.org/cpchain/chain/api/v1"
+	"bitbucket.org/cpchain/chain/api/v1/commonpb"
 	"fmt"
-	"github.com/golang/protobuf/ptypes/empty"
-	"golang.org/x/net/context"
 
+	"bitbucket.org/cpchain/chain/api/v1/cpc"
 	"bitbucket.org/cpchain/chain/node/miner"
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 // Coinbase provides an API to access Ethereum full node-related
 // information.
 type Coinbase struct {
-	e *CpchainService
+	c *CpchainService
 }
 
 // NewCoinbase creates a new Ethereum protocol API for full nodes.
-func NewCoinbase(e *CpchainService) *Coinbase {
-	return &Coinbase{e}
+func NewCoinbase(c *CpchainService) *Coinbase {
+	return &Coinbase{c}
 }
 
-// Coinbase is the address that mining rewards will be send to (alias for Etherbase)
-func (api *Coinbase) Coinbase(ctx context.Context, req *empty.Empty) (*protos.Address, error) {
-	addr, err := api.e.Etherbase()
-	return &protos.Address{Address:addr.String()}, err
+// IsPublic if public default
+func (c *Coinbase) IsPublic() bool {
+	return true
+}
+
+// Namespace namespace naem
+func (c *Coinbase) Namespace() string {
+	return "cpc"
+}
+
+// RegisterServer register api to grpc
+func (c *Coinbase) RegisterServer(s *grpc.Server) {
+	cpcpb.RegisterCoinbaseServer(s, c)
+}
+
+// RegisterGateway register api to restfull json
+func (c *Coinbase) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	cpcpb.RegisterCoinbaseHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
+// Coinbase is the address that mining rewards will be send to
+func (c *Coinbase) Coinbase(ctx context.Context, req *empty.Empty) (*commonpb.Address, error) {
+	addr, err := c.c.Etherbase()
+	return &commonpb.Address{Address: addr.String()}, err
 }
 
 // MinerReader provides an API to control the miner.
@@ -34,37 +57,36 @@ type MinerReader struct {
 }
 
 // NewMinerReader create a new MinerReader instance.
-func NewMinerReader(e *CpchainService) *MinerReader {
-	agent := miner.NewRemoteAgent(e.BlockChain(), e.Engine())
-	e.Miner().Register(agent)
+func NewMinerReader(c *CpchainService) *MinerReader {
+	agent := miner.NewRemoteAgent(c.BlockChain(), c.Engine())
+	c.Miner().Register(agent)
 
-	return &MinerReader{e, agent}
+	return &MinerReader{c, agent}
 }
 
 // Mining returns an indication if this node is currently mining.
-func (api *MinerReader) Mining(ctx context.Context, req *empty.Empty) (*protos.IsOk, error){
-	return &protos.IsOk{IsOk:api.e.IsMining()}, nil
+func (m *MinerReader) Mining(ctx context.Context, req *empty.Empty) (*commonpb.IsOk, error) {
+	return &commonpb.IsOk{IsOk: m.e.IsMining()}, nil
 }
 
 // GetWork returns a work package for external miner. The work package consists of 3 strings
 // result[0], 32 bytes hex encoded current block header pow-hash
 // result[1], 32 bytes hex encoded seed hash used for DAG
 // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
-func (api *MinerReader) GetWork(ctx context.Context, req *empty.Empty) (*protos.Works, error) {
-	if !api.e.IsMining() {
+func (m *MinerReader) GetWork(ctx context.Context, req *empty.Empty) (*cpcpb.Works, error) {
+	if !m.e.IsMining() {
 		// TODO: @liuq fix this.
-		if err := api.e.StartMining(false, nil); err != nil {
-			return &protos.Works{}, err
+		if err := m.e.StartMining(false, nil); err != nil {
+			return &cpcpb.Works{}, err
 		}
 	}
-	work, err := api.agent.GetWork()
+	work, err := m.agent.GetWork()
 	if err != nil {
-		return &protos.Works{}, fmt.Errorf("mining not ready: %v", err)
+		return &cpcpb.Works{}, fmt.Errorf("mining not ready: %v", err)
 	}
-	mwork := make(map[uint32]string)
+	mwork := make(map[int32]string)
 	for i, w := range work {
-	    mwork[i] = w
+		mwork[int32(i)] = w
 	}
-	return &protos.Works{Works:mwork}, nil
+	return &cpcpb.Works{Works: mwork}, nil
 }
-

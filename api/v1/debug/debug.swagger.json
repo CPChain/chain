@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "debug.proto",
+    "title": "v1/debug/debug.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -15,15 +15,42 @@
     "application/json"
   ],
   "paths": {
-    "/apis/v1/debug/chaindbCompact": {
+    "/api/v1/debug/dumpBlock": {
       "post": {
-        "summary": "Preimage is a debug API function that returns the preimage for a sha3 hash, if known.",
-        "operationId": "ChaindbCompact",
+        "summary": "DumpBlock retrieves the entire state of the database at a given block.",
+        "operationId": "DumpBlock",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/debugpbPrivateInnerDebugAPIReply"
+              "$ref": "#/definitions/commonDump"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/commonBlockNumber"
+            }
+          }
+        ],
+        "tags": [
+          "DebugDumper"
+        ]
+      }
+    },
+    "/api/v1/debug/getBadBlocks": {
+      "post": {
+        "summary": "GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network\nand returns them as a JSON list of block-hashes",
+        "operationId": "GetBadBlocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonBadBlockArgs"
             }
           }
         },
@@ -38,119 +65,11 @@
           }
         ],
         "tags": [
-          "PrivateInnerDebugAPI"
-        ]
-      }
-    },
-    "/apis/v1/debug/chaindbProperty": {
-      "post": {
-        "summary": "GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network\nand returns them as a JSON list of block-hashes",
-        "operationId": "ChaindbProperty",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/debugpbPrivateInnerDebugAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/debugpbPrivateInnerDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateInnerDebugAPI"
-        ]
-      }
-    },
-    "/apis/v1/debug/dumpBlock": {
-      "post": {
-        "summary": "Preimage is a debug API function that returns the preimage for a sha3 hash, if known.",
-        "operationId": "DumpBlock",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protobufAny"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/debugpbPublicDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicDebugAPI"
-        ]
-      }
-    },
-    "/apis/v1/debug/getBadBlocks": {
-      "post": {
-        "summary": "GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network\nand returns them as a JSON list of block-hashes",
-        "operationId": "GetBadBlocks",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/protobufAny"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/debugpbDebugManagerRequest"
-            }
-          }
-        ],
-        "tags": [
           "DebugManager"
         ]
       }
     },
-    "/apis/v1/debug/getBlockRlp": {
-      "post": {
-        "summary": "Preimage is a debug API function that returns the preimage for a sha3 hash, if known.",
-        "operationId": "GetBlockRlp",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/debugpbPublicInnerDebugAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/debugpbPublicInnerDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicInnerDebugAPI"
-        ]
-      }
-    },
-    "/apis/v1/debug/getModifiedAccountsByHash": {
+    "/api/v1/debug/getModifiedAccountsByHash": {
       "post": {
         "summary": "GetModifiedAccountsByHash returns all accounts that have changed between the\ntwo blocks specified. A change is defined as a difference in nonce, balance,\ncode hash, or storage hash.",
         "description": "With one parameter, returns the list of accounts modified in the specified block.",
@@ -159,7 +78,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protobufAny"
+              "$ref": "#/definitions/commonAddresses"
             }
           }
         },
@@ -169,7 +88,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/debugpbDebugManagerRequest"
+              "$ref": "#/definitions/debugDebugManagerRequest"
             }
           }
         ],
@@ -178,7 +97,7 @@
         ]
       }
     },
-    "/apis/v1/debug/getModifiedAccountsByNumber": {
+    "/api/v1/debug/getModifiedAccountsByNumber": {
       "post": {
         "summary": "GetModifiedAccountsByNumber returns all accounts that have changed between the\ntwo blocks specified. A change is defined as a difference in nonce, balance,\ncode hash, or storage hash.",
         "description": "With one parameter, returns the list of accounts modified in the specified block.",
@@ -187,7 +106,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protobufAny"
+              "$ref": "#/definitions/commonAddresses"
             }
           }
         },
@@ -197,7 +116,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/debugpbDebugManagerRequest"
+              "$ref": "#/definitions/debugDebugManagerRequest"
             }
           }
         ],
@@ -206,15 +125,15 @@
         ]
       }
     },
-    "/apis/v1/debug/preimage": {
+    "/api/v1/debug/preimage": {
       "post": {
-        "summary": "Preimage is a debug API function that returns the preimage for a sha3 hash, if known.",
+        "summary": "DumpBlock retrieves the entire state of the database at a given block.",
         "operationId": "Preimage",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/debugpbDebugManagerReply"
+              "$ref": "#/definitions/debugPreimageValue"
             }
           }
         },
@@ -224,7 +143,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/debugpbDebugManagerRequest"
+              "$ref": "#/definitions/commonHash"
             }
           }
         ],
@@ -233,96 +152,15 @@
         ]
       }
     },
-    "/apis/v1/debug/printBlock": {
+    "/api/v1/debug/storageRangeAt": {
       "post": {
-        "summary": "GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network\nand returns them as a JSON list of block-hashes",
-        "operationId": "PrintBlock",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/debugpbPublicInnerDebugAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/debugpbPublicInnerDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicInnerDebugAPI"
-        ]
-      }
-    },
-    "/apis/v1/debug/seedHash": {
-      "post": {
-        "summary": "StorageRangeAt returns the storage at the given block height and transaction index.",
-        "operationId": "SeedHash",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/debugpbPublicInnerDebugAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/debugpbPublicInnerDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PublicInnerDebugAPI"
-        ]
-      }
-    },
-    "/apis/v1/debug/setHead": {
-      "post": {
-        "summary": "StorageRangeAt returns the storage at the given block height and transaction index.",
-        "operationId": "SetHead",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/debugpbPrivateInnerDebugAPIReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/debugpbPrivateInnerDebugAPIRequest"
-            }
-          }
-        ],
-        "tags": [
-          "PrivateInnerDebugAPI"
-        ]
-      }
-    },
-    "/apis/v1/debug/storageRangeAt": {
-      "post": {
-        "summary": "StorageRangeAt returns the storage at the given block height and transaction index.",
+        "summary": "StorageRangeAt returns the storage at the giyyven block height and transaction index.",
         "operationId": "StorageRangeAt",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protobufAny"
+              "$ref": "#/definitions/debugStorageRangeResult"
             }
           }
         },
@@ -332,7 +170,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/debugpbDebugManagerRequest"
+              "$ref": "#/definitions/debugDebugManagerRequest"
             }
           }
         ],
@@ -343,42 +181,238 @@
     }
   },
   "definitions": {
-    "debugpbDebugManagerReply": {
+    "commonAddresses": {
       "type": "object",
       "properties": {
-        "preimage": {
-          "type": "string",
-          "format": "byte"
-        },
-        "bad_block_args": {
-          "$ref": "#/definitions/protobufAny"
-        },
-        "storage_range_result": {
-          "$ref": "#/definitions/protobufAny"
-        },
-        "accounts": {
-          "$ref": "#/definitions/protobufAny"
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-    "debugpbDebugManagerRequest": {
+    "commonBadBlockArg": {
       "type": "object",
       "properties": {
         "hash": {
+          "type": "string"
+        },
+        "rlp": {
+          "type": "string"
+        },
+        "block": {
+          "$ref": "#/definitions/commonBlock"
+        }
+      }
+    },
+    "commonBadBlockArgs": {
+      "type": "object",
+      "properties": {
+        "bad_block_args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonBadBlockArg"
+          }
+        }
+      }
+    },
+    "commonBlock": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "parent_hash": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "mix_hash": {
+          "type": "string"
+        },
+        "logs_bloom": {
           "type": "string",
           "format": "byte"
         },
-        "block_hash": {
+        "state_root": {
+          "type": "string"
+        },
+        "miner": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "extra_data": {
           "type": "string",
           "format": "byte"
+        },
+        "size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_used": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "transactions_root": {
+          "type": "string"
+        },
+        "receipts_root": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonTransaction"
+          }
+        }
+      }
+    },
+    "commonBlockNumber": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "commonDump": {
+      "type": "object",
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "accounts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/commonDumpAccount"
+          }
+        }
+      }
+    },
+    "commonDumpAccount": {
+      "type": "object",
+      "properties": {
+        "balance": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "root": {
+          "type": "string"
+        },
+        "code_hash": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commonHash": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        }
+      }
+    },
+    "commonTransaction": {
+      "type": "object",
+      "properties": {
+        "tx_hash": {
+          "type": "string"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "v": {
+          "type": "string"
+        },
+        "r": {
+          "type": "string"
+        },
+        "s": {
+          "type": "string"
+        },
+        "transaction_index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_price": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "input": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "debugDebugManagerRequest": {
+      "type": "object",
+      "properties": {
+        "block_hash": {
+          "type": "string"
         },
         "tx_index": {
           "type": "integer",
           "format": "int32"
         },
         "contract_address": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         },
         "key_start": {
           "type": "string",
@@ -388,91 +422,58 @@
           "type": "integer",
           "format": "int32"
         },
-        "start_hash": {
+        "start_number": {
           "type": "string",
-          "format": "byte"
+          "format": "uint64"
+        },
+        "end_number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "start_hash": {
+          "type": "string"
         },
         "end_hash": {
-          "type": "string",
-          "format": "byte"
-        },
-        "start_num": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "end_num": {
-          "type": "string",
-          "format": "uint64"
-        }
-      }
-    },
-    "debugpbPrivateInnerDebugAPIReply": {
-      "type": "object",
-      "properties": {
-        "property": {
           "type": "string"
-        },
-        "block_number": {
-          "type": "string",
-          "format": "uint64"
-        }
-      }
-    },
-    "debugpbPrivateInnerDebugAPIRequest": {
-      "type": "object",
-      "properties": {
-        "property": {
-          "type": "string"
-        },
-        "block_number": {
-          "type": "string",
-          "format": "uint64"
-        }
-      }
-    },
-    "debugpbPublicDebugAPIRequest": {
-      "type": "object",
-      "properties": {
-        "block_number": {
-          "type": "string",
-          "format": "int64"
-        }
-      }
-    },
-    "debugpbPublicInnerDebugAPIReply": {
-      "type": "object",
-      "properties": {
-        "info": {
-          "type": "string"
-        },
-        "rlp": {
-          "type": "string"
-        }
-      }
-    },
-    "debugpbPublicInnerDebugAPIRequest": {
-      "type": "object",
-      "properties": {
-        "block_number": {
-          "type": "string",
-          "format": "uint64"
-        }
-      }
-    },
-    "protobufAny": {
-      "type": "object",
-      "properties": {
-        "type_url": {
-          "type": "string",
-          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
-        },
-        "value": {
-          "type": "string",
-          "format": "byte",
-          "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "title": "DebugManagerRequest DebugManager request arguments"
+    },
+    "debugPreimageValue": {
+      "type": "object",
+      "properties": {
+        "preimage": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "PreimageValue the preimage for a sha3 hash"
+    },
+    "debugStorageEntry": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "debugStorageRangeResult": {
+      "type": "object",
+      "properties": {
+        "storage_map": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/debugStorageEntry"
+          }
+        },
+        "next_key": {
+          "type": "string"
+        }
+      },
+      "description": "StorageRangeResult is the result of a debug_storageRangeAt API call."
     },
     "protobufEmpty": {
       "type": "object",

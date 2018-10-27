@@ -1,40 +1,38 @@
 package cpc
 
 import (
-    "bitbucket.org/cpchain/chain/api/v1/admin"
     "bitbucket.org/cpchain/chain/api/v1/debug"
-    "bitbucket.org/cpchain/chain/api/v1/miner"
     "bytes"
-    "compress/gzip"
-    "encoding/gob"
-    "errors"
-    "fmt"
-    "io"
-    "math/big"
-    "os"
-    "strings"
-    "time"
+	"compress/gzip"
+	"encoding/gob"
+	"errors"
+	"fmt"
+	"io"
+	"math/big"
+	"os"
+	"strings"
+	"time"
 
-    "bitbucket.org/cpchain/chain/api/protos/v1/miner"
-    "bitbucket.org/cpchain/chain/commons/log"
-    "bitbucket.org/cpchain/chain/configs"
-    "bitbucket.org/cpchain/chain/core"
-    "bitbucket.org/cpchain/chain/core/rawdb"
-    "bitbucket.org/cpchain/chain/core/state"
-    "bitbucket.org/cpchain/chain/core/vm"
-    "bitbucket.org/cpchain/chain/internal/ethapi"
-    "bitbucket.org/cpchain/chain/node/miner"
-    "bitbucket.org/cpchain/chain/rpc"
-    "bitbucket.org/cpchain/chain/types"
-    "github.com/ethereum/go-ethereum/common"
-    "github.com/ethereum/go-ethereum/rlp"
-    "github.com/ethereum/go-ethereum/trie"
-    "github.com/golang/protobuf/ptypes/any"
-    "github.com/golang/protobuf/ptypes/empty"
-    "github.com/golang/protobuf/ptypes/wrappers"
-    "github.com/grpc-ecosystem/grpc-gateway/runtime"
-    "golang.org/x/net/context"
-    "google.golang.org/grpc"
+	"bitbucket.org/cpchain/chain/api/v1/miner"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/core"
+	"bitbucket.org/cpchain/chain/core/rawdb"
+	"bitbucket.org/cpchain/chain/core/state"
+	"bitbucket.org/cpchain/chain/core/vm"
+	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/node/miner"
+	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/trie"
+	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 type PublicMinerAPIServer struct {
@@ -101,30 +99,30 @@ func (api *PublicMinerAPIServer) SubmitHashrate(ctx context.Context, req *minerp
 	return &minerpb.PublicMinerAPIReply{IsAccepting: true}, nil
 }
 
-// MineControlServer provides private RPC methods to control the miner.
+// MinerManagerServer provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
-type MineControlServer struct {
+type MinerManagerServer struct {
 	e *CpchainService
 }
 
-// NewMineControlServer create a new RPC service which controls the miner of this node.
-func NewMineControlServer(e *CpchainService) *MineControlServer {
-	return &MineControlServer{e: e}
+// NewMinerManagerServer create a new RPC service which controls the miner of this node.
+func NewMinerManagerServer(e *CpchainService) *MinerManagerServer {
+	return &MinerManagerServer{e: e}
 }
 
-func (api *MineControlServer) RegisterServer(s *grpc.Server) {
-	minerpb.RegisterMineControlServer(s, api)
+func (api *MinerManagerServer) RegisterServer(s *grpc.Server) {
+	minerpb.RegisterMinerManagerServer(s, api)
 }
 
-func (api *MineControlServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	minerpb.RegisterMineControlHandlerFromEndpoint(ctx, mux, endpoint, opts)
+func (api *MinerManagerServer) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	minerpb.RegisterMinerManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-func (api *MineControlServer) IsPublic() bool {
+func (api *MinerManagerServer) IsPublic() bool {
 	return false
 }
 
-func (api *MineControlServer) Namespace() string {
+func (api *MinerManagerServer) Namespace() string {
 	return "miner"
 }
 
@@ -132,7 +130,7 @@ func (api *MineControlServer) Namespace() string {
 // of workers started is equal to the number of logical CPUs that are usable by
 // this process. If mining is already running, this method adjust the number of
 // threads allowed to use.
-func (api *MineControlServer) Start(ctx context.Context, req *minerpb.MineControlRequest) (*minerpb.MineControlReply, error) {
+func (api *MinerManagerServer) Start(ctx context.Context, req *minerpb.MinerManagerRequest) (*minerpb.MinerManagerReply, error) {
 	// Set the number of threads if the seal engine supports it
 	if req.Threads == nil {
 		req.Threads = &wrappers.Int32Value{}
@@ -155,13 +153,13 @@ func (api *MineControlServer) Start(ctx context.Context, req *minerpb.MineContro
 
 		api.e.txPool.SetGasPrice(price)
 		// TODO: @liuq fix this.
-		return &minerpb.MineControlReply{}, api.e.StartMining(true, nil)
+		return &minerpb.MinerManagerReply{}, api.e.StartMining(true, nil)
 	}
-	return &minerpb.MineControlReply{}, nil
+	return &minerpb.MinerManagerReply{}, nil
 }
 
 // Stop the miner
-func (api *MineControlServer) Stop(ctx context.Context, req *empty.Empty) (*minerpb.MineControlReply, error) {
+func (api *MinerManagerServer) Stop(ctx context.Context, req *empty.Empty) (*minerpb.MinerManagerReply, error) {
 	type threaded interface {
 		SetThreads(threads int)
 	}
@@ -169,37 +167,37 @@ func (api *MineControlServer) Stop(ctx context.Context, req *empty.Empty) (*mine
 		th.SetThreads(-1)
 	}
 	api.e.StopMining()
-	return &minerpb.MineControlReply{IsOk: true}, nil
+	return &minerpb.MinerManagerReply{IsOk: true}, nil
 }
 
 // SetExtra sets the extra data string that is included when this miner mines a block.
-func (api *MineControlServer) SetExtra(ctx context.Context, req *minerpb.MineControlRequest) (*minerpb.MineControlReply, error) {
+func (api *MinerManagerServer) SetExtra(ctx context.Context, req *minerpb.MinerManagerRequest) (*minerpb.MinerManagerReply, error) {
 	if err := api.e.Miner().SetExtra([]byte(req.Extra)); err != nil {
-		return &minerpb.MineControlReply{IsOk: false}, err
+		return &minerpb.MinerManagerReply{IsOk: false}, err
 	}
-	return &minerpb.MineControlReply{IsOk: true}, nil
+	return &minerpb.MinerManagerReply{IsOk: true}, nil
 }
 
 // SetGasPrice sets the minimum accepted gas price for the miner.
-func (api *MineControlServer) SetGasPrice(ctx context.Context, req *minerpb.MineControlRequest) (*minerpb.MineControlReply, error) {
+func (api *MinerManagerServer) SetGasPrice(ctx context.Context, req *minerpb.MinerManagerRequest) (*minerpb.MinerManagerReply, error) {
 	gasPrice := new(big.Int).SetBytes(req.GasPrice)
 	api.e.lock.Lock()
 	api.e.gasPrice = gasPrice
 	api.e.lock.Unlock()
 
 	api.e.txPool.SetGasPrice(gasPrice)
-	return &minerpb.MineControlReply{IsOk: true}, nil
+	return &minerpb.MinerManagerReply{IsOk: true}, nil
 }
 
 // SetEtherbase sets the etherbase of the miner
-func (api *MineControlServer) SetEtherbase(ctx context.Context, req *minerpb.MineControlRequest) (*minerpb.MineControlReply, error) {
+func (api *MinerManagerServer) SetEtherbase(ctx context.Context, req *minerpb.MinerManagerRequest) (*minerpb.MinerManagerReply, error) {
 	api.e.SetEtherbase(common.BytesToAddress(req.Etherbase))
-	return &minerpb.MineControlReply{IsOk: true}, nil
+	return &minerpb.MinerManagerReply{IsOk: true}, nil
 }
 
 // GetHashrate returns the current hashrate of the miner.
-func (api *MineControlServer) GetHashrate(ctx context.Context, req *empty.Empty) (*minerpb.MineControlReply, error) {
-	return &minerpb.MineControlReply{Hashrate: uint64(api.e.miner.HashRate())}, nil
+func (api *MinerManagerServer) GetHashrate(ctx context.Context, req *empty.Empty) (*minerpb.MinerManagerReply, error) {
+	return &minerpb.MinerManagerReply{Hashrate: uint64(api.e.miner.HashRate())}, nil
 }
 
 // ChainManager is the collection of Ethereum full node-related APIs

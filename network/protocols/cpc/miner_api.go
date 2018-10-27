@@ -1,90 +1,113 @@
 package cpc
 
 import (
-    "bitbucket.org/cpchain/chain/api/v1"
+    "bitbucket.org/cpchain/chain/api/v1/commonpb"
+    "bitbucket.org/cpchain/chain/api/v1/miner"
     "bitbucket.org/cpchain/chain/commons/log"
     "github.com/ethereum/go-ethereum/common"
     "github.com/golang/protobuf/ptypes/empty"
+    "github.com/grpc-ecosystem/grpc-gateway/runtime"
     "golang.org/x/net/context"
+    "google.golang.org/grpc"
     "math/big"
 )
 
-// MineControl provides private RPC methods to control the miner.
+// MinerManager provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
-type MineControl struct {
-    e *CpchainService
+type MinerManager struct {
+    c *CpchainService
 }
 
-// NewMineControl create a new RPC service which controls the miner of this node.
-func NewMineControl(e *CpchainService) *MineControl {
-    return &MineControl{e: e}
+// NewMinerManager create a new RPC service which controls the miner of this node.
+func NewMinerManager(c *CpchainService) *MinerManager {
+    return &MinerManager{c: c}
+}
+
+// IsPublic if public default
+func (m *MinerManager) IsPublic() bool {
+    return false
+}
+// Namespace namespace
+func (m *MinerManager) Namespace() string {
+    return "miner"
+}
+
+// RegisterServer register api to grpc
+func (m *MinerManager) RegisterServer(s *grpc.Server) {
+    minerpb.RegisterMinerManagerServer(s, m)
+}
+
+// RegisterGateway register api to restfull json
+func (m *MinerManager) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+    minerpb.RegisterMinerManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 // Start the miner with the given number of threads. If threads is nil the number
 // of workers started is equal to the number of logical CPUs that are usable by
 // this process. If mining is already running, this method adjust the number of
 // threads allowed to use.
-func (api *MineControl) Start(ctx context.Context, threads *protos.Threads) (*empty.Empty, error){
+func (api *MinerManager) Start(ctx context.Context, threads *minerpb.Threads) (*empty.Empty, error){
     // Set the number of threads if the seal engine supports it
     if threads == nil {
-        threads = new(protos.Threads)
+        threads = new(minerpb.Threads)
     } else if threads.Threads == 0 {
         threads.Threads = -1 // Disable the miner from within
     }
     type threaded interface {
         SetThreads(threads int)
     }
-    if th, ok := api.e.engine.(threaded); ok {
+    if th, ok := api.c.engine.(threaded); ok {
         log.Info("Updated mining threads", "threads", *threads)
         th.SetThreads(int(threads.Threads))
     }
     // Start the miner and return
-    if !api.e.IsMining() {
+    if !api.c.IsMining() {
         // Propagate the initial price point to the transaction pool
-        api.e.lock.RLock()
-        price := api.e.gasPrice
-        api.e.lock.RUnlock()
+        api.c.lock.RLock()
+        price := api.c.gasPrice
+        api.c.lock.RUnlock()
 
-        api.e.txPool.SetGasPrice(price)
+        api.c.txPool.SetGasPrice(price)
         // TODO: @liuq fix this.
-        return &empty.Empty{},api.e.StartMining(true, nil)
+        return &empty.Empty{},api.c.StartMining(true, nil)
     }
     return &empty.Empty{}, nil
 }
 
 // Stop the miner
-func (api *MineControl) Stop(ctx context.Context) (*protos.IsOk, error){
+func (api *MinerManager) Stop(ctx context.Context, req *empty.Empty) (*commonpb.IsOk, error){
     type threaded interface {
         SetThreads(threads int)
     }
-    if th, ok := api.e.engine.(threaded); ok {
+    if th, ok := api.c.engine.(threaded); ok {
         th.SetThreads(-1)
     }
-    api.e.StopMining()
-    return &protos.IsOk{IsOk:true}, nil
+    api.c.StopMining()
+    return &commonpb.IsOk{IsOk:true}, nil
 }
 
 // SetExtra sets the extra data string that is included when this miner mines a block.
-func (api *MineControl) SetExtra(ctx context.Context, extra *protos.Extra) (*protos.IsOk, error) {
-    if err := api.e.Miner().SetExtra([]byte(extra.Extra)); err != nil {
-        return &protos.IsOk{IsOk:false}, err
+func (api *MinerManager) SetExtra(ctx context.Context, extra *minerpb.Extra) (*commonpb.IsOk, error) {
+    if err := api.c.Miner().SetExtra([]byte(extra.Extra)); err != nil {
+        return &commonpb.IsOk{IsOk:false}, err
     }
-    return &protos.IsOk{IsOk:true}, nil
+    return &commonpb.IsOk{IsOk:true}, nil
 }
 
 // SetGasPrice sets the minimum accepted gas price for the miner.
-func (api *MineControl) SetGasPrice(ctx context.Context, gasPrice *protos.GasPrice) (*protos.IsOk, error){
-    api.e.lock.Lock()
-    api.e.gasPrice = (*big.Int)(gasPrice.GasPrice)
-    api.e.lock.Unlock()
+func (api *MinerManager) SetGasPrice(ctx context.Context, gasPrice *commonpb.GasPrice) (*commonpb.IsOk, error){
+    price := big.NewInt(gasPrice.GasPrice)
+    api.c.lock.Lock()
+    api.c.gasPrice = price
+    api.c.lock.Unlock()
 
-    api.e.txPool.SetGasPrice((*big.Int)(gasPrice))
-    return &protos.IsOk{IsOk:true}, nil
+    api.c.txPool.SetGasPrice(price)
+    return &commonpb.IsOk{IsOk:true}, nil
 }
 
 // SetEtherbase sets the etherbase of the miner
-func (api *MineControl) SetCoinbase(ctx context.Context, newAddress *protos.Address) (*protos.IsOk, error){
-    api.e.SetEtherbase(common.HexToAddress(newAddress.Address))
-    return &protos.IsOk{IsOk:true}, nil
+func (api *MinerManager) SetCoinbase(ctx context.Context, newAddress *commonpb.Address) (*commonpb.IsOk, error){
+    api.c.SetEtherbase(common.HexToAddress(newAddress.Address))
+    return &commonpb.IsOk{IsOk:true}, nil
 }
 

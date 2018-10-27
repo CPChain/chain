@@ -28,7 +28,7 @@ type Server struct {
 }
 
 func NewSerever(cfg Config) *Server {
-	// // TODO: @sangh use config to set
+	// TODO: @sangh use config to set
 	serverOpts := []grpc.ServerOption{}
 
 	s := &Server{
@@ -87,14 +87,14 @@ func (s *Server) startIpc() error {
 			return err
 		}
 		s.ipcListener = c
-	}
-	os.Chmod(s.config.IpcAddress(), 0600)
 
-	go func() {
-		if err := s.handler.Serve(s.ipcListener); err != nil {
-			log.Error(err.Error())
-		}
-	}()
+		go func() {
+			if err := s.ipcHandler.Serve(s.ipcListener); err != nil {
+				log.Error(err.Error())
+			}
+		}()
+		os.Chmod(s.config.IpcAddress(), 0600)
+	}
 
 	return nil
 }

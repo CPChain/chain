@@ -1,54 +1,18 @@
 syntax = "proto3";
 
-option java_package = "org.bitbucket.cpchain.chain.txpoolpb";
-option go_package = "txpoolpb";
-
-package txpooldb;
-
 import "google/protobuf/empty.proto";
-import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 
-message RPCTransaction {
-    bytes block_hash = 1;
-    bytes block_number = 2;
-    bytes from = 3;
-    uint64 gas = 4;
-    bytes gas_price = 5;
-    bytes hash = 6;
-    bytes input = 7;
-    uint64 nonce = 8;
-    bytes to = 9;
-    uint32 transaction_index = 10;
-    bytes v = 11;
-    bytes r = 12;
-    bytes s = 13;
-}
+option go_package = "txpoolpb";
 
-message PublicTxPoolAPIReply {
-    map<string, uint64> status = 1;
-    google.protobuf.Any content = 2;
-    google.protobuf.Any inspect = 3;
-}
+package txpool;
 
-service PublicTxPoolAPI {
-    rpc Content(google.protobuf.Empty) returns (PublicTxPoolAPIReply) {
+// TransactionPoolReader offers and API for the transaction pool. It only operates on data that is non confidential.
+service TransactionPoolReader {
+    rpc Content(google.protobuf.Empty) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-post : "/apis/v1/txpool/content"
-         body : "*"
-    };
-    }
-    rpc Inspect(google.protobuf.Empty) returns (PublicTxPoolAPIReply) {
-        option (google.api.http) = {
-post : "/apis/v1/txpool/inspect"
-         body : "*"
-    };
-    }
-    rpc Status(google.protobuf.Empty) returns (PublicTxPoolAPIReply) {
-        option (google.api.http) = {
-post : "/apis/v1/txpool/status"
-         body : "*"
-    };
+            post: "/api/v1/txpool/content"
+            body: "*"
+          };
     }
 }
-
