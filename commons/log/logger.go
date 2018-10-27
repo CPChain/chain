@@ -52,7 +52,7 @@ func New(ctx ...interface{}) *Logger {
 func (logger *Logger) ShowFilename() {
 	filenameHook := filename.NewHook()
 	filenameHook.Field = "Line"
-	filenameHook.Skip += 3
+	filenameHook.Skip += 4
 	// logger.Entry.Logger.Hooks
 	logger.Entry.Logger.AddHook(filenameHook)
 }
