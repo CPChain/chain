@@ -19,7 +19,6 @@ package core
 
 import (
 	"crypto/rsa"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -30,6 +29,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -38,8 +38,6 @@ import (
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/event"
@@ -1230,7 +1228,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		case err == consensus.ErrNewSignedHeader:
 
 			log.Debug("ErrNewSignedHeader err in blockchain.insertChain.")
-			log.Debug("err block", "block", block.NumberU64(), block.Hash().Hex(), block.Extra2())
 			err := err.(*consensus.ErrNewSignedHeaderType)
 			err.SignedHeader = block.RefHeader()
 			bc.pendingBlocks.Add(block.Hash(), block)
@@ -1301,9 +1298,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		stats.usedGas += usedGas
 
 		cache, _ := bc.stateCache.TrieDB().Size()
-
-		log.Debug("block sigs of ", "n", chain[i].NumberU64())
-		log.Debug("\n" + hex.Dump(chain[i].Extra2()))
 
 		log.Info("Imported new block: " + strconv.Itoa(int(chain[i].Number().Int64())) + " hash: " + chain[i].Hash().Hex())
 		stats.report(chain, i, cache)
