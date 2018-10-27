@@ -258,6 +258,7 @@ func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 // updateRpts updates rpts of candidates
 func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 
+	// TODO: use rpt collector to update rpts.
 	var rpts rpt.RPTs
 	for idx, candidate := range s.Candidates {
 		r := rpt.RPT{Address: candidate, Rpt: float64(idx)}
