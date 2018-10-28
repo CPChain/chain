@@ -646,7 +646,7 @@ func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
 		pool.priced.Put(tx)
 		pool.journalTx(from, tx)
 
-		log.Debug("Pooled new executable transaction", "hash", hash.Hex(), "from", from.Hex(), "to", tx.To().Hex())
+		log.Debug("Pooled new executable transaction", "hash", hash.Hex(), "from", from, "to", tx.To())
 
 		// We've directly injected a replacement transaction, notify subsystems
 		go pool.txFeed.Send(NewTxsEvent{types.Transactions{tx}})
@@ -664,7 +664,7 @@ func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
 	}
 	pool.journalTx(from, tx)
 
-	log.Debug("Pooled new future transaction", "hash", hash.Hex(), "from", from.Hex(), "to", tx.To().Hex())
+	log.Debug("Pooled new future transaction", "hash", hash.Hex(), "from", from, "to", tx.To())
 	return replace, nil
 }
 

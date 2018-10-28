@@ -309,12 +309,22 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	// TODO: remove comments.
+	return true, nil
+
+	// TODO
 	// snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
 	// if err != nil {
 	// 	return false, err
 	// }
-	// return snap.isFutureSigner(address, number), nil
 
-	return true, nil
+	// if snap.ifUseDefaultSigners() {
+	// 	for _, signer := range snap.candidates() {
+	// 		if signer == address {
+	// 			return true, nil
+	// 		}
+	// 	}
+	// 	return false, nil
+	// }
+
+	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
 }

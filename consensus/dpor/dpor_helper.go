@@ -152,7 +152,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		// If an on-disk checkpoint Snapshot can be found, use that
 		// if number%checkpointInterval == 0 {
 		if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) {
-			if s, err := loadSnapshot(dpor.config, dpor.signatures, dpor.db, hash); err == nil {
+			if s, err := loadSnapshot(dpor.config, dpor.db, hash); err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", number, "hash", hash)
 				snap = s
 				break
@@ -172,7 +172,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			for i := 0; i < len(signers); i++ {
 				copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
 			}
-			snap = newSnapshot(dpor.config, dpor.signatures, 0, genesis.Hash(), signers)
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), signers)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}
@@ -216,14 +216,14 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	// Save to cache
-	dpor.recents.Add(snap.Hash, snap)
+	dpor.recents.Add(snap.hash(), snap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if IsCheckPoint(snap.Number, dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
+	if IsCheckPoint(snap.number(), dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
-		log.Debug("Stored voting Snapshot to disk", "number", snap.Number, "hash", snap.Hash)
+		log.Debug("Stored voting Snapshot to disk", "number", snap.number(), "hash", snap.hash())
 	}
 	return snap, err
 }
@@ -368,7 +368,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
 		log.Debug("----------------------")
 		log.Debug("signers in snapshot of:", "epoch idx", i)
-		for _, s := range snap.RecentSigners[i] {
+		for _, s := range snap.recentSigners()[i] {
 			log.Debug("signer", "s", s.Hex())
 		}
 	}

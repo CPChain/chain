@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"sync"
 	"sync/atomic"
@@ -864,7 +863,8 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 		}
 
 		// Send the block to a subset of our peers
-		transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		// transfer := peers[:int(math.Sqrt(float64(len(peers))))])
+		transfer := peers
 
 		for _, peer := range transfer {
 			peer.AsyncSendNewBlock(block, td)
