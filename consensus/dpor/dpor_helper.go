@@ -129,7 +129,9 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
-		return errInvalidSigners
+		if !dpor.fake {
+			return errInvalidSigners
+		}
 	}
 
 	// All basic checks passed, verify the seal and return

@@ -225,7 +225,6 @@ func TestGetBlockHeaders(t *testing.T) {
 
 // Tests that block contents can be retrieved from a remote chain based on their hashes.
 func TestGetBlockBodies(t *testing.T) {
-	t.Skip("===TestGetBlockBodies invalid signer list on checkpoint block")
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxBlockFetch+15, nil, nil)
 	peer, _ := newTestPeer("peer", 64, pm, true)
 	defer peer.close()
