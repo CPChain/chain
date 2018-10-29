@@ -105,7 +105,7 @@ func (s *Server) startIpc() error {
 			if err := handler.Serve(lis); err != nil {
 				log.Error(err.Error())
 			}
-		}(s.handler, s.ipcListener)
+		}(s.ipcHandler, s.ipcListener)
 	}
 
 	return nil
