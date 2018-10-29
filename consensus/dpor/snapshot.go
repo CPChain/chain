@@ -19,7 +19,6 @@ package dpor
 import (
 	"encoding/json"
 	"errors"
-	"math/big"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -27,7 +26,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -304,31 +302,37 @@ func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
 		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
 		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
+		common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
+		common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"),
+		common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
+		common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
+		common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
+		common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
 	}
 
-	contractCaller := s.contractCaller()
+	// contractCaller := s.contractCaller()
 
 	// If contractCaller is not nil, use it to update candidates from contract
-	if contractCaller != nil {
+	// if contractCaller != nil {
 
-		// Creates an contract instance
-		campaignAddress := s.config.Contracts["campaign"]
-		contractInstance, err := contract.NewCampaign(campaignAddress, contractCaller.Client)
-		if err != nil {
-			return err
-		}
+	// 	// Creates an contract instance
+	// 	campaignAddress := s.config.Contracts["campaign"]
+	// 	contractInstance, err := contract.NewCampaign(campaignAddress, contractCaller.Client)
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		// Read candidates from the contract instance
-		cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
-		if err != nil {
-			return err
-		}
+	// 	// Read candidates from the contract instance
+	// 	cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		// If useful, use it!
-		if uint64(len(cds)) > s.config.Epoch {
-			candidates = cds
-		}
-	}
+	// 	// If useful, use it!
+	// 	if uint64(len(cds)) > s.config.Epoch {
+	// 		candidates = cds
+	// 	}
+	// }
 
 	s.setCandidates(candidates)
 	return nil
