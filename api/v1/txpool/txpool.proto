@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
-option go_package = "txpoolpb";
+option go_package = "txpool";
 
 package txpool;
 

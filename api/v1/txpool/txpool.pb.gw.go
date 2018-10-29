@@ -2,11 +2,11 @@
 // source: v1/txpool/txpool.proto
 
 /*
-Package txpoolpb is a reverse proxy.
+Package txpool is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package txpoolpb
+package txpool
 
 import (
 	"io"

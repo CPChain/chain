@@ -288,7 +288,7 @@ func (d *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *
 	return d.dh.calcDifficulty(snap, d.signer)
 }
 
-// APIs implements consensus.Engine, returning the user facing RPC API to allow
+// APIs implements consensus.Engine, returning the user facing RPC Api to allow
 // controlling the signer voting.
 func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 	return []rpc.API{{
@@ -299,8 +299,8 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 	}}
 }
 
-func (d *Dpor) GAPIs(chain consensus.ChainReader) []api.API {
-	return []api.API{}
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []api.Api {
+	return []api.Api{}
 }
 
 // IsFutureSigner implements Validator.

@@ -96,7 +96,7 @@ type Engine interface {
 	APIs(chain ChainReader) []rpc.API
 
 	// GAPIs returns the GRPC APIs this consensus engine provides.
-	GAPIs(chain ChainReader) []api.API
+	GAPIs(chain ChainReader) []api.Api
 
 	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeNetworkHandler) error
 }

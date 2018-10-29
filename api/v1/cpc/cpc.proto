@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-import "v1/commonpb/common.proto";
+import "common/common.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 import "google/api/annotations.proto";
 
-option go_package = "cpcpb";
+option go_package = "cpc";
 
 package cpc;
 
@@ -19,7 +19,6 @@ service Coinbase {
           };
     }
 }
-
 
 // Works a work package for external miner. The work package consists of 3 strings
 // result[0], 32 bytes hex encoded current block header pow-hash
@@ -101,9 +100,9 @@ service ChainStateReader {
 //ChainReaderRequest ChainReader request arguments
 message ChainReaderRequest {
     string address = 1;
-    string block_hash = 2;
-    int64 block_number = 3;
-    bool is_full = 4;
+    string blockHash = 2;
+    int64 blockNumber = 3;
+    bool isFull = 4;
 }
 
 // ChainReader provides an API to access the Ethereum blockchain.
@@ -144,70 +143,91 @@ service ChainReader {
             body : "*"
         };
     }
+
+    // GetCode returns the code stored at the given address in the state for the given block number.
+    rpc GetCode(ChainReaderRequest) returns (common.Code) {
+        option (google.api.http) = {
+            post : "/api/v1/cpc/getcode"
+            body : "*"
+        };
+    }
 }
 
+//TransactionCount transaction count
 message TransactionCount {
-    uint64 transaction_count = 1;
+    uint64 transactionCount = 1;
 }
 
+//TransactionPoolReaderRequest request parameters
 message TransactionPoolReaderRequest {
-    uint64 block_number = 1;
+    uint64 blockNumber = 1;
     uint64 index = 2;
-    string block_hash =3;
+    string blockHash =3;
     string address = 4;
 }
 
+//RawTransaction transaction bytes
 message RawTransaction {
-    bytes raw_transaction = 1;
+    bytes rawTransaction = 1;
 }
 
+//TransactionHash transaction hash
 message TransactionHash {
-    string transaction_hash = 1;
+    string transactionHash = 1;
 }
 
+// TransactionReader exposes methods for the RPC interface
 service TransactionPoolReader {
+    // GetBlockTransactionCountByNumber returns the number of transactions in the block with the given block number.
     rpc GetTransactionCountByBlockNumber(common.BlockNumber) returns (TransactionCount) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionCountByBlockNumber"
             body : "*"
         };
     }
+    // GetBlockTransactionCountByHash returns the number of transactions in the block with the given hash.
     rpc GetTransactionCountByBlockHash(common.BlockHash) returns (TransactionCount) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionCountByBlockHash"
             body : "*"
         };
     }
+    // GetTransactionByBlockNumberAndIndex returns the transaction for the given block number and index.
     rpc GetTransactionByBlockNumberAndIndex(TransactionPoolReaderRequest) returns (common.Transaction) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionByBlockNumberAndIndex"
             body : "*"
         };
     }
+    // GetTransactionByBlockHashAndIndex returns the transaction for the given block hash and index.
     rpc GetTransactionByBlockHashAndIndex(TransactionPoolReaderRequest) returns (common.Transaction) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionByBlockHashAndIndex"
             body : "*"
         };
     }
+    // GetTransactionByHash returns the transaction for the given hash
     rpc GetRawTransactionByBlockNumberAndIndex(TransactionPoolReaderRequest) returns (RawTransaction) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getRawTransactionByBlockNumberAndIndex"
             body : "*"
         };
     }
+    // GetRawTransactionByBlockHashAndIndex returns the bytes of the transaction for the given block hash and index.
     rpc GetTransactionByHash(TransactionHash) returns (common.Transaction) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionByHash"
             body : "*"
         };
     }
+    // GetTransactionReceipt returns the transaction receipt for the given transaction hash.
     rpc GetTransactionReceipt(TransactionHash) returns (common.Receipt) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionReceipt"
             body : "*"
         };
     }
+    // GetTransactionCount returns the number of transactions the given address has sent for the given block number
     rpc GetTransactionCount(TransactionPoolReaderRequest) returns (TransactionCount) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionCount"

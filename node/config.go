@@ -99,7 +99,7 @@ type Config struct {
 	IPCPath string `toml:",omitempty"`
 
 	// HTTPHost is the host interface on which to start the HTTP RPC server. If this
-	// field is empty, no HTTP API endpoint will be started.
+	// field is empty, no HTTP Api endpoint will be started.
 	HTTPHost string `toml:",omitempty"`
 
 	// HTTPPort is the TCP port number on which to start the HTTP RPC server. The
@@ -120,13 +120,13 @@ type Config struct {
 	// Requests using ip address directly are not affected
 	HTTPVirtualHosts []string `toml:",omitempty"`
 
-	// HTTPModules is a list of API modules to expose via the HTTP RPC interface.
-	// If the module list is empty, all RPC API endpoints designated public will be
+	// HTTPModules is a list of Api modules to expose via the HTTP RPC interface.
+	// If the module list is empty, all RPC Api endpoints designated public will be
 	// exposed.
 	HTTPModules []string `toml:",omitempty"`
 
 	// WSHost is the host interface on which to start the websocket RPC server. If
-	// this field is empty, no websocket API endpoint will be started.
+	// this field is empty, no websocket Api endpoint will be started.
 	WSHost string `toml:",omitempty"`
 
 	// WSPort is the TCP port number on which to start the websocket RPC server. The
@@ -139,12 +139,12 @@ type Config struct {
 	// cannot verify the validity of the request header.
 	WSOrigins []string `toml:",omitempty"`
 
-	// WSModules is a list of API modules to expose via the websocket RPC interface.
-	// If the module list is empty, all RPC API endpoints designated public will be
+	// WSModules is a list of Api modules to expose via the websocket RPC interface.
+	// If the module list is empty, all RPC Api endpoints designated public will be
 	// exposed.
 	WSModules []string `toml:",omitempty"`
 
-	// WSExposeAll exposes all API modules via the WebSocket RPC interface rather
+	// WSExposeAll exposes all Api modules via the WebSocket RPC interface rather
 	// than just the public ones.
 	//
 	// *WARNING* Only set this if the node is running in a trusted network, exposing
@@ -401,11 +401,6 @@ func (c *Config) parsePersistentNodes(path string) []*discover.Node {
 	return nodes
 }
 
-func (c *Config) GrpcConfig() api.Config {
-	c.Grpc.DataDir = c.DataDir
-	return c.Grpc
-}
-
 // AccountConfig determines the settings for scrypt and keydirectory
 func (c *Config) AccountConfig() (int, int, string, error) {
 	scryptN := keystore.StandardScryptN
@@ -473,7 +468,7 @@ var DefaultConfig = Config{
 	DataDir:          DefaultDataDir(),
 	IPCPath:          DefaultIPCEndpoint(configs.ClientIdentifier),
 	HTTPPort:         DefaultHTTPPort,
-	HTTPModules:      []string{"net", "web3", "eth"},
+	HTTPModules:      []string{"net", "web3", "eth", "cpc"},
 	HTTPVirtualHosts: []string{"localhost"},
 	WSPort:           DefaultWSPort,
 	WSModules:        []string{"net", "web3", "eth"},

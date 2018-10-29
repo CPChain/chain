@@ -16,10 +16,12 @@ const (
 	defaultGatewayPort = 8452
 )
 
+// Config grpc configuration
 type Config struct {
-	DataDir string `toml:",omitempt"`
-	Host    string `toml:",omitempty"`
-	Port    int    `toml:",omitempty"`
+	Modules []string `toml:",omitempty"`
+	DataDir string   `toml:",omitempt"`
+	Host    string   `toml:",omitempty"`
+	Port    int      `toml:",omitempty"`
 
 	GatewayHost string `toml:",omitempty"`
 	GatewayPort int    `toml:",omitempty"`
@@ -27,6 +29,7 @@ type Config struct {
 	IpcPath string `toml:",omitempty"`
 }
 
+// Address returns the grpc server address
 func (c *Config) Address() string {
 	if c.Host == "" {
 		c.Host = defaultHost
@@ -34,9 +37,10 @@ func (c *Config) Address() string {
 	if c.Port == 0 {
 		c.Port = defaultPort
 	}
-	return fmt.Sprintf("/%s:%d", c.Host, c.Port)
+	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
+// GatewayAddress returns the restfull json http server address
 func (c *Config) GatewayAddress() string {
 	if c.GatewayHost == "" {
 		c.GatewayHost = defaultHost
@@ -47,6 +51,7 @@ func (c *Config) GatewayAddress() string {
 	return fmt.Sprintf("%s:%d", c.GatewayHost, c.GatewayPort)
 }
 
+// IpcAddress returns the ipc server address
 func (c *Config) IpcAddress() string {
 	// Short circuit if IPC has not been enabled
 	if c.IpcPath == "" {

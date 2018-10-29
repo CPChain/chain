@@ -2,11 +2,11 @@
 // source: v1/personal/personal.proto
 
 /*
-Package personalpb is a reverse proxy.
+Package personal is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package personalpb
+package personal
 
 import (
 	"io"

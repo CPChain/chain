@@ -280,13 +280,14 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	}
 }
 
-func (s *CpchainService) GAPIs() []api.API {
-    apis := ethapi.GetGAPIs(s.APIBackend)
-    return append(apis, []api.API{
-        NewDebugDumper(s),
-        NewDebugManager(s.chainConfig, s),
-        NewMinerManager(s),
-        NewAdminManager(s),
+func (s *CpchainService) GAPIs() []api.Api {
+	apis := ethapi.GetGAPIs(s.APIBackend)
+	return append(apis, []api.Api{
+		NewCoinbase(s),
+		NewDebugDumper(s),
+		NewDebugManager(s.chainConfig, s),
+		NewMinerManager(s),
+		NewAdminManager(s),
 	}...)
 }
 

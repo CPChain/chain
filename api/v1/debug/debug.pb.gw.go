@@ -2,17 +2,17 @@
 // source: v1/debug/debug.proto
 
 /*
-Package debugpb is a reverse proxy.
+Package debug is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package debugpb
+package debug
 
 import (
 	"io"
 	"net/http"
 
-	"bitbucket.org/cpchain/chain/api/v1/commonpb"
+	"bitbucket.org/cpchain/chain/api/v1/common"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -31,7 +31,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_DebugDumper_DumpBlock_0(ctx context.Context, marshaler runtime.Marshaler, client DebugDumperClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq commonpb.BlockNumber
+	var protoReq common.BlockNumber
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -44,7 +44,7 @@ func request_DebugDumper_DumpBlock_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func request_DebugManager_Preimage_0(ctx context.Context, marshaler runtime.Marshaler, client DebugManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq commonpb.Hash
+	var protoReq common.Hash
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {

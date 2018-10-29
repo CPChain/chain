@@ -206,6 +206,7 @@
     },
     "/api/v1/cpc/getRawTransactionByBlockNumberAndIndex": {
       "post": {
+        "summary": "GetCode returns the code stored at the given address in the state for the given block number.",
         "operationId": "GetRawTransactionByBlockNumberAndIndex",
         "responses": {
           "200": {
@@ -286,6 +287,7 @@
     },
     "/api/v1/cpc/getTransactionByHash": {
       "post": {
+        "summary": "GetRawTransactionByBlockHashAndIndex returns the bytes of the transaction for the given block hash and index.",
         "operationId": "GetTransactionByHash",
         "responses": {
           "200": {
@@ -312,6 +314,7 @@
     },
     "/api/v1/cpc/getTransactionCount": {
       "post": {
+        "summary": "GetTransactionCount returns the number of transactions the given address has sent for the given block number",
         "operationId": "GetTransactionCount",
         "responses": {
           "200": {
@@ -392,6 +395,7 @@
     },
     "/api/v1/cpc/getTransactionReceipt": {
       "post": {
+        "summary": "GetTransactionReceipt returns the transaction receipt for the given transaction hash.",
         "operationId": "GetTransactionReceipt",
         "responses": {
           "200": {
@@ -440,6 +444,33 @@
         ],
         "tags": [
           "MinerReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getcode": {
+      "post": {
+        "summary": "GetCode returns the code stored at the given address in the state for the given block number.",
+        "operationId": "GetCode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonCode"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcChainReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChainReader"
         ]
       }
     },
@@ -563,21 +594,21 @@
         "hash": {
           "type": "string"
         },
-        "parent_hash": {
+        "parentHash": {
           "type": "string"
         },
         "nonce": {
           "type": "string",
           "format": "uint64"
         },
-        "mix_hash": {
+        "mixHash": {
           "type": "string"
         },
-        "logs_bloom": {
+        "logsBloom": {
           "type": "string",
           "format": "byte"
         },
-        "state_root": {
+        "stateRoot": {
           "type": "string"
         },
         "miner": {
@@ -587,7 +618,7 @@
           "type": "string",
           "format": "uint64"
         },
-        "extra_data": {
+        "extraData": {
           "type": "string",
           "format": "byte"
         },
@@ -595,21 +626,21 @@
           "type": "string",
           "format": "uint64"
         },
-        "gas_limit": {
+        "gasLimit": {
           "type": "string",
           "format": "uint64"
         },
-        "gas_used": {
+        "gasUsed": {
           "type": "string",
           "format": "uint64"
         },
         "timestamp": {
           "type": "string"
         },
-        "transactions_root": {
+        "transactionsRoot": {
           "type": "string"
         },
-        "receipts_root": {
+        "receiptsRoot": {
           "type": "string"
         },
         "error": {
@@ -626,7 +657,7 @@
     "commonBlockHash": {
       "type": "object",
       "properties": {
-        "block_hash": {
+        "blockHash": {
           "type": "string"
         }
       }
@@ -634,16 +665,25 @@
     "commonBlockNumber": {
       "type": "object",
       "properties": {
-        "block_number": {
+        "blockNumber": {
           "type": "string",
           "format": "int64"
+        }
+      }
+    },
+    "commonCode": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "format": "byte"
         }
       }
     },
     "commonGasPrice": {
       "type": "object",
       "properties": {
-        "gas_price": {
+        "gasPrice": {
           "type": "string",
           "format": "int64"
         }
@@ -652,11 +692,12 @@
     "commonIsOk": {
       "type": "object",
       "properties": {
-        "is_ok": {
+        "isOk": {
           "type": "boolean",
           "format": "boolean"
         }
-      }
+      },
+      "title": "IsOk return status"
     },
     "commonLog": {
       "type": "object",
@@ -665,15 +706,15 @@
           "type": "boolean",
           "format": "boolean"
         },
-        "block_number": {
+        "blockNumber": {
           "type": "string",
           "format": "uint64"
         },
-        "tx_index": {
+        "txIndex": {
           "type": "string",
           "format": "uint64"
         },
-        "block_hash": {
+        "blockHash": {
           "type": "string"
         },
         "index": {
@@ -683,7 +724,7 @@
         "address": {
           "type": "string"
         },
-        "tx_hash": {
+        "txHash": {
           "type": "string"
         },
         "data": {
@@ -701,26 +742,26 @@
     "commonReceipt": {
       "type": "object",
       "properties": {
-        "block_number": {
+        "blockNumber": {
           "type": "string",
           "format": "uint64"
         },
-        "gas_used": {
+        "gasUsed": {
           "type": "string",
           "format": "uint64"
         },
-        "cumulative_gas_used": {
+        "cumulativeGasUsed": {
           "type": "string",
           "format": "uint64"
         },
-        "transaction_index": {
+        "transactionIndex": {
           "type": "string",
           "format": "uint64"
         },
-        "block_hash": {
+        "blockHash": {
           "type": "string"
         },
-        "transaction_hash": {
+        "transactionHash": {
           "type": "string"
         },
         "from": {
@@ -729,7 +770,7 @@
         "to": {
           "type": "string"
         },
-        "contract_address": {
+        "contractAddress": {
           "type": "string"
         },
         "status": {
@@ -740,7 +781,7 @@
           "type": "string",
           "format": "byte"
         },
-        "logs_bloom": {
+        "logsBloom": {
           "type": "string",
           "format": "byte"
         },
@@ -755,27 +796,27 @@
     "commonSyncingInfo": {
       "type": "object",
       "properties": {
-        "is_syncing": {
+        "isSyncing": {
           "type": "boolean",
           "format": "boolean"
         },
-        "start_block": {
+        "startBlock": {
           "type": "string",
           "format": "uint64"
         },
-        "current_block": {
+        "currentBlock": {
           "type": "string",
           "format": "uint64"
         },
-        "highest_block": {
+        "highestBlock": {
           "type": "string",
           "format": "uint64"
         },
-        "pulled_states": {
+        "pulledStates": {
           "type": "string",
           "format": "uint64"
         },
-        "known_states": {
+        "knownStates": {
           "type": "string",
           "format": "uint64"
         }
@@ -785,10 +826,10 @@
     "commonTransaction": {
       "type": "object",
       "properties": {
-        "tx_hash": {
+        "txHash": {
           "type": "string"
         },
-        "block_hash": {
+        "blockHash": {
           "type": "string"
         },
         "from": {
@@ -812,7 +853,7 @@
         "s": {
           "type": "string"
         },
-        "transaction_index": {
+        "transactionIndex": {
           "type": "string",
           "format": "uint64"
         },
@@ -820,7 +861,7 @@
           "type": "string",
           "format": "uint64"
         },
-        "block_number": {
+        "blockNumber": {
           "type": "string",
           "format": "uint64"
         },
@@ -828,7 +869,7 @@
           "type": "string",
           "format": "uint64"
         },
-        "gas_price": {
+        "gasPrice": {
           "type": "string",
           "format": "uint64"
         },
@@ -844,14 +885,14 @@
         "address": {
           "type": "string"
         },
-        "block_hash": {
+        "blockHash": {
           "type": "string"
         },
-        "block_number": {
+        "blockNumber": {
           "type": "string",
           "format": "int64"
         },
-        "is_full": {
+        "isFull": {
           "type": "boolean",
           "format": "boolean"
         }
@@ -861,33 +902,36 @@
     "cpcRawTransaction": {
       "type": "object",
       "properties": {
-        "raw_transaction": {
+        "rawTransaction": {
           "type": "string",
           "format": "byte"
         }
-      }
+      },
+      "title": "RawTransaction transaction bytes"
     },
     "cpcTransactionCount": {
       "type": "object",
       "properties": {
-        "transaction_count": {
+        "transactionCount": {
           "type": "string",
           "format": "uint64"
         }
-      }
+      },
+      "title": "TransactionCount transaction count"
     },
     "cpcTransactionHash": {
       "type": "object",
       "properties": {
-        "transaction_hash": {
+        "transactionHash": {
           "type": "string"
         }
-      }
+      },
+      "title": "TransactionHash transaction hash"
     },
     "cpcTransactionPoolReaderRequest": {
       "type": "object",
       "properties": {
-        "block_number": {
+        "blockNumber": {
           "type": "string",
           "format": "uint64"
         },
@@ -895,13 +939,14 @@
           "type": "string",
           "format": "uint64"
         },
-        "block_hash": {
+        "blockHash": {
           "type": "string"
         },
         "address": {
           "type": "string"
         }
-      }
+      },
+      "title": "TransactionPoolReaderRequest request parameters"
     },
     "cpcWorks": {
       "type": "object",

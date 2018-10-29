@@ -163,7 +163,7 @@
     "commonGasPrice": {
       "type": "object",
       "properties": {
-        "gas_price": {
+        "gasPrice": {
           "type": "string",
           "format": "int64"
         }
@@ -172,11 +172,12 @@
     "commonIsOk": {
       "type": "object",
       "properties": {
-        "is_ok": {
+        "isOk": {
           "type": "boolean",
           "format": "boolean"
         }
-      }
+      },
+      "title": "IsOk return status"
     },
     "minerExtra": {
       "type": "object",

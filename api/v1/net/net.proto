@@ -1,6 +1,6 @@
 
 syntax = "proto3";
 
-option go_package = "netpb";
+option go_package = "net";
 
 package net;

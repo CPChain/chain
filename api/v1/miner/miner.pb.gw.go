@@ -2,17 +2,17 @@
 // source: v1/miner/miner.proto
 
 /*
-Package minerpb is a reverse proxy.
+Package miner is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package minerpb
+package miner
 
 import (
 	"io"
 	"net/http"
 
-	"bitbucket.org/cpchain/chain/api/v1/commonpb"
+	"bitbucket.org/cpchain/chain/api/v1/common"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -70,7 +70,7 @@ func request_MinerManager_SetExtra_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func request_MinerManager_SetGasPrice_0(ctx context.Context, marshaler runtime.Marshaler, client MinerManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq commonpb.GasPrice
+	var protoReq common.GasPrice
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -83,7 +83,7 @@ func request_MinerManager_SetGasPrice_0(ctx context.Context, marshaler runtime.M
 }
 
 func request_MinerManager_SetCoinbase_0(ctx context.Context, marshaler runtime.Marshaler, client MinerManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq commonpb.Address
+	var protoReq common.Address
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {

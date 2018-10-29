@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-import "v1/commonpb/common.proto";
+import "common/common.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 import "google/api/annotations.proto";
 
-option go_package = "debugpb";
+option go_package = "debug";
 
 package debug;
 
@@ -28,17 +28,18 @@ message PreimageValue {
 
 // DebugManagerRequest DebugManager request arguments
 message DebugManagerRequest {
-    string block_hash = 1;
-    int32 tx_index = 2;
-    string contract_address = 3;
-    bytes key_start = 4;
-    int32 max_result = 5;
-    uint64 start_number = 6;
-    google.protobuf.UInt64Value end_number = 7;
-    string start_hash = 8;
-    google.protobuf.StringValue end_hash = 9;
+    string blockHash = 1;
+    int32 txIndex = 2;
+    string contractAddress = 3;
+    bytes keyStart = 4;
+    int32 maxResult = 5;
+    uint64 startNumber = 6;
+    google.protobuf.UInt64Value endNumber = 7;
+    string startHash = 8;
+    google.protobuf.StringValue endHash = 9;
 }
 
+//StorageEntry storage's entry
 message StorageEntry {
     string key = 1;
     string value = 2;
@@ -46,8 +47,8 @@ message StorageEntry {
 
 // StorageRangeResult is the result of a debug_storageRangeAt API call.
 message StorageRangeResult {
-    map<string, StorageEntry> storage_map = 1;
-    string next_key = 2;
+    map<string, StorageEntry> storageMap = 1;
+    string nextKey = 2;
 }
 
 // DebugManager is the collection of cpc full node APIs exposed over

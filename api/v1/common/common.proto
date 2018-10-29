@@ -2,16 +2,21 @@ syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
 
-option go_package = "bitbucket.org/cpchain/chain/api/v1/commonpb" ;
+option go_package = "common";
 
 package common;
 
+//IsOk return status
 message IsOk {
-    bool is_ok = 1;
+    bool isOk = 1;
+}
+
+message Code {
+    bytes code = 1;
 }
 
 message BlockNumber {
-    int64 block_number = 1;
+    int64 blockNumber = 1;
 }
 
 message Address {
@@ -23,7 +28,7 @@ message Addresses {
 }
 
 message BlockHash {
-    string block_hash = 1;
+    string blockHash = 1;
 }
 
 message Hash {
@@ -35,37 +40,37 @@ message Balance {
 }
 
 message GasPrice {
-    int64 gas_price = 1;
+    int64 gasPrice = 1;
 }
 
 message IsFull {
-    bool is_full = 1;
+    bool isFull = 1;
 }
 
 message Block {
     uint64 number = 1;
     string hash = 2;
-    string parent_hash = 3;
+    string parentHash = 3;
     uint64 nonce = 4;
-    string mix_hash = 5;
-    bytes logs_bloom = 6;
-    string state_root = 7;
+    string mixHash = 5;
+    bytes logsBloom = 6;
+    string stateRoot = 7;
     string miner = 8;
     uint64 difficulty = 9;
-    bytes extra_data = 10;
+    bytes extraData = 10;
     uint64 size = 11;
-    uint64 gas_limit = 12;
-    uint64 gas_used = 13;
+    uint64 gasLimit = 12;
+    uint64 gasUsed = 13;
     string timestamp = 14;
-    string transactions_root = 15;
-    string receipts_root = 16;
+    string transactionsRoot = 15;
+    string receiptsRoot = 16;
     string error = 17;
     repeated Transaction transactions = 18;
 }
 
 message Transaction {
-    string tx_hash = 1;
-    string block_hash = 2;
+    string txHash = 1;
+    string blockHash = 2;
     string from = 3;
     string to = 4;
     string hash = 5;
@@ -73,38 +78,38 @@ message Transaction {
     string v = 7;
     string r = 8;
     string s = 9;
-    uint64 transaction_index = 10;
+    uint64 transactionIndex = 10;
     uint64 nonce = 11;
-    uint64 block_number = 12;
+    uint64 blockNumber = 12;
     uint64 gas = 13;
-    uint64 gas_price = 14;
+    uint64 gasPrice = 14;
     bytes input = 15;
 }
 
 message Receipt {
-    uint64 block_number = 1;
-    uint64 gas_used = 2;
-    uint64 cumulative_gas_used = 3;
-    uint64 transaction_index = 4;
-    string block_hash = 5;
-    string transaction_hash = 6;
+    uint64 blockNumber = 1;
+    uint64 gasUsed = 2;
+    uint64 cumulativeGasUsed = 3;
+    uint64 transactionIndex = 4;
+    string blockHash = 5;
+    string transactionHash = 6;
     string from = 7;
     string to = 8;
-    string contract_address = 9;
+    string contractAddress = 9;
     uint64 status= 10;
     bytes root = 11;
-    bytes logs_bloom = 12;
+    bytes logsBloom = 12;
     repeated Log logs = 13;
 }
 
 message Log {
     bool removed = 1;
-    uint64 block_number = 2;
-    uint64 tx_index = 3;
-    string block_hash = 4;
+    uint64 blockNumber = 2;
+    uint64 txIndex = 3;
+    string blockHash = 4;
     uint32 index = 5;
     string address = 6;
-    string tx_hash = 7;
+    string txHash = 7;
     bytes data = 8;
     repeated string topics = 9;
 }
@@ -124,7 +129,7 @@ message Dump {
 }
 
 message BadBlockArgs {
-    repeated BadBlockArg bad_block_args = 1;
+    repeated BadBlockArg badBlockArgs = 1;
 }
 
 message BadBlockArg {
@@ -139,26 +144,26 @@ message BadBlockArg {
 // - pulledStates:  number of state entries processed until now
 // - knownStates:   number of known state entries that still need to be pulled
 message SyncingInfo {
-    bool is_syncing = 1;
-    uint64 start_block = 2;
-    uint64 current_block = 3;
-    uint64 highest_block = 4;
-    uint64 pulled_states = 5;
-    uint64 known_states = 6;
+    bool isSyncing = 1;
+    uint64 startBlock = 2;
+    uint64 currentBlock = 3;
+    uint64 highestBlock = 4;
+    uint64 pulledStates = 5;
+    uint64 knownStates = 6;
 }
 
 // RPCTransaction represents a transaction that will serialize to the RPC representation of a transaction
 message  RpcTransaction {
-    string block_hash = 1;
-    uint64 block_number = 2;
+    string blockHash = 1;
+    uint64 blockNumber = 2;
     string from = 3;
     uint64 gas = 4;
-    uint64 gas_price = 5;
+    uint64 gasPrice = 5;
     string hash = 6;
     bytes input = 7;
     uint64 nonce = 8;
     google.protobuf.StringValue to = 9;
-    uint32 transaction_index = 10;
+    uint32 transactionIndex = 10;
     bytes v = 11;
     bytes r = 12;
     bytes s = 13;

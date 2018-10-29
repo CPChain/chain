@@ -572,7 +572,7 @@ func (ethash *Ethash) APIs(chain consensus.ChainReader) []rpc.API {
 	return nil
 }
 
-func (ethash *Ethash) GAPIs(chain consensus.ChainReader) []api.API {
+func (ethash *Ethash) GAPIs(chain consensus.ChainReader) []api.Api {
 	return nil
 }
 

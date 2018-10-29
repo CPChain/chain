@@ -209,7 +209,7 @@
     "commonBadBlockArgs": {
       "type": "object",
       "properties": {
-        "bad_block_args": {
+        "badBlockArgs": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/commonBadBlockArg"
@@ -227,21 +227,21 @@
         "hash": {
           "type": "string"
         },
-        "parent_hash": {
+        "parentHash": {
           "type": "string"
         },
         "nonce": {
           "type": "string",
           "format": "uint64"
         },
-        "mix_hash": {
+        "mixHash": {
           "type": "string"
         },
-        "logs_bloom": {
+        "logsBloom": {
           "type": "string",
           "format": "byte"
         },
-        "state_root": {
+        "stateRoot": {
           "type": "string"
         },
         "miner": {
@@ -251,7 +251,7 @@
           "type": "string",
           "format": "uint64"
         },
-        "extra_data": {
+        "extraData": {
           "type": "string",
           "format": "byte"
         },
@@ -259,21 +259,21 @@
           "type": "string",
           "format": "uint64"
         },
-        "gas_limit": {
+        "gasLimit": {
           "type": "string",
           "format": "uint64"
         },
-        "gas_used": {
+        "gasUsed": {
           "type": "string",
           "format": "uint64"
         },
         "timestamp": {
           "type": "string"
         },
-        "transactions_root": {
+        "transactionsRoot": {
           "type": "string"
         },
-        "receipts_root": {
+        "receiptsRoot": {
           "type": "string"
         },
         "error": {
@@ -290,7 +290,7 @@
     "commonBlockNumber": {
       "type": "object",
       "properties": {
-        "block_number": {
+        "blockNumber": {
           "type": "string",
           "format": "int64"
         }
@@ -348,10 +348,10 @@
     "commonTransaction": {
       "type": "object",
       "properties": {
-        "tx_hash": {
+        "txHash": {
           "type": "string"
         },
-        "block_hash": {
+        "blockHash": {
           "type": "string"
         },
         "from": {
@@ -375,7 +375,7 @@
         "s": {
           "type": "string"
         },
-        "transaction_index": {
+        "transactionIndex": {
           "type": "string",
           "format": "uint64"
         },
@@ -383,7 +383,7 @@
           "type": "string",
           "format": "uint64"
         },
-        "block_number": {
+        "blockNumber": {
           "type": "string",
           "format": "uint64"
         },
@@ -391,7 +391,7 @@
           "type": "string",
           "format": "uint64"
         },
-        "gas_price": {
+        "gasPrice": {
           "type": "string",
           "format": "uint64"
         },
@@ -404,36 +404,36 @@
     "debugDebugManagerRequest": {
       "type": "object",
       "properties": {
-        "block_hash": {
+        "blockHash": {
           "type": "string"
         },
-        "tx_index": {
+        "txIndex": {
           "type": "integer",
           "format": "int32"
         },
-        "contract_address": {
+        "contractAddress": {
           "type": "string"
         },
-        "key_start": {
+        "keyStart": {
           "type": "string",
           "format": "byte"
         },
-        "max_result": {
+        "maxResult": {
           "type": "integer",
           "format": "int32"
         },
-        "start_number": {
+        "startNumber": {
           "type": "string",
           "format": "uint64"
         },
-        "end_number": {
+        "endNumber": {
           "type": "string",
           "format": "uint64"
         },
-        "start_hash": {
+        "startHash": {
           "type": "string"
         },
-        "end_hash": {
+        "endHash": {
           "type": "string"
         }
       },
@@ -458,18 +458,19 @@
         "value": {
           "type": "string"
         }
-      }
+      },
+      "title": "StorageEntry storage's entry"
     },
     "debugStorageRangeResult": {
       "type": "object",
       "properties": {
-        "storage_map": {
+        "storageMap": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/debugStorageEntry"
           }
         },
-        "next_key": {
+        "nextKey": {
           "type": "string"
         }
       },

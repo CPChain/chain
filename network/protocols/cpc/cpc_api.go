@@ -1,7 +1,7 @@
 package cpc
 
 import (
-	"bitbucket.org/cpchain/chain/api/v1/commonpb"
+	"bitbucket.org/cpchain/chain/api/v1/common"
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/api/v1/cpc"
@@ -35,18 +35,18 @@ func (c *Coinbase) Namespace() string {
 
 // RegisterServer register api to grpc
 func (c *Coinbase) RegisterServer(s *grpc.Server) {
-	cpcpb.RegisterCoinbaseServer(s, c)
+	cpc.RegisterCoinbaseServer(s, c)
 }
 
 // RegisterGateway register api to restfull json
 func (c *Coinbase) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	cpcpb.RegisterCoinbaseHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	cpc.RegisterCoinbaseHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 // Coinbase is the address that mining rewards will be send to
-func (c *Coinbase) Coinbase(ctx context.Context, req *empty.Empty) (*commonpb.Address, error) {
+func (c *Coinbase) Coinbase(ctx context.Context, req *empty.Empty) (*common.Address, error) {
 	addr, err := c.c.Etherbase()
-	return &commonpb.Address{Address: addr.String()}, err
+	return &common.Address{Address: addr.String()}, err
 }
 
 // MinerReader provides an API to control the miner.
@@ -65,28 +65,28 @@ func NewMinerReader(c *CpchainService) *MinerReader {
 }
 
 // Mining returns an indication if this node is currently mining.
-func (m *MinerReader) Mining(ctx context.Context, req *empty.Empty) (*commonpb.IsOk, error) {
-	return &commonpb.IsOk{IsOk: m.e.IsMining()}, nil
+func (m *MinerReader) Mining(ctx context.Context, req *empty.Empty) (*common.IsOk, error) {
+	return &common.IsOk{IsOk: m.e.IsMining()}, nil
 }
 
 // GetWork returns a work package for external miner. The work package consists of 3 strings
 // result[0], 32 bytes hex encoded current block header pow-hash
 // result[1], 32 bytes hex encoded seed hash used for DAG
 // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
-func (m *MinerReader) GetWork(ctx context.Context, req *empty.Empty) (*cpcpb.Works, error) {
+func (m *MinerReader) GetWork(ctx context.Context, req *empty.Empty) (*cpc.Works, error) {
 	if !m.e.IsMining() {
 		// TODO: @liuq fix this.
 		if err := m.e.StartMining(false, nil); err != nil {
-			return &cpcpb.Works{}, err
+			return &cpc.Works{}, err
 		}
 	}
 	work, err := m.agent.GetWork()
 	if err != nil {
-		return &cpcpb.Works{}, fmt.Errorf("mining not ready: %v", err)
+		return &cpc.Works{}, fmt.Errorf("mining not ready: %v", err)
 	}
 	mwork := make(map[int32]string)
 	for i, w := range work {
 		mwork[int32(i)] = w
 	}
-	return &cpcpb.Works{Works: mwork}, nil
+	return &cpc.Works{Works: mwork}, nil
 }

@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-import "v1/commonpb/common.proto";
+import "common/common.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
-option go_package = "minerpb";
+option go_package = "miner";
 
 package miner;
 

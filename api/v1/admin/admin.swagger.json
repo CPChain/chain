@@ -75,18 +75,20 @@
       "type": "object",
       "properties": {
         "file": {
-          "type": "string"
+          "type": "string",
+          "title": "file to import or export"
         }
       }
     },
     "commonIsOk": {
       "type": "object",
       "properties": {
-        "is_ok": {
+        "isOk": {
           "type": "boolean",
           "format": "boolean"
         }
-      }
+      },
+      "title": "IsOk return status"
     }
   }
 }

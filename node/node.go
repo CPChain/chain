@@ -26,6 +26,8 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/net/context"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/api"
@@ -57,20 +59,20 @@ type Node struct {
 	grpcServer *api.Server
 
 	rpcAPIs       []rpc.API   // List of APIs currently provided by the node
-	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
+	inprocHandler *rpc.Server // In-process RPC request handler to process the Api requests
 
 	ipcEndpoint string       // IPC endpoint to listen at (empty = IPC disabled)
-	ipcListener net.Listener // IPC RPC listener socket to serve API requests
-	ipcHandler  *rpc.Server  // IPC RPC request handler to process the API requests
+	ipcListener net.Listener // IPC RPC listener socket to serve Api requests
+	ipcHandler  *rpc.Server  // IPC RPC request handler to process the Api requests
 
 	httpEndpoint  string       // HTTP endpoint (interface + port) to listen at (empty = HTTP disabled)
 	httpWhitelist []string     // HTTP RPC modules to allow through this endpoint
-	httpListener  net.Listener // HTTP RPC listener socket to server API requests
-	httpHandler   *rpc.Server  // HTTP RPC request handler to process the API requests
+	httpListener  net.Listener // HTTP RPC listener socket to server Api requests
+	httpHandler   *rpc.Server  // HTTP RPC request handler to process the Api requests
 
 	wsEndpoint string       // Websocket endpoint (interface + port) to listen at (empty = websocket disabled)
-	wsListener net.Listener // Websocket RPC listener socket to server API requests
-	wsHandler  *rpc.Server  // Websocket RPC request handler to process the API requests
+	wsListener net.Listener // Websocket RPC listener socket to server Api requests
+	wsHandler  *rpc.Server  // Websocket RPC request handler to process the Api requests
 
 	stop chan struct{} // Channel to wait for termination notifications
 	lock sync.RWMutex
@@ -118,7 +120,7 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
-		grpcServer:        api.NewSerever(conf.GrpcConfig()),
+		grpcServer:        api.NewSerever(conf.DataDir, conf.HTTPModules, conf.Grpc),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
@@ -220,15 +222,16 @@ func (n *Node) Start() error {
 		// Mark the service started for potential cleanup
 		started = append(started, kind)
 	}
-	// Lastly start the configured RPC interfaces
-	if err := n.startRPC(services); err != nil {
+	// start the configured grpc interfaces
+	if err := n.startGRPC(services); err != nil {
 		for _, service := range services {
 			service.Stop()
 		}
 		running.Stop()
 		return err
 	}
-	if err := n.startGRPC(services); err != nil {
+	// Lastly start the configured RPC interfaces
+	if err := n.startRPC(services); err != nil {
 		for _, service := range services {
 			service.Stop()
 		}
@@ -268,7 +271,11 @@ func (n *Node) startGRPC(services map[reflect.Type]Service) error {
 	for _, service := range services {
 		apis = append(apis, service.GAPIs()...)
 	}
-	n.grpcServer.Register(apis)
+
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+
+	n.grpcServer.Register(ctx, cancel, apis)
 	if err := n.grpcServer.Start(); err != nil {
 		return err
 	}
@@ -284,7 +291,7 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 	for _, service := range services {
 		apis = append(apis, service.APIs()...)
 	}
-	// Start the various API endpoints, terminating all in case of errors
+	// Start the various Api endpoints, terminating all in case of errors
 	if err := n.startInProc(apis); err != nil {
 		return err
 	}
@@ -303,7 +310,7 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 		n.stopInProc()
 		return err
 	}
-	// All API endpoints started successfully
+	// All Api endpoints started successfully
 	n.rpcAPIs = apis
 	return nil
 }
@@ -440,7 +447,7 @@ func (n *Node) Stop() error {
 		return ErrNodeStopped
 	}
 
-	// Terminate the API, services and the p2p server.
+	// Terminate the Api, services and the p2p server.
 	n.stopWS()
 	n.stopHTTP()
 	n.stopIPC()
@@ -511,7 +518,7 @@ func (n *Node) Restart() error {
 	return nil
 }
 
-// Attach creates an RPC client attached to an in-process API handler.
+// Attach creates an RPC client attached to an in-process Api handler.
 func (n *Node) Attach() (*rpc.Client, error) {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
@@ -614,8 +621,8 @@ func (n *Node) ResolvePath(x string) string {
 }
 
 // TODO: @sangh add builtin apis
-func (n *Node) gapis() []api.API {
-	return []api.API{}
+func (n *Node) gapis() []api.Api {
+	return []api.Api{}
 }
 
 // apis returns the collection of RPC descriptors this node offers.

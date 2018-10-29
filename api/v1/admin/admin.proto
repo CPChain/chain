@@ -1,13 +1,14 @@
 syntax = "proto3";
 
-import "v1/commonpb/common.proto";
+import "common/common.proto";
 import "google/api/annotations.proto";
 
-option go_package = "adminpb";
+option go_package = "admin";
 
 package admin;
 
 message File {
+    // file to import or export
     string file = 1;
 }
 

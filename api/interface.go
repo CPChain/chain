@@ -7,7 +7,7 @@ import (
 )
 
 // Named Register is better
-type API interface {
+type Api interface {
 	IsPublic() bool
 	Namespace() string
 	RegisterServer(*grpc.Server)

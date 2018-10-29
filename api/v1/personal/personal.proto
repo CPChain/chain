@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
-option go_package = "personalpb";
+option go_package = "personal";
 
 package personal;
 
