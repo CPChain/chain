@@ -255,19 +255,14 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	// Some debug infos here
 	log.Debug("--------dpor.verifySeal start--------")
-
 	log.Debug("hash", "hash", hash.Hex())
-
 	log.Debug("number", "number", number)
 	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
-
 	log.Debug("leader", "address", leader.Hex())
-
 	log.Debug("signers recoverd from header: ")
 	for _, signer := range signers {
 		log.Debug("signer", "address", signer.Hex())
 	}
-
 	log.Debug("signers in snapshot: ")
 	for _, signer := range snap.SignersOf(number) {
 		log.Debug("signer", "address", signer.Hex())
@@ -368,7 +363,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
 		log.Debug("----------------------")
 		log.Debug("signers in snapshot of:", "epoch idx", i)
-		for _, s := range snap.recentSigners()[i] {
+		for _, s := range snap.getRecentSigners(i) {
 			log.Debug("signer", "s", s.Hex())
 		}
 	}

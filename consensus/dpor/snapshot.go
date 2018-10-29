@@ -31,6 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -66,11 +67,14 @@ type Snapshot interface {
 
 // DporSnapshot is the state of the authorization voting at a given point in time.
 type DporSnapshot struct {
-	Number         uint64                      `json:"number"`     // Block number where the Snapshot was created
-	Hash           common.Hash                 `json:"hash"`       // Block hash where the Snapshot was created
-	Candidates     []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
-	RecentSigners  map[uint64][]common.Address `json:"signers"`    // Set of recent signers
-	config         *configs.DporConfig         // Consensus engine parameters to fine tune behavior
+	Number        uint64           `json:"number"`     // Block number where the Snapshot was created
+	Hash          common.Hash      `json:"hash"`       // Block hash where the Snapshot was created
+	Candidates    []common.Address `json:"candidates"` // Set of candidates read from campaign contract
+	RecentSigners *lru.ARCCache    `json:"signers"`    // Signatures of recent blocks to speed up mining
+
+	// RecentSigners map[uint64][]common.Address `json:"signers"`    // Set of recent signers
+
+	config         *configs.DporConfig // Consensus engine parameters to fine tune behavior
 	ContractCaller *consensus.ContractCaller
 
 	lock sync.RWMutex
@@ -118,23 +122,35 @@ func (s *DporSnapshot) setCandidates(candidates []common.Address) {
 	s.Candidates = candidates
 }
 
-func (s *DporSnapshot) recentSigners() map[uint64][]common.Address {
+func (s *DporSnapshot) recentSigners() *lru.ARCCache {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	return s.RecentSigners
 }
 
+func (s *DporSnapshot) getRecentSigners(epochIdx uint64) []common.Address {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	signers, ok := s.RecentSigners.Get(epochIdx)
+	if !ok {
+		return nil
+	}
+
+	return signers.([]common.Address)
+}
+
 func (s *DporSnapshot) setRecentSigners(epochIdx uint64, signers []common.Address) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.RecentSigners[epochIdx] = signers
+	s.RecentSigners.Add(epochIdx, signers)
 
-	// Remove useless signer caches
-	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
-		delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
-	}
+	// // Remove useless signer caches
+	// if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
+	// 	delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
+	// }
 }
 
 func (s *DporSnapshot) contractCaller() *consensus.ContractCaller {
@@ -156,12 +172,14 @@ func (s *DporSnapshot) setContractCaller(contractCaller *consensus.ContractCalle
 // the genesis block.
 func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
 	snap := &DporSnapshot{
-		config:        config,
-		Number:        number,
-		Hash:          hash,
-		RecentSigners: make(map[uint64][]common.Address),
+		config: config,
+		Number: number,
+		Hash:   hash,
 	}
-	snap.RecentSigners[snap.EpochIdx()] = signers
+	recentSigners, _ := lru.NewARC(MaxSizeOfRecentSigners)
+	snap.RecentSigners = recentSigners
+
+	snap.RecentSigners.Add(snap.EpochIdx(), signers)
 
 	return snap
 }
@@ -197,16 +215,15 @@ func (s *DporSnapshot) store(db ethdb.Database) error {
 // copy creates a deep copy of the Snapshot, though not the individual votes.
 func (s *DporSnapshot) copy() *DporSnapshot {
 	cpy := &DporSnapshot{
-		config:        s.config,
-		Number:        s.number(),
-		Hash:          s.hash(),
-		Candidates:    make([]common.Address, len(s.Candidates)),
-		RecentSigners: make(map[uint64][]common.Address),
+		config:     s.config,
+		Number:     s.number(),
+		Hash:       s.hash(),
+		Candidates: make([]common.Address, len(s.Candidates)),
 	}
+
+	cpy.RecentSigners = s.RecentSigners
 	copy(cpy.Candidates, s.candidates())
-	for epochIdx, committee := range s.recentSigners() {
-		cpy.RecentSigners[epochIdx] = committee
-	}
+
 	return cpy
 }
 
@@ -351,25 +368,12 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RPTs, seed int64) error {
 
 	// Elect signers
 	if s.ifStartElection() {
-		log.Info("number", "n", s.number())
-		log.Info("epochIdx", "eidx", s.EpochIdx())
-		log.Info("ifStartElection", "bool", s.ifStartElection())
 		epochIdx := s.FutureEpochIdxOf(s.number())
-		signers := s.recentSigners()[epochIdx]
-
-		log.Info("signers elected")
-		for _, ss := range signers {
-			log.Info("signer", "addr", ss.Hex())
-		}
+		signers := s.getRecentSigners(epochIdx)
 
 		if len(signers) == 0 {
 			signers = election.Elect(rpts, seed, int(s.config.Epoch))
 			s.setRecentSigners(epochIdx, signers)
-		}
-
-		log.Info("signers elected and stored to snapshot")
-		for _, ss := range s.FutureSignersOf(s.number()) {
-			log.Info("signer", "addr", ss.Hex())
 		}
 	}
 
@@ -399,7 +403,7 @@ func (s *DporSnapshot) FutureEpochIdxOf(blockNum uint64) uint64 {
 
 // SignersOf returns signers of given block number
 func (s *DporSnapshot) SignersOf(number uint64) []common.Address {
-	return s.recentSigners()[s.EpochIdxOf(number)]
+	return s.getRecentSigners(s.EpochIdxOf(number))
 }
 
 // SignerRoundOf returns signer round with given signer address and block number
@@ -433,7 +437,7 @@ func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, e
 
 // FutureSignersOf returns future signers of given block number
 func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
-	return s.recentSigners()[s.FutureEpochIdxOf(number)]
+	return s.getRecentSigners(s.FutureEpochIdxOf(number))
 }
 
 // FutureSignerRoundOf returns the future signer round with given signer address and block number
