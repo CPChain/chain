@@ -291,7 +291,6 @@ func Test_acceptSigs(t *testing.T) {
 func Test_calcDifficulty(t *testing.T) {
 	signers := getSignerAddress()
 	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
-	// cache, _ := lru.NewARC(inmemorySnapshots)
 	snapshot := newSnapshot(config, 1, common.Hash{}, signers)
 
 	type args struct {
