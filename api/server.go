@@ -19,6 +19,8 @@ type Server struct {
 	handler  *grpc.Server
 	listener net.Listener
 
+	gatewayListener net.Listener
+
 	ipcHandler  *grpc.Server
 	ipcListener net.Listener
 
@@ -70,11 +72,17 @@ func (s *Server) startGrpc() error {
 		}
 	}(s.listener)
 
-	go func(addr string, mux *runtime.ServeMux) {
-		if err := http.ListenAndServe(addr, mux); err != nil {
+	c, err = net.Listen("tcp", s.config.GatewayAddress())
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	s.gatewayListener = c
+	go func(lis net.Listener, mux *runtime.ServeMux) {
+		if err := http.Serve(lis, mux); err != nil {
 			log.Error(err.Error())
 		}
-	}(s.config.GatewayAddress(), s.mux)
+	}(s.gatewayListener, s.mux)
 	return nil
 }
 
@@ -129,6 +137,11 @@ func (s *Server) stopGrpc() {
 	if s.listener != nil {
 		s.listener.Close()
 		s.listener = nil
+	}
+
+	if s.gatewayListener != nil {
+		s.gatewayListener.Close()
+		s.gatewayListener = nil
 	}
 }
 
