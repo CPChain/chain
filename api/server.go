@@ -51,10 +51,10 @@ func (s *Server) Start() error {
 	if err := s.startGrpc(); err != nil {
 		return err
 	}
-	// if err := s.startIpc(); err != nil {
-	// 	s.stopGrpc()
-	// 	return err
-	// }
+	if err := s.startIpc(); err != nil {
+		s.stopGrpc()
+		return err
+	}
 	return nil
 }
 
@@ -66,11 +66,11 @@ func (s *Server) startGrpc() error {
 		return err
 	}
 	s.listener = c
-	go func(lis net.Listener) {
-		if err := s.handler.Serve(lis); err != nil {
+	go func(handler *grpc.Server, lis net.Listener) {
+		if err := handler.Serve(lis); err != nil {
 			log.Error(err.Error())
 		}
-	}(s.listener)
+	}(s.handler, s.listener)
 
 	c, err = net.Listen("tcp", s.config.GatewayAddress())
 	if err != nil {
@@ -101,11 +101,11 @@ func (s *Server) startIpc() error {
 		s.ipcListener = c
 		os.Chmod(s.config.IpcAddress(), 0600)
 
-		go func(lis net.Listener) {
-			if err := s.ipcHandler.Serve(lis); err != nil {
+		go func(handler *grpc.Server, lis net.Listener) {
+			if err := handler.Serve(lis); err != nil {
 				log.Error(err.Error())
 			}
-		}(s.ipcListener)
+		}(s.handler, s.ipcListener)
 	}
 
 	return nil
