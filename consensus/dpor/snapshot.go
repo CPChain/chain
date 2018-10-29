@@ -211,14 +211,17 @@ func (s *DporSnapshot) store(db ethdb.Database) error {
 // copy creates a deep copy of the Snapshot, though not the individual votes.
 func (s *DporSnapshot) copy() *DporSnapshot {
 	cpy := &DporSnapshot{
-		config:     s.config,
-		Number:     s.number(),
-		Hash:       s.hash(),
-		Candidates: make([]common.Address, len(s.Candidates)),
+		config:        s.config,
+		Number:        s.number(),
+		Hash:          s.hash(),
+		Candidates:    make([]common.Address, len(s.Candidates)),
+		RecentSigners: make(map[uint64][]common.Address),
 	}
 
-	cpy.RecentSigners = s.RecentSigners
 	copy(cpy.Candidates, s.candidates())
+	for epochIdx, signers := range s.recentSigners() {
+		cpy.setRecentSigners(epochIdx, signers)
+	}
 
 	return cpy
 }
