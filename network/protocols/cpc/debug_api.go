@@ -72,6 +72,7 @@ func grpcDump(dump state.Dump) *pb.Dump {
 	grpcDump := &pb.Dump{
 		Root: dump.Root,
 	}
+	grpcDump.Accounts = make(map[string]*pb.DumpAccount)
 	for k, v := range dump.Accounts {
 		grpcDump.Accounts[k] = grpcDumpAccount(v)
 	}
@@ -165,7 +166,11 @@ func (d *DebugManager) GetBadBlocks(ctx context.Context, req *empty.Empty) (*pb.
 			results[i].Block.Error = err.Error()
 		}
 	}
-	return &pb.BadBlockArgs{BadBlockArgs: results}, nil
+
+	var out pb.BadBlockArgs
+	out.BadBlockArgs = make([]*pb.BadBlockArg, 0, len(results))
+	out.BadBlockArgs = append(out.BadBlockArgs, results...)
+	return &out, nil
 }
 
 // StorageRangeAt returns the storage at the given block height and transaction index.

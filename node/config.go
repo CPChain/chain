@@ -74,6 +74,7 @@ type Config struct {
 	// Configuration of peer-to-peer networking.
 	P2P p2p.Config
 
+	// Grpc Configuration of grpc server
 	Grpc api.Config
 
 	// KeyStoreDir is the file system folder that contains private keys. The directory can

@@ -120,7 +120,7 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
-		grpcServer:        api.NewSerever(conf.DataDir, conf.HTTPModules, conf.Grpc),
+		grpcServer:        api.NewSerever(conf.DataDir, conf.HTTPModules, &conf.Grpc),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
@@ -273,9 +273,8 @@ func (n *Node) startGRPC(services map[reflect.Type]Service) error {
 	}
 
 	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
 
-	n.grpcServer.Register(ctx, cancel, apis)
+	n.grpcServer.Register(ctx, apis)
 	if err := n.grpcServer.Start(); err != nil {
 		return err
 	}

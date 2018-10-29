@@ -15,10 +15,12 @@ type Client struct {
 	c *grpc.ClientConn
 }
 
+// Dial listens the url and returns grpc client
 func Dial(rawurl string) (*Client, error) {
 	return DialContext(context.Background(), rawurl)
 }
 
+// DialContext returns a Clients with given rul
 func DialContext(ctx context.Context, rawurl string) (*Client, error) {
 	c, err := grpc.DialContext(ctx, rawurl)
 	if err != nil {
@@ -27,10 +29,12 @@ func DialContext(ctx context.Context, rawurl string) (*Client, error) {
 	return New(c), nil
 }
 
+// New returns a Client
 func New(conn *grpc.ClientConn) *Client {
 	return &Client{c: conn}
 }
 
+// Close close the connections
 func (c *Client) Close() {
 	c.c.Close()
 }
@@ -74,25 +78,47 @@ func (c *Client) getBlock(ctx context.Context, method string, in *cpc.ChainReade
 	return out, nil
 }
 
+func GRPCUnMarshalHeader(b *pb.Block) *types.Header {
+	header := new(types.Header)
+	header.Nonce = types.EncodeNonce(b.Nonce)
+	header.LogsBloom = types.BytesToBloom(b.LogsBloom)
+	header.Number = new(big.Int).SetUint64(b.Number)
+	header.GasUsed = b.GasUsed
+	header.ParentHash = common.HexToHash(b.ParentHash)
+	header.ReceiptsRoot = common.HexToHash(b.ReceiptsRoot)
+	header.TxsRoot = common.HexToHash(b.TransactionsRoot)
+	header.Time, _ = new(big.Int).SetString(b.Timestamp, 10)
+	header.Extra = make([]byte, len(b.ExtraData))
+	copy(header.Extra, b.ExtraData)
+	header.Difficulty = new(big.Int).SetUint64(b.Difficulty)
+	header.GasLimit = b.GasLimit
+	header.StateRoot = common.HexToHash(b.StateRoot)
+	header.MixHash = common.HexToHash(b.MixHash)
+	return header
+}
+
+func GRPCUnMarshalBlock(b *pb.Block, inclTx bool, fullTx bool) (*types.Block, error) {
+	header := GRPCUnMarshalHeader(b)
+	return types.NewBlockWithHeader(header), nil
+}
+
 // HeaderByHash returns the block header with the given hash.
 func (c *Client) HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error) {
-	// block, err := c.BlockByHash(ctx, hash)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return ethapi.GRPCUnMarshalHeader(block), nil
-	return nil, nil
+	block, err := c.BlockByHash(ctx, hash)
+	if err != nil {
+		return nil, err
+	}
+	return GRPCUnMarshalHeader(block), nil
 }
 
 // HeaderByNumber returns a block header from the current canonical chain. If number is
 // nil, the latest known header is returned.
 func (c *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
-	// block, err := c.BlockByNumber(ctx, number)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return ethapi.GRPCUnMarshalHeader(block), nil
-	return nil, nil
+	block, err := c.BlockByNumber(ctx, number)
+	if err != nil {
+		return nil, err
+	}
+	return GRPCUnMarshalHeader(block), nil
 }
 
 // TransactionCount returns the total number of transactions in the given block.

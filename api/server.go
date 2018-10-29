@@ -21,7 +21,6 @@ type Server struct {
 
 	ipcHandler  *grpc.Server
 	ipcListener net.Listener
-	cancel      context.CancelFunc
 
 	mux        *runtime.ServeMux
 	dialOpts   []grpc.DialOption
@@ -29,26 +28,17 @@ type Server struct {
 }
 
 // NewServer creates a new implementation of a Server
-func NewSerever(dataDir string, module []string, cfg Config) *Server {
+func NewSerever(dataDir string, modules []string, cfg *Config) *Server {
 	// update grpc config
 	cfg.DataDir = dataDir
-	cfg.Modules = make([]string, len(module))
-	copy(cfg.Modules, module)
-
-	// set default options here, TODO: @sangh add tls support
-	serverOpts := []grpc.ServerOption{}
-	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	cfg.Modules = make([]string, 0, len(modules))
+	cfg.Modules = append(cfg.Modules, modules...)
 
 	s := &Server{
-		config:     &cfg,
-		handler:    grpc.NewServer(serverOpts...),
+		config:     cfg,
 		mux:        runtime.NewServeMux(),
-		serverOpts: serverOpts,
-		dialOpts:   dialOpts,
-	}
-
-	if cfg.IpcAddress() != "" {
-		s.ipcHandler = grpc.NewServer(serverOpts...)
+		serverOpts: []grpc.ServerOption{},
+		dialOpts:   []grpc.DialOption{grpc.WithInsecure()},
 	}
 
 	return s
@@ -67,22 +57,24 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) startGrpc() error {
+	s.handler = grpc.NewServer(s.serverOpts...)
 	c, err := net.Listen("tcp", s.config.Address())
 	if err != nil {
-		return nil
+		log.Error(err.Error())
+		return err
 	}
 	s.listener = c
-	go func() {
-		if err := s.handler.Serve(s.listener); err != nil {
+	go func(lis net.Listener) {
+		if err := s.handler.Serve(lis); err != nil {
 			log.Error(err.Error())
 		}
-	}()
+	}(s.listener)
 
-	go func() {
-		if err := http.ListenAndServe(s.config.GatewayAddress(), s.mux); err != nil {
+	go func(addr string, mux *runtime.ServeMux) {
+		if err := http.ListenAndServe(addr, mux); err != nil {
 			log.Error(err.Error())
 		}
-	}()
+	}(s.config.GatewayAddress(), s.mux)
 	return nil
 }
 
@@ -94,17 +86,18 @@ func (s *Server) startIpc() error {
 	os.Remove(s.config.IpcAddress())
 	if s.config.IpcAddress() != "" {
 		c, err := net.Listen("unix", s.config.IpcAddress())
+		s.ipcHandler = grpc.NewServer(s.serverOpts...)
 		if err != nil {
 			return err
 		}
 		s.ipcListener = c
 		os.Chmod(s.config.IpcAddress(), 0600)
 
-		go func() {
-			if err := s.ipcHandler.Serve(s.ipcListener); err != nil {
+		go func(lis net.Listener) {
+			if err := s.ipcHandler.Serve(lis); err != nil {
 				log.Error(err.Error())
 			}
-		}()
+		}(s.ipcListener)
 	}
 
 	return nil
@@ -129,9 +122,6 @@ func (s *Server) stopIpc() {
 }
 
 func (s *Server) stopGrpc() {
-	if s.cancel != nil {
-		s.cancel()
-	}
 	if s.handler != nil {
 		s.handler.Stop()
 		s.handler = nil
@@ -143,8 +133,7 @@ func (s *Server) stopGrpc() {
 }
 
 // Register regists all the given apis
-func (s *Server) Register(ctx context.Context, cancel func(), gapis []Api) {
-	s.cancel = cancel
+func (s *Server) Register(ctx context.Context, gapis []Api) {
 	// Generate the whitelist based on the allowed modules
 	whitelist := make(map[string]bool)
 	for _, module := range s.config.Modules {
@@ -154,7 +143,7 @@ func (s *Server) Register(ctx context.Context, cancel func(), gapis []Api) {
 	for _, stub := range gapis {
 		if whitelist[stub.Namespace()] || (len(whitelist) == 0 && stub.IsPublic()) {
 			s.register(ctx, stub)
-			log.Error("Grpc registered", "namespace", stub.Namespace())
+			log.Debug("Grpc registered", "namespace", stub.Namespace())
 		}
 	}
 }

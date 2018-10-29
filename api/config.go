@@ -10,10 +10,9 @@ import (
 
 const (
 	defaultHost        = "localhost"
-	defaultPort        = 8453
-	defaultIpcHost     = "localhost"
+	defaultPort        = 8544
 	defaultGatewayHost = "localhost"
-	defaultGatewayPort = 8452
+	defaultGatewayPort = 8543
 )
 
 // Config grpc configuration
@@ -43,7 +42,7 @@ func (c *Config) Address() string {
 // GatewayAddress returns the restfull json http server address
 func (c *Config) GatewayAddress() string {
 	if c.GatewayHost == "" {
-		c.GatewayHost = defaultHost
+		c.GatewayHost = defaultGatewayHost
 	}
 	if c.GatewayPort == 0 {
 		c.GatewayPort = defaultGatewayPort

@@ -1,8 +1,6 @@
 package ethapi
 
 import (
-	"math/big"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	pb "bitbucket.org/cpchain/chain/api/v1/common"
 	"bitbucket.org/cpchain/chain/api/v1/cpc"
@@ -149,7 +147,6 @@ func newGRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumbe
 		Gas:      tx.Gas(),
 		GasPrice: tx.GasPrice().Uint64(),
 		Hash:     tx.Hash().Hex(),
-		Input:    tx.Data(),
 		Nonce:    tx.Nonce(),
 		To:       tx.To().Hex(),
 		Value:    tx.Value().String(),
@@ -157,6 +154,9 @@ func newGRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumbe
 		R:        r.String(),
 		S:        s.String(),
 	}
+	result.Input = make([]byte, len(tx.Data()))
+	copy(result.Input, tx.Data())
+
 	if blockHash != (common.Hash{}) {
 		result.BlockHash = blockHash.Hex()
 		result.BlockNumber = blockNumber
@@ -189,30 +189,6 @@ func newGRPCTransactionFromBlockHash(b *types.Block, hash common.Hash) *pb.Trans
 	return nil
 }
 
-func GRPCUnMarshalHeader(b *pb.Block) *types.Header {
-	header := new(types.Header)
-	header.Nonce = types.EncodeNonce(b.Nonce)
-	header.LogsBloom = types.BytesToBloom(b.LogsBloom)
-	header.Number = new(big.Int).SetUint64(b.Number)
-	header.GasUsed = b.GasUsed
-	header.ParentHash = common.HexToHash(b.ParentHash)
-	header.ReceiptsRoot = common.HexToHash(b.ReceiptsRoot)
-	header.TxsRoot = common.HexToHash(b.TransactionsRoot)
-	header.Time, _ = new(big.Int).SetString(b.Timestamp, 10)
-	header.Extra = make([]byte, len(b.ExtraData))
-	copy(header.Extra, b.ExtraData)
-	header.Difficulty = new(big.Int).SetUint64(b.Difficulty)
-	header.GasLimit = b.GasLimit
-	header.StateRoot = common.HexToHash(b.StateRoot)
-	header.MixHash = common.HexToHash(b.MixHash)
-	return header
-}
-
-func GRPCUnMarshalBlock(b *pb.Block, inclTx bool, fullTx bool) (*types.Block, error) {
-	header := GRPCUnMarshalHeader(b)
-	return types.NewBlockWithHeader(header), nil
-}
-
 // GRPCMarshalBlock converts the given block to the RPC output which depends on fullTx. If inclTx is true transactions are
 // returned. When fullTx is true the returned block contains full transaction details, otherwise it will only contain
 // transaction hashes.
@@ -227,7 +203,6 @@ func GRPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*pb.Block, erro
 		StateRoot:        head.StateRoot.Hex(),
 		Miner:            head.Coinbase.Hex(),
 		Difficulty:       head.Difficulty.Uint64(),
-		ExtraData:        head.Extra,
 		Size:             uint64(head.Size()),
 		GasLimit:         head.GasLimit,
 		GasUsed:          head.GasUsed,
@@ -237,6 +212,9 @@ func GRPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*pb.Block, erro
 	}
 	block.LogsBloom = make([]byte, len(block.LogsBloom))
 	copy(block.LogsBloom, block.LogsBloom)
+
+	block.ExtraData = make([]byte, len(head.Extra))
+	copy(block.ExtraData, head.Extra)
 
 	if inclTx {
 		formatTx := func(tx *types.Transaction) (*pb.Transaction, error) {
@@ -304,7 +282,12 @@ func (s *ChainReader) GetCode(ctx context.Context, req *cpc.ChainReaderRequest) 
 		return &pb.Code{}, err
 	}
 	code := state.GetCode(common.HexToAddress(req.Address))
-	return &pb.Code{Code: code}, state.Error()
+
+	var out pb.Code
+	out.Code = make([]byte, len(code))
+	copy(out.Code, code)
+
+	return &out, state.Error()
 }
 
 // TransactionReader exposes methods for the RPC interface
@@ -372,18 +355,24 @@ func (t *TransactionReader) GetTransactionByBlockHashAndIndex(ctx context.Contex
 
 // GetRawTransactionByBlockNumberAndIndex returns the bytes of the transaction for the given block number and index.
 func (t *TransactionReader) GetRawTransactionByBlockNumberAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*cpc.RawTransaction, error) {
+	var out cpc.RawTransaction
 	if block, _ := t.b.BlockByNumber(ctx, rpc.BlockNumber(req.BlockNumber)); block != nil {
-		return &cpc.RawTransaction{RawTransaction: newRPCRawTransactionFromBlockIndex(block, req.Index)}, nil
+		raw := newRPCRawTransactionFromBlockIndex(block, req.Index)
+		out.RawTransaction = make([]byte, len(raw))
+		copy(out.RawTransaction, raw)
 	}
-	return &cpc.RawTransaction{}, nil
+	return &out, nil
 }
 
 // GetRawTransactionByBlockHashAndIndex returns the bytes of the transaction for the given block hash and index.
 func (t *TransactionReader) GetRawTransactionByBlockHashAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*cpc.RawTransaction, error) {
+	var out cpc.RawTransaction
 	if block, _ := t.b.GetBlock(ctx, common.HexToHash(req.BlockHash)); block != nil {
-		return &cpc.RawTransaction{RawTransaction: newRPCRawTransactionFromBlockIndex(block, req.Index)}, nil
+		raw := newRPCRawTransactionFromBlockIndex(block, req.Index)
+		out.RawTransaction = make([]byte, len(raw))
+		copy(out.RawTransaction, raw)
 	}
-	return &cpc.RawTransaction{}, nil
+	return &out, nil
 }
 
 // GetTransactionCount returns the number of transactions the given address has sent for the given block number
@@ -464,8 +453,10 @@ func (t *TransactionReader) GetTransactionReceipt(ctx context.Context, txHash *c
 		To:               tx.To().Hex(),
 		GasUsed:          receipt.GasUsed,
 		Logs:             make([]*pb.Log, len(receipt.Logs)),
-		LogsBloom:        receipt.Bloom.Bytes(),
 	}
+
+	result.LogsBloom = make([]byte, len(receipt.Bloom.Bytes()))
+	copy(result.LogsBloom, receipt.Bloom.Bytes())
 
 	for _, log := range receipt.Logs {
 		l := &pb.Log{
@@ -476,9 +467,10 @@ func (t *TransactionReader) GetTransactionReceipt(ctx context.Context, txHash *c
 			Index:       uint32(log.Index),
 			Address:     log.Address.Hex(),
 			TxHash:      log.TxHash.Hex(),
-			Data:        log.Data,
+			Data:        make([]byte, len(log.Data)),
 			Topics:      make([]string, len(log.Topics)),
 		}
+		copy(l.Data, log.Data)
 		for _, t := range log.Topics {
 			l.Topics = append(l.Topics, t.Hex())
 		}
@@ -487,7 +479,8 @@ func (t *TransactionReader) GetTransactionReceipt(ctx context.Context, txHash *c
 
 	// Assign receipt status or post state.
 	if len(receipt.PostState) > 0 {
-		result.Root = receipt.PostState
+		result.Root = make([]byte, len(receipt.PostState))
+		copy(result.Root, receipt.PostState)
 	} else {
 		result.Status = receipt.Status
 	}
@@ -534,7 +527,6 @@ func (c *AccountReader) RegisterGateway(ctx context.Context, mux *runtime.ServeM
 
 // Accounts returns the collection of accounts this node manages
 func (s *AccountReader) Accounts(ctx context.Context, req *empty.Empty) (*pb.Addresses, error) {
-	// addresses := make([]common.Address, 0) // return [] instead of nil if empty
 	addresses := &pb.Addresses{Addresses: make([]string, 0, 0)}
 	for _, wallet := range s.am.Wallets() {
 		for _, account := range wallet.Accounts() {
