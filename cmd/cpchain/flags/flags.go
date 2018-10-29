@@ -192,11 +192,11 @@ var RpcFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  GrpcAddrFlagName,
-		Usage: "GRPC address",
+		Usage: "GRPC address whose format is <host:port>",
 	},
 	cli.StringFlag{
 		Name:  GatewayAddrFlagName,
-		Usage: "GRPC gateway address",
+		Usage: "GRPC gateway address whose format is <host:port>",
 	},
 	cli.StringFlag{
 		Name:  GrpcIpcAddrFlagName,
