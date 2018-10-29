@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -14,6 +15,7 @@ import (
 
 // Server Grpc Server
 type Server struct {
+	lock   *sync.Mutex
 	config *Config
 
 	handler  *grpc.Server
@@ -37,6 +39,7 @@ func NewSerever(dataDir string, modules []string, cfg *Config) *Server {
 	cfg.Modules = append(cfg.Modules, modules...)
 
 	s := &Server{
+		lock:       new(sync.Mutex),
 		config:     cfg,
 		mux:        runtime.NewServeMux(),
 		serverOpts: []grpc.ServerOption{},
@@ -59,6 +62,8 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) startGrpc() error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	s.handler = grpc.NewServer(s.serverOpts...)
 	c, err := net.Listen("tcp", s.config.Address())
 	if err != nil {
@@ -87,14 +92,16 @@ func (s *Server) startGrpc() error {
 }
 
 func (s *Server) startIpc() error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	// Ensure the IPC path exists and remove any previous leftover
 	if err := os.MkdirAll(filepath.Dir(s.config.IpcAddress()), 0751); err != nil {
 		return err
 	}
 	os.Remove(s.config.IpcAddress())
 	if s.config.IpcAddress() != "" {
-		c, err := net.Listen("unix", s.config.IpcAddress())
 		s.ipcHandler = grpc.NewServer(s.serverOpts...)
+		c, err := net.Listen("unix", s.config.IpcAddress())
 		if err != nil {
 			return err
 		}
@@ -118,6 +125,8 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) stopIpc() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	if s.ipcHandler != nil {
 		s.ipcHandler.Stop()
 		s.ipcHandler = nil
@@ -130,6 +139,8 @@ func (s *Server) stopIpc() {
 }
 
 func (s *Server) stopGrpc() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	if s.handler != nil {
 		s.handler.Stop()
 		s.handler = nil
@@ -147,6 +158,8 @@ func (s *Server) stopGrpc() {
 
 // Register regists all the given apis
 func (s *Server) Register(ctx context.Context, gapis []Api) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	// Generate the whitelist based on the allowed modules
 	whitelist := make(map[string]bool)
 	for _, module := range s.config.Modules {
