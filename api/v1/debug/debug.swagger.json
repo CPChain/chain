@@ -1,0 +1,487 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/debug/debug.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/debug/dumpBlock": {
+      "post": {
+        "summary": "DumpBlock retrieves the entire state of the database at a given block.",
+        "operationId": "DumpBlock",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonDump"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/commonBlockNumber"
+            }
+          }
+        ],
+        "tags": [
+          "DebugDumper"
+        ]
+      }
+    },
+    "/api/v1/debug/getBadBlocks": {
+      "post": {
+        "summary": "GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network\nand returns them as a JSON list of block-hashes",
+        "operationId": "GetBadBlocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonBadBlockArgs"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "DebugManager"
+        ]
+      }
+    },
+    "/api/v1/debug/getModifiedAccountsByHash": {
+      "post": {
+        "summary": "GetModifiedAccountsByHash returns all accounts that have changed between the\ntwo blocks specified. A change is defined as a difference in nonce, balance,\ncode hash, or storage hash.",
+        "description": "With one parameter, returns the list of accounts modified in the specified block.",
+        "operationId": "GetModifiedAccountsByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAddresses"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/debugDebugManagerRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DebugManager"
+        ]
+      }
+    },
+    "/api/v1/debug/getModifiedAccountsByNumber": {
+      "post": {
+        "summary": "GetModifiedAccountsByNumber returns all accounts that have changed between the\ntwo blocks specified. A change is defined as a difference in nonce, balance,\ncode hash, or storage hash.",
+        "description": "With one parameter, returns the list of accounts modified in the specified block.",
+        "operationId": "GetModifiedAccountsByNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAddresses"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/debugDebugManagerRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DebugManager"
+        ]
+      }
+    },
+    "/api/v1/debug/preimage": {
+      "post": {
+        "summary": "DumpBlock retrieves the entire state of the database at a given block.",
+        "operationId": "Preimage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/debugPreimageValue"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/commonHash"
+            }
+          }
+        ],
+        "tags": [
+          "DebugManager"
+        ]
+      }
+    },
+    "/api/v1/debug/storageRangeAt": {
+      "post": {
+        "summary": "StorageRangeAt returns the storage at the giyyven block height and transaction index.",
+        "operationId": "StorageRangeAt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/debugStorageRangeResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/debugDebugManagerRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DebugManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "commonAddresses": {
+      "type": "object",
+      "properties": {
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commonBadBlockArg": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "rlp": {
+          "type": "string"
+        },
+        "block": {
+          "$ref": "#/definitions/commonBlock"
+        }
+      }
+    },
+    "commonBadBlockArgs": {
+      "type": "object",
+      "properties": {
+        "badBlockArgs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonBadBlockArg"
+          }
+        }
+      },
+      "description": "BadBlockArgs represents the entries in the list returned when bad blocks are queried."
+    },
+    "commonBlock": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "parentHash": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "mixHash": {
+          "type": "string"
+        },
+        "logsBloom": {
+          "type": "string",
+          "format": "byte"
+        },
+        "stateRoot": {
+          "type": "string"
+        },
+        "miner": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "extraData": {
+          "type": "string",
+          "format": "byte"
+        },
+        "size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasLimit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasUsed": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "transactionsRoot": {
+          "type": "string"
+        },
+        "receiptsRoot": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonRpcTransaction"
+          }
+        }
+      }
+    },
+    "commonBlockNumber": {
+      "type": "object",
+      "properties": {
+        "blockNumber": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "commonDump": {
+      "type": "object",
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "accounts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/commonDumpAccount"
+          }
+        }
+      }
+    },
+    "commonDumpAccount": {
+      "type": "object",
+      "properties": {
+        "balance": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "root": {
+          "type": "string"
+        },
+        "code_hash": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commonHash": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        }
+      }
+    },
+    "commonRpcTransaction": {
+      "type": "object",
+      "properties": {
+        "txHash": {
+          "type": "string"
+        },
+        "blockHash": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "v": {
+          "type": "string"
+        },
+        "r": {
+          "type": "string"
+        },
+        "s": {
+          "type": "string"
+        },
+        "transactionIndex": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "blockNumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasPrice": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "input": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "Transaction represents a transaction that will serialize to the RPC representation of a transaction"
+    },
+    "debugDebugManagerRequest": {
+      "type": "object",
+      "properties": {
+        "blockHash": {
+          "type": "string"
+        },
+        "txIndex": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "contractAddress": {
+          "type": "string"
+        },
+        "keyStart": {
+          "type": "string",
+          "format": "byte"
+        },
+        "maxResult": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "startNumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "endNumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "startHash": {
+          "type": "string"
+        },
+        "endHash": {
+          "type": "string"
+        }
+      },
+      "title": "DebugManagerRequest DebugManager request arguments"
+    },
+    "debugPreimageValue": {
+      "type": "object",
+      "properties": {
+        "preimage": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "PreimageValue the preimage for a sha3 hash"
+    },
+    "debugStorageEntry": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "StorageEntry storage's entry"
+    },
+    "debugStorageRangeResult": {
+      "type": "object",
+      "properties": {
+        "storageMap": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/debugStorageEntry"
+          }
+        },
+        "nextKey": {
+          "type": "string"
+        }
+      },
+      "description": "StorageRangeResult is the result of a debug_storageRangeAt API call."
+    },
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    }
+  }
+}

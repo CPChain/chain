@@ -132,25 +132,27 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 	// ws is omitted for now
 
 	// grpc setting
-	if ctx.IsSet(flags.GRpcAddrFlagName) {
-		addr := strings.Split(ctx.String(flags.GRpcAddrFlagName), ":")
+	switch {
+	case ctx.IsSet(flags.GrpcAddrFlagName):
+		addr := strings.Split(ctx.String(flags.GrpcAddrFlagName), ":")
 		if len(addr) != 2 {
-			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GRpcAddrFlagName)
+			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GrpcAddrFlagName)
 		}
-		cfg.GrpcHost = addr[0]
-		cfg.GrpcPort, _ = strconv.Atoi(addr[1])
-	}
-
-	if ctx.IsSet(flags.GatewayAddrFlagName) {
+		cfg.Grpc.Host = addr[0]
+		cfg.Grpc.Port, _ = strconv.Atoi(addr[1])
+		fallthrough
+	case ctx.IsSet(flags.GatewayAddrFlagName):
 		addr := strings.Split(ctx.String(flags.GatewayAddrFlagName), ":")
 		if len(addr) != 2 {
 			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GatewayAddrFlagName)
 		}
-		cfg.GatewayHost = addr[0]
-		cfg.GatewayPort, _ = strconv.Atoi(addr[1])
-	}
-
-	if ctx.IsSet(flags.RpcCorsDomainFlagName) {
+		cfg.Grpc.GatewayHost = addr[0]
+		cfg.Grpc.GatewayPort, _ = strconv.Atoi(addr[1])
+		fallthrough
+	case ctx.IsSet(flags.GrpcIpcAddrFlagName):
+		cfg.Grpc.IpcPath = ctx.String(flags.GrpcIpcAddrFlagName)
+		fallthrough
+	case ctx.IsSet(flags.RpcCorsDomainFlagName):
 		cfg.HTTPCors = strings.Split(ctx.String(flags.RpcCorsDomainFlagName), ",")
 	}
 }

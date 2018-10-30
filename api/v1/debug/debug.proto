@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+import "common/common.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/api/annotations.proto";
+
+option go_package = "debug";
+
+package debug;
+
+// DebugDumper is the collection of Ethereum full node APIs exposed
+// over the public debugging endpoint.
+service DebugDumper {
+    // DumpBlock retrieves the entire state of the database at a given block.
+    rpc DumpBlock(common.BlockNumber) returns (common.Dump) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/dumpBlock"
+            body : "*"
+        };
+    }
+}
+
+// PreimageValue the preimage for a sha3 hash
+message PreimageValue {
+    bytes preimage = 1;
+}
+
+// DebugManagerRequest DebugManager request arguments
+message DebugManagerRequest {
+    string blockHash = 1;
+    int32 txIndex = 2;
+    string contractAddress = 3;
+    bytes keyStart = 4;
+    int32 maxResult = 5;
+    uint64 startNumber = 6;
+    google.protobuf.UInt64Value endNumber = 7;
+    string startHash = 8;
+    google.protobuf.StringValue endHash = 9;
+}
+
+//StorageEntry storage's entry
+message StorageEntry {
+    string key = 1;
+    string value = 2;
+}
+
+// StorageRangeResult is the result of a debug_storageRangeAt API call.
+message StorageRangeResult {
+    map<string, StorageEntry> storageMap = 1;
+    string nextKey = 2;
+}
+
+// DebugManager is the collection of cpc full node APIs exposed over
+// the private debugging endpoint.
+service DebugManager {
+    // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.
+    rpc Preimage(common.Hash) returns (PreimageValue) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/preimage"
+            body : "*"
+        };
+    }
+    // GetBadBlocks returns a list of the last 'bad blocks' that the client has seen on the network
+    // and returns them as a JSON list of block-hashes
+    rpc GetBadBlocks(google.protobuf.Empty) returns (common.BadBlockArgs) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/getBadBlocks"
+            body : "*"
+        };
+    }
+    // StorageRangeAt returns the storage at the giyyven block height and transaction index.
+    rpc StorageRangeAt(DebugManagerRequest) returns (StorageRangeResult) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/storageRangeAt"
+            body : "*"
+        };
+    }
+    // GetModifiedAccountsByNumber returns all accounts that have changed between the
+    // two blocks specified. A change is defined as a difference in nonce, balance,
+    // code hash, or storage hash.
+    //
+    // With one parameter, returns the list of accounts modified in the specified block.
+    rpc GetModifiedAccountsByNumber(DebugManagerRequest) returns (common.Addresses) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/getModifiedAccountsByNumber"
+            body : "*"
+        };
+    }
+    // GetModifiedAccountsByHash returns all accounts that have changed between the
+    // two blocks specified. A change is defined as a difference in nonce, balance,
+    // code hash, or storage hash.
+    //
+    // With one parameter, returns the list of accounts modified in the specified block.
+    rpc GetModifiedAccountsByHash(DebugManagerRequest) returns (common.Addresses) {
+        option (google.api.http) = {
+            post : "/api/v1/debug/getModifiedAccountsByHash"
+            body : "*"
+        };
+    }
+}

@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+option go_package = "common";
+
+package common;
+
+//IsOk return status
+message IsOk {
+    bool isOk = 1;
+}
+
+message Code {
+    bytes code = 1;
+}
+
+message BlockNumber {
+    int64 blockNumber = 1;
+}
+
+message Address {
+    string address = 1;
+}
+
+message Addresses {
+    repeated string addresses = 1;
+}
+
+message BlockHash {
+    string blockHash = 1;
+}
+
+message Hash {
+    string hash = 1;
+}
+
+message Balance {
+    string balance = 1;
+}
+
+message GasPrice {
+    int64 gasPrice = 1;
+}
+
+message IsFull {
+    bool isFull = 1;
+}
+
+message Accounts {
+    repeated Account accounts = 1;
+}
+message Account {
+    string address = 1;
+    string url = 2;
+}
+
+message RawWallets {
+    repeated RawWallet rawWallets = 1;
+}
+
+// RawWallet is a JSON representation of an accounts.Wallet interface, with its
+// data contents extracted into plain fields.
+message RawWallet {
+    string Url = 1;
+    string status = 2;
+    string failure = 3;
+    Accounts accounts = 4;
+}
+
+message Block {
+    uint64 number = 1;
+    string hash = 2;
+    string parentHash = 3;
+    uint64 nonce = 4;
+    string mixHash = 5;
+    bytes logsBloom = 6;
+    string stateRoot = 7;
+    string miner = 8;
+    uint64 difficulty = 9;
+    bytes extraData = 10;
+    uint64 size = 11;
+    uint64 gasLimit = 12;
+    uint64 gasUsed = 13;
+    string timestamp = 14;
+    string transactionsRoot = 15;
+    string receiptsRoot = 16;
+    string error = 17;
+    repeated RpcTransaction transactions = 18;
+}
+
+message Receipt {
+    uint64 blockNumber = 1;
+    uint64 gasUsed = 2;
+    uint64 cumulativeGasUsed = 3;
+    uint64 transactionIndex = 4;
+    string blockHash = 5;
+    string transactionHash = 6;
+    string from = 7;
+    string to = 8;
+    string contractAddress = 9;
+    uint64 status= 10;
+    bytes root = 11;
+    bytes logsBloom = 12;
+    repeated Log logs = 13;
+}
+
+message Log {
+    bool removed = 1;
+    uint64 blockNumber = 2;
+    uint64 txIndex = 3;
+    string blockHash = 4;
+    uint32 index = 5;
+    string address = 6;
+    string txHash = 7;
+    bytes data = 8;
+    repeated string topics = 9;
+}
+
+message DumpAccount {
+    string balance = 1;
+    uint64 nonce = 2;
+    string root = 3;
+    string code_hash = 4;
+    string code = 5;
+    map<string, string> storage = 6;
+}
+
+message Dump {
+    string root = 1;
+    map<string, DumpAccount> accounts = 2;
+}
+
+// BadBlockArgs represents the entries in the list returned when bad blocks are queried.
+message BadBlockArgs {
+    repeated BadBlockArg badBlockArgs = 1;
+}
+
+message BadBlockArg {
+    string hash = 1;
+    string rlp = 2;
+    Block block = 3;
+}
+
+// - startingBlock: block number this node started to synchronise from
+// - currentBlock:  block number this node is currently importing
+// - highestBlock:  block number of the highest block header this node has received from peers
+// - pulledStates:  number of state entries processed until now
+// - knownStates:   number of known state entries that still need to be pulled
+message SyncingInfo {
+    bool isSyncing = 1;
+    uint64 startBlock = 2;
+    uint64 currentBlock = 3;
+    uint64 highestBlock = 4;
+    uint64 pulledStates = 5;
+    uint64 knownStates = 6;
+}
+
+// Transaction represents a transaction that will serialize to the RPC representation of a transaction
+message RpcTransaction {
+    string txHash = 1;
+    string blockHash = 2;
+    string from = 3;
+    google.protobuf.StringValue to = 4;
+    string hash = 5;
+    string value = 6;
+    string v = 7;
+    string r = 8;
+    string s = 9;
+    uint64 transactionIndex = 10;
+    uint64 nonce = 11;
+    uint64 blockNumber = 12;
+    uint64 gas = 13;
+    uint64 gasPrice = 14;
+    bytes input = 15;
+}
+
+message Transaction {
+    TxData data = 1;
+    bytes hash = 2;
+    bytes size = 3;
+    bytes from = 4;
+}
+
+message TxData {
+    uint64 types = 1;
+    uint64 accountNonce = 2;
+    uint64 gasLimit = 3;
+    uint64 amount = 4;
+    bytes price = 5;
+    bytes payload = 6;
+    bytes extra = 7;
+    bytes v = 8;
+    bytes r = 9;
+    bytes s = 10;
+    google.protobuf.StringValue hash = 11;
+    google.protobuf.StringValue recipient = 12;
+}

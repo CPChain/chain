@@ -1,0 +1,244 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/txpool/txpool.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/txpool/content": {
+      "post": {
+        "operationId": "Content",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/txpoolTxPool"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/txpool/inspect": {
+      "post": {
+        "summary": "inspect retrieves the content of the transaction pool and flattens it into an\neasily inspectable list.",
+        "operationId": "Inspect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/txpoolTxStringPool"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/txpool/status": {
+      "post": {
+        "summary": "Status returns the number of pending and queued transaction in the pool.",
+        "operationId": "Status",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/txpoolStatusInfo"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "commonRpcTransaction": {
+      "type": "object",
+      "properties": {
+        "txHash": {
+          "type": "string"
+        },
+        "blockHash": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "v": {
+          "type": "string"
+        },
+        "r": {
+          "type": "string"
+        },
+        "s": {
+          "type": "string"
+        },
+        "transactionIndex": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "blockNumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasPrice": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "input": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "Transaction represents a transaction that will serialize to the RPC representation of a transaction"
+    },
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
+    "txpoolAccountNonceTxPool": {
+      "type": "object",
+      "properties": {
+        "accountNonceTxPool": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/txpoolNonceTx"
+          }
+        }
+      },
+      "title": "account -\u003e NonceTxPool"
+    },
+    "txpoolAccountNonceTxStringPool": {
+      "type": "object",
+      "properties": {
+        "accountNonceTxStringPool": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/txpoolNonceTxString"
+          }
+        }
+      }
+    },
+    "txpoolNonceTx": {
+      "type": "object",
+      "properties": {
+        "nonceTx": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/commonRpcTransaction"
+          }
+        }
+      },
+      "title": "NonceTxPool nonce -\u003e Txs"
+    },
+    "txpoolNonceTxString": {
+      "type": "object",
+      "properties": {
+        "txString": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "txpoolStatusInfo": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "uint64"
+          }
+        }
+      }
+    },
+    "txpoolTxPool": {
+      "type": "object",
+      "properties": {
+        "pendingTxPool": {
+          "$ref": "#/definitions/txpoolAccountNonceTxPool",
+          "title": "map\u003cstring,Accounts\u003e txPool = 1;"
+        },
+        "queuedTxPool": {
+          "$ref": "#/definitions/txpoolAccountNonceTxPool"
+        }
+      }
+    },
+    "txpoolTxStringPool": {
+      "type": "object",
+      "properties": {
+        "pendingTxStringPool": {
+          "$ref": "#/definitions/txpoolAccountNonceTxStringPool"
+        },
+        "queuedTxStringPool": {
+          "$ref": "#/definitions/txpoolAccountNonceTxStringPool"
+        }
+      }
+    }
+  }
+}

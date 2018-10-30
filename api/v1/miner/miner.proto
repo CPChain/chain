@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+import "common/common.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+option go_package = "miner";
+
+package miner;
+
+//Threads represents the number of threads opened.
+message Threads {
+    int32 threads = 1;
+}
+
+//ExTra the extra data string that is included when this miner mines a block.
+message Extra {
+    string extra = 1;
+}
+
+// MinerManager provides RPC methods to control the miner.
+// These methods can be abused by external users and must be considered insecure for use by untrusted users.
+service MinerManager {
+    // Start the miner with the given number of threads. If threads is nil the number
+    // of workers started is equal to the number of logical CPUs that are usable by
+    // this process. If mining is already running, this method adjust the number of
+    // threads allowed to use.
+    rpc Start(Threads) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/start"
+            body: "*"
+          };
+    }
+//    Stop the miner
+    rpc Stop(google.protobuf.Empty) returns (common.IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/stop"
+            body: "*"
+          };
+    }
+    // SetExtra sets the extra data string that is included when this miner mines a block.
+    rpc SetExtra(Extra) returns (common.IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/setExtra"
+            body: "*"
+          };
+    }
+    // SetGasPrice sets the minimum accepted gas price for the miner.
+    rpc SetGasPrice(common.GasPrice) returns (common.IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/setGasPrice"
+            body: "*"
+          };
+    }
+    // SetCoinbase sets the coinbase of the miner
+    rpc SetCoinbase(common.Address) returns (common.IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/miner/setCoinbase"
+            body: "*"
+          };
+    }
+}

@@ -22,7 +22,7 @@ package node
 import (
 	"reflect"
 
-	"bitbucket.org/cpchain/chain/apis"
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/p2p"
 )
@@ -32,7 +32,7 @@ type NoopService struct{}
 
 func (s *NoopService) Protocols() []p2p.Protocol { return nil }
 func (s *NoopService) APIs() []rpc.API           { return nil }
-func (s *NoopService) GAPIs() []apis.API         { return nil }
+func (s *NoopService) GAPIs() []api.Api          { return nil }
 func (s *NoopService) Start(*p2p.Server) error   { return nil }
 func (s *NoopService) Stop() error               { return nil }
 
@@ -75,7 +75,7 @@ func (s *InstrumentedService) APIs() []rpc.API {
 }
 
 // TODO @sangh test.
-func (s *InstrumentedService) GAPIs() []apis.API {
+func (s *InstrumentedService) GAPIs() []api.Api {
 	return nil
 }
 

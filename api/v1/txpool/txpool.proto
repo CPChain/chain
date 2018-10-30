@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+import "common/common.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+option go_package = "txpool";
+
+package txpool;
+
+message StatusInfo {
+    map<string, uint64> status = 1;
+}
+
+message Dump {
+    map<string, common.RpcTransaction> dump = 1;
+}
+
+//NonceTxPool nonce -> Txs
+message NonceTx {
+    map<string, common.RpcTransaction> nonceTx = 1;
+}
+
+//account -> NonceTxPool
+message AccountNonceTxPool {
+    map<string, NonceTx> accountNonceTxPool = 1;
+}
+
+message TxPool {
+//    map<string,Accounts> txPool = 1;
+    AccountNonceTxPool pendingTxPool = 1;
+    AccountNonceTxPool queuedTxPool = 2;
+}
+
+message NonceTxString {
+    map<string, string> txString = 1;
+}
+
+message AccountNonceTxStringPool {
+    map<string, NonceTxString> accountNonceTxStringPool = 1;
+}
+
+message TxStringPool{
+    AccountNonceTxStringPool pendingTxStringPool = 1;
+    AccountNonceTxStringPool queuedTxStringPool = 2;
+}
+
+// TransactionPoolReader offers and API for the transaction pool. It only operates on data that is non confidential.
+service TransactionPoolReader {
+    rpc Content(google.protobuf.Empty) returns (TxPool) {
+        option (google.api.http) = {
+            post: "/api/v1/txpool/content"
+            body: "*"
+          };
+    }
+    // Status returns the number of pending and queued transaction in the pool.
+    rpc Status(google.protobuf.Empty) returns (StatusInfo) {
+        option (google.api.http) = {
+            post: "/api/v1/txpool/status"
+            body: "*"
+          };
+    }
+    // inspect retrieves the content of the transaction pool and flattens it into an
+    // easily inspectable list.
+    rpc Inspect(google.protobuf.Empty) returns (TxStringPool) {
+        option (google.api.http) = {
+            post: "/api/v1/txpool/inspect"
+            body: "*"
+          };
+    }
+}
