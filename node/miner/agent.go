@@ -18,7 +18,6 @@ package miner
 
 import (
 	"sync"
-
 	"sync/atomic"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -101,7 +100,7 @@ out:
 
 func (self *CpuAgent) mine(work *Work, stop <-chan struct{}) {
 	if result, err := self.engine.Seal(self.chain, work.Block, stop); result != nil {
-		log.Info("Successfully sealed new block", "number", result.Number(), "hash", result.Hash())
+		log.Info("Successfully sealed new block", "number", result.Number(), "hash", result.Hash().Hex())
 		self.returnCh <- &Result{work, result}
 	} else {
 		if err != nil {

@@ -19,7 +19,6 @@ package core
 
 import (
 	"crypto/rsa"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -30,6 +29,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -38,8 +38,6 @@ import (
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/event"
@@ -213,7 +211,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *con
 			headerByNumber := bc.GetHeaderByNumber(header.Number.Uint64())
 			// make sure the headerByNumber (if present) is in our current canonical chain
 			if headerByNumber != nil && headerByNumber.Hash() == header.Hash() {
-				log.Error("Found bad hash, rewinding chain", "number", header.Number, "hash", header.ParentHash)
+				log.Error("Found bad hash, rewinding chain", "number", header.Number, "hash", header.ParentHash.Hex())
 				bc.SetHead(header.Number.Uint64() - 1)
 				log.Error("Chain rewind was successful, resuming normal operation")
 			}
@@ -248,7 +246,7 @@ func (bc *BlockChain) loadLastState() error {
 	// Make sure the state associated with the block is available
 	if _, err := state.New(currentBlock.StateRoot(), bc.stateCache); err != nil {
 		// Dangling block without a state associated, init from scratch
-		log.Warn("Head state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
+		log.Warn("Head state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash().Hex())
 		if err := bc.repair(&currentBlock); err != nil {
 			return err
 		}
@@ -256,7 +254,7 @@ func (bc *BlockChain) loadLastState() error {
 
 	// Make sure the private state associated with the block is available
 	if _, err := state.New(GetPrivateStateRoot(bc.db, currentBlock.StateRoot()), bc.privateStateCache); err != nil {
-		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
+		log.Warn("Head private state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash().Hex())
 		// TODO: use repair instead.
 		return bc.Reset()
 	}
@@ -288,9 +286,9 @@ func (bc *BlockChain) loadLastState() error {
 	blockTd := bc.GetTd(currentBlock.Hash(), currentBlock.NumberU64())
 	fastTd := bc.GetTd(currentFastBlock.Hash(), currentFastBlock.NumberU64())
 
-	log.Info("Loaded most recent local header", "number", currentHeader.Number, "hash", currentHeader.Hash(), "td", headerTd)
-	log.Info("Loaded most recent local full block", "number", currentBlock.Number(), "hash", currentBlock.Hash(), "td", blockTd)
-	log.Info("Loaded most recent local fast block", "number", currentFastBlock.Number(), "hash", currentFastBlock.Hash(), "td", fastTd)
+	log.Info("Loaded most recent local header", "number", currentHeader.Number, "hash", currentHeader.Hash().Hex(), "td", headerTd)
+	log.Info("Loaded most recent local full block", "number", currentBlock.Number(), "hash", currentBlock.Hash().Hex(), "td", blockTd)
+	log.Info("Loaded most recent local fast block", "number", currentFastBlock.Number(), "hash", currentFastBlock.Hash().Hex(), "td", fastTd)
 
 	return nil
 }
@@ -368,7 +366,7 @@ func (bc *BlockChain) FastSyncCommitHead(hash common.Hash) error {
 	bc.currentBlock.Store(block)
 	bc.mu.Unlock()
 
-	log.Info("Committed new head block", "number", block.Number(), "hash", hash)
+	log.Info("Committed new head block", "number", block.Number(), "hash", hash.Hex())
 	return nil
 }
 
@@ -479,7 +477,7 @@ func (bc *BlockChain) repair(head **types.Block) error {
 		// Abort if we've rewound to a head block that does have associated state
 		if _, err := state.New((*head).StateRoot(), bc.stateCache); err == nil {
 			if _, err = state.New(GetPrivateStateRoot(bc.db, (*head).StateRoot()), bc.privateStateCache); err == nil {
-				log.Info("Rewound blockchain to past state", "number", (*head).Number(), "hash", (*head).Hash())
+				log.Info("Rewound blockchain to past state", "number", (*head).Number(), "hash", (*head).Hash().Hex())
 				return nil
 			}
 		}
@@ -708,12 +706,12 @@ func (bc *BlockChain) Stop() {
 			if number := bc.CurrentBlock().NumberU64(); number > offset {
 				recent := bc.GetBlockByNumber(number - offset)
 
-				log.Info("Writing cached state to disk", "block", recent.Number(), "hash", recent.Hash(), "root", recent.StateRoot())
+				log.Info("Writing cached state to disk", "block", recent.Number(), "hash", recent.Hash().Hex(), "root", recent.StateRoot())
 				if err := triedb.Commit(recent.StateRoot(), true); err != nil {
 					log.Error("Failed to commit recent state trie", "err", err)
 				}
 
-				log.Info("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash(), "root", recent.StateRoot())
+				log.Info("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash().Hex(), "root", recent.StateRoot())
 				if err := privTrieDB.Commit(GetPrivateStateRoot(bc.db, recent.StateRoot()), true); err != nil {
 					log.Error("Failed to commit recent private state trie", "err", err)
 				}
@@ -856,8 +854,8 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 	// Do a sanity check that the provided chain is actually ordered and linked
 	for i := 1; i < len(blockChain); i++ {
 		if blockChain[i].NumberU64() != blockChain[i-1].NumberU64()+1 || blockChain[i].ParentHash() != blockChain[i-1].Hash() {
-			log.Error("Non contiguous receipt insert", "number", blockChain[i].Number(), "hash", blockChain[i].Hash(), "parent", blockChain[i].ParentHash(),
-				"prevnumber", blockChain[i-1].Number(), "prevhash", blockChain[i-1].Hash())
+			log.Error("Non contiguous receipt insert", "number", blockChain[i].Number(), "hash", blockChain[i].Hash().Hex(), "parent", blockChain[i].ParentHash().Hex(),
+				"prevnumber", blockChain[i-1].Number(), "prevhash", blockChain[i-1].Hash().Hex())
 			return 0, fmt.Errorf("non contiguous insert: item %d is #%d [%x…], item %d is #%d [%x…] (parent [%x…])", i-1, blockChain[i-1].NumberU64(),
 				blockChain[i-1].Hash().Bytes()[:4], i, blockChain[i].NumberU64(), blockChain[i].Hash().Bytes()[:4], blockChain[i].ParentHash().Bytes()[:4])
 		}
@@ -1104,8 +1102,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	for i := 1; i < len(chain); i++ {
 		if chain[i].NumberU64() != chain[i-1].NumberU64()+1 || chain[i].ParentHash() != chain[i-1].Hash() {
 			// Chain broke ancestry, log a messge (programming error) and skip insertion
-			log.Error("Non contiguous block insert", "number", chain[i].Number(), "hash", chain[i].Hash(),
-				"parent", chain[i].ParentHash(), "prevnumber", chain[i-1].Number(), "prevhash", chain[i-1].Hash())
+			log.Error("Non contiguous block insert", "number", chain[i].Number(), "hash", chain[i].Hash().Hex(),
+				"parent", chain[i].ParentHash().Hex(), "prevnumber", chain[i-1].Number(), "prevhash", chain[i-1].Hash().Hex())
 
 			return 0, nil, nil, fmt.Errorf("non contiguous insert: item %d is #%d [%x…], item %d is #%d [%x…] (parent [%x…])", i-1, chain[i-1].NumberU64(),
 				chain[i-1].Hash().Bytes()[:4], i, chain[i].NumberU64(), chain[i].Hash().Bytes()[:4], chain[i].ParentHash().Bytes()[:4])
@@ -1230,7 +1228,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		case err == consensus.ErrNewSignedHeader:
 
 			log.Debug("ErrNewSignedHeader err in blockchain.insertChain.")
-			log.Debug("err block", "block", block.NumberU64(), block.Hash().Hex(), block.Extra2())
 			err := err.(*consensus.ErrNewSignedHeaderType)
 			err.SignedHeader = block.RefHeader()
 			bc.pendingBlocks.Add(block.Hash(), block)
@@ -1279,7 +1276,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 		switch status {
 		case CanonStatTy:
-			log.Debug("Inserted new block", "number", block.Number(), "hash", block.Hash(), "txs",
+			log.Debug("Inserted new block", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
 				len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)))
 
 			coalescedLogs = append(coalescedLogs, logs...)
@@ -1291,7 +1288,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			bc.gcproc += proctime
 
 		case SideStatTy:
-			log.Debug("Inserted forked block", "number", block.Number(), "hash", block.Hash(), "diff", block.Difficulty(), "elapsed",
+			log.Debug("Inserted forked block", "number", block.Number(), "hash", block.Hash().Hex(), "diff", block.Difficulty(), "elapsed",
 				common.PrettyDuration(time.Since(bstart)), "txs", len(block.Transactions()), "gas", block.GasUsed())
 
 			blockInsertTimer.UpdateSince(bstart)
@@ -1301,9 +1298,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		stats.usedGas += usedGas
 
 		cache, _ := bc.stateCache.TrieDB().Size()
-
-		log.Debug("block sigs of ", "n", chain[i].NumberU64())
-		log.Debug("\n" + hex.Dump(chain[i].Extra2()))
 
 		log.Info("Imported new block: " + strconv.Itoa(int(chain[i].Number().Int64())) + " hash: " + chain[i].Hash().Hex())
 		stats.report(chain, i, cache)
@@ -1442,10 +1436,10 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 		if len(oldChain) > 63 {
 			logFn = log.Warn
 		}
-		logFn("Chain split detected", "number", commonBlock.Number(), "hash", commonBlock.Hash(),
-			"drop", len(oldChain), "dropfrom", oldChain[0].Hash(), "add", len(newChain), "addfrom", newChain[0].Hash())
+		logFn("Chain split detected", "number", commonBlock.Number(), "hash", commonBlock.Hash().Hex(),
+			"drop", len(oldChain), "dropfrom", oldChain[0].Hash().Hex(), "add", len(newChain), "addfrom", newChain[0].Hash())
 	} else {
-		log.Error("Impossible reorg, please file an issue", "oldnum", oldBlock.Number(), "oldhash", oldBlock.Hash(), "newnum", newBlock.Number(), "newhash", newBlock.Hash())
+		log.Error("Impossible reorg, please file an issue", "oldnum", oldBlock.Number(), "oldhash", oldBlock.Hash().Hex(), "newnum", newBlock.Number(), "newhash", newBlock.Hash().Hex())
 	}
 	// Insert the new chain, taking care of the proper incremental order
 	var addedTxs types.Transactions

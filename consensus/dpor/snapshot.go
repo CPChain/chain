@@ -19,7 +19,6 @@ package dpor
 import (
 	"encoding/json"
 	"errors"
-	"math/big"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -27,11 +26,9 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -67,38 +64,122 @@ type Snapshot interface {
 
 // DporSnapshot is the state of the authorization voting at a given point in time.
 type DporSnapshot struct {
-	config   *configs.DporConfig // Consensus engine parameters to fine tune behavior
-	sigcache *lru.ARCCache       // Cache of recent block signatures to speed up ecrecover
-
-	Number uint64      `json:"number"` // Block number where the Snapshot was created
-	Hash   common.Hash `json:"hash"`   // Block hash where the Snapshot was created
-
+	Number        uint64                      `json:"number"`     // Block number where the Snapshot was created
+	Hash          common.Hash                 `json:"hash"`       // Block hash where the Snapshot was created
 	Candidates    []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
 	RecentSigners map[uint64][]common.Address `json:"signers"`    // Set of recent signers
+	// RecentSigners *lru.ARCCache    `json:"signers"`
 
-	contractCaller *consensus.ContractCaller
+	config         *configs.DporConfig // Consensus engine parameters to fine tune behavior
+	ContractCaller *consensus.ContractCaller
 
 	lock sync.RWMutex
+}
+
+func (s *DporSnapshot) number() uint64 {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.Number
+}
+
+func (s *DporSnapshot) setNumber(number uint64) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.Number = number
+}
+
+func (s *DporSnapshot) setHash(hash common.Hash) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.Hash = hash
+}
+
+func (s *DporSnapshot) hash() common.Hash {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.Hash
+}
+
+func (s *DporSnapshot) candidates() []common.Address {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.Candidates
+}
+
+func (s *DporSnapshot) setCandidates(candidates []common.Address) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.Candidates = candidates
+}
+
+func (s *DporSnapshot) recentSigners() map[uint64][]common.Address {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.RecentSigners
+}
+
+func (s *DporSnapshot) getRecentSigners(epochIdx uint64) []common.Address {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	signers, ok := s.RecentSigners[epochIdx]
+	if !ok {
+		return nil
+	}
+
+	return signers
+}
+
+func (s *DporSnapshot) setRecentSigners(epochIdx uint64, signers []common.Address) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.RecentSigners[epochIdx] = signers
+
+	previousEpochIdx := epochIdx - EpochGapBetweenElectionAndMining - MaxSizeOfRecentSigners
+	if _, ok := s.RecentSigners[previousEpochIdx]; ok {
+		delete(s.RecentSigners, previousEpochIdx)
+	}
+}
+
+func (s *DporSnapshot) contractCaller() *consensus.ContractCaller {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.ContractCaller
+}
+
+func (s *DporSnapshot) setContractCaller(contractCaller *consensus.ContractCaller) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.ContractCaller = contractCaller
 }
 
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
 // method does not initialize the set of recent signers, so only ever use if for
 // the genesis block.
-func newSnapshot(config *configs.DporConfig, sigcache *lru.ARCCache, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
+func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
 	snap := &DporSnapshot{
 		config:        config,
-		sigcache:      sigcache,
 		Number:        number,
 		Hash:          hash,
 		RecentSigners: make(map[uint64][]common.Address),
 	}
-	snap.RecentSigners[snap.EpochIdx()] = signers
 
+	snap.setRecentSigners(snap.EpochIdx(), signers)
 	return snap
 }
 
 // loadSnapshot loads an existing Snapshot from the database.
-func loadSnapshot(config *configs.DporConfig, sigcache *lru.ARCCache, db ethdb.Database, hash common.Hash) (*DporSnapshot, error) {
+func loadSnapshot(config *configs.DporConfig, db ethdb.Database, hash common.Hash) (*DporSnapshot, error) {
 
 	// Retrieve from db
 	blob, err := db.Get(append([]byte("dpor-"), hash[:]...))
@@ -112,7 +193,6 @@ func loadSnapshot(config *configs.DporConfig, sigcache *lru.ARCCache, db ethdb.D
 		return nil, err
 	}
 	snap.config = config
-	snap.sigcache = sigcache
 
 	return snap, nil
 }
@@ -130,16 +210,17 @@ func (s *DporSnapshot) store(db ethdb.Database) error {
 func (s *DporSnapshot) copy() *DporSnapshot {
 	cpy := &DporSnapshot{
 		config:        s.config,
-		sigcache:      s.sigcache,
-		Number:        s.Number,
-		Hash:          s.Hash,
+		Number:        s.number(),
+		Hash:          s.hash(),
 		Candidates:    make([]common.Address, len(s.Candidates)),
 		RecentSigners: make(map[uint64][]common.Address),
 	}
-	copy(cpy.Candidates, s.Candidates)
-	for epochIdx, committee := range s.RecentSigners {
-		cpy.RecentSigners[epochIdx] = committee
+
+	copy(cpy.Candidates, s.candidates())
+	for epochIdx, signers := range s.recentSigners() {
+		cpy.setRecentSigners(epochIdx, signers)
 	}
+
 	return cpy
 }
 
@@ -163,7 +244,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *consensus.
 
 	// Iterate through the headers and create a new Snapshot
 	snap := s.copy()
-	snap.contractCaller = contractCaller
+	snap.setContractCaller(contractCaller)
 	for _, header := range headers {
 		err := snap.applyHeader(header)
 		if err != nil {
@@ -172,8 +253,8 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *consensus.
 		}
 	}
 
-	snap.Number = headers[len(headers)-1].Number.Uint64()
-	snap.Hash = headers[len(headers)-1].Hash()
+	snap.setNumber(headers[len(headers)-1].Number.Uint64())
+	snap.setHash(headers[len(headers)-1].Hash())
 
 	return snap, nil
 }
@@ -182,8 +263,8 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *consensus.
 func (s *DporSnapshot) applyHeader(header *types.Header) error {
 
 	// Update Snapshot attributes.
-	s.Number = header.Number.Uint64()
-	s.Hash = header.Hash()
+	s.setNumber(header.Number.Uint64())
+	s.setHash(header.Hash())
 
 	// Update candidates
 	err := s.updateCandidates(header)
@@ -200,10 +281,9 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	}
 
 	// If in checkpoint, run election
-	if IsCheckPoint(s.Number, s.config.Epoch, s.config.View) {
+	if IsCheckPoint(s.number(), s.config.Epoch, s.config.View) {
 		seed := header.Hash().Big().Int64()
-		viewLength := int(s.config.Epoch)
-		err := s.updateView(rpts, seed, viewLength)
+		err := s.updateSigners(rpts, seed)
 		if err != nil {
 			log.Warn("err when run election", "err", err)
 			return err
@@ -222,43 +302,48 @@ func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
 		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
 		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
+		common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
+		common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"),
+		common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
+		common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
+		common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
+		common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
 	}
 
-	s.lock.Lock()
-	contractCaller := s.contractCaller
-	s.lock.Unlock()
+	// contractCaller := s.contractCaller()
 
 	// If contractCaller is not nil, use it to update candidates from contract
-	if contractCaller != nil {
+	// if contractCaller != nil {
 
-		// Creates an contract instance
-		campaignAddress := s.config.Contracts["campaign"]
-		contractInstance, err := contract.NewCampaign(campaignAddress, contractCaller.Client)
-		if err != nil {
-			return err
-		}
+	// 	// Creates an contract instance
+	// 	campaignAddress := s.config.Contracts["campaign"]
+	// 	contractInstance, err := contract.NewCampaign(campaignAddress, contractCaller.Client)
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		// Read candidates from the contract instance
-		cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
-		if err != nil {
-			return err
-		}
+	// 	// Read candidates from the contract instance
+	// 	cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		// If useful, use it!
-		if uint64(len(cds)) > s.config.Epoch {
-			candidates = cds
-		}
-	}
+	// 	// If useful, use it!
+	// 	if uint64(len(cds)) > s.config.Epoch {
+	// 		candidates = cds
+	// 	}
+	// }
 
-	s.Candidates = candidates
+	s.setCandidates(candidates)
 	return nil
 }
 
 // updateRpts updates rpts of candidates
 func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 
+	// TODO: use rpt collector to update rpts.
 	var rpts rpt.RPTs
-	for idx, candidate := range s.Candidates {
+	for idx, candidate := range s.candidates() {
 		r := rpt.RPT{Address: candidate, Rpt: float64(idx)}
 		rpts = append(rpts, r)
 	}
@@ -266,48 +351,33 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 	return rpts, nil
 }
 
-// GetDefaultSigners returns default signers
-func (s *DporSnapshot) GetDefaultSigners() []common.Address {
-	// extra := core.DefaultGenesisBlock().ExtraData
-	// signers := make([]common.Address, (len(extra)-extraVanity-extraSeal)/common.AddressLength)
-	// for i := 0; i < len(signers); i++ {
-	// 	copy(signers[i][:], extra[extraVanity+i*common.AddressLength:])
-	// }
-	// TODO: @Liuq fix this.
-	signers := []common.Address{
-		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
-	}
-	return signers
+func (s *DporSnapshot) ifUseDefaultSigners() bool {
+	return s.number() < s.config.MaxInitBlockNumber
+}
+
+func (s *DporSnapshot) ifStartElection() bool {
+	return s.number() >= s.config.MaxInitBlockNumber-(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View)
 }
 
 // updateView use rpt and election result to get new committee(signers)
-func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+func (s *DporSnapshot) updateSigners(rpts rpt.RPTs, seed int64) error {
 
-	signers := s.GetDefaultSigners()
+	signers := s.candidates()[:s.config.Epoch]
 
 	// Use default signers
-	if s.Number < s.config.MaxInitBlockNumber {
-		s.RecentSigners[s.EpochIdx()+1] = signers
+	if s.ifUseDefaultSigners() {
+		s.setRecentSigners(s.EpochIdx()+1, signers)
 	}
 
 	// Elect signers
-	if s.Number >= s.config.MaxInitBlockNumber-(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View) {
-		epochIdx := s.EpochIdx() + EpochGapBetweenElectionAndMining
-		signers := s.RecentSigners[epochIdx]
-		if len(signers) == 0 {
-			signers = election.Elect(rpts, seed, viewLength)
-			s.RecentSigners[epochIdx] = signers
-		}
-	}
+	if s.ifStartElection() {
+		epochIdx := s.FutureEpochIdxOf(s.number())
+		signers := s.getRecentSigners(epochIdx)
 
-	// Remove useless signer caches
-	if uint(len(s.RecentSigners)) > MaxSizeOfRecentSigners {
-		delete(s.RecentSigners, s.EpochIdx()+EpochGapBetweenElectionAndMining-uint64(MaxSizeOfRecentSigners))
+		if len(signers) == 0 {
+			signers = election.Elect(rpts, seed, int(s.config.Epoch))
+			s.setRecentSigners(epochIdx, signers)
+		}
 	}
 
 	return nil
@@ -315,10 +385,10 @@ func (s *DporSnapshot) updateView(rpts rpt.RPTs, seed int64, viewLength int) err
 
 // EpochIdx returns the epoch index of current block number
 func (s *DporSnapshot) EpochIdx() uint64 {
-	if s.Number == 0 {
+	if s.number() == 0 {
 		return 0
 	}
-	return (s.Number - 1) / ((s.config.Epoch) * (s.config.View))
+	return (s.number() - 1) / ((s.config.Epoch) * (s.config.View))
 }
 
 // EpochIdxOf returns the epoch index of given block number
@@ -334,14 +404,9 @@ func (s *DporSnapshot) FutureEpochIdxOf(blockNum uint64) uint64 {
 	return s.EpochIdxOf(blockNum) + EpochGapBetweenElectionAndMining
 }
 
-// Candidates retrieves all candidates recorded in the campaign contract
-func (s *DporSnapshot) candidates() []common.Address {
-	return s.Candidates
-}
-
 // SignersOf returns signers of given block number
 func (s *DporSnapshot) SignersOf(number uint64) []common.Address {
-	return s.RecentSigners[s.EpochIdxOf(number)]
+	return s.getRecentSigners(s.EpochIdxOf(number))
 }
 
 // SignerRoundOf returns signer round with given signer address and block number
@@ -375,7 +440,7 @@ func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, e
 
 // FutureSignersOf returns future signers of given block number
 func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
-	return s.RecentSigners[s.FutureEpochIdxOf(number)]
+	return s.getRecentSigners(s.FutureEpochIdxOf(number))
 }
 
 // FutureSignerRoundOf returns the future signer round with given signer address and block number
