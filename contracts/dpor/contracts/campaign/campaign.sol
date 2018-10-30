@@ -54,6 +54,8 @@ contract Campaign {
         admission = AdmissionInterface(_addr);
     }
 
+    function() payable public { }
+
     function candidatesOf(uint _viewIdx) public view returns (address[]){
         return campaignSnapshots[_viewIdx].values;
     }
@@ -197,9 +199,5 @@ contract Campaign {
         candidates[candidate].stopViewIdx = 0;
         candidate.transfer(deposit);
     }
-
-    }
-
-    function() payable public { }
 
 }
