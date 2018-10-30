@@ -30,11 +30,7 @@ import (
 
 // Tests that simple header verification works, for both good and bad blocks.
 func TestHeaderVerification(t *testing.T) {
-	// Create a simple chain to verify
-	var (
-		testdb = ethdb.NewMemDatabase()
-	)
-
+	testdb := ethdb.NewMemDatabase()
 	genesis := DefaultGenesisBlock()
 	genesisBlock := genesis.MustCommit(testdb)
 

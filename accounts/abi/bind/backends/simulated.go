@@ -129,7 +129,6 @@ func (b *SimulatedBackend) Rollback() {
 }
 
 func (b *SimulatedBackend) rollback() {
-
 	config := configs.MainnetChainConfig.Dpor
 	d := dpor.NewFaker(config, b.database)
 
