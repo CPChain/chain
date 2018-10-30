@@ -134,7 +134,7 @@ func (s *ChainReader) GetBalance(ctx context.Context, req *cpc.ChainReaderReques
 
 // newGRPCTransaction returns a transaction that will serialize to the RPC
 // representation, with the given location metadata set (if available).
-func newGRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64) *pb.Transaction {
+func newGRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64) *pb.RpcTransaction {
 	var signer types.Signer = types.FrontierSigner{}
 	if tx.Protected() {
 		signer = types.NewPrivTxSupportEIP155Signer(tx.ChainId())
@@ -142,20 +142,19 @@ func newGRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumbe
 	from, _ := types.Sender(signer, tx)
 	v, r, s := tx.RawSignatureValues()
 
-	result := &pb.Transaction{
+	result := &pb.RpcTransaction{
 		From:     from.Hex(),
 		Gas:      tx.Gas(),
 		GasPrice: tx.GasPrice().Uint64(),
 		Hash:     tx.Hash().Hex(),
 		Nonce:    tx.Nonce(),
-		To:       tx.To().Hex(),
+		To:       &wrappers.StringValue{Value: tx.To().Hex()},
+		Input:    tx.Data(),
 		Value:    tx.Value().String(),
 		V:        v.String(),
 		R:        r.String(),
 		S:        s.String(),
 	}
-	result.Input = make([]byte, len(tx.Data()))
-	copy(result.Input, tx.Data())
 
 	if blockHash != (common.Hash{}) {
 		result.BlockHash = blockHash.Hex()
@@ -166,12 +165,12 @@ func newGRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumbe
 }
 
 // newRPCPendingTransaction returns a pending transaction that will serialize to the RPC representation
-func newGRPCPendingTransaction(tx *types.Transaction) *pb.Transaction {
+func newGRPCPendingTransaction(tx *types.Transaction) *pb.RpcTransaction {
 	return newGRPCTransaction(tx, common.Hash{}, 0, 0)
 }
 
 // newGRPCTransactionFromBlockIndex returns a transaction that will serialize to the RPC representation.
-func newGRPCTransactionFromBlockIndex(b *types.Block, index uint64) *pb.Transaction {
+func newGRPCTransactionFromBlockIndex(b *types.Block, index uint64) *pb.RpcTransaction {
 	txs := b.Transactions()
 	if index >= uint64(len(txs)) {
 		return nil
@@ -180,7 +179,7 @@ func newGRPCTransactionFromBlockIndex(b *types.Block, index uint64) *pb.Transact
 }
 
 // newGRPCTransactionFromBlockHash returns a transaction that will serialize to the RPC representation.
-func newGRPCTransactionFromBlockHash(b *types.Block, hash common.Hash) *pb.Transaction {
+func newGRPCTransactionFromBlockHash(b *types.Block, hash common.Hash) *pb.RpcTransaction {
 	for idx, tx := range b.Transactions() {
 		if tx.Hash() == hash {
 			return newGRPCTransactionFromBlockIndex(b, uint64(idx))
@@ -209,24 +208,21 @@ func GRPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*pb.Block, erro
 		Timestamp:        head.Time.String(),
 		TransactionsRoot: head.TxsRoot.Hex(),
 		ReceiptsRoot:     head.ReceiptsRoot.Hex(),
+		LogsBloom:        head.LogsBloom.Bytes(),
+		ExtraData:        head.Extra,
 	}
-	block.LogsBloom = make([]byte, len(block.LogsBloom))
-	copy(block.LogsBloom, block.LogsBloom)
-
-	block.ExtraData = make([]byte, len(head.Extra))
-	copy(block.ExtraData, head.Extra)
 
 	if inclTx {
-		formatTx := func(tx *types.Transaction) (*pb.Transaction, error) {
-			return &pb.Transaction{TxHash: tx.Hash().Hex()}, nil
+		formatTx := func(tx *types.Transaction) (*pb.RpcTransaction, error) {
+			return &pb.RpcTransaction{TxHash: tx.Hash().Hex()}, nil
 		}
 		if fullTx {
-			formatTx = func(tx *types.Transaction) (*pb.Transaction, error) {
+			formatTx = func(tx *types.Transaction) (*pb.RpcTransaction, error) {
 				return newGRPCTransactionFromBlockHash(b, tx.Hash()), nil
 			}
 		}
 		txs := b.Transactions()
-		block.Transactions = make([]*pb.Transaction, len(txs))
+		block.Transactions = make([]*pb.RpcTransaction, len(txs))
 		var err error
 		for i, tx := range txs {
 			if block.Transactions[i], err = formatTx(tx); err != nil {
@@ -283,11 +279,7 @@ func (s *ChainReader) GetCode(ctx context.Context, req *cpc.ChainReaderRequest) 
 	}
 	code := state.GetCode(common.HexToAddress(req.Address))
 
-	var out pb.Code
-	out.Code = make([]byte, len(code))
-	copy(out.Code, code)
-
-	return &out, state.Error()
+	return &pb.Code{Code: code}, state.Error()
 }
 
 // TransactionReader exposes methods for the RPC interface
@@ -338,19 +330,19 @@ func (t *TransactionReader) GetTransactionCountByBlockHash(ctx context.Context, 
 }
 
 // GetTransactionByBlockNumberAndIndex returns the transaction for the given block number and index.
-func (t *TransactionReader) GetTransactionByBlockNumberAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*pb.Transaction, error) {
+func (t *TransactionReader) GetTransactionByBlockNumberAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*pb.RpcTransaction, error) {
 	if block, _ := t.b.BlockByNumber(ctx, rpc.BlockNumber(req.BlockNumber)); block != nil {
 		return newGRPCTransactionFromBlockIndex(block, req.Index), nil
 	}
-	return &pb.Transaction{}, nil
+	return &pb.RpcTransaction{}, nil
 }
 
 // GetTransactionByBlockHashAndIndex returns the transaction for the given block hash and index.
-func (t *TransactionReader) GetTransactionByBlockHashAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*pb.Transaction, error) {
+func (t *TransactionReader) GetTransactionByBlockHashAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*pb.RpcTransaction, error) {
 	if block, _ := t.b.GetBlock(ctx, common.HexToHash(req.BlockHash)); block != nil {
 		return newGRPCTransactionFromBlockIndex(block, req.Index), nil
 	}
-	return &pb.Transaction{}, nil
+	return &pb.RpcTransaction{}, nil
 }
 
 // GetRawTransactionByBlockNumberAndIndex returns the bytes of the transaction for the given block number and index.
@@ -358,8 +350,7 @@ func (t *TransactionReader) GetRawTransactionByBlockNumberAndIndex(ctx context.C
 	var out cpc.RawTransaction
 	if block, _ := t.b.BlockByNumber(ctx, rpc.BlockNumber(req.BlockNumber)); block != nil {
 		raw := newRPCRawTransactionFromBlockIndex(block, req.Index)
-		out.RawTransaction = make([]byte, len(raw))
-		copy(out.RawTransaction, raw)
+		out.RawTransaction = raw
 	}
 	return &out, nil
 }
@@ -369,8 +360,7 @@ func (t *TransactionReader) GetRawTransactionByBlockHashAndIndex(ctx context.Con
 	var out cpc.RawTransaction
 	if block, _ := t.b.GetBlock(ctx, common.HexToHash(req.BlockHash)); block != nil {
 		raw := newRPCRawTransactionFromBlockIndex(block, req.Index)
-		out.RawTransaction = make([]byte, len(raw))
-		copy(out.RawTransaction, raw)
+		out.RawTransaction = raw
 	}
 	return &out, nil
 }
@@ -386,7 +376,7 @@ func (t *TransactionReader) GetTransactionCount(ctx context.Context, req *cpc.Tr
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (t *TransactionReader) GetTransactionByHash(ctx context.Context, txHash *cpc.TransactionHash) (*pb.Transaction, error) {
+func (t *TransactionReader) GetTransactionByHash(ctx context.Context, txHash *cpc.TransactionHash) (*pb.RpcTransaction, error) {
 	// Try to return an already finalized transaction
 	if tx, blockHash, blockNumber, index := rawdb.ReadTransaction(t.b.ChainDb(), common.HexToHash(txHash.TransactionHash)); tx != nil {
 		return newGRPCTransaction(tx, blockHash, blockNumber, index), nil
@@ -396,7 +386,7 @@ func (t *TransactionReader) GetTransactionByHash(ctx context.Context, txHash *cp
 		return newGRPCPendingTransaction(tx), nil
 	}
 	// Transaction unknown, return as such
-	return &pb.Transaction{}, nil
+	return &pb.RpcTransaction{}, nil
 }
 
 // GetRawTransactionByHash returns the bytes of the transaction for the given hash.
@@ -453,10 +443,8 @@ func (t *TransactionReader) GetTransactionReceipt(ctx context.Context, txHash *c
 		To:               tx.To().Hex(),
 		GasUsed:          receipt.GasUsed,
 		Logs:             make([]*pb.Log, len(receipt.Logs)),
+		LogsBloom:        receipt.Bloom.Bytes(),
 	}
-
-	result.LogsBloom = make([]byte, len(receipt.Bloom.Bytes()))
-	copy(result.LogsBloom, receipt.Bloom.Bytes())
 
 	for _, log := range receipt.Logs {
 		l := &pb.Log{
@@ -467,10 +455,9 @@ func (t *TransactionReader) GetTransactionReceipt(ctx context.Context, txHash *c
 			Index:       uint32(log.Index),
 			Address:     log.Address.Hex(),
 			TxHash:      log.TxHash.Hex(),
-			Data:        make([]byte, len(log.Data)),
+			Data:        log.Data,
 			Topics:      make([]string, len(log.Topics)),
 		}
-		copy(l.Data, log.Data)
 		for _, t := range log.Topics {
 			l.Topics = append(l.Topics, t.Hex())
 		}
@@ -479,8 +466,7 @@ func (t *TransactionReader) GetTransactionReceipt(ctx context.Context, txHash *c
 
 	// Assign receipt status or post state.
 	if len(receipt.PostState) > 0 {
-		result.Root = make([]byte, len(receipt.PostState))
-		copy(result.Root, receipt.PostState)
+		result.Root = receipt.PostState
 	} else {
 		result.Status = receipt.Status
 	}

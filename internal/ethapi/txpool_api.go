@@ -1,9 +1,18 @@
 package ethapi
 
 import (
-	"bitbucket.org/cpchain/chain/types"
 	"fmt"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+
+	"bitbucket.org/cpchain/chain/api/v1/common"
+
+	"bitbucket.org/cpchain/chain/api/v1/txpool"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
+
+	"bitbucket.org/cpchain/chain/types"
+	"github.com/golang/protobuf/ptypes/empty"
+	"golang.org/x/net/context"
 )
 
 // TransactionPoolReader offers and API for the transaction pool. It only operates on data that is non confidential.
@@ -16,48 +25,80 @@ func NewTransactionPoolReader(b Backend) *TransactionPoolReader {
 	return &TransactionPoolReader{b}
 }
 
+// IsPublic if public default
+func (t *TransactionPoolReader) IsPublic() bool {
+	return true
+}
+
+// Namespace namespace
+func (t *TransactionPoolReader) Namespace() string {
+	return "txpool"
+}
+
+// RegisterServer register api to grpc
+func (t *TransactionPoolReader) RegisterServer(s *grpc.Server) {
+	txpool.RegisterTransactionPoolReaderServer(s, t)
+}
+
+// RegisterGateway register api to restfull json
+func (t *TransactionPoolReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	txpool.RegisterTransactionPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
 // Content returns the transactions contained within the transaction pool.
-func (s *TransactionPoolReader) Content() map[string]map[string]map[string]*RPCTransaction {
-	content := map[string]map[string]map[string]*RPCTransaction{
-		"pending": make(map[string]map[string]*RPCTransaction),
-		"queued":  make(map[string]map[string]*RPCTransaction),
+func (s *TransactionPoolReader) Content(ctx context.Context, in *empty.Empty) (*txpool.TxPool, error) {
+	// var content txpool.TxPool
+	content := &txpool.TxPool{
+		PendingTxPool: &txpool.AccountNonceTxPool{
+			AccountNonceTxPool: make(map[string]*txpool.NonceTx),
+		},
+		QueuedTxPool: &txpool.AccountNonceTxPool{
+			AccountNonceTxPool: make(map[string]*txpool.NonceTx),
+		},
 	}
 	pending, queue := s.b.TxPoolContent()
 
 	// Flatten the pending transactions
 	for account, txs := range pending {
-		dump := make(map[string]*RPCTransaction)
+		dump := &txpool.NonceTx{NonceTx: make(map[string]*common.RpcTransaction)}
 		for _, tx := range txs {
-			dump[fmt.Sprintf("%d", tx.Nonce())] = newRPCPendingTransaction(tx)
+			dump.NonceTx[fmt.Sprintf("%d", tx.Nonce())] = newGRPCPendingTransaction(tx)
 		}
-		content["pending"][account.Hex()] = dump
+		content.PendingTxPool.AccountNonceTxPool[account.Hex()] = dump
 	}
 	// Flatten the queued transactions
 	for account, txs := range queue {
-		dump := make(map[string]*RPCTransaction)
+		dump := &txpool.NonceTx{NonceTx: make(map[string]*common.RpcTransaction)}
 		for _, tx := range txs {
-			dump[fmt.Sprintf("%d", tx.Nonce())] = newRPCPendingTransaction(tx)
+			dump.NonceTx[fmt.Sprintf("%d", tx.Nonce())] = newGRPCPendingTransaction(tx)
 		}
-		content["queued"][account.Hex()] = dump
+		content.QueuedTxPool.AccountNonceTxPool[account.Hex()] = dump
 	}
-	return content
+	return content, nil
 }
 
 // Status returns the number of pending and queued transaction in the pool.
-func (s *TransactionPoolReader) Status() map[string]hexutil.Uint {
+func (s *TransactionPoolReader) Status(ctx context.Context, in *empty.Empty) (*txpool.StatusInfo, error) {
+	var out txpool.StatusInfo
+	out.Status = make(map[string]uint64)
+
 	pending, queue := s.b.Stats()
-	return map[string]hexutil.Uint{
-		"pending": hexutil.Uint(pending),
-		"queued":  hexutil.Uint(queue),
-	}
+	out.Status["pending"] = uint64(pending)
+	out.Status["queued"] = uint64(queue)
+
+	return &out, nil
 }
 
-// Inspect retrieves the content of the transaction pool and flattens it into an
+// inspect retrieves the content of the transaction pool and flattens it into an
 // easily inspectable list.
-func (s *TransactionPoolReader) Inspect() map[string]map[string]map[string]string {
-	content := map[string]map[string]map[string]string{
-		"pending": make(map[string]map[string]string),
-		"queued":  make(map[string]map[string]string),
+func (s *TransactionPoolReader) Inspect(ctx context.Context, in *empty.Empty) (*txpool.TxStringPool, error) {
+	content := &txpool.TxStringPool{
+		PendingTxStringPool: &txpool.AccountNonceTxStringPool{
+			AccountNonceTxStringPool: make(map[string]*txpool.NonceTxString),
+		},
+		QueuedTxStringPool: &txpool.AccountNonceTxStringPool{
+			AccountNonceTxStringPool: make(map[string]*txpool.NonceTxString),
+		},
 	}
 	pending, queue := s.b.TxPoolContent()
 
@@ -70,19 +111,19 @@ func (s *TransactionPoolReader) Inspect() map[string]map[string]map[string]strin
 	}
 	// Flatten the pending transactions
 	for account, txs := range pending {
-		dump := make(map[string]string)
+		dump := &txpool.NonceTxString{TxString: make(map[string]string)}
 		for _, tx := range txs {
-			dump[fmt.Sprintf("%d", tx.Nonce())] = format(tx)
+			dump.TxString[fmt.Sprintf("%d", tx.Nonce())] = format(tx)
 		}
-		content["pending"][account.Hex()] = dump
+		content.PendingTxStringPool.AccountNonceTxStringPool[account.Hex()] = dump
 	}
 	// Flatten the queued transactions
 	for account, txs := range queue {
-		dump := make(map[string]string)
+		dump := &txpool.NonceTxString{TxString: make(map[string]string)}
 		for _, tx := range txs {
-			dump[fmt.Sprintf("%d", tx.Nonce())] = format(tx)
+			dump.TxString[fmt.Sprintf("%d", tx.Nonce())] = format(tx)
 		}
-		content["queued"][account.Hex()] = dump
+		content.PendingTxStringPool.AccountNonceTxStringPool[account.Hex()] = dump
 	}
-	return content
+	return content, nil
 }

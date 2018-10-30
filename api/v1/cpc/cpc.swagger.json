@@ -239,7 +239,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/commonTransaction"
+              "$ref": "#/definitions/commonRpcTransaction"
             }
           }
         },
@@ -266,7 +266,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/commonTransaction"
+              "$ref": "#/definitions/commonRpcTransaction"
             }
           }
         },
@@ -293,7 +293,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/commonTransaction"
+              "$ref": "#/definitions/commonRpcTransaction"
             }
           }
         },
@@ -649,7 +649,7 @@
         "transactions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/commonTransaction"
+            "$ref": "#/definitions/commonRpcTransaction"
           }
         }
       }
@@ -793,37 +793,7 @@
         }
       }
     },
-    "commonSyncingInfo": {
-      "type": "object",
-      "properties": {
-        "isSyncing": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "startBlock": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "currentBlock": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "highestBlock": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "pulledStates": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "knownStates": {
-          "type": "string",
-          "format": "uint64"
-        }
-      },
-      "title": "- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled"
-    },
-    "commonTransaction": {
+    "commonRpcTransaction": {
       "type": "object",
       "properties": {
         "txHash": {
@@ -877,7 +847,38 @@
           "type": "string",
           "format": "byte"
         }
-      }
+      },
+      "title": "Transaction represents a transaction that will serialize to the RPC representation of a transaction"
+    },
+    "commonSyncingInfo": {
+      "type": "object",
+      "properties": {
+        "isSyncing": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "startBlock": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "currentBlock": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "highestBlock": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "pulledStates": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "knownStates": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled"
     },
     "cpcChainReaderRequest": {
       "type": "object",

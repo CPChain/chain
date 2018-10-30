@@ -193,14 +193,14 @@ service TransactionPoolReader {
         };
     }
     // GetTransactionByBlockNumberAndIndex returns the transaction for the given block number and index.
-    rpc GetTransactionByBlockNumberAndIndex(TransactionPoolReaderRequest) returns (common.Transaction) {
+    rpc GetTransactionByBlockNumberAndIndex(TransactionPoolReaderRequest) returns (common.RpcTransaction) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionByBlockNumberAndIndex"
             body : "*"
         };
     }
     // GetTransactionByBlockHashAndIndex returns the transaction for the given block hash and index.
-    rpc GetTransactionByBlockHashAndIndex(TransactionPoolReaderRequest) returns (common.Transaction) {
+    rpc GetTransactionByBlockHashAndIndex(TransactionPoolReaderRequest) returns (common.RpcTransaction) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionByBlockHashAndIndex"
             body : "*"
@@ -214,7 +214,7 @@ service TransactionPoolReader {
         };
     }
     // GetRawTransactionByBlockHashAndIndex returns the bytes of the transaction for the given block hash and index.
-    rpc GetTransactionByHash(TransactionHash) returns (common.Transaction) {
+    rpc GetTransactionByHash(TransactionHash) returns (common.RpcTransaction) {
         option (google.api.http) = {
             post : "/api/v1/cpc/getTransactionByHash"
             body : "*"

@@ -278,17 +278,10 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 }
 
 func (s *CpchainService) GAPIs() []api.Api {
-	apis := ethapi.GetGAPIs(s.APIBackend)
-	return append(apis, []api.Api{
-		NewCoinbase(s),
-		NewDebugDumper(s),
-		NewDebugManager(s.chainConfig, s),
-		NewMinerManager(s),
-		NewAdminManager(s),
-	}...)
+	return []api.Api{}
 }
 
-// APIs return the collection of RPC services the ethereum package offers.
+// APIs return the collection of RPC services the cpc package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *CpchainService) APIs() []rpc.API {
 	apis := ethapi.GetAPIs(s.APIBackend)

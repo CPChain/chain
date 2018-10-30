@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package ethapi implements the general Ethereum Api functions.
+// Package ethapi implements the general Ethereum API functions.
 package ethapi
 
 import (
@@ -35,10 +35,10 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 )
 
-// Backend interface provides the common Api services (that are provided by
+// Backend interface provides the common API services (that are provided by
 // both full and light clients) with access to necessary functions.
 type Backend interface {
-	// General Ethereum Api
+	// General Ethereum API
 	Downloader() *downloader.Downloader
 	ProtocolVersion() int
 	SuggestPrice(ctx context.Context) (*big.Int, error)
@@ -46,7 +46,7 @@ type Backend interface {
 	EventMux() *event.TypeMux
 	AccountManager() *accounts.Manager
 
-	// BlockChain Api
+	// BlockChain API
 	SetHead(number uint64)
 	HeaderByNumber(ctx context.Context, blockNr rpc.BlockNumber) (*types.Header, error)
 	BlockByNumber(ctx context.Context, blockNr rpc.BlockNumber) (*types.Block, error)
@@ -60,7 +60,7 @@ type Backend interface {
 	SubscribeChainHeadEvent(ch chan<- core.ChainHeadEvent) event.Subscription
 	SubscribeChainSideEvent(ch chan<- core.ChainSideEvent) event.Subscription
 
-	// TxPool Api
+	// TxPool API
 	SendTx(ctx context.Context, signedTx *types.Transaction) error
 	GetPoolTransactions() (types.Transactions, error)
 	GetPoolTransaction(txHash common.Hash) *types.Transaction
@@ -76,13 +76,8 @@ type Backend interface {
 }
 
 func GetGAPIs(b Backend) []api.Api {
-	nonceLock := new(AddrLocker)
-	return []api.Api{
-		NewChainStateReader(b),
-		NewChainReader(b),
-		NewTransactionReader(b, nonceLock),
-		NewAccountReader(b.AccountManager()),
-	}
+	// nonceLock := new(AddrLocker)
+	return []api.Api{}
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

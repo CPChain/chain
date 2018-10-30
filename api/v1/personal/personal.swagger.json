@@ -15,14 +15,95 @@
     "application/json"
   ],
   "paths": {
+    "/api/v1/personal/deriveAccount": {
+      "post": {
+        "summary": "DeriveAccount requests a HD wallet to derive a new account, optionally pinning\nit for later reuse.",
+        "operationId": "DeriveAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAccount"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalDeriveAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/ecRecover": {
+      "post": {
+        "operationId": "EcRecover",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAddress"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalEcRecoverRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/importRawKey": {
+      "post": {
+        "summary": "ImportRawKey stores the given hex encoded ECDSA key into the key directory,\nencrypting it with the passphrase.",
+        "operationId": "ImportRawKey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAddress"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalImportRawKeyRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
     "/api/v1/personal/listAccounts": {
       "post": {
+        "summary": "ListAccounts will return a list of addresses for accounts this node manages.",
         "operationId": "ListAccounts",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protobufEmpty"
+              "$ref": "#/definitions/commonAccounts"
             }
           }
         },
@@ -40,9 +121,526 @@
           "AccountManager"
         ]
       }
+    },
+    "/api/v1/personal/listWallets": {
+      "post": {
+        "summary": "ListWallets will return a list of wallets this node manages.",
+        "operationId": "ListWallets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAccounts"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/lockAccount": {
+      "post": {
+        "summary": "LockAccount will lock the account associated with the given address when it's unlocked.",
+        "operationId": "LockAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/commonAddress"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/newAccount": {
+      "post": {
+        "summary": "NewAccount will create a new account and returns the address for the new account.",
+        "operationId": "NewAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAddress"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalNewAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/openWallet": {
+      "post": {
+        "summary": "OpenWallet initiates a hardware wallet opening procedure, establishing a USB\nconnection and attempting to authenticate via the provided passphrase. Note,\nthe method may return an extra challenge requiring a second open (e.g. the\nTrezor PIN matrix challenge).",
+        "operationId": "OpenWallet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalOpenWalletRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/sendTransaction": {
+      "post": {
+        "summary": "SendTransaction creates a transaction for the given argument, sign it and submit it to the\ntransaction pool.",
+        "operationId": "SendTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonHash"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalSendTxArgs"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/sign": {
+      "post": {
+        "operationId": "Sign",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/personalSignature"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalSignRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/signAndSendTransaction": {
+      "post": {
+        "operationId": "SignAndSendTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAddress"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalSendTxArgs"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/signTransaction": {
+      "post": {
+        "operationId": "SignTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/personalSignTransactionResult"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalSendTxArgs"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
+    },
+    "/api/v1/personal/unlockAccount": {
+      "post": {
+        "summary": "UnlockAccount will unlock the account associated with the given address with\nthe given password for duration seconds. If duration is nil it will use a\ndefault of 300 seconds. It returns an indication if the account was unlocked.",
+        "operationId": "UnlockAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/personalUnlockAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountManager"
+        ]
+      }
     }
   },
   "definitions": {
+    "commonAccount": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "commonAccounts": {
+      "type": "object",
+      "properties": {
+        "accounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonAccount"
+          }
+        }
+      }
+    },
+    "commonAddress": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "commonHash": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        }
+      }
+    },
+    "commonIsOk": {
+      "type": "object",
+      "properties": {
+        "isOk": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "IsOk return status"
+    },
+    "commonTransaction": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/commonTxData"
+        },
+        "hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "size": {
+          "type": "string",
+          "format": "byte"
+        },
+        "from": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "commonTxData": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "accountNonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasLimit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "amount": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "price": {
+          "type": "string",
+          "format": "byte"
+        },
+        "payload": {
+          "type": "string",
+          "format": "byte"
+        },
+        "extra": {
+          "type": "string",
+          "format": "byte"
+        },
+        "v": {
+          "type": "string",
+          "format": "byte"
+        },
+        "r": {
+          "type": "string",
+          "format": "byte"
+        },
+        "s": {
+          "type": "string",
+          "format": "byte"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "recipient": {
+          "type": "string"
+        }
+      }
+    },
+    "personalDeriveAccountRequest": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "pin": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "personalEcRecoverRequest": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "sig": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "personalImportRawKeyRequest": {
+      "type": "object",
+      "properties": {
+        "privkey": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "personalNewAccountRequest": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "personalOpenWalletRequest": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "passphrase": {
+          "type": "string"
+        }
+      },
+      "title": "OpenWalletRequest interface OpenWallet request parameters"
+    },
+    "personalSendTxArgs": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "gas": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasPrice": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "value": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "input": {
+          "type": "string",
+          "format": "byte"
+        },
+        "isPrivate": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "passwd": {
+          "type": "string"
+        }
+      }
+    },
+    "personalSignRequest": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "addr": {
+          "type": "string"
+        },
+        "passwd": {
+          "type": "string"
+        }
+      }
+    },
+    "personalSignTransactionResult": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "string",
+          "format": "byte"
+        },
+        "tx": {
+          "$ref": "#/definitions/commonTransaction"
+        }
+      }
+    },
+    "personalSignature": {
+      "type": "object",
+      "properties": {
+        "signature": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "personalUnlockAccountRequest": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
     "protobufEmpty": {
       "type": "object",
       "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",

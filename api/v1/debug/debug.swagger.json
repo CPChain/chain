@@ -215,7 +215,8 @@
             "$ref": "#/definitions/commonBadBlockArg"
           }
         }
-      }
+      },
+      "description": "BadBlockArgs represents the entries in the list returned when bad blocks are queried."
     },
     "commonBlock": {
       "type": "object",
@@ -282,7 +283,7 @@
         "transactions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/commonTransaction"
+            "$ref": "#/definitions/commonRpcTransaction"
           }
         }
       }
@@ -345,7 +346,7 @@
         }
       }
     },
-    "commonTransaction": {
+    "commonRpcTransaction": {
       "type": "object",
       "properties": {
         "txHash": {
@@ -399,7 +400,8 @@
           "type": "string",
           "format": "byte"
         }
-      }
+      },
+      "title": "Transaction represents a transaction that will serialize to the RPC representation of a transaction"
     },
     "debugDebugManagerRequest": {
       "type": "object",
