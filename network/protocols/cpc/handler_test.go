@@ -63,9 +63,7 @@ func TestProtocolCompatibility(t *testing.T) {
 
 // Tests that block headers can be retrieved from a remote chain based on user queries.
 func TestGetBlockHeaders(t *testing.T) {
-	// t.Skip("===TestGetBlockHeaders invalid signer list on checkpoint block")
-	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 10, nil, nil)
-	// pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxHashFetch+15, nil, nil)
+	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxHashFetch+15, nil, nil)
 	peer, _ := newTestPeer("peer", 64, pm, true)
 	defer peer.close()
 
@@ -75,8 +73,7 @@ func TestGetBlockHeaders(t *testing.T) {
 		unknown[i] = byte(i)
 	}
 	// Create a batch of tests for various scenarios
-	limit := uint64(10)
-	// limit := uint64(downloader.MaxHeaderFetch)
+	limit := uint64(downloader.MaxHeaderFetch)
 	tests := []struct {
 		query  *getBlockHeadersData // The query to execute for header retrieval
 		expect []common.Hash        // The hashes of the block whose headers are expected
