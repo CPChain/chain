@@ -3,15 +3,15 @@ package dpor
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +33,7 @@ func sigHash(testfile file) (hash common.Hash) {
 	return hash
 }
 
-func deployTestRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend)(common.Address,*Register,error){
+func deployTestRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *Register, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	addr, instance, err := DeployRegister(deployTransactor, backend)
 
@@ -58,10 +58,10 @@ func TestRegister(t *testing.T) {
 	copy(fakefile.fileHash[:], sigHash(fakefile).Bytes())
 
 	transactOpts := bind.NewKeyedTransactor(key)
-	_ , err=register.ClaimRegister(transactOpts,fakefile.fileName,fakefile.fileHash,fakefile.fileSize)
-	if err !=nil{
-		fmt.Println("ClainRegister error :",err)
-		log.Warn("ClaimRegister error",err)
+	_, err = register.ClaimRegister(transactOpts, fakefile.fileName, fakefile.fileHash, fakefile.fileSize)
+	if err != nil {
+		fmt.Println("ClainRegister error :", err)
+		log.Warn("ClaimRegister error", err)
 	}
 	contractBackend.Commit()
 

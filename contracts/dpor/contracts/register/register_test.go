@@ -1,23 +1,23 @@
 package register
 
 import (
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"bitbucket.org/cpchain/chain/ethclient"
-	"bitbucket.org/cpchain/chain/crypto"
+	"context"
+	"crypto/ecdsa"
 	"fmt"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/stretchr/testify/assert"
+	"math/big"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"context"
-	"crypto/ecdsa"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/crypto/sha3"
+	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
-	"math/big"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/stretchr/testify/assert"
 )
 
 type filestruck struct {
@@ -82,7 +82,7 @@ func TestDeployRegister(t *testing.T) {
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
 
-	contractAddress,_,_,err:=DeployRegister(auth,client)
+	contractAddress, _, _, err := DeployRegister(auth, client)
 
 	Fakeregister, err := NewRegister(contractAddress, client)
 	checkError(t, "NewRegister, got %v", err)
@@ -117,4 +117,3 @@ func checkError(t *testing.T, msg string, err error) {
 		t.Fatalf(msg, err)
 	}
 }
-

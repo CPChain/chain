@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-
 	"math/big"
 	"testing"
 

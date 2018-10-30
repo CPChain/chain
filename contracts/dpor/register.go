@@ -1,14 +1,14 @@
 package dpor
 
 import (
+	"context"
+	"fmt"
+	"math/big"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
 	"bitbucket.org/cpchain/chain/types"
-	"context"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-
-	"math/big"
 )
 
 type RegisterBackend interface {
@@ -37,8 +37,8 @@ func NewRegister(transactOpts *bind.TransactOpts, contractAddr common.Address, c
 	}, nil
 }
 
-func DeployRegister(transactOpts *bind.TransactOpts,contractBackend RegisterBackend)(common.Address,*Register,error) {
-	contractAddr, _, _, err := register.DeployRegister(transactOpts,contractBackend)
+func DeployRegister(transactOpts *bind.TransactOpts, contractBackend RegisterBackend) (common.Address, *Register, error) {
+	contractAddr, _, _, err := register.DeployRegister(transactOpts, contractBackend)
 	if err != nil {
 		return contractAddr, nil, err
 	}
@@ -51,12 +51,12 @@ func DeployRegister(transactOpts *bind.TransactOpts,contractBackend RegisterBack
 
 }
 
-func (self *Register) ClaimRegister(transactOpts *bind.TransactOpts,fileName string,fileHash [32]byte,fileSize *big.Int)(*types.Transaction,error) {
+func (self *Register) ClaimRegister(transactOpts *bind.TransactOpts, fileName string, fileHash [32]byte, fileSize *big.Int) (*types.Transaction, error) {
 	fmt.Println("ClainRegister is called:")
-	return self.Contract.ClaimRegister(transactOpts,fileName,fileHash,fileSize)
+	return self.Contract.ClaimRegister(transactOpts, fileName, fileHash, fileSize)
 }
 
-func (self *Register)GetUploadCount(CallOpts *bind.CallOpts,address common.Address)(*big.Int,error) {
+func (self *Register) GetUploadCount(CallOpts *bind.CallOpts, address common.Address) (*big.Int, error) {
 	fmt.Println("GetUploadCount is call:")
-	return self.Contract.GetUploadCount(CallOpts,address)
+	return self.Contract.GetUploadCount(CallOpts, address)
 }

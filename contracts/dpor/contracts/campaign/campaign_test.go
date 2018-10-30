@@ -1,18 +1,15 @@
 package contract
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
-
 	"testing"
-
 	"time"
-
-	"bytes"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
