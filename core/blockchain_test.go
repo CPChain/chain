@@ -832,7 +832,6 @@ func TestBlockchainHeaderchainReorgConsistency(t *testing.T) {
 // Tests that importing small side forks doesn't leave junk in the trie database
 // cache (which would eventually cause memory issues).
 func TestTrieForkGC(t *testing.T) {
-	t.Skip("===TestTrieForkGC")
 	// Generate a canonical chain to act as the main dataset
 
 	db := ethdb.NewMemDatabase()

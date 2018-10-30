@@ -57,6 +57,9 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 		return consensus.ErrFutureBlock
 	}
 
+	if c.fake == ModeFake {
+		return nil
+	}
 	// Check that the extra-data contains both the vanity and signature
 	if len(header.Extra) < extraVanity {
 		return errMissingVanity
@@ -129,7 +132,7 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
-		if !dpor.fake {
+		if ModeNormal == dpor.fake {
 			return errInvalidSigners
 		}
 	}
@@ -170,11 +173,17 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				return nil, err
 			}
 
-			// Create a snapshot from the genesis block
-			signers := make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal)/common.AddressLength)
-			for i := 0; i < len(signers); i++ {
-				copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
+			var signers []common.Address
+			if dpor.fake == ModeFake {
+				// do nothing when test,empty signers assigned
+			} else {
+				// Create a snapshot from the genesis block
+				signers = make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal)/common.AddressLength)
+				for i := 0; i < len(signers); i++ {
+					copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
+				}
 			}
+
 			snap = newSnapshot(dpor.config, dpor.signatures, 0, genesis.Hash(), signers)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
@@ -245,7 +254,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// TODO: @liuq fix this!!!
-	if dpor.fake {
+	if dpor.fake == ModeFake {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
 			return errFakerFail
