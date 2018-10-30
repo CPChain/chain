@@ -28,7 +28,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -269,10 +268,17 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
 
 // GetDefaultSigners returns default signers
 func (s *DporSnapshot) GetDefaultSigners() []common.Address {
-	extra := core.DefaultGenesisBlock().ExtraData
-	signers := make([]common.Address, (len(extra)-extraVanity-extraSeal)/common.AddressLength)
-	for i := 0; i < len(signers); i++ {
-		copy(signers[i][:], extra[extraVanity+i*common.AddressLength:])
+	// extra := core.DefaultGenesisBlock().ExtraData
+	// signers := make([]common.Address, (len(extra)-extraVanity-extraSeal)/common.AddressLength)
+	// for i := 0; i < len(signers); i++ {
+	// 	copy(signers[i][:], extra[extraVanity+i*common.AddressLength:])
+	// }
+	// TODO: @Liuq fix this.
+	signers := []common.Address{
+		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
 	}
 	return signers
 }

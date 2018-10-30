@@ -35,10 +35,13 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	epochLength = uint(4) // Default number of signers.
-	viewLength  = uint(3) // Default number of blocks one signer can generate in one committee.
+	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
+	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
-	blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
+	epochLength = uint(4) // Default number of signers.
+	viewLength  = uint(4) // Default number of blocks one signer can generate in one committee.
+
+	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -99,7 +102,9 @@ var (
 	// errNoSigsInCache is returned if the cache is unable to store and return sigs.
 	errNoSigsInCache = errors.New("signatures not found in cache")
 
-	// --- new error types end ---
+	errFakerFail = errors.New("error fake fail")
+
+	// --- our new error types ---
 
 	// errVerifyUncleNotAllowed is returned when verify uncle block.
 	errVerifyUncleNotAllowed = errors.New("uncles not allowed")
@@ -176,11 +181,13 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	}
 	header.Extra = header.Extra[:extraVanity]
 
-	// Set header.Extra and header.Extra2
+	// if number%d.config.Epoch == 0 {
 	for _, signer := range snap.SignersOf(number) {
 		header.Extra = append(header.Extra, signer[:]...)
 	}
+	// }
 	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
+	// We suppose each signer only produces one block.
 	header.Extra2 = make([]byte, extraSeal*int(d.config.Epoch)+1)
 
 	// Mix digest is reserved for now, set to empty
@@ -252,7 +259,26 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, consensus.ErrUnauthorized
 	}
 
-	// Set coinbase, aka leader of this block.
+	/*
+		// TODO: fix this logic.
+		// Sweet, the protocol permits us to sign the block, wait for our time
+		delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
+		if header.Difficulty.Cmp(diffNoTurn) == 0 {
+			// It's not our turn explicitly to sign, delay it a bit
+			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
+			delay += time.Duration(rand.Int63n(int64(wiggle)))
+
+			log.Debug("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
+		}
+		log.Debug("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
+
+		select {
+		case <-stop:
+			return nil, nil
+		case <-time.After(delay):
+		}
+	*/
+	// set coinbase
 	header.Coinbase = signer
 
 	// Sign all the things!
@@ -288,7 +314,7 @@ func (d *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *
 	return d.dh.calcDifficulty(snap, d.signer)
 }
 
-// APIs implements consensus.Engine, returning the user facing RPC Api to allow
+// APIs implements consensus.Engine, returning the user facing RPC API to allow
 // controlling the signer voting.
 func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 	return []rpc.API{{

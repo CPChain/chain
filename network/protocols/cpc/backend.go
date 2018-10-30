@@ -118,9 +118,6 @@ func (s *CpchainService) AddLesServer(ls LesServer) {
 // New creates a new CpchainService object (including the
 // initialisation of the common CpchainService object)
 func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
-	if config.SyncMode == downloader.LightSync {
-		return nil, errors.New("can't run eth.CpchainService in light sync mode, use les.LightCpchainService")
-	}
 	if !config.SyncMode.IsValid() {
 		return nil, fmt.Errorf("invalid sync mode %d", config.SyncMode)
 	}

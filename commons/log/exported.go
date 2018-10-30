@@ -7,27 +7,13 @@ import (
 )
 
 var (
-	root           = NewLogger()
+	root           = New()
 	termTimeFormat = "01-02|15:04:05.000"
 )
 
-func NewLogger() *Logger {
-	l := &Logger{
-		logrus.NewEntry(logrus.New()),
-	}
-
-	l.SetFormatter(&TextFormatter{
-		QuoteEmptyFields: true,
-		FullTimestamp:    true,
-		ForceColors:      true,
-		TimestampFormat:  termTimeFormat,
-	})
-
-	return l
-}
-
 // ShowFilename show filename and position
 func ShowFilename() {
+	root.skip()
 	root.ShowFilename()
 }
 

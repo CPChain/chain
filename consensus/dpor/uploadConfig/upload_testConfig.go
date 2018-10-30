@@ -1,4 +1,4 @@
-package rpt
+package uploadConfig
 
 import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"

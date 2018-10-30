@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"sync"
 
 	"github.com/Sirupsen/logrus"
 	filename "github.com/keepeye/logrus-filename"
@@ -10,12 +11,13 @@ import (
 const errCtx = "Normalized odd number of arguments by adding nil"
 
 const (
-	PanicLevel = logrus.PanicLevel
-	FatalLevel = logrus.FatalLevel
-	ErrorLevel = logrus.ErrorLevel
-	WarnLevel  = logrus.WarnLevel
-	InfoLevel  = logrus.InfoLevel
-	DebugLevel = logrus.DebugLevel
+	PanicLevel                  = logrus.PanicLevel
+	FatalLevel                  = logrus.FatalLevel
+	ErrorLevel                  = logrus.ErrorLevel
+	WarnLevel                   = logrus.WarnLevel
+	InfoLevel                   = logrus.InfoLevel
+	DebugLevel                  = logrus.DebugLevel
+	defaultFilenameHookBaseSkip = 3
 )
 
 type (
@@ -27,16 +29,28 @@ type (
 
 type Logger struct {
 	*logrus.Entry
+	needSkip     bool
+	once         *sync.Once
+	filenameHook *filename.Hook
 }
 
 func New(ctx ...interface{}) *Logger {
-	if len(ctx)%2 != 0 {
-		logrus.Error(errCtx)
+	var l *Logger
+	opt := len(ctx)
+	switch {
+	case opt == 0:
+		l = &Logger{
+			Entry: logrus.NewEntry(logrus.New()),
+			once:  new(sync.Once),
+		}
+	case (opt % 2) == 0:
+		l = &Logger{
+			Entry: logrus.WithFields(getFields(ctx)),
+			once:  new(sync.Once),
+		}
+	default:
+		logrus.Error("argument number wrong")
 		return nil
-	}
-
-	l := &Logger{
-		logrus.WithFields(getFields(ctx)),
 	}
 
 	l.SetFormatter(&TextFormatter{
@@ -48,13 +62,22 @@ func New(ctx ...interface{}) *Logger {
 	return l
 }
 
+func (logger *Logger) skip() {
+	logger.needSkip = true
+}
+
 // ShowFilename show filename and position
 func (logger *Logger) ShowFilename() {
-	filenameHook := filename.NewHook()
-	filenameHook.Field = "Line"
-	filenameHook.Skip += 4
-	// logger.Entry.Logger.Hooks
-	logger.Entry.Logger.AddHook(filenameHook)
+	logger.once.Do(func() {
+		logger.filenameHook = filename.NewHook()
+		if logger.needSkip {
+			logger.filenameHook.Skip++
+		}
+		logger.filenameHook.Skip += defaultFilenameHookBaseSkip
+		logger.filenameHook.Field = "Line"
+		// logger.Entry.Logger.Hooks
+		logger.Entry.Logger.AddHook(logger.filenameHook)
+	})
 }
 
 // SetLevel sets the logger level.
