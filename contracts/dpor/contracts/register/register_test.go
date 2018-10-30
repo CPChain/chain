@@ -1,35 +1,32 @@
 package register
 
 import (
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
-	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"fmt"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/stretchr/testify/assert"
-	"testing"
-
-	"bitbucket.org/cpchain/chain/crypto"
 	"context"
 	"crypto/ecdsa"
-	"github.com/ethereum/go-ethereum/common"
+	"fmt"
 	"math/big"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/crypto/sha3"
+	"bitbucket.org/cpchain/chain/ethclient"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/stretchr/testify/assert"
 )
 
-var (
-	key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	addr   = crypto.PubkeyToAddress(key.PublicKey)
-)
-
-type file struct {
+type filestruck struct {
 	fileName string
 	fileHash [32]byte
 	fileSize *big.Int
 }
 
-func sigHash(testfile file) (hash common.Hash) {
+func sigHash(testfile filestruck) (hash common.Hash) {
 	hasher := sha3.NewKeccak256()
 
 	rlp.Encode(hasher, []interface{}{
@@ -40,63 +37,83 @@ func sigHash(testfile file) (hash common.Hash) {
 	return hash
 }
 
-func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
-	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	deployTransactor.Value = amount
-	addr, _, _, err := DeployRegister(deployTransactor, backend)
-	if err != nil {
-		return common.Address{}, err
-	}
-	backend.Commit()
-	return addr, nil
-}
-
 func TestDeployRegister(t *testing.T) {
-	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
-	checkError(t, "deploy contract: expected no error, got %v", err)
+	t.Skip("we shall use a simulated backend.")
 
-	Fakeregister, err := NewRegister(contractAddr, contractBackend)
+	// create client.
+	// client, err := ethclient.Dial("https://rinkeby.infura.io")
+	client, err := ethclient.Dial("http://localhost:8501") // local
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	file, _ := os.Open("../../../examples/cpchain/data/dd1/keystore/")
+	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
+	kst := keystore.NewKeyStore(keyPath, 2, 1)
+	account := kst.Accounts()[0]
+	account, key, err := kst.GetDecryptedKey(account, "password")
+	privateKey := key.PrivateKey
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("error casting public key to ECDSA")
+	}
+
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	fmt.Println("from address:", fromAddress.Hex()) // 0x96216849c49358B10257cb55b28eA603c874b05E
+
+	bal, err := client.BalanceAt(context.Background(), fromAddress, nil)
+	fmt.Println("bal:", bal)
+	gasLimit := 3000000
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	fmt.Println("gasPrice:", gasPrice)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	auth := bind.NewKeyedTransactor(privateKey)
+	//auth.Nonce = big.NewInt(int64(nonce)) // not necessary
+	auth.Value = big.NewInt(0)       // in wei
+	auth.GasLimit = uint64(gasLimit) // in units
+	auth.GasPrice = gasPrice
+
+	contractAddress, _, _, err := DeployRegister(auth, client)
+
+	Fakeregister, err := NewRegister(contractAddress, client)
 	checkError(t, "NewRegister, got %v", err)
-	contractBackend.Commit()
-	printBalance(contractBackend)
 
-	fakefile := file{
+	fakefile := filestruck{
 		fileName: ",cpchian,cpchian,cpchian",
 		fileSize: big.NewInt(88),
 	}
 	copy(fakefile.fileHash[:], sigHash(fakefile).Bytes())
-	transactOpts := bind.NewKeyedTransactor(key)
-	_, err1 := Fakeregister.ClaimRegister(transactOpts, fakefile.fileName, fakefile.fileHash, fakefile.fileSize)
-	if err1 != nil {
-		log.Warn("ClaimRegister,error", addr, err)
-	}
-	contractBackend.Commit()
-	printBalance(contractBackend)
 
-	filenumber, err2 := Fakeregister.GetUploadCount(nil, addr)
-	if err2 != nil {
-		log.Warn("GetUploadCount err", addr, err)
+	_, err1 := Fakeregister.ClaimRegister(auth, fakefile.fileName, fakefile.fileHash, fakefile.fileSize)
+	if err1 != nil {
+		log.Warn("ClaimRegister,error", fromAddress, err)
+	}
+
+	filenumber, err := Fakeregister.GetUploadCount(nil, fromAddress)
+	if err != nil {
+		log.Warn("GetUploadCount err", fromAddress, err)
 	}
 	fmt.Println(err)
 	assert.Equal(t, float64(1), float64(filenumber.Int64()))
 
-	file, err3 := Fakeregister.UploadHistory(nil, addr, big.NewInt(int64(0)))
-	if err3 != nil {
-		log.Warn("GetUploadCount err", addr, err)
+	fileHistory, err := Fakeregister.UploadHistory(nil, fromAddress, big.NewInt(int64(0)))
+	if err != nil {
+		log.Warn("GetUploadCount err", fromAddress, err)
 	}
-	assert.Equal(t, fakefile.fileName, file.FileName)
-	contractBackend.Commit()
-	printBalance(contractBackend)
+	assert.Equal(t, fakefile.fileName, fileHistory.FileName)
 }
 
 func checkError(t *testing.T, msg string, err error) {
 	if err != nil {
 		t.Fatalf(msg, err)
 	}
-}
-
-func printBalance(contractBackend *backends.SimulatedBackend) {
-	addrBalance, _ := contractBackend.BalanceAt(context.Background(), addr, nil)
-	fmt.Println("==== addrBalance ==== ", addrBalance)
 }
