@@ -127,7 +127,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	numOfCampaign, deposit, startViewIdx, err := campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
-	assert(1, 50, numOfCampaign, deposit, t)
+	assertCaompaign(1, 50, numOfCampaign, deposit, t)
 
 	tx, err = campaign.ClaimCampaign(big.NewInt(1), big.NewInt(60))
 	checkError(t, "ClaimCampaign error: %v", err)
@@ -139,7 +139,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	numOfCampaign, deposit, startViewIdx, err = campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
-	assert(2, 100, numOfCampaign, deposit, t)
+	assertCaompaign(2, 100, numOfCampaign, deposit, t)
 
 	// get candidates by view index
 	candidates, err := campaign.CandidatesOf(big.NewInt(0))
@@ -207,7 +207,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	numOfCampaign, deposit, startViewIdx, err := campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx)
-	assert(2, 100, numOfCampaign, deposit, t)
+	assertCaompaign(2, 100, numOfCampaign, deposit, t)
 
 	// get candidates by view index
 	verifyCandidates(campaign, t, big.NewInt(0), 1)
@@ -271,7 +271,7 @@ func printBalance(contractBackend *backends.SimulatedBackend) {
 	fmt.Println("==== addrBalance ==== ", addrBalance)
 }
 
-func assert(expectNum int64, expectDeposit int64, numOfCampaign *big.Int, deposit *big.Int, t *testing.T) {
+func assertCaompaign(expectNum int64, expectDeposit int64, numOfCampaign *big.Int, deposit *big.Int, t *testing.T) {
 	if numOfCampaign.Cmp(big.NewInt(expectNum)) != 0 || deposit.Cmp(big.NewInt(expectDeposit)) != 0 {
 		t.Fatal("unexpected numOfCampaign, deposit:", numOfCampaign, deposit)
 	}
