@@ -11,13 +11,13 @@ import (
 const errCtx = "Normalized odd number of arguments by adding nil"
 
 const (
-	PanicLevel          = logrus.PanicLevel
-	FatalLevel          = logrus.FatalLevel
-	ErrorLevel          = logrus.ErrorLevel
-	WarnLevel           = logrus.WarnLevel
-	InfoLevel           = logrus.InfoLevel
-	DebugLevel          = logrus.DebugLevel
-	DefaultFilenameHook = 3
+	PanicLevel                  = logrus.PanicLevel
+	FatalLevel                  = logrus.FatalLevel
+	ErrorLevel                  = logrus.ErrorLevel
+	WarnLevel                   = logrus.WarnLevel
+	InfoLevel                   = logrus.InfoLevel
+	DebugLevel                  = logrus.DebugLevel
+	defaultFilenameHookBaseSkip = 3
 )
 
 type (
@@ -71,9 +71,9 @@ func (logger *Logger) ShowFilename() {
 	logger.once.Do(func() {
 		logger.filenameHook = filename.NewHook()
 		if logger.needSkip {
-			logger.filenameHook.Skip += 1
+			logger.filenameHook.Skip++
 		}
-		logger.filenameHook.Skip += DefaultFilenameHook
+		logger.filenameHook.Skip += defaultFilenameHookBaseSkip
 		logger.filenameHook.Field = "Line"
 		// logger.Entry.Logger.Hooks
 		logger.Entry.Logger.AddHook(logger.filenameHook)
