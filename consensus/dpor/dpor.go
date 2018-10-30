@@ -105,8 +105,14 @@ func NewFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	return d
 }
 
+func NewDoNothingFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
+	d := New(config, db)
+	d.fake = ModeDoNothingFake
+	return d
+}
+
 func NewFakeFailer(config *configs.DporConfig, db ethdb.Database, fail uint64) *Dpor {
-	d := NewFaker(config, db)
+	d := NewDoNothingFaker(config, db)
 	d.fakeFail = fail
 	return d
 }

@@ -57,9 +57,13 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 		return consensus.ErrFutureBlock
 	}
 
-	if c.fake == ModeFake {
+	switch c.fake {
+	case ModeDoNothingFake:
+		// do nothing
+	case ModeFake:
 		return nil
 	}
+
 	// Check that the extra-data contains both the vanity and signature
 	if len(header.Extra) < extraVanity {
 		return errMissingVanity
@@ -174,7 +178,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			}
 
 			var signers []common.Address
-			if dpor.fake == ModeFake {
+			if dpor.fake == ModeFake || dpor.fake == ModeDoNothingFake {
 				// do nothing when test,empty signers assigned
 			} else {
 				// Create a snapshot from the genesis block
@@ -254,7 +258,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// TODO: @liuq fix this!!!
-	if dpor.fake == ModeFake {
+	if dpor.fake == ModeFake || dpor.fake == ModeDoNothingFake {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
 			return errFakerFail

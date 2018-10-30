@@ -86,13 +86,18 @@ func TestHeaderVerification(t *testing.T) {
 }
 
 // Tests that concurrent header verification works, for both good and bad blocks.
-func TestHeaderConcurrentVerification2(t *testing.T)  { testHeaderConcurrentVerification(t, 2) }
-func TestHeaderConcurrentVerification8(t *testing.T)  { testHeaderConcurrentVerification(t, 8) }
-func TestHeaderConcurrentVerification32(t *testing.T) { testHeaderConcurrentVerification(t, 32) }
+func TestHeaderConcurrentVerification2(t *testing.T) {
+	testHeaderConcurrentVerification(t, 2)
+}
+func TestHeaderConcurrentVerification8(t *testing.T) {
+	testHeaderConcurrentVerification(t, 8)
+}
+func TestHeaderConcurrentVerification32(t *testing.T) {
+	testHeaderConcurrentVerification(t, 32)
+}
 
 func testHeaderConcurrentVerification(t *testing.T, threads int) {
 	// Create a simple chain to verify
-
 	var (
 		testdb = ethdb.NewMemDatabase()
 	)
@@ -103,7 +108,7 @@ func testHeaderConcurrentVerification(t *testing.T, threads int) {
 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
 
 	config := configs.MainnetChainConfig.Dpor
-	d := dpor.NewFaker(config, testdb)
+	d := dpor.NewDoNothingFaker(config, testdb)
 
 	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)
 
@@ -124,7 +129,7 @@ func testHeaderConcurrentVerification(t *testing.T, threads int) {
 		var results <-chan error
 
 		if valid {
-			engine := dpor.NewFaker(config, testdb)
+			engine := dpor.NewDoNothingFaker(config, testdb)
 			chain, _ := NewBlockChain(testdb, nil, genesis.Config, engine, vm.Config{}, remoteDB, nil)
 			_, results = chain.engine.VerifyHeaders(chain, headers, seals, headers)
 			chain.Stop()
