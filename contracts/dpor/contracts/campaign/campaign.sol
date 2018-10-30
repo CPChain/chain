@@ -11,7 +11,7 @@ contract AdmissionInterface {
 // TODO this file exposes security holes.
 
 contract Campaign {
-    
+
     using Set for Set.Data;
     using SafeMath for uint256;
 
@@ -36,78 +36,78 @@ contract Campaign {
         uint startViewIdx;
         uint stopViewIdx;
     }
-    
+
     mapping(address => CandidateInfo) candidates;
     mapping(uint => Set.Data) campaignSnapshots;
-    
+
     AdmissionInterface admission;
 
     modifier onlyOwner() {require(msg.sender == owner);_;}
-    
+
     // TODO add some log.
     event ClaimCampaign(address candidate, uint startViewIdx, uint stopViewIdx);
     event QuitCampaign(address candidate, uint payback);
     event ViewChange();
-    
+
     constructor(address _addr) public {
         owner = msg.sender;
         admission = AdmissionInterface(_addr);
     }
-    
+
     function candidatesOf(uint _viewIdx) public view returns (address[]){
         return campaignSnapshots[_viewIdx].values;
     }
 
-    function candidateInfoOf(address _candidate) 
-        public 
-        view 
-        returns (uint, uint, uint, uint) 
+    function candidateInfoOf(address _candidate)
+        public
+        view
+        returns (uint, uint, uint, uint)
     {
         return (
-            candidates[_candidate].numOfCampaign, 
-            candidates[_candidate].deposit, 
+            candidates[_candidate].numOfCampaign,
+            candidates[_candidate].deposit,
             candidates[_candidate].startViewIdx,
             candidates[_candidate].stopViewIdx
         );
     }
-    
+
     /** set the Admission interface address. */
     function setAdmissionAddr(address _addr) public onlyOwner(){
         admission = AdmissionInterface(_addr);
     }
-    
+
     /** update the config params. */
     function updateBaseDeposit(uint _deposit) public onlyOwner(){
         baseDeposit = _deposit;
     }
-    
+
     function updateMinNoc(uint _minNoc) public onlyOwner(){
         minNoc = _minNoc;
     }
-    
+
     function updateMaxNoc(uint _maxNoc) public onlyOwner(){
         maxNoc = _maxNoc;
     }
-    
+
     /**
-     * Claim a Candidate have three basic conditions. 
+     * Claim a Candidate have three basic conditions.
      * One is pay some specified cpc.
      * The seconde is pass the cpu&memory capacity verification.
      * The last is rpt.
      * Each call may tried to update viewIdx once.
      */
     function claimCampaign(
-        uint _numOfCampaign, 
+        uint _numOfCampaign,
         // TODO users cannot submit his rpt himself.
         // waite for the 'precompiled contract' solution.
-        uint _rpt, 
-        uint64 _cpuNonce, 
-        uint _cpuBlockNumber, 
-        uint64 _memoryNonce, 
+        uint _rpt,
+        uint64 _cpuNonce,
+        uint _cpuBlockNumber,
+        uint64 _memoryNonce,
         uint _memoryBlockNumber
-        ) 
-        public 
-        payable 
+        )
+        public
+        payable
         {
             require(_rpt >= minRpt, "too low rpt.");
             require(msg.value == SafeMath.mul(baseDeposit, _numOfCampaign), "wrong deposit value.");
@@ -115,13 +115,13 @@ contract Campaign {
             require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber), "cpu or memory not passed.");
             updateViewIdx();
             require(
-                candidates[candidate].numOfCampaign == 0, 
+                candidates[candidate].numOfCampaign == 0,
                 "please waite until your last round ended and try again."
             );
             require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
-        
+
             address candidate = msg.sender;
-            
+
             candidates[candidate].numOfCampaign = candidates[candidate].numOfCampaign.add(_numOfCampaign);
             candidates[candidate].deposit = candidates[candidate].deposit.add(msg.value);
             candidates[candidate].startViewIdx = viewIdx.add(1);
@@ -133,7 +133,7 @@ contract Campaign {
             }
             emit ClaimCampaign(candidate, candidates[candidate].startViewIdx, candidates[candidate].stopViewIdx);
         }
-    
+
     // TODO QuitCampaign test ok.
     function quitCampaign() public {
         address candidate = msg.sender;
@@ -175,7 +175,7 @@ contract Campaign {
             }
         }
     }
-        
+
     /** update viewIdx called by function ClaimCampaign. */
     function updateViewIdx() internal{
         uint blockNumber = block.number;
@@ -188,7 +188,7 @@ contract Campaign {
         candidates[candidate].deposit -= baseDeposit;
         campaignSnapshots[_viewIdx].remove(candidate);
     }
-    
+
     function paybackDeposit(address candidate) internal {
         uint deposit = candidates[candidate].deposit;
         candidates[candidate].numOfCampaign = 0;
@@ -197,9 +197,9 @@ contract Campaign {
         candidates[candidate].stopViewIdx = 0;
         candidate.transfer(deposit);
     }
-    
+
     }
-    
+
     function() payable public { }
 
 }

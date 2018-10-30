@@ -17,7 +17,7 @@ library Set {
      * be seen as a method of that object.
     */
     function insert(Data storage self, address value)
-      internal 
+      internal
       returns (bool)
     {
         if (self.flags[value])
@@ -28,7 +28,7 @@ library Set {
     }
 
     function remove(Data storage self, address value)
-      internal 
+      internal
       returns (bool)
     {
         if (!self.flags[value])
@@ -44,7 +44,7 @@ library Set {
                 // delete self.values[size-1];
                 // self.values.length--;
                 // break;
-                
+
                 // simplify the steps to save gas.
                 self.values[i] = self.values[size-1];
                 delete self.values[size-1];
@@ -62,6 +62,6 @@ library Set {
     function getAll(Data storage self) internal view returns (address[]) {
         return self.values;
     }
-    
+
 }
 
