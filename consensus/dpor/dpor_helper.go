@@ -49,6 +49,7 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	if header.Number == nil {
 		return errUnknownBlock
 	}
+
 	number := header.Number.Uint64()
 
 	// Don't waste time checking blocks from the future
@@ -241,6 +242,15 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return errUnknownBlock
 	}
 
+	// TODO: @liuq fix this!!!
+	if dpor.fake {
+		time.Sleep(dpor.fakeDelay)
+		if dpor.fakeFail == number {
+			return errFakerFail
+		}
+		return nil
+	}
+
 	// Retrieve the Snapshot needed to verify this header and cache it
 	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
@@ -290,7 +300,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// Retrieve signatures of the block in cache
 	s, _ := dpor.signatures.Get(hash)
 
-	// Copy all signatures recovered to allSigs
+	// Copy all signatures recovered to allSigs.
 	allSigs := make([]byte, int(dpor.config.Epoch)*extraSeal)
 	for round, signer := range snap.SignersOf(number) {
 		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
@@ -298,7 +308,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		}
 	}
 
-	// Encode allSigs to header.extra2
+	// Encode allSigs to header.extra2.
 	err = refHeader.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
 	if err != nil {
 		return err
@@ -338,6 +348,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return consensus.ErrNotEnoughSigs
 
 	}
+	// --- our check ends ---
 
 	// Ensure that the difficulty corresponds to the turn-ness of the signer
 	inturn, _ := snap.IsLeaderOf(leader, header.Number.Uint64())
