@@ -277,15 +277,18 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	}
 }
 
+// GAPIs return the collection of GRPC services the cpc package offers.
+// NOTE, some of these services probably need to be moved to somewhere else.
 func (s *CpchainService) GAPIs() []api.GApi {
-	return []api.GApi{
+	apis := ethapi.GetGAPIs(s.APIBackend)
+	return append(apis, []api.GApi{
 		NewMinerReader(s),
 		NewCoinbase(s),
 		NewAdminManager(s),
 		NewMinerManager(s),
 		NewDebugDumper(s),
 		NewDebugManager(s),
-	}
+	}...)
 }
 
 // APIs return the collection of RPC services the cpc package offers.
