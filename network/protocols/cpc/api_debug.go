@@ -6,7 +6,6 @@ import (
 
 	pb "bitbucket.org/cpchain/chain/api/v1/common"
 	"bitbucket.org/cpchain/chain/api/v1/debug"
-	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
@@ -108,14 +107,13 @@ func (api *DebugDumper) DumpBlock(ctx context.Context, blockNumber *pb.BlockNumb
 // DebugManager is the collection of Ethereum full node APIs exposed over
 // the private debugging endpoint.
 type DebugManager struct {
-	config *configs.ChainConfig
-	c      *CpchainService
+	c *CpchainService
 }
 
 // NewDebugManager creates a new API definition for the full node-related
 // private debug methods of the Ethereum service.
-func NewDebugManager(config *configs.ChainConfig, c *CpchainService) *DebugManager {
-	return &DebugManager{config: config, c: c}
+func NewDebugManager(c *CpchainService) *DebugManager {
+	return &DebugManager{c: c}
 }
 
 // IsPublic if public default

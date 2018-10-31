@@ -279,10 +279,12 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 
 func (s *CpchainService) GAPIs() []api.GApi {
 	return []api.GApi{
+		NewMinerReader(s),
+		NewCoinbase(s),
 		NewAdminManager(s),
 		NewMinerManager(s),
-		NewMinerManager(s),
 		NewDebugDumper(s),
+		NewDebugManager(s),
 	}
 }
 

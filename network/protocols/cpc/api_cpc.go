@@ -64,6 +64,26 @@ func NewMinerReader(c *CpchainService) *MinerReader {
 	return &MinerReader{c, agent}
 }
 
+// IsPublic if public default
+func (m *MinerReader) IsPublic() bool {
+	return true
+}
+
+// Namespace namespace naem
+func (m *MinerReader) Namespace() string {
+	return "cpc"
+}
+
+// RegisterServer register api to grpc
+func (m *MinerReader) RegisterServer(s *grpc.Server) {
+	cpc.RegisterMinerReaderServer(s, m)
+}
+
+// RegisterJsonRpc register api to restfull json
+func (m *MinerReader) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	cpc.RegisterMinerReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
 // Mining returns an indication if this node is currently mining.
 func (m *MinerReader) Mining(ctx context.Context, req *empty.Empty) (*common.IsOk, error) {
 	return &common.IsOk{IsOk: m.e.IsMining()}, nil
