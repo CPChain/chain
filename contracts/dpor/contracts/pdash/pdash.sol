@@ -326,7 +326,7 @@ contract Pdash {
             orderRecords[id].sellerAddress.transfer(paySeller);
             orderRecords[id].buyerAddress.transfer(paySeller);
         }
-            emit SellerClaimTimeout(id, now);
+        emit SellerClaimTimeout(id, now);
     }
 
     // seller score to proxy

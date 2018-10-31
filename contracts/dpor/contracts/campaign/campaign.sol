@@ -112,32 +112,32 @@ contract Campaign {
         )
         public
         payable
-        {
-            require(_rpt >= minRpt, "too low rpt.");
-            require(msg.value == SafeMath.mul(baseDeposit, _numOfCampaign), "wrong deposit value.");
-            // verify the sender's cpu ability.
-            require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber), "cpu or memory not passed.");
-            updateViewIdx();
-            require(
-                candidates[candidate].numOfCampaign == 0,
-                "please waite until your last round ended and try again."
-            );
-            require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
+    {
+        require(_rpt >= minRpt, "too low rpt.");
+        require(msg.value == SafeMath.mul(baseDeposit, _numOfCampaign), "wrong deposit value.");
+        // verify the sender's cpu ability.
+        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber), "cpu or memory not passed.");
+        updateViewIdx();
+        require(
+            candidates[candidate].numOfCampaign == 0,
+            "please waite until your last round ended and try again."
+        );
+        require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
 
-            address candidate = msg.sender;
+        address candidate = msg.sender;
 
-            candidates[candidate].numOfCampaign = candidates[candidate].numOfCampaign.add(_numOfCampaign);
-            candidates[candidate].deposit = candidates[candidate].deposit.add(msg.value);
-            candidates[candidate].startViewIdx = viewIdx.add(1);
-            //[start, stop)
-            candidates[candidate].stopViewIdx = candidates[candidate].startViewIdx.add(_numOfCampaign);
-            candidates[candidate].baseDeposit = baseDeposit;
-            // add candidate to campaignSnapshots.
-            for(uint i = candidates[candidate].startViewIdx; i < candidates[candidate].stopViewIdx; i++) {
-                campaignSnapshots[i].insert(candidate);
-            }
-            emit ClaimCampaign(candidate, candidates[candidate].startViewIdx, candidates[candidate].stopViewIdx);
+        candidates[candidate].numOfCampaign = candidates[candidate].numOfCampaign.add(_numOfCampaign);
+        candidates[candidate].deposit = candidates[candidate].deposit.add(msg.value);
+        candidates[candidate].startViewIdx = viewIdx.add(1);
+        //[start, stop)
+        candidates[candidate].stopViewIdx = candidates[candidate].startViewIdx.add(_numOfCampaign);
+        candidates[candidate].baseDeposit = baseDeposit;
+        // add candidate to campaignSnapshots.
+        for(uint i = candidates[candidate].startViewIdx; i < candidates[candidate].stopViewIdx; i++) {
+            campaignSnapshots[i].insert(candidate);
         }
+        emit ClaimCampaign(candidate, candidates[candidate].startViewIdx, candidates[candidate].stopViewIdx);
+    }
 
     // TODO QuitCampaign test ok.
     function quitCampaign() public {
