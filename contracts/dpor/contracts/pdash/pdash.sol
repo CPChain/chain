@@ -4,56 +4,8 @@ pragma solidity ^0.4.0;
  * @title SafeMath
  * @dev Math operations with safety checks that throw on error
  */
-library SafeMath {
+import "../../lib/safeMath.sol";
 
-    /**
-    * @dev Multiplies two numbers, throws on overflow.
-    */
-    function mul(uint256 a, uint256 b) internal pure returns (uint256 c) {
-        if (a == 0) {
-            return 0;
-        }
-        c = a * b;
-        assert(c / a == b);
-        return c;
-    }
-
-    /**
-    * @dev Integer division of two numbers, truncating the quotient.
-    */
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        // assert(b > 0); // Solidity automatically throws when dividing by 0
-        // uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-        return a / b;
-    }
-
-    /**
-    * @dev Subtracts two numbers, throws on overflow (i.e. if subtrahend is greater than minuend).
-    */
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        assert(b <= a);
-        return a - b;
-    }
-
-    /**
-    * @dev Adds two numbers, throws on overflow.
-    */
-    function add(uint256 a, uint256 b) internal pure returns (uint256 c) {
-        c = a + b;
-        assert(c >= a);
-        return c;
-    }
-}
-
-library Set {
-    // We define a new struct datatype that will be used to
-    // hold its data in the calling contract.
-    struct Data {
-             mapping(address => bool) flags;
-             address[] values;
-         }
-}
 
 /*
     A Contract Contract for order processing in CPChain.
@@ -62,7 +14,7 @@ library Set {
 contract Pdash {
 
     using SafeMath for uint256;
-
+    // transaction status
     enum State {
         Created,
         SellerConfirmed,
@@ -75,6 +27,12 @@ contract Pdash {
         AllRated,
         Disputed,
         Withdrawn
+    }
+    // dispute status
+    enum DisputeState {
+        Proposed,
+        Processed,
+        Handled
     }
 
     struct OrderInfo {
@@ -91,12 +49,6 @@ contract Pdash {
         State state;
         uint disputeId;
     }
-
-    enum DisputeState {
-        Proposed,
-        Processed,
-        Handled
-    }
     struct DisputeInfo {
         uint orderId;
         bool badBuyer;
@@ -107,19 +59,19 @@ contract Pdash {
         uint endTime;
         DisputeState disputeState;
     }
+
+    address public owner;
     uint DisputeTimeAllowed = 100;
-
-    address public trentAddress;
-
     uint public numOrders = 0;
     uint public numDisputes = 0;
+    // TODO let records to be public or only let relevant address to be a accessible
     mapping(uint => OrderInfo) public orderRecords;
     mapping(uint => DisputeInfo) public disputeRecords;
-
     mapping(address => uint) public proxyCredits;
-    
     mapping(address => uint) public proxyDeposits;
+    // the orders id in a certain block.
     mapping(uint => uint[]) public blockOrders;
+    // the number of orders in a certain block.
     mapping(uint => uint) public blockOrdersLength;
 
     // Security Checks
@@ -136,32 +88,24 @@ contract Pdash {
     }
     modifier inState(uint id, State _state) {require(orderRecords[id].state == _state); _;}
     modifier inDisputeState(uint id, DisputeState _state) {require(disputeRecords[id].disputeState == _state); _;}
-    
-    modifier onlyTrent() {require(msg.sender == trentAddress); _;}
+    modifier onlyOwner() {require(msg.sender == owner); _;}
 
     constructor() public {
-        trentAddress = msg.sender;
+        owner = msg.sender;
     }
 
-    function() payable external {
-    }
+    function() public payable { }
 
-    // Some events that help tracking the status of the chain
+    // Some events that help tracking the status of the orders.
     event OrderInitiated(address from, uint orderId, uint value, uint time);
     event OrderWithdrawn(uint orderId, uint time);
-
     event SellerConfirmed(uint orderId, uint value, uint time);
-
     event ProxyFetched(uint orderId, uint time);
     event ProxyDelivered(uint orderId, uint time);
-
     event BuyerConfirmed(uint orderId, uint time);
     event BuyerDisputed(uint orderId, uint time);
-
     event SellerClaimTimeout(uint orderId, uint time);
-
     event OrderFinished(uint orderId, uint time);
-
     event ProxyDeposited(address from, uint value, uint time);
     event ProxyWithdrawn(address from, uint value, uint time);
 
@@ -228,7 +172,7 @@ contract Pdash {
         emit OrderWithdrawn(id, now);
     }
 
-//buyer confirm tx
+    // buyer confirm tx
     function buyerConfirmDeliver(uint id)
         public
         onlyBuyer(id)
@@ -240,14 +184,15 @@ contract Pdash {
         uint payProxy = orderRecords[id].proxyFee;
         orderRecords[id].proxyAddress.transfer(payProxy);
         orderRecords[id].secondaryProxyAddress.transfer(payProxy);
-
-        uint paySeller = orderRecords[id].offeredPrice.mul(2).sub(payProxy.mul(2));
+        // exchange the calc step to save gas.
+        uint paySeller = (orderRecords[id].offeredPrice.sub(payProxy)).mul(2);
         orderRecords[id].sellerAddress.transfer(paySeller);
         orderRecords[id].state = State.Finished;
 
         emit BuyerConfirmed(id, now);
     }
-//buyer dispute tx
+
+    // buyer dispute tx
     function buyerDispute(uint id)
         public
         onlyBuyer(id)
@@ -270,7 +215,7 @@ contract Pdash {
         emit BuyerDisputed(id, now);
 
     }
-//buyer agreee or not the tx
+    // buyer agreee or not the tx
     function buyerAgreeOrNot(uint id, bool if_agree)
         public
         onlyBuyer(id)
@@ -286,9 +231,8 @@ contract Pdash {
             finishDispute(id, disputeId, disputeRecords[disputeId].badBuyer, disputeRecords[disputeId].badSeller, disputeRecords[disputeId].badProxy);
             emit OrderFinished(id, now);
         }
-
     }
-//buyer give a Score to buyer
+    // buyer give a Score to buyer
     function buyerRateProxy(uint id, uint rate)
         public
         onlyBuyer(id)
@@ -297,7 +241,7 @@ contract Pdash {
         require(rate > 0 && rate < 10);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].add(rate);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].div(2);
-        
+
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].add(rate);
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
         if(orderRecords[id].state == State.Finished){
@@ -305,9 +249,8 @@ contract Pdash {
         }else{
             orderRecords[id].state = State.AllRated;
         }
-
     }
-//seller confirm the order
+    // seller confirm the order
     function sellerConfirm(uint id)
         public
         onlySeller(id)
@@ -320,7 +263,8 @@ contract Pdash {
 
         emit SellerConfirmed(id, msg.value, now);
     }
-//seller agree oe not to the proxy
+
+    // seller agree oe not to the proxy
     function sellerAgreeOrNot(uint id, bool if_agree)
         public
         onlySeller(id)
@@ -358,7 +302,8 @@ contract Pdash {
 
         emit SellerClaimTimeout(id, now);
     }
-//seller score to proxy
+
+    // seller score to proxy
     function sellerRateProxy(uint id, uint rate)
         public
         onlySeller(id)
@@ -367,7 +312,7 @@ contract Pdash {
         require(rate > 0 && rate < 10);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].add(rate);
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].div(2);
-        
+
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].add(rate);
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
         if(orderRecords[id].state == State.Finished){
@@ -377,7 +322,8 @@ contract Pdash {
         }
 
     }
-    //proxy deposit
+
+    // proxy deposit
     function proxyDeposit()
         public
         payable
@@ -397,7 +343,8 @@ contract Pdash {
 
         emit ProxyWithdrawn(msg.sender, value, now);
     }
-//proxy git the data
+
+    // proxy git the data
     function proxyFetched(uint id)
         public
         onlyProxy(id)
@@ -408,7 +355,8 @@ contract Pdash {
 
         emit ProxyFetched(id, now);
     }
-//proxy give buyer the data address
+
+    // proxy give buyer the data address
     function proxyDelivered(bytes32 deliverHash, uint id)
         public
         onlyProxy(id)
@@ -442,7 +390,7 @@ contract Pdash {
 
     function trentHandleDispute(uint id, bool badBuyer, bool badSeller, bool badProxy)
         public
-        onlyTrent()
+        onlyOwner
         inState(id, State.Disputed)
     {
         uint orderId = id;
@@ -481,7 +429,7 @@ contract Pdash {
                 proxyDeposits[secondaryProxyAddress].sub(proxyFee);
 
                 sellerAddress.transfer(proxyFee.mul(2));
-                trentAddress.transfer(proxyFee.mul(2));
+                owner.transfer(proxyFee.mul(2));
             }
             else {
                 proxyAddress.transfer(proxyFee);
@@ -497,13 +445,13 @@ contract Pdash {
                 proxyDeposits[proxyAddress].sub(proxyFee); // punish bad proxy.
                 proxyDeposits[secondaryProxyAddress].sub(proxyFee);
 
-                trentAddress.transfer(offeredPrice.div(2).add(proxyFee.mul(2)));
+                owner.transfer(offeredPrice.div(2).add(proxyFee.mul(2)));
             }
             else {
                 proxyAddress.transfer(proxyFee);
                 secondaryProxyAddress.transfer(proxyFee);
 
-                trentAddress.transfer(offeredPrice.div(2).sub(proxyFee.mul(2)));
+                owner.transfer(offeredPrice.div(2).sub(proxyFee.mul(2)));
             }
         }
         emit OrderFinished(orderId, now);

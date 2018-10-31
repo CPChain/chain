@@ -34,49 +34,49 @@ import (
 	"google.golang.org/grpc"
 )
 
-type PublicEthereumAPIServer struct {
-	e *CpchainService
+type PublicCpchainAPIServer struct {
+	c *CpchainService
 }
 
-func NewPublicEthereumAPIServer(e *CpchainService) *PublicEthereumAPIServer {
-	return &PublicEthereumAPIServer{e}
+func NewPublicCpchainAPIServer(e *CpchainService) *PublicCpchainAPIServer {
+	return &PublicCpchainAPIServer{e}
 }
 
-func (api *PublicEthereumAPIServer) RegisterServer(s *grpc.Server) {
+func (api *PublicCpchainAPIServer) RegisterServer(s *grpc.Server) {
 	protos.RegisterPublicEthereumAPIServer(s, api)
 }
 
-func (api *PublicEthereumAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+func (api *PublicCpchainAPIServer) RegisterProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	protos.RegisterPublicEthereumAPIHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-func (api *PublicEthereumAPIServer) Namespace() string {
+func (api *PublicCpchainAPIServer) Namespace() string {
 	return "eth"
 }
 
-func (api *PublicEthereumAPIServer) IsPublic() bool {
+func (api *PublicCpchainAPIServer) IsPublic() bool {
 	return true
 }
 
-func (api *PublicEthereumAPIServer) Etherbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
-	etherBase, err := api.e.Etherbase()
+func (api *PublicCpchainAPIServer) Etherbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
+	etherBase, err := api.c.Etherbase()
 	if err != nil {
 		return nil, err
 	}
 	return &protos.PublicEthereumAPIReply{Address: &wrappers.BytesValue{Value: etherBase.Bytes()}}, nil
 }
 
-func (api *PublicEthereumAPIServer) Coinbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
+func (api *PublicCpchainAPIServer) Coinbase(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
 	return api.Etherbase(ctx, e)
 }
 
-func (api *PublicEthereumAPIServer) Hashrate(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
-	rate := api.e.Miner().HashRate()
+func (api *PublicCpchainAPIServer) Hashrate(ctx context.Context, e *empty.Empty) (*protos.PublicEthereumAPIReply, error) {
+	rate := api.c.Miner().HashRate()
 	return &protos.PublicEthereumAPIReply{Rate: &wrappers.UInt64Value{Value: uint64(rate)}}, nil
 }
 
 type PublicMinerAPIServer struct {
-	e     *CpchainService
+	c     *CpchainService
 	agent *miner.RemoteAgent
 }
 
@@ -84,7 +84,7 @@ func NewPublicMinerAPIServer(e *CpchainService) *PublicMinerAPIServer {
 	agent := miner.NewRemoteAgent(e.BlockChain(), e.Engine())
 	e.Miner().Register(agent)
 
-	return &PublicMinerAPIServer{e: e, agent: agent}
+	return &PublicMinerAPIServer{c: e, agent: agent}
 }
 
 func (api *PublicMinerAPIServer) RegisterServer(s *grpc.Server) {
@@ -104,7 +104,7 @@ func (api *PublicMinerAPIServer) Namespace() string {
 }
 
 func (api *PublicMinerAPIServer) Mining(ctx context.Context, req *empty.Empty) (*protos.PublicMinerAPIReply, error) {
-	return &protos.PublicMinerAPIReply{Mining: &wrappers.BoolValue{Value: api.e.IsMining()}}, nil
+	return &protos.PublicMinerAPIReply{Mining: &wrappers.BoolValue{Value: api.c.IsMining()}}, nil
 }
 
 func (api *PublicMinerAPIServer) SubmitWork(ctx context.Context, req *protos.PublicMinerAPIRequest) (*protos.PublicMinerAPIReply, error) {
@@ -121,9 +121,9 @@ func (api *PublicMinerAPIServer) SubmitWork(ctx context.Context, req *protos.Pub
 }
 
 func (api *PublicMinerAPIServer) GetWork(ctx context.Context, req *empty.Empty) (*protos.PublicMinerAPIReply, error) {
-	if !api.e.IsMining() {
+	if !api.c.IsMining() {
 		// TODO: @liuq fix this.
-		if err := api.e.StartMining(false, nil); err != nil {
+		if err := api.c.StartMining(false, nil); err != nil {
 			return &protos.PublicMinerAPIReply{}, err
 		}
 	}
@@ -142,12 +142,12 @@ func (api *PublicMinerAPIServer) SubmitHashrate(ctx context.Context, req *protos
 // PrivateMinerAPIServer provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
 type PrivateMinerAPIServer struct {
-	e *CpchainService
+	c *CpchainService
 }
 
 // NewPrivateMinerAPIServer create a new RPC service which controls the miner of this node.
 func NewPrivateMinerAPIServer(e *CpchainService) *PrivateMinerAPIServer {
-	return &PrivateMinerAPIServer{e: e}
+	return &PrivateMinerAPIServer{c: e}
 }
 
 func (api *PrivateMinerAPIServer) RegisterServer(s *grpc.Server) {
@@ -180,20 +180,20 @@ func (api *PrivateMinerAPIServer) Start(ctx context.Context, req *protos.Private
 	type threaded interface {
 		SetThreads(threads int)
 	}
-	if th, ok := api.e.engine.(threaded); ok {
+	if th, ok := api.c.engine.(threaded); ok {
 		log.Info("Updated mining threads", "threads", req.Threads)
 		th.SetThreads(int(req.Threads.Value))
 	}
 	// Start the miner and return
-	if !api.e.IsMining() {
+	if !api.c.IsMining() {
 		// Propagate the initial price point to the transaction pool
-		api.e.lock.RLock()
-		price := api.e.gasPrice
-		api.e.lock.RUnlock()
+		api.c.lock.RLock()
+		price := api.c.gasPrice
+		api.c.lock.RUnlock()
 
-		api.e.txPool.SetGasPrice(price)
+		api.c.txPool.SetGasPrice(price)
 		// TODO: @liuq fix this.
-		return &protos.PrivateMinerAPIReply{}, api.e.StartMining(true, nil)
+		return &protos.PrivateMinerAPIReply{}, api.c.StartMining(true, nil)
 	}
 	return &protos.PrivateMinerAPIReply{}, nil
 }
@@ -203,16 +203,16 @@ func (api *PrivateMinerAPIServer) Stop(ctx context.Context, req *empty.Empty) (*
 	type threaded interface {
 		SetThreads(threads int)
 	}
-	if th, ok := api.e.engine.(threaded); ok {
+	if th, ok := api.c.engine.(threaded); ok {
 		th.SetThreads(-1)
 	}
-	api.e.StopMining()
+	api.c.StopMining()
 	return &protos.PrivateMinerAPIReply{IsOk: true}, nil
 }
 
 // SetExtra sets the extra data string that is included when this miner mines a block.
 func (api *PrivateMinerAPIServer) SetExtra(ctx context.Context, req *protos.PrivateMinerAPIRequest) (*protos.PrivateMinerAPIReply, error) {
-	if err := api.e.Miner().SetExtra([]byte(req.Extra)); err != nil {
+	if err := api.c.Miner().SetExtra([]byte(req.Extra)); err != nil {
 		return &protos.PrivateMinerAPIReply{IsOk: false}, err
 	}
 	return &protos.PrivateMinerAPIReply{IsOk: true}, nil
@@ -221,33 +221,33 @@ func (api *PrivateMinerAPIServer) SetExtra(ctx context.Context, req *protos.Priv
 // SetGasPrice sets the minimum accepted gas price for the miner.
 func (api *PrivateMinerAPIServer) SetGasPrice(ctx context.Context, req *protos.PrivateMinerAPIRequest) (*protos.PrivateMinerAPIReply, error) {
 	gasPrice := new(big.Int).SetBytes(req.GasPrice)
-	api.e.lock.Lock()
-	api.e.gasPrice = gasPrice
-	api.e.lock.Unlock()
+	api.c.lock.Lock()
+	api.c.gasPrice = gasPrice
+	api.c.lock.Unlock()
 
-	api.e.txPool.SetGasPrice(gasPrice)
+	api.c.txPool.SetGasPrice(gasPrice)
 	return &protos.PrivateMinerAPIReply{IsOk: true}, nil
 }
 
 // SetEtherbase sets the etherbase of the miner
 func (api *PrivateMinerAPIServer) SetEtherbase(ctx context.Context, req *protos.PrivateMinerAPIRequest) (*protos.PrivateMinerAPIReply, error) {
-	api.e.SetEtherbase(common.BytesToAddress(req.Etherbase))
+	api.c.SetEtherbase(common.BytesToAddress(req.Etherbase))
 	return &protos.PrivateMinerAPIReply{IsOk: true}, nil
 }
 
 // GetHashrate returns the current hashrate of the miner.
 func (api *PrivateMinerAPIServer) GetHashrate(ctx context.Context, req *empty.Empty) (*protos.PrivateMinerAPIReply, error) {
-	return &protos.PrivateMinerAPIReply{Hashrate: uint64(api.e.miner.HashRate())}, nil
+	return &protos.PrivateMinerAPIReply{Hashrate: uint64(api.c.miner.HashRate())}, nil
 }
 
 // PrivateAdminAPI is the collection of Ethereum full node-related APIs
 // exposed over the private admin endpoint.
 type PrivateAdminAPIServer struct {
-	e *CpchainService
+	c *CpchainService
 }
 
 func NewPrivateAdminAPIServer(e *CpchainService) *PrivateAdminAPIServer {
-	return &PrivateAdminAPIServer{e: e}
+	return &PrivateAdminAPIServer{c: e}
 }
 
 func (api *PrivateAdminAPIServer) RegisterServer(s *grpc.Server) {
@@ -283,7 +283,7 @@ func (api *PrivateAdminAPIServer) ExportChain(ctx context.Context, req *protos.P
 	}
 
 	// Export the blockchain
-	if err := api.e.BlockChain().Export(writer); err != nil {
+	if err := api.c.BlockChain().Export(writer); err != nil {
 		return &protos.PrivateAdminAPIReply{IsOk: false}, err
 	}
 	return &protos.PrivateAdminAPIReply{IsOk: true}, err
@@ -325,12 +325,12 @@ func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *protos.P
 			break
 		}
 
-		if hasAllBlocks(api.e.BlockChain(), blocks) {
+		if hasAllBlocks(api.c.BlockChain(), blocks) {
 			blocks = blocks[:0]
 			continue
 		}
 		// Import the batch and reset the buffer
-		if _, err := api.e.BlockChain().InsertChain(blocks); err != nil {
+		if _, err := api.c.BlockChain().InsertChain(blocks); err != nil {
 			return &protos.PrivateAdminAPIReply{IsOk: false}, fmt.Errorf("batch %d: failed to insert: %v", batch, err)
 		}
 		blocks = blocks[:0]
@@ -341,13 +341,13 @@ func (api *PrivateAdminAPIServer) ImportChain(ctx context.Context, req *protos.P
 // PublicDebugAPIServer is the collection of Ethereum full node APIs exposed
 // over the public debugging endpoint.
 type PublicDebugAPIServer struct {
-	e *CpchainService
+	c *CpchainService
 }
 
 // NewPublicDebugAPIServer creates a new API definition for the full node-
 // related public debug methods of the Ethereum service.
 func NewPublicDebugAPIServer(e *CpchainService) *PublicDebugAPIServer {
-	return &PublicDebugAPIServer{e: e}
+	return &PublicDebugAPIServer{c: e}
 }
 
 func (api *PublicDebugAPIServer) RegisterServer(s *grpc.Server) {
@@ -382,20 +382,20 @@ func (api *PublicDebugAPIServer) DumpBlock(ctx context.Context, req *protos.Publ
 		// If we're dumping the pending state, we need to request
 		// both the pending block as well as the pending state from
 		// the miner and operate on those
-		_, stateDb := api.e.miner.Pending()
+		_, stateDb := api.c.miner.Pending()
 		dump := stateDb.RawDump()
 		return f(&dump)
 	}
 	var block *types.Block
 	if blockNumber == rpc.LatestBlockNumber {
-		block = api.e.blockchain.CurrentBlock()
+		block = api.c.blockchain.CurrentBlock()
 	} else {
-		block = api.e.blockchain.GetBlockByNumber(uint64(blockNumber))
+		block = api.c.blockchain.GetBlockByNumber(uint64(blockNumber))
 	}
 	if block == nil {
 		return &any.Any{}, fmt.Errorf("block #%d not found", blockNumber)
 	}
-	stateDb, err := api.e.BlockChain().StateAt(block.StateRoot())
+	stateDb, err := api.c.BlockChain().StateAt(block.StateRoot())
 	if err != nil {
 		return &any.Any{}, err
 	}
@@ -407,13 +407,13 @@ func (api *PublicDebugAPIServer) DumpBlock(ctx context.Context, req *protos.Publ
 // the private debugging endpoint.
 type PrivateDebugAPIServer struct {
 	config *configs.ChainConfig
-	eth    *CpchainService
+	cpc    *CpchainService
 }
 
 // NewPrivateDebugAPI creates a new API definition for the full node-related
 // private debug methods of the Ethereum service.
 func NewPrivateDebugAPIServer(config *configs.ChainConfig, eth *CpchainService) *PrivateDebugAPIServer {
-	return &PrivateDebugAPIServer{config: config, eth: eth}
+	return &PrivateDebugAPIServer{config: config, cpc: eth}
 }
 
 func (api *PrivateDebugAPIServer) RegisterServer(s *grpc.Server) {
@@ -434,14 +434,14 @@ func (api *PrivateDebugAPIServer) Namespace() string {
 
 // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.
 func (api *PrivateDebugAPIServer) Preimage(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*protos.PrivateDebugAPIReply, error) {
-	if preimage := rawdb.ReadPreimage(api.eth.ChainDb(), common.BytesToHash(req.Hash)); preimage != nil {
+	if preimage := rawdb.ReadPreimage(api.cpc.ChainDb(), common.BytesToHash(req.Hash)); preimage != nil {
 		return &protos.PrivateDebugAPIReply{Preimage: preimage}, nil
 	}
 	return nil, errors.New("unknown preimage")
 }
 
 func (api *PrivateDebugAPIServer) GetBadBlocks(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
-	blocks := api.eth.BlockChain().BadBlocks()
+	blocks := api.cpc.BlockChain().BadBlocks()
 	results := make([]*BadBlockArgs, len(blocks))
 
 	var err error
@@ -498,19 +498,19 @@ func (api *PrivateDebugAPIServer) StorageRangeAt(ctx context.Context, req *proto
 func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
 	var startBlock, endBlock *types.Block
 
-	startBlock = api.eth.blockchain.GetBlockByNumber(req.StartNum)
+	startBlock = api.cpc.blockchain.GetBlockByNumber(req.StartNum)
 	if startBlock == nil {
 		return nil, fmt.Errorf("start block %x not found", req.StartNum)
 	}
 
 	if req.EndNum == nil {
 		endBlock = startBlock
-		startBlock = api.eth.blockchain.GetBlockByHash(startBlock.ParentHash())
+		startBlock = api.cpc.blockchain.GetBlockByHash(startBlock.ParentHash())
 		if startBlock == nil {
 			return nil, fmt.Errorf("block %x has no parent", endBlock.Number())
 		}
 	} else {
-		endBlock = api.eth.blockchain.GetBlockByNumber(req.EndNum.Value)
+		endBlock = api.cpc.blockchain.GetBlockByNumber(req.EndNum.Value)
 		if endBlock == nil {
 			return nil, fmt.Errorf("end block %d not found", req.EndNum.Value)
 		}
@@ -530,19 +530,19 @@ func (api *PrivateDebugAPIServer) GetModifiedAccountsByNumber(ctx context.Contex
 
 func (api *PrivateDebugAPIServer) GetModifiedAccountsByHash(ctx context.Context, req *protos.PrivateDebugAPIRequest) (*any.Any, error) {
 	var startBlock, endBlock *types.Block
-	startBlock = api.eth.blockchain.GetBlockByHash(common.BytesToHash(req.StartHash))
+	startBlock = api.cpc.blockchain.GetBlockByHash(common.BytesToHash(req.StartHash))
 	if startBlock == nil {
 		return nil, fmt.Errorf("start block %x not found", req.StartHash)
 	}
 
 	if req.EndHash == nil {
 		endBlock = startBlock
-		startBlock = api.eth.blockchain.GetBlockByHash(startBlock.ParentHash())
+		startBlock = api.cpc.blockchain.GetBlockByHash(startBlock.ParentHash())
 		if startBlock == nil {
 			return nil, fmt.Errorf("block %x has no parent", endBlock.Number())
 		}
 	} else {
-		endBlock = api.eth.blockchain.GetBlockByHash(common.BytesToHash(req.EndHash.Value))
+		endBlock = api.cpc.blockchain.GetBlockByHash(common.BytesToHash(req.EndHash.Value))
 		if endBlock == nil {
 			return nil, fmt.Errorf("end block %x not found", req.EndHash.Value)
 		}
@@ -562,16 +562,16 @@ func (api *PrivateDebugAPIServer) GetModifiedAccountsByHash(ctx context.Context,
 
 func (api *PrivateDebugAPIServer) computeStateDB(block *types.Block, reexec uint64) (*state.StateDB, error) {
 	// If we have the state fully available, use that
-	pubStateDB, err := api.eth.blockchain.StateAt(block.StateRoot())
+	pubStateDB, err := api.cpc.blockchain.StateAt(block.StateRoot())
 	if err == nil {
 		return pubStateDB, nil
 	}
 	// Otherwise try to reexec blocks until we find a state or reach our limit
 	origin := block.NumberU64()
-	database := state.NewDatabase(api.eth.ChainDb())
+	database := state.NewDatabase(api.cpc.ChainDb())
 
 	for i := uint64(0); i < reexec; i++ {
-		block = api.eth.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1)
+		block = api.cpc.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1)
 		if block == nil {
 			break
 		}
@@ -600,14 +600,14 @@ func (api *PrivateDebugAPIServer) computeStateDB(block *types.Block, reexec uint
 			logged = time.Now()
 		}
 		// Retrieve the next block to regenerate and process it
-		if block = api.eth.blockchain.GetBlockByNumber(block.NumberU64() + 1); block == nil {
+		if block = api.cpc.blockchain.GetBlockByNumber(block.NumberU64() + 1); block == nil {
 			return nil, fmt.Errorf("block #%d not found", block.NumberU64()+1)
 		}
 
 		// TODO: check if below statement is correct.
-		privStateDB, _ := state.New(core.GetPrivateStateRoot(api.eth.chainDb, block.StateRoot()), pubStateDB.Database())
+		privStateDB, _ := state.New(core.GetPrivateStateRoot(api.cpc.chainDb, block.StateRoot()), pubStateDB.Database())
 		// TODO: pass real remote database.
-		_, _, _, _, err := api.eth.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.eth.blockchain.RsaPrivateKey())
+		_, _, _, _, err := api.cpc.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.cpc.blockchain.RsaPrivateKey())
 		if err != nil {
 			return nil, err
 		}
@@ -631,7 +631,7 @@ func (api *PrivateDebugAPIServer) computeStateDB(block *types.Block, reexec uint
 // computeStatePrivDB retrieves the private state database associated with a certain block.
 func (api *PrivateDebugAPIServer) computeStatePrivDB(block *types.Block) (*state.StateDB, error) {
 	// If we have the state fully available, use that
-	privStatedb, err := api.eth.blockchain.StatePrivAt(block.StateRoot())
+	privStatedb, err := api.cpc.blockchain.StatePrivAt(block.StateRoot())
 	if err == nil {
 		return privStatedb, nil
 	}
@@ -641,11 +641,11 @@ func (api *PrivateDebugAPIServer) computeStatePrivDB(block *types.Block) (*state
 
 func (api *PrivateDebugAPIServer) computeTxEnv(blockHash common.Hash, txIndex int, reexec uint64) (core.Message, vm.Context, *state.StateDB, error) {
 	// Create the parent state database
-	block := api.eth.blockchain.GetBlockByHash(blockHash)
+	block := api.cpc.blockchain.GetBlockByHash(blockHash)
 	if block == nil {
 		return nil, vm.Context{}, nil, fmt.Errorf("block %x not found", blockHash)
 	}
-	parent := api.eth.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1)
+	parent := api.cpc.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1)
 	if parent == nil {
 		return nil, vm.Context{}, nil, fmt.Errorf("parent %x not found", block.ParentHash())
 	}
@@ -666,7 +666,7 @@ func (api *PrivateDebugAPIServer) computeTxEnv(blockHash common.Hash, txIndex in
 	for idx, tx := range block.Transactions() {
 		// Assemble the transaction call message and return if the requested offset
 		msg, _ := tx.AsMessage(signer)
-		context := core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
+		context := core.NewEVMContext(msg, block.Header(), api.cpc.blockchain, nil)
 
 		var statedb *state.StateDB
 		if tx.IsPrivate() {
@@ -695,11 +695,11 @@ func (api *PrivateDebugAPIServer) getModifiedAccounts(startBlock, endBlock *type
 		return nil, fmt.Errorf("start block height (%d) must be less than end block height (%d)", startBlock.Number().Uint64(), endBlock.Number().Uint64())
 	}
 
-	oldTrie, err := trie.NewSecure(startBlock.StateRoot(), trie.NewDatabase(api.eth.chainDb), 0)
+	oldTrie, err := trie.NewSecure(startBlock.StateRoot(), trie.NewDatabase(api.cpc.chainDb), 0)
 	if err != nil {
 		return nil, err
 	}
-	newTrie, err := trie.NewSecure(endBlock.StateRoot(), trie.NewDatabase(api.eth.chainDb), 0)
+	newTrie, err := trie.NewSecure(endBlock.StateRoot(), trie.NewDatabase(api.cpc.chainDb), 0)
 	if err != nil {
 		return nil, err
 	}

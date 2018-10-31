@@ -95,7 +95,7 @@ type CpchainService struct {
 	bloomRequests chan chan *bloombits.Retrieval // Channel receiving bloom data retrieval requests
 	bloomIndexer  *core.ChainIndexer             // LogsBloom indexer operating during block imports
 
-	APIBackend          *EthAPIBackend
+	APIBackend          *APIBackend
 	AdmissionAPIBackend admission.APIBackend
 
 	miner     *miner.Miner
@@ -202,7 +202,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
 	eth.miner.SetExtra(makeExtraData(config.ExtraData))
 
-	eth.APIBackend = &EthAPIBackend{eth, nil}
+	eth.APIBackend = &APIBackend{eth, nil}
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
 		gpoParams.Default = config.GasPrice
@@ -279,7 +279,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 
 func (s *CpchainService) GAPIs() []apis.API {
 	return []apis.API{
-		NewPublicEthereumAPIServer(s),
+		NewPublicCpchainAPIServer(s),
 		NewPublicMinerAPIServer(s),
 		NewPrivateMinerAPIServer(s),
 		NewPrivateAdminAPIServer(s),
@@ -288,7 +288,7 @@ func (s *CpchainService) GAPIs() []apis.API {
 	}
 }
 
-// APIs return the collection of RPC services the ethereum package offers.
+// APIs return the collection of RPC services the cpc package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *CpchainService) APIs() []rpc.API {
 	apis := ethapi.GetAPIs(s.APIBackend)
@@ -304,7 +304,7 @@ func (s *CpchainService) APIs() []rpc.API {
 		{
 			Namespace: "eth",
 			Version:   "1.0",
-			Service:   NewPublicEthereumAPI(s),
+			Service:   NewPublicCpchainAPI(s),
 			Public:    true,
 		}, {
 			Namespace: "eth",
@@ -439,7 +439,7 @@ func (s *CpchainService) EventMux() *event.TypeMux           { return s.eventMux
 func (s *CpchainService) Engine() consensus.Engine           { return s.engine }
 func (s *CpchainService) ChainDb() ethdb.Database            { return s.chainDb }
 func (s *CpchainService) IsListening() bool                  { return true } // Always listening
-func (s *CpchainService) EthVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
+func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *CpchainService) NetVersion() uint64                 { return s.networkID }
 func (s *CpchainService) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 func (s *CpchainService) RemoteDB() ethdb.RemoteDatabase     { return s.remoteDB }
