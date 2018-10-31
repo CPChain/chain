@@ -135,21 +135,21 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 	if ctx.IsSet(flags.GrpcAddrFlagName) {
 		addr := strings.Split(ctx.String(flags.GrpcAddrFlagName), ":")
 		if len(addr) != 2 {
-			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GRpcAddrFlagName)
+			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GrpcAddrFlagName)
 		}
-		cfg.Grpc.Host = addr[0]
-		cfg.Grpc.Port, _ = strconv.Atoi(addr[1])
+		cfg.GRpc.Host = addr[0]
+		cfg.GRpc.Port, _ = strconv.Atoi(addr[1])
 	}
 	if ctx.IsSet(flags.JsonRpcHttpAddrFlagName) {
 		addr := strings.Split(ctx.String(flags.JsonRpcHttpAddrFlagName), ":")
 		if len(addr) != 2 {
 			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.JsonRpcHttpAddrFlagName)
 		}
-		cfg.Grpc.GatewayHost = addr[0]
-		cfg.Grpc.GatewayPort, _ = strconv.Atoi(addr[1])
+		cfg.GRpc.JsonRpcHost = addr[0]
+		cfg.GRpc.JsonRpcPort, _ = strconv.Atoi(addr[1])
 	}
 	if ctx.IsSet(flags.GrpcIpcAddrFlagName) {
-		cfg.Grpc.IpcPath = ctx.String(flags.GrpcIpcAddrFlagName)
+		cfg.GRpc.IpcPath = ctx.String(flags.GrpcIpcAddrFlagName)
 	}
 	if ctx.IsSet(flags.RpcCorsDomainFlagName) {
 		cfg.HTTPCors = strings.Split(ctx.String(flags.RpcCorsDomainFlagName), ",")

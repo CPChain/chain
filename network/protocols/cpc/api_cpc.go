@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/api/v1/common"
-
 	"bitbucket.org/cpchain/chain/api/v1/cpc"
 	"bitbucket.org/cpchain/chain/node/miner"
 	"github.com/golang/protobuf/ptypes/empty"

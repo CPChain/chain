@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Server Grpc Server
+// Server GRpc Server
 type Server struct {
 	config *Config
 
@@ -72,7 +72,7 @@ func (s *Server) startGrpc() error {
 		}
 	}(s.handler, s.listener)
 
-	c, err = net.Listen("tcp", s.config.GatewayAddress())
+	c, err = net.Listen("tcp", s.config.JsonHttpAddress())
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -156,7 +156,7 @@ func (s *Server) Register(ctx context.Context, gapis []GApi) {
 	for _, stub := range gapis {
 		if whitelist[stub.Namespace()] || (len(whitelist) == 0 && stub.IsPublic()) {
 			s.register(ctx, stub)
-			log.Debug("Grpc registered", "namespace", stub.Namespace())
+			log.Debug("GRpc registered", "namespace", stub.Namespace())
 		}
 	}
 }

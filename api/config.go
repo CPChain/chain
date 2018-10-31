@@ -11,8 +11,8 @@ import (
 const (
 	defaultHost        = "localhost"
 	defaultPort        = 8544
-	defaultGatewayHost = "localhost"
-	defaultGatewayPort = 8543
+	defaultJsonRpcHost = "localhost"
+	defaultJsonRpcPort = 8543
 )
 
 // Config grpc configuration
@@ -22,8 +22,8 @@ type Config struct {
 	Host    string   `toml:",omitempty"`
 	Port    int      `toml:",omitempty"`
 
-	GatewayHost string `toml:",omitempty"`
-	GatewayPort int    `toml:",omitempty"`
+	JsonRpcHost string `toml:",omitempty"`
+	JsonRpcPort int    `toml:",omitempty"`
 
 	IpcPath string `toml:",omitempty"`
 }
@@ -39,15 +39,15 @@ func (c *Config) Address() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
-// GatewayAddress returns the restfull json http server address
-func (c *Config) GatewayAddress() string {
-	if c.GatewayHost == "" {
-		c.GatewayHost = defaultGatewayHost
+// JsonHttpAddress returns the restfull json http server address
+func (c *Config) JsonHttpAddress() string {
+	if c.JsonRpcHost == "" {
+		c.JsonRpcHost = defaultJsonRpcHost
 	}
-	if c.GatewayPort == 0 {
-		c.GatewayPort = defaultGatewayPort
+	if c.JsonRpcPort == 0 {
+		c.JsonRpcPort = defaultJsonRpcPort
 	}
-	return fmt.Sprintf("%s:%d", c.GatewayHost, c.GatewayPort)
+	return fmt.Sprintf("%s:%d", c.JsonRpcHost, c.JsonRpcPort)
 }
 
 // IpcAddress returns the ipc server address

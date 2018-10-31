@@ -26,8 +26,6 @@ import (
 	"strings"
 	"sync"
 
-	"golang.org/x/net/context"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/api"
@@ -39,6 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/prometheus/prometheus/util/flock"
+	"golang.org/x/net/context"
 )
 
 // Node is a container on which services can be registered.
@@ -59,20 +58,20 @@ type Node struct {
 	grpcServer *api.Server
 
 	rpcAPIs       []rpc.API   // List of APIs currently provided by the node
-	inprocHandler *rpc.Server // In-process RPC request handler to process the GApi requests
+	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
 
 	ipcEndpoint string       // IPC endpoint to listen at (empty = IPC disabled)
-	ipcListener net.Listener // IPC RPC listener socket to serve GApi requests
-	ipcHandler  *rpc.Server  // IPC RPC request handler to process the GApi requests
+	ipcListener net.Listener // IPC RPC listener socket to serve API requests
+	ipcHandler  *rpc.Server  // IPC RPC request handler to process the API requests
 
 	httpEndpoint  string       // HTTP endpoint (interface + port) to listen at (empty = HTTP disabled)
 	httpWhitelist []string     // HTTP RPC modules to allow through this endpoint
-	httpListener  net.Listener // HTTP RPC listener socket to server GApi requests
-	httpHandler   *rpc.Server  // HTTP RPC request handler to process the GApi requests
+	httpListener  net.Listener // HTTP RPC listener socket to server API requests
+	httpHandler   *rpc.Server  // HTTP RPC request handler to process the API requests
 
 	wsEndpoint string       // Websocket endpoint (interface + port) to listen at (empty = websocket disabled)
-	wsListener net.Listener // Websocket RPC listener socket to server GApi requests
-	wsHandler  *rpc.Server  // Websocket RPC request handler to process the GApi requests
+	wsListener net.Listener // Websocket RPC listener socket to server API requests
+	wsHandler  *rpc.Server  // Websocket RPC request handler to process the API requests
 
 	stop chan struct{} // Channel to wait for termination notifications
 	lock sync.RWMutex
@@ -120,7 +119,7 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
-		grpcServer:        api.NewSerever(conf.DataDir, conf.HTTPModules, &conf.Grpc),
+		grpcServer:        api.NewSerever(conf.DataDir, conf.HTTPModules, &conf.GRpc),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
@@ -290,7 +289,7 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 	for _, service := range services {
 		apis = append(apis, service.APIs()...)
 	}
-	// Start the various GApi endpoints, terminating all in case of errors
+	// Start the various API endpoints, terminating all in case of errors
 	if err := n.startInProc(apis); err != nil {
 		return err
 	}
@@ -309,7 +308,7 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 		n.stopInProc()
 		return err
 	}
-	// All GApi endpoints started successfully
+	// All API endpoints started successfully
 	n.rpcAPIs = apis
 	return nil
 }
@@ -446,7 +445,7 @@ func (n *Node) Stop() error {
 		return ErrNodeStopped
 	}
 
-	// Terminate the GApi, services and the p2p server.
+	// Terminate the API, services and the p2p server.
 	n.stopWS()
 	n.stopHTTP()
 	n.stopIPC()
@@ -517,7 +516,7 @@ func (n *Node) Restart() error {
 	return nil
 }
 
-// Attach creates an RPC client attached to an in-process GApi handler.
+// Attach creates an RPC client attached to an in-process API handler.
 func (n *Node) Attach() (*rpc.Client, error) {
 	n.lock.RLock()
 	defer n.lock.RUnlock()

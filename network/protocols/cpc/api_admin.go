@@ -38,12 +38,12 @@ func (c *ChainManager) Namespace() string {
 	return "admin"
 }
 
-// RegisterServer register api to grpc
+// RegisterServer register GAPI to grpc
 func (c *ChainManager) RegisterServer(s *grpc.Server) {
 	admin.RegisterAdminManagerServer(s, c)
 }
 
-// RegisterJsonRpcHttp register api to restfull json
+// RegisterJsonRpcHttp register GAPI to restfull json
 func (c *ChainManager) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	admin.RegisterAdminManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
