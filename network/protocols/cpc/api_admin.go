@@ -43,8 +43,8 @@ func (c *ChainManager) RegisterServer(s *grpc.Server) {
 	admin.RegisterAdminManagerServer(s, c)
 }
 
-// RegisterJsonRpcHttp register GAPI to restfull json
-func (c *ChainManager) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+// RegisterJsonRpc register GAPI to restfull json
+func (c *ChainManager) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	admin.RegisterAdminManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 

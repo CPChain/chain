@@ -81,7 +81,7 @@ service AccountManager {
           };
     }
     // ListWallets will return a list of wallets this node manages.
-    rpc ListWallets(google.protobuf.Empty) returns (common.Accounts) {
+    rpc ListWallets(google.protobuf.Empty) returns (common.RawWallets) {
         option (google.api.http) = {
             post: "/api/v1/personal/listWallets"
             body: "*"
@@ -162,7 +162,7 @@ service AccountManager {
             body: "*"
           };
     }
-    rpc SignAndSendTransaction(SendTxArgs) returns (common.Address) {
+    rpc SignAndSendTransaction(SendTxArgs) returns (common.Hash) {
         option (google.api.http) = {
             post: "/api/v1/personal/signAndSendTransaction"
             body: "*"

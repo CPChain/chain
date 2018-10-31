@@ -130,7 +130,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/commonAccounts"
+              "$ref": "#/definitions/commonRawWallets"
             }
           }
         },
@@ -290,7 +290,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/commonAddress"
+              "$ref": "#/definitions/commonHash"
             }
           }
         },
@@ -411,6 +411,35 @@
         }
       },
       "title": "IsOk return status"
+    },
+    "commonRawWallet": {
+      "type": "object",
+      "properties": {
+        "Url": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "failure": {
+          "type": "string"
+        },
+        "accounts": {
+          "$ref": "#/definitions/commonAccounts"
+        }
+      },
+      "description": "RawWallet is a JSON representation of an accounts.Wallet interface, with its\ndata contents extracted into plain fields."
+    },
+    "commonRawWallets": {
+      "type": "object",
+      "properties": {
+        "rawWallets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonRawWallet"
+          }
+        }
+      }
     },
     "commonTransaction": {
       "type": "object",

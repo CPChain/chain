@@ -12,38 +12,38 @@ import (
 	"google.golang.org/grpc"
 )
 
-// TransactionPoolReader offers and API for the transaction pool. It only operates on data that is non confidential.
-type TransactionPoolReader struct {
+// TxPoolReader offers and API for the transaction pool. It only operates on data that is non confidential.
+type TxPoolReader struct {
 	b Backend
 }
 
-// NewTransactionPoolReader creates a new tx pool service that gives information about the transaction pool.
-func NewTransactionPoolReader(b Backend) *TransactionPoolReader {
-	return &TransactionPoolReader{b}
+// NewTxPoolReader creates a new tx pool service that gives information about the transaction pool.
+func NewTxPoolReader(b Backend) *TxPoolReader {
+	return &TxPoolReader{b}
 }
 
 // IsPublic if public default
-func (t *TransactionPoolReader) IsPublic() bool {
+func (t *TxPoolReader) IsPublic() bool {
 	return true
 }
 
 // Namespace namespace
-func (t *TransactionPoolReader) Namespace() string {
+func (t *TxPoolReader) Namespace() string {
 	return "txpool"
 }
 
 // RegisterServer register api to grpc
-func (t *TransactionPoolReader) RegisterServer(s *grpc.Server) {
-	txpool.RegisterTransactionPoolReaderServer(s, t)
+func (t *TxPoolReader) RegisterServer(s *grpc.Server) {
+	// txpool.RegisterTxPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
-// RegisterJsonRpcHttp register api to restfull json
-func (t *TransactionPoolReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	txpool.RegisterTransactionPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
+// RegisterJsonRpc register api to restfull json
+func (t *TxPoolReader) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	// txpool.RegisterTxPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 // Content returns the transactions contained within the transaction pool.
-func (s *TransactionPoolReader) Content(ctx context.Context, in *empty.Empty) (*txpool.TxPool, error) {
+func (s *TxPoolReader) Content(ctx context.Context, in *empty.Empty) (*txpool.TxPool, error) {
 	// var content txpool.TxPool
 	content := &txpool.TxPool{
 		PendingTxPool: &txpool.AccountNonceTxPool{
@@ -75,7 +75,7 @@ func (s *TransactionPoolReader) Content(ctx context.Context, in *empty.Empty) (*
 }
 
 // Status returns the number of pending and queued transaction in the pool.
-func (s *TransactionPoolReader) Status(ctx context.Context, in *empty.Empty) (*txpool.StatusInfo, error) {
+func (s *TxPoolReader) Status(ctx context.Context, in *empty.Empty) (*txpool.StatusInfo, error) {
 	var out txpool.StatusInfo
 	out.Status = make(map[string]uint64)
 
@@ -88,7 +88,7 @@ func (s *TransactionPoolReader) Status(ctx context.Context, in *empty.Empty) (*t
 
 // inspect retrieves the content of the transaction pool and flattens it into an
 // easily inspectable list.
-func (s *TransactionPoolReader) Inspect(ctx context.Context, in *empty.Empty) (*txpool.TxStringPool, error) {
+func (s *TxPoolReader) Inspect(ctx context.Context, in *empty.Empty) (*txpool.TxStringPool, error) {
 	content := &txpool.TxStringPool{
 		PendingTxStringPool: &txpool.AccountNonceTxStringPool{
 			AccountNonceTxStringPool: make(map[string]*txpool.NonceTxString),

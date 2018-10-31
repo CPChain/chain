@@ -76,8 +76,16 @@ type Backend interface {
 }
 
 func GetGAPIs(b Backend) []api.GApi {
-	// nonceLock := new(AddrLocker)
-	return []api.GApi{}
+	nonceLock := new(AddrLocker)
+	return []api.GApi{
+		NewTransactionPoolReader(b, nonceLock),
+		NewAccountManager(b, nonceLock),
+		NewAccountReader(b.AccountManager()),
+		NewChainStateReader(b),
+		NewChainReader(b),
+		NewTxPoolReader(b),
+		NewTransactionPoolReader(b, nonceLock),
+	}
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

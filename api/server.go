@@ -164,10 +164,10 @@ func (s *Server) Register(ctx context.Context, gapis []GApi) {
 func (s *Server) register(ctx context.Context, stub GApi) {
 	if s.handler != nil {
 		stub.RegisterServer(s.handler)
-		stub.RegisterJsonRpcHttp(ctx, s.mux, s.config.Address(), s.dialOpts)
+		stub.RegisterJsonRpc(ctx, s.mux, s.config.Address(), s.dialOpts)
 	}
 	if s.ipcHandler != nil {
 		stub.RegisterServer(s.ipcHandler)
-		stub.RegisterJsonRpcHttp(ctx, s.mux, s.config.IpcAddress(), s.dialOpts)
+		stub.RegisterJsonRpc(ctx, s.mux, s.config.IpcAddress(), s.dialOpts)
 	}
 }

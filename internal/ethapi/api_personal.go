@@ -2,12 +2,13 @@ package ethapi
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
 	"time"
+
+	"golang.org/x/net/context"
 
 	"bitbucket.org/cpchain/chain/accounts"
 	pb "bitbucket.org/cpchain/chain/api/v1/common"
@@ -18,6 +19,8 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 )
 
 // AccountManager provides an API to access accounts managed by this node.
@@ -38,13 +41,33 @@ func NewAccountManager(b Backend, nonceLock *AddrLocker) *AccountManager {
 	}
 }
 
+// IsPublic if public default
+func (m *AccountManager) IsPublic() bool {
+	return true
+}
+
+// Namespace namespace
+func (m *AccountManager) Namespace() string {
+	return "personal"
+}
+
+// RegisterServer register api to grpc
+func (m *AccountManager) RegisterServer(s *grpc.Server) {
+	personal.RegisterAccountManagerServer(s, m)
+}
+
+// RegisterJsonRpc register api to restfull json
+func (m *AccountManager) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+	personal.RegisterAccountManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
+}
+
 // ListAccounts will return a list of addresses for accounts this node manages.
-func (s *AccountManager) ListAccounts(ctx context.Context, in *empty.Empty) (*pb.Accounts, error) {
+func (m *AccountManager) ListAccounts(ctx context.Context, in *empty.Empty) (*pb.Accounts, error) {
 	accounts := &pb.Accounts{
 		Accounts: make([]*pb.Account, 0, 0),
 	}
 	// addresses := make([]common.Address, 0) // return [] instead of nil if empty
-	for _, wallet := range s.am.Wallets() {
+	for _, wallet := range m.am.Wallets() {
 		for _, account := range wallet.Accounts() {
 			accounts.Accounts = append(accounts.Accounts, &pb.Account{Address: account.Address.Hex()})
 		}
@@ -62,12 +85,12 @@ func ToPbAccount(account *accounts.Account) *pb.Account {
 }
 
 // ListWallets will return a list of wallets this node manages.
-func (s *AccountManager) ListWallets(ctx context.Context, in *empty.Empty) (*pb.RawWallets, error) {
+func (m *AccountManager) ListWallets(ctx context.Context, in *empty.Empty) (*pb.RawWallets, error) {
 	// wallets := make([]rawWallet, 0) // return [] instead of nil if empty
 	wallets := &pb.RawWallets{
 		RawWallets: make([]*pb.RawWallet, 0, 0),
 	}
-	for _, wallet := range s.am.Wallets() {
+	for _, wallet := range m.am.Wallets() {
 		status, failure := wallet.Status()
 
 		raw := &pb.RawWallet{
@@ -92,8 +115,8 @@ func (s *AccountManager) ListWallets(ctx context.Context, in *empty.Empty) (*pb.
 // connection and attempting to authenticate via the provided passphrase. Note,
 // the method may return an extra challenge requiring a second open (e.g. the
 // Trezor PIN matrix challenge).
-func (s *AccountManager) OpenWallet(ctx context.Context, in *personal.OpenWalletRequest) (*empty.Empty, error) {
-	wallet, err := s.am.Wallet(in.Url)
+func (m *AccountManager) OpenWallet(ctx context.Context, in *personal.OpenWalletRequest) (*empty.Empty, error) {
+	wallet, err := m.am.Wallet(in.Url)
 	if err != nil {
 		return &empty.Empty{}, err
 	}
@@ -106,8 +129,8 @@ func (s *AccountManager) OpenWallet(ctx context.Context, in *personal.OpenWallet
 
 // DeriveAccount requests a HD wallet to derive a new account, optionally pinning
 // it for later reuse.
-func (s *AccountManager) DeriveAccount(ctx context.Context, in *personal.DeriveAccountRequest) (*pb.Account, error) {
-	wallet, err := s.am.Wallet(in.Url)
+func (m *AccountManager) DeriveAccount(ctx context.Context, in *personal.DeriveAccountRequest) (*pb.Account, error) {
+	wallet, err := m.am.Wallet(in.Url)
 	if err != nil {
 		return &pb.Account{}, err
 	}
@@ -126,8 +149,8 @@ func (s *AccountManager) DeriveAccount(ctx context.Context, in *personal.DeriveA
 }
 
 // NewAccount will create a new account and returns the address for the new account.
-func (s *AccountManager) NewAccount(ctx context.Context, in *personal.NewAccountRequest) (*pb.Address, error) {
-	acc, err := fetchKeystore(s.am).NewAccount(in.Password)
+func (m *AccountManager) NewAccount(ctx context.Context, in *personal.NewAccountRequest) (*pb.Address, error) {
+	acc, err := fetchKeystore(m.am).NewAccount(in.Password)
 	if err == nil {
 		return &pb.Address{Address: acc.Address.Hex()}, nil
 	}
@@ -141,19 +164,19 @@ func (s *AccountManager) NewAccount(ctx context.Context, in *personal.NewAccount
 
 // ImportRawKey stores the given hex encoded ECDSA key into the key directory,
 // encrypting it with the passphrase.
-func (s *AccountManager) ImportRawKey(ctx context.Context, in *personal.ImportRawKeyRequest) (*pb.Address, error) {
+func (m *AccountManager) ImportRawKey(ctx context.Context, in *personal.ImportRawKeyRequest) (*pb.Address, error) {
 	key, err := crypto.HexToECDSA(in.Privkey)
 	if err != nil {
 		return &pb.Address{}, err
 	}
-	acc, err := fetchKeystore(s.am).ImportECDSA(key, in.Password)
+	acc, err := fetchKeystore(m.am).ImportECDSA(key, in.Password)
 	return &pb.Address{Address: acc.Address.Hex()}, err
 }
 
 // UnlockAccount will unlock the account associated with the given address with
 // the given password for duration seconds. If duration is nil it will use a
 // default of 300 seconds. It returns an indication if the account was unlocked.
-func (s *AccountManager) UnlockAccount(ctx context.Context, in *personal.UnlockAccountRequest) (*pb.IsOk, error) {
+func (m *AccountManager) UnlockAccount(ctx context.Context, in *personal.UnlockAccountRequest) (*pb.IsOk, error) {
 	const max = uint64(time.Duration(math.MaxInt64) / time.Second)
 	var d time.Duration
 	if in.Duration == nil {
@@ -163,13 +186,13 @@ func (s *AccountManager) UnlockAccount(ctx context.Context, in *personal.UnlockA
 	} else {
 		d = time.Duration(in.Duration.Value) * time.Second
 	}
-	err := fetchKeystore(s.am).TimedUnlock(accounts.Account{Address: common.HexToAddress(in.Address)}, in.Password, d)
+	err := fetchKeystore(m.am).TimedUnlock(accounts.Account{Address: common.HexToAddress(in.Address)}, in.Password, d)
 	return &pb.IsOk{IsOk: (err == nil)}, err
 }
 
 // LockAccount will lock the account associated with the given address when it's unlocked.
-func (s *AccountManager) LockAccount(ctx context.Context, addr *pb.Address) (*pb.IsOk, error) {
-	err := fetchKeystore(s.am).Lock(common.HexToAddress(addr.Address))
+func (m *AccountManager) LockAccount(ctx context.Context, addr *pb.Address) (*pb.IsOk, error) {
+	err := fetchKeystore(m.am).Lock(common.HexToAddress(addr.Address))
 	if err != nil {
 		return &pb.IsOk{IsOk: false}, err
 	}
@@ -242,39 +265,39 @@ func (args *GrpcSendTxArgs) toTransaction() *types.Transaction {
 // signTransactions sets defaults and signs the given transaction
 // NOTE: the caller needs to ensure that the nonceLock is held, if applicable,
 // and release it after the transaction has been submitted to the tx pool
-func (s *AccountManager) signTransaction(ctx context.Context, args *GrpcSendTxArgs) (*types.Transaction, error) {
+func (m *AccountManager) signTransaction(ctx context.Context, args *GrpcSendTxArgs) (*types.Transaction, error) {
 	// Look up the wallet containing the requested signer
 	account := accounts.Account{Address: common.HexToAddress(args.From)}
-	wallet, err := s.am.Find(account)
+	wallet, err := m.am.Find(account)
 	if err != nil {
 		return nil, err
 	}
 	// Set some sanity defaults and terminate on failure
-	if err := (*GrpcSendTxArgs)(args).setDefaults(ctx, s.b); err != nil {
+	if err := (*GrpcSendTxArgs)(args).setDefaults(ctx, m.b); err != nil {
 		return nil, err
 	}
 	// Assemble the transaction and sign with the wallet
 	tx := (*GrpcSendTxArgs)(args).toTransaction()
 
-	chainID := s.b.ChainConfig().ChainID
+	chainID := m.b.ChainConfig().ChainID
 	return wallet.SignTxWithPassphrase(account, args.Passwd, tx, chainID)
 }
 
 // SendTransaction will create a transaction from the given arguments and
 // tries to sign it with the key associated with args.To. If the given passwd isn't
 // able to decrypt the key it fails.
-func (s *AccountManager) SendTransaction(ctx context.Context, args *personal.SendTxArgs) (*pb.Hash, error) {
+func (m *AccountManager) SendTransaction(ctx context.Context, args *personal.SendTxArgs) (*pb.Hash, error) {
 	if args.Nonce == nil {
 		// Hold the addresse's mutex around signing to prevent concurrent assignment of
 		// the same nonce to multiple accounts.
-		s.nonceLock.LockAddr(common.HexToAddress(args.From))
-		defer s.nonceLock.UnlockAddr(common.HexToAddress(args.From))
+		m.nonceLock.LockAddr(common.HexToAddress(args.From))
+		defer m.nonceLock.UnlockAddr(common.HexToAddress(args.From))
 	}
-	signed, err := s.signTransaction(ctx, (*GrpcSendTxArgs)(args))
+	signed, err := m.signTransaction(ctx, (*GrpcSendTxArgs)(args))
 	if err != nil {
 		return &pb.Hash{}, err
 	}
-	hash, err := submitTransaction(ctx, s.b, signed)
+	hash, err := submitTransaction(ctx, m.b, signed)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +312,7 @@ func toPbTransaction() *pb.Transaction {
 // tries to sign it with the key associated with args.To. If the given passwd isn't
 // able to decrypt the key it fails. The transaction is returned in RLP-form, not broadcast
 // to other nodes
-func (s *AccountManager) SignTransaction(ctx context.Context, args *personal.SendTxArgs) (*personal.SignTransactionResult, error) {
+func (m *AccountManager) SignTransaction(ctx context.Context, args *personal.SendTxArgs) (*personal.SignTransactionResult, error) {
 	// No need to obtain the noncelock mutex, since we won't be sending this
 	// tx into the transaction pool, but right back to the user
 	if args.Gas == nil {
@@ -301,7 +324,7 @@ func (s *AccountManager) SignTransaction(ctx context.Context, args *personal.Sen
 	if args.Nonce == nil {
 		return nil, fmt.Errorf("nonce not specified")
 	}
-	signed, err := s.signTransaction(ctx, (*GrpcSendTxArgs)(args))
+	signed, err := m.signTransaction(ctx, (*GrpcSendTxArgs)(args))
 	if err != nil {
 		return nil, err
 	}
@@ -337,11 +360,11 @@ func (s *AccountManager) SignTransaction(ctx context.Context, args *personal.Sen
 // The key used to calculate the signature is decrypted with the given password.
 //
 // https://github.com/ethereum/go-ethereum/wiki/Management-APIs#personal_sign
-func (s *AccountManager) Sign(ctx context.Context, in *personal.SignRequest) (*personal.Signature, error) {
+func (m *AccountManager) Sign(ctx context.Context, in *personal.SignRequest) (*personal.Signature, error) {
 	// Look up the wallet containing the requested signer
 	account := accounts.Account{Address: common.HexToAddress(in.Addr)}
 
-	wallet, err := s.b.AccountManager().Find(account)
+	wallet, err := m.b.AccountManager().Find(account)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +387,7 @@ func (s *AccountManager) Sign(ctx context.Context, in *personal.SignRequest) (*p
 // the V value must be be 27 or 28 for legacy reasons.
 //
 // https://github.com/ethereum/go-ethereum/wiki/Management-APIs#personal_ecRecover
-func (s *AccountManager) EcRecover(ctx context.Context, in *personal.EcRecoverRequest) (*pb.Address, error) {
+func (m *AccountManager) EcRecover(ctx context.Context, in *personal.EcRecoverRequest) (*pb.Address, error) {
 	if len(in.Sig) != 65 {
 		return &pb.Address{}, fmt.Errorf("signature must be 65 bytes long")
 	}
@@ -382,6 +405,6 @@ func (s *AccountManager) EcRecover(ctx context.Context, in *personal.EcRecoverRe
 
 // SignAndSendTransaction was renamed to SendTransaction. This method is deprecated
 // and will be removed in the future. It primary goal is to give clients time to update.
-func (s *AccountManager) SignAndSendTransaction(ctx context.Context, args *personal.SendTxArgs) (*pb.Hash, error) {
-	return s.SendTransaction(ctx, args)
+func (m *AccountManager) SignAndSendTransaction(ctx context.Context, args *personal.SendTxArgs) (*pb.Hash, error) {
+	return m.SendTransaction(ctx, args)
 }

@@ -38,8 +38,8 @@ func (c *Coinbase) RegisterServer(s *grpc.Server) {
 	cpc.RegisterCoinbaseServer(s, c)
 }
 
-// RegisterJsonRpcHttp register api to restfull json
-func (c *Coinbase) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+// RegisterJsonRpc register api to restfull json
+func (c *Coinbase) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterCoinbaseHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 

@@ -43,8 +43,8 @@ func (c *ChainStateReader) RegisterServer(s *grpc.Server) {
 	cpc.RegisterChainStateReaderServer(s, c)
 }
 
-// RegisterJsonRpcHttp register api to restfull json
-func (c *ChainStateReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+// RegisterJsonRpc register api to restfull json
+func (c *ChainStateReader) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterChainStateReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -115,8 +115,8 @@ func (c *ChainReader) RegisterServer(s *grpc.Server) {
 	cpc.RegisterChainReaderServer(s, c)
 }
 
-// RegisterJsonRpcHttp register api to restfull json
-func (c *ChainReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+// RegisterJsonRpc register api to restfull json
+func (c *ChainReader) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterChainReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
@@ -282,39 +282,39 @@ func (s *ChainReader) GetCode(ctx context.Context, req *cpc.ChainReaderRequest) 
 	return &pb.Code{Code: code}, state.Error()
 }
 
-// TransactionReader exposes methods for the RPC interface
-type TransactionReader struct {
+// TransactionPoolReader exposes methods for the RPC interface
+type TransactionPoolReader struct {
 	b         Backend
 	nonceLock *AddrLocker
 }
 
-// NewTransactionReader a new RPC service with methods specific for the transaction pool.
-func NewTransactionReader(b Backend, nonceLock *AddrLocker) *TransactionReader {
-	return &TransactionReader{b, nonceLock}
+// NewTransactionPoolReader a new RPC service with methods specific for the transaction pool.
+func NewTransactionPoolReader(b Backend, nonceLock *AddrLocker) *TransactionPoolReader {
+	return &TransactionPoolReader{b, nonceLock}
 }
 
 // IsPublic if public default
-func (t *TransactionReader) IsPublic() bool {
+func (t *TransactionPoolReader) IsPublic() bool {
 	return true
 }
 
 // Namespace namespace
-func (t *TransactionReader) Namespace() string {
+func (t *TransactionPoolReader) Namespace() string {
 	return "cpc"
 }
 
 // RegisterServer register api to grpc
-func (t *TransactionReader) RegisterServer(s *grpc.Server) {
+func (t *TransactionPoolReader) RegisterServer(s *grpc.Server) {
 	cpc.RegisterTransactionPoolReaderServer(s, t)
 }
 
-// RegisterJsonRpcHttp register api to restfull json
-func (t *TransactionReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+// RegisterJsonRpc register api to restfull json
+func (t *TransactionPoolReader) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterTransactionPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 // GetBlockTransactionCountByNumber returns the number of transactions in the block with the given block number.
-func (t *TransactionReader) GetTransactionCountByBlockNumber(ctx context.Context, blockNr *pb.BlockNumber) (*cpc.TransactionCount, error) {
+func (t *TransactionPoolReader) GetTransactionCountByBlockNumber(ctx context.Context, blockNr *pb.BlockNumber) (*cpc.TransactionCount, error) {
 	if block, _ := t.b.BlockByNumber(ctx, rpc.BlockNumber(blockNr.BlockNumber)); block != nil {
 		return &cpc.TransactionCount{TransactionCount: uint64(len(block.Transactions()))}, nil
 	}
@@ -322,7 +322,7 @@ func (t *TransactionReader) GetTransactionCountByBlockNumber(ctx context.Context
 }
 
 // GetBlockTransactionCountByHash returns the number of transactions in the block with the given hash.
-func (t *TransactionReader) GetTransactionCountByBlockHash(ctx context.Context, blockHash *pb.BlockHash) (*cpc.TransactionCount, error) {
+func (t *TransactionPoolReader) GetTransactionCountByBlockHash(ctx context.Context, blockHash *pb.BlockHash) (*cpc.TransactionCount, error) {
 	if block, _ := t.b.GetBlock(ctx, common.HexToHash(blockHash.BlockHash)); block != nil {
 		return &cpc.TransactionCount{TransactionCount: uint64(len(block.Transactions()))}, nil
 	}
@@ -330,7 +330,7 @@ func (t *TransactionReader) GetTransactionCountByBlockHash(ctx context.Context, 
 }
 
 // GetTransactionByBlockNumberAndIndex returns the transaction for the given block number and index.
-func (t *TransactionReader) GetTransactionByBlockNumberAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*pb.RpcTransaction, error) {
+func (t *TransactionPoolReader) GetTransactionByBlockNumberAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*pb.RpcTransaction, error) {
 	if block, _ := t.b.BlockByNumber(ctx, rpc.BlockNumber(req.BlockNumber)); block != nil {
 		return newGRPCTransactionFromBlockIndex(block, req.Index), nil
 	}
@@ -338,7 +338,7 @@ func (t *TransactionReader) GetTransactionByBlockNumberAndIndex(ctx context.Cont
 }
 
 // GetTransactionByBlockHashAndIndex returns the transaction for the given block hash and index.
-func (t *TransactionReader) GetTransactionByBlockHashAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*pb.RpcTransaction, error) {
+func (t *TransactionPoolReader) GetTransactionByBlockHashAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*pb.RpcTransaction, error) {
 	if block, _ := t.b.GetBlock(ctx, common.HexToHash(req.BlockHash)); block != nil {
 		return newGRPCTransactionFromBlockIndex(block, req.Index), nil
 	}
@@ -346,7 +346,7 @@ func (t *TransactionReader) GetTransactionByBlockHashAndIndex(ctx context.Contex
 }
 
 // GetRawTransactionByBlockNumberAndIndex returns the bytes of the transaction for the given block number and index.
-func (t *TransactionReader) GetRawTransactionByBlockNumberAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*cpc.RawTransaction, error) {
+func (t *TransactionPoolReader) GetRawTransactionByBlockNumberAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*cpc.RawTransaction, error) {
 	var out cpc.RawTransaction
 	if block, _ := t.b.BlockByNumber(ctx, rpc.BlockNumber(req.BlockNumber)); block != nil {
 		raw := newRPCRawTransactionFromBlockIndex(block, req.Index)
@@ -356,7 +356,7 @@ func (t *TransactionReader) GetRawTransactionByBlockNumberAndIndex(ctx context.C
 }
 
 // GetRawTransactionByBlockHashAndIndex returns the bytes of the transaction for the given block hash and index.
-func (t *TransactionReader) GetRawTransactionByBlockHashAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*cpc.RawTransaction, error) {
+func (t *TransactionPoolReader) GetRawTransactionByBlockHashAndIndex(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*cpc.RawTransaction, error) {
 	var out cpc.RawTransaction
 	if block, _ := t.b.GetBlock(ctx, common.HexToHash(req.BlockHash)); block != nil {
 		raw := newRPCRawTransactionFromBlockIndex(block, req.Index)
@@ -366,7 +366,7 @@ func (t *TransactionReader) GetRawTransactionByBlockHashAndIndex(ctx context.Con
 }
 
 // GetTransactionCount returns the number of transactions the given address has sent for the given block number
-func (t *TransactionReader) GetTransactionCount(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*cpc.TransactionCount, error) {
+func (t *TransactionPoolReader) GetTransactionCount(ctx context.Context, req *cpc.TransactionPoolReaderRequest) (*cpc.TransactionCount, error) {
 	state, _, err := t.b.StateAndHeaderByNumber(ctx, rpc.BlockNumber(req.BlockNumber), false)
 	if state == nil || err != nil {
 		return nil, err
@@ -376,7 +376,7 @@ func (t *TransactionReader) GetTransactionCount(ctx context.Context, req *cpc.Tr
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (t *TransactionReader) GetTransactionByHash(ctx context.Context, txHash *cpc.TransactionHash) (*pb.RpcTransaction, error) {
+func (t *TransactionPoolReader) GetTransactionByHash(ctx context.Context, txHash *cpc.TransactionHash) (*pb.RpcTransaction, error) {
 	// Try to return an already finalized transaction
 	if tx, blockHash, blockNumber, index := rawdb.ReadTransaction(t.b.ChainDb(), common.HexToHash(txHash.TransactionHash)); tx != nil {
 		return newGRPCTransaction(tx, blockHash, blockNumber, index), nil
@@ -390,7 +390,7 @@ func (t *TransactionReader) GetTransactionByHash(ctx context.Context, txHash *cp
 }
 
 // GetRawTransactionByHash returns the bytes of the transaction for the given hash.
-func (t *TransactionReader) GetRawTransactionByHash(ctx context.Context, hash common.Hash) (hexutil.Bytes, error) {
+func (t *TransactionPoolReader) GetRawTransactionByHash(ctx context.Context, hash common.Hash) (hexutil.Bytes, error) {
 	var tx *types.Transaction
 
 	// Retrieve a finalized transaction, or a pooled otherwise
@@ -405,7 +405,7 @@ func (t *TransactionReader) GetRawTransactionByHash(ctx context.Context, hash co
 }
 
 // GetTransactionReceipt returns the transaction receipt for the given transaction hash.
-func (t *TransactionReader) GetTransactionReceipt(ctx context.Context, txHash *cpc.TransactionHash) (*pb.Receipt, error) {
+func (t *TransactionPoolReader) GetTransactionReceipt(ctx context.Context, txHash *cpc.TransactionHash) (*pb.Receipt, error) {
 	tx, blockHash, blockNumber, index := rawdb.ReadTransaction(t.b.ChainDb(), common.HexToHash(txHash.TransactionHash))
 	if tx == nil {
 		return &pb.Receipt{}, nil
@@ -506,8 +506,8 @@ func (c *AccountReader) RegisterServer(s *grpc.Server) {
 	cpc.RegisterAccountReaderServer(s, c)
 }
 
-// RegisterJsonRpcHttp register api to restfull json
-func (c *AccountReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+// RegisterJsonRpc register api to restfull json
+func (c *AccountReader) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterAccountReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 

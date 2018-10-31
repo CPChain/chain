@@ -39,8 +39,8 @@ func (m *MinerManager) RegisterServer(s *grpc.Server) {
 	miner.RegisterMinerManagerServer(s, m)
 }
 
-// RegisterJsonRpcHttp register api to restfull json
-func (m *MinerManager) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
+// RegisterJsonRpc register api to restfull json
+func (m *MinerManager) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	miner.RegisterMinerManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 

@@ -11,5 +11,5 @@ type GApi interface {
 	IsPublic() bool
 	Namespace() string
 	RegisterServer(*grpc.Server)
-	RegisterJsonRpcHttp(context.Context, *runtime.ServeMux, string, []grpc.DialOption)
+	RegisterJsonRpc(context.Context, *runtime.ServeMux, string, []grpc.DialOption)
 }
