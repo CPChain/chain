@@ -17,15 +17,12 @@
 package miner
 
 import (
-	"errors"
-	"math/big"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -94,42 +91,42 @@ func (a *RemoteAgent) Stop() {
 	close(a.workCh)
 }
 
-// GetHashRate returns the accumulated hashrate of all identifier combined
-func (a *RemoteAgent) GetHashRate() (tot int64) {
-	a.hashrateMu.RLock()
-	defer a.hashrateMu.RUnlock()
+// // GetHashRate returns the accumulated hashrate of all identifier combined
+// func (a *RemoteAgent) GetHashRate() (tot int64) {
+// 	a.hashrateMu.RLock()
+// 	defer a.hashrateMu.RUnlock()
 
-	// this could overflow
-	for _, hashrate := range a.hashrate {
-		tot += int64(hashrate.rate)
-	}
-	return
-}
+// 	// this could overflow
+// 	for _, hashrate := range a.hashrate {
+// 		tot += int64(hashrate.rate)
+// 	}
+// 	return
+// }
 
-func (a *RemoteAgent) GetWork() ([3]string, error) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+// func (a *RemoteAgent) GetWork() ([3]string, error) {
+// 	a.mu.Lock()
+// 	defer a.mu.Unlock()
 
-	var res [3]string
+// 	var res [3]string
 
-	if a.currentWork != nil {
-		block := a.currentWork.Block
+// 	if a.currentWork != nil {
+// 		block := a.currentWork.Block
 
-		res[0] = block.HashNoNonce().Hex()
-		seedHash := ethash.SeedHash(block.NumberU64())
-		res[1] = common.BytesToHash(seedHash).Hex()
-		// Calculate the "target" to be returned to the external miner
-		n := big.NewInt(1)
-		n.Lsh(n, 255)
-		n.Div(n, block.Difficulty())
-		n.Lsh(n, 1)
-		res[2] = common.BytesToHash(n.Bytes()).Hex()
+// 		res[0] = block.HashNoNonce().Hex()
+// 		seedHash := ethash.SeedHash(block.NumberU64())
+// 		res[1] = common.BytesToHash(seedHash).Hex()
+// 		// Calculate the "target" to be returned to the external miner
+// 		n := big.NewInt(1)
+// 		n.Lsh(n, 255)
+// 		n.Div(n, block.Difficulty())
+// 		n.Lsh(n, 1)
+// 		res[2] = common.BytesToHash(n.Bytes()).Hex()
 
-		a.work[block.HashNoNonce()] = a.currentWork
-		return res, nil
-	}
-	return res, errors.New("No work available yet, don't panic.")
-}
+// 		a.work[block.HashNoNonce()] = a.currentWork
+// 		return res, nil
+// 	}
+// 	return res, errors.New("No work available yet, don't panic.")
+// }
 
 // SubmitWork tries to inject a pow solution into the remote agent, returning
 // whether the solution was accepted or not (not can be both a bad pow as well as

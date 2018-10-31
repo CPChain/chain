@@ -25,7 +25,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
@@ -112,7 +112,7 @@ func (t *BlockTest) Run() error {
 		return fmt.Errorf("genesis block state root does not match test: computed=%x, test=%x", gblock.StateRoot().Bytes()[:6], t.json.Genesis.StateRoot[:6])
 	}
 
-	chain, err := core.NewBlockChain(db, nil, config, ethash.NewShared(), vm.Config{}, remoteDB, nil)
+	chain, err := core.NewBlockChain(db, nil, config, dpor.NewFaker(config.Dpor, db), vm.Config{}, remoteDB, nil)
 	if err != nil {
 		return err
 	}

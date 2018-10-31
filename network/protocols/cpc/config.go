@@ -20,13 +20,10 @@ import (
 	"math/big"
 	"os"
 	"os/user"
-	"path/filepath"
-	"runtime"
 	"time"
 
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/network/protocols/cpc/gasprice"
@@ -37,14 +34,7 @@ import (
 
 // DefaultConfig contains default settings for use on the Cpchain main net.
 var DefaultConfig = Config{
-	SyncMode: downloader.FullSync,
-	Ethash: ethash.Config{
-		CacheDir:       "cpchash",
-		CachesInMem:    2,
-		CachesOnDisk:   3,
-		DatasetsInMem:  1,
-		DatasetsOnDisk: 2,
-	},
+	SyncMode:      downloader.FullSync,
 	NetworkId:     1,
 	LightPeers:    100,
 	DatabaseCache: 768,
@@ -67,11 +57,6 @@ func init() {
 		if user, err := user.Current(); err == nil {
 			home = user.HomeDir
 		}
-	}
-	if runtime.GOOS == "windows" {
-		DefaultConfig.Ethash.DatasetDir = filepath.Join(home, "AppData", "Ethash")
-	} else {
-		DefaultConfig.Ethash.DatasetDir = filepath.Join(home, ".ethash")
 	}
 }
 
@@ -103,9 +88,6 @@ type Config struct {
 	MinerThreads int            `toml:",omitempty"`
 	ExtraData    []byte         `toml:",omitempty"`
 	GasPrice     *big.Int
-
-	// Ethash options
-	Ethash ethash.Config
 
 	// Admission options
 	Admission admission.Config

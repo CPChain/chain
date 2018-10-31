@@ -29,7 +29,6 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
@@ -1409,14 +1408,14 @@ func (api *PublicDebugAPI) PrintBlock(ctx context.Context, number uint64) (strin
 	return spew.Sdump(block), nil
 }
 
-// SeedHash retrieves the seed hash of a block.
-func (api *PublicDebugAPI) SeedHash(ctx context.Context, number uint64) (string, error) {
-	block, _ := api.b.BlockByNumber(ctx, rpc.BlockNumber(number))
-	if block == nil {
-		return "", fmt.Errorf("block #%d not found", number)
-	}
-	return fmt.Sprintf("0x%x", ethash.SeedHash(number)), nil
-}
+// // SeedHash retrieves the seed hash of a block.
+// func (api *PublicDebugAPI) SeedHash(ctx context.Context, number uint64) (string, error) {
+// 	block, _ := api.b.BlockByNumber(ctx, rpc.BlockNumber(number))
+// 	if block == nil {
+// 		return "", fmt.Errorf("block #%d not found", number)
+// 	}
+// 	return fmt.Sprintf("0x%x", ethash.SeedHash(number)), nil
+// }
 
 // PrivateDebugAPI is the collection of Ethereum APIs exposed over the private
 // debugging endpoint.
