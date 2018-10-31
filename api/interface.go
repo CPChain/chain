@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Named Register is better
+// GApi Named Register is better
 type GApi interface {
 	IsPublic() bool
 	Namespace() string

@@ -572,6 +572,8 @@ func (ethash *Ethash) APIs(chain consensus.ChainReader) []rpc.API {
 	return nil
 }
 
+// GAPIs implements consensus.ChainReader, returning the user facing RPC APIs. Currently
+// that is empty.
 func (ethash *Ethash) GAPIs(chain consensus.ChainReader) []api.GApi {
 	return nil
 }

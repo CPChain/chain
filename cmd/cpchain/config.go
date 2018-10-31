@@ -135,7 +135,7 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 	if ctx.IsSet(flags.GrpcAddrFlagName) {
 		addr := strings.Split(ctx.String(flags.GrpcAddrFlagName), ":")
 		if len(addr) != 2 {
-			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GrpcAddrFlagName)
+			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GRpcAddrFlagName)
 		}
 		cfg.Grpc.Host = addr[0]
 		cfg.Grpc.Port, _ = strconv.Atoi(addr[1])

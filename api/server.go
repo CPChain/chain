@@ -145,7 +145,7 @@ func (s *Server) stopGrpc() {
 	}
 }
 
-// Register regists all the given apis
+// Register regists all the given GApis
 func (s *Server) Register(ctx context.Context, gapis []GApi) {
 	// Generate the whitelist based on the allowed modules
 	whitelist := make(map[string]bool)

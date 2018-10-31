@@ -325,6 +325,7 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 	}}
 }
 
+// GAPIs is APIs for dpor.
 func (d *Dpor) GAPIs(chain consensus.ChainReader) []api.GApi {
 	return []api.GApi{}
 }

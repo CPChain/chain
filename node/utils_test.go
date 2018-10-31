@@ -128,7 +128,7 @@ func InstrumentedServiceMakerC(base ServiceConstructor) ServiceConstructor {
 	return InstrumentingWrapperMaker(base, reflect.TypeOf(InstrumentedServiceC{}))
 }
 
-// OneMethodAPI is a single-method GApi handler to be returned by test services.
+// OneMethodAPI is a single-method API handler to be returned by test services.
 type OneMethodAPI struct {
 	fun func()
 }
