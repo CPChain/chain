@@ -201,7 +201,7 @@ func (p *peer) SendNewSignerMsg(eb common.Address) error {
 
 // SendNewPendingBlocks sends new generated block, waiting for signatures.
 func (p *peer) SendNewPendingBlock(block *types.Block) error {
-	err := p2p.Send(p.rw, NewBlockGeneratedMsg, []interface{}{block})
+	err := p2p.Send(p.rw, NewPendingBlockMsg, []interface{}{block})
 	if err == nil {
 		p.MarkPendingBlock(block.Hash())
 	}
@@ -226,7 +226,7 @@ func (p *peer) SendNewPendingBlockHashes(hashes []common.Hash, numbers []uint64)
 		request[i].Number = numbers[i]
 	}
 
-	err := p2p.Send(p.rw, NewBlockGeneratedHashesMsg, request)
+	err := p2p.Send(p.rw, NewPendingBlockHashesMsg, request)
 	if err == nil {
 		for _, hash := range hashes {
 			p.MarkPendingBlock(hash)
@@ -247,7 +247,7 @@ func (p *peer) AsyncSendNewPendingBlockHashes(block *types.Block) {
 // SendNewSignedHeader sends new signed block header.
 func (p *peer) SendNewSignedHeader(header *types.Header) error {
 	// err := p2p.Send(p.rw, NewSignedHeaderMsg, []*types.Header{header})
-	err := p2p.Send(p.rw, NewSignedHeaderMsg, header)
+	err := p2p.Send(p.rw, PrepareSignedHeaderMsg, header)
 	if err == nil {
 		p.MarkPendingBlock(header.Hash())
 	}

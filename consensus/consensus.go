@@ -136,49 +136,35 @@ type Pbft interface {
 
 	// Commit returns true if collected enough(>2f+1 || >2/3) <Commit> msg from other signers for given block.
 	Commit()
+
+	// Status returns current pbft phrase.
+	Status()
 }
 
 // Pbft process is as follow:
 
-// for true {
-// 	select {
-
-// 	case IamLeader:
-// 		sealedBlock := Engine.Seal()
-// 		Pbft.SendPrePrepare(sealedBlock)
-
-// 	case TimerReached && IamNextLeader:
-// 		viewChangeMsg := true
-// 		Pbft.SendPrePrepare(viewChangeMsg)
-
-// 	case ReceivedNewGeneratedBlock <- msgChan || ReceivedViewChangeMsg <- msgChan:
-// 		preprepare := Pbft.PrePrepare()
-// 		if preprepare {
-
-// 			Pbft.SendPrepare()
-
-// 			for true{
-// 				select {
-// 				case ReceivedPrepareMsg <- msgChan:
-// 					prepare := Pbft.Prepare()
-// 					if prepare {
-// 						break
-// 					}
-// 				}
+// for {
+// 	switch {
+// 	case msg.Code < X:
+// 		// simple sync method.
+// 	case msg.Code >= X:
+// 		// pbft phrase
+// 		switch Pbft.Status() {
+// 		case 0 && msg.Code == NewPendingBlockMsg:
+// 			if Pbft.PrePrepare() {
+// 				Pbft.SendPrepare()
 // 			}
-
-// 			Pbft.SendCommit()
-
-// 			for true{
-// 				select {
-// 				case ReceivedCommitMsg <- msgChan:
-// 					committed := Pbft.Commit()
-// 					if committed {
-// 						break
-// 					}
-// 				}
+// 		case 1 && msg.Code == PrepareMsg:
+// 			if Pbft.Prepare() {
+// 				Pbft.SendCommit()
 // 			}
-
+// 		case 2 && msg.Code == CommitMsg:
+// 			if Pbft.Commit() {
+// 			}
+// 		default:
+// 			log.Warn
 // 		}
+// 	default:
+// 		return err
 // 	}
 // }

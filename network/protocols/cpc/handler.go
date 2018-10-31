@@ -738,7 +738,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// send NewSignerMsg too.
 		// register peer as signer.
 
-	case msg.Code == NewBlockGeneratedMsg:
+	case msg.Code == NewPendingBlockMsg:
 		// if received a new generated block, perform as to verify a normal block
 		// do signing in dpor, return consensus.ErrNewSignedHeader
 		// then broadcast to remote committee.
@@ -749,11 +749,11 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		// }
 		// go pm.blockchain.InsertChain(types.Blocks{request.Block})
 
-	case msg.Code == NewBlockGeneratedHashesMsg:
+	case msg.Code == NewPendingBlockHashesMsg:
 		// if received a new generated header of block,
 		// notify the fetcher to fetch the block
 
-	case msg.Code == NewSignedHeaderMsg:
+	case msg.Code == PrepareSignedHeaderMsg:
 		// collect the sigs in the header.
 		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
 
