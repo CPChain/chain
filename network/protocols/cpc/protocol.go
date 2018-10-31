@@ -30,9 +30,6 @@ import (
 
 // Constants to match up protocol versions and messages
 const (
-	// eth62 = 62
-	// eth63 = 63
-
 	cpc01 = 64
 )
 
@@ -43,10 +40,7 @@ var ProtocolName = "cpc"
 // ProtocolVersions are the upported versions of the eth protocol (first is primary).
 var ProtocolVersions = []uint{cpc01}
 
-// var ProtocolVersions = []uint{cpc01, eth63, eth62}
-
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
-// var ProtocolLengths = []uint64{17, 8}
 var ProtocolLengths = []uint64{70, 16, 8} // TODO: this is wrong, fix this.
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message

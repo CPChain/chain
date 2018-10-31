@@ -1,4 +1,4 @@
-package register
+package rpt_test
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/ethclient"
@@ -82,9 +83,9 @@ func TestDeployRegister(t *testing.T) {
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
 
-	contractAddress, _, _, err := DeployRegister(auth, client)
+	contractAddress, _, _, err := register.DeployRegister(auth, client)
 
-	Fakeregister, err := NewRegister(contractAddress, client)
+	Fakeregister, err := register.NewRegister(contractAddress, client)
 	checkError(t, "NewRegister, got %v", err)
 
 	fakefile := filestruck{

@@ -3,6 +3,7 @@ package dpor
 
 import (
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -29,15 +30,19 @@ type Dpor struct {
 	recents    *lru.ARCCache // Snapshots for recent block to speed up reorgs
 	signatures *lru.ARCCache // Signatures of recent blocks to speed up mining
 
-	signedBlocks map[uint64]common.Hash // record signed blocks
+	signedBlocks map[uint64]common.Hash // record signed blocks.
 
 	signer common.Address // Ethereum address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
-	contractCaller          *consensus.ContractCaller         // contractCaller is used to handle contract related calls
-	committeeNetworkHandler consensus.CommitteeNetworkHandler // committeeHandler handles all related dials and calls
+	committeeNetworkHandler consensus.CommitteeNetworkHandler
 
-	lock sync.RWMutex // Protects the signer fields defined above
+	fake           bool // used for test, always accept a block.
+	fakeFail       uint64
+	fakeDelay      time.Duration // Time delay to sleep for before returning from verify
+	contractCaller *consensus.ContractCaller
+
+	lock sync.RWMutex // Protects the signer fields
 }
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
@@ -56,6 +61,7 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	// Allocate the Snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	signatures, _ := lru.NewARC(inmemorySignatures)
+
 	signedBlocks := make(map[uint64]common.Hash)
 
 	return &Dpor{
@@ -66,6 +72,24 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 		signatures:   signatures,
 		signedBlocks: signedBlocks,
 	}
+}
+
+func NewFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
+	d := New(config, db)
+	d.fake = true
+	return d
+}
+
+func NewFakeFailer(config *configs.DporConfig, db ethdb.Database, fail uint64) *Dpor {
+	d := NewFaker(config, db)
+	d.fakeFail = fail
+	return d
+}
+
+func NewFakeDelayer(config *configs.DporConfig, db ethdb.Database, delay time.Duration) *Dpor {
+	d := NewFaker(config, db)
+	d.fakeDelay = delay
+	return d
 }
 
 // SetContractCaller sets dpor.contractCaller
