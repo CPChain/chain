@@ -35,6 +35,8 @@ contract Campaign {
         uint deposit;
         uint startViewIdx;
         uint stopViewIdx;
+        // recorded for ViewChange
+        uint baseDeposit;
     }
 
     mapping(address => CandidateInfo) candidates;
@@ -129,6 +131,7 @@ contract Campaign {
             candidates[candidate].startViewIdx = viewIdx.add(1);
             //[start, stop)
             candidates[candidate].stopViewIdx = candidates[candidate].startViewIdx.add(_numOfCampaign);
+            candidates[candidate].baseDeposit = baseDeposit;
             // add candidate to campaignSnapshots.
             for(uint i = candidates[candidate].startViewIdx; i < candidates[candidate].stopViewIdx; i++) {
                 campaignSnapshots[i].insert(candidate);
@@ -164,15 +167,17 @@ contract Campaign {
             size = campaignSnapshots[withdrawViewIdx].values.length;
             for(uint i = 0; i < size; i++) {
                 address candidate = campaignSnapshots[viewIdx].values[i];
-                if(candidates[candidate].deposit >= baseDeposit) {
-                    candidates[candidate].deposit -= baseDeposit;
-                    candidate.transfer(baseDeposit);
+                uint depositValue = candidates[candidate].baseDeposit;
+                if(candidates[candidate].deposit >= depositValue) {
+                    candidates[candidate].deposit -= depositValue;
+                    candidate.transfer(depositValue);
                     candidates[candidate].numOfCampaign--;
                 }
                 // if candidate's tenure is all over, all status return to zero.
                 if (candidates[candidate].numOfCampaign == 0) {
                     candidates[candidate].startViewIdx = 0;
                     candidates[candidate].stopViewIdx = 0;
+                    candidates[candidate].baseDeposit = 0;
                 }
             }
         }
@@ -186,8 +191,9 @@ contract Campaign {
 
     // TODO. require sender check.
     function punishCandidate(address candidate, uint _viewIdx) public onlyOwner {
-        require(candidates[candidate].deposit >= baseDeposit, "wrong deposit value.");
-        candidates[candidate].deposit -= baseDeposit;
+        uint depositValue = candidates[candidate].baseDeposit;
+        require(candidates[candidate].deposit >= depositValue, "wrong deposit value.");
+        candidates[candidate].deposit -= depositValue;
         campaignSnapshots[_viewIdx].remove(candidate);
     }
 
