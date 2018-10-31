@@ -34,16 +34,15 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/filters"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/gasprice"
+	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
+	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/node/miner"
 	"bitbucket.org/cpchain/chain/private"
@@ -145,7 +144,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		chainConfig:    chainConfig,
 		eventMux:       ctx.EventMux,
 		accountManager: ctx.AccountManager,
-		engine:         CreateConsensusEngine(ctx, &config.Ethash, chainConfig, chainDb),
+		engine:         CreateConsensusEngine(ctx, chainConfig, chainDb),
 		shutdownChan:   make(chan bool),
 		networkID:      config.NetworkId,
 		gasPrice:       config.GasPrice,
@@ -245,36 +244,14 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Data
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
-func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chainConfig *configs.ChainConfig, db ethdb.Database) consensus.Engine {
+func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db ethdb.Database) consensus.Engine {
 
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. Liu Qian
 		return dpor.New(chainConfig.Dpor, db)
 	}
-	// Otherwise assume proof-of-work
-	switch config.PowMode {
-	case ethash.ModeFake:
-		log.Warn("Ethash used in fake mode")
-		return ethash.NewFaker()
-	case ethash.ModeTest:
-		log.Warn("Ethash used in test mode")
-		return ethash.NewTester()
-	case ethash.ModeShared:
-		log.Warn("Ethash used in shared mode")
-		return ethash.NewShared()
-	default:
-		engine := ethash.New(ethash.Config{
-			CacheDir:       ctx.ResolvePath(config.CacheDir),
-			CachesInMem:    config.CachesInMem,
-			CachesOnDisk:   config.CachesOnDisk,
-			DatasetDir:     config.DatasetDir,
-			DatasetsInMem:  config.DatasetsInMem,
-			DatasetsOnDisk: config.DatasetsOnDisk,
-		})
-		engine.SetThreads(-1) // Disable CPU mining
-		return engine
-	}
+	return nil
 }
 
 // GAPIs return the collection of GRPC services the cpc package offers.
@@ -282,7 +259,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 func (s *CpchainService) GAPIs() []api.GApi {
 	apis := ethapi.GetGAPIs(s.APIBackend)
 	return append(apis, []api.GApi{
-		NewMinerReader(s),
+		// NewMinerReader(s),
 		NewCoinbase(s),
 		NewAdminManager(s),
 		NewMinerManager(s),
@@ -309,12 +286,14 @@ func (s *CpchainService) APIs() []rpc.API {
 			Version:   "1.0",
 			Service:   NewPublicCpchainAPI(s),
 			Public:    true,
-		}, {
-			Namespace: "eth",
-			Version:   "1.0",
-			Service:   NewPublicMinerAPI(s),
-			Public:    true,
-		}, {
+		},
+		// {
+		// 	Namespace: "eth",
+		// 	Version:   "1.0",
+		// 	Service:   NewPublicMinerAPI(s),
+		// 	Public:    true,
+		// },
+		{
 			Namespace: "eth",
 			Version:   "1.0",
 			Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),

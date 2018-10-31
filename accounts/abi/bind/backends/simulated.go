@@ -34,7 +34,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/filters"
+	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"

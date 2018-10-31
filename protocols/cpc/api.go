@@ -74,13 +74,13 @@ type PublicMinerAPI struct {
 	agent *miner.RemoteAgent
 }
 
-// NewPublicMinerAPI create a new PublicMinerAPI instance.
-func NewPublicMinerAPI(e *CpchainService) *PublicMinerAPI {
-	agent := miner.NewRemoteAgent(e.BlockChain(), e.Engine())
-	e.Miner().Register(agent)
+// // NewPublicMinerAPI create a new PublicMinerAPI instance.
+// func NewPublicMinerAPI(e *CpchainService) *PublicMinerAPI {
+// 	agent := miner.NewRemoteAgent(e.BlockChain(), e.Engine())
+// 	e.Miner().Register(agent)
 
-	return &PublicMinerAPI{e, agent}
-}
+// 	return &PublicMinerAPI{e, agent}
+// }
 
 // Mining returns an indication if this node is currently mining.
 func (api *PublicMinerAPI) Mining() bool {
@@ -97,19 +97,19 @@ func (api *PublicMinerAPI) SubmitWork(nonce types.BlockNonce, solution, digest c
 // result[0], 32 bytes hex encoded current block header pow-hash
 // result[1], 32 bytes hex encoded seed hash used for DAG
 // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
-func (api *PublicMinerAPI) GetWork() ([3]string, error) {
-	if !api.c.IsMining() {
-		// TODO: @liuq fix this.
-		if err := api.c.StartMining(false, nil); err != nil {
-			return [3]string{}, err
-		}
-	}
-	work, err := api.agent.GetWork()
-	if err != nil {
-		return work, fmt.Errorf("mining not ready: %v", err)
-	}
-	return work, nil
-}
+// func (api *PublicMinerAPI) GetWork() ([3]string, error) {
+// 	if !api.c.IsMining() {
+// 		// TODO: @liuq fix this.
+// 		if err := api.c.StartMining(false, nil); err != nil {
+// 			return [3]string{}, err
+// 		}
+// 	}
+// 	work, err := api.agent.GetWork()
+// 	if err != nil {
+// 		return work, fmt.Errorf("mining not ready: %v", err)
+// 	}
+// 	return work, nil
+// }
 
 // SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined
 // hash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which

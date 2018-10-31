@@ -7,10 +7,9 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/gasprice"
+	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/private"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -36,7 +35,6 @@ func (c Config) MarshalTOML() (interface{}, error) {
 		MinerThreads            int            `toml:",omitempty"`
 		ExtraData               hexutil.Bytes  `toml:",omitempty"`
 		GasPrice                *big.Int
-		Ethash                  ethash.Config
 		Admission               admission.Config
 		TxPool                  core.TxPoolConfig
 		GPO                     gasprice.Config
@@ -60,7 +58,6 @@ func (c Config) MarshalTOML() (interface{}, error) {
 	enc.MinerThreads = c.MinerThreads
 	enc.ExtraData = c.ExtraData
 	enc.GasPrice = c.GasPrice
-	enc.Ethash = c.Ethash
 	enc.Admission = c.Admission
 	enc.TxPool = c.TxPool
 	enc.GPO = c.GPO
@@ -88,7 +85,6 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		MinerThreads            *int            `toml:",omitempty"`
 		ExtraData               *hexutil.Bytes  `toml:",omitempty"`
 		GasPrice                *big.Int
-		Ethash                  *ethash.Config
 		Admission               *admission.Config
 		TxPool                  *core.TxPoolConfig
 		GPO                     *gasprice.Config
@@ -144,9 +140,6 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	}
 	if dec.GasPrice != nil {
 		c.GasPrice = dec.GasPrice
-	}
-	if dec.Ethash != nil {
-		c.Ethash = *dec.Ethash
 	}
 	if dec.Admission != nil {
 		c.Admission = *dec.Admission

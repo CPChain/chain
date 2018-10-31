@@ -15,7 +15,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc"
+	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
