@@ -7,7 +7,6 @@ package api
 // unzip protoc-3.6.1-linux-x86_64.zip -d protoc
 // sudo mv protoc /usr/local/protoc
 // add `export PATH=$PATH:/usr/local/protoc/bin` to your bashrc or zshrc file
-// then go get -u github.com/golang/protobuf/protoc-gen-go
 
 // go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 // go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
