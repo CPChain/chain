@@ -29,7 +29,7 @@ contract Trading {
     /**
      * @dev Information about delivery.
      */
-    struct Delivery{
+    struct Delivery {
         bool available;
         string cid;
         string symKey;
@@ -45,9 +45,12 @@ contract Trading {
     // delivery status
     Delivery public _delivery;
 
-    modifier onlyOwner(){ require(msg.sender == _owner); _; }
-    modifier onlySeller(){ require(msg.sender == _item.seller); _; }
-    modifier onlyBuyer(){ require(msg.sender == _order.buyer); _; }
+    modifier onlyOwner(){require(msg.sender == _owner);
+        _;}
+    modifier onlySeller(){require(msg.sender == _item.seller);
+        _;}
+    modifier onlyBuyer(){require(msg.sender == _order.buyer);
+        _;}
 
     event OrderCreated(uint price, address seller, address buyer, string pubkey);
     event ItemDelivered(string cid, address seller, address buyer, string symKey);
@@ -103,7 +106,7 @@ contract Trading {
     /**
      * @dev Deliver the item.
      */
-    function deliver(string cid, string symKey) public onlySeller(){
+    function deliver(string cid, string symKey) public onlySeller() {
         require(_delivery.available == false && _order.available == true);
 
         _delivery = Delivery(true, cid, symKey, false);
