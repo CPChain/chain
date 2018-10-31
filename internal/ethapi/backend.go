@@ -22,13 +22,13 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/apis"
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -75,17 +75,16 @@ type Backend interface {
 	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
 }
 
-func GetGAPIs(b Backend) []apis.API {
+func GetGAPIs(b Backend) []api.GApi {
 	nonceLock := new(AddrLocker)
-	return []apis.API{
-		NewPublicEthereumAPIServer(b),
-		NewPublicBlockChainAPIServer(b),
-		NewPublicTransactionPoolAPIServer(b, nonceLock),
-		NewPublicTxPoolAPIServer(b),
-		NewPublicDebugAPIServer(b),
-		NewPrivateDebugAPIServer(b),
-		NewPublicAccountAPIServer(b.AccountManager()),
-		NewPrivateAccountAPIServer(b, nonceLock),
+	return []api.GApi{
+		NewTransactionPoolReader(b, nonceLock),
+		NewAccountManager(b, nonceLock),
+		NewAccountReader(b.AccountManager()),
+		NewChainStateReader(b),
+		NewChainReader(b),
+		NewTxPoolReader(b),
+		NewTransactionPoolReader(b, nonceLock),
 	}
 }
 

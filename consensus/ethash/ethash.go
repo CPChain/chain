@@ -32,8 +32,7 @@ import (
 	"time"
 	"unsafe"
 
-	"bitbucket.org/cpchain/chain/apis"
-
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/rpc"
@@ -573,7 +572,9 @@ func (ethash *Ethash) APIs(chain consensus.ChainReader) []rpc.API {
 	return nil
 }
 
-func (ethash *Ethash) GAPIs(chain consensus.ChainReader) []apis.API {
+// GAPIs implements consensus.ChainReader, returning the user facing RPC APIs. Currently
+// that is empty.
+func (ethash *Ethash) GAPIs(chain consensus.ChainReader) []api.GApi {
 	return nil
 }
 

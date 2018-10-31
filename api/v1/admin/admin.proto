@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+import "common/common.proto";
+import "google/api/annotations.proto";
+
+option go_package = "admin";
+
+package admin;
+
+message File {
+    // file to import or export
+    string file = 1;
+}
+
+// AdminManager is the collection of Ethereum full node-related APIs
+// exposed over the private admin endpoint.
+service AdminManager {
+    // ChainManager is the collection of Ethereum full node-related APIs
+    // exposed over the private admin endpoint.
+    rpc ExportChain(File) returns (common.IsOk) {
+        option (google.api.http) = {
+            post : "/api/v1/admin/exportChain"
+            body : "*"
+        };
+    }
+    // ImportChain imports a blockchain from a local file.
+    rpc ImportChain(File) returns (common.IsOk) {
+        option (google.api.http) = {
+            post : "/api/v1/admin/importChain"
+            body : "*"
+        };
+    }
+}

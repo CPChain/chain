@@ -1,0 +1,94 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/admin/admin.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/admin/exportChain": {
+      "post": {
+        "summary": "ChainManager is the collection of Ethereum full node-related APIs\nexposed over the private admin endpoint.",
+        "operationId": "ExportChain",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/adminFile"
+            }
+          }
+        ],
+        "tags": [
+          "AdminManager"
+        ]
+      }
+    },
+    "/api/v1/admin/importChain": {
+      "post": {
+        "summary": "ImportChain imports a blockchain from a local file.",
+        "operationId": "ImportChain",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/adminFile"
+            }
+          }
+        ],
+        "tags": [
+          "AdminManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "adminFile": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "title": "file to import or export"
+        }
+      }
+    },
+    "commonIsOk": {
+      "type": "object",
+      "properties": {
+        "isOk": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "IsOk return status"
+    }
+  }
+}
