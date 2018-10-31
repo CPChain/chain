@@ -75,9 +75,9 @@ type Backend interface {
 	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
 }
 
-func GetGAPIs(b Backend) []api.Api {
+func GetGAPIs(b Backend) []api.GApi {
 	// nonceLock := new(AddrLocker)
-	return []api.Api{}
+	return []api.GApi{}
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

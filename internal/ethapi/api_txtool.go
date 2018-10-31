@@ -40,7 +40,7 @@ func (t *TransactionPoolReader) RegisterServer(s *grpc.Server) {
 	txpool.RegisterTransactionPoolReaderServer(s, t)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (t *TransactionPoolReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	txpool.RegisterTransactionPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }

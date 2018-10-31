@@ -48,7 +48,7 @@ func (d *DebugDumper) RegisterServer(s *grpc.Server) {
 	debug.RegisterDebugDumperServer(s, d)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (d *DebugDumper) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	debug.RegisterDebugDumperHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
@@ -133,7 +133,7 @@ func (d *DebugManager) RegisterServer(s *grpc.Server) {
 	debug.RegisterDebugManagerServer(s, d)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (d *DebugManager) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	debug.RegisterDebugManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }

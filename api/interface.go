@@ -7,9 +7,9 @@ import (
 )
 
 // Named Register is better
-type Api interface {
+type GApi interface {
 	IsPublic() bool
 	Namespace() string
 	RegisterServer(*grpc.Server)
-	RegisterGateway(context.Context, *runtime.ServeMux, string, []grpc.DialOption)
+	RegisterJsonRpcHttp(context.Context, *runtime.ServeMux, string, []grpc.DialOption)
 }

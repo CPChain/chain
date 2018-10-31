@@ -277,8 +277,8 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	}
 }
 
-func (s *CpchainService) GAPIs() []api.Api {
-	return []api.Api{}
+func (s *CpchainService) GAPIs() []api.GApi {
+	return []api.GApi{}
 }
 
 // APIs return the collection of RPC services the cpc package offers.

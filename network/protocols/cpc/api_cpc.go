@@ -1,8 +1,9 @@
 package cpc
 
 import (
-	"bitbucket.org/cpchain/chain/api/v1/common"
 	"fmt"
+
+	"bitbucket.org/cpchain/chain/api/v1/common"
 
 	"bitbucket.org/cpchain/chain/api/v1/cpc"
 	"bitbucket.org/cpchain/chain/node/miner"
@@ -38,7 +39,7 @@ func (c *Coinbase) RegisterServer(s *grpc.Server) {
 	cpc.RegisterCoinbaseServer(s, c)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (c *Coinbase) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterCoinbaseHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }

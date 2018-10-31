@@ -146,7 +146,7 @@ func (s *Server) stopGrpc() {
 }
 
 // Register regists all the given apis
-func (s *Server) Register(ctx context.Context, gapis []Api) {
+func (s *Server) Register(ctx context.Context, gapis []GApi) {
 	// Generate the whitelist based on the allowed modules
 	whitelist := make(map[string]bool)
 	for _, module := range s.config.Modules {
@@ -161,13 +161,13 @@ func (s *Server) Register(ctx context.Context, gapis []Api) {
 	}
 }
 
-func (s *Server) register(ctx context.Context, stub Api) {
+func (s *Server) register(ctx context.Context, stub GApi) {
 	if s.handler != nil {
 		stub.RegisterServer(s.handler)
-		stub.RegisterGateway(ctx, s.mux, s.config.Address(), s.dialOpts)
+		stub.RegisterJsonRpcHttp(ctx, s.mux, s.config.Address(), s.dialOpts)
 	}
 	if s.ipcHandler != nil {
 		stub.RegisterServer(s.ipcHandler)
-		stub.RegisterGateway(ctx, s.mux, s.config.IpcAddress(), s.dialOpts)
+		stub.RegisterJsonRpcHttp(ctx, s.mux, s.config.IpcAddress(), s.dialOpts)
 	}
 }

@@ -1,18 +1,19 @@
 package cpc
 
 import (
+	"compress/gzip"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+
 	"bitbucket.org/cpchain/chain/api/v1/admin"
 	"bitbucket.org/cpchain/chain/api/v1/common"
 	"bitbucket.org/cpchain/chain/types"
-	"compress/gzip"
-	"fmt"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"io"
-	"os"
-	"strings"
 )
 
 // ChainManager is the collection of Ethereum full node-related APIs
@@ -42,7 +43,7 @@ func (c *ChainManager) RegisterServer(s *grpc.Server) {
 	admin.RegisterAdminManagerServer(s, c)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (c *ChainManager) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	admin.RegisterAdminManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }

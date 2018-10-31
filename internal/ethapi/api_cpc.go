@@ -43,7 +43,7 @@ func (c *ChainStateReader) RegisterServer(s *grpc.Server) {
 	cpc.RegisterChainStateReaderServer(s, c)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (c *ChainStateReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterChainStateReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
@@ -115,7 +115,7 @@ func (c *ChainReader) RegisterServer(s *grpc.Server) {
 	cpc.RegisterChainReaderServer(s, c)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (c *ChainReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterChainReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
@@ -308,7 +308,7 @@ func (t *TransactionReader) RegisterServer(s *grpc.Server) {
 	cpc.RegisterTransactionPoolReaderServer(s, t)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (t *TransactionReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterTransactionPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
@@ -506,7 +506,7 @@ func (c *AccountReader) RegisterServer(s *grpc.Server) {
 	cpc.RegisterAccountReaderServer(s, c)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (c *AccountReader) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	cpc.RegisterAccountReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }

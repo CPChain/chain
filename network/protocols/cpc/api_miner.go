@@ -1,6 +1,8 @@
 package cpc
 
 import (
+	"math/big"
+
 	pb "bitbucket.org/cpchain/chain/api/v1/common"
 	"bitbucket.org/cpchain/chain/api/v1/miner"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -9,7 +11,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"math/big"
 )
 
 // MinerManager provides private RPC methods to control the miner.
@@ -38,7 +39,7 @@ func (m *MinerManager) RegisterServer(s *grpc.Server) {
 	miner.RegisterMinerManagerServer(s, m)
 }
 
-// RegisterGateway register api to restfull json
+// RegisterJsonRpcHttp register api to restfull json
 func (m *MinerManager) RegisterGateway(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
 	miner.RegisterMinerManagerHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }

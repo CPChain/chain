@@ -100,7 +100,7 @@ type Config struct {
 	IPCPath string `toml:",omitempty"`
 
 	// HTTPHost is the host interface on which to start the HTTP RPC server. If this
-	// field is empty, no HTTP Api endpoint will be started.
+	// field is empty, no HTTP GApi endpoint will be started.
 	HTTPHost string `toml:",omitempty"`
 
 	// HTTPPort is the TCP port number on which to start the HTTP RPC server. The
@@ -121,13 +121,13 @@ type Config struct {
 	// Requests using ip address directly are not affected
 	HTTPVirtualHosts []string `toml:",omitempty"`
 
-	// HTTPModules is a list of Api modules to expose via the HTTP RPC interface.
-	// If the module list is empty, all RPC Api endpoints designated public will be
+	// HTTPModules is a list of GApi modules to expose via the HTTP RPC interface.
+	// If the module list is empty, all RPC GApi endpoints designated public will be
 	// exposed.
 	HTTPModules []string `toml:",omitempty"`
 
 	// WSHost is the host interface on which to start the websocket RPC server. If
-	// this field is empty, no websocket Api endpoint will be started.
+	// this field is empty, no websocket GApi endpoint will be started.
 	WSHost string `toml:",omitempty"`
 
 	// WSPort is the TCP port number on which to start the websocket RPC server. The
@@ -140,12 +140,12 @@ type Config struct {
 	// cannot verify the validity of the request header.
 	WSOrigins []string `toml:",omitempty"`
 
-	// WSModules is a list of Api modules to expose via the websocket RPC interface.
-	// If the module list is empty, all RPC Api endpoints designated public will be
+	// WSModules is a list of GApi modules to expose via the websocket RPC interface.
+	// If the module list is empty, all RPC GApi endpoints designated public will be
 	// exposed.
 	WSModules []string `toml:",omitempty"`
 
-	// WSExposeAll exposes all Api modules via the WebSocket RPC interface rather
+	// WSExposeAll exposes all GApi modules via the WebSocket RPC interface rather
 	// than just the public ones.
 	//
 	// *WARNING* Only set this if the node is running in a trusted network, exposing
