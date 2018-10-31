@@ -59,6 +59,11 @@ contract Pdash {
         uint endTime;
         DisputeState disputeState;
     }
+    struct Credit {
+        uint count;
+        uint amount;
+        uint rate;
+    }
 
     address public owner;
     uint DisputeTimeAllowed = 100;
@@ -67,7 +72,7 @@ contract Pdash {
     // TODO let records to be public or only let relevant address to be a accessible
     mapping(uint => OrderInfo) public orderRecords;
     mapping(uint => DisputeInfo) public disputeRecords;
-    mapping(address => uint) public proxyCredits;
+    mapping(address => Credit) public proxyCredits;
     mapping(address => uint) public proxyDeposits;
     // the orders id in a certain block.
     mapping(uint => uint[]) public blockOrders;
@@ -89,6 +94,8 @@ contract Pdash {
     modifier inState(uint id, State _state) {require(orderRecords[id].state == _state); _;}
     modifier inDisputeState(uint id, DisputeState _state) {require(disputeRecords[id].disputeState == _state); _;}
     modifier onlyOwner() {require(msg.sender == owner); _;}
+    // defined the range of the rate.
+    modifier inRateRange(uint rate) {rate >= 10 && rate <= 50; _;}
 
     constructor() public {
         owner = msg.sender;
@@ -236,14 +243,19 @@ contract Pdash {
     function buyerRateProxy(uint id, uint rate)
         public
         onlyBuyer(id)
+        inRateRange(rate)
     {
         require(orderRecords[id].state == State.Finished || orderRecords[id].state == State.SellerRated);
-        require(rate > 0 && rate < 10);
-        proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].add(rate);
-        proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].div(2);
+        uint count = proxyCredits[orderRecords[id].proxyAddress].count.add(1);
+        uint amount = proxyCredits[orderRecords[id].proxyAddress].amount;
+        proxyCredits[orderRecords[id].proxyAddress].rate = amount.add(rate).div(count);
+        proxyCredits[orderRecords[id].proxyAddress].count = count;
 
-        proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].add(rate);
-        proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
+        count = proxyCredits[orderRecords[id].proxyAddress].count.add(1);
+        amount = proxyCredits[orderRecords[id].proxyAddress].amount;
+        proxyCredits[orderRecords[id].secondaryProxyAddress].rate = amount.add(rate).div(count);
+        proxyCredits[orderRecords[id].secondaryProxyAddress].count = count;
+
         if(orderRecords[id].state == State.Finished){
             orderRecords[id].state = State.BuyerRated;
         }else{
@@ -286,35 +298,55 @@ contract Pdash {
     function sellerClaimTimeOut(uint id)
         public
         onlySeller(id)
-        inState(id, State.ProxyDelivered)
+        // inState(id, State.ProxyDelivered)
         onlyAfter(orderRecords[id].endTime)
     {
-        orderRecords[id].state = State.Finished;
+        require(
+            orderRecords[id].state == State.SellerConfirmed ||
+            orderRecords[id].state == State.ProxyFetched ||
+            orderRecords[id].state == State.ProxyDelivered
+        );
+        // buyer confirmed timeout
+        if(orderRecords[id].state == State.ProxyDelivered) {
+            orderRecords[id].state = State.Finished;
 
-        uint payProxy = orderRecords[id].proxyFee;
-        orderRecords[id].proxyAddress.transfer(payProxy);
-        orderRecords[id].secondaryProxyAddress.transfer(payProxy);
+            uint payProxy = orderRecords[id].proxyFee;
+            orderRecords[id].proxyAddress.transfer(payProxy);
+            orderRecords[id].secondaryProxyAddress.transfer(payProxy);
 
-        orderRecords[id].sellerAddress.transfer(orderRecords[id].offeredPrice); // pay back seller's deposit.
+            orderRecords[id].sellerAddress.transfer(orderRecords[id].offeredPrice); // pay back seller's deposit.
 
-        uint paySeller = orderRecords[id].offeredPrice.sub(payProxy.mul(2));
-        orderRecords[id].sellerAddress.transfer(paySeller); // pay seller.
+            uint paySeller = orderRecords[id].offeredPrice.sub(payProxy.mul(2));
+            orderRecords[id].sellerAddress.transfer(paySeller); // pay seller.
 
-        emit SellerClaimTimeout(id, now);
+        } else {
+            // proxy deliverd timeout
+            orderRecords[id].state = State.Withdrawn;
+            paySeller = orderRecords[id].offeredPrice;
+            orderRecords[id].sellerAddress.transfer(paySeller);
+            orderRecords[id].buyerAddress.transfer(paySeller);
+        }
+            emit SellerClaimTimeout(id, now);
     }
 
     // seller score to proxy
     function sellerRateProxy(uint id, uint rate)
         public
         onlySeller(id)
+        inRateRange(rate)
     {
         require(orderRecords[id].state == State.Finished || orderRecords[id].state == State.BuyerRated);
-        require(rate > 0 && rate < 10);
-        proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].add(rate);
-        proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress].div(2);
+        // require(rate > 0 && rate < 10);
+        uint count = proxyCredits[orderRecords[id].proxyAddress].count.add(1);
+        uint amount = proxyCredits[orderRecords[id].proxyAddress].amount;
+        proxyCredits[orderRecords[id].proxyAddress].rate = amount.add(rate).div(count);
+        proxyCredits[orderRecords[id].proxyAddress].count = count;
 
-        proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].add(rate);
-        proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
+        count = proxyCredits[orderRecords[id].proxyAddress].count.add(1);
+        amount = proxyCredits[orderRecords[id].proxyAddress].amount;
+        proxyCredits[orderRecords[id].secondaryProxyAddress].rate = amount.add(rate).div(count);
+        proxyCredits[orderRecords[id].secondaryProxyAddress].count = count;
+
         if(orderRecords[id].state == State.Finished){
             orderRecords[id].state = State.SellerRated;
         }else{
