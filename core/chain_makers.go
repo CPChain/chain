@@ -174,13 +174,15 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		config = configs.TestChainConfig
 	}
 	blocks, receipts := make(types.Blocks, n), make([]types.Receipts, n)
+	blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB, nil)
+	defer blockchain.Stop()
+
 	genblock := func(i int, parent *types.Block, pubStatedb *state.StateDB, privStateDB *state.StateDB) (*types.Block, types.Receipts) {
 		// TODO(karalabe): This is needed for clique, which depends on multiple blocks.
 		// It's nonetheless ugly to spin up a blockchain here. Get rid of this somehow.
-		blockchain, _ := NewBlockChain(db, nil, config, engine, vm.Config{}, remoteDB, nil)
-		defer blockchain.Stop()
 
 		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, pubStateDB: pubStatedb, privStateDB: privStateDB, config: config, engine: engine}
+
 		b.header = makeHeader(b.chainReader, parent, pubStatedb, b.engine)
 
 		// Execute any user modifications to the block and finalize it
@@ -212,6 +214,11 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 			panic(err)
 		}
 		block, receipt := genblock(i, parent, pubStatedb, privStateDB)
+		_, err = blockchain.InsertChain(types.Blocks{block})
+		if err != nil {
+			// panic(err)
+		}
+
 		blocks[i] = block
 		receipts[i] = receipt
 		parent = block
@@ -227,19 +234,20 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 		time = new(big.Int).Add(parent.Time(), big.NewInt(10)) // block time is fixed at 10 seconds
 	}
 
-	return &types.Header{
-		StateRoot:  state.IntermediateRoot(true),
-		ParentHash: parent.Hash(),
-		Coinbase:   parent.Coinbase(),
-		Difficulty: engine.CalcDifficulty(chain, time.Uint64(), &types.Header{
-			Number:     parent.Number(),
-			Time:       new(big.Int).Sub(time, big.NewInt(10)),
-			Difficulty: parent.Difficulty(),
-		}),
-		GasLimit: CalcGasLimit(parent),
-		Number:   new(big.Int).Add(parent.Number(), common.Big1),
-		Time:     time,
-	}
+	header := &types.Header{}
+
+	header.Number = new(big.Int).Add(parent.Number(), common.Big1)
+	header.ParentHash = parent.Hash()
+
+	_ = engine.Prepare(chain, header)
+
+	header.StateRoot = state.IntermediateRoot(true)
+	header.Coinbase = parent.Coinbase()
+	header.GasLimit = CalcGasLimit(parent)
+
+	header.Time = time
+
+	return header
 }
 
 // makeHeaderChain creates a deterministic chain of headers rooted at parent.

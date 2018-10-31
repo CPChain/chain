@@ -1,9 +1,10 @@
-package register
+package rpt_test
 
 import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"fmt"
@@ -43,7 +44,7 @@ func sigHash(testfile file) (hash common.Hash) {
 func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
-	addr, _, _, err := DeployRegister(deployTransactor, backend)
+	addr, _, _, err := register.DeployRegister(deployTransactor, backend)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -56,7 +57,7 @@ func TestDeployRegister(t *testing.T) {
 	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 
-	Fakeregister, err := NewRegister(contractAddr, contractBackend)
+	Fakeregister, err := register.NewRegister(contractAddr, contractBackend)
 	checkError(t, "NewRegister, got %v", err)
 	contractBackend.Commit()
 	printBalance(contractBackend)

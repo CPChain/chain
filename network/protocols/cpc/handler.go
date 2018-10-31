@@ -17,12 +17,10 @@
 package cpc
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -130,23 +128,10 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(config.Dpor, etherbase)
 	}
 
-	// Figure out whether to allow fast sync or not
-	if mode == downloader.FastSync && blockchain.CurrentBlock().NumberU64() > 0 {
-		log.Warn("Blockchain not empty, fast sync disabled")
-		mode = downloader.FullSync
-	}
-	if mode == downloader.FastSync {
-		manager.fastSync = uint32(1)
-	}
 	// Initiate a sub-protocol for every implemented version we can handle
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 	for i, version := range ProtocolVersions {
-		// Skip protocol version if incompatible with the mode of operation
-		// if mode == downloader.FastSync && version < eth63 {
-		// 	continue
-		// }
 		// Compatible; initialise the sub-protocol
-		version := version // Closure for the run
 		manager.SubProtocols = append(manager.SubProtocols, p2p.Protocol{
 			Name:    ProtocolName,
 			Version: version,
@@ -189,7 +174,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	inserter := func(blocks types.Blocks) (int, error) {
 		// If fast sync is running, deny importing weird blocks
 		if atomic.LoadUint32(&manager.fastSync) == 1 {
-			log.Warn("Discarded bad propagated block", "number", blocks[0].Number(), "hash", blocks[0].Hash())
+			log.Warn("Discarded bad propagated block", "number", blocks[0].Number(), "hash", blocks[0].Hash().Hex())
 			return 0, nil
 		}
 		atomic.StoreUint32(&manager.acceptTxs, 1) // Mark initial sync done on any fetcher import
@@ -228,26 +213,6 @@ func (pm *ProtocolManager) removePeer(id string) {
 	}
 }
 
-// func (pm *ProtocolManager) update() {
-// 	futureTimer := time.NewTicker(time.Duration(30*int64(configs.MainnetChainConfig.Dpor.Period)) * time.Second)
-// 	defer futureTimer.Stop()
-// 	for {
-// 		blockHeight := pm.blockchain.CurrentBlock().NumberU64()
-// 		select {
-// 		case <-futureTimer.C:
-// 			if pm.blockchain.CurrentBlock().NumberU64() == blockHeight {
-
-// 				for p := range pm.peers.peers {
-// 					pm.removePeer(p)
-// 				}
-// 			}
-
-// 		case <-pm.quitSync:
-// 			return
-// 		}
-// 	}
-// }
-
 func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.maxPeers = maxPeers
 
@@ -265,9 +230,6 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	// start sync handlers
 	go pm.syncer()
 	go pm.txsyncLoop()
-
-	// start an update goroutine to ensure network performance.
-	// go pm.update()
 }
 
 func (pm *ProtocolManager) Stop() {
@@ -299,6 +261,7 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 	return newPeer(pv, p, newMeteredMsgWriter(rw))
 }
 
+// SignerValidator validates if an address is a future signer
 func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner bool, err error) {
 	e, ok := pm.engine.(consensus.Validator)
 	if !ok {
@@ -328,6 +291,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 
 	log.Debug("my etherbase", "address", pm.etherbase)
 
+	// Do normal handshake
 	err := p.Handshake(pm.networkID, td, hash, genesis.Hash())
 
 	if err != nil {
@@ -335,6 +299,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		return err
 	}
 
+	// Do committee handshake
 	isSigner, err := p.CommitteeHandshake(pm.etherbase, pm.SignerValidator)
 
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
@@ -374,6 +339,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	}
 }
 
+// VerifyAndSign validates a header and signs it if nessary
 func (pm *ProtocolManager) VerifyAndSign(header *types.Header) error {
 	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
 }
@@ -670,12 +636,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		request.Block.ReceivedAt = msg.ReceivedAt
 		request.Block.ReceivedFrom = p
 
-		log.Debug("received propgrated block from", "peer", p)
-		log.Debug("received block number", "n", request.Block.NumberU64())
-		log.Debug("received block hash", "hash", request.Block.Hash())
-		log.Debug("received block extra2", "extra2", "\n")
-		log.Debug("\n" + hex.Dump(request.Block.Extra2()))
-
 		// Mark the peer as owning the block and schedule it for import
 		p.MarkBlock(request.Block.Hash())
 		pm.fetcher.Enqueue(p.id, request.Block)
@@ -699,20 +659,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			}
 		}
 
-		// TODO @Liuq, fix this.
-		number := request.Block.NumberU64()
-		currentNum := pm.blockchain.CurrentBlock().NumberU64()
-		if number <= currentNum {
-			return nil
-		}
-
-		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
-		if err == consensus.ErrNewSignedHeader {
-			err := err.(*consensus.ErrNewSignedHeaderType)
-			header := err.SignedHeader
-			go pm.BroadcastSignedHeader(header)
-		}
-
 	case msg.Code == TxMsg:
 		// Transactions arrived, make sure we have a valid and fresh chain to handle them
 		if atomic.LoadUint32(&pm.acceptTxs) == 0 {
@@ -732,26 +678,81 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		}
 		pm.txpool.AddRemotes(txs)
 
-	// TODO: fix this.
 	case msg.Code == NewSignerMsg:
 		// handshake
 		// send NewSignerMsg too.
 		// register peer as signer.
+		if msg.Size > ProtocolMaxMsgSize {
+			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+		}
+		// Decode the handshake and make sure everything matches
+		var signerStatus signerStatusData
+		if err := msg.Decode(&signerStatus); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+		if int(signerStatus.ProtocolVersion) != p.version {
+			return errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
+		}
+		isSigner, err := pm.SignerValidator(signerStatus.Address)
+		if isSigner && err != nil {
+			err := p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
+				ProtocolVersion: uint32(p.version),
+				Address:         pm.etherbase,
+			})
+			if err != nil {
+				return nil
+			}
+		}
 
 	case msg.Code == NewPendingBlockMsg:
 		// if received a new generated block, perform as to verify a normal block
 		// do signing in dpor, return consensus.ErrNewSignedHeader
 		// then broadcast to remote committee.
-		// TODO: @Liuq fix this.
-		// var request newBlockData
-		// if err := msg.Decode(&request); err != nil {
-		// 	return errResp(ErrDecode, "%v: %v", msg, err)
-		// }
-		// go pm.blockchain.InsertChain(types.Blocks{request.Block})
+
+		var request newBlockData
+		if err := msg.Decode(&request); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		request.Block.ReceivedAt = msg.ReceivedAt
+		request.Block.ReceivedFrom = p
+
+		p.MarkPendingBlock(request.Block.Hash())
+		pm.fetcher.Enqueue(p.id, request.Block)
+
+		number := request.Block.NumberU64()
+		currentNum := pm.blockchain.CurrentBlock().NumberU64()
+		if number <= currentNum {
+			return nil
+		}
+
+		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
+		if err == consensus.ErrNewSignedHeader {
+			err := err.(*consensus.ErrNewSignedHeaderType)
+			header := err.SignedHeader
+			go pm.BroadcastSignedHeader(header)
+		}
 
 	case msg.Code == NewPendingBlockHashesMsg:
 		// if received a new generated header of block,
 		// notify the fetcher to fetch the block
+		var announces newBlockHashesData
+		if err := msg.Decode(&announces); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		// Mark the hashes as present at the remote node
+		for _, block := range announces {
+			p.MarkPendingBlock(block.Hash)
+		}
+		// Schedule all the unknown hashes for retrieval
+		unknown := make(newBlockHashesData, 0, len(announces))
+		for _, block := range announces {
+			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
+				unknown = append(unknown, block)
+			}
+		}
+		for _, block := range unknown {
+			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+		}
 
 	case msg.Code == PrepareSignedHeaderMsg:
 		// collect the sigs in the header.
@@ -770,30 +771,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		case nil:
 			log.Debug("verify succeed, accepting...")
 			hash := header.Hash()
-			// number := header.Number.Uint64()
-
-			// // accept the header and the block, if does not have the block, ask for the block.
-			// if !pm.blockchain.HasBlock(header.Hash(), header.Number.Uint64()) {
-			// 	// ask for the block from remote peer.
-
-			// 	// Mark the hashes as present at the remote node
-			// 	p.MarkPendingBlock(header.Hash())
-
-			// 	go pm.synchronise(p)
-
-			// } else {
-			// 	block := pm.blockchain.GetBlockByHash(hash)
-			// 	log.Debug(" received newsignedheadermsg, I got the block, broadcasting it")
-			// 	log.Debug("local extra2", "extra2", "\n"+hex.Dump(block.Extra2()))
-			// 	go pm.BroadcastBlock(block, true)
-
-			// 	if number < pm.blockchain.CurrentBlock().NumberU64() {
-
-			// 		for i := number; i <= pm.blockchain.CurrentBlock().NumberU64(); i++ {
-			// 			go pm.BroadcastBlock(pm.blockchain.GetBlockByNumber(i), true)
-			// 		}
-			// 	}
-			// }
 
 			if block, ok := pm.blockchain.WaitingSignatureBlocks().Get(hash); ok {
 				b := block.(*types.Block)
@@ -801,17 +778,11 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 				go pm.broadcastGeneratedBlock(b)
 			}
 
-			// if pm.blockchain.CurrentHeader().Number.Uint64() <= number {
-			// go p.AsyncSendNewSignedHeader(header)
-			// }
-
 		case consensus.ErrNewSignedHeader:
 			log.Debug("verify failed, but signed it, broadcast...")
 
-			// TODO: @liuq fix this.
 			go pm.BroadcastSignedHeader(header)
 		default:
-			// return err
 		}
 
 	default:
@@ -844,17 +815,14 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 func (pm *ProtocolManager) broadcastGeneratedBlock(block *types.Block) {
 	committee := pm.peers.committee
 	for _, peer := range committee {
-		// peer.AsyncSendNewPendingBlock(block)
-		peer.AsyncSendNewBlock(block, big.NewInt(0))
+		peer.AsyncSendNewPendingBlock(block)
 	}
 }
 
 // BroadcastSignedHeader broadcasts signed header to remote committee.
 func (pm *ProtocolManager) BroadcastSignedHeader(header *types.Header) {
 	committee := pm.peers.committee
-	log.Debug("broadcasting to committee", "c", committee)
 	for _, peer := range committee {
-		log.Debug("broadcast to signer", "s", peer)
 		peer.AsyncSendNewSignedHeader(header)
 	}
 }
@@ -870,13 +838,9 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 	peers := pm.peers.PeersWithoutBlock(hash)
 
 	if ifMined {
-		peers = pm.peers.CommitteeWithoutBlock(hash)
+		pm.broadcastGeneratedBlock(block)
+		return
 	}
-
-	// TODO: fix this.
-	log.Debug("--------I am in handler.BroadcastBlock start--------")
-	log.Debug("broadcasting block ... " + "number: " + strconv.Itoa(int(block.Header().Number.Uint64())) + " hash: " + hash.Hex())
-	log.Debug("--------I am in handler.BroadcastBlock end--------")
 
 	// If propagation is requested, send to a subset of the peer
 	if propagate {
@@ -885,19 +849,19 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 		if parent := pm.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1); parent != nil {
 			td = new(big.Int).Add(block.Difficulty(), pm.blockchain.GetTd(block.ParentHash(), block.NumberU64()-1))
 		} else {
-			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash)
+			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash.Hex())
 			return
 		}
 
 		// Send the block to a subset of our peers
-		// transfer := peers[:int(math.Sqrt(float64(len(peers))))]
-		transfer := peers[:]
+		// transfer := peers[:int(math.Sqrt(float64(len(peers))))])
+		transfer := peers
 
 		for _, peer := range transfer {
 			peer.AsyncSendNewBlock(block, td)
 		}
 
-		log.Debug("Propagated block", "hash", hash, "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+		log.Debug("Propagated block", "hash", hash.Hex(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 		return
 	}
 
@@ -906,7 +870,7 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 		for _, peer := range peers {
 			peer.AsyncSendNewBlockHash(block)
 		}
-		log.Debug("Announced block", "hash", hash, "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+		log.Debug("Announced block", "hash", hash.Hex(), "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 	}
 }
 
@@ -921,7 +885,7 @@ func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions) {
 		for _, peer := range peers {
 			txset[peer] = append(txset[peer], tx)
 		}
-		log.Debug("Broadcast transaction", "hash", tx.Hash(), "recipients", len(peers))
+		log.Debug("Broadcast transaction", "hash", tx.Hash().Hex(), "recipients", len(peers))
 	}
 	// FIXME include this again: peers = peers[:int(math.Sqrt(float64(len(peers))))]
 	for peer, txs := range txset {

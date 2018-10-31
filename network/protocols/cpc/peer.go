@@ -17,7 +17,6 @@
 package cpc
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -199,25 +198,24 @@ func (p *peer) SendNewSignerMsg(eb common.Address) error {
 	return p2p.Send(p.rw, NewSignerMsg, eb)
 }
 
-// SendNewPendingBlocks sends new generated block, waiting for signatures.
+// SendNewPendingBlock propagates an entire block to a remote peer.
 func (p *peer) SendNewPendingBlock(block *types.Block) error {
-	err := p2p.Send(p.rw, NewPendingBlockMsg, []interface{}{block})
-	if err == nil {
-		p.MarkPendingBlock(block.Hash())
-	}
-	return err
+	p.knownPendingBlocks.Add(block.Hash())
+	return p2p.Send(p.rw, NewPendingBlockMsg, []interface{}{block, big.NewInt(0)})
 }
 
+// AsyncSendNewPendingBlock queues an entire block for propagation to a remote peer. If
+// the peer's broadcast queue is full, the event is silently dropped.
 func (p *peer) AsyncSendNewPendingBlock(block *types.Block) {
 	select {
 	case p.queuedPendingBlocks <- block:
-		p.MarkPendingBlock(block.Hash())
+		p.knownPendingBlocks.Add(block.Hash())
 	default:
 		p.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	}
 }
 
-// SendNewWaitHashes announces the availability of a number of blocks waiting for signatures through
+// SendNewPendingBlockHashes announces the availability of a number of blocks through
 // a hash notification.
 func (p *peer) SendNewPendingBlockHashes(hashes []common.Hash, numbers []uint64) error {
 	request := make(newBlockHashesData, len(hashes))
@@ -225,20 +223,15 @@ func (p *peer) SendNewPendingBlockHashes(hashes []common.Hash, numbers []uint64)
 		request[i].Hash = hashes[i]
 		request[i].Number = numbers[i]
 	}
-
-	err := p2p.Send(p.rw, NewPendingBlockHashesMsg, request)
-	if err == nil {
-		for _, hash := range hashes {
-			p.MarkPendingBlock(hash)
-		}
-	}
-	return err
+	return p2p.Send(p.rw, NewPendingBlockHashesMsg, request)
 }
 
+// AsyncSendNewPendingBlockHashes queues the availability of a block for propagation to a
+// remote peer. If the peer's broadcast queue is full, the event is silently
+// dropped.
 func (p *peer) AsyncSendNewPendingBlockHashes(block *types.Block) {
 	select {
 	case p.queuedPendingBlockHashes <- block:
-		p.MarkPendingBlock(block.Hash())
 	default:
 		p.Log().Debug("Dropping block announcement", "number", block.NumberU64(), "hash", block.Hash())
 	}
@@ -385,12 +378,6 @@ func (p *peer) SendNewBlock(block *types.Block, td *big.Int) error {
 // AsyncSendNewBlock queues an entire block for propagation to a remote peer. If
 // the peer's broadcast queue is full, the event is silently dropped.
 func (p *peer) AsyncSendNewBlock(block *types.Block, td *big.Int) {
-	log.Debug("in peer.AsyncSendNewBlock")
-	log.Debug("async sending new block", "num", block.NumberU64())
-	log.Debug("async sending new block", "hash", block.Hash())
-	log.Debug("async sending new block extra")
-	log.Debug("\n" + hex.Dump(block.Extra2()))
-
 	select {
 	case p.queuedProps <- &propEvent{block: block, td: td}:
 		p.knownBlocks.Add(block.Hash())

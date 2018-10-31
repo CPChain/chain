@@ -48,8 +48,8 @@ type RPT struct {
 }
 
 type RptItems struct {
-	nodeaddress common.Address
-	key         uint64
+	Nodeaddress common.Address
+	Key         uint64
 }
 
 // RPTs is an array of RPT.
@@ -97,9 +97,9 @@ type CollectorConfig struct {
 	contractAddress       common.Address
 	rNodeAddress          []common.Address
 	uploadAddress         []common.Address
-	uploadContractAddress common.Address
-	proxyContractAddress  common.Address
-	committeeNamber       int
+	UploadContractAddress common.Address
+	ProxyContractAddress  common.Address
+	CommitteeNamber       int
 }
 
 // ClientBackend is the client operation interface
@@ -137,12 +137,12 @@ type Info struct {
 	ContractInfo ContractRptInfo
 }
 
-func rptHash(rpthash RptItems) (hash common.Hash) {
+func RptHash(rpthash RptItems) (hash common.Hash) {
 	hasher := sha3.NewKeccak256()
 
 	rlp.Encode(hasher, []interface{}{
-		rpthash.nodeaddress,
-		rpthash.key,
+		rpthash.Nodeaddress,
+		rpthash.Key,
 	})
 	hasher.Sum(hash[:0])
 	return hash
@@ -171,7 +171,7 @@ func NewBasicCollector(ethClient ClientBackend, config *CollectorConfig) (*Basic
 func (bc *BasicCollector) GetRpts(addresses []common.Address, number uint64, rptcache *lru.ARCCache) RPTs {
 	rpts := RPTs{}
 	for i := 0; i < len(addresses); i++ {
-		rpts = append(rpts, bc.calcRptInfo(addresses[i], addresses, number, rptcache))
+		rpts = append(rpts, bc.CalcRptInfo(addresses[i], addresses, number, rptcache))
 	}
 	return rpts
 }
@@ -181,23 +181,23 @@ func (bc *BasicCollector) GetRptInfos(addresses []common.Address, number uint64)
 	infos := make(map[common.Address]Info)
 	for _, address := range addresses {
 		infos[address] = Info{
-			ChainInfo:    bc.getChainRptInfo(address, addresses, number),
-			ContractInfo: bc.getContractRptInfo(address, addresses, number),
+			ChainInfo:    bc.GetChainRptInfo(address, addresses, number),
+			ContractInfo: bc.GetContractRptInfo(address, addresses, number),
 		}
 	}
 	return infos
 }
 
 //calcRptInfo return the RPT of the rnode address
-func (bc *BasicCollector) calcRptInfo(address common.Address, addresses []common.Address, number uint64, rptcache *lru.ARCCache) RPT {
+func (bc *BasicCollector) CalcRptInfo(address common.Address, addresses []common.Address, number uint64, rptcache *lru.ARCCache) RPT {
 	rpt := 0.0
 	alpha, beta, gamma, phi, omega := bc.Config.Alpha, bc.Config.Beta, bc.Config.Gamma, bc.Config.Phi, bc.Config.Omega
 	for i := int(number); i >= 0 && i >= int(number-bc.Config.WindowSize); i-- {
-		hash := rptHash(RptItems{nodeaddress: address, key: uint64(i)})
+		hash := RptHash(RptItems{Nodeaddress: address, Key: uint64(i)})
 		rc, get := rptcache.Get(hash)
 		if get == false {
-			chainInfo := bc.getChainRptInfo(address, addresses, uint64(i))
-			contractInfo := bc.getContractRptInfo(address, addresses, uint64(i))
+			chainInfo := bc.GetChainRptInfo(address, addresses, uint64(i))
+			contractInfo := bc.GetContractRptInfo(address, addresses, uint64(i))
 			rptInfo := alpha*chainInfo.CoinAge + beta*chainInfo.TxVolume + gamma*chainInfo.IfLeader + phi*contractInfo.UploadReward + omega*contractInfo.ProxyReward
 			rptcache.Add(hash, RPT{Address: address, Rpt: rptInfo})
 			rpt += rptInfo
@@ -210,9 +210,9 @@ func (bc *BasicCollector) calcRptInfo(address common.Address, addresses []common
 	return RPT{Address: address, Rpt: rpt}
 }
 
-func (bc *BasicCollector) getChainRptInfo(address common.Address, addresses []common.Address, number uint64) ChainRptInfo {
+func (bc *BasicCollector) GetChainRptInfo(address common.Address, addresses []common.Address, number uint64) ChainRptInfo {
 	//coinAge, txVolume, ifLeader := 0., 0., 0.
-	ca, err := bc.getCoinAge(address, addresses, number)
+	ca, err := bc.GetCoinAge(address, addresses, number)
 	if err != nil {
 		log.Warn("getCoinAge error", address, err)
 		return ChainRptInfo{
@@ -221,7 +221,7 @@ func (bc *BasicCollector) getChainRptInfo(address common.Address, addresses []co
 			IfLeader: 0,
 		}
 	}
-	tv, err := bc.getTxVolume(address, number)
+	tv, err := bc.GetTxVolume(address, number)
 	if err != nil {
 		log.Warn("getTxVolume error", address, err)
 		return ChainRptInfo{
@@ -230,7 +230,7 @@ func (bc *BasicCollector) getChainRptInfo(address common.Address, addresses []co
 			IfLeader: 0,
 		}
 	}
-	Mr, err := bc.getMaintenance(address, number)
+	Mr, err := bc.GetMaintenance(address, number)
 	if err != nil {
 		log.Warn("getIfLeader error", address, err)
 		return ChainRptInfo{
@@ -246,13 +246,13 @@ func (bc *BasicCollector) getChainRptInfo(address common.Address, addresses []co
 	}
 }
 
-func (bc *BasicCollector) getContractRptInfo(address common.Address, addresses []common.Address, number uint64) ContractRptInfo {
+func (bc *BasicCollector) GetContractRptInfo(address common.Address, addresses []common.Address, number uint64) ContractRptInfo {
 	uploadReward, proxyReward := 0., 0.
-	ur, err := bc.getUploadReward(address, number)
+	ur, err := bc.GetUploadReward(address, 0)
 	if err != nil {
 		log.Warn("getContractRptInfo getUploadReward error", address, err)
 	}
-	pr, err := bc.getProxyReward(address, number)
+	pr, err := bc.GetProxyReward(address, 0)
 	if err != nil {
 		log.Warn("getContractRptInfo getProxyReward error", address, err)
 	}
@@ -269,7 +269,7 @@ func (bc *BasicCollector) getContractRptInfo(address common.Address, addresses [
 	}
 }
 
-func (bc *BasicCollector) getCoinAge(address common.Address, addresses []common.Address, number uint64) (float64, error) {
+func (bc *BasicCollector) GetCoinAge(address common.Address, addresses []common.Address, number uint64) (float64, error) {
 	var balances []float64
 	mybalance, err := bc.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
 	if err != nil {
@@ -286,7 +286,7 @@ func (bc *BasicCollector) getCoinAge(address common.Address, addresses []common.
 	var rank float64
 	sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
 	index := sort.SearchFloat64s(balances, float64(mybalance.Uint64()))
-	rank = float64(index / bc.Config.committeeNamber)
+	rank = float64(index / bc.Config.CommitteeNamber)
 	switch {
 	case rank <= 0.02:
 		return 100.0, err
@@ -306,7 +306,7 @@ func (bc *BasicCollector) getCoinAge(address common.Address, addresses []common.
 	}
 }
 
-func (bc *BasicCollector) getTxVolume(address common.Address, number uint64) (float64, error) {
+func (bc *BasicCollector) GetTxVolume(address common.Address, number uint64) (float64, error) {
 	block, err := bc.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with bc.getTxVolume", "error", err)
@@ -331,7 +331,7 @@ func (bc *BasicCollector) getTxVolume(address common.Address, number uint64) (fl
 	return txvs, nil
 }
 
-func (bc *BasicCollector) getIfLeader(address common.Address, number uint64) (float64, error) {
+func (bc *BasicCollector) GetIfLeader(address common.Address, number uint64) (float64, error) {
 	if bc.Config.ChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
@@ -352,7 +352,7 @@ func (bc *BasicCollector) getIfLeader(address common.Address, number uint64) (fl
 	return 0, err
 }
 
-func (bc *BasicCollector) getMaintenance(address common.Address, number uint64) (float64, error) {
+func (bc *BasicCollector) GetMaintenance(address common.Address, number uint64) (float64, error) {
 	ld, cm := 0.0, 0.0
 	if bc.Config.ChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
@@ -371,7 +371,7 @@ func (bc *BasicCollector) getMaintenance(address common.Address, number uint64) 
 	if leader == address {
 		ld = bc.Config.LeaderReward - bc.Config.CommitteReward
 	}
-	for _, committe := range bc.getCommiteetmember(header) {
+	for _, committe := range bc.GetCommiteetmember(header) {
 		if address == committe {
 			cm = bc.Config.CommitteReward
 			return ld + cm, nil
@@ -380,10 +380,10 @@ func (bc *BasicCollector) getMaintenance(address common.Address, number uint64) 
 	return 60, nil
 }
 
-func (bc *BasicCollector) getUploadReward(address common.Address, number uint64) (float64, error) {
+func (bc *BasicCollector) GetUploadReward(address common.Address, number uint64) (float64, error) {
 
 	uploadReward := 0.0
-	upload, err := register.NewRegister(bc.Config.uploadContractAddress, bc.Config.Client)
+	upload, err := register.NewRegister(bc.Config.UploadContractAddress, bc.Config.Client)
 	if err != nil {
 		log.Warn("NewRegister error", address, err)
 		return uploadReward, err
@@ -401,10 +401,10 @@ func (bc *BasicCollector) getUploadReward(address common.Address, number uint64)
 	}
 }
 
-func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) (float64, error) {
+func (bc *BasicCollector) GetProxyReward(address common.Address, number uint64) (float64, error) {
 	ProxyReward := 0.0
 	var proxyaddresses []common.Address
-	pdash, err := contract.NewPdash(bc.Config.proxyContractAddress, bc.Config.Client)
+	pdash, err := contract.NewPdash(bc.Config.ProxyContractAddress, bc.Config.Client)
 
 	if err != nil {
 		log.Warn("NewPdash error", address, err)
@@ -452,7 +452,7 @@ func (bc *BasicCollector) getProxyReward(address common.Address, number uint64) 
 	return ProxyReward, err
 }
 
-func (bc *BasicCollector) getCommiteetmember(header *types.Header) []common.Address {
+func (bc *BasicCollector) GetCommiteetmember(header *types.Header) []common.Address {
 	committee := make([]common.Address, (len(header.Extra)-extraVanity-extraSeal)/common.AddressLength)
 	for i := 0; i < len(committee); i++ {
 		copy(committee[i][:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])

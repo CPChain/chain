@@ -28,12 +28,12 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/network/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -52,17 +52,19 @@ var (
 func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *ethdb.MemDatabase, error) {
 	var (
 		evmux    = new(event.TypeMux)
-		engine   = ethash.NewFaker()
 		db       = ethdb.NewMemDatabase()
 		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
-		gspec    = &core.Genesis{
-			Config: configs.TestChainConfig,
-			Alloc:  core.GenesisAlloc{testBank: {Balance: big.NewInt(1000000)}},
-		}
-		genesis       = gspec.MustCommit(db)
-		blockchain, _ = core.NewBlockChain(db, nil, gspec.Config, engine, vm.Config{}, remoteDB, nil)
 	)
-	chain, _ := core.GenerateChain(gspec.Config, genesis, ethash.NewFaker(), db, remoteDB, blocks, generator)
+	gspec := core.DefaultGenesisBlock()
+	gspec.Alloc = core.GenesisAlloc{testBank: {Balance: big.NewInt(1000000)}}
+	genesis := gspec.MustCommit(db)
+
+	engine := dpor.NewFaker(configs.AllCpchainProtocolChanges.Dpor, db)
+
+	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, engine, vm.Config{}, remoteDB, nil)
+
+	chain, _ := core.GenerateChain(gspec.Config, genesis, engine, db, remoteDB, blocks, generator)
+
 	if _, err := blockchain.InsertChain(chain); err != nil {
 		panic(err)
 	}
@@ -205,11 +207,9 @@ func (p *testPeer) CommitteeHandshake(t *testing.T) (isSigner bool, err error) {
 	if err := p2p.ExpectMsg(p.app, NewSignerMsg, msg); err != nil {
 
 		t.Fatalf("status recv: %v", err)
-		// fmt.Println("status recv: ", err)
 	}
 	if err := p2p.Send(p.app, NewSignerMsg, msg); err != nil {
 		t.Fatalf("status send: %v", err)
-		// fmt.Println("status send: ", err)
 	}
 	return true, nil
 }
