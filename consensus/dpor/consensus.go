@@ -1,20 +1,3 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
-// Package dpor implements the dpor consensus engine.
 package dpor
 
 import (
@@ -24,7 +7,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/apis"
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -35,10 +18,13 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	epochLength = uint(4) // Default number of signers.
-	viewLength  = uint(3) // Default number of blocks one signer can generate in one committee.
+	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
+	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
 
-	blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
+	epochLength = uint(4) // Default number of signers.
+	viewLength  = uint(4) // Default number of blocks one signer can generate in one committee.
+
+	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -99,7 +85,9 @@ var (
 	// errNoSigsInCache is returned if the cache is unable to store and return sigs.
 	errNoSigsInCache = errors.New("signatures not found in cache")
 
-	// --- new error types end ---
+	errFakerFail = errors.New("error fake fail")
+
+	// --- our new error types ---
 
 	// errVerifyUncleNotAllowed is returned when verify uncle block.
 	errVerifyUncleNotAllowed = errors.New("uncles not allowed")
@@ -176,11 +164,13 @@ func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	}
 	header.Extra = header.Extra[:extraVanity]
 
-	// Set header.Extra and header.Extra2
+	// if number%d.config.Epoch == 0 {
 	for _, signer := range snap.SignersOf(number) {
 		header.Extra = append(header.Extra, signer[:]...)
 	}
+	// }
 	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
+	// We suppose each signer only produces one block.
 	header.Extra2 = make([]byte, extraSeal*int(d.config.Epoch)+1)
 
 	// Mix digest is reserved for now, set to empty
@@ -252,7 +242,26 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, consensus.ErrUnauthorized
 	}
 
-	// Set coinbase, aka leader of this block.
+	/*
+		// TODO: fix this logic.
+		// Sweet, the protocol permits us to sign the block, wait for our time
+		delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
+		if header.Difficulty.Cmp(diffNoTurn) == 0 {
+			// It's not our turn explicitly to sign, delay it a bit
+			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
+			delay += time.Duration(rand.Int63n(int64(wiggle)))
+
+			log.Debug("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
+		}
+		log.Debug("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
+
+		select {
+		case <-stop:
+			return nil, nil
+		case <-time.After(delay):
+		}
+	*/
+	// set coinbase
 	header.Coinbase = signer
 
 	// Sign all the things!
@@ -300,8 +309,8 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 }
 
 // GAPIs is APIs for dpor.
-func (d *Dpor) GAPIs(chain consensus.ChainReader) []apis.API {
-	return []apis.API{}
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []api.GApi {
+	return []api.GApi{}
 }
 
 // IsFutureSigner implements Validator.
@@ -309,12 +318,22 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	// TODO: remove comments.
+	return true, nil
+
+	// TODO
 	// snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
 	// if err != nil {
 	// 	return false, err
 	// }
-	// return snap.isFutureSigner(address, number), nil
 
-	return true, nil
+	// if snap.ifUseDefaultSigners() {
+	// 	for _, signer := range snap.candidates() {
+	// 		if signer == address {
+	// 			return true, nil
+	// 		}
+	// 	}
+	// 	return false, nil
+	// }
+
+	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
 }

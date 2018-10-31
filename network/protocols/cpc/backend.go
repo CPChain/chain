@@ -28,7 +28,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/apis"
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -95,7 +95,7 @@ type CpchainService struct {
 	bloomRequests chan chan *bloombits.Retrieval // Channel receiving bloom data retrieval requests
 	bloomIndexer  *core.ChainIndexer             // LogsBloom indexer operating during block imports
 
-	APIBackend          *EthAPIBackend
+	APIBackend          *APIBackend
 	AdmissionAPIBackend admission.APIBackend
 
 	miner     *miner.Miner
@@ -118,9 +118,6 @@ func (s *CpchainService) AddLesServer(ls LesServer) {
 // New creates a new CpchainService object (including the
 // initialisation of the common CpchainService object)
 func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
-	if config.SyncMode == downloader.LightSync {
-		return nil, errors.New("can't run eth.CpchainService in light sync mode, use les.LightCpchainService")
-	}
 	if !config.SyncMode.IsValid() {
 		return nil, fmt.Errorf("invalid sync mode %d", config.SyncMode)
 	}
@@ -205,7 +202,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
 	eth.miner.SetExtra(makeExtraData(config.ExtraData))
 
-	eth.APIBackend = &EthAPIBackend{eth, nil}
+	eth.APIBackend = &APIBackend{eth, nil}
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
 		gpoParams.Default = config.GasPrice
@@ -280,18 +277,21 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	}
 }
 
-func (s *CpchainService) GAPIs() []apis.API {
-	return []apis.API{
-		NewPublicEthereumAPIServer(s),
-		NewPublicMinerAPIServer(s),
-		NewPrivateMinerAPIServer(s),
-		NewPrivateAdminAPIServer(s),
-		NewPublicDebugAPIServer(s),
-		NewPrivateDebugAPIServer(s.chainConfig, s),
-	}
+// GAPIs return the collection of GRPC services the cpc package offers.
+// NOTE, some of these services probably need to be moved to somewhere else.
+func (s *CpchainService) GAPIs() []api.GApi {
+	apis := ethapi.GetGAPIs(s.APIBackend)
+	return append(apis, []api.GApi{
+		NewMinerReader(s),
+		NewCoinbase(s),
+		NewAdminManager(s),
+		NewMinerManager(s),
+		NewDebugDumper(s),
+		NewDebugManager(s),
+	}...)
 }
 
-// APIs return the collection of RPC services the ethereum package offers.
+// APIs return the collection of RPC services the cpc package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *CpchainService) APIs() []rpc.API {
 	apis := ethapi.GetAPIs(s.APIBackend)
@@ -307,7 +307,7 @@ func (s *CpchainService) APIs() []rpc.API {
 		{
 			Namespace: "eth",
 			Version:   "1.0",
-			Service:   NewPublicEthereumAPI(s),
+			Service:   NewPublicCpchainAPI(s),
 			Public:    true,
 		}, {
 			Namespace: "eth",
@@ -442,7 +442,7 @@ func (s *CpchainService) EventMux() *event.TypeMux           { return s.eventMux
 func (s *CpchainService) Engine() consensus.Engine           { return s.engine }
 func (s *CpchainService) ChainDb() ethdb.Database            { return s.chainDb }
 func (s *CpchainService) IsListening() bool                  { return true } // Always listening
-func (s *CpchainService) EthVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
+func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *CpchainService) NetVersion() uint64                 { return s.networkID }
 func (s *CpchainService) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 func (s *CpchainService) RemoteDB() ethdb.RemoteDatabase     { return s.remoteDB }

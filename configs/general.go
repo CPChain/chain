@@ -67,11 +67,8 @@ var (
 		Dpor:    &DporConfig{Period: 1, Epoch: 4},
 	}
 
-	TestChainConfig = &ChainConfig{
-		ChainID: big.NewInt(1),
-		Ethash:  new(EthashConfig),
-		Dpor:    nil,
-	}
+	// TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil}
+	TestChainConfig = &ChainConfig{big.NewInt(CpchainChainId), nil, &DporConfig{Period: 0, Epoch: 4}}
 
 	TestRules = TestChainConfig.Rules(new(big.Int))
 )

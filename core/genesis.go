@@ -159,7 +159,7 @@ func (e *GenesisMismatchError) Error() string {
 // The returned chain configuration is never nil.
 func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfig, common.Hash, error) {
 	if genesis != nil && genesis.Config == nil {
-		return configs.AllEthashProtocolChanges, common.Hash{}, errGenesisNoConfig
+		return configs.AllCpchainProtocolChanges, common.Hash{}, errGenesisNoConfig
 	}
 
 	stored := rawdb.ReadCanonicalHash(db, 0)
@@ -312,7 +312,8 @@ func (g *Genesis) MustCommit(db ethdb.Database) *types.Block {
 
 // GenesisBlockForTesting creates and writes a block in which addr has the given wei balance.
 func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big.Int) *types.Block {
-	g := Genesis{Alloc: GenesisAlloc{addr: {Balance: balance}}}
+	g := DefaultGenesisBlock()
+	g.Alloc = GenesisAlloc{addr: {Balance: balance}}
 	return g.MustCommit(db)
 }
 

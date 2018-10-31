@@ -27,7 +27,7 @@ import (
 
 	ethereum "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/ethash"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -162,7 +162,9 @@ func TestBlockSubscription(t *testing.T) {
 		backend     = &testBackend{mux, db, 0, txFeed, rmLogsFeed, logsFeed, chainFeed}
 		api         = NewPublicFilterAPI(backend, false)
 		genesis     = new(core.Genesis).MustCommit(db)
-		chain, _    = core.GenerateChain(configs.TestChainConfig, genesis, ethash.NewFaker(), db, remoteDB, 10, func(i int, gen *core.BlockGen) {})
+		config      = configs.MainnetChainConfig.Dpor
+		d           = dpor.NewFaker(config, db)
+		chain, _    = core.GenerateChain(configs.TestChainConfig, genesis, d, db, remoteDB, 10, func(i int, gen *core.BlockGen) {})
 		chainEvents = []core.ChainEvent{}
 	)
 

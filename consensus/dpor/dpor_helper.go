@@ -1,20 +1,3 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
-// Package dpor implements the dpor consensus engine.
 package dpor
 
 import (
@@ -49,6 +32,7 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	if header.Number == nil {
 		return errUnknownBlock
 	}
+
 	number := header.Number.Uint64()
 
 	// Don't waste time checking blocks from the future
@@ -152,7 +136,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		// If an on-disk checkpoint Snapshot can be found, use that
 		// if number%checkpointInterval == 0 {
 		if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) {
-			if s, err := loadSnapshot(dpor.config, dpor.signatures, dpor.db, hash); err == nil {
+			if s, err := loadSnapshot(dpor.config, dpor.db, hash); err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", number, "hash", hash)
 				snap = s
 				break
@@ -172,7 +156,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			for i := 0; i < len(signers); i++ {
 				copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
 			}
-			snap = newSnapshot(dpor.config, dpor.signatures, 0, genesis.Hash(), signers)
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), signers)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}
@@ -216,14 +200,14 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	// Save to cache
-	dpor.recents.Add(snap.Hash, snap)
+	dpor.recents.Add(snap.hash(), snap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if IsCheckPoint(snap.Number, dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
+	if IsCheckPoint(snap.number(), dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
-		log.Debug("Stored voting Snapshot to disk", "number", snap.Number, "hash", snap.Hash)
+		log.Debug("Stored voting Snapshot to disk", "number", snap.number(), "hash", snap.hash())
 	}
 	return snap, err
 }
@@ -241,6 +225,15 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return errUnknownBlock
 	}
 
+	// TODO: @liuq fix this!!!
+	if dpor.fake {
+		time.Sleep(dpor.fakeDelay)
+		if dpor.fakeFail == number {
+			return errFakerFail
+		}
+		return nil
+	}
+
 	// Retrieve the Snapshot needed to verify this header and cache it
 	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
@@ -255,19 +248,14 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	// Some debug infos here
 	log.Debug("--------dpor.verifySeal start--------")
-
 	log.Debug("hash", "hash", hash.Hex())
-
 	log.Debug("number", "number", number)
 	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
-
 	log.Debug("leader", "address", leader.Hex())
-
 	log.Debug("signers recoverd from header: ")
 	for _, signer := range signers {
 		log.Debug("signer", "address", signer.Hex())
 	}
-
 	log.Debug("signers in snapshot: ")
 	for _, signer := range snap.SignersOf(number) {
 		log.Debug("signer", "address", signer.Hex())
@@ -295,7 +283,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// Retrieve signatures of the block in cache
 	s, _ := dpor.signatures.Get(hash)
 
-	// Copy all signatures recovered to allSigs
+	// Copy all signatures recovered to allSigs.
 	allSigs := make([]byte, int(dpor.config.Epoch)*extraSeal)
 	for round, signer := range snap.SignersOf(number) {
 		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
@@ -303,7 +291,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		}
 	}
 
-	// Encode allSigs to header.extra2
+	// Encode allSigs to header.extra2.
 	err = refHeader.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
 	if err != nil {
 		return err
@@ -343,6 +331,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return consensus.ErrNotEnoughSigs
 
 	}
+	// --- our check ends ---
 
 	// Ensure that the difficulty corresponds to the turn-ness of the signer
 	inturn, _ := snap.IsLeaderOf(leader, header.Number.Uint64())
@@ -368,7 +357,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
 		log.Debug("----------------------")
 		log.Debug("signers in snapshot of:", "epoch idx", i)
-		for _, s := range snap.RecentSigners[i] {
+		for _, s := range snap.getRecentSigners(i) {
 			log.Debug("signer", "s", s.Hex())
 		}
 	}

@@ -28,6 +28,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/crypto"
@@ -73,6 +74,9 @@ type Config struct {
 	// Configuration of peer-to-peer networking.
 	P2P p2p.Config
 
+	// GRpc Configuration of grpc server
+	GRpc api.Config
+
 	// KeyStoreDir is the file system folder that contains private keys. The directory can
 	// be specified as a relative path, in which case it is resolved relative to the
 	// current directory.
@@ -103,13 +107,6 @@ type Config struct {
 	// default zero value is/ valid and will pick a port number randomly (useful
 	// for ephemeral nodes).
 	HTTPPort int `toml:",omitempty"`
-
-	GatewayHost string `toml:",omitempty"`
-	GatewayPort int `toml:",omitempty"`
-
-	GrpcHost string `toml:",omitempty"`
-	GrpcPort int `toml:",omitempty"`
-
 	// HTTPCors is the Cross-Origin Resource Sharing header to send to requesting
 	// clients. Please be aware that CORS is a browser enforced security, it's fully
 	// useless for custom HTTP clients.
@@ -206,20 +203,6 @@ func DefaultIPCEndpoint(clientIdentifier string) string {
 	return config.IPCEndpoint()
 }
 
-func (c *Config) GrpcEndpoint() string {
-	if c.GrpcHost == "" {
-		return ""
-	}
-	return fmt.Sprintf("%s:%d", c.GrpcHost, c.GrpcPort)
-}
-
-func (c *Config) GatewayEndpoint() string {
-	if c.GatewayHost == "" {
-		return ""
-	}
-	return fmt.Sprintf("%s:%d", c.GatewayHost, c.GatewayPort)
-}
-
 // HTTPEndpoint resolves an HTTP endpoint based on the configured host interface
 // and port parameters.
 func (c *Config) HTTPEndpoint() string {
@@ -227,16 +210,6 @@ func (c *Config) HTTPEndpoint() string {
 		return ""
 	}
 	return fmt.Sprintf("%s:%d", c.HTTPHost, c.HTTPPort)
-}
-
-func DefaultGrpcEndpoint() string {
-	config := &Config{GrpcHost: DefaultGrpcHost, GrpcPort: DefaultGrpcPort}
-	return config.GrpcEndpoint()
-}
-
-func DefaultProxyEndpoint() string {
-	config := &Config{GatewayHost: DefaultGatewayHost, GatewayPort: DefaultGatewayPort}
-	return config.GatewayEndpoint()
 }
 
 // DefaultHTTPEndpoint returns the HTTP endpoint used by default.
@@ -483,14 +456,10 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 // ************************************************************************************************
 
 const (
-	DefaultGrpcHost    = "localhost"
-	DefaultGrpcPort    = 8543
-	DefaultGatewayHost = "localhost"
-	DefaultGatewayPort = 8544
-	DefaultHTTPHost    = "localhost" // Default host interface for the HTTP RPC server
-	DefaultHTTPPort    = 8545        // Default TCP port for the HTTP RPC server
-	DefaultWSHost      = "localhost" // Default host interface for the websocket RPC server
-	DefaultWSPort      = 8546        // Default TCP port for the websocket RPC server
+	DefaultHTTPHost = "localhost" // Default host interface for the HTTP RPC server
+	DefaultHTTPPort = 8545        // Default TCP port for the HTTP RPC server
+	DefaultWSHost   = "localhost" // Default host interface for the websocket RPC server
+	DefaultWSPort   = 8546        // Default TCP port for the websocket RPC server
 )
 
 // DefaultConfig contains reasonable default settings.
@@ -500,7 +469,7 @@ var DefaultConfig = Config{
 	DataDir:          DefaultDataDir(),
 	IPCPath:          DefaultIPCEndpoint(configs.ClientIdentifier),
 	HTTPPort:         DefaultHTTPPort,
-	HTTPModules:      []string{"net", "web3", "eth"},
+	HTTPModules:      []string{"net", "web3", "eth", "cpc"},
 	HTTPVirtualHosts: []string{"localhost"},
 	WSPort:           DefaultWSPort,
 	WSModules:        []string{"net", "web3", "eth"},
