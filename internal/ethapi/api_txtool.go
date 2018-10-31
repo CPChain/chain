@@ -34,12 +34,12 @@ func (t *TxPoolReader) Namespace() string {
 
 // RegisterServer register api to grpc
 func (t *TxPoolReader) RegisterServer(s *grpc.Server) {
-	// txpool.RegisterTxPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	txpool.RegisterTxPoolReaderServer(s, t)
 }
 
 // RegisterJsonRpc register api to restfull json
 func (t *TxPoolReader) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {
-	// txpool.RegisterTxPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
+	txpool.RegisterTxPoolReaderHandlerFromEndpoint(ctx, mux, endpoint, opts)
 }
 
 // Content returns the transactions contained within the transaction pool.

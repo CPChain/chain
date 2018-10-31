@@ -37,7 +37,7 @@
           }
         ],
         "tags": [
-          "TransactionPoolReader"
+          "TxPoolReader"
         ]
       }
     },
@@ -64,7 +64,7 @@
           }
         ],
         "tags": [
-          "TransactionPoolReader"
+          "TxPoolReader"
         ]
       }
     },
@@ -91,7 +91,7 @@
           }
         ],
         "tags": [
-          "TransactionPoolReader"
+          "TxPoolReader"
         ]
       }
     }

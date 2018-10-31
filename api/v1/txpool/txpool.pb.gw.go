@@ -29,7 +29,7 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_TransactionPoolReader_Content_0(ctx context.Context, marshaler runtime.Marshaler, client TransactionPoolReaderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_TxPoolReader_Content_0(ctx context.Context, marshaler runtime.Marshaler, client TxPoolReaderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
@@ -42,7 +42,7 @@ func request_TransactionPoolReader_Content_0(ctx context.Context, marshaler runt
 
 }
 
-func request_TransactionPoolReader_Status_0(ctx context.Context, marshaler runtime.Marshaler, client TransactionPoolReaderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_TxPoolReader_Status_0(ctx context.Context, marshaler runtime.Marshaler, client TxPoolReaderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
@@ -55,7 +55,7 @@ func request_TransactionPoolReader_Status_0(ctx context.Context, marshaler runti
 
 }
 
-func request_TransactionPoolReader_Inspect_0(ctx context.Context, marshaler runtime.Marshaler, client TransactionPoolReaderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_TxPoolReader_Inspect_0(ctx context.Context, marshaler runtime.Marshaler, client TxPoolReaderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
@@ -68,9 +68,9 @@ func request_TransactionPoolReader_Inspect_0(ctx context.Context, marshaler runt
 
 }
 
-// RegisterTransactionPoolReaderHandlerFromEndpoint is same as RegisterTransactionPoolReaderHandler but
+// RegisterTxPoolReaderHandlerFromEndpoint is same as RegisterTxPoolReaderHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterTransactionPoolReaderHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+func RegisterTxPoolReaderHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
 	conn, err := grpc.Dial(endpoint, opts...)
 	if err != nil {
 		return err
@@ -90,23 +90,23 @@ func RegisterTransactionPoolReaderHandlerFromEndpoint(ctx context.Context, mux *
 		}()
 	}()
 
-	return RegisterTransactionPoolReaderHandler(ctx, mux, conn)
+	return RegisterTxPoolReaderHandler(ctx, mux, conn)
 }
 
-// RegisterTransactionPoolReaderHandler registers the http handlers for service TransactionPoolReader to "mux".
+// RegisterTxPoolReaderHandler registers the http handlers for service TxPoolReader to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterTransactionPoolReaderHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterTransactionPoolReaderHandlerClient(ctx, mux, NewTransactionPoolReaderClient(conn))
+func RegisterTxPoolReaderHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterTxPoolReaderHandlerClient(ctx, mux, NewTxPoolReaderClient(conn))
 }
 
-// RegisterTransactionPoolReaderHandlerClient registers the http handlers for service TransactionPoolReader
-// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "TransactionPoolReaderClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "TransactionPoolReaderClient"
+// RegisterTxPoolReaderHandlerClient registers the http handlers for service TxPoolReader
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "TxPoolReaderClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "TxPoolReaderClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "TransactionPoolReaderClient" to call the correct interceptors.
-func RegisterTransactionPoolReaderHandlerClient(ctx context.Context, mux *runtime.ServeMux, client TransactionPoolReaderClient) error {
+// "TxPoolReaderClient" to call the correct interceptors.
+func RegisterTxPoolReaderHandlerClient(ctx context.Context, mux *runtime.ServeMux, client TxPoolReaderClient) error {
 
-	mux.Handle("POST", pattern_TransactionPoolReader_Content_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_TxPoolReader_Content_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -124,18 +124,18 @@ func RegisterTransactionPoolReaderHandlerClient(ctx context.Context, mux *runtim
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_TransactionPoolReader_Content_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TxPoolReader_Content_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TransactionPoolReader_Content_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TxPoolReader_Content_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_TransactionPoolReader_Status_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_TxPoolReader_Status_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -153,18 +153,18 @@ func RegisterTransactionPoolReaderHandlerClient(ctx context.Context, mux *runtim
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_TransactionPoolReader_Status_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TxPoolReader_Status_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TransactionPoolReader_Status_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TxPoolReader_Status_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_TransactionPoolReader_Inspect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_TxPoolReader_Inspect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -182,14 +182,14 @@ func RegisterTransactionPoolReaderHandlerClient(ctx context.Context, mux *runtim
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_TransactionPoolReader_Inspect_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TxPoolReader_Inspect_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TransactionPoolReader_Inspect_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TxPoolReader_Inspect_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -197,17 +197,17 @@ func RegisterTransactionPoolReaderHandlerClient(ctx context.Context, mux *runtim
 }
 
 var (
-	pattern_TransactionPoolReader_Content_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "txpool", "content"}, ""))
+	pattern_TxPoolReader_Content_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "txpool", "content"}, ""))
 
-	pattern_TransactionPoolReader_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "txpool", "status"}, ""))
+	pattern_TxPoolReader_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "txpool", "status"}, ""))
 
-	pattern_TransactionPoolReader_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "txpool", "inspect"}, ""))
+	pattern_TxPoolReader_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "txpool", "inspect"}, ""))
 )
 
 var (
-	forward_TransactionPoolReader_Content_0 = runtime.ForwardResponseMessage
+	forward_TxPoolReader_Content_0 = runtime.ForwardResponseMessage
 
-	forward_TransactionPoolReader_Status_0 = runtime.ForwardResponseMessage
+	forward_TxPoolReader_Status_0 = runtime.ForwardResponseMessage
 
-	forward_TransactionPoolReader_Inspect_0 = runtime.ForwardResponseMessage
+	forward_TxPoolReader_Inspect_0 = runtime.ForwardResponseMessage
 )

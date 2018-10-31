@@ -45,8 +45,8 @@ message TxStringPool{
     AccountNonceTxStringPool queuedTxStringPool = 2;
 }
 
-// TransactionPoolReader offers and API for the transaction pool. It only operates on data that is non confidential.
-service TransactionPoolReader {
+// TxPoolReader offers and API for the transaction pool. It only operates on data that is non confidential.
+service TxPoolReader {
     rpc Content(google.protobuf.Empty) returns (TxPool) {
         option (google.api.http) = {
             post: "/api/v1/txpool/content"
