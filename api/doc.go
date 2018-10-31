@@ -1,10 +1,11 @@
 package api
 
 // for Ubuntu: Download protoc compile from here
-// https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
 // unzip it, and then add the binary file to system path;
-// unzip protoc-3.6.1-linux-x86_64.zip
-// mv protoc-3.6.1-linux-x86_64 /usr/local/protoc
+// mkdir protoc && cd protoc
+// download https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+// unzip protoc-3.6.1-linux-x86_64.zip -d protoc
+// sudo mv protoc /usr/local/protoc
 // add `export PATH=$PATH:/usr/local/protoc/bin` to your bashrc or zshrc file
 // then go get -u github.com/golang/protobuf/protoc-gen-go
 
