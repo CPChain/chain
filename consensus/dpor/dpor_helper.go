@@ -40,6 +40,13 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 		return consensus.ErrFutureBlock
 	}
 
+	switch c.fake {
+	case DoNothingFakeMode:
+		// do nothing
+	case FakeMode:
+		return nil
+	}
+
 	// Check that the extra-data contains both the vanity and signature
 	if len(header.Extra) < extraVanity {
 		return errMissingVanity
@@ -112,7 +119,9 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
-		return errInvalidSigners
+		if NormalMode == dpor.fake {
+			return errInvalidSigners
+		}
 	}
 
 	// All basic checks passed, verify the seal and return
@@ -151,11 +160,17 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				return nil, err
 			}
 
-			// Create a snapshot from the genesis block
-			signers := make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal)/common.AddressLength)
-			for i := 0; i < len(signers); i++ {
-				copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
+			var signers []common.Address
+			if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
+				// do nothing when test,empty signers assigned
+			} else {
+				// Create a snapshot from the genesis block
+				signers = make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal)/common.AddressLength)
+				for i := 0; i < len(signers); i++ {
+					copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
+				}
 			}
+
 			snap = newSnapshot(dpor.config, 0, genesis.Hash(), signers)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
@@ -200,14 +215,14 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	// Save to cache
-	dpor.recents.Add(snap.hash(), snap)
+	dpor.recents.Add(snap.Hash, snap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if IsCheckPoint(snap.number(), dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
+	if IsCheckPoint(snap.Number, dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
-		log.Debug("Stored voting Snapshot to disk", "number", snap.number(), "hash", snap.hash())
+		log.Debug("Stored voting Snapshot to disk", "number", snap.Number, "hash", snap.Hash)
 	}
 	return snap, err
 }
@@ -226,7 +241,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// TODO: @liuq fix this!!!
-	if dpor.fake {
+	if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
 			return errFakerFail
@@ -248,14 +263,19 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 	// Some debug infos here
 	log.Debug("--------dpor.verifySeal start--------")
+
 	log.Debug("hash", "hash", hash.Hex())
+
 	log.Debug("number", "number", number)
 	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
+
 	log.Debug("leader", "address", leader.Hex())
+
 	log.Debug("signers recoverd from header: ")
 	for _, signer := range signers {
 		log.Debug("signer", "address", signer.Hex())
 	}
+
 	log.Debug("signers in snapshot: ")
 	for _, signer := range snap.SignersOf(number) {
 		log.Debug("signer", "address", signer.Hex())
@@ -357,7 +377,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
 		log.Debug("----------------------")
 		log.Debug("signers in snapshot of:", "epoch idx", i)
-		for _, s := range snap.getRecentSigners(i) {
+		for _, s := range snap.RecentSigners[i] {
 			log.Debug("signer", "s", s.Hex())
 		}
 	}
