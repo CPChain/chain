@@ -55,6 +55,7 @@ func newCanonical(engine consensus.Engine, n int, db ethdb.Database) (*BlockChai
 		genesis  = GenesisBlockForTesting(db, common.Address{}, big.NewInt(1000))
 	)
 
+	// TODO file correct ? extraData and extraData2
 	// Initialize a fresh chain with only a genesis block
 	blockchain, _ := NewBlockChain(db, nil, configs.AllCpchainProtocolChanges, engine, vm.Config{}, remoteDB, nil)
 	// Create and inject the requested chain
@@ -328,7 +329,7 @@ func TestReorgLongBlocks(t *testing.T) {
 // Tests that reorganising a short difficult chain after a long easy one
 // overwrites the canonical numbers and links in the database.
 func TestReorgShortBlocks(t *testing.T) {
-	t.Skip("TestReorgShortBlocks failed to insert easy chain: invalid signer list on checkpoint block")
+	t.Skip("=== Diff TestReorgShortBlocks failed to insert easy chain: invalid signer list on checkpoint block")
 	// Create a long easy chain vs. a short heavy one. Due to difficulty adjustment
 	// we need a fairly long chain of blocks with different difficulties for a short
 	// one to become heavyer than a long one. The 96 is an empirical value.
@@ -484,7 +485,7 @@ func TestBlocksInsertNonceError(t *testing.T) {
 
 // Tests that chain reorganisations handle transaction removals and reinsertions.
 func TestChainTxReorgs(t *testing.T) {
-	t.Skip("===TestChainTxReorgs invalid memory address or nil pointer dereference")
+	t.Skip("=== Diff TestChainTxReorgs invalid memory address or nil pointer dereference")
 	var (
 		key1, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key2, _  = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
@@ -601,7 +602,7 @@ func TestChainTxReorgs(t *testing.T) {
 }
 
 func TestLogReorgs(t *testing.T) {
-	t.Skip("===TestLogReorgs invalid memory address or nil pointer dereference")
+	t.Skip("=== Diff TestLogReorgs invalid memory address or nil pointer dereference")
 	var (
 		key1, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		addr1    = crypto.PubkeyToAddress(key1.PublicKey)
@@ -649,7 +650,7 @@ func TestLogReorgs(t *testing.T) {
 }
 
 func TestReorgSideEvent(t *testing.T) {
-	t.Skip("===TestReorgSideEvent")
+	t.Skip("=== Diff TestReorgSideEvent")
 	var (
 		db       = ethdb.NewMemDatabase()
 		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
@@ -784,7 +785,7 @@ func TestCanonicalBlockRetrieval(t *testing.T) {
 //
 // https://github.com/ethereum/go-ethereum/pull/15941
 func TestBlockchainHeaderchainReorgConsistency(t *testing.T) {
-	t.Skip("===TestBlockchainHeaderchainReorgConsistency failed to insert into chain: extra-data 32 byte vanity prefix missing")
+	t.Skip("=== Diff TestBlockchainHeaderchainReorgConsistency failed to insert into chain: extra-data 32 byte vanity prefix missing")
 	// Generate a canonical chain to act as the main dataset
 
 	db := ethdb.NewMemDatabase()
@@ -831,7 +832,6 @@ func TestBlockchainHeaderchainReorgConsistency(t *testing.T) {
 // Tests that importing small side forks doesn't leave junk in the trie database
 // cache (which would eventually cause memory issues).
 func TestTrieForkGC(t *testing.T) {
-	t.Skip("===TestTrieForkGC")
 	// Generate a canonical chain to act as the main dataset
 
 	db := ethdb.NewMemDatabase()
@@ -878,7 +878,7 @@ func TestTrieForkGC(t *testing.T) {
 // Tests that doing large reorgs works even if the state associated with the
 // forking point is not available any more.
 func TestLargeReorgTrieGC(t *testing.T) {
-	t.Skip("===TestLargeReorgTrieGC")
+	t.Skip("=== Diff TestLargeReorgTrieGC")
 	// Generate the original common chain segment and the two competing forks
 
 	db := ethdb.NewMemDatabase()

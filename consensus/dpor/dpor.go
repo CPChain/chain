@@ -20,6 +20,15 @@ const (
 	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
+// Mode defines the type and amount of PoW verification an ethash engine makes.
+type Mode uint
+
+const (
+	ModeNormal Mode = iota
+	ModeFake
+	ModeDoNothingFake
+)
+
 // Dpor is the proof-of-reputation consensus engine proposed to support the
 // cpchain testnet.
 type Dpor struct {
@@ -37,7 +46,7 @@ type Dpor struct {
 
 	committeeNetworkHandler consensus.CommitteeNetworkHandler
 
-	fake           bool // used for test, always accept a block.
+	fake           Mode // used for test, always accept a block.
 	fakeFail       uint64
 	fakeDelay      time.Duration // Time delay to sleep for before returning from verify
 	contractCaller *consensus.ContractCaller
@@ -76,12 +85,18 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 
 func NewFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	d := New(config, db)
-	d.fake = true
+	d.fake = ModeFake
+	return d
+}
+
+func NewDoNothingFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
+	d := New(config, db)
+	d.fake = ModeDoNothingFake
 	return d
 }
 
 func NewFakeFailer(config *configs.DporConfig, db ethdb.Database, fail uint64) *Dpor {
-	d := NewFaker(config, db)
+	d := NewDoNothingFaker(config, db)
 	d.fakeFail = fail
 	return d
 }
