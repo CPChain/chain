@@ -34,10 +34,10 @@ import (
 	"syscall"
 	"time"
 
-	"bitbucket.org/cpchain/chain/node"
+	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
-	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/ethereum/go-ethereum/log"
 	"golang.org/x/net/websocket"

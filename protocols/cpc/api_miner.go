@@ -107,7 +107,7 @@ func (api *MinerManager) SetGasPrice(ctx context.Context, gasPrice *pb.GasPrice)
 	return &pb.IsOk{IsOk: true}, nil
 }
 
-// SetEtherbase sets the etherbase of the miner
+// SetChainbase sets the etherbase of the miner
 func (api *MinerManager) SetCoinbase(ctx context.Context, newAddress *pb.Address) (*pb.IsOk, error) {
 	api.c.SetEtherbase(common.HexToAddress(newAddress.Address))
 	return &pb.IsOk{IsOk: true}, nil

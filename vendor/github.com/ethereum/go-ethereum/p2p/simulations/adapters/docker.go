@@ -27,7 +27,7 @@ import (
 	"runtime"
 	"strings"
 
-	"bitbucket.org/cpchain/chain/node"
+	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/docker/docker/pkg/reexec"
 )

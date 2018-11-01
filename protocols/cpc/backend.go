@@ -357,13 +357,13 @@ func (s *CpchainService) Etherbase() (eb common.Address, err error) {
 	return common.Address{}, fmt.Errorf("etherbase must be explicitly specified")
 }
 
-// SetEtherbase sets the mining reward address.
+// SetChainbase sets the mining reward address.
 func (s *CpchainService) SetEtherbase(etherbase common.Address) {
 	s.lock.Lock()
 	s.etherbase = etherbase
 	s.lock.Unlock()
 
-	s.miner.SetEtherbase(etherbase)
+	s.miner.SetChainbase(etherbase)
 }
 
 func (s *CpchainService) StartMining(local bool, contractCaller *consensus.ContractCaller) error {

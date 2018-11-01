@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/usbwallet"
-	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/robertkrimen/otto"
 )

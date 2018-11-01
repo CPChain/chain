@@ -62,14 +62,9 @@ func TestProtocolCompatibility(t *testing.T) {
 }
 
 // Tests that block headers can be retrieved from a remote chain based on user queries.
-func TestGetBlockHeaders64(t *testing.T) {
-	t.Skip("===TestGetBlockHeaders64 invalid signer list on checkpoint block")
-	testGetBlockHeaders(t, 64)
-}
-
-func testGetBlockHeaders(t *testing.T, protocol int) {
+func TestGetBlockHeaders(t *testing.T) {
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxHashFetch+15, nil, nil)
-	peer, _ := newTestPeer("peer", protocol, pm, true)
+	peer, _ := newTestPeer("peer", 64, pm, true)
 	defer peer.close()
 
 	// Create a "random" unknown hash for testing
@@ -87,7 +82,8 @@ func testGetBlockHeaders(t *testing.T, protocol int) {
 		{
 			&getBlockHeadersData{Origin: hashOrNumber{Hash: pm.blockchain.GetBlockByNumber(limit / 2).Hash()}, Amount: 1},
 			[]common.Hash{pm.blockchain.GetBlockByNumber(limit / 2).Hash()},
-		}, {
+		},
+		{
 			&getBlockHeadersData{Origin: hashOrNumber{Number: limit / 2}, Amount: 1},
 			[]common.Hash{pm.blockchain.GetBlockByNumber(limit / 2).Hash()},
 		},
@@ -99,7 +95,8 @@ func testGetBlockHeaders(t *testing.T, protocol int) {
 				pm.blockchain.GetBlockByNumber(limit/2 + 1).Hash(),
 				pm.blockchain.GetBlockByNumber(limit/2 + 2).Hash(),
 			},
-		}, {
+		},
+		{
 			&getBlockHeadersData{Origin: hashOrNumber{Number: limit / 2}, Amount: 3, Reverse: true},
 			[]common.Hash{
 				pm.blockchain.GetBlockByNumber(limit / 2).Hash(),
@@ -115,7 +112,8 @@ func testGetBlockHeaders(t *testing.T, protocol int) {
 				pm.blockchain.GetBlockByNumber(limit/2 + 4).Hash(),
 				pm.blockchain.GetBlockByNumber(limit/2 + 8).Hash(),
 			},
-		}, {
+		},
+		{
 			&getBlockHeadersData{Origin: hashOrNumber{Number: limit / 2}, Skip: 3, Amount: 3, Reverse: true},
 			[]common.Hash{
 				pm.blockchain.GetBlockByNumber(limit / 2).Hash(),
@@ -223,14 +221,9 @@ func testGetBlockHeaders(t *testing.T, protocol int) {
 }
 
 // Tests that block contents can be retrieved from a remote chain based on their hashes.
-func TestGetBlockBodies64(t *testing.T) {
-	t.Skip("===TestGetBlockBodies64 invalid signer list on checkpoint block")
-	testGetBlockBodies(t, 64)
-}
-
-func testGetBlockBodies(t *testing.T, protocol int) {
+func TestGetBlockBodies(t *testing.T) {
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxBlockFetch+15, nil, nil)
-	peer, _ := newTestPeer("peer", protocol, pm, true)
+	peer, _ := newTestPeer("peer", 64, pm, true)
 	defer peer.close()
 
 	// Create a batch of tests for various scenarios

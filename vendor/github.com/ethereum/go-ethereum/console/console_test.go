@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/consensus/ethash"
-	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/eth"
-	"bitbucket.org/cpchain/chain/internal/jsre"
-	"bitbucket.org/cpchain/chain/node"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/eth"
+	"github.com/ethereum/go-ethereum/internal/jsre"
+	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/common"
 )
 
