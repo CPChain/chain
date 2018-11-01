@@ -112,7 +112,7 @@ func TestDpor_Prepare(t *testing.T) {
 				signer:       tt.fields.signer,
 				signFn:       tt.fields.signFn,
 			}
-			if err := c.Prepare(tt.args.chain, tt.args.header); (err != nil) != tt.wantErr {
+			if err := c.PrepareBlock(tt.args.chain, tt.args.header); (err != nil) != tt.wantErr {
 				t.Errorf("Dpor.Prepare(%v, %v) error = %v, wantErr %v", tt.args.chain, tt.args.header, err, tt.wantErr)
 			}
 		})

@@ -44,7 +44,7 @@ type Dpor struct {
 	signer common.Address // Ethereum address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
-	committeeNetworkHandler consensus.CommitteeNetworkHandler
+	committeeNetworkHandler consensus.CommitteeHandler
 
 	fake           Mode // used for test, always accept a block.
 	fakeFail       uint64
@@ -116,7 +116,7 @@ func (d *Dpor) SetContractCaller(contractCaller *consensus.ContractCaller) error
 }
 
 // SetCommitteeNetworkHandler sets dpor.committeeNetworkHandler
-func (d *Dpor) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.CommitteeNetworkHandler) error {
+func (d *Dpor) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.CommitteeHandler) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	d.committeeNetworkHandler = committeeNetworkHandler

@@ -4,10 +4,10 @@ import "github.com/ethereum/go-ethereum/common"
 
 // committee network
 
-// CommitteeNetworkHandler is an interface used to do network building and related thing.
-type CommitteeNetworkHandler interface {
-	// Connect connects remote signers.
-	Connect()
+// CommitteeHandler is an interface used to do network building and related thing.
+type CommitteeHandler interface {
+	// DialAll dials remote signers.
+	DialAll()
 
 	// Disconnect disconnects all.
 	Disconnect()

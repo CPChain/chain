@@ -199,16 +199,16 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		}
 
 		if err == consensus.ErrNewSignedHeader {
-			err := err.(*consensus.ErrNewSignedHeaderType)
-			header := err.SignedHeader
+			// err := err.(*consensus.ErrNewSignedHeaderType)
+			// header := err.SignedHeader
 
-			log.Debug("--------I am in sync.Synchronise start--------")
-			log.Debug("I am in sync Synchronise, now with not enough sigs, but signed the new block, I'll broadcast it to my peers...")
-			log.Debug("--------I am in sync.Synchronise end--------")
+			// log.Debug("--------I am in sync.Synchronise start--------")
+			// log.Debug("I am in sync Synchronise, now with not enough sigs, but signed the new block, I'll broadcast it to my peers...")
+			// log.Debug("--------I am in sync.Synchronise end--------")
 
-			// TODO: @liuq fix this.
-			go pm.BroadcastSignedHeader(header)
-			// go peer.AsyncSendNewSignedHeader(header)
+			// // TODO: @liuq fix this.
+			// go pm.BroadcastSignedHeader(header)
+			// // go peer.AsyncSendNewSignedHeader(header)
 
 		}
 	}
