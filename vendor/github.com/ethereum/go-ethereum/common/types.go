@@ -25,8 +25,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 // Lengths of hashes and addresses in bytes.

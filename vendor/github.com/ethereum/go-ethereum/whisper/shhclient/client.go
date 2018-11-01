@@ -19,8 +19,8 @@ package shhclient
 import (
 	"context"
 
-	"bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/rpc"
 	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )

@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/p2p"
+	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
