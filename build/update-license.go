@@ -55,7 +55,12 @@ var (
 		"log/",
 		"common/bitutil/bitutil",
 		// don't license generated files
-		"contracts/chequebook/contract/code.go",
+		"contracts/dpor/contracts/admission/admission.go",
+		"contracts/dpor/contracts/campaign/campaign.go",
+		"contracts/dpor/contracts/pdash/pdash.go",
+		"contracts/dpor/contracts/register/register.go",
+		"contracts/dpor/contracts/rpt/rpt.go",
+		"contracts/dpor/contracts/signerRegister/signerRegister.go",
 	}
 
 	// paths with this prefix are licensed as GPL. all other files are LGPL.
@@ -66,13 +71,13 @@ var (
 	licenseCommentRE = regexp.MustCompile(`^//\s*(Copyright|This file is part of).*?\n(?://.*?\n)*\n*`)
 
 	// this text appears at the start of AUTHORS
-	authorsFileHeader = "# This is the official list of go-ethereum authors for copyright purposes.\n\n"
+	authorsFileHeader = "# This is the official list of cpchain authors for copyright purposes.\n\n"
 )
 
 // this template generates the license comment.
 // its input is an info structure.
 var licenseT = template.Must(template.New("").Parse(`
-// Copyright {{.Year}} The go-ethereum Authors
+// Copyright {{.Year}} The cpchain Authors
 // This file is part of {{.Whole false}}.
 //
 // {{.Whole true}} is free software: you can redistribute it and/or modify
@@ -111,12 +116,12 @@ func (i info) ShortLicense() string {
 
 func (i info) Whole(startOfSentence bool) string {
 	if i.gpl() {
-		return "go-ethereum"
+		return "cpchain"
 	}
 	if startOfSentence {
-		return "The go-ethereum library"
+		return "The cpchain library"
 	}
-	return "the go-ethereum library"
+	return "the cpchain library"
 }
 
 func (i info) gpl() bool {
