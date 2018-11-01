@@ -41,9 +41,9 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	}
 
 	switch c.fake {
-	case ModeDoNothingFake:
+	case DoNothingFakeMode:
 		// do nothing
-	case ModeFake:
+	case FakeMode:
 		return nil
 	}
 
@@ -119,7 +119,7 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
-		if ModeNormal == dpor.fake {
+		if NormalMode == dpor.fake {
 			return errInvalidSigners
 		}
 	}
@@ -161,7 +161,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			}
 
 			var signers []common.Address
-			if dpor.fake == ModeFake || dpor.fake == ModeDoNothingFake {
+			if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
 				// do nothing when test,empty signers assigned
 			} else {
 				// Create a snapshot from the genesis block
@@ -241,7 +241,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// TODO: @liuq fix this!!!
-	if dpor.fake == ModeFake || dpor.fake == ModeDoNothingFake {
+	if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
 			return errFakerFail

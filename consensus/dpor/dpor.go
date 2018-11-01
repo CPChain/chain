@@ -24,9 +24,9 @@ const (
 type Mode uint
 
 const (
-	ModeNormal Mode = iota
-	ModeFake
-	ModeDoNothingFake
+	NormalMode Mode = iota
+	FakeMode
+	DoNothingFakeMode
 )
 
 // Dpor is the proof-of-reputation consensus engine proposed to support the
@@ -85,13 +85,13 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 
 func NewFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	d := New(config, db)
-	d.fake = ModeFake
+	d.fake = FakeMode
 	return d
 }
 
 func NewDoNothingFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	d := New(config, db)
-	d.fake = ModeDoNothingFake
+	d.fake = DoNothingFakeMode
 	return d
 }
 
