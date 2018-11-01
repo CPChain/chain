@@ -14,7 +14,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/profile"
-	"bitbucket.org/cpchain/chain/network/protocols/cpc"
+	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/urfave/cli"
 )

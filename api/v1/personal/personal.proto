@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+import "common/common.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/api/annotations.proto";
+
+option go_package = "personal";
+
+package personal;
+
+//OpenWalletRequest interface OpenWallet request parameters
+message OpenWalletRequest {
+    string url = 1;
+    google.protobuf.StringValue passphrase = 2;
+}
+message DeriveAccountRequest {
+    string url = 1;
+    string path = 2;
+    google.protobuf.BoolValue pin = 3;
+}
+
+message NewAccountRequest {
+    string password = 1;
+}
+
+message ImportRawKeyRequest {
+    string privkey = 1;
+    string password = 2;
+}
+
+message UnlockAccountRequest {
+    string address = 1;
+    string password = 2;
+    google.protobuf.UInt64Value duration = 3;
+}
+
+message SendTxArgs {
+    string from = 1;
+    google.protobuf.StringValue to = 2;
+    google.protobuf.UInt64Value gas = 3;
+    google.protobuf.UInt64Value gasPrice = 4;
+    google.protobuf.UInt64Value value = 5;
+    google.protobuf.UInt64Value nonce = 6;
+    bytes data = 7;
+    bytes input = 8;
+    bool isPrivate = 9;
+    repeated string participants = 10;
+    string passwd = 11;
+}
+
+message SignTransactionResult {
+    bytes raw = 1;
+    common.Transaction tx = 2;
+}
+
+message Signature {
+    bytes signature = 1;
+}
+
+message SignRequest {
+    bytes data = 1;
+    string addr = 2;
+    string passwd = 3;
+}
+
+message EcRecoverRequest {
+    bytes data = 1;
+    bytes sig = 2;
+}
+
+// PrivateAccountAPI provides an API to access accounts managed by this node.
+// It offers methods to create, (un)lock en list accounts. Some methods accept
+// passwords and are therefore considered private by default.
+service AccountManager {
+    // ListAccounts will return a list of addresses for accounts this node manages.
+    rpc ListAccounts(google.protobuf.Empty) returns (common.Accounts) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/listAccounts"
+            body: "*"
+          };
+    }
+    // ListWallets will return a list of wallets this node manages.
+    rpc ListWallets(google.protobuf.Empty) returns (common.RawWallets) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/listWallets"
+            body: "*"
+          };
+    }
+    // OpenWallet initiates a hardware wallet opening procedure, establishing a USB
+    // connection and attempting to authenticate via the provided passphrase. Note,
+    // the method may return an extra challenge requiring a second open (e.g. the
+    // Trezor PIN matrix challenge).
+    rpc OpenWallet(OpenWalletRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/openWallet"
+            body: "*"
+          };
+    }
+    // DeriveAccount requests a HD wallet to derive a new account, optionally pinning
+    // it for later reuse.
+    rpc DeriveAccount(DeriveAccountRequest) returns (common.Account) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/deriveAccount"
+            body: "*"
+          };
+    }
+    // NewAccount will create a new account and returns the address for the new account.
+    rpc NewAccount(NewAccountRequest) returns (common.Address) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/newAccount"
+            body: "*"
+          };
+    }
+    // ImportRawKey stores the given hex encoded ECDSA key into the key directory,
+    // encrypting it with the passphrase.
+    rpc ImportRawKey(ImportRawKeyRequest) returns (common.Address) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/importRawKey"
+            body: "*"
+          };
+    }
+    // UnlockAccount will unlock the account associated with the given address with
+    // the given password for duration seconds. If duration is nil it will use a
+    // default of 300 seconds. It returns an indication if the account was unlocked.
+    rpc UnlockAccount(UnlockAccountRequest) returns (common.IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/unlockAccount"
+            body: "*"
+          };
+    }
+    // LockAccount will lock the account associated with the given address when it's unlocked.
+    rpc LockAccount(common.Address) returns (common.IsOk) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/lockAccount"
+            body: "*"
+          };
+    }
+    // SendTransaction creates a transaction for the given argument, sign it and submit it to the
+    // transaction pool.
+    rpc SendTransaction(SendTxArgs) returns (common.Hash) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/sendTransaction"
+            body: "*"
+          };
+    }
+    rpc SignTransaction(SendTxArgs) returns (SignTransactionResult) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/signTransaction"
+            body: "*"
+          };
+    }
+    rpc Sign(SignRequest) returns (Signature) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/sign"
+            body: "*"
+          };
+    }
+    rpc EcRecover(EcRecoverRequest) returns (common.Address) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/ecRecover"
+            body: "*"
+          };
+    }
+    rpc SignAndSendTransaction(SendTxArgs) returns (common.Hash) {
+        option (google.api.http) = {
+            post: "/api/v1/personal/signAndSendTransaction"
+            body: "*"
+          };
+    }
+}

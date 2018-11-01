@@ -1,20 +1,3 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
-// Package dpor implements the dpor consensus engine.
 package dpor
 
 import (
@@ -23,9 +6,8 @@ import (
 	"math/big"
 	"time"
 
-	"bitbucket.org/cpchain/chain/apis"
-
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -327,8 +309,8 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 }
 
 // GAPIs is APIs for dpor.
-func (d *Dpor) GAPIs(chain consensus.ChainReader) []apis.API {
-	return []apis.API{}
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []api.GApi {
+	return []api.GApi{}
 }
 
 // IsFutureSigner implements Validator.

@@ -52,7 +52,6 @@ var (
 		"crypto/ecies/",
 		"crypto/secp256k1/curve.go",
 		"crypto/sha3/",
-		"internal/jsre/deps",
 		"log/",
 		"common/bitutil/bitutil",
 		// don't license generated files
