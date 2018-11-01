@@ -341,7 +341,7 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 // SendPrePrepare implements Pbft.SendPrePrepare.
 func (d *Dpor) SendPrePrepare(msg interface{}, broadcastFn consensus.Broadcast) error {
 	if d.Status() == consensus.PrePrepare {
-		go broadcastFn(msg)
+		go broadcastFn(msg, consensus.PrePrepare)
 	}
 	return nil
 }
@@ -385,6 +385,6 @@ func (d *Dpor) Commit(msg interface{}) (bool, error) {
 }
 
 // Status implements Pbft.Status.
-func (d *Dpor) Status() uint {
+func (d *Dpor) Status() uint8 {
 	return 0
 }
