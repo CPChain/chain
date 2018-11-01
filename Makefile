@@ -63,7 +63,8 @@ cpchain-cross: cpchain-linux cpchain-darwin cpchain-windows
 	@echo "Full cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-*
 
-cpchain-linux: cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-arm cpchain-linux-mips64 cpchain-linux-mips64le
+#cpchain-linux: cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-arm cpchain-linux-mips64 cpchain-linux-mips64le
+cpchain-linux: cpchain-linux-386 cpchain-linux-amd64
 	@echo "Linux cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-linux-*
 
