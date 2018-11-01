@@ -383,3 +383,47 @@ func (oc *BasicCommitteeHandler) Disconnect() {
 	oc.connected = connected
 	oc.lock.Unlock()
 }
+
+// SendPreprepare implements Pbft.SendPreprepare.
+func (oc *BasicCommitteeHandler) SendPreprepare(msg interface{}, broadcastFn consensus.Broadcast) error {
+	go broadcastFn(msg, consensus.Preprepare)
+
+	return nil
+}
+
+// Preprepare implements Pbft.Preprepare.
+func (oc *BasicCommitteeHandler) Preprepare(msg interface{}) (bool, error) {
+
+	return false, nil
+}
+
+// SendPrepare implements Pbft.SendPrepare.
+func (oc *BasicCommitteeHandler) SendPrepare(msg interface{}, broadcastFn consensus.Broadcast) error {
+	go broadcastFn(msg, consensus.Prepare)
+
+	return nil
+}
+
+// Prepare implements Pbft.Prepare.
+func (oc *BasicCommitteeHandler) Prepare(msg interface{}) (bool, error) {
+
+	return false, nil
+}
+
+// SendCommit implements Pbft.SendCommit.
+func (oc *BasicCommitteeHandler) SendCommit(msg interface{}, broadcastFn consensus.Broadcast) error {
+	go broadcastFn(msg, consensus.Commit)
+
+	return nil
+}
+
+// Commit implements Pbft.Commit.
+func (oc *BasicCommitteeHandler) Commit(msg interface{}) (bool, error) {
+
+	return false, nil
+}
+
+// Status implements Pbft.Status.
+func (oc *BasicCommitteeHandler) Status() uint8 {
+	return 0
+}

@@ -136,7 +136,7 @@ func (pm *ProtocolManager) BroadcastPBFT(msg interface{}, pbftStatus uint8) erro
 	case *types.Block:
 		for _, p := range peers {
 			switch pbftStatus {
-			case consensus.PrePrepare:
+			case consensus.Preprepare:
 				p.AsyncSendNewPendingBlock(m)
 			}
 		}

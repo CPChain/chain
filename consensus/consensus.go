@@ -120,8 +120,8 @@ type PoW interface {
 type Broadcast func(msg interface{}, pbftStatus uint8) error
 
 const (
-	// PrePrepare is returned if pbft status is in PrePrepare phrase.
-	PrePrepare uint8 = iota
+	// Preprepare is returned if pbft status is in Preprepare phrase.
+	Preprepare uint8 = iota
 
 	// Prepare is returned if pbft status is in Prepare phrase.
 	Prepare
@@ -133,11 +133,11 @@ const (
 // Pbft is a consensus engine based on practical byzantine fault tolerance algorithm.
 type Pbft interface {
 
-	// SendPrePrepare used by leader to send <PrePrepare> msg to other signers.
-	SendPrePrepare(msg interface{}, broadcastFn Broadcast) error
+	// SendPreprepare used by leader to send <PrePrepare> msg to other signers.
+	SendPreprepare(msg interface{}, broadcastFn Broadcast) error
 
-	// PrePrepare returns true if received block has correct fields(hash, number, signature of leader).
-	PrePrepare(msg interface{}) (bool, error)
+	// Preprepare returns true if received block has correct fields(hash, number, signature of leader).
+	Preprepare(msg interface{}) (bool, error)
 
 	// SendPrepare sends <Prepare> msg to other signers.
 	SendPrepare(msg interface{}, broadcastFn Broadcast) error
