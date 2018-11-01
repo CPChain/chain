@@ -141,9 +141,9 @@ func (d *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, ref
 	return d.dh.verifySeal(d, chain, header, nil, refHeader)
 }
 
-// Prepare implements consensus.Engine, preparing all the consensus fields of the
+// PrepareBlock implements consensus.Engine, preparing all the consensus fields of the
 // header for running the transactions on top.
-func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error {
+func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
 	// If the block isn't a checkpoint, cast a random vote (good enough for now)
 	header.Coinbase = common.Address{}
 	header.Nonce = types.BlockNonce{}
@@ -336,4 +336,55 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 	// }
 
 	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
+}
+
+// SendPrePrepare implements Pbft.SendPrePrepare.
+func (d *Dpor) SendPrePrepare(msg interface{}, broadcastFn consensus.Broadcast) error {
+	if d.Status() == consensus.PrePrepare {
+		go broadcastFn(msg)
+	}
+	return nil
+}
+
+// PrePrepare implements Pbft.PrePrepare.
+func (d *Dpor) PrePrepare(msg interface{}) (bool, error) {
+
+	switch {
+	// case msg.Code == NewPendingBlockMsg:
+	// verify basic block fields.
+
+	// case msg.Code == ViewChangeMsg:
+	// verify viewchange request.
+	}
+
+	return false, nil
+}
+
+// SendPrepare implements Pbft.SendPrepare.
+func (d *Dpor) SendPrepare(msg interface{}, broadcastFn consensus.Broadcast) error {
+
+	return nil
+}
+
+// Prepare implements Pbft.Prepare.
+func (d *Dpor) Prepare(msg interface{}) (bool, error) {
+
+	return false, nil
+}
+
+// SendCommit implements Pbft.SendCommit.
+func (d *Dpor) SendCommit(msg interface{}, broadcastFn consensus.Broadcast) error {
+
+	return nil
+}
+
+// Commit implements Pbft.Commit.
+func (d *Dpor) Commit(msg interface{}) (bool, error) {
+
+	return false, nil
+}
+
+// Status implements Pbft.Status.
+func (d *Dpor) Status() uint {
+	return 0
 }

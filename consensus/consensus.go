@@ -73,9 +73,9 @@ type Engine interface {
 	// the consensus rules of the given engine.
 	VerifySeal(chain ChainReader, header *types.Header, refHeader *types.Header) error
 
-	// Prepare initializes the consensus fields of a block header according to the
+	// PrepareBlock initializes the consensus fields of a block header according to the
 	// rules of a particular engine. The changes are executed inline.
-	Prepare(chain ChainReader, header *types.Header) error
+	PrepareBlock(chain ChainReader, header *types.Header) error
 
 	// Finalize runs any post-transaction state modifications (e.g. block rewards)
 	// and assembles the final block.
@@ -116,54 +116,84 @@ type PoW interface {
 	Hashrate() float64
 }
 
+// Broadcast sends msg to all pbft peers.
+type Broadcast func(msg interface{}, pbftStatus uint8) error
+
+const (
+	// PrePrepare is returned if pbft status is in PrePrepare phrase.
+	PrePrepare uint8 = iota
+
+	// Prepare is returned if pbft status is in Prepare phrase.
+	Prepare
+
+	// Commit is returned if pbft status is in Commit phrase.
+	Commit
+)
+
 // Pbft is a consensus engine based on practical byzantine fault tolerance algorithm.
 type Pbft interface {
 
 	// SendPrePrepare used by leader to send <PrePrepare> msg to other signers.
-	SendPrePrepare()
+	SendPrePrepare(msg interface{}, broadcastFn Broadcast) error
 
 	// PrePrepare returns true if received block has correct fields(hash, number, signature of leader).
-	PrePrepare()
+	PrePrepare(msg interface{}) (bool, error)
 
 	// SendPrepare sends <Prepare> msg to other signers.
-	SendPrepare()
+	SendPrepare(msg interface{}, broadcastFn Broadcast) error
 
 	// Prepare returns true if collected enough(>2f+1 || >2/3) <Prepare> msg from other signers for given block.
-	Prepare()
+	Prepare(msg interface{}) (bool, error)
 
 	// SendCommit sends <Commit> msg to other signers.
-	SendCommit()
+	SendCommit(msg interface{}, broadcastFn Broadcast) error
 
 	// Commit returns true if collected enough(>2f+1 || >2/3) <Commit> msg from other signers for given block.
-	Commit()
+	Commit(msg interface{}) (bool, error)
 
-	// Status returns current pbft phrase.
-	Status()
+	// Status returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
+	Status() uint8
 }
 
 // Pbft process is as follow:
 
 // for {
-// 	switch {
-// 	case msg.Code < X:
-// 		// simple sync method.
+// // 	switch {
+// // 	case msg.Code < X:
+// // 		// simple sync method.
 // 	case msg.Code >= X:
-// 		// pbft phrase
-// 		switch Pbft.Status() {
-// 		case 0 && msg.Code == NewPendingBlockMsg:
-// 			if Pbft.PrePrepare() {
-// 				Pbft.SendPrepare()
+// // 		// pbft phrase
+// 		switch {
+// 		case Pbft.Status() == PrePrepare:
+// 			if (msg.Code == NewPendingBlockMsg || msg.Code == ViewChangeMsg) {
+// 				if Pbft.PrePrepare() {
+// 					Pbft.SendPrepare()
+// 				}
 // 			}
-// 		case 1 && msg.Code == PrepareMsg:
-// 			if Pbft.Prepare() {
-// 				Pbft.SendCommit()
+
+// 			if timer.C && Pbft.IsNextLeader() {
+// 				Pbft.SendPrePrepare(viewChangeMsg)
 // 			}
-// 		case 2 && msg.Code == CommitMsg:
-// 			if Pbft.Commit() {
+
+// 		case Pbft.Status() == Prepare:
+// 			if msg.Code == PrepareMsg {
+// 				if Pbft.Prepare() {
+// 					Pbft.SendCommit()
+// 				}
 // 			}
+
+// 		case Pbft.Status() == Commit:
+// 			if msg.Code == CommitMsg {
+// 				if Pbft.Commit() {
+// 					// Do preprepare request.
+// 				}
+// 			}
+
 // 		default:
 // 			log.Warn
+
 // 		}
+
 // 	default:
 // 		return err
 // 	}
