@@ -55,7 +55,6 @@ func newCanonical(engine consensus.Engine, n int, db ethdb.Database) (*BlockChai
 		genesis  = GenesisBlockForTesting(db, common.Address{}, big.NewInt(1000))
 	)
 
-	// TODO file correct ? extraData and extraData2
 	// Initialize a fresh chain with only a genesis block
 	blockchain, _ := NewBlockChain(db, nil, configs.AllCpchainProtocolChanges, engine, vm.Config{}, remoteDB, nil)
 	// Create and inject the requested chain

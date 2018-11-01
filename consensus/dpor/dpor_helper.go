@@ -145,7 +145,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		// If an on-disk checkpoint Snapshot can be found, use that
 		// if number%checkpointInterval == 0 {
 		if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) {
-			if s, err := loadSnapshot(dpor.config, dpor.signatures, dpor.db, hash); err == nil {
+			if s, err := loadSnapshot(dpor.config, dpor.db, hash); err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", number, "hash", hash)
 				snap = s
 				break
@@ -171,7 +171,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				}
 			}
 
-			snap = newSnapshot(dpor.config, dpor.signatures, 0, genesis.Hash(), signers)
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), signers)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}
