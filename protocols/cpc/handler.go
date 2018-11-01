@@ -181,13 +181,9 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		return manager.blockchain.InsertChain(blocks)
 	}
 
-	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, manager.BroadcastSignedHeader, heighter, inserter, manager.removePeer, manager.peerSendSignedHeader)
+	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, heighter, inserter, manager.removePeer)
 
 	return manager, nil
-}
-
-func (pm *ProtocolManager) peerSendSignedHeader(id string, header *types.Header) {
-	go pm.peers.peers[id].AsyncSendNewSignedHeader(header)
 }
 
 func (pm *ProtocolManager) removePeer(id string) {
@@ -358,6 +354,132 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 	}
 	defer msg.Discard()
 
+	if IsPbftMsg(msg) {
+		return pm.handlePbftMsg(msg, p)
+	}
+
+	return pm.handleNormalMsg(msg, p)
+}
+
+func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
+
+	switch {
+	case msg.Code == NewSignerMsg:
+		// handshake
+		// send NewSignerMsg too.
+		// register peer as signer.
+		if msg.Size > ProtocolMaxMsgSize {
+			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+		}
+		// Decode the handshake and make sure everything matches
+		var signerStatus signerStatusData
+		if err := msg.Decode(&signerStatus); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+		if int(signerStatus.ProtocolVersion) != p.version {
+			return errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
+		}
+		isSigner, err := pm.SignerValidator(signerStatus.Address)
+		if isSigner && err != nil {
+			err := p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
+				ProtocolVersion: uint32(p.version),
+				Address:         pm.etherbase,
+			})
+			if err != nil {
+				return nil
+			}
+		}
+
+	case msg.Code == NewPendingBlockMsg:
+		// if received a new generated block, perform as to verify a normal block
+		// do signing in dpor, return consensus.ErrNewSignedHeader
+		// then broadcast to remote committee.
+
+		var request newBlockData
+		if err := msg.Decode(&request); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		request.Block.ReceivedAt = msg.ReceivedAt
+		request.Block.ReceivedFrom = p
+
+		p.MarkPendingBlock(request.Block.Hash())
+		pm.fetcher.Enqueue(p.id, request.Block)
+
+		number := request.Block.NumberU64()
+		currentNum := pm.blockchain.CurrentBlock().NumberU64()
+		if number <= currentNum {
+			return nil
+		}
+
+		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
+		if err == consensus.ErrNewSignedHeader {
+			err := err.(*consensus.ErrNewSignedHeaderType)
+			header := err.SignedHeader
+			go pm.BroadcastSignedHeader(header)
+		}
+
+	case msg.Code == NewPendingBlockHashesMsg:
+		// if received a new generated header of block,
+		// notify the fetcher to fetch the block
+		var announces newBlockHashesData
+		if err := msg.Decode(&announces); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		// Mark the hashes as present at the remote node
+		for _, block := range announces {
+			p.MarkPendingBlock(block.Hash)
+		}
+		// Schedule all the unknown hashes for retrieval
+		unknown := make(newBlockHashesData, 0, len(announces))
+		for _, block := range announces {
+			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
+				unknown = append(unknown, block)
+			}
+		}
+		for _, block := range unknown {
+			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+		}
+
+	case msg.Code == PrepareSignedHeaderMsg:
+		// collect the sigs in the header.
+		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
+
+		log.Debug("received NewSignedHeaderMsg, decoding...")
+
+		var header *types.Header
+		if err := msg.Decode(&header); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+
+		log.Debug("received NewSignedHeaderMsg, verifying...")
+
+		switch err := pm.VerifyAndSign(header); err {
+		case nil:
+			log.Debug("verify succeed, accepting...")
+			hash := header.Hash()
+
+			if block, ok := pm.blockchain.WaitingSignatureBlocks().Get(hash); ok {
+				b := block.(*types.Block)
+				go pm.blockchain.InsertChain(types.Blocks{b.WithSeal(header)})
+				go pm.broadcastGeneratedBlock(b)
+			}
+
+		case consensus.ErrNewSignedHeader:
+			log.Debug("verify failed, but signed it, broadcast...")
+
+			go pm.BroadcastSignedHeader(header)
+		default:
+		}
+
+	default:
+		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
+
+	}
+
+	return nil
+}
+
+func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 	// Handle the message depending on its contents
 	switch {
 	case msg.Code == StatusMsg:
@@ -677,114 +799,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			p.MarkTransaction(tx.Hash())
 		}
 		pm.txpool.AddRemotes(txs)
-
-	case msg.Code == NewSignerMsg:
-		// handshake
-		// send NewSignerMsg too.
-		// register peer as signer.
-		if msg.Size > ProtocolMaxMsgSize {
-			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-		}
-		// Decode the handshake and make sure everything matches
-		var signerStatus signerStatusData
-		if err := msg.Decode(&signerStatus); err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
-		}
-		if int(signerStatus.ProtocolVersion) != p.version {
-			return errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
-		}
-		isSigner, err := pm.SignerValidator(signerStatus.Address)
-		if isSigner && err != nil {
-			err := p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
-				ProtocolVersion: uint32(p.version),
-				Address:         pm.etherbase,
-			})
-			if err != nil {
-				return nil
-			}
-		}
-
-	case msg.Code == NewPendingBlockMsg:
-		// if received a new generated block, perform as to verify a normal block
-		// do signing in dpor, return consensus.ErrNewSignedHeader
-		// then broadcast to remote committee.
-
-		var request newBlockData
-		if err := msg.Decode(&request); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		request.Block.ReceivedAt = msg.ReceivedAt
-		request.Block.ReceivedFrom = p
-
-		p.MarkPendingBlock(request.Block.Hash())
-		pm.fetcher.Enqueue(p.id, request.Block)
-
-		number := request.Block.NumberU64()
-		currentNum := pm.blockchain.CurrentBlock().NumberU64()
-		if number <= currentNum {
-			return nil
-		}
-
-		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
-		if err == consensus.ErrNewSignedHeader {
-			err := err.(*consensus.ErrNewSignedHeaderType)
-			header := err.SignedHeader
-			go pm.BroadcastSignedHeader(header)
-		}
-
-	case msg.Code == NewPendingBlockHashesMsg:
-		// if received a new generated header of block,
-		// notify the fetcher to fetch the block
-		var announces newBlockHashesData
-		if err := msg.Decode(&announces); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		// Mark the hashes as present at the remote node
-		for _, block := range announces {
-			p.MarkPendingBlock(block.Hash)
-		}
-		// Schedule all the unknown hashes for retrieval
-		unknown := make(newBlockHashesData, 0, len(announces))
-		for _, block := range announces {
-			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
-				unknown = append(unknown, block)
-			}
-		}
-		for _, block := range unknown {
-			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
-		}
-
-	case msg.Code == PrepareSignedHeaderMsg:
-		// collect the sigs in the header.
-		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
-
-		log.Debug("received NewSignedHeaderMsg, decoding...")
-
-		var header *types.Header
-		if err := msg.Decode(&header); err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
-		}
-
-		log.Debug("received NewSignedHeaderMsg, verifying...")
-
-		switch err := pm.VerifyAndSign(header); err {
-		case nil:
-			log.Debug("verify succeed, accepting...")
-			hash := header.Hash()
-
-			if block, ok := pm.blockchain.WaitingSignatureBlocks().Get(hash); ok {
-				b := block.(*types.Block)
-				go pm.blockchain.InsertChain(types.Blocks{b.WithSeal(header)})
-				go pm.broadcastGeneratedBlock(b)
-			}
-
-		case consensus.ErrNewSignedHeader:
-			log.Debug("verify failed, but signed it, broadcast...")
-
-			go pm.BroadcastSignedHeader(header)
-		default:
-		}
-
 	default:
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
 	}
@@ -823,7 +837,7 @@ func (pm *ProtocolManager) broadcastGeneratedBlock(block *types.Block) {
 func (pm *ProtocolManager) BroadcastSignedHeader(header *types.Header) {
 	committee := pm.peers.committee
 	for _, peer := range committee {
-		peer.AsyncSendNewSignedHeader(header)
+		peer.AsyncSendPrepareSignedHeader(header)
 	}
 }
 
@@ -940,4 +954,24 @@ func (pm *ProtocolManager) NodeInfo() *NodeInfo {
 		Config:     pm.blockchain.Config(),
 		Head:       currentBlock.Hash(),
 	}
+}
+
+// BroadcastPBFT broadcasts pbft messages to other signers
+func (pm *ProtocolManager) BroadcastPBFT(msg interface{}, pbftStatus uint8) error {
+	// peers := pm.peers.committee
+	// switch m := msg.(type) {
+	// case *types.Header:
+	// 	for _, p := range peers {
+	// 		switch pbftStatus {
+	// 		case consensus.Prepare:
+	// 			p.asysend
+	// 		}
+	// 		p.send
+	// 	}
+
+	// case *types.Block:
+
+	// }
+
+	return nil
 }
