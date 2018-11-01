@@ -97,7 +97,7 @@ type ProtocolManager struct {
 	server                  *p2p.Server
 	engine                  consensus.Engine
 	etherbase               common.Address
-	committeeNetworkHandler *BasicCommitteeNetworkHandler
+	committeeNetworkHandler *BasicCommitteeHandler
 
 	// wait group is used for graceful shutdowns during downloading
 	// and processing

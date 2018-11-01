@@ -222,8 +222,8 @@ func (rs *RemoteSigner) disconnect(server *p2p.Server) error {
 	return nil
 }
 
-// BasicCommitteeNetworkHandler implements consensus.CommitteeNetworkHandler
-type BasicCommitteeNetworkHandler struct {
+// BasicCommitteeHandler implements consensus.CommitteeHandler
+type BasicCommitteeHandler struct {
 	epochIdx uint64
 
 	ownNodeID  string
@@ -245,8 +245,8 @@ type BasicCommitteeNetworkHandler struct {
 }
 
 // NewBasicCommitteeNetworkHandler creates a BasicCommitteeNetworkHandler instance
-func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, etherbase common.Address) (*BasicCommitteeNetworkHandler, error) {
-	bc := &BasicCommitteeNetworkHandler{
+func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, etherbase common.Address) (*BasicCommitteeHandler, error) {
+	bc := &BasicCommitteeHandler{
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
 		remoteSigners:   make([]*RemoteSigner, config.Epoch),
@@ -256,7 +256,7 @@ func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, etherbase commo
 	return bc, nil
 }
 
-func (oc *BasicCommitteeNetworkHandler) UpdateServer(server *p2p.Server) error {
+func (oc *BasicCommitteeHandler) UpdateServer(server *p2p.Server) error {
 	oc.lock.Lock()
 	defer oc.lock.Unlock()
 	oc.server = server
@@ -264,7 +264,7 @@ func (oc *BasicCommitteeNetworkHandler) UpdateServer(server *p2p.Server) error {
 	return nil
 }
 
-func (oc *BasicCommitteeNetworkHandler) SetRSAKeys(rsaReader RSAReader) error {
+func (oc *BasicCommitteeHandler) SetRSAKeys(rsaReader RSAReader) error {
 	oc.lock.Lock()
 	defer oc.lock.Unlock()
 
@@ -276,7 +276,7 @@ func (oc *BasicCommitteeNetworkHandler) SetRSAKeys(rsaReader RSAReader) error {
 }
 
 // UpdateContractCaller updates contractcaller.
-func (oc *BasicCommitteeNetworkHandler) UpdateContractCaller(contractCaller *consensus.ContractCaller) error {
+func (oc *BasicCommitteeHandler) UpdateContractCaller(contractCaller *consensus.ContractCaller) error {
 
 	// creates an contract instance
 	contractInstance, err := contract.NewSignerConnectionRegister(oc.contractAddress, contractCaller.Client)
@@ -309,7 +309,7 @@ func (oc *BasicCommitteeNetworkHandler) UpdateContractCaller(contractCaller *con
 }
 
 // UpdateRemoteSigners updates BasicCommitteeNetworkHandler's remoteSigners.
-func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error {
+func (oc *BasicCommitteeHandler) UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error {
 	oc.lock.Lock()
 	remoteSigners := oc.remoteSigners
 	oc.lock.Unlock()
@@ -338,8 +338,8 @@ func (oc *BasicCommitteeNetworkHandler) UpdateRemoteSigners(epochIdx uint64, sig
 	return nil
 }
 
-// Connect connects remote signers.
-func (oc *BasicCommitteeNetworkHandler) Connect() {
+// DialAll connects remote signers.
+func (oc *BasicCommitteeHandler) DialAll() {
 	oc.lock.Lock()
 	nodeID, address, contractInstance, auth, client := oc.ownNodeID, oc.ownAddress, oc.contractInstance, oc.contractTransactor, oc.contractCaller.Client
 	connected, remoteSigners, server := oc.connected, oc.remoteSigners, oc.server
@@ -363,7 +363,7 @@ func (oc *BasicCommitteeNetworkHandler) Connect() {
 }
 
 // Disconnect disconnects all.
-func (oc *BasicCommitteeNetworkHandler) Disconnect() {
+func (oc *BasicCommitteeHandler) Disconnect() {
 	oc.lock.Lock()
 	connected, remoteSigners, server := oc.connected, oc.remoteSigners, oc.server
 	oc.lock.Unlock()

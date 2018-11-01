@@ -98,7 +98,7 @@ type Engine interface {
 	// GAPIs returns the GRPC APIs this consensus engine provides.
 	GAPIs(chain ChainReader) []api.GApi
 
-	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeNetworkHandler) error
+	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeHandler) error
 }
 
 // Validator is used to determine whether an address is in the committee.
