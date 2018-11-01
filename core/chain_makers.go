@@ -27,7 +27,6 @@ import (
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
-
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -239,7 +238,7 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 	header.Number = new(big.Int).Add(parent.Number(), common.Big1)
 	header.ParentHash = parent.Hash()
 
-	_ = engine.Prepare(chain, header)
+	_ = engine.PrepareBlock(chain, header)
 
 	header.StateRoot = state.IntermediateRoot(true)
 	header.Coinbase = parent.Coinbase()

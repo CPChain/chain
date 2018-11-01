@@ -183,7 +183,7 @@ func (p *peer) signerBroadcast() {
 
 		// send signatures only
 		case header := <-p.queuedSigs:
-			if err := p.SendNewSignedHeader(header); err != nil {
+			if err := p.SendPrepareSignedHeader(header); err != nil {
 				return
 			}
 			p.Log().Trace("Propagated signed header", "number", header.Number, "hash", header.Hash())
@@ -201,7 +201,7 @@ func (p *peer) SendNewSignerMsg(eb common.Address) error {
 // SendNewPendingBlock propagates an entire block to a remote peer.
 func (p *peer) SendNewPendingBlock(block *types.Block) error {
 	p.knownPendingBlocks.Add(block.Hash())
-	return p2p.Send(p.rw, NewBlockGeneratedMsg, []interface{}{block, big.NewInt(0)})
+	return p2p.Send(p.rw, NewPendingBlockMsg, []interface{}{block, big.NewInt(0)})
 }
 
 // AsyncSendNewPendingBlock queues an entire block for propagation to a remote peer. If
@@ -223,7 +223,7 @@ func (p *peer) SendNewPendingBlockHashes(hashes []common.Hash, numbers []uint64)
 		request[i].Hash = hashes[i]
 		request[i].Number = numbers[i]
 	}
-	return p2p.Send(p.rw, NewBlockGeneratedHashesMsg, request)
+	return p2p.Send(p.rw, NewPendingBlockHashesMsg, request)
 }
 
 // AsyncSendNewPendingBlockHashes queues the availability of a block for propagation to a
@@ -237,20 +237,32 @@ func (p *peer) AsyncSendNewPendingBlockHashes(block *types.Block) {
 	}
 }
 
-// SendNewSignedHeader sends new signed block header.
-func (p *peer) SendNewSignedHeader(header *types.Header) error {
-	// err := p2p.Send(p.rw, NewSignedHeaderMsg, []*types.Header{header})
-	err := p2p.Send(p.rw, NewSignedHeaderMsg, header)
+// SendPrepareSignedHeader sends new signed block header.
+func (p *peer) SendPrepareSignedHeader(header *types.Header) error {
+	err := p2p.Send(p.rw, PrepareSignedHeaderMsg, header)
+	return err
+}
+
+func (p *peer) AsyncSendPrepareSignedHeader(header *types.Header) {
+	select {
+	case p.queuedSigs <- header:
+	default:
+		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+	}
+}
+
+// SendCommitSignedHeader sends new signed block header.
+func (p *peer) SendCommitSignedHeader(header *types.Header) error {
+	err := p2p.Send(p.rw, CommitSignedHeaderMsg, header)
 	if err == nil {
 		p.MarkPendingBlock(header.Hash())
 	}
 	return err
 }
 
-func (p *peer) AsyncSendNewSignedHeader(header *types.Header) {
+func (p *peer) AsyncSendCommitSignedHeader(header *types.Header) {
 	select {
 	case p.queuedSigs <- header:
-		p.MarkPendingBlock(header.Hash())
 	default:
 		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
 	}

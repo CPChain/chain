@@ -97,7 +97,7 @@ type ProtocolManager struct {
 	server                  *p2p.Server
 	engine                  consensus.Engine
 	etherbase               common.Address
-	committeeNetworkHandler *BasicCommitteeNetworkHandler
+	committeeNetworkHandler *BasicCommitteeHandler
 
 	// wait group is used for graceful shutdowns during downloading
 	// and processing
@@ -181,13 +181,9 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		return manager.blockchain.InsertChain(blocks)
 	}
 
-	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, manager.BroadcastSignedHeader, heighter, inserter, manager.removePeer, manager.peerSendSignedHeader)
+	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, heighter, inserter, manager.removePeer)
 
 	return manager, nil
-}
-
-func (pm *ProtocolManager) peerSendSignedHeader(id string, header *types.Header) {
-	go pm.peers.peers[id].AsyncSendNewSignedHeader(header)
 }
 
 func (pm *ProtocolManager) removePeer(id string) {
@@ -358,6 +354,132 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 	}
 	defer msg.Discard()
 
+	if IsPbftMsg(msg) {
+		return pm.handlePbftMsg(msg, p)
+	}
+
+	return pm.handleNormalMsg(msg, p)
+}
+
+func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
+
+	switch {
+	case msg.Code == NewSignerMsg:
+		// handshake
+		// send NewSignerMsg too.
+		// register peer as signer.
+		if msg.Size > ProtocolMaxMsgSize {
+			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+		}
+		// Decode the handshake and make sure everything matches
+		var signerStatus signerStatusData
+		if err := msg.Decode(&signerStatus); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+		if int(signerStatus.ProtocolVersion) != p.version {
+			return errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
+		}
+		isSigner, err := pm.SignerValidator(signerStatus.Address)
+		if isSigner && err != nil {
+			err := p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
+				ProtocolVersion: uint32(p.version),
+				Address:         pm.etherbase,
+			})
+			if err != nil {
+				return nil
+			}
+		}
+
+	case msg.Code == NewPendingBlockMsg:
+		// if received a new generated block, perform as to verify a normal block
+		// do signing in dpor, return consensus.ErrNewSignedHeader
+		// then broadcast to remote committee.
+
+		var request newBlockData
+		if err := msg.Decode(&request); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		request.Block.ReceivedAt = msg.ReceivedAt
+		request.Block.ReceivedFrom = p
+
+		p.MarkPendingBlock(request.Block.Hash())
+		pm.fetcher.Enqueue(p.id, request.Block)
+
+		number := request.Block.NumberU64()
+		currentNum := pm.blockchain.CurrentBlock().NumberU64()
+		if number <= currentNum {
+			return nil
+		}
+
+		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
+		if err == consensus.ErrNewSignedHeader {
+			err := err.(*consensus.ErrNewSignedHeaderType)
+			header := err.SignedHeader
+			go pm.BroadcastSignedHeader(header)
+		}
+
+	case msg.Code == NewPendingBlockHashesMsg:
+		// if received a new generated header of block,
+		// notify the fetcher to fetch the block
+		var announces newBlockHashesData
+		if err := msg.Decode(&announces); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		// Mark the hashes as present at the remote node
+		// for _, block := range announces {
+		// 	// p.MarkPendingBlock(block.Hash)
+		// }
+		// Schedule all the unknown hashes for retrieval
+		unknown := make(newBlockHashesData, 0, len(announces))
+		for _, block := range announces {
+			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
+				unknown = append(unknown, block)
+			}
+		}
+		for _, block := range unknown {
+			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+		}
+
+	case msg.Code == PrepareSignedHeaderMsg:
+		// collect the sigs in the header.
+		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
+
+		log.Debug("received NewSignedHeaderMsg, decoding...")
+
+		var header *types.Header
+		if err := msg.Decode(&header); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+
+		log.Debug("received NewSignedHeaderMsg, verifying...")
+
+		switch err := pm.VerifyAndSign(header); err {
+		case nil:
+			log.Debug("verify succeed, accepting...")
+			hash := header.Hash()
+
+			if block, ok := pm.blockchain.WaitingSignatureBlocks().Get(hash); ok {
+				b := block.(*types.Block)
+				go pm.blockchain.InsertChain(types.Blocks{b.WithSeal(header)})
+				go pm.broadcastGeneratedBlock(b)
+			}
+
+		case consensus.ErrNewSignedHeader:
+			log.Debug("verify failed, but signed it, broadcast...")
+
+			go pm.BroadcastSignedHeader(header)
+		default:
+		}
+
+	default:
+		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
+
+	}
+
+	return nil
+}
+
+func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 	// Handle the message depending on its contents
 	switch {
 	case msg.Code == StatusMsg:
@@ -677,114 +799,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			p.MarkTransaction(tx.Hash())
 		}
 		pm.txpool.AddRemotes(txs)
-
-	case msg.Code == NewSignerMsg:
-		// handshake
-		// send NewSignerMsg too.
-		// register peer as signer.
-		if msg.Size > ProtocolMaxMsgSize {
-			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-		}
-		// Decode the handshake and make sure everything matches
-		var signerStatus signerStatusData
-		if err := msg.Decode(&signerStatus); err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
-		}
-		if int(signerStatus.ProtocolVersion) != p.version {
-			return errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
-		}
-		isSigner, err := pm.SignerValidator(signerStatus.Address)
-		if isSigner && err != nil {
-			err := p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
-				ProtocolVersion: uint32(p.version),
-				Address:         pm.etherbase,
-			})
-			if err != nil {
-				return nil
-			}
-		}
-
-	case msg.Code == NewBlockGeneratedMsg:
-		// if received a new generated block, perform as to verify a normal block
-		// do signing in dpor, return consensus.ErrNewSignedHeader
-		// then broadcast to remote committee.
-
-		var request newBlockData
-		if err := msg.Decode(&request); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		request.Block.ReceivedAt = msg.ReceivedAt
-		request.Block.ReceivedFrom = p
-
-		p.MarkPendingBlock(request.Block.Hash())
-		pm.fetcher.Enqueue(p.id, request.Block)
-
-		number := request.Block.NumberU64()
-		currentNum := pm.blockchain.CurrentBlock().NumberU64()
-		if number <= currentNum {
-			return nil
-		}
-
-		_, err := pm.blockchain.InsertChain(types.Blocks{request.Block})
-		if err == consensus.ErrNewSignedHeader {
-			err := err.(*consensus.ErrNewSignedHeaderType)
-			header := err.SignedHeader
-			go pm.BroadcastSignedHeader(header)
-		}
-
-	case msg.Code == NewBlockGeneratedHashesMsg:
-		// if received a new generated header of block,
-		// notify the fetcher to fetch the block
-		var announces newBlockHashesData
-		if err := msg.Decode(&announces); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		// Mark the hashes as present at the remote node
-		for _, block := range announces {
-			p.MarkPendingBlock(block.Hash)
-		}
-		// Schedule all the unknown hashes for retrieval
-		unknown := make(newBlockHashesData, 0, len(announces))
-		for _, block := range announces {
-			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
-				unknown = append(unknown, block)
-			}
-		}
-		for _, block := range unknown {
-			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
-		}
-
-	case msg.Code == NewSignedHeaderMsg:
-		// collect the sigs in the header.
-		// if already collected enough sigs, broadcast to all peers with NewBlockMsg.
-
-		log.Debug("received NewSignedHeaderMsg, decoding...")
-
-		var header *types.Header
-		if err := msg.Decode(&header); err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
-		}
-
-		log.Debug("received NewSignedHeaderMsg, verifying...")
-
-		switch err := pm.VerifyAndSign(header); err {
-		case nil:
-			log.Debug("verify succeed, accepting...")
-			hash := header.Hash()
-
-			if block, ok := pm.blockchain.WaitingSignatureBlocks().Get(hash); ok {
-				b := block.(*types.Block)
-				go pm.blockchain.InsertChain(types.Blocks{b.WithSeal(header)})
-				go pm.broadcastGeneratedBlock(b)
-			}
-
-		case consensus.ErrNewSignedHeader:
-			log.Debug("verify failed, but signed it, broadcast...")
-
-			go pm.BroadcastSignedHeader(header)
-		default:
-		}
-
 	default:
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
 	}
@@ -807,114 +821,6 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 				go pm.BroadcastSignedHeader(header)
 			}
 		case <-pm.blockchain.Quit:
-			return
-		}
-	}
-}
-
-func (pm *ProtocolManager) broadcastGeneratedBlock(block *types.Block) {
-	committee := pm.peers.committee
-	for _, peer := range committee {
-		peer.AsyncSendNewPendingBlock(block)
-	}
-}
-
-// BroadcastSignedHeader broadcasts signed header to remote committee.
-func (pm *ProtocolManager) BroadcastSignedHeader(header *types.Header) {
-	committee := pm.peers.committee
-	for _, peer := range committee {
-		peer.AsyncSendNewSignedHeader(header)
-	}
-}
-
-// BroadcastBlock will either propagate a block to a subset of it's peers, or
-// will only announce it's availability (depending what's requested).
-func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
-	pm.broadcastBlock(block, propagate, false)
-}
-
-func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, ifMined bool) {
-	hash := block.Hash()
-	peers := pm.peers.PeersWithoutBlock(hash)
-
-	if ifMined {
-		pm.broadcastGeneratedBlock(block)
-		return
-	}
-
-	// If propagation is requested, send to a subset of the peer
-	if propagate {
-		// Calculate the TD of the block (it's not imported yet, so block.Td is not valid)
-		var td *big.Int
-		if parent := pm.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1); parent != nil {
-			td = new(big.Int).Add(block.Difficulty(), pm.blockchain.GetTd(block.ParentHash(), block.NumberU64()-1))
-		} else {
-			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash.Hex())
-			return
-		}
-
-		// Send the block to a subset of our peers
-		// transfer := peers[:int(math.Sqrt(float64(len(peers))))])
-		transfer := peers
-
-		for _, peer := range transfer {
-			peer.AsyncSendNewBlock(block, td)
-		}
-
-		log.Debug("Propagated block", "hash", hash.Hex(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
-		return
-	}
-
-	// Otherwise if the block is indeed in out own chain, announce it
-	if pm.blockchain.HasBlock(hash, block.NumberU64()) {
-		for _, peer := range peers {
-			peer.AsyncSendNewBlockHash(block)
-		}
-		log.Debug("Announced block", "hash", hash.Hex(), "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
-	}
-}
-
-// BroadcastTxs will propagate a batch of transactions to all peers which are not known to
-// already have the given transaction.
-func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions) {
-	var txset = make(map[*peer]types.Transactions)
-
-	// Broadcast transactions to a batch of peers not knowing about it
-	for _, tx := range txs {
-		peers := pm.peers.PeersWithoutTx(tx.Hash())
-		for _, peer := range peers {
-			txset[peer] = append(txset[peer], tx)
-		}
-		log.Debug("Broadcast transaction", "hash", tx.Hash().Hex(), "recipients", len(peers))
-	}
-	// FIXME include this again: peers = peers[:int(math.Sqrt(float64(len(peers))))]
-	for peer, txs := range txset {
-		peer.AsyncSendTransactions(txs)
-	}
-}
-
-// Mined broadcast loop
-func (pm *ProtocolManager) minedBroadcastLoop() {
-
-	// automatically stops if unsubscribe
-	for obj := range pm.minedBlockSub.Chan() {
-		switch ev := obj.Data.(type) {
-		case core.NewMinedBlockEvent:
-			pm.broadcastBlock(ev.Block, true, true)  // First propagate block to peers
-			pm.broadcastBlock(ev.Block, false, true) // Only then announce to the rest
-		}
-	}
-
-}
-
-func (pm *ProtocolManager) txBroadcastLoop() {
-	for {
-		select {
-		case event := <-pm.txsCh:
-			pm.BroadcastTxs(event.Txs)
-
-		// Err() channel will be closed when unsubscribing.
-		case <-pm.txsSub.Err():
 			return
 		}
 	}

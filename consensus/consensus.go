@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.o                                                                                                                                                                                                                                                                                                             rg/licenses/>.
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 // Package consensus implements different Ethereum consensus engines.
 package consensus
@@ -73,9 +73,9 @@ type Engine interface {
 	// the consensus rules of the given engine.
 	VerifySeal(chain ChainReader, header *types.Header, refHeader *types.Header) error
 
-	// Prepare initializes the consensus fields of a block header according to the
+	// PrepareBlock initializes the consensus fields of a block header according to the
 	// rules of a particular engine. The changes are executed inline.
-	Prepare(chain ChainReader, header *types.Header) error
+	PrepareBlock(chain ChainReader, header *types.Header) error
 
 	// Finalize runs any post-transaction state modifications (e.g. block rewards)
 	// and assembles the final block.
@@ -98,7 +98,7 @@ type Engine interface {
 	// GAPIs returns the GRPC APIs this consensus engine provides.
 	GAPIs(chain ChainReader) []api.GApi
 
-	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeNetworkHandler) error
+	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeHandler) error
 }
 
 // Validator is used to determine whether an address is in the committee.
@@ -115,3 +115,86 @@ type PoW interface {
 	// Hashrate returns the current mining hashrate of a PoW consensus engine.
 	Hashrate() float64
 }
+
+// Broadcast sends msg to all pbft peers.
+type Broadcast func(msg interface{}, pbftStatus uint8) error
+
+const (
+	// Preprepare is returned if pbft status is in Preprepare phrase.
+	Preprepare uint8 = iota
+
+	// Prepare is returned if pbft status is in Prepare phrase.
+	Prepare
+
+	// Commit is returned if pbft status is in Commit phrase.
+	Commit
+)
+
+// Pbft is a consensus engine based on practical byzantine fault tolerance algorithm.
+type Pbft interface {
+
+	// SendPreprepare used by leader to send <PrePrepare> msg to other signers.
+	SendPreprepare(msg interface{}, broadcastFn Broadcast) error
+
+	// Preprepare returns true if received block has correct fields(hash, number, signature of leader).
+	Preprepare(msg interface{}) (bool, error)
+
+	// SendPrepare sends <Prepare> msg to other signers.
+	SendPrepare(msg interface{}, broadcastFn Broadcast) error
+
+	// Prepare returns true if collected enough(>2f+1 || >2/3) <Prepare> msg from other signers for given block.
+	Prepare(msg interface{}) (bool, error)
+
+	// SendCommit sends <Commit> msg to other signers.
+	SendCommit(msg interface{}, broadcastFn Broadcast) error
+
+	// Commit returns true if collected enough(>2f+1 || >2/3) <Commit> msg from other signers for given block.
+	Commit(msg interface{}) (bool, error)
+
+	// Status returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
+	Status() uint8
+}
+
+// Pbft process is as follow:
+
+// for {
+// // 	switch {
+// // 	case msg.Code < X:
+// // 		// simple sync method.
+// 	case msg.Code >= X:
+// // 		// pbft phrase
+// 		switch {
+// 		case Pbft.Status() == PrePrepare:
+// 			if (msg.Code == NewPendingBlockMsg || msg.Code == ViewChangeMsg) {
+// 				if Pbft.PrePrepare() {
+// 					Pbft.SendPrepare()
+// 				}
+// 			}
+
+// 			if timer.C && Pbft.IsNextLeader() {
+// 				Pbft.SendPrePrepare(viewChangeMsg)
+// 			}
+
+// 		case Pbft.Status() == Prepare:
+// 			if msg.Code == PrepareMsg {
+// 				if Pbft.Prepare() {
+// 					Pbft.SendCommit()
+// 				}
+// 			}
+
+// 		case Pbft.Status() == Commit:
+// 			if msg.Code == CommitMsg {
+// 				if Pbft.Commit() {
+// 					// Do preprepare request.
+// 				}
+// 			}
+
+// 		default:
+// 			log.Warn
+
+// 		}
+
+// 	default:
+// 		return err
+// 	}
+// }

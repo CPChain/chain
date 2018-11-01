@@ -395,7 +395,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 			// Updates committeeNetworkHandler.RemoteSigners
 			dpor.committeeNetworkHandler.UpdateRemoteSigners(eIdx, committee)
 			// Connect all
-			dpor.committeeNetworkHandler.Connect()
+			dpor.committeeNetworkHandler.DialAll()
 		}(epochIdx, signers)
 
 	} else {

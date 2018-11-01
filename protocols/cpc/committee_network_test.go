@@ -20,7 +20,7 @@ func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *BasicCommitteeNetworkHandler
+		want    *BasicCommitteeHandler
 		wantErr bool
 	}{
 		// TODO: Add test cases.

@@ -141,9 +141,9 @@ func (d *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, ref
 	return d.dh.verifySeal(d, chain, header, nil, refHeader)
 }
 
-// Prepare implements consensus.Engine, preparing all the consensus fields of the
+// PrepareBlock implements consensus.Engine, preparing all the consensus fields of the
 // header for running the transactions on top.
-func (d *Dpor) Prepare(chain consensus.ChainReader, header *types.Header) error {
+func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
 	// If the block isn't a checkpoint, cast a random vote (good enough for now)
 	header.Coinbase = common.Address{}
 	header.Nonce = types.BlockNonce{}
