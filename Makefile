@@ -2,7 +2,7 @@
 # with Go source code. If you know what GOPATH is then you probably
 # don't need to bother with make.
 
-.PHONY: cpchain cpchain-cross evm all test clean
+.PHONY: cpchain cpchain-cross all test clean
 .PHONY: cpchain-linux cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-mips64 cpchain-linux-mips64le
 .PHONY: cpchain-linux-arm cpchain-linux-arm-5 cpchain-linux-arm-6 cpchain-linux-arm-7 cpchain-linux-arm64
 .PHONY: cpchain-darwin cpchain-darwin-386 cpchain-darwin-amd64
@@ -63,8 +63,7 @@ cpchain-cross: cpchain-linux cpchain-darwin cpchain-windows
 	@echo "Full cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-*
 
-#cpchain-linux: cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-arm cpchain-linux-mips64 cpchain-linux-mips64le
-cpchain-linux: cpchain-linux-386 cpchain-linux-amd64
+cpchain-linux: cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-arm cpchain-linux-mips64 cpchain-linux-mips64le
 	@echo "Linux cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-linux-*
 
@@ -122,8 +121,7 @@ cpchain-linux-mips64le:
 	@echo "Linux MIPS64le cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-linux-* | grep mips64le
 
-#cpchain-darwin: cpchain-darwin-386 cpchain-darwin-amd64
-cpchain-darwin: cpchain-darwin-386
+cpchain-darwin: cpchain-darwin-386 cpchain-darwin-amd64
 	@echo "Darwin cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-darwin-*
 
@@ -137,8 +135,7 @@ cpchain-darwin-amd64:
 	@echo "Darwin amd64 cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-darwin-* | grep amd64
 
-#cpchain-windows: cpchain-windows-386 cpchain-windows-amd64
-cpchain-windows: cpchain-windows-386
+cpchain-windows: cpchain-windows-386 cpchain-windows-amd64
 	@echo "Windows cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-windows-*
 
