@@ -99,6 +99,16 @@ type Engine interface {
 	GAPIs(chain ChainReader) []api.GApi
 
 	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeHandler) error
+
+	// SignHeader signs the given header.
+	// Note: it doesn't check if the header is correct.
+	SignHeader(chain ChainReader, header *types.Header) error
+
+	// IfSigned returns if have signed the block
+	IfSigned(header *types.Header) bool
+
+	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
+	State() uint8
 }
 
 // Validator is used to determine whether an address is in the committee.
@@ -132,18 +142,6 @@ const (
 
 // PbftPhraseSize is the number of pbft phrases
 const PbftPhraseSize = 3
-
-// PbftEngine is a consensus engine based on practical byzantine fault tolerance algorithm
-type PbftEngine interface {
-	Engine
-
-	// SignHeader signs the given header.
-	// Note: it doesn't check if the header is correct.
-	SignHeader(chain ChainReader, header *types.Header, seal bool) error
-
-	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
-	State() uint8
-}
 
 // Pbft is a consensus engine based on practical byzantine fault tolerance algorithm.
 type Pbft interface {
