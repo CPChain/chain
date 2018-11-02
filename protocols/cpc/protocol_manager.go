@@ -407,18 +407,22 @@ func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
 			// Verify the block
 			// if correct, sign it and broadcast as Prepare msg
 			header := request.Block.RefHeader()
+			pm.blockchain.AddPendingBlock(request.Block)
 			switch err := pm.VerifyHeader(header); err {
 			case nil:
 				go pm.BroadcastBlock(request.Block, true)
 				go pm.BroadcastBlock(request.Block, false)
 
 			case consensus.ErrNotEnoughSigs:
-				switch e := pm.SignHeader(header); e {
-				case nil:
-					go pm.BroadcastPrepareSignedHeader(header)
 
-				default:
-					return e
+				if !pm.engine.IfSigned(header) {
+					switch e := pm.SignHeader(header); e {
+					case nil:
+						go pm.BroadcastPrepareSignedHeader(header)
+
+					default:
+						return e
+					}
 				}
 
 			default:
@@ -445,15 +449,15 @@ func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
 				go pm.BroadcastCommitSignedHeader(header)
 
 			case consensus.ErrNotEnoughSigs:
-				if !pm.engine.IfSigned(header) {
-					switch e := pm.SignHeader(header); e {
-					case nil:
-						go pm.BroadcastPrepareSignedHeader(header)
+				// if !pm.engine.IfSigned(header) {
+				// 	switch e := pm.SignHeader(header); e {
+				// 	case nil:
+				// 		go pm.BroadcastPrepareSignedHeader(header)
 
-					default:
-						return e
-					}
-				}
+				// 	default:
+				// 		return e
+				// 	}
+				// }
 
 			default:
 			}
@@ -475,18 +479,29 @@ func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
 
 			switch err := pm.VerifyHeader(header); err {
 			case nil:
-				// go pm.BroadcastCommitSignedHeader(header)
+				// if commited, insert to chain, then broadcast the block
+				if block := pm.blockchain.GetPendingBlock(header.Hash()); block != nil {
+
+					block = block.WithSeal(header)
+
+					if _, err := pm.blockchain.InsertChain(types.Blocks{block}); err != nil {
+						return err
+					}
+
+					go pm.BroadcastBlock(block, true)
+					go pm.BroadcastBlock(block, false)
+				}
 
 			case consensus.ErrNotEnoughSigs:
-				if !pm.engine.IfSigned(header) {
-					switch e := pm.SignHeader(header); e {
-					case nil:
-						go pm.BroadcastPrepareSignedHeader(header)
+				// if !pm.engine.IfSigned(header) {
+				// 	switch e := pm.SignHeader(header); e {
+				// 	case nil:
+				// 		go pm.BroadcastPrepareSignedHeader(header)
 
-					default:
-						return e
-					}
-				}
+				// 	default:
+				// 		return e
+				// 	}
+				// }
 
 			default:
 			}
