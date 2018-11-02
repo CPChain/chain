@@ -69,11 +69,10 @@ const (
 
 	// Pbft messages starts here
 
-	PbftMsgOutSet            = 0x43 // not a msg code, just used for msg code comparing
-	NewPendingBlockMsg       = 0x43
-	NewPendingBlockHashesMsg = 0x44
-	PrepareSignedHeaderMsg   = 0x45
-	CommitSignedHeaderMsg    = 0x46
+	PbftMsgOutSet             = 0x43 // not a msg code, just used for msg code comparing
+	PrepreparePendingBlockMsg = 0x43
+	PrepareSignedHeaderMsg    = 0x44
+	CommitSignedHeaderMsg     = 0x45
 )
 
 type errCode int
