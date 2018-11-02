@@ -18,7 +18,7 @@ type dporHelper interface {
 	verifyCascadingFields(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	snapshot(d *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error)
 	verifySeal(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
-	// signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header) error
+	signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header) error
 }
 
 type defaultDporHelper struct {
@@ -362,10 +362,9 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			return err
 		}
 
-		// Return special err to return new signed header
 		return nil
 	}
-	return nil
+	return errSignerNotInCommittee
 }
 
 // timeToDialCommittee checks if it is time to dial remote signers, and dails them if time is up
