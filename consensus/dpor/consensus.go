@@ -337,3 +337,36 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 
 	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
 }
+
+// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
+func (d *Dpor) State() uint8 {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	return d.pbftState
+}
+
+// UpdateState updates pbft state.
+func (d *Dpor) UpdateState() {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	state := d.pbftState
+
+	state++
+	state %= consensus.PbftPhraseSize
+
+	d.pbftState = state
+}
+
+// SignHeader signs the header and adds all known sigs to header
+func (d *Dpor) SignHeader(chain consensus.ChainReader, header *types.Header) error {
+
+	// switch err := d.dh.signHeader(d, chain, header); err {
+	// case nil:
+	// 	d.UpdateState()
+	// 	return nil
+	// default:
+	// 	return consensus.ErrWhenSigningHeader
+	// }
+	return nil
+}
