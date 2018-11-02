@@ -8,6 +8,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -123,4 +124,15 @@ func (d *Dpor) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.Comm
 	defer d.lock.Unlock()
 	d.committeeNetworkHandler = committeeNetworkHandler
 	return nil
+}
+
+// IfSigned returns if already signed the block
+func (d *Dpor) IfSigned(header *types.Header) bool {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	if _, ok := d.signedBlocks[header.Number.Uint64()]; ok {
+		return true
+	}
+	return false
 }
