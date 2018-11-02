@@ -361,12 +361,12 @@ func (d *Dpor) UpdateState() {
 // SignHeader signs the header and adds all known sigs to header
 func (d *Dpor) SignHeader(chain consensus.ChainReader, header *types.Header) error {
 
-	// switch err := d.dh.signHeader(d, chain, header); err {
-	// case nil:
-	// 	d.UpdateState()
-	// 	return nil
-	// default:
-	// 	return consensus.ErrWhenSigningHeader
-	// }
+	switch err := d.dh.signHeader(d, chain, header); err {
+	case nil:
+		d.UpdateState()
+		return nil
+	default:
+		return consensus.ErrWhenSigningHeader
+	}
 	return nil
 }
