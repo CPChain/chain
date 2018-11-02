@@ -333,9 +333,19 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	}
 }
 
-// VerifyAndSign validates a header and signs it if nessary
-func (pm *ProtocolManager) VerifyAndSign(header *types.Header) error {
+// // VerifyAndSign validates a header and signs it if nessary
+// func (pm *ProtocolManager) VerifyAndSign(header *types.Header) error {
+// 	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
+// }
+
+// VerifyHeader validates a header
+func (pm *ProtocolManager) VerifyHeader(header *types.Header) error {
 	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
+}
+
+// SignHeader signs the header
+func (pm *ProtocolManager) SignHeader(header *types.Header) error {
+	return pm.engine.SignHeader(pm.blockchain, header)
 }
 
 // handleMsg is invoked whenever an inbound message is received from a remote
@@ -368,8 +378,52 @@ func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
 	case consensus.Preprepare:
 		switch {
 		case msg.Code == PrepreparePendingBlockMsg:
+			var request newBlockData
+			if err := msg.Decode(&request); err != nil {
+				return errResp(ErrDecode, "%v: %v", msg, err)
+			}
+			request.Block.ReceivedAt = msg.ReceivedAt
+			request.Block.ReceivedFrom = p
+
+			// Assuming the block is importable by the peer, but possibly not yet done so,
+			// calculate the head hash and TD that the peer truly must have.
+			var (
+				trueHead = request.Block.ParentHash()
+				trueTD   = new(big.Int).Sub(request.TD, request.Block.Difficulty())
+			)
+			// Update the peers total difficulty if better than the previous
+			if _, td := p.Head(); trueTD.Cmp(td) > 0 {
+				p.SetHead(trueHead, trueTD)
+
+				// Schedule a sync if above ours. Note, this will not fire a sync for a gap of
+				// a singe block (as the true TD is below the propagated block), however this
+				// scenario should easily be covered by the fetcher.
+				currentBlock := pm.blockchain.CurrentBlock()
+				if trueTD.Cmp(pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())) > 0 {
+					go pm.synchronise(p)
+				}
+			}
+
 			// Verify the block
 			// if correct, sign it and broadcast as Prepare msg
+			header := request.Block.RefHeader()
+			switch err := pm.VerifyHeader(header); err {
+			case nil:
+				go pm.BroadcastBlock(request.Block, true)
+				go pm.BroadcastBlock(request.Block, false)
+
+			case consensus.ErrNotEnoughSigs:
+				switch e := pm.SignHeader(header); e {
+				case nil:
+					go pm.BroadcastPrepareSignedHeader(header)
+
+				default:
+					return e
+				}
+
+			default:
+				return err
+			}
 
 		default:
 			log.Warn("receievd unwelcome msg in state Preprepare", "msg code", msg.Code)
@@ -378,35 +432,31 @@ func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
 	case consensus.Prepare:
 		switch {
 		case msg.Code == PrepareSignedHeaderMsg:
+
+			var header *types.Header
+			if err := msg.Decode(&header); err != nil {
+				return errResp(ErrDecode, "msg %v: %v", msg, err)
+			}
+
 			// Verify the signed header
 			// if correct, rebroadcast it as Commit msg
+			switch err := pm.VerifyHeader(header); err {
+			case nil:
+				go pm.BroadcastCommitSignedHeader(header)
 
-			// log.Debug("received NewSignedHeaderMsg, decoding...")
+			case consensus.ErrNotEnoughSigs:
+				if !pm.engine.IfSigned(header) {
+					switch e := pm.SignHeader(header); e {
+					case nil:
+						go pm.BroadcastPrepareSignedHeader(header)
 
-			// var header *types.Header
-			// if err := msg.Decode(&header); err != nil {
-			// 	return errResp(ErrDecode, "msg %v: %v", msg, err)
-			// }
+					default:
+						return e
+					}
+				}
 
-			// log.Debug("received NewSignedHeaderMsg, verifying...")
-
-			// switch err := pm.VerifyAndSign(header); err {
-			// case nil:
-			// 	log.Debug("verify succeed, accepting...")
-			// 	hash := header.Hash()
-
-			// 	if block, ok := pm.blockchain.WaitingSignatureBlocks().Get(hash); ok {
-			// 		b := block.(*types.Block)
-			// 		go pm.blockchain.InsertChain(types.Blocks{b.WithSeal(header)})
-			// 		go pm.broadcastGeneratedBlock(b)
-			// 	}
-
-			// case consensus.ErrNewSignedHeader:
-			// 	log.Debug("verify failed, but signed it, broadcast...")
-
-			// 	go pm.BroadcastSignedHeader(header)
-			// default:
-			// }
+			default:
+			}
 
 		default:
 			log.Warn("receievd unwelcome msg in state Prepare", "msg code", msg.Code)
@@ -415,8 +465,31 @@ func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
 	case consensus.Commit:
 		switch {
 		case msg.Code == CommitSignedHeaderMsg:
+
 			// Verify the signed header
 			// if correct, broadcast it as NewBlockMsg
+			var header *types.Header
+			if err := msg.Decode(&header); err != nil {
+				return errResp(ErrDecode, "msg %v: %v", msg, err)
+			}
+
+			switch err := pm.VerifyHeader(header); err {
+			case nil:
+				// go pm.BroadcastCommitSignedHeader(header)
+
+			case consensus.ErrNotEnoughSigs:
+				if !pm.engine.IfSigned(header) {
+					switch e := pm.SignHeader(header); e {
+					case nil:
+						go pm.BroadcastPrepareSignedHeader(header)
+
+					default:
+						return e
+					}
+				}
+
+			default:
+			}
 
 		default:
 			log.Warn("receievd unwelcome msg in state Prepare", "msg code", msg.Code)
