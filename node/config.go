@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"

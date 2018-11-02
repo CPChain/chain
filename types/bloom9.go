@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 

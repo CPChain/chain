@@ -24,7 +24,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/types"

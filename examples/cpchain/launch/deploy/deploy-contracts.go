@@ -17,7 +17,7 @@ import (
 	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 )
 

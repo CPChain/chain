@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"

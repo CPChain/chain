@@ -7,7 +7,7 @@ import (
 
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/crypto/sha3"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"

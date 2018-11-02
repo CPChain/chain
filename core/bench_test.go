@@ -27,7 +27,7 @@ import (
 	// "bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 

@@ -26,7 +26,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/common/bitutil"
 )
 

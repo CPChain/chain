@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"

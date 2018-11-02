@@ -25,7 +25,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
