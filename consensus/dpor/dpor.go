@@ -51,6 +51,8 @@ type Dpor struct {
 	fakeDelay      time.Duration // Time delay to sleep for before returning from verify
 	contractCaller *consensus.ContractCaller
 
+	pbftState uint8
+
 	lock sync.RWMutex // Protects the signer fields
 }
 
