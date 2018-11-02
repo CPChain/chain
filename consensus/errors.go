@@ -43,6 +43,18 @@ var (
 	// ErrNotEnoughSigs is returned if there is not enough signatures for a block.
 	ErrNotEnoughSigs = &ErrNotEnoughSigsType{NotEnoughSigsBlockHash: common.Hash{}}
 
+	// ErrPreprepareHeader is returned if a header in Preprepare phrase is invalid.
+	ErrPreprepareHeader = errors.New("invalid preprepare header")
+
+	// ErrPrepareHeader is returned if a header in Prepare phrase is invalid.
+	ErrPrepareHeader = errors.New("invalid prepare header")
+
+	// ErrCommitHeader is returned if a header in Commit phrase is invalid.
+	ErrCommitHeader = errors.New("invalid commit header")
+
+	// ErrWhenSigningHeader is returned if there is an error when signing header.
+	ErrWhenSigningHeader = errors.New("error when signing header")
+
 	// ErrUnauthorized is returned if a header is signed by a non-authorized entity.
 	ErrUnauthorized = errors.New("unauthorized leader")
 
