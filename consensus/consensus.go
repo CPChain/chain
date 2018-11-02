@@ -151,8 +151,8 @@ type Pbft interface {
 	// Commit returns true if collected enough(>2f+1 || >2/3) <Commit> msg from other signers for given block.
 	Commit(msg interface{}) (bool, error)
 
-	// Status returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
-	Status() uint8
+	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
+	State() uint8
 }
 
 // Pbft process is as follow:

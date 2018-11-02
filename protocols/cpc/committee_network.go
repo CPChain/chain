@@ -246,40 +246,40 @@ type BasicCommitteeHandler struct {
 
 // NewBasicCommitteeNetworkHandler creates a BasicCommitteeNetworkHandler instance
 func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, etherbase common.Address) (*BasicCommitteeHandler, error) {
-	bc := &BasicCommitteeHandler{
+	ch := &BasicCommitteeHandler{
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
 		remoteSigners:   make([]*RemoteSigner, config.Epoch),
 		// remoteSigners:   make([]*RemoteSigner, config.Epoch-1),
 		connected: false,
 	}
-	return bc, nil
+	return ch, nil
 }
 
-func (oc *BasicCommitteeHandler) UpdateServer(server *p2p.Server) error {
-	oc.lock.Lock()
-	defer oc.lock.Unlock()
-	oc.server = server
-	oc.ownNodeID = server.Self().String()
+func (ch *BasicCommitteeHandler) UpdateServer(server *p2p.Server) error {
+	ch.lock.Lock()
+	defer ch.lock.Unlock()
+	ch.server = server
+	ch.ownNodeID = server.Self().String()
 	return nil
 }
 
-func (oc *BasicCommitteeHandler) SetRSAKeys(rsaReader RSAReader) error {
-	oc.lock.Lock()
-	defer oc.lock.Unlock()
+func (ch *BasicCommitteeHandler) SetRSAKeys(rsaReader RSAReader) error {
+	ch.lock.Lock()
+	defer ch.lock.Unlock()
 
 	var err error
 
-	oc.RsaKey, err = rsaReader()
+	ch.RsaKey, err = rsaReader()
 
 	return err
 }
 
 // UpdateContractCaller updates contractcaller.
-func (oc *BasicCommitteeHandler) UpdateContractCaller(contractCaller *consensus.ContractCaller) error {
+func (ch *BasicCommitteeHandler) UpdateContractCaller(contractCaller *consensus.ContractCaller) error {
 
 	// creates an contract instance
-	contractInstance, err := contract.NewSignerConnectionRegister(oc.contractAddress, contractCaller.Client)
+	contractInstance, err := contract.NewSignerConnectionRegister(ch.contractAddress, contractCaller.Client)
 	if err != nil {
 		return err
 	}
@@ -296,33 +296,33 @@ func (oc *BasicCommitteeHandler) UpdateContractCaller(contractCaller *consensus.
 	auth.GasLimit = contractCaller.GasLimit
 	auth.GasPrice = gasPrice
 
-	oc.lock.Lock()
+	ch.lock.Lock()
 
 	// assign
-	oc.contractCaller = contractCaller
-	oc.contractInstance = contractInstance
-	oc.contractTransactor = auth
+	ch.contractCaller = contractCaller
+	ch.contractInstance = contractInstance
+	ch.contractTransactor = auth
 
-	oc.lock.Unlock()
+	ch.lock.Unlock()
 
 	return nil
 }
 
 // UpdateRemoteSigners updates BasicCommitteeNetworkHandler's remoteSigners.
-func (oc *BasicCommitteeHandler) UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error {
-	oc.lock.Lock()
-	remoteSigners := oc.remoteSigners
-	oc.lock.Unlock()
+func (ch *BasicCommitteeHandler) UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error {
+	ch.lock.Lock()
+	remoteSigners := ch.remoteSigners
+	ch.lock.Unlock()
 
 	log.Debug("remote signers", "signers", signers)
-	log.Debug("oc.remoteSigners", "signers", remoteSigners)
+	log.Debug("ch.remoteSigners", "signers", remoteSigners)
 
 	for i, signer := range signers {
 		// if remoteSigners[i] == nil || remoteSigners[i].address != signer {
 		if remoteSigners[i] == nil {
 
 			// // omit self
-			// if signer == oc.contractTransactor.From {
+			// if signer == ch.contractTransactor.From {
 			// 	continue
 			// }
 			s := NewRemoteSigner(epochIdx, signer)
@@ -330,21 +330,21 @@ func (oc *BasicCommitteeHandler) UpdateRemoteSigners(epochIdx uint64, signers []
 		}
 	}
 
-	oc.lock.Lock()
-	oc.epochIdx = epochIdx
-	oc.remoteSigners = remoteSigners
-	oc.lock.Unlock()
+	ch.lock.Lock()
+	ch.epochIdx = epochIdx
+	ch.remoteSigners = remoteSigners
+	ch.lock.Unlock()
 
 	return nil
 }
 
 // DialAll connects remote signers.
-func (oc *BasicCommitteeHandler) DialAll() {
-	oc.lock.Lock()
-	nodeID, address, contractInstance, auth, client := oc.ownNodeID, oc.ownAddress, oc.contractInstance, oc.contractTransactor, oc.contractCaller.Client
-	connected, remoteSigners, server := oc.connected, oc.remoteSigners, oc.server
-	rsaKey := oc.RsaKey
-	oc.lock.Unlock()
+func (ch *BasicCommitteeHandler) DialAll() {
+	ch.lock.Lock()
+	nodeID, address, contractInstance, auth, client := ch.ownNodeID, ch.ownAddress, ch.contractInstance, ch.contractTransactor, ch.contractCaller.Client
+	connected, remoteSigners, server := ch.connected, ch.remoteSigners, ch.server
+	rsaKey := ch.RsaKey
+	ch.lock.Unlock()
 
 	if !connected {
 		log.Debug("connecting...")
@@ -356,17 +356,17 @@ func (oc *BasicCommitteeHandler) DialAll() {
 		connected = true
 	}
 
-	oc.lock.Lock()
-	oc.connected = connected
-	oc.lock.Unlock()
+	ch.lock.Lock()
+	ch.connected = connected
+	ch.lock.Unlock()
 
 }
 
 // Disconnect disconnects all.
-func (oc *BasicCommitteeHandler) Disconnect() {
-	oc.lock.Lock()
-	connected, remoteSigners, server := oc.connected, oc.remoteSigners, oc.server
-	oc.lock.Unlock()
+func (ch *BasicCommitteeHandler) Disconnect() {
+	ch.lock.Lock()
+	connected, remoteSigners, server := ch.connected, ch.remoteSigners, ch.server
+	ch.lock.Unlock()
 
 	if connected {
 		log.Debug("disconnecting...")
@@ -376,54 +376,54 @@ func (oc *BasicCommitteeHandler) Disconnect() {
 			log.Debug("err when disconnect", "e", err)
 		}
 
-		oc.connected = false
+		ch.connected = false
 	}
 
-	oc.lock.Lock()
-	oc.connected = connected
-	oc.lock.Unlock()
+	ch.lock.Lock()
+	ch.connected = connected
+	ch.lock.Unlock()
 }
 
 // SendPreprepare implements Pbft.SendPreprepare.
-func (oc *BasicCommitteeHandler) SendPreprepare(msg interface{}, broadcastFn consensus.Broadcast) error {
+func (ch *BasicCommitteeHandler) SendPreprepare(msg interface{}, broadcastFn consensus.Broadcast) error {
 	go broadcastFn(msg, consensus.Preprepare)
 
 	return nil
 }
 
 // Preprepare implements Pbft.Preprepare.
-func (oc *BasicCommitteeHandler) Preprepare(msg interface{}) (bool, error) {
+func (ch *BasicCommitteeHandler) Preprepare(msg interface{}) (bool, error) {
 
 	return false, nil
 }
 
 // SendPrepare implements Pbft.SendPrepare.
-func (oc *BasicCommitteeHandler) SendPrepare(msg interface{}, broadcastFn consensus.Broadcast) error {
+func (ch *BasicCommitteeHandler) SendPrepare(msg interface{}, broadcastFn consensus.Broadcast) error {
 	go broadcastFn(msg, consensus.Prepare)
 
 	return nil
 }
 
 // Prepare implements Pbft.Prepare.
-func (oc *BasicCommitteeHandler) Prepare(msg interface{}) (bool, error) {
+func (ch *BasicCommitteeHandler) Prepare(msg interface{}) (bool, error) {
 
 	return false, nil
 }
 
 // SendCommit implements Pbft.SendCommit.
-func (oc *BasicCommitteeHandler) SendCommit(msg interface{}, broadcastFn consensus.Broadcast) error {
+func (ch *BasicCommitteeHandler) SendCommit(msg interface{}, broadcastFn consensus.Broadcast) error {
 	go broadcastFn(msg, consensus.Commit)
 
 	return nil
 }
 
 // Commit implements Pbft.Commit.
-func (oc *BasicCommitteeHandler) Commit(msg interface{}) (bool, error) {
+func (ch *BasicCommitteeHandler) Commit(msg interface{}) (bool, error) {
 
 	return false, nil
 }
 
-// Status implements Pbft.Status.
-func (oc *BasicCommitteeHandler) Status() uint8 {
+// State implements Pbft.State.
+func (ch *BasicCommitteeHandler) State() uint8 {
 	return 0
 }
