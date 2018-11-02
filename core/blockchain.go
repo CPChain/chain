@@ -51,7 +51,8 @@ import (
 var (
 	blockInsertTimer = metrics.NewRegisteredTimer("chain/inserts", nil)
 
-	ErrNoGenesis = errors.New("Genesis not found in chain")
+	ErrNoGenesis             = errors.New("Genesis not found in chain")
+	ErrFailToAddPendingBlock = errors.New("fail to add pending block")
 )
 
 type VerifyEthashFunc func(uint64, uint64, common.Address) bool
@@ -144,9 +145,28 @@ type BlockChain struct {
 	ErrChan chan error
 }
 
-// WaitingSignatureBlocks returns waitingSignatureBlocks
-func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
-	return bc.pendingBlocks
+// GetPendingBlock returns a pending block with given hash
+func (bc *BlockChain) GetPendingBlock(hash common.Hash) *types.Block {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+
+	if block, ok := bc.pendingBlocks.Get(hash); ok {
+		return block.(*types.Block)
+	}
+	return nil
+}
+
+// AddPendingBlock adds a pending block with given hash
+func (bc *BlockChain) AddPendingBlock(block *types.Block) error {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+
+	hash := block.Hash()
+
+	if bc.pendingBlocks.Add(hash, block) {
+		return nil
+	}
+	return ErrFailToAddPendingBlock
 }
 
 // NewBlockChain returns a fully initialised block chain using information
