@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -42,16 +42,16 @@ var (
 	forkSeed      = 2
 )
 
-func fakeDpor(db ethdb.Database) *dpor.Dpor {
+func fakeDpor(db database.Database) *dpor.Dpor {
 	return dpor.NewFaker(configs.AllCpchainProtocolChanges.Dpor, db)
 }
 
 // newCanonical creates a chain database, and injects a deterministic canonical
 // chain. Depending on the full flag, if creates either a full block chain or a
 // header only chain.
-func newCanonical(engine consensus.Engine, n int, db ethdb.Database) (*BlockChain, error) {
+func newCanonical(engine consensus.Engine, n int, db database.Database) (*BlockChain, error) {
 	var (
-		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 		genesis  = GenesisBlockForTesting(db, common.Address{}, big.NewInt(1000))
 	)
 
@@ -70,7 +70,7 @@ func newCanonical(engine consensus.Engine, n int, db ethdb.Database) (*BlockChai
 // Test fork of length N starting from block i
 func testFork(t *testing.T, blockchain *BlockChain, i, n int, comparator func(td1, td2 *big.Int)) {
 	// Copy old chain up to #i into a new db
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockchain2, err := newCanonical(fakeDpor(db), i, db)
 
 	if err != nil {
@@ -175,7 +175,7 @@ func testHeaderChainImport(chain []*types.Header, blockchain *BlockChain) error 
 }
 
 func TestLastBlock(t *testing.T) {
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockchain, err := newCanonical(fakeDpor(db), 0, db)
 	if err != nil {
 		t.Fatalf("failed to create pristine chain: %v", err)
@@ -196,7 +196,7 @@ func TestLastBlock(t *testing.T) {
 func TestExtendCanonicalBlocks(t *testing.T) {
 	length := 5
 
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	processor, err := newCanonical(fakeDpor(db), length, db)
 	// Make first chain starting from genesis
 	if err != nil {
@@ -221,7 +221,7 @@ func TestExtendCanonicalBlocks(t *testing.T) {
 // forks do not take canonical ownership.
 func TestShorterForkBlocks(t *testing.T) {
 	length := 10
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	processor, err := newCanonical(fakeDpor(db), length, db)
 
 	// Make first chain starting from genesis
@@ -250,7 +250,7 @@ func TestShorterForkBlocks(t *testing.T) {
 func TestLongerForkBlocks(t *testing.T) {
 	length := 10
 
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	processor, err := newCanonical(fakeDpor(db), length, db)
 	// Make first chain starting from genesis
 	if err != nil {
@@ -277,7 +277,7 @@ func TestLongerForkBlocks(t *testing.T) {
 // forks do take canonical ownership.
 func TestEqualForkBlocks(t *testing.T) {
 	length := 10
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	processor, err := newCanonical(fakeDpor(db), length, db)
 
 	// Make first chain starting from genesis
@@ -304,7 +304,7 @@ func TestEqualForkBlocks(t *testing.T) {
 // Tests that chains missing links do not get accepted by the processor.
 func TestBrokenBlockChain(t *testing.T) {
 	t.Skip("===TestBrokenBlockChain broken block chain not reported")
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockchain, err := newCanonical(fakeDpor(db), 10, db)
 	// Make chain starting from genesis
 	if err != nil {
@@ -345,14 +345,14 @@ func TestReorgShortBlocks(t *testing.T) {
 
 func testReorg(t *testing.T, first, second []int64, td int64) {
 	// Create a pristine chain and database
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockchain, err := newCanonical(fakeDpor(db), 0, db)
 	if err != nil {
 		t.Fatalf("failed to create pristine chain: %v", err)
 	}
 	defer blockchain.Stop()
 
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	// Insert an easy and a difficult chain afterwards
 	easyBlocks, _ := GenerateChain(configs.TestChainConfig, blockchain.CurrentBlock(), fakeDpor(db), db, remoteDB, len(first), func(i int, b *BlockGen) {
 		b.OffsetTime(first[i])
@@ -385,7 +385,7 @@ func testReorg(t *testing.T, first, second []int64, td int64) {
 
 func TestBadBlockHashes(t *testing.T) {
 	// Create a pristine chain and database
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockchain, err := newCanonical(fakeDpor(db), 0, db)
 	if err != nil {
 		t.Fatalf("failed to create pristine chain: %v", err)
@@ -408,7 +408,7 @@ func TestBadBlockHashes(t *testing.T) {
 // good state prior to the bad hash.
 func TestReorgBadBlockHashes(t *testing.T) {
 	// Create a pristine chain and database
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockchain, err := newCanonical(fakeDpor(db), 0, db)
 	if err != nil {
 		t.Fatalf("failed to create pristine chain: %v", err)
@@ -446,7 +446,7 @@ func TestBlocksInsertNonceError(t *testing.T) {
 	t.Skip("===TestBlocksInsertNonceError invalid block in chain")
 	for i := 1; i < 25 && !t.Failed(); i++ {
 		// Create a pristine chain and database
-		db := ethdb.NewMemDatabase()
+		db := database.NewMemDatabase()
 		blockchain, err := newCanonical(fakeDpor(db), 0, db)
 		if err != nil {
 			t.Fatalf("failed to create pristine chain: %v", err)
@@ -492,8 +492,8 @@ func TestChainTxReorgs(t *testing.T) {
 		addr1    = crypto.PubkeyToAddress(key1.PublicKey)
 		addr2    = crypto.PubkeyToAddress(key2.PublicKey)
 		addr3    = crypto.PubkeyToAddress(key3.PublicKey)
-		db       = ethdb.NewMemDatabase()
-		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db       = database.NewMemDatabase()
+		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 		gspec    = &Genesis{
 			Config:   configs.TestChainConfig,
 			GasLimit: 3141592,
@@ -605,8 +605,8 @@ func TestLogReorgs(t *testing.T) {
 	var (
 		key1, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		addr1    = crypto.PubkeyToAddress(key1.PublicKey)
-		db       = ethdb.NewMemDatabase()
-		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db       = database.NewMemDatabase()
+		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 		// this code generates a log
 		code    = common.Hex2Bytes("60606040525b7f24ec1d3ff24c2f6ff210738839dbc339cd45a5294d85c79361016243157aae7b60405180905060405180910390a15b600a8060416000396000f360606040526008565b00")
 		gspec   = &Genesis{Config: configs.TestChainConfig, Alloc: GenesisAlloc{addr1: {Balance: big.NewInt(10000000000000)}}}
@@ -651,8 +651,8 @@ func TestLogReorgs(t *testing.T) {
 func TestReorgSideEvent(t *testing.T) {
 	t.Skip("=== Diff TestReorgSideEvent")
 	var (
-		db       = ethdb.NewMemDatabase()
-		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db       = database.NewMemDatabase()
+		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 		key1, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		addr1    = crypto.PubkeyToAddress(key1.PublicKey)
 		gspec    = &Genesis{
@@ -735,7 +735,7 @@ done:
 
 // Tests if the canonical block can be fetched from the database during chain insertion.
 func TestCanonicalBlockRetrieval(t *testing.T) {
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockchain, err := newCanonical(fakeDpor(db), 0, db)
 	if err != nil {
 		t.Fatalf("failed to create pristine chain: %v", err)
@@ -787,9 +787,9 @@ func TestBlockchainHeaderchainReorgConsistency(t *testing.T) {
 	t.Skip("=== Diff TestBlockchainHeaderchainReorgConsistency failed to insert into chain: extra-data 32 byte vanity prefix missing")
 	// Generate a canonical chain to act as the main dataset
 
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	engine := fakeDpor(db)
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	genesis := new(Genesis).MustCommit(db)
 	blocks, _ := GenerateChain(configs.TestChainConfig, genesis, engine, db, remoteDB, 64, func(i int, b *BlockGen) { b.SetCoinbase(common.Address{1}) })
 
@@ -805,7 +805,7 @@ func TestBlockchainHeaderchainReorgConsistency(t *testing.T) {
 	}
 	// Import the canonical and fork chain side by side, verifying the current block
 	// and current header consistency
-	diskdb := ethdb.NewMemDatabase()
+	diskdb := database.NewMemDatabase()
 	new(Genesis).MustCommit(diskdb)
 
 	chain, err := NewBlockChain(diskdb, nil, configs.TestChainConfig, engine, vm.Config{}, remoteDB, nil)
@@ -833,9 +833,9 @@ func TestBlockchainHeaderchainReorgConsistency(t *testing.T) {
 func TestTrieForkGC(t *testing.T) {
 	// Generate a canonical chain to act as the main dataset
 
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	engine := fakeDpor(db)
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	genesis := new(Genesis).MustCommit(db)
 	blocks, _ := GenerateChain(configs.TestChainConfig, genesis, engine, db, remoteDB, 2*triesInMemory, func(i int, b *BlockGen) { b.SetCoinbase(common.Address{1}) })
 
@@ -850,7 +850,7 @@ func TestTrieForkGC(t *testing.T) {
 		forks[i] = fork[0]
 	}
 	// Import the canonical and fork chain side by side, forcing the trie cache to cache both
-	diskdb := ethdb.NewMemDatabase()
+	diskdb := database.NewMemDatabase()
 	new(Genesis).MustCommit(diskdb)
 	chain, err := NewBlockChain(diskdb, nil, configs.TestChainConfig, engine, vm.Config{}, remoteDB, nil)
 	if err != nil {
@@ -880,9 +880,9 @@ func TestLargeReorgTrieGC(t *testing.T) {
 	t.Skip("=== Diff TestLargeReorgTrieGC")
 	// Generate the original common chain segment and the two competing forks
 
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	engine := fakeDpor(db)
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	genesis := new(Genesis).MustCommit(db)
 
 	shared, _ := GenerateChain(configs.TestChainConfig, genesis, engine, db, remoteDB, 64, func(i int, b *BlockGen) { b.SetCoinbase(common.Address{1}) })
@@ -890,7 +890,7 @@ func TestLargeReorgTrieGC(t *testing.T) {
 	competitor, _ := GenerateChain(configs.TestChainConfig, shared[len(shared)-1], engine, db, remoteDB, 2*triesInMemory+1, func(i int, b *BlockGen) { b.SetCoinbase(common.Address{3}) })
 
 	// Import the shared chain and the original canonical one
-	diskdb := ethdb.NewMemDatabase()
+	diskdb := database.NewMemDatabase()
 	new(Genesis).MustCommit(diskdb)
 
 	chain, err := NewBlockChain(diskdb, nil, configs.TestChainConfig, engine, vm.Config{}, remoteDB, nil)
@@ -939,7 +939,7 @@ func benchmarkLargeNumberOfValueToNonexisting(b *testing.B, numTxs, numBlocks in
 	)
 
 	// Generate the original common chain segment and the two competing forks
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	gspec := DefaultGenesisBlock()
 	gspec.Alloc = GenesisAlloc{
 		testBankAddress: {Balance: bankFunds},
@@ -951,7 +951,7 @@ func benchmarkLargeNumberOfValueToNonexisting(b *testing.B, numTxs, numBlocks in
 	gspec.GasLimit = 100e6 // 100 M
 
 	engine := fakeDpor(db)
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	genesis := gspec.MustCommit(db)
 
 	blockGenerator := func(i int, block *BlockGen) {
@@ -973,9 +973,9 @@ func benchmarkLargeNumberOfValueToNonexisting(b *testing.B, numTxs, numBlocks in
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		// Import the shared chain and the original canonical one
-		diskdb := ethdb.NewMemDatabase()
+		diskdb := database.NewMemDatabase()
 		gspec.MustCommit(diskdb)
-		remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 
 		chain, err := NewBlockChain(diskdb, nil, configs.TestChainConfig, engine, vm.Config{}, remoteDB, nil)
 		if err != nil {

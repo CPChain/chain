@@ -26,7 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -349,7 +349,7 @@ func testGetNodeData(t *testing.T, protocol int) {
 			t.Errorf("data hash mismatch: have %x, want %x", hash, want)
 		}
 	}
-	statedb := ethdb.NewMemDatabase()
+	statedb := database.NewMemDatabase()
 	for i := 0; i < len(data); i++ {
 		statedb.Put(hashes[i].Bytes(), data[i])
 	}

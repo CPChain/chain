@@ -26,7 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/trie"
 )
@@ -324,7 +324,7 @@ func (s *stateSync) loop() (err error) {
 }
 
 func (s *stateSync) commit(force bool) error {
-	if !force && s.bytesUncommitted < ethdb.IdealBatchSize {
+	if !force && s.bytesUncommitted < database.IdealBatchSize {
 		return nil
 	}
 	start := time.Now()

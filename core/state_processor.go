@@ -25,7 +25,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/types"
 
@@ -66,7 +66,7 @@ func NewStateProcessor(config *configs.ChainConfig, bc *BlockChain, engine conse
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
 func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, statePrivDB *state.StateDB,
-	remoteDB ethdb.RemoteDatabase, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (types.Receipts, types.Receipts, []*types.Log, uint64, error) {
+	remoteDB database.RemoteDatabase, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (types.Receipts, types.Receipts, []*types.Log, uint64, error) {
 	var (
 		pubReceipts  types.Receipts
 		privReceipts types.Receipts
@@ -104,7 +104,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 // for the transaction, gas used and an error if the transaction failed,
 // indicating the block was invalid.
 func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, pubStateDb *state.StateDB,
-	privateStateDb *state.StateDB, remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64,
+	privateStateDb *state.StateDB, remoteDB database.RemoteDatabase, header *types.Header, tx *types.Transaction, usedGas *uint64,
 	cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, *types.Receipt, uint64, error) {
 	msg, err := tx.AsMessage(types.MakeSigner(config))
 	if err != nil {
@@ -162,7 +162,7 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 
 // applyPrivateTx attempts to apply a private transaction to the given state database
 func tryApplyPrivateTx(config *configs.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, privateStateDb *state.StateDB,
-	remoteDB ethdb.RemoteDatabase, header *types.Header, tx *types.Transaction, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, error) {
+	remoteDB database.RemoteDatabase, header *types.Header, tx *types.Transaction, cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (*types.Receipt, error) {
 	msg, err := tx.AsMessage(types.MakeSigner(config))
 	if err != nil {
 		return nil, err

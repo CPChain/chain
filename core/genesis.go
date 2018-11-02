@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -157,7 +157,7 @@ func (e *GenesisMismatchError) Error() string {
 // error is a *params.ConfigCompatError and the new, unwritten config is returned.
 //
 // The returned chain configuration is never nil.
-func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfig, common.Hash, error) {
+func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainConfig, common.Hash, error) {
 	if genesis != nil && genesis.Config == nil {
 		return configs.AllCpchainProtocolChanges, common.Hash{}, errGenesisNoConfig
 	}
@@ -199,7 +199,7 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*configs.ChainConfi
 	}
 }
 
-func updateChainConfig(storedcfg *configs.ChainConfig, newcfg *configs.ChainConfig, db ethdb.Database, stored common.Hash) *configs.ChainConfig {
+func updateChainConfig(storedcfg *configs.ChainConfig, newcfg *configs.ChainConfig, db database.Database, stored common.Hash) *configs.ChainConfig {
 	if storedcfg == nil {
 		log.Warn("Found genesis block without chain config")
 	}
@@ -210,7 +210,7 @@ func updateChainConfig(storedcfg *configs.ChainConfig, newcfg *configs.ChainConf
 
 // OpenGenesisBlock opens genesis block and returns its chain configuration and hash.
 // Return errors when genesis block not exist or genesis block configuration not exist.
-func OpenGenesisBlock(db ethdb.Database) (*configs.ChainConfig, common.Hash, error) {
+func OpenGenesisBlock(db database.Database) (*configs.ChainConfig, common.Hash, error) {
 	// the hash of the stored block
 	stored := rawdb.ReadCanonicalHash(db, 0)
 	if (stored == common.Hash{}) {
@@ -239,9 +239,9 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 
 // ToBlock creates the genesis block and writes state of a genesis specification
 // to the given database (or discards it if nil).
-func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
+func (g *Genesis) ToBlock(db database.Database) *types.Block {
 	if db == nil {
-		db = ethdb.NewMemDatabase()
+		db = database.NewMemDatabase()
 	}
 	statedb, _ := state.New(common.Hash{}, state.NewDatabase(db))
 	for addr, account := range g.Alloc {
@@ -280,7 +280,7 @@ func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 
 // Commit writes the block and state of a genesis specification to the database.
 // The block is committed as the canonical head block.
-func (g *Genesis) Commit(db ethdb.Database) (*types.Block, error) {
+func (g *Genesis) Commit(db database.Database) (*types.Block, error) {
 	block := g.ToBlock(db)
 	if block.Number().Sign() != 0 {
 		return nil, fmt.Errorf("can't commit genesis block with number > 0")
@@ -302,7 +302,7 @@ func (g *Genesis) Commit(db ethdb.Database) (*types.Block, error) {
 
 // MustCommit writes the genesis block and state to db, panicking on error.
 // The block is committed as the canonical head block.
-func (g *Genesis) MustCommit(db ethdb.Database) *types.Block {
+func (g *Genesis) MustCommit(db database.Database) *types.Block {
 	block, err := g.Commit(db)
 	if err != nil {
 		panic(err)
@@ -311,7 +311,7 @@ func (g *Genesis) MustCommit(db ethdb.Database) *types.Block {
 }
 
 // GenesisBlockForTesting creates and writes a block in which addr has the given wei balance.
-func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big.Int) *types.Block {
+func GenesisBlockForTesting(db database.Database, addr common.Address, balance *big.Int) *types.Block {
 	g := DefaultGenesisBlock()
 	g.Alloc = GenesisAlloc{addr: {Balance: balance}}
 	return g.MustCommit(db)

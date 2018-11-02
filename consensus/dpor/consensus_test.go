@@ -8,7 +8,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/golang-lru"
@@ -82,7 +82,7 @@ func TestDpor_APIs(t *testing.T) {
 func TestDpor_Prepare(t *testing.T) {
 	type fields struct {
 		config       *configs.DporConfig
-		db           ethdb.Database
+		db           database.Database
 		recents      *lru.ARCCache
 		signatures   *lru.ARCCache
 		signedBlocks map[uint64]common.Hash
@@ -122,7 +122,7 @@ func TestDpor_Prepare(t *testing.T) {
 func TestDpor_Seal(t *testing.T) {
 	type fields struct {
 		config       *configs.DporConfig
-		db           ethdb.Database
+		db           database.Database
 		recents      *lru.ARCCache
 		signatures   *lru.ARCCache
 		signedBlocks map[uint64]common.Hash

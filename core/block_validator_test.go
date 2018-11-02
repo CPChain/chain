@@ -24,17 +24,17 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 )
 
 // Tests that simple header verification works, for both good and bad blocks.
 func TestHeaderVerification(t *testing.T) {
-	testdb := ethdb.NewMemDatabase()
+	testdb := database.NewMemDatabase()
 	genesis := DefaultGenesisBlock()
 	genesisBlock := genesis.MustCommit(testdb)
 
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 
 	config := configs.MainnetChainConfig.Dpor
 	d := dpor.NewFaker(config, testdb)
@@ -95,13 +95,13 @@ func TestHeaderConcurrentVerification32(t *testing.T) {
 func testHeaderConcurrentVerification(t *testing.T, threads int) {
 	// Create a simple chain to verify
 	var (
-		testdb = ethdb.NewMemDatabase()
+		testdb = database.NewMemDatabase()
 	)
 
 	genesis := DefaultGenesisBlock()
 	genesisBlock := genesis.MustCommit(testdb)
 
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 
 	config := configs.MainnetChainConfig.Dpor
 	d := dpor.NewDoNothingFaker(config, testdb)
@@ -178,13 +178,13 @@ func testHeaderConcurrentAbortion(t *testing.T, threads int) {
 	// Create a simple chain to verify
 
 	var (
-		testdb = ethdb.NewMemDatabase()
+		testdb = database.NewMemDatabase()
 	)
 
 	genesis := DefaultGenesisBlock()
 	genesisBlock := genesis.MustCommit(testdb)
 
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 
 	config := configs.MainnetChainConfig.Dpor
 	d := dpor.NewFaker(config, testdb)

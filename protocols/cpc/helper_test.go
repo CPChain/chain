@@ -32,7 +32,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -49,11 +49,11 @@ var (
 // newTestProtocolManager creates a new protocol manager for testing purposes,
 // with the given number of blocks already known, and potential notification
 // channels for different events.
-func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *ethdb.MemDatabase, error) {
+func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *database.MemDatabase, error) {
 	var (
 		evmux    = new(event.TypeMux)
-		db       = ethdb.NewMemDatabase()
-		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db       = database.NewMemDatabase()
+		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	)
 	gspec := core.DefaultGenesisBlock()
 	gspec.Alloc = core.GenesisAlloc{testBank: {Balance: big.NewInt(1000000)}}
@@ -81,7 +81,7 @@ func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func
 // with the given number of blocks already known, and potential notification
 // channels for different events. In case of an error, the constructor force-
 // fails the test.
-func newTestProtocolManagerMust(t *testing.T, mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *ethdb.MemDatabase) {
+func newTestProtocolManagerMust(t *testing.T, mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *database.MemDatabase) {
 	pm, db, err := newTestProtocolManager(mode, blocks, generator, newtx)
 	if err != nil {
 		t.Fatalf("Failed to create protocol manager: %v", err)

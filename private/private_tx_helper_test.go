@@ -7,7 +7,7 @@ import (
 	"io"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -30,8 +30,8 @@ func (adapter *FaultIpfsAdapter) Add(r io.Reader) (string, error) {
 
 // TestSealPrivatePayload tests seal and encrypt private tx's payload.
 func TestSealPrivatePayload(t *testing.T) {
-	fakeIpfsAdapter := ethdb.NewFakeIpfsAdapter()
-	ipfsDb := ethdb.NewIpfsDbWithAdapter(fakeIpfsAdapter)
+	fakeIpfsAdapter := database.NewFakeIpfsAdapter()
+	ipfsDb := database.NewIpfsDbWithAdapter(fakeIpfsAdapter)
 	callSealPrivatePayload(t, ipfsDb)
 }
 
@@ -53,14 +53,14 @@ func TestSealPrivatePayloadWithFaultIPFS(t *testing.T) {
 		"3082010a0282010100bc84262a13ceff4b5d3bfb296d594658ce52b2853d88df4393f96644cdb0c5ab8bf72d529422d955e046c225cf67cf311c3c32ca02abf9f0e3cf669dc702ae07fd234a953113c9744ef11bf33c9794e4b57742bcb2139edfdcc1fbc6258414ca4d9872ee59769aa8caecaa5495c891c168963fd6793e19a42e630f9265abaaf8374911c5ac5dc3170f122c5697fabc72fc4604523a4dd629a34510ade89a0eb26e9ad1ba56f0dfcc83294bcbda9b7d97b2e41d6ea2ad84957e4353207ac51753b801206b4ff99df96bcaec37728956b41ebe892eed87543cf41fba2b02401f15d6daa335baecd30f1622f8bf1bfd39ac638eee957dc3c30ed3b6d823708cd0470203010001"}
 
 	adapter := FaultIpfsAdapter{}
-	ipfsDb := ethdb.NewIpfsDbWithAdapter(&adapter)
+	ipfsDb := database.NewIpfsDbWithAdapter(&adapter)
 	_, err := SealPrivatePayload(payload, txNonce, parties, ipfsDb)
 	if err == nil {
 		t.Fatal("It should return an error when IPFS is in fault.")
 	}
 }
 
-func callSealPrivatePayload(t *testing.T, remoteDB ethdb.RemoteDatabase) {
+func callSealPrivatePayload(t *testing.T, remoteDB database.RemoteDatabase) {
 	payload := []byte("This is a payload plaintext.")
 	txNonce := uint64(10000)
 

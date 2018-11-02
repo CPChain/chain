@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -53,9 +53,9 @@ func init() {
 type downloadTester struct {
 	downloader *Downloader
 
-	genesis *types.Block   // Genesis blocks used by the tester and peers
-	stateDb ethdb.Database // Database used by the tester for syncing from peers
-	peerDb  ethdb.Database // Database of the peers containing all data
+	genesis *types.Block      // Genesis blocks used by the tester and peers
+	stateDb database.Database // Database used by the tester for syncing from peers
+	peerDb  database.Database // Database of the peers containing all data
 
 	ownHashes   []common.Hash                  // Hash chain belonging to the tester
 	ownHeaders  map[common.Hash]*types.Header  // Headers belonging to the tester
@@ -75,7 +75,7 @@ type downloadTester struct {
 }
 
 var (
-	testdb = ethdb.NewMemDatabase()
+	testdb = database.NewMemDatabase()
 )
 
 // newTester creates a new downloader test mocker.
@@ -97,7 +97,7 @@ func newTester() *downloadTester {
 		peerChainTds:      make(map[string]map[common.Hash]*big.Int),
 		peerMissingStates: make(map[string]map[common.Hash]bool),
 	}
-	tester.stateDb = ethdb.NewMemDatabase()
+	tester.stateDb = database.NewMemDatabase()
 	tester.stateDb.Put(genesis.StateRoot().Bytes(), []byte{0x00})
 
 	tester.downloader = New(FullSync, tester.stateDb, new(event.TypeMux), tester, nil, tester.dropPeer)

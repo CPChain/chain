@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -40,7 +40,7 @@ import (
 
 type testBackend struct {
 	mux        *event.TypeMux
-	db         ethdb.Database
+	db         database.Database
 	sections   uint64
 	txFeed     *event.Feed
 	rmLogsFeed *event.Feed
@@ -48,7 +48,7 @@ type testBackend struct {
 	chainFeed  *event.Feed
 }
 
-func (b *testBackend) ChainDb() ethdb.Database {
+func (b *testBackend) ChainDb() database.Database {
 	return b.db
 }
 
@@ -153,8 +153,8 @@ func TestBlockSubscription(t *testing.T) {
 
 	var (
 		mux         = new(event.TypeMux)
-		db          = ethdb.NewMemDatabase()
-		remoteDB    = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db          = database.NewMemDatabase()
+		remoteDB    = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 		txFeed      = new(event.Feed)
 		rmLogsFeed  = new(event.Feed)
 		logsFeed    = new(event.Feed)
@@ -213,7 +213,7 @@ func TestPendingTxFilter(t *testing.T) {
 
 	var (
 		mux        = new(event.TypeMux)
-		db         = ethdb.NewMemDatabase()
+		db         = database.NewMemDatabase()
 		txFeed     = new(event.Feed)
 		rmLogsFeed = new(event.Feed)
 		logsFeed   = new(event.Feed)
@@ -273,7 +273,7 @@ func TestPendingTxFilter(t *testing.T) {
 func TestLogFilterCreation(t *testing.T) {
 	var (
 		mux        = new(event.TypeMux)
-		db         = ethdb.NewMemDatabase()
+		db         = database.NewMemDatabase()
 		txFeed     = new(event.Feed)
 		rmLogsFeed = new(event.Feed)
 		logsFeed   = new(event.Feed)
@@ -322,7 +322,7 @@ func TestInvalidLogFilterCreation(t *testing.T) {
 
 	var (
 		mux        = new(event.TypeMux)
-		db         = ethdb.NewMemDatabase()
+		db         = database.NewMemDatabase()
 		txFeed     = new(event.Feed)
 		rmLogsFeed = new(event.Feed)
 		logsFeed   = new(event.Feed)
@@ -352,7 +352,7 @@ func TestLogFilter(t *testing.T) {
 
 	var (
 		mux        = new(event.TypeMux)
-		db         = ethdb.NewMemDatabase()
+		db         = database.NewMemDatabase()
 		txFeed     = new(event.Feed)
 		rmLogsFeed = new(event.Feed)
 		logsFeed   = new(event.Feed)
@@ -471,7 +471,7 @@ func TestPendingLogsSubscription(t *testing.T) {
 
 	var (
 		mux        = new(event.TypeMux)
-		db         = ethdb.NewMemDatabase()
+		db         = database.NewMemDatabase()
 		txFeed     = new(event.Feed)
 		rmLogsFeed = new(event.Feed)
 		logsFeed   = new(event.Feed)

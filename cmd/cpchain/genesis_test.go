@@ -10,7 +10,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/rawdb"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -94,7 +94,7 @@ func TestCustomGenesis(t *testing.T) {
 
 func checkGenesisNonceHex(t *testing.T, datadir string, nonceHex string, wantSuccess bool) {
 	dbPath := filepath.Join(datadir, "/cpchain/"+configs.DatabaseName)
-	db, _ := ethdb.NewLDBDatabase(dbPath, 0, 0)
+	db, _ := database.NewLDBDatabase(dbPath, 0, 0)
 	number := uint64(0)
 	hash := rawdb.ReadCanonicalHash(db, number)
 	if hash == (common.Hash{}) {

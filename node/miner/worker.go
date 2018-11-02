@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -64,14 +64,14 @@ type Work struct {
 	config *configs.ChainConfig
 	signer types.Signer
 
-	privState *state.StateDB       // apply public state changes here
-	pubState  *state.StateDB       // apply private state changes here
-	remoteDB  ethdb.RemoteDatabase // ipfs database used for private tx processing
-	ancestors *set.Set             // ancestor set (used for checking uncle parent validity)
-	family    *set.Set             // family set (used for checking uncle invalidity)
-	uncles    *set.Set             // uncle set
-	tcount    int                  // tx count in cycle
-	gasPool   *core.GasPool        // available gas used to pack transactions
+	privState *state.StateDB          // apply public state changes here
+	pubState  *state.StateDB          // apply private state changes here
+	remoteDB  database.RemoteDatabase // ipfs database used for private tx processing
+	ancestors *set.Set                // ancestor set (used for checking uncle parent validity)
+	family    *set.Set                // family set (used for checking uncle invalidity)
+	uncles    *set.Set                // uncle set
+	tcount    int                     // tx count in cycle
+	gasPool   *core.GasPool           // available gas used to pack transactions
 
 	Block *types.Block // the new block
 
@@ -111,7 +111,7 @@ type worker struct {
 	backend Backend
 	chain   *core.BlockChain
 	proc    core.Validator
-	chainDb ethdb.Database
+	chainDb database.Database
 
 	coinbase common.Address
 	extra    []byte

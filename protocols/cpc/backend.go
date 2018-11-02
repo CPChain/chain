@@ -38,7 +38,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
@@ -85,7 +85,7 @@ type CpchainService struct {
 	server *p2p.Server
 
 	// DB interfaces
-	chainDb ethdb.Database // Block chain database
+	chainDb database.Database // Block chain database
 
 	eventMux       *event.TypeMux
 	engine         consensus.Engine
@@ -106,7 +106,7 @@ type CpchainService struct {
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 
-	remoteDB ethdb.RemoteDatabase // remoteDB represents an remote distributed database.
+	remoteDB database.RemoteDatabase // remoteDB represents an remote distributed database.
 }
 
 func (s *CpchainService) AddLesServer(ls LesServer) {
@@ -130,12 +130,12 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	log.Info("Initialised chain configuration", "config", chainConfig)
 
-	var remoteDB ethdb.RemoteDatabase
+	var remoteDB database.RemoteDatabase
 	switch config.PrivateTx.RemoteDBType {
 	case private.IPFS:
-		remoteDB = ethdb.NewIpfsDB(config.PrivateTx.RemoteDBParams)
+		remoteDB = database.NewIpfsDB(config.PrivateTx.RemoteDBParams)
 	default:
-		remoteDB = ethdb.NewIpfsDB(private.DefaultIpfsUrl)
+		remoteDB = database.NewIpfsDB(private.DefaultIpfsUrl)
 	}
 
 	eth := &CpchainService{
@@ -232,19 +232,19 @@ func makeExtraData(extra []byte) []byte {
 }
 
 // CreateDB creates the chain database.
-func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Database, error) {
+func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.Database, error) {
 	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
 	if err != nil {
 		return nil, err
 	}
-	if db, ok := db.(*ethdb.LDBDatabase); ok {
+	if db, ok := db.(*database.LDBDatabase); ok {
 		db.Meter("eth/db/chaindata/")
 	}
 	return db, nil
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
-func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db ethdb.Database) consensus.Engine {
+func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db database.Database) consensus.Engine {
 
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
@@ -419,12 +419,12 @@ func (s *CpchainService) BlockChain() *core.BlockChain       { return s.blockcha
 func (s *CpchainService) TxPool() *core.TxPool               { return s.txPool }
 func (s *CpchainService) EventMux() *event.TypeMux           { return s.eventMux }
 func (s *CpchainService) Engine() consensus.Engine           { return s.engine }
-func (s *CpchainService) ChainDb() ethdb.Database            { return s.chainDb }
+func (s *CpchainService) ChainDb() database.Database         { return s.chainDb }
 func (s *CpchainService) IsListening() bool                  { return true } // Always listening
 func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *CpchainService) NetVersion() uint64                 { return s.networkID }
 func (s *CpchainService) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
-func (s *CpchainService) RemoteDB() ethdb.RemoteDatabase     { return s.remoteDB }
+func (s *CpchainService) RemoteDB() database.RemoteDatabase  { return s.remoteDB }
 
 // Protocols implements node.Service, returning all the currently configured
 // network protocols to start.
