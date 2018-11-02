@@ -48,7 +48,9 @@ var (
 
 	// ErrNewSignedHeader is returned if i sign the block, but not accept the block yet.
 	ErrNewSignedHeader = &ErrNewSignedHeaderType{SignedHeader: &types.Header{}}
-	// ErrNewSignedHeader = errors.New("new signed header")
+
+	// ErrUnknownPbftState is returned if committee handler's state is unknown
+	ErrUnknownPbftState = errors.New("unknown pbft state")
 )
 
 // ErrNotEnoughSigsType is returned if there is not enough signatures for a block.
