@@ -1,4 +1,4 @@
-package uploadConfig
+package upload_config
 
 import (
 	"context"
