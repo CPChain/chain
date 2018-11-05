@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 const (
@@ -66,4 +67,8 @@ type signerStatusData struct {
 
 func errResp(code errCode, format string, v ...interface{}) error {
 	return fmt.Errorf("%v - %v", code, fmt.Sprintf(format, v...))
+}
+
+func IsPbftMsg(msg p2p.Msg) bool {
+	return msg.Code >= PbftMsgOutSet
 }
