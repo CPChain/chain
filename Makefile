@@ -12,10 +12,10 @@ GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
 
-all: cpchain bootnode abigen
+all: cpchain bootnode abigen pre-commit
 
 pre-commit:
-	build/set_pre-commit.sh
+	build/set-pre-commit.sh
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/pre-commit\" to set pre-commit in hooks."
 
