@@ -98,7 +98,7 @@
     },
     "/api/v1/cpc/getBalance": {
       "post": {
-        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
         "operationId": "GetBalance",
         "responses": {
           "200": {
@@ -341,7 +341,7 @@
     },
     "/api/v1/cpc/getTransactionCountByBlockHash": {
       "post": {
-        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
         "operationId": "GetTransactionCountByBlockHash",
         "responses": {
           "200": {
@@ -420,33 +420,6 @@
         ]
       }
     },
-    "/api/v1/cpc/getWork": {
-      "post": {
-        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
-        "operationId": "GetWork",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/cpcWorks"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        ],
-        "tags": [
-          "MinerReader"
-        ]
-      }
-    },
     "/api/v1/cpc/getcode": {
       "post": {
         "summary": "GetCode returns the code stored at the given address in the state for the given block number.",
@@ -503,7 +476,7 @@
     },
     "/api/v1/cpc/protocolVersion": {
       "post": {
-        "summary": "GetWork returns a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty",
+        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
         "operationId": "ProtocolVersion",
         "responses": {
           "200": {
@@ -948,18 +921,6 @@
         }
       },
       "title": "TransactionPoolReaderRequest request parameters"
-    },
-    "cpcWorks": {
-      "type": "object",
-      "properties": {
-        "works": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "Works a work package for external miner. The work package consists of 3 strings\nresult[0], 32 bytes hex encoded current block header pow-hash\nresult[1], 32 bytes hex encoded seed hash used for DAG\nresult[2], 32 bytes hex encoded boundary condition (\"target\"), 2^256/difficulty"
     },
     "protobufEmpty": {
       "type": "object",

@@ -1,9 +1,6 @@
-// Copyright 2015 The go-ethereum Authors
-
 package miner
 
 import (
-	"fmt"
 	"math/big"
 	"sync"
 	"sync/atomic"
@@ -19,7 +16,7 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"gopkg.in/fatih/set.v0"
+	set "gopkg.in/fatih/set.v0"
 )
 
 const (
@@ -101,15 +98,12 @@ type engine struct {
 	coinbase common.Address
 	extra    []byte
 
-	currentMu sync.Mutex
-	current   *Work
+	currentMu   sync.Mutex
+	currentWork *Work
 
 	snapshotMu    sync.RWMutex
 	snapshotBlock *types.Block
 	snapshotState *state.StateDB
-
-	uncleMu        sync.Mutex
-	possibleUncles map[common.Hash]*types.Block
 
 	unconfirmed *unconfirmedBlocks // set of locally mined blocks pending canonicalness confirmations
 
@@ -120,21 +114,20 @@ type engine struct {
 
 func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase common.Address, backend Backend, mux *event.TypeMux) *engine {
 	eng := &engine{
-		config:         config,
-		cons:           cons,
-		backend:        backend,
-		mux:            mux,
-		txsCh:          make(chan core.NewTxsEvent, txChanSize),
-		chainHeadCh:    make(chan core.ChainHeadEvent, chainHeadChanSize),
-		chainSideCh:    make(chan core.ChainSideEvent, chainSideChanSize),
-		chainDb:        backend.ChainDb(),
-		recv:           make(chan *Result, resultQueueSize),
-		chain:          backend.BlockChain(),
-		proc:           backend.BlockChain().Validator(),
-		possibleUncles: make(map[common.Hash]*types.Block),
-		coinbase:       coinbase,
-		workers:        make(map[Worker]struct{}),
-		unconfirmed:    newUnconfirmedBlocks(backend.BlockChain(), miningLogAtDepth),
+		config:      config,
+		cons:        cons,
+		backend:     backend,
+		mux:         mux,
+		txsCh:       make(chan core.NewTxsEvent, txChanSize),
+		chainHeadCh: make(chan core.ChainHeadEvent, chainHeadChanSize),
+		chainSideCh: make(chan core.ChainSideEvent, chainSideChanSize),
+		chainDb:     backend.ChainDb(),
+		recv:        make(chan *Result, resultQueueSize),
+		chain:       backend.BlockChain(),
+		proc:        backend.BlockChain().Validator(),
+		coinbase:    coinbase,
+		workers:     make(map[Worker]struct{}),
+		unconfirmed: newUnconfirmedBlocks(backend.BlockChain(), miningLogAtDepth),
 	}
 	// Subscribe NewTxsEvent for tx pool
 	eng.txsSub = backend.TxPool().SubscribeNewTxsEvent(eng.txsCh)
@@ -171,7 +164,7 @@ func (self *engine) pending() (*types.Block, *state.StateDB) {
 
 	self.currentMu.Lock()
 	defer self.currentMu.Unlock()
-	return self.current.Block, self.current.pubState.Copy()
+	return self.currentWork.Block, self.currentWork.pubState.Copy()
 }
 
 func (self *engine) pendingBlock() *types.Block {
@@ -184,7 +177,7 @@ func (self *engine) pendingBlock() *types.Block {
 
 	self.currentMu.Lock()
 	defer self.currentMu.Unlock()
-	return self.current.Block
+	return self.currentWork.Block
 }
 
 func (self *engine) start() {
@@ -241,9 +234,7 @@ func (self *engine) update() {
 
 		// Handle ChainSideEvent
 		case ev := <-self.chainSideCh:
-			self.uncleMu.Lock()
-			self.possibleUncles[ev.Block.Hash()] = ev.Block
-			self.uncleMu.Unlock()
+			log.Info("Got unexpected uncle block ", "hash", ev.Block.Hash().Hex())
 
 		// Handle NewTxsEvent
 		case ev := <-self.txsCh:
@@ -256,11 +247,11 @@ func (self *engine) update() {
 				self.currentMu.Lock()
 				txs := make(map[common.Address]types.Transactions)
 				for _, tx := range ev.Txs {
-					acc, _ := types.Sender(self.current.signer, tx)
+					acc, _ := types.Sender(self.currentWork.signer, tx)
 					txs[acc] = append(txs[acc], tx)
 				}
-				txset := types.NewTransactionsByPriceAndNonce(self.current.signer, txs)
-				self.current.commitTransactions(self.mux, txset, self.chain, self.coinbase)
+				txset := types.NewTransactionsByPriceAndNonce(self.currentWork.signer, txs)
+				self.currentWork.commitTransactions(self.mux, txset, self.chain, self.coinbase)
 				self.updateSnapshot()
 				self.currentMu.Unlock()
 			} else {
@@ -358,31 +349,20 @@ func (self *engine) makeCurrent(parent *types.Block, header *types.Header) error
 		signer:    types.NewPrivTxSupportEIP155Signer(self.config.ChainID),
 		pubState:  pubState,
 		privState: privState,
-		ancestors: set.New(),
-		family:    set.New(),
-		uncles:    set.New(),
 		header:    header,
 		createdAt: time.Now(),
 		remoteDB:  self.chain.RemoteDB(),
 	}
 
-	// when 08 is processed ancestors contain 07 (quick block)
-	for _, ancestor := range self.chain.GetBlocksFromHash(parent.Hash(), 7) {
-		work.family.Add(ancestor.Hash())
-		work.ancestors.Add(ancestor.Hash())
-	}
-
 	// Keep track of transactions which return errors so they can be removed
 	work.tcount = 0
-	self.current = work
+	self.currentWork = work
 	return nil
 }
 
 func (self *engine) commitNewWork() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	self.uncleMu.Lock()
-	defer self.uncleMu.Unlock()
 	self.currentMu.Lock()
 	defer self.currentMu.Unlock()
 
@@ -396,7 +376,7 @@ func (self *engine) commitNewWork() {
 	// this will ensure we're not going off too far in the future
 	if now := time.Now().Unix(); tstamp > now+1 {
 		wait := time.Duration(tstamp-now) * time.Second
-		log.Info("Mining too far in the future", "wait", common.PrettyDuration(wait))
+		log.Info("IsMining too far in the future", "wait", common.PrettyDuration(wait))
 		time.Sleep(wait)
 	}
 
@@ -424,65 +404,28 @@ func (self *engine) commitNewWork() {
 		return
 	}
 	// Create the current work task and check any fork transitions needed
-	work := self.current
+	work := self.currentWork
 	pending, err := self.backend.TxPool().Pending()
 	if err != nil {
 		log.Error("Failed to fetch pending transactions", "err", err)
 		return
 	}
-	txs := types.NewTransactionsByPriceAndNonce(self.current.signer, pending)
+	txs := types.NewTransactionsByPriceAndNonce(self.currentWork.signer, pending)
 	work.commitTransactions(self.mux, txs, self.chain, self.coinbase)
 
-	// compute uncles for the new block.
-	var (
-		uncles    []*types.Header
-		badUncles []common.Hash
-	)
-	for hash, uncle := range self.possibleUncles {
-		if len(uncles) == 2 {
-			break
-		}
-		if err := self.commitUncle(work, uncle.Header()); err != nil {
-			log.Debug("Bad uncle found and will be removed", "hash", hash)
-			log.Debug(fmt.Sprint(uncle))
-
-			badUncles = append(badUncles, hash)
-		} else {
-			log.Debug("Committing new uncle to block", "hash", hash)
-			uncles = append(uncles, uncle.Header())
-		}
-	}
-	for _, hash := range badUncles {
-		delete(self.possibleUncles, hash)
-	}
 	// Create the new block to seal with the consensus engine. Private tx's receipts are not involved computing block's
 	// receipts hash and receipts bloom as they are private and not guaranteeing identical in different nodes.
-	if work.Block, err = self.cons.Finalize(self.chain, header, work.pubState, work.txs, uncles, work.pubReceipts); err != nil {
+	if work.Block, err = self.cons.Finalize(self.chain, header, work.pubState, work.txs, []*types.Header{}, work.pubReceipts); err != nil {
 		log.Error("Failed to finalize block for sealing", "err", err)
 		return
 	}
 	// We only care about logging if we're actually mining.
 	if atomic.LoadInt32(&self.mining) == 1 {
-		log.Info("Commit new mining work", "number", work.Block.Number(), "txs", work.tcount, "uncles", len(uncles), "elapsed", common.PrettyDuration(time.Since(tstart)))
+		log.Info("Commit new mining work", "number", work.Block.Number(), "txs", work.tcount, "elapsed", common.PrettyDuration(time.Since(tstart)))
 		self.unconfirmed.Shift(work.Block.NumberU64() - 1)
 	}
 	self.push(work)
 	self.updateSnapshot()
-}
-
-func (self *engine) commitUncle(work *Work, uncle *types.Header) error {
-	hash := uncle.Hash()
-	if work.uncles.Has(hash) {
-		return fmt.Errorf("uncle not unique")
-	}
-	if !work.ancestors.Has(uncle.ParentHash) {
-		return fmt.Errorf("uncle's parent unknown (%x)", uncle.ParentHash[0:4])
-	}
-	if work.family.Has(hash) {
-		return fmt.Errorf("uncle already in family (%x)", hash)
-	}
-	work.uncles.Add(uncle.Hash())
-	return nil
 }
 
 func (self *engine) updateSnapshot() {
@@ -490,11 +433,11 @@ func (self *engine) updateSnapshot() {
 	defer self.snapshotMu.Unlock()
 
 	self.snapshotBlock = types.NewBlock(
-		self.current.header,
-		self.current.txs,
-		self.current.pubReceipts,
+		self.currentWork.header,
+		self.currentWork.txs,
+		self.currentWork.pubReceipts,
 	)
-	self.snapshotState = self.current.pubState.Copy()
+	self.snapshotState = self.currentWork.pubState.Copy()
 	// TODO: if need to snapshot private state?
 }
 

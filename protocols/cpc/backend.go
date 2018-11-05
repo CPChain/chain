@@ -40,12 +40,12 @@ import (
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
-	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
-	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/node/miner"
 	"bitbucket.org/cpchain/chain/private"
+	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
+	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -411,7 +411,7 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 }
 
 func (s *CpchainService) StopMining()         { s.miner.Stop() }
-func (s *CpchainService) IsMining() bool      { return s.miner.Mining() }
+func (s *CpchainService) IsMining() bool      { return s.miner.IsMining() }
 func (s *CpchainService) Miner() *miner.Miner { return s.miner }
 
 func (s *CpchainService) AccountManager() *accounts.Manager  { return s.accountManager }

@@ -34,7 +34,7 @@ type Miner struct {
 	eng *engine
 
 	coinbase common.Address
-	mining   int32
+	isMining int32
 	backend  Backend
 	cons     consensus.Engine
 
@@ -68,10 +68,10 @@ out:
 		case downloader.StartEvent:
 			atomic.StoreInt32(&self.canStart, 0)
 			// stop mining first, and resume mining later
-			if self.Mining() {
+			if self.IsMining() {
 				self.Stop()
 				atomic.StoreInt32(&self.shouldStart, 1)
-				log.Info("Mining aborted due to sync")
+				log.Info("IsMining aborted due to sync")
 			}
 		case downloader.DoneEvent, downloader.FailedEvent:
 			shouldStart := atomic.LoadInt32(&self.shouldStart) == 1
@@ -98,7 +98,7 @@ func (self *Miner) Start(coinbase common.Address) {
 		log.Info("Network syncing, will start miner afterwards")
 		return
 	}
-	atomic.StoreInt32(&self.mining, 1)
+	atomic.StoreInt32(&self.isMining, 1)
 
 	log.Info("Starting mining operation")
 	self.eng.start()
@@ -107,12 +107,12 @@ func (self *Miner) Start(coinbase common.Address) {
 
 func (self *Miner) Stop() {
 	self.eng.stop()
-	atomic.StoreInt32(&self.mining, 0)
+	atomic.StoreInt32(&self.isMining, 0)
 	atomic.StoreInt32(&self.shouldStart, 0)
 }
 
 func (self *Miner) Register(agent Worker) {
-	if self.Mining() {
+	if self.IsMining() {
 		agent.Start()
 	}
 	self.eng.register(agent)
@@ -122,8 +122,8 @@ func (self *Miner) Unregister(agent Worker) {
 	self.eng.unregister(agent)
 }
 
-func (self *Miner) Mining() bool {
-	return atomic.LoadInt32(&self.mining) > 0
+func (self *Miner) IsMining() bool {
+	return atomic.LoadInt32(&self.isMining) > 0
 }
 
 func (self *Miner) SetExtra(extra []byte) error {
