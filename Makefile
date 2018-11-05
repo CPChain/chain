@@ -14,6 +14,11 @@ GO ?= latest
 
 all: cpchain bootnode abigen
 
+pre-commit:
+	build/set_pre-commit.sh
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/pre-commit\" to set pre-commit in hooks."
+
 cpchain:
 	build/env.sh go run build/ci.go install ./cmd/cpchain
 	@echo "Done building."
