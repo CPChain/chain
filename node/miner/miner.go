@@ -31,26 +31,26 @@ type Backend interface {
 type Miner struct {
 	mux *event.TypeMux
 
-	worker *worker
+	eng *engine
 
 	coinbase common.Address
 	mining   int32
 	backend  Backend
-	engine   consensus.Engine
+	cons     consensus.Engine
 
 	canStart    int32 // can start indicates whether we can start the mining operation
 	shouldStart int32 // should start indicates whether we should start after sync
 }
 
-func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, engine consensus.Engine) *Miner {
+func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, cons consensus.Engine) *Miner {
 	miner := &Miner{
 		backend:  backend,
 		mux:      mux,
-		engine:   engine,
-		worker:   newWorker(config, engine, common.Address{}, backend, mux),
+		cons:     cons,
+		eng:      newEngine(config, cons, common.Address{}, backend, mux),
 		canStart: 1,
 	}
-	miner.Register(NewNativeAgent(backend.BlockChain(), engine))
+	miner.Register(NewNativeWorker(backend.BlockChain(), cons))
 	go miner.update()
 
 	return miner
@@ -101,25 +101,25 @@ func (self *Miner) Start(coinbase common.Address) {
 	atomic.StoreInt32(&self.mining, 1)
 
 	log.Info("Starting mining operation")
-	self.worker.start()
-	self.worker.commitNewWork()
+	self.eng.start()
+	self.eng.commitNewWork()
 }
 
 func (self *Miner) Stop() {
-	self.worker.stop()
+	self.eng.stop()
 	atomic.StoreInt32(&self.mining, 0)
 	atomic.StoreInt32(&self.shouldStart, 0)
 }
 
-func (self *Miner) Register(agent Agent) {
+func (self *Miner) Register(agent Worker) {
 	if self.Mining() {
 		agent.Start()
 	}
-	self.worker.register(agent)
+	self.eng.register(agent)
 }
 
-func (self *Miner) Unregister(agent Agent) {
-	self.worker.unregister(agent)
+func (self *Miner) Unregister(agent Worker) {
+	self.eng.unregister(agent)
 }
 
 func (self *Miner) Mining() bool {
@@ -130,13 +130,13 @@ func (self *Miner) SetExtra(extra []byte) error {
 	if uint64(len(extra)) > configs.MaximumExtraDataSize {
 		return fmt.Errorf("Extra exceeds max length. %d > %v", len(extra), configs.MaximumExtraDataSize)
 	}
-	self.worker.setExtra(extra)
+	self.eng.setExtra(extra)
 	return nil
 }
 
 // Pending returns the currently pending block and associated state.
 func (self *Miner) Pending() (*types.Block, *state.StateDB) {
-	return self.worker.pending()
+	return self.eng.pending()
 }
 
 // PendingBlock returns the currently pending block.
@@ -145,10 +145,10 @@ func (self *Miner) Pending() (*types.Block, *state.StateDB) {
 // simultaneously, please use Pending(), as the pending state can
 // change between multiple method calls
 func (self *Miner) PendingBlock() *types.Block {
-	return self.worker.pendingBlock()
+	return self.eng.pendingBlock()
 }
 
 func (self *Miner) SetChainbase(addr common.Address) {
 	self.coinbase = addr
-	self.worker.setCoinbase(addr)
+	self.eng.setCoinbase(addr)
 }
