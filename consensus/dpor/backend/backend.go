@@ -6,8 +6,10 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // ClientBackend is the client operation interface
@@ -44,4 +46,26 @@ func NewContractCaller(key *keystore.Key, client ClientBackend, gasLimit uint64)
 		Client:   client,
 		GasLimit: gasLimit,
 	}, nil
+}
+
+// RsaReader reads a rsa key
+type RsaReader func() (*rsakey.RsaKey, error)
+
+// NodeBackend is a backend represents all possible methods a node can provide to do consensus protocol requests.
+type NodeBackend interface {
+	SetServer(srv *p2p.Server) error
+
+	SetRSAKey(rsaReader RsaReader) error
+
+	SetContractCaller(cc *ContractCaller) error
+
+	UpdateSigners(epochIdx uint64, signers []common.Address) error
+
+	Start() error
+
+	Stop() error
+
+	SendMsg(addr common.Address, msg interface{}) error
+
+	BroadcastMsg(msg interface{}) error
 }
