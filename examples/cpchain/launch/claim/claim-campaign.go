@@ -14,7 +14,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
+	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
