@@ -1,4 +1,4 @@
-package cpc
+package backend
 
 import (
 	"context"
@@ -382,48 +382,4 @@ func (ch *BasicCommitteeHandler) Disconnect() {
 	ch.lock.Lock()
 	ch.connected = connected
 	ch.lock.Unlock()
-}
-
-// SendPreprepare implements Pbft.SendPreprepare.
-func (ch *BasicCommitteeHandler) SendPreprepare(msg interface{}, broadcastFn consensus.Broadcast) error {
-	go broadcastFn(msg, consensus.Preprepare)
-
-	return nil
-}
-
-// Preprepare implements Pbft.Preprepare.
-func (ch *BasicCommitteeHandler) Preprepare(msg interface{}) (bool, error) {
-
-	return false, nil
-}
-
-// SendPrepare implements Pbft.SendPrepare.
-func (ch *BasicCommitteeHandler) SendPrepare(msg interface{}, broadcastFn consensus.Broadcast) error {
-	go broadcastFn(msg, consensus.Prepare)
-
-	return nil
-}
-
-// Prepare implements Pbft.Prepare.
-func (ch *BasicCommitteeHandler) Prepare(msg interface{}) (bool, error) {
-
-	return false, nil
-}
-
-// SendCommit implements Pbft.SendCommit.
-func (ch *BasicCommitteeHandler) SendCommit(msg interface{}, broadcastFn consensus.Broadcast) error {
-	go broadcastFn(msg, consensus.Commit)
-
-	return nil
-}
-
-// Commit implements Pbft.Commit.
-func (ch *BasicCommitteeHandler) Commit(msg interface{}) (bool, error) {
-
-	return false, nil
-}
-
-// State implements Pbft.State.
-func (ch *BasicCommitteeHandler) State() uint8 {
-	return 0
 }
