@@ -1,28 +1,7 @@
 #!/bin/bash
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
-
-preMd5() {
-   find vendor/ -name "vendor.json" -type f | xargs md5sum > /tmp/preMd5.log
-}
-nowMd5() {
-   find vendor/ -name "vendor.json" -type f | xargs md5sum > /tmp/nowMd5.log
-}
-
-cd ../..
-
-if [ ! -f /tmp/preMd5.log ];then
-   preMd5
+if test $(git diff-index --cached HEAD | grep vendor/vendor.json | wc -c) != 0
+then
+    echo 'has vendor changed'
 fi
 
-nowMd5
-diff /tmp/preMd5.log /tmp/nowMd5.log > /dev/null 2> &1
-Status=$?
-
-if [ $Status = 0 ];then
-exit
-else
-   echo "vendor is changed"
-fi
-
-find /tmp/*.log |xargs rm
