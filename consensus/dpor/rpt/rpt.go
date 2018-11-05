@@ -4,6 +4,11 @@ package rpt
 // then calculates the reputations of candidates.
 
 import (
+	"context"
+	"fmt"
+	"math/big"
+	"sort"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -13,13 +18,9 @@ import (
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
-	"context"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/hashicorp/golang-lru"
-	"math/big"
-	"sort"
 )
 
 var (

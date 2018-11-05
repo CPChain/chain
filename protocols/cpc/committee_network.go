@@ -11,7 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
