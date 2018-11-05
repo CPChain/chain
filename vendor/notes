@@ -3,3 +3,6 @@
 * packages modified
 ** go-ethereum/trie
    the import database part
+** go-ethereum/crypto
+   crypto upgrades to 1.8.15
+   
