@@ -13,7 +13,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	pb "bitbucket.org/cpchain/chain/api/v1/common"
 	"bitbucket.org/cpchain/chain/api/v1/personal"
-	"github.com/ethereum/go-ethereum/crypto"
+	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"

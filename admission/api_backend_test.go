@@ -14,7 +14,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	contractDpor "bitbucket.org/cpchain/chain/contracts/dpor"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
+	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"

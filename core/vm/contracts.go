@@ -22,8 +22,8 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/bn256"
+	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/crypto/bn256"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"golang.org/x/crypto/ripemd160"

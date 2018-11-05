@@ -26,7 +26,7 @@ import (
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"github.com/ethereum/go-ethereum/crypto"
+	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/pborman/uuid"
 	"golang.org/x/crypto/pbkdf2"
 )

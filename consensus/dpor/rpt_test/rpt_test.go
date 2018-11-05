@@ -9,7 +9,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/consensus/dpor/upload_config"
+	"bitbucket.org/cpchain/chain/consensus/dpor/uploadConfig"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/golang-lru"
@@ -180,7 +180,7 @@ func TestCache(t *testing.T) {
 }
 func TestBasicCollector_GetRptInfos(t *testing.T) {
 	bc := createBasicCollector(t, 4)
-	bc.Config.Client = upload_config.ContractBackend
+	bc.Config.Client = uploadConfig.ContractBackend
 	var addresses []common.Address
 
 	for i := 0; i < 6; i++ {
@@ -231,7 +231,7 @@ func TestBasicCollector_GetRptInfosNew(t *testing.T) {
 }
 
 func getCollectorConfig(chainId int64) *rpt.CollectorConfig {
-	Client := upload_config.ContractBackend
+	Client := uploadConfig.ContractBackend
 	config := &rpt.CollectorConfig{
 		LeaderReward:   80,
 		ProxyReward:    0,
@@ -287,11 +287,11 @@ func TestGetIfLeaderIsLeader(t *testing.T) {
 }
 
 func TestGetUploadReward(t *testing.T) {
-	upload_config.DeployRegister()
+	uploadConfig.DeployRegister()
 	bc := createBasicCollector(t, 5)
-	bc.Config.Client = upload_config.ContractBackend
-	bc.Config.UploadContractAddress = upload_config.RegisterContractAddr
-	LeaderReward, _ := bc.GetUploadReward(upload_config.Addr, 10)
+	bc.Config.Client = uploadConfig.ContractBackend
+	bc.Config.UploadContractAddress = uploadConfig.RegisterContractAddr
+	LeaderReward, _ := bc.GetUploadReward(uploadConfig.Addr, 10)
 	assert.Equal(t, float64(15), LeaderReward)
 }
 
