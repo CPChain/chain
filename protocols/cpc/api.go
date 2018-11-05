@@ -32,7 +32,6 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/node/miner"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -65,58 +64,6 @@ func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
 // Hashrate returns the POW hashrate
 func (api *PublicCpchainAPI) Hashrate() hexutil.Uint64 {
 	return hexutil.Uint64(api.c.Miner().HashRate())
-}
-
-// PublicMinerAPI provides an API to control the miner.
-// It offers only methods that operate on data that pose no security risk when it is publicly accessible.
-type PublicMinerAPI struct {
-	c     *CpchainService
-	agent *miner.RemoteAgent
-}
-
-// // NewPublicMinerAPI create a new PublicMinerAPI instance.
-// func NewPublicMinerAPI(e *CpchainService) *PublicMinerAPI {
-// 	agent := miner.NewRemoteAgent(e.BlockChain(), e.Engine())
-// 	e.Miner().Register(agent)
-
-// 	return &PublicMinerAPI{e, agent}
-// }
-
-// Mining returns an indication if this node is currently mining.
-func (api *PublicMinerAPI) Mining() bool {
-	return api.c.IsMining()
-}
-
-// SubmitWork can be used by external miner to submit their POW solution. It returns an indication if the work was
-// accepted. Note, this is not an indication if the provided work was valid!
-func (api *PublicMinerAPI) SubmitWork(nonce types.BlockNonce, solution, digest common.Hash) bool {
-	return api.agent.SubmitWork(nonce, digest, solution)
-}
-
-// GetWork returns a work package for external miner. The work package consists of 3 strings
-// result[0], 32 bytes hex encoded current block header pow-hash
-// result[1], 32 bytes hex encoded seed hash used for DAG
-// result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
-// func (api *PublicMinerAPI) GetWork() ([3]string, error) {
-// 	if !api.c.IsMining() {
-// 		// TODO: @liuq fix this.
-// 		if err := api.c.StartMining(false, nil); err != nil {
-// 			return [3]string{}, err
-// 		}
-// 	}
-// 	work, err := api.agent.GetWork()
-// 	if err != nil {
-// 		return work, fmt.Errorf("mining not ready: %v", err)
-// 	}
-// 	return work, nil
-// }
-
-// SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined
-// hash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which
-// must be unique between nodes.
-func (api *PublicMinerAPI) SubmitHashrate(hashrate hexutil.Uint64, id common.Hash) bool {
-	api.agent.SubmitHashrate(id, uint64(hashrate))
-	return true
 }
 
 // PrivateMinerAPI provides private RPC methods to control the miner.
