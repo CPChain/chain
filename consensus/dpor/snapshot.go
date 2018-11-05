@@ -7,7 +7,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/ethdb"
@@ -55,7 +55,7 @@ type DporSnapshot struct {
 	// RecentSigners *lru.ARCCache    `json:"signers"`
 
 	config         *configs.DporConfig // Consensus engine parameters to fine tune behavior
-	ContractCaller *consensus.ContractCaller
+	ContractCaller *backend.ContractCaller
 
 	lock sync.RWMutex
 }
@@ -133,14 +133,14 @@ func (s *DporSnapshot) setRecentSigners(epochIdx uint64, signers []common.Addres
 	}
 }
 
-func (s *DporSnapshot) contractCaller() *consensus.ContractCaller {
+func (s *DporSnapshot) contractCaller() *backend.ContractCaller {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	return s.ContractCaller
 }
 
-func (s *DporSnapshot) setContractCaller(contractCaller *consensus.ContractCaller) {
+func (s *DporSnapshot) setContractCaller(contractCaller *backend.ContractCaller) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -210,7 +210,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 
 // apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *consensus.ContractCaller) (*DporSnapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.ContractCaller) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
