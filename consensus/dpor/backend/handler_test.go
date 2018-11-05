@@ -12,7 +12,7 @@ import (
 // new a committee_network_handler
 // build the network.
 
-func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
+func TestNew(t *testing.T) {
 	type args struct {
 		config    *configs.DporConfig
 		etherbase common.Address
@@ -20,20 +20,20 @@ func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *BasicCommitteeHandler
+		want    *Handler
 		wantErr bool
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewBasicCommitteeNetworkHandler(tt.args.config, tt.args.etherbase)
+			got, err := New(tt.args.config, tt.args.etherbase)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewBasicCommitteeNetworkHandler() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewBasicCommitteeNetworkHandler() = %v, want %v", got, tt.want)
+				t.Errorf("New() = %v, want %v", got, tt.want)
 			}
 		})
 	}
