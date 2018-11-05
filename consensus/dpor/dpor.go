@@ -7,6 +7,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -45,7 +46,7 @@ type Dpor struct {
 	signer common.Address // Ethereum address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
-	committeeNetworkHandler consensus.CommitteeHandler
+	handler backend.PbftHandler
 
 	fake           Mode // used for test, always accept a block.
 	fakeFail       uint64
@@ -118,11 +119,11 @@ func (d *Dpor) SetContractCaller(contractCaller *consensus.ContractCaller) error
 	return nil
 }
 
-// SetCommitteeNetworkHandler sets dpor.committeeNetworkHandler
-func (d *Dpor) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.CommitteeHandler) error {
+// SetHandler sets dpor.handler
+func (d *Dpor) SetHandler(handler backend.PbftHandler) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-	d.committeeNetworkHandler = committeeNetworkHandler
+	d.handler = handler
 	return nil
 }
 

@@ -68,4 +68,8 @@ type PbftHandler interface {
 	SendMsg(addr common.Address, msg interface{}) error
 
 	BroadcastMsg(msg interface{}) error
+
+	DialAll() error
+
+	Disconnect() error
 }
