@@ -21,9 +21,9 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/trie"
 )
 

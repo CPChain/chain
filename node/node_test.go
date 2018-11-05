@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/rpc"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
