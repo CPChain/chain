@@ -65,7 +65,7 @@ func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, engin
 		worker:   newWorker(config, engine, common.Address{}, backend, mux),
 		canStart: 1,
 	}
-	miner.Register(NewCpuAgent(backend.BlockChain(), engine))
+	miner.Register(NewNativeAgent(backend.BlockChain(), engine))
 	go miner.update()
 
 	return miner
@@ -82,6 +82,7 @@ out:
 		switch ev.Data.(type) {
 		case downloader.StartEvent:
 			atomic.StoreInt32(&self.canStart, 0)
+			// stop mining first, and resume mining later
 			if self.Mining() {
 				self.Stop()
 				atomic.StoreInt32(&self.shouldStart, 1)
@@ -92,6 +93,7 @@ out:
 
 			atomic.StoreInt32(&self.canStart, 1)
 			atomic.StoreInt32(&self.shouldStart, 0)
+			// resume
 			if shouldStart {
 				self.Start(self.coinbase)
 			}
@@ -137,21 +139,6 @@ func (self *Miner) Unregister(agent Agent) {
 
 func (self *Miner) Mining() bool {
 	return atomic.LoadInt32(&self.mining) > 0
-}
-
-func (self *Miner) HashRate() (tot int64) {
-	if pow, ok := self.engine.(consensus.PoW); ok {
-		tot += int64(pow.Hashrate())
-	}
-	// do we care this might race? is it worth we're rewriting some
-	// aspects of the worker/locking up agents so we can get an accurate
-	// hashrate?
-	for agent := range self.worker.agents {
-		if _, ok := agent.(*CpuAgent); !ok {
-			tot += agent.GetHashRate()
-		}
-	}
-	return
 }
 
 func (self *Miner) SetExtra(extra []byte) error {

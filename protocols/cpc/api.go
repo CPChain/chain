@@ -61,11 +61,6 @@ func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
 	return api.Etherbase()
 }
 
-// Hashrate returns the POW hashrate
-func (api *PublicCpchainAPI) Hashrate() hexutil.Uint64 {
-	return hexutil.Uint64(api.c.Miner().HashRate())
-}
-
 // PrivateMinerAPI provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
 type PrivateMinerAPI struct {
@@ -143,11 +138,6 @@ func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 func (api *PrivateMinerAPI) SetEtherbase(etherbase common.Address) bool {
 	api.c.SetEtherbase(etherbase)
 	return true
-}
-
-// GetHashrate returns the current hashrate of the miner.
-func (api *PrivateMinerAPI) GetHashrate() uint64 {
-	return uint64(api.c.miner.HashRate())
 }
 
 // PrivateAdminAPI is the collection of Cpchain full node-related APIs
