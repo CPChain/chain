@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
@@ -51,7 +50,7 @@ type Dpor struct {
 	fake           Mode // used for test, always accept a block.
 	fakeFail       uint64
 	fakeDelay      time.Duration // Time delay to sleep for before returning from verify
-	contractCaller *consensus.ContractCaller
+	contractCaller *backend.ContractCaller
 
 	pbftState uint8
 
@@ -112,7 +111,7 @@ func NewFakeDelayer(config *configs.DporConfig, db ethdb.Database, delay time.Du
 }
 
 // SetContractCaller sets dpor.contractCaller
-func (d *Dpor) SetContractCaller(contractCaller *consensus.ContractCaller) error {
+func (d *Dpor) SetContractCaller(contractCaller *backend.ContractCaller) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	d.contractCaller = contractCaller
@@ -136,4 +135,14 @@ func (d *Dpor) IfSigned(header *types.Header) bool {
 		return true
 	}
 	return false
+}
+
+// Start starts dpor engine to handle different phrases
+func (d *Dpor) Start() error {
+	return nil
+}
+
+// Stop stops dpor engine
+func (d *Dpor) Stop() error {
+	return nil
 }
