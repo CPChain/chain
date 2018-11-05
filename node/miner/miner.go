@@ -71,7 +71,7 @@ out:
 			if self.IsMining() {
 				self.Stop()
 				atomic.StoreInt32(&self.shouldStart, 1)
-				log.Info("IsMining aborted due to sync")
+				log.Info("Mining aborted due to sync")
 			}
 		case downloader.DoneEvent, downloader.FailedEvent:
 			shouldStart := atomic.LoadInt32(&self.shouldStart) == 1
