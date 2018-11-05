@@ -51,11 +51,11 @@ func NewContractCaller(key *keystore.Key, client ClientBackend, gasLimit uint64)
 // RsaReader reads a rsa key
 type RsaReader func() (*rsakey.RsaKey, error)
 
-// NodeBackend is a backend represents all possible methods a node can provide to do consensus protocol requests.
-type NodeBackend interface {
+// PbftHandler is a handler represents all possible methods a node can provide to do consensus protocol requests.
+type PbftHandler interface {
 	SetServer(srv *p2p.Server) error
 
-	SetRSAKey(rsaReader RsaReader) error
+	SetRsaKey(rsaReader RsaReader) error
 
 	SetContractCaller(cc *ContractCaller) error
 
