@@ -131,4 +131,10 @@ type PbftEngine interface {
 
 	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
 	State() uint8
+
+	// Start starts engine
+	Start() error
+
+	// Stop stops all
+	Stop() error
 }
