@@ -16,7 +16,7 @@ import (
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
-	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
+	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
 	"bitbucket.org/cpchain/chain/crypto"
 	"bitbucket.org/cpchain/chain/ethclient"
 )
