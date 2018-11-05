@@ -16,7 +16,6 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	set "gopkg.in/fatih/set.v0"
 )
 
 const (
@@ -49,9 +48,6 @@ type Work struct {
 	privState *state.StateDB          // apply public state changes here
 	pubState  *state.StateDB          // apply private state changes here
 	remoteDB  database.RemoteDatabase // ipfs database used for private tx processing
-	ancestors *set.Set                // ancestor set (used for checking uncle parent validity)
-	family    *set.Set                // family set (used for checking uncle invalidity)
-	uncles    *set.Set                // uncle set
 	tcount    int                     // tx count in cycle
 	gasPool   *core.GasPool           // available gas used to pack transactions
 
@@ -234,7 +230,7 @@ func (self *engine) update() {
 
 		// Handle ChainSideEvent
 		case ev := <-self.chainSideCh:
-			log.Info("Got unexpected uncle block ", "hash", ev.Block.Hash().Hex())
+			log.Warn("Got unexpected uncle block ", "hash", ev.Block.Hash().Hex())
 
 		// Handle NewTxsEvent
 		case ev := <-self.txsCh:
