@@ -12,6 +12,6 @@ type CommitteeHandler interface {
 	// Disconnect disconnects all.
 	Disconnect()
 
-	// UpdateRemoteSigners updates OverlayHandler's remoteSigners.
-	UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error
+	// UpdateSigners updates OverlayHandler's remoteSigners.
+	UpdateSigners(epochIdx uint64, signers []common.Address) error
 }

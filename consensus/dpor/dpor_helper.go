@@ -410,8 +410,8 @@ func (dh *defaultDporHelper) dialCommittee(dpor *Dpor, snap *DporSnapshot, numbe
 	signers := snap.FutureSignersOf(number)
 
 	go func(eIdx uint64, committee []common.Address) {
-		// Updates committeeNetworkHandler.RemoteSigners
-		dpor.committeeNetworkHandler.UpdateRemoteSigners(eIdx, committee)
+		// Updates committeeNetworkHandler.Signers
+		dpor.committeeNetworkHandler.UpdateSigners(eIdx, committee)
 		// Connect all
 		dpor.committeeNetworkHandler.DialAll()
 	}(epochIdx, signers)

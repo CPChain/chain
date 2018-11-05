@@ -17,8 +17,8 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/discover"
 )
 
-// RemoteSigner represents a remote signer waiting to be connected and communicate with.
-type RemoteSigner struct {
+// Signer represents a remote signer waiting to be connected and communicate with.
+type Signer struct {
 	epochIdx      uint64
 	pubkey        []byte
 	nodeID        string
@@ -31,16 +31,16 @@ type RemoteSigner struct {
 	lock sync.RWMutex
 }
 
-// NewRemoteSigner creates a new NewRemoteSigner with given view idx and address.
-func NewRemoteSigner(epochIdx uint64, address common.Address) *RemoteSigner {
-	return &RemoteSigner{
+// NewSigner creates a new NewSigner with given view idx and address.
+func NewSigner(epochIdx uint64, address common.Address) *Signer {
+	return &Signer{
 		epochIdx: epochIdx,
 		address:  address,
 	}
 }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.
-func (rs *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
+func (rs *Signer) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
 
 	address := rs.address
 
@@ -61,7 +61,7 @@ func (rs *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionR
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
+func (rs *Signer) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
 	epochIdx, address := rs.epochIdx, rs.address
 
 	log.Debug("fetching nodeID of remote signer")
@@ -97,7 +97,7 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 }
 
 // updateNodeID encrypts my node id with this remote signer's public key and update to the contract.
-func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend) error {
+func (rs *Signer) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend) error {
 	epochIdx, address := rs.epochIdx, rs.address
 
 	log.Debug("fetched rsa pubkey")
@@ -139,7 +139,7 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 }
 
 // dial dials the signer.
-func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
+func (rs *Signer) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 
@@ -195,7 +195,7 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 	return rs.dialed, nil
 }
 
-func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) error {
+func (rs *Signer) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) error {
 
 	succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 	// succeed, err := func() (bool, error) { return true, nil }()
@@ -209,7 +209,7 @@ func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.A
 	return nil
 }
 
-func (rs *RemoteSigner) disconnect(server *p2p.Server) error {
+func (rs *Signer) disconnect(server *p2p.Server) error {
 	rs.lock.Lock()
 	nodeID := rs.nodeID
 	rs.lock.Unlock()
@@ -238,7 +238,7 @@ type BasicCommitteeHandler struct {
 
 	RsaKey *rsakey.RsaKey
 
-	remoteSigners []*RemoteSigner
+	remoteSigners []*Signer
 
 	connected bool
 	lock      sync.RWMutex
@@ -249,8 +249,8 @@ func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, etherbase commo
 	ch := &BasicCommitteeHandler{
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
-		remoteSigners:   make([]*RemoteSigner, config.Epoch),
-		// remoteSigners:   make([]*RemoteSigner, config.Epoch-1),
+		remoteSigners:   make([]*Signer, config.Epoch),
+		// remoteSigners:   make([]*Signer, config.Epoch-1),
 		connected: false,
 	}
 	return ch, nil
@@ -308,8 +308,8 @@ func (ch *BasicCommitteeHandler) UpdateContractCaller(contractCaller *consensus.
 	return nil
 }
 
-// UpdateRemoteSigners updates BasicCommitteeNetworkHandler's remoteSigners.
-func (ch *BasicCommitteeHandler) UpdateRemoteSigners(epochIdx uint64, signers []common.Address) error {
+// UpdateSigners updates BasicCommitteeNetworkHandler's remoteSigners.
+func (ch *BasicCommitteeHandler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
 	ch.lock.Lock()
 	remoteSigners := ch.remoteSigners
 	ch.lock.Unlock()
@@ -325,7 +325,7 @@ func (ch *BasicCommitteeHandler) UpdateRemoteSigners(epochIdx uint64, signers []
 			// if signer == ch.contractTransactor.From {
 			// 	continue
 			// }
-			s := NewRemoteSigner(epochIdx, signer)
+			s := NewSigner(epochIdx, signer)
 			remoteSigners[i] = s
 		}
 	}

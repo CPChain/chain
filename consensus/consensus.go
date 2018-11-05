@@ -98,7 +98,7 @@ type Engine interface {
 	// GAPIs returns the GRPC APIs this consensus engine provides.
 	GAPIs(chain ChainReader) []api.GApi
 
-	SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeHandler) error
+	// SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeHandler) error
 
 	// SignHeader signs the given header.
 	// Note: it doesn't check if the header is correct.
