@@ -22,6 +22,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -97,18 +98,6 @@ type Engine interface {
 
 	// GAPIs returns the GRPC APIs this consensus engine provides.
 	GAPIs(chain ChainReader) []api.GApi
-
-	// SetCommitteeNetworkHandler(committeeNetworkHandler CommitteeHandler) error
-
-	// SignHeader signs the given header.
-	// Note: it doesn't check if the header is correct.
-	SignHeader(chain ChainReader, header *types.Header) error
-
-	// IfSigned returns if have signed the block
-	IfSigned(header *types.Header) bool
-
-	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
-	State() uint8
 }
 
 // Validator is used to determine whether an address is in the committee.
@@ -126,88 +115,20 @@ type PoW interface {
 	Hashrate() float64
 }
 
-// Broadcast sends msg to all pbft peers.
-type Broadcast func(msg interface{}, pbftStatus uint8) error
+// PbftEngine is a pbft based consensus engine
+type PbftEngine interface {
+	Engine
 
-const (
-	// Preprepare is returned if pbft status is in Preprepare phrase.
-	Preprepare uint8 = iota
+	// SetHandler sets a handler to engine
+	SetHandler(handler backend.PbftHandler) error
 
-	// Prepare is returned if pbft status is in Prepare phrase.
-	Prepare
+	// SignHeader signs the given header.
+	// Note: it doesn't check if the header is correct.
+	SignHeader(chain ChainReader, header *types.Header) error
 
-	// Commit is returned if pbft status is in Commit phrase.
-	Commit
-)
-
-// PbftPhraseSize is the number of pbft phrases
-const PbftPhraseSize = 3
-
-// Pbft is a consensus engine based on practical byzantine fault tolerance algorithm.
-type Pbft interface {
-
-	// SendPreprepare used by leader to send <PrePrepare> msg to other signers.
-	SendPreprepare(msg interface{}, broadcastFn Broadcast) error
-
-	// Preprepare returns true if received block has correct fields(hash, number, signature of leader).
-	Preprepare(msg interface{}) (bool, error)
-
-	// SendPrepare sends <Prepare> msg to other signers.
-	SendPrepare(msg interface{}, broadcastFn Broadcast) error
-
-	// Prepare returns true if collected enough(>2f+1 || >2/3) <Prepare> msg from other signers for given block.
-	Prepare(msg interface{}) (bool, error)
-
-	// SendCommit sends <Commit> msg to other signers.
-	SendCommit(msg interface{}, broadcastFn Broadcast) error
-
-	// Commit returns true if collected enough(>2f+1 || >2/3) <Commit> msg from other signers for given block.
-	Commit(msg interface{}) (bool, error)
+	// IfSigned returns if have signed the block
+	IfSigned(header *types.Header) bool
 
 	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
 	State() uint8
 }
-
-// Pbft process is as follow:
-
-// for {
-// // 	switch {
-// // 	case msg.Code < X:
-// // 		// simple sync method.
-// 	case msg.Code >= X:
-// // 		// pbft phrase
-// 		switch {
-// 		case Pbft.Status() == PrePrepare:
-// 			if (msg.Code == NewPendingBlockMsg || msg.Code == ViewChangeMsg) {
-// 				if Pbft.PrePrepare() {
-// 					Pbft.SendPrepare()
-// 				}
-// 			}
-
-// 			if timer.C && Pbft.IsNextLeader() {
-// 				Pbft.SendPrePrepare(viewChangeMsg)
-// 			}
-
-// 		case Pbft.Status() == Prepare:
-// 			if msg.Code == PrepareMsg {
-// 				if Pbft.Prepare() {
-// 					Pbft.SendCommit()
-// 				}
-// 			}
-
-// 		case Pbft.Status() == Commit:
-// 			if msg.Code == CommitMsg {
-// 				if Pbft.Commit() {
-// 					// Do preprepare request.
-// 				}
-// 			}
-
-// 		default:
-// 			log.Warn
-
-// 		}
-
-// 	default:
-// 		return err
-// 	}
-// }
