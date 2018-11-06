@@ -88,6 +88,11 @@ class ServiceContext {
 	services       map[reflect.Type]Service
 	EventMux       *event.TypeMux
 	AccountManager *accounts.Manager
+
+	OpenDatabase()
+	ResolvePath()
+	Service()
+	RsaKey()
 }
 
 ServiceContext "1" o-- "1" Config
