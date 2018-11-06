@@ -9,9 +9,14 @@ import (
 )
 
 const (
-	ProtocolName    = "dpor"
+	// ProtocolName protocol name
+	ProtocolName = "dpor"
+
+	// ProtocolVersion protocol verion
 	ProtocolVersion = 1
-	ProtocolLength  = 70
+
+	// ProtocolLength protocol length, max msg code
+	ProtocolLength = 70
 )
 
 const (
@@ -34,19 +39,37 @@ const (
 	CommitSignedHeaderMsg = 0x45
 )
 
-const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
+// ProtocolMaxMsgSize Maximum cap on the size of a protocol message
+const ProtocolMaxMsgSize = 10 * 1024 * 1024
 
 type errCode int
 
 const (
+	// ErrMsgTooLarge is returned if msg if too large
 	ErrMsgTooLarge = iota
+
+	// ErrDecode is returned if decode failed
 	ErrDecode
+
+	// ErrInvalidMsgCode is returned if msg code is invalid
 	ErrInvalidMsgCode
+
+	// ErrProtocolVersionMismatch is returned if protocol version is not matched when handshaking
 	ErrProtocolVersionMismatch
+
+	// ErrNetworkIdMismatch is returned if networkid is not matched when handshaking
 	ErrNetworkIdMismatch
+
+	// ErrGenesisBlockMismatch is returned if genesis block is different from remote signer
 	ErrGenesisBlockMismatch
+
+	// ErrNoStatusMsg is returned if failed when reading status msg
 	ErrNoStatusMsg
+
+	// ErrExtraStatusMsg is returned if failed when extracting status msg
 	ErrExtraStatusMsg
+
+	// ErrSuspendedPeer is returned if remote signer is dead
 	ErrSuspendedPeer
 )
 
@@ -81,6 +104,7 @@ func IsPbftMsg(msg p2p.Msg) bool {
 	return msg.Code >= PbftMsgOutSet
 }
 
+// State is the pbft state
 type State uint8
 
 const (
