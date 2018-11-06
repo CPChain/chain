@@ -22,11 +22,11 @@ import (
 
 	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // ChainReader defines a small collection of methods needed to access the local
@@ -120,7 +120,7 @@ type PbftEngine interface {
 	Engine
 
 	// SetHandler sets a handler to engine
-	SetHandler(handler backend.PbftHandler) error
+	// SetHandler(handler backend.PbftHandler) error
 
 	// SignHeader signs the given header.
 	// Note: it doesn't check if the header is correct.
@@ -137,4 +137,6 @@ type PbftEngine interface {
 
 	// Stop stops all
 	Stop() error
+
+	Protocol() p2p.Protocol
 }
