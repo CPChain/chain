@@ -15,7 +15,7 @@ GO ?= latest
 all: cpchain bootnode abigen pre-commit
 
 pre-commit:
-	@cp  build/pre-commit-hooks  .git/hooks/pre-commit
+	@cp  build/pre-commit-hook  .git/hooks/pre-commit
 	@echo "move pre-commit-hooks to .git/hooks/pre-commits"
 
 cpchain:
