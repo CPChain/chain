@@ -102,6 +102,6 @@ const (
 
 // PbftStatus represents a state of a dpor replica
 type PbftStatus struct {
-	state State
-	head  *types.Header
+	State State
+	Head  *types.Header
 }
