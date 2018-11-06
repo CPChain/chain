@@ -28,6 +28,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
@@ -124,10 +125,6 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		etherbase: etherbase,
 	}
 
-	if config.Dpor != nil {
-		manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(config.Dpor, etherbase)
-	}
-
 	// Initiate a sub-protocol for every implemented version we can handle
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 	for i, version := range ProtocolVersions {
@@ -162,6 +159,14 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	if len(manager.SubProtocols) == 0 {
 		return nil, errIncompatibleConfig
 	}
+
+	if config.Dpor != nil {
+		if dpor, ok := engine.(*dpor.Dpor); ok {
+			pbftProtocol := dpor.Protocol()
+			manager.SubProtocols = append(manager.SubProtocols, pbftProtocol)
+		}
+	}
+
 	// Construct the different synchronisation mechanisms
 	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
