@@ -1,7 +1,4 @@
 #!/bin/bash
-
-check_results=`git diff-index --cached HEAD | grep vendor/vendor.json | wc -c`
-if test $[check_results] -ne 0
-then
+if git diff-index --cached HEAD | egrep -q "\bvendor/"; then
     echo 'vendor has been changed'
 fi

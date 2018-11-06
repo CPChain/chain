@@ -7,16 +7,12 @@
 .PHONY: cpchain-linux-arm cpchain-linux-arm-5 cpchain-linux-arm-6 cpchain-linux-arm-7 cpchain-linux-arm64
 .PHONY: cpchain-darwin cpchain-darwin-386 cpchain-darwin-amd64
 .PHONY: cpchain-windows cpchain-windows-386 cpchain-windows-amd64
+.PHONY: dev-init
 
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
-
-all: cpchain bootnode abigen pre-commit
-
-pre-commit:
-	@cp  build/pre-commit-hook  .git/hooks/pre-commit
-	@echo "move pre-commit-hooks to .git/hooks/pre-commits"
+all: cpchain bootnode abigen
 
 cpchain:
 	build/env.sh go run build/ci.go install ./cmd/cpchain
@@ -167,3 +163,8 @@ cpchain-windows-amd64:
 dev-test:
 	docker build -f Dockerfile.dev .
 	@echo "chain test in docker done"
+
+
+dev-init:
+	@cp  build/pre-commit-hook  .git/hooks/pre-commit
+	@echo "move pre-commit-hook to .git/hooks/pre-commit"
