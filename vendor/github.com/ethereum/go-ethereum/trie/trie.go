@@ -22,9 +22,9 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
-	"bitbucket.org/cpchain/chain/crypto"
-	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 var (

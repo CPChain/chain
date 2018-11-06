@@ -9,7 +9,7 @@ import (
 	"encoding/binary"
 	"io"
 
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -54,7 +54,7 @@ type PayloadReplacement struct {
 
 // SealPrivatePayload encrypts private tx's payload and sends it to IPFS, then replaces the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
-func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, remoteDB ethdb.RemoteDatabase) (PayloadReplacement, error) {
+func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, remoteDB database.RemoteDatabase) (PayloadReplacement, error) {
 	// Encrypt payload
 	// use tx's nonce as gcm nonce
 	nonce := make([]byte, 12)

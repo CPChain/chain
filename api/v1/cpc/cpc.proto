@@ -20,14 +20,6 @@ service Coinbase {
     }
 }
 
-// Works a work package for external miner. The work package consists of 3 strings
-// result[0], 32 bytes hex encoded current block header pow-hash
-// result[1], 32 bytes hex encoded seed hash used for DAG
-// result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
-message Works {
-    map<int32, string> works = 1;
-}
-
 // MinerReadder provides an API to control the miner.
 // It offers only methods that operate on data that pose no security risk when it is publicly accessible.
 service MinerReader {
@@ -35,16 +27,6 @@ service MinerReader {
     rpc Mining(google.protobuf.Empty) returns (common.IsOk) {
         option (google.api.http) = {
             post: "/api/v1/cpc/mining"
-            body: "*"
-          };
-    }
-    // GetWork returns a work package for external miner. The work package consists of 3 strings
-    // result[0], 32 bytes hex encoded current block header pow-hash
-    // result[1], 32 bytes hex encoded seed hash used for DAG
-    // result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
-    rpc GetWork(google.protobuf.Empty) returns (Works) {
-        option (google.api.http) = {
-            post: "/api/v1/cpc/getWork"
             body: "*"
           };
     }

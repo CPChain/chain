@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
@@ -19,7 +19,7 @@ var (
 )
 
 // GetPrivateStateRoot gets the root(hash) for private state associated with the root of Merkle tree in public chain.
-func GetPrivateStateRoot(db ethdb.Database, blockRoot common.Hash) common.Hash {
+func GetPrivateStateRoot(db database.Database, blockRoot common.Hash) common.Hash {
 	exist, _ := db.Has(append(privateRootPrefix, blockRoot[:]...))
 	if exist {
 		root, _ := db.Get(append(privateRootPrefix, blockRoot[:]...))
@@ -29,12 +29,12 @@ func GetPrivateStateRoot(db ethdb.Database, blockRoot common.Hash) common.Hash {
 }
 
 // WritePrivateStateRoot writes the root(hash) for private state associated with the root of Merkle tree in public chain.
-func WritePrivateStateRoot(db ethdb.Database, blockRoot, root common.Hash) error {
+func WritePrivateStateRoot(db database.Database, blockRoot, root common.Hash) error {
 	return db.Put(append(privateRootPrefix, blockRoot[:]...), root[:])
 }
 
 // WritePrivateReceipt writes private receipt associated with specified transaction.
-func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db ethdb.Database) error {
+func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db database.Database) error {
 	hash := getPrivateReceiptKey(txHash)
 	// Write receipt to trie db.
 	storageReceipt := (*types.ReceiptForStorage)(receipt)
@@ -45,7 +45,7 @@ func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db ethdb.Da
 }
 
 // ReadPrivateReceipt reads private receipt associated with specified transaction.
-func ReadPrivateReceipt(txHash common.Hash, db ethdb.Database) (*types.Receipt, error) {
+func ReadPrivateReceipt(txHash common.Hash, db database.Database) (*types.Receipt, error) {
 	hash := getPrivateReceiptKey(txHash)
 	// Read private receipt data
 	data, err := db.Get(hash.Bytes())

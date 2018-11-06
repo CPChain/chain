@@ -33,7 +33,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -51,8 +51,8 @@ var errGasEstimationFailed = errors.New("gas required exceeds allowance or alway
 // SimulatedBackend implements bind.ContractBackend, simulating a blockchain in
 // the background. Its main purpose is to allow easily testing contract bindings.
 type SimulatedBackend struct {
-	database   ethdb.Database   // In memory database to store our testing data
-	blockchain *core.BlockChain // Ethereum blockchain to handle the consensus
+	database   database.Database // In memory database to store our testing data
+	blockchain *core.BlockChain  // Ethereum blockchain to handle the consensus
 
 	mu           sync.Mutex
 	pendingBlock *types.Block   // Currently pending block that will be imported on request
@@ -85,24 +85,24 @@ type SimulatedBackend struct {
 // NewDporSimulatedBackend creates a new binding backend using a simulated blockchain
 // for testing purposes.
 func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
-	database := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	genesis := core.DefaultGenesisBlock()
 	genesis.Alloc = alloc
-	genesis.MustCommit(database)
+	genesis.MustCommit(db)
 
-	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	// TODO we need our own NewFaker(), `ethash.NewFaker' does nothing.
 
 	config := configs.MainnetChainConfig.Dpor
-	d := dpor.NewFaker(config, database)
+	d := dpor.NewFaker(config, db)
 
-	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, d, vm.Config{}, remoteDB, nil)
+	blockchain, _ := core.NewBlockChain(db, nil, genesis.Config, d, vm.Config{}, remoteDB, nil)
 
 	backend := &SimulatedBackend{
-		database:   database,
+		database:   db,
 		blockchain: blockchain,
 		config:     genesis.Config,
-		events:     filters.NewEventSystem(new(event.TypeMux), &filterBackend{database, blockchain}, false),
+		events:     filters.NewEventSystem(new(event.TypeMux), &filterBackend{db, blockchain}, false),
 	}
 	backend.rollback()
 	return backend
@@ -453,12 +453,12 @@ func (m callmsg) Data() []byte         { return m.CallMsg.Data }
 // filterBackend implements filters.Backend to support filtering for logs without
 // taking bloom-bits acceleration structures into account.
 type filterBackend struct {
-	db ethdb.Database
+	db database.Database
 	bc *core.BlockChain
 }
 
-func (fb *filterBackend) ChainDb() ethdb.Database  { return fb.db }
-func (fb *filterBackend) EventMux() *event.TypeMux { panic("not supported") }
+func (fb *filterBackend) ChainDb() database.Database { return fb.db }
+func (fb *filterBackend) EventMux() *event.TypeMux   { panic("not supported") }
 
 func (fb *filterBackend) HeaderByNumber(ctx context.Context, block rpc.BlockNumber) (*types.Header, error) {
 	if block == rpc.LatestBlockNumber {

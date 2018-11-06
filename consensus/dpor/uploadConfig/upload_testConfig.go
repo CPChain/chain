@@ -1,19 +1,20 @@
 package uploadConfig
 
 import (
+	"context"
+	"crypto/ecdsa"
+	"fmt"
+	"math/big"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"context"
-	"crypto/ecdsa"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
-	"math/big"
 )
 
 var (

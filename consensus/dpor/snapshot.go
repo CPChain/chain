@@ -10,7 +10,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -31,7 +31,7 @@ var (
 
 // Snapshot is used to check if a received block is valid by create a snapshot from previous blocks
 type Snapshot interface {
-	store(db ethdb.Database) error
+	store(db database.Database) error
 	copy() *Snapshot
 	apply(headers []*types.Header) (*Snapshot, error)
 	applyHeader(header *types.Header) error
@@ -163,7 +163,7 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, si
 }
 
 // loadSnapshot loads an existing Snapshot from the database.
-func loadSnapshot(config *configs.DporConfig, db ethdb.Database, hash common.Hash) (*DporSnapshot, error) {
+func loadSnapshot(config *configs.DporConfig, db database.Database, hash common.Hash) (*DporSnapshot, error) {
 
 	// Retrieve from db
 	blob, err := db.Get(append([]byte("dpor-"), hash[:]...))
@@ -182,7 +182,7 @@ func loadSnapshot(config *configs.DporConfig, db ethdb.Database, hash common.Has
 }
 
 // store inserts the Snapshot into the database.
-func (s *DporSnapshot) store(db ethdb.Database) error {
+func (s *DporSnapshot) store(db database.Database) error {
 	blob, err := json.Marshal(s)
 	if err != nil {
 		return err

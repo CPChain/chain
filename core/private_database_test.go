@@ -7,23 +7,23 @@ import (
 
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/pkg/errors"
 )
 
 func TestGetPrivateStateRoot(t *testing.T) {
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockRoot := common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7, 8})
 	privateRoot := common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7, 8})
 
 	WritePrivateStateRoot(db, blockRoot, privateRoot)
 
 	type args struct {
-		db        ethdb.Database
+		db        database.Database
 		blockRoot common.Hash
 	}
 	tests := []struct {
@@ -58,12 +58,12 @@ func TestGetPrivateStateRoot(t *testing.T) {
 }
 
 func TestWritePrivateStateRoot(t *testing.T) {
-	db := ethdb.NewMemDatabase()
+	db := database.NewMemDatabase()
 	blockRoot := common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7, 8})
 	privateRoot := common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7, 8})
 
 	type args struct {
-		db        ethdb.Database
+		db        database.Database
 		blockRoot common.Hash
 		root      common.Hash
 	}
@@ -95,7 +95,7 @@ func TestWritePrivateReceipt(t *testing.T) {
 	type args struct {
 		receipt *types.Receipt
 		txHash  common.Hash
-		db      ethdb.Database
+		db      database.Database
 	}
 
 	db := getTestDB()
@@ -155,7 +155,7 @@ func TestWritePrivateReceipt(t *testing.T) {
 func TestReadPrivateReceipt(t *testing.T) {
 	type args struct {
 		txHash common.Hash
-		db     ethdb.Database
+		db     database.Database
 	}
 
 	db := getTestDB()
@@ -217,6 +217,6 @@ func getTestReceipt() *types.Receipt {
 	return types.NewReceipt(common.Hash{}.Bytes(), false, 3000)
 }
 
-func getTestDB() *ethdb.MemDatabase {
-	return ethdb.NewMemDatabase()
+func getTestDB() *database.MemDatabase {
+	return database.NewMemDatabase()
 }

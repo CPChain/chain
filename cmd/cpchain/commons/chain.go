@@ -16,13 +16,13 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/protocols/cpc"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/node"
+	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/fdlimit"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/urfave/cli"
 )
@@ -33,7 +33,7 @@ const (
 
 // MakeChainDatabase open an LevelDB using the flags passed to the client and will hard crash if it fails.
 // It creates a new one if the database doesn't exist.
-func MakeChainDatabase(ctx *cli.Context, n *node.Node, databaseCache int) ethdb.Database {
+func MakeChainDatabase(ctx *cli.Context, n *node.Node, databaseCache int) database.Database {
 	// TODO hardcoded name
 	name := "chaindata"
 	handles := makeDatabaseHandles()
@@ -51,7 +51,7 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 }
 
 // OpenChain opens a blockchain
-func OpenChain(ctx *cli.Context, n *node.Node, cfg *cpc.Config) (chain *core.BlockChain, chainDb ethdb.Database) {
+func OpenChain(ctx *cli.Context, n *node.Node, cfg *cpc.Config) (chain *core.BlockChain, chainDb database.Database) {
 	var err error
 	chainDb = MakeChainDatabase(ctx, n, cfg.DatabaseCache)
 
@@ -64,7 +64,7 @@ func OpenChain(ctx *cli.Context, n *node.Node, cfg *cpc.Config) (chain *core.Blo
 	return chain, chainDb
 }
 
-func newBlockChain(config *configs.ChainConfig, chainDb ethdb.Database, trieCache int, n *node.Node, chain *core.BlockChain, err error) *core.BlockChain {
+func newBlockChain(config *configs.ChainConfig, chainDb database.Database, trieCache int, n *node.Node, chain *core.BlockChain, err error) *core.BlockChain {
 	var engine consensus.Engine
 	engine = dpor.New(config.Dpor, chainDb)
 	cacheCfg := &core.CacheConfig{
@@ -229,7 +229,7 @@ func ExportChainN(blockchain *core.BlockChain, fn string, first, last uint64) er
 }
 
 // ImportPreimages imports a batch of exported hash preimages into the database.
-func ImportPreimages(db *ethdb.LDBDatabase, fn string) error {
+func ImportPreimages(db *database.LDBDatabase, fn string) error {
 	log.Info("Importing preimages", "file", fn)
 
 	// Open the file handle and potentially unwrap the gzip stream
@@ -276,7 +276,7 @@ func ImportPreimages(db *ethdb.LDBDatabase, fn string) error {
 
 // ExportPreimages exports all known hash preimages into the specified file,
 // truncating any data already present in the file.
-func ExportPreimages(db *ethdb.LDBDatabase, fn string) error {
+func ExportPreimages(db *database.LDBDatabase, fn string) error {
 	log.Info("Exporting preimages", "file", fn)
 
 	// Open the file handle and potentially wrap with a gzip stream

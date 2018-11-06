@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 

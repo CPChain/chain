@@ -35,11 +35,11 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/mclock"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -95,9 +95,9 @@ type BlockChain struct {
 	chainConfig *configs.ChainConfig // Chain & network configuration
 	cacheConfig *CacheConfig         // Cache configuration for pruning
 
-	db     ethdb.Database // Low level persistent database to store final content in
-	triegc *prque.Prque   // Priority queue mapping block numbers to tries to gc
-	gcproc time.Duration  // Accumulates canonical block processing for trie dumping
+	db     database.Database // Low level persistent database to store final content in
+	triegc *prque.Prque      // Priority queue mapping block numbers to tries to gc
+	gcproc time.Duration     // Accumulates canonical block processing for trie dumping
 
 	hc            *HeaderChain
 	rmLogsFeed    event.Feed
@@ -137,9 +137,9 @@ type BlockChain struct {
 	badBlocks     *lru.Cache // Bad block cache
 	pendingBlocks *lru.Cache // not enough signatures block cache
 
-	privateStateCache state.Database       // State database to reuse between imports (contains state cache)
-	remoteDB          ethdb.RemoteDatabase // Remote database for huge amount data storage
-	rsaPrivateKey     *rsa.PrivateKey      // Private RSA key used for many features such as private tx
+	privateStateCache state.Database          // State database to reuse between imports (contains state cache)
+	remoteDB          database.RemoteDatabase // Remote database for huge amount data storage
+	rsaPrivateKey     *rsa.PrivateKey         // Private RSA key used for many features such as private tx
 
 	ErrChan chan error
 }
@@ -153,8 +153,8 @@ func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
 // TODO chengx the key should be accessed with keystore.
-func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *configs.ChainConfig, engine consensus.Engine,
-	vmConfig vm.Config, remoteDB ethdb.RemoteDatabase, rsaPrivKey *rsa.PrivateKey) (*BlockChain, error) {
+func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *configs.ChainConfig, engine consensus.Engine,
+	vmConfig vm.Config, remoteDB database.RemoteDatabase, rsaPrivKey *rsa.PrivateKey) (*BlockChain, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
 			TrieNodeLimit: 256 * 1024 * 1024,
@@ -893,7 +893,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 
 		stats.processed++
 
-		if batch.ValueSize() >= ethdb.IdealBatchSize {
+		if batch.ValueSize() >= database.IdealBatchSize {
 			if err := batch.Write(); err != nil {
 				return 0, err
 			}
@@ -1006,7 +1006,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 				limit       = common.StorageSize(bc.cacheConfig.TrieNodeLimit) * 1024 * 1024
 			)
 			if nodes > limit || imgs > 4*1024*1024 {
-				triedb.Cap(limit - ethdb.IdealBatchSize)
+				triedb.Cap(limit - database.IdealBatchSize)
 			}
 			// Find the next pubState trie we need to commit
 			header := bc.GetHeaderByNumber(current - triesInMemory)
@@ -1693,7 +1693,7 @@ func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscript
 }
 
 // RemoteDB returns remote database if it has, otherwise return nil.
-func (bc *BlockChain) RemoteDB() ethdb.RemoteDatabase {
+func (bc *BlockChain) RemoteDB() database.RemoteDatabase {
 	return bc.remoteDB
 }
 

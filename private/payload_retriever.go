@@ -7,14 +7,14 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // Read tx's payload replacement, retrieve encrypted payload from IPFS and decrypt it.
 // Return decrypted payload, a flag indicating if the node has enough permission and error if there is.
-func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB ethdb.RemoteDatabase, pubKey *rsa.PublicKey,
+func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.RemoteDatabase, pubKey *rsa.PublicKey,
 	privKey *rsa.PrivateKey) (payload []byte, hasPermission bool, error error) {
 	replacement := PayloadReplacement{}
 	err := rlp.DecodeBytes(data, &replacement)
@@ -49,7 +49,7 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB ethdb.Remot
 	return []byte{}, false, nil
 }
 
-func getDataFromRemote(ipfsAddress []byte, remoteDB ethdb.RemoteDatabase) ([]byte, error) {
+func getDataFromRemote(ipfsAddress []byte, remoteDB database.RemoteDatabase) ([]byte, error) {
 	content, err := remoteDB.Get(ipfsAddress)
 	if err != nil {
 		return []byte{}, err

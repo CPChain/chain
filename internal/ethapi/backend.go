@@ -27,7 +27,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -42,7 +42,7 @@ type Backend interface {
 	Downloader() *downloader.Downloader
 	ProtocolVersion() int
 	SuggestPrice(ctx context.Context) (*big.Int, error)
-	ChainDb() ethdb.Database
+	ChainDb() database.Database
 	EventMux() *event.TypeMux
 	AccountManager() *accounts.Manager
 
@@ -72,7 +72,7 @@ type Backend interface {
 	ChainConfig() *configs.ChainConfig
 	CurrentBlock() *types.Block
 
-	RemoteDB() ethdb.RemoteDatabase // RemoteDB returns remote database instance.
+	RemoteDB() database.RemoteDatabase // RemoteDB returns remote database instance.
 }
 
 func GetGAPIs(b Backend) []api.GApi {
