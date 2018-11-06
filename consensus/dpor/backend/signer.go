@@ -49,16 +49,6 @@ type Signer struct {
 	lock sync.RWMutex
 }
 
-// SetSigner sets a signer
-func (rs *Signer) SetSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
-	rs.lock.Lock()
-	defer rs.lock.Unlock()
-
-	rs.version, rs.Peer, rs.rw = version, p, rw
-
-	return nil
-}
-
 // NewSigner creates a new NewSigner with given view idx and address.
 func NewSigner(epochIdx uint64, address common.Address) *Signer {
 	return &Signer{
@@ -74,9 +64,9 @@ func NewSigner(epochIdx uint64, address common.Address) *Signer {
 }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.
-func (rs *Signer) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
+func (s *Signer) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
 
-	address := rs.address
+	address := s.address
 
 	log.Debug("fetching public key of remote signer")
 	log.Debug("signer", "addr", address)
@@ -86,8 +76,8 @@ func (rs *Signer) fetchPubkey(contractInstance *contract.SignerConnectionRegiste
 		return err
 	}
 
-	rs.pubkey = pubkey
-	rs.pubkeyFetched = true
+	s.pubkey = pubkey
+	s.pubkeyFetched = true
 
 	log.Debug("fetched public key of remote signer", "pubkey", pubkey)
 
@@ -95,8 +85,8 @@ func (rs *Signer) fetchPubkey(contractInstance *contract.SignerConnectionRegiste
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (rs *Signer) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
-	epochIdx, address := rs.epochIdx, rs.address
+func (s *Signer) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
+	epochIdx, address := s.epochIdx, s.address
 
 	log.Debug("fetching nodeID of remote signer")
 	log.Debug("epoch", "idx", epochIdx)
@@ -114,8 +104,8 @@ func (rs *Signer) fetchNodeID(contractInstance *contract.SignerConnectionRegiste
 	}
 
 	nodeID := string(nodeid)
-	rs.nodeID = nodeID
-	rs.nodeIDFetched = true
+	s.nodeID = nodeID
+	s.nodeIDFetched = true
 
 	log.Debug("fetched nodeID of remote signer", "nodeID", nodeID)
 
@@ -131,13 +121,13 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 }
 
 // updateNodeID encrypts my node id with this remote signer's public key and update to the contract.
-func (rs *Signer) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
-	epochIdx, address := rs.epochIdx, rs.address
+func (s *Signer) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
+	epochIdx, address := s.epochIdx, s.address
 
 	log.Debug("fetched rsa pubkey")
-	log.Debug(hex.Dump(rs.pubkey))
+	log.Debug(hex.Dump(s.pubkey))
 
-	pubkey, err := rsakey.NewRsaPublicKey(rs.pubkey)
+	pubkey, err := rsakey.NewRsaPublicKey(s.pubkey)
 
 	log.Debug("updating self nodeID with remote signer's public key")
 	log.Debug("epoch", "idx", epochIdx)
@@ -165,7 +155,7 @@ func (rs *Signer) updateNodeID(nodeID string, auth *bind.TransactOpts, contractI
 		return err
 	}
 
-	rs.nodeIDUpdated = true
+	s.nodeIDUpdated = true
 
 	log.Debug("updated self nodeID")
 
@@ -173,29 +163,29 @@ func (rs *Signer) updateNodeID(nodeID string, auth *bind.TransactOpts, contractI
 }
 
 // dial dials the signer.
-func (rs *Signer) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
-	rs.lock.Lock()
-	defer rs.lock.Unlock()
+func (s *Signer) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
-	log.Debug("dialing to remote signer", "signer", rs)
+	log.Debug("dialing to remote signer", "signer", s)
 
 	// fetch remtoe signer's public key if there is no one.
-	if !rs.pubkeyFetched {
-		err := rs.fetchPubkey(contractInstance)
+	if !s.pubkeyFetched {
+		err := s.fetchPubkey(contractInstance)
 		if err != nil {
 			log.Warn("err when fetching signer's pubkey from contract", "err", err)
 			return false, err
 		}
 	}
 
-	nodeid, err := fetchNodeID(rs.epochIdx, address, contractInstance)
+	nodeid, err := fetchNodeID(s.epochIdx, address, contractInstance)
 	if err != nil {
 		return false, err
 	}
 
 	// update my nodeID to contract if already know the public key of the remote signer and not updated yet.
-	if rs.pubkeyFetched && len(nodeid) == 0 {
-		err := rs.updateNodeID(nodeID, auth, contractInstance, client)
+	if s.pubkeyFetched && len(nodeid) == 0 {
+		err := s.updateNodeID(nodeID, auth, contractInstance, client)
 		if err != nil {
 			log.Warn("err when updating my node id to contract", "err", err)
 			return false, err
@@ -203,8 +193,8 @@ func (rs *Signer) dial(server *p2p.Server, nodeID string, address common.Address
 	}
 
 	// fetch the nodeID of the remote signer if not fetched yet.
-	if !rs.nodeIDFetched {
-		err := rs.fetchNodeID(contractInstance, rsaKey)
+	if !s.nodeIDFetched {
+		err := s.fetchNodeID(contractInstance, rsaKey)
 		if err != nil {
 			log.Warn("err when fetching signer's nodeID from contract", "err", err)
 			return false, err
@@ -212,8 +202,8 @@ func (rs *Signer) dial(server *p2p.Server, nodeID string, address common.Address
 	}
 
 	// dial the signer with his nodeID if not dialed yet.
-	if rs.nodeIDFetched && !rs.dialed {
-		node, err := discover.ParseNode(rs.nodeID)
+	if s.nodeIDFetched && !s.dialed {
+		node, err := discover.ParseNode(s.nodeID)
 		if err != nil {
 			log.Warn("err when dialing remote signer with his nodeID", "err", err)
 			return false, err
@@ -223,16 +213,16 @@ func (rs *Signer) dial(server *p2p.Server, nodeID string, address common.Address
 		} else {
 			log.Warn("invalid server", "server", server)
 		}
-		rs.dialed = true
+		s.dialed = true
 	}
 
-	return rs.dialed, nil
+	return s.dialed, nil
 }
 
 // Dial dials the signer
-func (rs *Signer) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) error {
+func (s *Signer) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) error {
 
-	succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
+	succeed, err := s.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 	// succeed, err := func() (bool, error) { return true, nil }()
 
 	log.Debug("result of rs.dial", "succeed", succeed)
@@ -244,10 +234,10 @@ func (rs *Signer) Dial(server *p2p.Server, nodeID string, address common.Address
 	return nil
 }
 
-func (rs *Signer) disconnect(server *p2p.Server) error {
-	rs.lock.Lock()
-	nodeID := rs.nodeID
-	rs.lock.Unlock()
+func (s *Signer) disconnect(server *p2p.Server) error {
+	s.lock.Lock()
+	nodeID := s.nodeID
+	s.lock.Unlock()
 
 	node, err := discover.ParseNode(nodeID)
 	if err != nil {
@@ -257,84 +247,98 @@ func (rs *Signer) disconnect(server *p2p.Server) error {
 	return nil
 }
 
+// SetSigner sets a signer
+func (s *Signer) SetSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.version, s.Peer, s.rw = version, p, rw
+
+	return nil
+}
+
 // signerBroadcast is a write loop that multiplexes block propagations, announcements
 // and transaction broadcasts into the remote peer. The goal is to have an async
 // writer that does not lock up node internals.
-func (p *Signer) signerBroadcast() {
+func (s *Signer) signerBroadcast() {
 	for {
 		select {
 		// blocks waiting for signatures
-		case block := <-p.queuedPendingBlocks:
-			if err := p.SendNewPendingBlock(block); err != nil {
+		case block := <-s.queuedPendingBlocks:
+			if err := s.SendNewPendingBlock(block); err != nil {
 				return
 			}
-			p.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
+			s.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
 
-		case header := <-p.queuedPrepareSigs:
-			if err := p.SendPrepareSignedHeader(header); err != nil {
+		case header := <-s.queuedPrepareSigs:
+			if err := s.SendPrepareSignedHeader(header); err != nil {
 				return
 			}
-			p.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
+			s.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
 
-		case header := <-p.queuedCommitSigs:
-			if err := p.SendCommitSignedHeader(header); err != nil {
+		case header := <-s.queuedCommitSigs:
+			if err := s.SendCommitSignedHeader(header); err != nil {
 				return
 			}
-			p.Log().Trace("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
+			s.Log().Trace("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
 
-		case <-p.term:
+		case <-s.term:
 			return
 		}
 	}
 }
 
-func (p *Signer) SendNewSignerMsg(eb common.Address) error {
-	return p2p.Send(p.rw, NewSignerMsg, eb)
+// SendNewSignerMsg sends a
+func (s *Signer) SendNewSignerMsg(eb common.Address) error {
+	return p2p.Send(s.rw, NewSignerMsg, eb)
 }
 
 // SendNewPendingBlock propagates an entire block to a remote peer.
-func (p *Signer) SendNewPendingBlock(block *types.Block) error {
-	return p2p.Send(p.rw, PrepreparePendingBlockMsg, block)
+func (s *Signer) SendNewPendingBlock(block *types.Block) error {
+	return p2p.Send(s.rw, PrepreparePendingBlockMsg, block)
 }
 
 // AsyncSendNewPendingBlock queues an entire block for propagation to a remote peer. If
 // the peer's broadcast queue is full, the event is silently dropped.
-func (p *Signer) AsyncSendNewPendingBlock(block *types.Block) {
+func (s *Signer) AsyncSendNewPendingBlock(block *types.Block) {
 	select {
-	case p.queuedPendingBlocks <- block:
+	case s.queuedPendingBlocks <- block:
 	default:
-		p.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		s.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	}
 }
 
 // SendPrepareSignedHeader sends new signed block header.
-func (p *Signer) SendPrepareSignedHeader(header *types.Header) error {
-	err := p2p.Send(p.rw, PrepareSignedHeaderMsg, header)
+func (s *Signer) SendPrepareSignedHeader(header *types.Header) error {
+	err := p2p.Send(s.rw, PrepareSignedHeaderMsg, header)
 	return err
 }
 
-func (p *Signer) AsyncSendPrepareSignedHeader(header *types.Header) {
+// AsyncSendPrepareSignedHeader adds a msg to broadcast channel
+func (s *Signer) AsyncSendPrepareSignedHeader(header *types.Header) {
 	select {
-	case p.queuedPrepareSigs <- header:
+	case s.queuedPrepareSigs <- header:
 	default:
-		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		s.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
 	}
 }
 
 // SendCommitSignedHeader sends new signed block header.
-func (p *Signer) SendCommitSignedHeader(header *types.Header) error {
-	err := p2p.Send(p.rw, CommitSignedHeaderMsg, header)
+func (s *Signer) SendCommitSignedHeader(header *types.Header) error {
+	err := p2p.Send(s.rw, CommitSignedHeaderMsg, header)
 	return err
 }
 
-func (p *Signer) AsyncSendCommitSignedHeader(header *types.Header) {
+// AsyncSendCommitSignedHeader sends new signed block header.
+func (s *Signer) AsyncSendCommitSignedHeader(header *types.Header) {
 	select {
-	case p.queuedCommitSigs <- header:
+	case s.queuedCommitSigs <- header:
 	default:
-		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		s.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
 	}
 }
 
+// Handshake tries to handshake with remote signer
 func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
@@ -367,6 +371,7 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, sign
 	return isSigner, address, nil
 }
 
+// ReadSignerStatus reads status of remote signer
 func ReadSignerStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerStatusData, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
