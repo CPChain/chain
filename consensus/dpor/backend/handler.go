@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
@@ -35,6 +36,8 @@ type Handler struct {
 
 	signers map[common.Address]*Signer
 
+	snap *PbftStatus
+
 	stateFn          StateFn
 	statusFn         StatusFn
 	addPendingFn     AddPendingBlockFn
@@ -45,10 +48,10 @@ type Handler struct {
 	broadcastBlockFn BroadcastBlockFn
 	validateSignerFn ValidateSignerFn
 
-	wg sync.WaitGroup
-
-	newPeerCh chan *p2p.Peer
-	quitSync  chan struct{}
+	wg             sync.WaitGroup
+	pendingBlockCh chan *types.Block
+	newPeerCh      chan *p2p.Peer
+	quitSync       chan struct{}
 
 	available bool
 
@@ -194,26 +197,6 @@ func (h *Handler) Disconnect() {
 	h.lock.Lock()
 	h.connected = connected
 	h.lock.Unlock()
-}
-
-// Start starts pbft handler
-func (h *Handler) Start() error {
-	return nil
-}
-
-// Stop stops all
-func (h *Handler) Stop() error {
-	return nil
-}
-
-// SendMsg sends msg to signer with given addr
-func (h *Handler) SendMsg(addr common.Address, msg interface{}) error {
-	return nil
-}
-
-// BroadcastMsg broadcasts msg to all
-func (h *Handler) BroadcastMsg(msg interface{}) error {
-	return nil
 }
 
 // BroadcastGeneratedBlock broadcasts generated block to committee
@@ -437,6 +420,11 @@ func (h *Handler) Protocol() p2p.Protocol {
 		Length:  ProtocolLength,
 		Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
 
+			if !h.IsAvailable() {
+				log.Debug("not available now")
+				return nil
+			}
+
 			cb := h.ownAddress
 			validator := h.validateSignerFn
 
@@ -461,5 +449,81 @@ func (h *Handler) Protocol() p2p.Protocol {
 		PeerInfo: func(id discover.NodeID) interface{} {
 			return nil
 		},
+	}
+}
+
+// Start starts pbft handler
+func (h *Handler) Start() {
+
+	// Dail all remote signers
+	go h.DialAll()
+
+	// Broadcast mined pending block, including empty block
+	go h.PendingBlockBroadcastLoop()
+
+	return
+}
+
+// PendingBlockBroadcastLoop loops to broadcast blocks
+func (h *Handler) PendingBlockBroadcastLoop() {
+	futureTimer := time.NewTicker(10 * time.Second)
+	defer futureTimer.Stop()
+
+	for {
+		select {
+		case pendingBlock := <-h.pendingBlockCh:
+
+			// broadcast mined pending block to remote signers
+			h.BroadcastGeneratedBlock(pendingBlock)
+
+		case <-futureTimer.C:
+
+			// check if still not received new block, if true, continue
+			if h.ReadyToImpeach() {
+
+				// get empty block
+				if emptyBlock, err := h.GetEmptyPendingBlock(); err == nil {
+
+					// broadcast the empty block
+					h.BroadcastGeneratedBlock(emptyBlock)
+				}
+			}
+
+		case <-h.quitSync:
+			return
+		}
+	}
+}
+
+// ReadyToImpeach returns if its time to impeach leader
+func (h *Handler) ReadyToImpeach() bool {
+	snap := h.snap
+	head := h.statusFn()
+
+	if head.Head.Number.Uint64() <= snap.Head.Number.Uint64() {
+		return true
+	}
+
+	h.snap = head
+	return false
+}
+
+// Stop stops all
+func (h *Handler) Stop() {
+
+	close(h.quitSync)
+
+	return
+}
+
+// GetEmptyPendingBlock returns an empty block to be used to act as viewchange
+func (h *Handler) GetEmptyPendingBlock() (*types.Block, error) {
+	return nil, nil
+}
+
+func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
+	select {
+	case h.pendingBlockCh <- block:
+		return nil
 	}
 }
