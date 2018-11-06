@@ -49,6 +49,16 @@ type Signer struct {
 	lock sync.RWMutex
 }
 
+// SetSigner sets a signer
+func (rs *Signer) SetSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
+	rs.lock.Lock()
+	defer rs.lock.Unlock()
+
+	rs.version, rs.Peer, rs.rw = version, p, rw
+
+	return nil
+}
+
 // NewSigner creates a new NewSigner with given view idx and address.
 func NewSigner(epochIdx uint64, address common.Address) *Signer {
 	return &Signer{
@@ -284,7 +294,7 @@ func (p *Signer) SendNewSignerMsg(eb common.Address) error {
 
 // SendNewPendingBlock propagates an entire block to a remote peer.
 func (p *Signer) SendNewPendingBlock(block *types.Block) error {
-	return p2p.Send(p.rw, PrepreparePendingBlockMsg, []interface{}{block, big.NewInt(0)})
+	return p2p.Send(p.rw, PrepreparePendingBlockMsg, block)
 }
 
 // AsyncSendNewPendingBlock queues an entire block for propagation to a remote peer. If
@@ -325,11 +335,7 @@ func (p *Signer) AsyncSendCommitSignedHeader(header *types.Header) {
 	}
 }
 
-type ValidateSigner func(signer common.Address) (bool, error)
-
-// Handshake executes the eth protocol handshake, negotiating version number,
-// network IDs, difficulties, head and genesis blocks.
-func (p *Signer) CommitteeHandshake(etherbase common.Address, signerValidator ValidateSigner) (isSigner bool, err error) {
+func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var signerStatus signerStatusData // safe to read after two values have been received from errc
@@ -337,13 +343,13 @@ func (p *Signer) CommitteeHandshake(etherbase common.Address, signerValidator Va
 	log.Debug("my etherbase", "address", etherbase)
 
 	go func() {
-		errc <- p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
-			ProtocolVersion: uint32(p.version),
+		errc <- p2p.Send(rw, NewSignerMsg, &signerStatusData{
+			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         etherbase,
 		})
 	}()
 	go func() {
-		isSigner, err = p.readSignerStatus(&signerStatus, signerValidator)
+		isSigner, address, err = ReadSignerStatus(p, rw, &signerStatus, signerValidator)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -352,35 +358,39 @@ func (p *Signer) CommitteeHandshake(etherbase common.Address, signerValidator Va
 		select {
 		case err := <-errc:
 			if err != nil {
-				return false, err
+				return false, common.Address{}, err
 			}
 		case <-timeout.C:
-			return false, p2p.DiscReadTimeout
+			return false, common.Address{}, p2p.DiscReadTimeout
 		}
 	}
-	return isSigner, nil
+	return isSigner, address, nil
 }
 
-func (p *Signer) readSignerStatus(signerStatus *signerStatusData, signerValidator ValidateSigner) (isSigner bool, err error) {
-	msg, err := p.rw.ReadMsg()
+func ReadSignerStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerStatusData, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+	msg, err := rw.ReadMsg()
 	if err != nil {
-		return false, err
+		return false, common.Address{}, err
 	}
 	if msg.Code != NewSignerMsg {
-		return false, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
+		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
 	}
 	if msg.Size > ProtocolMaxMsgSize {
-		return false, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+		return false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 	}
 	// Decode the handshake and make sure everything matches
 	if err := msg.Decode(&signerStatus); err != nil {
-		return false, errResp(ErrDecode, "msg %v: %v", msg, err)
+		return false, common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
-	if int(signerStatus.ProtocolVersion) != p.version {
-		return false, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
+	if int(signerStatus.ProtocolVersion) != ProtocolVersion {
+		return false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, ProtocolVersion)
 	}
+
+	// TODO: this (addr, ...) pair should be signed with its private key.
+	// @liuq
+
 	isSigner, err = signerValidator(signerStatus.Address)
 	log.Debug("cpchain committee network handshaking...")
 	log.Debug("peer is signer", "peer", signerStatus.Address, isSigner)
-	return isSigner, err
+	return isSigner, signerStatus.Address, err
 }
