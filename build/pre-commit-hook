@@ -2,5 +2,5 @@
 
 if git diff-index --cached HEAD | grep vendor/vendor.json > /dev/null 2>&1
 then
-    echo 'has vendor changed'
+    echo 'vendor has been changed'
 fi
