@@ -153,7 +153,8 @@ func (d *Dpor) Stop() error {
 	return nil
 }
 
-func (d *Dpor) Coinbase() common.Address {
+// Signer return dpor.signer
+func (d *Dpor) Signer() common.Address {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -166,6 +167,7 @@ func (d *Dpor) ValidateSigner(address common.Address) (bool, error) {
 	return d.IsFutureSigner(d.chain, address, number)
 }
 
+// Protocol returns Dpor p2p protocol
 func (d *Dpor) Protocol() p2p.Protocol {
 	return d.handler.Protocol()
 }
@@ -174,8 +176,28 @@ func (d *Dpor) Protocol() p2p.Protocol {
 func (d *Dpor) PbftStatus() *backend.PbftStatus {
 	state := d.State()
 	head := d.chain.CurrentHeader()
-	return &PbftStatus{
-		state: state,
-		head:  head,
+	return &backend.PbftStatus{
+		State: state,
+		Head:  head,
 	}
+}
+
+// SetFields sets ChainReader and ContractCaller for dpor
+func (d *Dpor) SetFields(blockchain consensus.ChainReader, contractCaller *backend.ContractCaller, server *p2p.Server) error {
+	d.chain = blockchain
+	d.contractCaller = contractCaller
+
+	// TODO: set contractcaller, rsakey and server for handler
+	_ = server
+
+	// if s.protocolManager.committeeNetworkHandler != nil {
+	// 	if err := s.protocolManager.committeeNetworkHandler.SetRSAKeys(
+	// 		func() (*rsakey.RsaKey, error) {
+	// 			return contractCaller.Key.RsaKey, nil
+	// 		}); err != nil {
+	// 		return errWrongRSAKey
+	// 	}
+	// }
+
+	return nil
 }
