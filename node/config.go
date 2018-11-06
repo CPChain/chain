@@ -258,15 +258,6 @@ func (c *Config) name() string {
 	return c.Name
 }
 
-// These resources are resolved differently for "cpchain" instances.
-var isOldGethResource = map[string]bool{
-	"chaindata":          true,
-	"nodes":              true,
-	"nodekey":            true,
-	"static-nodes.json":  true,
-	"trusted-nodes.json": true,
-}
-
 func (c *Config) rsaDir() string {
 	if c.DataDir == "" {
 		return ""
