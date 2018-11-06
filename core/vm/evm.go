@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 // emptyCodeHash is used by create to ensure deployment is disallowed to already

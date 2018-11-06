@@ -2,4 +2,7 @@
 
 * packages modified
 ** go-ethereum/trie
-   the import database part
+   modification: we import from cpchain/database instead of go-ethereum/ethdb.
+
+** go-ethereum/crypto
+   crypto upgrades to 1.8.15.  but we still keep the randentropy file from 1.8.12.
