@@ -40,12 +40,12 @@ import (
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
-	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
-	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/node/miner"
 	"bitbucket.org/cpchain/chain/private"
+	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
+	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -379,21 +379,11 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 			return fmt.Errorf("signer missing: %v", err)
 		}
 		dpor.Authorize(eb, wallet.SignHash)
+		dpor.SetFields(s.blockchain, contractCaller, s.server)
 
 		log.Info("I am in s.StartMining")
-		// TODO: fix this, update contract caller with private key here. Liu Qian
-		log.Info("s.pm.committeeNetworkHandler in s.StartMining", "s.pm.committeeNetworkHandler", s.protocolManager.committeeNetworkHandler)
 
-		if s.protocolManager.committeeNetworkHandler != nil {
-			if err := s.protocolManager.committeeNetworkHandler.SetRSAKeys(
-				func() (*rsakey.RsaKey, error) {
-					return contractCaller.Key.RsaKey, nil
-				}); err != nil {
-				return errWrongRSAKey
-			}
-		}
-
-		s.protocolManager.committeeNetworkHandler.UpdateContractCaller(contractCaller)
+		go dpor.Start()
 
 	}
 	if local {
@@ -444,13 +434,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 	// Start the RPC service
 	s.netRPCService = ethapi.NewPublicNetAPI(srvr, s.NetVersion())
 
-	// TODO: @liuq check security.
 	s.server = srvr
-
-	if s.protocolManager.committeeNetworkHandler != nil {
-		s.protocolManager.committeeNetworkHandler.UpdateServer(srvr)
-		s.protocolManager.engine.SetCommitteeNetworkHandler(s.protocolManager.committeeNetworkHandler)
-	}
 
 	log.Info("I am in s.Start")
 
