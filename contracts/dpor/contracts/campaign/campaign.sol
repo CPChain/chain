@@ -4,7 +4,16 @@ import "../../lib/safeMath.sol";
 import "../../lib/set.sol";
 
 contract AdmissionInterface {
-    function verify(uint64 _cpuNonce, uint _cpuBlockNumber, uint64 _memoryNonce, uint _memoryBlockNumber) public constant returns (bool);
+    function verify(
+        uint64 _cpuNonce,
+        uint _cpuBlockNumber,
+        uint64 _memoryNonce,
+        uint _memoryBlockNumber,
+        address _sender
+        )
+        public
+        view
+        returns (bool);
 }
 
 
@@ -116,7 +125,7 @@ contract Campaign {
         require(_rpt >= minRpt, "too low rpt.");
         require(msg.value == SafeMath.mul(baseDeposit, _numOfCampaign), "wrong deposit value.");
         // verify the sender's cpu ability.
-        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber), "cpu or memory not passed.");
+        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         updateViewIdx();
         require(
             candidates[candidate].numOfCampaign == 0,
