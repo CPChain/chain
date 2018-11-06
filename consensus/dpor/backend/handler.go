@@ -419,6 +419,7 @@ func (ch *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, addres
 	return nil
 }
 
+// Protocol returns a p2p protocol to handle dpor msgs
 func (ch *Handler) Protocol() p2p.Protocol {
 	return p2p.Protocol{
 		Name:    ProtocolName,
