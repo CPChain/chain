@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if test $(git diff-index --cached HEAD | grep vendor/vendor.json | wc -c) != 0
+if test "$(git diff-index --cached HEAD | grep vendor/vendor.json)"!= 0
 then
     echo 'has vendor changed'
 fi
