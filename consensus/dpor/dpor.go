@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/ethdb"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -45,14 +47,18 @@ type Dpor struct {
 	signer common.Address // Ethereum address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
-	handler backend.PbftHandler
+	handler *backend.Handler
 
 	fake           Mode // used for test, always accept a block.
 	fakeFail       uint64
 	fakeDelay      time.Duration // Time delay to sleep for before returning from verify
 	contractCaller *backend.ContractCaller
 
-	pbftState uint8
+	pbftState backend.State
+
+	chain consensus.ChainReader
+
+	quitSync chan struct{}
 
 	lock sync.RWMutex // Protects the signer fields
 }
@@ -119,7 +125,7 @@ func (d *Dpor) SetContractCaller(contractCaller *backend.ContractCaller) error {
 }
 
 // SetHandler sets dpor.handler
-func (d *Dpor) SetHandler(handler backend.PbftHandler) error {
+func (d *Dpor) SetHandler(handler *backend.Handler) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	d.handler = handler
@@ -145,4 +151,31 @@ func (d *Dpor) Start() error {
 // Stop stops dpor engine
 func (d *Dpor) Stop() error {
 	return nil
+}
+
+func (d *Dpor) Coinbase() common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	return d.signer
+}
+
+// ValidateSigner validates if given address is future signer
+func (d *Dpor) ValidateSigner(address common.Address) (bool, error) {
+	number := d.chain.CurrentHeader().Number.Uint64()
+	return d.IsFutureSigner(d.chain, address, number)
+}
+
+func (d *Dpor) Protocol() p2p.Protocol {
+	return d.handler.Protocol()
+}
+
+// PbftStatus returns current state of dpor
+func (d *Dpor) PbftStatus() *backend.PbftStatus {
+	state := d.State()
+	head := d.chain.CurrentHeader()
+	return &PbftStatus{
+		state: state,
+		head:  head,
+	}
 }
