@@ -65,11 +65,39 @@ type PbftHandler interface {
 
 	Stop() error
 
-	SendMsg(addr common.Address, msg interface{}) error
+	// SendMsg(addr common.Address, msg interface{}) error
 
-	BroadcastMsg(msg interface{}) error
+	// BroadcastMsg(msg interface{}) error
 
-	DialAll() error
+	// DialAll() error
 
-	Disconnect() error
+	// Disconnect() error
+
 }
+
+// ValidateSignerFn validates if a given address is signer of current epoch
+type ValidateSignerFn func(signer common.Address) (bool, error)
+
+// VerifyHeaderFn verify the given header
+type VerifyHeaderFn func(header *types.Header, state State) error
+
+// SignHeaderFn signs the block if not signed it yet
+type SignHeaderFn func(header *types.Header, state State) error
+
+// AddPendingBlockFn adds given block to pending blocks cache
+type AddPendingBlockFn func(block *types.Block) error
+
+// GetPendingBlockFn retrieves a block from cache with given hash
+type GetPendingBlockFn func(hash common.Hash) *types.Block
+
+// BroadcastBlockFn broadcasts a block to normal peers(not pbft replicas)
+type BroadcastBlockFn func(block *types.Block, prop bool) error
+
+// InsertChainFn inserts a block to chain
+type InsertChainFn func(block *types.Block) error
+
+// StateFn returns current state
+type StateFn func() State
+
+// StatusFn returns a pbft replica's status
+type StatusFn func() *PbftStatus
