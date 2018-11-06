@@ -50,47 +50,57 @@ type Handler struct {
 	newPeerCh chan *p2p.Peer
 	quitSync  chan struct{}
 
+	available bool
+
 	lock sync.RWMutex
 }
 
 // New creates a PbftHandler
 func New(config *configs.DporConfig, etherbase common.Address) (*Handler, error) {
-	ch := &Handler{
+	h := &Handler{
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
 		signers:         make(map[common.Address]*Signer),
 		connected:       false,
 	}
-	return ch, nil
+	return h, nil
+}
+
+// IsAvailable returns if handler is available
+func (h *Handler) IsAvailable() bool {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	return h.available
 }
 
 // SetServer sets handler.server
-func (ch *Handler) SetServer(server *p2p.Server) error {
-	ch.lock.Lock()
-	defer ch.lock.Unlock()
+func (h *Handler) SetServer(server *p2p.Server) error {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 
-	ch.server = server
-	ch.ownNodeID = server.Self().String()
+	h.server = server
+	h.ownNodeID = server.Self().String()
 
 	return nil
 }
 
 // SetRsaKey sets handler.rsaKey
-func (ch *Handler) SetRsaKey(rsaReader RsaReader) error {
-	ch.lock.Lock()
-	defer ch.lock.Unlock()
+func (h *Handler) SetRsaKey(rsaReader RsaReader) error {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 
 	var err error
-	ch.rsaKey, err = rsaReader()
+	h.rsaKey, err = rsaReader()
 
 	return err
 }
 
 // SetContractCaller sets handler.contractcaller.
-func (ch *Handler) SetContractCaller(contractCaller *ContractCaller) error {
+func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 
 	// creates an contract instance
-	contractInstance, err := contract.NewSignerConnectionRegister(ch.contractAddress, contractCaller.Client)
+	contractInstance, err := contract.NewSignerConnectionRegister(h.contractAddress, contractCaller.Client)
 	if err != nil {
 		return err
 	}
@@ -107,23 +117,23 @@ func (ch *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 	auth.GasLimit = contractCaller.GasLimit
 	auth.GasPrice = gasPrice
 
-	ch.lock.Lock()
+	h.lock.Lock()
 
 	// assign
-	ch.contractCaller = contractCaller
-	ch.contractInstance = contractInstance
-	ch.contractTransactor = auth
+	h.contractCaller = contractCaller
+	h.contractInstance = contractInstance
+	h.contractTransactor = auth
 
-	ch.lock.Unlock()
+	h.lock.Unlock()
 
 	return nil
 }
 
 // UpdateSigners updates Handler's signers.
-func (ch *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
-	ch.lock.Lock()
-	remoteSigners := ch.signers
-	ch.lock.Unlock()
+func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
+	h.lock.Lock()
+	remoteSigners := h.signers
+	h.lock.Unlock()
 
 	for _, signer := range signers {
 		if _, ok := remoteSigners[signer]; !ok {
@@ -132,21 +142,21 @@ func (ch *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) erro
 		}
 	}
 
-	ch.lock.Lock()
-	ch.epochIdx = epochIdx
-	ch.signers = remoteSigners
-	ch.lock.Unlock()
+	h.lock.Lock()
+	h.epochIdx = epochIdx
+	h.signers = remoteSigners
+	h.lock.Unlock()
 
 	return nil
 }
 
 // DialAll connects remote signers.
-func (ch *Handler) DialAll() {
-	ch.lock.Lock()
-	nodeID, address, contractInstance, auth, client := ch.ownNodeID, ch.ownAddress, ch.contractInstance, ch.contractTransactor, ch.contractCaller.Client
-	connected, signers, server := ch.connected, ch.signers, ch.server
-	rsaKey := ch.rsaKey
-	ch.lock.Unlock()
+func (h *Handler) DialAll() {
+	h.lock.Lock()
+	nodeID, address, contractInstance, auth, client := h.ownNodeID, h.ownAddress, h.contractInstance, h.contractTransactor, h.contractCaller.Client
+	connected, signers, server := h.connected, h.signers, h.server
+	rsaKey := h.rsaKey
+	h.lock.Unlock()
 
 	if !connected {
 		log.Debug("connecting...")
@@ -158,17 +168,17 @@ func (ch *Handler) DialAll() {
 		connected = true
 	}
 
-	ch.lock.Lock()
-	ch.connected = connected
-	ch.lock.Unlock()
+	h.lock.Lock()
+	h.connected = connected
+	h.lock.Unlock()
 
 }
 
 // Disconnect disconnects all.
-func (ch *Handler) Disconnect() {
-	ch.lock.Lock()
-	connected, signers, server := ch.connected, ch.signers, ch.server
-	ch.lock.Unlock()
+func (h *Handler) Disconnect() {
+	h.lock.Lock()
+	connected, signers, server := h.connected, h.signers, h.server
+	h.lock.Unlock()
 
 	if connected {
 		log.Debug("disconnecting...")
@@ -178,59 +188,59 @@ func (ch *Handler) Disconnect() {
 			log.Debug("err when disconnect", "e", err)
 		}
 
-		ch.connected = false
+		h.connected = false
 	}
 
-	ch.lock.Lock()
-	ch.connected = connected
-	ch.lock.Unlock()
+	h.lock.Lock()
+	h.connected = connected
+	h.lock.Unlock()
 }
 
 // Start starts pbft handler
-func (ch *Handler) Start() error {
+func (h *Handler) Start() error {
 	return nil
 }
 
 // Stop stops all
-func (ch *Handler) Stop() error {
+func (h *Handler) Stop() error {
 	return nil
 }
 
 // SendMsg sends msg to signer with given addr
-func (ch *Handler) SendMsg(addr common.Address, msg interface{}) error {
+func (h *Handler) SendMsg(addr common.Address, msg interface{}) error {
 	return nil
 }
 
 // BroadcastMsg broadcasts msg to all
-func (ch *Handler) BroadcastMsg(msg interface{}) error {
+func (h *Handler) BroadcastMsg(msg interface{}) error {
 	return nil
 }
 
 // BroadcastGeneratedBlock broadcasts generated block to committee
-func (ch *Handler) BroadcastGeneratedBlock(block *types.Block) {
-	committee := ch.signers
+func (h *Handler) BroadcastGeneratedBlock(block *types.Block) {
+	committee := h.signers
 	for _, peer := range committee {
 		peer.AsyncSendNewPendingBlock(block)
 	}
 }
 
 // BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
-func (ch *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
-	committee := ch.signers
+func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
+	committee := h.signers
 	for _, peer := range committee {
 		peer.AsyncSendPrepareSignedHeader(header)
 	}
 }
 
 // BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
-func (ch *Handler) BroadcastCommitSignedHeader(header *types.Header) {
-	committee := ch.signers
+func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
+	committee := h.signers
 	for _, peer := range committee {
 		peer.AsyncSendCommitSignedHeader(header)
 	}
 }
 
-func (ch *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
+func (h *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 	switch {
 	case msg.Code == PrepreparePendingBlockMsg:
 		var request *types.Block
@@ -243,17 +253,17 @@ func (ch *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 		// Verify the block
 		// if correct, sign it and broadcast as Prepare msg
 		header := request.RefHeader()
-		ch.addPendingFn(request)
-		switch err := ch.verifyHeaderFn(header, Preprepared); err {
+		h.addPendingFn(request)
+		switch err := h.verifyHeaderFn(header, Preprepared); err {
 		case nil:
-			go ch.broadcastBlockFn(request, true)
-			go ch.broadcastBlockFn(request, false)
+			go h.broadcastBlockFn(request, true)
+			go h.broadcastBlockFn(request, false)
 
 		case consensus.ErrNotEnoughSigs:
 
-			switch e := ch.verifyHeaderFn(header, Preprepared); e {
+			switch e := h.verifyHeaderFn(header, Preprepared); e {
 			case nil:
-				go ch.BroadcastPrepareSignedHeader(header)
+				go h.BroadcastPrepareSignedHeader(header)
 
 			default:
 				return e
@@ -269,7 +279,7 @@ func (ch *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (ch *Handler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
+func (h *Handler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
 	switch {
 	case msg.Code == PrepareSignedHeaderMsg:
 
@@ -280,9 +290,9 @@ func (ch *Handler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
 
 		// Verify the signed header
 		// if correct, rebroadcast it as Commit msg
-		switch err := ch.verifyHeaderFn(header, Prepared); err {
+		switch err := h.verifyHeaderFn(header, Prepared); err {
 		case nil:
-			go ch.BroadcastCommitSignedHeader(header)
+			go h.BroadcastCommitSignedHeader(header)
 
 		case consensus.ErrNotEnoughSigs:
 			// if !pm.engine.IfSigned(header) {
@@ -304,7 +314,7 @@ func (ch *Handler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (ch *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
+func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 	switch {
 	case msg.Code == CommitSignedHeaderMsg:
 
@@ -315,20 +325,20 @@ func (ch *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
-		switch err := ch.verifyHeaderFn(header, Committed); err {
+		switch err := h.verifyHeaderFn(header, Committed); err {
 		case nil:
 			// if commited, insert to chain, then broadcast the block
 
-			if block := ch.getPendingFn(header.Hash()); block != nil {
+			if block := h.getPendingFn(header.Hash()); block != nil {
 
 				block = block.WithSeal(header)
 
-				if err := ch.insertChainFn(block); err != nil {
+				if err := h.insertChainFn(block); err != nil {
 					return err
 				}
 
-				go ch.broadcastBlockFn(block, true)
-				go ch.broadcastBlockFn(block, false)
+				go h.broadcastBlockFn(block, true)
+				go h.broadcastBlockFn(block, false)
 			}
 
 		case consensus.ErrNotEnoughSigs:
@@ -352,32 +362,32 @@ func (ch *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (ch *Handler) handleMsg(msg p2p.Msg, p *Signer) error {
+func (h *Handler) handleMsg(msg p2p.Msg, p *Signer) error {
 	if msg.Code == NewSignerMsg {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
 
-	switch ch.stateFn() {
+	switch h.stateFn() {
 	case NewRound:
 		// if leader, send mined block with preprepare msg, enter preprepared
 		// if not leader, wait for a new preprepare block, verify basic field, enter preprepared
 		// if timer expired, send new empty block, enter preprepared
 
-		ch.handlePreprepareMsg(msg, p)
+		h.handlePreprepareMsg(msg, p)
 
 	case Preprepared:
 
 		// broadcast prepare msg
 
 		// wait for enough(>2f+1, >2/3) prepare msg, if true, enter prepared
-		ch.handlePrepareMsg(msg, p)
+		h.handlePrepareMsg(msg, p)
 
 	case Prepared:
 
 		// broadcast commit msg
 
 		// wait for enough commit msg, if true, enter committed
-		ch.handleCommitMsg(msg, p)
+		h.handleCommitMsg(msg, p)
 
 	case Committed:
 		// insert block to chain, if succeed, enter finalcommitted
@@ -392,9 +402,9 @@ func (ch *Handler) handleMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (ch *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
+func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
 	// TODO: add lock here
-	signer, ok := ch.signers[address]
+	signer, ok := h.signers[address]
 
 	if !ok {
 		// TODO: @liuq fix this
@@ -420,15 +430,15 @@ func (ch *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, addres
 }
 
 // Protocol returns a p2p protocol to handle dpor msgs
-func (ch *Handler) Protocol() p2p.Protocol {
+func (h *Handler) Protocol() p2p.Protocol {
 	return p2p.Protocol{
 		Name:    ProtocolName,
 		Version: ProtocolVersion,
 		Length:  ProtocolLength,
 		Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
 
-			cb := ch.ownAddress
-			validator := ch.validateSignerFn
+			cb := h.ownAddress
+			validator := h.validateSignerFn
 
 			ok, address, err := Handshake(p, rw, cb, validator)
 			if !ok || err != nil {
@@ -436,17 +446,17 @@ func (ch *Handler) Protocol() p2p.Protocol {
 			}
 
 			select {
-			case ch.newPeerCh <- p:
-				ch.wg.Add(1)
-				defer ch.wg.Done()
-				return ch.handle(ProtocolVersion, p, rw, address)
-			case <-ch.quitSync:
+			case h.newPeerCh <- p:
+				h.wg.Add(1)
+				defer h.wg.Done()
+				return h.handle(ProtocolVersion, p, rw, address)
+			case <-h.quitSync:
 				return p2p.DiscQuitting
 			}
 
 		},
 		NodeInfo: func() interface{} {
-			return ch.statusFn()
+			return h.statusFn()
 		},
 		PeerInfo: func(id discover.NodeID) interface{} {
 			return nil
