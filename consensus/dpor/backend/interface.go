@@ -78,8 +78,11 @@ type PbftHandler interface {
 // ValidateSignerFn validates if a given address is signer of current epoch
 type ValidateSignerFn func(signer common.Address) (bool, error)
 
-// VerifyHeaderFn verify the given header
+// VerifyHeaderFn verifies the given header
 type VerifyHeaderFn func(header *types.Header, state State) error
+
+// VerifyEBlockFn verifies empty block
+type VerifyEBlockFn func(block *types.Block) error
 
 // SignHeaderFn signs the block if not signed it yet
 type SignHeaderFn func(header *types.Header, state State) error

@@ -20,8 +20,7 @@ import (
 
 // Handler implements PbftHandler
 type Handler struct {
-	connected bool
-	epochIdx  uint64
+	epochIdx uint64
 
 	ownNodeID  string
 	ownAddress common.Address
@@ -37,6 +36,7 @@ type Handler struct {
 
 	signers map[common.Address]*Signer
 
+	// previous stable pbft status
 	snap *PbftStatus
 
 	// those two funcs are methods from dpor, to determine the state
@@ -48,10 +48,11 @@ type Handler struct {
 	addPendingFn AddPendingBlockFn
 	getPendingFn GetPendingBlockFn
 
-	// those two funcs are methods from dpor, used for header verification and signing
+	// those three funcs are methods from dpor, used for header verification and signing
 	verifyHeaderFn VerifyHeaderFn
-	signHeaderFn   SignHeaderFn
 	// TODO: add empty block body verification func here
+	verifyEBlockFn VerifyEBlockFn
+	signHeaderFn   SignHeaderFn
 
 	// this func is method from blockchain, used for inserting a block to chain
 	insertChainFn InsertChainFn
@@ -68,6 +69,7 @@ type Handler struct {
 	newPeerCh      chan *p2p.Peer
 	quitSync       chan struct{}
 
+	dialed    bool
 	available bool
 
 	lock sync.RWMutex
@@ -79,15 +81,15 @@ func New(config *configs.DporConfig, etherbase common.Address) (*Handler, error)
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
 		signers:         make(map[common.Address]*Signer),
-		connected:       false,
+		dialed:          false,
 	}
 	return h, nil
 }
 
 // IsAvailable returns if handler is available
 func (h *Handler) IsAvailable() bool {
-	h.lock.Lock()
-	defer h.lock.Unlock()
+	h.lock.RLock()
+	defer h.lock.RUnlock()
 
 	return h.available
 }
@@ -172,7 +174,7 @@ func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error
 func (h *Handler) DialAll() {
 	h.lock.Lock()
 	nodeID, address, contractInstance, auth, client := h.ownNodeID, h.ownAddress, h.contractInstance, h.contractTransactor, h.contractCaller.Client
-	connected, signers, server := h.connected, h.signers, h.server
+	connected, signers, server := h.dialed, h.signers, h.server
 	rsaKey := h.rsaKey
 	h.lock.Unlock()
 
@@ -187,7 +189,7 @@ func (h *Handler) DialAll() {
 	}
 
 	h.lock.Lock()
-	h.connected = connected
+	h.dialed = connected
 	h.lock.Unlock()
 
 }
@@ -195,7 +197,7 @@ func (h *Handler) DialAll() {
 // Disconnect disconnects all.
 func (h *Handler) Disconnect() {
 	h.lock.Lock()
-	connected, signers, server := h.connected, h.signers, h.server
+	connected, signers, server := h.dialed, h.signers, h.server
 	h.lock.Unlock()
 
 	if connected {
@@ -206,11 +208,11 @@ func (h *Handler) Disconnect() {
 			log.Debug("err when disconnect", "e", err)
 		}
 
-		h.connected = false
+		h.dialed = false
 	}
 
 	h.lock.Lock()
-	h.connected = connected
+	h.dialed = connected
 	h.lock.Unlock()
 }
 
