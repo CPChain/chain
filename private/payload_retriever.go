@@ -7,30 +7,16 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/database"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // Read tx's payload replacement, retrieve encrypted payload from IPFS and decrypt it.
 // Return decrypted payload, a flag indicating if the node has enough permission and error if there is.
-func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.RemoteDatabase, accm *accounts.Manager) (payload []byte, hasPermission bool, error error) {
+func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.RemoteDatabase, abDecryptor accounts.AccountBasedDecryptor) (payload []byte, hasPermission bool, error error) {
 	replacement := PayloadReplacement{}
 	err := rlp.DecodeBytes(data, &replacement)
 	if err != nil {
 		return []byte{}, false, err
-	}
-
-	accLookup := make(map[string]*accounts.Account) // <public key encoded string> -> Account
-	walLookup := make(map[string]accounts.Wallet)   // <public key encoded string> -> Wallet
-	for _, wallet := range accm.Wallets() {
-		for _, account := range wallet.Accounts() {
-			rsaKey, error := wallet.GetRsaPublicKey(account)
-			if error == nil {
-				pubKeyEncoded := hexutil.Encode(rsaKey.RsaPublicKeyBytes)
-				accLookup[pubKeyEncoded] = &account
-				walLookup[pubKeyEncoded] = wallet
-			}
-		}
 	}
 
 	// Check if the current node is in the participant group by comparing is public key and decrypt with its private
@@ -46,12 +32,10 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.Re
 		return []byte{}, false, err
 	}
 	for i, k := range replacement.Participants {
-		acc, exists := accLookup[k]
-		if exists {
-			wallet, _ := walLookup[k]
-
+		canDecrypt, wallet, acc := abDecryptor.CanDecrypt(k)
+		if canDecrypt {
 			encryptedKey := sp.SymmetricKeys[i]
-			symKey := decryptSymKey(encryptedKey, wallet, acc)
+			symKey, _ := abDecryptor.Decrypt(encryptedKey, wallet, acc)
 			decrypted, _ := decryptPayload(sp.Payload, symKey, txNonce)
 			return decrypted, true, nil
 		}
@@ -66,11 +50,6 @@ func getDataFromRemote(ipfsAddress []byte, remoteDB database.RemoteDatabase) ([]
 		return []byte{}, err
 	}
 	return content, nil
-}
-
-func decryptSymKey(data []byte, wallet accounts.Wallet, account *accounts.Account) []byte {
-	decrypted, _ := wallet.DecryptWithRsa(*account, data)
-	return decrypted
 }
 
 // Decrypt payload with the given symmetric key.

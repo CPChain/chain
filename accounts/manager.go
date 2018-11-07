@@ -21,8 +21,17 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/event"
 )
+
+type AccountBasedDecryptor interface {
+	// CanDecrypt checks whether there is a corresponding private key for the given RSA public key to decrypt data and
+	// returns the account whose RSA private key is corresponding to the given RSA public key.
+	CanDecrypt(pubkey string) (canDecrypt bool, wallet Wallet, account *Account)
+	// Decrypt decrypts data with given account's RSA private key.
+	Decrypt(data []byte, wallet Wallet, account *Account) ([]byte, error)
+}
 
 // Manager is an overarching account manager that can communicate with various
 // backends for signing transactions.
@@ -166,6 +175,28 @@ func (am *Manager) Find(account Account) (Wallet, error) {
 // manager detects the arrival or departure of a wallet from any of its backends.
 func (am *Manager) Subscribe(sink chan<- WalletEvent) event.Subscription {
 	return am.feed.Subscribe(sink)
+}
+
+// CanDecrypt checks whether there is a corresponding private key for the given RSA public key to decrypt data and
+// returns the account whose RSA private key is corresponding to the given RSA public key.
+func (am *Manager) CanDecrypt(pubkey string) (bool, Wallet, *Account) {
+	for _, wallet := range am.Wallets() {
+		for _, account := range wallet.Accounts() {
+			rsaKey, error := wallet.GetRsaPublicKey(account)
+			if error == nil {
+				pubKeyEncoded := hexutil.Encode(rsaKey.RsaPublicKeyBytes)
+				if pubKeyEncoded == pubkey {
+					return true, wallet, &account
+				}
+			}
+		}
+	}
+	return false, nil, nil
+}
+
+// Decrypt decrypts data with given account's RSA private key.
+func (am *Manager) Decrypt(data []byte, wallet Wallet, account *Account) ([]byte, error) {
+	return wallet.DecryptWithRsa(*account, data)
 }
 
 // merge is a sorted analogue of append for wallets, where the ordering of the
