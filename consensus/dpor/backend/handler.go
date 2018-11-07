@@ -39,9 +39,9 @@ type Handler struct {
 	// previous stable pbft status
 	snap *PbftStatus
 
-	// those two funcs are methods from dpor, to determine the state
-	stateFn  StateFn
-	statusFn StatusFn
+	// this func is from dpor, to determine the state
+	statusFn       StatusFn
+	statusUpdateFn StatusUpdateFn
 
 	// those two funcs are methods from blockchain, to add and get pending
 	// blocks from pending block cache of blockchain
@@ -50,8 +50,7 @@ type Handler struct {
 
 	// those three funcs are methods from dpor, used for header verification and signing
 	verifyHeaderFn VerifyHeaderFn
-	// TODO: add empty block body verification func here
-	verifyEBlockFn VerifyEBlockFn
+	verifyBlockFn  VerifyBlockFn
 	signHeaderFn   SignHeaderFn
 
 	// this func is method from blockchain, used for inserting a block to chain
@@ -75,7 +74,7 @@ type Handler struct {
 	lock sync.RWMutex
 }
 
-// New creates a PbftHandler
+// New creates a new Handler
 func New(config *configs.DporConfig, etherbase common.Address) (*Handler, error) {
 	h := &Handler{
 		ownAddress:      etherbase,
@@ -240,30 +239,46 @@ func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
 	}
 }
 
+// handlePreprepareMsg handles received preprepare msg
 func (h *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 	switch {
 	case msg.Code == PrepreparePendingBlockMsg:
-		var request *types.Block
-		if err := msg.Decode(&request); err != nil {
+
+		// recover the block
+		var block *types.Block
+		if err := msg.Decode(&block); err != nil {
 			return errResp(ErrDecode, "%v: %v", msg, err)
 		}
-		request.ReceivedAt = msg.ReceivedAt
-		request.ReceivedFrom = p
+		block.ReceivedAt = msg.ReceivedAt
+		block.ReceivedFrom = p
 
 		// Verify the block
 		// if correct, sign it and broadcast as Prepare msg
-		header := request.RefHeader()
-		h.addPendingFn(request)
+		header := block.RefHeader()
+
+		// add block to pending block cache of blockchain
+		if err := h.addPendingFn(block); err != nil {
+			return err
+		}
+
+		// TODO: add empty view change block verification here
+
+		// verify header, if basic fields are correct, broadcast prepare msg
 		switch err := h.verifyHeaderFn(header, Preprepared); err {
+
+		// basic fields are correct
 		case nil:
-			go h.broadcastBlockFn(request, true)
-			go h.broadcastBlockFn(request, false)
 
-		case consensus.ErrNotEnoughSigs:
-
-			switch e := h.verifyHeaderFn(header, Preprepared); e {
+			// sign the block
+			switch e := h.signHeaderFn(header, Preprepared); e {
 			case nil:
+
+				// broadcast prepare msg
 				go h.BroadcastPrepareSignedHeader(header)
+
+				// update dpor status
+				h.statusUpdateFn()
+				// now prepared
 
 			default:
 				return e
@@ -283,27 +298,31 @@ func (h *Handler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
 	switch {
 	case msg.Code == PrepareSignedHeaderMsg:
 
+		// retrieve the header
 		var header *types.Header
 		if err := msg.Decode(&header); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
-		// Verify the signed header
+		// verify the signed header
 		// if correct, rebroadcast it as Commit msg
 		switch err := h.verifyHeaderFn(header, Prepared); err {
+
+		// with enough prepare sigs
 		case nil:
-			go h.BroadcastCommitSignedHeader(header)
+			// sign the block
+			switch e := h.signHeaderFn(header, Prepared); e {
+			case nil:
 
-		case consensus.ErrNotEnoughSigs:
-			// if !pm.engine.IfSigned(header) {
-			// 	switch e := pm.SignHeader(header); e {
-			// 	case nil:
-			// 		go pm.BroadcastPrepareSignedHeader(header)
+				// broadcast prepare msg
+				go h.BroadcastCommitSignedHeader(header)
 
-			// 	default:
-			// 		return e
-			// 	}
-			// }
+				h.statusUpdateFn()
+				// now prepared
+
+			default:
+				return e
+			}
 
 		default:
 		}
@@ -319,38 +338,45 @@ func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 	case msg.Code == CommitSignedHeaderMsg:
 
 		// Verify the signed header
-		// if correct, broadcast it as NewBlockMsg
+		// if correct, add the block to chain
+
+		// retrieve the header
 		var header *types.Header
 		if err := msg.Decode(&header); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
 		switch err := h.verifyHeaderFn(header, Committed); err {
+
+		// with enough commit sigs
 		case nil:
-			// if commited, insert to chain, then broadcast the block
+
+			// update dpor state and pbftstatus
+			h.statusUpdateFn()
+			// now committed
 
 			if block := h.getPendingFn(header.Hash()); block != nil {
 
 				block = block.WithSeal(header)
 
+				// insert into chain
 				if err := h.insertChainFn(block); err != nil {
 					return err
 				}
 
+				// update dpor state and pbftstatus
+				h.statusUpdateFn()
+				// now final-committed
+
+				// broadcast the block
 				go h.broadcastBlockFn(block, true)
 				go h.broadcastBlockFn(block, false)
+
+				// update dpor state and pbftstatus
+				h.statusUpdateFn()
+				// now new-round
+
 			}
-
-		case consensus.ErrNotEnoughSigs:
-			// if !pm.engine.IfSigned(header) {
-			// 	switch e := pm.SignHeader(header); e {
-			// 	case nil:
-			// 		go pm.BroadcastPrepareSignedHeader(header)
-
-			// 	default:
-			// 		return e
-			// 	}
-			// }
 
 		default:
 		}
@@ -367,7 +393,7 @@ func (h *Handler) handleMsg(msg p2p.Msg, p *Signer) error {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
 
-	switch h.stateFn() {
+	switch h.statusFn().State {
 	case NewRound:
 		// if leader, send mined block with preprepare msg, enter preprepared
 		// if not leader, wait for a new preprepare block, verify basic field, enter preprepared

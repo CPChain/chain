@@ -79,10 +79,13 @@ type PbftHandler interface {
 type ValidateSignerFn func(signer common.Address) (bool, error)
 
 // VerifyHeaderFn verifies the given header
+// if in preprepared state, verify basic fields
+// if in prepared state, verify if enough prepare sigs
+// if in committed state, verify if enough commit sigs
 type VerifyHeaderFn func(header *types.Header, state State) error
 
-// VerifyEBlockFn verifies empty block
-type VerifyEBlockFn func(block *types.Block) error
+// VerifyBlockFn verifies a block
+type VerifyBlockFn func(block *types.Block) error
 
 // SignHeaderFn signs the block if not signed it yet
 type SignHeaderFn func(header *types.Header, state State) error
@@ -99,11 +102,11 @@ type BroadcastBlockFn func(block *types.Block, prop bool) error
 // InsertChainFn inserts a block to chain
 type InsertChainFn func(block *types.Block) error
 
-// StateFn returns current state
-type StateFn func() State
-
 // StatusFn returns a pbft replica's status
 type StatusFn func() *PbftStatus
+
+// StatusUpdateFn updates status of dpor
+type StatusUpdateFn func() error
 
 // GetEmptyBlockFn returns an empty block for view change
 type GetEmptyBlockFn func() (*types.Block, error)
