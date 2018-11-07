@@ -6,7 +6,7 @@ participant "p2p/Server" as ps
 [-> n: New
 
 
-[-> n: Register]
+[-> n: Register
 n -> n : append(serviceFuncs, ctor)
 activate n
 deactivate n
