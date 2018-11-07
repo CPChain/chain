@@ -29,6 +29,7 @@ type Handler struct {
 	server *p2p.Server
 	rsaKey *rsakey.RsaKey
 
+	// signer register contract related fields
 	contractAddress    common.Address
 	contractCaller     *ContractCaller
 	contractInstance   *contract.SignerConnectionRegister
@@ -38,14 +39,28 @@ type Handler struct {
 
 	snap *PbftStatus
 
-	stateFn          StateFn
-	statusFn         StatusFn
-	addPendingFn     AddPendingBlockFn
-	getPendingFn     GetPendingBlockFn
-	verifyHeaderFn   VerifyHeaderFn
-	signHeaderFn     SignHeaderFn
-	insertChainFn    InsertChainFn
+	// those two funcs are methods from dpor, to determine the state
+	stateFn  StateFn
+	statusFn StatusFn
+
+	// those two funcs are methods from blockchain, to add and get pending
+	// blocks from pending block cache of blockchain
+	addPendingFn AddPendingBlockFn
+	getPendingFn GetPendingBlockFn
+
+	// those two funcs are methods from dpor, used for header verification and signing
+	verifyHeaderFn VerifyHeaderFn
+	signHeaderFn   SignHeaderFn
+	// TODO: add empty block body verification func here
+
+	// this func is method from blockchain, used for inserting a block to chain
+	insertChainFn InsertChainFn
+
+	// this func is method from cpc/handler(ProtocolManager),
+	// used for broadcasting a block to my normal peers
 	broadcastBlockFn BroadcastBlockFn
+
+	// this func is method from dpor, used for checking if a remote peer is signer
 	validateSignerFn ValidateSignerFn
 
 	wg             sync.WaitGroup
@@ -518,9 +533,11 @@ func (h *Handler) Stop() {
 
 // GetEmptyPendingBlock returns an empty block to be used to act as viewchange
 func (h *Handler) GetEmptyPendingBlock() (*types.Block, error) {
+
 	return nil, nil
 }
 
+// ReceiveMinedPendingBlock receives a block to add to pending block channel
 func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
 	case h.pendingBlockCh <- block:

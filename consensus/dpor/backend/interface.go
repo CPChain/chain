@@ -101,3 +101,6 @@ type StateFn func() State
 
 // StatusFn returns a pbft replica's status
 type StatusFn func() *PbftStatus
+
+// GetEmptyBlockFn returns an empty block for view change
+type GetEmptyBlockFn func() (*types.Block, error)
