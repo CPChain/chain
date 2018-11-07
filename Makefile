@@ -19,6 +19,11 @@ cpchain:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/cpchain\" to launch cpchain."
 
+cpchain-race:
+	build/env.sh go run build/ci.go raceInstall ./cmd/cpchain
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/cpchain\" to launch cpchain."
+
 bootnode:
 	build/env.sh go run build/ci.go install ./tools/bootnode
 	@echo "Done building."

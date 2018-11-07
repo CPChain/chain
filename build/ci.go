@@ -88,11 +88,13 @@ func main() {
 	}
 	switch os.Args[1] {
 	case "install":
-		doInstall(os.Args[2:])
+		doInstall(os.Args[2:], false)
 	case "test":
 		doTest(os.Args[2:])
 	case "raceTest":
 		doRaceTest(os.Args[2:])
+	case "raceInstall":
+		doInstall(os.Args[2:], true)
 	case "lint":
 		doLint(os.Args[2:])
 	case "archive":
@@ -108,7 +110,7 @@ func main() {
 
 // Compiling
 
-func doInstall(cmdline []string) {
+func doInstall(cmdline []string, isRace bool) {
 	var (
 		arch = flag.String("arch", "", "Architecture to cross build for")
 		cc   = flag.String("cc", "", "C compiler to cross build with")
@@ -140,6 +142,9 @@ func doInstall(cmdline []string) {
 	if *arch == "" || *arch == runtime.GOARCH {
 		goinstall := goTool("install", buildFlags(env)...)
 		goinstall.Args = append(goinstall.Args, "-v")
+		if isRace {
+			goinstall.Args = append(goinstall.Args, "-race")
+		}
 		goinstall.Args = append(goinstall.Args, packages...)
 		build.MustRun(goinstall)
 		return
@@ -154,6 +159,10 @@ func doInstall(cmdline []string) {
 	// Seems we are cross compiling, work around forbidden GOBIN
 	goinstall := goToolArch(*arch, *cc, "install", buildFlags(env)...)
 	goinstall.Args = append(goinstall.Args, "-v")
+	if isRace {
+		goinstall.Args = append(goinstall.Args, "-race")
+	}
+
 	goinstall.Args = append(goinstall.Args, []string{"-buildmode", "archive"}...)
 	goinstall.Args = append(goinstall.Args, packages...)
 	build.MustRun(goinstall)
