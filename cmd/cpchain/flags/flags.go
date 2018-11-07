@@ -157,6 +157,7 @@ const (
 	JsonRpcHttpAddrFlagName = "jsonrpchttpaddr"
 	GrpcIpcAddrFlagName     = "grpcipcaddr"
 	RpcCorsDomainFlagName   = "rpccorsdomain"
+	RpcApiFlagName          = "rpcapi"
 )
 
 // TODO @sangh adjust these
@@ -182,6 +183,12 @@ var RpcFlags = []cli.Flag{
 	// 	Name:  RpcVerifyFlagName,
 	// 	Usage: "HTTP-RPC server if need verify client",
 	// },
+
+	cli.StringFlag{
+		Name:  RpcApiFlagName,
+		Usage: "Set the APIs offered over the HTTP-RPC interface",
+		Value: "",
+	},
 	cli.StringFlag{
 		Name:  IpcAddrFlagName,
 		Usage: "Local ipc path",

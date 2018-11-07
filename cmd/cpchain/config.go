@@ -129,6 +129,11 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.HTTPHost = addr[0]
 		cfg.HTTPPort, _ = strconv.Atoi(addr[1])
 	}
+	if ctx.IsSet(flags.RpcApiFlagName) {
+		cfg.HTTPModules = strings.Split(ctx.String(flags.RpcApiFlagName), ",")
+		log.Infof("HTTPModules:%v", cfg.HTTPModules)
+	}
+
 	// ws is omitted for now
 
 	// grpc setting
