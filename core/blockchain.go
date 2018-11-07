@@ -18,7 +18,6 @@
 package core
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"io"
@@ -140,7 +139,6 @@ type BlockChain struct {
 
 	privateStateCache state.Database          // State database to reuse between imports (contains state cache)
 	remoteDB          database.RemoteDatabase // Remote database for huge amount data storage
-	rsaPrivateKey     *rsa.PrivateKey         // Private RSA key used for many features such as private tx
 
 	ErrChan chan error
 }
@@ -1694,10 +1692,6 @@ func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscript
 // RemoteDB returns remote database if it has, otherwise return nil.
 func (bc *BlockChain) RemoteDB() database.RemoteDatabase {
 	return bc.remoteDB
-}
-
-func (bc *BlockChain) RsaPrivateKey() *rsa.PrivateKey {
-	return bc.rsaPrivateKey
 }
 
 func (bc *BlockChain) SetVerifyEthashFunc(verifyEthash VerifyEthashFunc) {
