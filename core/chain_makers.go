@@ -17,7 +17,6 @@
 package core
 
 import (
-	"crypto/rsa"
 	"fmt"
 	"math/big"
 
@@ -95,13 +94,11 @@ func (b *BlockGen) AddTxWithChain(bc *BlockChain, tx *types.Transaction) {
 	b.privStateDB.Prepare(tx.Hash(), common.Hash{}, len(b.txs))
 
 	var remoteDB database.RemoteDatabase
-	var rsaPrivKey *rsa.PrivateKey
 	if bc != nil {
 		remoteDB = bc.remoteDB
-		rsaPrivKey = bc.rsaPrivateKey
 	}
 	receipt, _, _, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.pubStateDB, b.privStateDB, remoteDB,
-		b.header, tx, &b.header.GasUsed, vm.Config{}, rsaPrivKey)
+		b.header, tx, &b.header.GasUsed, vm.Config{}, nil) // Account manager is not required in thes scenario.
 	if err != nil {
 		panic(err)
 	}

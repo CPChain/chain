@@ -17,8 +17,6 @@
 package core
 
 import (
-	"crypto/rsa"
-
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -46,5 +44,5 @@ type Validator interface {
 // failed.
 type Processor interface {
 	Process(block *types.Block, statedb *state.StateDB, statePrivDB *state.StateDB, remoteDB database.RemoteDatabase,
-		cfg vm.Config, rsaPrivKey *rsa.PrivateKey) (types.Receipts, types.Receipts, []*types.Log, uint64, error)
+		cfg vm.Config) (types.Receipts, types.Receipts, []*types.Log, uint64, error)
 }

@@ -3,10 +3,9 @@ package private
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/binary"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -14,15 +13,25 @@ import (
 
 // Read tx's payload replacement, retrieve encrypted payload from IPFS and decrypt it.
 // Return decrypted payload, a flag indicating if the node has enough permission and error if there is.
-func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.RemoteDatabase, pubKey *rsa.PublicKey,
-	privKey *rsa.PrivateKey) (payload []byte, hasPermission bool, error error) {
+func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.RemoteDatabase, accm *accounts.Manager) (payload []byte, hasPermission bool, error error) {
 	replacement := PayloadReplacement{}
 	err := rlp.DecodeBytes(data, &replacement)
 	if err != nil {
 		return []byte{}, false, err
 	}
 
-	pubEncoded := hexutil.Encode(x509.MarshalPKCS1PublicKey(pubKey))
+	accLookup := make(map[string]*accounts.Account) // <public key encoded string> -> Account
+	walLookup := make(map[string]accounts.Wallet)   // <public key encoded string> -> Wallet
+	for _, wallet := range accm.Wallets() {
+		for _, account := range wallet.Accounts() {
+			rsaKey, error := wallet.GetRsaPublicKey(account)
+			if error == nil {
+				pubKeyEncoded := hexutil.Encode(rsaKey.RsaPublicKeyBytes)
+				accLookup[pubKeyEncoded] = &account
+				walLookup[pubKeyEncoded] = wallet
+			}
+		}
+	}
 
 	// Check if the current node is in the participant group by comparing is public key and decrypt with its private
 	// key and return result.
@@ -37,10 +46,12 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.Re
 		return []byte{}, false, err
 	}
 	for i, k := range replacement.Participants {
-		encryptedKey := sp.SymmetricKeys[i]
-		// If the participant's public key equals to current public key, decrypt with corresponding private key.
-		if k == pubEncoded {
-			symKey := decryptSymKey(encryptedKey, privKey)
+		acc, exists := accLookup[k]
+		if exists {
+			wallet, _ := walLookup[k]
+
+			encryptedKey := sp.SymmetricKeys[i]
+			symKey := decryptSymKey(encryptedKey, wallet, acc)
 			decrypted, _ := decryptPayload(sp.Payload, symKey, txNonce)
 			return decrypted, true, nil
 		}
@@ -57,8 +68,8 @@ func getDataFromRemote(ipfsAddress []byte, remoteDB database.RemoteDatabase) ([]
 	return content, nil
 }
 
-func decryptSymKey(data []byte, privateKey *rsa.PrivateKey) []byte {
-	decrypted, _ := rsa.DecryptPKCS1v15(nil, privateKey, data)
+func decryptSymKey(data []byte, wallet accounts.Wallet, account *accounts.Account) []byte {
+	decrypted, _ := wallet.DecryptWithRsa(*account, data)
 	return decrypted
 }
 

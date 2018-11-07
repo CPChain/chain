@@ -167,8 +167,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		vmConfig    = vm.Config{EnablePreimageRecording: config.EnablePreimageRecording}
 		cacheConfig = &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	)
-	rsaKey, _ := ctx.RsaKey()
-	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, rsaKey.PrivateKey)
+	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, ctx.AccountManager)
 	if err != nil {
 		return nil, err
 	}
