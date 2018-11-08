@@ -138,7 +138,7 @@ func testBlockChainImport(chain types.Blocks, blockchain *BlockChain) error {
 		privStateDB, _ := state.New(GetPrivateStateRoot(blockchain.db,
 			blockchain.GetBlockByHash(block.ParentHash()).StateRoot()), blockchain.privateStateCache)
 		// TODO: remoteDB is not used as there are no private tx here, add a concrete remoteDB if test private tx in future.
-		receipts, _, _, usedGas, err := blockchain.Processor().Process(block, statedb, privStateDB, nil, vm.Config{}, blockchain.rsaPrivateKey)
+		receipts, _, _, usedGas, err := blockchain.Processor().Process(block, statedb, privStateDB, nil, vm.Config{})
 		if err != nil {
 			blockchain.reportBlock(block, receipts, err)
 			return err

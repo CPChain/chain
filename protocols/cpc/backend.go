@@ -167,8 +167,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		vmConfig    = vm.Config{EnablePreimageRecording: config.EnablePreimageRecording}
 		cacheConfig = &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	)
-	rsaKey, _ := ctx.RsaKey()
-	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, rsaKey.PrivateKey)
+	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, ctx.AccountManager)
 	if err != nil {
 		return nil, err
 	}
@@ -192,12 +191,6 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		return nil, err
 	}
 
-	// if eth.protocolManager.committeeNetworkHandler != nil {
-	// 	if err := eth.protocolManager.committeeNetworkHandler.SetRSAKeys(ctx.RsaKey); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
 	eth.miner.SetExtra(makeExtraData(config.ExtraData))
 
@@ -207,6 +200,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		gpoParams.Default = config.GasPrice
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
+
 	ks := eth.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.blockchain, eth.etherbase, ks, eth.config.Admission)
 	eth.blockchain.SetVerifyEthashFunc(eth.AdmissionAPIBackend.VerifyEthash)

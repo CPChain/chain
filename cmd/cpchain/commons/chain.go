@@ -74,9 +74,8 @@ func newBlockChain(config *configs.ChainConfig, chainDb database.Database, trieC
 	}
 	cacheCfg.TrieNodeLimit = trieCache
 	vmcfg := vm.Config{EnablePreimageRecording: false} // TODO: consider if add VMEnableDebugFlag {AC}
-	rsaKey, _ := n.RsaKey()
 	// TODO: give a fake or real RemoteDB{AC}
-	chain, err = core.NewBlockChain(chainDb, cacheCfg, config, engine, vmcfg, nil, rsaKey.PrivateKey)
+	chain, err = core.NewBlockChain(chainDb, cacheCfg, config, engine, vmcfg, nil, n.AccountManager())
 	if err != nil {
 		log.Fatalf("Can't create BlockChain: %v", err)
 	}

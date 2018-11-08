@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -59,6 +60,7 @@ type Work struct {
 	privReceipts []*types.Receipt
 
 	createdAt time.Time
+	accm      *accounts.Manager
 }
 
 type Result struct {
@@ -328,8 +330,8 @@ func (self *engine) push(work *Work) {
 	}
 }
 
-// makeCurrent creates a new environment for the current cycle.
-func (self *engine) makeCurrent(parent *types.Block, header *types.Header) error {
+// makeCurrentWork creates a new environment for the current cycle.
+func (self *engine) makeCurrentWork(parent *types.Block, header *types.Header) error {
 	pubState, err := self.chain.StateAt(parent.StateRoot())
 	if err != nil {
 		return err
@@ -348,6 +350,7 @@ func (self *engine) makeCurrent(parent *types.Block, header *types.Header) error
 		header:    header,
 		createdAt: time.Now(),
 		remoteDB:  self.chain.RemoteDB(),
+		accm:      self.backend.AccountManager(),
 	}
 
 	// Keep track of transactions which return errors so they can be removed
@@ -394,7 +397,7 @@ func (self *engine) commitNewWork() {
 	}
 
 	// Could potentially happen if starting to mine in an odd state.
-	err := self.makeCurrent(parent, header)
+	err := self.makeCurrentWork(parent, header)
 	if err != nil {
 		log.Error("Failed to create mining context", "err", err)
 		return
@@ -521,7 +524,7 @@ func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, c
 	snapPriv := env.privState.Snapshot()
 
 	pubReceipt, privReceipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.remoteDB,
-		env.header, tx, &env.header.GasUsed, vm.Config{}, bc.RsaPrivateKey())
+		env.header, tx, &env.header.GasUsed, vm.Config{}, env.accm)
 	if err != nil {
 		env.pubState.RevertToSnapshot(snap)
 		env.privState.RevertToSnapshot(snapPriv)

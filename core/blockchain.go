@@ -18,7 +18,6 @@
 package core
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"io"
@@ -29,6 +28,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -139,7 +139,6 @@ type BlockChain struct {
 
 	privateStateCache state.Database          // State database to reuse between imports (contains state cache)
 	remoteDB          database.RemoteDatabase // Remote database for huge amount data storage
-	rsaPrivateKey     *rsa.PrivateKey         // Private RSA key used for many features such as private tx
 
 	ErrChan chan error
 }
@@ -152,9 +151,8 @@ func (bc *BlockChain) WaitingSignatureBlocks() *lru.Cache {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
-// TODO chengx the key should be accessed with keystore.
 func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *configs.ChainConfig, engine consensus.Engine,
-	vmConfig vm.Config, remoteDB database.RemoteDatabase, rsaPrivKey *rsa.PrivateKey) (*BlockChain, error) {
+	vmConfig vm.Config, remoteDB database.RemoteDatabase, accm *accounts.Manager) (*BlockChain, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
 			TrieNodeLimit: 256 * 1024 * 1024,
@@ -186,11 +184,10 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 		pendingBlocks:     waitingSignatureBlocks,
 		privateStateCache: state.NewDatabase(db),
 		remoteDB:          remoteDB,
-		rsaPrivateKey:     rsaPrivKey,
 		ErrChan:           make(chan error),
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
-	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
+	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine, accm))
 
 	var err error
 	bc.hc, err = NewHeaderChain(db, chainConfig, engine, bc.getProcInterrupt)
@@ -1256,7 +1253,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		// Process block using the parent state as reference point.
 		pubReceipts, privReceipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB,
-			bc.vmConfig, bc.rsaPrivateKey)
+			bc.vmConfig)
 		if err != nil {
 			bc.reportBlock(block, pubReceipts, err)
 			return i, events, coalescedLogs, err
@@ -1695,10 +1692,6 @@ func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscript
 // RemoteDB returns remote database if it has, otherwise return nil.
 func (bc *BlockChain) RemoteDB() database.RemoteDatabase {
 	return bc.remoteDB
-}
-
-func (bc *BlockChain) RsaPrivateKey() *rsa.PrivateKey {
-	return bc.rsaPrivateKey
 }
 
 func (bc *BlockChain) SetVerifyEthashFunc(verifyEthash VerifyEthashFunc) {
