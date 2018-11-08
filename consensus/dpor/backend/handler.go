@@ -37,7 +37,7 @@ type Handler struct {
 	signers map[common.Address]*Signer
 
 	// previous stable pbft status
-	snap *PbftStatus
+	snap *consensus.PbftStatus
 
 	// this func is from dpor, to determine the state
 	statusFn       StatusFn
@@ -274,13 +274,13 @@ func (h *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 		// TODO: add empty view change block verification here
 
 		// verify header, if basic fields are correct, broadcast prepare msg
-		switch err := h.verifyHeaderFn(header, Preprepared); err {
+		switch err := h.verifyHeaderFn(header, consensus.Preprepared); err {
 
 		// basic fields are correct
 		case nil:
 
 			// sign the block
-			switch e := h.signHeaderFn(header, Preprepared); e {
+			switch e := h.signHeaderFn(header, consensus.Preprepared); e {
 			case nil:
 
 				// broadcast prepare msg
@@ -316,12 +316,12 @@ func (h *Handler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
 
 		// verify the signed header
 		// if correct, rebroadcast it as Commit msg
-		switch err := h.verifyHeaderFn(header, Prepared); err {
+		switch err := h.verifyHeaderFn(header, consensus.Prepared); err {
 
 		// with enough prepare sigs
 		case nil:
 			// sign the block
-			switch e := h.signHeaderFn(header, Prepared); e {
+			switch e := h.signHeaderFn(header, consensus.Prepared); e {
 			case nil:
 
 				// broadcast prepare msg
@@ -356,7 +356,7 @@ func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
-		switch err := h.verifyHeaderFn(header, Committed); err {
+		switch err := h.verifyHeaderFn(header, consensus.Committed); err {
 
 		// with enough commit sigs
 		case nil:
@@ -404,31 +404,31 @@ func (h *Handler) handleMsg(msg p2p.Msg, p *Signer) error {
 	}
 
 	switch h.statusFn().State {
-	case NewRound:
+	case consensus.NewRound:
 		// if leader, send mined block with preprepare msg, enter preprepared
 		// if not leader, wait for a new preprepare block, verify basic field, enter preprepared
 		// if timer expired, send new empty block, enter preprepared
 
 		h.handlePreprepareMsg(msg, p)
 
-	case Preprepared:
+	case consensus.Preprepared:
 
 		// broadcast prepare msg
 
 		// wait for enough(>2f+1, >2/3) prepare msg, if true, enter prepared
 		h.handlePrepareMsg(msg, p)
 
-	case Prepared:
+	case consensus.Prepared:
 
 		// broadcast commit msg
 
 		// wait for enough commit msg, if true, enter committed
 		h.handleCommitMsg(msg, p)
 
-	case Committed:
+	case consensus.Committed:
 		// insert block to chain, if succeed, enter finalcommitted
 
-	case FinalCommitted:
+	case consensus.FinalCommitted:
 		// broadcast block to normal peers, once finished, enter newround
 
 	default:

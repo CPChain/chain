@@ -124,13 +124,13 @@ type PbftEngine interface {
 
 	// SignHeader signs the given header.
 	// Note: it doesn't check if the header is correct.
-	SignHeader(chain ChainReader, header *types.Header) error
+	SignHeader(chain ChainReader, header *types.Header, state State) error
 
 	// IfSigned returns if have signed the block
 	IfSigned(header *types.Header) bool
 
 	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
-	State() uint8
+	State() State
 
 	// Start starts engine
 	Start() error
@@ -139,4 +139,30 @@ type PbftEngine interface {
 	Stop() error
 
 	Protocol() p2p.Protocol
+}
+
+// State is the pbft state
+type State uint8
+
+const (
+	// NewRound is a state in pbft notes that replica enters a new round
+	NewRound State = iota
+
+	// Preprepared is set if Preprepare msg is already sent, or received Preprepare msg and not entered Prepared yet, starting to broadcast
+	Preprepared
+
+	// Prepared is set if received > 2f+1 same Preprepare msg from different replica, starting to broadcast Commit msg
+	Prepared
+
+	// Committed is set if received > 2f+1 same Prepare msg
+	Committed
+
+	// FinalCommitted is set if succeed to insert block into local chain
+	FinalCommitted
+)
+
+// PbftStatus represents a state of a dpor replica
+type PbftStatus struct {
+	State State
+	Head  *types.Header
 }

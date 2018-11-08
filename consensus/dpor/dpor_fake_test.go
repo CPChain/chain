@@ -71,3 +71,8 @@ func (*fakeDporHelper) verifySeal(c *Dpor, chain consensus.ChainReader, header *
 type fakeSnapshot struct {
 	Snapshot
 }
+
+func (*fakeDporHelper) signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error {
+
+	return nil
+}

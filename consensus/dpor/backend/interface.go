@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -82,13 +83,13 @@ type ValidateSignerFn func(signer common.Address) (bool, error)
 // if in preprepared state, verify basic fields
 // if in prepared state, verify if enough prepare sigs
 // if in committed state, verify if enough commit sigs
-type VerifyHeaderFn func(header *types.Header, state State) error
+type VerifyHeaderFn func(header *types.Header, state consensus.State) error
 
 // VerifyBlockFn verifies a block
 type VerifyBlockFn func(block *types.Block) error
 
 // SignHeaderFn signs the block if not signed it yet
-type SignHeaderFn func(header *types.Header, state State) error
+type SignHeaderFn func(header *types.Header, state consensus.State) error
 
 // AddPendingBlockFn adds given block to pending blocks cache
 type AddPendingBlockFn func(block *types.Block) error
@@ -103,7 +104,7 @@ type BroadcastBlockFn func(block *types.Block, prop bool)
 type InsertChainFn func(block *types.Block) error
 
 // StatusFn returns a pbft replica's status
-type StatusFn func() *PbftStatus
+type StatusFn func() *consensus.PbftStatus
 
 // StatusUpdateFn updates status of dpor
 type StatusUpdateFn func() error

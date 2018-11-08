@@ -18,7 +18,7 @@ type dporHelper interface {
 	verifyCascadingFields(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	snapshot(d *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error)
 	verifySeal(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
-	signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header) error
+	signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error
 }
 
 type defaultDporHelper struct {
@@ -311,7 +311,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 }
 
 // sighHeader signs the given refHeader if self is in the committee
-func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header) error {
+func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error {
 	hash := header.Hash()
 	number := header.Number.Uint64()
 

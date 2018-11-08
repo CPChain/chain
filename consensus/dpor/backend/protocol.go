@@ -3,7 +3,6 @@ package backend
 import (
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 )
@@ -102,30 +101,4 @@ func errResp(code errCode, format string, v ...interface{}) error {
 // IsPbftMsg checks if a msg is pbft msg
 func IsPbftMsg(msg p2p.Msg) bool {
 	return msg.Code >= PbftMsgOutSet
-}
-
-// State is the pbft state
-type State uint8
-
-const (
-	// NewRound is a state in pbft notes that replica enters a new round
-	NewRound State = iota
-
-	// Preprepared is set if Preprepare msg is already sent, or received Preprepare msg and not entered Prepared yet, starting to broadcast
-	Preprepared
-
-	// Prepared is set if received > 2f+1 same Preprepare msg from different replica, starting to broadcast Commit msg
-	Prepared
-
-	// Committed is set if received > 2f+1 same Prepare msg
-	Committed
-
-	// FinalCommitted is set if succeed to insert block into local chain
-	FinalCommitted
-)
-
-// PbftStatus represents a state of a dpor replica
-type PbftStatus struct {
-	State State
-	Head  *types.Header
 }

@@ -10,7 +10,6 @@ import (
 	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -340,20 +339,19 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 }
 
 // State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
-func (d *Dpor) State() backend.State {
+func (d *Dpor) State() consensus.State {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	return d.pbftState
 }
 
 // SignHeader signs the header and adds all known sigs to header
-func (d *Dpor) SignHeader(chain consensus.ChainReader, header *types.Header) error {
+func (d *Dpor) SignHeader(chain consensus.ChainReader, header *types.Header, state consensus.State) error {
 
-	switch err := d.dh.signHeader(d, chain, header); err {
+	switch err := d.dh.signHeader(d, chain, header, state); err {
 	case nil:
 		return nil
 	default:
 		return consensus.ErrWhenSigningHeader
 	}
-	return nil
 }

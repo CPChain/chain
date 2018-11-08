@@ -54,7 +54,7 @@ type Dpor struct {
 	fakeDelay      time.Duration // Time delay to sleep for before returning from verify
 	contractCaller *backend.ContractCaller
 
-	pbftState backend.State
+	pbftState consensus.State
 
 	chain consensus.ChainReader
 
@@ -171,7 +171,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 		return d.IsFutureSigner(d.chain, signer, currentNumber)
 	}
 
-	verifyHeaderFn := func(header *types.Header, state backend.State) error {
+	verifyHeaderFn := func(header *types.Header, state consensus.State) error {
 		// TODO: fix this, !!! state
 		return d.VerifyHeader(d.chain, header, true, header)
 	}
@@ -182,9 +182,9 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 		return d.VerifyHeader(d.chain, header, true, header)
 	}
 
-	signHeaderFn := func(header *types.Header, state backend.State) error {
+	signHeaderFn := func(header *types.Header, state consensus.State) error {
 		// TODO: fix this, !!! state
-		return d.SignHeader(d.chain, header)
+		return d.SignHeader(d.chain, header, state)
 	}
 
 	addPendingBlockFn := func(block *types.Block) error {
@@ -207,7 +207,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 		return nil
 	}
 
-	statusFn := func() *backend.PbftStatus {
+	statusFn := func() *consensus.PbftStatus {
 		return d.PbftStatus()
 	}
 	statusUpdateFn := func() error {
@@ -272,10 +272,10 @@ func (d *Dpor) Protocol() p2p.Protocol {
 }
 
 // PbftStatus returns current state of dpor
-func (d *Dpor) PbftStatus() *backend.PbftStatus {
+func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 	state := d.State()
 	head := d.chain.CurrentHeader()
-	return &backend.PbftStatus{
+	return &consensus.PbftStatus{
 		State: state,
 		Head:  head,
 	}

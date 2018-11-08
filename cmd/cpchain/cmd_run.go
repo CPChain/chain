@@ -11,11 +11,11 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/profile"
-	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"bitbucket.org/cpchain/chain/node"
+	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"github.com/urfave/cli"
 )
 
@@ -201,10 +201,10 @@ func startMining(ctx *cli.Context, n *node.Node) {
 }
 
 // TODO to be removed.  do not add it here.
-func createContractCaller(ctx *cli.Context, n *node.Node) *consensus.ContractCaller {
+func createContractCaller(ctx *cli.Context, n *node.Node) *backend.ContractCaller {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	passwords := makePasswordList(ctx)
-	var contractCaller *consensus.ContractCaller
+	var contractCaller *backend.ContractCaller
 	// TODO: @liuq fix this.
 	if len(ks.Accounts()) > 0 && len(passwords) > 0 {
 		account := ks.Accounts()[0]
@@ -221,7 +221,7 @@ func createContractCaller(ctx *cli.Context, n *node.Node) *consensus.ContractCal
 		client := ethclient.NewClient(rpcClient)
 
 		// TODO: @Liuq fix this.
-		contractCaller, err = consensus.NewContractCaller(key, client, 300000)
+		contractCaller, err = backend.NewContractCaller(key, client, 300000)
 		if err != nil {
 			log.Warn("err when make contract call", "err", err)
 		}
