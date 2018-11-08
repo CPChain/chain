@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -99,7 +100,14 @@ func (pm *ProtocolManager) minedBroadcastLoop() {
 	for obj := range pm.minedBlockSub.Chan() {
 		switch ev := obj.Data.(type) {
 		case core.NewMinedBlockEvent:
-			pm.BroadcastGeneratedBlock(ev.Block)
+
+			if pm.chainconfig.Dpor != nil {
+				// broadcast mined block with dpor handler
+				pm.engine.(*dpor.Dpor).HandleMinedBlock(ev.Block)
+			} else {
+				pm.BroadcastGeneratedBlock(ev.Block)
+			}
+
 		}
 	}
 

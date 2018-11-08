@@ -280,3 +280,8 @@ func (d *Dpor) PbftStatus() *backend.PbftStatus {
 		Head:  head,
 	}
 }
+
+// HandleMinedBlock receives a block to add to handler's pending block channel
+func (d *Dpor) HandleMinedBlock(block *types.Block) error {
+	return d.handler.ReceiveMinedPendingBlock(block)
+}
