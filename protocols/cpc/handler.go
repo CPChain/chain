@@ -95,10 +95,9 @@ type ProtocolManager struct {
 	quitSync    chan struct{}
 	noMorePeers chan struct{}
 
-	server                  *p2p.Server
-	engine                  consensus.Engine
-	etherbase               common.Address
-	committeeNetworkHandler *BasicCommitteeHandler
+	server    *p2p.Server
+	engine    consensus.Engine
+	etherbase common.Address
 
 	// wait group is used for graceful shutdowns during downloading
 	// and processing
@@ -348,11 +347,6 @@ func (pm *ProtocolManager) VerifyHeader(header *types.Header) error {
 	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
 }
 
-// SignHeader signs the header
-func (pm *ProtocolManager) SignHeader(header *types.Header) error {
-	return pm.engine.SignHeader(pm.blockchain, header)
-}
-
 // handleMsg is invoked whenever an inbound message is received from a remote
 // peer. The remote connection is torn down upon returning any error.
 func (pm *ProtocolManager) handleMsg(p *peer) error {
@@ -367,159 +361,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 	}
 	defer msg.Discard()
 
-	if IsPbftMsg(msg) {
-		return pm.handlePbftMsg(msg, p)
-	}
-
 	return pm.handleNormalMsg(msg, p)
-}
-
-func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
-	if msg.Code == NewSignerMsg {
-		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
-	}
-
-	switch pm.committeeNetworkHandler.State() {
-	case consensus.Preprepare:
-		switch {
-		case msg.Code == PrepreparePendingBlockMsg:
-			var request newBlockData
-			if err := msg.Decode(&request); err != nil {
-				return errResp(ErrDecode, "%v: %v", msg, err)
-			}
-			request.Block.ReceivedAt = msg.ReceivedAt
-			request.Block.ReceivedFrom = p
-
-			// Assuming the block is importable by the peer, but possibly not yet done so,
-			// calculate the head hash and TD that the peer truly must have.
-			var (
-				trueHead = request.Block.ParentHash()
-				trueTD   = new(big.Int).Sub(request.TD, request.Block.Difficulty())
-			)
-			// Update the peers total difficulty if better than the previous
-			if _, td := p.Head(); trueTD.Cmp(td) > 0 {
-				p.SetHead(trueHead, trueTD)
-
-				// Schedule a sync if above ours. Note, this will not fire a sync for a gap of
-				// a singe block (as the true TD is below the propagated block), however this
-				// scenario should easily be covered by the fetcher.
-				currentBlock := pm.blockchain.CurrentBlock()
-				if trueTD.Cmp(pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())) > 0 {
-					go pm.synchronise(p)
-				}
-			}
-
-			// Verify the block
-			// if correct, sign it and broadcast as Prepare msg
-			header := request.Block.RefHeader()
-			pm.blockchain.AddPendingBlock(request.Block)
-			switch err := pm.VerifyHeader(header); err {
-			case nil:
-				go pm.BroadcastBlock(request.Block, true)
-				go pm.BroadcastBlock(request.Block, false)
-
-			case consensus.ErrNotEnoughSigs:
-
-				if !pm.engine.IfSigned(header) {
-					switch e := pm.SignHeader(header); e {
-					case nil:
-						go pm.BroadcastPrepareSignedHeader(header)
-
-					default:
-						return e
-					}
-				}
-
-			default:
-				return err
-			}
-
-		default:
-			log.Warn("receievd unwelcome msg in state Preprepare", "msg code", msg.Code)
-		}
-
-	case consensus.Prepare:
-		switch {
-		case msg.Code == PrepareSignedHeaderMsg:
-
-			var header *types.Header
-			if err := msg.Decode(&header); err != nil {
-				return errResp(ErrDecode, "msg %v: %v", msg, err)
-			}
-
-			// Verify the signed header
-			// if correct, rebroadcast it as Commit msg
-			switch err := pm.VerifyHeader(header); err {
-			case nil:
-				go pm.BroadcastCommitSignedHeader(header)
-
-			case consensus.ErrNotEnoughSigs:
-				// if !pm.engine.IfSigned(header) {
-				// 	switch e := pm.SignHeader(header); e {
-				// 	case nil:
-				// 		go pm.BroadcastPrepareSignedHeader(header)
-
-				// 	default:
-				// 		return e
-				// 	}
-				// }
-
-			default:
-			}
-
-		default:
-			log.Warn("receievd unwelcome msg in state Prepare", "msg code", msg.Code)
-		}
-
-	case consensus.Commit:
-		switch {
-		case msg.Code == CommitSignedHeaderMsg:
-
-			// Verify the signed header
-			// if correct, broadcast it as NewBlockMsg
-			var header *types.Header
-			if err := msg.Decode(&header); err != nil {
-				return errResp(ErrDecode, "msg %v: %v", msg, err)
-			}
-
-			switch err := pm.VerifyHeader(header); err {
-			case nil:
-				// if commited, insert to chain, then broadcast the block
-				if block := pm.blockchain.GetPendingBlock(header.Hash()); block != nil {
-
-					block = block.WithSeal(header)
-
-					if _, err := pm.blockchain.InsertChain(types.Blocks{block}); err != nil {
-						return err
-					}
-
-					go pm.BroadcastBlock(block, true)
-					go pm.BroadcastBlock(block, false)
-				}
-
-			case consensus.ErrNotEnoughSigs:
-				// if !pm.engine.IfSigned(header) {
-				// 	switch e := pm.SignHeader(header); e {
-				// 	case nil:
-				// 		go pm.BroadcastPrepareSignedHeader(header)
-
-				// 	default:
-				// 		return e
-				// 	}
-				// }
-
-			default:
-			}
-
-		default:
-			log.Warn("receievd unwelcome msg in state Prepare", "msg code", msg.Code)
-		}
-
-	default:
-		return consensus.ErrUnknownPbftState
-	}
-
-	return nil
 }
 
 func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {

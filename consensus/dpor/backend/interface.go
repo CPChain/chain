@@ -97,7 +97,7 @@ type AddPendingBlockFn func(block *types.Block) error
 type GetPendingBlockFn func(hash common.Hash) *types.Block
 
 // BroadcastBlockFn broadcasts a block to normal peers(not pbft replicas)
-type BroadcastBlockFn func(block *types.Block, prop bool) error
+type BroadcastBlockFn func(block *types.Block, prop bool)
 
 // InsertChainFn inserts a block to chain
 type InsertChainFn func(block *types.Block) error

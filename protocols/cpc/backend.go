@@ -34,6 +34,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -366,7 +367,7 @@ func (s *CpchainService) SetEtherbase(etherbase common.Address) {
 	s.miner.SetChainbase(etherbase)
 }
 
-func (s *CpchainService) StartMining(local bool, contractCaller *consensus.ContractCaller) error {
+func (s *CpchainService) StartMining(local bool, contractCaller *backend.ContractCaller) error {
 
 	log.Info("I am in s.StartMining")
 

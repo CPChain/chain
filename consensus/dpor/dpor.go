@@ -197,9 +197,9 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 		return nil
 	}
 
-	broadcastBlockFn := func(block *types.Block, prop bool) error {
+	broadcastBlockFn := func(block *types.Block, prop bool) {
 
-		return pmBroadcastBlockFn(block, prop)
+		go pmBroadcastBlockFn(block, prop)
 	}
 
 	insertChainFn := func(block *types.Block) error {
