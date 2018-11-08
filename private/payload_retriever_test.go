@@ -288,7 +288,7 @@ func (fakeWallet) SignTxWithPassphrase(account accounts.Account, passphrase stri
 	panic("implement me")
 }
 
-func (fakeWallet) EnryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
+func (fakeWallet) EncryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
 	panic("implement me")
 }
 
@@ -296,7 +296,7 @@ func (fakeWallet) DecryptWithRsa(account accounts.Account, cipherText []byte) ([
 	panic("implement me")
 }
 
-func (fakeWallet) GetRsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
+func (fakeWallet) RsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
 	panic("implement me")
 }
 
