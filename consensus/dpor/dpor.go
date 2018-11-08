@@ -156,13 +156,11 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 		return
 	}
 
-	err = handler.SetContractCaller(contractCaller)
-	if err != nil {
+	if err = handler.SetContractCaller(contractCaller); err != nil {
 		return
 	}
 
-	err = handler.SetServer(server)
-	if err != nil {
+	if err = handler.SetServer(server); err != nil {
 		return
 	}
 
