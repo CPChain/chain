@@ -535,7 +535,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			if h.ReadyToImpeach() {
 
 				// get empty block
-				if emptyBlock, err := h.getEmptyPendingBlock(); err == nil {
+				if emptyBlock, err := h.getEmptyBlockFn(); err == nil {
 
 					// broadcast the empty block
 					h.BroadcastGeneratedBlock(emptyBlock)
