@@ -144,7 +144,7 @@ func (d *Dpor) IfSigned(header *types.Header) bool {
 }
 
 // StartMining starts to create a handler and start it.
-func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *backend.ContractCaller, server *p2p.Server) {
+func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *backend.ContractCaller, server *p2p.Server, pmBroadcastBlockFn backend.BroadcastBlockFn) {
 
 	d.chain = blockchain
 	d.contractCaller = contractCaller
@@ -167,6 +167,75 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 	}
 
 	// TODO: set handler functions here
+
+	validateSignerFn := func(signer common.Address) (bool, error) {
+		currentNumber := d.chain.CurrentHeader().Number.Uint64()
+		return d.IsFutureSigner(d.chain, signer, currentNumber)
+	}
+
+	verifyHeaderFn := func(header *types.Header, state backend.State) error {
+		// TODO: fix this, !!! state
+		return d.VerifyHeader(d.chain, header, true, header)
+	}
+
+	verifyBlockFn := func(block *types.Block) error {
+		// TODO: fix this, verify block
+		header := block.RefHeader()
+		return d.VerifyHeader(d.chain, header, true, header)
+	}
+
+	signHeaderFn := func(header *types.Header, state backend.State) error {
+		// TODO: fix this, !!! state
+		return d.SignHeader(d.chain, header)
+	}
+
+	addPendingBlockFn := func(block *types.Block) error {
+		// TODO: fix this
+		return nil
+	}
+
+	getPendingBlockFn := func(hash common.Hash) *types.Block {
+		// TODO: fix this
+		return nil
+	}
+
+	broadcastBlockFn := func(block *types.Block, prop bool) error {
+
+		return pmBroadcastBlockFn(block, prop)
+	}
+
+	insertChainFn := func(block *types.Block) error {
+		// TODO: fix this
+		return nil
+	}
+
+	statusFn := func() *backend.PbftStatus {
+		return d.PbftStatus()
+	}
+	statusUpdateFn := func() error {
+		// TODO: fix this
+		return nil
+	}
+	getEmptyBlockFn := func() (*types.Block, error) {
+
+		// TODO: fix this
+		return nil, nil
+	}
+
+	// set functions
+	handler.SetFuncs(
+		validateSignerFn,
+		verifyHeaderFn,
+		verifyBlockFn,
+		signHeaderFn,
+		addPendingBlockFn,
+		getPendingBlockFn,
+		broadcastBlockFn,
+		insertChainFn,
+		statusFn,
+		statusUpdateFn,
+		getEmptyBlockFn,
+	)
 
 	d.handler = handler
 
