@@ -382,7 +382,7 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 			return fmt.Errorf("signer missing: %v", err)
 		}
 		dpor.Authorize(eb, wallet.SignHash)
-		go dpor.StartMining(s.blockchain, contractCaller, s.server)
+		go dpor.StartMining(s.blockchain, contractCaller, s.server, s.protocolManager.BroadcastBlock)
 
 	}
 	if local {
