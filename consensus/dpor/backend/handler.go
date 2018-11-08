@@ -74,8 +74,8 @@ type Handler struct {
 	lock sync.RWMutex
 }
 
-// New creates a new Handler
-func New(config *configs.DporConfig, etherbase common.Address) (*Handler, error) {
+// NewHandler creates a new Handler
+func NewHandler(config *configs.DporConfig, etherbase common.Address) (*Handler, error) {
 	h := &Handler{
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
@@ -104,8 +104,8 @@ func (h *Handler) SetServer(server *p2p.Server) error {
 	return nil
 }
 
-// SetRsaKey sets handler.rsaKey
-func (h *Handler) SetRsaKey(rsaReader RsaReader) error {
+// setRsaKey sets handler.rsaKey
+func (h *Handler) setRsaKey(rsaReader RsaReader) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -135,6 +135,14 @@ func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 	auth.Value = big.NewInt(0)
 	auth.GasLimit = contractCaller.GasLimit
 	auth.GasPrice = gasPrice
+
+	rsaReader := func() (*rsakey.RsaKey, error) {
+		return contractCaller.Key.RsaKey, nil
+	}
+	err = h.setRsaKey(rsaReader)
+	if err != nil {
+		return err
+	}
 
 	h.lock.Lock()
 

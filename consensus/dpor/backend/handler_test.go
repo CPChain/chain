@@ -12,7 +12,7 @@ import (
 // new a committee_network_handler
 // build the network.
 
-func TestNew(t *testing.T) {
+func TestNewHandler(t *testing.T) {
 	type args struct {
 		config    *configs.DporConfig
 		etherbase common.Address
@@ -27,13 +27,13 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.config, tt.args.etherbase)
+			got, err := NewHandler(tt.args.config, tt.args.etherbase)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewHandler() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
+				t.Errorf("NewHandler() = %v, want %v", got, tt.want)
 			}
 		})
 	}
