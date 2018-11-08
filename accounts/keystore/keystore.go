@@ -499,7 +499,7 @@ func zeroKey(k *ecdsa.PrivateKey) {
 	}
 }
 
-// EncryptWithRsa encrypts with a specified account's RSA key. The account is required to be unloced.
+// EncryptWithRsa encrypts with a specified account's RSA key. The account is required to be unlocked.
 func (ks *KeyStore) EncryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
 	unlocked, exists := ks.unlocked[account.Address]
 	if !exists {
@@ -521,8 +521,8 @@ func (ks *KeyStore) DecryptWithRsa(account accounts.Account, cipherText []byte) 
 	return key.RsaKey.RsaDecrypt(cipherText)
 }
 
-// GetRsaPublicKey requires RSA public key for a given account.
-func (ks *KeyStore) GetRsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
+// RsaPublicKey requires RSA public key for a given account.
+func (ks *KeyStore) RsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
 	unlocked, exists := ks.unlocked[account.Address]
 	if !exists {
 		return nil, ErrNoMatch

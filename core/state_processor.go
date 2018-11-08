@@ -36,7 +36,6 @@ import (
 var (
 	RemoteDBAbsenceError = errors.New("RemoteDB is not set, no capacibility of processing private transaction.")
 	NoPermissionError    = errors.New("The node doesn't have the permission/responsibility to process the private tx.")
-	//RSAKeyAbsenceError   = errors.New("RSA private key is not set, no capacibility of processing private transaction.")
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning

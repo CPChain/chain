@@ -25,10 +25,10 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 )
 
-type AccountBasedDecryptor interface {
+type AccountRsaDecryptor interface {
 	// CanDecrypt checks whether there is a corresponding private key for the given RSA public key to decrypt data and
 	// returns the account whose RSA private key is corresponding to the given RSA public key.
-	CanDecrypt(pubkey string) (canDecrypt bool, wallet Wallet, account *Account)
+	CanDecrypt(rsaPubkey string) (canDecrypt bool, wallet Wallet, account *Account)
 	// Decrypt decrypts data with given account's RSA private key.
 	Decrypt(data []byte, wallet Wallet, account *Account) ([]byte, error)
 }
@@ -179,13 +179,13 @@ func (am *Manager) Subscribe(sink chan<- WalletEvent) event.Subscription {
 
 // CanDecrypt checks whether there is a corresponding private key for the given RSA public key to decrypt data and
 // returns the account whose RSA private key is corresponding to the given RSA public key.
-func (am *Manager) CanDecrypt(pubkey string) (bool, Wallet, *Account) {
+func (am *Manager) CanDecrypt(rsaPubkey string) (bool, Wallet, *Account) {
 	for _, wallet := range am.Wallets() {
 		for _, account := range wallet.Accounts() {
-			rsaKey, error := wallet.GetRsaPublicKey(account)
-			if error == nil {
+			rsaKey, err := wallet.RsaPublicKey(account)
+			if err == nil {
 				pubKeyEncoded := hexutil.Encode(rsaKey.RsaPublicKeyBytes)
-				if pubKeyEncoded == pubkey {
+				if pubKeyEncoded == rsaPubkey {
 					return true, wallet, &account
 				}
 			}

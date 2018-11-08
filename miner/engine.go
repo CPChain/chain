@@ -330,8 +330,8 @@ func (self *engine) push(work *Work) {
 	}
 }
 
-// makeCurrent creates a new environment for the current cycle.
-func (self *engine) makeCurrent(parent *types.Block, header *types.Header) error {
+// makeCurrentWork creates a new environment for the current cycle.
+func (self *engine) makeCurrentWork(parent *types.Block, header *types.Header) error {
 	pubState, err := self.chain.StateAt(parent.StateRoot())
 	if err != nil {
 		return err
@@ -397,7 +397,7 @@ func (self *engine) commitNewWork() {
 	}
 
 	// Could potentially happen if starting to mine in an odd state.
-	err := self.makeCurrent(parent, header)
+	err := self.makeCurrentWork(parent, header)
 	if err != nil {
 		log.Error("Failed to create mining context", "err", err)
 		return

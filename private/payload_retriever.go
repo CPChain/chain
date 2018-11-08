@@ -12,7 +12,7 @@ import (
 
 // Read tx's payload replacement, retrieve encrypted payload from IPFS and decrypt it.
 // Return decrypted payload, a flag indicating if the node has enough permission and error if there is.
-func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.RemoteDatabase, abDecryptor accounts.AccountBasedDecryptor) (payload []byte, hasPermission bool, error error) {
+func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.RemoteDatabase, decryptor accounts.AccountRsaDecryptor) (payload []byte, hasPermission bool, error error) {
 	replacement := PayloadReplacement{}
 	err := rlp.DecodeBytes(data, &replacement)
 	if err != nil {
@@ -32,10 +32,10 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.Re
 		return []byte{}, false, err
 	}
 	for i, k := range replacement.Participants {
-		canDecrypt, wallet, acc := abDecryptor.CanDecrypt(k)
+		canDecrypt, wallet, acc := decryptor.CanDecrypt(k)
 		if canDecrypt {
 			encryptedKey := sp.SymmetricKeys[i]
-			symKey, _ := abDecryptor.Decrypt(encryptedKey, wallet, acc)
+			symKey, _ := decryptor.Decrypt(encryptedKey, wallet, acc)
 			decrypted, _ := decryptPayload(sp.Payload, symKey, txNonce)
 			return decrypted, true, nil
 		}

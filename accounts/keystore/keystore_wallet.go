@@ -139,7 +139,7 @@ func (w *keystoreWallet) SignTxWithPassphrase(account accounts.Account, passphra
 	return w.keystore.SignTxWithPassphrase(account, passphrase, tx, chainID)
 }
 
-func (w *keystoreWallet) EnryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
+func (w *keystoreWallet) EncryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
 	return w.keystore.EncryptWithRsa(account, plainText)
 }
 
@@ -147,6 +147,6 @@ func (w *keystoreWallet) DecryptWithRsa(account accounts.Account, cipherText []b
 	return w.keystore.DecryptWithRsa(account, cipherText)
 }
 
-func (w *keystoreWallet) GetRsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
-	return w.keystore.GetRsaPublicKey(account)
+func (w *keystoreWallet) RsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
+	return w.keystore.RsaPublicKey(account)
 }
