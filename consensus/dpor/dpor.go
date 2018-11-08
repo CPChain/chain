@@ -143,14 +143,46 @@ func (d *Dpor) IfSigned(header *types.Header) bool {
 	return false
 }
 
+// StartMining starts to create a handler and start it.
+func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *backend.ContractCaller, server *p2p.Server) {
+
+	d.chain = blockchain
+	d.contractCaller = contractCaller
+
+	// create a pbft handler
+
+	handler, err := backend.NewHandler(d.config, d.Signer())
+	if err != nil {
+		return
+	}
+
+	err = handler.SetContractCaller(contractCaller)
+	if err != nil {
+		return
+	}
+
+	err = handler.SetServer(server)
+	if err != nil {
+		return
+	}
+
+	// TODO: set handler functions here
+
+	d.handler = handler
+
+	go d.handler.Start()
+
+	return
+}
+
 // Start starts dpor engine to handle different phrases
-func (d *Dpor) Start() error {
-	return nil
+func (d *Dpor) Start() {
+	return
 }
 
 // Stop stops dpor engine
-func (d *Dpor) Stop() error {
-	return nil
+func (d *Dpor) Stop() {
+	return
 }
 
 // Signer return dpor.signer
@@ -180,24 +212,4 @@ func (d *Dpor) PbftStatus() *backend.PbftStatus {
 		State: state,
 		Head:  head,
 	}
-}
-
-// SetFields sets ChainReader and ContractCaller for dpor
-func (d *Dpor) SetFields(blockchain consensus.ChainReader, contractCaller *backend.ContractCaller, server *p2p.Server) error {
-	d.chain = blockchain
-	d.contractCaller = contractCaller
-
-	// TODO: set contractcaller, rsakey and server for handler
-	_ = server
-
-	// if s.protocolManager.committeeNetworkHandler != nil {
-	// 	if err := s.protocolManager.committeeNetworkHandler.SetRSAKeys(
-	// 		func() (*rsakey.RsaKey, error) {
-	// 			return contractCaller.Key.RsaKey, nil
-	// 		}); err != nil {
-	// 		return errWrongRSAKey
-	// 	}
-	// }
-
-	return nil
 }

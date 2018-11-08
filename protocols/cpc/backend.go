@@ -367,6 +367,9 @@ func (s *CpchainService) SetEtherbase(etherbase common.Address) {
 }
 
 func (s *CpchainService) StartMining(local bool, contractCaller *consensus.ContractCaller) error {
+
+	log.Info("I am in s.StartMining")
+
 	eb, err := s.Etherbase()
 	if err != nil {
 		log.Error("Cannot start mining without etherbase", "err", err)
@@ -379,11 +382,7 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 			return fmt.Errorf("signer missing: %v", err)
 		}
 		dpor.Authorize(eb, wallet.SignHash)
-		dpor.SetFields(s.blockchain, contractCaller, s.server)
-
-		log.Info("I am in s.StartMining")
-
-		go dpor.Start()
+		go dpor.StartMining(s.blockchain, contractCaller, s.server)
 
 	}
 	if local {
