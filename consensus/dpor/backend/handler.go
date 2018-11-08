@@ -48,6 +48,8 @@ type Handler struct {
 	addPendingFn AddPendingBlockFn
 	getPendingFn GetPendingBlockFn
 
+	getEmptyBlockFn GetEmptyBlockFn
+
 	// those three funcs are methods from dpor, used for header verification and signing
 	verifyHeaderFn VerifyHeaderFn
 	verifyBlockFn  VerifyBlockFn
@@ -533,7 +535,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			if h.ReadyToImpeach() {
 
 				// get empty block
-				if emptyBlock, err := h.GetEmptyPendingBlock(); err == nil {
+				if emptyBlock, err := h.getEmptyPendingBlock(); err == nil {
 
 					// broadcast the empty block
 					h.BroadcastGeneratedBlock(emptyBlock)
@@ -567,16 +569,40 @@ func (h *Handler) Stop() {
 	return
 }
 
-// GetEmptyPendingBlock returns an empty block to be used to act as viewchange
-func (h *Handler) GetEmptyPendingBlock() (*types.Block, error) {
-
-	return nil, nil
-}
-
 // ReceiveMinedPendingBlock receives a block to add to pending block channel
 func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
 	case h.pendingBlockCh <- block:
 		return nil
 	}
+}
+
+// SetFuncs sets some funcs
+func (h *Handler) SetFuncs(
+	validateSignerFn ValidateSignerFn,
+	verifyHeaderFn VerifyHeaderFn,
+	verifyBlockFn VerifyBlockFn,
+	signHeaderFn SignHeaderFn,
+	addPendingBlockFn AddPendingBlockFn,
+	getPendingBlockFn GetPendingBlockFn,
+	broadcastBlockFn BroadcastBlockFn,
+	insertChainFn InsertChainFn,
+	statusFn StatusFn,
+	statusUpdateFn StatusUpdateFn,
+	getEmptyBlockFn GetEmptyBlockFn,
+) error {
+
+	h.validateSignerFn = validateSignerFn
+	h.verifyHeaderFn = verifyHeaderFn
+	h.verifyBlockFn = verifyBlockFn
+	h.signHeaderFn = signHeaderFn
+	h.addPendingFn = addPendingBlockFn
+	h.getPendingFn = getPendingBlockFn
+	h.broadcastBlockFn = broadcastBlockFn
+	h.insertChainFn = insertChainFn
+	h.statusFn = statusFn
+	h.statusUpdateFn = statusUpdateFn
+	h.getEmptyBlockFn = getEmptyBlockFn
+
+	return nil
 }
