@@ -11,30 +11,30 @@ def main():
     print('web3.eth.blockNumber:' + str(web3.eth.blockNumber))
     print(web3.eth.getBlock('latest'))
 
-    print ('\nlistAccounts:')
+    print('\nlistAccounts:')
     print(web3.eth.accounts)
 
-    print ('\nunlock:')
-    print (web3.personal.unlockAccount(account1, 'password'))
+    print('\nunlock:')
+    print(web3.personal.unlockAccount(account1, 'password'))
 
-    print ('\nbalance of :' + account1)
-    print (web3.eth.getBalance(account1))
+    print('\nbalance of :' + account1)
+    print(web3.eth.getBalance(account1))
 
-    print ('balance of :' + account2)
-    print (web3.eth.getBalance(account2))
+    print('balance of :' + account2)
+    print(web3.eth.getBalance(account2))
 
-    print ('\nsend tx1:')
+    print('\nsend tx1:')
     tx_hash = web3.personal.sendTransaction({'to': account2, 'from': web3.eth.coinbase, 'value': 10},'password')
 
-    print ('\nwaitForTransactionReceipt:')
+    print('\nwaitForTransactionReceipt:')
     tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-    print (tx_receipt)
+    print(tx_receipt)
 
-    print ('\nnew balance of:' + account1)
-    print (web3.eth.getBalance(account1))
+    print('\nnew balance of:' + account1)
+    print(web3.eth.getBalance(account1))
 
-    print ('new balance of:' + account2)
-    print (web3.eth.getBalance(account2))
+    print('new balance of:' + account2)
+    print(web3.eth.getBalance(account2))
 
 if __name__ == '__main__':
     main()
