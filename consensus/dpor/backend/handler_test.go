@@ -18,21 +18,15 @@ func TestNewHandler(t *testing.T) {
 		etherbase common.Address
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    *Handler
-		wantErr bool
+		name string
+		args args
+		want *Handler
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewHandler(tt.args.config, tt.args.etherbase)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewHandler() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if got := NewHandler(tt.args.config, tt.args.etherbase); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewHandler() = %v, want %v", got, tt.want)
 			}
 		})

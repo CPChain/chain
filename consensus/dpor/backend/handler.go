@@ -472,7 +472,6 @@ func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address
 			return err
 		}
 	}
-	return nil
 }
 
 func (h *Handler) removeSigner(signer common.Address) error {

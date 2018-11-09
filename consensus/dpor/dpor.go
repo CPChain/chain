@@ -152,16 +152,13 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 
 	// create a pbft handler
 
-	handler, err := backend.NewHandler(d.config, d.Signer())
-	if err != nil {
+	handler := backend.NewHandler(d.config, d.Signer())
+
+	if err := handler.SetContractCaller(contractCaller); err != nil {
 		return
 	}
 
-	if err = handler.SetContractCaller(contractCaller); err != nil {
-		return
-	}
-
-	if err = handler.SetServer(server); err != nil {
+	if err := handler.SetServer(server); err != nil {
 		return
 	}
 
