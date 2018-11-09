@@ -9,13 +9,13 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/internal/profile"
-	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"bitbucket.org/cpchain/chain/node"
+	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"github.com/urfave/cli"
 )
 
@@ -142,7 +142,7 @@ func handleWallet(n *node.Node) {
 		if err != nil {
 			log.Fatalf("Failed to attach to self: %v", err)
 		}
-		stateReader := ethclient.NewClient(rpcClient)
+		stateReader := cpclient.NewClient(rpcClient)
 
 		// Open any wallets already attached
 		for _, wallet := range n.AccountManager().Wallets() {
@@ -218,7 +218,7 @@ func createContractCaller(ctx *cli.Context, n *node.Node) *consensus.ContractCal
 		if err != nil {
 			log.Fatalf("Failed to attach to self: %v", err)
 		}
-		client := ethclient.NewClient(rpcClient)
+		client := cpclient.NewClient(rpcClient)
 
 		// TODO: @Liuq fix this.
 		contractCaller, err = consensus.NewContractCaller(key, client, 300000)

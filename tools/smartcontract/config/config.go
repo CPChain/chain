@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -20,9 +20,9 @@ var (
 	DefaultMemoryDifficulty = uint64(25)
 )
 
-func Connect() (*ethclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
+func Connect() (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

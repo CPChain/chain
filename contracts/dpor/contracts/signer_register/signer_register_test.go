@@ -16,9 +16,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -41,10 +41,10 @@ func TestSignerRegister(t *testing.T) {
 	fmt.Println("*******************************************************")
 }
 
-func deployContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *SignerConnectionRegister, context.Context) {
+func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *SignerConnectionRegister, context.Context) {
 	// create client.
 	// client, err := ethclient.Dial("https://rinkeby.infura.io")
-	client, err := ethclient.Dial("http://localhost:8501")
+	client, err := cpclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {
 		log.Fatal(err.Error())
@@ -109,7 +109,7 @@ func deployContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int
 	return client, privateKey, fromAddress, gasLimit, gasPrice, instance, ctx
 }
 
-func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, instance *SignerConnectionRegister, ctx context.Context, client *ethclient.Client, fromAddress common.Address) {
+func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, instance *SignerConnectionRegister, ctx context.Context, client *cpclient.Client, fromAddress common.Address) {
 	// 1. load RsaPublicKey/PrivateKey
 	fmt.Println("1.load RsaPublicKey/PrivateKey")
 

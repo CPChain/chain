@@ -16,9 +16,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -82,8 +82,8 @@ func TestSignerRegisterProxyContractRegister(t *testing.T) {
 	}
 }
 
-func deploySignerRegisterProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *Proxy, context.Context, common.Address) {
-	client, err := ethclient.Dial("http://localhost:8501")
+func deploySignerRegisterProxyContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *Proxy, context.Context, common.Address) {
+	client, err := cpclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {
 		log.Fatal(err.Error())

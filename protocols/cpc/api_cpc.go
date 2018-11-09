@@ -1,8 +1,8 @@
 package cpc
 
 import (
-	"bitbucket.org/cpchain/chain/api/v1/common"
-	"bitbucket.org/cpchain/chain/api/v1/cpc"
+	"bitbucket.org/cpchain/chain/api/grpc/v1/common"
+	"bitbucket.org/cpchain/chain/api/grpc/v1/cpc"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"

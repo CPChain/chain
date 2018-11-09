@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func printTx(tx *types.Transaction, err error, client *ethclient.Client, contractAddress common.Address) context.Context {
+func printTx(tx *types.Transaction, err error, client *cpclient.Client, contractAddress common.Address) context.Context {
 	ctx := context.Background()
 	fmt.Printf("Transaction: 0x%x\n", tx.Hash())
 	startTime := time.Now()
@@ -29,7 +29,7 @@ func printTx(tx *types.Transaction, err error, client *ethclient.Client, contrac
 	return ctx
 }
 
-func printBalance(client *ethclient.Client, fromAddress common.Address) {
+func printBalance(client *cpclient.Client, fromAddress common.Address) {
 	// Check balance.
 	bal, _ := client.BalanceAt(context.Background(), fromAddress, nil)
 	fmt.Println("balance:", bal)

@@ -10,12 +10,12 @@ import (
 	"sort"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/api/cpclient"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
-	"bitbucket.org/cpchain/chain/ethclient"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -149,13 +149,13 @@ func RptHash(rpthash RptItems) (hash common.Hash) {
 	return hash
 }
 
-func NewEthClient(endpoint string) (*ethclient.Client, error) {
+func NewEthClient(endpoint string) (*cpclient.Client, error) {
 	log.Info("connecting to RPT API", "url", endpoint)
 	client, err := rpc.Dial(endpoint)
 	if err != nil {
 		return nil, err
 	}
-	return ethclient.NewClient(client), nil
+	return cpclient.NewClient(client), nil
 
 }
 

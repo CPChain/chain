@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/api"
+	"bitbucket.org/cpchain/chain/api/grpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -309,8 +309,8 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 }
 
 // GAPIs is APIs for dpor.
-func (d *Dpor) GAPIs(chain consensus.ChainReader) []api.GApi {
-	return []api.GApi{}
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []grpc.GApi {
+	return []grpc.GApi{}
 }
 
 // IsFutureSigner implements Validator.

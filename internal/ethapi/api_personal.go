@@ -11,8 +11,8 @@ import (
 	"golang.org/x/net/context"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	pb "bitbucket.org/cpchain/chain/api/v1/common"
-	"bitbucket.org/cpchain/chain/api/v1/personal"
+	pb "bitbucket.org/cpchain/chain/api/grpc/v1/common"
+	"bitbucket.org/cpchain/chain/api/grpc/v1/personal"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"

@@ -3,8 +3,8 @@ package cpc
 import (
 	"math/big"
 
-	pb "bitbucket.org/cpchain/chain/api/v1/common"
-	"bitbucket.org/cpchain/chain/api/v1/miner"
+	pb "bitbucket.org/cpchain/chain/api/grpc/v1/common"
+	"bitbucket.org/cpchain/chain/api/grpc/v1/miner"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/golang/protobuf/ptypes/empty"

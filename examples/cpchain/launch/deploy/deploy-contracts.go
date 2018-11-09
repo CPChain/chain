@@ -13,11 +13,11 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -29,7 +29,7 @@ var (
 func deploySigner() {
 
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -114,7 +114,7 @@ func deploySigner() {
 func deployCampaign() {
 
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -198,7 +198,7 @@ func deployCampaign() {
 
 func deployRegister() {
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -282,7 +282,7 @@ func deployRegister() {
 
 func deployPdash() {
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err)
 	}

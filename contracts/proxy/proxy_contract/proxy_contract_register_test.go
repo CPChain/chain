@@ -16,8 +16,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -32,8 +32,8 @@ func TestProxyContractRegister(t *testing.T) {
 	fmt.Println("*******************************************************")
 }
 
-func deployProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *ProxyContractRegister, context.Context, common.Address) {
-	client, err := ethclient.Dial("http://localhost:8501")
+func deployProxyContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *ProxyContractRegister, context.Context, common.Address) {
+	client, err := cpclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {
 		log.Fatal(err.Error())
@@ -91,7 +91,7 @@ func deployProxyContract() (*ethclient.Client, *ecdsa.PrivateKey, common.Address
 	return client, privateKey, fromAddress, gasLimit, gasPrice, instance, ctx, address
 }
 
-func registerProxyAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, instance *ProxyContractRegister, ctx context.Context, client *ethclient.Client, fromAddress, contractAddress common.Address) {
+func registerProxyAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, instance *ProxyContractRegister, ctx context.Context, client *cpclient.Client, fromAddress, contractAddress common.Address) {
 
 	// 2. register node2 public key on chain (claim campaign)
 	fmt.Println("2.RegisterProxyContract")

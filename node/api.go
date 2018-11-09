@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/metrics"

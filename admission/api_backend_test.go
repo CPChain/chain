@@ -18,10 +18,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/rpc"
 )
 
 var (

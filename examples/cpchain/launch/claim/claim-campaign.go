@@ -12,10 +12,10 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -107,7 +107,7 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 
 func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address) {
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -162,7 +162,7 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 
 func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address, rsaPubkey []byte) {
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

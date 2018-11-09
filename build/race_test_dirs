@@ -8,4 +8,5 @@ core
 protocols/cpc
 protocols/cpc/fetcher
 protocols/cpc/downloader
-rpc
+api/rpc
+api/cpclient

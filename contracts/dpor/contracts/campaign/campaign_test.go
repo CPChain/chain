@@ -13,8 +13,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -24,7 +24,7 @@ func TestCampaign(t *testing.T) {
 
 	// create client.
 	// client, err := ethclient.Dial("https://rinkeby.infura.io")
-	client, err := ethclient.Dial("http://localhost:8501") // local
+	client, err := cpclient.Dial("http://localhost:8501") // local
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -102,7 +102,7 @@ func assert(expectNum int64, expectDeposit int64, numOfCampaign *big.Int, deposi
 	}
 }
 
-func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *Campaign, startTime time.Time, ctx context.Context, client *ethclient.Client, fromAddress common.Address) (*big.Int, *big.Int, *big.Int) {
+func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *Campaign, startTime time.Time, ctx context.Context, client *cpclient.Client, fromAddress common.Address) (*big.Int, *big.Int, *big.Int) {
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(50)
 	// in wei

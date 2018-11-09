@@ -9,10 +9,10 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission/ethash"
+	"bitbucket.org/cpchain/chain/api/cpclient"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor"
-	"bitbucket.org/cpchain/chain/ethclient"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -223,7 +223,7 @@ func (ac *AdmissionControl) sendCampaignProofInfo() {
 // RegisterInProcHander registers the rpc.Server, handles RPC request to process the API requests in process
 func (ac *AdmissionControl) RegisterInProcHander(localRPCServer *rpc.Server) {
 	client := rpc.DialInProc(localRPCServer)
-	ac.contractBackend = ethclient.NewClient(client)
+	ac.contractBackend = cpclient.NewClient(client)
 }
 
 // VerifyEthash verify ethash nonce

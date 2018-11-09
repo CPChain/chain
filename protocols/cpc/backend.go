@@ -28,7 +28,8 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/api"
+	"bitbucket.org/cpchain/chain/api/grpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -46,7 +47,6 @@ import (
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -250,9 +250,9 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainC
 
 // GAPIs return the collection of GRPC services the cpc package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
-func (s *CpchainService) GAPIs() []api.GApi {
+func (s *CpchainService) GAPIs() []grpc.GApi {
 	apis := ethapi.GetGAPIs(s.APIBackend)
-	return append(apis, []api.GApi{
+	return append(apis, []grpc.GApi{
 		// NewMinerReader(s),
 		NewCoinbase(s),
 		NewAdminManager(s),

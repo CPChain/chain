@@ -22,14 +22,14 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/api"
+	"bitbucket.org/cpchain/chain/api/grpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -75,9 +75,9 @@ type Backend interface {
 	RemoteDB() database.RemoteDatabase // RemoteDB returns remote database instance.
 }
 
-func GetGAPIs(b Backend) []api.GApi {
+func GetGAPIs(b Backend) []grpc.GApi {
 	nonceLock := new(AddrLocker)
-	return []api.GApi{
+	return []grpc.GApi{
 		NewTransactionPoolReader(b, nonceLock),
 		NewAccountManager(b, nonceLock),
 		NewAccountReader(b.AccountManager()),

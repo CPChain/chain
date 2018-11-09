@@ -28,11 +28,11 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/api"
+	"bitbucket.org/cpchain/chain/api/grpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/internal/debug"
-	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -55,7 +55,7 @@ type Node struct {
 	serviceFuncs []ServiceConstructor     // Service constructors (in dependency order)
 	services     map[reflect.Type]Service // Currently running services
 
-	grpcServer *api.Server
+	grpcServer *grpc.Server
 
 	rpcAPIs       []rpc.API   // List of APIs currently provided by the node
 	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
@@ -119,7 +119,7 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
-		grpcServer:        api.NewSerever(conf.DataDir, conf.HTTPModules, &conf.GRpc),
+		grpcServer:        grpc.NewSerever(conf.DataDir, conf.HTTPModules, &conf.GRpc),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
@@ -619,8 +619,8 @@ func (n *Node) ResolvePath(x string) string {
 }
 
 // TODO: @sangh add builtin apis
-func (n *Node) gapis() []api.GApi {
-	return []api.GApi{}
+func (n *Node) gapis() []grpc.GApi {
+	return []grpc.GApi{}
 }
 
 // apis returns the collection of RPC descriptors this node offers.

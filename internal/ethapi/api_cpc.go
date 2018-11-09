@@ -2,10 +2,10 @@ package ethapi
 
 import (
 	"bitbucket.org/cpchain/chain/accounts"
-	pb "bitbucket.org/cpchain/chain/api/v1/common"
-	"bitbucket.org/cpchain/chain/api/v1/cpc"
+	pb "bitbucket.org/cpchain/chain/api/grpc/v1/common"
+	"bitbucket.org/cpchain/chain/api/grpc/v1/cpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/core/rawdb"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
