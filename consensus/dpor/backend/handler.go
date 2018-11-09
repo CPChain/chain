@@ -398,7 +398,16 @@ func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (h *Handler) handleMsg(msg p2p.Msg, p *Signer) error {
+func (h *Handler) handleMsg(p *Signer) error {
+	msg, err := p.rw.ReadMsg()
+	if err != nil {
+		return err
+	}
+	if msg.Size > ProtocolMaxMsgSize {
+		return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+	}
+	defer msg.Discard()
+
 	if msg.Code == NewSignerMsg {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
@@ -454,14 +463,24 @@ func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address
 		}
 	}
 	// TODO: add defer to remove signer
+	defer h.removeSigner(address)
 
 	// main loop. handle incoming messages.
-	// for {
-	// 	if err := ch.handleMsg(p); err != nil {
-	// 		p.Log().Debug("Cpchain message handling failed", "err", err)
-	// 		return err
-	// 	}
-	// }
+	for {
+		if err := h.handleMsg(signer); err != nil {
+			p.Log().Debug("Cpchain message handling failed", "err", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (h *Handler) removeSigner(signer common.Address) error {
+
+	if _, ok := h.signers[signer]; ok {
+		delete(h.signers, signer)
+	}
+
 	return nil
 }
 
@@ -478,7 +497,7 @@ func (h *Handler) Protocol() p2p.Protocol {
 				return nil
 			}
 
-			cb := h.ownAddress
+			cb := h.Signer()
 			validator := h.validateSignerFn
 
 			ok, address, err := Handshake(p, rw, cb, validator)
@@ -607,6 +626,7 @@ func (h *Handler) SetFuncs(
 	return nil
 }
 
+// Signer returns handler.signer
 func (h *Handler) Signer() common.Address {
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -614,6 +634,7 @@ func (h *Handler) Signer() common.Address {
 	return h.ownAddress
 }
 
+// SetSigner sets signer of handler
 func (h *Handler) SetSigner(signer common.Address) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
