@@ -1,0 +1,11 @@
+version: '3'
+services:
+  doc:
+    build: .
+    image: cpchain:docs
+    container_name: sphinx-docs
+    user: cpchain
+    volumes:
+      - ..:/docs
+    ports:
+     - "9528:9528"
