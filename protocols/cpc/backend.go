@@ -145,7 +145,6 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		chainConfig:    chainConfig,
 		eventMux:       ctx.EventMux,
 		accountManager: ctx.AccountManager,
-		engine:         CreateConsensusEngine(ctx, chainConfig, chainDb),
 		shutdownChan:   make(chan bool),
 		networkID:      config.NetworkId,
 		gasPrice:       config.GasPrice,
@@ -154,6 +153,8 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		bloomIndexer:   NewBloomIndexer(chainDb, configs.BloomBitsBlocks),
 		remoteDB:       remoteDB,
 	}
+
+	eth.engine = eth.CreateConsensusEngine(ctx, chainConfig, chainDb)
 
 	log.Info("Initialising Cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
 
@@ -245,12 +246,23 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Data
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
-func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db ethdb.Database) consensus.Engine {
+func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db ethdb.Database) consensus.Engine {
 
+	eb, err := s.Etherbase()
+	if err != nil {
+		return nil
+	}
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. Liu Qian
-		return dpor.New(chainConfig.Dpor, db)
+		dpor := dpor.New(chainConfig.Dpor, db)
+		wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
+		if wallet == nil || err != nil {
+			log.Error("Etherbase account unavailable locally", "err", err)
+			return nil
+		}
+		dpor.Authorize(eb, wallet.SignHash)
+		return dpor
 	}
 	return nil
 }
@@ -377,14 +389,17 @@ func (s *CpchainService) StartMining(local bool, contractCaller *backend.Contrac
 		return fmt.Errorf("etherbase missing: %v", err)
 	}
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
-		wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
-		if wallet == nil || err != nil {
-			log.Error("Etherbase account unavailable locally", "err", err)
-			return fmt.Errorf("signer missing: %v", err)
-		}
-		dpor.Authorize(eb, wallet.SignHash)
-		go dpor.StartMining(s.blockchain, contractCaller, s.server, s.protocolManager.BroadcastBlock)
 
+		if dpor.Signer() != eb {
+			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
+			if wallet == nil || err != nil {
+				log.Error("Etherbase account unavailable locally", "err", err)
+				return nil
+			}
+			dpor.Authorize(eb, wallet.SignHash)
+		}
+
+		go dpor.StartMining(s.blockchain, contractCaller, s.server, s.protocolManager.BroadcastBlock)
 	}
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection
@@ -394,8 +409,6 @@ func (s *CpchainService) StartMining(local bool, contractCaller *backend.Contrac
 		atomic.StoreUint32(&s.protocolManager.acceptTxs, 1)
 	}
 	go s.miner.Start(eb)
-
-	// go s.AddCommittee()
 
 	return nil
 }
