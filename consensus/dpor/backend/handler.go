@@ -77,14 +77,14 @@ type Handler struct {
 }
 
 // NewHandler creates a new Handler
-func NewHandler(config *configs.DporConfig, etherbase common.Address) (*Handler, error) {
+func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 	h := &Handler{
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
 		signers:         make(map[common.Address]*Signer),
 		dialed:          false,
 	}
-	return h, nil
+	return h
 }
 
 // IsAvailable returns if handler is available
@@ -605,4 +605,20 @@ func (h *Handler) SetFuncs(
 	h.getEmptyBlockFn = getEmptyBlockFn
 
 	return nil
+}
+
+func (h *Handler) Signer() common.Address {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	return h.ownAddress
+}
+
+func (h *Handler) SetSigner(signer common.Address) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	if h.ownAddress != signer {
+		h.ownAddress = signer
+	}
 }

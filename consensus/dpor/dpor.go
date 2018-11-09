@@ -85,6 +85,7 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	return &Dpor{
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
+		handler:      backend.NewHandler(&conf, common.Address{}),
 		db:           db,
 		recents:      recents,
 		signatures:   signatures,

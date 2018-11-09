@@ -204,6 +204,12 @@ func (d *Dpor) Authorize(signer common.Address, signFn SignerFn) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
+	if d.handler != nil {
+		if d.handler.Signer() != signer {
+			d.handler.SetSigner(signer)
+		}
+	}
+
 	d.signer = signer
 	d.signFn = signFn
 }
