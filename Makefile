@@ -7,10 +7,14 @@
 .PHONY: cpchain-linux-arm cpchain-linux-arm-5 cpchain-linux-arm-6 cpchain-linux-arm-7 cpchain-linux-arm64
 .PHONY: cpchain-darwin cpchain-darwin-386 cpchain-darwin-amd64
 .PHONY: cpchain-windows cpchain-windows-386 cpchain-windows-amd64
-.PHONY: dev-init
+.PHONY: dev-init 
+.PHONY: docs docs-serve
+
+SHELL := $(shell which bash)
 
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
+
 
 all: cpchain bootnode abigen
 
@@ -164,3 +168,10 @@ dev-test:
 dev-init:
 	@cp  build/pre-commit-hook  .git/hooks/pre-commit
 	@echo "move pre-commit-hook to .git/hooks/pre-commit"
+
+
+docs:
+	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --rm docs sphinx-build -b html ./ _build
+
+docs-serve:
+	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --service-ports --rm serve python3 docker/app.py

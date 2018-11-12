@@ -1,11 +1,18 @@
 version: '3'
 services:
-  doc:
+  docs:
     build: .
     image: cpchain:docs
     container_name: sphinx-docs
-    user: cpchain
+    user: "${UID}:${GID}"
+    volumes:
+         - ..:/docs
+  serve:
+    build: .
+    image: cpchain:docs
+    container_name: docs-serve
+    user: "${UID}:${GID}"
     volumes:
       - ..:/docs
     ports:
-     - "9528:9528"
+      - "9528:9528"
