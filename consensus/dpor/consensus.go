@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/cpchain/chain/api"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -204,14 +205,15 @@ func (d *Dpor) Authorize(signer common.Address, signFn SignerFn) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	if d.handler != nil {
-		if d.handler.Signer() != signer {
-			d.handler.SetSigner(signer)
-		}
-	}
-
 	d.signer = signer
 	d.signFn = signFn
+
+	if d.handler == nil {
+		d.handler = backend.NewHandler(d.config, d.Signer())
+	}
+	if d.handler.Signer() != signer {
+		d.handler.SetSigner(signer)
+	}
 }
 
 // Seal implements consensus.Engine, attempting to create a sealed block using
