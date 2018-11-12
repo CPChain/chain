@@ -416,6 +416,7 @@ func (h *Handler) handleMsg(p *Signer) error {
 	}
 	defer msg.Discard()
 
+	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	log.Debug("handling msg", "msg", msg.Code)
 
 	if msg.Code == NewSignerMsg {
@@ -507,10 +508,12 @@ func (h *Handler) Protocol() p2p.Protocol {
 				log.Debug("not available now")
 				return nil
 			}
+			log.Debug("available now!!!!!!!!")
 
 			cb := h.Signer()
 			validator := h.validateSignerFn
 
+			log.Debug("handshaking...")
 			ok, address, err := Handshake(p, rw, cb, validator)
 			if !ok || err != nil {
 				return err
@@ -555,6 +558,8 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 	for {
 		select {
 		case pendingBlock := <-h.pendingBlockCh:
+
+			log.Debug("generated new pending block, broadcasting")
 
 			// broadcast mined pending block to remote signers
 			h.BroadcastGeneratedBlock(pendingBlock)

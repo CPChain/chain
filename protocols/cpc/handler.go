@@ -287,8 +287,6 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		td      = pm.blockchain.GetTd(hash, number)
 	)
 
-	log.Debug("my etherbase", "address", pm.etherbase)
-
 	// Do normal handshake
 	err := p.Handshake(pm.networkID, td, hash, genesis.Hash())
 
@@ -296,6 +294,8 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		p.Log().Debug("Cpchain handshake failed", "err", err)
 		return err
 	}
+
+	// log.Debug("my etherbase", "address", pm.etherbase)
 
 	// // Do committee handshake
 	// isSigner, err := p.CommitteeHandshake(pm.etherbase, pm.SignerValidator)
