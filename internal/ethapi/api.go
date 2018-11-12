@@ -27,6 +27,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -484,6 +485,35 @@ type PublicBlockChainAPI struct {
 // NewPublicBlockChainAPI creates a new Ethereum blockchain API.
 func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
+}
+
+// Query RNodes.
+func (s *PublicBlockChainAPI) GetRNodes() []common.Address {
+	// TODO fill biz logic later
+	return []common.Address{common.HexToAddress("01"), common.HexToAddress("02")}
+}
+
+func (s *PublicBlockChainAPI) GetCurrentRound() uint64 {
+	// TODO fill biz logic later
+	return 7
+}
+
+func (s *PublicBlockChainAPI) GetCurrentEpoch() uint64 {
+	// TODO fill biz logic later
+	return 10
+}
+
+func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committee {
+	// TODO fill biz logic later
+	return []cpclient.Committee{
+		{Epoch: 1, Round: 1, Producer: common.HexToAddress("01"), PublicKey: "012345", Block: 1111},
+		{Epoch: 1, Round: 2, Producer: common.HexToAddress("02"), PublicKey: "012345", Block: 1112},
+		{Epoch: 1, Round: 3, Producer: common.HexToAddress("03"), PublicKey: "012345", Block: 1113},
+		{Epoch: 1, Round: 4, Producer: common.HexToAddress("04"), PublicKey: "012345", Block: 1114},
+		{Epoch: 1, Round: 5, Producer: common.HexToAddress("05"), PublicKey: "012345", Block: 1115},
+		{Epoch: 1, Round: 6, Producer: common.HexToAddress("06"), PublicKey: "012345", Block: 1116},
+		{Epoch: 1, Round: 7, Producer: common.HexToAddress("07"), PublicKey: "012345", Block: 1117},
+	}
 }
 
 // BlockNumber returns the block number of the chain head.
