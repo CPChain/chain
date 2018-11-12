@@ -201,9 +201,9 @@ func (pm *ProtocolManager) removePeer(id string) {
 	// Unregister the peer from the downloader and Cpchain peer set
 	pm.downloader.UnregisterPeer(id)
 
-	if err := pm.peers.UnregisterSigner(id); err != nil {
-		log.Error("Signer Peer removal failed", "peer", id, "err", err)
-	}
+	// if err := pm.peers.UnregisterSigner(id); err != nil {
+	// 	log.Error("Signer Peer removal failed", "peer", id, "err", err)
+	// }
 	if err := pm.peers.Unregister(id); err != nil {
 		log.Error("Peer removal failed", "peer", id, "err", err)
 	}
@@ -297,20 +297,20 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		return err
 	}
 
-	// Do committee handshake
-	isSigner, err := p.CommitteeHandshake(pm.etherbase, pm.SignerValidator)
+	// // Do committee handshake
+	// isSigner, err := p.CommitteeHandshake(pm.etherbase, pm.SignerValidator)
 
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
 		rw.Init(p.version)
 	}
 
-	if isSigner {
-		// register peer as signer.
-		err := pm.peers.RegisterSigner(p)
-		if err != nil && err != errAlreadyRegistered {
-			return err
-		}
-	}
+	// if isSigner {
+	// 	// register peer as signer.
+	// 	err := pm.peers.RegisterSigner(p)
+	// 	if err != nil && err != errAlreadyRegistered {
+	// 		return err
+	// 	}
+	// }
 
 	// Register the peer locally
 	if err := pm.peers.Register(p); err != nil {

@@ -12,29 +12,29 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// BroadcastGeneratedBlock broadcasts generated block to committee
-func (pm *ProtocolManager) BroadcastGeneratedBlock(block *types.Block) {
-	committee := pm.peers.committee
-	for _, peer := range committee {
-		peer.AsyncSendNewPendingBlock(block)
-	}
-}
+// // BroadcastGeneratedBlock broadcasts generated block to committee
+// func (pm *ProtocolManager) BroadcastGeneratedBlock(block *types.Block) {
+// 	committee := pm.peers.committee
+// 	for _, peer := range committee {
+// 		peer.AsyncSendNewPendingBlock(block)
+// 	}
+// }
 
-// BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
-func (pm *ProtocolManager) BroadcastPrepareSignedHeader(header *types.Header) {
-	committee := pm.peers.committee
-	for _, peer := range committee {
-		peer.AsyncSendPrepareSignedHeader(header)
-	}
-}
+// // BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
+// func (pm *ProtocolManager) BroadcastPrepareSignedHeader(header *types.Header) {
+// 	committee := pm.peers.committee
+// 	for _, peer := range committee {
+// 		peer.AsyncSendPrepareSignedHeader(header)
+// 	}
+// }
 
-// BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
-func (pm *ProtocolManager) BroadcastCommitSignedHeader(header *types.Header) {
-	committee := pm.peers.committee
-	for _, peer := range committee {
-		peer.AsyncSendCommitSignedHeader(header)
-	}
-}
+// // BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
+// func (pm *ProtocolManager) BroadcastCommitSignedHeader(header *types.Header) {
+// 	committee := pm.peers.committee
+// 	for _, peer := range committee {
+// 		peer.AsyncSendCommitSignedHeader(header)
+// 	}
+// }
 
 // BroadcastBlock will either propagate a block to a subset of it's peers, or
 // will only announce it's availability (depending what's requested).
@@ -105,7 +105,7 @@ func (pm *ProtocolManager) minedBroadcastLoop() {
 				// broadcast mined block with dpor handler
 				pm.engine.(*dpor.Dpor).HandleMinedBlock(ev.Block)
 			} else {
-				pm.BroadcastGeneratedBlock(ev.Block)
+				pm.BroadcastBlock(ev.Block, true)
 			}
 
 		}

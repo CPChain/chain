@@ -23,7 +23,6 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -56,11 +55,11 @@ const (
 	// above some healthy uncle limit, so use that.
 	maxQueuedAnns = 4
 
-	maxKnownPendingBlocks = 21
+	// maxKnownPendingBlocks = 21
 
-	maxQueuedPendingBlocks      = 8
-	maxQueuedPendingBlockHashes = 8
-	maxQueuedSigs               = 8
+	// maxQueuedPendingBlocks      = 8
+	// maxQueuedPendingBlockHashes = 8
+	// maxQueuedSigs               = 8
 
 	handshakeTimeout = 5 * time.Second
 )
@@ -95,15 +94,15 @@ type peer struct {
 	knownTxs    *set.Set // Set of transaction hashes known to be known by this peer
 	knownBlocks *set.Set // Set of block hashes known to be known by this peer
 
-	knownPendingBlocks *set.Set // Set of waiting block hashes known to be known by this peer
+	// knownPendingBlocks *set.Set // Set of waiting block hashes known to be known by this peer
 
 	queuedTxs   chan []*types.Transaction // Queue of transactions to broadcast to the peer
 	queuedProps chan *propEvent           // Queue of blocks to broadcast to the peer
 	queuedAnns  chan *types.Block         // Queue of blocks to announce to the peer
 
-	queuedPendingBlocks chan *types.Block  // Queue of blocks to broadcast to the signer
-	queuedPrepareSigs   chan *types.Header // Queue of signatures to broadcast to the signer
-	queuedCommitSigs    chan *types.Header // Queue of signatures to broadcast to the signer
+	// queuedPendingBlocks chan *types.Block  // Queue of blocks to broadcast to the signer
+	// queuedPrepareSigs   chan *types.Header // Queue of signatures to broadcast to the signer
+	// queuedCommitSigs    chan *types.Header // Queue of signatures to broadcast to the signer
 
 	term chan struct{} // Termination channel to stop the broadcaster
 }
@@ -117,15 +116,15 @@ func newPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) *peer {
 		knownTxs:    set.New(),
 		knownBlocks: set.New(),
 
-		knownPendingBlocks: set.New(),
+		// knownPendingBlocks: set.New(),
 
 		queuedTxs:   make(chan []*types.Transaction, maxQueuedTxs),
 		queuedProps: make(chan *propEvent, maxQueuedProps),
 		queuedAnns:  make(chan *types.Block, maxQueuedAnns),
 
-		queuedPendingBlocks: make(chan *types.Block, maxQueuedPendingBlocks),
-		queuedPrepareSigs:   make(chan *types.Header, maxQueuedSigs),
-		queuedCommitSigs:    make(chan *types.Header, maxQueuedSigs),
+		// queuedPendingBlocks: make(chan *types.Block, maxQueuedPendingBlocks),
+		// queuedPrepareSigs:   make(chan *types.Header, maxQueuedSigs),
+		// queuedCommitSigs:    make(chan *types.Header, maxQueuedSigs),
 
 		term: make(chan struct{}),
 	}
@@ -164,82 +163,82 @@ func (p *peer) broadcast() {
 // signerBroadcast is a write loop that multiplexes block propagations, announcements
 // and transaction broadcasts into the remote peer. The goal is to have an async
 // writer that does not lock up node internals.
-func (p *peer) signerBroadcast() {
-	for {
-		select {
-		// blocks waiting for signatures
-		case block := <-p.queuedPendingBlocks:
-			if err := p.SendNewPendingBlock(block); err != nil {
-				return
-			}
-			p.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
+// func (p *peer) signerBroadcast() {
+// 	for {
+// 		select {
+// 		// blocks waiting for signatures
+// 		case block := <-p.queuedPendingBlocks:
+// 			if err := p.SendNewPendingBlock(block); err != nil {
+// 				return
+// 			}
+// 			p.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
 
-		case header := <-p.queuedPrepareSigs:
-			if err := p.SendPrepareSignedHeader(header); err != nil {
-				return
-			}
-			p.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
+// 		case header := <-p.queuedPrepareSigs:
+// 			if err := p.SendPrepareSignedHeader(header); err != nil {
+// 				return
+// 			}
+// 			p.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
 
-		case header := <-p.queuedCommitSigs:
-			if err := p.SendCommitSignedHeader(header); err != nil {
-				return
-			}
-			p.Log().Trace("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
+// 		case header := <-p.queuedCommitSigs:
+// 			if err := p.SendCommitSignedHeader(header); err != nil {
+// 				return
+// 			}
+// 			p.Log().Trace("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
 
-		case <-p.term:
-			return
-		}
-	}
-}
+// 		case <-p.term:
+// 			return
+// 		}
+// 	}
+// }
 
 func (p *peer) SendNewSignerMsg(eb common.Address) error {
 	return p2p.Send(p.rw, NewSignerMsg, eb)
 }
 
-// SendNewPendingBlock propagates an entire block to a remote peer.
-func (p *peer) SendNewPendingBlock(block *types.Block) error {
-	p.knownPendingBlocks.Add(block.Hash())
-	return p2p.Send(p.rw, PrepreparePendingBlockMsg, []interface{}{block, big.NewInt(0)})
-}
+// // SendNewPendingBlock propagates an entire block to a remote peer.
+// func (p *peer) SendNewPendingBlock(block *types.Block) error {
+// 	p.knownPendingBlocks.Add(block.Hash())
+// 	return p2p.Send(p.rw, PrepreparePendingBlockMsg, []interface{}{block, big.NewInt(0)})
+// }
 
-// AsyncSendNewPendingBlock queues an entire block for propagation to a remote peer. If
-// the peer's broadcast queue is full, the event is silently dropped.
-func (p *peer) AsyncSendNewPendingBlock(block *types.Block) {
-	select {
-	case p.queuedPendingBlocks <- block:
-		p.knownPendingBlocks.Add(block.Hash())
-	default:
-		p.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
-	}
-}
+// // AsyncSendNewPendingBlock queues an entire block for propagation to a remote peer. If
+// // the peer's broadcast queue is full, the event is silently dropped.
+// func (p *peer) AsyncSendNewPendingBlock(block *types.Block) {
+// 	select {
+// 	case p.queuedPendingBlocks <- block:
+// 		p.knownPendingBlocks.Add(block.Hash())
+// 	default:
+// 		p.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+// 	}
+// }
 
-// SendPrepareSignedHeader sends new signed block header.
-func (p *peer) SendPrepareSignedHeader(header *types.Header) error {
-	err := p2p.Send(p.rw, PrepareSignedHeaderMsg, header)
-	return err
-}
+// // SendPrepareSignedHeader sends new signed block header.
+// func (p *peer) SendPrepareSignedHeader(header *types.Header) error {
+// 	err := p2p.Send(p.rw, PrepareSignedHeaderMsg, header)
+// 	return err
+// }
 
-func (p *peer) AsyncSendPrepareSignedHeader(header *types.Header) {
-	select {
-	case p.queuedPrepareSigs <- header:
-	default:
-		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
-	}
-}
+// func (p *peer) AsyncSendPrepareSignedHeader(header *types.Header) {
+// 	select {
+// 	case p.queuedPrepareSigs <- header:
+// 	default:
+// 		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+// 	}
+// }
 
-// SendCommitSignedHeader sends new signed block header.
-func (p *peer) SendCommitSignedHeader(header *types.Header) error {
-	err := p2p.Send(p.rw, CommitSignedHeaderMsg, header)
-	return err
-}
+// // SendCommitSignedHeader sends new signed block header.
+// func (p *peer) SendCommitSignedHeader(header *types.Header) error {
+// 	err := p2p.Send(p.rw, CommitSignedHeaderMsg, header)
+// 	return err
+// }
 
-func (p *peer) AsyncSendCommitSignedHeader(header *types.Header) {
-	select {
-	case p.queuedCommitSigs <- header:
-	default:
-		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
-	}
-}
+// func (p *peer) AsyncSendCommitSignedHeader(header *types.Header) {
+// 	select {
+// 	case p.queuedCommitSigs <- header:
+// 	default:
+// 		p.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+// 	}
+// }
 
 // close signals the broadcast goroutine to terminate.
 func (p *peer) close() {
@@ -286,15 +285,15 @@ func (p *peer) MarkBlock(hash common.Hash) {
 	p.knownBlocks.Add(hash)
 }
 
-// MarkPendingBlock marks a block as known for the signer, ensuring that the block will
-// never be propagated to this particular peer.
-func (p *peer) MarkPendingBlock(hash common.Hash) {
-	// If we reached the memory allowance, drop a previously known block hash
-	for p.knownPendingBlocks.Size() >= maxKnownPendingBlocks {
-		p.knownPendingBlocks.Pop()
-	}
-	p.knownPendingBlocks.Add(hash)
-}
+// // MarkPendingBlock marks a block as known for the signer, ensuring that the block will
+// // never be propagated to this particular peer.
+// func (p *peer) MarkPendingBlock(hash common.Hash) {
+// 	// If we reached the memory allowance, drop a previously known block hash
+// 	for p.knownPendingBlocks.Size() >= maxKnownPendingBlocks {
+// 		p.knownPendingBlocks.Pop()
+// 	}
+// 	p.knownPendingBlocks.Add(hash)
+// }
 
 // MarkTransaction marks a transaction as known for the peer, ensuring that it
 // will never be propagated to this particular peer.
@@ -502,65 +501,65 @@ func (p *peer) readStatus(network uint64, status *statusData, genesis common.Has
 	return nil
 }
 
-type ValidateSigner func(signer common.Address) (bool, error)
+// type ValidateSigner func(signer common.Address) (bool, error)
 
-// Handshake executes the eth protocol handshake, negotiating version number,
-// network IDs, difficulties, head and genesis blocks.
-func (p *peer) CommitteeHandshake(etherbase common.Address, signerValidator ValidateSigner) (isSigner bool, err error) {
-	// Send out own handshake in a new thread
-	errc := make(chan error, 2)
-	var signerStatus signerStatusData // safe to read after two values have been received from errc
+// // Handshake executes the eth protocol handshake, negotiating version number,
+// // network IDs, difficulties, head and genesis blocks.
+// func (p *peer) CommitteeHandshake(etherbase common.Address, signerValidator ValidateSigner) (isSigner bool, err error) {
+// 	// Send out own handshake in a new thread
+// 	errc := make(chan error, 2)
+// 	var signerStatus signerStatusData // safe to read after two values have been received from errc
 
-	log.Debug("my etherbase", "address", etherbase)
+// 	log.Debug("my etherbase", "address", etherbase)
 
-	go func() {
-		errc <- p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
-			ProtocolVersion: uint32(p.version),
-			Address:         etherbase,
-		})
-	}()
-	go func() {
-		isSigner, err = p.readSignerStatus(&signerStatus, signerValidator)
-		errc <- err
-	}()
-	timeout := time.NewTimer(handshakeTimeout)
-	defer timeout.Stop()
-	for i := 0; i < 2; i++ {
-		select {
-		case err := <-errc:
-			if err != nil {
-				return false, err
-			}
-		case <-timeout.C:
-			return false, p2p.DiscReadTimeout
-		}
-	}
-	return isSigner, nil
-}
+// 	go func() {
+// 		errc <- p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
+// 			ProtocolVersion: uint32(p.version),
+// 			Address:         etherbase,
+// 		})
+// 	}()
+// 	go func() {
+// 		isSigner, err = p.readSignerStatus(&signerStatus, signerValidator)
+// 		errc <- err
+// 	}()
+// 	timeout := time.NewTimer(handshakeTimeout)
+// 	defer timeout.Stop()
+// 	for i := 0; i < 2; i++ {
+// 		select {
+// 		case err := <-errc:
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 		case <-timeout.C:
+// 			return false, p2p.DiscReadTimeout
+// 		}
+// 	}
+// 	return isSigner, nil
+// }
 
-func (p *peer) readSignerStatus(signerStatus *signerStatusData, signerValidator ValidateSigner) (isSigner bool, err error) {
-	msg, err := p.rw.ReadMsg()
-	if err != nil {
-		return false, err
-	}
-	if msg.Code != NewSignerMsg {
-		return false, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
-	}
-	if msg.Size > ProtocolMaxMsgSize {
-		return false, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-	}
-	// Decode the handshake and make sure everything matches
-	if err := msg.Decode(&signerStatus); err != nil {
-		return false, errResp(ErrDecode, "msg %v: %v", msg, err)
-	}
-	if int(signerStatus.ProtocolVersion) != p.version {
-		return false, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
-	}
-	isSigner, err = signerValidator(signerStatus.Address)
-	log.Debug("cpchain committee network handshaking...")
-	log.Debug("peer is signer", "peer", signerStatus.Address, isSigner)
-	return isSigner, err
-}
+// func (p *peer) readSignerStatus(signerStatus *signerStatusData, signerValidator ValidateSigner) (isSigner bool, err error) {
+// 	msg, err := p.rw.ReadMsg()
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if msg.Code != NewSignerMsg {
+// 		return false, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
+// 	}
+// 	if msg.Size > ProtocolMaxMsgSize {
+// 		return false, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+// 	}
+// 	// Decode the handshake and make sure everything matches
+// 	if err := msg.Decode(&signerStatus); err != nil {
+// 		return false, errResp(ErrDecode, "msg %v: %v", msg, err)
+// 	}
+// 	if int(signerStatus.ProtocolVersion) != p.version {
+// 		return false, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, p.version)
+// 	}
+// 	isSigner, err = signerValidator(signerStatus.Address)
+// 	log.Debug("cpchain committee network handshaking...")
+// 	log.Debug("peer is signer", "peer", signerStatus.Address, isSigner)
+// 	return isSigner, err
+// }
 
 // String implements fmt.Stringer.
 func (p *peer) String() string {
@@ -572,17 +571,17 @@ func (p *peer) String() string {
 // peerSet represents the collection of active peers currently participating in
 // the Cpchain sub-protocol.
 type peerSet struct {
-	peers     map[string]*peer
-	committee map[string]*peer
-	lock      sync.RWMutex
-	closed    bool
+	peers map[string]*peer
+	// committee map[string]*peer
+	lock   sync.RWMutex
+	closed bool
 }
 
 // newPeerSet creates a new peer set to track the active participants.
 func newPeerSet() *peerSet {
 	return &peerSet{
-		peers:     make(map[string]*peer),
-		committee: make(map[string]*peer),
+		peers: make(map[string]*peer),
+		// committee: make(map[string]*peer),
 	}
 }
 
@@ -605,40 +604,40 @@ func (ps *peerSet) Register(p *peer) error {
 	return nil
 }
 
-// RegisterSigner injects a new peer into the working committee set, or returns an error if the
-// signer is already known. If a new signer it registered, its signerBroadcast loop is also
-// started.
-func (ps *peerSet) RegisterSigner(p *peer) error {
-	ps.lock.Lock()
-	defer ps.lock.Unlock()
+// // RegisterSigner injects a new peer into the working committee set, or returns an error if the
+// // signer is already known. If a new signer it registered, its signerBroadcast loop is also
+// // started.
+// func (ps *peerSet) RegisterSigner(p *peer) error {
+// 	ps.lock.Lock()
+// 	defer ps.lock.Unlock()
 
-	log.Info("register peer", "peer", p.id)
-	if ps.closed {
-		return errClosed
-	}
-	if _, ok := ps.committee[p.id]; ok {
-		return errAlreadyRegistered
-	}
-	ps.committee[p.id] = p
-	go p.signerBroadcast()
+// 	log.Info("register peer", "peer", p.id)
+// 	if ps.closed {
+// 		return errClosed
+// 	}
+// 	if _, ok := ps.committee[p.id]; ok {
+// 		return errAlreadyRegistered
+// 	}
+// 	ps.committee[p.id] = p
+// 	go p.signerBroadcast()
 
-	return nil
-}
+// 	return nil
+// }
 
-// UnregisterSigner removes a remote peer from the active committee set, disabling any further
-// actions to/from that particular entity.
-func (ps *peerSet) UnregisterSigner(id string) error {
-	ps.lock.Lock()
-	defer ps.lock.Unlock()
+// // UnregisterSigner removes a remote peer from the active committee set, disabling any further
+// // actions to/from that particular entity.
+// func (ps *peerSet) UnregisterSigner(id string) error {
+// 	ps.lock.Lock()
+// 	defer ps.lock.Unlock()
 
-	_, ok := ps.committee[id]
-	if !ok {
-		return errNotRegistered
-	}
-	delete(ps.committee, id)
+// 	_, ok := ps.committee[id]
+// 	if !ok {
+// 		return errNotRegistered
+// 	}
+// 	delete(ps.committee, id)
 
-	return nil
-}
+// 	return nil
+// }
 
 // Unregister removes a remote peer from the active set, disabling any further
 // actions to/from that particular entity.
@@ -664,12 +663,12 @@ func (ps *peerSet) Peer(id string) *peer {
 	return ps.peers[id]
 }
 
-func (ps *peerSet) Signer(id string) *peer {
-	ps.lock.RLock()
-	defer ps.lock.RUnlock()
+// func (ps *peerSet) Signer(id string) *peer {
+// 	ps.lock.RLock()
+// 	defer ps.lock.RUnlock()
 
-	return ps.committee[id]
-}
+// 	return ps.committee[id]
+// }
 
 // Len returns if the current number of peers in the set.
 func (ps *peerSet) Len() int {
@@ -694,32 +693,32 @@ func (ps *peerSet) PeersWithoutBlock(hash common.Hash) []*peer {
 	return list
 }
 
-// CommitteeWithoutWaitBlock retrieves a list of peers that do not have a given block in
-// their set of known hashes.
-func (ps *peerSet) CommitteeWithoutBlock(hash common.Hash) []*peer {
-	ps.lock.RLock()
-	defer ps.lock.RUnlock()
+// // CommitteeWithoutWaitBlock retrieves a list of peers that do not have a given block in
+// // their set of known hashes.
+// func (ps *peerSet) CommitteeWithoutBlock(hash common.Hash) []*peer {
+// 	ps.lock.RLock()
+// 	defer ps.lock.RUnlock()
 
-	list := make([]*peer, 0, len(ps.committee))
-	for _, p := range ps.committee {
-		if !p.knownPendingBlocks.Has(hash) {
-			list = append(list, p)
-		}
-	}
-	return list
-}
+// 	list := make([]*peer, 0, len(ps.committee))
+// 	for _, p := range ps.committee {
+// 		if !p.knownPendingBlocks.Has(hash) {
+// 			list = append(list, p)
+// 		}
+// 	}
+// 	return list
+// }
 
-// AllSigners retrieves a list of signers.
-func (ps *peerSet) AllSigners() []*peer {
-	ps.lock.RLock()
-	defer ps.lock.RUnlock()
+// // AllSigners retrieves a list of signers.
+// func (ps *peerSet) AllSigners() []*peer {
+// 	ps.lock.RLock()
+// 	defer ps.lock.RUnlock()
 
-	list := make([]*peer, 0, len(ps.committee))
-	for _, p := range ps.committee {
-		list = append(list, p)
-	}
-	return list
-}
+// 	list := make([]*peer, 0, len(ps.committee))
+// 	for _, p := range ps.committee {
+// 		list = append(list, p)
+// 	}
+// 	return list
+// }
 
 // AllPeers retrieves a list of peers.
 func (ps *peerSet) AllPeers() []*peer {
