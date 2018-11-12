@@ -166,7 +166,7 @@ dev-test:
 
 
 dev-init:
-	@cp  build/pre-commit-hook  .git/hooks/pre-commit
+	@cp  dev/git-pre-commit-hook  .git/hooks/pre-commit
 	@echo "move pre-commit-hook to .git/hooks/pre-commit"
 
 docs:
