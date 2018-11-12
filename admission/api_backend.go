@@ -12,7 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/contracts/dpor"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -207,7 +207,7 @@ func (ac *AdmissionControl) sendCampaignProofInfo() {
 	}
 
 	auth.Value = big.NewInt(ac.config.Deposit)
-	instance, err := dpor.NewCampaign(auth, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
+	instance, err := dpor.NewCampaignWrapper(auth, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
 	if err != nil {
 		ac.err = err
 		return

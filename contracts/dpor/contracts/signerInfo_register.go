@@ -27,21 +27,21 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-//go:generate abigen --sol contract/signerRegister.sol --pkg contract --out contract/signerRegister.go
+////go:generate abigen --sol contract/signerRegister.sol --pkg contract --out contract/signerRegister.go
 
 type SignerConnectionRegister struct {
-	*contract.SignerConnectionRegisterSession
+	*signer_register.SignerConnectionRegisterSession
 	contractBackend bind.ContractBackend
 }
 
 func NewSignerConnectionRegister(transactOpts *bind.TransactOpts, contractAddr common.Address, contractBackend Backend) (*SignerConnectionRegister, error) {
-	c, err := contract.NewSignerConnectionRegister(contractAddr, contractBackend)
+	c, err := signer_register.NewSignerConnectionRegister(contractAddr, contractBackend)
 	if err != nil {
 		return nil, err
 	}
 
 	return &SignerConnectionRegister{
-		&contract.SignerConnectionRegisterSession{
+		&signer_register.SignerConnectionRegisterSession{
 			Contract:     c,
 			TransactOpts: *transactOpts,
 		},
@@ -50,7 +50,7 @@ func NewSignerConnectionRegister(transactOpts *bind.TransactOpts, contractAddr c
 }
 
 func DeploySignerConnectionRegister(transactOpts *bind.TransactOpts, contractBackend Backend) (common.Address, *types.Transaction, *SignerConnectionRegister, error) {
-	contractAddr, tx, _, err := contract.DeploySignerConnectionRegister(transactOpts, contractBackend)
+	contractAddr, tx, _, err := signer_register.DeploySignerConnectionRegister(transactOpts, contractBackend)
 	if err != nil {
 		return contractAddr, tx, nil, err
 	}

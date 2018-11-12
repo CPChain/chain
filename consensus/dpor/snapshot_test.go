@@ -293,7 +293,7 @@ func TestSnapshot_updateRpts(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    rpt.RPTs
+		want    rpt.RptList
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -330,7 +330,7 @@ func TestSnapshot_updateView(t *testing.T) {
 		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
-		rpts rpt.RPTs
+		rpts rpt.RptList
 		seed int64
 		// viewLength int
 	}

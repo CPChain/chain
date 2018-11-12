@@ -1,4 +1,4 @@
-package campaignVerify
+package admission
 
 import (
 	"crypto/ecdsa"

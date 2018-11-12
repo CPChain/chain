@@ -13,6 +13,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/protocols/cpc"
@@ -74,6 +75,10 @@ func registerChainService(cfg *cpc.Config, n *node.Node) {
 		// 	ls, _ := les.NewLesServer(fullNode, cfg)
 		// 	fullNode.AddLesServer(ls)
 		// }
+		for addr, c := range fullNode.MakePrimitiveContracts(n) {
+			vm.RegisterPrimitiveContract(addr, c)
+		}
+
 		return fullNode, err
 	})
 	if err != nil {

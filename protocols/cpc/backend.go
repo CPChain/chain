@@ -35,6 +35,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -70,8 +71,9 @@ type RSAReader func() (*rsakey.RsaKey, error)
 
 // CpchainService implements the CpchainService full node service.
 type CpchainService struct {
-	config      *Config
-	chainConfig *configs.ChainConfig
+	config       *Config
+	chainConfig  *configs.ChainConfig
+	RptEvaluator *primitives.RptEvaluator
 
 	// Channel for shutting down the service
 	shutdownChan chan bool // Channel for shutting down the Cpchain
@@ -482,4 +484,16 @@ func (s *CpchainService) Stop() error {
 	close(s.shutdownChan)
 
 	return nil
+}
+
+func (s *CpchainService) MakePrimitiveContracts(n *node.Node) map[common.Address]vm.PrimitiveContract {
+	contracts := make(map[common.Address]vm.PrimitiveContract)
+	// we start from 100 to reserve enough space for upstream primitive contracts.
+	contracts[common.BytesToAddress([]byte{100})] = &primitives.GetRank{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{101})] = &primitives.GetMaintenance{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{102})] = &primitives.GetProxyCount{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{103})] = &primitives.GetUploadReward{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{104})] = &primitives.GetTxVolume{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{105})] = &primitives.IsProxy{Backend: s.RptEvaluator}
+	return contracts
 }

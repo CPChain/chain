@@ -1,4 +1,4 @@
-package contract
+package campaign
 
 import (
 	"bytes"

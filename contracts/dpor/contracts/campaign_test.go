@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package dpor
+package dpor_test
 
 import (
 	"context"
@@ -25,6 +25,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
@@ -39,7 +40,7 @@ var (
 func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	deployTransactor.Value = amount
-	addr, _, _, err := contract.DeployCampaign(deployTransactor, backend)
+	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -53,7 +54,7 @@ func TestDeployCampaign(t *testing.T) {
 	checkError(t, "deploy contract: expected no error, got %v", err)
 
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := NewCampaign(transactOpts, contractAddr, contractBackend)
+	campaign, err := dpor.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = contractAddr
 	contractBackend.Commit()
@@ -106,7 +107,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := NewCampaign(transactOpts, contractAddr, contractBackend)
+	campaign, err := dpor.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = contractAddr
 	printBalance(contractBackend)
@@ -187,7 +188,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := NewCampaign(transactOpts, contractAddr, contractBackend)
+	campaign, err := dpor.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = contractAddr
 	printBalance(contractBackend)
@@ -256,7 +257,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	verifyCandidates(campaign, t, big.NewInt(2), 0)
 }
 
-func verifyCandidates(campaign *Campaign, t *testing.T, viewIdx *big.Int, candidateLengh int) {
+func verifyCandidates(campaign *dpor.CampaignWrapper, t *testing.T, viewIdx *big.Int, candidateLengh int) {
 	candidates, err := campaign.CandidatesOf(viewIdx)
 	checkError(t, "CandidatesOf error: %v", err)
 	fmt.Println("len(candidates):", len(candidates))

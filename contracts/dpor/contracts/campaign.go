@@ -16,13 +16,9 @@
 
 package dpor
 
-//go:generate abigen --sol contract/campaign.sol --pkg contract --out contract/campaign.go
-//need generate in dir:contracts/dpor
-
 import (
 	"context"
 	"fmt"
-
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -31,6 +27,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+//go:generate abigen --sol rpt/rpt.sol --pkg rpt --out rpt/rpt.go
+
+////go:generate abigen --sol contracts/campaign/campaign.sol --pkg contract --out contracts/campaign/campaign.go
+//need generate in dir:contracts/dpor
+
 // Backend wraps all methods required for campaign operation.
 type Backend interface {
 	bind.ContractBackend
@@ -38,19 +39,19 @@ type Backend interface {
 	BalanceAt(ctx context.Context, address common.Address, blockNum *big.Int) (*big.Int, error)
 }
 
-type Campaign struct {
-	*contract.CampaignSession
+type CampaignWrapper struct {
+	*campaign.CampaignSession
 	contractBackend bind.ContractBackend
 }
 
-func NewCampaign(transactOpts *bind.TransactOpts, contractAddr common.Address, contractBackend Backend) (*Campaign, error) {
-	c, err := contract.NewCampaign(contractAddr, contractBackend)
+func NewCampaignWrapper(transactOpts *bind.TransactOpts, contractAddr common.Address, contractBackend Backend) (*CampaignWrapper, error) {
+	c, err := campaign.NewCampaign(contractAddr, contractBackend)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Campaign{
-		&contract.CampaignSession{
+	return &CampaignWrapper{
+		&campaign.CampaignSession{
 			Contract:     c,
 			TransactOpts: *transactOpts,
 		},
@@ -58,12 +59,12 @@ func NewCampaign(transactOpts *bind.TransactOpts, contractAddr common.Address, c
 	}, nil
 }
 
-func DeployCampaign(transactOpts *bind.TransactOpts, contractBackend Backend) (common.Address, *Campaign, error) {
-	contractAddr, _, _, err := contract.DeployCampaign(transactOpts, contractBackend)
+func DeployCampaign(transactOpts *bind.TransactOpts, contractBackend Backend) (common.Address, *CampaignWrapper, error) {
+	contractAddr, _, _, err := campaign.DeployCampaign(transactOpts, contractBackend)
 	if err != nil {
 		return contractAddr, nil, err
 	}
-	campaign, err := NewCampaign(transactOpts, contractAddr, contractBackend)
+	campaign, err := NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
 	if err != nil {
 		return contractAddr, nil, err
 	}
@@ -71,11 +72,11 @@ func DeployCampaign(transactOpts *bind.TransactOpts, contractBackend Backend) (c
 	return contractAddr, campaign, err
 }
 
-func (self *Campaign) MaximumNoc() (*big.Int, error) {
+func (self *CampaignWrapper) MaximumNoc() (*big.Int, error) {
 	fmt.Println("MaximumNoc is called")
 	return self.Contract.MaximumNoc(nil)
 }
 
-func (self *Campaign) ClaimCampaign(numOfCampaign *big.Int, rpt *big.Int) (*types.Transaction, error) {
+func (self *CampaignWrapper) ClaimCampaign(numOfCampaign *big.Int, rpt *big.Int) (*types.Transaction, error) {
 	return self.Contract.ClaimCampaign(&self.TransactOpts, numOfCampaign, rpt)
 }

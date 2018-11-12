@@ -13,7 +13,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
+	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -78,14 +78,14 @@ func TestDeployRegister(t *testing.T) {
 	}
 
 	auth := bind.NewKeyedTransactor(privateKey)
-	//auth.Nonce = big.NewInt(int64(nonce)) // not necessary
+	// auth.Nonce = big.NewInt(int64(nonce)) // not necessary
 	auth.Value = big.NewInt(0)       // in wei
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
 
-	contractAddress, _, _, err := register.DeployRegister(auth, client)
+	contractAddress, _, _, err := pdash.DeployRegister(auth, client)
 
-	Fakeregister, err := register.NewRegister(contractAddress, client)
+	Fakeregister, err := pdash.NewRegister(contractAddress, client)
 	checkError(t, "NewRegister, got %v", err)
 
 	fakefile := filestruck{

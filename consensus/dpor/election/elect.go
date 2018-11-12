@@ -19,7 +19,7 @@ func randRange(i, j int) int {
 	return j + rand.Intn(i-j)
 }
 
-func findNearest(array []float64, target float64) (float64, int) {
+func findNearest(array []int64, target int64) (int64, int) {
 	if len(array) == 0 {
 		panic("array length must be nonzero.")
 	}
@@ -51,7 +51,7 @@ func findNearest(array []float64, target float64) (float64, int) {
 
 // Elect returns election result of the given rpt list of candidates,
 // seed and viewLength.
-func Elect(rpts rpt.RPTs, seed int64, viewLength int) []common.Address {
+func Elect(rpts rpt.RptList, seed int64, viewLength int) []common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
 	rand.Seed(seed)
@@ -60,14 +60,14 @@ func Elect(rpts rpt.RPTs, seed int64, viewLength int) []common.Address {
 	lower := 0
 	step := (upper - lower) / viewLength
 
-	var randoms []float64
+	var randoms []int64
 
 	for i := 0; i < viewLength; i++ {
 		rnd := randRange(i*step, (i+1)*step)
-		randoms = append(randoms, math.Log2(float64(1.0+rnd)))
+		randoms = append(randoms, int64(math.Log2(float64(1.0+rnd))))
 	}
 
-	scale := sortedRpts[len(sortedRpts)-1].Rpt / math.Log2(float64(1+upper))
+	scale := sortedRpts[len(sortedRpts)-1].Rpt / int64(math.Log2(float64(1+upper)))
 	scaledRpts := sortedRpts
 	for i := 0; i < len(sortedRpts); i++ {
 		scaledRpts[i].Rpt /= scale
@@ -76,7 +76,7 @@ func Elect(rpts rpt.RPTs, seed int64, viewLength int) []common.Address {
 	signers := make([]common.Address, viewLength)
 
 	for i := 0; i < viewLength; i++ {
-		var srpts []float64
+		var srpts []int64
 		for j := 0; j < len(scaledRpts); j++ {
 			srpts = append(srpts, scaledRpts[j].Rpt)
 		}

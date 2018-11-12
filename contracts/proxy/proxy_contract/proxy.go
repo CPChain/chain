@@ -16,7 +16,7 @@ import (
 const ProxyABI = "[]"
 
 // ProxyBin is the compiled bytecode used for deploying new contracts.
-const ProxyBin = `0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a723058203136e2ad1cae648ad06ab102bb215a7ac1ee15711376414ac9846099c52b64e40029`
+const ProxyBin = `0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a72305820cbc484bf00b46016a380dd0eb2f4931f6ca4902e646f2f72f7bb8f7bc72493080029`
 
 // DeployProxy deploys a new Ethereum contract, binding an instance of Proxy to it.
 func DeployProxy(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Proxy, error) {
