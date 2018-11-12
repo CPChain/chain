@@ -95,6 +95,14 @@ func (h *Handler) IsAvailable() bool {
 	return h.available
 }
 
+// SetAvailable sets available
+func (h *Handler) SetAvailable() {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	h.available = true
+}
+
 // SetServer sets handler.server
 func (h *Handler) SetServer(server *p2p.Server) error {
 	h.lock.Lock()
@@ -408,6 +416,8 @@ func (h *Handler) handleMsg(p *Signer) error {
 	}
 	defer msg.Discard()
 
+	log.Debug("handling msg", "msg", msg.Code)
+
 	if msg.Code == NewSignerMsg {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
@@ -455,6 +465,8 @@ func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address
 		// TODO: @liuq fix this
 		return nil
 	}
+
+	log.Debug("received remote signer ping", "signer", address.Hex())
 
 	if signer.Peer == nil {
 		err := signer.SetSigner(version, p, rw)
@@ -547,18 +559,18 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			// broadcast mined pending block to remote signers
 			h.BroadcastGeneratedBlock(pendingBlock)
 
-		case <-futureTimer.C:
+		// case <-futureTimer.C:
 
-			// check if still not received new block, if true, continue
-			if h.ReadyToImpeach() {
+		// 	// check if still not received new block, if true, continue
+		// 	if h.ReadyToImpeach() {
 
-				// get empty block
-				if emptyBlock, err := h.getEmptyBlockFn(); err == nil {
+		// 		// get empty block
+		// 		if emptyBlock, err := h.getEmptyBlockFn(); err == nil {
 
-					// broadcast the empty block
-					h.BroadcastGeneratedBlock(emptyBlock)
-				}
-			}
+		// 			// broadcast the empty block
+		// 			h.BroadcastGeneratedBlock(emptyBlock)
+		// 		}
+		// 	}
 
 		case <-h.quitSync:
 			return

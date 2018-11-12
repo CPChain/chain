@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
@@ -234,6 +235,9 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 	)
 
 	d.handler = handler
+
+	log.Debug("set available!!!!!!!!!!!!!!!!!")
+	d.handler.SetAvailable()
 
 	go d.handler.Start()
 
