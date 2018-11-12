@@ -344,8 +344,6 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, sign
 	errc := make(chan error, 2)
 	var signerStatus signerStatusData // safe to read after two values have been received from errc
 
-	log.Debug("my etherbase", "address", etherbase)
-
 	go func() {
 		errc <- p2p.Send(rw, NewSignerMsg, &signerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
@@ -396,6 +394,6 @@ func ReadSignerStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerSta
 
 	isSigner, err = signerValidator(signerStatus.Address)
 	log.Debug("cpchain committee network handshaking...")
-	log.Debug("peer is signer", "peer", signerStatus.Address, isSigner)
+	log.Debug("peer validate result", "peer", signerStatus.Address, "is signer", isSigner)
 	return isSigner, signerStatus.Address, err
 }
