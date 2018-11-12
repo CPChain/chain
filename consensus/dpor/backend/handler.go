@@ -65,9 +65,7 @@ type Handler struct {
 	// this func is method from dpor, used for checking if a remote peer is signer
 	validateSignerFn ValidateSignerFn
 
-	wg             sync.WaitGroup
 	pendingBlockCh chan *types.Block
-	newPeerCh      chan *p2p.Peer
 	quitSync       chan struct{}
 
 	dialed    bool
@@ -82,6 +80,8 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
 		signers:         make(map[common.Address]*Signer),
+		pendingBlockCh:  make(chan *types.Block),
+		quitSync:        make(chan struct{}),
 		dialed:          false,
 	}
 	return h
@@ -236,7 +236,9 @@ func (h *Handler) Disconnect() {
 // BroadcastGeneratedBlock broadcasts generated block to committee
 func (h *Handler) BroadcastGeneratedBlock(block *types.Block) {
 	committee := h.signers
-	for _, peer := range committee {
+	log.Debug("broadcast new generated block to commttee")
+	for addr, peer := range committee {
+		log.Debug("signer", "addr", addr.Hex())
 		peer.AsyncSendNewPendingBlock(block)
 	}
 }
@@ -407,6 +409,7 @@ func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 }
 
 func (h *Handler) handleMsg(p *Signer) error {
+	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	msg, err := p.rw.ReadMsg()
 	if err != nil {
 		return err
@@ -416,7 +419,6 @@ func (h *Handler) handleMsg(p *Signer) error {
 	}
 	defer msg.Discard()
 
-	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	log.Debug("handling msg", "msg", msg.Code)
 
 	if msg.Code == NewSignerMsg {
@@ -464,7 +466,7 @@ func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address
 
 	if !ok {
 		// TODO: @liuq fix this
-		return nil
+		signer = NewSigner(h.epochIdx, address)
 	}
 
 	log.Debug("received remote signer ping", "signer", address.Hex())
@@ -519,14 +521,14 @@ func (h *Handler) Protocol() p2p.Protocol {
 				return err
 			}
 
-			select {
-			case h.newPeerCh <- p:
-				h.wg.Add(1)
-				defer h.wg.Done()
-				return h.handle(ProtocolVersion, p, rw, address)
-			case <-h.quitSync:
-				return p2p.DiscQuitting
-			}
+			log.Debug("done with handshake")
+
+			// select {
+			// case <-h.quitSync:
+			// 	return p2p.DiscQuitting
+			// default:
+			return h.handle(ProtocolVersion, p, rw, address)
+			// }
 
 		},
 		NodeInfo: func() interface{} {
@@ -608,6 +610,7 @@ func (h *Handler) Stop() {
 func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
 	case h.pendingBlockCh <- block:
+		log.Debug("!!!!!!!!!!!!!!!!! inserted into handler.pendingBlockCh")
 		return nil
 	}
 }
