@@ -329,7 +329,7 @@ func DefaultOldGenesisBlock() *Genesis {
 	}
 }
 
-// DefaultGenesisBlock returns the CPChain main net genesis block.
+// DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     configs.MainnetChainConfig,

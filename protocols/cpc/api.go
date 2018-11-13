@@ -40,13 +40,13 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 )
 
-// PublicCpchainAPI provides an API to access Cpchain full node-related
+// PublicCpchainAPI provides an API to access cpchain full node-related
 // information.
 type PublicCpchainAPI struct {
 	c *CpchainService
 }
 
-// NewPublicCpchainAPI creates a new Cpchain protocol API for full nodes.
+// NewPublicCpchainAPI creates a new cpchain protocol API for full nodes.
 func NewPublicCpchainAPI(e *CpchainService) *PublicCpchainAPI {
 	return &PublicCpchainAPI{e}
 }
@@ -140,14 +140,14 @@ func (api *PrivateMinerAPI) SetEtherbase(etherbase common.Address) bool {
 	return true
 }
 
-// PrivateAdminAPI is the collection of Cpchain full node-related APIs
+// PrivateAdminAPI is the collection of cpchain full node-related APIs
 // exposed over the private admin endpoint.
 type PrivateAdminAPI struct {
 	cpc *CpchainService
 }
 
 // NewPrivateAdminAPI creates a new API definition for the full node private
-// admin methods of the Cpchain service.
+// admin methods of the cpchain service.
 func NewPrivateAdminAPI(eth *CpchainService) *PrivateAdminAPI {
 	return &PrivateAdminAPI{cpc: eth}
 }
@@ -233,14 +233,14 @@ func (api *PrivateAdminAPI) ImportChain(file string) (bool, error) {
 	return true, nil
 }
 
-// PublicDebugAPI is the collection of Cpchain full node APIs exposed
+// PublicDebugAPI is the collection of cpchain full node APIs exposed
 // over the public debugging endpoint.
 type PublicDebugAPI struct {
 	cpc *CpchainService
 }
 
 // NewPublicDebugAPI creates a new API definition for the full node-
-// related public debug methods of the Cpchain service.
+// related public debug methods of the cpchain service.
 func NewPublicDebugAPI(eth *CpchainService) *PublicDebugAPI {
 	return &PublicDebugAPI{cpc: eth}
 }
@@ -270,7 +270,7 @@ func (api *PublicDebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error
 	return stateDb.RawDump(), nil
 }
 
-// PrivateDebugAPI is the collection of Cpchain full node APIs exposed over
+// PrivateDebugAPI is the collection of cpchain full node APIs exposed over
 // the private debugging endpoint.
 type PrivateDebugAPI struct {
 	config *configs.ChainConfig
@@ -278,7 +278,7 @@ type PrivateDebugAPI struct {
 }
 
 // NewPrivateDebugAPI creates a new API definition for the full node-related
-// private debug methods of the Cpchain service.
+// private debug methods of the cpchain service.
 func NewPrivateDebugAPI(config *configs.ChainConfig, eth *CpchainService) *PrivateDebugAPI {
 	return &PrivateDebugAPI{config: config, cpc: eth}
 }
