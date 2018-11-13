@@ -25,17 +25,7 @@ func TestNewHandler(t *testing.T) {
 
 	//define the parameter "config" of NewHandler()
 	var testConfig *configs.DporConfig
-	testConfig = &configs.DporConfig{
-		Period:             1,
-		Epoch:              4,
-		View:               1,
-		MaxInitBlockNumber: 12,
-		Contracts: map[string]common.Address{
-			"campaign": common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"),
-			"signer":   common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"),
-		},
-		ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
-	}
+	testConfig = configs.MainnetChainConfig.Dpor
 	//define the parameter "etherbase" for NewHandler()
 	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
 
@@ -119,5 +109,7 @@ func TestHandler_SetContractCaller(t *testing.T) {
 
 func TestHandler_handlePreprepareMsg(t *testing.T) {
 	//t.Skip("skip for short test")
+	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
+	NewSigner(1, common.HexToAddress(addrHex))
 
 }
