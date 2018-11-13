@@ -343,16 +343,16 @@ func (m *AccountManager) SignTransaction(ctx context.Context, args *personal.Sen
 // safely used to calculate a signature from.
 //
 // The hash is calulcated as
-//   keccak256("\x19Ethereum Signed Message:\n"${message length}${message}).
+//   keccak256("\x19Cpchain Signed Message:\n"${message length}${message}).
 //
 // This gives context to the signed message and prevents signing of transactions.
 // func signHash(data []byte) []byte {
-// 	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(data), data)
+// 	msg := fmt.Sprintf("\x19Cpchain Signed Message:\n%d%s", len(data), data)
 // 	return crypto.Keccak256([]byte(msg))
 // }
 
-// Sign calculates an Ethereum ECDSA signature for:
-// keccack256("\x19Ethereum Signed Message:\n" + len(message) + message))
+// Sign calculates an Cpchain ECDSA signature for:
+// keccack256("\x19Cpchain Signed Message:\n" + len(message) + message))
 //
 // Note, the produced signature conforms to the secp256k1 curve R, S and V values,
 // where the V value will be 27 or 28 for legacy reasons.
@@ -380,7 +380,7 @@ func (m *AccountManager) Sign(ctx context.Context, in *personal.SignRequest) (*p
 // EcRecover returns the address for the account that was used to create the signature.
 // Note, this function is compatible with eth_sign and personal_sign. As such it recovers
 // the address of:
-// hash = keccak256("\x19Ethereum Signed Message:\n"${message length}${message})
+// hash = keccak256("\x19Cpchain Signed Message:\n"${message length}${message})
 // addr = ecrecover(hash, signature)
 //
 // Note, the signature must conform to the secp256k1 curve R, S and V values, where
@@ -392,7 +392,7 @@ func (m *AccountManager) EcRecover(ctx context.Context, in *personal.EcRecoverRe
 		return &pb.Address{}, fmt.Errorf("signature must be 65 bytes long")
 	}
 	if in.Sig[64] != 27 && in.Sig[64] != 28 {
-		return &pb.Address{}, fmt.Errorf("invalid Ethereum signature (V is not 27 or 28)")
+		return &pb.Address{}, fmt.Errorf("invalid Cpchain signature (V is not 27 or 28)")
 	}
 	in.Sig[64] -= 27 // Transform yellow paper V from 27/28 to 0/1
 

@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// ChainStateReader provides an API to access Ethereum related information.
+// ChainStateReader provides an API to access Cpchain related information.
 // It offers only methods that operate on public data that is freely available to anyone.
 type ChainStateReader struct {
 	b Backend
@@ -54,7 +54,7 @@ func (c *ChainStateReader) GasPrice(ctx context.Context, req *empty.Empty) (*pb.
 	return &pb.GasPrice{GasPrice: price.Int64()}, err
 }
 
-// ProtocolVersion returns the current Ethereum protocol version this node supports
+// ProtocolVersion returns the current Cpchain protocol version this node supports
 func (c *ChainStateReader) ProtocolVersion(ctx context.Context, req *empty.Empty) (*wrappers.UInt32Value, error) {
 	return &wrappers.UInt32Value{Value: uint32(c.b.ProtocolVersion())}, nil
 }
@@ -83,7 +83,7 @@ func (c *ChainStateReader) Syncing(ctx context.Context, req *empty.Empty) (*pb.S
 	}, nil
 }
 
-// ChainReader provides an API to access the Ethereum blockchain.
+// ChainReader provides an API to access the Cpchain blockchain.
 // It offers only methods that operate on public data that is freely available to anyone.
 type ChainReader struct {
 	b Backend
