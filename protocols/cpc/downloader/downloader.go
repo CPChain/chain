@@ -25,7 +25,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	ethereum "bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -244,7 +244,7 @@ func New(mode SyncMode, stateDb database.Database, mux *event.TypeMux, chain Blo
 // In addition, during the state download phase of fast synchronisation the number
 // of processed and the total number of known states are also returned. Otherwise
 // these are zero.
-func (d *Downloader) Progress() ethereum.SyncProgress {
+func (d *Downloader) Progress() cpchain.SyncProgress {
 	// Lock the current stats and return the progress
 	d.syncStatsLock.RLock()
 	defer d.syncStatsLock.RUnlock()
@@ -254,7 +254,7 @@ func (d *Downloader) Progress() ethereum.SyncProgress {
 	case FullSync:
 		current = d.Blockchain.CurrentBlock().NumberU64()
 	}
-	return ethereum.SyncProgress{
+	return cpchain.SyncProgress{
 		StartingBlock: d.syncStatsChainOrigin,
 		CurrentBlock:  current,
 		HighestBlock:  d.syncStatsChainHeight,

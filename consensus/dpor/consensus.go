@@ -118,7 +118,7 @@ var (
 // backing account.
 type SignerFn func(accounts.Account, []byte) ([]byte, error)
 
-// Author implements consensus.Engine, returning the Cpchain address recovered
+// Author implements consensus.Engine, returning the cpchain address recovered
 // from the signature in the header's extra-data section.
 func (d *Dpor) Author(header *types.Header) (common.Address, error) {
 	leader, _, err := d.dh.ecrecover(header, d.signatures)

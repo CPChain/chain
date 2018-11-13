@@ -17,7 +17,7 @@
 package configs
 
 // CpchainBootnodes are the enode URLs of the P2P bootstrap nodes running on
-// the main Cpchain network.
+// the main cpchain network.
 var CpchainBootnodes = []string{
 	"enode://5293dc8aaa5c2fcc7905c21391ce38f4f877722ff1918f4fa86379347ad8a244c2995631f89866693d05bf5c94493c247f02716f19a90689fa406189b03a5243@127.0.0.1:30310", // local
 	// "enode://7c4fe440eff5f327ebb6f4f6e688d0a0e037364991f5404f900efc591667f0d0aab4290d73592f594538244b547d1b51e30d34d96038829496002b1894b63da1@54.237.250.178:30311",
