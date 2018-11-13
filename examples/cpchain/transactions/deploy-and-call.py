@@ -13,6 +13,11 @@ contract_source_code = '''
 pragma solidity ^0.4.0;
 
 contract Greeter {
+    event SetGreetingEvent(
+        address indexed _from,
+        uint val
+    );
+
     string public greeting;
 
     function Greeter() {
@@ -20,6 +25,7 @@ contract Greeter {
     }
 
     function setGreeting(string _greeting) public {
+        emit SetGreetingEvent(msg.sender, 42);
         greeting = _greeting;
     }
 
@@ -71,6 +77,9 @@ def compile_contract():
 
 def deploy_contract(interface):
     contract = w3.eth.contract(abi=interface['abi'], bytecode=interface['evm']['bytecode']['object'])
+
+    # create filter
+    event_filter = contract.events.SetGreetingEvent.createFilter(fromBlock=0, toBlock="latest")
     
     estimated_gas = contract.constructor().estimateGas()
     tx_hash = contract.constructor().transact(dict(gas=estimated_gas))
@@ -85,7 +94,12 @@ def deploy_contract(interface):
     tx_hash = contract.setGreeting('Nihao')
     w3.eth.waitForTransactionReceipt(tx_hash)
     print('Setting value to: Nihao')
+    output = contract.greet()
     print('Contract value: {}'.format(contract.greet()))
+    assert output == "Nihao" 
+    
+    entry = event_filter.get_all_entries()[0]
+    assert entry.args.val == 42
 
 
 def main():
