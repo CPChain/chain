@@ -37,8 +37,8 @@ type Signatures struct {
 
 // GetSig gets addr's sig
 func (s *Signatures) GetSig(addr common.Address) (sig []byte, ok bool) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 	sig, ok = s.sigs[addr]
 	return sig, ok
 }
@@ -215,7 +215,7 @@ func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
-	if ok, _ := snap.IsLeaderOf(signer, snap.Number+1); ok {
+	if ok, _ := snap.IsLeaderOf(signer, snap.number()+1); ok {
 		return new(big.Int).Set(diffInTurn)
 	}
 	return new(big.Int).Set(diffNoTurn)

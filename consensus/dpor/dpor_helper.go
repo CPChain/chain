@@ -136,8 +136,39 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
 		if NormalMode == dpor.fake {
+
+			log.Debug("err: invalid signer list")
+			signerBytes := header.Extra[extraVanity:extraSuffix]
+			extraSigners := make([]common.Address, dpor.config.Epoch)
+			for i := 0; i < len(signerBytes)/common.AddressLength; i++ {
+				extraSigners[i].SetBytes(signerBytes[i*common.AddressLength : (i+1)*common.AddressLength])
+			}
+
+			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
+			log.Debug("signers in block extra:")
+			for round, signer := range extraSigners {
+				log.Debug("signer", "addr", signer.Hex(), "idx", round)
+			}
+
+			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
+			log.Debug("signers in snapshot:")
+			for round, signer := range snap.SignersOf(number) {
+				log.Debug("signer", "addr", signer.Hex(), "idx", round)
+			}
+
+			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
+			log.Debug("recent signers: ")
+			for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
+				log.Debug("----------------------")
+				log.Debug("signers in snapshot of:", "epoch idx", i)
+				for _, s := range snap.getRecentSigners(i) {
+					log.Debug("signer", "s", s.Hex())
+				}
+			}
+
 			return errInvalidSigners
 		}
+
 	}
 
 	// All basic checks passed, verify the seal and return
@@ -231,14 +262,14 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	// Save to cache
-	dpor.recents.Add(snap.Hash, snap)
+	dpor.recents.Add(snap.hash(), snap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if IsCheckPoint(snap.Number, dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
+	if IsCheckPoint(snap.number(), dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
-		log.Debug("Stored voting Snapshot to disk", "number", snap.Number, "hash", snap.Hash)
+		log.Debug("Stored voting Snapshot to disk", "number", snap.number(), "hash", snap.hash())
 	}
 	return snap, err
 }
@@ -262,6 +293,12 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		if dpor.fakeFail == number {
 			return errFakerFail
 		}
+		return nil
+	}
+
+	inserted := chain.GetHeaderByHash(hash)
+	// Already in chain
+	if inserted != nil {
 		return nil
 	}
 
@@ -393,7 +430,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
 		log.Debug("----------------------")
 		log.Debug("signers in snapshot of:", "epoch idx", i)
-		for _, s := range snap.RecentSigners[i] {
+		for _, s := range snap.getRecentSigners(i) {
 			log.Debug("signer", "s", s.Hex())
 		}
 	}

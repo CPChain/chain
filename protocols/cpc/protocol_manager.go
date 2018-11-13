@@ -226,6 +226,37 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	// start sync handlers
 	go pm.syncer()
 	go pm.txsyncLoop()
+
+	// update, avoid stop
+	go pm.update()
+}
+
+func (pm *ProtocolManager) update() {
+	futureTimer := time.NewTicker(10 * time.Second)
+	defer futureTimer.Stop()
+
+	prev := pm.blockchain.CurrentHeader()
+
+	for {
+		select {
+		case <-futureTimer.C:
+			current := pm.blockchain.CurrentHeader()
+
+			// if still not updated, notice my peers my status.
+			if prev.Number.Uint64() == current.Number.Uint64() {
+				currentBlock := pm.blockchain.CurrentBlock()
+				log.Debug("broadcast updating block")
+
+				go pm.BroadcastBlock(currentBlock, true)
+				go pm.BroadcastBlock(currentBlock, false)
+			} else {
+				prev = current
+			}
+
+		case <-pm.quitSync:
+			return
+		}
+	}
 }
 
 func (pm *ProtocolManager) Stop() {

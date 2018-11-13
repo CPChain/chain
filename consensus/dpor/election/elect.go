@@ -28,11 +28,11 @@ import (
 
 // randRange returns a random integer between [ min(i,j), max(i,j) )
 // NB, the rhs is open.
-func randRange(i, j int) int {
+func randRange(i, j int, myrand *rand.Rand) int {
 	if j > i {
-		return i + rand.Intn(j-i)
+		return i + myrand.Intn(j-i)
 	}
-	return j + rand.Intn(i-j)
+	return j + myrand.Intn(i-j)
 }
 
 func findNearest(array []int64, target int64) (int64, int) {
@@ -70,7 +70,9 @@ func findNearest(array []int64, target int64) (int64, int) {
 func Elect(rpts rpt.RptList, seed int64, viewLength int) []common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
-	rand.Seed(seed)
+
+	randSource := rand.NewSource(seed)
+	myRand := rand.New(randSource)
 
 	upper := 10
 	lower := 0
@@ -79,7 +81,7 @@ func Elect(rpts rpt.RptList, seed int64, viewLength int) []common.Address {
 	var randoms []int64
 
 	for i := 0; i < viewLength; i++ {
-		rnd := randRange(i*step, (i+1)*step)
+		rnd := randRange(i*step, (i+1)*step, myRand)
 		randoms = append(randoms, int64(math.Log2(float64(1.0+rnd))))
 	}
 

@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	inmemorySnapshots  = 1000 // Number of recent vote snapshots to keep in memory
-	inmemorySignatures = 1000 // Number of recent block signatures to keep in memory
+	inmemorySnapshots  = 10 // Number of recent vote snapshots to keep in memory
+	inmemorySignatures = 10 // Number of recent block signatures to keep in memory
 
 	pctA = 2
 	pctB = 3 // only when n > 2/3 * N, accept the block
