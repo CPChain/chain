@@ -32,7 +32,7 @@ var (
 		Ethash:  new(EthashConfig),
 	}
 
-	// 	// MainnetChainConfig is the chain parameters to run a node on the CPChain main network.
+	// 	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
 	MainnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(CpchainChainId),
 
@@ -52,7 +52,7 @@ var (
 	}
 
 	// AllEthashProtocolChanges contains every protocol change (EIPs) introduced
-	// and accepted by the Ethereum core developers into the Ethash consensus.
+	// and accepted by the cpchain core developers into the Ethash consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.

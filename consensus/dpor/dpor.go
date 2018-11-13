@@ -41,7 +41,7 @@ type Dpor struct {
 
 	signedBlocks map[uint64]common.Hash // record signed blocks.
 
-	signer common.Address // Ethereum address of the signing key
+	signer common.Address // Cpchain address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
 	committeeNetworkHandler consensus.CommitteeHandler

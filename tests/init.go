@@ -25,7 +25,7 @@ import (
 
 // Forks table defines supported forks and their chain config.
 var Forks = map[string]*configs.ChainConfig{
-	// TODO: @AC confirm the real name of the initial phase(the first release of CPChain)
+	// TODO: @AC confirm the real name of the initial phase(the first release of cpchain)
 	"cep1": {
 		ChainID: big.NewInt(45),
 	},

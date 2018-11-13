@@ -54,7 +54,7 @@ import (
 
 var (
 	// Files that end up in the cpchain*.zip archive.
-	gethArchiveFiles = []string{
+	archiveFiles = []string{
 		"COPYING",
 		executablePath("cpchain"),
 	}
@@ -343,7 +343,7 @@ func doArchive(cmdline []string) {
 		alltools = "cpchain-alltools-" + base + ext
 	)
 	maybeSkipArchive(env)
-	if err := build.WriteArchive(cpchain, gethArchiveFiles); err != nil {
+	if err := build.WriteArchive(cpchain, archiveFiles); err != nil {
 		log.Fatal(err)
 	}
 	if err := build.WriteArchive(alltools, allToolsArchiveFiles); err != nil {
@@ -510,22 +510,6 @@ func doWindowsInstaller(cmdline []string) {
 	if err := archiveUpload(installer, *upload, *signer); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func gomobileTool(subcmd string, args ...string) *exec.Cmd {
-	cmd := exec.Command(filepath.Join(GOBIN, "gomobile"), subcmd)
-	cmd.Args = append(cmd.Args, args...)
-	cmd.Env = []string{
-		"GOPATH=" + build.GOPATH(),
-		"PATH=" + GOBIN + string(os.PathListSeparator) + os.Getenv("PATH"),
-	}
-	for _, e := range os.Environ() {
-		if strings.HasPrefix(e, "GOPATH=") || strings.HasPrefix(e, "PATH=") {
-			continue
-		}
-		cmd.Env = append(cmd.Env, e)
-	}
-	return cmd
 }
 
 // Cross compilation

@@ -101,7 +101,7 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 	return hash
 }
 
-// ecrecover extracts the Ethereum account address from a signed header.
+// ecrecover extracts the cpchain account address from a signed header.
 // the return value is (leader_address, signer_addresses, error)
 func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
 	d.lock.Lock()
@@ -128,7 +128,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	}
 	signersSig := ss.Data
 
-	// Recover the public key and the Ethereum address of leader.
+	// Recover the public key and the cpchain address of leader.
 	var leader common.Address
 	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig)
 	if err != nil {
@@ -152,7 +152,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		return leader, []common.Address{}, errInvalidSigBytes
 	}
 
-	// Recover the public key and the Ethereum address of signers one by one.
+	// Recover the public key and the cpchain address of signers one by one.
 	var signers []common.Address
 	for i := 0; i < len(signersSig)/extraSeal; i++ {
 		signerSig := signersSig[i*extraSeal : (i+1)*extraSeal]

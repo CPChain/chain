@@ -25,7 +25,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/internal/cpcapi"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -176,7 +176,7 @@ func (d *DebugManager) GetBadBlocks(ctx context.Context, req *empty.Empty) (*pb.
 		} else {
 			results[i].Rlp = fmt.Sprintf("0x%x", rlpBytes)
 		}
-		if results[i].Block, err = ethapi.GRPCMarshalBlock(block, true, true); err != nil {
+		if results[i].Block, err = cpcapi.GRPCMarshalBlock(block, true, true); err != nil {
 			results[i].Block.Error = err.Error()
 		}
 	}

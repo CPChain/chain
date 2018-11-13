@@ -41,7 +41,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/internal/cpcapi"
 	"bitbucket.org/cpchain/chain/miner"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/private"
@@ -104,7 +104,7 @@ type CpchainService struct {
 	etherbase common.Address
 
 	networkID     uint64
-	netRPCService *ethapi.PublicNetAPI
+	netRPCService *cpcapi.PublicNetAPI
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 
@@ -253,7 +253,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainC
 // GAPIs return the collection of GRPC services the cpc package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *CpchainService) GAPIs() []grpc.GApi {
-	apis := ethapi.GetGAPIs(s.APIBackend)
+	apis := cpcapi.GetGAPIs(s.APIBackend)
 	return append(apis, []grpc.GApi{
 		// NewMinerReader(s),
 		NewCoinbase(s),
@@ -267,7 +267,7 @@ func (s *CpchainService) GAPIs() []grpc.GApi {
 // APIs return the collection of RPC services the cpc package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *CpchainService) APIs() []rpc.API {
-	apis := ethapi.GetAPIs(s.APIBackend)
+	apis := cpcapi.GetAPIs(s.APIBackend)
 
 	// Append any APIs exposed explicitly by the consensus engine
 	apis = append(apis, s.engine.APIs(s.BlockChain())...)
@@ -438,7 +438,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 	s.startBloomHandlers()
 
 	// Start the RPC service
-	s.netRPCService = ethapi.NewPublicNetAPI(srvr, s.NetVersion())
+	s.netRPCService = cpcapi.NewPublicNetAPI(srvr, s.NetVersion())
 
 	// TODO: @liuq check security.
 	s.server = srvr

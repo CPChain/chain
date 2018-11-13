@@ -28,17 +28,17 @@ import (
 
 // Verify that Client implements the ethereum interfaces.
 var (
-	_ = ethereum.ChainReader(&cpclient.Client{})
-	_ = ethereum.TransactionReader(&cpclient.Client{})
-	_ = ethereum.ChainStateReader(&cpclient.Client{})
-	_ = ethereum.ChainSyncReader(&cpclient.Client{})
-	_ = ethereum.ContractCaller(&cpclient.Client{})
-	_ = ethereum.GasEstimator(&cpclient.Client{})
-	_ = ethereum.GasPricer(&cpclient.Client{})
-	_ = ethereum.LogFilterer(&cpclient.Client{})
-	_ = ethereum.PendingStateReader(&cpclient.Client{})
+	_ = cpchain.ChainReader(&cpclient.Client{})
+	_ = cpchain.TransactionReader(&cpclient.Client{})
+	_ = cpchain.ChainStateReader(&cpclient.Client{})
+	_ = cpchain.ChainSyncReader(&cpclient.Client{})
+	_ = cpchain.ContractCaller(&cpclient.Client{})
+	_ = cpchain.GasEstimator(&cpclient.Client{})
+	_ = cpchain.GasPricer(&cpclient.Client{})
+	_ = cpchain.LogFilterer(&cpclient.Client{})
+	_ = cpchain.PendingStateReader(&cpclient.Client{})
 	// _ = ethereum.PendingStateEventer(&Client{})
-	_ = ethereum.PendingContractCaller(&cpclient.Client{})
+	_ = cpchain.PendingContractCaller(&cpclient.Client{})
 )
 
 func TestGetRNode(t *testing.T) {
