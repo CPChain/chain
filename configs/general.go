@@ -32,7 +32,7 @@ var (
 		Ethash:  new(EthashConfig),
 	}
 
-	// 	// MainnetChainConfig is the chain parameters to run a node on the CPChain main network.
+	// 	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
 	MainnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(CpchainChainId),
 

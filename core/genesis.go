@@ -317,7 +317,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 	return g.MustCommit(db)
 }
 
-// DefaultGenesisBlock returns the CPChain main net genesis block.
+// DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     configs.MainnetChainConfig,
