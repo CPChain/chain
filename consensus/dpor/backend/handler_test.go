@@ -60,7 +60,7 @@ func TestNewHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewHandler(tt.args.config, tt.args.etherbase)
 			//pendingBlockCh and quitSync are expected to be different
-			//thus, before reflect.DeepEqual(), we set both variables equalling to the expected value
+			//Thus, before reflect.DeepEqual(), we set both variables equalling to the expected value
 			got.pendingBlockCh = expectedResult.pendingBlockCh
 			got.quitSync = expectedResult.quitSync
 			if !reflect.DeepEqual(got, tt.want) {
@@ -72,17 +72,19 @@ func TestNewHandler(t *testing.T) {
 func TestHandler_IsAvailable(t *testing.T) {
 	var testHandler Handler
 	testHandler.available = false
+	//Test IsAvailable()
 	if testHandler.IsAvailable() != false {
 		t.Errorf("IsAvailable() = %v, want %v\n", testHandler.IsAvailable(), false)
 	}
+	//Test SetAvailable()
 	testHandler.SetAvailable()
 	if testHandler.IsAvailable() != true {
 		t.Errorf("SetAvailale() does not work\n")
 	}
 }
 
+// Load account. Used for create ContractCaller
 func getAccount(keyStoreFilePath string, passphrase string, t *testing.T) keystore.Key {
-	// Load account.
 	ff, err := filepath.Abs("../../../")
 	file, err := os.Open(ff + "/examples/cpchain/data/" + keyStoreFilePath)
 	if err != nil {
