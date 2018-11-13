@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package dpor
+package dpor_test
 
 import (
 	"context"
@@ -28,14 +28,15 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
+	dpor "bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *SignerConnectionRegister, error) {
+func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *dpor.SignerConnectionRegister, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, tx, instance, err := DeploySignerConnectionRegister(deployTransactor, backend)
+	addr, tx, instance, err := dpor.DeploySignerConnectionRegister(deployTransactor, backend)
 
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)

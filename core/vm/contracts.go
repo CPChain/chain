@@ -50,6 +50,15 @@ var PrimitiveContracts = map[common.Address]PrimitiveContract{
 	common.BytesToAddress([]byte{8}): &bn256Pairing{},
 }
 
+func RegisterPrimitiveContract(address common.Address, contract PrimitiveContract) error {
+	if PrimitiveContracts[address] == nil {
+		PrimitiveContracts[address] = contract
+		return nil
+	} else {
+		return ErrPrimitiveContractExists
+	}
+}
+
 // RunPrecompiledContract runs and evaluates the output of a precompiled contract.
 func RunPrecompiledContract(p PrimitiveContract, input []byte, contract *Contract) (ret []byte, err error) {
 	gas := p.RequiredGas(input)

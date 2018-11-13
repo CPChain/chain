@@ -36,8 +36,8 @@ type Snapshot interface {
 	apply(headers []*types.Header) (*Snapshot, error)
 	applyHeader(header *types.Header) error
 	updateCandidates(header *types.Header) error
-	updateRpts(header *types.Header) (rpt.RPTs, error)
-	updateView(rpts rpt.RPTs, seed int64, viewLength int) error
+	updateRpts(header *types.Header) (rpt.RptList, error)
+	updateView(rpts rpt.RptList, seed int64, viewLength int) error
 	signers() []common.Address
 	signerRound(signer common.Address) (int, error)
 	isSigner(signer common.Address) bool
@@ -323,12 +323,12 @@ func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 }
 
 // updateRpts updates rpts of candidates
-func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RPTs, error) {
+func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RptList, error) {
 
 	// TODO: use rpt collector to update rpts.
-	var rpts rpt.RPTs
+	var rpts rpt.RptList
 	for idx, candidate := range s.candidates() {
-		r := rpt.RPT{Address: candidate, Rpt: float64(idx)}
+		r := rpt.Rpt{Address: candidate, Rpt: int64(idx)}
 		rpts = append(rpts, r)
 	}
 
@@ -344,7 +344,7 @@ func (s *DporSnapshot) ifStartElection() bool {
 }
 
 // updateView use rpt and election result to get new committee(signers)
-func (s *DporSnapshot) updateSigners(rpts rpt.RPTs, seed int64) error {
+func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 
 	signers := s.candidates()[:s.config.Epoch]
 

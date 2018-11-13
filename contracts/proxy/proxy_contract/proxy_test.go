@@ -68,12 +68,12 @@ func TestSignerRegisterProxyContractRegister(t *testing.T) {
 	auth.GasLimit = uint64(gasLimit) // in units
 	auth.GasPrice = gasPrice
 
-	campaignIns, err := contract.NewCampaign(realAddr, client)
+	campaignIns, err := campaign.NewCampaign(realAddr, client)
 	newMaxNoc, err := campaignIns.MaximumNoc(nil)
 	fmt.Println("newMaxNoc:", newMaxNoc)
 
 	// 5. replace real contract address with proxy contract
-	proxyCampaignIns, err := contract.NewCampaign(proxyAddress, client)
+	proxyCampaignIns, err := campaign.NewCampaign(proxyAddress, client)
 	proxyNewMaxNoc, err := proxyCampaignIns.MaximumNoc(nil)
 	fmt.Println("proxy newMaxNoc:", proxyNewMaxNoc)
 

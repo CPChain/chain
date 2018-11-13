@@ -13,7 +13,7 @@ func DeployCampaign() common.Address {
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
 	auth := bind.NewKeyedTransactor(privateKey)
-	contractAddress, tx, _, err := contract.DeployCampaign(auth, client)
+	contractAddress, tx, _, err := campaign.DeployCampaign(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

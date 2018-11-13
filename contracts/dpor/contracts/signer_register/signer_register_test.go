@@ -1,18 +1,15 @@
-package contract
+package signer_register
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
-
 	"testing"
-
 	"time"
-
-	"bytes"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -77,7 +74,7 @@ func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int,
 		log.Fatal(err.Error())
 	}
 	auth := bind.NewKeyedTransactor(privateKey)
-	//auth.Nonce = big.NewInt(int64(nonce)) // not necessary
+	// auth.Nonce = big.NewInt(int64(nonce)) // not necessary
 	auth.Value = big.NewInt(0)
 	// in wei
 	auth.GasLimit = uint64(gasLimit)

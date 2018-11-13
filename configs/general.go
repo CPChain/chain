@@ -45,6 +45,8 @@ var (
 			Contracts: map[string]common.Address{
 				"campaign": common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"),
 				"signer":   common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"),
+				// TODO @hmw make the name more concrete
+				"register": common.HexToAddress("3A220f351252089D385b29beca14e27F204c296A"),
 			},
 		},
 	}

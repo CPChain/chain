@@ -252,6 +252,14 @@ type rpcProgress struct {
 	KnownStates   hexutil.Uint64
 }
 
+type Committee struct {
+	Epoch     uint64 // contain 21 round in each epoch
+	Round     uint64
+	Producer  common.Address
+	PublicKey string
+	Block     uint64 // hight
+}
+
 // SyncProgress retrieves the current progress of the sync algorithm. If there's
 // no sync currently running, it returns nil.
 func (ec *Client) SyncProgress(ctx context.Context) (*cpchain.SyncProgress, error) {
@@ -296,6 +304,30 @@ func (ec *Client) NetworkID(ctx context.Context) (*big.Int, error) {
 		return nil, fmt.Errorf("invalid net_version result %q", ver)
 	}
 	return version, nil
+}
+
+func (ec *Client) GetRNodes(ctx context.Context) ([]common.Address, error) {
+	var result []common.Address
+	err := ec.c.CallContext(ctx, &result, "eth_getRNodes")
+	return result, err
+}
+
+func (ec *Client) GetCurrentRound(ctx context.Context) (uint64, error) {
+	var result uint64
+	err := ec.c.CallContext(ctx, &result, "eth_getCurrentRound")
+	return result, err
+}
+
+func (ec *Client) GetCurrentEpoch(ctx context.Context) (uint64, error) {
+	var result uint64
+	err := ec.c.CallContext(ctx, &result, "eth_getCurrentEpoch")
+	return result, err
+}
+
+func (ec *Client) GetCommittees(ctx context.Context) ([]Committee, error) {
+	var result []Committee
+	err := ec.c.CallContext(ctx, &result, "eth_getCommittees")
+	return result, err
 }
 
 // BalanceAt returns the wei balance of the given account.

@@ -15,9 +15,8 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -255,7 +254,7 @@ func deployRegister() {
 	auth.GasPrice = gasPrice
 
 	// Launch contract deploy transaction.
-	address, tx, _, err := register.DeployRegister(auth, client)
+	address, tx, _, err := pdash.DeployRegister(auth, client)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -40,7 +40,7 @@ func NewRemoteSigner(epochIdx uint64, address common.Address) *RemoteSigner {
 }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.
-func (rs *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
+func (rs *RemoteSigner) fetchPubkey(contractInstance *signer_register.SignerConnectionRegister) error {
 
 	address := rs.address
 
@@ -61,7 +61,7 @@ func (rs *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionR
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
+func (rs *RemoteSigner) fetchNodeID(contractInstance *signer_register.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
 	epochIdx, address := rs.epochIdx, rs.address
 
 	log.Debug("fetching nodeID of remote signer")
@@ -88,7 +88,7 @@ func (rs *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionR
 	return nil
 }
 
-func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *contract.SignerConnectionRegister) ([]byte, error) {
+func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *signer_register.SignerConnectionRegister) ([]byte, error) {
 	encryptedNodeID, err := contractInstance.GetNodeInfo(nil, big.NewInt(int64(epochIdx)), address)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 }
 
 // updateNodeID encrypts my node id with this remote signer's public key and update to the contract.
-func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend) error {
+func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *signer_register.SignerConnectionRegister, client consensus.ClientBackend) error {
 	epochIdx, address := rs.epochIdx, rs.address
 
 	log.Debug("fetched rsa pubkey")
@@ -139,7 +139,7 @@ func (rs *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, con
 }
 
 // dial dials the signer.
-func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
+func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *signer_register.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 
@@ -195,7 +195,7 @@ func (rs *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.A
 	return rs.dialed, nil
 }
 
-func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) error {
+func (rs *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *signer_register.SignerConnectionRegister, client consensus.ClientBackend, rsaKey *rsakey.RsaKey) error {
 
 	succeed, err := rs.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 	// succeed, err := func() (bool, error) { return true, nil }()
@@ -233,7 +233,7 @@ type BasicCommitteeHandler struct {
 
 	contractAddress    common.Address
 	contractCaller     *consensus.ContractCaller
-	contractInstance   *contract.SignerConnectionRegister
+	contractInstance   *signer_register.SignerConnectionRegister
 	contractTransactor *bind.TransactOpts
 
 	RsaKey *rsakey.RsaKey
@@ -279,7 +279,7 @@ func (oc *BasicCommitteeHandler) SetRSAKeys(rsaReader RSAReader) error {
 func (oc *BasicCommitteeHandler) UpdateContractCaller(contractCaller *consensus.ContractCaller) error {
 
 	// creates an contract instance
-	contractInstance, err := contract.NewSignerConnectionRegister(oc.contractAddress, contractCaller.Client)
+	contractInstance, err := signer_register.NewSignerConnectionRegister(oc.contractAddress, contractCaller.Client)
 	if err != nil {
 		return err
 	}

@@ -10,8 +10,8 @@ import (
 )
 
 func TestElect(t *testing.T) {
-	a := []float64{1, 2, 5, 6, 6, 7, 8, 9}
-	target := 4.0
+	a := []int64{1, 2, 5, 6, 6, 7, 8, 9}
+	target := int64(4)
 	nearest, pos := findNearest(a, target)
 	fmt.Println(nearest, pos)
 	if nearest != 5 || pos != 2 {
@@ -24,10 +24,10 @@ func TestElect(t *testing.T) {
 		addresses[i] = common.HexToAddress("0x" + fmt.Sprintf("%040x", i))
 	}
 
-	b := rpt.RPTs{
-		rpt.RPT{Address: addresses[0], Rpt: 12},
-		rpt.RPT{Address: addresses[1], Rpt: 3},
-		rpt.RPT{Address: addresses[2], Rpt: 6},
+	b := rpt.RptList{
+		rpt.Rpt{Address: addresses[0], Rpt: 12},
+		rpt.Rpt{Address: addresses[1], Rpt: 3},
+		rpt.Rpt{Address: addresses[2], Rpt: 6},
 	}
 
 	fmt.Println("before sort:")
@@ -42,11 +42,11 @@ func TestElect(t *testing.T) {
 		fmt.Println(b[i].Address.Hex(), b[i].Rpt)
 	}
 
-	rptx := [10]float64{100, 95, 80, 70, 60, 53, 42, 30, 10, 5}
+	rptx := [10]int64{100, 95, 80, 70, 60, 53, 42, 30, 10, 5}
 
-	rpts := rpt.RPTs{rpt.RPT{Address: addresses[0], Rpt: rptx[0]}}
+	rpts := rpt.RptList{rpt.Rpt{Address: addresses[0], Rpt: rptx[0]}}
 	for i := 1; i < len(addresses); i++ {
-		rpts = append(rpts, rpt.RPT{Address: addresses[i], Rpt: rptx[i]})
+		rpts = append(rpts, rpt.Rpt{Address: addresses[i], Rpt: rptx[i]})
 	}
 
 	seed := int64(66)

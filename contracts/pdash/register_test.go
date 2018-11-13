@@ -1,4 +1,4 @@
-package dpor
+package pdash
 
 import (
 	"crypto/ecdsa"
@@ -33,9 +33,12 @@ func sigHash(testfile file) (hash common.Hash) {
 	return hash
 }
 
-func deployTestRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *Register, error) {
+func deployTestRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *RegisterWrapper, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, instance, err := DeployRegister(deployTransactor, backend)
+	addr, instance, err := DeployRegisterAndReturnWrapper(deployTransactor, backend)
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	fmt.Println("contract address :", addr.Hex())
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
@@ -77,5 +80,10 @@ func TestRegister(t *testing.T) {
 		log.Warn("GetUploadCount err", addr, err)
 	}
 	assert.Equal(t, fakefile.fileName, file.FileName)
+}
 
+func checkError(t *testing.T, msg string, err error) {
+	if err != nil {
+		t.Fatalf(msg, err)
+	}
 }

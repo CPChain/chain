@@ -55,13 +55,12 @@ library Set {
         return true;
     }
 
-    function contains(Data storage self, address value)internal view returns (bool) {
+    function contains(Data storage self, address value) internal view returns (bool) {
         return self.flags[value];
     }
 
     function getAll(Data storage self) internal view returns (address[]) {
         return self.values;
     }
-
 }
 

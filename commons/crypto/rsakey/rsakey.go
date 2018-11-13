@@ -1,13 +1,14 @@
 package rsakey
 
 import (
-	"bitbucket.org/cpchain/chain/commons/log"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"bitbucket.org/cpchain/chain/commons/log"
 )
 
 type RsaPublicKey struct {

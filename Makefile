@@ -166,9 +166,8 @@ dev-test:
 
 
 dev-init:
-	@cp  build/pre-commit-hook  .git/hooks/pre-commit
+	@cp  dev/git-pre-commit-hook  .git/hooks/pre-commit
 	@echo "move pre-commit-hook to .git/hooks/pre-commit"
-
 
 docs:
 	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --rm docs sphinx-build -b html ./ _build
