@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package ethapi implements the general Ethereum API functions.
-package ethapi
+// Package cpcapi implements the general Ethereum API functions.
+package cpcapi
 
 import (
 	"context"
@@ -94,7 +94,7 @@ func GetAPIs(apiBackend Backend) []rpc.API {
 		{
 			Namespace: "eth",
 			Version:   "1.0",
-			Service:   NewPublicEthereumAPI(apiBackend),
+			Service:   NewPublicCpchainAPI(apiBackend),
 			Public:    true,
 		}, {
 			Namespace: "eth",

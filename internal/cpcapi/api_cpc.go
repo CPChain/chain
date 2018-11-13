@@ -1,4 +1,4 @@
-package ethapi
+package cpcapi
 
 import (
 	"bitbucket.org/cpchain/chain/accounts"
