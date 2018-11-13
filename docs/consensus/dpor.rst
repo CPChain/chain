@@ -1,23 +1,25 @@
 dpor
 ******
-
-+------------+------------+
-|PBFT        | Blockchain |
-+============+============+
-| primary    | leader     |
-+------------+------------+
-| backup     | signer     |
-+------------+------------+
-| replica    |            |
-+------------+------------+
-|            |            |
-+------------+------------+
+..
+    +------------+------------+
+    |PBFT        | Blockchain |
+    +============+============+
+    | primary    | leader     |
+    +------------+------------+
+    | backup     | signer     |
+    +------------+------------+
+    | replica    |            |
+    +------------+------------+
+    | sequence number | block number|
+    +------------+------------+
+    |  | |
+    +------------+------------+
 
 - **Normal Case**
     - **Pre-prepare**
         - The *leader* p broadcasts a <<PRE−PREPARE, v, n, d>,m>
         - v: the view
-        - n: sequence number
+        - n: block number
         - d: digest of message
         - m: message
     - **Prepare**
@@ -42,5 +44,5 @@ dpor
         - The primary p of view v+1 is collecting view-change certificate
             - View-change certificate is 2f+1 VIEW-CHANGE messages (including p)
     - Entering new view i+1
-        - After p collects VIEW-CHANGE certificate, it multicast a <NEW-VIEW, v+1> message
-        - Signer i enters new view v+1
+        - After p collects a view-change certificate, it multicast a <NEW-VIEW, v+1> message
+        - Signer i enters new view v+1, if i has 2f VIEW-CHANGE messages (including i) and receives NEW-VIEW message
