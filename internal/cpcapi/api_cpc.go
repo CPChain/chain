@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package cpcapi
 
 import (
@@ -17,7 +33,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// ChainStateReader provides an API to access Cpchain related information.
+// ChainStateReader provides an API to access Ethereum related information.
 // It offers only methods that operate on public data that is freely available to anyone.
 type ChainStateReader struct {
 	b Backend
@@ -54,7 +70,7 @@ func (c *ChainStateReader) GasPrice(ctx context.Context, req *empty.Empty) (*pb.
 	return &pb.GasPrice{GasPrice: price.Int64()}, err
 }
 
-// ProtocolVersion returns the current Cpchain protocol version this node supports
+// ProtocolVersion returns the current Ethereum protocol version this node supports
 func (c *ChainStateReader) ProtocolVersion(ctx context.Context, req *empty.Empty) (*wrappers.UInt32Value, error) {
 	return &wrappers.UInt32Value{Value: uint32(c.b.ProtocolVersion())}, nil
 }
@@ -83,7 +99,7 @@ func (c *ChainStateReader) Syncing(ctx context.Context, req *empty.Empty) (*pb.S
 	}, nil
 }
 
-// ChainReader provides an API to access the Cpchain blockchain.
+// ChainReader provides an API to access the Ethereum blockchain.
 // It offers only methods that operate on public data that is freely available to anyone.
 type ChainReader struct {
 	b Backend
