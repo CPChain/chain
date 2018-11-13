@@ -77,7 +77,7 @@ var (
 // this template generates the license comment.
 // its input is an info structure.
 var licenseT = template.Must(template.New("").Parse(`
-// Copyright {{.Year}} The cpchain Authors
+// Copyright {{.Year}} The cpchain authors
 // This file is part of {{.Whole false}}.
 //
 // {{.Whole true}} is free software: you can redistribute it and/or modify
@@ -356,6 +356,17 @@ func writeLicense(info *info) {
 	if err != nil {
 		log.Fatalf("error reading %s: %v\n", info.file, err)
 	}
+	// Skip file that already start with license with key word :"// Copyright"
+	if strings.HasPrefix(string(content), "// Copyright") {
+		fmt.Println("skipping old file:", info.file)
+		return
+	}
+
+	if info.Year < 2018 {
+		fmt.Println("skipping old file:", info.file)
+		return
+	}
+
 	// Construct new file content.
 	buf := new(bytes.Buffer)
 	licenseT.Execute(buf, info)

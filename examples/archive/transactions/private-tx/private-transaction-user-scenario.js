@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 // Create a private tx for node1 and node2.
 // Account 1 (Party A), Account 2(Party B), Account 3(Agent P), Account 4(other party)
 var account1 = "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a";

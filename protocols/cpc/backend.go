@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package cpc implements the Cpchain protocol.
+// Package cpc implements the cpchain protocol.
 package cpc
 
 import (
@@ -156,7 +156,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		remoteDB:       remoteDB,
 	}
 
-	log.Info("Initialising Cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
+	log.Info("Initialising cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
 
 	if !config.SkipBcVersionCheck {
 		bcVersion := rawdb.ReadDatabaseVersion(chainDb)
@@ -239,7 +239,7 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 	return db, nil
 }
 
-// CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
+// CreateConsensusEngine creates the required type of consensus engine instance for an cpchain service
 func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db database.Database) consensus.Engine {
 
 	// If Dpor is requested, set it up
@@ -432,7 +432,7 @@ func (s *CpchainService) Protocols() []p2p.Protocol {
 }
 
 // Start implements node.Service, starting all internal goroutines needed by the
-// Cpchain protocol implementation.
+// cpchain protocol implementation.
 func (s *CpchainService) Start(srvr *p2p.Server) error {
 	// Start the bloom bits servicing goroutines
 	s.startBloomHandlers()
@@ -468,7 +468,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 }
 
 // Stop implements node.Service, terminating all internal goroutines used by the
-// Cpchain protocol.
+// cpchain protocol.
 func (s *CpchainService) Stop() error {
 	s.bloomIndexer.Close()
 	s.blockchain.Stop()

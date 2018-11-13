@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 // Package election implements dpor's election method.
 package election
 
@@ -12,11 +28,11 @@ import (
 
 // randRange returns a random integer between [ min(i,j), max(i,j) )
 // NB, the rhs is open.
-func randRange(i, j int) int {
+func randRange(i, j int, myrand *rand.Rand) int {
 	if j > i {
-		return i + rand.Intn(j-i)
+		return i + myrand.Intn(j-i)
 	}
-	return j + rand.Intn(i-j)
+	return j + myrand.Intn(i-j)
 }
 
 func findNearest(array []int64, target int64) (int64, int) {
@@ -54,7 +70,9 @@ func findNearest(array []int64, target int64) (int64, int) {
 func Elect(rpts rpt.RptList, seed int64, viewLength int) []common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
-	rand.Seed(seed)
+
+	randSource := rand.NewSource(seed)
+	myRand := rand.New(randSource)
 
 	upper := 10
 	lower := 0
@@ -63,7 +81,7 @@ func Elect(rpts rpt.RptList, seed int64, viewLength int) []common.Address {
 	var randoms []int64
 
 	for i := 0; i < viewLength; i++ {
-		rnd := randRange(i*step, (i+1)*step)
+		rnd := randRange(i*step, (i+1)*step, myRand)
 		randoms = append(randoms, int64(math.Log2(float64(1.0+rnd))))
 	}
 

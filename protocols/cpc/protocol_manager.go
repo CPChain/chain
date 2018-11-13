@@ -104,8 +104,8 @@ type ProtocolManager struct {
 	wg sync.WaitGroup
 }
 
-// NewProtocolManager returns a new Cpchain sub protocol manager. The Cpchain sub protocol manages peers capable
-// with the Cpchain network.
+// NewProtocolManager returns a new cpchain sub protocol manager. The cpchain sub protocol manages peers capable
+// with the cpchain network.
 func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, etherbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
@@ -192,9 +192,9 @@ func (pm *ProtocolManager) removePeer(id string) {
 	if peer == nil {
 		return
 	}
-	log.Debug("Removing Cpchain peer", "peer", id)
+	log.Debug("Removing cpchain peer", "peer", id)
 
-	// Unregister the peer from the downloader and Cpchain peer set
+	// Unregister the peer from the downloader and cpchain peer set
 	pm.downloader.UnregisterPeer(id)
 
 	if err := pm.peers.UnregisterSigner(id); err != nil {
@@ -226,10 +226,41 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	// start sync handlers
 	go pm.syncer()
 	go pm.txsyncLoop()
+
+	// update, avoid stop
+	go pm.update()
+}
+
+func (pm *ProtocolManager) update() {
+	futureTimer := time.NewTicker(10 * time.Second)
+	defer futureTimer.Stop()
+
+	prev := pm.blockchain.CurrentHeader()
+
+	for {
+		select {
+		case <-futureTimer.C:
+			current := pm.blockchain.CurrentHeader()
+
+			// if still not updated, notice my peers my status.
+			if prev.Number.Uint64() == current.Number.Uint64() {
+				currentBlock := pm.blockchain.CurrentBlock()
+				log.Debug("broadcast updating block")
+
+				go pm.BroadcastBlock(currentBlock, true)
+				go pm.BroadcastBlock(currentBlock, false)
+			} else {
+				prev = current
+			}
+
+		case <-pm.quitSync:
+			return
+		}
+	}
 }
 
 func (pm *ProtocolManager) Stop() {
-	log.Info("Stopping Cpchain protocol")
+	log.Info("Stopping cpchain protocol")
 
 	pm.txsSub.Unsubscribe()        // quits txBroadcastLoop
 	pm.minedBlockSub.Unsubscribe() // quits blockBroadcastLoop
@@ -276,7 +307,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	}
 	p.Log().Debug("Cpchain peer connected", "name", p.Name())
 
-	// Execute the Cpchain handshake
+	// Execute the cpchain handshake
 	var (
 		genesis = pm.blockchain.Genesis()
 		head    = pm.blockchain.CurrentHeader()
@@ -826,10 +857,10 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 	}
 }
 
-// NodeInfo represents a short summary of the Cpchain sub-protocol metadata
+// NodeInfo represents a short summary of the cpchain sub-protocol metadata
 // known about the host peer.
 type NodeInfo struct {
-	Network    uint64               `json:"network"`    // Cpchain network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
+	Network    uint64               `json:"network"`    // cpchain network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
 	Difficulty *big.Int             `json:"difficulty"` // Total difficulty of the host's blockchain
 	Genesis    common.Hash          `json:"genesis"`    // SHA3 hash of the host's genesis block
 	Config     *configs.ChainConfig `json:"config"`     // Chain configuration for the fork rules

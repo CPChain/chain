@@ -32,7 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-// DefaultConfig contains default settings for use on the Cpchain main net.
+// DefaultConfig contains default settings for use on the cpchain main net.
 var DefaultConfig = Config{
 	SyncMode:      downloader.FullSync,
 	NetworkId:     1,
@@ -64,7 +64,7 @@ func init() {
 
 type Config struct {
 	// The genesis block, which is inserted if the database is empty.
-	// If nil, the Cpchain main net block is used.
+	// If nil, the cpchain main net block is used.
 	Genesis *core.Genesis `toml:",omitempty"`
 
 	// Protocol options

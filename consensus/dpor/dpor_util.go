@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package dpor
 
 import (
@@ -21,8 +37,8 @@ type Signatures struct {
 
 // GetSig gets addr's sig
 func (s *Signatures) GetSig(addr common.Address) (sig []byte, ok bool) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 	sig, ok = s.sigs[addr]
 	return sig, ok
 }
@@ -199,7 +215,7 @@ func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
-	if ok, _ := snap.IsLeaderOf(signer, snap.Number+1); ok {
+	if ok, _ := snap.IsLeaderOf(signer, snap.number()+1); ok {
 		return new(big.Int).Set(diffInTurn)
 	}
 	return new(big.Int).Set(diffNoTurn)
