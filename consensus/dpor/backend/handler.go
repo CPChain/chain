@@ -83,6 +83,7 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		pendingBlockCh:  make(chan *types.Block),
 		quitSync:        make(chan struct{}),
 		dialed:          false,
+		available:       false,
 	}
 	return h
 }

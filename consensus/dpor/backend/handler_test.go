@@ -4,9 +4,13 @@ import (
 	"reflect"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
+	"os"
+	"path/filepath"
 )
 
 // launch the chain
@@ -43,6 +47,7 @@ func TestNewHandler(t *testing.T) {
 	expectedResult.pendingBlockCh = make(chan *types.Block)
 	expectedResult.quitSync = make(chan struct{})
 	expectedResult.dialed = false
+	expectedResult.available = false
 
 	tests := []struct {
 		name string
@@ -59,8 +64,58 @@ func TestNewHandler(t *testing.T) {
 			got.pendingBlockCh = expectedResult.pendingBlockCh
 			got.quitSync = expectedResult.quitSync
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewHandler() = %v, \n want %v", got, tt.want)
+				t.Errorf("NewHandler() = %v, \n want %v\n", got, tt.want)
 			}
 		})
 	}
+}
+func TestHandler_IsAvailable(t *testing.T) {
+	var testHandler Handler
+	testHandler.available = false
+	if testHandler.IsAvailable() != false {
+		t.Errorf("IsAvailable() = %v, want %v\n", testHandler.IsAvailable(), false)
+	}
+	testHandler.SetAvailable()
+	if testHandler.IsAvailable() != true {
+		t.Errorf("SetAvailale() does not work\n")
+	}
+}
+
+func getAccount(keyStoreFilePath string, passphrase string, t *testing.T) keystore.Key {
+	// Load account.
+	ff, err := filepath.Abs("../../../")
+	file, err := os.Open(ff + "/examples/cpchain/data/" + keyStoreFilePath)
+	if err != nil {
+		t.Fatalf("KeyStoreFilePath error, got %v\n", err)
+	}
+
+	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
+	if err != nil {
+		t.Fatalf("KeyStoreFilePath error, got %v\n", err)
+	}
+
+	kst := keystore.NewKeyStore(keyPath, 2, 1)
+
+	// Get account.
+	account := kst.Accounts()[0]
+	account, key, err := kst.GetDecryptedKey(account, passphrase)
+	if err != nil {
+		t.Fatalf("Get account failed, got %v", err)
+	}
+
+	return *key
+
+}
+
+func TestHandler_SetContractCaller(t *testing.T) {
+	t.Skip("skip testing this function")
+	var key keystore.Key
+	key = getAccount("dd1/keystore/", "password", t)
+	fmt.Println("sucessfully print")
+	fmt.Println(key)
+}
+
+func TestHandler_handlePreprepareMsg(t *testing.T) {
+	//t.Skip("skip for short test")
+
 }
