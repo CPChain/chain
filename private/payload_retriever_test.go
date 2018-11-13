@@ -268,7 +268,7 @@ func (fakeWallet) Derive(path accounts.DerivationPath, pin bool) (accounts.Accou
 	panic("implement me")
 }
 
-func (fakeWallet) SelfDerive(base accounts.DerivationPath, chain ethereum.ChainStateReader) {
+func (fakeWallet) SelfDerive(base accounts.DerivationPath, chain cpchain.ChainStateReader) {
 	panic("implement me")
 }
 
