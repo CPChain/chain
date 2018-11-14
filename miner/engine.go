@@ -279,40 +279,42 @@ func (self *engine) wait() {
 				continue
 			}
 			block := result.Block
-			work := result.Work
 
-			// Update the block hash in all logs since it is now available and not when the
-			// receipt/log of individual transactions were created.
-			for _, r := range append(work.pubReceipts, work.privReceipts...) {
-				for _, l := range r.Logs {
-					l.BlockHash = block.Hash()
-				}
-			}
-			for _, log := range append(work.pubState.Logs(), work.privState.Logs()...) {
-				log.BlockHash = block.Hash()
-			}
+			// TODO: @liuq fix this.
+			// work := result.Work
 
-			stat, err := self.chain.WriteBlockWithState(block, work.pubReceipts, work.privReceipts, work.pubState, work.privState)
-			if err != nil {
-				log.Error("Failed writing block to chain", "err", err)
-				continue
-			}
+			// // Update the block hash in all logs since it is now available and not when the
+			// // receipt/log of individual transactions were created.
+			// for _, r := range append(work.pubReceipts, work.privReceipts...) {
+			// 	for _, l := range r.Logs {
+			// 		l.BlockHash = block.Hash()
+			// 	}
+			// }
+			// for _, log := range append(work.pubState.Logs(), work.privState.Logs()...) {
+			// 	log.BlockHash = block.Hash()
+			// }
+
+			// stat, err := self.chain.WriteBlockWithState(block, work.pubReceipts, work.privReceipts, work.pubState, work.privState)
+			// if err != nil {
+			// 	log.Error("Failed writing block to chain", "err", err)
+			// 	continue
+			// }
 
 			// Broadcast the block and announce chain insertion event
 			self.mux.Post(core.NewMinedBlockEvent{Block: block})
-			var (
-				events []interface{}
-				// TODO: try merging private logs
-				logs = work.pubState.Logs()
-			)
-			events = append(events, core.ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
-			if stat == core.CanonStatTy {
-				events = append(events, core.ChainHeadEvent{Block: block})
-			}
-			self.chain.PostChainEvents(events, logs)
+			// var (
+			// 	events []interface{}
+			// 	// TODO: try merging private logs
+			// 	logs = work.pubState.Logs()
+			// )
+			// events = append(events, core.ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
+			// if stat == core.CanonStatTy {
+			// 	events = append(events, core.ChainHeadEvent{Block: block})
+			// }
+			// self.chain.PostChainEvents(events, logs)
 
-			// Insert the block into the set of pending ones to wait for confirmations
-			self.unconfirmed.Insert(block.NumberU64(), block.Hash())
+			// // Insert the block into the set of pending ones to wait for confirmations
+			// self.unconfirmed.Insert(block.NumberU64(), block.Hash())
 		}
 	}
 }
