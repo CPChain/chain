@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"sync"
 	"testing"
 
 	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
@@ -26,6 +27,7 @@ func TestSigner_fetchPubkey(t *testing.T) {
 		queuedPrepareSigs   chan *types.Header
 		queuedCommitSigs    chan *types.Header
 		term                chan struct{}
+		lock                sync.RWMutex
 	}
 	type args struct {
 		contractInstance *contract.SignerConnectionRegister
@@ -56,6 +58,7 @@ func TestSigner_fetchPubkey(t *testing.T) {
 				queuedPrepareSigs:   tt.fields.queuedPrepareSigs,
 				queuedCommitSigs:    tt.fields.queuedCommitSigs,
 				term:                tt.fields.term,
+				lock:                tt.fields.lock,
 			}
 			if err := s.fetchPubkey(tt.args.contractInstance); (err != nil) != tt.wantErr {
 				t.Errorf("Signer.fetchPubkey() error = %v, wantErr %v", err, tt.wantErr)
