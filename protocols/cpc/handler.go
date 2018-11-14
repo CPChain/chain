@@ -1,18 +1,4 @@
-// Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// Copyright 2018 The cpchain authors
 
 package cpc
 
@@ -118,7 +104,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		etherbase: etherbase,
 	}
 
-	// Initiate a sub-protocol for every implemented version we can handle
+	// initialize a sub-protocol for every implemented version we can handle
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 	for i, version := range ProtocolVersions {
 		// Compatible; initialise the sub-protocol
@@ -133,6 +119,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 				case manager.newPeerCh <- peer:
 					manager.wg.Add(1)
 					defer manager.wg.Done()
+					// handle will hang on until the peer disappears
 					return manager.handle(peer)
 				case <-manager.quitSync:
 					return p2p.DiscQuitting
@@ -294,7 +281,7 @@ func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner boo
 	return isSigner, err
 }
 
-// handle is the callback invoked to manage the life cycle of an eth peer. When
+// handle is the callback invoked to manage the life cycle of a cpchain peer. When
 // this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) handle(p *peer) error {
 	// Ignore maxPeers if this is a trusted peer
