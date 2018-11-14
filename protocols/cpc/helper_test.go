@@ -1,21 +1,4 @@
 // Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
-// This file contains some shares testing functionality, common to  multiple
-// different files and modules being tested.
 
 package cpc
 
@@ -134,6 +117,7 @@ func (p *testTxPool) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subs
 // newTestTransaction create a new dummy transaction.
 func newTestTransaction(from *ecdsa.PrivateKey, nonce uint64, datasize int) *types.Transaction {
 	tx := types.NewTransaction(nonce, common.Address{}, big.NewInt(0), 100000, big.NewInt(0), make([]byte, datasize))
+	// TODO @chengx change the signer
 	tx, _ = types.SignTx(tx, types.HomesteadSigner{}, from)
 	return tx
 }
@@ -160,12 +144,14 @@ func newTestPeer(name string, version int, pm *ProtocolManager, shake bool) (*te
 	errc := make(chan error, 1)
 	go func() {
 		select {
+		// one shot for a single peer
 		case pm.newPeerCh <- peer:
 			errc <- pm.handle(peer)
 		case <-pm.quitSync:
 			errc <- p2p.DiscQuitting
 		}
 	}()
+
 	tp := &testPeer{app: app, net: net, peer: peer}
 	// Execute any implicitly requested handshakes and return
 	if shake {

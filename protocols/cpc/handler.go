@@ -206,8 +206,9 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent{})
 	go pm.minedBroadcastLoop()
 
-	// start sync handlers
+	// receives data
 	go pm.syncer()
+	// sends out data
 	go pm.txsyncLoop()
 
 	// update, avoid stop
@@ -336,8 +337,9 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {
 		return err
 	}
-	// Propagate existing transactions. new transactions appearing
-	// after this will be sent via broadcasts.
+
+	// send local pending transactions to the peer.
+	// new transactions appearing after this will be sent via broadcasts.
 	pm.syncTransactions(p)
 
 	// main loop. handle incoming messages.
