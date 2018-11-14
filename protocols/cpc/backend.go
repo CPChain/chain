@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"runtime"
 	"sync"
 	"sync/atomic"
 
@@ -51,10 +50,8 @@ import (
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/rlp"
 )
 
 var (
@@ -97,6 +94,7 @@ type CpchainService struct {
 	bloomRequests chan chan *bloombits.Retrieval // Channel receiving bloom data retrieval requests
 	bloomIndexer  *core.ChainIndexer             // LogsBloom indexer operating during block imports
 
+	// chain service backend
 	APIBackend          *APIBackend
 	AdmissionAPIBackend admission.APIBackend
 
@@ -166,6 +164,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		}
 		rawdb.WriteDatabaseVersion(chainDb, core.BlockChainVersion)
 	}
+
 	var (
 		vmConfig    = vm.Config{EnablePreimageRecording: config.EnablePreimageRecording}
 		cacheConfig = &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
@@ -174,6 +173,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	// Rewind the chain in case of an incompatible config upgrade.
 	if compat, ok := genesisErr.(*configs.ConfigCompatError); ok {
 		log.Warn("Rewinding chain to upgrade configuration", "err", compat)
@@ -195,15 +195,17 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 
 	cpc.miner = miner.New(cpc, cpc.chainConfig, cpc.EventMux(), cpc.engine)
-	cpc.miner.SetExtra(makeExtraData(config.ExtraData))
 
 	cpc.APIBackend = &APIBackend{cpc, nil}
+
+	// gas related
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
 		gpoParams.Default = config.GasPrice
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
 
+	// TODO @chengx do we really need this?
 	ks := cpc.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	cpc.AdmissionAPIBackend = admission.NewAdmissionControl(cpc.blockchain, cpc.etherbase, ks, cpc.config.Admission)
 	cpc.blockchain.SetVerifyEthashFunc(cpc.AdmissionAPIBackend.VerifyEthash)
@@ -211,22 +213,6 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	return cpc, nil
 }
 
-func makeExtraData(extra []byte) []byte {
-	if len(extra) == 0 {
-		// create default extradata
-		extra, _ = rlp.EncodeToBytes([]interface{}{
-			configs.Version,
-			"cpchain",
-			runtime.Version(),
-			runtime.GOOS,
-		})
-	}
-	if uint64(len(extra)) > configs.MaximumExtraDataSize {
-		log.Warn("Miner extra data exceed limit", "extra", hexutil.Bytes(extra), "limit", configs.MaximumExtraDataSize)
-		extra = nil
-	}
-	return extra
-}
 
 // CreateDB creates the chain database.
 func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.Database, error) {

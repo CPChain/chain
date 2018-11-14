@@ -1,18 +1,4 @@
 // Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package cpc
 
@@ -31,18 +17,17 @@ import (
 
 // Constants to match up protocol versions and messages
 const (
-	cpc01 = 64
+	cpc1 = 64
 )
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.
-// var ProtocolName = "eth"
 var ProtocolName = "cpc"
 
-// ProtocolVersions are the upported versions of the eth protocol (first is primary).
-var ProtocolVersions = []uint{cpc01}
+// ProtocolVersions are the versions of the cpchain protocol (first is primary).
+var ProtocolVersions = []uint{cpc1}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
-var ProtocolLengths = []uint64{16, 8} // TODO: this is wrong, fix this.
+var ProtocolLengths = []uint64{16}
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 
@@ -64,7 +49,7 @@ const (
 	GetReceiptsMsg = 0x0f
 	ReceiptsMsg    = 0x10
 
-	// Protocol messages belonging to cpc/01
+	// Protocol messages belonging to cpc/1
 	NewSignerMsg = 0x42
 
 	// Pbft messages starts here
@@ -123,7 +108,6 @@ type txPool interface {
 type statusData struct {
 	ProtocolVersion uint32
 	NetworkId       uint64
-	TD              *big.Int
 	CurrentBlock    common.Hash
 	GenesisBlock    common.Hash
 }

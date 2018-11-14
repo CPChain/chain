@@ -187,7 +187,6 @@ func (p *testPeer) handshake(t *testing.T, td *big.Int, head common.Hash, genesi
 	msg := &statusData{
 		ProtocolVersion: uint32(p.version),
 		NetworkId:       DefaultConfig.NetworkId,
-		TD:              td,
 		CurrentBlock:    head,
 		GenesisBlock:    genesis,
 	}
