@@ -1,4 +1,20 @@
-package contract
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
+package campaign
 
 import (
 	"bytes"
@@ -13,10 +29,10 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethclient"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func TestCampaign(t *testing.T) {
@@ -24,7 +40,7 @@ func TestCampaign(t *testing.T) {
 
 	// create client.
 	// client, err := ethclient.Dial("https://rinkeby.infura.io")
-	client, err := ethclient.Dial("http://localhost:8501") // local
+	client, err := cpclient.Dial("http://localhost:8501") // local
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -102,7 +118,7 @@ func assert(expectNum int64, expectDeposit int64, numOfCampaign *big.Int, deposi
 	}
 }
 
-func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *Campaign, startTime time.Time, ctx context.Context, client *ethclient.Client, fromAddress common.Address) (*big.Int, *big.Int, *big.Int) {
+func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *Campaign, startTime time.Time, ctx context.Context, client *cpclient.Client, fromAddress common.Address) (*big.Int, *big.Int, *big.Int) {
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(50)
 	// in wei

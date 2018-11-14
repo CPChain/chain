@@ -8,7 +8,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
@@ -46,7 +46,7 @@ func (*fakeDb) Close() {
 	panic("implement me4")
 }
 
-func (*fakeDb) NewBatch() ethdb.Batch {
+func (*fakeDb) NewBatch() database.Batch {
 	panic("implement me5")
 }
 
@@ -66,7 +66,7 @@ func Test_loadSnapshot(t *testing.T) {
 	type args struct {
 		config   *configs.DporConfig
 		sigcache *lru.ARCCache
-		db       ethdb.Database
+		db       database.Database
 		hash     common.Hash
 	}
 	tests := []struct {
@@ -102,7 +102,7 @@ func TestSnapshot_store(t *testing.T) {
 		// RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
-		db ethdb.Database
+		db database.Database
 	}
 
 	cache, _ := lru.NewARC(inmemorySnapshots)
@@ -293,7 +293,7 @@ func TestSnapshot_updateRpts(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    rpt.RPTs
+		want    rpt.RptList
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -330,7 +330,7 @@ func TestSnapshot_updateView(t *testing.T) {
 		RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
-		rpts rpt.RPTs
+		rpts rpt.RptList
 		seed int64
 		// viewLength int
 	}

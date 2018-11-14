@@ -9,7 +9,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	inmemorySnapshots  = 1000 // Number of recent vote snapshots to keep in memory
-	inmemorySignatures = 1000 // Number of recent block signatures to keep in memory
+	inmemorySnapshots  = 10 // Number of recent vote snapshots to keep in memory
+	inmemorySignatures = 10 // Number of recent block signatures to keep in memory
 
 	pctA = 2
 	pctB = 3 // only when n > 2/3 * N, accept the block
@@ -37,7 +37,7 @@ const (
 // cpchain testnet.
 type Dpor struct {
 	dh     dporHelper
-	db     ethdb.Database      // Database to store and retrieve Snapshot checkpoints
+	db     database.Database   // Database to store and retrieve Snapshot checkpoints
 	config *configs.DporConfig // Consensus engine configuration parameters
 
 	recents    *lru.ARCCache // Snapshots for recent block to speed up reorgs
@@ -45,7 +45,7 @@ type Dpor struct {
 
 	signedBlocks map[uint64]common.Hash // record signed blocks.
 
-	signer common.Address // Ethereum address of the signing key
+	signer common.Address // Cpchain address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
 	handler *backend.Handler
@@ -66,7 +66,7 @@ type Dpor struct {
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
-func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
+func New(config *configs.DporConfig, db database.Database) *Dpor {
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config
@@ -94,25 +94,25 @@ func New(config *configs.DporConfig, db ethdb.Database) *Dpor {
 	}
 }
 
-func NewFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
+func NewFaker(config *configs.DporConfig, db database.Database) *Dpor {
 	d := New(config, db)
 	d.fake = FakeMode
 	return d
 }
 
-func NewDoNothingFaker(config *configs.DporConfig, db ethdb.Database) *Dpor {
+func NewDoNothingFaker(config *configs.DporConfig, db database.Database) *Dpor {
 	d := New(config, db)
 	d.fake = DoNothingFakeMode
 	return d
 }
 
-func NewFakeFailer(config *configs.DporConfig, db ethdb.Database, fail uint64) *Dpor {
+func NewFakeFailer(config *configs.DporConfig, db database.Database, fail uint64) *Dpor {
 	d := NewDoNothingFaker(config, db)
 	d.fakeFail = fail
 	return d
 }
 
-func NewFakeDelayer(config *configs.DporConfig, db ethdb.Database, delay time.Duration) *Dpor {
+func NewFakeDelayer(config *configs.DporConfig, db database.Database, delay time.Duration) *Dpor {
 	d := NewFaker(config, db)
 	d.fakeDelay = delay
 	return d

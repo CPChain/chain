@@ -21,7 +21,7 @@ import (
 	"sync"
 
 	ethereum "bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"github.com/ethereum/go-ethereum/event"
 )
 

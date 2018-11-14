@@ -27,13 +27,8 @@ Available commands are:
    test       [ -coverage ] [ packages... ]                                                    -- runs the tests
    lint                                                                                        -- runs certain pre-selected linters
    archive    [ -arch architecture ] [ -type zip|tar ] [ -signer key-envvar ] [ -upload dest ] -- archives build artefacts
-   importkeys                                                                                  -- imports signing keys from env
-   debsrc     [ -signer key-id ] [ -upload dest ]                                              -- creates a debian source package
    nsis                                                                                        -- creates a Windows NSIS installer
-   aar        [ -local ] [ -sign key-id ] [-deploy repo] [ -upload dest ]                      -- creates an Android archive
-   xcode      [ -local ] [ -sign key-id ] [-deploy repo] [ -upload dest ]                      -- creates an iOS XCode framework
    xgo        [ -alltools ] [ options ]                                                        -- cross builds according to options
-   purge      [ -store blobstore ] [ -days threshold ]                                         -- purges old archives from the blobstore
 
 For all commands, -n prevents execution of external programs (dry run mode).
 
@@ -41,8 +36,6 @@ For all commands, -n prevents execution of external programs (dry run mode).
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -53,17 +46,15 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
-	"time"
 
 	"bitbucket.org/cpchain/chain/internal/build"
 )
 
 var (
 	// Files that end up in the cpchain*.zip archive.
-	gethArchiveFiles = []string{
+	archiveFiles = []string{
 		"COPYING",
 		executablePath("cpchain"),
 	}
@@ -73,51 +64,8 @@ var (
 		"COPYING",
 		executablePath("abigen"),
 		executablePath("bootnode"),
-		executablePath("evm"),
 		executablePath("cpchain"),
-		executablePath("puppeth"),
-		executablePath("rlpdump"),
-		executablePath("wnode"),
 	}
-
-	// A debian package is created for all executables listed here.
-	debExecutables = []debExecutable{
-		{
-			Name:        "abigen",
-			Description: "Source code generator to convert Ethereum contract definitions into easy to use, compile-time type-safe Go packages.",
-		},
-		{
-			Name:        "bootnode",
-			Description: "Ethereum bootnode.",
-		},
-		{
-			Name:        "evm",
-			Description: "Developer utility version of the EVM (Ethereum Virtual Machine) that is capable of running bytecode snippets within a configurable environment and execution mode.",
-		},
-		{
-			Name:        "cpchain",
-			Description: "Ethereum CLI client.",
-		},
-		{
-			Name:        "puppeth",
-			Description: "Ethereum private network manager.",
-		},
-		{
-			Name:        "rlpdump",
-			Description: "Developer utility tool that prints RLP structures.",
-		},
-		{
-			Name:        "wnode",
-			Description: "Ethereum Whisper diagnostic tool",
-		},
-	}
-
-	// Distros for which packages are created.
-	// Note: vivid is unsupported because there is no golang-1.6 package for it.
-	// Note: wily is unsupported because it was officially deprecated on lanchpad.
-	// Note: yakkety is unsupported because it was officially deprecated on lanchpad.
-	// Note: zesty is unsupported because it was officially deprecated on lanchpad.
-	debDistros = []string{"trusty", "xenial", "artful", "bionic"}
 )
 
 var GOBIN, _ = filepath.Abs(filepath.Join("build", "bin"))
@@ -140,27 +88,21 @@ func main() {
 	}
 	switch os.Args[1] {
 	case "install":
-		doInstall(os.Args[2:])
+		doInstall(os.Args[2:], false)
 	case "test":
 		doTest(os.Args[2:])
 	case "raceTest":
 		doRaceTest(os.Args[2:])
+	case "raceInstall":
+		doInstall(os.Args[2:], true)
 	case "lint":
 		doLint(os.Args[2:])
 	case "archive":
 		doArchive(os.Args[2:])
-	case "debsrc":
-		doDebianSource(os.Args[2:])
 	case "nsis":
 		doWindowsInstaller(os.Args[2:])
-	case "aar":
-		doAndroidArchive(os.Args[2:])
-	case "xcode":
-		doXCodeFramework(os.Args[2:])
 	case "xgo":
 		doXgo(os.Args[2:])
-	case "purge":
-		doPurge(os.Args[2:])
 	default:
 		log.Fatal("unknown command ", os.Args[1])
 	}
@@ -168,7 +110,7 @@ func main() {
 
 // Compiling
 
-func doInstall(cmdline []string) {
+func doInstall(cmdline []string, isRace bool) {
 	var (
 		arch = flag.String("arch", "", "Architecture to cross build for")
 		cc   = flag.String("cc", "", "C compiler to cross build with")
@@ -200,6 +142,9 @@ func doInstall(cmdline []string) {
 	if *arch == "" || *arch == runtime.GOARCH {
 		goinstall := goTool("install", buildFlags(env)...)
 		goinstall.Args = append(goinstall.Args, "-v")
+		if isRace {
+			goinstall.Args = append(goinstall.Args, "-race")
+		}
 		goinstall.Args = append(goinstall.Args, packages...)
 		build.MustRun(goinstall)
 		return
@@ -214,6 +159,10 @@ func doInstall(cmdline []string) {
 	// Seems we are cross compiling, work around forbidden GOBIN
 	goinstall := goToolArch(*arch, *cc, "install", buildFlags(env)...)
 	goinstall.Args = append(goinstall.Args, "-v")
+	if isRace {
+		goinstall.Args = append(goinstall.Args, "-race")
+	}
+
 	goinstall.Args = append(goinstall.Args, []string{"-buildmode", "archive"}...)
 	goinstall.Args = append(goinstall.Args, packages...)
 	build.MustRun(goinstall)
@@ -390,17 +339,17 @@ func doArchive(cmdline []string) {
 	var (
 		env      = build.Env()
 		base     = archiveBasename(*arch, env)
-		geth     = "cpchain-" + base + ext
+		cpchain  = "cpchain-" + base + ext
 		alltools = "cpchain-alltools-" + base + ext
 	)
 	maybeSkipArchive(env)
-	if err := build.WriteArchive(geth, gethArchiveFiles); err != nil {
+	if err := build.WriteArchive(cpchain, archiveFiles); err != nil {
 		log.Fatal(err)
 	}
 	if err := build.WriteArchive(alltools, allToolsArchiveFiles); err != nil {
 		log.Fatal(err)
 	}
-	for _, archive := range []string{geth, alltools} {
+	for _, archive := range []string{cpchain, alltools} {
 		if err := archiveUpload(archive, *upload, *signer); err != nil {
 			log.Fatal(err)
 		}
@@ -411,12 +360,6 @@ func archiveBasename(arch string, env build.Environment) string {
 	platform := runtime.GOOS + "-" + arch
 	if arch == "arm" {
 		platform += os.Getenv("GOARM")
-	}
-	if arch == "android" {
-		platform = "android-all"
-	}
-	if arch == "ios" {
-		platform = "ios-all"
 	}
 	return platform + "-" + archiveVersion(env)
 }
@@ -478,50 +421,6 @@ func maybeSkipArchive(env build.Environment) {
 	}
 }
 
-// Debian Packaging
-
-func doDebianSource(cmdline []string) {
-	var (
-		signer  = flag.String("signer", "", `Signing key name, also used as package author`)
-		upload  = flag.String("upload", "", `Where to upload the source package (usually "ppa:ethereum/ethereum")`)
-		workdir = flag.String("workdir", "", `Output directory for packages (uses temp dir if unset)`)
-		now     = time.Now()
-	)
-	flag.CommandLine.Parse(cmdline)
-	*workdir = makeWorkdir(*workdir)
-	env := build.Env()
-	maybeSkipArchive(env)
-
-	// Import the signing key.
-	if b64key := os.Getenv("PPA_SIGNING_KEY"); b64key != "" {
-		key, err := base64.StdEncoding.DecodeString(b64key)
-		if err != nil {
-			log.Fatal("invalid base64 PPA_SIGNING_KEY")
-		}
-		gpg := exec.Command("gpg", "--import")
-		gpg.Stdin = bytes.NewReader(key)
-		build.MustRun(gpg)
-	}
-
-	// Create the packages.
-	for _, distro := range debDistros {
-		meta := newDebMetadata(distro, *signer, env, now)
-		pkgdir := stageDebianSource(*workdir, meta)
-		debuild := exec.Command("debuild", "-S", "-sa", "-us", "-uc")
-		debuild.Dir = pkgdir
-		build.MustRun(debuild)
-
-		changes := fmt.Sprintf("%s_%s_source.changes", meta.Name(), meta.VersionString())
-		changes = filepath.Join(*workdir, changes)
-		if *signer != "" {
-			build.MustRunCommand("debsign", changes)
-		}
-		if *upload != "" {
-			build.MustRunCommand("dput", *upload, changes)
-		}
-	}
-}
-
 func makeWorkdir(wdflag string) string {
 	var err error
 	if wdflag != "" {
@@ -540,121 +439,6 @@ func isUnstableBuild(env build.Environment) bool {
 		return false
 	}
 	return true
-}
-
-type debMetadata struct {
-	Env build.Environment
-
-	// go-ethereum version being built. Note that this
-	// is not the debian package version. The package version
-	// is constructed by VersionString.
-	Version string
-
-	Author       string // "name <email>", also selects signing key
-	Distro, Time string
-	Executables  []debExecutable
-}
-
-type debExecutable struct {
-	Name, Description string
-}
-
-func newDebMetadata(distro, author string, env build.Environment, t time.Time) debMetadata {
-	if author == "" {
-		// No signing key, use default author.
-		author = "Ethereum Builds <fjl@ethereum.org>"
-	}
-	return debMetadata{
-		Env:         env,
-		Author:      author,
-		Distro:      distro,
-		Version:     build.VERSION(),
-		Time:        t.Format(time.RFC1123Z),
-		Executables: debExecutables,
-	}
-}
-
-// Name returns the name of the metapackage that depends
-// on all executable packages.
-func (meta debMetadata) Name() string {
-	if isUnstableBuild(meta.Env) {
-		return "ethereum-unstable"
-	}
-	return "ethereum"
-}
-
-// VersionString returns the debian version of the packages.
-func (meta debMetadata) VersionString() string {
-	vsn := meta.Version
-	if meta.Env.Buildnum != "" {
-		vsn += "+build" + meta.Env.Buildnum
-	}
-	if meta.Distro != "" {
-		vsn += "+" + meta.Distro
-	}
-	return vsn
-}
-
-// ExeList returns the list of all executable packages.
-func (meta debMetadata) ExeList() string {
-	names := make([]string, len(meta.Executables))
-	for i, e := range meta.Executables {
-		names[i] = meta.ExeName(e)
-	}
-	return strings.Join(names, ", ")
-}
-
-// ExeName returns the package name of an executable package.
-func (meta debMetadata) ExeName(exe debExecutable) string {
-	if isUnstableBuild(meta.Env) {
-		return exe.Name + "-unstable"
-	}
-	return exe.Name
-}
-
-// ExeConflicts returns the content of the Conflicts field
-// for executable packages.
-func (meta debMetadata) ExeConflicts(exe debExecutable) string {
-	if isUnstableBuild(meta.Env) {
-		// Set up the conflicts list so that the *-unstable packages
-		// cannot be installed alongside the regular version.
-		//
-		// https://www.debian.org/doc/debian-policy/ch-relationships.html
-		// is very explicit about Conflicts: and says that Breaks: should
-		// be preferred and the conflicting files should be handled via
-		// alternates. We might do this eventually but using a conflict is
-		// easier now.
-		return "ethereum, " + exe.Name
-	}
-	return ""
-}
-
-func stageDebianSource(tmpdir string, meta debMetadata) (pkgdir string) {
-	pkg := meta.Name() + "-" + meta.VersionString()
-	pkgdir = filepath.Join(tmpdir, pkg)
-	if err := os.Mkdir(pkgdir, 0755); err != nil {
-		log.Fatal(err)
-	}
-
-	// Copy the source code.
-	build.MustRunCommand("git", "checkout-index", "-a", "--prefix", pkgdir+string(filepath.Separator))
-
-	// Put the debian build files in place.
-	debian := filepath.Join(pkgdir, "debian")
-	build.Render("build/deb.rules", filepath.Join(debian, "rules"), 0755, meta)
-	build.Render("build/deb.changelog", filepath.Join(debian, "changelog"), 0644, meta)
-	build.Render("build/deb.control", filepath.Join(debian, "control"), 0644, meta)
-	build.Render("build/deb.copyright", filepath.Join(debian, "copyright"), 0644, meta)
-	build.RenderString("8\n", filepath.Join(debian, "compat"), 0644, meta)
-	build.RenderString("3.0 (native)\n", filepath.Join(debian, "source/format"), 0644, meta)
-	for _, exe := range meta.Executables {
-		install := filepath.Join(debian, meta.ExeName(exe)+".install")
-		docs := filepath.Join(debian, meta.ExeName(exe)+".docs")
-		build.Render("build/deb.install", install, 0644, exe)
-		build.Render("build/deb.docs", docs, 0644, exe)
-	}
-
-	return pkgdir
 }
 
 // Windows installer
@@ -728,230 +512,6 @@ func doWindowsInstaller(cmdline []string) {
 	}
 }
 
-// Android archives
-
-func doAndroidArchive(cmdline []string) {
-	var (
-		local  = flag.Bool("local", false, `Flag whether we're only doing a local build (skip Maven artifacts)`)
-		signer = flag.String("signer", "", `Environment variable holding the signing key (e.g. ANDROID_SIGNING_KEY)`)
-		deploy = flag.String("deploy", "", `Destination to deploy the archive (usually "https://oss.sonatype.org")`)
-		upload = flag.String("upload", "", `Destination to upload the archive (usually "gethstore/builds")`)
-	)
-	flag.CommandLine.Parse(cmdline)
-	env := build.Env()
-
-	// Sanity check that the SDK and NDK are installed and set
-	if os.Getenv("ANDROID_HOME") == "" {
-		log.Fatal("Please ensure ANDROID_HOME points to your Android SDK")
-	}
-	if os.Getenv("ANDROID_NDK") == "" {
-		log.Fatal("Please ensure ANDROID_NDK points to your Android NDK")
-	}
-	// Build the Android archive and Maven resources
-	build.MustRun(goTool("get", "golang.org/x/mobile/cmd/gomobile", "golang.org/x/mobile/cmd/gobind"))
-	build.MustRun(gomobileTool("init", "--ndk", os.Getenv("ANDROID_NDK")))
-	build.MustRun(gomobileTool("bind", "-ldflags", "-s -w", "--target", "android", "--javapkg", "org.ethereum", "-v", "github.com/ethereum/go-ethereum/mobile"))
-
-	if *local {
-		// If we're building locally, copy bundle to build dir and skip Maven
-		os.Rename("cpchain.aar", filepath.Join(GOBIN, "cpchain.aar"))
-		return
-	}
-	meta := newMavenMetadata(env)
-	build.Render("build/mvn.pom", meta.Package+".pom", 0755, meta)
-
-	// Skip Maven deploy and Azure upload for PR builds
-	maybeSkipArchive(env)
-
-	// Sign and upload the archive to Azure
-	archive := "cpchain-" + archiveBasename("android", env) + ".aar"
-	os.Rename("cpchain.aar", archive)
-
-	if err := archiveUpload(archive, *upload, *signer); err != nil {
-		log.Fatal(err)
-	}
-	// Sign and upload all the artifacts to Maven Central
-	os.Rename(archive, meta.Package+".aar")
-	if *signer != "" && *deploy != "" {
-		// Import the signing key into the local GPG instance
-		b64key := os.Getenv(*signer)
-		key, err := base64.StdEncoding.DecodeString(b64key)
-		if err != nil {
-			log.Fatalf("invalid base64 %s", *signer)
-		}
-		gpg := exec.Command("gpg", "--import")
-		gpg.Stdin = bytes.NewReader(key)
-		build.MustRun(gpg)
-
-		keyID, err := build.PGPKeyID(string(key))
-		if err != nil {
-			log.Fatal(err)
-		}
-		// Upload the artifacts to Sonatype and/or Maven Central
-		repo := *deploy + "/service/local/staging/deploy/maven2"
-		if meta.Develop {
-			repo = *deploy + "/content/repositories/snapshots"
-		}
-		build.MustRunCommand("mvn", "gpg:sign-and-deploy-file", "-e", "-X",
-			"-settings=build/mvn.settings", "-Durl="+repo, "-DrepositoryId=ossrh",
-			"-Dgpg.keyname="+keyID,
-			"-DpomFile="+meta.Package+".pom", "-Dfile="+meta.Package+".aar")
-	}
-}
-
-func gomobileTool(subcmd string, args ...string) *exec.Cmd {
-	cmd := exec.Command(filepath.Join(GOBIN, "gomobile"), subcmd)
-	cmd.Args = append(cmd.Args, args...)
-	cmd.Env = []string{
-		"GOPATH=" + build.GOPATH(),
-		"PATH=" + GOBIN + string(os.PathListSeparator) + os.Getenv("PATH"),
-	}
-	for _, e := range os.Environ() {
-		if strings.HasPrefix(e, "GOPATH=") || strings.HasPrefix(e, "PATH=") {
-			continue
-		}
-		cmd.Env = append(cmd.Env, e)
-	}
-	return cmd
-}
-
-type mavenMetadata struct {
-	Version      string
-	Package      string
-	Develop      bool
-	Contributors []mavenContributor
-}
-
-type mavenContributor struct {
-	Name  string
-	Email string
-}
-
-func newMavenMetadata(env build.Environment) mavenMetadata {
-	// Collect the list of authors from the repo root
-	contribs := []mavenContributor{}
-	if authors, err := os.Open("AUTHORS"); err == nil {
-		defer authors.Close()
-
-		scanner := bufio.NewScanner(authors)
-		for scanner.Scan() {
-			// Skip any whitespace from the authors list
-			line := strings.TrimSpace(scanner.Text())
-			if line == "" || line[0] == '#' {
-				continue
-			}
-			// Split the author and insert as a contributor
-			re := regexp.MustCompile("([^<]+) <(.+)>")
-			parts := re.FindStringSubmatch(line)
-			if len(parts) == 3 {
-				contribs = append(contribs, mavenContributor{Name: parts[1], Email: parts[2]})
-			}
-		}
-	}
-	// Render the version and package strings
-	version := build.VERSION()
-	if isUnstableBuild(env) {
-		version += "-SNAPSHOT"
-	}
-	return mavenMetadata{
-		Version:      version,
-		Package:      "cpchain-" + version,
-		Develop:      isUnstableBuild(env),
-		Contributors: contribs,
-	}
-}
-
-// XCode frameworks
-
-func doXCodeFramework(cmdline []string) {
-	var (
-		local  = flag.Bool("local", false, `Flag whether we're only doing a local build (skip Maven artifacts)`)
-		signer = flag.String("signer", "", `Environment variable holding the signing key (e.g. IOS_SIGNING_KEY)`)
-		deploy = flag.String("deploy", "", `Destination to deploy the archive (usually "trunk")`)
-		upload = flag.String("upload", "", `Destination to upload the archives (usually "gethstore/builds")`)
-	)
-	flag.CommandLine.Parse(cmdline)
-	env := build.Env()
-
-	// Build the iOS XCode framework
-	build.MustRun(goTool("get", "golang.org/x/mobile/cmd/gomobile", "golang.org/x/mobile/cmd/gobind"))
-	build.MustRun(gomobileTool("init"))
-	bind := gomobileTool("bind", "-ldflags", "-s -w", "--target", "ios", "--tags", "ios", "-v", "github.com/ethereum/go-ethereum/mobile")
-
-	if *local {
-		// If we're building locally, use the build folder and stop afterwards
-		bind.Dir, _ = filepath.Abs(GOBIN)
-		build.MustRun(bind)
-		return
-	}
-	archive := "cpchain-" + archiveBasename("ios", env)
-	if err := os.Mkdir(archive, os.ModePerm); err != nil {
-		log.Fatal(err)
-	}
-	bind.Dir, _ = filepath.Abs(archive)
-	build.MustRun(bind)
-	build.MustRunCommand("tar", "-zcvf", archive+".tar.gz", archive)
-
-	// Skip CocoaPods deploy and Azure upload for PR builds
-	maybeSkipArchive(env)
-
-	// Sign and upload the framework to Azure
-	if err := archiveUpload(archive+".tar.gz", *upload, *signer); err != nil {
-		log.Fatal(err)
-	}
-	// Prepare and upload a PodSpec to CocoaPods
-	if *deploy != "" {
-		meta := newPodMetadata(env, archive)
-		build.Render("build/pod.podspec", "Geth.podspec", 0755, meta)
-		build.MustRunCommand("pod", *deploy, "push", "Geth.podspec", "--allow-warnings", "--verbose")
-	}
-}
-
-type podMetadata struct {
-	Version      string
-	Commit       string
-	Archive      string
-	Contributors []podContributor
-}
-
-type podContributor struct {
-	Name  string
-	Email string
-}
-
-func newPodMetadata(env build.Environment, archive string) podMetadata {
-	// Collect the list of authors from the repo root
-	contribs := []podContributor{}
-	if authors, err := os.Open("AUTHORS"); err == nil {
-		defer authors.Close()
-
-		scanner := bufio.NewScanner(authors)
-		for scanner.Scan() {
-			// Skip any whitespace from the authors list
-			line := strings.TrimSpace(scanner.Text())
-			if line == "" || line[0] == '#' {
-				continue
-			}
-			// Split the author and insert as a contributor
-			re := regexp.MustCompile("([^<]+) <(.+)>")
-			parts := re.FindStringSubmatch(line)
-			if len(parts) == 3 {
-				contribs = append(contribs, podContributor{Name: parts[1], Email: parts[2]})
-			}
-		}
-	}
-	version := build.VERSION()
-	if isUnstableBuild(env) {
-		version += "-unstable." + env.Buildnum
-	}
-	return podMetadata{
-		Archive:      archive,
-		Version:      version,
-		Commit:       env.Commit,
-		Contributors: contribs,
-	}
-}
-
 // Cross compilation
 
 func doXgo(cmdline []string) {
@@ -1002,63 +562,4 @@ func xgoTool(args []string) *exec.Cmd {
 		cmd.Env = append(cmd.Env, e)
 	}
 	return cmd
-}
-
-// Binary distribution cleanups
-
-func doPurge(cmdline []string) {
-	var (
-		store = flag.String("store", "", `Destination from where to purge archives (usually "gethstore/builds")`)
-		limit = flag.Int("days", 30, `Age threshold above which to delete unstalbe archives`)
-	)
-	flag.CommandLine.Parse(cmdline)
-
-	if env := build.Env(); !env.IsCronJob {
-		log.Printf("skipping because not a cron job")
-		os.Exit(0)
-	}
-	// Create the azure authentication and list the current archives
-	auth := build.AzureBlobstoreConfig{
-		Account:   strings.Split(*store, "/")[0],
-		Token:     os.Getenv("AZURE_BLOBSTORE_TOKEN"),
-		Container: strings.SplitN(*store, "/", 2)[1],
-	}
-	blobs, err := build.AzureBlobstoreList(auth)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Iterate over the blobs, collect and sort all unstable builds
-	for i := 0; i < len(blobs); i++ {
-		if !strings.Contains(blobs[i].Name, "unstable") {
-			blobs = append(blobs[:i], blobs[i+1:]...)
-			i--
-		}
-	}
-	for i := 0; i < len(blobs); i++ {
-		for j := i + 1; j < len(blobs); j++ {
-			iTime, err := time.Parse(time.RFC1123, blobs[i].Properties.LastModified)
-			if err != nil {
-				log.Fatal(err)
-			}
-			jTime, err := time.Parse(time.RFC1123, blobs[j].Properties.LastModified)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if iTime.After(jTime) {
-				blobs[i], blobs[j] = blobs[j], blobs[i]
-			}
-		}
-	}
-	// Filter out all archives more recent that the given threshold
-	for i, blob := range blobs {
-		timestamp, _ := time.Parse(time.RFC1123, blob.Properties.LastModified)
-		if time.Since(timestamp) < time.Duration(*limit)*24*time.Hour {
-			blobs = blobs[:i]
-			break
-		}
-	}
-	// Delete all marked as such and return
-	if err := build.AzureBlobstoreDelete(auth, blobs); err != nil {
-		log.Fatal(err)
-	}
 }

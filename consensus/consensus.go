@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package consensus implements different Ethereum consensus engines.
+// Package consensus implements different cpchain consensus engines.
 package consensus
 
 import (
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/api"
+	"bitbucket.org/cpchain/chain/api/grpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -53,7 +53,7 @@ type ChainReader interface {
 
 // Engine is an algorithm agnostic consensus engine.
 type Engine interface {
-	// Author retrieves the Ethereum address of the account that minted the given
+	// Author retrieves the cpchain address of the account that minted the given
 	// block, which may be different from the header's coinbase if a consensus
 	// engine is based on signatures.
 	Author(header *types.Header) (common.Address, error)
@@ -97,7 +97,7 @@ type Engine interface {
 	APIs(chain ChainReader) []rpc.API
 
 	// GAPIs returns the GRPC APIs this consensus engine provides.
-	GAPIs(chain ChainReader) []api.GApi
+	GAPIs(chain ChainReader) []grpc.GApi
 }
 
 // Validator is used to determine whether an address is in the committee.

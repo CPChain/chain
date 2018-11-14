@@ -21,23 +21,23 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/event"
 )
 
-// APIBackend implements ethapi.Backend for full nodes
+// APIBackend implements cpcapi.Backend for full nodes
 type APIBackend struct {
 	cpc *CpchainService
 	gpo *gasprice.Oracle
@@ -218,7 +218,7 @@ func (b *APIBackend) SuggestPrice(ctx context.Context) (*big.Int, error) {
 	return b.gpo.SuggestPrice(ctx)
 }
 
-func (b *APIBackend) ChainDb() ethdb.Database {
+func (b *APIBackend) ChainDb() database.Database {
 	return b.cpc.ChainDb()
 }
 
@@ -242,6 +242,6 @@ func (b *APIBackend) ServiceFilter(ctx context.Context, session *bloombits.Match
 }
 
 // RemoteDB returns remote database instance.
-func (b *APIBackend) RemoteDB() ethdb.RemoteDatabase {
+func (b *APIBackend) RemoteDB() database.RemoteDatabase {
 	return b.cpc.RemoteDB()
 }

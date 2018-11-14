@@ -23,9 +23,9 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func ExampleGenerateChain() {
@@ -36,8 +36,8 @@ func ExampleGenerateChain() {
 		addr1    = crypto.PubkeyToAddress(key1.PublicKey)
 		addr2    = crypto.PubkeyToAddress(key2.PublicKey)
 		addr3    = crypto.PubkeyToAddress(key3.PublicKey)
-		db       = ethdb.NewMemDatabase()
-		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db       = database.NewMemDatabase()
+		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	)
 
 	// Ensure that key1 has some funds in the genesis block.

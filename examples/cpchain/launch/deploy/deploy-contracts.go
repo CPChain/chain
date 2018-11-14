@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package main
 
 import (
@@ -13,12 +29,11 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	pdash "bitbucket.org/cpchain/chain/contracts/dpor/contracts/pdash"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/register"
-	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethclient"
+	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -29,7 +44,7 @@ var (
 func deploySigner() {
 
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -114,7 +129,7 @@ func deploySigner() {
 func deployCampaign() {
 
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -198,7 +213,7 @@ func deployCampaign() {
 
 func deployRegister() {
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -255,7 +270,7 @@ func deployRegister() {
 	auth.GasPrice = gasPrice
 
 	// Launch contract deploy transaction.
-	address, tx, _, err := register.DeployRegister(auth, client)
+	address, tx, _, err := pdash.DeployRegister(auth, client)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -282,7 +297,7 @@ func deployRegister() {
 
 func deployPdash() {
 	// Create client.
-	client, err := ethclient.Dial(endPoint)
+	client, err := cpclient.Dial(endPoint)
 	if err != nil {
 		log.Fatal(err)
 	}

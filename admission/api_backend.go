@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package admission
 
 import (
@@ -9,10 +25,10 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission/ethash"
+	"bitbucket.org/cpchain/chain/api/cpclient"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/contracts/dpor"
-	"bitbucket.org/cpchain/chain/ethclient"
-	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -207,7 +223,7 @@ func (ac *AdmissionControl) sendCampaignProofInfo() {
 	}
 
 	auth.Value = big.NewInt(ac.config.Deposit)
-	instance, err := dpor.NewCampaign(auth, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
+	instance, err := dpor.NewCampaignWrapper(auth, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
 	if err != nil {
 		ac.err = err
 		return
@@ -223,7 +239,7 @@ func (ac *AdmissionControl) sendCampaignProofInfo() {
 // RegisterInProcHander registers the rpc.Server, handles RPC request to process the API requests in process
 func (ac *AdmissionControl) RegisterInProcHander(localRPCServer *rpc.Server) {
 	client := rpc.DialInProc(localRPCServer)
-	ac.contractBackend = ethclient.NewClient(client)
+	ac.contractBackend = cpclient.NewClient(client)
 }
 
 // VerifyEthash verify ethash nonce

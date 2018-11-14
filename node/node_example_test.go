@@ -19,10 +19,10 @@ package node_test
 import (
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/api"
+	"bitbucket.org/cpchain/chain/api/grpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
-	"bitbucket.org/cpchain/chain/rpc"
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
@@ -39,7 +39,7 @@ type SampleService struct{}
 
 func (s *SampleService) Protocols() []p2p.Protocol { return nil }
 func (s *SampleService) APIs() []rpc.API           { return nil }
-func (s *SampleService) GAPIs() []api.GApi         { return nil }
+func (s *SampleService) GAPIs() []grpc.GApi        { return nil }
 func (s *SampleService) Start(*p2p.Server) error   { fmt.Println("Service starting..."); return nil }
 func (s *SampleService) Stop() error               { fmt.Println("Service stopping..."); return nil }
 

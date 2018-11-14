@@ -1,12 +1,28 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package core
 
 import (
 	"bytes"
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/crypto/sha3"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
@@ -19,7 +35,7 @@ var (
 )
 
 // GetPrivateStateRoot gets the root(hash) for private state associated with the root of Merkle tree in public chain.
-func GetPrivateStateRoot(db ethdb.Database, blockRoot common.Hash) common.Hash {
+func GetPrivateStateRoot(db database.Database, blockRoot common.Hash) common.Hash {
 	exist, _ := db.Has(append(privateRootPrefix, blockRoot[:]...))
 	if exist {
 		root, _ := db.Get(append(privateRootPrefix, blockRoot[:]...))
@@ -29,12 +45,12 @@ func GetPrivateStateRoot(db ethdb.Database, blockRoot common.Hash) common.Hash {
 }
 
 // WritePrivateStateRoot writes the root(hash) for private state associated with the root of Merkle tree in public chain.
-func WritePrivateStateRoot(db ethdb.Database, blockRoot, root common.Hash) error {
+func WritePrivateStateRoot(db database.Database, blockRoot, root common.Hash) error {
 	return db.Put(append(privateRootPrefix, blockRoot[:]...), root[:])
 }
 
 // WritePrivateReceipt writes private receipt associated with specified transaction.
-func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db ethdb.Database) error {
+func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db database.Database) error {
 	hash := getPrivateReceiptKey(txHash)
 	// Write receipt to trie db.
 	storageReceipt := (*types.ReceiptForStorage)(receipt)
@@ -45,7 +61,7 @@ func WritePrivateReceipt(receipt *types.Receipt, txHash common.Hash, db ethdb.Da
 }
 
 // ReadPrivateReceipt reads private receipt associated with specified transaction.
-func ReadPrivateReceipt(txHash common.Hash, db ethdb.Database) (*types.Receipt, error) {
+func ReadPrivateReceipt(txHash common.Hash, db database.Database) (*types.Receipt, error) {
 	hash := getPrivateReceiptKey(txHash)
 	// Read private receipt data
 	data, err := db.Get(hash.Bytes())

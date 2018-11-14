@@ -1,28 +1,39 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package private
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/binary"
 
-	"bitbucket.org/cpchain/chain/ethdb"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // Read tx's payload replacement, retrieve encrypted payload from IPFS and decrypt it.
 // Return decrypted payload, a flag indicating if the node has enough permission and error if there is.
-func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB ethdb.RemoteDatabase, pubKey *rsa.PublicKey,
-	privKey *rsa.PrivateKey) (payload []byte, hasPermission bool, error error) {
+func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.RemoteDatabase, decryptor accounts.AccountRsaDecryptor) (payload []byte, hasPermission bool, error error) {
 	replacement := PayloadReplacement{}
 	err := rlp.DecodeBytes(data, &replacement)
 	if err != nil {
 		return []byte{}, false, err
 	}
-
-	pubEncoded := hexutil.Encode(x509.MarshalPKCS1PublicKey(pubKey))
 
 	// Check if the current node is in the participant group by comparing is public key and decrypt with its private
 	// key and return result.
@@ -37,10 +48,10 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB ethdb.Remot
 		return []byte{}, false, err
 	}
 	for i, k := range replacement.Participants {
-		encryptedKey := sp.SymmetricKeys[i]
-		// If the participant's public key equals to current public key, decrypt with corresponding private key.
-		if k == pubEncoded {
-			symKey := decryptSymKey(encryptedKey, privKey)
+		canDecrypt, wallet, acc := decryptor.CanDecrypt(k)
+		if canDecrypt {
+			encryptedKey := sp.SymmetricKeys[i]
+			symKey, _ := decryptor.Decrypt(encryptedKey, wallet, acc)
 			decrypted, _ := decryptPayload(sp.Payload, symKey, txNonce)
 			return decrypted, true, nil
 		}
@@ -49,17 +60,12 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB ethdb.Remot
 	return []byte{}, false, nil
 }
 
-func getDataFromRemote(ipfsAddress []byte, remoteDB ethdb.RemoteDatabase) ([]byte, error) {
+func getDataFromRemote(ipfsAddress []byte, remoteDB database.RemoteDatabase) ([]byte, error) {
 	content, err := remoteDB.Get(ipfsAddress)
 	if err != nil {
 		return []byte{}, err
 	}
 	return content, nil
-}
-
-func decryptSymKey(data []byte, privateKey *rsa.PrivateKey) []byte {
-	decrypted, _ := rsa.DecryptPKCS1v15(nil, privateKey, data)
-	return decrypted
 }
 
 // Decrypt payload with the given symmetric key.

@@ -1,0 +1,4 @@
+#!/bin/bash
+if git diff-index --cached HEAD | egrep -q "\bvendor/"; then
+    echo 'vendor has been changed'
+fi

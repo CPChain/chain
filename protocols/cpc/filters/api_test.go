@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"github.com/ethereum/go-ethereum/common"
 )
 

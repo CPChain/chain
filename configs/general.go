@@ -32,7 +32,7 @@ var (
 		Ethash:  new(EthashConfig),
 	}
 
-	// 	// MainnetChainConfig is the chain parameters to run a node on the CPChain main network.
+	// 	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
 	MainnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(CpchainChainId),
 
@@ -40,17 +40,19 @@ var (
 			Period:                1,
 			Epoch:                 4,
 			View:                  1,
-			MaxInitBlockNumber:    12,
+			MaxInitBlockNumber:    96,
 			ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
 			Contracts: map[string]common.Address{
 				"campaign": common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"),
 				"signer":   common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"),
+				// TODO @hmw make the name more concrete
+				"register": common.HexToAddress("3A220f351252089D385b29beca14e27F204c296A"),
 			},
 		},
 	}
 
 	// AllEthashProtocolChanges contains every protocol change (EIPs) introduced
-	// and accepted by the Ethereum core developers into the Ethash consensus.
+	// and accepted by the cpchain core developers into the Ethash consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
