@@ -20,7 +20,8 @@ import (
 
 // Handler implements PbftHandler
 type Handler struct {
-	epochIdx uint64
+	epochIdx    uint64
+	epochLength uint64
 
 	ownNodeID  string
 	ownAddress common.Address
@@ -79,6 +80,7 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 	h := &Handler{
 		ownAddress:      etherbase,
 		contractAddress: config.Contracts["signer"],
+		epochLength:     config.Epoch,
 		signers:         make(map[common.Address]*Signer),
 		pendingBlockCh:  make(chan *types.Block),
 		quitSync:        make(chan struct{}),
@@ -234,9 +236,15 @@ func (h *Handler) Disconnect() {
 	h.lock.Unlock()
 }
 
-// BroadcastGeneratedBlock broadcasts generated block to committee
-func (h *Handler) BroadcastGeneratedBlock(block *types.Block) {
+// BroadcastMinedBlock broadcasts generated block to committee
+func (h *Handler) BroadcastMinedBlock(block *types.Block) {
+
 	committee := h.signers
+	// for len(committee) <= int(h.epochLength) {
+	// 	committee = h.signers
+	// 	time.Sleep(3 * time.Second)
+	// }
+
 	log.Debug("broadcast new generated block to commttee")
 	for addr, peer := range committee {
 		log.Debug("signer", "addr", addr.Hex())
@@ -565,7 +573,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			log.Debug("generated new pending block, broadcasting")
 
 			// broadcast mined pending block to remote signers
-			h.BroadcastGeneratedBlock(pendingBlock)
+			h.BroadcastMinedBlock(pendingBlock)
 
 		// case <-futureTimer.C:
 

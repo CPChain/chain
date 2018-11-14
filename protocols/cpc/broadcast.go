@@ -117,7 +117,10 @@ func (pm *ProtocolManager) minedBroadcastLoop() {
 		switch ev := obj.Data.(type) {
 		case core.NewMinedBlockEvent:
 
-			if pm.chainconfig.Dpor != nil && pm.chainconfig.Dpor.MaxInitBlockNumber < ev.Block.NumberU64() {
+			if pm.chainconfig.Dpor != nil {
+
+				log.Debug("handling mined block with dpor handler")
+
 				// broadcast mined block with dpor handler
 				pm.engine.(*dpor.Dpor).HandleMinedBlock(ev.Block)
 			} else {
