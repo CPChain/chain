@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of cpchain.
+//
+// cpchain is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// cpchain is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with cpchain. If not, see <http://www.gnu.org/licenses/>.
+
 package main
 
 import (
@@ -17,7 +33,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/trie"
@@ -234,7 +250,7 @@ func importChain(ctx *cli.Context) error {
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
 
 	// Output pre-compaction stats mostly to see the import trashing
-	db := chainDb.(*ethdb.LDBDatabase)
+	db := chainDb.(*database.LDBDatabase)
 
 	stats, err := db.LDB().GetProperty("leveldb.stats")
 	if err != nil {
@@ -328,7 +344,7 @@ func importPreimages(ctx *cli.Context) error {
 		log.Fatalf("This command requires an argument.")
 	}
 	cfg, stack := newConfigNode(ctx)
-	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*ethdb.LDBDatabase)
+	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*database.LDBDatabase)
 
 	start := time.Now()
 	if err := commons.ImportPreimages(diskdb, ctx.Args().First()); err != nil {
@@ -344,7 +360,7 @@ func exportPreimages(ctx *cli.Context) error {
 		log.Fatal("This command requires an argument.")
 	}
 	cfg, stack := newConfigNode(ctx)
-	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*ethdb.LDBDatabase)
+	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*database.LDBDatabase)
 
 	start := time.Now()
 	if err := commons.ExportPreimages(diskdb, ctx.Args().First()); err != nil {

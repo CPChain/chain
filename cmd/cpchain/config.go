@@ -14,10 +14,10 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"bitbucket.org/cpchain/chain/node"
+	"bitbucket.org/cpchain/chain/protocols/cpc"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/naoina/toml"
@@ -81,7 +81,7 @@ func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
 // updateBootstrapNodes creates a list of bootstrap nodes from the command line
 // flags, reverting to pre-configured ones if none have been specified.
 func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
-	urls := configs.CpchainBootnodes // TODO: CPChain boot nodes should be mainnet
+	urls := configs.CpchainBootnodes // TODO: cpchain boot nodes should be mainnet
 	if ctx.IsSet(flags.BootnodesFlagName) {
 		urls = strings.Split(ctx.String(flags.BootnodesFlagName), ",")
 	}
@@ -129,6 +129,11 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 		cfg.HTTPHost = addr[0]
 		cfg.HTTPPort, _ = strconv.Atoi(addr[1])
 	}
+	if ctx.IsSet(flags.RpcApiFlagName) {
+		cfg.HTTPModules = strings.Split(ctx.String(flags.RpcApiFlagName), ",")
+		log.Infof("HTTPModules:%v", cfg.HTTPModules)
+	}
+
 	// ws is omitted for now
 
 	// grpc setting

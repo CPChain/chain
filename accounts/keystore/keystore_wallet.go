@@ -21,6 +21,7 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/types"
 )
 
@@ -76,7 +77,7 @@ func (w *keystoreWallet) Derive(path accounts.DerivationPath, pin bool) (account
 
 // SelfDerive implements accounts.Wallet, but is a noop for plain wallets since
 // there is no notion of hierarchical account derivation for plain keystore accounts.
-func (w *keystoreWallet) SelfDerive(base accounts.DerivationPath, chain ethereum.ChainStateReader) {}
+func (w *keystoreWallet) SelfDerive(base accounts.DerivationPath, chain cpchain.ChainStateReader) {}
 
 // SignHash implements accounts.Wallet, attempting to sign the given hash with
 // the given account. If the wallet does not wrap this particular account, an
@@ -138,10 +139,14 @@ func (w *keystoreWallet) SignTxWithPassphrase(account accounts.Account, passphra
 	return w.keystore.SignTxWithPassphrase(account, passphrase, tx, chainID)
 }
 
-func (w *keystoreWallet) EnryptWithRsa(account accounts.Account, password string, plainText []byte) ([]byte, error) {
-	return w.keystore.EncryptWithRsa(account, password, plainText)
+func (w *keystoreWallet) EncryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
+	return w.keystore.EncryptWithRsa(account, plainText)
 }
 
-func (w *keystoreWallet) DecryptWithRsa(account accounts.Account, password string, cipherText []byte) ([]byte, error) {
-	return w.keystore.DecryptWithRsa(account, password, cipherText)
+func (w *keystoreWallet) DecryptWithRsa(account accounts.Account, cipherText []byte) ([]byte, error) {
+	return w.keystore.DecryptWithRsa(account, cipherText)
+}
+
+func (w *keystoreWallet) RsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
+	return w.keystore.RsaPublicKey(account)
 }

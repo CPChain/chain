@@ -22,10 +22,10 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/crypto/bn256"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/bn256"
 	"golang.org/x/crypto/ripemd160"
 )
 
@@ -48,6 +48,15 @@ var PrimitiveContracts = map[common.Address]PrimitiveContract{
 	common.BytesToAddress([]byte{6}): &bn256Add{},
 	common.BytesToAddress([]byte{7}): &bn256ScalarMul{},
 	common.BytesToAddress([]byte{8}): &bn256Pairing{},
+}
+
+func RegisterPrimitiveContract(address common.Address, contract PrimitiveContract) error {
+	if PrimitiveContracts[address] == nil {
+		PrimitiveContracts[address] = contract
+		return nil
+	} else {
+		return ErrPrimitiveContractExists
+	}
 }
 
 // RunPrecompiledContract runs and evaluates the output of a precompiled contract.

@@ -26,14 +26,14 @@ import (
 	"sync"
 	"time"
 
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/internal/cpcapi"
 	"bitbucket.org/cpchain/chain/protocols/cpc/tracers"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -279,7 +279,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			// TODO: test if below statement is correct.
 			privStateDB, _ := state.New(core.GetPrivateStateRoot(api.cpc.chainDb, block.StateRoot()), pubStateDB.Database())
 			// TODO: Pass real remote database
-			_, _, _, _, err := api.cpc.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.cpc.blockchain.RsaPrivateKey())
+			_, _, _, _, err := api.cpc.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{})
 			if err != nil {
 				failed = err
 				break
@@ -520,7 +520,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		// TODO: check if below statement is correct.
 		privStateDB, _ := state.New(core.GetPrivateStateRoot(api.cpc.chainDb, block.StateRoot()), pubStateDB.Database())
 		// TODO: pass real remote database.
-		_, _, _, _, err := api.cpc.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{}, api.cpc.blockchain.RsaPrivateKey())
+		_, _, _, _, err := api.cpc.blockchain.Processor().Process(block, pubStateDB, privStateDB, nil, vm.Config{})
 		if err != nil {
 			return nil, err
 		}
@@ -618,11 +618,11 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 	// Depending on the tracer type, format and return the output
 	switch tracer := tracer.(type) {
 	case *vm.StructLogger:
-		return &ethapi.ExecutionResult{
+		return &cpcapi.ExecutionResult{
 			Gas:         gas,
 			Failed:      failed,
 			ReturnValue: fmt.Sprintf("%x", ret),
-			StructLogs:  ethapi.FormatLogs(tracer.StructLogs()),
+			StructLogs:  cpcapi.FormatLogs(tracer.StructLogs()),
 		}, nil
 
 	case *tracers.Tracer:

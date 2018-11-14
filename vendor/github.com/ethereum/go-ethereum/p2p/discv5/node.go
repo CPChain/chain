@@ -30,8 +30,8 @@ import (
 	"strconv"
 	"strings"
 
-	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 // Node represents a host on the network.

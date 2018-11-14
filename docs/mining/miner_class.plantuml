@@ -1,0 +1,75 @@
+@startuml
+
+interface Worker {
+	Work() chan<- *WorkItem
+	SetReturnCh(chan<- *Result)
+	Stop()
+	Start()
+	GetHashRate() int64
+}
+
+class NativeWorker {
+  workChannel
+  returnChannel
+}
+
+Worker  <|... NativeWorker
+
+class mineEngine {
+  txsChannel
+  txsSubscription
+  chainHeadChannel
+  chainHeadSubscription
+  chainSideChannel
+  chainSideSubscription
+
+  backend
+  blockchain
+  chainDb
+  coinbase
+  currentWork
+
+  start()
+  stop()
+  update()
+}
+
+class WorkItem {
+  config
+  signer
+  privateStateDB
+  publicStateDB
+  remoteDB
+  gasPool
+  header
+  transactions
+  publicReceipts
+  privateReceipts
+
+  commitTransactions()
+
+}
+
+mineEngine "1" *-- "*" Worker : workers
+mineEngine "1" *-- "1" WorkItem : currentWork
+mineEngine ...> WorkItem : register
+
+class Miner {
+  coinbase common.Address
+  mining   int32
+  backend  Backend
+  consensusEngine
+
+  Start()
+  Stop()
+  Register(Worker)
+  Unregister(Worker)
+  SetExtra()
+  update()
+}
+
+Miner "1" --> "1" mineEngine : mineEngine
+
+Worker ---> WorkItem : process
+
+@enduml

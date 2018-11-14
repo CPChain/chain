@@ -2,11 +2,15 @@
 # with Go source code. If you know what GOPATH is then you probably
 # don't need to bother with make.
 
-.PHONY: cpchain android ios cpchain-cross evm all test clean
+.PHONY: cpchain cpchain-cross all test clean
 .PHONY: cpchain-linux cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-mips64 cpchain-linux-mips64le
 .PHONY: cpchain-linux-arm cpchain-linux-arm-5 cpchain-linux-arm-6 cpchain-linux-arm-7 cpchain-linux-arm64
 .PHONY: cpchain-darwin cpchain-darwin-386 cpchain-darwin-amd64
 .PHONY: cpchain-windows cpchain-windows-386 cpchain-windows-amd64
+.PHONY: dev-init 
+.PHONY: docs docs-serve
+
+SHELL := $(shell which bash)
 
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
@@ -19,6 +23,11 @@ cpchain:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/cpchain\" to launch cpchain."
 
+cpchain-race:
+	build/env.sh go run build/ci.go raceInstall ./cmd/cpchain
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/cpchain\" to launch cpchain."
+
 bootnode:
 	build/env.sh go run build/ci.go install ./tools/bootnode
 	@echo "Done building."
@@ -28,16 +37,6 @@ abigen:
 	build/env.sh go run build/ci.go install ./tools/abigen
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/abigen\" to launch abigen."
-
-android:
-	build/env.sh go run build/ci.go aar --local
-	@echo "Done building."
-	@echo "Import \"$(GOBIN)/cpchain.aar\" to use the library."
-
-ios:
-	build/env.sh go run build/ci.go xcode --local
-	@echo "Done building."
-	@echo "Import \"$(GOBIN)/Cpchain.framework\" to use the library."
 
 test: all
 	build/env.sh go run build/ci.go test
@@ -69,11 +68,12 @@ devtools:
 
 # Cross Compilation Targets (xgo)
 
-cpchain-cross: cpchain-linux cpchain-darwin cpchain-windows cpchain-android cpchain-ios
+cpchain-cross: cpchain-linux cpchain-darwin cpchain-windows
 	@echo "Full cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-*
 
-cpchain-linux: cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-arm cpchain-linux-mips64 cpchain-linux-mips64le
+#cpchain-linux: cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-arm cpchain-linux-mips64 cpchain-linux-mips64le
+cpchain-linux: cpchain-linux-386 cpchain-linux-amd64
 	@echo "Linux cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-linux-*
 
@@ -163,3 +163,14 @@ cpchain-windows-amd64:
 dev-test:
 	docker build -f Dockerfile.dev .
 	@echo "chain test in docker done"
+
+
+dev-init:
+	@cp  dev/git-pre-commit-hook  .git/hooks/pre-commit
+	@echo "move pre-commit-hook to .git/hooks/pre-commit"
+
+docs:
+	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --rm docs sphinx-build -b html ./ _build
+
+docs-serve:
+	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --service-ports --rm serve python3 docker/app.py

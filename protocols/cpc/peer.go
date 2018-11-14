@@ -1,18 +1,4 @@
 // Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package cpc
 
@@ -64,10 +50,10 @@ const (
 	handshakeTimeout = 5 * time.Second
 )
 
-// PeerInfo represents a short summary of the Cpchain sub-protocol metadata known
+// PeerInfo represents a short summary of the cpchain sub-protocol metadata known
 // about a connected peer.
 type PeerInfo struct {
-	Version    int      `json:"version"`    // Cpchain protocol version negotiated
+	Version    int      `json:"version"`    // cpchain protocol version negotiated
 	Difficulty *big.Int `json:"difficulty"` // Total difficulty of the peer's blockchain
 	Head       string   `json:"head"`       // SHA3 hash of the peer's best owned block
 }
@@ -439,18 +425,16 @@ func (p *peer) RequestReceipts(hashes []common.Hash) error {
 	return p2p.Send(p.rw, GetReceiptsMsg, hashes)
 }
 
-// Handshake executes the eth protocol handshake, negotiating version number,
-// network IDs, difficulties, head and genesis blocks.
+// handshake executes the eth protocol handshake, negotiating version number,
+// network IDs, etc.  it sends a message and checks the reply.
 func (p *peer) Handshake(network uint64, td *big.Int, head common.Hash, genesis common.Hash) error {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var status statusData // safe to read after two values have been received from errc
-
 	go func() {
 		errc <- p2p.Send(p.rw, StatusMsg, &statusData{
 			ProtocolVersion: uint32(p.version),
 			NetworkId:       network,
-			TD:              td,
 			CurrentBlock:    head,
 			GenesisBlock:    genesis,
 		})
@@ -470,7 +454,8 @@ func (p *peer) Handshake(network uint64, td *big.Int, head common.Hash, genesis 
 			return p2p.DiscReadTimeout
 		}
 	}
-	p.td, p.head = status.TD, status.CurrentBlock
+	p.head = status.CurrentBlock
+	// NB @liuq p.td is removed
 	return nil
 }
 
@@ -569,7 +554,7 @@ func (p *peer) String() string {
 }
 
 // peerSet represents the collection of active peers currently participating in
-// the Cpchain sub-protocol.
+// the cpchain sub-protocol.
 type peerSet struct {
 	peers map[string]*peer
 	// committee map[string]*peer

@@ -1,0 +1,942 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1/cpc/cpc.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/cpc/accounts": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "Accounts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAddresses"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "AccountReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/coinbase": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "Coinbase",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonAddress"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "Coinbase"
+        ]
+      }
+    },
+    "/api/v1/cpc/gasPrice": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "GasPrice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonGasPrice"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "ChainStateReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getBalance": {
+      "post": {
+        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
+        "operationId": "GetBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonBalance"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcChainReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChainReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getBlockByHash": {
+      "post": {
+        "summary": "GetBlockByHash returns the requested block. When fullTx is true all transactions in the block are returned in full\ndetail, otherwise only the transaction hash is returned.",
+        "operationId": "GetBlockByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonBlock"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcChainReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChainReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getBlockByNumber": {
+      "post": {
+        "summary": "Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not\nyet received the latest block headers from its pears. In case it is synchronizing:\n- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled",
+        "operationId": "GetBlockByNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonBlock"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcChainReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChainReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getBlockCount": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "GetBlockCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonBlockNumber"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "ChainReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getRawTransactionByBlockNumberAndIndex": {
+      "post": {
+        "summary": "GetCode returns the code stored at the given address in the state for the given block number.",
+        "operationId": "GetRawTransactionByBlockNumberAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cpcRawTransaction"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionPoolReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionByBlockHashAndIndex": {
+      "post": {
+        "summary": "GetBlockByHash returns the requested block. When fullTx is true all transactions in the block are returned in full\ndetail, otherwise only the transaction hash is returned.",
+        "operationId": "GetTransactionByBlockHashAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonRpcTransaction"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionPoolReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionByBlockNumberAndIndex": {
+      "post": {
+        "summary": "Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not\nyet received the latest block headers from its pears. In case it is synchronizing:\n- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled",
+        "operationId": "GetTransactionByBlockNumberAndIndex",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonRpcTransaction"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionPoolReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionByHash": {
+      "post": {
+        "summary": "GetRawTransactionByBlockHashAndIndex returns the bytes of the transaction for the given block hash and index.",
+        "operationId": "GetTransactionByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonRpcTransaction"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionHash"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionCount": {
+      "post": {
+        "summary": "GetTransactionCount returns the number of transactions the given address has sent for the given block number",
+        "operationId": "GetTransactionCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionCount"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionPoolReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionCountByBlockHash": {
+      "post": {
+        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
+        "operationId": "GetTransactionCountByBlockHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionCount"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/commonBlockHash"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionCountByBlockNumber": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "GetTransactionCountByBlockNumber",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionCount"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/commonBlockNumber"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getTransactionReceipt": {
+      "post": {
+        "summary": "GetTransactionReceipt returns the transaction receipt for the given transaction hash.",
+        "operationId": "GetTransactionReceipt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonReceipt"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcTransactionHash"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionPoolReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/getcode": {
+      "post": {
+        "summary": "GetCode returns the code stored at the given address in the state for the given block number.",
+        "operationId": "GetCode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonCode"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cpcChainReaderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChainReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/mining": {
+      "post": {
+        "summary": "Coinbase is the address that mining rewards will be send to",
+        "operationId": "Mining",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonIsOk"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "MinerReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/protocolVersion": {
+      "post": {
+        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
+        "operationId": "ProtocolVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/protobufUInt32Value"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "ChainStateReader"
+        ]
+      }
+    },
+    "/api/v1/cpc/syncing": {
+      "post": {
+        "summary": "Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not\nyet received the latest block headers from its pears. In case it is synchronizing:\n- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled",
+        "operationId": "Syncing",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonSyncingInfo"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "ChainStateReader"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "commonAddress": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "commonAddresses": {
+      "type": "object",
+      "properties": {
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commonBalance": {
+      "type": "object",
+      "properties": {
+        "balance": {
+          "type": "string"
+        }
+      }
+    },
+    "commonBlock": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "parentHash": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "mixHash": {
+          "type": "string"
+        },
+        "logsBloom": {
+          "type": "string",
+          "format": "byte"
+        },
+        "stateRoot": {
+          "type": "string"
+        },
+        "miner": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "extraData": {
+          "type": "string",
+          "format": "byte"
+        },
+        "size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasLimit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasUsed": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "transactionsRoot": {
+          "type": "string"
+        },
+        "receiptsRoot": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonRpcTransaction"
+          }
+        }
+      }
+    },
+    "commonBlockHash": {
+      "type": "object",
+      "properties": {
+        "blockHash": {
+          "type": "string"
+        }
+      }
+    },
+    "commonBlockNumber": {
+      "type": "object",
+      "properties": {
+        "blockNumber": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "commonCode": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "commonGasPrice": {
+      "type": "object",
+      "properties": {
+        "gasPrice": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "commonIsOk": {
+      "type": "object",
+      "properties": {
+        "isOk": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "IsOk return status"
+    },
+    "commonLog": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "blockNumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "txIndex": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "blockHash": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "address": {
+          "type": "string"
+        },
+        "txHash": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commonReceipt": {
+      "type": "object",
+      "properties": {
+        "blockNumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasUsed": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "cumulativeGasUsed": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "transactionIndex": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "blockHash": {
+          "type": "string"
+        },
+        "transactionHash": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "contractAddress": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "root": {
+          "type": "string",
+          "format": "byte"
+        },
+        "logsBloom": {
+          "type": "string",
+          "format": "byte"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonLog"
+          }
+        }
+      }
+    },
+    "commonRpcTransaction": {
+      "type": "object",
+      "properties": {
+        "txHash": {
+          "type": "string"
+        },
+        "blockHash": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "v": {
+          "type": "string"
+        },
+        "r": {
+          "type": "string"
+        },
+        "s": {
+          "type": "string"
+        },
+        "transactionIndex": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "blockNumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gasPrice": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "input": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "Transaction represents a transaction that will serialize to the RPC representation of a transaction"
+    },
+    "commonSyncingInfo": {
+      "type": "object",
+      "properties": {
+        "isSyncing": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "startBlock": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "currentBlock": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "highestBlock": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "pulledStates": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "knownStates": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "- startingBlock: block number this node started to synchronise from\n- currentBlock:  block number this node is currently importing\n- highestBlock:  block number of the highest block header this node has received from peers\n- pulledStates:  number of state entries processed until now\n- knownStates:   number of known state entries that still need to be pulled"
+    },
+    "cpcChainReaderRequest": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "blockHash": {
+          "type": "string"
+        },
+        "blockNumber": {
+          "type": "string",
+          "format": "int64"
+        },
+        "isFull": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "ChainReaderRequest ChainReader request arguments"
+    },
+    "cpcRawTransaction": {
+      "type": "object",
+      "properties": {
+        "rawTransaction": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "RawTransaction transaction bytes"
+    },
+    "cpcTransactionCount": {
+      "type": "object",
+      "properties": {
+        "transactionCount": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "TransactionCount transaction count"
+    },
+    "cpcTransactionHash": {
+      "type": "object",
+      "properties": {
+        "transactionHash": {
+          "type": "string"
+        }
+      },
+      "title": "TransactionHash transaction hash"
+    },
+    "cpcTransactionPoolReaderRequest": {
+      "type": "object",
+      "properties": {
+        "blockNumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "blockHash": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "title": "TransactionPoolReaderRequest request parameters"
+    },
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
+    "protobufUInt32Value": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The uint32 value."
+        }
+      },
+      "description": "Wrapper message for `uint32`.\n\nThe JSON representation for `UInt32Value` is JSON number."
+    }
+  }
+}

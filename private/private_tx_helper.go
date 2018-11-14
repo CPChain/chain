@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package private
 
 import (
@@ -9,7 +25,7 @@ import (
 	"encoding/binary"
 	"io"
 
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -54,7 +70,7 @@ type PayloadReplacement struct {
 
 // SealPrivatePayload encrypts private tx's payload and sends it to IPFS, then replaces the payload with the address in IPFS.
 // Returns an address which could be used to retrieve original payload from IPFS.
-func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, remoteDB ethdb.RemoteDatabase) (PayloadReplacement, error) {
+func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, remoteDB database.RemoteDatabase) (PayloadReplacement, error) {
 	// Encrypt payload
 	// use tx's nonce as gcm nonce
 	nonce := make([]byte, 12)

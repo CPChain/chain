@@ -23,8 +23,8 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -94,7 +94,7 @@ type Signer interface {
 }
 
 // PrivTxSupportEIP155Signer implements the signer which could be able to sign both public tx and private tx. It also implement EIP155 rules.
-// TODO: once the CPChain standards released, it will be rename <x>Signer where <x> is CPChain standard name such as CIP001.
+// TODO: once the cpchain standards released, it will be rename <x>Signer where <x> is cpchain standard name such as CIP001.
 type PrivTxSupportEIP155Signer struct{ EIP155Signer }
 
 func NewPrivTxSupportEIP155Signer(chanId *big.Int) PrivTxSupportEIP155Signer {

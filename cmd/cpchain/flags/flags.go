@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of cpchain.
+//
+// cpchain is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// cpchain is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with cpchain. If not, see <http://www.gnu.org/licenses/>.
+
 package flags
 
 import (
@@ -157,6 +173,7 @@ const (
 	JsonRpcHttpAddrFlagName = "jsonrpchttpaddr"
 	GrpcIpcAddrFlagName     = "grpcipcaddr"
 	RpcCorsDomainFlagName   = "rpccorsdomain"
+	RpcApiFlagName          = "rpcapi"
 )
 
 // TODO @sangh adjust these
@@ -182,6 +199,12 @@ var RpcFlags = []cli.Flag{
 	// 	Name:  RpcVerifyFlagName,
 	// 	Usage: "HTTP-RPC server if need verify client",
 	// },
+
+	cli.StringFlag{
+		Name:  RpcApiFlagName,
+		Usage: "Set the APIs offered over the HTTP-RPC interface",
+		Value: "",
+	},
 	cli.StringFlag{
 		Name:  IpcAddrFlagName,
 		Usage: "Local ipc path",

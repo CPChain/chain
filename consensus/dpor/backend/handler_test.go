@@ -1,19 +1,16 @@
 package backend
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/p2p"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 // launch the chain
@@ -34,8 +31,9 @@ func TestNewHandler(t *testing.T) {
 
 	//Assign an expected handler
 	var expectedResult Handler
-	expectedResult.ownAddress = testEtherbase
+	expectedResult.coinbase = testEtherbase
 	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
+	expectedResult.epochLength = testConfig.Epoch
 	expectedResult.signers = make(map[common.Address]*Signer)
 	expectedResult.pendingBlockCh = make(chan *types.Block)
 	expectedResult.quitSync = make(chan struct{})
@@ -113,6 +111,7 @@ func TestHandler_SetContractCaller(t *testing.T) {
 func TestHandler_handlePreprepareMsg(t *testing.T) {
 	//t.Skip("skip for short test")
 	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
+	NewSigner(1, common.HexToAddress(addrHex))
 
 	signer := NewSigner(1, common.HexToAddress(addrHex))
 	msg := p2p.Msg{PrepareSignedHeaderMsg, 1000, strings.NewReader("Test_Payload"), time.Now()}

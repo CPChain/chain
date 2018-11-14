@@ -28,11 +28,11 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/api"
+	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -75,7 +75,7 @@ type Config struct {
 	P2P p2p.Config
 
 	// GRpc Configuration of grpc server
-	GRpc api.Config
+	GRpc grpc.Config
 
 	// KeyStoreDir is the file system folder that contains private keys. The directory can
 	// be specified as a relative path, in which case it is resolved relative to the
@@ -236,10 +236,6 @@ func DefaultWSEndpoint() string {
 // NodeName returns the devp2p node identifier.
 func (c *Config) NodeName() string {
 	name := c.name()
-	// Backwards compatibility: previous versions used title-cased "Geth", keep that.
-	if name == "cpchain" || name == "cpchain-testnet" {
-		name = "Geth"
-	}
 	if c.UserIdent != "" {
 		name += "/" + c.UserIdent
 	}
@@ -262,15 +258,6 @@ func (c *Config) name() string {
 	return c.Name
 }
 
-// These resources are resolved differently for "cpchain" instances.
-var isOldGethResource = map[string]bool{
-	"chaindata":          true,
-	"nodes":              true,
-	"nodekey":            true,
-	"static-nodes.json":  true,
-	"trusted-nodes.json": true,
-}
-
 func (c *Config) rsaDir() string {
 	if c.DataDir == "" {
 		return ""
@@ -285,18 +272,6 @@ func (c *Config) resolvePath(path string) string {
 	}
 	if c.DataDir == "" {
 		return ""
-	}
-	// Backwards-compatibility: ensure that data directory files created
-	// by cpchain 1.4 are used if they exist.
-	if c.name() == "cpchain" && isOldGethResource[path] {
-		oldpath := ""
-		if c.Name == "cpchain" {
-			oldpath = filepath.Join(c.DataDir, path)
-		}
-		if oldpath != "" && common.FileExist(oldpath) {
-			// TODO: print warning
-			return oldpath
-		}
 	}
 	return filepath.Join(c.instanceDir(), path)
 }
@@ -435,7 +410,7 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 	var ephemeral string
 	if keydir == "" {
 		// There is no datadir.
-		keydir, err = ioutil.TempDir("", "go-ethereum-keystore")
+		keydir, err = ioutil.TempDir("", "go-cpchain-keystore")
 		ephemeral = keydir
 	}
 

@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package admission
 
 import (
@@ -12,16 +28,16 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
-	contractDpor "bitbucket.org/cpchain/chain/contracts/dpor"
+	contractDpor "bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/crypto"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/database"
 )
 
 var (
@@ -39,7 +55,7 @@ var (
 	}
 	// gspec   = core.Genesis{Config: params.TestChainConfig, Alloc: alloc}
 	gspec   = core.Genesis{Config: configs.AllEthashProtocolChanges, Alloc: alloc}
-	testdb  = ethdb.NewMemDatabase()
+	testdb  = database.NewMemDatabase()
 	genesis = gspec.MustCommit(testdb)
 )
 

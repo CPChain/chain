@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package core implements the Ethereum consensus protocol.
+// Package core implements the cpchain consensus protocol.
 package core
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"io"
@@ -29,17 +28,18 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/mclock"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -96,9 +96,9 @@ type BlockChain struct {
 	chainConfig *configs.ChainConfig // Chain & network configuration
 	cacheConfig *CacheConfig         // Cache configuration for pruning
 
-	db     ethdb.Database // Low level persistent database to store final content in
-	triegc *prque.Prque   // Priority queue mapping block numbers to tries to gc
-	gcproc time.Duration  // Accumulates canonical block processing for trie dumping
+	db     database.Database // Low level persistent database to store final content in
+	triegc *prque.Prque      // Priority queue mapping block numbers to tries to gc
+	gcproc time.Duration     // Accumulates canonical block processing for trie dumping
 
 	hc            *HeaderChain
 	rmLogsFeed    event.Feed
@@ -138,9 +138,8 @@ type BlockChain struct {
 	badBlocks     *lru.Cache // Bad block cache
 	pendingBlocks *lru.Cache // not enough signatures block cache
 
-	privateStateCache state.Database       // State database to reuse between imports (contains state cache)
-	remoteDB          ethdb.RemoteDatabase // Remote database for huge amount data storage
-	rsaPrivateKey     *rsa.PrivateKey      // Private RSA key used for many features such as private tx
+	privateStateCache state.Database          // State database to reuse between imports (contains state cache)
+	remoteDB          database.RemoteDatabase // Remote database for huge amount data storage
 
 	ErrChan chan error
 }
@@ -172,9 +171,8 @@ func (bc *BlockChain) AddPendingBlock(block *types.Block) error {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
-// TODO chengx the key should be accessed with keystore.
-func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *configs.ChainConfig, engine consensus.Engine,
-	vmConfig vm.Config, remoteDB ethdb.RemoteDatabase, rsaPrivKey *rsa.PrivateKey) (*BlockChain, error) {
+func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *configs.ChainConfig, engine consensus.Engine,
+	vmConfig vm.Config, remoteDB database.RemoteDatabase, accm *accounts.Manager) (*BlockChain, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
 			TrieNodeLimit: 256 * 1024 * 1024,
@@ -206,11 +204,10 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *con
 		pendingBlocks:     waitingSignatureBlocks,
 		privateStateCache: state.NewDatabase(db),
 		remoteDB:          remoteDB,
-		rsaPrivateKey:     rsaPrivKey,
 		ErrChan:           make(chan error),
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
-	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine))
+	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine, accm))
 
 	var err error
 	bc.hc, err = NewHeaderChain(db, chainConfig, engine, bc.getProcInterrupt)
@@ -913,7 +910,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 
 		stats.processed++
 
-		if batch.ValueSize() >= ethdb.IdealBatchSize {
+		if batch.ValueSize() >= database.IdealBatchSize {
 			if err := batch.Write(); err != nil {
 				return 0, err
 			}
@@ -1026,7 +1023,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 				limit       = common.StorageSize(bc.cacheConfig.TrieNodeLimit) * 1024 * 1024
 			)
 			if nodes > limit || imgs > 4*1024*1024 {
-				triedb.Cap(limit - ethdb.IdealBatchSize)
+				triedb.Cap(limit - database.IdealBatchSize)
 			}
 			// Find the next pubState trie we need to commit
 			header := bc.GetHeaderByNumber(current - triesInMemory)
@@ -1276,7 +1273,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		// Process block using the parent state as reference point.
 		pubReceipts, privReceipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB,
-			bc.vmConfig, bc.rsaPrivateKey)
+			bc.vmConfig)
 		if err != nil {
 			bc.reportBlock(block, pubReceipts, err)
 			return i, events, coalescedLogs, err
@@ -1713,12 +1710,8 @@ func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscript
 }
 
 // RemoteDB returns remote database if it has, otherwise return nil.
-func (bc *BlockChain) RemoteDB() ethdb.RemoteDatabase {
+func (bc *BlockChain) RemoteDB() database.RemoteDatabase {
 	return bc.remoteDB
-}
-
-func (bc *BlockChain) RsaPrivateKey() *rsa.PrivateKey {
-	return bc.rsaPrivateKey
 }
 
 func (bc *BlockChain) SetVerifyEthashFunc(verifyEthash VerifyEthashFunc) {

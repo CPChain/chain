@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package cpc
 
 import (
@@ -101,7 +117,10 @@ func (pm *ProtocolManager) minedBroadcastLoop() {
 		switch ev := obj.Data.(type) {
 		case core.NewMinedBlockEvent:
 
-			if pm.chainconfig.Dpor != nil && pm.chainconfig.Dpor.MaxInitBlockNumber < ev.Block.NumberU64() {
+			if pm.chainconfig.Dpor != nil {
+
+				log.Debug("handling mined block with dpor handler")
+
 				// broadcast mined block with dpor handler
 				pm.engine.(*dpor.Dpor).HandleMinedBlock(ev.Block)
 			} else {

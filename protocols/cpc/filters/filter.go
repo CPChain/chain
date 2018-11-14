@@ -20,17 +20,17 @@ import (
 	"context"
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
-	"bitbucket.org/cpchain/chain/ethdb"
-	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 )
 
 type Backend interface {
-	ChainDb() ethdb.Database
+	ChainDb() database.Database
 	EventMux() *event.TypeMux
 	HeaderByNumber(ctx context.Context, blockNr rpc.BlockNumber) (*types.Header, error)
 	GetReceipts(ctx context.Context, blockHash common.Hash) (types.Receipts, error)
@@ -49,7 +49,7 @@ type Backend interface {
 type Filter struct {
 	backend Backend
 
-	db         ethdb.Database
+	db         database.Database
 	begin, end int64
 	addresses  []common.Address
 	topics     [][]common.Hash

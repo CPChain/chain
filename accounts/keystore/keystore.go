@@ -34,9 +34,10 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/crypto"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 )
 
@@ -478,7 +479,7 @@ func (ks *KeyStore) Update(a accounts.Account, passphrase, newPassphrase string)
 	return ks.storage.StoreKey(a.URL.Path, key, newPassphrase)
 }
 
-// ImportPreSaleKey decrypts the given Ethereum presale wallet and stores
+// ImportPreSaleKey decrypts the given cpchain presale wallet and stores
 // a key file in the key directory. The key file is encrypted with the same passphrase.
 func (ks *KeyStore) ImportPreSaleKey(keyJSON []byte, passphrase string) (accounts.Account, error) {
 	a, _, err := importPreSaleKey(ks.storage, keyJSON, passphrase)
@@ -498,20 +499,33 @@ func zeroKey(k *ecdsa.PrivateKey) {
 	}
 }
 
-func (ks *KeyStore) EncryptWithRsa(account accounts.Account, passphrase string, plainText []byte) ([]byte, error) {
-	_, key, err := ks.getDecryptedKey(account, passphrase)
-	if err != nil {
-		return nil, err
+// EncryptWithRsa encrypts with a specified account's RSA key. The account is required to be unlocked.
+func (ks *KeyStore) EncryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
+	unlocked, exists := ks.unlocked[account.Address]
+	if !exists {
+		return nil, ErrNoMatch
 	}
-	defer zeroKey(key.PrivateKey)
+
+	key := unlocked.Key
 	return key.RsaKey.RsaEncrypt(plainText)
 }
 
-func (ks *KeyStore) DecryptWithRsa(account accounts.Account, passphrase string, cipherText []byte) ([]byte, error) {
-	_, key, err := ks.getDecryptedKey(account, passphrase)
-	if err != nil {
-		return nil, err
+// DecryptWithRsa decrypts with a specified account's RSA key. The account is required to be unloced.
+func (ks *KeyStore) DecryptWithRsa(account accounts.Account, cipherText []byte) ([]byte, error) {
+	unlocked, exists := ks.unlocked[account.Address]
+	if !exists {
+		return nil, ErrNoMatch
 	}
-	defer zeroKey(key.PrivateKey)
+
+	key := unlocked.Key
 	return key.RsaKey.RsaDecrypt(cipherText)
+}
+
+// RsaPublicKey requires RSA public key for a given account.
+func (ks *KeyStore) RsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
+	unlocked, exists := ks.unlocked[account.Address]
+	if !exists {
+		return nil, ErrNoMatch
+	}
+	return unlocked.Key.RsaKey.PublicKey, nil
 }

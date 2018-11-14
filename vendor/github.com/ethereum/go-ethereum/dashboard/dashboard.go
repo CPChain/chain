@@ -32,12 +32,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/elastic/gosigar"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/rpc"
 	"golang.org/x/net/websocket"
 )
 
@@ -219,13 +219,13 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 	}()
 
 	versionMeta := ""
-	if len(configs.VersionMeta) > 0 {
-		versionMeta = fmt.Sprintf(" (%s)", configs.VersionMeta)
+	if len(params.VersionMeta) > 0 {
+		versionMeta = fmt.Sprintf(" (%s)", params.VersionMeta)
 	}
 	// Send the past data.
 	client.msg <- Message{
 		General: &GeneralMessage{
-			Version: fmt.Sprintf("v%d.%d.%d%s", configs.VersionMajor, configs.VersionMinor, configs.VersionPatch, versionMeta),
+			Version: fmt.Sprintf("v%d.%d.%d%s", params.VersionMajor, params.VersionMinor, params.VersionPatch, versionMeta),
 			Commit:  db.commit,
 		},
 		System: &SystemMessage{

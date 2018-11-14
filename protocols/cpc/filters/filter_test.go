@@ -27,10 +27,10 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 )
 
@@ -51,8 +51,8 @@ func BenchmarkFilters(b *testing.B) {
 	defer os.RemoveAll(dir)
 
 	var (
-		db, _      = ethdb.NewLDBDatabase(dir, 0, 0)
-		remoteDB   = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db, _      = database.NewLDBDatabase(dir, 0, 0)
+		remoteDB   = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 		mux        = new(event.TypeMux)
 		txFeed     = new(event.Feed)
 		rmLogsFeed = new(event.Feed)
@@ -115,8 +115,8 @@ func TestFilters(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	var (
-		db, _      = ethdb.NewLDBDatabase(dir, 0, 0)
-		remoteDB   = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db, _      = database.NewLDBDatabase(dir, 0, 0)
+		remoteDB   = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 		mux        = new(event.TypeMux)
 		txFeed     = new(event.Feed)
 		rmLogsFeed = new(event.Feed)

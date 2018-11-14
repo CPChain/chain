@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package dpor
 
 import (
@@ -5,10 +21,10 @@ import (
 	"math/big"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/crypto/sha3"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/hashicorp/golang-lru"
 )
@@ -21,8 +37,8 @@ type Signatures struct {
 
 // GetSig gets addr's sig
 func (s *Signatures) GetSig(addr common.Address) (sig []byte, ok bool) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 	sig, ok = s.sigs[addr]
 	return sig, ok
 }
@@ -85,7 +101,7 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 	return hash
 }
 
-// ecrecover extracts the Ethereum account address from a signed header.
+// ecrecover extracts the cpchain account address from a signed header.
 // the return value is (leader_address, signer_addresses, error)
 func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
 	d.lock.Lock()
@@ -112,7 +128,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	}
 	signersSig := ss.Data
 
-	// Recover the public key and the Ethereum address of leader.
+	// Recover the public key and the cpchain address of leader.
 	var leader common.Address
 	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig)
 	if err != nil {
@@ -136,7 +152,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		return leader, []common.Address{}, errInvalidSigBytes
 	}
 
-	// Recover the public key and the Ethereum address of signers one by one.
+	// Recover the public key and the cpchain address of signers one by one.
 	var signers []common.Address
 	for i := 0; i < len(signersSig)/extraSeal; i++ {
 		signerSig := signersSig[i*extraSeal : (i+1)*extraSeal]
@@ -199,7 +215,7 @@ func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
-	if ok, _ := snap.IsLeaderOf(signer, snap.Number+1); ok {
+	if ok, _ := snap.IsLeaderOf(signer, snap.number()+1); ok {
 		return new(big.Int).Set(diffInTurn)
 	}
 	return new(big.Int).Set(diffNoTurn)

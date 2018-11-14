@@ -13,7 +13,18 @@ echo "[*] Starting cpchain nodes"
 # ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --verbosity 4 "
 # ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --verbosity 4 --maxpeers 5"
 # ARGS=" --syncmode full --rpc --rpcaddr 127.0.0.1 --rpcapi personal,db,eth,net,web3,txpool,miner --networkid 42 --gasprice 1 --maxpeers 8"
-args="run --networkid 42  --verbosity 9 --linenumber"
+
+#set log level by add parameter:--verbosity 4
+# or spec env like this:env CPC_VERBOSITY=4  ./cpchain-start.sh
+#PanicLevel	0
+#FatalLevel	1
+#ErrorLevel	2
+#WarnLevel	3
+#InfoLevel	4
+#DebugLevel	5
+
+
+args="run --networkid 42  --rpcapi personal,eth,cpc,net,web3,db,txpool,miner --linenumber"
 
 #start bootnode service
 ./bootnode-start.sh 2>data/logs/bootnode.log &
@@ -25,6 +36,8 @@ cpchain=$proj_dir/build/bin/cpchain
 
 $cpchain $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
          --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000" 2>data/logs/1.log &
+
+# dlv --headless --listen=:2345 --api-version=2 dlv-cpchain bitbucket.org/cpchain/chain/cmd/cpchain -- $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000"
 
 $cpchain $args --datadir data/data2  --rpcaddr 127.0.0.1:8502 --grpcaddr 127.0.0.1:8602 --jsonrpchttpaddr 127.0.0.1:8702 --port 30312 --mine \
          --unlock "0xc05302acebd0730e3a18a058d7d1cb1204c4a092" --password conf/password 2>data/logs/2.log &

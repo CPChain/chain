@@ -5,8 +5,8 @@ accounts/rsakey
 cmd
 cmd/cpchain
 core
-les
-network/protocols/cpc
-network/protocols/cpc/fetcher
-network/protocols/cpc/downloader
-rpc
+protocols/cpc
+protocols/cpc/fetcher
+protocols/cpc/downloader
+api/rpc
+api/cpclient

@@ -26,14 +26,13 @@ import (
 	"os"
 	"strings"
 
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/internal/ethapi"
-	"bitbucket.org/cpchain/chain/node/miner"
-	"bitbucket.org/cpchain/chain/rpc"
+	"bitbucket.org/cpchain/chain/internal/cpcapi"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -41,13 +40,13 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 )
 
-// PublicCpchainAPI provides an API to access Cpchain full node-related
+// PublicCpchainAPI provides an API to access cpchain full node-related
 // information.
 type PublicCpchainAPI struct {
 	c *CpchainService
 }
 
-// NewPublicCpchainAPI creates a new Cpchain protocol API for full nodes.
+// NewPublicCpchainAPI creates a new cpchain protocol API for full nodes.
 func NewPublicCpchainAPI(e *CpchainService) *PublicCpchainAPI {
 	return &PublicCpchainAPI{e}
 }
@@ -60,63 +59,6 @@ func (api *PublicCpchainAPI) Etherbase() (common.Address, error) {
 // Coinbase is the address that mining rewards will be send to (alias for Etherbase)
 func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
 	return api.Etherbase()
-}
-
-// Hashrate returns the POW hashrate
-func (api *PublicCpchainAPI) Hashrate() hexutil.Uint64 {
-	return hexutil.Uint64(api.c.Miner().HashRate())
-}
-
-// PublicMinerAPI provides an API to control the miner.
-// It offers only methods that operate on data that pose no security risk when it is publicly accessible.
-type PublicMinerAPI struct {
-	c     *CpchainService
-	agent *miner.RemoteAgent
-}
-
-// // NewPublicMinerAPI create a new PublicMinerAPI instance.
-// func NewPublicMinerAPI(e *CpchainService) *PublicMinerAPI {
-// 	agent := miner.NewRemoteAgent(e.BlockChain(), e.Engine())
-// 	e.Miner().Register(agent)
-
-// 	return &PublicMinerAPI{e, agent}
-// }
-
-// Mining returns an indication if this node is currently mining.
-func (api *PublicMinerAPI) Mining() bool {
-	return api.c.IsMining()
-}
-
-// SubmitWork can be used by external miner to submit their POW solution. It returns an indication if the work was
-// accepted. Note, this is not an indication if the provided work was valid!
-func (api *PublicMinerAPI) SubmitWork(nonce types.BlockNonce, solution, digest common.Hash) bool {
-	return api.agent.SubmitWork(nonce, digest, solution)
-}
-
-// GetWork returns a work package for external miner. The work package consists of 3 strings
-// result[0], 32 bytes hex encoded current block header pow-hash
-// result[1], 32 bytes hex encoded seed hash used for DAG
-// result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
-// func (api *PublicMinerAPI) GetWork() ([3]string, error) {
-// 	if !api.c.IsMining() {
-// 		// TODO: @liuq fix this.
-// 		if err := api.c.StartMining(false, nil); err != nil {
-// 			return [3]string{}, err
-// 		}
-// 	}
-// 	work, err := api.agent.GetWork()
-// 	if err != nil {
-// 		return work, fmt.Errorf("mining not ready: %v", err)
-// 	}
-// 	return work, nil
-// }
-
-// SubmitHashrate can be used for remote miners to submit their hash rate. This enables the node to report the combined
-// hash rate of all miners which submit work through this node. It accepts the miner hash rate and an identifier which
-// must be unique between nodes.
-func (api *PublicMinerAPI) SubmitHashrate(hashrate hexutil.Uint64, id common.Hash) bool {
-	api.agent.SubmitHashrate(id, uint64(hashrate))
-	return true
 }
 
 // PrivateMinerAPI provides private RPC methods to control the miner.
@@ -198,19 +140,14 @@ func (api *PrivateMinerAPI) SetEtherbase(etherbase common.Address) bool {
 	return true
 }
 
-// GetHashrate returns the current hashrate of the miner.
-func (api *PrivateMinerAPI) GetHashrate() uint64 {
-	return uint64(api.c.miner.HashRate())
-}
-
-// PrivateAdminAPI is the collection of Cpchain full node-related APIs
+// PrivateAdminAPI is the collection of cpchain full node-related APIs
 // exposed over the private admin endpoint.
 type PrivateAdminAPI struct {
 	cpc *CpchainService
 }
 
 // NewPrivateAdminAPI creates a new API definition for the full node private
-// admin methods of the Cpchain service.
+// admin methods of the cpchain service.
 func NewPrivateAdminAPI(eth *CpchainService) *PrivateAdminAPI {
 	return &PrivateAdminAPI{cpc: eth}
 }
@@ -296,14 +233,14 @@ func (api *PrivateAdminAPI) ImportChain(file string) (bool, error) {
 	return true, nil
 }
 
-// PublicDebugAPI is the collection of Cpchain full node APIs exposed
+// PublicDebugAPI is the collection of cpchain full node APIs exposed
 // over the public debugging endpoint.
 type PublicDebugAPI struct {
 	cpc *CpchainService
 }
 
 // NewPublicDebugAPI creates a new API definition for the full node-
-// related public debug methods of the Cpchain service.
+// related public debug methods of the cpchain service.
 func NewPublicDebugAPI(eth *CpchainService) *PublicDebugAPI {
 	return &PublicDebugAPI{cpc: eth}
 }
@@ -333,7 +270,7 @@ func (api *PublicDebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error
 	return stateDb.RawDump(), nil
 }
 
-// PrivateDebugAPI is the collection of Cpchain full node APIs exposed over
+// PrivateDebugAPI is the collection of cpchain full node APIs exposed over
 // the private debugging endpoint.
 type PrivateDebugAPI struct {
 	config *configs.ChainConfig
@@ -341,7 +278,7 @@ type PrivateDebugAPI struct {
 }
 
 // NewPrivateDebugAPI creates a new API definition for the full node-related
-// private debug methods of the Cpchain service.
+// private debug methods of the cpchain service.
 func NewPrivateDebugAPI(config *configs.ChainConfig, eth *CpchainService) *PrivateDebugAPI {
 	return &PrivateDebugAPI{config: config, cpc: eth}
 }
@@ -377,7 +314,7 @@ func (api *PrivateDebugAPI) GetBadBlocks(ctx context.Context) ([]*BadBlockArgs, 
 		} else {
 			results[i].RLP = fmt.Sprintf("0x%x", rlpBytes)
 		}
-		if results[i].Block, err = ethapi.RPCMarshalBlock(block, true, true); err != nil {
+		if results[i].Block, err = cpcapi.RPCMarshalBlock(block, true, true); err != nil {
 			results[i].Block = map[string]interface{}{"error": err.Error()}
 		}
 	}

@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package dpor
 
 import (
@@ -7,12 +23,12 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/api"
+	"bitbucket.org/cpchain/chain/api/grpc"
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/rpc"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -103,7 +119,7 @@ var (
 // backing account.
 type SignerFn func(accounts.Account, []byte) ([]byte, error)
 
-// Author implements consensus.Engine, returning the Ethereum address recovered
+// Author implements consensus.Engine, returning the cpchain address recovered
 // from the signature in the header's extra-data section.
 func (d *Dpor) Author(header *types.Header) (common.Address, error) {
 	leader, _, err := d.dh.ecrecover(header, d.signatures)
@@ -317,8 +333,8 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 }
 
 // GAPIs is APIs for dpor.
-func (d *Dpor) GAPIs(chain consensus.ChainReader) []api.GApi {
-	return []api.GApi{}
+func (d *Dpor) GAPIs(chain consensus.ChainReader) []grpc.GApi {
+	return []grpc.GApi{}
 }
 
 // IsFutureSigner implements Validator.

@@ -31,11 +31,11 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/crypto"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -49,11 +49,11 @@ var (
 // newTestProtocolManager creates a new protocol manager for testing purposes,
 // with the given number of blocks already known, and potential notification
 // channels for different events.
-func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *ethdb.MemDatabase, error) {
+func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *database.MemDatabase, error) {
 	var (
 		evmux    = new(event.TypeMux)
-		db       = ethdb.NewMemDatabase()
-		remoteDB = ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
+		db       = database.NewMemDatabase()
+		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	)
 	gspec := core.DefaultGenesisBlock()
 	gspec.Alloc = core.GenesisAlloc{testBank: {Balance: big.NewInt(1000000)}}
@@ -81,7 +81,7 @@ func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func
 // with the given number of blocks already known, and potential notification
 // channels for different events. In case of an error, the constructor force-
 // fails the test.
-func newTestProtocolManagerMust(t *testing.T, mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *ethdb.MemDatabase) {
+func newTestProtocolManagerMust(t *testing.T, mode downloader.SyncMode, blocks int, generator func(int, *core.BlockGen), newtx chan<- []*types.Transaction) (*ProtocolManager, *database.MemDatabase) {
 	pm, db, err := newTestProtocolManager(mode, blocks, generator, newtx)
 	if err != nil {
 		t.Fatalf("Failed to create protocol manager: %v", err)
@@ -175,7 +175,7 @@ func newTestPeer(name string, version int, pm *ProtocolManager, shake bool) (*te
 			td      = pm.blockchain.GetTd(head.Hash(), head.Number.Uint64())
 		)
 		tp.handshake(nil, td, head.Hash(), genesis.Hash())
-		tp.CommitteeHandshake(nil)
+		// tp.CommitteeHandshake(nil)
 
 	}
 	return tp, errc
@@ -187,7 +187,6 @@ func (p *testPeer) handshake(t *testing.T, td *big.Int, head common.Hash, genesi
 	msg := &statusData{
 		ProtocolVersion: uint32(p.version),
 		NetworkId:       DefaultConfig.NetworkId,
-		TD:              td,
 		CurrentBlock:    head,
 		GenesisBlock:    genesis,
 	}
@@ -199,20 +198,20 @@ func (p *testPeer) handshake(t *testing.T, td *big.Int, head common.Hash, genesi
 	}
 }
 
-func (p *testPeer) CommitteeHandshake(t *testing.T) (isSigner bool, err error) {
-	msg := &signerStatusData{
-		ProtocolVersion: uint32(p.version),
-		Address:         common.HexToAddress("0x0000000000000000000000000000000000000000"),
-	}
-	if err := p2p.ExpectMsg(p.app, NewSignerMsg, msg); err != nil {
+// func (p *testPeer) CommitteeHandshake(t *testing.T) (isSigner bool, err error) {
+// 	msg := &signerStatusData{
+// 		ProtocolVersion: uint32(p.version),
+// 		Address:         common.HexToAddress("0x0000000000000000000000000000000000000000"),
+// 	}
+// 	if err := p2p.ExpectMsg(p.app, NewSignerMsg, msg); err != nil {
 
-		t.Fatalf("status recv: %v", err)
-	}
-	if err := p2p.Send(p.app, NewSignerMsg, msg); err != nil {
-		t.Fatalf("status send: %v", err)
-	}
-	return true, nil
-}
+// 		t.Fatalf("status recv: %v", err)
+// 	}
+// 	if err := p2p.Send(p.app, NewSignerMsg, msg); err != nil {
+// 		t.Fatalf("status send: %v", err)
+// 	}
+// 	return true, nil
+// }
 
 // close terminates the local side of the peer, notifying the remote protocol
 // manager of termination.

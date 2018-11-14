@@ -23,7 +23,7 @@ type GasTable struct {
 
 // Variables containing gas prices for different ethereum phases.
 var (
-	// Cpchain Initial Gas Table
+	// cpchain Initial Gas Table
 	GasTableCep0 = GasTable{
 		ExtcodeSize: 700,
 		ExtcodeCopy: 700,

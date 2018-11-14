@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of cpchain.
+//
+// cpchain is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// cpchain is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with cpchain. If not, see <http://www.gnu.org/licenses/>.
+
 package main
 
 import (
@@ -9,10 +25,11 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/ethclient"
+	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/protocols/cpc"
@@ -74,6 +91,10 @@ func registerChainService(cfg *cpc.Config, n *node.Node) {
 		// 	ls, _ := les.NewLesServer(fullNode, cfg)
 		// 	fullNode.AddLesServer(ls)
 		// }
+		for addr, c := range fullNode.MakePrimitiveContracts(n) {
+			vm.RegisterPrimitiveContract(addr, c)
+		}
+
 		return fullNode, err
 	})
 	if err != nil {
@@ -142,7 +163,7 @@ func handleWallet(n *node.Node) {
 		if err != nil {
 			log.Fatalf("Failed to attach to self: %v", err)
 		}
-		stateReader := ethclient.NewClient(rpcClient)
+		stateReader := cpclient.NewClient(rpcClient)
 
 		// Open any wallets already attached
 		for _, wallet := range n.AccountManager().Wallets() {
@@ -218,7 +239,7 @@ func createContractCaller(ctx *cli.Context, n *node.Node) *backend.ContractCalle
 		if err != nil {
 			log.Fatalf("Failed to attach to self: %v", err)
 		}
-		client := ethclient.NewClient(rpcClient)
+		client := cpclient.NewClient(rpcClient)
 
 		// TODO: @Liuq fix this.
 		contractCaller, err = backend.NewContractCaller(key, client, 300000)

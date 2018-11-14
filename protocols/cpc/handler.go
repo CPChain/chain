@@ -1,18 +1,4 @@
-// Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// Copyright 2018 The cpchain authors
 
 package cpc
 
@@ -30,7 +16,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
-	"bitbucket.org/cpchain/chain/ethdb"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/fetcher"
 	"bitbucket.org/cpchain/chain/types"
@@ -51,11 +37,6 @@ const (
 )
 
 var (
-	daoChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the DAO handshake challenge
-)
-
-var (
-
 	// errIncompatibleConfig is returned if the requested protocols and configs are
 	// not compatible (low protocol version restrictions and high requirements).
 	errIncompatibleConfig = errors.New("incompatible configuration")
@@ -104,9 +85,8 @@ type ProtocolManager struct {
 	wg sync.WaitGroup
 }
 
-// NewProtocolManager returns a new Cpchain sub protocol manager. The Cpchain sub protocol manages peers capable
-// with the Cpchain network.
-func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, etherbase common.Address) (*ProtocolManager, error) {
+// NewProtocolManager returns a new cpchain protocol manager.
+func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, etherbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -124,7 +104,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		etherbase: etherbase,
 	}
 
-	// Initiate a sub-protocol for every implemented version we can handle
+	// initialize a sub-protocol for every implemented version we can handle
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 	for i, version := range ProtocolVersions {
 		// Compatible; initialise the sub-protocol
@@ -139,6 +119,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 				case manager.newPeerCh <- peer:
 					manager.wg.Add(1)
 					defer manager.wg.Done()
+					// handle will hang on until the peer disappears
 					return manager.handle(peer)
 				case <-manager.quitSync:
 					return p2p.DiscQuitting
@@ -196,9 +177,9 @@ func (pm *ProtocolManager) removePeer(id string) {
 	if peer == nil {
 		return
 	}
-	log.Debug("Removing Cpchain peer", "peer", id)
+	log.Debug("Removing cpchain peer", "peer", id)
 
-	// Unregister the peer from the downloader and Cpchain peer set
+	// Unregister the peer from the downloader and cpchain peer set
 	pm.downloader.UnregisterPeer(id)
 
 	// if err := pm.peers.UnregisterSigner(id); err != nil {
@@ -228,10 +209,41 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	// start sync handlers
 	go pm.syncer()
 	go pm.txsyncLoop()
+
+	// update, avoid stop
+	go pm.update()
+}
+
+func (pm *ProtocolManager) update() {
+	futureTimer := time.NewTicker(10 * time.Second)
+	defer futureTimer.Stop()
+
+	prev := pm.blockchain.CurrentHeader()
+
+	for {
+		select {
+		case <-futureTimer.C:
+			current := pm.blockchain.CurrentHeader()
+
+			// if still not updated, notice my peers my status.
+			if prev.Number.Uint64() == current.Number.Uint64() {
+				currentBlock := pm.blockchain.CurrentBlock()
+				log.Debug("broadcast updating block")
+
+				go pm.BroadcastBlock(currentBlock, true)
+				go pm.BroadcastBlock(currentBlock, false)
+			} else {
+				prev = current
+			}
+
+		case <-pm.quitSync:
+			return
+		}
+	}
 }
 
 func (pm *ProtocolManager) Stop() {
-	log.Info("Stopping Cpchain protocol")
+	log.Info("Stopping cpchain protocol")
 
 	pm.txsSub.Unsubscribe()        // quits txBroadcastLoop
 	pm.minedBlockSub.Unsubscribe() // quits blockBroadcastLoop
@@ -269,16 +281,16 @@ func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner boo
 	return isSigner, err
 }
 
-// handle is the callback invoked to manage the life cycle of an eth peer. When
+// handle is the callback invoked to manage the life cycle of a cpchain peer. When
 // this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) handle(p *peer) error {
-	// Ignore maxPeers if this is a trusted peer
+	// ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
 		return p2p.DiscTooManyPeers
 	}
 	p.Log().Debug("Cpchain peer connected", "name", p.Name())
 
-	// Execute the Cpchain handshake
+	// Execute the cpchain handshake
 	var (
 		genesis = pm.blockchain.Genesis()
 		head    = pm.blockchain.CurrentHeader()
@@ -287,7 +299,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		td      = pm.blockchain.GetTd(hash, number)
 	)
 
-	// Do normal handshake
+	// handshake at the very beginning
 	err := p.Handshake(pm.networkID, td, hash, genesis.Hash())
 
 	if err != nil {
@@ -693,7 +705,7 @@ func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 // NodeInfo represents a short summary of the Cpchain sub-protocol metadata
 // known about the host peer.
 type NodeInfo struct {
-	Network    uint64               `json:"network"`    // Cpchain network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
+	Network    uint64               `json:"network"`    // cpchain network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
 	Difficulty *big.Int             `json:"difficulty"` // Total difficulty of the host's blockchain
 	Genesis    common.Hash          `json:"genesis"`    // SHA3 hash of the host's genesis block
 	Config     *configs.ChainConfig `json:"config"`     // Chain configuration for the fork rules
