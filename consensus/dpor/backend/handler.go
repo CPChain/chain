@@ -238,13 +238,7 @@ func (h *Handler) Disconnect() {
 
 // BroadcastMinedBlock broadcasts generated block to committee
 func (h *Handler) BroadcastMinedBlock(block *types.Block) {
-
 	committee := h.signers
-	// for len(committee) <= int(h.epochLength) {
-	// 	committee = h.signers
-	// 	time.Sleep(3 * time.Second)
-	// }
-
 	log.Debug("broadcast new generated block to commttee")
 	for addr, peer := range committee {
 		log.Debug("signer", "addr", addr.Hex())
@@ -421,6 +415,7 @@ func (h *Handler) handleMsg(p *Signer) error {
 	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	msg, err := p.rw.ReadMsg()
 	if err != nil {
+		log.Debug("err when readmsg", "err", err)
 		return err
 	}
 	if msg.Size > ProtocolMaxMsgSize {
@@ -469,7 +464,7 @@ func (h *Handler) handleMsg(p *Signer) error {
 	return nil
 }
 
-func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
+func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*Signer, error) {
 	// TODO: add lock here
 	signer, ok := h.signers[address]
 
@@ -483,10 +478,18 @@ func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address
 	if signer.Peer == nil {
 		err := signer.SetSigner(version, p, rw)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	// TODO: add defer to remove signer
+	return signer, nil
+}
+
+func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
+	signer, err := h.addSigner(version, p, rw, address)
+	if err != nil {
+		return err
+	}
+
 	defer h.removeSigner(address)
 
 	// main loop. handle incoming messages.
@@ -573,7 +576,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			log.Debug("generated new pending block, broadcasting")
 
 			// broadcast mined pending block to remote signers
-			h.BroadcastMinedBlock(pendingBlock)
+			go h.BroadcastMinedBlock(pendingBlock)
 
 		// case <-futureTimer.C:
 
