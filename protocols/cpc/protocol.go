@@ -49,7 +49,7 @@ const (
 	GetReceiptsMsg = 0x0f
 	ReceiptsMsg    = 0x10
 
-	// Protocol messages belonging to cpc/01
+	// Protocol messages belonging to cpc/1
 	NewSignerMsg = 0x42
 
 	// Pbft messages starts here
@@ -108,7 +108,6 @@ type txPool interface {
 type statusData struct {
 	ProtocolVersion uint32
 	NetworkId       uint64
-	TD              *big.Int
 	CurrentBlock    common.Hash
 	GenesisBlock    common.Hash
 }

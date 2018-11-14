@@ -284,7 +284,7 @@ func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner boo
 // handle is the callback invoked to manage the life cycle of a cpchain peer. When
 // this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) handle(p *peer) error {
-	// Ignore maxPeers if this is a trusted peer
+	// ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
 		return p2p.DiscTooManyPeers
 	}
@@ -299,7 +299,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		td      = pm.blockchain.GetTd(hash, number)
 	)
 
-	// Do normal handshake
+	// handshake at the very beginning
 	err := p.Handshake(pm.networkID, td, hash, genesis.Hash())
 
 	if err != nil {
