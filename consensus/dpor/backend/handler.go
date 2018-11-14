@@ -87,6 +87,26 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 	return h
 }
 
+// Start starts pbft handler
+func (h *Handler) Start() {
+
+	// Dail all remote signers
+	go h.DialAll()
+
+	// Broadcast mined pending block, including empty block
+	go h.PendingBlockBroadcastLoop()
+
+	return
+}
+
+// Stop stops all
+func (h *Handler) Stop() {
+
+	close(h.quitSync)
+
+	return
+}
+
 // Protocol returns a p2p protocol to handle dpor msgs
 func (h *Handler) Protocol() p2p.Protocol {
 	return p2p.Protocol{
@@ -112,12 +132,12 @@ func (h *Handler) Protocol() p2p.Protocol {
 
 			log.Debug("done with handshake")
 
-			// select {
-			// case <-h.quitSync:
-			// 	return p2p.DiscQuitting
-			// default:
-			return h.handle(ProtocolVersion, p, rw, address)
-			// }
+			select {
+			case <-h.quitSync:
+				return p2p.DiscQuitting
+			default:
+				return h.handle(ProtocolVersion, p, rw, address)
+			}
 
 		},
 		NodeInfo: func() interface{} {
@@ -173,26 +193,6 @@ func (h *Handler) removeSigner(signer common.Address) error {
 	}
 
 	return nil
-}
-
-// Start starts pbft handler
-func (h *Handler) Start() {
-
-	// Dail all remote signers
-	go h.DialAll()
-
-	// Broadcast mined pending block, including empty block
-	go h.PendingBlockBroadcastLoop()
-
-	return
-}
-
-// Stop stops all
-func (h *Handler) Stop() {
-
-	close(h.quitSync)
-
-	return
 }
 
 func (h *Handler) handleMsg(p *Signer) error {
