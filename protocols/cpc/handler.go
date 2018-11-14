@@ -51,11 +51,6 @@ const (
 )
 
 var (
-	daoChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the DAO handshake challenge
-)
-
-var (
-
 	// errIncompatibleConfig is returned if the requested protocols and configs are
 	// not compatible (low protocol version restrictions and high requirements).
 	errIncompatibleConfig = errors.New("incompatible configuration")
@@ -104,8 +99,7 @@ type ProtocolManager struct {
 	wg sync.WaitGroup
 }
 
-// NewProtocolManager returns a new cpchain sub protocol manager. The cpchain sub protocol manages peers capable
-// with the cpchain network.
+// NewProtocolManager returns a new cpchain protocol manager.
 func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, etherbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
