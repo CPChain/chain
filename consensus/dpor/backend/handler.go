@@ -66,6 +66,8 @@ type Handler struct {
 	pendingBlockCh chan *types.Block
 	quitSync       chan struct{}
 
+	currentPending common.Hash
+
 	dialed    bool
 	available bool
 
@@ -197,6 +199,12 @@ func (h *Handler) removeSigner(signer common.Address) error {
 
 func (h *Handler) handleMsg(p *Signer) error {
 	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+	// TODO: remove this. this is only for test
+	block := h.getPendingFn(h.currentPending)
+	p.SendNewPendingBlock(block)
+	// remove above
+
 	msg, err := p.rw.ReadMsg()
 	if err != nil {
 		log.Debug("err when readmsg", "err", err)
@@ -415,6 +423,13 @@ func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
 	case h.pendingBlockCh <- block:
 		log.Debug("!!!!!!!!!!!!!!!!! inserted into handler.pendingBlockCh")
+
+		err := h.addPendingFn(block)
+		if err != nil {
+			return err
+		}
+		h.currentPending = block.Hash()
+
 		return nil
 	}
 }
