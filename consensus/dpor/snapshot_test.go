@@ -34,7 +34,7 @@ func (f *fakeDb) Get(key []byte) ([]byte, error) {
 		blob, err := json.Marshal(snap)
 		return blob, err
 	}
-	return []byte("ssss"), nil
+	return []byte("dpor-ssss"), nil
 
 }
 
@@ -69,13 +69,20 @@ func Test_loadSnapshot(t *testing.T) {
 		db       ethdb.Database
 		hash     common.Hash
 	}
+	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	cache, _ := lru.NewARC(inmemorySnapshots)
+	expectedDporSnapshot := new(DporSnapshot)
+	expectedDporSnapshot.config = &testConfig
 	tests := []struct {
 		name    string
 		args    args
 		want    *DporSnapshot
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"test_loadSnapshot1",
+			args{&testConfig, cache, &fakeDb{dbType: 1}, common.Hash{}},
+			expectedDporSnapshot,
+			false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -85,7 +92,7 @@ func Test_loadSnapshot(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("loadSnapshot(%v, %v, %v, %v) = %v, want %v", tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash, got, tt.want)
+				t.Errorf("loadSnapshot(%v, %v, %v, %v) = \n %v, want \n %v\n", tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash, got, tt.want)
 			}
 		})
 	}
@@ -162,16 +169,23 @@ func TestSnapshot_copy(t *testing.T) {
 
 func TestSnapshot_apply(t *testing.T) {
 	type fields struct {
-		config        *configs.DporConfig
-		sigcache      *lru.ARCCache
-		Number        uint64
-		Hash          common.Hash
-		Candidates    []common.Address
-		RecentSigners map[uint64][]common.Address
+		config     *configs.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Candidates []common.Address
+		//RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		headers []*types.Header
 	}
+	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	testCache, _ := lru.NewARC(inmemorySnapshots)
+	expectedResult := new(DporSnapshot)
+	expectedResult.Number = 1
+	expectedResult.config = &testConfig
+	expectedResult.Candidates = getSignerAddress()
+	//testHeader := make([]*types.Header, 0)
 	tests := []struct {
 		name    string
 		fields  fields
@@ -179,7 +193,20 @@ func TestSnapshot_apply(t *testing.T) {
 		want    *DporSnapshot
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"empty header",
+			fields{&testConfig,
+				testCache,
+				1,
+				common.Hash{},
+				getSignerAddress(),
+			},
+			args{
+				nil,
+			},
+			expectedResult,
+			false,
+		},
+		//TODO: Add a non-empty header
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -197,31 +224,50 @@ func TestSnapshot_apply(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DporSnapshot.apply(%v) = %v, want %v", tt.args.headers, got, tt.want)
+				t.Errorf("DporSnapshot.apply(%v) = \n%v, want \n%v", tt.args.headers, got, tt.want)
 			}
 		})
 	}
 }
 
 func TestSnapshot_applyHeader(t *testing.T) {
+	t.Skip("temporally skip for further considerations in header construction")
 	type fields struct {
-		config        *configs.DporConfig
-		sigcache      *lru.ARCCache
-		Number        uint64
-		Hash          common.Hash
-		Candidates    []common.Address
-		RecentSigners map[uint64][]common.Address
+		config     *configs.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Candidates []common.Address
+		//RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		header *types.Header
 	}
+	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	testCache, _ := lru.NewARC(inmemorySnapshots)
+	expectedResult := new(DporSnapshot)
+	expectedResult.Number = 1
+	expectedResult.config = &testConfig
+	expectedResult.Candidates = getSignerAddress()
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"empty header",
+			fields{&testConfig,
+				testCache,
+				1,
+				common.Hash{},
+				getSignerAddress(),
+			},
+			args{
+				nil,
+				//TODO: this header should not be nil, otherwise it causes a panic on invalid memory address
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -241,24 +287,43 @@ func TestSnapshot_applyHeader(t *testing.T) {
 }
 
 func TestSnapshot_updateCandidates(t *testing.T) {
+	t.Skip("Snapshot_updateCandiates have not complete yet")
 	type fields struct {
-		config        *configs.DporConfig
-		sigcache      *lru.ARCCache
-		Number        uint64
-		Hash          common.Hash
-		Candidates    []common.Address
-		RecentSigners map[uint64][]common.Address
+		config     *configs.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Candidates []common.Address
+		//RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		header *types.Header
 	}
+	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	testCache, _ := lru.NewARC(inmemorySnapshots)
+	expectedResult := new(DporSnapshot)
+	expectedResult.Number = 1
+	expectedResult.config = &testConfig
+	expectedResult.Candidates = getSignerAddress()
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"empty header",
+			fields{&testConfig,
+				testCache,
+				1,
+				common.Hash{},
+				getSignerAddress(),
+			},
+			args{
+				nil,
+				//TODO: this header should not be nil, otherwise it causes a panic on invalid memory address
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -318,6 +383,59 @@ func TestSnapshot_updateRpts(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSnapshot_updateSigner(t *testing.T) {
+	type fields struct {
+		config *configs.DporConfig
+		//sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Candidates []common.Address
+		//RecentSigners map[uint64][]common.Address
+	}
+	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3, MaxInitBlockNumber: 1000}
+	//testCache, _ := lru.NewARC(inmemorySnapshots)
+	expectedResult := new(DporSnapshot)
+	expectedResult.Number = 1
+	expectedResult.config = &testConfig
+	expectedResult.Candidates = getSignerAddress()
+	fmt.Println("candidates: ", expectedResult.Candidates)
+	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
+	var testRpt float64
+	testRpt = 1000
+	testRpts := rpt.RPTs{{common.HexToAddress(addrHex), testRpt}}
+	var testSeed int64
+	testSeed = 2000
+	tt := fields{
+		&testConfig,
+		//testCache,
+		1,
+		common.Hash{},
+		getSignerAddress(),
+	}
+	//construct a DporSnapshot for testing, with above settings
+	testDporSnapshot := &DporSnapshot{
+		config: tt.config,
+		// sigcache:      tt.fields.sigcache,
+		Number:     tt.Number,
+		Hash:       tt.Hash,
+		Candidates: tt.Candidates,
+		// RecentSigners: tt.fields.RecentSigners,
+	}
+	fmt.Println("Candidates: ", testDporSnapshot.Candidates)
+	fmt.Println("Recent signer: ", testDporSnapshot.RecentSigners)
+	err := testDporSnapshot.updateSigners(testRpts, testSeed)
+	//err here may never have a value, as the updateSigners always returns a nil error message
+	if err != nil {
+		t.Errorf("DporSnapshot.updateSigners returns an error message, as %v\n", err)
+	}
+	testEpoch := testDporSnapshot.EpochIdx()
+	testSigner := testDporSnapshot.getRecentSigners(testEpoch)
+	fmt.Println(testDporSnapshot.ifUseDefaultSigners())
+	fmt.Println(testDporSnapshot.ifStartElection())
+	fmt.Println(testEpoch)
+	fmt.Println(testSigner)
 }
 
 func TestSnapshot_updateView(t *testing.T) {
