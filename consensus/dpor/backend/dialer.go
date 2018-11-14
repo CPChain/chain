@@ -18,7 +18,7 @@ func (h *Handler) SetServer(server *p2p.Server) error {
 	defer h.lock.Unlock()
 
 	h.server = server
-	h.ownNodeID = server.Self().String()
+	h.nodeId = server.Self().String()
 
 	return nil
 }
@@ -99,7 +99,7 @@ func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error
 // DialAll connects remote signers.
 func (h *Handler) DialAll() {
 	h.lock.Lock()
-	nodeID, address, contractInstance, auth, client := h.ownNodeID, h.ownAddress, h.contractInstance, h.contractTransactor, h.contractCaller.Client
+	nodeID, address, contractInstance, auth, client := h.nodeId, h.coinbase, h.contractInstance, h.contractTransactor, h.contractCaller.Client
 	connected, signers, server := h.dialed, h.signers, h.server
 	rsaKey := h.rsaKey
 	h.lock.Unlock()

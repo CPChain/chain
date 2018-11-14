@@ -31,7 +31,7 @@ func TestNewHandler(t *testing.T) {
 
 	//Assign an expected handler
 	var expectedResult Handler
-	expectedResult.ownAddress = testEtherbase
+	expectedResult.coinbase = testEtherbase
 	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
 	expectedResult.epochLength = testConfig.Epoch
 	expectedResult.signers = make(map[common.Address]*Signer)

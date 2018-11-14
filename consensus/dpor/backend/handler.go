@@ -20,8 +20,8 @@ type Handler struct {
 	epochIdx    uint64
 	epochLength uint64
 
-	ownNodeID  string
-	ownAddress common.Address
+	nodeId   string
+	coinbase common.Address
 
 	server *p2p.Server
 	rsaKey *rsakey.RsaKey
@@ -75,7 +75,7 @@ type Handler struct {
 // NewHandler creates a new Handler
 func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 	h := &Handler{
-		ownAddress:      etherbase,
+		coinbase:        etherbase,
 		contractAddress: config.Contracts["signer"],
 		epochLength:     config.Epoch,
 		signers:         make(map[common.Address]*Signer),
@@ -454,7 +454,7 @@ func (h *Handler) Signer() common.Address {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	return h.ownAddress
+	return h.coinbase
 }
 
 // SetSigner sets signer of handler
@@ -462,8 +462,8 @@ func (h *Handler) SetSigner(signer common.Address) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	if h.ownAddress != signer {
-		h.ownAddress = signer
+	if h.coinbase != signer {
+		h.coinbase = signer
 	}
 }
 
