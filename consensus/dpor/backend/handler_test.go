@@ -1,16 +1,16 @@
 package backend
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-	"os"
-	"path/filepath"
 )
 
 // launch the chain
@@ -33,6 +33,7 @@ func TestNewHandler(t *testing.T) {
 	var expectedResult Handler
 	expectedResult.ownAddress = testEtherbase
 	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
+	expectedResult.epochLength = testConfig.Epoch
 	expectedResult.signers = make(map[common.Address]*Signer)
 	expectedResult.pendingBlockCh = make(chan *types.Block)
 	expectedResult.quitSync = make(chan struct{})
