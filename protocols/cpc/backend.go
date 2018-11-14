@@ -139,7 +139,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		remoteDB = ethdb.NewIpfsDB(private.DefaultIpfsUrl)
 	}
 
-	eth := &CpchainService{
+	cpc := &CpchainService{
 		config:         config,
 		chainDb:        chainDb,
 		chainConfig:    chainConfig,
@@ -154,7 +154,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		remoteDB:       remoteDB,
 	}
 
-	eth.engine = eth.CreateConsensusEngine(ctx, chainConfig, chainDb)
+	cpc.engine = cpc.CreateConsensusEngine(ctx, chainConfig, chainDb)
 
 	log.Info("Initialising Cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
 
@@ -170,50 +170,50 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		cacheConfig = &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	)
 	rsaKey, _ := ctx.RsaKey()
-	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, rsaKey.PrivateKey)
+	cpc.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, cpc.chainConfig, cpc.engine, vmConfig, remoteDB, rsaKey.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	// Rewind the chain in case of an incompatible config upgrade.
 	if compat, ok := genesisErr.(*configs.ConfigCompatError); ok {
 		log.Warn("Rewinding chain to upgrade configuration", "err", compat)
-		eth.blockchain.SetHead(compat.RewindTo)
+		cpc.blockchain.SetHead(compat.RewindTo)
 		rawdb.WriteChainConfig(chainDb, genesisHash, chainConfig)
 	}
-	eth.bloomIndexer.Start(eth.blockchain)
+	cpc.bloomIndexer.Start(cpc.blockchain)
 
 	if config.TxPool.Journal != "" {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
-	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
+	cpc.txPool = core.NewTxPool(config.TxPool, cpc.chainConfig, cpc.blockchain)
 
-	eth.Etherbase()
-	log.Debug("etherbase in backend", "eb", eth.etherbase)
+	cpc.Etherbase()
+	log.Debug("etherbase in backend", "eb", cpc.etherbase)
 
-	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, eth.etherbase); err != nil {
+	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.SyncMode, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.etherbase); err != nil {
 		return nil, err
 	}
 
-	// if eth.protocolManager.committeeNetworkHandler != nil {
-	// 	if err := eth.protocolManager.committeeNetworkHandler.SetRSAKeys(ctx.RsaKey); err != nil {
+	// if cpc.protocolManager.committeeNetworkHandler != nil {
+	// 	if err := cpc.protocolManager.committeeNetworkHandler.SetRSAKeys(ctx.RsaKey); err != nil {
 	// 		return nil, err
 	// 	}
 	// }
 
-	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
-	eth.miner.SetExtra(makeExtraData(config.ExtraData))
+	cpc.miner = miner.New(cpc, cpc.chainConfig, cpc.EventMux(), cpc.engine)
+	cpc.miner.SetExtra(makeExtraData(config.ExtraData))
 
-	eth.APIBackend = &APIBackend{eth, nil}
+	cpc.APIBackend = &APIBackend{cpc, nil}
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
 		gpoParams.Default = config.GasPrice
 	}
-	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
-	ks := eth.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.blockchain, eth.etherbase, ks, eth.config.Admission)
-	eth.blockchain.SetVerifyEthashFunc(eth.AdmissionAPIBackend.VerifyEthash)
+	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
+	ks := cpc.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	cpc.AdmissionAPIBackend = admission.NewAdmissionControl(cpc.blockchain, cpc.etherbase, ks, cpc.config.Admission)
+	cpc.blockchain.SetVerifyEthashFunc(cpc.AdmissionAPIBackend.VerifyEthash)
 
-	return eth, nil
+	return cpc, nil
 }
 
 func makeExtraData(extra []byte) []byte {
