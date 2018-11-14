@@ -10,7 +10,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/signerRegister"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"

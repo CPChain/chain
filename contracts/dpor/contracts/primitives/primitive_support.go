@@ -28,10 +28,9 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
-
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -83,11 +82,11 @@ type RptPrimitiveBackend interface {
 }
 
 type RptEvaluator struct {
-	consensus.ChainBackend
+	backend.ChainBackend
 	Config CollectorConfig
 }
 
-func NewCollectorConfig(Client consensus.ChainBackend, config *CollectorConfig) (*RptEvaluator, error) {
+func NewCollectorConfig(Client backend.ChainBackend, config *CollectorConfig) (*RptEvaluator, error) {
 	bc := &RptEvaluator{
 		ChainBackend: Client,
 		Config:       *config,

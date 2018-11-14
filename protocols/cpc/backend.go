@@ -241,7 +241,7 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
-func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db ethdb.Database) consensus.Engine {
+func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db database.Database) consensus.Engine {
 
 	eb, err := s.Etherbase()
 	if err != nil {
