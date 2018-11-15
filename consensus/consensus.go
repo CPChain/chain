@@ -51,6 +51,25 @@ type ChainReader interface {
 	GetBlock(hash common.Hash, number uint64) *types.Block
 }
 
+// ChainWriter reads and writes pending block to blockchain
+type ChainWriter interface {
+
+	// AddPendingBlock adds given block to pending blocks cache
+	AddPendingBlock(block *types.Block) error
+
+	// GetPendingBlock retrieves a block from cache with given hash
+	GetPendingBlock(hash common.Hash) *types.Block
+
+	// InsertChain inserts blocks to chain, returns fail index and error
+	InsertChain(chain types.Blocks) (int, error)
+}
+
+// ChainReadWriter includes reader and writer
+type ChainReadWriter interface {
+	ChainReader
+	ChainWriter
+}
+
 // Engine is an algorithm agnostic consensus engine.
 type Engine interface {
 	// Author retrieves the cpchain address of the account that minted the given
