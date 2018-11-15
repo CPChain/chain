@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
-import "../../lib/safeMath.sol";
-import "../../lib/set.sol";
+import "./lib/safeMath.sol";
+import "./lib/set.sol";
 
 contract AdmissionInterface {
     function verify(
@@ -31,8 +31,6 @@ contract Campaign {
     uint public numPerRound = 21;
     // 50 wei per round.
     uint public baseDeposit = 50;
-    // The minimum reputation.
-    uint public minRpt = 50;
     // The minimun and maximun round to claim.
     uint public minNoc = 1;
     uint public maxNoc = 10;
@@ -103,17 +101,17 @@ contract Campaign {
     }
 
     /**
-     * Claim a Candidate have three basic conditions.
-     * One is pay some specified cpc.
-     * The seconde is pass the cpu&memory capacity verification.
-     * The last is rpt.
+     * Submits required information to participate the campaign for membership of the committee.
+     *
      * Each call may tried to update viewIdx once.
+     *
+     * Claiming a candidate has three conditions:
+     * 1. pay some specified cpc token.
+     * 2. pass the cpu&memory capacity proof.
+     * 3. rpt score reaches the threshold (be computed somewhere else).
      */
     function claimCampaign(
         uint _numOfCampaign,
-        // TODO users cannot submit his rpt himself.
-        // waite for the 'precompiled contract' solution.
-        uint _rpt,
         uint64 _cpuNonce,
         uint _cpuBlockNumber,
         uint64 _memoryNonce,
@@ -122,9 +120,8 @@ contract Campaign {
         public
         payable
     {
-        require(_rpt >= minRpt, "too low rpt.");
         require(msg.value == SafeMath.mul(baseDeposit, _numOfCampaign), "wrong deposit value.");
-        // verify the sender's cpu ability.
+        // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         updateViewIdx();
         require(

@@ -25,7 +25,6 @@ import (
 	"sync/atomic"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
@@ -96,7 +95,7 @@ type CpchainService struct {
 
 	// chain service backend
 	APIBackend          *APIBackend
-	AdmissionAPIBackend admission.APIBackend
+	AdmissionApiBackend admission.ApiBackend
 
 	miner     *miner.Miner
 	gasPrice  *big.Int
@@ -204,11 +203,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		gpoParams.Default = config.GasPrice
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
-
-	// TODO @chengx do we really need this?
-	ks := cpc.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	cpc.AdmissionAPIBackend = admission.NewAdmissionControl(cpc.blockchain, cpc.etherbase, ks, cpc.config.Admission)
-	cpc.blockchain.SetVerifyEthashFunc(cpc.AdmissionAPIBackend.VerifyEthash)
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.etherbase, cpc.config.Admission)
 
 	return cpc, nil
 }
@@ -271,7 +266,7 @@ func (s *CpchainService) APIs() []rpc.API {
 	apis = append(apis, s.engine.APIs(s.BlockChain())...)
 
 	// Append any APIs exposed explicitly by the admission control
-	apis = append(apis, s.AdmissionAPIBackend.APIs()...)
+	apis = append(apis, s.AdmissionApiBackend.Apis()...)
 
 	// Append all the local APIs and return
 	return append(apis, []rpc.API{
@@ -477,5 +472,7 @@ func (s *CpchainService) MakePrimitiveContracts(n *node.Node) map[common.Address
 	contracts[common.BytesToAddress([]byte{103})] = &primitives.GetUploadReward{Backend: s.RptEvaluator}
 	contracts[common.BytesToAddress([]byte{104})] = &primitives.GetTxVolume{Backend: s.RptEvaluator}
 	contracts[common.BytesToAddress([]byte{105})] = &primitives.IsProxy{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{106})] = &primitives.CpuPowValidate{}
+	contracts[common.BytesToAddress([]byte{107})] = &primitives.MemPowValidate{}
 	return contracts
 }

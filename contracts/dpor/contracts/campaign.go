@@ -59,8 +59,8 @@ func NewCampaignWrapper(transactOpts *bind.TransactOpts, contractAddr common.Add
 	}, nil
 }
 
-func DeployCampaign(transactOpts *bind.TransactOpts, contractBackend Backend) (common.Address, *CampaignWrapper, error) {
-	contractAddr, _, _, err := campaign.DeployCampaign(transactOpts, contractBackend)
+func DeployCampaign(transactOpts *bind.TransactOpts, contractBackend Backend, admissionContractAddr common.Address) (common.Address, *CampaignWrapper, error) {
+	contractAddr, _, _, err := campaign.DeployCampaign(transactOpts, contractBackend, admissionContractAddr)
 	if err != nil {
 		return contractAddr, nil, err
 	}
@@ -74,9 +74,10 @@ func DeployCampaign(transactOpts *bind.TransactOpts, contractBackend Backend) (c
 
 func (self *CampaignWrapper) MaximumNoc() (*big.Int, error) {
 	fmt.Println("MaximumNoc is called")
-	return self.Contract.MaximumNoc(nil)
+	return self.Contract.MaxNoc(nil)
 }
 
-func (self *CampaignWrapper) ClaimCampaign(numOfCampaign *big.Int, rpt *big.Int) (*types.Transaction, error) {
-	return self.Contract.ClaimCampaign(&self.TransactOpts, numOfCampaign, rpt)
+func (self *CampaignWrapper) ClaimCampaign(numOfCampaign *big.Int, cpuNonce uint64, cpuBlockNumber *big.Int,
+	memoryNonce uint64, memoryBlockNumber *big.Int) (*types.Transaction, error) {
+	return self.Contract.ClaimCampaign(&self.TransactOpts, numOfCampaign, cpuNonce, cpuBlockNumber, memoryNonce, memoryBlockNumber)
 }

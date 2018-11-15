@@ -31,8 +31,6 @@ import (
 var emptyCodeHash = crypto.Keccak256Hash(nil)
 
 type (
-	// VerifyEthashFunc returns true if memory's nonce is valid
-	VerifyEthashFunc func(uint64, uint64, common.Address) bool
 	// CanTransferFunc is the signature of a transfer guard function
 	CanTransferFunc func(StateDB, common.Address, *big.Int) bool
 	// TransferFunc is the signature of a transfer function
@@ -56,7 +54,6 @@ func run(evm *EVM, contract *Contract, input []byte) ([]byte, error) {
 // Context provides the EVM with auxiliary information. Once provided
 // it shouldn't be modified.
 type Context struct {
-	VerifyEthash VerifyEthashFunc
 	// CanTransfer returns whether the account contains
 	// sufficient ether to transfer the value
 	CanTransfer CanTransferFunc

@@ -20,7 +20,7 @@
 // modifying this file, please port any modification over into the developer's
 // guide wiki pages too!
 
-package guide
+package keystore_test
 
 import (
 	"io/ioutil"

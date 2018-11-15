@@ -1,4 +1,4 @@
-pragma solidity ^0.4.16;
+pragma solidity ^0.4.24;
 
 /** @title admission control for campaign committee */
 
@@ -60,28 +60,50 @@ contract Admission {
         view
         returns (bool)
     {
-        return verifyCPU(_cpuNonce, _cpuBlockNumber, _sender) && verifyMemory(_memoryNonce, _memoryBlockNumber);
-    }
-
-    /**
-     * @dev verifyMemory verifies the given memory proof
-     * @param _nonce the memory nonce
-     * @param _blockNumber the memory pow input block number
-     * @return true returns true if memory proof is ok
-     */
-    function verifyMemory(uint64 _nonce, uint _blockNumber) public constant returns (bool) {
-        return true;
+        return verifyCPU(_sender, _cpuNonce, _cpuBlockNumber, cpuDifficulty)
+                && verifyMemory(_sender, _memoryNonce, _memoryBlockNumber, memoryDifficulty);
     }
 
     /**
      * @dev verifyCPU verifies the given cpu proof
+     * @param _sender the campaign participant, message sender of claimcampaign contract.
      * @param _nonce the cpu nonce
      * @param _blockNumber the cpu pow input block number
      * @return true returns true if cpu proof is ok
      */
-    function verifyCPU(uint64 _nonce, uint _blockNumber, address _sender) public view returns (bool) {
-        require((block.number - _blockNumber) <= 20 && (block.number - _blockNumber) >= 0, "must within 20 block");
-        return sha256(abi.encodePacked(_sender, blockhash(_blockNumber), _nonce)) <=  bytes32(cpuTarget);
+    function verifyCPU(address _sender, uint64 _nonce, uint _blockNumber, uint _difficulty) public view returns (bool b) {
+        assembly {
+            let p := mload(0x40)
+            mstore(p, _sender)  // NOTE: mstore stores 32 bytes regardless of the length of input paramter
+            mstore(add(p, 0x20), _nonce)
+            mstore(add(p, 0x40), blockhash(_blockNumber))
+            mstore(add(p, 0x60), _difficulty)
+            if iszero(staticcall(not(0), 0x6A, p, 0x80, p, 0x20)) {
+                revert(0, 0)
+            }
+            b := mload(p)
+        }
     }
 
+    /**
+     * @dev verifyMemory verifies the given memory proof
+     * @param _sender the campaign participant, message sender of claimcampaign contract.
+     * @param _nonce the memory nonce
+     * @param _blockNumber the memory pow input block number
+     * @param _difficulty  the difficulty of memory pow
+     * @return true returns true if memory proof is ok
+     */
+    function verifyMemory(address _sender, uint64 _nonce, uint _blockNumber, uint _difficulty) public view returns (bool b) {
+        assembly {
+            let p := mload(0x40)
+            mstore(p, _sender)
+            mstore(add(p, 0x20), _nonce)
+            mstore(add(p, 0x40), blockhash(_blockNumber))
+            mstore(add(p, 0x60), _difficulty)
+            if iszero(staticcall(not(0), 0x6B, p, 0x80, p, 0x20)) {
+                revert(0, 0)
+            }
+            b := mload(p)
+        }
+    }
 }

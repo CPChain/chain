@@ -215,6 +215,8 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		// cpchainService.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
 
 		contractCaller := createContractCaller(ctx, n)
+
+		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
 		if err := cpchainService.StartMining(true, contractCaller); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
 		}

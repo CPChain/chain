@@ -319,7 +319,7 @@ func (n *Node) startInProc(apis []rpc.API) error {
 	handler := rpc.NewServer()
 	for _, api := range apis {
 		if api.Namespace == "admission" {
-			api.Service.(*admission.AdmissionControl).RegisterInProcHander(handler)
+			api.Service.(admission.ApiBackend).RegisterInProcHandler(handler)
 		}
 
 		if err := handler.RegisterName(api.Namespace, api.Service); err != nil {
