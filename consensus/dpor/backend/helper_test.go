@@ -4,8 +4,6 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -21,11 +19,9 @@ import (
 )
 
 func loadDefaultAccount(idx int) (common.Address, *keystore.Key) {
-	filename := fmt.Sprintf("../../../examples/cpchain/data/data%d/keystore/", idx)
-	file, _ := os.Open(filename)
-	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
-	kst := keystore.NewKeyStore(keyPath, 2, 1)
-	account := kst.Accounts()[0]
+	filename := "../../../examples/cpchain/conf/keys/"
+	kst := keystore.NewKeyStore(filename, 2, 1)
+	account := kst.Accounts()[idx]
 	account, key, err := kst.GetDecryptedKey(account, "password")
 	privateKey := key.PrivateKey
 	if err != nil {
