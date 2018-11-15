@@ -57,7 +57,7 @@ type Dpor struct {
 
 	pbftState consensus.State
 
-	chain consensus.ChainReader
+	chain consensus.ChainReadWriter
 
 	quitSync chan struct{}
 
@@ -146,7 +146,7 @@ func (d *Dpor) IfSigned(header *types.Header) bool {
 }
 
 // StartMining starts to create a handler and start it.
-func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *backend.ContractCaller, server *p2p.Server, pmBroadcastBlockFn backend.BroadcastBlockFn) {
+func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller *backend.ContractCaller, server *p2p.Server, pmBroadcastBlockFn backend.BroadcastBlockFn) {
 
 	d.chain = blockchain
 	d.contractCaller = contractCaller
@@ -187,13 +187,11 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 	}
 
 	addPendingBlockFn := func(block *types.Block) error {
-		// TODO: fix this
-		return nil
+		return d.chain.AddPendingBlock(block)
 	}
 
 	getPendingBlockFn := func(hash common.Hash) *types.Block {
-		// TODO: fix this
-		return nil
+		return d.chain.GetPendingBlock(hash)
 	}
 
 	broadcastBlockFn := func(block *types.Block, prop bool) {
@@ -202,8 +200,8 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReader, contractCaller *bac
 	}
 
 	insertChainFn := func(block *types.Block) error {
-		// TODO: fix this
-		return nil
+		_, err := d.chain.InsertChain(types.Blocks{block})
+		return err
 	}
 
 	statusFn := func() *consensus.PbftStatus {
