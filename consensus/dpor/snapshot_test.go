@@ -408,9 +408,9 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	var testRpt int64
 	testRpt = 1000
 	//the length of testRptLists should be no less than testConfig.Epoch
-	testRptList := rpt.RptList{{common.HexToAddress(addrHex), testRpt},
-		{common.HexToAddress(addrHex), testRpt},
-		{common.HexToAddress(addrHex), testRpt},
+	testRptList := rpt.RptList{rpt.Rpt{Address: common.HexToAddress(addrHex), Rpt: testRpt},
+		rpt.Rpt{Address: common.HexToAddress(addrHex), Rpt: testRpt},
+		rpt.Rpt{Address: common.HexToAddress(addrHex), Rpt: testRpt},
 	}
 	//TODO: if testRptList is not long enough, like it has only one element in this test, it incurs a panic.
 	var testSeed int64

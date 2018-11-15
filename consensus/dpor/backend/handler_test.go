@@ -7,13 +7,14 @@ import (
 	"reflect"
 	"testing"
 
+	"strings"
+	"time"
+
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
-	"strings"
-	"time"
 )
 
 // launch the chain
@@ -117,7 +118,7 @@ func TestHandler_handlePreprepareMsg(t *testing.T) {
 	NewSigner(1, common.HexToAddress(addrHex))
 
 	signer := NewSigner(1, common.HexToAddress(addrHex))
-	msg := p2p.Msg{PrepareSignedHeaderMsg, 1000, strings.NewReader("Test_Payload"), time.Now()}
+	msg := p2p.Msg{Code: PrepareSignedHeaderMsg, Size: 1000, Payload: strings.NewReader("Test_Payload"), ReceivedAt: time.Now()}
 
 	var testConfig *configs.DporConfig
 	testConfig = configs.MainnetChainConfig.Dpor
