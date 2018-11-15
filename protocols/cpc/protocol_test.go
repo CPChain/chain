@@ -1,18 +1,4 @@
 // Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package cpc
 
@@ -36,16 +22,13 @@ func init() {
 
 var testAccount, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 
-// Tests that handshake failures are detected and reported correctly.
-func TestStatusMsgErrors62(t *testing.T) { testStatusMsgErrors(t, 62) }
-func TestStatusMsgErrors63(t *testing.T) { testStatusMsgErrors(t, 63) }
+func TestStatusMsgErrorsCpc1(t *testing.T) { testStatusMsgErrors(t, 1) }
 
 func testStatusMsgErrors(t *testing.T, protocol int) {
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 0, nil, nil)
 	var (
 		genesis = pm.blockchain.Genesis()
 		head    = pm.blockchain.CurrentHeader()
-		td      = pm.blockchain.GetTd(head.Hash(), head.Number.Uint64())
 	)
 	defer pm.Stop()
 
@@ -59,15 +42,15 @@ func testStatusMsgErrors(t *testing.T, protocol int) {
 			wantError: errResp(ErrNoStatusMsg, "first msg has code 2 (!= 0)"),
 		},
 		{
-			code: StatusMsg, data: statusData{10, DefaultConfig.NetworkId, td, head.Hash(), genesis.Hash()},
+			code: StatusMsg, data: statusData{10, DefaultConfig.NetworkId, head.Hash(), genesis.Hash()},
 			wantError: errResp(ErrProtocolVersionMismatch, "10 (!= %d)", protocol),
 		},
 		{
-			code: StatusMsg, data: statusData{uint32(protocol), 999, td, head.Hash(), genesis.Hash()},
-			wantError: errResp(ErrNetworkIdMismatch, "999 (!= 1)"),
+			code: StatusMsg, data: statusData{uint32(protocol), 999, head.Hash(), genesis.Hash()},
+			wantError: errResp(ErrNetworkIdMismatch, fmt.Sprintf("999 (!= %v)", DefaultConfig.NetworkId)),
 		},
 		{
-			code: StatusMsg, data: statusData{uint32(protocol), DefaultConfig.NetworkId, td, head.Hash(), common.Hash{3}},
+			code: StatusMsg, data: statusData{uint32(protocol), DefaultConfig.NetworkId, head.Hash(), common.Hash{3}},
 			wantError: errResp(ErrGenesisBlockMismatch, "0300000000000000 (!= %x)", genesis.Hash().Bytes()[:8]),
 		},
 	}
@@ -93,8 +76,7 @@ func testStatusMsgErrors(t *testing.T, protocol int) {
 }
 
 // This test checks that received transactions are added to the local pool.
-func TestRecvTransactions62(t *testing.T) { testRecvTransactions(t, 62) }
-func TestRecvTransactions63(t *testing.T) { testRecvTransactions(t, 63) }
+func TestRecvTransactionsCpc1(t *testing.T) { testRecvTransactions(t, 1) }
 
 func testRecvTransactions(t *testing.T, protocol int) {
 	txAdded := make(chan []*types.Transaction)
@@ -105,6 +87,7 @@ func testRecvTransactions(t *testing.T, protocol int) {
 	defer p.close()
 
 	tx := newTestTransaction(testAccount, 0, 0)
+	// p.app is the local side of the remote peer
 	if err := p2p.Send(p.app, TxMsg, []interface{}{tx}); err != nil {
 		t.Fatalf("send error: %v", err)
 	}
@@ -121,8 +104,7 @@ func testRecvTransactions(t *testing.T, protocol int) {
 }
 
 // This test checks that pending transactions are sent.
-func TestSendTransactions62(t *testing.T) { testSendTransactions(t, 62) }
-func TestSendTransactions63(t *testing.T) { testSendTransactions(t, 63) }
+func TestSendTransactionsCpc1(t *testing.T) { testSendTransactions(t, 1) }
 
 func testSendTransactions(t *testing.T, protocol int) {
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 0, nil, nil)

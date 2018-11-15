@@ -1,3 +1,4 @@
+// Copyright 2018 The cphain authors
 // Copyright 2016 The go-ethereum Authors
 
 package configs

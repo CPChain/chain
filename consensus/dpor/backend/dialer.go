@@ -101,16 +101,17 @@ func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error
 // DialAll connects remote signers.
 func (h *Handler) DialAll() {
 	h.lock.Lock()
-	nodeID, address, contractInstance, auth, client := h.nodeId, h.coinbase, h.contractInstance, h.contractTransactor, h.contractCaller.Client
-	connected, signers, server := h.dialed, h.signers, h.server
 	rsaKey := h.rsaKey
+	nodeID, address := h.nodeId, h.coinbase
+	connected, signers, server := h.dialed, h.signers, h.server
+	contractInstance, contractTransactor, client := h.contractInstance, h.contractTransactor, h.contractCaller.Client
 	h.lock.Unlock()
 
 	if !connected {
 		log.Debug("connecting...")
 
 		for _, s := range signers {
-			err := s.Dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
+			err := s.Dial(server, nodeID, address, contractTransactor, contractInstance, client, rsaKey)
 			log.Debug("err when connect", "e", err)
 		}
 		connected = true

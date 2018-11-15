@@ -66,6 +66,8 @@ type Handler struct {
 	pendingBlockCh chan *types.Block
 	quitSync       chan struct{}
 
+	currentPending common.Hash
+
 	dialed    bool
 	available bool
 
@@ -85,6 +87,26 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		available:       false,
 	}
 	return h
+}
+
+// Start starts pbft handler
+func (h *Handler) Start() {
+
+	// Dail all remote signers
+	go h.DialAll()
+
+	// Broadcast mined pending block, including empty block
+	go h.PendingBlockBroadcastLoop()
+
+	return
+}
+
+// Stop stops all
+func (h *Handler) Stop() {
+
+	close(h.quitSync)
+
+	return
 }
 
 // Protocol returns a p2p protocol to handle dpor msgs
@@ -112,12 +134,12 @@ func (h *Handler) Protocol() p2p.Protocol {
 
 			log.Debug("done with handshake")
 
-			// select {
-			// case <-h.quitSync:
-			// 	return p2p.DiscQuitting
-			// default:
-			return h.handle(ProtocolVersion, p, rw, address)
-			// }
+			select {
+			case <-h.quitSync:
+				return p2p.DiscQuitting
+			default:
+				return h.handle(ProtocolVersion, p, rw, address)
+			}
 
 		},
 		NodeInfo: func() interface{} {
@@ -175,28 +197,14 @@ func (h *Handler) removeSigner(signer common.Address) error {
 	return nil
 }
 
-// Start starts pbft handler
-func (h *Handler) Start() {
-
-	// Dail all remote signers
-	go h.DialAll()
-
-	// Broadcast mined pending block, including empty block
-	go h.PendingBlockBroadcastLoop()
-
-	return
-}
-
-// Stop stops all
-func (h *Handler) Stop() {
-
-	close(h.quitSync)
-
-	return
-}
-
 func (h *Handler) handleMsg(p *Signer) error {
 	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+	// TODO: remove this. this is only for test
+	block := h.getPendingFn(h.currentPending)
+	p.SendNewPendingBlock(block)
+	// remove above
+
 	msg, err := p.rw.ReadMsg()
 	if err != nil {
 		log.Debug("err when readmsg", "err", err)
@@ -415,6 +423,13 @@ func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
 	case h.pendingBlockCh <- block:
 		log.Debug("!!!!!!!!!!!!!!!!! inserted into handler.pendingBlockCh")
+
+		err := h.addPendingFn(block)
+		if err != nil {
+			return err
+		}
+		h.currentPending = block.Hash()
+
 		return nil
 	}
 }
