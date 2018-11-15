@@ -106,6 +106,14 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 
 	// initialize a sub-protocol for every implemented version we can handle
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
+
+	if config.Dpor != nil {
+		if dpor, ok := engine.(*dpor.Dpor); ok {
+			pbftProtocol := dpor.Protocol()
+			manager.SubProtocols = append(manager.SubProtocols, pbftProtocol)
+		}
+	}
+
 	for i, version := range ProtocolVersions {
 		// Compatible; initialise the sub-protocol
 		manager.SubProtocols = append(manager.SubProtocols, p2p.Protocol{
@@ -138,13 +146,6 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	}
 	if len(manager.SubProtocols) == 0 {
 		return nil, errIncompatibleConfig
-	}
-
-	if config.Dpor != nil {
-		if dpor, ok := engine.(*dpor.Dpor); ok {
-			pbftProtocol := dpor.Protocol()
-			manager.SubProtocols = append(manager.SubProtocols, pbftProtocol)
-		}
 	}
 
 	// Construct the different synchronisation mechanisms
