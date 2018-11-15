@@ -11,6 +11,9 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
+	"strings"
+	"time"
 )
 
 // launch the chain
@@ -113,4 +116,16 @@ func TestHandler_handlePreprepareMsg(t *testing.T) {
 	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
 	NewSigner(1, common.HexToAddress(addrHex))
 
+	signer := NewSigner(1, common.HexToAddress(addrHex))
+	msg := p2p.Msg{PrepareSignedHeaderMsg, 1000, strings.NewReader("Test_Payload"), time.Now()}
+
+	var testConfig *configs.DporConfig
+	testConfig = configs.MainnetChainConfig.Dpor
+	//define the parameter "etherbase" for NewHandler()
+	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
+	testHandler := NewHandler(testConfig, testEtherbase)
+	err := testHandler.handlePreprepareMsg(msg, signer)
+	if err != nil {
+		t.Errorf("handlePrePrepareMsg returns an error message, as %v\n", err)
+	}
 }

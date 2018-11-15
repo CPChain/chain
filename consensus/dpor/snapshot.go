@@ -38,7 +38,7 @@ type Snapshot interface {
 	applyHeader(header *types.Header) error
 	updateCandidates(header *types.Header) error
 	updateRpts(header *types.Header) (rpt.RptList, error)
-	updateView(rpts rpt.RptList, seed int64, viewLength int) error
+	updateSigner(rpts rpt.RptList, seed int64, viewLength int) error
 	signers() []common.Address
 	signerRound(signer common.Address) (int, error)
 	isSigner(signer common.Address) bool
@@ -138,7 +138,6 @@ func (s *DporSnapshot) setRecentSigners(epochIdx uint64, signers []common.Addres
 
 	ss := make([]common.Address, len(signers))
 	copy(ss, signers)
-
 	s.RecentSigners[epochIdx] = ss
 
 	beforeEpochIdx := uint64(math.Max(0, float64(epochIdx-MaxSizeOfRecentSigners)))
@@ -361,7 +360,7 @@ func (s *DporSnapshot) ifStartElection() bool {
 	return s.number() >= s.config.MaxInitBlockNumber-(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View)
 }
 
-// updateView use rpt and election result to get new committee(signers)
+// updateSigner use rpt and election result to get new committee(signers)
 func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 
 	signers := s.candidates()[:s.config.Epoch]
@@ -373,15 +372,15 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 
 	// Elect signers
 	if s.ifStartElection() {
-		log.Debug("electiing")
-		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
+		log.Debug("electing")
+		log.Debug("---------------------------")
 		log.Debug("rpts:")
 		for _, r := range rpts {
 			log.Debug("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
 		}
 		log.Debug("seed", "seed", seed)
 		log.Debug("epoch length", "epoch", int(s.config.Epoch))
-		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
+		log.Debug("---------------------------")
 
 		signers := election.Elect(rpts, seed, int(s.config.Epoch))
 
@@ -390,7 +389,7 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 		for _, s := range signers {
 			log.Debug("signer", "addr", s.Hex())
 		}
-		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
+		log.Debug("---------------------------")
 
 		log.Debug("snap.number", "n", s.number())
 
@@ -400,14 +399,14 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 
 		s.setRecentSigners(epochIdx, signers)
 
-		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
+		log.Debug("---------------------------")
 		signers = s.getRecentSigners(epochIdx)
 		log.Debug("stored elected signers")
 
 		for _, s := range signers {
 			log.Debug("signer", "addr", s.Hex())
 		}
-		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
+		log.Debug("---------------------------")
 
 	}
 
