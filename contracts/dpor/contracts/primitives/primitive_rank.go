@@ -33,7 +33,7 @@ type GetRank struct {
 }
 
 func (c *GetRank) RequiredGas(input []byte) uint64 {
-	return configs.GetBalance
+	return configs.GetRank
 }
 
 func (c *GetRank) Run(input []byte) ([]byte, error) {

@@ -26,7 +26,6 @@ import (
 	"sync/atomic"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
@@ -97,7 +96,7 @@ type CpchainService struct {
 	bloomIndexer  *core.ChainIndexer             // LogsBloom indexer operating during block imports
 
 	APIBackend          *APIBackend
-	AdmissionAPIBackend admission.APIBackend
+	AdmissionApiBackend admission.ApiBackend
 
 	miner     *miner.Miner
 	gasPrice  *big.Int
@@ -140,7 +139,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		remoteDB = database.NewIpfsDB(private.DefaultIpfsUrl)
 	}
 
-	eth := &CpchainService{
+	cpc := &CpchainService{
 		config:         config,
 		chainDb:        chainDb,
 		chainConfig:    chainConfig,
@@ -169,45 +168,42 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		vmConfig    = vm.Config{EnablePreimageRecording: config.EnablePreimageRecording}
 		cacheConfig = &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	)
-	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, ctx.AccountManager)
+	cpc.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, cpc.chainConfig, cpc.engine, vmConfig, remoteDB, ctx.AccountManager)
 	if err != nil {
 		return nil, err
 	}
 	// Rewind the chain in case of an incompatible config upgrade.
 	if compat, ok := genesisErr.(*configs.ConfigCompatError); ok {
 		log.Warn("Rewinding chain to upgrade configuration", "err", compat)
-		eth.blockchain.SetHead(compat.RewindTo)
+		cpc.blockchain.SetHead(compat.RewindTo)
 		rawdb.WriteChainConfig(chainDb, genesisHash, chainConfig)
 	}
-	eth.bloomIndexer.Start(eth.blockchain)
+	cpc.bloomIndexer.Start(cpc.blockchain)
 
 	if config.TxPool.Journal != "" {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
-	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
+	cpc.txPool = core.NewTxPool(config.TxPool, cpc.chainConfig, cpc.blockchain)
 
-	eth.Etherbase()
-	log.Debug("etherbase in backend", "eb", eth.etherbase)
+	cpc.Etherbase()
+	log.Debug("etherbase in backend", "eb", cpc.etherbase)
 
-	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, eth.etherbase); err != nil {
+	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.SyncMode, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.etherbase); err != nil {
 		return nil, err
 	}
 
-	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
-	eth.miner.SetExtra(makeExtraData(config.ExtraData))
+	cpc.miner = miner.New(cpc, cpc.chainConfig, cpc.EventMux(), cpc.engine)
+	cpc.miner.SetExtra(makeExtraData(config.ExtraData))
 
-	eth.APIBackend = &APIBackend{eth, nil}
+	cpc.APIBackend = &APIBackend{cpc, nil}
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
 		gpoParams.Default = config.GasPrice
 	}
-	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
+	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.etherbase, cpc.config.Admission)
 
-	ks := eth.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.blockchain, eth.etherbase, ks, eth.config.Admission)
-	eth.blockchain.SetVerifyEthashFunc(eth.AdmissionAPIBackend.VerifyEthash)
-
-	return eth, nil
+	return cpc, nil
 }
 
 func makeExtraData(extra []byte) []byte {
@@ -273,7 +269,7 @@ func (s *CpchainService) APIs() []rpc.API {
 	apis = append(apis, s.engine.APIs(s.BlockChain())...)
 
 	// Append any APIs exposed explicitly by the admission control
-	apis = append(apis, s.AdmissionAPIBackend.APIs()...)
+	apis = append(apis, s.AdmissionApiBackend.Apis()...)
 
 	// Append all the local APIs and return
 	return append(apis, []rpc.API{
@@ -495,5 +491,7 @@ func (s *CpchainService) MakePrimitiveContracts(n *node.Node) map[common.Address
 	contracts[common.BytesToAddress([]byte{103})] = &primitives.GetUploadReward{Backend: s.RptEvaluator}
 	contracts[common.BytesToAddress([]byte{104})] = &primitives.GetTxVolume{Backend: s.RptEvaluator}
 	contracts[common.BytesToAddress([]byte{105})] = &primitives.IsProxy{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{106})] = &primitives.CpuPowValidate{}
+	contracts[common.BytesToAddress([]byte{107})] = &primitives.MemPowValidate{}
 	return contracts
 }

@@ -30,6 +30,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
 	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
@@ -186,7 +187,12 @@ func deployCampaign() {
 	auth.GasPrice = gasPrice
 
 	// Launch contract deploy transaction.
-	address, tx, _, err := campaign.DeployCampaign(auth, client)
+	acAddr, _, _, err := admission.DeployAdmission(auth, client, big.NewInt(50), big.NewInt(50))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	address, tx, _, err := campaign.DeployCampaign(auth, client, acAddr)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

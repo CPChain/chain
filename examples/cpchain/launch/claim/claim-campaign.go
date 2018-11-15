@@ -149,14 +149,18 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 	baseDeposit := 50
 	gasLimit := 3000000
 	numOfCampaign := 10
-	myRpt := 60
+	cpuNonce := 345678
+	cpuBlockNum := 100
+	memNonce := 345678
+	memBlockNum := 101
 
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(int64(baseDeposit * numOfCampaign))
 	auth.GasLimit = uint64(gasLimit)
 	auth.GasPrice = gasPrice
 
-	tx, err := instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), big.NewInt(int64(myRpt)))
+	tx, err := instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), uint64(cpuNonce), big.NewInt(int64(cpuBlockNum)),
+		uint64(memNonce), big.NewInt(int64(memBlockNum)))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -172,8 +176,8 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 	fmt.Printf("tx mining take time:%s\n", time.Since(startTime))
 	fmt.Println("receipt.Status:", receipt.Status)
 
-	noc, deposit, timestamp, err := instance.CandidateInfoOf(nil, address)
-	fmt.Println("candidate info of", address.Hex(), ":", noc, deposit, timestamp)
+	noc, deposit, startView, stopView, err := instance.CandidateInfoOf(nil, address)
+	fmt.Println("candidate info of", address.Hex(), ":", noc, deposit, startView, stopView)
 }
 
 func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address, rsaPubkey []byte) {

@@ -434,6 +434,11 @@ func (b *SimulatedBackend) AdjustTime(adjustment time.Duration) error {
 	return nil
 }
 
+// Blockchain returns the underlying blockchain
+func (b *SimulatedBackend) Blockchain() *core.BlockChain {
+	return b.blockchain
+}
+
 // callmsg implements core.Message to allow passing it as a transaction simulator.
 type callmsg struct {
 	cpchain.CallMsg
