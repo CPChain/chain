@@ -13,7 +13,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -139,7 +138,6 @@ func (s *DporSnapshot) setRecentSigners(epochIdx uint64, signers []common.Addres
 
 	ss := make([]common.Address, len(signers))
 	copy(ss, signers)
-	fmt.Println("signer:", ss)
 	s.RecentSigners[epochIdx] = ss
 
 	beforeEpochIdx := uint64(math.Max(0, float64(epochIdx-MaxSizeOfRecentSigners)))
