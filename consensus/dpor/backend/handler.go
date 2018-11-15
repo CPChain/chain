@@ -202,7 +202,9 @@ func (h *Handler) handleMsg(p *Signer) error {
 
 	// TODO: remove this. this is only for test
 	block := h.getPendingFn(h.currentPending)
-	p.SendNewPendingBlock(block)
+	if block != nil {
+		p.SendNewPendingBlock(block)
+	}
 	// remove above
 
 	msg, err := p.rw.ReadMsg()
@@ -425,6 +427,7 @@ func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 		log.Debug("!!!!!!!!!!!!!!!!! inserted into handler.pendingBlockCh")
 
 		err := h.addPendingFn(block)
+		log.Debug("err when add pending block to chain", "err", err)
 		if err != nil {
 			return err
 		}
