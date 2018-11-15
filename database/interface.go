@@ -38,8 +38,8 @@ type Batch interface {
 	Reset()
 }
 
-// RemoteDatabase represents the database interface that be able to maintain a huge amount of data. Distributed P2P database
-// such as IPFS is the classic implementation of the interface.
+// RemoteDatabase represents the database interface that be able to maintain a huge amount of data. Distributed p2p database
+// such as ipfs is the classic implementation of the interface.
 type RemoteDatabase interface {
 	// Get gets data from database with given key.
 	Get(key []byte) ([]byte, error)

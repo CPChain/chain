@@ -15,7 +15,7 @@ import (
 )
 
 func newTestLDB() (*database.LDBDatabase, func()) {
-	dirname, err := ioutil.TempDir(os.TempDir(), "ethdb_test_")
+	dirname, err := ioutil.TempDir(os.TempDir(), "cpcdb_test")
 	if err != nil {
 		panic("failed to create test file: " + err.Error())
 	}
