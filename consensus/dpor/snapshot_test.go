@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
@@ -389,11 +390,13 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	type fields struct {
 		config *configs.DporConfig
 		//sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Candidates []common.Address
-		//RecentSigners map[uint64][]common.Address
+		Number        uint64
+		Hash          common.Hash
+		Candidates    []common.Address
+		RecentSigners map[uint64][]common.Address
 	}
+
+	//For the case testDporSnapshot.ifUserDefaultSigner() == true
 	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3, MaxInitBlockNumber: 1000}
 	//testCache, _ := lru.NewARC(inmemorySnapshots)
 	expectedResult := new(DporSnapshot)
@@ -402,9 +405,14 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	expectedResult.Candidates = getSignerAddress()
 	fmt.Println("candidates: ", expectedResult.Candidates)
 	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
-	var testRpt float64
+	var testRpt int64
 	testRpt = 1000
-	testRpts := rpt.RPTs{{common.HexToAddress(addrHex), testRpt}}
+	//the length of testRptLists should be no less than testConfig.Epoch
+	testRptList := rpt.RptList{{common.HexToAddress(addrHex), testRpt},
+		{common.HexToAddress(addrHex), testRpt},
+		{common.HexToAddress(addrHex), testRpt},
+	}
+	//TODO: if testRptList is not long enough, like it has only one element in this test, it incurs a panic.
 	var testSeed int64
 	testSeed = 2000
 	tt := fields{
@@ -413,29 +421,51 @@ func TestSnapshot_updateSigner(t *testing.T) {
 		1,
 		common.Hash{},
 		getSignerAddress(),
+		make(map[uint64][]common.Address),
 	}
 	//construct a DporSnapshot for testing, with above settings
 	testDporSnapshot := &DporSnapshot{
 		config: tt.config,
 		// sigcache:      tt.fields.sigcache,
-		Number:     tt.Number,
-		Hash:       tt.Hash,
-		Candidates: tt.Candidates,
-		// RecentSigners: tt.fields.RecentSigners,
+		Number:        tt.Number,
+		Hash:          tt.Hash,
+		Candidates:    tt.Candidates,
+		RecentSigners: tt.RecentSigners,
 	}
-	fmt.Println("Candidates: ", testDporSnapshot.Candidates)
-	fmt.Println("Recent signer: ", testDporSnapshot.RecentSigners)
-	err := testDporSnapshot.updateSigners(testRpts, testSeed)
+	//fmt.Println("Candidates: ", testDporSnapshot.Candidates)
+	//fmt.Println("Recent signer: ", testDporSnapshot.RecentSigners)
+	//fmt.Println("EpochIdx:", testDporSnapshot.EpochIdx())
+	//testDporSnapshot.setRecentSigners(1, []common.Address{common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")})
+
 	//err here may never have a value, as the updateSigners always returns a nil error message
+	err := testDporSnapshot.updateSigners(testRptList, testSeed)
 	if err != nil {
 		t.Errorf("DporSnapshot.updateSigners returns an error message, as %v\n", err)
 	}
-	testEpoch := testDporSnapshot.EpochIdx()
-	testSigner := testDporSnapshot.getRecentSigners(testEpoch)
-	fmt.Println(testDporSnapshot.ifUseDefaultSigners())
-	fmt.Println(testDporSnapshot.ifStartElection())
-	fmt.Println(testEpoch)
-	fmt.Println(testSigner)
+	testEpochIdx := testDporSnapshot.EpochIdx()
+	fmt.Println(testEpochIdx)
+	recentSigner := testDporSnapshot.getRecentSigners(testEpochIdx + 1)
+	if !reflect.DeepEqual(recentSigner, expectedResult.Candidates) {
+		t.Errorf("For the case snapshot uses default signer, updateSigner() =  \n%v, want \n%v\n", recentSigner, expectedResult)
+	}
+
+	//For the case testDporSnapshot.ifStartElection() == true
+	testDporSnapshot.Number = 2000
+	expectedResult.Number = 2000
+	fmt.Println("ifStarElection() = ", testDporSnapshot.ifStartElection())
+	err = testDporSnapshot.updateSigners(testRptList, testSeed)
+	if err != nil {
+		t.Errorf("DporSnapshot.updateSigners returns an error message, as %v\n", err)
+	}
+	testEpoch := testDporSnapshot.config.Epoch
+	expectedSigner := election.Elect(testRptList, testSeed, int(testEpoch))
+	testEpochIdx = testDporSnapshot.EpochIdx()
+	fmt.Println(testEpochIdx)
+	recentSigner = testDporSnapshot.getRecentSigners(testEpochIdx + EpochGapBetweenElectionAndMining)
+	if !reflect.DeepEqual(expectedSigner, recentSigner) {
+		t.Errorf("For the case snapshot starts election, updateSigner() =  \n%v, want \n%v\n", recentSigner, expectedSigner)
+	}
+
 }
 
 func TestSnapshot_updateView(t *testing.T) {
