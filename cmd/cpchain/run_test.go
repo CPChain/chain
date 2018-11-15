@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/internal/cmdtest"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/cmdtest"
 	"github.com/docker/docker/pkg/reexec"
 )
 
