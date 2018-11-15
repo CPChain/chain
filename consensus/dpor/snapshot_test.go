@@ -468,45 +468,6 @@ func TestSnapshot_updateSigner(t *testing.T) {
 
 }
 
-func TestSnapshot_updateView(t *testing.T) {
-	type fields struct {
-		config        *configs.DporConfig
-		sigcache      *lru.ARCCache
-		Number        uint64
-		Hash          common.Hash
-		Candidates    []common.Address
-		RecentSigners map[uint64][]common.Address
-	}
-	type args struct {
-		rpts rpt.RptList
-		seed int64
-		// viewLength int
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &DporSnapshot{
-				config: tt.fields.config,
-				// sigcache:      tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Candidates: tt.fields.Candidates,
-				// RecentSigners: tt.fields.RecentSigners,
-			}
-			if err := s.updateSigners(tt.args.rpts, tt.args.seed); (err != nil) != tt.wantErr {
-				t.Errorf("DporSnapshot.updateView(%v, %v) error = %v, wantErr %v", tt.args.rpts, tt.args.seed, err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func TestSnapshot_signers(t *testing.T) {
 	snap := createSnapshot()
 	signers := snap.SignersOf(snap.Number)
