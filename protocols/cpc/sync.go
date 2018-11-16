@@ -169,10 +169,10 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	}
 	// Make sure the peer's TD is higher than our own
 	currentBlock := pm.blockchain.CurrentBlock()
-	td := pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())
+	height := currentBlock.Number()
 
-	pHead, pTd := peer.Head()
-	if pTd.Cmp(td) <= 0 {
+	pHead, pHt := peer.Head()
+	if pHt.Cmp(height) <= 0 {
 		// TODO: @liuq, fix this. added because of sync_test.go err.
 		atomic.StoreUint32(&pm.fastSync, 0)
 		return
@@ -181,7 +181,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	mode := downloader.FullSync
 
 	// Run the sync cycle, and disable fast sync if we've went past the pivot block
-	if err := pm.downloader.Synchronise(peer.id, pHead, pTd, mode); err != nil {
+	if err := pm.downloader.Synchronise(peer.id, pHead, pHt, mode); err != nil {
 
 		// TODO: @liuq check if there is any security problems!
 		if err == consensus.ErrNotEnoughSigs {

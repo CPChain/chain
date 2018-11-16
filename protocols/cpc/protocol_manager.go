@@ -312,14 +312,13 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		genesis = pm.blockchain.Genesis()
 		head    = pm.blockchain.CurrentHeader()
 		hash    = head.Hash()
-		number  = head.Number.Uint64()
-		td      = pm.blockchain.GetTd(hash, number)
+		height  = head.Number
 	)
 
 	log.Debug("my etherbase", "address", pm.etherbase)
 
 	// Do normal handshake
-	err := p.Handshake(pm.networkID, td, hash, genesis.Hash())
+	err := p.Handshake(pm.networkID, height, hash, genesis.Hash())
 
 	if err != nil {
 		p.Log().Debug("Cpchain handshake failed", "err", err)
@@ -796,18 +795,19 @@ func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 		// Assuming the block is importable by the peer, but possibly not yet done so,
 		// calculate the head hash and TD that the peer truly must have.
 		var (
-			trueHead = request.Block.ParentHash()
-			trueTD   = new(big.Int).Sub(request.TD, request.Block.Difficulty())
+			trueHead   = request.Block.ParentHash()
+			trueHeight = request.Block.Number()
 		)
 		// Update the peers total difficulty if better than the previous
-		if _, td := p.Head(); trueTD.Cmp(td) > 0 {
-			p.SetHead(trueHead, trueTD)
+		if _, ht := p.Head(); trueHeight.Cmp(ht) > 0 {
+			p.SetHead(trueHead, trueHeight)
 
 			// Schedule a sync if above ours. Note, this will not fire a sync for a gap of
 			// a singe block (as the true TD is below the propagated block), however this
 			// scenario should easily be covered by the fetcher.
+			// replaced td with height
 			currentBlock := pm.blockchain.CurrentBlock()
-			if trueTD.Cmp(pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())) > 0 {
+			if trueHeight.Cmp(currentBlock.Number()) > 0 {
 				go pm.synchronise(p)
 			}
 		}
@@ -860,21 +860,21 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 // NodeInfo represents a short summary of the cpchain sub-protocol metadata
 // known about the host peer.
 type NodeInfo struct {
-	Network    uint64               `json:"network"`    // cpchain network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
-	Difficulty *big.Int             `json:"difficulty"` // Total difficulty of the host's blockchain
-	Genesis    common.Hash          `json:"genesis"`    // SHA3 hash of the host's genesis block
-	Config     *configs.ChainConfig `json:"config"`     // Chain configuration for the fork rules
-	Head       common.Hash          `json:"head"`       // SHA3 hash of the host's best owned block
+	Network uint64               `json:"network"` // cpchain network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
+	Height  *big.Int             `json:"height"`  // height of the host's blockchain
+	Genesis common.Hash          `json:"genesis"` // SHA3 hash of the host's genesis block
+	Config  *configs.ChainConfig `json:"config"`  // Chain configuration for the fork rules
+	Head    common.Hash          `json:"head"`    // SHA3 hash of the host's best owned block
 }
 
 // NodeInfo retrieves some protocol metadata about the running host node.
 func (pm *ProtocolManager) NodeInfo() *NodeInfo {
 	currentBlock := pm.blockchain.CurrentBlock()
 	return &NodeInfo{
-		Network:    pm.networkID,
-		Difficulty: pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64()),
-		Genesis:    pm.blockchain.Genesis().Hash(),
-		Config:     pm.blockchain.Config(),
-		Head:       currentBlock.Hash(),
+		Network: pm.networkID,
+		Height:  pm.blockchain.CurrentBlock().Number(),
+		Genesis: pm.blockchain.Genesis().Hash(),
+		Config:  pm.blockchain.Config(),
+		Head:    currentBlock.Hash(),
 	}
 }

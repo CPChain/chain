@@ -40,7 +40,7 @@ var (
 		Dpor: &DporConfig{
 			Period:                1,
 			Epoch:                 4,
-			View:                  1,
+			View:                  3,
 			MaxInitBlockNumber:    96,
 			ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
 			Contracts: map[string]common.Address{
