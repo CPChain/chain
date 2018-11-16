@@ -21,7 +21,6 @@ package primitives
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"sort"
 
@@ -31,7 +30,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
-
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -45,16 +43,7 @@ var (
 
 const (
 	Created = iota
-	SellerConfirmed
-	ProxyFetched
-	ProxyDelivered
-	BuyerConfirmed
 	Finished
-	SellerRated
-	BuyerRated
-	AllRated
-	Disputed
-	Withdrawn
 )
 
 // CollectorConfig is the config of rpt info collector
@@ -168,13 +157,13 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	leaderBytes := header.Extra[uint64(extraVanity)+number*common.AddressLength : uint64(extraVanity)+(number+1)*common.AddressLength]
 	leader := common.BytesToAddress(leaderBytes)
 
-	fmt.Println("leader.Hex():", leader.Hex())
+	log.Debug("leader.Hex is ", "hex", leader.Hex())
 
 	if leader == address {
 		ld = 0
 	} else {
-		for _, committe := range re.CommitteeMember(header) {
-			if address == committe {
+		for _, committee := range re.CommitteeMember(header) {
+			if address == committee {
 				ld = 1
 			}
 		}
@@ -182,7 +171,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	return ld, nil
 }
 
-// GetCoinAge is the func to get uploadnamber to rpt
+// GetCoinAge is the func to get uploadnumber to rpt
 func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int64, error) {
 	uploadNumber := int64(0)
 	contractAddress := re.Config.DporConfig.Contracts["register"]

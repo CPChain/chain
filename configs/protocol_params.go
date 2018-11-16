@@ -64,13 +64,13 @@ const (
 	Bn256PairingBaseGas     uint64 = 100000 // Base price for an elliptic curve pairing check
 	Bn256PairingPerPointGas uint64 = 80000  // Per-point price for an elliptic curve pairing check
 	// TODO @chengx make the name more concrete
-	GetRank           uint64 = 600   // Gas needed for getting balance
-	GetMaintenance    uint64 = 600   // Gas needed for GetMaintenance
-	GetProxyReward    uint64 = 600   // Gas needed for GetProxyReward
-	GetTxVolume       uint64 = 600   // Gas needed for GetTxVolume
-	GetUploadReward   uint64 = 600   // Gas needed for GetUploadReward
-	CpuPowValidateGas uint64 = 20000 // Gas needed for CpuPowValidate
-	MemPowValidateGas uint64 = 20000 // Gas needed for MemPowValidate
+	GetRankGas         uint64 = 600   // Gas needed for GetRank
+	GetMaintenanceGas  uint64 = 600   // Gas needed for GetMaintenanceGas
+	IsProxyGas         uint64 = 600   // Gas needed for IsProxyGas
+	GetTxVolumeGas     uint64 = 600   // Gas needed for GetTxVolumeGas
+	GetUploadRewardGas uint64 = 600   // Gas needed for GetUploadRewardGas
+	CpuPowValidateGas  uint64 = 20000 // Gas needed for CpuPowValidate
+	MemPowValidateGas  uint64 = 20000 // Gas needed for MemPowValidate
 )
 
 var (
