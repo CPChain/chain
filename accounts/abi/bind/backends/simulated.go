@@ -63,25 +63,6 @@ type SimulatedBackend struct {
 	config *configs.ChainConfig
 }
 
-// // NewSimulatedBackend creates a new binding backend using a simulated blockchain
-// // for testing purposes.
-// func NewSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
-// 	database := ethdb.NewMemDatabase()
-// 	genesis := core.Genesis{Config: configs.AllEthashProtocolChanges, Alloc: alloc}
-// 	genesis.MustCommit(database)
-// 	remoteDB := ethdb.NewIpfsDbWithAdapter(ethdb.NewFakeIpfsAdapter())
-// 	blockchain, _ := core.NewBlockChain(database, nil, genesis.Config, ethash.NewFaker(), vm.Config{}, remoteDB, nil)
-
-// 	backend := &SimulatedBackend{
-// 		database:   database,
-// 		blockchain: blockchain,
-// 		config:     genesis.Config,
-// 		events:     filters.NewEventSystem(new(event.TypeMux), &filterBackend{database, blockchain}, false),
-// 	}
-// 	backend.rollback()
-// 	return backend
-// }
-
 // NewDporSimulatedBackend creates a new binding backend using a simulated blockchain
 // for testing purposes.
 func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {

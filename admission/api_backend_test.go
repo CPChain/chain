@@ -35,7 +35,7 @@ var (
 		addr1: {Balance: big.NewInt(1000000000)},
 	}
 	// gspec   = core.Genesis{Config: params.TestChainConfig, Alloc: alloc}
-	gspec   = core.Genesis{Config: configs.AllEthashProtocolChanges, Alloc: alloc}
+	gspec   = core.Genesis{Config: configs.AllCpchainProtocolChanges, Alloc: alloc}
 	testdb  = database.NewMemDatabase()
 	genesis = gspec.MustCommit(testdb)
 )

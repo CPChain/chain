@@ -30,8 +30,8 @@ import (
 
 func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
 	type args struct {
-		config    *configs.DporConfig
-		etherbase common.Address
+		config  *configs.DporConfig
+		cpcbase common.Address
 	}
 	tests := []struct {
 		name    string
@@ -43,7 +43,7 @@ func TestNewBasicCommitteeNetworkHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewBasicCommitteeNetworkHandler(tt.args.config, tt.args.etherbase)
+			got, err := NewBasicCommitteeNetworkHandler(tt.args.config, tt.args.cpcbase)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewBasicCommitteeNetworkHandler() error = %v, wantErr %v", err, tt.wantErr)
 				return
