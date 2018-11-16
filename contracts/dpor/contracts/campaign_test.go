@@ -35,8 +35,9 @@ import (
 )
 
 var (
-	key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	addr   = crypto.PubkeyToAddress(key.PublicKey)
+	key, _      = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	addr        = crypto.PubkeyToAddress(key.PublicKey)
+	numPerRound = 21
 )
 
 func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
@@ -184,6 +185,63 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	}
 }
 
+func TestClaimWhenDepositLessThanBase(t *testing.T) {
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
+	printBalance(contractBackend)
+
+	fmt.Println("deploy Campaign")
+	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	fmt.Println("contractAddr:", contractAddr)
+	checkError(t, "deploy contract: expected no error, got %v", err)
+	contractBackend.Commit()
+	printBalance(contractBackend)
+
+	fmt.Println("load Campaign")
+	transactOpts := bind.NewKeyedTransactor(key)
+	campaign, err := dpor.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
+	checkError(t, "can't deploy root registry: %v", err)
+	_ = contractAddr
+	printBalance(contractBackend)
+
+	// setup TransactOpts
+	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
+	campaign.TransactOpts.Value = big.NewInt(40)
+	campaign.TransactOpts.GasLimit = 1000000
+
+	// compute cpu&memory pow
+	config := admission2.DefaultConfig
+	config.CpuDifficulty = 5
+	config.MemoryDifficulty = 5
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
+	ac.Campaign()
+	<-ac.DoneCh() // wait for done
+	results := ac.GetResult()
+	cpuBlockNum := results[admission2.Cpu].BlockNumber
+	cpuNonce := results[admission2.Cpu].Nonce
+	memBlockNum := results[admission2.Memory].BlockNumber
+	memNonce := results[admission2.Memory].Nonce
+
+	tx, err := campaign.ClaimCampaign(big.NewInt(2), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
+	fmt.Println(tx)
+	checkError(t, "ClaimCampaign error:", err)
+
+	// wait for view change
+	verifyDeposit(campaign, t, big.NewInt(0))
+	waitForViewChange(contractBackend, 2)
+
+	// view change 1st time
+	fmt.Println("ViewChange")
+	tx, err = campaign.ViewChange()
+	checkError(t, "ViewChange error:%v", err)
+	contractBackend.Commit()
+
+	// get candidates by start view index
+	verifyCandidates(campaign, t, big.NewInt(1), 0)
+	verifyDeposit(campaign, t, big.NewInt(0))
+	printBalance(contractBackend)
+
+}
+
 func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
 	printBalance(contractBackend)
@@ -205,6 +263,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	// setup TransactOpts
 	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
 	campaign.TransactOpts.Value = big.NewInt(50 * 2)
+	campaign.TransactOpts.GasLimit = 1000000
 
 	// compute cpu&memory pow
 	config := admission2.DefaultConfig
@@ -236,8 +295,9 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	printBalance(contractBackend)
 	contractBackend.Commit()
 
-	t.Skip("campaign.ViewChange() doesn't work as expected.")
-	// TODO: @zjj fix the issue of ViewChange
+	// wait for view change
+	verifyDeposit(campaign, t, big.NewInt(100))
+	waitForViewChange(contractBackend, 2)
 
 	// view change 1st time
 	fmt.Println("ViewChange")
@@ -246,23 +306,26 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	contractBackend.Commit()
 
 	// get candidates by start view index
-	verifyCandidates(campaign, t, startViewIdx, 0)
-	printBalance(contractBackend)
-
-	// get candidates by end view index
-	verifyCandidates(campaign, t, endViewIdx, 1)
+	verifyCandidates(campaign, t, startViewIdx, 1)
+	verifyDeposit(campaign, t, big.NewInt(50))
 	printBalance(contractBackend)
 
 	// view change 2nd time
+	waitForViewChange(contractBackend, 1)
 	fmt.Println("ViewChange")
 	tx, err = campaign.ViewChange()
 	checkError(t, "ViewChange error:%v", err)
 	contractBackend.Commit()
 
+	// get candidates by end view index
+	verifyCandidates(campaign, t, endViewIdx, 0)
+	verifyDeposit(campaign, t, big.NewInt(50))
+	printBalance(contractBackend)
+
 	// get candidates by view index
-	verifyCandidates(campaign, t, big.NewInt(0), 1)
 	verifyCandidates(campaign, t, big.NewInt(1), 1)
-	verifyCandidates(campaign, t, big.NewInt(2), 0)
+	verifyCandidates(campaign, t, big.NewInt(2), 1)
+	verifyCandidates(campaign, t, big.NewInt(3), 0)
 	printBalance(contractBackend)
 
 	// quit campaign
@@ -277,9 +340,24 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
-	verifyCandidates(campaign, t, big.NewInt(0), 1)
 	verifyCandidates(campaign, t, big.NewInt(1), 1)
-	verifyCandidates(campaign, t, big.NewInt(2), 0)
+	verifyCandidates(campaign, t, big.NewInt(2), 1)
+	verifyCandidates(campaign, t, big.NewInt(3), 0)
+}
+
+func waitForViewChange(contractBackend *backends.SimulatedBackend, viewIdx int) {
+	i := 0
+	for i < viewIdx*numPerRound {
+		contractBackend.Commit()
+		i++
+	}
+}
+
+func verifyDeposit(campaign *dpor.CampaignWrapper, t *testing.T, amount *big.Int) {
+	_, deposit, _, _, _ := campaign.CandidateInfoOf(addr)
+	if deposit.Cmp(amount) != 0 {
+		t.Fatal("Deposit ", deposit, " != ", amount)
+	}
 }
 
 func verifyCandidates(campaign *dpor.CampaignWrapper, t *testing.T, viewIdx *big.Int, candidateLengh int) {
