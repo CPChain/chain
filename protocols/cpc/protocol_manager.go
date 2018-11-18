@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package cpc
 
@@ -50,10 +37,6 @@ const (
 )
 
 var (
-	daoChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the DAO handshake challenge
-)
-
-var (
 
 	// errIncompatibleConfig is returned if the requested protocols and configs are
 	// not compatible (low protocol version restrictions and high requirements).
@@ -69,8 +52,8 @@ func errResp(code errCode, format string, v ...interface{}) error {
 type ProtocolManager struct {
 	networkID uint64
 
-	fastSync  uint32 // Flag whether fast sync is enabled (gets disabled if we already have blocks)
-	acceptTxs uint32 // Flag whether we're considered synchronised (enables transaction processing)
+	fastSync  uint32 // whether fast sync is enabled (gets disabled if we already have blocks)
+	acceptTxs uint32 // whether we're considered synchronised (enables transaction processing)
 
 	txpool      txPool
 	blockchain  *core.BlockChain
@@ -84,8 +67,8 @@ type ProtocolManager struct {
 	SubProtocols []p2p.Protocol
 
 	eventMux      *event.TypeMux
-	txsCh         chan core.NewTxsEvent  // subscribes to new transactions from txpool
-	txsSub        event.Subscription // manages txsCh
+	txsCh         chan core.NewTxsEvent // subscribes to new transactions from txpool
+	txsSub        event.Subscription    // manages txsCh
 	minedBlockSub *event.TypeMuxSubscription
 
 	// channels for fetcher, syncer, txsyncLoop
@@ -99,12 +82,11 @@ type ProtocolManager struct {
 	cpcbase                 common.Address
 	committeeNetworkHandler *BasicCommitteeHandler
 
-	// wait group is used for graceful shutdowns during downloading
-	// and processing
+	// wait group is used for graceful shutdowns during downloading and processing
 	wg sync.WaitGroup
 }
 
-// NewProtocolManager returns a new cpchain sub protocol manager. The cpchain sub protocol manages peers capable
+// NewProtocolManager returns a new sub protocol manager. The cpchain sub protocol manages peers capable
 // with the cpchain network.
 func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, cpcbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
@@ -254,6 +236,7 @@ func (pm *ProtocolManager) update() {
 				currentBlock := pm.blockchain.CurrentBlock()
 				log.Debug("broadcast updating block")
 
+				// TODO @liuq the logic should be fetch new blocks
 				go pm.BroadcastBlock(currentBlock, true)
 				go pm.BroadcastBlock(currentBlock, false)
 			} else {

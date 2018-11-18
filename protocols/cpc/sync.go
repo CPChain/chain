@@ -149,6 +149,7 @@ func (pm *ProtocolManager) syncer() {
 			if pm.peers.Len() < minDesiredPeerCount {
 				break
 			}
+			// update from peers
 			go pm.synchronise(pm.peers.BestPeer())
 
 		case <-forceSync.C:
@@ -163,29 +164,24 @@ func (pm *ProtocolManager) syncer() {
 
 // synchronise tries to sync up our local block chain with a remote peer.
 func (pm *ProtocolManager) synchronise(peer *peer) {
-	// Short circuit if no peers are available
 	if peer == nil {
 		return
 	}
-	// Make sure the peer's TD is higher than our own
+
+	// make sure the peer has more blocks
 	currentBlock := pm.blockchain.CurrentBlock()
 	height := currentBlock.Number()
-
 	pHead, pHt := peer.Head()
 	if pHt.Cmp(height) <= 0 {
 		// TODO: @liuq, fix this. added because of sync_test.go err.
 		atomic.StoreUint32(&pm.fastSync, 0)
 		return
 	}
-	// Otherwise try to sync with the downloader
-	mode := downloader.FullSync
 
-	// Run the sync cycle, and disable fast sync if we've went past the pivot block
-	if err := pm.downloader.Synchronise(peer.id, pHead, pHt, mode); err != nil {
-
+	// full sync with the downloader
+	if err := pm.downloader.Synchronise(peer.id, pHead, pHt, downloader.FullSync); err != nil {
 		// TODO: @liuq check if there is any security problems!
 		if err == consensus.ErrNotEnoughSigs {
-
 			// log.Debug("--------I am in sync.Synchronise start--------")
 			// log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
 			// log.Debug("--------I am in sync.Synchronise end--------")
@@ -196,6 +192,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			// 	waitingSignatureBlock := waitingSignatureBlock.(*types.Block)
 			// 	go pm.BroadcastBlock(waitingSignatureBlock, true)
 			// }
+			log.Warn("Got error", "error", err)
 		}
 
 		if err == consensus.ErrNewSignedHeader {
@@ -217,7 +214,10 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		log.Info("Fast sync complete, auto disabling")
 		atomic.StoreUint32(&pm.fastSync, 0)
 	}
+
+	// because we have done the synchronization
 	atomic.StoreUint32(&pm.acceptTxs, 1) // Mark initial sync done
+
 	if head := pm.blockchain.CurrentBlock(); head.NumberU64() > 0 {
 		// We've completed a sync cycle, notify all peers of new state. This path is
 		// essential in star-topology networks where a gateway node needs to notify
