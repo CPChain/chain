@@ -413,7 +413,7 @@ func (s *CpchainService) EventMux() *event.TypeMux           { return s.eventMux
 func (s *CpchainService) Engine() consensus.Engine           { return s.engine }
 func (s *CpchainService) ChainDb() database.Database         { return s.chainDb }
 func (s *CpchainService) IsListening() bool                  { return true } // Always listening
-func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
+func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }  // the first protocol is the latest version.
 func (s *CpchainService) NetVersion() uint64                 { return s.networkID }
 func (s *CpchainService) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 func (s *CpchainService) RemoteDB() database.RemoteDatabase  { return s.remoteDB }
@@ -427,7 +427,7 @@ func (s *CpchainService) Protocols() []p2p.Protocol {
 	return append(s.protocolManager.SubProtocols, s.lesServer.Protocols()...)
 }
 
-// Start implements node.Service, starting all internal goroutines needed by the
+// start implements node.service, starting all internal goroutines needed by the
 // cpchain protocol implementation.
 func (s *CpchainService) Start(srvr *p2p.Server) error {
 	// Start the bloom bits servicing goroutines
@@ -444,7 +444,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 		s.protocolManager.engine.SetCommitteeNetworkHandler(s.protocolManager.committeeNetworkHandler)
 	}
 
-	log.Info("I am in s.Start")
+	log.Info("cpchainService started")
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers
@@ -454,7 +454,8 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 		}
 		maxPeers -= s.config.LightPeers
 	}
-	// Start the networking layer and the light server if requested
+	// start the networking layer and the light server if requested
+	// by this time, the p2p has already started.  we are only starting the upper layer handling.
 	s.protocolManager.Start(maxPeers)
 	if s.lesServer != nil {
 		s.lesServer.Start(srvr)

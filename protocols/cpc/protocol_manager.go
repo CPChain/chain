@@ -84,8 +84,8 @@ type ProtocolManager struct {
 	SubProtocols []p2p.Protocol
 
 	eventMux      *event.TypeMux
-	txsCh         chan core.NewTxsEvent
-	txsSub        event.Subscription
+	txsCh         chan core.NewTxsEvent  // subscribes to new transactions from txpool
+	txsSub        event.Subscription // manages txsCh
 	minedBlockSub *event.TypeMuxSubscription
 
 	// channels for fetcher, syncer, txsyncLoop
@@ -128,21 +128,26 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(config.Dpor, cpcbase)
 	}
 
-	// Initiate a sub-protocol for every implemented version we can handle
+	// initiate a sub-protocol for every implemented version we can handle
+	// these protocols are used by the p2p server.
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 	for i, version := range ProtocolVersions {
-		// Compatible; initialise the sub-protocol
+		// compatible; initialise the sub-protocol
 		manager.SubProtocols = append(manager.SubProtocols, p2p.Protocol{
 			Name:    ProtocolName,
 			Version: version,
 			Length:  ProtocolLengths[i],
 			Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
+
+				// wrap up the peer
 				peer := manager.newPeer(int(version), p, rw)
 
+				// either we quit or we wait on accepting a new peer by syncer
 				select {
 				case manager.newPeerCh <- peer:
 					manager.wg.Add(1)
 					defer manager.wg.Done()
+					// stuck in the message loop on this peer
 					return manager.handle(peer)
 				case <-manager.quitSync:
 					return p2p.DiscQuitting
@@ -162,9 +167,10 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	if len(manager.SubProtocols) == 0 {
 		return nil, errIncompatibleConfig
 	}
-	// Construct the different synchronisation mechanisms
+	// downloader
 	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
+	// fetcher specific
 	validator := func(header *types.Header, refHeader *types.Header) error {
 		return engine.VerifyHeader(blockchain, header, true, refHeader)
 	}
@@ -172,7 +178,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		return blockchain.CurrentBlock().NumberU64()
 	}
 	inserter := func(blocks types.Blocks) (int, error) {
-		// If fast sync is running, deny importing weird blocks
+		// if fast sync is running, deny importing weird blocks
 		if atomic.LoadUint32(&manager.fastSync) == 1 {
 			log.Warn("Discarded bad propagated block", "number", blocks[0].Number(), "hash", blocks[0].Hash().Hex())
 			return 0, nil
@@ -180,7 +186,6 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		atomic.StoreUint32(&manager.acceptTxs, 1) // Mark initial sync done on any fetcher import
 		return manager.blockchain.InsertChain(blocks)
 	}
-
 	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, heighter, inserter, manager.removePeer)
 
 	return manager, nil
@@ -209,6 +214,7 @@ func (pm *ProtocolManager) removePeer(id string) {
 	}
 }
 
+// starts all the blockchain synchronization mechanisms
 func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.maxPeers = maxPeers
 
@@ -231,6 +237,7 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	go pm.update()
 }
 
+// Periodically updates the block head
 func (pm *ProtocolManager) update() {
 	futureTimer := time.NewTicker(10 * time.Second)
 	defer futureTimer.Stop()
@@ -298,8 +305,8 @@ func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner boo
 	return isSigner, err
 }
 
-// handle is the callback invoked to manage the life cycle of an eth peer. When
-// this function terminates, the peer is disconnected.
+// handle is the callback invoked to manage the life cycle of cpchain peer.
+// when this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) handle(p *peer) error {
 	// Ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
