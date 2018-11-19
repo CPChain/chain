@@ -265,7 +265,7 @@ func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, cpcbase common.
 	bc := &BasicCommitteeHandler{
 		ownAddress:      cpcbase,
 		contractAddress: config.Contracts["signer"],
-		remoteSigners:   make([]*RemoteSigner, config.Epoch),
+		remoteSigners:   make([]*RemoteSigner, config.TermLen),
 		// remoteSigners:   make([]*RemoteSigner, config.Epoch-1),
 		connected: false,
 	}

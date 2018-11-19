@@ -153,7 +153,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 		log.Warn("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
-	number = number%re.Config.DporConfig.Epoch - 1
+	number = number%re.Config.DporConfig.TermLen - 1
 	leaderBytes := header.Extra[uint64(extraVanity)+number*common.AddressLength : uint64(extraVanity)+(number+1)*common.AddressLength]
 	leader := common.BytesToAddress(leaderBytes)
 

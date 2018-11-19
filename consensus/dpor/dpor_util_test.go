@@ -259,7 +259,7 @@ func Test_acceptSigs(t *testing.T) {
 		header   *types.Header
 		sigcache *lru.ARCCache
 		signers  []common.Address
-		epochL   uint
+		termL    uint
 	}
 	tests := []struct {
 		name    string
@@ -275,7 +275,7 @@ func Test_acceptSigs(t *testing.T) {
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers, tt.args.epochL)
+			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers, tt.args.termL)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("acceptSigs(%v, %v, %v) error = %v, wantErr %v", tt.args.header, tt.args.sigcache, tt.args.signers, err, tt.wantErr)
 				return
@@ -289,7 +289,7 @@ func Test_acceptSigs(t *testing.T) {
 
 func Test_calcDifficulty(t *testing.T) {
 	signers := getSignerAddress()
-	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	snapshot := newSnapshot(config, 1, common.Hash{}, signers)
 
 	type args struct {
