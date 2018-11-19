@@ -119,11 +119,26 @@ type Engine interface {
 	GAPIs(chain ChainReader) []grpc.GApi
 }
 
-// Validator is used to determine whether an address is in the committee.
+// Producer is used to produce a block in our PV(Producer-Validator) model.
+type Producer interface {
+	Engine
+}
+
+// Validator is used to validate and sign a block
 type Validator interface {
 
 	// IsFutureSigner returns if a given address is a future signer.
 	IsFutureSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
+
+	// ValidateBlock validates a block.
+	ValidateBlock(chain ChainReader, block *types.Block) error
+
+	// SignHeader signs a header in given state.
+	SignHeader(chain ChainReader, header *types.Header, state State) error
+
+	// SignBlock signs a block with own private key
+	SignBlock(chain ChainReader, block *types.Block) error
+
 }
 
 // PoW is a consensus engine based on proof-of-work.
