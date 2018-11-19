@@ -1,3 +1,5 @@
+// Copyright 2018 The cpchain authors
+
 package database
 
 import (

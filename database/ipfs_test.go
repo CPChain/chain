@@ -1,3 +1,5 @@
+// Copyright 2018 The cpchain authors
+
 package database
 
 import (
@@ -5,8 +7,8 @@ import (
 )
 
 const (
-	testDbWrongURL  = "localhost:5002"
-	unexistIpfsAddr = "QmPam2fqFP7eTmnUJn2BX1GSBXpVZ5zqDpVjWQ3T88AEd3"
+	testDbWrongURL      = "localhost:5002"
+	nonexistentIpfsAddr = "QmPam2fqFP7eTmnUJn2BX1GSBXpVZ5zqDpVjWQ3T88AEd3"
 )
 
 var normalContent = []byte("this is a placeholder for private tx payload.")
@@ -81,7 +83,7 @@ func TestIpfsDatabase_Has(t *testing.T) {
 		t.Error("The result of Has() should be true when the data to retrieve does exist.")
 	}
 
-	if db.Has([]byte(unexistIpfsAddr)) {
+	if db.Has([]byte(nonexistentIpfsAddr)) {
 		t.Error("The result of Has() should be false when the data to retrieve does not exist.")
 	}
 

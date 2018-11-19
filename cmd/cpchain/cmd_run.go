@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of cpchain.
+//
+// cpchain is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// cpchain is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with cpchain. If not, see <http://www.gnu.org/licenses/>.
+
 package main
 
 import (
@@ -13,6 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/protocols/cpc"
@@ -74,6 +91,10 @@ func registerChainService(cfg *cpc.Config, n *node.Node) {
 		// 	ls, _ := les.NewLesServer(fullNode, cfg)
 		// 	fullNode.AddLesServer(ls)
 		// }
+		for addr, c := range fullNode.MakePrimitiveContracts(n) {
+			vm.RegisterPrimitiveContract(addr, c)
+		}
+
 		return fullNode, err
 	})
 	if err != nil {
@@ -194,6 +215,8 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		// cpchainService.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
 
 		contractCaller := createContractCaller(ctx, n)
+
+		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
 		if err := cpchainService.StartMining(true, contractCaller); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
 		}

@@ -1,5 +1,4 @@
 admission
-admission/ethash
 accounts/keystore
 accounts/rsakey
 cmd
@@ -10,3 +9,4 @@ protocols/cpc/fetcher
 protocols/cpc/downloader
 api/rpc
 api/cpclient
+contracts/dpor/contracts

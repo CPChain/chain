@@ -1,18 +1,31 @@
-package contract
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
+package signer_register
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
-
 	"testing"
-
 	"time"
-
-	"bytes"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -43,7 +56,7 @@ func TestSignerRegister(t *testing.T) {
 
 func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *SignerConnectionRegister, context.Context) {
 	// create client.
-	// client, err := ethclient.Dial("https://rinkeby.infura.io")
+	// client, err := cpchain.Dial("https://rinkeby.infura.io")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {
@@ -77,7 +90,7 @@ func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int,
 		log.Fatal(err.Error())
 	}
 	auth := bind.NewKeyedTransactor(privateKey)
-	//auth.Nonce = big.NewInt(int64(nonce)) // not necessary
+	// auth.Nonce = big.NewInt(int64(nonce)) // not necessary
 	auth.Value = big.NewInt(0)
 	// in wei
 	auth.GasLimit = uint64(gasLimit)

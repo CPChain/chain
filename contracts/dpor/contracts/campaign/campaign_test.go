@@ -1,4 +1,20 @@
-package contract
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
+package campaign
 
 import (
 	"bytes"
@@ -15,6 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -23,7 +40,7 @@ func TestCampaign(t *testing.T) {
 	t.Skip("we shall use a simulated backend.")
 
 	// create client.
-	// client, err := ethclient.Dial("https://rinkeby.infura.io")
+	// client, err := cpchain.Dial("https://rinkeby.infura.io")
 	client, err := cpclient.Dial("http://localhost:8501") // local
 	if err != nil {
 		log.Fatal(err.Error())
@@ -67,7 +84,8 @@ func TestCampaign(t *testing.T) {
 	auth.GasPrice = gasPrice
 
 	// launch contract deploy transaction.
-	address, tx, instance, err := DeployCampaign(auth, client)
+	acAddr, _, _, _ := admission.DeployAdmission(auth, client, big.NewInt(50), big.NewInt(50))
+	address, tx, instance, err := DeployCampaign(auth, client, acAddr)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -88,11 +106,11 @@ func TestCampaign(t *testing.T) {
 	}
 
 	fmt.Println("*******************************************************")
-	numOfCampaign, deposit, _ := ClaimCampaign(privateKey, gasLimit, gasPrice, err, instance, startTime, ctx, client, fromAddress)
+	numOfCampaign, deposit, _, _ := ClaimCampaign(privateKey, gasLimit, gasPrice, err, instance, startTime, ctx, client, fromAddress)
 	assert(1, 50, numOfCampaign, deposit, t)
 
 	fmt.Println("*******************************************************")
-	numOfCampaign, deposit, _ = ClaimCampaign(privateKey, gasLimit, gasPrice, err, instance, startTime, ctx, client, fromAddress)
+	numOfCampaign, deposit, _, _ = ClaimCampaign(privateKey, gasLimit, gasPrice, err, instance, startTime, ctx, client, fromAddress)
 	assert(2, 100, numOfCampaign, deposit, t)
 }
 
@@ -102,14 +120,15 @@ func assert(expectNum int64, expectDeposit int64, numOfCampaign *big.Int, deposi
 	}
 }
 
-func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *Campaign, startTime time.Time, ctx context.Context, client *cpclient.Client, fromAddress common.Address) (*big.Int, *big.Int, *big.Int) {
+func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *Campaign, startTime time.Time,
+	ctx context.Context, client *cpclient.Client, fromAddress common.Address) (*big.Int, *big.Int, *big.Int, *big.Int) {
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(50)
 	// in wei
 	auth.GasLimit = uint64(gasLimit)
 	// in units
 	auth.GasPrice = gasPrice
-	claimtx, err := instance.ClaimCampaign(auth, big.NewInt(int64(1)), big.NewInt(int64(60)))
+	claimtx, err := instance.ClaimCampaign(auth, big.NewInt(int64(1)), 101, big.NewInt(123456), 101, big.NewInt(234567))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -122,17 +141,17 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 	fmt.Printf("tx mining take time:%s\n", time.Since(startTime))
 	fmt.Println("receipt.Status:", receipt.Status)
 	// test contract state variable call.
-	x, err := instance.MinimumRpt(nil)
+	x, err := instance.MinNoc(nil)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	fmt.Println("minimum reputation: ", x)
 	// test contract map variable call.
-	numOfCampaign, deposit, timestamp, err := instance.CandidateInfoOf(nil, fromAddress)
+	numOfCampaign, deposit, startViewIdx, endViewIdx, err := instance.CandidateInfoOf(nil, fromAddress)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, deposit, timestamp)
+	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
 	// see candidates of view zero.
 	candidates, err := instance.CandidatesOf(nil, big.NewInt(0))
 	if err != nil {
@@ -142,5 +161,5 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 	for i := 0; i < len(candidates); i++ {
 		fmt.Println("number", i, candidates[i].Hex())
 	}
-	return numOfCampaign, deposit, timestamp
+	return numOfCampaign, deposit, startViewIdx, endViewIdx
 }

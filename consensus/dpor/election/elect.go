@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 // Package election implements dpor's election method.
 package election
 
@@ -12,14 +28,14 @@ import (
 
 // randRange returns a random integer between [ min(i,j), max(i,j) )
 // NB, the rhs is open.
-func randRange(i, j int) int {
+func randRange(i, j int, myrand *rand.Rand) int {
 	if j > i {
-		return i + rand.Intn(j-i)
+		return i + myrand.Intn(j-i)
 	}
-	return j + rand.Intn(i-j)
+	return j + myrand.Intn(i-j)
 }
 
-func findNearest(array []float64, target float64) (float64, int) {
+func findNearest(array []int64, target int64) (int64, int) {
 	if len(array) == 0 {
 		panic("array length must be nonzero.")
 	}
@@ -51,23 +67,25 @@ func findNearest(array []float64, target float64) (float64, int) {
 
 // Elect returns election result of the given rpt list of candidates,
 // seed and viewLength.
-func Elect(rpts rpt.RPTs, seed int64, viewLength int) []common.Address {
+func Elect(rpts rpt.RptList, seed int64, viewLength int) []common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
-	rand.Seed(seed)
+
+	randSource := rand.NewSource(seed)
+	myRand := rand.New(randSource)
 
 	upper := 10
 	lower := 0
 	step := (upper - lower) / viewLength
 
-	var randoms []float64
+	var randoms []int64
 
 	for i := 0; i < viewLength; i++ {
-		rnd := randRange(i*step, (i+1)*step)
-		randoms = append(randoms, math.Log2(float64(1.0+rnd)))
+		rnd := randRange(i*step, (i+1)*step, myRand)
+		randoms = append(randoms, int64(math.Log2(float64(1.0+rnd))))
 	}
 
-	scale := sortedRpts[len(sortedRpts)-1].Rpt / math.Log2(float64(1+upper))
+	scale := sortedRpts[len(sortedRpts)-1].Rpt / int64(math.Log2(float64(1+upper)))
 	scaledRpts := sortedRpts
 	for i := 0; i < len(sortedRpts); i++ {
 		scaledRpts[i].Rpt /= scale
@@ -76,7 +94,7 @@ func Elect(rpts rpt.RPTs, seed int64, viewLength int) []common.Address {
 	signers := make([]common.Address, viewLength)
 
 	for i := 0; i < viewLength; i++ {
-		var srpts []float64
+		var srpts []int64
 		for j := 0; j < len(scaledRpts); j++ {
 			srpts = append(srpts, scaledRpts[j].Rpt)
 		}

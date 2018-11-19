@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package cpc implements the Cpchain protocol.
+// Package cpc implements the cpchain protocol.
 package cpc
 
 import (
@@ -26,7 +26,6 @@ import (
 	"sync/atomic"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
@@ -35,12 +34,13 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/internal/cpcapi"
 	"bitbucket.org/cpchain/chain/miner"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/private"
@@ -70,8 +70,9 @@ type RSAReader func() (*rsakey.RsaKey, error)
 
 // CpchainService implements the CpchainService full node service.
 type CpchainService struct {
-	config      *Config
-	chainConfig *configs.ChainConfig
+	config       *Config
+	chainConfig  *configs.ChainConfig
+	RptEvaluator *primitives.RptEvaluator
 
 	// Channel for shutting down the service
 	shutdownChan chan bool // Channel for shutting down the Cpchain
@@ -95,16 +96,16 @@ type CpchainService struct {
 	bloomIndexer  *core.ChainIndexer             // LogsBloom indexer operating during block imports
 
 	APIBackend          *APIBackend
-	AdmissionAPIBackend admission.APIBackend
+	AdmissionApiBackend admission.ApiBackend
 
-	miner     *miner.Miner
-	gasPrice  *big.Int
-	etherbase common.Address
+	miner    *miner.Miner
+	gasPrice *big.Int
+	cpcbase  common.Address
 
 	networkID     uint64
-	netRPCService *ethapi.PublicNetAPI
+	netRPCService *cpcapi.PublicNetAPI
 
-	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
+	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and cpcbase)
 
 	remoteDB database.RemoteDatabase // remoteDB represents an remote distributed database.
 }
@@ -138,7 +139,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		remoteDB = database.NewIpfsDB(private.DefaultIpfsUrl)
 	}
 
-	eth := &CpchainService{
+	cpc := &CpchainService{
 		config:         config,
 		chainDb:        chainDb,
 		chainConfig:    chainConfig,
@@ -148,13 +149,13 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		shutdownChan:   make(chan bool),
 		networkID:      config.NetworkId,
 		gasPrice:       config.GasPrice,
-		etherbase:      config.Etherbase,
+		cpcbase:        config.Cpcbase,
 		bloomRequests:  make(chan chan *bloombits.Retrieval),
 		bloomIndexer:   NewBloomIndexer(chainDb, configs.BloomBitsBlocks),
 		remoteDB:       remoteDB,
 	}
 
-	log.Info("Initialising Cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
+	log.Info("Initialising cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
 
 	if !config.SkipBcVersionCheck {
 		bcVersion := rawdb.ReadDatabaseVersion(chainDb)
@@ -167,45 +168,42 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		vmConfig    = vm.Config{EnablePreimageRecording: config.EnablePreimageRecording}
 		cacheConfig = &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	)
-	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, remoteDB, ctx.AccountManager)
+	cpc.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, cpc.chainConfig, cpc.engine, vmConfig, remoteDB, ctx.AccountManager)
 	if err != nil {
 		return nil, err
 	}
 	// Rewind the chain in case of an incompatible config upgrade.
 	if compat, ok := genesisErr.(*configs.ConfigCompatError); ok {
 		log.Warn("Rewinding chain to upgrade configuration", "err", compat)
-		eth.blockchain.SetHead(compat.RewindTo)
+		cpc.blockchain.SetHead(compat.RewindTo)
 		rawdb.WriteChainConfig(chainDb, genesisHash, chainConfig)
 	}
-	eth.bloomIndexer.Start(eth.blockchain)
+	cpc.bloomIndexer.Start(cpc.blockchain)
 
 	if config.TxPool.Journal != "" {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
-	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
+	cpc.txPool = core.NewTxPool(config.TxPool, cpc.chainConfig, cpc.blockchain)
 
-	eth.Etherbase()
-	log.Debug("etherbase in backend", "eb", eth.etherbase)
+	cpc.Cpcbase()
+	log.Debug("cpcbase in backend", "eb", cpc.cpcbase)
 
-	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, eth.etherbase); err != nil {
+	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.SyncMode, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.cpcbase); err != nil {
 		return nil, err
 	}
 
-	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
-	eth.miner.SetExtra(makeExtraData(config.ExtraData))
+	cpc.miner = miner.New(cpc, cpc.chainConfig, cpc.EventMux(), cpc.engine)
+	cpc.miner.SetExtra(makeExtraData(config.ExtraData))
 
-	eth.APIBackend = &APIBackend{eth, nil}
+	cpc.APIBackend = &APIBackend{cpc, nil}
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
 		gpoParams.Default = config.GasPrice
 	}
-	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
+	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.cpcbase, cpc.config.Admission)
 
-	ks := eth.accountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	eth.AdmissionAPIBackend = admission.NewAdmissionControl(eth.blockchain, eth.etherbase, ks, eth.config.Admission)
-	eth.blockchain.SetVerifyEthashFunc(eth.AdmissionAPIBackend.VerifyEthash)
-
-	return eth, nil
+	return cpc, nil
 }
 
 func makeExtraData(extra []byte) []byte {
@@ -237,7 +235,7 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 	return db, nil
 }
 
-// CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
+// CreateConsensusEngine creates the required type of consensus engine instance for an cpchain service
 func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db database.Database) consensus.Engine {
 
 	// If Dpor is requested, set it up
@@ -251,7 +249,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainC
 // GAPIs return the collection of GRPC services the cpc package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *CpchainService) GAPIs() []grpc.GApi {
-	apis := ethapi.GetGAPIs(s.APIBackend)
+	apis := cpcapi.GetGAPIs(s.APIBackend)
 	return append(apis, []grpc.GApi{
 		// NewMinerReader(s),
 		NewCoinbase(s),
@@ -265,13 +263,13 @@ func (s *CpchainService) GAPIs() []grpc.GApi {
 // APIs return the collection of RPC services the cpc package offers.
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *CpchainService) APIs() []rpc.API {
-	apis := ethapi.GetAPIs(s.APIBackend)
+	apis := cpcapi.GetAPIs(s.APIBackend)
 
 	// Append any APIs exposed explicitly by the consensus engine
 	apis = append(apis, s.engine.APIs(s.BlockChain())...)
 
 	// Append any APIs exposed explicitly by the admission control
-	apis = append(apis, s.AdmissionAPIBackend.APIs()...)
+	apis = append(apis, s.AdmissionApiBackend.Apis()...)
 
 	// Append all the local APIs and return
 	return append(apis, []rpc.API{
@@ -328,48 +326,48 @@ func (s *CpchainService) ResetWithGenesisBlock(gb *types.Block) {
 	s.blockchain.ResetWithGenesisBlock(gb)
 }
 
-func (s *CpchainService) Etherbase() (eb common.Address, err error) {
+func (s *CpchainService) Cpcbase() (eb common.Address, err error) {
 	s.lock.RLock()
-	etherbase := s.etherbase
+	cpcbase := s.cpcbase
 	s.lock.RUnlock()
 
-	if etherbase != (common.Address{}) {
-		return etherbase, nil
+	if cpcbase != (common.Address{}) {
+		return cpcbase, nil
 	}
 	if wallets := s.AccountManager().Wallets(); len(wallets) > 0 {
 		if accounts := wallets[0].Accounts(); len(accounts) > 0 {
-			etherbase := accounts[0].Address
+			cpcbase := accounts[0].Address
 
 			s.lock.Lock()
-			s.etherbase = etherbase
+			s.cpcbase = cpcbase
 			s.lock.Unlock()
 
-			log.Info("Etherbase automatically configured", "address", etherbase)
-			return etherbase, nil
+			log.Info("Cpcbase automatically configured", "address", cpcbase)
+			return cpcbase, nil
 		}
 	}
-	return common.Address{}, fmt.Errorf("etherbase must be explicitly specified")
+	return common.Address{}, fmt.Errorf("cpcbase must be explicitly specified")
 }
 
 // SetChainbase sets the mining reward address.
-func (s *CpchainService) SetEtherbase(etherbase common.Address) {
+func (s *CpchainService) SetCpcbase(cpcbase common.Address) {
 	s.lock.Lock()
-	s.etherbase = etherbase
+	s.cpcbase = cpcbase
 	s.lock.Unlock()
 
-	s.miner.SetChainbase(etherbase)
+	s.miner.SetChainbase(cpcbase)
 }
 
 func (s *CpchainService) StartMining(local bool, contractCaller *consensus.ContractCaller) error {
-	eb, err := s.Etherbase()
+	eb, err := s.Cpcbase()
 	if err != nil {
-		log.Error("Cannot start mining without etherbase", "err", err)
-		return fmt.Errorf("etherbase missing: %v", err)
+		log.Error("Cannot start mining without cpcbase", "err", err)
+		return fmt.Errorf("cpcbase missing: %v", err)
 	}
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 		if wallet == nil || err != nil {
-			log.Error("Etherbase account unavailable locally", "err", err)
+			log.Error("Cpcbase account unavailable locally", "err", err)
 			return fmt.Errorf("signer missing: %v", err)
 		}
 		dpor.Authorize(eb, wallet.SignHash)
@@ -415,7 +413,7 @@ func (s *CpchainService) EventMux() *event.TypeMux           { return s.eventMux
 func (s *CpchainService) Engine() consensus.Engine           { return s.engine }
 func (s *CpchainService) ChainDb() database.Database         { return s.chainDb }
 func (s *CpchainService) IsListening() bool                  { return true } // Always listening
-func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
+func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }  // the first protocol is the latest version.
 func (s *CpchainService) NetVersion() uint64                 { return s.networkID }
 func (s *CpchainService) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 func (s *CpchainService) RemoteDB() database.RemoteDatabase  { return s.remoteDB }
@@ -429,14 +427,14 @@ func (s *CpchainService) Protocols() []p2p.Protocol {
 	return append(s.protocolManager.SubProtocols, s.lesServer.Protocols()...)
 }
 
-// Start implements node.Service, starting all internal goroutines needed by the
-// Cpchain protocol implementation.
+// start implements node.service, starting all internal goroutines needed by the
+// cpchain protocol implementation.
 func (s *CpchainService) Start(srvr *p2p.Server) error {
 	// Start the bloom bits servicing goroutines
 	s.startBloomHandlers()
 
 	// Start the RPC service
-	s.netRPCService = ethapi.NewPublicNetAPI(srvr, s.NetVersion())
+	s.netRPCService = cpcapi.NewPublicNetAPI(srvr, s.NetVersion())
 
 	// TODO: @liuq check security.
 	s.server = srvr
@@ -446,7 +444,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 		s.protocolManager.engine.SetCommitteeNetworkHandler(s.protocolManager.committeeNetworkHandler)
 	}
 
-	log.Info("I am in s.Start")
+	log.Info("cpchainService started")
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers
@@ -456,7 +454,8 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 		}
 		maxPeers -= s.config.LightPeers
 	}
-	// Start the networking layer and the light server if requested
+	// start the networking layer and the light server if requested
+	// by this time, the p2p has already started.  we are only starting the upper layer handling.
 	s.protocolManager.Start(maxPeers)
 	if s.lesServer != nil {
 		s.lesServer.Start(srvr)
@@ -466,7 +465,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 }
 
 // Stop implements node.Service, terminating all internal goroutines used by the
-// Cpchain protocol.
+// cpchain protocol.
 func (s *CpchainService) Stop() error {
 	s.bloomIndexer.Close()
 	s.blockchain.Stop()
@@ -482,4 +481,18 @@ func (s *CpchainService) Stop() error {
 	close(s.shutdownChan)
 
 	return nil
+}
+
+func (s *CpchainService) MakePrimitiveContracts(n *node.Node) map[common.Address]vm.PrimitiveContract {
+	contracts := make(map[common.Address]vm.PrimitiveContract)
+	// we start from 100 to reserve enough space for upstream primitive contracts.
+	contracts[common.BytesToAddress([]byte{100})] = &primitives.GetRank{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{101})] = &primitives.GetMaintenance{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{102})] = &primitives.GetProxyCount{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{103})] = &primitives.GetUploadReward{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{104})] = &primitives.GetTxVolume{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{105})] = &primitives.IsProxy{Backend: s.RptEvaluator}
+	contracts[common.BytesToAddress([]byte{106})] = &primitives.CpuPowValidate{}
+	contracts[common.BytesToAddress([]byte{107})] = &primitives.MemPowValidate{}
+	return contracts
 }

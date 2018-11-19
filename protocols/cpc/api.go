@@ -32,7 +32,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
-	"bitbucket.org/cpchain/chain/internal/ethapi"
+	"bitbucket.org/cpchain/chain/internal/cpcapi"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -40,25 +40,25 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 )
 
-// PublicCpchainAPI provides an API to access Cpchain full node-related
+// PublicCpchainAPI provides an API to access cpchain full node-related
 // information.
 type PublicCpchainAPI struct {
 	c *CpchainService
 }
 
-// NewPublicCpchainAPI creates a new Cpchain protocol API for full nodes.
+// NewPublicCpchainAPI creates a new cpchain protocol API for full nodes.
 func NewPublicCpchainAPI(e *CpchainService) *PublicCpchainAPI {
 	return &PublicCpchainAPI{e}
 }
 
-// Etherbase is the address that mining rewards will be send to
-func (api *PublicCpchainAPI) Etherbase() (common.Address, error) {
-	return api.c.Etherbase()
+// Cpcbase is the address that mining rewards will be send to
+func (api *PublicCpchainAPI) Cpcbase() (common.Address, error) {
+	return api.c.Cpcbase()
 }
 
-// Coinbase is the address that mining rewards will be send to (alias for Etherbase)
+// Coinbase is the address that mining rewards will be send to (alias for Cpcbase)
 func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
-	return api.Etherbase()
+	return api.Cpcbase()
 }
 
 // PrivateMinerAPI provides private RPC methods to control the miner.
@@ -134,20 +134,20 @@ func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 	return true
 }
 
-// SetChainbase sets the etherbase of the miner
-func (api *PrivateMinerAPI) SetEtherbase(etherbase common.Address) bool {
-	api.c.SetEtherbase(etherbase)
+// SetChainbase sets the cpcbase of the miner
+func (api *PrivateMinerAPI) SetCpcbase(cpcbase common.Address) bool {
+	api.c.SetCpcbase(cpcbase)
 	return true
 }
 
-// PrivateAdminAPI is the collection of Cpchain full node-related APIs
+// PrivateAdminAPI is the collection of cpchain full node-related APIs
 // exposed over the private admin endpoint.
 type PrivateAdminAPI struct {
 	cpc *CpchainService
 }
 
 // NewPrivateAdminAPI creates a new API definition for the full node private
-// admin methods of the Cpchain service.
+// admin methods of the cpchain service.
 func NewPrivateAdminAPI(eth *CpchainService) *PrivateAdminAPI {
 	return &PrivateAdminAPI{cpc: eth}
 }
@@ -233,14 +233,14 @@ func (api *PrivateAdminAPI) ImportChain(file string) (bool, error) {
 	return true, nil
 }
 
-// PublicDebugAPI is the collection of Cpchain full node APIs exposed
+// PublicDebugAPI is the collection of cpchain full node APIs exposed
 // over the public debugging endpoint.
 type PublicDebugAPI struct {
 	cpc *CpchainService
 }
 
 // NewPublicDebugAPI creates a new API definition for the full node-
-// related public debug methods of the Cpchain service.
+// related public debug methods of the cpchain service.
 func NewPublicDebugAPI(eth *CpchainService) *PublicDebugAPI {
 	return &PublicDebugAPI{cpc: eth}
 }
@@ -270,7 +270,7 @@ func (api *PublicDebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error
 	return stateDb.RawDump(), nil
 }
 
-// PrivateDebugAPI is the collection of Cpchain full node APIs exposed over
+// PrivateDebugAPI is the collection of cpchain full node APIs exposed over
 // the private debugging endpoint.
 type PrivateDebugAPI struct {
 	config *configs.ChainConfig
@@ -278,7 +278,7 @@ type PrivateDebugAPI struct {
 }
 
 // NewPrivateDebugAPI creates a new API definition for the full node-related
-// private debug methods of the Cpchain service.
+// private debug methods of the cpchain service.
 func NewPrivateDebugAPI(config *configs.ChainConfig, eth *CpchainService) *PrivateDebugAPI {
 	return &PrivateDebugAPI{config: config, cpc: eth}
 }
@@ -314,7 +314,7 @@ func (api *PrivateDebugAPI) GetBadBlocks(ctx context.Context) ([]*BadBlockArgs, 
 		} else {
 			results[i].RLP = fmt.Sprintf("0x%x", rlpBytes)
 		}
-		if results[i].Block, err = ethapi.RPCMarshalBlock(block, true, true); err != nil {
+		if results[i].Block, err = cpcapi.RPCMarshalBlock(block, true, true); err != nil {
 			results[i].Block = map[string]interface{}{"error": err.Error()}
 		}
 	}

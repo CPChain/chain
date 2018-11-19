@@ -318,6 +318,7 @@ func (f *Fetcher) loop() {
 			}
 			f.insert(op.origin, op.block)
 		}
+
 		// Wait for an outside event to occur
 		select {
 		case <-f.quit:
@@ -351,6 +352,7 @@ func (f *Fetcher) loop() {
 			}
 			f.announces[notification.origin] = count
 			f.announced[notification.hash] = append(f.announced[notification.hash], notification)
+
 			if f.announceChangeHook != nil && len(f.announced[notification.hash]) == 1 {
 				f.announceChangeHook(notification.hash, true)
 			}
@@ -569,6 +571,7 @@ func (f *Fetcher) loop() {
 }
 
 // rescheduleFetch resets the specified fetch timer to the next announce timeout.
+// A block is fetched after arriveTimeout.
 func (f *Fetcher) rescheduleFetch(fetch *time.Timer) {
 	// Short circuit if no blocks are announced
 	if len(f.announced) == 0 {
@@ -658,6 +661,7 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 		case nil:
 			// All ok, quickly propagate to our peers
 			propBroadcastOutTimer.UpdateSince(block.ReceivedAt)
+			// send out the block
 			go f.broadcastBlock(block, true)
 
 		case consensus.ErrNotEnoughSigs:

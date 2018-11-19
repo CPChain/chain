@@ -4,15 +4,16 @@
 package cpc
 
 import (
-	common "bitbucket.org/cpchain/chain/api/grpc/v1/common"
 	fmt "fmt"
+	math "math"
+
+	common "bitbucket.org/cpchain/chain/api/grpc/v1/common"
 	proto "github.com/golang/protobuf/proto"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	context "golang.org/x/net/context"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -559,7 +560,7 @@ var _AccountReader_serviceDesc = grpc.ServiceDesc{
 type ChainStateReaderClient interface {
 	// GasPrice returns a suggestion for a gas price.
 	GasPrice(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*common.GasPrice, error)
-	// ProtocolVersion returns the current Ethereum protocol version this node supports
+	// ProtocolVersion returns the current cpchain protocol version this node supports
 	ProtocolVersion(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*wrappers.UInt32Value, error)
 	// Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not
 	// yet received the latest block headers from its pears. In case it is synchronizing:
@@ -610,7 +611,7 @@ func (c *chainStateReaderClient) Syncing(ctx context.Context, in *empty.Empty, o
 type ChainStateReaderServer interface {
 	// GasPrice returns a suggestion for a gas price.
 	GasPrice(context.Context, *empty.Empty) (*common.GasPrice, error)
-	// ProtocolVersion returns the current Ethereum protocol version this node supports
+	// ProtocolVersion returns the current cpchain protocol version this node supports
 	ProtocolVersion(context.Context, *empty.Empty) (*wrappers.UInt32Value, error)
 	// Syncing returns false in case the node is currently not syncing with the network. It can be up to date or has not
 	// yet received the latest block headers from its pears. In case it is synchronizing:

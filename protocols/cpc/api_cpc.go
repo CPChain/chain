@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package cpc
 
 import (
@@ -42,7 +58,7 @@ func (c *Coinbase) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, e
 
 // Coinbase is the address that mining rewards will be send to
 func (c *Coinbase) Coinbase(ctx context.Context, req *empty.Empty) (*common.Address, error) {
-	addr, err := c.c.Etherbase()
+	addr, err := c.c.Cpcbase()
 	return &common.Address{Address: addr.String()}, err
 }
 

@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package dpor
 
 import (
@@ -113,15 +129,46 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 
 	// Check signers bytes in extraData
-	signers := make([]byte, dpor.config.Epoch*common.AddressLength)
+	signers := make([]byte, dpor.config.TermLen*common.AddressLength)
 	for round, signer := range snap.SignersOf(number) {
 		copy(signers[round*common.AddressLength:(round+1)*common.AddressLength], signer[:])
 	}
 	extraSuffix := len(header.Extra) - extraSeal
 	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
 		if NormalMode == dpor.fake {
+
+			log.Debug("err: invalid signer list")
+			signerBytes := header.Extra[extraVanity:extraSuffix]
+			extraSigners := make([]common.Address, dpor.config.TermLen)
+			for i := 0; i < len(signerBytes)/common.AddressLength; i++ {
+				extraSigners[i].SetBytes(signerBytes[i*common.AddressLength : (i+1)*common.AddressLength])
+			}
+
+			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
+			log.Debug("signers in block extra:")
+			for round, signer := range extraSigners {
+				log.Debug("signer", "addr", signer.Hex(), "idx", round)
+			}
+
+			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
+			log.Debug("signers in snapshot:")
+			for round, signer := range snap.SignersOf(number) {
+				log.Debug("signer", "addr", signer.Hex(), "idx", round)
+			}
+
+			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
+			log.Debug("recent signers: ")
+			for i := snap.TermOf(number); i < snap.TermOf(number)+5; i++ {
+				log.Debug("----------------------")
+				log.Debug("signers in snapshot of:", "term idx", i)
+				for _, s := range snap.getRecentSigners(i) {
+					log.Debug("signer", "s", s.Hex())
+				}
+			}
+
 			return errInvalidSigners
 		}
+
 	}
 
 	// All basic checks passed, verify the seal and return
@@ -144,7 +191,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 		// If an on-disk checkpoint Snapshot can be found, use that
 		// if number%checkpointInterval == 0 {
-		if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) {
+		if IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen) {
 			if s, err := loadSnapshot(dpor.config, dpor.db, hash); err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", number, "hash", hash)
 				snap = s
@@ -215,14 +262,14 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	// Save to cache
-	dpor.recents.Add(snap.Hash, snap)
+	dpor.recents.Add(snap.hash(), snap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if IsCheckPoint(snap.Number, dpor.config.Epoch, dpor.config.View) && len(headers) > 0 {
+	if IsCheckPoint(snap.number(), dpor.config.TermLen, dpor.config.ViewLen) && len(headers) > 0 {
 		if err = snap.store(dpor.db); err != nil {
 			return nil, err
 		}
-		log.Debug("Stored voting Snapshot to disk", "number", snap.Number, "hash", snap.Hash)
+		log.Debug("Stored voting Snapshot to disk", "number", snap.number(), "hash", snap.hash())
 	}
 	return snap, err
 }
@@ -246,6 +293,12 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		if dpor.fakeFail == number {
 			return errFakerFail
 		}
+		return nil
+	}
+
+	inserted := chain.GetHeaderByHash(hash)
+	// Already in chain
+	if inserted != nil {
 		return nil
 	}
 
@@ -294,7 +347,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Check if accept the sigs and if leader is in the sigs
-	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.SignersOf(number), uint(dpor.config.Epoch))
+	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.SignersOf(number), uint(dpor.config.TermLen))
 	if err != nil {
 		log.Warn("err in dpor.dh.acceptSigs", "err", err)
 		return err
@@ -304,7 +357,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	s, _ := dpor.signatures.Get(hash)
 
 	// Copy all signatures recovered to allSigs.
-	allSigs := make([]byte, int(dpor.config.Epoch)*extraSeal)
+	allSigs := make([]byte, int(dpor.config.TermLen)*extraSeal)
 	for round, signer := range snap.SignersOf(number) {
 		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
 			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sigHash)
@@ -334,7 +387,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 			}
 
 			// Copy signer's signature to the right position in the allSigs
-			round, _ := snap.SignerRoundOf(dpor.signer, number)
+			round, _ := snap.SignerViewOf(dpor.signer, number)
 			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
 
 			// Encode to header.extra2
@@ -369,15 +422,15 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	log.Debug("my address", "eb", dpor.signer.Hex())
 	log.Debug("ready to accept this block", "number", number)
 	log.Debug("current block number", "number", currentNum)
-	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.Epoch, dpor.config.View))
+	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen))
 	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
-	log.Debug("epoch idx of block number", "block epochIdx", snap.EpochIdxOf(number))
+	log.Debug("term idx of block number", "block term index", snap.TermOf(number))
 
 	log.Debug("recent signers: ")
-	for i := snap.EpochIdxOf(number); i < snap.EpochIdxOf(number)+5; i++ {
+	for i := snap.TermOf(number); i < snap.TermOf(number)+5; i++ {
 		log.Debug("----------------------")
-		log.Debug("signers in snapshot of:", "epoch idx", i)
-		for _, s := range snap.RecentSigners[i] {
+		log.Debug("signers in snapshot of:", "term idx", i)
+		for _, s := range snap.getRecentSigners(i) {
 			log.Debug("signer", "s", s.Hex())
 		}
 	}
@@ -385,10 +438,10 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	log.Debug("--------dpor.verifySeal end--------")
 
 	// If in a checkpoint and self is in the future committee, try to build the committee network
-	if IsCheckPoint(number, dpor.config.Epoch, dpor.config.View) && number >= dpor.config.MaxInitBlockNumber && snap.IsFutureSignerOf(dpor.signer, number) {
+	if IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen) && number >= dpor.config.MaxInitBlockNumber && snap.IsFutureSignerOf(dpor.signer, number) {
 		log.Info("In future committee, building the committee network...")
 
-		epochIdx := snap.FutureEpochIdxOf(number)
+		term := snap.FutureTermOf(number)
 		signers := snap.FutureSignersOf(number)
 
 		go func(eIdx uint64, committee []common.Address) {
@@ -396,7 +449,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 			dpor.committeeNetworkHandler.UpdateRemoteSigners(eIdx, committee)
 			// Connect all
 			dpor.committeeNetworkHandler.DialAll()
-		}(epochIdx, signers)
+		}(term, signers)
 
 	} else {
 		log.Info("Not in future committee, doing nothing.")

@@ -172,9 +172,9 @@ func newTestPeer(name string, version int, pm *ProtocolManager, shake bool) (*te
 		var (
 			genesis = pm.blockchain.Genesis()
 			head    = pm.blockchain.CurrentHeader()
-			td      = pm.blockchain.GetTd(head.Hash(), head.Number.Uint64())
+			ht      = head.Number
 		)
-		tp.handshake(nil, td, head.Hash(), genesis.Hash())
+		tp.handshake(nil, ht, head.Hash(), genesis.Hash())
 		tp.CommitteeHandshake(nil)
 
 	}
@@ -183,11 +183,11 @@ func newTestPeer(name string, version int, pm *ProtocolManager, shake bool) (*te
 
 // handshake simulates a trivial handshake that expects the same state from the
 // remote side as we are simulating locally.
-func (p *testPeer) handshake(t *testing.T, td *big.Int, head common.Hash, genesis common.Hash) {
+func (p *testPeer) handshake(t *testing.T, ht *big.Int, head common.Hash, genesis common.Hash) {
 	msg := &statusData{
 		ProtocolVersion: uint32(p.version),
 		NetworkId:       DefaultConfig.NetworkId,
-		TD:              td,
+		Height:          ht,
 		CurrentBlock:    head,
 		GenesisBlock:    genesis,
 	}

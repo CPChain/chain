@@ -9,7 +9,7 @@ option go_package = "debug";
 
 package debug;
 
-// DebugDumper is the collection of Ethereum full node APIs exposed
+// DebugDumper is the collection of Cpchain full node APIs exposed
 // over the public debugging endpoint.
 service DebugDumper {
     // DumpBlock retrieves the entire state of the database at a given block.

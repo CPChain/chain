@@ -23,10 +23,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
-	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -289,19 +288,9 @@ func opByte(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Sta
 func opAddmod(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	x, y, z := stack.pop(), stack.pop(), stack.pop()
 	if z.Cmp(bigZero) > 0 {
-		if z.Cmp(new(big.Int).SetUint64(math.MaxUint64)) == 0 {
-			// difficulty, blockNumber, blockHash, nonce, sender address
-			ok := evm.Context.VerifyEthash(x.Uint64(), y.Uint64(), evm.Origin)
-			if ok {
-				stack.push(x.SetUint64(1))
-			} else {
-				stack.push(x.SetUint64(0))
-			}
-		} else {
-			x.Add(x, y)
-			x.Mod(x, z)
-			stack.push(math.U256(x))
-		}
+		x.Add(x, y)
+		x.Mod(x, z)
+		stack.push(math.U256(x))
 	} else {
 		stack.push(x.SetUint64(0))
 	}
@@ -876,8 +865,4 @@ func makeSwap(size int64) executionFunc {
 		stack.swap(int(size))
 		return nil, nil
 	}
-}
-
-func verifySeal(difficulty, blockNumber, nonce *big.Int, auth common.Address) bool {
-	return true
 }

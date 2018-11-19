@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	inmemorySnapshots  = 1000 // Number of recent vote snapshots to keep in memory
-	inmemorySignatures = 1000 // Number of recent block signatures to keep in memory
+	inmemorySnapshots  = 10 // Number of recent vote snapshots to keep in memory
+	inmemorySignatures = 10 // Number of recent block signatures to keep in memory
 
 	pctA = 2
 	pctB = 3 // only when n > 2/3 * N, accept the block
@@ -41,7 +41,7 @@ type Dpor struct {
 
 	signedBlocks map[uint64]common.Hash // record signed blocks.
 
-	signer common.Address // Ethereum address of the signing key
+	signer common.Address // Cpchain address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
 	committeeNetworkHandler consensus.CommitteeHandler
@@ -60,11 +60,11 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config
-	if conf.Epoch == 0 {
-		conf.Epoch = uint64(epochLength)
+	if conf.TermLen == 0 {
+		conf.TermLen = uint64(termLen)
 	}
-	if conf.View == 0 {
-		conf.View = uint64(viewLength)
+	if conf.ViewLen == 0 {
+		conf.ViewLen = uint64(viewLen)
 	}
 
 	// Allocate the Snapshot caches and create the engine

@@ -172,10 +172,11 @@ func (n *Node) Start() error {
 	if n.serverConfig.NodeDatabase == "" {
 		n.serverConfig.NodeDatabase = n.config.NodeDB()
 	}
+	// p2p server
 	running := &p2p.Server{Config: n.serverConfig}
 	n.log.Info("Starting peer-to-peer node", "instance", n.serverConfig.Name)
 
-	// Otherwise copy and specialize the P2P configuration
+	// create the services
 	services := make(map[reflect.Type]Service)
 	for _, constructor := range n.serviceFuncs {
 		// Create a new context for the particular service
@@ -199,14 +200,18 @@ func (n *Node) Start() error {
 		}
 		services[kind] = service
 	}
-	// Gather the protocols and start the freshly assembled P2P server
+
+	// gather the protocols and start the freshly assembled P2P server
 	for _, service := range services {
 		running.Protocols = append(running.Protocols, service.Protocols()...)
 	}
+
+	// start the p2p server
 	if err := running.Start(); err != nil {
 		return convertFileLockError(err)
 	}
-	// Start each of the services
+
+	// start each of the services
 	started := []reflect.Type{}
 	for kind, service := range services {
 		// Start the next service, stopping all previous upon failure
@@ -221,6 +226,7 @@ func (n *Node) Start() error {
 		// Mark the service started for potential cleanup
 		started = append(started, kind)
 	}
+
 	// start the configured grpc interfaces
 	if err := n.startGRPC(services); err != nil {
 		for _, service := range services {
@@ -229,7 +235,8 @@ func (n *Node) Start() error {
 		running.Stop()
 		return err
 	}
-	// Lastly start the configured RPC interfaces
+
+	// lastly start the configured rpc interfaces
 	if err := n.startRPC(services); err != nil {
 		for _, service := range services {
 			service.Stop()
@@ -237,7 +244,8 @@ func (n *Node) Start() error {
 		running.Stop()
 		return err
 	}
-	// Finish initializing the startup
+
+	// finish initializing the startup
 	n.services = services
 	n.server = running
 	n.stop = make(chan struct{})
@@ -319,7 +327,7 @@ func (n *Node) startInProc(apis []rpc.API) error {
 	handler := rpc.NewServer()
 	for _, api := range apis {
 		if api.Namespace == "admission" {
-			api.Service.(*admission.AdmissionControl).RegisterInProcHander(handler)
+			api.Service.(admission.ApiBackend).RegisterInProcHandler(handler)
 		}
 
 		if err := handler.RegisterName(api.Namespace, api.Service); err != nil {

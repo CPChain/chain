@@ -37,7 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 )
 
-// APIBackend implements ethapi.Backend for full nodes
+// APIBackend implements cpcapi.Backend for full nodes
 type APIBackend struct {
 	cpc *CpchainService
 	gpo *gasprice.Oracle

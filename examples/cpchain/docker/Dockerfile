@@ -1,4 +1,4 @@
-# Docker container spec for building the CPChain blockchain explorer
+# Docker container spec for building the cpchain blockchain explorer
 #
 # VERSION               0.0.1
 

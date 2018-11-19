@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package campaignVerify
+package admission
 
 import (
 	"math/big"
@@ -14,10 +14,10 @@ import (
 )
 
 // AdmissionABI is the input ABI used to generate the binding from.
-const AdmissionABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"memoryDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"verifyCPU\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"verifyMemory\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"}],\"name\":\"verify\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"cpuDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateCPUDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateMemoryDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_cpuDifficulty\",\"type\":\"uint256\"},{\"name\":\"_memoryDifficulty\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
+const AdmissionABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"memoryDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_sender\",\"type\":\"address\"}],\"name\":\"verify\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_sender\",\"type\":\"address\"},{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"},{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"verifyMemory\",\"outputs\":[{\"name\":\"b\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_sender\",\"type\":\"address\"},{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"},{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"verifyCPU\",\"outputs\":[{\"name\":\"b\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"cpuDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateCPUDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateMemoryDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_cpuDifficulty\",\"type\":\"uint256\"},{\"name\":\"_memoryDifficulty\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
 
 // AdmissionBin is the compiled bytecode used for deploying new contracts.
-const AdmissionBin = `0x608060405234801561001057600080fd5b506040516040806106e5833981016040528051602090910151610100821180159061003c575060008210155b151561009757604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201526000805160206106c5833981519152604482015290519081900360640190fd5b61010081111580156100aa575060008110155b151561010557604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201526000805160206106c5833981519152604482015290519081900360640190fd5b61011782640100000000610130810204565b610129816401000000006101b1810204565b5050610230565b6101008111158015610143575060008110155b151561019e57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201526000805160206106c5833981519152604482015290519081900360640190fd5b600281815561010091909103900a600055565b61010081111580156101c4575060008110155b151561021f57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201526000805160206106c5833981519152604482015290519081900360640190fd5b60038190556101000360020a600155565b6104868061023f6000396000f3006080604052600436106100825763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166317e6b9668114610087578063502e7f48146100ae5780635e0870b2146100e7578063702656af1461010c5780638b6546131461013b578063be981db814610150578063e17189461461016a575b600080fd5b34801561009357600080fd5b5061009c610182565b60408051918252519081900360200190f35b3480156100ba57600080fd5b506100d367ffffffffffffffff60043516602435610188565b604080519115158252519081900360200190f35b3480156100f357600080fd5b506100d367ffffffffffffffff60043516602435610302565b34801561011857600080fd5b506100d367ffffffffffffffff600435811690602435906044351660643561030a565b34801561014757600080fd5b5061009c610330565b34801561015c57600080fd5b50610168600435610336565b005b34801561017657600080fd5b506101686004356103c9565b60035481565b60006014824303111580156101a05750600082430310155b151561020d57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601460248201527f6d7573742077697468696e20323020626c6f636b000000000000000000000000604482015290519081900360640190fd5b600054604080516c01000000000000000000000000410260208083019190915285406034830152780100000000000000000000000000000000000000000000000067ffffffffffffffff88160260548301528251603c818403018152605c909201928390528151600293918291908401908083835b602083106102a15780518252601f199092019160209182019101610282565b51815160209384036101000a600019018019909216911617905260405191909301945091925050808303816000865af11580156102e2573d6000803e3d6000fd5b5050506040513d60208110156102f757600080fd5b505111159392505050565b600192915050565b60006103168585610188565b801561032757506103278383610302565b95945050505050565b60025481565b6101008111158015610349575060008110155b15156103b657604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b61010081111580156103dc575060008110155b151561044957604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60038190556101000360020a6001555600a165627a7a72305820e278017fb2299a383924ef6d3526cdbabd7c5a7d4d6037bdd5a710620cb7ff570029446966666963756c7479206d757374206c657373207468616e20323536000000`
+const AdmissionBin = `0x608060405234801561001057600080fd5b506040516040806105ca83398101604052805160209091015160048054600160a060020a0319163317905561004d82640100000000610066810204565b61005f816401000000006100f9810204565b505061018a565b6101008111801590610079575060008110155b15156100e657604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b610100811180159061010c575060008110155b151561017957604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60038190556101000360020a600155565b610431806101996000396000f30060806040526004361061008d5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166317e6b96681146100925780633395492e146100b95780634bda8957146101155780636ac03dcc146101565780638b654613146101975780638da5cb5b146101ac578063be981db8146101ea578063e171894614610204575b600080fd5b34801561009e57600080fd5b506100a761021c565b60408051918252519081900360200190f35b3480156100c557600080fd5b5061010167ffffffffffffffff600435811690602435906044351660643573ffffffffffffffffffffffffffffffffffffffff60843516610222565b604080519115158252519081900360200190f35b34801561012157600080fd5b5061010173ffffffffffffffffffffffffffffffffffffffff6004351667ffffffffffffffff60243516604435606435610251565b34801561016257600080fd5b5061010173ffffffffffffffffffffffffffffffffffffffff6004351667ffffffffffffffff6024351660443560643561028d565b3480156101a357600080fd5b506100a76102bf565b3480156101b857600080fd5b506101c16102c5565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b3480156101f657600080fd5b506102026004356102e1565b005b34801561021057600080fd5b50610202600435610374565b60035481565b600061023282878760025461028d565b80156102475750610247828585600354610251565b9695505050505050565b600060405185815284602082015283406040820152826060820152602081608083606b600019fa151561028357600080fd5b5195945050505050565b600060405185815284602082015283406040820152826060820152602081608083606a600019fa151561028357600080fd5b60025481565b60045473ffffffffffffffffffffffffffffffffffffffff1681565b61010081118015906102f4575060008110155b151561036157604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b6101008111801590610387575060008110155b15156103f457604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60038190556101000360020a6001555600a165627a7a72305820ee9e629f71278701463502be768067637bf7473e0552b793f6e99110b17ce2ee0029`
 
 // DeployAdmission deploys a new Ethereum contract, binding an instance of Admission to it.
 func DeployAdmission(auth *bind.TransactOpts, backend bind.ContractBackend, _cpuDifficulty *big.Int, _memoryDifficulty *big.Int) (common.Address, *types.Transaction, *Admission, error) {
@@ -226,82 +226,108 @@ func (_Admission *AdmissionCallerSession) MemoryDifficulty() (*big.Int, error) {
 	return _Admission.Contract.MemoryDifficulty(&_Admission.CallOpts)
 }
 
-// Verify is a free data retrieval call binding the contract method 0x702656af.
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function verify(_cpuNonce uint64, _cpuBlockNumber uint256, _memoryNonce uint64, _memoryBlockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionCaller) Verify(opts *bind.CallOpts, _cpuNonce uint64, _cpuBlockNumber *big.Int, _memoryNonce uint64, _memoryBlockNumber *big.Int) (bool, error) {
+// Solidity: function owner() constant returns(address)
+func (_Admission *AdmissionCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
+	var (
+		ret0 = new(common.Address)
+	)
+	out := ret0
+	err := _Admission.contract.Call(opts, out, "owner")
+	return *ret0, err
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() constant returns(address)
+func (_Admission *AdmissionSession) Owner() (common.Address, error) {
+	return _Admission.Contract.Owner(&_Admission.CallOpts)
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() constant returns(address)
+func (_Admission *AdmissionCallerSession) Owner() (common.Address, error) {
+	return _Admission.Contract.Owner(&_Admission.CallOpts)
+}
+
+// Verify is a free data retrieval call binding the contract method 0x3395492e.
+//
+// Solidity: function verify(_cpuNonce uint64, _cpuBlockNumber uint256, _memoryNonce uint64, _memoryBlockNumber uint256, _sender address) constant returns(bool)
+func (_Admission *AdmissionCaller) Verify(opts *bind.CallOpts, _cpuNonce uint64, _cpuBlockNumber *big.Int, _memoryNonce uint64, _memoryBlockNumber *big.Int, _sender common.Address) (bool, error) {
 	var (
 		ret0 = new(bool)
 	)
 	out := ret0
-	err := _Admission.contract.Call(opts, out, "verify", _cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber)
+	err := _Admission.contract.Call(opts, out, "verify", _cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, _sender)
 	return *ret0, err
 }
 
-// Verify is a free data retrieval call binding the contract method 0x702656af.
+// Verify is a free data retrieval call binding the contract method 0x3395492e.
 //
-// Solidity: function verify(_cpuNonce uint64, _cpuBlockNumber uint256, _memoryNonce uint64, _memoryBlockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionSession) Verify(_cpuNonce uint64, _cpuBlockNumber *big.Int, _memoryNonce uint64, _memoryBlockNumber *big.Int) (bool, error) {
-	return _Admission.Contract.Verify(&_Admission.CallOpts, _cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber)
+// Solidity: function verify(_cpuNonce uint64, _cpuBlockNumber uint256, _memoryNonce uint64, _memoryBlockNumber uint256, _sender address) constant returns(bool)
+func (_Admission *AdmissionSession) Verify(_cpuNonce uint64, _cpuBlockNumber *big.Int, _memoryNonce uint64, _memoryBlockNumber *big.Int, _sender common.Address) (bool, error) {
+	return _Admission.Contract.Verify(&_Admission.CallOpts, _cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, _sender)
 }
 
-// Verify is a free data retrieval call binding the contract method 0x702656af.
+// Verify is a free data retrieval call binding the contract method 0x3395492e.
 //
-// Solidity: function verify(_cpuNonce uint64, _cpuBlockNumber uint256, _memoryNonce uint64, _memoryBlockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionCallerSession) Verify(_cpuNonce uint64, _cpuBlockNumber *big.Int, _memoryNonce uint64, _memoryBlockNumber *big.Int) (bool, error) {
-	return _Admission.Contract.Verify(&_Admission.CallOpts, _cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber)
+// Solidity: function verify(_cpuNonce uint64, _cpuBlockNumber uint256, _memoryNonce uint64, _memoryBlockNumber uint256, _sender address) constant returns(bool)
+func (_Admission *AdmissionCallerSession) Verify(_cpuNonce uint64, _cpuBlockNumber *big.Int, _memoryNonce uint64, _memoryBlockNumber *big.Int, _sender common.Address) (bool, error) {
+	return _Admission.Contract.Verify(&_Admission.CallOpts, _cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, _sender)
 }
 
-// VerifyCPU is a free data retrieval call binding the contract method 0x502e7f48.
+// VerifyCPU is a free data retrieval call binding the contract method 0x6ac03dcc.
 //
-// Solidity: function verifyCPU(_nonce uint64, _blockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionCaller) VerifyCPU(opts *bind.CallOpts, _nonce uint64, _blockNumber *big.Int) (bool, error) {
+// Solidity: function verifyCPU(_sender address, _nonce uint64, _blockNumber uint256, _difficulty uint256) constant returns(b bool)
+func (_Admission *AdmissionCaller) VerifyCPU(opts *bind.CallOpts, _sender common.Address, _nonce uint64, _blockNumber *big.Int, _difficulty *big.Int) (bool, error) {
 	var (
 		ret0 = new(bool)
 	)
 	out := ret0
-	err := _Admission.contract.Call(opts, out, "verifyCPU", _nonce, _blockNumber)
+	err := _Admission.contract.Call(opts, out, "verifyCPU", _sender, _nonce, _blockNumber, _difficulty)
 	return *ret0, err
 }
 
-// VerifyCPU is a free data retrieval call binding the contract method 0x502e7f48.
+// VerifyCPU is a free data retrieval call binding the contract method 0x6ac03dcc.
 //
-// Solidity: function verifyCPU(_nonce uint64, _blockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionSession) VerifyCPU(_nonce uint64, _blockNumber *big.Int) (bool, error) {
-	return _Admission.Contract.VerifyCPU(&_Admission.CallOpts, _nonce, _blockNumber)
+// Solidity: function verifyCPU(_sender address, _nonce uint64, _blockNumber uint256, _difficulty uint256) constant returns(b bool)
+func (_Admission *AdmissionSession) VerifyCPU(_sender common.Address, _nonce uint64, _blockNumber *big.Int, _difficulty *big.Int) (bool, error) {
+	return _Admission.Contract.VerifyCPU(&_Admission.CallOpts, _sender, _nonce, _blockNumber, _difficulty)
 }
 
-// VerifyCPU is a free data retrieval call binding the contract method 0x502e7f48.
+// VerifyCPU is a free data retrieval call binding the contract method 0x6ac03dcc.
 //
-// Solidity: function verifyCPU(_nonce uint64, _blockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionCallerSession) VerifyCPU(_nonce uint64, _blockNumber *big.Int) (bool, error) {
-	return _Admission.Contract.VerifyCPU(&_Admission.CallOpts, _nonce, _blockNumber)
+// Solidity: function verifyCPU(_sender address, _nonce uint64, _blockNumber uint256, _difficulty uint256) constant returns(b bool)
+func (_Admission *AdmissionCallerSession) VerifyCPU(_sender common.Address, _nonce uint64, _blockNumber *big.Int, _difficulty *big.Int) (bool, error) {
+	return _Admission.Contract.VerifyCPU(&_Admission.CallOpts, _sender, _nonce, _blockNumber, _difficulty)
 }
 
-// VerifyMemory is a free data retrieval call binding the contract method 0x5e0870b2.
+// VerifyMemory is a free data retrieval call binding the contract method 0x4bda8957.
 //
-// Solidity: function verifyMemory(_nonce uint64, _blockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionCaller) VerifyMemory(opts *bind.CallOpts, _nonce uint64, _blockNumber *big.Int) (bool, error) {
+// Solidity: function verifyMemory(_sender address, _nonce uint64, _blockNumber uint256, _difficulty uint256) constant returns(b bool)
+func (_Admission *AdmissionCaller) VerifyMemory(opts *bind.CallOpts, _sender common.Address, _nonce uint64, _blockNumber *big.Int, _difficulty *big.Int) (bool, error) {
 	var (
 		ret0 = new(bool)
 	)
 	out := ret0
-	err := _Admission.contract.Call(opts, out, "verifyMemory", _nonce, _blockNumber)
+	err := _Admission.contract.Call(opts, out, "verifyMemory", _sender, _nonce, _blockNumber, _difficulty)
 	return *ret0, err
 }
 
-// VerifyMemory is a free data retrieval call binding the contract method 0x5e0870b2.
+// VerifyMemory is a free data retrieval call binding the contract method 0x4bda8957.
 //
-// Solidity: function verifyMemory(_nonce uint64, _blockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionSession) VerifyMemory(_nonce uint64, _blockNumber *big.Int) (bool, error) {
-	return _Admission.Contract.VerifyMemory(&_Admission.CallOpts, _nonce, _blockNumber)
+// Solidity: function verifyMemory(_sender address, _nonce uint64, _blockNumber uint256, _difficulty uint256) constant returns(b bool)
+func (_Admission *AdmissionSession) VerifyMemory(_sender common.Address, _nonce uint64, _blockNumber *big.Int, _difficulty *big.Int) (bool, error) {
+	return _Admission.Contract.VerifyMemory(&_Admission.CallOpts, _sender, _nonce, _blockNumber, _difficulty)
 }
 
-// VerifyMemory is a free data retrieval call binding the contract method 0x5e0870b2.
+// VerifyMemory is a free data retrieval call binding the contract method 0x4bda8957.
 //
-// Solidity: function verifyMemory(_nonce uint64, _blockNumber uint256) constant returns(bool)
-func (_Admission *AdmissionCallerSession) VerifyMemory(_nonce uint64, _blockNumber *big.Int) (bool, error) {
-	return _Admission.Contract.VerifyMemory(&_Admission.CallOpts, _nonce, _blockNumber)
+// Solidity: function verifyMemory(_sender address, _nonce uint64, _blockNumber uint256, _difficulty uint256) constant returns(b bool)
+func (_Admission *AdmissionCallerSession) VerifyMemory(_sender common.Address, _nonce uint64, _blockNumber *big.Int, _difficulty *big.Int) (bool, error) {
+	return _Admission.Contract.VerifyMemory(&_Admission.CallOpts, _sender, _nonce, _blockNumber, _difficulty)
 }
 
 // UpdateCPUDifficulty is a paid mutator transaction binding the contract method 0xbe981db8.

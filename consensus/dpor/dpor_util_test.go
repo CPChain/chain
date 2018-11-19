@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package dpor
 
 import (
@@ -164,7 +180,7 @@ func Test_ecrecover(t *testing.T) {
 	existingCache.Add(newHeader.Hash(), sigs)
 	dporUtil := &defaultDporUtil{}
 	// get extra2sig for test
-	//privateKey, _, loadedAddr := getAccount("$project_dir/src/github.com/ethereum/go-ethereum/examples/cpchain/data/dd1/keystore/", "password")
+	//privateKey, _, loadedAddr := getAccount("$project_dir/src/bitbucket.org/cpchain/chain/examples/cpchain/data/data1/keystore/", "password")
 	//extra2Sig, _ := crypto.Sign(dporUtil.sigHash(newHeader).Bytes(), privateKey)
 	//fmt.Println("extra2Sig:", extra2Sig)
 	//fmt.Println("extra2Sig hex:", common.Bytes2Hex(extra2Sig))
@@ -243,7 +259,7 @@ func Test_acceptSigs(t *testing.T) {
 		header   *types.Header
 		sigcache *lru.ARCCache
 		signers  []common.Address
-		epochL   uint
+		termL    uint
 	}
 	tests := []struct {
 		name    string
@@ -259,7 +275,7 @@ func Test_acceptSigs(t *testing.T) {
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers, tt.args.epochL)
+			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers, tt.args.termL)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("acceptSigs(%v, %v, %v) error = %v, wantErr %v", tt.args.header, tt.args.sigcache, tt.args.signers, err, tt.wantErr)
 				return
@@ -273,7 +289,7 @@ func Test_acceptSigs(t *testing.T) {
 
 func Test_calcDifficulty(t *testing.T) {
 	signers := getSignerAddress()
-	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	snapshot := newSnapshot(config, 1, common.Hash{}, signers)
 
 	type args struct {

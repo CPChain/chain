@@ -1,3 +1,19 @@
+// Copyright 2018 The cpchain authors
+// This file is part of the cpchain library.
+//
+// The cpchain library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The cpchain library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
+
 package dpor
 
 import (
@@ -18,11 +34,8 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	// epochLength = uint64(30000) // Default number of blocks after which to checkpoint and reset the pending votes
-	// blockPeriod = uint64(15)    // Default minimum difference between two consecutive block's timestamps
-
-	epochLength = uint(4) // Default number of signers.
-	viewLength  = uint(4) // Default number of blocks one signer can generate in one committee.
+	termLen = uint(4) // Default number of signers.
+	viewLen = uint(4) // Default number of blocks one signer can generate in one committee.
 
 	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
 
@@ -102,7 +115,7 @@ var (
 // backing account.
 type SignerFn func(accounts.Account, []byte) ([]byte, error)
 
-// Author implements consensus.Engine, returning the Ethereum address recovered
+// Author implements consensus.Engine, returning the cpchain address recovered
 // from the signature in the header's extra-data section.
 func (d *Dpor) Author(header *types.Header) (common.Address, error) {
 	leader, _, err := d.dh.ecrecover(header, d.signatures)
@@ -171,7 +184,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	// }
 	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
 	// We suppose each signer only produces one block.
-	header.Extra2 = make([]byte, extraSeal*int(d.config.Epoch)+1)
+	header.Extra2 = make([]byte, extraSeal*int(d.config.TermLen)+1)
 
 	// Mix digest is reserved for now, set to empty
 	header.MixHash = common.Hash{}
@@ -272,10 +285,10 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
 
 	// allSigs is a SignatureExtra2.
-	allSigs := make([]byte, int(d.config.Epoch)*extraSeal)
+	allSigs := make([]byte, int(d.config.TermLen)*extraSeal)
 
 	// Copy signature to the right position in allSigs.
-	round, _ := snap.SignerRoundOf(signer, number)
+	round, _ := snap.SignerViewOf(signer, number)
 	copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
 
 	// Encode it to header.extra2.

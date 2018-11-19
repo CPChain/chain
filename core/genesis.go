@@ -231,7 +231,7 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 	case ghash == configs.MainnetGenesisHash:
 		return configs.MainnetChainConfig
 	default:
-		return configs.AllEthashProtocolChanges
+		return configs.AllCpchainProtocolChanges
 		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
 		// check the ussage of `newcfg' in `setupGenesisBlock'.
 	}
@@ -294,7 +294,7 @@ func (g *Genesis) Commit(db database.Database) (*types.Block, error) {
 
 	config := g.Config
 	if config == nil {
-		config = configs.AllEthashProtocolChanges
+		config = configs.AllCpchainProtocolChanges
 	}
 	rawdb.WriteChainConfig(db, block.Hash(), config)
 	return block, nil
@@ -317,19 +317,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 	return g.MustCommit(db)
 }
 
-// DefaultGenesisBlock returns the Ethereum main net genesis block.
-func DefaultOldGenesisBlock() *Genesis {
-	return &Genesis{
-		Config:     configs.MainnetChainConfig,
-		Nonce:      66,
-		ExtraData:  hexutil.MustDecode("0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa"),
-		GasLimit:   5000,
-		Difficulty: big.NewInt(17179869184),
-		Alloc:      decodePrealloc(mainnetAllocData),
-	}
-}
-
-// DefaultGenesisBlock returns the CPChain main net genesis block.
+// DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     configs.MainnetChainConfig,

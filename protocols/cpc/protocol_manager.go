@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package cpc
 
@@ -50,10 +37,6 @@ const (
 )
 
 var (
-	daoChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the DAO handshake challenge
-)
-
-var (
 
 	// errIncompatibleConfig is returned if the requested protocols and configs are
 	// not compatible (low protocol version restrictions and high requirements).
@@ -69,8 +52,8 @@ func errResp(code errCode, format string, v ...interface{}) error {
 type ProtocolManager struct {
 	networkID uint64
 
-	fastSync  uint32 // Flag whether fast sync is enabled (gets disabled if we already have blocks)
-	acceptTxs uint32 // Flag whether we're considered synchronised (enables transaction processing)
+	fastSync  uint32 // whether fast sync is enabled (gets disabled if we already have blocks)
+	acceptTxs uint32 // whether we're considered synchronised (enables transaction processing)
 
 	txpool      txPool
 	blockchain  *core.BlockChain
@@ -84,8 +67,8 @@ type ProtocolManager struct {
 	SubProtocols []p2p.Protocol
 
 	eventMux      *event.TypeMux
-	txsCh         chan core.NewTxsEvent
-	txsSub        event.Subscription
+	txsCh         chan core.NewTxsEvent // subscribes to new transactions from txpool
+	txsSub        event.Subscription    // manages txsCh
 	minedBlockSub *event.TypeMuxSubscription
 
 	// channels for fetcher, syncer, txsyncLoop
@@ -96,17 +79,16 @@ type ProtocolManager struct {
 
 	server                  *p2p.Server
 	engine                  consensus.Engine
-	etherbase               common.Address
+	cpcbase                 common.Address
 	committeeNetworkHandler *BasicCommitteeHandler
 
-	// wait group is used for graceful shutdowns during downloading
-	// and processing
+	// wait group is used for graceful shutdowns during downloading and processing
 	wg sync.WaitGroup
 }
 
-// NewProtocolManager returns a new Cpchain sub protocol manager. The Cpchain sub protocol manages peers capable
-// with the Cpchain network.
-func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, etherbase common.Address) (*ProtocolManager, error) {
+// NewProtocolManager returns a new sub protocol manager. The cpchain sub protocol manages peers capable
+// with the cpchain network.
+func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, cpcbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -120,29 +102,34 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		txsyncCh:    make(chan *txsync),
 		quitSync:    make(chan struct{}),
 
-		engine:    engine,
-		etherbase: etherbase,
+		engine:  engine,
+		cpcbase: cpcbase,
 	}
 
 	if config.Dpor != nil {
-		manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(config.Dpor, etherbase)
+		manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(config.Dpor, cpcbase)
 	}
 
-	// Initiate a sub-protocol for every implemented version we can handle
+	// initiate a sub-protocol for every implemented version we can handle
+	// these protocols are used by the p2p server.
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 	for i, version := range ProtocolVersions {
-		// Compatible; initialise the sub-protocol
+		// compatible; initialise the sub-protocol
 		manager.SubProtocols = append(manager.SubProtocols, p2p.Protocol{
 			Name:    ProtocolName,
 			Version: version,
 			Length:  ProtocolLengths[i],
 			Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
+
+				// wrap up the peer
 				peer := manager.newPeer(int(version), p, rw)
 
+				// either we quit or we wait on accepting a new peer by syncer
 				select {
 				case manager.newPeerCh <- peer:
 					manager.wg.Add(1)
 					defer manager.wg.Done()
+					// stuck in the message loop on this peer
 					return manager.handle(peer)
 				case <-manager.quitSync:
 					return p2p.DiscQuitting
@@ -162,9 +149,11 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	if len(manager.SubProtocols) == 0 {
 		return nil, errIncompatibleConfig
 	}
-	// Construct the different synchronisation mechanisms
+	// downloader
 	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
+	// fetcher specific
+	// verifies the header when insert into the chain
 	validator := func(header *types.Header, refHeader *types.Header) error {
 		return engine.VerifyHeader(blockchain, header, true, refHeader)
 	}
@@ -172,7 +161,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		return blockchain.CurrentBlock().NumberU64()
 	}
 	inserter := func(blocks types.Blocks) (int, error) {
-		// If fast sync is running, deny importing weird blocks
+		// if fast sync is running, deny importing weird blocks
 		if atomic.LoadUint32(&manager.fastSync) == 1 {
 			log.Warn("Discarded bad propagated block", "number", blocks[0].Number(), "hash", blocks[0].Hash().Hex())
 			return 0, nil
@@ -180,7 +169,6 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		atomic.StoreUint32(&manager.acceptTxs, 1) // Mark initial sync done on any fetcher import
 		return manager.blockchain.InsertChain(blocks)
 	}
-
 	manager.fetcher = fetcher.New(blockchain.GetBlockByHash, validator, manager.BroadcastBlock, heighter, inserter, manager.removePeer)
 
 	return manager, nil
@@ -192,9 +180,9 @@ func (pm *ProtocolManager) removePeer(id string) {
 	if peer == nil {
 		return
 	}
-	log.Debug("Removing Cpchain peer", "peer", id)
+	log.Debug("Removing cpchain peer", "peer", id)
 
-	// Unregister the peer from the downloader and Cpchain peer set
+	// Unregister the peer from the downloader and cpchain peer set
 	pm.downloader.UnregisterPeer(id)
 
 	if err := pm.peers.UnregisterSigner(id); err != nil {
@@ -209,6 +197,7 @@ func (pm *ProtocolManager) removePeer(id string) {
 	}
 }
 
+// starts all the blockchain synchronization mechanisms
 func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.maxPeers = maxPeers
 
@@ -226,10 +215,43 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	// start sync handlers
 	go pm.syncer()
 	go pm.txsyncLoop()
+
+	// update, avoid stop
+	go pm.update()
+}
+
+// Periodically updates the block head
+func (pm *ProtocolManager) update() {
+	futureTimer := time.NewTicker(10 * time.Second)
+	defer futureTimer.Stop()
+
+	prev := pm.blockchain.CurrentHeader()
+
+	for {
+		select {
+		case <-futureTimer.C:
+			current := pm.blockchain.CurrentHeader()
+
+			// if still not updated, notice my peers my status.
+			if prev.Number.Uint64() == current.Number.Uint64() {
+				currentBlock := pm.blockchain.CurrentBlock()
+				log.Debug("broadcast updating block")
+
+				// TODO @liuq the logic should be fetch new blocks
+				go pm.BroadcastBlock(currentBlock, true)
+				go pm.BroadcastBlock(currentBlock, false)
+			} else {
+				prev = current
+			}
+
+		case <-pm.quitSync:
+			return
+		}
+	}
 }
 
 func (pm *ProtocolManager) Stop() {
-	log.Info("Stopping Cpchain protocol")
+	log.Info("Stopping cpchain protocol")
 
 	pm.txsSub.Unsubscribe()        // quits txBroadcastLoop
 	pm.minedBlockSub.Unsubscribe() // quits blockBroadcastLoop
@@ -267,8 +289,8 @@ func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner boo
 	return isSigner, err
 }
 
-// handle is the callback invoked to manage the life cycle of an eth peer. When
-// this function terminates, the peer is disconnected.
+// handle is the callback invoked to manage the life cycle of cpchain peer.
+// when this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) handle(p *peer) error {
 	// Ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
@@ -276,19 +298,18 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	}
 	p.Log().Debug("Cpchain peer connected", "name", p.Name())
 
-	// Execute the Cpchain handshake
+	// Execute the cpchain handshake
 	var (
 		genesis = pm.blockchain.Genesis()
 		head    = pm.blockchain.CurrentHeader()
 		hash    = head.Hash()
-		number  = head.Number.Uint64()
-		td      = pm.blockchain.GetTd(hash, number)
+		height  = head.Number
 	)
 
-	log.Debug("my etherbase", "address", pm.etherbase)
+	log.Debug("my cpcbase", "address", pm.cpcbase)
 
 	// Do normal handshake
-	err := p.Handshake(pm.networkID, td, hash, genesis.Hash())
+	err := p.Handshake(pm.networkID, height, hash, genesis.Hash())
 
 	if err != nil {
 		p.Log().Debug("Cpchain handshake failed", "err", err)
@@ -296,7 +317,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	}
 
 	// Do committee handshake
-	isSigner, err := p.CommitteeHandshake(pm.etherbase, pm.SignerValidator)
+	isSigner, err := p.CommitteeHandshake(pm.cpcbase, pm.SignerValidator)
 
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
 		rw.Init(p.version)
@@ -310,7 +331,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		}
 	}
 
-	// Register the peer locally
+	// add the peer to peerset
 	if err := pm.peers.Register(p); err != nil {
 		log.Debug("register new peer ")
 		p.Log().Error("Cpchain peer registration failed", "err", err)
@@ -340,7 +361,7 @@ func (pm *ProtocolManager) VerifyAndSign(header *types.Header) error {
 	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
 }
 
-// handleMsg is invoked whenever an inbound message is received from a remote
+// handleMsg is invoked whenever an *inbound* message is received from a remote
 // peer. The remote connection is torn down upon returning any error.
 func (pm *ProtocolManager) handleMsg(p *peer) error {
 
@@ -383,7 +404,7 @@ func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
 		if isSigner && err != nil {
 			err := p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
 				ProtocolVersion: uint32(p.version),
-				Address:         pm.etherbase,
+				Address:         pm.cpcbase,
 			})
 			if err != nil {
 				return nil
@@ -746,6 +767,7 @@ func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 			}
 		}
 		for _, block := range unknown {
+			// use fetcher to retrieve each block
 			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
 		}
 
@@ -758,25 +780,21 @@ func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 		request.Block.ReceivedAt = msg.ReceivedAt
 		request.Block.ReceivedFrom = p
 
-		// Mark the peer as owning the block and schedule it for import
+		// mark the peer as owning the block and schedule it for import
 		p.MarkBlock(request.Block.Hash())
+		// notify fetcher to inject the block
 		pm.fetcher.Enqueue(p.id, request.Block)
-
-		// Assuming the block is importable by the peer, but possibly not yet done so,
-		// calculate the head hash and TD that the peer truly must have.
 		var (
-			trueHead = request.Block.ParentHash()
-			trueTD   = new(big.Int).Sub(request.TD, request.Block.Difficulty())
+			trueHead   = request.Block.Hash()
+			trueHeight = request.Block.Number()
 		)
 		// Update the peers total difficulty if better than the previous
-		if _, td := p.Head(); trueTD.Cmp(td) > 0 {
-			p.SetHead(trueHead, trueTD)
+		if _, ht := p.Head(); trueHeight.Cmp(ht) > 0 {
+			p.SetHead(trueHead, trueHeight)
 
-			// Schedule a sync if above ours. Note, this will not fire a sync for a gap of
-			// a singe block (as the true TD is below the propagated block), however this
-			// scenario should easily be covered by the fetcher.
 			currentBlock := pm.blockchain.CurrentBlock()
-			if trueTD.Cmp(pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())) > 0 {
+			if trueHeight.Cmp(currentBlock.Number()) > 0 {
+				// bulk sync from the peer
 				go pm.synchronise(p)
 			}
 		}
@@ -826,24 +844,24 @@ func (pm *ProtocolManager) waitForSignedHeader() {
 	}
 }
 
-// NodeInfo represents a short summary of the Cpchain sub-protocol metadata
+// NodeInfo represents a short summary of the cpchain sub-protocol metadata
 // known about the host peer.
 type NodeInfo struct {
-	Network    uint64               `json:"network"`    // Cpchain network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
-	Difficulty *big.Int             `json:"difficulty"` // Total difficulty of the host's blockchain
-	Genesis    common.Hash          `json:"genesis"`    // SHA3 hash of the host's genesis block
-	Config     *configs.ChainConfig `json:"config"`     // Chain configuration for the fork rules
-	Head       common.Hash          `json:"head"`       // SHA3 hash of the host's best owned block
+	Network uint64               `json:"network"` // cpchain network ID (1=Frontier, 2=Morden, Ropsten=3, Rinkeby=4)
+	Height  *big.Int             `json:"height"`  // height of the host's blockchain
+	Genesis common.Hash          `json:"genesis"` // SHA3 hash of the host's genesis block
+	Config  *configs.ChainConfig `json:"config"`  // Chain configuration for the fork rules
+	Head    common.Hash          `json:"head"`    // SHA3 hash of the host's best owned block
 }
 
 // NodeInfo retrieves some protocol metadata about the running host node.
 func (pm *ProtocolManager) NodeInfo() *NodeInfo {
 	currentBlock := pm.blockchain.CurrentBlock()
 	return &NodeInfo{
-		Network:    pm.networkID,
-		Difficulty: pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64()),
-		Genesis:    pm.blockchain.Genesis().Hash(),
-		Config:     pm.blockchain.Config(),
-		Head:       currentBlock.Hash(),
+		Network: pm.networkID,
+		Height:  pm.blockchain.CurrentBlock().Number(),
+		Genesis: pm.blockchain.Genesis().Hash(),
+		Config:  pm.blockchain.Config(),
+		Head:    currentBlock.Hash(),
 	}
 }
