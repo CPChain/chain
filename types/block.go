@@ -18,6 +18,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -36,6 +37,7 @@ import (
 const (
 	// TypeExtra2Signatures is the first byte in header.extra2 if the extra2Data is signatures.
 	TypeExtra2Signatures = 0
+	DporSigLength        = 65
 )
 
 type EncoderAndDecoder struct {
@@ -82,6 +84,11 @@ func (n *BlockNonce) UnmarshalText(input []byte) error {
 
 //go:generate gencodec -type Header -field-override headerMarshaling -out gen_header_json.go
 
+const (
+	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
+	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
+)
+
 // Header represents a block header in the Ethereum blockchain.
 type Header struct {
 	ParentHash   common.Hash    `json:"parentHash"       gencodec:"required"`
@@ -99,6 +106,64 @@ type Header struct {
 	Extra2       []byte         `json:"extraData2"       gencodec:"required"`
 	MixHash      common.Hash    `json:"mixHash"          gencodec:"required"`
 	Nonce        BlockNonce     `json:"nonce"            gencodec:"required"`
+	Dpor         DporSnap       `rlp:"-"`
+}
+
+func (h *Header) GetDpor() *DporSnap {
+	// Update dpor snap every time, not consider performance hit because it is temporary code. @AC
+
+	if len(h.Extra)-extraVanity > 0 {
+		proBuf := h.Extra[extraVanity : len(h.Extra)-extraSeal]
+		proCount := len(proBuf) / common.AddressLength
+		h.Dpor.Proposers = make([]common.Address, proCount)
+		for i := 0; i < proCount; i++ {
+			h.Dpor.Proposers[i] = common.BytesToAddress(proBuf[i*common.AddressLength : (i+1)*common.AddressLength])
+		}
+
+		sealBuf := h.Extra[len(h.Extra)-extraSeal:]
+		h.Dpor.Seal = DporSignature{}
+		copy(h.Dpor.Seal[:], sealBuf)
+
+	} else {
+		h.Dpor = DporSnap{} // Assign empty values
+	}
+
+	if len(h.Extra2) > 0 {
+		sigCount := len(h.Extra2) / DporSigLength
+		h.Dpor.Sigs = make([]DporSignature, sigCount)
+		for i := 0; i < sigCount; i++ {
+			h.Dpor.Sigs[i] = DporSignature{}
+			copy(h.Dpor.Sigs[i][:], h.Extra2[i*DporSigLength:(i+1)*DporSigLength])
+		}
+	}
+	return &h.Dpor
+}
+
+func (h *Header) saveDporSnapToExtras() {
+	// update extra field
+	h.Extra = make([]byte, extraVanity+len(h.Dpor.Proposers)*common.AddressLength+DporSigLength)
+	copy(h.Extra[0:], bytes.Repeat([]byte{0x00}, extraVanity))
+	proBuf := make([]byte, len(h.Dpor.Proposers)*common.AddressLength)
+	for i := 0; i < len(h.Dpor.Proposers); i++ {
+		copy(proBuf[i*common.AddressLength:], h.Dpor.Proposers[i][:])
+	}
+	copy(h.Extra[extraVanity:], proBuf)
+	copy(h.Extra[extraVanity+len(proBuf):], h.Dpor.Seal[:])
+
+	// update extra2
+	h.Extra2 = make([]byte, len(h.Dpor.Sigs)*DporSigLength)
+	for i := 0; i < len(h.Dpor.Sigs); i++ {
+		copy(h.Extra2[i*DporSigLength:], h.Dpor.Sigs[i][:])
+	}
+}
+
+type DporSignature [DporSigLength]byte
+
+type DporSnap struct {
+	Seal       DporSignature    // the signature of the block's producer
+	Sigs       []DporSignature  // the signatures of validators to endorse the block
+	Proposers  []common.Address // current proposers committee
+	Validators []common.Address // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
 }
 
 // field type overrides for gencodec
@@ -111,6 +176,7 @@ type headerMarshaling struct {
 	Extra      hexutil.Bytes
 	Extra2     hexutil.Bytes
 	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
+	Dpor       *DporSnap
 }
 
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
