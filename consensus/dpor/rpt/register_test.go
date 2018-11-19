@@ -58,7 +58,7 @@ func TestDeployRegister(t *testing.T) {
 	t.Skip("we shall use a simulated backend.")
 
 	// create client.
-	// client, err := ethclient.Dial("https://rinkeby.infura.io")
+	// client, err := cpchain.Dial("https://rinkeby.infura.io")
 	client, err := cpclient.Dial("http://localhost:8501") // local
 	if err != nil {
 		log.Fatal(err.Error())
