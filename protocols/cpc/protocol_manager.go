@@ -361,7 +361,7 @@ func (pm *ProtocolManager) VerifyAndSign(header *types.Header) error {
 	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
 }
 
-// handleMsg is invoked whenever an inbound message is received from a remote
+// handleMsg is invoked whenever an *inbound* message is received from a remote
 // peer. The remote connection is torn down upon returning any error.
 func (pm *ProtocolManager) handleMsg(p *peer) error {
 
@@ -784,7 +784,6 @@ func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 		p.MarkBlock(request.Block.Hash())
 		// notify fetcher to inject the block
 		pm.fetcher.Enqueue(p.id, request.Block)
-
 		var (
 			trueHead   = request.Block.Hash()
 			trueHeight = request.Block.Number()
@@ -793,12 +792,9 @@ func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 		if _, ht := p.Head(); trueHeight.Cmp(ht) > 0 {
 			p.SetHead(trueHead, trueHeight)
 
-			// Schedule a sync if above ours. Note, this will not fire a sync for a gap of
-			// a singe block (as the true TD is below the propagated block), however this
-			// scenario should easily be covered by the fetcher.
-			// replaced td with height
 			currentBlock := pm.blockchain.CurrentBlock()
 			if trueHeight.Cmp(currentBlock.Number()) > 0 {
+				// bulk sync from the peer
 				go pm.synchronise(p)
 			}
 		}
