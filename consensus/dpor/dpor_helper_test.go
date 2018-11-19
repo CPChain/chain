@@ -122,7 +122,7 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dh := &defaultDporHelper{}
-			if err := dh.verifyHeader(tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader); (err != nil) != tt.wantErr {
+			if err := dh.verifyHeader(tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, true); (err != nil) != tt.wantErr {
 				t.Errorf("defaultDporHelper.verifyHeader(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
 			}
 		})
@@ -166,7 +166,7 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			d := &defaultDporHelper{}
-			if err := d.verifyCascadingFields(tt.args.d, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader); (err != nil) != tt.wantErr {
+			if err := d.verifyCascadingFields(tt.args.d, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, true); (err != nil) != tt.wantErr {
 				t.Errorf("defaultDporHelper.verifyCascadingFields(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.d, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
 			}
 		})

@@ -5,9 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"testing"
-
 	"strings"
+	"testing"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -35,6 +34,7 @@ func TestNewHandler(t *testing.T) {
 
 	//Assign an expected handler
 	var expectedResult Handler
+	expectedResult.mode = LBFTMode
 	expectedResult.coinbase = testEtherbase
 	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
 	expectedResult.epochLength = testConfig.Epoch

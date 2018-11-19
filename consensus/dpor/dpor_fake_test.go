@@ -59,7 +59,7 @@ type fakeDporHelper struct {
 	snapshotSuccess bool
 }
 
-func (f *fakeDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (f *fakeDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error {
 	if f.verifySuccess {
 		return nil
 	} else {
@@ -67,8 +67,12 @@ func (f *fakeDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, head
 	}
 }
 
-func (*fakeDporHelper) verifyCascadingFields(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (*fakeDporHelper) verifyCascadingFields(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error {
 	panic("implement me")
+}
+
+func (*fakeDporHelper) validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block) error {
+	return nil
 }
 
 func (f *fakeDporHelper) snapshot(c *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error) {
