@@ -153,6 +153,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
 	// fetcher specific
+	// verifies the header when insert into the chain
 	validator := func(header *types.Header, refHeader *types.Header) error {
 		return engine.VerifyHeader(blockchain, header, true, refHeader)
 	}

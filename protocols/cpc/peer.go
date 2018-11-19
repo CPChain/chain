@@ -142,12 +142,14 @@ func (p *peer) broadcast() {
 			}
 			p.Log().Trace("Broadcast transactions", "count", len(txs))
 
+		// prop is for full block
 		case prop := <-p.queuedProps:
 			if err := p.SendNewBlock(prop.block); err != nil {
 				return
 			}
 			p.Log().Trace("Propagated block", "number", prop.block.Number(), "hash", prop.block.Hash(), "ht", prop.block.NumberU64())
 
+		// anns is for block hash
 		case block := <-p.queuedAnns:
 			if err := p.SendNewBlockHashes([]common.Hash{block.Hash()}, []uint64{block.NumberU64()}); err != nil {
 				return
@@ -357,6 +359,7 @@ func (p *peer) AsyncSendTransactions(txs []*types.Transaction) {
 // SendNewBlockHashes announces the availability of a number of blocks through
 // a hash notification.
 func (p *peer) SendNewBlockHashes(hashes []common.Hash, numbers []uint64) error {
+	// also adds to the known blocks
 	for _, hash := range hashes {
 		p.knownBlocks.Add(hash)
 	}
@@ -626,6 +629,7 @@ func (ps *peerSet) Register(p *peer) error {
 		return errAlreadyRegistered
 	}
 	ps.peers[p.id] = p
+	// each peer has one associated broadcast loop.
 	go p.broadcast()
 
 	return nil

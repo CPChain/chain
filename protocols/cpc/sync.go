@@ -162,7 +162,7 @@ func (pm *ProtocolManager) syncer() {
 	}
 }
 
-// synchronise tries to sync up our local block chain with a remote peer.
+// Synchronise tries to sync up our local block chain with a remote peer. It fetches blocks a peer.
 func (pm *ProtocolManager) synchronise(peer *peer) {
 	if peer == nil {
 		return
