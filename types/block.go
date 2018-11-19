@@ -18,7 +18,6 @@
 package types
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -139,10 +138,11 @@ func (h *Header) GetDpor() *DporSnap {
 	return &h.Dpor
 }
 
-func (h *Header) saveDporSnapToExtras() {
+func (h *Header) SaveDporSnapToExtras() {
 	// update extra field
+	vanity := h.Extra[:extraVanity]
 	h.Extra = make([]byte, extraVanity+len(h.Dpor.Proposers)*common.AddressLength+DporSigLength)
-	copy(h.Extra[0:], bytes.Repeat([]byte{0x00}, extraVanity))
+	copy(h.Extra[0:], vanity) // keep vanity unchanged
 	proBuf := make([]byte, len(h.Dpor.Proposers)*common.AddressLength)
 	for i := 0; i < len(h.Dpor.Proposers); i++ {
 		copy(proBuf[i*common.AddressLength:], h.Dpor.Proposers[i][:])
