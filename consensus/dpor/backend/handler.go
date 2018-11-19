@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"errors"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -15,8 +16,15 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/discover"
 )
 
+var (
+	// ErrUnknownHandlerMode is returnd if in an unknown mode
+	ErrUnknownHandlerMode = errors.New("unknown dpor handler mode")
+)
+
 // Handler implements PbftHandler
 type Handler struct {
+	mode HandlerMode
+
 	epochIdx    uint64
 	epochLength uint64
 
@@ -49,9 +57,9 @@ type Handler struct {
 	getEmptyBlockFn GetEmptyBlockFn
 
 	// those three funcs are methods from dpor, used for header verification and signing
-	verifyHeaderFn VerifyHeaderFn
-	verifyBlockFn  VerifyBlockFn
-	signHeaderFn   SignHeaderFn
+	verifyHeaderFn  VerifyHeaderFn
+	validateBlockFn ValidateBlockFn
+	signHeaderFn    SignHeaderFn
 
 	// this func is method from blockchain, used for inserting a block to chain
 	insertChainFn InsertChainFn
@@ -86,6 +94,10 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		dialed:          false,
 		available:       false,
 	}
+
+	// TODO: fix this
+	h.mode = LBFTMode
+
 	return h
 }
 
@@ -223,6 +235,107 @@ func (h *Handler) handleMsg(p *Signer) error {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
 
+	// TODO: @liuq fix this.
+	switch h.mode {
+	case LBFTMode:
+		return h.handleLbftMsg(msg, p)
+	case PBFTMode:
+		return h.handlePbftMsg(msg, p)
+	default:
+		return ErrUnknownHandlerMode
+	}
+}
+
+// handleLbftMsg handles given msg with lbft (lightweighted bft) mode
+func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
+
+	// TODO: @liuq fix this.
+	switch {
+	case msg.Code == PrepreparePendingBlockMsg:
+		// sign the block and broadcast PrepareSignedHeaderMsg
+
+		var block *types.Block
+		if err := msg.Decode(&block); err != nil {
+			return errResp(ErrDecode, "%v: %v", msg, err)
+		}
+		block.ReceivedAt = msg.ReceivedAt
+		block.ReceivedFrom = p
+
+		// Verify the block
+		// if correct, sign it and broadcast as Prepare msg
+		// verify header, if basic fields are correct, broadcast prepare msg
+		switch err := h.validateBlockFn(block); err {
+		case nil:
+			// basic fields are correct
+
+			// sign the block
+			header := block.RefHeader()
+			switch e := h.signHeaderFn(header, consensus.Preprepared); e {
+			case nil:
+
+				// add block to pending block cache of blockchain
+				if err := h.addPendingFn(block); err != nil {
+					return err
+				}
+
+				// broadcast prepare msg
+				go h.BroadcastPrepareSignedHeader(header)
+
+			default:
+				log.Warn("err when signing header", "hash", header.Hash, "number", header.Number.Uint64(), "err", err)
+				return e
+			}
+
+		default:
+			log.Warn("err when validating block", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
+			return err
+		}
+
+	case msg.Code == PrepareSignedHeaderMsg:
+		// add sigs to the header and broadcast, if ready to accept, accept
+
+		// retrieve the header
+		var header *types.Header
+		if err := msg.Decode(&header); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+
+		// verify the signed header
+		// if correct, insert the block into chain, broadcast it
+		switch err := h.verifyHeaderFn(header, consensus.Prepared); err {
+		case nil:
+			// with enough prepare sigs
+			// sign the block
+			switch e := h.signHeaderFn(header, consensus.Prepared); e {
+			case nil:
+
+				block := h.getPendingFn(header.Hash())
+
+				err := h.insertChainFn(block)
+				if err != nil {
+					log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
+					return err
+				}
+
+				// broadcast the block
+				go h.broadcastBlockFn(block, true)
+
+			default:
+				log.Warn("err when signing header", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
+				return e
+			}
+
+		default:
+			log.Warn("err when verifying header", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
+		}
+
+	default:
+		return consensus.ErrUnknownLbftState
+	}
+	return nil
+}
+
+func (h *Handler) handlePbftMsg(msg p2p.Msg, p *Signer) error {
 	switch h.statusFn().State {
 	case consensus.NewRound:
 		// if leader, send mined block with preprepare msg, enter preprepared
@@ -441,8 +554,7 @@ func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 func (h *Handler) SetFuncs(
 	validateSignerFn ValidateSignerFn,
 	verifyHeaderFn VerifyHeaderFn,
-	verifyBlockFn VerifyBlockFn,
-	signHeaderFn SignHeaderFn,
+	verifyBlockFn ValidateBlockFn, signHeaderFn SignHeaderFn,
 	addPendingBlockFn AddPendingBlockFn,
 	getPendingBlockFn GetPendingBlockFn,
 	broadcastBlockFn BroadcastBlockFn,
@@ -454,7 +566,7 @@ func (h *Handler) SetFuncs(
 
 	h.validateSignerFn = validateSignerFn
 	h.verifyHeaderFn = verifyHeaderFn
-	h.verifyBlockFn = verifyBlockFn
+	h.validateBlockFn = verifyBlockFn
 	h.signHeaderFn = signHeaderFn
 	h.addPendingFn = addPendingBlockFn
 	h.getPendingFn = getPendingBlockFn
