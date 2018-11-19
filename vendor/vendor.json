@@ -51,12 +51,6 @@
 			"revisionTime": "2018-08-15T10:47:33Z"
 		},
 		{
-			"checksumSHA1": "IJfgr2GrcATr8H78epZaeoLzq+s=",
-			"path": "github.com/Sirupsen/logrus",
-			"revision": "458213699411cdceb6fd839a3178be49c01fba54",
-			"revisionTime": "2018-10-10T20:06:18Z"
-		},
-		{
 			"checksumSHA1": "QC55lHNOv1+UAL2xtIHw17MJ8J8=",
 			"path": "github.com/StackExchange/wmi",
 			"revision": "5d049714c4a64225c3c79a7cf7d02f7fb5b96338",
@@ -661,6 +655,12 @@
 			"path": "github.com/rs/xhandler",
 			"revision": "ed27b6fd65218132ee50cd95f38474a3d8a2cd12",
 			"revisionTime": "2016-06-18T19:32:21Z"
+		},
+		{
+			"checksumSHA1": "qCF/dQD99N2dp441K5auWYqu+dU=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "",
+			"tree": true
 		},
 		{
 			"checksumSHA1": "jAzqolwnRJhHsKXmmvKNrHqxqAw=",

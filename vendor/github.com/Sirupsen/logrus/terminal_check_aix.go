@@ -1,10 +1,8 @@
-// +build js
+// +build !appengine,!js,!windows,aix
 
 package logrus
 
-import (
-	"io"
-)
+import "io"
 
 func checkIfTerminal(w io.Writer) bool {
 	return false
