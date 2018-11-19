@@ -331,7 +331,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		}
 	}
 
-	// Register the peer locally
+	// add the peer to peerset
 	if err := pm.peers.Register(p); err != nil {
 		log.Debug("register new peer ")
 		p.Log().Error("Cpchain peer registration failed", "err", err)
@@ -767,6 +767,7 @@ func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 			}
 		}
 		for _, block := range unknown {
+			// use fetcher to retrieve each block
 			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
 		}
 
@@ -779,14 +780,13 @@ func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
 		request.Block.ReceivedAt = msg.ReceivedAt
 		request.Block.ReceivedFrom = p
 
-		// Mark the peer as owning the block and schedule it for import
+		// mark the peer as owning the block and schedule it for import
 		p.MarkBlock(request.Block.Hash())
+		// notify fetcher to inject the block
 		pm.fetcher.Enqueue(p.id, request.Block)
 
-		// Assuming the block is importable by the peer, but possibly not yet done so,
-		// calculate the head hash and TD that the peer truly must have.
 		var (
-			trueHead   = request.Block.ParentHash()
+			trueHead   = request.Block.Hash()
 			trueHeight = request.Block.Number()
 		)
 		// Update the peers total difficulty if better than the previous

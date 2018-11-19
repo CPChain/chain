@@ -285,8 +285,7 @@ func (p *peer) Info() *PeerInfo {
 	}
 }
 
-// Head retrieves a copy of the current head hash and total difficulty of the
-// peer.
+// Head retrieves a copy of the current head hash and the block height of the peer.
 func (p *peer) Head() (hash common.Hash, ht *big.Int) {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
@@ -470,7 +469,7 @@ func (p *peer) RequestReceipts(hashes []common.Hash) error {
 }
 
 // Handshake executes the cpchain protocol handshake, negotiating version number,
-// network IDs, difficulties, head and genesis blocks.
+// network IDs, head and genesis blocks.
 func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis common.Hash) error {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
@@ -485,6 +484,7 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 			GenesisBlock:    genesis,
 		})
 	}()
+	// readStatus reads the handshake from the opposite side.
 	go func() {
 		errc <- p.readStatus(network, &status, genesis)
 	}()
