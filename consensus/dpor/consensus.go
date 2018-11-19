@@ -171,7 +171,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	// Set the correct difficulty
 	header.Difficulty = d.dh.calcDifficulty(snap, d.signer)
 
-	// Ensure the extra data has all it's components
+	// Ensure the extra data has all its components
 	if len(header.Extra) < extraVanity {
 		header.Extra = append(header.Extra, bytes.Repeat([]byte{0x00}, extraVanity-len(header.Extra))...)
 	}
