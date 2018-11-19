@@ -245,3 +245,23 @@ func (b *APIBackend) ServiceFilter(ctx context.Context, session *bloombits.Match
 func (b *APIBackend) RemoteDB() database.RemoteDatabase {
 	return b.cpc.RemoteDB()
 }
+
+func (b *APIBackend) RNode(view_idx *big.Int) []common.Address {
+	return b.cpc.dpor.RNode(view_idx)
+}
+
+func (b *APIBackend) CurrentView() uint64 {
+	return b.cpc.dpor.CurrentView()
+}
+
+func (b *APIBackend) CurrentTerm() uint64 {
+	return b.cpc.dpor.CurrentTerm()
+}
+
+func (b *APIBackend) CommitteMember(number *big.Int) []common.Address {
+	return b.cpc.dpor.CommitteMember(number)
+}
+
+func (b *APIBackend) CalcRptInfo(address common.Address, blockNum uint64) int64 {
+	return b.cpc.rpt.CalcRptInfo(address, blockNum).Rpt
+}

@@ -18,7 +18,6 @@
 package cpcapi
 
 import (
-	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"context"
 	"math/big"
 
@@ -75,12 +74,12 @@ type Backend interface {
 
 	RemoteDB() database.RemoteDatabase // RemoteDB returns remote database instance.
 
-	//RNode Api
+	//RNode API
 	RNode(view_idx *big.Int) []common.Address
 	CurrentView() uint64
 	CurrentTerm() uint64
 	CommitteMember(number *big.Int) []common.Address
-	CalcRptInfo(address common.Address, blockNum uint64) rpt.Rpt
+	CalcRptInfo(address common.Address, blockNum uint64) int64
 }
 
 func GetGAPIs(b Backend) []grpc.GApi {

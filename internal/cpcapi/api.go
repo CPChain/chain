@@ -475,7 +475,7 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 
 func (s *PublicBlockChainAPI) GetRNodesAddress(view_idex *big.Int) []common.Address {
 	var rNodeAddress []common.Address
-	if view_idex == nil {
+	if view_idex == big.NewInt(0) {
 		rNodeAddress = s.b.RNode(big.NewInt(rpc.LatestBlockNumber.Int64()))
 	}
 	rNodeAddress = s.b.RNode(view_idex)
@@ -490,7 +490,7 @@ func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *b
 
 	Score := s.b.CalcRptInfo(nodeAddress, view_idex.Uint64())
 
-	if view_idex == nil {
+	if view_idex == big.NewInt(0) {
 		rNodeAddress = s.b.RNode(big.NewInt(rpc.LatestBlockNumber.Int64()))
 		committeAddress = s.b.CommitteMember(big.NewInt(rpc.LatestBlockNumber.Int64()))
 	}
@@ -500,7 +500,7 @@ func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *b
 		if nodeAddress == address {
 			return cpclient.RNode{
 				Address: nodeAddress,
-				Rpt:     Score.Rpt,
+				Rpt:     Score,
 				Status:  cpclient.Committe,
 			}
 		} else {
@@ -508,7 +508,7 @@ func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *b
 				if address == nodeAddress {
 					return cpclient.RNode{
 						Address: nodeAddress,
-						Rpt:     Score.Rpt,
+						Rpt:     Score,
 						Status:  cpclient.Cadidate,
 					}
 				}
@@ -517,7 +517,7 @@ func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *b
 	}
 	return cpclient.RNode{
 		Address: nodeAddress,
-		Rpt:     Score.Rpt,
+		Rpt:     Score,
 		Status:  cpclient.Civilian,
 	}
 	//return []common.Address{common.HexToAddress("01"), common.HexToAddress("02")}
@@ -540,30 +540,21 @@ func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committee {
 
 	v := s.b.CurrentView()
 	t := s.b.CurrentTerm()
-
-	header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
-	if err != nil {
-		log.Fatal("can't get header", err)
-	}
+	var committees []cpclient.Committee
 
 	for i := uint64(0); i < t; i++ {
-		header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
+		header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber-rpc.BlockNumber(t-i))
 		if err != nil {
 			log.Fatal("can't get header", err)
 		}
 		committee := cpclient.Committee{
-			View: v, Term: t, Producer: header.Coinbase,
+			//TODO fill PublicKey logic later
+			View: v, Term: t, Producer: header.Coinbase, PublicKey: "", Block: uint64(rpc.LatestBlockNumber - rpc.BlockNumber(t-i)),
 		}
+		committees = append(committees, committee)
 	}
-	//return []cpclient.Committee{
-	//	{View: 1, Term: 1, Producer: common.HexToAddress("01"), PublicKey: "012345", Block: 1111},
-	//	{View: 1, Term: 2, Producer: common.HexToAddress("02"), PublicKey: "012345", Block: 1112},
-	//	{View: 1, Term: 3, Producer: common.HexToAddress("03"), PublicKey: "012345", Block: 1113},
-	//	{View: 1, Term: 4, Producer: common.HexToAddress("04"), PublicKey: "012345", Block: 1114},
-	//	{View: 1, Term: 5, Producer: common.HexToAddress("05"), PublicKey: "012345", Block: 1115},
-	//	{View: 1, Term: 6, Producer: common.HexToAddress("06"), PublicKey: "012345", Block: 1116},
-	//	{View: 1, Term: 7, Producer: common.HexToAddress("07"), PublicKey: "012345", Block: 1117},
-	//}
+
+	return committees
 
 }
 
