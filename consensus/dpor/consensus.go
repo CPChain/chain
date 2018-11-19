@@ -128,7 +128,7 @@ func (d *Dpor) Author(header *types.Header) (common.Address, error) {
 
 // VerifyHeader checks whether a header conforms to the consensus rules.
 func (d *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool, refHeader *types.Header) error {
-	return d.dh.verifyHeader(d, chain, header, nil, refHeader)
+	return d.dh.verifyHeader(d, chain, header, nil, refHeader, true)
 }
 
 // VerifyHeaders is similar to VerifyHeader, but verifies a batch of headers. The
@@ -140,7 +140,7 @@ func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Heade
 
 	go func() {
 		for i, header := range headers {
-			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i])
+			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i], true)
 
 			select {
 			case <-abort:
@@ -378,4 +378,9 @@ func (d *Dpor) SignHeader(chain consensus.ChainReader, header *types.Header, sta
 	default:
 		return consensus.ErrWhenSigningHeader
 	}
+}
+
+// ValidateBlock validates a basic field excepts seal of a block.
+func (d *Dpor) ValidateBlock(chain consensus.ChainReader, block *types.Block) error {
+	return d.dh.validateBlock(d, chain, block)
 }

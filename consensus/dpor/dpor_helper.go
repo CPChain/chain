@@ -30,22 +30,28 @@ import (
 
 type dporHelper interface {
 	dporUtil
-	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
-	verifyCascadingFields(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
+	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error
+	verifyCascadingFields(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error
 	snapshot(d *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error)
 	verifySeal(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error
+	validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block) error
 }
 
 type defaultDporHelper struct {
 	dporUtil
 }
 
+// validateBlock checks basic fields in a block
+func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block) error {
+	return dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), false)
+}
+
 // verifyHeader checks whether a header conforms to the consensus rules.The
 // caller may optionally pass in a batch of parents (ascending order) to avoid
 // looking those up from the database. This is useful for concurrently verifying
 // a batch of new headers.
-func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error {
 	if header.Number == nil {
 		return errUnknownBlock
 	}
@@ -91,14 +97,14 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	}
 
 	// All basic checks passed, verify cascading fields
-	return c.dh.verifyCascadingFields(c, chain, header, parents, refHeader)
+	return c.dh.verifyCascadingFields(c, chain, header, parents, refHeader, true)
 }
 
 // verifyCascadingFields verifies all the header fields that are not standalone,
 // rather depend on a batch of previous headers. The caller may optionally pass
 // in a batch of parents (ascending order) to avoid looking those up from the
 // database. This is useful for concurrently verifying a batch of new headers.
-func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error {
 	// The genesis block is the always valid dead-end
 	number := header.Number.Uint64()
 	if number == 0 {
@@ -173,7 +179,11 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	}
 
 	// All basic checks passed, verify the seal and return
-	return dh.verifySeal(dpor, chain, header, parents, refHeader)
+	if seal {
+		return dh.verifySeal(dpor, chain, header, parents, refHeader)
+	}
+
+	return nil
 }
 
 // Snapshot retrieves the authorization Snapshot at a given point in time.
@@ -204,7 +214,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		if number == 0 {
 			// Retrieve genesis block and verify it
 			genesis := chain.GetHeaderByNumber(0)
-			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil); err != nil {
+			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil, true); err != nil {
 				return nil, err
 			}
 

@@ -130,7 +130,7 @@ type Validator interface {
 	// IsFutureSigner returns if a given address is a future signer.
 	IsFutureSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
 
-	// ValidateBlock validates a block.
+	// ValidateBlock validates a basic field excepts seal of a block.
 	ValidateBlock(chain ChainReader, block *types.Block) error
 
 	// SignHeader signs a header in given state.
