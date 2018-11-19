@@ -98,7 +98,7 @@
     },
     "/api/v1/cpc/getBalance": {
       "post": {
-        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
+        "summary": "ProtocolVersion returns the current Cpchain protocol version this node supports",
         "operationId": "GetBalance",
         "responses": {
           "200": {
@@ -341,7 +341,7 @@
     },
     "/api/v1/cpc/getTransactionCountByBlockHash": {
       "post": {
-        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
+        "summary": "ProtocolVersion returns the current Cpchain protocol version this node supports",
         "operationId": "GetTransactionCountByBlockHash",
         "responses": {
           "200": {
@@ -476,7 +476,7 @@
     },
     "/api/v1/cpc/protocolVersion": {
       "post": {
-        "summary": "ProtocolVersion returns the current Ethereum protocol version this node supports",
+        "summary": "ProtocolVersion returns the current Cpchain protocol version this node supports",
         "operationId": "ProtocolVersion",
         "responses": {
           "200": {

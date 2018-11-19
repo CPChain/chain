@@ -12,10 +12,10 @@ message File {
     string file = 1;
 }
 
-// AdminManager is the collection of Ethereum full node-related APIs
+// AdminManager is the collection of Cpchain full node-related APIs
 // exposed over the private admin endpoint.
 service AdminManager {
-    // ChainManager is the collection of Ethereum full node-related APIs
+    // ChainManager is the collection of Cpchain full node-related APIs
     // exposed over the private admin endpoint.
     rpc ExportChain(File) returns (common.IsOk) {
         option (google.api.http) = {

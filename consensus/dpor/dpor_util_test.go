@@ -180,7 +180,7 @@ func Test_ecrecover(t *testing.T) {
 	existingCache.Add(newHeader.Hash(), sigs)
 	dporUtil := &defaultDporUtil{}
 	// get extra2sig for test
-	//privateKey, _, loadedAddr := getAccount("$project_dir/src/github.com/ethereum/go-ethereum/examples/cpchain/data/dd1/keystore/", "password")
+	//privateKey, _, loadedAddr := getAccount("$project_dir/src/bitbucket.org/cpchain/chain/examples/cpchain/data/data1/keystore/", "password")
 	//extra2Sig, _ := crypto.Sign(dporUtil.sigHash(newHeader).Bytes(), privateKey)
 	//fmt.Println("extra2Sig:", extra2Sig)
 	//fmt.Println("extra2Sig hex:", common.Bytes2Hex(extra2Sig))

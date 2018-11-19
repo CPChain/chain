@@ -17,7 +17,7 @@
   "paths": {
     "/api/v1/admin/exportChain": {
       "post": {
-        "summary": "ChainManager is the collection of Ethereum full node-related APIs\nexposed over the private admin endpoint.",
+        "summary": "ChainManager is the collection of Cpchain full node-related APIs\nexposed over the private admin endpoint.",
         "operationId": "ExportChain",
         "responses": {
           "200": {
