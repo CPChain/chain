@@ -87,7 +87,7 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 	h := &Handler{
 		coinbase:        etherbase,
 		contractAddress: config.Contracts["signer"],
-		epochLength:     config.Epoch,
+		epochLength:     config.TermLen,
 		signers:         make(map[common.Address]*Signer),
 		pendingBlockCh:  make(chan *types.Block),
 		quitSync:        make(chan struct{}),

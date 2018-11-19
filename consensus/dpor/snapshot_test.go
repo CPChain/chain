@@ -70,7 +70,7 @@ func Test_loadSnapshot(t *testing.T) {
 		db       database.Database
 		hash     common.Hash
 	}
-	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	cache, _ := lru.NewARC(inmemorySnapshots)
 	expectedDporSnapshot := new(DporSnapshot)
 	expectedDporSnapshot.config = &testConfig
@@ -180,7 +180,7 @@ func TestSnapshot_apply(t *testing.T) {
 	type args struct {
 		headers []*types.Header
 	}
-	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	testCache, _ := lru.NewARC(inmemorySnapshots)
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
@@ -244,7 +244,7 @@ func TestSnapshot_applyHeader(t *testing.T) {
 	type args struct {
 		header *types.Header
 	}
-	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	testCache, _ := lru.NewARC(inmemorySnapshots)
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
@@ -300,7 +300,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 	type args struct {
 		header *types.Header
 	}
-	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	testCache, _ := lru.NewARC(inmemorySnapshots)
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
@@ -397,7 +397,7 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	}
 
 	//For the case testDporSnapshot.ifUserDefaultSigner() == true
-	testConfig := configs.DporConfig{Period: 3, Epoch: 3, View: 3, MaxInitBlockNumber: 1000}
+	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3, MaxInitBlockNumber: 1000}
 	//testCache, _ := lru.NewARC(inmemorySnapshots)
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
@@ -407,7 +407,7 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
 	var testRpt int64
 	testRpt = 1000
-	//the length of testRptLists should be no less than testConfig.Epoch
+	//the length of testRptLists should be no less than testConfig.TermLen
 	testRptList := rpt.RptList{rpt.Rpt{Address: common.HexToAddress(addrHex), Rpt: testRpt},
 		rpt.Rpt{Address: common.HexToAddress(addrHex), Rpt: testRpt},
 		rpt.Rpt{Address: common.HexToAddress(addrHex), Rpt: testRpt},
@@ -442,7 +442,7 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	if err != nil {
 		t.Errorf("DporSnapshot.updateSigners returns an error message, as %v\n", err)
 	}
-	testEpochIdx := testDporSnapshot.EpochIdx()
+	testEpochIdx := testDporSnapshot.Term()
 	fmt.Println(testEpochIdx)
 	recentSigner := testDporSnapshot.getRecentSigners(testEpochIdx + 1)
 	if !reflect.DeepEqual(recentSigner, expectedResult.Candidates) {
@@ -457,11 +457,11 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	if err != nil {
 		t.Errorf("DporSnapshot.updateSigners returns an error message, as %v\n", err)
 	}
-	testEpoch := testDporSnapshot.config.Epoch
+	testEpoch := testDporSnapshot.config.TermLen
 	expectedSigner := election.Elect(testRptList, testSeed, int(testEpoch))
-	testEpochIdx = testDporSnapshot.EpochIdx()
+	testEpochIdx = testDporSnapshot.Term()
 	fmt.Println(testEpochIdx)
-	recentSigner = testDporSnapshot.getRecentSigners(testEpochIdx + EpochGapBetweenElectionAndMining)
+	recentSigner = testDporSnapshot.getRecentSigners(testEpochIdx + TermGapBetweenElectionAndMining)
 	if !reflect.DeepEqual(expectedSigner, recentSigner) {
 		t.Errorf("For the case snapshot starts election, updateSigner() =  \n%v, want \n%v\n", recentSigner, expectedSigner)
 	}
