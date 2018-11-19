@@ -60,11 +60,11 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config
-	if conf.Epoch == 0 {
-		conf.Epoch = uint64(epochLength)
+	if conf.TermLen == 0 {
+		conf.TermLen = uint64(termLen)
 	}
-	if conf.View == 0 {
-		conf.View = uint64(viewLength)
+	if conf.ViewLen == 0 {
+		conf.ViewLen = uint64(viewLen)
 	}
 
 	// Allocate the Snapshot caches and create the engine

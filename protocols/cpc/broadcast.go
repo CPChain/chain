@@ -17,7 +17,6 @@
 package cpc
 
 import (
-	"math/big"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -59,11 +58,7 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 
 	// If propagation is requested, send to a subset of the peer
 	if propagate {
-		// Calculate the TD of the block (it's not imported yet, so block.Td is not valid)
-		var td *big.Int
-		if parent := pm.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1); parent != nil {
-			td = new(big.Int).Add(block.Difficulty(), pm.blockchain.GetTd(block.ParentHash(), block.NumberU64()-1))
-		} else {
+		if parent := pm.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1); parent == nil {
 			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash.Hex())
 			return
 		}
@@ -73,7 +68,7 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 		transfer := peers
 
 		for _, peer := range transfer {
-			peer.AsyncSendNewBlock(block, td)
+			peer.AsyncSendNewBlock(block)
 		}
 
 		log.Debug("Propagated block", "hash", hash.Hex(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))

@@ -51,14 +51,14 @@ func NewPublicCpchainAPI(e *CpchainService) *PublicCpchainAPI {
 	return &PublicCpchainAPI{e}
 }
 
-// Etherbase is the address that mining rewards will be send to
-func (api *PublicCpchainAPI) Etherbase() (common.Address, error) {
-	return api.c.Etherbase()
+// Cpcbase is the address that mining rewards will be send to
+func (api *PublicCpchainAPI) Cpcbase() (common.Address, error) {
+	return api.c.Cpcbase()
 }
 
-// Coinbase is the address that mining rewards will be send to (alias for Etherbase)
+// Coinbase is the address that mining rewards will be send to (alias for Cpcbase)
 func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
-	return api.Etherbase()
+	return api.Cpcbase()
 }
 
 // PrivateMinerAPI provides private RPC methods to control the miner.
@@ -134,9 +134,9 @@ func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 	return true
 }
 
-// SetChainbase sets the etherbase of the miner
-func (api *PrivateMinerAPI) SetEtherbase(etherbase common.Address) bool {
-	api.c.SetEtherbase(etherbase)
+// SetChainbase sets the cpcbase of the miner
+func (api *PrivateMinerAPI) SetCpcbase(cpcbase common.Address) bool {
+	api.c.SetCpcbase(cpcbase)
 	return true
 }
 

@@ -9,3 +9,4 @@ protocols/cpc/fetcher
 protocols/cpc/downloader
 api/rpc
 api/cpclient
+contracts/dpor/contracts

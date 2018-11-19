@@ -10,7 +10,7 @@
 *un~
 .DS_Store
 */**/.DS_Store
-.ethtest
+.cpctest
 */**/*tx_database*
 */**/*dapps*
 build/_vendor/pkg
@@ -26,6 +26,7 @@ build/_vendor/pkg
 /build/_workspace/
 /build/bin/
 /geth*.zip
+/cpchain*.zip
 
 # travis
 profile.tmp

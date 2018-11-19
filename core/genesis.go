@@ -231,7 +231,7 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 	case ghash == configs.MainnetGenesisHash:
 		return configs.MainnetChainConfig
 	default:
-		return configs.AllEthashProtocolChanges
+		return configs.AllCpchainProtocolChanges
 		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
 		// check the ussage of `newcfg' in `setupGenesisBlock'.
 	}
@@ -294,7 +294,7 @@ func (g *Genesis) Commit(db database.Database) (*types.Block, error) {
 
 	config := g.Config
 	if config == nil {
-		config = configs.AllEthashProtocolChanges
+		config = configs.AllCpchainProtocolChanges
 	}
 	rawdb.WriteChainConfig(db, block.Hash(), config)
 	return block, nil

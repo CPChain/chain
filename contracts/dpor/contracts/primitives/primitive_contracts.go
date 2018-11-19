@@ -16,9 +16,9 @@ import (
 const PrimitiveContractsInterfaceABI = "[]"
 
 // PrimitiveContractsInterfaceBin is the compiled bytecode used for deploying new contracts.
-const PrimitiveContractsInterfaceBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a7230582032bac6f22e275ba26cd97a3fb15ca6603a0a74c9ab7d812780987bf54838637e0029`
+const PrimitiveContractsInterfaceBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a7230582023a9901fefa44f89cdfb7b600504bde0d96777cffb3ee09b8be326f9954ba8320029`
 
-// DeployPrimitiveContractsInterface deploys a new Ethereum contract, binding an instance of PrimitiveContractsInterface to it.
+// DeployPrimitiveContractsInterface deploys a new cpchain contract, binding an instance of PrimitiveContractsInterface to it.
 func DeployPrimitiveContractsInterface(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *PrimitiveContractsInterface, error) {
 	parsed, err := abi.JSON(strings.NewReader(PrimitiveContractsInterfaceABI))
 	if err != nil {
@@ -31,29 +31,29 @@ func DeployPrimitiveContractsInterface(auth *bind.TransactOpts, backend bind.Con
 	return address, tx, &PrimitiveContractsInterface{PrimitiveContractsInterfaceCaller: PrimitiveContractsInterfaceCaller{contract: contract}, PrimitiveContractsInterfaceTransactor: PrimitiveContractsInterfaceTransactor{contract: contract}, PrimitiveContractsInterfaceFilterer: PrimitiveContractsInterfaceFilterer{contract: contract}}, nil
 }
 
-// PrimitiveContractsInterface is an auto generated Go binding around an Ethereum contract.
+// PrimitiveContractsInterface is an auto generated Go binding around an cpchain contract.
 type PrimitiveContractsInterface struct {
 	PrimitiveContractsInterfaceCaller     // Read-only binding to the contract
 	PrimitiveContractsInterfaceTransactor // Write-only binding to the contract
 	PrimitiveContractsInterfaceFilterer   // Log filterer for contract events
 }
 
-// PrimitiveContractsInterfaceCaller is an auto generated read-only Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceCaller is an auto generated read-only Go binding around an cpchain contract.
 type PrimitiveContractsInterfaceCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PrimitiveContractsInterfaceTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceTransactor is an auto generated write-only Go binding around an cpchain contract.
 type PrimitiveContractsInterfaceTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PrimitiveContractsInterfaceFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// PrimitiveContractsInterfaceFilterer is an auto generated log filtering Go binding around an cpchain contract events.
 type PrimitiveContractsInterfaceFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PrimitiveContractsInterfaceSession is an auto generated Go binding around an Ethereum contract,
+// PrimitiveContractsInterfaceSession is an auto generated Go binding around an cpchain contract,
 // with pre-set call and transact options.
 type PrimitiveContractsInterfaceSession struct {
 	Contract     *PrimitiveContractsInterface // Generic contract binding to set the session for
@@ -61,31 +61,31 @@ type PrimitiveContractsInterfaceSession struct {
 	TransactOpts bind.TransactOpts            // Transaction auth options to use throughout this session
 }
 
-// PrimitiveContractsInterfaceCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// PrimitiveContractsInterfaceCallerSession is an auto generated read-only Go binding around an cpchain contract,
 // with pre-set call options.
 type PrimitiveContractsInterfaceCallerSession struct {
 	Contract *PrimitiveContractsInterfaceCaller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts                      // Call options to use throughout this session
 }
 
-// PrimitiveContractsInterfaceTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// PrimitiveContractsInterfaceTransactorSession is an auto generated write-only Go binding around an cpchain contract,
 // with pre-set transact options.
 type PrimitiveContractsInterfaceTransactorSession struct {
 	Contract     *PrimitiveContractsInterfaceTransactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts                      // Transaction auth options to use throughout this session
 }
 
-// PrimitiveContractsInterfaceRaw is an auto generated low-level Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceRaw is an auto generated low-level Go binding around an cpchain contract.
 type PrimitiveContractsInterfaceRaw struct {
 	Contract *PrimitiveContractsInterface // Generic contract binding to access the raw methods on
 }
 
-// PrimitiveContractsInterfaceCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
 type PrimitiveContractsInterfaceCallerRaw struct {
 	Contract *PrimitiveContractsInterfaceCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// PrimitiveContractsInterfaceTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
 type PrimitiveContractsInterfaceTransactorRaw struct {
 	Contract *PrimitiveContractsInterfaceTransactor // Generic write-only contract binding to access the raw methods on
 }

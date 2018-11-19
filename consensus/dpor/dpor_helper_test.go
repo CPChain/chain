@@ -67,46 +67,46 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 
 		{"errInvalidCheckpointBeneficiary", dh,
 			args{header: &types.Header{Number: big.NewInt(6), Time: time, Coinbase: common.HexToAddress("aaaaa")},
-				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
+				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"header.Extra error1", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(extra))},
-				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
+				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"header.Extra error2", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(err2Extra))},
-				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
+				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"errInvalidSigners", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(errInvalidSignersExtra))},
-				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
+				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"errInvalidMixHash", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
 					MixHash: common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0")},
-				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
+				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"errInvalidUncleHash", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
 					MixHash: common.Hash{}},
-				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
+				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"errInvalidDifficulty", dh,
 			args{
 				header: &types.Header{
 					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
 					MixHash: common.Hash{}},
-				c: &Dpor{config: &configs.DporConfig{Epoch: 3}}}, true},
+				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"success", dh,
 			args{
@@ -114,7 +114,7 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 					Number: big.NewInt(0), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
 					MixHash:    common.Hash{},
 					Difficulty: big.NewInt(2)},
-				c:       &Dpor{config: &configs.DporConfig{Epoch: 3}, dh: &defaultDporHelper{}},
+				c:       &Dpor{config: &configs.DporConfig{TermLen: 3}, dh: &defaultDporHelper{}},
 				chain:   &FakeReader{},
 				parents: []*types.Header{},
 			}, false},
@@ -136,7 +136,7 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 	time2 := big.NewInt(time.Now().Unix() + 100)
 	header := &types.Header{Number: big.NewInt(0), Time: time1}
 	parentHash := header.Hash()
-	recents.Add(parentHash, &DporSnapshot{config: &configs.DporConfig{Period: 3, View: 3, Epoch: 3}, RecentSigners: make(map[uint64][]common.Address)})
+	recents.Add(parentHash, &DporSnapshot{config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}, RecentSigners: make(map[uint64][]common.Address)})
 	type args struct {
 		d         *Dpor
 		chain     consensus.ChainReader
@@ -151,14 +151,14 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 		wantErr bool
 	}{
 		{"success when block 0", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, View: 3, Epoch: 4}},
+			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}},
 				header: &types.Header{Number: big.NewInt(0), ParentHash: parentHash}}, false},
 		{"fail with parent block", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, View: 3, Epoch: 4}},
+			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}},
 				header:  &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time1},
 				parents: []*types.Header{header}}, true},
 		{"errInvalidSigners", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, View: 3, Epoch: 4}, dh: &defaultDporHelper{}},
+			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}, dh: &defaultDporHelper{}},
 				header: &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time2,
 					Extra: hexutil.MustDecode(rightExtra)},
 				parents: []*types.Header{header}}, true},

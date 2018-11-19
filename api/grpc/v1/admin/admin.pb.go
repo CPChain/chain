@@ -4,13 +4,14 @@
 package admin
 
 import (
-	common "bitbucket.org/cpchain/chain/api/grpc/v1/common"
 	fmt "fmt"
+	math "math"
+
+	common "bitbucket.org/cpchain/chain/api/grpc/v1/common"
 	proto "github.com/golang/protobuf/proto"
 	context "golang.org/x/net/context"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -99,7 +100,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type AdminManagerClient interface {
-	// ChainManager is the collection of Ethereum full node-related APIs
+	// ChainManager is the collection of Cpchain full node-related APIs
 	// exposed over the private admin endpoint.
 	ExportChain(ctx context.Context, in *File, opts ...grpc.CallOption) (*common.IsOk, error)
 	// ImportChain imports a blockchain from a local file.
@@ -134,7 +135,7 @@ func (c *adminManagerClient) ImportChain(ctx context.Context, in *File, opts ...
 
 // AdminManagerServer is the server API for AdminManager service.
 type AdminManagerServer interface {
-	// ChainManager is the collection of Ethereum full node-related APIs
+	// ChainManager is the collection of Cpchain full node-related APIs
 	// exposed over the private admin endpoint.
 	ExportChain(context.Context, *File) (*common.IsOk, error)
 	// ImportChain imports a blockchain from a local file.

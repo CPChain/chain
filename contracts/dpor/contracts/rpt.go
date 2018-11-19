@@ -18,9 +18,9 @@ import (
 const PrimitiveContractsInterfaceABI = "[]"
 
 // PrimitiveContractsInterfaceBin is the compiled bytecode used for deploying new contracts.
-const PrimitiveContractsInterfaceBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a7230582032bac6f22e275ba26cd97a3fb15ca6603a0a74c9ab7d812780987bf54838637e0029`
+const PrimitiveContractsInterfaceBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a7230582023a9901fefa44f89cdfb7b600504bde0d96777cffb3ee09b8be326f9954ba8320029`
 
-// DeployPrimitiveContractsInterface deploys a new Ethereum contract, binding an instance of PrimitiveContractsInterface to it.
+// DeployPrimitiveContractsInterface deploys a new cpchain contract, binding an instance of PrimitiveContractsInterface to it.
 func DeployPrimitiveContractsInterface(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *PrimitiveContractsInterface, error) {
 	parsed, err := abi.JSON(strings.NewReader(PrimitiveContractsInterfaceABI))
 	if err != nil {
@@ -33,29 +33,29 @@ func DeployPrimitiveContractsInterface(auth *bind.TransactOpts, backend bind.Con
 	return address, tx, &PrimitiveContractsInterface{PrimitiveContractsInterfaceCaller: PrimitiveContractsInterfaceCaller{contract: contract}, PrimitiveContractsInterfaceTransactor: PrimitiveContractsInterfaceTransactor{contract: contract}, PrimitiveContractsInterfaceFilterer: PrimitiveContractsInterfaceFilterer{contract: contract}}, nil
 }
 
-// PrimitiveContractsInterface is an auto generated Go binding around an Ethereum contract.
+// PrimitiveContractsInterface is an auto generated Go binding around a cpchain contract.
 type PrimitiveContractsInterface struct {
 	PrimitiveContractsInterfaceCaller     // Read-only binding to the contract
 	PrimitiveContractsInterfaceTransactor // Write-only binding to the contract
 	PrimitiveContractsInterfaceFilterer   // Log filterer for contract events
 }
 
-// PrimitiveContractsInterfaceCaller is an auto generated read-only Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceCaller is an auto generated read-only Go binding around a cpchain contract.
 type PrimitiveContractsInterfaceCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PrimitiveContractsInterfaceTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceTransactor is an auto generated write-only Go binding around a cpchain contract.
 type PrimitiveContractsInterfaceTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PrimitiveContractsInterfaceFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// PrimitiveContractsInterfaceFilterer is an auto generated log filtering Go binding around a cpchain contract events.
 type PrimitiveContractsInterfaceFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// PrimitiveContractsInterfaceSession is an auto generated Go binding around an Ethereum contract,
+// PrimitiveContractsInterfaceSession is an auto generated Go binding around a cpchain contract,
 // with pre-set call and transact options.
 type PrimitiveContractsInterfaceSession struct {
 	Contract     *PrimitiveContractsInterface // Generic contract binding to set the session for
@@ -63,31 +63,31 @@ type PrimitiveContractsInterfaceSession struct {
 	TransactOpts bind.TransactOpts            // Transaction auth options to use throughout this session
 }
 
-// PrimitiveContractsInterfaceCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// PrimitiveContractsInterfaceCallerSession is an auto generated read-only Go binding around a cpchain contract,
 // with pre-set call options.
 type PrimitiveContractsInterfaceCallerSession struct {
 	Contract *PrimitiveContractsInterfaceCaller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts                      // Call options to use throughout this session
 }
 
-// PrimitiveContractsInterfaceTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// PrimitiveContractsInterfaceTransactorSession is an auto generated write-only Go binding around a cpchain contract,
 // with pre-set transact options.
 type PrimitiveContractsInterfaceTransactorSession struct {
 	Contract     *PrimitiveContractsInterfaceTransactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts                      // Transaction auth options to use throughout this session
 }
 
-// PrimitiveContractsInterfaceRaw is an auto generated low-level Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceRaw is an auto generated low-level Go binding around a cpchain contract.
 type PrimitiveContractsInterfaceRaw struct {
 	Contract *PrimitiveContractsInterface // Generic contract binding to access the raw methods on
 }
 
-// PrimitiveContractsInterfaceCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceCallerRaw is an auto generated low-level read-only Go binding around a cpchain contract.
 type PrimitiveContractsInterfaceCallerRaw struct {
 	Contract *PrimitiveContractsInterfaceCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// PrimitiveContractsInterfaceTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// PrimitiveContractsInterfaceTransactorRaw is an auto generated low-level write-only Go binding around a cpchain contract.
 type PrimitiveContractsInterfaceTransactorRaw struct {
 	Contract *PrimitiveContractsInterfaceTransactor // Generic write-only contract binding to access the raw methods on
 }
@@ -179,9 +179,9 @@ func (_PrimitiveContractsInterface *PrimitiveContractsInterfaceTransactorRaw) Tr
 const RptABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"}],\"name\":\"updateAlpha\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"omega\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"f\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getProxyRep\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"window\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_gamma\",\"type\":\"uint256\"}],\"name\":\"updateGamma\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getRpt\",\"outputs\":[{\"name\":\"rpt\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getTx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getDataContribution\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"psi\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"beta\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_omega\",\"type\":\"uint256\"}],\"name\":\"updateOmega\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_beta\",\"type\":\"uint256\"}],\"name\":\"updateBeta\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"gamma\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_psi\",\"type\":\"uint256\"}],\"name\":\"updatePsi\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateWindow\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"},{\"name\":\"_beta\",\"type\":\"uint256\"},{\"name\":\"_gamma\",\"type\":\"uint256\"},{\"name\":\"_psi\",\"type\":\"uint256\"},{\"name\":\"_omega\",\"type\":\"uint256\"},{\"name\":\"_f\",\"type\":\"uint256\"},{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateConfigs\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"alpha\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getCoinage\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getBlockchainMaintenance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"name\":\"UpdateConfigs\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"configName\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"configValue\",\"type\":\"uint256\"}],\"name\":\"UpdateOneConfig\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"exprNmae\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"expr\",\"type\":\"string\"}],\"name\":\"SetExp\",\"type\":\"event\"}]"
 
 // RptBin is the compiled bytecode used for deploying new contracts.
-const RptBin = `0x60806040526032600055600f600155600a600255600f600355600a6004556004600555601560065534801561003357600080fd5b5060078054600160a060020a03191633179055610bd2806100556000396000f30060806040526004361061011c5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306d2d3dc81146101215780632262a1b31461013b57806326121ff01461016257806344cc5c5214610177578063461645bf1461019b5780636d8004c5146101b05780636f126a8f146101c8578063741a35c4146101ec5780637c9f4b661461021057806386f87fdd146102345780638da5cb5b146102495780639faa3c911461027a578063a23f52b81461028f578063ac7dabbc146102a7578063b1373929146102bf578063b2f801c4146102d4578063b98f0056146102ec578063bd5c5f8614610304578063db1d0fd51461032e578063db40a12e14610343578063e81092a514610367575b600080fd5b34801561012d57600080fd5b5061013960043561038b565b005b34801561014757600080fd5b50610150610406565b60408051918252519081900360200190f35b34801561016e57600080fd5b5061015061040c565b34801561018357600080fd5b50610150600160a060020a0360043516602435610412565b3480156101a757600080fd5b506101506104a0565b3480156101bc57600080fd5b506101396004356104a6565b3480156101d457600080fd5b50610150600160a060020a0360043516602435610521565b3480156101f857600080fd5b50610150600160a060020a0360043516602435610662565b34801561021c57600080fd5b50610150600160a060020a03600435166024356106b0565b34801561024057600080fd5b50610150610700565b34801561025557600080fd5b5061025e610706565b60408051600160a060020a039092168252519081900360200190f35b34801561028657600080fd5b50610150610715565b34801561029b57600080fd5b5061013960043561071b565b3480156102b357600080fd5b50610139600435610796565b3480156102cb57600080fd5b50610150610811565b3480156102e057600080fd5b50610139600435610817565b3480156102f857600080fd5b50610139600435610891565b34801561031057600080fd5b5061013960043560243560443560643560843560a43560c43561090c565b34801561033a57600080fd5b50610150610982565b34801561034f57600080fd5b50610150600160a060020a0360043516602435610988565b34801561037357600080fd5b50610150600160a060020a0360043516602435610a1c565b600754600160a060020a031633146103a257600080fd5b6000819055604080514381528082018390526060602082018190526005908201527f616c70686100000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b60045481565b60065481565b6000808080610430600160a060020a0387168663ffffffff610a6616565b92508215156104425760009350610497565b61045b600160a060020a0387168663ffffffff610a9316565b915061047f600a61047384600563ffffffff610ab816565b9063ffffffff610ae316565b905060648111156104935760649350610497565b8093505b50505092915050565b60055481565b600754600160a060020a031633146104bd57600080fd5b6002819055604080514381528082018390526060602082018190526005908201527f67616d6d6100000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b60004382111561059257604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601960248201527f626c6f636b4e756d62657220697320746f6f206c617267652e00000000000000604482015290519081900360640190fd5b5060006105ae600160a060020a0384168363ffffffff610af216565b600314156105bb5761065c565b6105d96105c88484610988565b60005483910263ffffffff610ae316565b90506105f96105e88484610662565b60015483910263ffffffff610ae316565b90506106196106088484610412565b60025483910263ffffffff610ae316565b905061063961062884846106b0565b60035483910263ffffffff610ae316565b90506106596106488484610a1c565b60045483910263ffffffff610ae316565b90505b92915050565b60008061067e600160a060020a0385168463ffffffff610b1716565b905061069181600563ffffffff610ab816565b905060648111156106a557606491506106a9565b8091505b5092915050565b600080806106cd600160a060020a0386168563ffffffff610b3c16565b91506106e082600363ffffffff610ab816565b905060648111156106f457606492506106f8565b8092505b505092915050565b60035481565b600754600160a060020a031681565b60015481565b600754600160a060020a0316331461073257600080fd5b6004819055604080514381528082018390526060602082018190526005908201527f6f6d65676100000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b600754600160a060020a031633146107ad57600080fd5b6001819055604080514381528082018390526060602082018190526004908201527f626574610000000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b60025481565b600754600160a060020a0316331461082e57600080fd5b6003818155604080514381528082018490526060602082018190528101929092527f7073690000000000000000000000000000000000000000000000000000000000608083015251600080516020610b878339815191529181900360a00190a150565b600754600160a060020a031633146108a857600080fd5b6005819055604080514381528082018390526060602082018190526006908201527f77696e646f77000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b600754600160a060020a0316331461092357600080fd5b60008790556001869055600285905560038490556004839055600581905560068290556040805143815290517f78a3671679b68721aaad9eb74535be0be119bd34c0efa671eb6ab3210d1fe2579181900360200190a150505050505050565b60005481565b6000806109a4600160a060020a0385168463ffffffff610b6116565b905060028110156109b857606491506106a9565b60058110156109ca57605a91506106a9565b600f8110156109dc57605091506106a9565b60238110156109ee57604691506106a9565b603c811015610a0057603c91506106a9565b6050811015610a1257602891506106a9565b5060149392505050565b600080610a38600160a060020a0385168463ffffffff610af216565b9050801515610a4a57606491506106a9565b8060011415610a5c57605091506106a9565b50603c9392505050565b60006040518381528260148201526020816034836069600019fa1515610a8b57600080fd5b519392505050565b60006040518381528260148201526020816034836066600019fa1515610a8b57600080fd5b600080831515610acb57600091506106a9565b50828202828482811515610adb57fe5b04146106a557fe5b6000828201838110156106a557fe5b60006040518381528260148201526020816034836065600019fa1515610a8b57600080fd5b60006040518381528260148201526020816034836068600019fa1515610a8b57600080fd5b60006040518381528260148201526020816034836067600019fa1515610a8b57600080fd5b60006040518381528260148201526020816034836064600019fa1515610a8b57600080fd007c2d85cf45868065466ed7df2e23f26349626794d112e41a734a4e34727fcb21a165627a7a723058209ad398f1fae1aeb2692df61f3bcb74f7370346433a5027591ba8ebdf5308a3b10029`
+const RptBin = `0x60806040526032600055600f600155600a600255600f600355600a6004556004600555601560065534801561003357600080fd5b5060078054600160a060020a03191633179055610bd2806100556000396000f30060806040526004361061011c5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306d2d3dc81146101215780632262a1b31461013b57806326121ff01461016257806344cc5c5214610177578063461645bf1461019b5780636d8004c5146101b05780636f126a8f146101c8578063741a35c4146101ec5780637c9f4b661461021057806386f87fdd146102345780638da5cb5b146102495780639faa3c911461027a578063a23f52b81461028f578063ac7dabbc146102a7578063b1373929146102bf578063b2f801c4146102d4578063b98f0056146102ec578063bd5c5f8614610304578063db1d0fd51461032e578063db40a12e14610343578063e81092a514610367575b600080fd5b34801561012d57600080fd5b5061013960043561038b565b005b34801561014757600080fd5b50610150610406565b60408051918252519081900360200190f35b34801561016e57600080fd5b5061015061040c565b34801561018357600080fd5b50610150600160a060020a0360043516602435610412565b3480156101a757600080fd5b506101506104a0565b3480156101bc57600080fd5b506101396004356104a6565b3480156101d457600080fd5b50610150600160a060020a0360043516602435610521565b3480156101f857600080fd5b50610150600160a060020a0360043516602435610662565b34801561021c57600080fd5b50610150600160a060020a03600435166024356106b0565b34801561024057600080fd5b50610150610700565b34801561025557600080fd5b5061025e610706565b60408051600160a060020a039092168252519081900360200190f35b34801561028657600080fd5b50610150610715565b34801561029b57600080fd5b5061013960043561071b565b3480156102b357600080fd5b50610139600435610796565b3480156102cb57600080fd5b50610150610811565b3480156102e057600080fd5b50610139600435610817565b3480156102f857600080fd5b50610139600435610891565b34801561031057600080fd5b5061013960043560243560443560643560843560a43560c43561090c565b34801561033a57600080fd5b50610150610982565b34801561034f57600080fd5b50610150600160a060020a0360043516602435610988565b34801561037357600080fd5b50610150600160a060020a0360043516602435610a1c565b600754600160a060020a031633146103a257600080fd5b6000819055604080514381528082018390526060602082018190526005908201527f616c70686100000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b60045481565b60065481565b6000808080610430600160a060020a0387168663ffffffff610a6616565b92508215156104425760009350610497565b61045b600160a060020a0387168663ffffffff610a9316565b915061047f600a61047384600563ffffffff610ab816565b9063ffffffff610ae316565b905060648111156104935760649350610497565b8093505b50505092915050565b60055481565b600754600160a060020a031633146104bd57600080fd5b6002819055604080514381528082018390526060602082018190526005908201527f67616d6d6100000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b60004382111561059257604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601960248201527f626c6f636b4e756d62657220697320746f6f206c617267652e00000000000000604482015290519081900360640190fd5b5060006105ae600160a060020a0384168363ffffffff610af216565b600314156105bb5761065c565b6105d96105c88484610988565b60005483910263ffffffff610ae316565b90506105f96105e88484610662565b60015483910263ffffffff610ae316565b90506106196106088484610412565b60025483910263ffffffff610ae316565b905061063961062884846106b0565b60035483910263ffffffff610ae316565b90506106596106488484610a1c565b60045483910263ffffffff610ae316565b90505b92915050565b60008061067e600160a060020a0385168463ffffffff610b1716565b905061069181600563ffffffff610ab816565b905060648111156106a557606491506106a9565b8091505b5092915050565b600080806106cd600160a060020a0386168563ffffffff610b3c16565b91506106e082600363ffffffff610ab816565b905060648111156106f457606492506106f8565b8092505b505092915050565b60035481565b600754600160a060020a031681565b60015481565b600754600160a060020a0316331461073257600080fd5b6004819055604080514381528082018390526060602082018190526005908201527f6f6d65676100000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b600754600160a060020a031633146107ad57600080fd5b6001819055604080514381528082018390526060602082018190526004908201527f626574610000000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b60025481565b600754600160a060020a0316331461082e57600080fd5b6003818155604080514381528082018490526060602082018190528101929092527f7073690000000000000000000000000000000000000000000000000000000000608083015251600080516020610b878339815191529181900360a00190a150565b600754600160a060020a031633146108a857600080fd5b6005819055604080514381528082018390526060602082018190526006908201527f77696e646f77000000000000000000000000000000000000000000000000000060808201529051600080516020610b878339815191529181900360a00190a150565b600754600160a060020a0316331461092357600080fd5b60008790556001869055600285905560038490556004839055600581905560068290556040805143815290517f78a3671679b68721aaad9eb74535be0be119bd34c0efa671eb6ab3210d1fe2579181900360200190a150505050505050565b60005481565b6000806109a4600160a060020a0385168463ffffffff610b6116565b905060028110156109b857606491506106a9565b60058110156109ca57605a91506106a9565b600f8110156109dc57605091506106a9565b60238110156109ee57604691506106a9565b603c811015610a0057603c91506106a9565b6050811015610a1257602891506106a9565b5060149392505050565b600080610a38600160a060020a0385168463ffffffff610af216565b9050801515610a4a57606491506106a9565b8060011415610a5c57605091506106a9565b50603c9392505050565b60006040518381528260208201526020816040836069600019fa1515610a8b57600080fd5b519392505050565b60006040518381528260208201526020816040836066600019fa1515610a8b57600080fd5b600080831515610acb57600091506106a9565b50828202828482811515610adb57fe5b04146106a557fe5b6000828201838110156106a557fe5b60006040518381528260208201526020816040836065600019fa1515610a8b57600080fd5b60006040518381528260208201526020816040836068600019fa1515610a8b57600080fd5b60006040518381528260208201526020816040836067600019fa1515610a8b57600080fd5b60006040518381528260208201526020816040836064600019fa1515610a8b57600080fd007c2d85cf45868065466ed7df2e23f26349626794d112e41a734a4e34727fcb21a165627a7a7230582013bcb9ac00daf39fd6c697fae9dcf060986f10550d57f22eb3dbc80f1b1a631d0029`
 
-// DeployRpt deploys a new Ethereum contract, binding an instance of Rpt to it.
+// DeployRpt deploys a new cpchain contract, binding an instance of Rpt to it.
 func DeployRpt(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Rpt, error) {
 	parsed, err := abi.JSON(strings.NewReader(RptABI))
 	if err != nil {
@@ -194,29 +194,29 @@ func DeployRpt(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Ad
 	return address, tx, &Rpt{RptCaller: RptCaller{contract: contract}, RptTransactor: RptTransactor{contract: contract}, RptFilterer: RptFilterer{contract: contract}}, nil
 }
 
-// Rpt is an auto generated Go binding around an Ethereum contract.
+// Rpt is an auto generated Go binding around a cpchain contract.
 type Rpt struct {
 	RptCaller     // Read-only binding to the contract
 	RptTransactor // Write-only binding to the contract
 	RptFilterer   // Log filterer for contract events
 }
 
-// RptCaller is an auto generated read-only Go binding around an Ethereum contract.
+// RptCaller is an auto generated read-only Go binding around a cpchain contract.
 type RptCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// RptTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// RptTransactor is an auto generated write-only Go binding around a cpchain contract.
 type RptTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// RptFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// RptFilterer is an auto generated log filtering Go binding around a cpchain contract events.
 type RptFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// RptSession is an auto generated Go binding around an Ethereum contract,
+// RptSession is an auto generated Go binding around a cpchain contract,
 // with pre-set call and transact options.
 type RptSession struct {
 	Contract     *Rpt              // Generic contract binding to set the session for
@@ -224,31 +224,31 @@ type RptSession struct {
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// RptCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// RptCallerSession is an auto generated read-only Go binding around a cpchain contract,
 // with pre-set call options.
 type RptCallerSession struct {
 	Contract *RptCaller    // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts // Call options to use throughout this session
 }
 
-// RptTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// RptTransactorSession is an auto generated write-only Go binding around a cpchain contract,
 // with pre-set transact options.
 type RptTransactorSession struct {
 	Contract     *RptTransactor    // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// RptRaw is an auto generated low-level Go binding around an Ethereum contract.
+// RptRaw is an auto generated low-level Go binding around a cpchain contract.
 type RptRaw struct {
 	Contract *Rpt // Generic contract binding to access the raw methods on
 }
 
-// RptCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// RptCallerRaw is an auto generated low-level read-only Go binding around a cpchain contract.
 type RptCallerRaw struct {
 	Contract *RptCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// RptTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// RptTransactorRaw is an auto generated low-level write-only Go binding around a cpchain contract.
 type RptTransactorRaw struct {
 	Contract *RptTransactor // Generic write-only contract binding to access the raw methods on
 }
@@ -1223,7 +1223,7 @@ const SafeMathABI = "[]"
 // SafeMathBin is the compiled bytecode used for deploying new contracts.
 const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a723058203c583f566367488ec923b14604a730c6212ec94bca82a871c067b0cbf882af130029`
 
-// DeploySafeMath deploys a new Ethereum contract, binding an instance of SafeMath to it.
+// DeploySafeMath deploys a new cpchain contract, binding an instance of SafeMath to it.
 func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *SafeMath, error) {
 	parsed, err := abi.JSON(strings.NewReader(SafeMathABI))
 	if err != nil {
@@ -1236,29 +1236,29 @@ func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 	return address, tx, &SafeMath{SafeMathCaller: SafeMathCaller{contract: contract}, SafeMathTransactor: SafeMathTransactor{contract: contract}, SafeMathFilterer: SafeMathFilterer{contract: contract}}, nil
 }
 
-// SafeMath is an auto generated Go binding around an Ethereum contract.
+// SafeMath is an auto generated Go binding around a cpchain contract.
 type SafeMath struct {
 	SafeMathCaller     // Read-only binding to the contract
 	SafeMathTransactor // Write-only binding to the contract
 	SafeMathFilterer   // Log filterer for contract events
 }
 
-// SafeMathCaller is an auto generated read-only Go binding around an Ethereum contract.
+// SafeMathCaller is an auto generated read-only Go binding around a cpchain contract.
 type SafeMathCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SafeMathTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// SafeMathTransactor is an auto generated write-only Go binding around a cpchain contract.
 type SafeMathTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SafeMathFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// SafeMathFilterer is an auto generated log filtering Go binding around a cpchain contract events.
 type SafeMathFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SafeMathSession is an auto generated Go binding around an Ethereum contract,
+// SafeMathSession is an auto generated Go binding around a cpchain contract,
 // with pre-set call and transact options.
 type SafeMathSession struct {
 	Contract     *SafeMath         // Generic contract binding to set the session for
@@ -1266,31 +1266,31 @@ type SafeMathSession struct {
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// SafeMathCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// SafeMathCallerSession is an auto generated read-only Go binding around a cpchain contract,
 // with pre-set call options.
 type SafeMathCallerSession struct {
 	Contract *SafeMathCaller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts   // Call options to use throughout this session
 }
 
-// SafeMathTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// SafeMathTransactorSession is an auto generated write-only Go binding around a cpchain contract,
 // with pre-set transact options.
 type SafeMathTransactorSession struct {
 	Contract     *SafeMathTransactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
 }
 
-// SafeMathRaw is an auto generated low-level Go binding around an Ethereum contract.
+// SafeMathRaw is an auto generated low-level Go binding around a cpchain contract.
 type SafeMathRaw struct {
 	Contract *SafeMath // Generic contract binding to access the raw methods on
 }
 
-// SafeMathCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// SafeMathCallerRaw is an auto generated low-level read-only Go binding around a cpchain contract.
 type SafeMathCallerRaw struct {
 	Contract *SafeMathCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// SafeMathTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// SafeMathTransactorRaw is an auto generated low-level write-only Go binding around a cpchain contract.
 type SafeMathTransactorRaw struct {
 	Contract *SafeMathTransactor // Generic write-only contract binding to access the raw methods on
 }

@@ -31,7 +31,7 @@ import (
 
 var (
 	endPoint                = "http://localhost:8501"
-	keyStoreFilePath        = "./examples/cpchain/data/dd1/keystore/"
+	keyStoreFilePath        = "/chain/examples/cpchain/data/data1/keystore/"
 	DefaultCPUDifficulty    = uint64(25)
 	DefaultMemoryDifficulty = uint64(25)
 )

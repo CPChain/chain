@@ -33,23 +33,19 @@ type GetRank struct {
 }
 
 func (c *GetRank) RequiredGas(input []byte) uint64 {
-	return configs.GetRank
+	return configs.GetRankGas
 }
 
 func (c *GetRank) Run(input []byte) ([]byte, error) {
-	const getBalanceInputLength = 52
-
-	if len(input) != getBalanceInputLength {
-		log.Warnf("The expected input is %d bytes, but got %d", getBalanceInputLength, len(input))
+	addr, number, err := extractRptPrimitivesArgs(input)
+	if err != nil {
+		log.Warnf("primitive_rank got error %v\n", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-
-	addr := common.Bytes2Hex(input[0:20])
-	number := new(big.Int).SetBytes(input[20:52])
-	log.Infof("primitive_coinage, address %s, block number %d", addr, number)
+	log.Infof("primitive_rank, address %s, block number %d\n", addr.Hex(), number)
 
 	// TODO: @AC get cpchain Backend and read balance.
-	coinAge, err := c.Backend.Rank(common.HexToAddress(addr), number.Uint64())
+	coinAge, err := c.Backend.Rank(addr, number)
 	if err != nil {
 		log.Fatal("NewBasicCollector,error", err)
 	}

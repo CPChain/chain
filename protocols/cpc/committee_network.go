@@ -261,11 +261,11 @@ type BasicCommitteeHandler struct {
 }
 
 // NewBasicCommitteeNetworkHandler creates a BasicCommitteeNetworkHandler instance
-func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, etherbase common.Address) (*BasicCommitteeHandler, error) {
+func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, cpcbase common.Address) (*BasicCommitteeHandler, error) {
 	bc := &BasicCommitteeHandler{
-		ownAddress:      etherbase,
+		ownAddress:      cpcbase,
 		contractAddress: config.Contracts["signer"],
-		remoteSigners:   make([]*RemoteSigner, config.Epoch),
+		remoteSigners:   make([]*RemoteSigner, config.TermLen),
 		// remoteSigners:   make([]*RemoteSigner, config.Epoch-1),
 		connected: false,
 	}
