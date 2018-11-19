@@ -9,7 +9,7 @@ option go_package = "cpc";
 
 package cpc;
 
-// Coinbase provides an API to access Ethereum full node-related
+// Coinbase provides an API to access Cpchain full node-related
 service Coinbase {
     // Coinbase is the address that mining rewards will be send to 
     rpc Coinbase(google.protobuf.Empty) returns (common.Address) {
@@ -44,7 +44,7 @@ service AccountReader {
     }
 }
 
-// ChainStateReader provides an API to access the Ethereum blockchain.
+// ChainStateReader provides an API to access the Cpchain blockchain.
 // It offers only methods that operate on public data that is freely available to anyone.
 service ChainStateReader {
     // GasPrice returns a suggestion for a gas price.
@@ -55,7 +55,7 @@ service ChainStateReader {
         };
     }
 
-    // ProtocolVersion returns the current Ethereum protocol version this node supports
+    // ProtocolVersion returns the current Cpchain protocol version this node supports
     rpc ProtocolVersion(google.protobuf.Empty) returns (google.protobuf.UInt32Value) {
         option (google.api.http) = {
             post : "/api/v1/cpc/protocolVersion"
@@ -87,7 +87,7 @@ message ChainReaderRequest {
     bool isFull = 4;
 }
 
-// ChainReader provides an API to access the Ethereum blockchain.
+// ChainReader provides an API to access the Cpchain blockchain.
 // It offers only methods that operate on public data that is freely available to anyone.
 service ChainReader {
     // GetBlockCount returns the block number of the chain head.
