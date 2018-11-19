@@ -91,3 +91,4 @@ dpor
         i. The validator committee follows the PBFT protocol.
         #. The system can reach a consensus, as long as the number of total faulty validators are less than f.
     #. Abnormal Case 6:
+        i. 
