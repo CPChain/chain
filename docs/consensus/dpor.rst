@@ -79,10 +79,10 @@ dpor
     #. Abnormal Case 2: *Validators does not receive a block from the proposer*
         i. It is for the case when Step 2.a.v cannot be reached
         #. After a validator sends out its address to the proposer, it sets up a timer
-        #. If the timer expires, the validator committee starts a three-phase protocol in PBFT manner to propose the block
+        #. If the timer expires, the validator committee activates *impeachment*, a three-phase protocol in PBFT manner to propose the block
     #. Abnormal Case 3: *The proposer proposes one or more faulty blocks*
         i. Faulty blocks cannot be validated in Step 2.b.i
-        #. It is handled case Abnormal Case 2
+        #. The validator committee activates impeachment
     #. Abnormal Case 4: *The proposer proposes multiple valid blocks*
         i. Each validator can only validate one block for a same block number
         #. Thus, it is impossible for two or more blocks to receive 2f+1 PREPARE messages simultaneously. Only one block can enter Step 2.b.4
@@ -91,4 +91,26 @@ dpor
         i. The validator committee follows the PBFT protocol.
         #. The system can reach a consensus, as long as the number of total faulty validators are less than f.
     #. Abnormal Case 6:
-        i. 
+        i. It is for the cases when 2f+1 PREPARE messages, COMMIT messages or 2f+1 VALIDATION messages cannot be collected
+        #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATION messages
+        #. Any of these timer expires, the validator committee activates *impeachment*
+#. **Impeachment**
+    a. It is an abnormal handler when the proposer is either faulty, or no responding
+    #. It is a PBFT three-phase protocol, consisting of *pre-prepare*, *prepare* and *commit* phases.
+    #. There is a *leader* in validator committee takes the responsibility to propose a block when the impeachment is activated
+    #. Impeach steps:
+        i. The leader broadcasts PRE-PREPARE messages to all validators, indicating the proposer is not working properly
+        #. After receiving a PRE-PREPARE message, each validator broadcasts a PREPARE message to all validators
+        #. Once receives 2f+1 PREPARE messages, a validator broadcasts COMMIT message to other validators
+        #. Once received 2f+1 COMMIT messages, a validator inserts the block into local chain, and broadcasts VALIDATION message to all users
+        #. All users insert the block into local chain, if they receive f+1 VALIDATION messages
+    #. Each validator takes the role of leader one by one for one view
+    #. Leader change
+        i. *View change* is activated when leader is faulty
+        #. A validator suspects the leader is faulty, when any of following situations happens
+            - The validator committee should start the impeachment, but the timers expires and the validator does not receive PRE-PREPARE message
+            - The validator committee should not start the impeachment, and the validator receive a PRE-PREPARE message from the leader
+        #. If a validator suspects the leader, it broadcasts a VIEW-CHANGE message to all validators
+        #. If the leader of the next view collects 2f+1 VIEW-CHANGE messages, it broadcasts a NEW-LEADER message to all validator
+        #. Other validators accepts this NEW-LEADER message if they receive 2f VIEW-CHANGE messages
+        #. The new leader takes the responsibility of proposing block, as in the Step 4.d.i
