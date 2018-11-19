@@ -17,19 +17,20 @@
 package dpor
 
 import (
-	"bytes"
-	"errors"
-	"math/big"
-	"time"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/types"
+	"bytes"
+	"context"
+	"errors"
 	"github.com/ethereum/go-ethereum/common"
+	"math/big"
+	"time"
 )
 
 // Dpor proof-of-reputation protocol constants.
@@ -349,4 +350,51 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 	// }
 
 	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
+}
+
+//RNode return current RNode address
+func (d *Dpor) RNode(view_idx *big.Int) []common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	instance, err := campaign.NewCampaign(d.config.Contracts["campaign"], d.contractCaller.Client)
+	if err != nil {
+		log.Fatal("can not new a Campaign instance address", err)
+	}
+	RNodeAddress, err := instance.CandidatesOf(nil, view_idx)
+	if err != nil {
+		log.Fatal("can not get RNode address", err)
+	}
+	return RNodeAddress
+}
+
+func (d *Dpor) CurrentView() uint64 {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	vl, tl := d.config.ViewLen, d.config.TermLen
+	bn := rpc.LatestBlockNumber
+	View := (uint64(bn) - (uint64(bn) / (vl * tl))) / vl
+	return View
+}
+
+func (d *Dpor) CurrentTerm() uint64 {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	vl, tl := d.config.ViewLen, d.config.TermLen
+	bn := rpc.LatestBlockNumber
+	Term := uint64(bn) / (vl * tl)
+	return Term
+}
+
+func (d *Dpor) CommitteMember(number *big.Int) []common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	header, err := d.contractCaller.Client.HeaderByNumber(context.Background(), number)
+	if err != nil {
+		log.Fatal("err in CommitteMember,can't get header", err)
+	}
+	committee := make([]common.Address, (len(header.Extra)-extraVanity-extraSeal)/common.AddressLength)
+	for i := 0; i < len(committee); i++ {
+		copy(committee[i][:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
+	}
+	return committee
 }

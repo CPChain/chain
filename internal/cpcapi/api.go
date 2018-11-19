@@ -473,33 +473,98 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
 }
 
+func (s *PublicBlockChainAPI) GetRNodesAddress(view_idex *big.Int) []common.Address {
+	var rNodeAddress []common.Address
+	if view_idex == nil {
+		rNodeAddress = s.b.RNode(big.NewInt(rpc.LatestBlockNumber.Int64()))
+	}
+	rNodeAddress = s.b.RNode(view_idex)
+	return rNodeAddress
+}
+
 // Query RNodes.
-func (s *PublicBlockChainAPI) GetRNodes() []common.Address {
+func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *big.Int) cpclient.RNode {
 	// TODO fill biz logic later
-	return []common.Address{common.HexToAddress("01"), common.HexToAddress("02")}
+	var rNodeAddress []common.Address
+	var committeAddress []common.Address
+
+	Score := s.b.CalcRptInfo(nodeAddress, view_idex.Uint64())
+
+	if view_idex == nil {
+		rNodeAddress = s.b.RNode(big.NewInt(rpc.LatestBlockNumber.Int64()))
+		committeAddress = s.b.CommitteMember(big.NewInt(rpc.LatestBlockNumber.Int64()))
+	}
+	rNodeAddress = s.b.RNode(view_idex)
+	committeAddress = s.b.CommitteMember(view_idex)
+	for _, address := range committeAddress {
+		if nodeAddress == address {
+			return cpclient.RNode{
+				Address: nodeAddress,
+				Rpt:     Score.Rpt,
+				Status:  cpclient.Committe,
+			}
+		} else {
+			for _, address := range rNodeAddress {
+				if address == nodeAddress {
+					return cpclient.RNode{
+						Address: nodeAddress,
+						Rpt:     Score.Rpt,
+						Status:  cpclient.Cadidate,
+					}
+				}
+			}
+		}
+	}
+	return cpclient.RNode{
+		Address: nodeAddress,
+		Rpt:     Score.Rpt,
+		Status:  cpclient.Civilian,
+	}
+	//return []common.Address{common.HexToAddress("01"), common.HexToAddress("02")}
 }
 
-func (s *PublicBlockChainAPI) GetCurrentRound() uint64 {
+func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
 	// TODO fill biz logic later
-	return 7
+	CurrentView := s.b.CurrentView()
+	return CurrentView
 }
 
-func (s *PublicBlockChainAPI) GetCurrentEpoch() uint64 {
+func (s *PublicBlockChainAPI) GetCurrentTerm() uint64 {
 	// TODO fill biz logic later
-	return 10
+	CurrentTerm := s.b.CurrentTerm()
+	return CurrentTerm
 }
 
 func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committee {
 	// TODO fill biz logic later
-	return []cpclient.Committee{
-		{Epoch: 1, Round: 1, Producer: common.HexToAddress("01"), PublicKey: "012345", Block: 1111},
-		{Epoch: 1, Round: 2, Producer: common.HexToAddress("02"), PublicKey: "012345", Block: 1112},
-		{Epoch: 1, Round: 3, Producer: common.HexToAddress("03"), PublicKey: "012345", Block: 1113},
-		{Epoch: 1, Round: 4, Producer: common.HexToAddress("04"), PublicKey: "012345", Block: 1114},
-		{Epoch: 1, Round: 5, Producer: common.HexToAddress("05"), PublicKey: "012345", Block: 1115},
-		{Epoch: 1, Round: 6, Producer: common.HexToAddress("06"), PublicKey: "012345", Block: 1116},
-		{Epoch: 1, Round: 7, Producer: common.HexToAddress("07"), PublicKey: "012345", Block: 1117},
+
+	v := s.b.CurrentView()
+	t := s.b.CurrentTerm()
+
+	header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
+	if err != nil {
+		log.Fatal("can't get header", err)
 	}
+
+	for i := uint64(0); i < t; i++ {
+		header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
+		if err != nil {
+			log.Fatal("can't get header", err)
+		}
+		committee := cpclient.Committee{
+			View: v, Term: t, Producer: header.Coinbase,
+		}
+	}
+	//return []cpclient.Committee{
+	//	{View: 1, Term: 1, Producer: common.HexToAddress("01"), PublicKey: "012345", Block: 1111},
+	//	{View: 1, Term: 2, Producer: common.HexToAddress("02"), PublicKey: "012345", Block: 1112},
+	//	{View: 1, Term: 3, Producer: common.HexToAddress("03"), PublicKey: "012345", Block: 1113},
+	//	{View: 1, Term: 4, Producer: common.HexToAddress("04"), PublicKey: "012345", Block: 1114},
+	//	{View: 1, Term: 5, Producer: common.HexToAddress("05"), PublicKey: "012345", Block: 1115},
+	//	{View: 1, Term: 6, Producer: common.HexToAddress("06"), PublicKey: "012345", Block: 1116},
+	//	{View: 1, Term: 7, Producer: common.HexToAddress("07"), PublicKey: "012345", Block: 1117},
+	//}
+
 }
 
 // BlockNumber returns the block number of the chain head.

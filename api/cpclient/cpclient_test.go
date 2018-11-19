@@ -68,7 +68,7 @@ func TestGetCurrentEpoch(t *testing.T) {
 	fmt.Println(currentEpoch)
 
 	if err != nil {
-		t.Errorf("GetCurrentEpoch failed")
+		t.Errorf("GetCurrentTerm failed")
 	}
 }
 
@@ -84,7 +84,7 @@ func TestGetCurrentRound(t *testing.T) {
 	fmt.Println(currentRound)
 
 	if err != nil {
-		t.Errorf("GetCurrentRound failed")
+		t.Errorf("GetCurrentView failed")
 	}
 }
 

@@ -253,11 +253,24 @@ type rpcProgress struct {
 }
 
 type Committee struct {
-	Epoch     uint64 // contain 21 round in each epoch
-	Round     uint64
+	View      uint64 // contain 21 round in each epoch
+	Term      uint64
 	Producer  common.Address
 	PublicKey string
 	Block     uint64 // hight
+}
+
+//node status
+const (
+	Committe = iota
+	Cadidate
+	Civilian
+)
+
+type RNode struct {
+	Address common.Address //RNode address
+	Rpt     int64
+	Status  int
 }
 
 // SyncProgress retrieves the current progress of the sync algorithm. If there's
