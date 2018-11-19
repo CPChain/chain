@@ -58,7 +58,7 @@ func (c *Coinbase) RegisterJsonRpc(ctx context.Context, mux *runtime.ServeMux, e
 
 // Coinbase is the address that mining rewards will be send to
 func (c *Coinbase) Coinbase(ctx context.Context, req *empty.Empty) (*common.Address, error) {
-	addr, err := c.c.Etherbase()
+	addr, err := c.c.Cpcbase()
 	return &common.Address{Address: addr.String()}, err
 }
 

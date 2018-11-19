@@ -173,7 +173,7 @@ func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
 
 // begin chain configs ********************************************************************88
 
-// Updates the account for cfg.Etherbase
+// Updates the account for cfg.Cpcbase
 func updateBaseAccount(ctx *cli.Context, ks *keystore.KeyStore, cfg *cpc.Config) {
 	if ctx.IsSet("account") {
 		val := ctx.String("account")
@@ -181,14 +181,14 @@ func updateBaseAccount(ctx *cli.Context, ks *keystore.KeyStore, cfg *cpc.Config)
 			log.Fatalf("Invalid account hex address: %v", val)
 		}
 		account := accounts.Account{Address: common.HexToAddress(val)}
-		cfg.Etherbase = account.Address
+		cfg.Cpcbase = account.Address
 	} else {
 		isRunCommand := ctx.Command.Name == runCommand.Name
 		// fall back on the first account
 		accs := ks.Accounts()
 		if len(accs) > 0 {
 			account := accs[0].Address
-			cfg.Etherbase = account
+			cfg.Cpcbase = account
 			// only log if we are running
 			if isRunCommand {
 				log.Warnf("Use account %v as the default account.", account.String())

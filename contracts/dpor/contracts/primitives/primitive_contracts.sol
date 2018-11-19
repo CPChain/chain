@@ -5,8 +5,8 @@ library PrimitiveContractsInterface {
         assembly {
             let p := mload(0x40)
             mstore(p, addr)
-            mstore(add(p, 0x14), blockNum)
-            if iszero(staticcall(not(0), 0x64, p, 0x34, p, 0x20)) {
+            mstore(add(p, 0x20), blockNum)
+            if iszero(staticcall(not(0), 0x64, p, 0x40, p, 0x20)) {
                 revert(0, 0)
             }
             b := mload(p)
@@ -17,8 +17,8 @@ library PrimitiveContractsInterface {
         assembly {
             let p := mload(0x40)
             mstore(p, addr)
-            mstore(add(p, 0x14), blockNum)
-            if iszero(staticcall(not(0), 0x65, p, 0x34, p, 0x20)) {
+            mstore(add(p, 0x20), blockNum)
+            if iszero(staticcall(not(0), 0x65, p, 0x40, p, 0x20)) {
                 revert(0, 0)
             }
             b := mload(p)
@@ -29,8 +29,8 @@ library PrimitiveContractsInterface {
         assembly {
             let p := mload(0x40)
             mstore(p, addr)
-            mstore(add(p, 0x14), blockNum)
-            if iszero(staticcall(not(0), 0x66, p, 0x34, p, 0x20)) {
+            mstore(add(p, 0x20), blockNum)
+            if iszero(staticcall(not(0), 0x66, p, 0x40, p, 0x20)) {
                 revert(0, 0)
             }
             b := mload(p)
@@ -41,8 +41,8 @@ library PrimitiveContractsInterface {
         assembly {
             let p := mload(0x40)
             mstore(p, addr)
-            mstore(add(p, 0x14), blockNum)
-            if iszero(staticcall(not(0), 0x67, p, 0x34, p, 0x20)) {
+            mstore(add(p, 0x20), blockNum)
+            if iszero(staticcall(not(0), 0x67, p, 0x40, p, 0x20)) {
                 revert(0, 0)
             }
             b := mload(p)
@@ -53,8 +53,8 @@ library PrimitiveContractsInterface {
         assembly {
             let p := mload(0x40)
             mstore(p, addr)
-            mstore(add(p, 0x14), blockNum)
-            if iszero(staticcall(not(0), 0x68, p, 0x34, p, 0x20)) {
+            mstore(add(p, 0x20), blockNum)
+            if iszero(staticcall(not(0), 0x68, p, 0x40, p, 0x20)) {
                 revert(0, 0)
             }
             b := mload(p)
@@ -65,8 +65,8 @@ library PrimitiveContractsInterface {
         assembly {
             let p := mload(0x40)
             mstore(p, addr)
-            mstore(add(p, 0x14), blockNum)
-            if iszero(staticcall(not(0), 0x69, p, 0x34, p, 0x20)) {
+            mstore(add(p, 0x20), blockNum)
+            if iszero(staticcall(not(0), 0x69, p, 0x40, p, 0x20)) {
                 revert(0, 0)
             }
             b := mload(p)

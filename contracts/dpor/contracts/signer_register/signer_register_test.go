@@ -56,7 +56,7 @@ func TestSignerRegister(t *testing.T) {
 
 func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *SignerConnectionRegister, context.Context) {
 	// create client.
-	// client, err := ethclient.Dial("https://rinkeby.infura.io")
+	// client, err := cpchain.Dial("https://rinkeby.infura.io")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {

@@ -38,8 +38,8 @@ type testcpchain struct {
 	*cmdtest.TestCmd
 
 	// template variables for expect
-	Datadir   string
-	Etherbase string
+	Datadir string
+	Cpcbase string
 }
 
 func init() {
@@ -72,9 +72,9 @@ func runCpchain(t *testing.T, args ...string) *testcpchain {
 			if i < len(args)-1 {
 				tt.Datadir = args[i+1]
 			}
-		case arg == "-etherbase" || arg == "--etherbase":
+		case arg == "-cpcbase" || arg == "--cpcbase":
 			if i < len(args)-1 {
-				tt.Etherbase = args[i+1]
+				tt.Cpcbase = args[i+1]
 			}
 		}
 	}

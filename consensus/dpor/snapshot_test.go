@@ -52,7 +52,7 @@ func (*fakeDb) NewBatch() database.Batch {
 }
 
 func Test_newSnapshot(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3, View: 3}, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress())
 	equal := reflect.DeepEqual(snap.SignersOf(1), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
@@ -114,7 +114,7 @@ func TestSnapshot_store(t *testing.T) {
 	}
 
 	cache, _ := lru.NewARC(inmemorySnapshots)
-	config := &configs.DporConfig{Period: 3, Epoch: 3}
+	config := &configs.DporConfig{Period: 3, TermLen: 3}
 
 	tests := []struct {
 		name    string
@@ -152,7 +152,7 @@ func TestSnapshot_store(t *testing.T) {
 }
 
 func TestSnapshot_copy(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3, View: 3}, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress())
 	snap.Candidates = getCandidates()
 
 	cpySnap := snap.copy()
@@ -508,7 +508,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			got, err := s.SignerRoundOf(tt.args.signer, tt.fields.Number)
+			got, err := s.SignerViewOf(tt.args.signer, tt.fields.Number)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.signerRound(%v) error = %v, wantErr %v", tt.args.signer, err, tt.wantErr)
 				return
@@ -521,7 +521,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 }
 
 func TestSnapshot_isSigner(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, Epoch: 3, View: 3}, 1, common.Hash{}, getSignerAddress()[1:2])
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress()[1:2])
 	isSinger := snap.IsSignerOf(addr1, 1)
 	if isSinger {
 		t.Errorf("expected isSinger %v,get %v", false, isSinger)
@@ -570,7 +570,7 @@ func TestSnapshot_isNotLeader(t *testing.T) {
 
 func TestSnapshot_signerRoundFail(t *testing.T) {
 	snap := createSnapshot()
-	round, err := snap.SignerRoundOf(addr4, snap.Number)
+	round, err := snap.SignerViewOf(addr4, snap.Number)
 	if err == nil || round != -1 {
 		t.Errorf("expect round %v, get %v", -1, round)
 	}
@@ -578,17 +578,17 @@ func TestSnapshot_signerRoundFail(t *testing.T) {
 
 func TestSnapshot_signerRoundOk(t *testing.T) {
 	snap := createSnapshot()
-	round, err := snap.SignerRoundOf(addr1, snap.Number)
+	round, err := snap.SignerViewOf(addr1, snap.Number)
 	if err != nil || round != 0 {
 		t.Errorf("expect round %v, get %v", 0, round)
 	}
 
-	round, err = snap.SignerRoundOf(addr2, snap.Number)
+	round, err = snap.SignerViewOf(addr2, snap.Number)
 	if err != nil || round != 1 {
 		t.Errorf("expect round %v, get %v", 1, round)
 	}
 
-	round, err = snap.SignerRoundOf(addr3, snap.Number)
+	round, err = snap.SignerViewOf(addr3, snap.Number)
 	if err != nil || round != 2 {
 		t.Errorf("expect round %v, get %v", 2, round)
 	}
@@ -596,7 +596,7 @@ func TestSnapshot_signerRoundOk(t *testing.T) {
 
 func createSnapshot() *DporSnapshot {
 	signers := getSignerAddress()
-	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	// cache, _ := lru.NewARC(inmemorySnapshots)
 	snap := newSnapshot(config, 1, common.Hash{}, signers)
 	return snap
@@ -637,7 +637,7 @@ func TestSnapshot_candidates(t *testing.T) {
 
 func TestSnapshot_inturn(t *testing.T) {
 	signers := getSignerAddress()
-	config := &configs.DporConfig{Period: 3, Epoch: 3, View: 3}
+	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	// cache, _ := lru.NewARC(inmemorySnapshots)
 	snap := newSnapshot(config, 1, common.Hash{}, signers)
 

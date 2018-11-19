@@ -51,18 +51,18 @@ func (s *Signatures) SetSig(addr common.Address, sig []byte) {
 }
 
 // IsCheckPoint returns if a given block number is in a checkpoint with given
-// epochLength and viewLength
-func IsCheckPoint(number uint64, epochL uint64, viewL uint64) bool {
-	if epochL == 0 || viewL == 0 {
+// termLen and viewLen
+func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
+	if termLen == 0 || viewLen == 0 {
 		return true
 	}
-	return number%(epochL*viewL) == 0
+	return number%(termLen*viewLen) == 0
 }
 
 type dporUtil interface {
 	sigHash(header *types.Header) (hash common.Hash)
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)
-	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, epochL uint) (bool, error)
+	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, termLen uint) (bool, error)
 	percentagePBFT(n uint, N uint) bool
 	calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int
 }
@@ -179,7 +179,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 }
 
 // acceptSigs checks that signatures have enough signatures to accept the block.
-func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, epochL uint) (bool, error) {
+func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, termLen uint) (bool, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -198,8 +198,8 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 		return false, errNoSigsInCache
 	}
 
-	// num of sigs must > 2/3 * epochLength, leader must be in the sigs.
-	if d.percentagePBFT(numSigs, epochL) {
+	// num of sigs must > 2/3 * termLen, leader must be in the sigs.
+	if d.percentagePBFT(numSigs, termLen) {
 		accept = true
 	}
 

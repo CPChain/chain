@@ -8,17 +8,19 @@ echo "deploy time:$now"
 
 cd ..
 cur_dir=$(cd "$(dirname "$0")";pwd)
-#echo ${cur_dir}
+echo "current dir:${cur_dir}"
 
-cd ../../../../
+cd build/_workspace
+
+pwd
+
 shell_dir=$(cd "$(dirname "$0")";pwd)
-#echo "shell_dir:${shell_dir}"
+echo "shell_dir:${shell_dir}"
+
 export GOPATH=${shell_dir}
+echo "GOPATH:${GOPATH}"
 
 
-cd ${cur_dir}
 
-echo "" >> /tmp/init_contract.log
-echo "" >> /tmp/init_contract.log
-echo "Current time : $now" >> /tmp/init_contract.log
-go run ${GOPATH}/src/bitbucket.org/cpchain/chain/tools/smartcontract/main.go >> /tmp/init_contract.log
+echo "Current time : $now"
+go run ${GOPATH}/src/bitbucket.org/cpchain/chain/tools/smartcontract/main.go

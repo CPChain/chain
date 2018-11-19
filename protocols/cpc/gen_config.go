@@ -31,7 +31,7 @@ func (c Config) MarshalTOML() (interface{}, error) {
 		DatabaseCache           int
 		TrieCache               int
 		TrieTimeout             time.Duration
-		Etherbase               common.Address `toml:",omitempty"`
+		Cpcbase                 common.Address `toml:",omitempty"`
 		MinerThreads            int            `toml:",omitempty"`
 		ExtraData               hexutil.Bytes  `toml:",omitempty"`
 		GasPrice                *big.Int
@@ -54,7 +54,7 @@ func (c Config) MarshalTOML() (interface{}, error) {
 	enc.DatabaseCache = c.DatabaseCache
 	enc.TrieCache = c.TrieCache
 	enc.TrieTimeout = c.TrieTimeout
-	enc.Etherbase = c.Etherbase
+	enc.Cpcbase = c.Cpcbase
 	enc.MinerThreads = c.MinerThreads
 	enc.ExtraData = c.ExtraData
 	enc.GasPrice = c.GasPrice
@@ -81,7 +81,7 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		DatabaseCache           *int
 		TrieCache               *int
 		TrieTimeout             *time.Duration
-		Etherbase               *common.Address `toml:",omitempty"`
+		Cpcbase                 *common.Address `toml:",omitempty"`
 		MinerThreads            *int            `toml:",omitempty"`
 		ExtraData               *hexutil.Bytes  `toml:",omitempty"`
 		GasPrice                *big.Int
@@ -129,8 +129,8 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	if dec.TrieTimeout != nil {
 		c.TrieTimeout = *dec.TrieTimeout
 	}
-	if dec.Etherbase != nil {
-		c.Etherbase = *dec.Etherbase
+	if dec.Cpcbase != nil {
+		c.Cpcbase = *dec.Cpcbase
 	}
 	if dec.MinerThreads != nil {
 		c.MinerThreads = *dec.MinerThreads

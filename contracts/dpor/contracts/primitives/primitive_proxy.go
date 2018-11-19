@@ -35,23 +35,19 @@ type GetProxyCount struct {
 }
 
 func (c *GetProxyCount) RequiredGas(input []byte) uint64 {
-	return configs.GetProxyReward
+	return configs.IsProxyGas
 }
 
 func (c *GetProxyCount) Run(input []byte) ([]byte, error) {
-	const getBalanceInputLength = 52
-
-	if len(input) != getBalanceInputLength {
-		log.Warnf("The expected input is %d bytes, but got %d", getBalanceInputLength, len(input))
+	addr, number, err := extractRptPrimitivesArgs(input)
+	if err != nil {
+		log.Warnf("primitive_proxy_count got error %v", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-
-	addr := common.Bytes2Hex(input[0:20])
-	number := new(big.Int).SetBytes(input[20:52])
-	log.Infof("GetProxyCount, address %s, block number %d", addr, number)
+	log.Info("primitive_proxy_count", "address", addr.Hex(), "block number", number)
 
 	// TODO: @AC get cpchain Backend and read balance.
-	_, proxyCount, err := c.Backend.ProxyInfo(common.HexToAddress(addr), number.Uint64())
+	_, proxyCount, err := c.Backend.ProxyInfo(addr, number)
 	if err != nil {
 		log.Fatal("NewBasicCollector,error", err)
 	}
@@ -64,22 +60,18 @@ type IsProxy struct {
 }
 
 func (c *IsProxy) RequiredGas(input []byte) uint64 {
-	return configs.GetProxyReward
+	return configs.IsProxyGas
 }
 
 func (c *IsProxy) Run(input []byte) ([]byte, error) {
-	const getBalanceInputLength = 52
-
-	if len(input) != getBalanceInputLength {
-		log.Warnf("The expected input is %d bytes, but got %d", getBalanceInputLength, len(input))
+	addr, number, err := extractRptPrimitivesArgs(input)
+	if err != nil {
+		log.Warnf("primitive_is_proxy got error %v\n", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
+	log.Infof("primitive_is_proxy, address %s, block number %d", addr.Hex(), number)
 
-	addr := common.Bytes2Hex(input[0:20])
-	number := new(big.Int).SetBytes(input[20:52])
-	log.Infof("primitive_proxyreward, address %s, block number %d", addr, number)
-
-	isProxy, _, err := c.Backend.ProxyInfo(common.HexToAddress(addr), number.Uint64())
+	isProxy, _, err := c.Backend.ProxyInfo(addr, number)
 	if err != nil {
 		log.Fatal("NewBasicCollector,error", err)
 	}

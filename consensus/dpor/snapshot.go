@@ -18,8 +18,8 @@ import (
 
 const (
 
-	// EpochGapBetweenElectionAndMining is the the epoch gap between election and mining.
-	EpochGapBetweenElectionAndMining = 3
+	// TermGapBetweenElectionAndMining is the the term gap between election and mining.
+	TermGapBetweenElectionAndMining = 3
 
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
 	MaxSizeOfRecentSigners = 5
@@ -40,7 +40,7 @@ type Snapshot interface {
 	updateRpts(header *types.Header) (rpt.RptList, error)
 	updateSigner(rpts rpt.RptList, seed int64, viewLength int) error
 	signers() []common.Address
-	signerRound(signer common.Address) (int, error)
+	signerViewOf(signer common.Address) (int, error)
 	isSigner(signer common.Address) bool
 	isLeader(signer common.Address, number uint64) (bool, error)
 	candidates() []common.Address
@@ -114,17 +114,17 @@ func (s *DporSnapshot) recentSigners() map[uint64][]common.Address {
 	defer s.lock.RUnlock()
 
 	recentSigners := make(map[uint64][]common.Address)
-	for epochIdx, signers := range s.RecentSigners {
-		recentSigners[epochIdx] = signers
+	for term, signers := range s.RecentSigners {
+		recentSigners[term] = signers
 	}
 	return recentSigners
 }
 
-func (s *DporSnapshot) getRecentSigners(epochIdx uint64) []common.Address {
+func (s *DporSnapshot) getRecentSigners(term uint64) []common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	signers, ok := s.RecentSigners[epochIdx]
+	signers, ok := s.RecentSigners[term]
 	if !ok {
 		return nil
 	}
@@ -132,17 +132,18 @@ func (s *DporSnapshot) getRecentSigners(epochIdx uint64) []common.Address {
 	return signers
 }
 
-func (s *DporSnapshot) setRecentSigners(epochIdx uint64, signers []common.Address) {
+func (s *DporSnapshot) setRecentSigners(term uint64, signers []common.Address) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	ss := make([]common.Address, len(signers))
 	copy(ss, signers)
-	s.RecentSigners[epochIdx] = ss
 
-	beforeEpochIdx := uint64(math.Max(0, float64(epochIdx-MaxSizeOfRecentSigners)))
-	if _, ok := s.RecentSigners[beforeEpochIdx]; ok {
-		delete(s.RecentSigners, beforeEpochIdx)
+	s.RecentSigners[term] = ss
+
+	beforeTerm := uint64(math.Max(0, float64(term-MaxSizeOfRecentSigners)))
+	if _, ok := s.RecentSigners[beforeTerm]; ok {
+		delete(s.RecentSigners, beforeTerm)
 	}
 
 }
@@ -172,7 +173,7 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, si
 		RecentSigners: make(map[uint64][]common.Address),
 	}
 
-	snap.setRecentSigners(snap.EpochIdx(), signers)
+	snap.setRecentSigners(snap.Term(), signers)
 	return snap
 }
 
@@ -218,8 +219,8 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 	}
 
 	copy(cpy.Candidates, s.candidates())
-	for epochIdx, signers := range s.recentSigners() {
-		cpy.setRecentSigners(epochIdx, signers)
+	for term, signers := range s.recentSigners() {
+		cpy.setRecentSigners(term, signers)
 	}
 
 	return cpy
@@ -282,7 +283,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	}
 
 	// If in checkpoint, run election
-	if IsCheckPoint(s.number(), s.config.Epoch, s.config.View) {
+	if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
 		seed := header.Hash().Big().Int64()
 		err := s.updateSigners(rpts, seed)
 		if err != nil {
@@ -330,7 +331,7 @@ func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 	// 	}
 
 	// 	// If useful, use it!
-	// 	if uint64(len(cds)) > s.config.Epoch {
+	// 	if uint64(len(cds)) > s.config.TermLen {
 	// 		candidates = cds
 	// 	}
 	// }
@@ -357,17 +358,17 @@ func (s *DporSnapshot) ifUseDefaultSigners() bool {
 }
 
 func (s *DporSnapshot) ifStartElection() bool {
-	return s.number() >= s.config.MaxInitBlockNumber-(s.config.Epoch*(EpochGapBetweenElectionAndMining-1)*s.config.View)
+	return s.number() >= s.config.MaxInitBlockNumber-(s.config.TermLen*(TermGapBetweenElectionAndMining-1)*s.config.ViewLen)
 }
 
 // updateSigner use rpt and election result to get new committee(signers)
 func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 
-	signers := s.candidates()[:s.config.Epoch]
+	signers := s.candidates()[:s.config.TermLen]
 
 	// Use default signers
 	if s.ifUseDefaultSigners() {
-		s.setRecentSigners(s.EpochIdx()+1, signers)
+		s.setRecentSigners(s.Term()+1, signers)
 	}
 
 	// Elect signers
@@ -379,10 +380,10 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 			log.Debug("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
 		}
 		log.Debug("seed", "seed", seed)
-		log.Debug("epoch length", "epoch", int(s.config.Epoch))
-		log.Debug("---------------------------")
+		log.Debug("term length", "term", int(s.config.TermLen))
+		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
 
-		signers := election.Elect(rpts, seed, int(s.config.Epoch))
+		signers := election.Elect(rpts, seed, int(s.config.TermLen))
 
 		log.Debug("elected signers:")
 
@@ -393,14 +394,14 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 
 		log.Debug("snap.number", "n", s.number())
 
-		epochIdx := s.FutureEpochIdxOf(s.number())
+		term := s.FutureTermOf(s.number())
 
-		log.Debug("epoch idx", "eidx", epochIdx)
+		log.Debug("term idx", "eidx", term)
 
-		s.setRecentSigners(epochIdx, signers)
+		s.setRecentSigners(term, signers)
 
-		log.Debug("---------------------------")
-		signers = s.getRecentSigners(epochIdx)
+		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
+		signers = s.getRecentSigners(term)
 		log.Debug("stored elected signers")
 
 		for _, s := range signers {
@@ -413,37 +414,37 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 	return nil
 }
 
-// EpochIdx returns the epoch index of current block number
-func (s *DporSnapshot) EpochIdx() uint64 {
+// Term returns the term index of current block number
+func (s *DporSnapshot) Term() uint64 {
 	if s.number() == 0 {
 		return 0
 	}
-	return (s.number() - 1) / ((s.config.Epoch) * (s.config.View))
+	return (s.number() - 1) / ((s.config.TermLen) * (s.config.ViewLen))
 }
 
-// EpochIdxOf returns the epoch index of given block number
-func (s *DporSnapshot) EpochIdxOf(blockNum uint64) uint64 {
+// TermOf returns the term index of given block number
+func (s *DporSnapshot) TermOf(blockNum uint64) uint64 {
 	if blockNum == 0 {
 		return 0
 	}
-	return (blockNum - 1) / ((s.config.Epoch) * (s.config.View))
+	return (blockNum - 1) / ((s.config.TermLen) * (s.config.ViewLen))
 }
 
-// FutureEpochIdxOf returns future epoch idx with given block number
-func (s *DporSnapshot) FutureEpochIdxOf(blockNum uint64) uint64 {
-	return s.EpochIdxOf(blockNum) + EpochGapBetweenElectionAndMining
+// FutureTermOf returns future term idx with given block number
+func (s *DporSnapshot) FutureTermOf(blockNum uint64) uint64 {
+	return s.TermOf(blockNum) + TermGapBetweenElectionAndMining
 }
 
 // SignersOf returns signers of given block number
 func (s *DporSnapshot) SignersOf(number uint64) []common.Address {
-	return s.getRecentSigners(s.EpochIdxOf(number))
+	return s.getRecentSigners(s.TermOf(number))
 }
 
-// SignerRoundOf returns signer round with given signer address and block number
-func (s *DporSnapshot) SignerRoundOf(signer common.Address, number uint64) (int, error) {
-	for round, s := range s.SignersOf(number) {
+// SignerViewOf returns signer view with given signer address and block number
+func (s *DporSnapshot) SignerViewOf(signer common.Address, number uint64) (int, error) {
+	for view, s := range s.SignersOf(number) {
 		if s == signer {
-			return round, nil
+			return view, nil
 		}
 	}
 	return -1, errSignerNotInCommittee
@@ -451,7 +452,7 @@ func (s *DporSnapshot) SignerRoundOf(signer common.Address, number uint64) (int,
 
 // IsSignerOf returns if an address is a signer in the given block number
 func (s *DporSnapshot) IsSignerOf(signer common.Address, number uint64) bool {
-	_, err := s.SignerRoundOf(signer, number)
+	_, err := s.SignerViewOf(signer, number)
 	return err == nil
 }
 
@@ -460,24 +461,24 @@ func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, e
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
-	round, err := s.SignerRoundOf(signer, number)
+	view, err := s.SignerViewOf(signer, number)
 	if err != nil {
 		return false, err
 	}
-	b := round == int(((number-1)%(s.config.Epoch*s.config.View))/s.config.View)
+	b := view == int(((number-1)%(s.config.TermLen*s.config.ViewLen))/s.config.ViewLen)
 	return b, nil
 }
 
 // FutureSignersOf returns future signers of given block number
 func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
-	return s.getRecentSigners(s.FutureEpochIdxOf(number))
+	return s.getRecentSigners(s.FutureTermOf(number))
 }
 
-// FutureSignerRoundOf returns the future signer round with given signer address and block number
-func (s *DporSnapshot) FutureSignerRoundOf(signer common.Address, number uint64) (int, error) {
-	for round, s := range s.FutureSignersOf(number) {
+// FutureSignerViewOf returns the future signer view with given signer address and block number
+func (s *DporSnapshot) FutureSignerViewOf(signer common.Address, number uint64) (int, error) {
+	for view, s := range s.FutureSignersOf(number) {
 		if s == signer {
-			return round, nil
+			return view, nil
 		}
 	}
 	return -1, errSignerNotInCommittee
@@ -485,7 +486,7 @@ func (s *DporSnapshot) FutureSignerRoundOf(signer common.Address, number uint64)
 
 // IsFutureSignerOf returns if an address is a future signer in the given block number
 func (s *DporSnapshot) IsFutureSignerOf(signer common.Address, number uint64) bool {
-	_, err := s.FutureSignerRoundOf(signer, number)
+	_, err := s.FutureSignerViewOf(signer, number)
 	return err == nil
 }
 

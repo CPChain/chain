@@ -1,18 +1,4 @@
 // Copyright 2018 The cpchain authors
-// This file is part of the cpchain library.
-//
-// The cpchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The cpchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
 
 package database
 
@@ -21,8 +7,8 @@ import (
 )
 
 const (
-	testDbWrongURL  = "localhost:5002"
-	unexistIpfsAddr = "QmPam2fqFP7eTmnUJn2BX1GSBXpVZ5zqDpVjWQ3T88AEd3"
+	testDbWrongURL      = "localhost:5002"
+	nonexistentIpfsAddr = "QmPam2fqFP7eTmnUJn2BX1GSBXpVZ5zqDpVjWQ3T88AEd3"
 )
 
 var normalContent = []byte("this is a placeholder for private tx payload.")
@@ -97,7 +83,7 @@ func TestIpfsDatabase_Has(t *testing.T) {
 		t.Error("The result of Has() should be true when the data to retrieve does exist.")
 	}
 
-	if db.Has([]byte(unexistIpfsAddr)) {
+	if db.Has([]byte(nonexistentIpfsAddr)) {
 		t.Error("The result of Has() should be false when the data to retrieve does not exist.")
 	}
 

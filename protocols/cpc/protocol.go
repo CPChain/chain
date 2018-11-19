@@ -108,6 +108,7 @@ type txPool interface {
 type statusData struct {
 	ProtocolVersion uint32
 	NetworkId       uint64
+	Height          *big.Int
 	CurrentBlock    common.Hash
 	GenesisBlock    common.Hash
 }
@@ -169,7 +170,6 @@ func (hn *hashOrNumber) DecodeRLP(s *rlp.Stream) error {
 // newBlockData is the network packet for the block propagation message.
 type newBlockData struct {
 	Block *types.Block
-	TD    *big.Int
 }
 
 // blockBody represents the data content of a single block.

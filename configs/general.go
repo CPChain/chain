@@ -39,8 +39,8 @@ var (
 
 		Dpor: &DporConfig{
 			Period:                1,
-			Epoch:                 4,
-			View:                  1,
+			TermLen:               4,
+			ViewLen:               3,
 			MaxInitBlockNumber:    96,
 			ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
 			Contracts: map[string]common.Address{
@@ -52,26 +52,14 @@ var (
 		},
 	}
 
-	// AllEthashProtocolChanges contains every protocol change (EIPs) introduced
-	// and accepted by the cpchain core developers into the Ethash consensus.
-	//
-	// This configuration is intentionally not using keyed fields to force anyone
-	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{
-		ChainID: big.NewInt(1337),
-		Ethash:  new(EthashConfig),
-		Dpor:    nil,
-	}
-
-	// FIXME add to genesis.go
 	AllCpchainProtocolChanges = &ChainConfig{
 		ChainID: big.NewInt(CpchainChainId),
 		Ethash:  nil,
-		Dpor:    &DporConfig{Period: 1, Epoch: 4},
+		Dpor:    &DporConfig{Period: 1, TermLen: 4},
 	}
 
 	// TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil}
-	TestChainConfig = &ChainConfig{big.NewInt(CpchainChainId), nil, &DporConfig{Period: 0, Epoch: 4}}
+	TestChainConfig = &ChainConfig{big.NewInt(CpchainChainId), nil, &DporConfig{Period: 0, TermLen: 4}}
 
 	TestRules = TestChainConfig.Rules(new(big.Int))
 )
@@ -99,9 +87,9 @@ func (c *EthashConfig) String() string {
 
 // DporConfig is the consensus engine configs for proof-of-authority based sealing.
 type DporConfig struct {
-	Period                uint64                    `json:"period"                toml:"period"` // Number of seconds between blocks to enforce
-	Epoch                 uint64                    `json:"epoch"                 toml:"epoch"`  // Epoch length to reset votes and checkpoint
-	View                  uint64                    `json:"view"                  toml:"view"`   // View length of blocks one signer can seal in one committee
+	Period                uint64                    `json:"period"                toml:"period"`  // Number of seconds between blocks to enforce
+	TermLen               uint64                    `json:"termLen"               toml:"termLen"` // Term length to reset votes and checkpoint
+	ViewLen               uint64                    `json:"viewLen"               toml:"viewLen"` // View length of blocks one signer can seal in one committee
 	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"    toml:"maxInitBlockNumber"`
 	Contracts             map[string]common.Address `json:"contracts"             toml:"contracts"`
 	ProxyContractRegister common.Address            `json:"proxyContractRegister" toml:"proxyContractRegister"`

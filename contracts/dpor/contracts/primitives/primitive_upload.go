@@ -33,23 +33,19 @@ type GetUploadReward struct {
 }
 
 func (c *GetUploadReward) RequiredGas(input []byte) uint64 {
-	return configs.GetUploadReward
+	return configs.GetUploadRewardGas
 }
 
 func (c *GetUploadReward) Run(input []byte) ([]byte, error) {
-	const getBalanceInputLength = 52
-
-	if len(input) != getBalanceInputLength {
-		log.Warnf("The expected input is %d bytes, but got %d", getBalanceInputLength, len(input))
+	addr, number, err := extractRptPrimitivesArgs(input)
+	if err != nil {
+		log.Warnf("primitive_uploadreward got error %v", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-
-	addr := common.Bytes2Hex(input[0:20])
-	number := new(big.Int).SetBytes(input[20:52])
-	log.Infof("primitive_uploadreward, address %s, block number %d", addr, number)
+	log.Infof("primitive_uploadreward, address %s, block number %d", addr.Hex(), number)
 
 	// TODO: @AC get cpchain backend and read balance.
-	uploadReward, err := c.Backend.UploadCount(common.HexToAddress(addr), number.Uint64())
+	uploadReward, err := c.Backend.UploadCount(addr, number)
 	if err != nil {
 		log.Fatal("NewBasicCollector,error", err)
 	}
