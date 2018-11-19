@@ -136,9 +136,8 @@ type Validator interface {
 	// SignHeader signs a header in given state.
 	SignHeader(chain ChainReader, header *types.Header, state State) error
 
-	// SignBlock signs a block with own private key
-	SignBlock(chain ChainReader, block *types.Block) error
-
+	// SealBlock signs a block with own private key
+	SealBlock(chain ChainReader, block *types.Block) error
 }
 
 // PoW is a consensus engine based on proof-of-work.
