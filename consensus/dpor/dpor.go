@@ -166,8 +166,11 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	// TODO: set handler functions here
 
 	validateSignerFn := func(signer common.Address) (bool, error) {
-		currentNumber := d.chain.CurrentHeader().Number.Uint64()
-		return d.IsFutureSigner(d.chain, signer, currentNumber)
+		// TODO: fix this
+		// currentNumber := d.chain.CurrentHeader().Number.Uint64()
+		// return d.IsFutureSigner(d.chain, signer, currentNumber)
+
+		return true, nil
 	}
 
 	verifyHeaderFn := func(header *types.Header, state consensus.State) error {
@@ -175,10 +178,9 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		return d.VerifyHeader(d.chain, header, true, header)
 	}
 
-	verifyBlockFn := func(block *types.Block) error {
+	validateBlockFn := func(block *types.Block) error {
 		// TODO: fix this, verify block
-		header := block.RefHeader()
-		return d.VerifyHeader(d.chain, header, true, header)
+		return d.ValidateBlock(d.chain, block)
 	}
 
 	signHeaderFn := func(header *types.Header, state consensus.State) error {
@@ -195,7 +197,6 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	}
 
 	broadcastBlockFn := func(block *types.Block, prop bool) {
-
 		go pmBroadcastBlockFn(block, prop)
 	}
 
@@ -207,12 +208,13 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	statusFn := func() *consensus.PbftStatus {
 		return d.PbftStatus()
 	}
+
 	statusUpdateFn := func() error {
 		// TODO: fix this
 		return nil
 	}
-	getEmptyBlockFn := func() (*types.Block, error) {
 
+	getEmptyBlockFn := func() (*types.Block, error) {
 		// TODO: fix this
 		return nil, nil
 	}
@@ -221,7 +223,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	handler.SetFuncs(
 		validateSignerFn,
 		verifyHeaderFn,
-		verifyBlockFn,
+		validateBlockFn,
 		signHeaderFn,
 		addPendingBlockFn,
 		getPendingBlockFn,
