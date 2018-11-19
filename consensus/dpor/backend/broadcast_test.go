@@ -51,8 +51,8 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h := &Handler{
-				epochIdx:           tt.fields.epochIdx,
-				epochLength:        tt.fields.epochLength,
+				term:               tt.fields.epochIdx,
+				termLen:            tt.fields.epochLength,
 				nodeId:             tt.fields.nodeId,
 				coinbase:           tt.fields.coinbase,
 				server:             tt.fields.server,

@@ -91,7 +91,7 @@ func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error
 	}
 
 	h.lock.Lock()
-	h.epochIdx = epochIdx
+	h.term = epochIdx
 	h.signers = remoteSigners
 	h.lock.Unlock()
 

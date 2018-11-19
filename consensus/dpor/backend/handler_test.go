@@ -37,7 +37,8 @@ func TestNewHandler(t *testing.T) {
 	expectedResult.mode = LBFTMode
 	expectedResult.coinbase = testEtherbase
 	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
-	expectedResult.epochLength = testConfig.TermLen
+	expectedResult.termLen = testConfig.TermLen
+	expectedResult.maxInitNumber = testConfig.MaxInitBlockNumber
 	expectedResult.signers = make(map[common.Address]*Signer)
 	expectedResult.pendingBlockCh = make(chan *types.Block)
 	expectedResult.quitSync = make(chan struct{})

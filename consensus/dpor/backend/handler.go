@@ -25,8 +25,9 @@ var (
 type Handler struct {
 	mode HandlerMode
 
-	epochIdx    uint64
-	epochLength uint64
+	term          uint64
+	termLen       uint64
+	maxInitNumber uint64
 
 	nodeId   string
 	coinbase common.Address
@@ -87,7 +88,8 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 	h := &Handler{
 		coinbase:        etherbase,
 		contractAddress: config.Contracts["signer"],
-		epochLength:     config.TermLen,
+		termLen:         config.TermLen,
+		maxInitNumber:   config.MaxInitBlockNumber,
 		signers:         make(map[common.Address]*Signer),
 		pendingBlockCh:  make(chan *types.Block),
 		quitSync:        make(chan struct{}),
@@ -186,7 +188,7 @@ func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, addr
 
 	if !ok {
 		// TODO: @liuq fix this
-		signer = NewSigner(h.epochIdx, address)
+		signer = NewSigner(h.term, address)
 	}
 
 	log.Debug("received remote signer ping", "signer", address.Hex())
