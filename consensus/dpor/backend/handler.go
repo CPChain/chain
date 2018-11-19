@@ -214,13 +214,6 @@ func (h *Handler) removeSigner(signer common.Address) error {
 func (h *Handler) handleMsg(p *Signer) error {
 	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-	// TODO: remove this. this is only for test
-	block := h.getPendingFn(h.currentPending)
-	if block != nil {
-		p.SendNewPendingBlock(block)
-	}
-	// remove above
-
 	msg, err := p.rw.ReadMsg()
 	if err != nil {
 		log.Debug("err when readmsg", "err", err)
