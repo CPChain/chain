@@ -248,7 +248,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 
 	ok, err := snap.IsLeaderOf(d.signer, number)
 	if err != nil {
-		log.Warn("Error occurs when seal block", err)
+		log.Warn("Error occurs when seal block", "error", err)
 		return nil, err
 	}
 	if !ok {
