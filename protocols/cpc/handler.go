@@ -308,8 +308,6 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		height  = head.Number
 	)
 
-	log.Debug("my cpcbase", "address", pm.cpcbase)
-
 	// Do normal handshake
 	err := p.Handshake(pm.networkID, height, hash, genesis.Hash())
 
