@@ -32,7 +32,7 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 		getPendingFn       GetPendingBlockFn
 		getEmptyBlockFn    GetEmptyBlockFn
 		verifyHeaderFn     VerifyHeaderFn
-		verifyBlockFn      VerifyBlockFn
+		verifyBlockFn      ValidateBlockFn
 		signHeaderFn       SignHeaderFn
 		insertChainFn      InsertChainFn
 		broadcastBlockFn   BroadcastBlockFn
@@ -69,7 +69,7 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 				getPendingFn:       tt.fields.getPendingFn,
 				getEmptyBlockFn:    tt.fields.getEmptyBlockFn,
 				verifyHeaderFn:     tt.fields.verifyHeaderFn,
-				verifyBlockFn:      tt.fields.verifyBlockFn,
+				validateBlockFn:    tt.fields.verifyBlockFn,
 				signHeaderFn:       tt.fields.signHeaderFn,
 				insertChainFn:      tt.fields.insertChainFn,
 				broadcastBlockFn:   tt.fields.broadcastBlockFn,
