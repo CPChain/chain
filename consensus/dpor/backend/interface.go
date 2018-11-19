@@ -85,8 +85,8 @@ type ValidateSignerFn func(signer common.Address) (bool, error)
 // if in committed state, verify if enough commit sigs
 type VerifyHeaderFn func(header *types.Header, state consensus.State) error
 
-// VerifyBlockFn verifies a block
-type VerifyBlockFn func(block *types.Block) error
+// ValidateBlockFn verifies a block
+type ValidateBlockFn func(block *types.Block) error
 
 // SignHeaderFn signs the block if not signed it yet
 type SignHeaderFn func(header *types.Header, state consensus.State) error
@@ -111,3 +111,10 @@ type StatusUpdateFn func() error
 
 // GetEmptyBlockFn returns an empty block for view change
 type GetEmptyBlockFn func() (*types.Block, error)
+
+type HandlerMode uint
+
+const (
+	PBFTMode HandlerMode = iota
+	LBFTMode
+)

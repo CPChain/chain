@@ -63,6 +63,9 @@ var (
 
 	// ErrUnknownPbftState is returned if committee handler's state is unknown
 	ErrUnknownPbftState = errors.New("unknown pbft state")
+
+	// ErrUnknownLbftState is returned if committee handler's state is unknown
+	ErrUnknownLbftState = errors.New("unknown lbft state")
 )
 
 // ErrNotEnoughSigsType is returned if there is not enough signatures for a block.
