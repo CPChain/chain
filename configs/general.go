@@ -48,6 +48,7 @@ var (
 				"signer":   common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"),
 				// TODO @hmw make the name more concrete
 				"register": common.HexToAddress("3A220f351252089D385b29beca14e27F204c296A"),
+				"rpt":      common.HexToAddress("0x5af979ebb310248f5c139c601e46b1aca9890827"),
 			},
 		},
 	}
