@@ -109,10 +109,11 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	// initialize a sub-protocol for every implemented version we can handle
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 
+	var dporProtocol consensus.Protocol
 	if config.Dpor != nil {
 		if dpor, ok := engine.(*dpor.Dpor); ok {
-			pbftProtocol := dpor.Protocol()
-			manager.SubProtocols = append(manager.SubProtocols, pbftProtocol)
+			dporProtocol = dpor.Protocol()
+			// manager.SubProtocols = append(manager.SubProtocols, pbftProtocol)
 		}
 	}
 
@@ -133,7 +134,54 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					manager.wg.Add(1)
 					defer manager.wg.Done()
 					// stuck in the message loop on this peer
-					return manager.handle(peer)
+
+					err := manager.handle(peer)
+					if err != nil {
+						return err
+					}
+					defer manager.removePeer(peer.id)
+
+					var addr string
+
+					if dporProtocol.Available() {
+						// add dpor peer
+						addr, err = dporProtocol.AddPeer(int(version), p, rw)
+						if err != nil {
+							return err
+						}
+						defer dporProtocol.RemovePeer(addr)
+
+					}
+
+					for {
+						msg, err := rw.ReadMsg()
+						if err != nil {
+							return err
+						}
+						if msg.Size > ProtocolMaxMsgSize {
+							return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+						}
+
+						defer msg.Discard()
+
+						if dporProtocol.Available() {
+							if IsPbftMsg(msg) {
+								err = dporProtocol.HandleMsg(addr, msg)
+								if err != nil {
+									log.Error("err when handling pbft msg", "err", err)
+									return err
+								}
+							}
+						}
+
+						err = manager.handleNormalMsg(msg, peer)
+						if err != nil {
+							log.Error("err when handling pbft msg", "err", err)
+							return err
+						}
+
+					}
+
 				case <-manager.quitSync:
 					return p2p.DiscQuitting
 				}
@@ -339,7 +387,6 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		p.Log().Error("Cpchain peer registration failed", "err", err)
 		return err
 	}
-	defer pm.removePeer(p.id)
 
 	// Register the peer in the downloader. If the downloader considers it banned, we disconnect
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {

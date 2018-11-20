@@ -199,3 +199,18 @@ type PbftStatus struct {
 	State State
 	Head  *types.Header
 }
+
+// Protocol represents interfaces a protocol can provide
+type Protocol interface {
+	Name() string
+	Version() int
+	Length() int
+
+	Available() bool
+
+	AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, error)
+	RemovePeer(id string) error
+	HandleMsg(id string, msg p2p.Msg) error
+
+	NodeInfo() interface{}
+}

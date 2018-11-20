@@ -54,6 +54,10 @@ import (
 // BroadcastBlock will either propagate a block to a subset of it's peers, or
 // will only announce it's availability (depending what's requested).
 func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
+	log.Debug("peers:")
+	for p := range pm.peers.peers {
+		log.Debug("signer", "id", p)
+	}
 
 	hash := block.Hash()
 	peers := pm.peers.PeersWithoutBlock(hash)

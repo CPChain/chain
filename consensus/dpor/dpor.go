@@ -269,8 +269,9 @@ func (d *Dpor) ValidateSigner(address common.Address) (bool, error) {
 }
 
 // Protocol returns Dpor p2p protocol
-func (d *Dpor) Protocol() p2p.Protocol {
-	return d.handler.Protocol()
+func (d *Dpor) Protocol() consensus.Protocol {
+	// return d.handler.Protocol()
+	return d.handler.GetProtocol()
 }
 
 // PbftStatus returns current state of dpor

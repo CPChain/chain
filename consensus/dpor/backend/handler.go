@@ -13,7 +13,6 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/discover"
 )
 
 var (
@@ -123,46 +122,97 @@ func (h *Handler) Stop() {
 	return
 }
 
-// Protocol returns a p2p protocol to handle dpor msgs
-func (h *Handler) Protocol() p2p.Protocol {
-	return p2p.Protocol{
-		Name:    ProtocolName,
-		Version: ProtocolVersion,
-		Length:  ProtocolLength,
-		Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
+// // Protocol returns a p2p protocol to handle dpor msgs
+// func (h *Handler) Protocol() p2p.Protocol {
+// 	return p2p.Protocol{
+// 		Name:    ProtocolName,
+// 		Version: ProtocolVersion,
+// 		Length:  ProtocolLength,
+// 		Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
 
-			if !h.IsAvailable() {
-				log.Debug("not available now")
-				return nil
-			}
-			log.Debug("available now!!!!!!!!")
+// 			if !h.IsAvailable() {
+// 				log.Debug("not available now")
+// 				return nil
+// 			}
+// 			log.Debug("available now!!!!!!!!")
 
-			cb := h.Signer()
-			validator := h.validateSignerFn
+// 			cb := h.Signer()
+// 			validator := h.validateSignerFn
 
-			log.Debug("handshaking...")
-			ok, address, err := Handshake(p, rw, cb, validator)
-			if !ok || err != nil {
-				return err
-			}
+// 			log.Debug("handshaking...")
+// 			ok, address, err := Handshake(p, rw, cb, validator)
+// 			if !ok || err != nil {
+// 				return err
+// 			}
 
-			log.Debug("done with handshake")
+// 			log.Debug("done with handshake")
 
-			select {
-			case <-h.quitSync:
-				return p2p.DiscQuitting
-			default:
-				return h.handle(ProtocolVersion, p, rw, address)
-			}
+// 			select {
+// 			case <-h.quitSync:
+// 				return p2p.DiscQuitting
+// 			default:
+// 				return h.handle(ProtocolVersion, p, rw, address)
+// 			}
 
-		},
-		NodeInfo: func() interface{} {
-			return h.statusFn()
-		},
-		PeerInfo: func(id discover.NodeID) interface{} {
-			return nil
-		},
+// 		},
+// 		NodeInfo: func() interface{} {
+// 			return h.statusFn()
+// 		},
+// 		PeerInfo: func(id discover.NodeID) interface{} {
+// 			return nil
+// 		},
+// 	}
+// }
+
+func (h *Handler) GetProtocol() consensus.Protocol {
+	return h
+}
+
+func (h *Handler) NodeInfo() interface{} {
+
+	return h.statusFn()
+}
+
+func (h *Handler) Name() string {
+	return ProtocolName
+}
+
+func (h *Handler) Version() int {
+	return ProtocolVersion
+}
+
+func (h *Handler) Length() int {
+	return ProtocolLength
+}
+
+func (h *Handler) Available() bool {
+	return h.available
+}
+
+func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, error) {
+	coinbase := h.Signer()
+	validator := h.validateSignerFn
+	ok, address, err := Handshake(p, rw, coinbase, validator)
+	if !ok || err != nil {
+		return "", err
 	}
+	_, err = h.addSigner(version, p, rw, address)
+	return address.Hex(), err
+}
+
+func (h *Handler) RemovePeer(addr string) error {
+	return h.removeSigner(common.HexToAddress(addr))
+}
+
+func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
+
+	signer, ok := h.signers[common.HexToAddress(addr)]
+	if !ok {
+		// TODO: return new err
+		return nil
+	}
+
+	return h.handleMsg(signer, msg)
 }
 
 func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
@@ -175,10 +225,22 @@ func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address
 
 	// main loop. handle incoming messages.
 	for {
-		if err := h.handleMsg(signer); err != nil {
+		msg, err := signer.rw.ReadMsg()
+		if err != nil {
+			log.Debug("err when readmsg", "err", err)
+			return err
+		}
+		if msg.Size > ProtocolMaxMsgSize {
+			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+		}
+		err = h.handleMsg(signer, msg)
+		msg.Discard()
+
+		if err != nil {
 			p.Log().Debug("Cpchain message handling failed", "err", err)
 			return err
 		}
+
 	}
 }
 
@@ -211,19 +273,7 @@ func (h *Handler) removeSigner(signer common.Address) error {
 	return nil
 }
 
-func (h *Handler) handleMsg(p *Signer) error {
-	log.Debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-	msg, err := p.rw.ReadMsg()
-	if err != nil {
-		log.Debug("err when readmsg", "err", err)
-		return err
-	}
-	if msg.Size > ProtocolMaxMsgSize {
-		return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-	}
-	defer msg.Discard()
-
+func (h *Handler) handleMsg(p *Signer, msg p2p.Msg) error {
 	log.Debug("handling msg", "msg", msg.Code)
 
 	if msg.Code == NewSignerMsg {
