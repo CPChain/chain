@@ -7,7 +7,7 @@ USAGE
 package main
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/keepeye/logrus-filename"
 )
 
