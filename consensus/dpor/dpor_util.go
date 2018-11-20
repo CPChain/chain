@@ -121,13 +121,6 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	// Retrieve leader's signature
 	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
 
-	// Retrieve signers' signatures
-	ss, err := header.DecodedExtra2(types.TypeExtra2SignaturesDecoder)
-	if err != nil {
-		return common.Address{}, []common.Address{}, err
-	}
-	signersSig := ss.Data
-
 	// Recover the public key and the cpchain address of leader.
 	var leader common.Address
 	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig)
@@ -147,35 +140,30 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		sigcache.Add(hash, sigs)
 	}
 
-	// Return if there is no signers' signatures.
-	if len(signersSig)%extraSeal != 0 {
-		return leader, []common.Address{}, errInvalidSigBytes
-	}
-
 	// Recover the public key and the cpchain address of signers one by one.
-	var signers []common.Address
-	for i := 0; i < len(signersSig)/extraSeal; i++ {
-		signerSig := signersSig[i*extraSeal : (i+1)*extraSeal]
+	var proposers []common.Address
+	for i := 0; i < len(header.Dpor.Sigs); i++ {
+		signerSig := header.Dpor.Sigs[i]
 
-		noSigner := bytes.Equal(signerSig, make([]byte, extraSeal))
+		noSigner := bytes.Equal(signerSig[:], make([]byte, extraSeal))
 		if !noSigner {
 			// Recover it!
-			signerPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), signerSig)
+			signerPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), signerSig[:])
 			if err != nil {
-				return common.Address{}, signers, err
+				return common.Address{}, proposers, err
 			}
-			var signer common.Address
-			copy(signer[:], crypto.Keccak256(signerPubkey[1:])[12:])
+			var proposer common.Address
+			copy(proposer[:], crypto.Keccak256(signerPubkey[1:])[12:])
 
 			// Cache it!
 			sigs, _ := sigcache.Get(hash)
-			sigs.(*Signatures).SetSig(signer, signerSig)
+			sigs.(*Signatures).SetSig(proposer, signerSig[:])
 
 			// Add signer to known signers
-			signers = append(signers, signer)
+			proposers = append(proposers, proposer)
 		}
 	}
-	return leader, signers, nil
+	return leader, proposers, nil
 }
 
 // acceptSigs checks that signatures have enough signatures to accept the block.
