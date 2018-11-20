@@ -319,9 +319,15 @@ func (ec *Client) NetworkID(ctx context.Context) (*big.Int, error) {
 	return version, nil
 }
 
-func (ec *Client) GetRNodes(ctx context.Context) ([]common.Address, error) {
-	var result []common.Address
+func (ec *Client) GetRNodes(ctx context.Context) (RNode, error) {
+	var result RNode
 	err := ec.c.CallContext(ctx, &result, "eth_getRNodes")
+	return result, err
+}
+
+func (ec *Client) GetRNodesaddress(ctx context.Context) ([]common.Address, error) {
+	var result []common.Address
+	err := ec.c.CallContext(ctx, &result, "eth_getRNodesAddress")
 	return result, err
 }
 

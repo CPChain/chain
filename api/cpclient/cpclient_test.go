@@ -42,7 +42,7 @@ var (
 )
 
 func TestGetRNode(t *testing.T) {
-	t.Skip("skip test")
+	//	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
@@ -50,9 +50,25 @@ func TestGetRNode(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	rnodes, err := client.GetRNodes(context.Background())
-	fmt.Println(rnodes)
+	fmt.Println(rnodes, err)
 
-	if len(rnodes) < 1 {
+	if rnodes.Rpt == 0 {
+		t.Errorf("GetRNodes failed")
+	}
+}
+
+func TestGetRNodeAddress(t *testing.T) {
+	//	t.Skip("skip test")
+	fmt.Println("*******************************************************")
+	client, err := cpclient.Dial("http://localhost:8501")
+	// local
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	rnodes, err := client.GetRNodesaddress(context.Background())
+	fmt.Println(rnodes, err)
+
+	if len(rnodes) == 0 {
 		t.Errorf("GetRNodes failed")
 	}
 }
