@@ -93,10 +93,13 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 		header.GasLimit,
 		header.GasUsed,
 		header.Time,
-		header.Extra[:len(header.Extra)-65],
+		header.Dpor.Proposers,
+		header.Dpor.Validators,
+		header.Extra,
 		header.MixHash,
 		header.Nonce,
 	})
+
 	hasher.Sum(hash[:0])
 	return hash
 }
@@ -109,8 +112,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 	hash := header.Hash()
 
-	// If header.Extra format is invalid, return
-	if len(header.Extra) < extraSeal {
+	if bytes.Equal(header.Dpor.Seal[:], new(types.DporSignature)[:]) {
 		return common.Address{}, []common.Address{}, errMissingSignature
 	}
 
@@ -119,11 +121,11 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	// header.Extra2[signer1-sig:...:signerN-sig]
 
 	// Retrieve leader's signature
-	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
+	leaderSig := header.Dpor.Seal
 
 	// Recover the public key and the cpchain address of leader.
 	var leader common.Address
-	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig)
+	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig[:])
 	if err != nil {
 		return common.Address{}, []common.Address{}, err
 	}
@@ -131,12 +133,12 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 	// Cache leader signature.
 	if sigs, known := sigcache.Get(hash); known {
-		sigs.(*Signatures).SetSig(leader, leaderSig)
+		sigs.(*Signatures).SetSig(leader, leaderSig[:])
 	} else {
 		sigs := &Signatures{
 			sigs: make(map[common.Address][]byte),
 		}
-		sigs.SetSig(leader, leaderSig)
+		sigs.SetSig(leader, leaderSig[:])
 		sigcache.Add(hash, sigs)
 	}
 

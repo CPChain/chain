@@ -99,6 +99,12 @@ type Header struct {
 
 type DporSignature [DporSigLength]byte
 
+func HexToDporSig(s string) DporSignature {
+	var a DporSignature
+	copy(a[:], common.FromHex(s))
+	return a
+}
+
 type DporSnap struct {
 	Seal       DporSignature    // the signature of the block's producer
 	Sigs       []DporSignature  // the signatures of validators to endorse the block
@@ -142,7 +148,6 @@ func sigHash(header *Header) (hash common.Hash) {
 		header.GasUsed,
 		header.Time,
 		header.Dpor.Proposers,
-		header.Dpor.Seal,
 		header.Dpor.Validators,
 		header.Extra,
 		header.MixHash,
@@ -167,7 +172,6 @@ func (h *Header) HashNoNonce() common.Hash {
 		h.GasUsed,
 		h.Time,
 		h.Dpor.Proposers,
-		h.Dpor.Seal,
 		h.Dpor.Validators,
 		h.Extra,
 	})
