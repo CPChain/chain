@@ -110,7 +110,7 @@ dpor
         #. A validator suspects the leader is faulty, when any of following situations happens
             - The validator committee should start the impeachment, but the timers expires and the validator does not receive PRE-PREPARE message
             - The validator committee should not start the impeachment, and the validator receive a PRE-PREPARE message from the leader
-        #. If a validator suspects the leader, it broadcasts a VIEW-CHANGE message to all validators
-        #. If the leader of the next view collects 2f+1 VIEW-CHANGE messages, it broadcasts a NEW-LEADER message to all validator
+        #. If a validator suspects the leader, it broadcasts a LEADER-CHANGE message to all validators
+        #. If the leader of the next view collects 2f+1 LEADER-CHANGE messages, it broadcasts a NEW-LEADER message to all validator
         #. Other validators accepts this NEW-LEADER message if they receive 2f VIEW-CHANGE messages
         #. The new leader takes the responsibility of proposing block, as in the Step 4.d.i
