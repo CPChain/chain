@@ -412,8 +412,8 @@ func (s *CpchainService) TxPool() *core.TxPool               { return s.txPool }
 func (s *CpchainService) EventMux() *event.TypeMux           { return s.eventMux }
 func (s *CpchainService) Engine() consensus.Engine           { return s.engine }
 func (s *CpchainService) ChainDb() database.Database         { return s.chainDb }
-func (s *CpchainService) IsListening() bool                  { return true } // Always listening
-func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }  // the first protocol is the latest version.
+func (s *CpchainService) IsListening() bool                  { return true }                                           // Always listening
+func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) } // the first protocol is the latest version.
 func (s *CpchainService) NetVersion() uint64                 { return s.networkID }
 func (s *CpchainService) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 func (s *CpchainService) RemoteDB() database.RemoteDatabase  { return s.remoteDB }

@@ -22,7 +22,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log/filename"
 	"bitbucket.org/cpchain/chain/commons/log/stack"
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 const errCtx = "Normalized odd number of arguments by adding nil"
