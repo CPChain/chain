@@ -218,7 +218,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				}
 			}
 
-			snap = newSnapshot(dpor.config, 0, genesis.Hash(), signers)
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), signers, FakeMode)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}

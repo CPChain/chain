@@ -51,7 +51,7 @@ func (*fakeDb) NewBatch() database.Batch {
 }
 
 func Test_newSnapshot(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress(), FakeMode)
 	equal := reflect.DeepEqual(snap.SignersOf(1), getSignerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
@@ -144,7 +144,7 @@ func TestSnapshot_store(t *testing.T) {
 }
 
 func TestSnapshot_copy(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress(), FakeMode)
 	snap.Candidates = getCandidates()
 
 	cpySnap := snap.copy()
@@ -412,7 +412,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 }
 
 func TestSnapshot_isSigner(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress()[1:2])
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress()[1:2], FakeMode)
 	isSinger := snap.IsSignerOf(addr1, 1)
 	if isSinger {
 		t.Errorf("expected isSinger %v,get %v", false, isSinger)
@@ -489,7 +489,7 @@ func createSnapshot() *DporSnapshot {
 	signers := getSignerAddress()
 	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	// cache, _ := lru.NewARC(inmemorySnapshots)
-	snap := newSnapshot(config, 1, common.Hash{}, signers)
+	snap := newSnapshot(config, 1, common.Hash{}, signers, FakeMode)
 	return snap
 }
 
@@ -530,7 +530,7 @@ func TestSnapshot_inturn(t *testing.T) {
 	signers := getSignerAddress()
 	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	// cache, _ := lru.NewARC(inmemorySnapshots)
-	snap := newSnapshot(config, 1, common.Hash{}, signers)
+	snap := newSnapshot(config, 1, common.Hash{}, signers, FakeMode)
 
 	tests := []struct {
 		number         uint64

@@ -38,7 +38,7 @@ type Snapshot interface {
 	applyHeader(header *types.Header) error
 	updateCandidates(header *types.Header) error
 	updateRpts(header *types.Header) (rpt.RptList, error)
-	updateView(rpts rpt.RptList, seed int64, viewLength int) error
+	updateSigners(rpts rpt.RptList, seed int64, viewLength int) error
 	signers() []common.Address
 	signerViewOf(signer common.Address) (int, error)
 	isSigner(signer common.Address) bool
@@ -49,14 +49,15 @@ type Snapshot interface {
 
 // DporSnapshot is the state of the authorization voting at a given point in time.
 type DporSnapshot struct {
-	Number     uint64           `json:"number"`     // Block number where the Snapshot was created
-	Hash       common.Hash      `json:"hash"`       // Block hash where the Snapshot was created
-	Candidates []common.Address `json:"candidates"` // Set of candidates read from campaign contract
-	// RecentSigners *lru.ARCCache    `json:"signers"`
-	RecentSigners map[uint64][]common.Address `json:"signers"` // Set of recent signers
+	Mode          Mode                        `json:"mode"`
+	Number        uint64                      `json:"number"`     // Block number where the Snapshot was created
+	Hash          common.Hash                 `json:"hash"`       // Block hash where the Snapshot was created
+	Candidates    []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
+	RecentSigners map[uint64][]common.Address `json:"signers"`    // Set of recent signers
 
 	config         *configs.DporConfig // Consensus engine parameters to fine tune behavior
 	ContractCaller *consensus.ContractCaller
+	rptBackend     rpt.RptService
 
 	lock sync.RWMutex
 }
@@ -165,11 +166,12 @@ func (s *DporSnapshot) setContractCaller(contractCaller *consensus.ContractCalle
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
 // method does not initialize the set of recent signers, so only ever use if for
 // the genesis block.
-func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
+func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, signers []common.Address, mode Mode) *DporSnapshot {
 	snap := &DporSnapshot{
+		Mode:          mode,
 		config:        config,
-		Number:        number,
 		Hash:          hash,
+		Number:        number,
 		RecentSigners: make(map[uint64][]common.Address),
 	}
 
@@ -269,14 +271,14 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	s.setHash(header.Hash())
 
 	// Update candidates
-	err := s.updateCandidates(header)
+	err := s.updateCandidates()
 	if err != nil {
 		log.Warn("err when update candidates", "err", err)
 		return err
 	}
 
 	// Update rpts
-	rpts, err := s.updateRpts(header)
+	rpts, err := s.updateRpts()
 	if err != nil {
 		log.Warn("err when update rpts", "err", err)
 		return err
@@ -296,7 +298,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 }
 
 // updateCandidates updates candidates from campaign contract
-func (s *DporSnapshot) updateCandidates(header *types.Header) error {
+func (s *DporSnapshot) updateCandidates() error {
 
 	// Default Signers/Candidates
 	candidates := []common.Address{
@@ -341,16 +343,33 @@ func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 }
 
 // updateRpts updates rpts of candidates
-func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RptList, error) {
+func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 
-	// TODO: use rpt collector to update rpts.
-	var rpts rpt.RptList
-	for idx, candidate := range s.candidates() {
-		r := rpt.Rpt{Address: candidate, Rpt: int64(idx)}
-		rpts = append(rpts, r)
+	if s.contractCaller() == nil && s.Mode == NormalMode {
+		log.Warn("snapshot contract caller is nil")
+		s.Mode = FakeMode
 	}
 
-	return rpts, nil
+	switch {
+	case s.Mode == NormalMode && s.ifStartElection():
+
+		rptBackend, err := s.rptBackend, error(nil)
+		if rptBackend == nil {
+			rptBackend, err = rpt.NewRptService(s.contractCaller().Client, s.config.Contracts["rpt"])
+		}
+		rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
+		s.rptBackend = rptBackend
+
+		return rpts, err
+	default:
+		var rpts rpt.RptList
+		for idx, candidate := range s.candidates() {
+			r := rpt.Rpt{Address: candidate, Rpt: int64(idx)}
+			rpts = append(rpts, r)
+		}
+
+		return rpts, nil
+	}
 }
 
 func (s *DporSnapshot) ifUseDefaultSigners() bool {

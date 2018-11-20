@@ -290,7 +290,7 @@ func Test_acceptSigs(t *testing.T) {
 func Test_calcDifficulty(t *testing.T) {
 	signers := getSignerAddress()
 	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	snapshot := newSnapshot(config, 1, common.Hash{}, signers)
+	snapshot := newSnapshot(config, 1, common.Hash{}, signers, FakeMode)
 
 	type args struct {
 		snap   *DporSnapshot
