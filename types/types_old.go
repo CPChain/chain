@@ -108,6 +108,7 @@ func (h *HeaderOld) ToNewType() *Header {
 		GasLimit:     h.GasLimit,
 		GasUsed:      h.GasUsed,
 		Time:         h.Time,
+		Extra:        h.Extra,
 		MixHash:      h.MixHash,
 		Nonce:        h.Nonce,
 	}
@@ -130,7 +131,6 @@ func (h *HeaderOld) extractDporSnap() *DporSnap {
 		sealBuf := h.Extra[len(h.Extra)-extraSeal:]
 		dpor.Seal = DporSignature{}
 		copy(dpor.Seal[:], sealBuf)
-
 	}
 
 	if len(h.Extra2) > 0 {

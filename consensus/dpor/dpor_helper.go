@@ -356,19 +356,14 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	// Retrieve signatures of the block in cache
 	s, _ := dpor.signatures.Get(hash)
 
-	// Copy all signatures recovered to allSigs.
-	allSigs := make([]byte, int(dpor.config.TermLen)*extraSeal)
+	// Copy all signatures to allSigs
+	allSigs := make([]types.DporSignature, dpor.config.TermLen)
 	for round, signer := range snap.SignersOf(number) {
 		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
-			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sigHash)
+			copy(allSigs[round][:], sigHash)
 		}
 	}
-
-	// Encode allSigs to header.extra2.
-	err = refHeader.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
-	if err != nil {
-		return err
-	}
+	refHeader.Dpor.Sigs = allSigs
 
 	// We haven't reached the 2/3 rule
 	if !accept {
@@ -388,13 +383,8 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 			// Copy signer's signature to the right position in the allSigs
 			round, _ := snap.SignerViewOf(dpor.signer, number)
-			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
-
-			// Encode to header.extra2
-			err = refHeader.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
-			if err != nil {
-				return err
-			}
+			copy(allSigs[round][:], sighash)
+			refHeader.Dpor.Sigs = allSigs
 
 			// Return special err to return new signed header
 			return consensus.ErrNewSignedHeader

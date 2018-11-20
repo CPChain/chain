@@ -39,19 +39,9 @@ const (
 	DporSigLength        = 65
 )
 
-type EncoderAndDecoder struct {
-	Encoder Extra2Encoder
-	Decoder Extra2Decoder
-}
-
 var (
-	errTooShortExtra2    = errors.New("too short extra2")
-	errUnknownExtra2Type = errors.New("unknown extra2 type")
-
-	EmptyRootHash         = DeriveSha(Transactions{})
-	Extra2RegisterMapping = map[uint8]EncoderAndDecoder{
-		TypeExtra2Signatures: {TypeExtra2SignaturesEncoder, TypeExtra2SignaturesDecoder},
-	}
+	errTooShortExtra2 = errors.New("too short extra2")
+	EmptyRootHash     = DeriveSha(Transactions{})
 )
 
 // A BlockNonce is a 64-bit hash which proves (combined with the
@@ -102,59 +92,9 @@ type Header struct {
 	GasUsed      uint64         `json:"gasUsed"          gencodec:"required"`
 	Time         *big.Int       `json:"timestamp"        gencodec:"required"`
 	Extra        []byte         `json:"extraData"        gencodec:"required"`
-	Extra2       []byte         `json:"extraData2"       gencodec:"required"`
 	MixHash      common.Hash    `json:"mixHash"          gencodec:"required"`
 	Nonce        BlockNonce     `json:"nonce"            gencodec:"required"`
-	Dpor         DporSnap       `rlp:"-"`
-}
-
-func (h *Header) GetDpor() *DporSnap {
-	// Update dpor snap every time, not consider performance hit because it is temporary code. @AC
-
-	if len(h.Extra)-extraVanity > 0 {
-		proBuf := h.Extra[extraVanity : len(h.Extra)-extraSeal]
-		proCount := len(proBuf) / common.AddressLength
-		h.Dpor.Proposers = make([]common.Address, proCount)
-		for i := 0; i < proCount; i++ {
-			h.Dpor.Proposers[i] = common.BytesToAddress(proBuf[i*common.AddressLength : (i+1)*common.AddressLength])
-		}
-
-		sealBuf := h.Extra[len(h.Extra)-extraSeal:]
-		h.Dpor.Seal = DporSignature{}
-		copy(h.Dpor.Seal[:], sealBuf)
-
-	} else {
-		h.Dpor = DporSnap{} // Assign empty values
-	}
-
-	if len(h.Extra2) > 0 {
-		sigCount := len(h.Extra2) / DporSigLength
-		h.Dpor.Sigs = make([]DporSignature, sigCount)
-		for i := 0; i < sigCount; i++ {
-			h.Dpor.Sigs[i] = DporSignature{}
-			copy(h.Dpor.Sigs[i][:], h.Extra2[i*DporSigLength:(i+1)*DporSigLength])
-		}
-	}
-	return &h.Dpor
-}
-
-func (h *Header) SaveDporSnapToExtras() {
-	// update extra field
-	vanity := h.Extra[:extraVanity]
-	h.Extra = make([]byte, extraVanity+len(h.Dpor.Proposers)*common.AddressLength+DporSigLength)
-	copy(h.Extra[0:], vanity) // keep vanity unchanged
-	proBuf := make([]byte, len(h.Dpor.Proposers)*common.AddressLength)
-	for i := 0; i < len(h.Dpor.Proposers); i++ {
-		copy(proBuf[i*common.AddressLength:], h.Dpor.Proposers[i][:])
-	}
-	copy(h.Extra[extraVanity:], proBuf)
-	copy(h.Extra[extraVanity+len(proBuf):], h.Dpor.Seal[:])
-
-	// update extra2
-	h.Extra2 = make([]byte, len(h.Dpor.Sigs)*DporSigLength)
-	for i := 0; i < len(h.Dpor.Sigs); i++ {
-		copy(h.Extra2[i*DporSigLength:], h.Dpor.Sigs[i][:])
-	}
+	Dpor         DporSnap       `json:"dpor"             gencodec:"required"`
 }
 
 type DporSignature [DporSigLength]byte
@@ -174,9 +114,7 @@ type headerMarshaling struct {
 	GasUsed    hexutil.Uint64
 	Time       *hexutil.Big
 	Extra      hexutil.Bytes
-	Extra2     hexutil.Bytes
 	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
-	Dpor       *DporSnap
 }
 
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
@@ -185,63 +123,6 @@ func (h *Header) Hash() common.Hash {
 	// because of the introduction of `extra2', we define a `sigHash' to exclude that field.
 	// return rlpHash(h)
 	return sigHash(h) // TODO: this is wrong, fix this.
-}
-
-// Extra2Struct is the structure of header.extra2.
-type Extra2Struct struct {
-	Type uint8
-	Data []byte
-}
-
-// Extra2Decoder is used to format the bytes in extra2 and get a structured result.
-type Extra2Decoder func([]byte) (Extra2Struct, error)
-
-// Extra2Encoder is used to serialize the given structure to bytes.
-type Extra2Encoder func(Extra2Struct) ([]byte, error)
-
-// DecodedExtra2 returns formated structure of extra2.
-func (h *Header) DecodedExtra2(decoder Extra2Decoder) (Extra2Struct, error) {
-	extra2 := make([]byte, len(h.Extra2))
-	copy(extra2[:], h.Extra2)
-	dataType := extra2[0]
-	encoderAndDecoder, ok := Extra2RegisterMapping[dataType]
-	if !ok {
-		return Extra2Struct{}, errUnknownExtra2Type
-	}
-	return encoderAndDecoder.Decoder(extra2)
-}
-
-// EncodeToExtra2 serializes the data with the given serializer to extra2 in header.
-func (h *Header) EncodeToExtra2(data Extra2Struct) error {
-	dataType := data.Type
-	encoderAndDecoder, ok := Extra2RegisterMapping[dataType]
-	if !ok {
-		return errUnknownExtra2Type
-	}
-	extra2, err := encoderAndDecoder.Encoder(data)
-	if err != nil {
-		return err
-	}
-	h.Extra2 = extra2
-	return nil
-}
-
-// TypeExtra2SignaturesDecoder implements Extra2Decoder.
-func TypeExtra2SignaturesDecoder(extra2 []byte) (Extra2Struct, error) {
-	if n := len(extra2); n < 1 {
-		return Extra2Struct{}, errTooShortExtra2
-	}
-	data := Extra2Struct{Type: TypeExtra2Signatures, Data: make([]byte, len(extra2)-1)}
-	copy(data.Data[:], extra2[1:])
-	return data, nil
-}
-
-// TypeExtra2SignaturesEncoder implements Extra2Encoder.
-func TypeExtra2SignaturesEncoder(data Extra2Struct) ([]byte, error) {
-	extra2 := make([]byte, len(data.Data)+1)
-	extra2[0] = TypeExtra2Signatures
-	copy(extra2[1:], data.Data)
-	return extra2, nil
 }
 
 // sigHash returns hash of header without `extra2' field.
@@ -260,6 +141,9 @@ func sigHash(header *Header) (hash common.Hash) {
 		header.GasLimit,
 		header.GasUsed,
 		header.Time,
+		header.Dpor.Proposers,
+		header.Dpor.Seal,
+		header.Dpor.Validators,
 		header.Extra,
 		header.MixHash,
 		header.Nonce,
@@ -282,6 +166,9 @@ func (h *Header) HashNoNonce() common.Hash {
 		h.GasLimit,
 		h.GasUsed,
 		h.Time,
+		h.Dpor.Proposers,
+		h.Dpor.Seal,
+		h.Dpor.Validators,
 		h.Extra,
 	})
 }
@@ -289,7 +176,13 @@ func (h *Header) HashNoNonce() common.Hash {
 // Size returns the approximate memory used by all internal contents. It is used
 // to approximate and limit the memory consumption of various caches.
 func (h *Header) Size() common.StorageSize {
-	return common.StorageSize(unsafe.Sizeof(*h)) + common.StorageSize(len(h.Extra)+(h.Difficulty.BitLen()+h.Number.BitLen()+h.Time.BitLen())/8)
+	dporSize := common.StorageSize(len(h.Dpor.Proposers))*common.StorageSize(unsafe.Sizeof(common.Address{})) +
+		common.StorageSize(len(h.Dpor.Sigs))*common.StorageSize(unsafe.Sizeof(DporSignature{})) +
+		common.StorageSize(len(h.Dpor.Validators))*common.StorageSize(unsafe.Sizeof(common.Address{})) +
+		common.StorageSize(unsafe.Sizeof(h.Dpor.Seal))
+
+	return common.StorageSize(unsafe.Sizeof(*h)) + common.StorageSize(len(h.Extra)+(h.Difficulty.BitLen()+
+		h.Number.BitLen()+h.Time.BitLen())/8) + dporSize
 }
 
 func rlpHash(x interface{}) (h common.Hash) {
@@ -403,11 +296,31 @@ func CopyHeader(h *Header) *Header {
 		cpy.Extra = make([]byte, len(h.Extra))
 		copy(cpy.Extra, h.Extra)
 	}
-	if len(h.Extra2) > 0 {
-		cpy.Extra2 = make([]byte, len(h.Extra2))
-		copy(cpy.Extra2, h.Extra2)
-	}
+	cpy.Dpor = *CopyDporSnap(&h.Dpor)
 	return &cpy
+}
+
+func CopyDporSnap(d *DporSnap) *DporSnap {
+	// copy DporSnap
+	cpy := new(DporSnap)
+	// copy DporSnap.Proposers
+	cpy.Proposers = make([]common.Address, len(d.Proposers))
+	for i := 0; i < len(d.Proposers); i++ {
+		copy(cpy.Proposers[i][:], d.Proposers[i][:])
+	}
+	// copy DporSnap.Sigs
+	cpy.Sigs = make([]DporSignature, len(d.Sigs))
+	for i := 0; i < len(d.Sigs); i++ {
+		copy(cpy.Sigs[i][:], d.Sigs[i][:])
+	}
+	// copy DporSnap.Seal
+	copy(cpy.Seal[:], d.Seal[:])
+	// copy DporSnap.Validators
+	cpy.Validators = make([]common.Address, len(d.Validators))
+	for i := 0; i < len(d.Validators); i++ {
+		copy(cpy.Validators[i][:], d.Validators[i][:])
+	}
+	return cpy
 }
 
 // DecodeRLP decodes the Ethereum
@@ -469,8 +382,7 @@ func (b *Block) ParentHash() common.Hash   { return b.header.ParentHash }
 func (b *Block) TxsRoot() common.Hash      { return b.header.TxsRoot }
 func (b *Block) ReceiptsRoot() common.Hash { return b.header.ReceiptsRoot }
 func (b *Block) Extra() []byte             { return common.CopyBytes(b.header.Extra) }
-
-func (b *Block) Extra2() []byte { return common.CopyBytes(b.header.Extra2) }
+func (b *Block) Dpor() DporSnap            { return b.header.Dpor }
 
 func (b *Block) RefHeader() *Header { return b.header } // TODO: fix it.
 func (b *Block) Header() *Header    { return CopyHeader(b.header) }

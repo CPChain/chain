@@ -177,15 +177,11 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	}
 	header.Extra = header.Extra[:extraVanity]
 
-	// if number%d.config.Epoch == 0 {
 	for _, signer := range snap.SignersOf(number) {
-		header.Extra = append(header.Extra, signer[:]...)
+		header.Dpor.Proposers = append(header.Dpor.Proposers, signer)
 	}
-	// }
-	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
-	// We suppose each signer only produces one block.
-	header.Extra2 = make([]byte, extraSeal*int(d.config.TermLen)+1)
 
+	header.Dpor.Sigs = make([]types.DporSignature, d.config.TermLen)
 	// Mix digest is reserved for now, set to empty
 	header.MixHash = common.Hash{}
 
@@ -282,20 +278,16 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	if err != nil {
 		return nil, err
 	}
-	copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
+
+	copy(header.Dpor.Seal[:], sighash)
 
 	// allSigs is a SignatureExtra2.
-	allSigs := make([]byte, int(d.config.TermLen)*extraSeal)
+	header.Dpor.Sigs = make([]types.DporSignature, d.config.TermLen)
 
 	// Copy signature to the right position in allSigs.
 	round, _ := snap.SignerViewOf(signer, number)
-	copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
+	copy(header.Dpor.Sigs[round][:], sighash)
 
-	// Encode it to header.extra2.
-	err = header.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
-	if err != nil {
-		return nil, err
-	}
 	return block.WithSeal(header), nil
 }
 
