@@ -657,6 +657,12 @@
 			"revisionTime": "2016-06-18T19:32:21Z"
 		},
 		{
+			"checksumSHA1": "BQFHX0X4aA3KpAUuozV2vg6tDhA=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "",
+			"tree": true
+		},
+		{
 			"checksumSHA1": "jAzqolwnRJhHsKXmmvKNrHqxqAw=",
 			"path": "github.com/spaolacci/murmur3",
 			"revision": "f09979ecbc725b9e6d41a297405f65e7e8804acc",
