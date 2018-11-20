@@ -47,7 +47,7 @@ dpor
             - After p collects a view-change certificate, it multicast a <NEW-VIEW, v+1> message
             - Signer i enters new view v+1, if i has 2f VIEW-CHANGE messages (including i) and receives NEW-VIEW message
 
-1. **Validator** and **proposer** and **Ordinary** users
+1. **Validator** and **Proposer** and **Ordinary** users
     a. Block validators, or validators refer to a group of users that can validate a newly proposed block
         - The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
         - Except for some abnormal cases, validators have no right producing blocks
