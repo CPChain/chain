@@ -78,42 +78,69 @@ func ConvertOldTxHexToNewTxHex(oldTxHex string) string {
 
 // Header represents a block header in the Ethereum blockchain.
 type HeaderOld struct {
-	ParentHash  common.Hash    `json:"parentHash"       gencodec:"required"`
-	UncleHash   common.Hash    `json:"sha3Uncles"       gencodec:"required"`
-	Coinbase    common.Address `json:"miner"            gencodec:"required"`
-	Root        common.Hash    `json:"stateRoot"        gencodec:"required"`
-	TxHash      common.Hash    `json:"transactionsRoot" gencodec:"required"`
-	ReceiptHash common.Hash    `json:"receiptsRoot"     gencodec:"required"`
-	Bloom       Bloom          `json:"logsBloom"        gencodec:"required"`
-	Difficulty  *big.Int       `json:"difficulty"       gencodec:"required"`
-	Number      *big.Int       `json:"number"           gencodec:"required"`
-	GasLimit    uint64         `json:"gasLimit"         gencodec:"required"`
-	GasUsed     uint64         `json:"gasUsed"          gencodec:"required"`
-	Time        *big.Int       `json:"timestamp"        gencodec:"required"`
-	Extra       []byte         `json:"extraData"        gencodec:"required"`
-	Extra2      []byte         `json:"extraData2"       gencodec:"required"`
-	MixDigest   common.Hash    `json:"mixHash"          gencodec:"required"`
-	Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
+	ParentHash   common.Hash    `json:"parentHash"       gencodec:"required"`
+	Coinbase     common.Address `json:"miner"            gencodec:"required"`
+	StateRoot    common.Hash    `json:"stateRoot"        gencodec:"required"`
+	TxsRoot      common.Hash    `json:"transactionsRoot" gencodec:"required"`
+	ReceiptsRoot common.Hash    `json:"receiptsRoot"     gencodec:"required"`
+	LogsBloom    Bloom          `json:"logsBloom"        gencodec:"required"`
+	Difficulty   *big.Int       `json:"difficulty"       gencodec:"required"`
+	Number       *big.Int       `json:"number"           gencodec:"required"`
+	GasLimit     uint64         `json:"gasLimit"         gencodec:"required"`
+	GasUsed      uint64         `json:"gasUsed"          gencodec:"required"`
+	Time         *big.Int       `json:"timestamp"        gencodec:"required"`
+	Extra        []byte         `json:"extraData"        gencodec:"required"`
+	Extra2       []byte         `json:"extraData2"       gencodec:"required"`
+	MixHash      common.Hash    `json:"mixHash"          gencodec:"required"`
+	Nonce        BlockNonce     `json:"nonce"            gencodec:"required"`
 }
 
 func (h *HeaderOld) ToNewType() *Header {
-	return &Header{
+	newHeader := &Header{
 		ParentHash:   h.ParentHash,
 		Coinbase:     h.Coinbase,
-		StateRoot:    h.Root,
-		TxsRoot:      h.TxHash,
-		ReceiptsRoot: h.ReceiptHash,
-		LogsBloom:    h.Bloom,
+		StateRoot:    h.StateRoot,
+		TxsRoot:      h.TxsRoot,
+		ReceiptsRoot: h.ReceiptsRoot,
+		LogsBloom:    h.LogsBloom,
 		Difficulty:   h.Difficulty,
 		Number:       h.Number,
 		GasLimit:     h.GasLimit,
 		GasUsed:      h.GasUsed,
 		Time:         h.Time,
-		Extra:        h.Extra,
-		Extra2:       h.Extra2,
-		MixHash:      h.MixDigest,
+		MixHash:      h.MixHash,
 		Nonce:        h.Nonce,
 	}
+	// update dpor field
+	newHeader.Dpor = *h.extractDporSnap()
+	return newHeader
+}
+
+func (h *HeaderOld) extractDporSnap() *DporSnap {
+	dpor := new(DporSnap)
+	// Update dpor snap every time, not consider performance hit because it is temporary code. @AC
+	if len(h.Extra)-extraVanity > 0 {
+		proBuf := h.Extra[extraVanity : len(h.Extra)-extraSeal]
+		proCount := len(proBuf) / common.AddressLength
+		dpor.Proposers = make([]common.Address, proCount)
+		for i := 0; i < proCount; i++ {
+			dpor.Proposers[i] = common.BytesToAddress(proBuf[i*common.AddressLength : (i+1)*common.AddressLength])
+		}
+
+		sealBuf := h.Extra[len(h.Extra)-extraSeal:]
+		dpor.Seal = DporSignature{}
+		copy(dpor.Seal[:], sealBuf)
+
+	}
+
+	if len(h.Extra2) > 0 {
+		sigCount := len(h.Extra2) / DporSigLength
+		dpor.Sigs = make([]DporSignature, sigCount)
+		for i := 0; i < sigCount; i++ {
+			copy(dpor.Sigs[i][:], h.Extra2[i*DporSigLength:(i+1)*DporSigLength])
+		}
+	}
+	return dpor
 }
 
 func (header *HeaderOld) Hash() (hash common.Hash) {
@@ -122,17 +149,17 @@ func (header *HeaderOld) Hash() (hash common.Hash) {
 	rlp.Encode(hasher, []interface{}{
 		header.ParentHash,
 		header.Coinbase,
-		header.Root,
-		header.TxHash,
-		header.ReceiptHash,
-		header.Bloom,
+		header.StateRoot,
+		header.TxsRoot,
+		header.ReceiptsRoot,
+		header.LogsBloom,
 		header.Difficulty,
 		header.Number,
 		header.GasLimit,
 		header.GasUsed,
 		header.Time,
 		header.Extra,
-		header.MixDigest,
+		header.MixHash,
 		header.Nonce,
 	})
 	hasher.Sum(hash[:0])
@@ -155,13 +182,11 @@ type headerOldMarshaling struct {
 type extblockold struct {
 	Header *HeaderOld
 	Txs    []*Transaction
-	Uncles []*HeaderOld
 }
 
 // Block represents an entire block in the Ethereum blockchain.
 type BlockOld struct {
 	header       *HeaderOld
-	uncles       []*HeaderOld
 	transactions Transactions
 
 	// caches
@@ -172,8 +197,7 @@ type BlockOld struct {
 	// of the chain up to and including the block.
 	td *big.Int
 
-	// These fields are used by package eth to track
-	// inter-peer block relay.
+	// These fields are used to track inter-peer block relay.
 	ReceivedAt   time.Time
 	ReceivedFrom interface{}
 }
@@ -198,7 +222,7 @@ func (b *BlockOld) DecodeRLP(s *rlp.Stream) error {
 	if err := s.Decode(&eb); err != nil {
 		return err
 	}
-	b.header, b.uncles, b.transactions = eb.Header, eb.Uncles, eb.Txs
+	b.header, b.transactions = eb.Header, eb.Txs
 	b.size.Store(common.StorageSize(rlp.ListSize(size)))
 	return nil
 }
@@ -208,7 +232,6 @@ func (b *BlockOld) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, extblockold{
 		Header: b.header,
 		Txs:    b.transactions,
-		Uncles: b.uncles,
 	})
 }
 
