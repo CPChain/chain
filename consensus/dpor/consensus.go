@@ -26,6 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/types"
@@ -41,6 +42,7 @@ const (
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
+
 )
 
 var (
@@ -201,12 +203,17 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	return nil
 }
 
+func addCoinbaseReward(coinbase common.Address, state *state.StateDB) {
+	amount := big.NewInt(configs.Cep1BlockReward)
+	state.AddBalance(coinbase, amount)
+}
+
 // Finalize implements consensus.Engine, ensuring no uncles are set, nor block
 // rewards given, and returns the final block.
 func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
-	// No block rewards in PoA, so the state remains as is and uncles are dropped
+	addCoinbaseReward(header.Coinbase, state)
+	// last step
 	header.StateRoot = state.IntermediateRoot(true)
-
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil
 }
@@ -274,9 +281,6 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		case <-time.After(delay):
 		}
 	*/
-	// set coinbase
-	header.Coinbase = signer
-
 	// Sign all the things!
 	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header).Bytes())
 	if err != nil {

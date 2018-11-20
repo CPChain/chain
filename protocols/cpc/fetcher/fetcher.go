@@ -691,11 +691,13 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 			f.dropPeer(peer)
 			return
 		}
-		// Run the actual import and log any issues
+
+		// NB we actually insert the chain.  run the actual import and log any issues
 		if _, err := f.insertChain(types.Blocks{block}); err != nil {
 			log.Debug("Propagated block import failed", "peer", peer, "number", block.Number(), "hash", hash.Hex(), "err", err)
 			return
 		}
+
 		// If import succeeded, broadcast the block
 		propAnnounceOutTimer.UpdateSince(block.ReceivedAt)
 		go f.broadcastBlock(block, false)
