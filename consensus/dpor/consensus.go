@@ -26,6 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/types"
@@ -42,10 +43,6 @@ const (
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
 
-)
-
-var (
-	Cep1BlockReward = big.NewInt(5e+18) // Block reward in wei for successfully mining a block
 )
 
 var (
@@ -207,7 +204,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 }
 
 func addCoinbaseReward(coinbase common.Address, state *state.StateDB) {
-	amount := new(big.Int).Set(Cep1BlockReward)
+	amount := big.NewInt(configs.Cep1BlockReward)
 	state.AddBalance(coinbase, amount)
 }
 
