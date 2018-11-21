@@ -18,6 +18,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -105,6 +106,10 @@ func HexToDporSig(s string) DporSignature {
 	return a
 }
 
+func (d *DporSignature) IsEmpty() bool {
+	return bytes.Equal(d[:], bytes.Repeat([]byte{0x00}, DporSigLength))
+}
+
 type DporSnap struct {
 	Seal       DporSignature    // the signature of the block's producer
 	Sigs       []DporSignature  // the signatures of validators to endorse the block
@@ -127,9 +132,7 @@ type headerMarshaling struct {
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
 // RLP encoding.
 func (h *Header) Hash() common.Hash {
-	// because of the introduction of `extra2', we define a `sigHash' to exclude that field.
-	// return rlpHash(h)
-	return sigHash(h) // TODO: this is wrong, fix this.
+	return sigHash(h)
 }
 
 // sigHash returns hash of header without `extra2' field.

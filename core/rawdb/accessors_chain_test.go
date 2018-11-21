@@ -42,6 +42,8 @@ type headerTest struct {
 	GasLimit     uint64
 	GasUsed      uint64
 	Time         *big.Int
+	Proposers    []common.Address
+	Validators   []common.Address
 	Extra        []byte
 	MixHash      common.Hash
 	Nonce        types.BlockNonce
@@ -84,6 +86,8 @@ func TestHeaderStorage(t *testing.T) {
 			headerFromRLP.GasLimit,
 			headerFromRLP.GasUsed,
 			headerFromRLP.Time,
+			headerFromRLP.Dpor.Proposers,
+			headerFromRLP.Dpor.Validators,
 			headerFromRLP.Extra,
 			headerFromRLP.MixHash,
 			headerFromRLP.Nonce,
