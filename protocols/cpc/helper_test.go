@@ -146,7 +146,7 @@ func newTestPeer(name string, version int, pm *ProtocolManager, shake bool) (*te
 		select {
 		// one shot for a single peer
 		case pm.newPeerCh <- peer:
-			errc <- pm.handle(peer)
+			errc <- pm.addPeer(peer)
 		case <-pm.quitSync:
 			errc <- p2p.DiscQuitting
 		}
