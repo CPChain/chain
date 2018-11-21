@@ -52,6 +52,7 @@ func ExampleGenerateChain() {
 	// block index.
 	signer := types.HomesteadSigner{}
 	chain, _ := GenerateChain(gspec.Config, genesis, engine, db, remoteDB, 5, func(i int, gen *BlockGen) {
+		fmt.Println("round", i, " , balance of addr3:", gen.pubStateDB.GetBalance(addr3))
 		switch i {
 		case 0:
 			// In block 1, addr1 sends addr2 some ether.

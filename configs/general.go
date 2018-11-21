@@ -23,7 +23,7 @@ const (
 // Genesis hashes to enforce below configs on.
 var (
 	// hash refers to default block.
-	MainnetGenesisHash = common.HexToHash("0x6a1455819a218618d870ad9c84257d4917ec6c6e10f4c133004dd1f8a687612a")
+	MainnetGenesisHash = common.HexToHash("0x09809289eaa451c3699771207105557748fe6b382bfb5d3cc1c145d1d41ceae6")
 )
 
 var (
