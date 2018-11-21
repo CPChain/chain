@@ -10,9 +10,8 @@ import (
 // BroadcastMinedBlock broadcasts generated block to committee
 func (h *Handler) BroadcastMinedBlock(block *types.Block) {
 	committee := h.signers
-	log.Debug("broadcast new generated block to commttee")
-	for addr, peer := range committee {
-		log.Debug("signer", "addr", addr.Hex())
+	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
+	for _, peer := range committee {
 		peer.AsyncSendNewPendingBlock(block)
 	}
 }
@@ -44,14 +43,23 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 
 			log.Debug("generated new pending block, broadcasting")
 
-			// broadcast mined pending block to remote signers
-			// go h.BroadcastMinedBlock(pendingBlock)
-			log.Debug("local block", "block", pendingBlock)
+			done := false
 
-			for i := 0; i < 100; i++ {
-				h.BroadcastMinedBlock(pendingBlock)
-				time.Sleep(3 * time.Second)
+			for !done {
+				if h.Available() && len(h.signers) >= int(h.termLen) {
+					// broadcast mined pending block to remote signers
+					go h.BroadcastMinedBlock(pendingBlock)
+					done = true
+				}
 			}
+
+			// TODO: remove this
+			// log.Debug("local block", "block", pendingBlock)
+
+			// for i := 0; i < 100; i++ {
+			// 	h.BroadcastMinedBlock(pendingBlock)
+			// 	time.Sleep(3 * time.Second)
+			// }
 
 		// case <-futureTimer.C:
 
