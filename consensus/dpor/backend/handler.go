@@ -13,7 +13,6 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
-	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -72,11 +71,12 @@ type Handler struct {
 	// this func is method from dpor, used for checking if a remote peer is signer
 	validateSignerFn ValidateSignerFn
 
-	pendingBlocks  *lru.Cache // not enough signatures block cache
+	pendingBlocks map[common.Hash]*types.Block // not enough signatures block cache
+	// pendingBlocks  *lru.Cache // not enough signatures block cache
 	pendingBlockCh chan *types.Block
 	quitSync       chan struct{}
 
-	currentPending common.Hash
+	currentPending *types.Block
 
 	dialed    bool
 	available bool
@@ -98,8 +98,10 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		available:       false,
 	}
 
-	pendingBlocks, _ := lru.New(maxPendingBlocks)
-	h.pendingBlocks = pendingBlocks
+	// pendingBlocks, _ := lru.New(maxPendingBlocks)
+	// h.pendingBlocks = pendingBlocks
+
+	h.pendingBlocks = make(map[common.Hash]*types.Block)
 
 	// TODO: fix this
 	h.mode = LBFTMode
@@ -340,6 +342,9 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 		case nil:
 			// basic fields are correct
 
+			// TODO: remove this line
+			go h.BroadcastMinedBlock(block)
+
 			// sign the block
 			header := block.RefHeader()
 			switch e := h.signHeaderFn(header, consensus.Preprepared); e {
@@ -349,6 +354,7 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 				if err := h.AddPendingBlock(block); err != nil {
 					return err
 				}
+				h.currentPending = block
 
 				// broadcast prepare msg
 				go h.BroadcastPrepareSignedHeader(header)
@@ -377,20 +383,32 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 		switch err := h.verifyHeaderFn(header, consensus.Prepared); err {
 		case nil:
 			// with enough prepare sigs
+
+			block := h.currentPending
+			if header.Hash() != block.Hash() {
+
+				block = h.GetPendingBlock(header.Hash())
+				if block == nil {
+					// TODO: remove this line
+					go h.BroadcastPrepareSignedHeader(header)
+					return nil
+				}
+			}
+
+			err := h.insertChainFn(block)
+			if err != nil {
+				log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
+				return err
+			}
+
+			// broadcast the block
+			go h.broadcastBlockFn(block, true)
+
+		case consensus.ErrNotEnoughSigs:
 			// sign the block
 			switch e := h.signHeaderFn(header, consensus.Prepared); e {
 			case nil:
-
-				block := h.GetPendingBlock(header.Hash())
-
-				err := h.insertChainFn(block)
-				if err != nil {
-					log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
-					return err
-				}
-
-				// broadcast the block
-				go h.broadcastBlockFn(block, true)
+				go h.BroadcastPrepareSignedHeader(header)
 
 			default:
 				log.Warn("err when signing header", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
@@ -609,14 +627,11 @@ func (h *Handler) ReadyToImpeach() bool {
 func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
 	case h.pendingBlockCh <- block:
-		log.Debug("!!!!!!!!!!!!!!!!! inserted into handler.pendingBlockCh")
-
 		err := h.AddPendingBlock(block)
-		log.Debug("err when add pending block to chain", "err", err)
 		if err != nil {
 			return err
 		}
-		h.currentPending = block.Hash()
+		h.currentPending = block
 
 		return nil
 	}
@@ -705,13 +720,11 @@ func (h *Handler) Disconnect() {
 
 // GetPendingBlock returns a pending block with given hash
 func (h *Handler) GetPendingBlock(hash common.Hash) *types.Block {
-	h.lock.RLock()
-	defer h.lock.RUnlock()
+	h.lock.Lock()
+	defer h.lock.Unlock()
 
-	if block, ok := h.pendingBlocks.Get(hash); ok {
-		return block.(*types.Block)
-	}
-	return nil
+	block := h.pendingBlocks[hash]
+	return block
 }
 
 // AddPendingBlock adds a pending block with given hash
@@ -720,7 +733,7 @@ func (h *Handler) AddPendingBlock(block *types.Block) error {
 	defer h.lock.Unlock()
 
 	hash := block.Hash()
+	h.pendingBlocks[hash] = block
 
-	h.pendingBlocks.Add(hash, block)
 	return nil
 }
