@@ -251,11 +251,19 @@ func (b *APIBackend) RNode(view_idx *big.Int) []common.Address {
 }
 
 func (b *APIBackend) CurrentView() uint64 {
-	return b.cpc.dpor.CurrentView()
+	block := b.cpc.blockchain.CurrentBlock()
+	bn := block.Number()
+	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
+	View := (uint64(bn.Uint64()) - (uint64(bn.Uint64()) / (vl * tl))) / vl
+	return View
 }
 
 func (b *APIBackend) CurrentTerm() uint64 {
-	return b.cpc.dpor.CurrentTerm()
+	block := b.cpc.blockchain.CurrentBlock()
+	bn := block.Number()
+	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
+	Term := uint64(bn.Uint64()) / (vl * tl)
+	return Term
 }
 
 func (b *APIBackend) CommitteMember(number *big.Int) []common.Address {

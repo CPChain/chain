@@ -473,53 +473,47 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
 }
 
-func (s *PublicBlockChainAPI) GetRNodesAddress(view_idex *big.Int) []common.Address {
-	var rNodeAddress []common.Address
-	if view_idex == big.NewInt(0) {
-		rNodeAddress = s.b.RNode(big.NewInt(rpc.LatestBlockNumber.Int64()))
-	}
-	rNodeAddress = s.b.RNode(view_idex)
-	return rNodeAddress
-}
+//func (s *PublicBlockChainAPI) GetRNodesAddress(view_idex *big.Int) []common.Address {
+//	var rNodeAddress []common.Address
+//	if view_idex == big.NewInt(0) {
+//		rNodeAddress = s.b.RNode(big.NewInt(rpc.LatestBlockNumber.Int64()))
+//	}
+//	rNodeAddress = s.b.RNode(view_idex)
+//	return rNodeAddress
+//}
 
 // Query RNodes.
-func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *big.Int) cpclient.RNode {
+func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *big.Int) []cpclient.RNode {
 	// TODO fill biz logic later
 	var rNodeAddress []common.Address
 	var committeAddress []common.Address
 
-	Score := s.b.CalcRptInfo(nodeAddress, view_idex.Uint64())
+	var RNodes []cpclient.RNode
 
-	if view_idex == big.NewInt(0) {
-		rNodeAddress = s.b.RNode(big.NewInt(rpc.LatestBlockNumber.Int64()))
-		committeAddress = s.b.CommitteMember(big.NewInt(rpc.LatestBlockNumber.Int64()))
-	}
 	rNodeAddress = s.b.RNode(view_idex)
 	committeAddress = s.b.CommitteMember(view_idex)
-	for _, address := range committeAddress {
-		if nodeAddress == address {
-			return cpclient.RNode{
-				Address: nodeAddress,
-				Rpt:     Score,
-				Status:  cpclient.Committe,
-			}
-		} else {
-			for _, address := range rNodeAddress {
-				if address == nodeAddress {
-					return cpclient.RNode{
-						Address: nodeAddress,
-						Rpt:     Score,
-						Status:  cpclient.Cadidate,
-					}
+
+	for _, rodeAddr := range rNodeAddress {
+		for _, comAddr := range committeAddress {
+			if comAddr == rodeAddr {
+				score := s.b.CalcRptInfo(comAddr, view_idex.Uint64())
+				r := cpclient.RNode{
+					Address: comAddr,
+					Rpt:     score,
+					Status:  cpclient.Committe,
 				}
+				RNodes = append(RNodes, r)
 			}
 		}
+		score := s.b.CalcRptInfo(rodeAddr, view_idex.Uint64())
+		r := cpclient.RNode{
+			Address: rodeAddr,
+			Rpt:     score,
+			Status:  cpclient.Committe,
+		}
+		RNodes = append(RNodes, r)
 	}
-	return cpclient.RNode{
-		Address: nodeAddress,
-		Rpt:     Score,
-		Status:  cpclient.Civilian,
-	}
+	return RNodes
 	//return []common.Address{common.HexToAddress("01"), common.HexToAddress("02")}
 }
 
