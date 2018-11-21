@@ -168,13 +168,16 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, sign
 	var signerStatus signerStatusData // safe to read after two values have been received from errc
 
 	go func() {
-		errc <- p2p.Send(rw, NewSignerMsg, &signerStatusData{
+		err := p2p.Send(rw, NewSignerMsg, &signerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         etherbase,
 		})
+		log.Debug("err when send msg", "err", err)
+		errc <- err
 	}()
 	go func() {
 		isSigner, address, err = ReadSignerStatus(p, rw, &signerStatus, signerValidator)
+		log.Debug("err when read signer msg", "err", err)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -196,19 +199,24 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, sign
 func ReadSignerStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerStatusData, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
+		log.Debug("hi 1", "err", err)
 		return false, common.Address{}, err
 	}
 	if msg.Code != NewSignerMsg {
+		log.Debug("hi 2", "err", err)
 		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
 	}
 	if msg.Size > ProtocolMaxMsgSize {
+		log.Debug("hi 3", "err", err)
 		return false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 	}
 	// Decode the handshake and make sure everything matches
 	if err := msg.Decode(&signerStatus); err != nil {
+		log.Debug("hi 4", "err", err)
 		return false, common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
 	if int(signerStatus.ProtocolVersion) != ProtocolVersion {
+		log.Debug("hi 5", "err", err)
 		return false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, ProtocolVersion)
 	}
 
@@ -218,5 +226,6 @@ func ReadSignerStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerSta
 	isSigner, err = signerValidator(signerStatus.Address)
 	log.Debug("cpchain committee network handshaking...")
 	log.Debug("peer validate result", "peer", signerStatus.Address, "is signer", isSigner)
+	log.Debug("hi 6", "err", err)
 	return isSigner, signerStatus.Address, err
 }
