@@ -188,14 +188,6 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		return d.SignHeader(d.chain, header, state)
 	}
 
-	addPendingBlockFn := func(block *types.Block) error {
-		return d.chain.AddPendingBlock(block)
-	}
-
-	getPendingBlockFn := func(hash common.Hash) *types.Block {
-		return d.chain.GetPendingBlock(hash)
-	}
-
 	broadcastBlockFn := func(block *types.Block, prop bool) {
 		go pmBroadcastBlockFn(block, prop)
 	}
@@ -225,8 +217,6 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		verifyHeaderFn,
 		validateBlockFn,
 		signHeaderFn,
-		addPendingBlockFn,
-		getPendingBlockFn,
 		broadcastBlockFn,
 		insertChainFn,
 		statusFn,
