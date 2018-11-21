@@ -113,7 +113,6 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	if config.Dpor != nil {
 		if dpor, ok := engine.(*dpor.Dpor); ok {
 			dporProtocol = dpor.Protocol()
-			// manager.SubProtocols = append(manager.SubProtocols, pbftProtocol)
 		}
 	}
 
@@ -125,6 +124,12 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 			Length:  ProtocolLengths[i],
 			Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
 
+				// return if dpor is still not initialized
+				if config.Dpor != nil && !dporProtocol.Available() {
+					log.Warn("dpor handler is not not available now")
+					return nil
+				}
+
 				// wrap up the peer
 				peer := manager.newPeer(int(version), p, rw)
 
@@ -135,26 +140,29 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					defer manager.wg.Done()
 					// stuck in the message loop on this peer
 
-					err := manager.handle(peer)
+					// Add peer to manager.peers, this is for basic msg syncing
+					err := manager.addPeer(peer)
 					if err != nil {
+						log.Error("faile to add peer to cpc protocol manager's peer set", "err", err)
 						return err
 					}
 					defer manager.removePeer(peer.id)
 
-					var addr string
-
-					if dporProtocol.Available() {
-						// add dpor peer
-						addr, err = dporProtocol.AddPeer(int(version), p, rw)
-						if err != nil {
-							return err
-						}
-						defer dporProtocol.RemovePeer(addr)
-
+					// add peer to dpor.handler.peers, this is for pbft/lbft msg handling
+					id, ok := common.Address{}.Hex(), false
+					id, ok, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
+					if err != nil {
+						log.Error("faile to add peer to dpor's peer set", "err", err)
+						return err
 					}
+					defer dporProtocol.RemovePeer(id)
+
+					// send local pending transactions to the peer.
+					// new transactions appearing after this will be sent via broadcasts.
+					manager.syncTransactions(peer)
 
 					for {
-						msg, err := rw.ReadMsg()
+						msg, err := peer.rw.ReadMsg()
 						if err != nil {
 							return err
 						}
@@ -162,24 +170,26 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 							return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 						}
 
-						defer msg.Discard()
-
-						if dporProtocol.Available() {
-							if IsPbftMsg(msg) {
-								err = dporProtocol.HandleMsg(addr, msg)
-								if err != nil {
-									log.Error("err when handling pbft msg", "err", err)
-									return err
-								}
+						switch {
+						case IsSyncMsg(msg):
+							err = manager.handleSyncMsg(msg, peer)
+							if err != nil {
+								log.Error("err when handling sync msg", "err", err)
+								return err
 							}
+
+						case IsDporMsg(msg) && ok:
+							err = dporProtocol.HandleMsg(id, msg)
+							if err != nil {
+								log.Error("err when handling dpor msg", "err", err)
+								return err
+							}
+
+						default:
+							log.Error("unknown msg code", "msg", msg.Code)
 						}
 
-						err = manager.handleNormalMsg(msg, peer)
-						if err != nil {
-							log.Error("err when handling pbft msg", "err", err)
-							return err
-						}
-
+						msg.Discard()
 					}
 
 				case <-manager.quitSync:
@@ -187,6 +197,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 				}
 			},
 			NodeInfo: func() interface{} {
+				// TODO: add dpor pbft status to this if dpor is available
 				return manager.NodeInfo()
 			},
 			PeerInfo: func(id discover.NodeID) interface{} {
@@ -236,9 +247,6 @@ func (pm *ProtocolManager) removePeer(id string) {
 	// Unregister the peer from the downloader and cpchain peer set
 	pm.downloader.UnregisterPeer(id)
 
-	// if err := pm.peers.UnregisterSigner(id); err != nil {
-	// 	log.Error("Signer Peer removal failed", "peer", id, "err", err)
-	// }
 	if err := pm.peers.Unregister(id); err != nil {
 		log.Error("Peer removal failed", "peer", id, "err", err)
 	}
@@ -248,7 +256,7 @@ func (pm *ProtocolManager) removePeer(id string) {
 	}
 }
 
-// starts all the blockchain synchronization mechanisms
+// Start starts all the blockchain synchronization mechanisms
 func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.maxPeers = maxPeers
 
@@ -300,6 +308,7 @@ func (pm *ProtocolManager) update() {
 	}
 }
 
+// Stop stops all
 func (pm *ProtocolManager) Stop() {
 	log.Info("Stopping cpchain protocol")
 
@@ -339,9 +348,9 @@ func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner boo
 	return isSigner, err
 }
 
-// handle is the callback invoked to manage the life cycle of cpchain peer.
+// addPeer is the callback invoked to manage the life cycle of cpchain peer.
 // when this function terminates, the peer is disconnected.
-func (pm *ProtocolManager) handle(p *peer) error {
+func (pm *ProtocolManager) addPeer(p *peer) error {
 	// ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
 		return p2p.DiscTooManyPeers
@@ -392,18 +401,14 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {
 		return err
 	}
-
-	// send local pending transactions to the peer.
-	// new transactions appearing after this will be sent via broadcasts.
-	pm.syncTransactions(p)
-
-	// main loop. handle incoming messages.
-	for {
-		if err := pm.handleMsg(p); err != nil {
-			p.Log().Debug("Cpchain message handling failed", "err", err)
-			return err
-		}
-	}
+	// // main loop. handle incoming messages.
+	// for {
+	// 	if err := pm.handleMsg(p); err != nil {
+	// 		p.Log().Debug("Cpchain message handling failed", "err", err)
+	// 		return err
+	// 	}
+	// }
+	return nil
 }
 
 // // VerifyAndSign validates a header and signs it if nessary
@@ -430,10 +435,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 	}
 	defer msg.Discard()
 
-	return pm.handleNormalMsg(msg, p)
+	return pm.handleSyncMsg(msg, p)
 }
 
-func (pm *ProtocolManager) handleNormalMsg(msg p2p.Msg, p *peer) error {
+func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 	// Handle the message depending on its contents
 	switch {
 	case msg.Code == StatusMsg:
