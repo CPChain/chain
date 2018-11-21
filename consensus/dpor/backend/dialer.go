@@ -98,7 +98,7 @@ func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error
 	return nil
 }
 
-// DialAll connects remote signers.
+// DialAll connects remote proposers.
 func (h *Handler) DialAll() {
 	h.lock.Lock()
 	rsaKey := h.rsaKey
@@ -229,7 +229,7 @@ func (s *Signer) dial(server *p2p.Server, nodeID string, address common.Address,
 
 	log.Debug("dialing to remote signer", "signer", s)
 
-	// fetch remtoe signer's public key if there is no one.
+	// fetch remote signer's public key if there is no one.
 	if !s.pubkeyFetched {
 		err := s.fetchPubkey(contractInstance)
 		if err != nil {

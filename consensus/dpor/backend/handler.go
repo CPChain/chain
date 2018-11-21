@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	// ErrUnknownHandlerMode is returnd if in an unknown mode
+	// ErrUnknownHandlerMode is returned if in an unknown mode
 	ErrUnknownHandlerMode = errors.New("unknown dpor handler mode")
 )
 
@@ -106,7 +106,7 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 // Start starts pbft handler
 func (h *Handler) Start() {
 
-	// Dail all remote signers
+	// Dail all remote validators
 	go h.DialAll()
 
 	// Broadcast mined pending block, including empty block

@@ -326,7 +326,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Ensure that the difficulty corresponds to the turn-ness of the signer
-	inturn, _ := snap.IsLeaderOf(leader, header.Number.Uint64())
+	inturn, _ := snap.IsProposerOf(leader, header.Number.Uint64())
 	if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
 		return errInvalidDifficulty
 	}
@@ -340,7 +340,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	log.Debug("number", "number", number)
 	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
 	log.Debug("leader", "address", leader.Hex())
-	log.Debug("signers recoverd from header: ")
+	log.Debug("signers recovered from header: ")
 	for _, signer := range signers {
 		log.Debug("signer", "address", signer.Hex())
 	}
@@ -350,7 +350,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Check if the leader is the real leader
-	ok, err := snap.IsLeaderOf(leader, number)
+	ok, err := snap.IsProposerOf(leader, number)
 	if err != nil {
 		return err
 	}
@@ -373,7 +373,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	return nil
 }
 
-// sighHeader signs the given refHeader if self is in the committee
+// signHeader signs the given refHeader if self is in the committee
 func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error {
 	hash := header.Hash()
 	number := header.Number.Uint64()
@@ -402,7 +402,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Sign the block if self is in the committee
-	if snap.IsSignerOf(dpor.signer, number) {
+	if snap.IsValidatorOf(dpor.signer, number) {
 
 		// NOTE: sign a block only once
 		if signedHash, signed := dpor.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {
@@ -415,8 +415,8 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			return err
 		}
 
-		// Copy signer's signature to the right position in the allSigs
-		round, _ := snap.SignerViewOf(dpor.signer, number)
+		// Copy validator's signature to the right position in the all Sigs
+		round, _ := snap.ValidatorViewOf(dpor.signer, number)
 		copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
 
 		// Encode to header.extra2
@@ -427,10 +427,10 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 		return nil
 	}
-	return errSignerNotInCommittee
+	return errValidatorNotInCommittee
 }
 
-// timeToDialCommittee checks if it is time to dial remote signers, and dails them if time is up
+// timeToDialCommittee checks if it is time to dial remote signers, and dials them if time is up
 func (dh *defaultDporHelper) timeToDialCommittee(dpor *Dpor, chain consensus.ChainReader) bool {
 
 	header := chain.CurrentHeader()
@@ -442,7 +442,7 @@ func (dh *defaultDporHelper) timeToDialCommittee(dpor *Dpor, chain consensus.Cha
 		return false
 	}
 
-	// Some debug infos
+	// Some debug info
 	log.Debug("my address", "eb", dpor.signer.Hex())
 	log.Debug("current block number", "number", number)
 	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen))

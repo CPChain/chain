@@ -10,7 +10,7 @@ import (
 // BroadcastMinedBlock broadcasts generated block to committee
 func (h *Handler) BroadcastMinedBlock(block *types.Block) {
 	committee := h.signers
-	log.Debug("broadcast new generated block to commttee")
+	log.Debug("broadcast newly proposed block to the validators committee")
 	for addr, peer := range committee {
 		log.Debug("signer", "addr", addr.Hex())
 		peer.AsyncSendNewPendingBlock(block)
@@ -42,7 +42,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 		select {
 		case pendingBlock := <-h.pendingBlockCh:
 
-			log.Debug("generated new pending block, broadcasting")
+			log.Debug("proposed new pending block, broadcasting")
 
 			// broadcast mined pending block to remote signers
 			go h.BroadcastMinedBlock(pendingBlock)

@@ -124,6 +124,10 @@ type Producer interface {
 	Engine
 }
 
+type Proposer interface {
+	Engine
+}
+
 // Validator is used to validate and sign a block
 type Validator interface {
 
