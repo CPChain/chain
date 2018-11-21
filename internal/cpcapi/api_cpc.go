@@ -153,7 +153,7 @@ func (s *ChainReader) GetBalance(ctx context.Context, req *cpc.ChainReaderReques
 func newGRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64) *pb.RpcTransaction {
 	var signer types.Signer = types.FrontierSigner{}
 	if tx.Protected() {
-		signer = types.NewPrivTxSupportEIP155Signer(tx.ChainId())
+		signer = types.NewCep1Signer(tx.ChainId())
 	}
 	from, _ := types.Sender(signer, tx)
 	v, r, s := tx.RawSignatureValues()
@@ -446,7 +446,7 @@ func (t *TransactionPoolReader) GetTransactionReceipt(ctx context.Context, txHas
 
 	var signer types.Signer = types.FrontierSigner{}
 	if tx.Protected() {
-		signer = types.NewPrivTxSupportEIP155Signer(tx.ChainId())
+		signer = types.NewCep1Signer(tx.ChainId())
 	}
 	from, _ := types.Sender(signer, tx)
 

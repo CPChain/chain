@@ -345,7 +345,7 @@ func (self *engine) makeCurrentWork(parent *types.Block, header *types.Header) e
 
 	work := &Work{
 		config:    self.config,
-		signer:    types.NewPrivTxSupportEIP155Signer(self.config.ChainID),
+		signer:    types.NewCep1Signer(self.config.ChainID),
 		pubState:  pubState,
 		privState: privState,
 		header:    header,

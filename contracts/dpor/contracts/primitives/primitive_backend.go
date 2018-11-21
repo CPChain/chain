@@ -123,7 +123,7 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 		return 0, err
 	}
 	txvs := int64(0)
-	signer := types.NewPrivTxSupportEIP155Signer(re.Config.ChainConfig.ChainID)
+	signer := types.NewCep1Signer(re.Config.ChainConfig.ChainID)
 	txs := block.Transactions()
 	for _, tx := range txs {
 		sender, err := signer.Sender(tx)
