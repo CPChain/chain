@@ -9,15 +9,22 @@ import (
 
 // BroadcastMinedBlock broadcasts generated block to committee
 func (h *Handler) BroadcastMinedBlock(block *types.Block) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	committee := h.signers
 	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
-	for _, peer := range committee {
+	for addr, peer := range committee {
+		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
 		peer.AsyncSendNewPendingBlock(block)
 	}
 }
 
 // BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
 func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	committee := h.signers
 	for _, peer := range committee {
 		peer.AsyncSendPrepareSignedHeader(header)
@@ -26,6 +33,9 @@ func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
 
 // BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
 func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	committee := h.signers
 	for _, peer := range committee {
 		peer.AsyncSendCommitSignedHeader(header)
@@ -43,23 +53,23 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 
 			log.Debug("generated new pending block, broadcasting")
 
-			done := false
+			// done := false
 
-			for !done {
-				if h.Available() && len(h.signers) >= int(h.termLen) {
-					// broadcast mined pending block to remote signers
-					go h.BroadcastMinedBlock(pendingBlock)
-					done = true
-				}
-			}
+			// for !done {
+			// 	if h.Available() && len(h.signers) >= int(h.termLen) {
+			// 		// broadcast mined pending block to remote signers
+			// 		go h.BroadcastMinedBlock(pendingBlock)
+			// 		done = true
+			// 	}
+			// }
 
 			// TODO: remove this
-			// log.Debug("local block", "block", pendingBlock)
+			log.Debug("local block", "block", pendingBlock)
 
-			// for i := 0; i < 100; i++ {
-			// 	h.BroadcastMinedBlock(pendingBlock)
-			// 	time.Sleep(3 * time.Second)
-			// }
+			for i := 0; i < 30; i++ {
+				h.BroadcastMinedBlock(pendingBlock)
+				time.Sleep(3 * time.Second)
+			}
 
 		// case <-futureTimer.C:
 
