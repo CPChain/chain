@@ -177,27 +177,34 @@ func (h *Handler) Name() string {
 	return ProtocolName
 }
 
-func (h *Handler) Version() int {
+func (h *Handler) Version() uint {
 	return ProtocolVersion
 }
 
-func (h *Handler) Length() int {
+func (h *Handler) Length() uint64 {
 	return ProtocolLength
 }
 
 func (h *Handler) Available() bool {
+	h.lock.RLock()
+	defer h.lock.RUnlock()
+
 	return h.available
 }
 
-func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, error) {
+func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error) {
 	coinbase := h.Signer()
 	validator := h.validateSignerFn
+
+	log.Debug("do handshaking with remote peer...")
+
 	ok, address, err := Handshake(p, rw, coinbase, validator)
 	if !ok || err != nil {
-		return "", err
+		log.Debug("failed to handshake in dpor", "err", err, "ok", ok)
+		return "", ok, err
 	}
 	_, err = h.addSigner(version, p, rw, address)
-	return address.Hex(), err
+	return address.Hex(), true, err
 }
 
 func (h *Handler) RemovePeer(addr string) error {
@@ -253,11 +260,13 @@ func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, addr
 		signer = NewSigner(h.term, address)
 	}
 
-	log.Debug("received remote signer ping", "signer", address.Hex())
+	log.Debug("adding remote signer...", "signer", address.Hex())
 
 	if signer.Peer == nil {
 		err := signer.SetSigner(version, p, rw)
 		if err != nil {
+
+			log.Debug("failed to set peer")
 			return nil, err
 		}
 	}
