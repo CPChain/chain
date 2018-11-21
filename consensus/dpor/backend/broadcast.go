@@ -45,7 +45,13 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			log.Debug("generated new pending block, broadcasting")
 
 			// broadcast mined pending block to remote signers
-			go h.BroadcastMinedBlock(pendingBlock)
+			// go h.BroadcastMinedBlock(pendingBlock)
+			log.Debug("local block", "block", pendingBlock)
+
+			for i := 0; i < 100; i++ {
+				h.BroadcastMinedBlock(pendingBlock)
+				time.Sleep(3 * time.Second)
+			}
 
 		// case <-futureTimer.C:
 
