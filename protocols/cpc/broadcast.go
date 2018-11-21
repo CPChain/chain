@@ -54,10 +54,6 @@ import (
 // BroadcastBlock will either propagate a block to a subset of it's peers, or
 // will only announce it's availability (depending what's requested).
 func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
-	log.Debug("peers:")
-	for p := range pm.peers.peers {
-		log.Debug("signer", "id", p)
-	}
 
 	hash := block.Hash()
 	peers := pm.peers.PeersWithoutBlock(hash)
@@ -65,7 +61,7 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 	// If propagation is requested, send to a subset of the peer
 	if propagate {
 		if parent := pm.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1); parent == nil {
-			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash.Hex())
+			log.Error("Propagating dangling block", "number", block.NumberU64(), "hash", hash.Hex())
 			return
 		}
 
@@ -76,7 +72,7 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 			peer.AsyncSendNewBlock(block)
 		}
 
-		log.Debug("Propagated block", "hash", hash.Hex(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+		log.Debug("Propagated block", "number", block.NumberU64(), "hash", hash.Hex(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 		return
 	}
 
@@ -85,7 +81,7 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		for _, peer := range peers {
 			peer.AsyncSendNewBlockHash(block)
 		}
-		log.Debug("Announced block", "hash", hash.Hex(), "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+		log.Debug("Announced block", "number", block.NumberU64(), "hash", hash.Hex(), "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 	}
 }
 
@@ -118,7 +114,7 @@ func (pm *ProtocolManager) minedBroadcastLoop() {
 
 			if pm.chainconfig.Dpor != nil {
 
-				log.Debug("handling mined block with dpor handler")
+				log.Debug("handling mined block with dpor handler", "number", ev.Block.NumberU64())
 
 				// broadcast mined block with dpor handler
 				pm.engine.(*dpor.Dpor).HandleMinedBlock(ev.Block)
