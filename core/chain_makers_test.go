@@ -51,8 +51,10 @@ func ExampleGenerateChain() {
 	// each block and adds different features to gen based on the
 	// block index.
 	signer := types.HomesteadSigner{}
-	chain, _ := GenerateChain(gspec.Config, genesis, engine, db, remoteDB, 5, func(i int, gen *BlockGen) {
+	n := 5
+	chain, _ := GenerateChain(gspec.Config, genesis, engine, db, remoteDB, n, func(i int, gen *BlockGen) {
 		fmt.Println("round", i, " , balance of addr3:", gen.pubStateDB.GetBalance(addr3))
+
 		switch i {
 		case 0:
 			// In block 1, addr1 sends addr2 some ether.
@@ -66,7 +68,7 @@ func ExampleGenerateChain() {
 			gen.AddTx(tx1)
 			gen.AddTx(tx2)
 		case 2:
-			// Block 3 is empty but was mined by addr3.
+			// Block 3 is empty but was *mined* by addr3.
 			gen.SetCoinbase(addr3)
 		}
 	})
@@ -84,10 +86,13 @@ func ExampleGenerateChain() {
 	fmt.Printf("last block: #%d\n", blockchain.CurrentBlock().Number())
 	fmt.Println("balance of addr1:", state.GetBalance(addr1))
 	fmt.Println("balance of addr2:", state.GetBalance(addr2))
-	fmt.Println("balance of addr3:", state.GetBalance(addr3))
+
+	sub := new(big.Int).Mul(big.NewInt(configs.Cep1BlockReward), big.NewInt(int64(n-2)))
+	balanceAddr3 := new(big.Int).Sub(state.GetBalance(addr3), sub)
+	fmt.Println("balance of addr3 (adjusted):", balanceAddr3)
 	// Output:
 	// last block: #5
 	// balance of addr1: 989000
 	// balance of addr2: 10000
-	// balance of addr3: 1000
+	// balance of addr3 (adjusted): 1000
 }
