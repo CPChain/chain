@@ -135,6 +135,10 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 			}
 		}
 	}
+
+	if rpt <= 16 {
+		rpt = int64(16)
+	}
 	return Rpt{Address: address, Rpt: rpt}
 }
 

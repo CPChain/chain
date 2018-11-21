@@ -63,8 +63,8 @@ $cpchain $args --datadir data/data8  --rpcaddr 127.0.0.1:8508 --grpcaddr 127.0.0
 $cpchain $args --datadir data/data9  --rpcaddr 127.0.0.1:8509 --grpcaddr 127.0.0.1:8609 --jsonrpchttpaddr 127.0.0.1:8709 --port 30319 --mine \
          --unlock "0xe4d51117832e84f1d082e9fc12439b771a57e7b2"  --password conf/password 2>data/logs/9.log &
 
-$cpchain $args --datadir data/data10  --rpcaddr 127.0.0.1:8510 --grpcaddr 127.0.0.1:8610 --jsonrpchttpaddr 127.0.0.1:8710 --port 30320 --mine \
-         --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --password conf/password 2>data/logs/10.log &
+#$cpchain $args
+# 2>data/logs/10.log &
 
 
 # dlv is useful for debugging.  do not remove.

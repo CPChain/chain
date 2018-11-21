@@ -39,15 +39,16 @@ func (c *GetMaintenance) RequiredGas(input []byte) uint64 {
 func (c *GetMaintenance) Run(input []byte) ([]byte, error) {
 	addr, number, err := extractRptPrimitivesArgs(input)
 	if err != nil {
-		log.Warnf("primitive_maintenance got error %v", err)
+		log.Warn("primitive_maintenance got error %v", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-	log.Infof("primitive_maintenance, address %s, block number %d", addr.Hex(), number)
+	//log.Info("primitive_maintenance, address , block number %d", addr.Hex(), number)
+	log.Debug("primitive_maintenance", "address", addr.Hex(), "number", number)
 
 	// TODO: @AC get cpchain Backend and read balance.
 	maintenance, err := c.Backend.Maintenance(addr, number)
 	if err != nil {
-		log.Fatal("NewBasicCollector,error", err)
+		log.Fatal("NewBasicCollector,error", "error", err)
 	}
 	ret := new(big.Int).SetInt64(int64(maintenance))
 	return common.LeftPadBytes(ret.Bytes(), 32), nil

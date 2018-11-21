@@ -25,7 +25,6 @@ import (
 	"math/big"
 	"sort"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -72,15 +71,15 @@ type RptPrimitiveBackend interface {
 }
 
 type RptEvaluator struct {
-	consensus.ChainBackend
-	Client      bind.ContractBackend
+	//consensus.ClientBackend
+	Client      consensus.ClientBackend
 	ChainConfig *configs.ChainConfig
 }
 
-func NewRptEvaluator(Client consensus.ChainBackend, ChainConfig *configs.ChainConfig) (*RptEvaluator, error) {
+func NewRptEvaluator(Client consensus.ClientBackend, ChainConfig *configs.ChainConfig) (*RptEvaluator, error) {
 	bc := &RptEvaluator{
-		ChainBackend: Client,
-		ChainConfig:  ChainConfig,
+		Client:      Client,
+		ChainConfig: ChainConfig,
 	}
 	return bc, nil
 }
@@ -88,21 +87,21 @@ func NewRptEvaluator(Client consensus.ChainBackend, ChainConfig *configs.ChainCo
 // GetCoinAge is the func to get rank to rpt
 func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, error) {
 	var balances []float64
-	myBalance, err := re.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
+	myBalance, err := re.Client.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
 	}
 	contractAddress := re.ChainConfig.Dpor.Contracts["campagin"]
 	intance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewCampaign error", address, err)
+		log.Warn("NewCampaign error", "erroe", err)
 	}
 	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("CandidatesOf error", address, err)
+		log.Warn("CandidatesOf error", "error", err)
 	}
 	for _, committee := range rNodeAddress {
-		balance, err := re.BalanceAt(context.Background(), committee, big.NewInt(int64(number)))
+		balance, err := re.Client.BalanceAt(context.Background(), committee, big.NewInt(int64(number)))
 		if err != nil {
 			log.Warn("error with bc.BalanceAt", "error", err)
 			return 0, err
@@ -118,7 +117,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 
 // GetCoinAge is the func to get txVolume to rpt
 func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, error) {
-	block, err := re.BlockByNumber(context.Background(), big.NewInt(int64(number)))
+	block, err := re.Client.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with bc.getTxVolume", "error", err)
 		return 0, err
@@ -149,7 +148,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	if re.ChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
-	header, err := re.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
+	header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with bc.getIfLeader", "error", err)
 		return 0, err
@@ -178,12 +177,12 @@ func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int6
 	contractAddress := re.ChainConfig.Dpor.Contracts["register"]
 	upload, err := pdash.NewRegister(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewRegister error", address, err)
+		log.Warn("NewRegister error", "error", err)
 		return uploadNumber, err
 	}
 	fileNumber, err := upload.GetUploadCount(nil, address)
 	if err != nil {
-		log.Warn("GetUploadCount error", address, err)
+		log.Warn("GetUploadCount error", "error", err)
 		return uploadNumber, err
 	}
 	return fileNumber.Int64(), err
@@ -197,20 +196,20 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	pdash, err := pdash.NewPdash(contractAddress, re.Client)
 
 	if err != nil {
-		log.Warn("NewPdash error", address, err)
+		log.Warn("NewPdash error", "error", err)
 		return proxyCount, 0, err
 	}
 
 	len, err := pdash.BlockOrdersLength(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("BlockOrdersLength err", address, err)
+		log.Warn("BlockOrdersLength err", "error", err)
 		return proxyCount, 0, err
 	}
 
 	for i := 0; i < int(len.Int64()); i++ {
 		id, err := pdash.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
-			log.Warn("BlockOrders error", address, err)
+			log.Warn("BlockOrders error", "error", err)
 			break
 		}
 		OrderRecord, err := pdash.OrderRecords(nil, id)
@@ -227,7 +226,7 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	for i := 0; i < int(len.Int64()); i++ {
 		id, err := pdash.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
-			log.Warn("BlockOrders error", address, err)
+			log.Warn("BlockOrders error", "error", err)
 			break
 		}
 		OrderRecord, err := pdash.OrderRecords(nil, id)
@@ -251,27 +250,16 @@ func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
 }
 
 func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
-	if re == nil {
-		log.Fatal("re is nil")
-	}
-	if re.Client == nil {
-		log.Fatal("re is nil")
-	}
-	if re.ChainConfig == nil {
-		log.Fatal("re is nil")
-	}
-	if re.ChainConfig.Dpor == nil {
-		log.Fatal("re is nil")
-	}
 	contractAddress := re.ChainConfig.Dpor.Contracts["campaign"]
 	instance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewCampaign error", address, err)
+		log.Fatal("NewCampaign error", "address", address, "error", err)
 		return false, err
 	}
+	//todo:fix error (abi: unmarshalling empty output)
 	rNdoeAddress, err := instance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("CandidatesOf error", address, err)
+		log.Fatal("CandidatesOf error", "error", err)
 		return false, err
 	}
 	for _, rNode := range rNdoeAddress {

@@ -17,6 +17,7 @@
 package main
 
 import (
+	"bitbucket.org/cpchain/chain/core/vm"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -29,7 +30,6 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/protocols/cpc"
@@ -91,9 +91,10 @@ func registerChainService(cfg *cpc.Config, n *node.Node) {
 		// 	ls, _ := les.NewLesServer(fullNode, cfg)
 		// 	fullNode.AddLesServer(ls)
 		// }
-		for addr, c := range fullNode.MakePrimitiveContracts(n) {
-			vm.RegisterPrimitiveContract(addr, c)
-		}
+
+		//for addr, c := range fullNode.MakePrimitiveContracts(n) {
+		//	vm.RegisterPrimitiveContract(addr, c)
+		//}
 
 		return fullNode, err
 	})
@@ -216,6 +217,9 @@ func startMining(ctx *cli.Context, n *node.Node) {
 
 		contractCaller := createContractCaller(ctx, n)
 
+		for addr, c := range cpchainService.MakePrimitiveContracts(n, contractCaller) {
+			vm.RegisterPrimitiveContract(addr, c)
+		}
 		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
 		if err := cpchainService.StartMining(true, contractCaller); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)

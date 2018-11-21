@@ -18,6 +18,7 @@
 package election
 
 import (
+	"bitbucket.org/cpchain/chain/commons/log"
 	"math"
 	"math/rand"
 	"sort"
@@ -70,6 +71,11 @@ func findNearest(array []int64, target int64) (int64, int) {
 func Elect(rpts rpt.RptList, seed int64, viewLength int) []common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
+
+	log.Info("lenth of rpts", "len", len(rpts))
+	for _, r := range rpts {
+		log.Info("rptlist", "addr", r.Address, "rpt", r.Rpt)
+	}
 
 	randSource := rand.NewSource(seed)
 	myRand := rand.New(randSource)

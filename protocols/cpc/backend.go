@@ -74,7 +74,7 @@ type CpchainService struct {
 	config      *Config
 	chainConfig *configs.ChainConfig
 	//	RptEvaluator *primitives.RptEvaluator
-	contractCaller *consensus.ContractCaller
+	//contractCaller *consensus.ContractCaller
 
 	// Channel for shutting down the service
 	shutdownChan chan bool // Channel for shutting down the Cpchain
@@ -378,7 +378,7 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 		// TODO: fix this, update contract caller with private key here. Liu Qian
 		log.Info("s.pm.committeeNetworkHandler in s.StartMining", "s.pm.committeeNetworkHandler", s.protocolManager.committeeNetworkHandler)
 
-		//	s.RptEvaluator, err = primitives.NewRptEvaluator(contractCaller.Client, s.chainConfig)
+		//		s.RptEvaluator, err = primitives.NewRptEvaluator(contractCaller.Client, s.chainConfig)
 		if err != nil {
 			log.Fatal("NewRptEvaluator err ", err)
 		}
@@ -493,12 +493,18 @@ func (s *CpchainService) Stop() error {
 	return nil
 }
 
-func (s *CpchainService) MakePrimitiveContracts(n *node.Node) map[common.Address]vm.PrimitiveContract {
+func (s *CpchainService) MakePrimitiveContracts(n *node.Node, contractCaller *consensus.ContractCaller) map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
-	// we start from 100 to reserve enough space for upstream primitive contracts.
-	RptEvaluator, err := primitives.NewRptEvaluator(s.contractCaller.Client, s.chainConfig)
+	//if s.contractCaller == nil {
+	//	log.Fatal("s.contractCaller is nil")
+	//}
+	//if s.chainConfig == nil {
+	//	log.Fatal("s.chainConfig is nil")
+	//}
+	//// we start from 100 to reserve enough space for upstream primitive contracts.
+	RptEvaluator, err := primitives.NewRptEvaluator(contractCaller.Client, s.chainConfig)
 	if err != nil {
-		log.Fatal("NewRptEvaluator is fail")
+		log.Fatal("s.RptEvaluator is file")
 	}
 	contracts[common.BytesToAddress([]byte{100})] = &primitives.GetRank{Backend: RptEvaluator}
 	contracts[common.BytesToAddress([]byte{101})] = &primitives.GetMaintenance{Backend: RptEvaluator}
