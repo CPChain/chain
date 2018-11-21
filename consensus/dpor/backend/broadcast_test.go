@@ -28,8 +28,6 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 		snap               *consensus.PbftStatus
 		statusFn           StatusFn
 		statusUpdateFn     StatusUpdateFn
-		addPendingFn       AddPendingBlockFn
-		getPendingFn       GetPendingBlockFn
 		getEmptyBlockFn    GetEmptyBlockFn
 		verifyHeaderFn     VerifyHeaderFn
 		verifyBlockFn      ValidateBlockFn
@@ -65,8 +63,6 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 				snap:               tt.fields.snap,
 				statusFn:           tt.fields.statusFn,
 				statusUpdateFn:     tt.fields.statusUpdateFn,
-				addPendingFn:       tt.fields.addPendingFn,
-				getPendingFn:       tt.fields.getPendingFn,
 				getEmptyBlockFn:    tt.fields.getEmptyBlockFn,
 				verifyHeaderFn:     tt.fields.verifyHeaderFn,
 				validateBlockFn:    tt.fields.verifyBlockFn,
