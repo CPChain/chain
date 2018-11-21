@@ -13,11 +13,17 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
+	lru "github.com/hashicorp/golang-lru"
+)
+
+const (
+	maxPendingBlocks = 256
 )
 
 var (
 	// ErrUnknownHandlerMode is returnd if in an unknown mode
-	ErrUnknownHandlerMode = errors.New("unknown dpor handler mode")
+	ErrUnknownHandlerMode    = errors.New("unknown dpor handler mode")
+	ErrFailToAddPendingBlock = errors.New("fail to add pending block")
 )
 
 // Handler implements PbftHandler
@@ -49,11 +55,6 @@ type Handler struct {
 	statusFn       StatusFn
 	statusUpdateFn StatusUpdateFn
 
-	// those two funcs are methods from blockchain, to add and get pending
-	// blocks from pending block cache of blockchain
-	addPendingFn AddPendingBlockFn
-	getPendingFn GetPendingBlockFn
-
 	getEmptyBlockFn GetEmptyBlockFn
 
 	// those three funcs are methods from dpor, used for header verification and signing
@@ -71,6 +72,7 @@ type Handler struct {
 	// this func is method from dpor, used for checking if a remote peer is signer
 	validateSignerFn ValidateSignerFn
 
+	pendingBlocks  *lru.Cache // not enough signatures block cache
 	pendingBlockCh chan *types.Block
 	quitSync       chan struct{}
 
@@ -95,6 +97,9 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		dialed:          false,
 		available:       false,
 	}
+
+	pendingBlocks, _ := lru.New(maxPendingBlocks)
+	h.pendingBlocks = pendingBlocks
 
 	// TODO: fix this
 	h.mode = LBFTMode
@@ -203,7 +208,13 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 		log.Debug("failed to handshake in dpor", "err", err, "ok", ok)
 		return "", ok, err
 	}
-	_, err = h.addSigner(version, p, rw, address)
+	signer, err := h.addSigner(version, p, rw, address)
+
+	log.Debug("after add signer", "signer", signer.ID(), "err", err)
+	for addr, s := range h.signers {
+		log.Debug("signers in handler", "addr", addr.Hex(), "id", s.ID())
+	}
+
 	return address.Hex(), true, err
 }
 
@@ -222,36 +233,39 @@ func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 	return h.handleMsg(signer, msg)
 }
 
-func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
-	signer, err := h.addSigner(version, p, rw, address)
-	if err != nil {
-		return err
-	}
+// func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
+// 	signer, err := h.addSigner(version, p, rw, address)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	defer h.removeSigner(address)
+// 	defer h.removeSigner(address)
 
-	// main loop. handle incoming messages.
-	for {
-		msg, err := signer.rw.ReadMsg()
-		if err != nil {
-			log.Debug("err when readmsg", "err", err)
-			return err
-		}
-		if msg.Size > ProtocolMaxMsgSize {
-			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-		}
-		err = h.handleMsg(signer, msg)
-		msg.Discard()
+// 	// main loop. handle incoming messages.
+// 	for {
+// 		msg, err := signer.rw.ReadMsg()
+// 		if err != nil {
+// 			log.Debug("err when readmsg", "err", err)
+// 			return err
+// 		}
+// 		if msg.Size > ProtocolMaxMsgSize {
+// 			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+// 		}
+// 		err = h.handleMsg(signer, msg)
+// 		msg.Discard()
 
-		if err != nil {
-			p.Log().Debug("Cpchain message handling failed", "err", err)
-			return err
-		}
+// 		if err != nil {
+// 			p.Log().Debug("Cpchain message handling failed", "err", err)
+// 			return err
+// 		}
 
-	}
-}
+// 	}
+// }
 
 func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*Signer, error) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	// TODO: add lock here
 	signer, ok := h.signers[address]
 
@@ -270,6 +284,10 @@ func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, addr
 			return nil, err
 		}
 	}
+
+	go signer.signerBroadcast()
+
+	h.signers[address] = signer
 	return signer, nil
 }
 
@@ -328,7 +346,7 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 			case nil:
 
 				// add block to pending block cache of blockchain
-				if err := h.addPendingFn(block); err != nil {
+				if err := h.AddPendingBlock(block); err != nil {
 					return err
 				}
 
@@ -363,7 +381,7 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 			switch e := h.signHeaderFn(header, consensus.Prepared); e {
 			case nil:
 
-				block := h.getPendingFn(header.Hash())
+				block := h.GetPendingBlock(header.Hash())
 
 				err := h.insertChainFn(block)
 				if err != nil {
@@ -443,7 +461,7 @@ func (h *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 		header := block.RefHeader()
 
 		// add block to pending block cache of blockchain
-		if err := h.addPendingFn(block); err != nil {
+		if err := h.AddPendingBlock(block); err != nil {
 			return err
 		}
 
@@ -541,7 +559,7 @@ func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 			h.statusUpdateFn()
 			// now committed
 
-			if block := h.getPendingFn(header.Hash()); block != nil {
+			if block := h.GetPendingBlock(header.Hash()); block != nil {
 
 				block = block.WithSeal(header)
 
@@ -593,7 +611,7 @@ func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 	case h.pendingBlockCh <- block:
 		log.Debug("!!!!!!!!!!!!!!!!! inserted into handler.pendingBlockCh")
 
-		err := h.addPendingFn(block)
+		err := h.AddPendingBlock(block)
 		log.Debug("err when add pending block to chain", "err", err)
 		if err != nil {
 			return err
@@ -609,8 +627,6 @@ func (h *Handler) SetFuncs(
 	validateSignerFn ValidateSignerFn,
 	verifyHeaderFn VerifyHeaderFn,
 	verifyBlockFn ValidateBlockFn, signHeaderFn SignHeaderFn,
-	addPendingBlockFn AddPendingBlockFn,
-	getPendingBlockFn GetPendingBlockFn,
 	broadcastBlockFn BroadcastBlockFn,
 	insertChainFn InsertChainFn,
 	statusFn StatusFn,
@@ -622,8 +638,6 @@ func (h *Handler) SetFuncs(
 	h.verifyHeaderFn = verifyHeaderFn
 	h.validateBlockFn = verifyBlockFn
 	h.signHeaderFn = signHeaderFn
-	h.addPendingFn = addPendingBlockFn
-	h.getPendingFn = getPendingBlockFn
 	h.broadcastBlockFn = broadcastBlockFn
 	h.insertChainFn = insertChainFn
 	h.statusFn = statusFn
@@ -687,4 +701,26 @@ func (h *Handler) Disconnect() {
 	h.lock.Lock()
 	h.dialed = connected
 	h.lock.Unlock()
+}
+
+// GetPendingBlock returns a pending block with given hash
+func (h *Handler) GetPendingBlock(hash common.Hash) *types.Block {
+	h.lock.RLock()
+	defer h.lock.RUnlock()
+
+	if block, ok := h.pendingBlocks.Get(hash); ok {
+		return block.(*types.Block)
+	}
+	return nil
+}
+
+// AddPendingBlock adds a pending block with given hash
+func (h *Handler) AddPendingBlock(block *types.Block) error {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	hash := block.Hash()
+
+	h.pendingBlocks.Add(hash, block)
+	return nil
 }
