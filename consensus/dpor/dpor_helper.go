@@ -385,7 +385,12 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Retrieve signatures of the block in cache
-	s, _ := dpor.signatures.Get(hash)
+	s, ok := dpor.signatures.Get(hash)
+	if !ok {
+		s = &Signatures{
+			sigs: make(map[common.Address][]byte),
+		}
+	}
 
 	// Copy all signatures recovered to allSigs.
 	allSigs := make([]byte, int(dpor.config.TermLen)*extraSeal)
