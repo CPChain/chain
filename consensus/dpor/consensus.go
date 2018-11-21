@@ -91,9 +91,6 @@ var (
 	// errMultiBlocksInOneHeight is returned if there is multi blocks in one height in the chain.
 	errMultiBlocksInOneHeight = errors.New("multi blocks in one height")
 
-	// errInvalidSigBytes is returned if the signatures bytes in header.extra2 is not valid.
-	errInvalidSigBytes = errors.New("error signers sigs bytes")
-
 	// errInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	errInvalidSigners = errors.New("invalid signer list on checkpoint block")
 
@@ -285,7 +282,6 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 
 	copy(header.Dpor.Seal[:], sighash)
 
-	// allSigs is a SignatureExtra2.
 	header.Dpor.Sigs = make([]types.DporSignature, d.config.TermLen)
 
 	// Copy signature to the right position in allSigs.
