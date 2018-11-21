@@ -12,7 +12,7 @@ const (
 	ProtocolName = "dpor"
 
 	// ProtocolVersion protocol verion
-	ProtocolVersion = 1
+	ProtocolVersion = 65
 
 	// ProtocolLength protocol length, max msg code
 	ProtocolLength = 70
