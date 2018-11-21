@@ -373,22 +373,9 @@ func (pm *ProtocolManager) addPeer(p *peer) error {
 		return err
 	}
 
-	// log.Debug("my etherbase", "address", pm.etherbase)
-
-	// // Do committee handshake
-	// isSigner, err := p.CommitteeHandshake(pm.etherbase, pm.SignerValidator)
-
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
 		rw.Init(p.version)
 	}
-
-	// if isSigner {
-	// 	// register peer as signer.
-	// 	err := pm.peers.RegisterSigner(p)
-	// 	if err != nil && err != errAlreadyRegistered {
-	// 		return err
-	// 	}
-	// }
 
 	// add the peer to peerset
 	if err := pm.peers.Register(p); err != nil {
@@ -401,42 +388,26 @@ func (pm *ProtocolManager) addPeer(p *peer) error {
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {
 		return err
 	}
-	// // main loop. handle incoming messages.
-	// for {
-	// 	if err := pm.handleMsg(p); err != nil {
-	// 		p.Log().Debug("Cpchain message handling failed", "err", err)
-	// 		return err
-	// 	}
-	// }
+
 	return nil
 }
 
-// // VerifyAndSign validates a header and signs it if nessary
-// func (pm *ProtocolManager) VerifyAndSign(header *types.Header) error {
-// 	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
+// // handleMsg is invoked whenever an *inbound* message is received from a remote
+// // peer. The remote connection is torn down upon returning any error.
+// func (pm *ProtocolManager) handleMsg(p *peer) error {
+
+// 	// Read the next message from the remote peer, and ensure it's fully consumed
+// 	msg, err := p.rw.ReadMsg()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if msg.Size > ProtocolMaxMsgSize {
+// 		return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+// 	}
+// 	defer msg.Discard()
+
+// 	return pm.handleSyncMsg(msg, p)
 // }
-
-// VerifyHeader validates a header
-func (pm *ProtocolManager) VerifyHeader(header *types.Header) error {
-	return pm.engine.VerifyHeader(pm.blockchain, header, true, header)
-}
-
-// handleMsg is invoked whenever an *inbound* message is received from a remote
-// peer. The remote connection is torn down upon returning any error.
-func (pm *ProtocolManager) handleMsg(p *peer) error {
-
-	// Read the next message from the remote peer, and ensure it's fully consumed
-	msg, err := p.rw.ReadMsg()
-	if err != nil {
-		return err
-	}
-	if msg.Size > ProtocolMaxMsgSize {
-		return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-	}
-	defer msg.Discard()
-
-	return pm.handleSyncMsg(msg, p)
-}
 
 func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 	// Handle the message depending on its contents
