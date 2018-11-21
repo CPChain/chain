@@ -148,7 +148,7 @@ func (s *DporSnapshot) recentValidators() map[uint64][]common.Address {
 	return recentValidators
 }
 
-//TODO: need to be removed later
+//TODO: @shiyc need to be removed later
 func (s *DporSnapshot) getRecentSigners(term uint64) []common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -491,7 +491,7 @@ func (s *DporSnapshot) FutureTermOf(blockNum uint64) uint64 {
 }
 
 // SignersOf returns signers of given block number
-// TODO: need to be removed later
+// TODO: @shiyc need to be removed later
 func (s *DporSnapshot) SignersOf(number uint64) []common.Address {
 	return s.getRecentSigners(s.TermOf(number))
 }
@@ -541,7 +541,7 @@ func (s *DporSnapshot) IsValidatorOf(validator common.Address, number uint64) bo
 }
 
 // IsSignerOf returns if an address is a signer in the given block number
-// TODO: need to removed later
+// TODO: @shiyc need to removed later
 func (s *DporSnapshot) IsSignerOf(signer common.Address, number uint64) bool {
 	_, err := s.SignerViewOf(signer, number)
 	return err == nil
@@ -559,7 +559,7 @@ func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, e
 	}
 	b := view == int(((number-1)%(s.config.TermLen*s.config.ViewLen))/s.config.ViewLen)
 	return b, nil
-	//TODO: finish it during the implement of impeachment
+	//TODO: @shiyc finish it during the implement of impeachment
 	return false, nil
 }
 
