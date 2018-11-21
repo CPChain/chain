@@ -47,8 +47,9 @@ var (
 				"campaign": common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"),
 				"signer":   common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"),
 				// TODO @hmw make the name more concrete
-				"register": common.HexToAddress("3A220f351252089D385b29beca14e27F204c296A"),
+				"register": common.HexToAddress("0xd6e4bdcc9b4d1744cf16ce904b9ede5e78751002"),
 				"rpt":      common.HexToAddress("0x5af979ebb310248f5c139c601e46b1aca9890827"),
+				"pdash":    common.HexToAddress("0x721adc4d993380e60e1c98efc6767dfe4cfbbeb4"),
 			},
 		},
 	}

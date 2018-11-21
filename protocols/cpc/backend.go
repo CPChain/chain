@@ -18,6 +18,7 @@
 package cpc
 
 import (
+	//	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"errors"
 	"fmt"
 	"math/big"
@@ -70,9 +71,10 @@ type RSAReader func() (*rsakey.RsaKey, error)
 
 // CpchainService implements the CpchainService full node service.
 type CpchainService struct {
-	config       *Config
-	chainConfig  *configs.ChainConfig
-	RptEvaluator *primitives.RptEvaluator
+	config      *Config
+	chainConfig *configs.ChainConfig
+	//	RptEvaluator *primitives.RptEvaluator
+	contractCaller *consensus.ContractCaller
 
 	// Channel for shutting down the service
 	shutdownChan chan bool // Channel for shutting down the Cpchain
@@ -376,6 +378,10 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 		// TODO: fix this, update contract caller with private key here. Liu Qian
 		log.Info("s.pm.committeeNetworkHandler in s.StartMining", "s.pm.committeeNetworkHandler", s.protocolManager.committeeNetworkHandler)
 
+		//	s.RptEvaluator, err = primitives.NewRptEvaluator(contractCaller.Client, s.chainConfig)
+		if err != nil {
+			log.Fatal("NewRptEvaluator err ", err)
+		}
 		if s.protocolManager.committeeNetworkHandler != nil {
 			if err := s.protocolManager.committeeNetworkHandler.SetRSAKeys(
 				func() (*rsakey.RsaKey, error) {
@@ -385,6 +391,9 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 			}
 		}
 
+		if err != nil {
+			log.Fatal("NewCollectorConfig error ", err)
+		}
 		dpor.SetContractCaller(contractCaller)
 		s.protocolManager.committeeNetworkHandler.UpdateContractCaller(contractCaller)
 
@@ -487,12 +496,16 @@ func (s *CpchainService) Stop() error {
 func (s *CpchainService) MakePrimitiveContracts(n *node.Node) map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
 	// we start from 100 to reserve enough space for upstream primitive contracts.
-	contracts[common.BytesToAddress([]byte{100})] = &primitives.GetRank{Backend: s.RptEvaluator}
-	contracts[common.BytesToAddress([]byte{101})] = &primitives.GetMaintenance{Backend: s.RptEvaluator}
-	contracts[common.BytesToAddress([]byte{102})] = &primitives.GetProxyCount{Backend: s.RptEvaluator}
-	contracts[common.BytesToAddress([]byte{103})] = &primitives.GetUploadReward{Backend: s.RptEvaluator}
-	contracts[common.BytesToAddress([]byte{104})] = &primitives.GetTxVolume{Backend: s.RptEvaluator}
-	contracts[common.BytesToAddress([]byte{105})] = &primitives.IsProxy{Backend: s.RptEvaluator}
+	RptEvaluator, err := primitives.NewRptEvaluator(s.contractCaller.Client, s.chainConfig)
+	if err != nil {
+		log.Fatal("NewRptEvaluator is fail")
+	}
+	contracts[common.BytesToAddress([]byte{100})] = &primitives.GetRank{Backend: RptEvaluator}
+	contracts[common.BytesToAddress([]byte{101})] = &primitives.GetMaintenance{Backend: RptEvaluator}
+	contracts[common.BytesToAddress([]byte{102})] = &primitives.GetProxyCount{Backend: RptEvaluator}
+	contracts[common.BytesToAddress([]byte{103})] = &primitives.GetUploadReward{Backend: RptEvaluator}
+	contracts[common.BytesToAddress([]byte{104})] = &primitives.GetTxVolume{Backend: RptEvaluator}
+	contracts[common.BytesToAddress([]byte{105})] = &primitives.IsProxy{Backend: RptEvaluator}
 	contracts[common.BytesToAddress([]byte{106})] = &primitives.CpuPowValidate{}
 	contracts[common.BytesToAddress([]byte{107})] = &primitives.MemPowValidate{}
 	return contracts

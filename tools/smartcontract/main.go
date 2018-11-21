@@ -40,4 +40,12 @@ func main() {
 	deploy.FormatPrint("DeployRpt")
 	contractAddress = deploy.DeployRpt()
 	deploy.PrintContract(contractAddress)
+
+	deploy.FormatPrint("DeployRegister")
+	contractAddress = deploy.DeployRegister()
+	deploy.PrintContract(contractAddress)
+
+	deploy.FormatPrint("DeployPdash")
+	contractAddress = deploy.DeployPdash()
+	deploy.PrintContract(contractAddress)
 }

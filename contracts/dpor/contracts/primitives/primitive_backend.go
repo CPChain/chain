@@ -21,6 +21,7 @@ package primitives
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"sort"
 
@@ -31,7 +32,6 @@ import (
 	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"bitbucket.org/cpchain/chain/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 //go:generate abigen --sol contracts/primitive_contracts_inst.sol --pkg contracts --out contracts/primitive_contracts_inst.go
@@ -47,11 +47,11 @@ const (
 )
 
 // CollectorConfig is the config of rpt info collector
-type CollectorConfig struct {
-	Client      bind.ContractBackend
-	ChainConfig *configs.ChainConfig
-	DporConfig  *configs.DporConfig
-}
+//type CollectorConfig struct {
+//	Client      bind.ContractBackend
+//	ChainConfig *configs.ChainConfig
+//	//	DporConfig  *configs.DporConfig
+//}
 
 type RptPrimitiveBackend interface {
 	// Rank returns the rank for given account address at the given block number.
@@ -73,13 +73,14 @@ type RptPrimitiveBackend interface {
 
 type RptEvaluator struct {
 	consensus.ChainBackend
-	Config CollectorConfig
+	Client      bind.ContractBackend
+	ChainConfig *configs.ChainConfig
 }
 
-func NewCollectorConfig(Client consensus.ChainBackend, config *CollectorConfig) (*RptEvaluator, error) {
+func NewRptEvaluator(Client consensus.ChainBackend, ChainConfig *configs.ChainConfig) (*RptEvaluator, error) {
 	bc := &RptEvaluator{
 		ChainBackend: Client,
-		Config:       *config,
+		ChainConfig:  ChainConfig,
 	}
 	return bc, nil
 }
@@ -91,8 +92,8 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
 	}
-	contractAddress := re.Config.DporConfig.Contracts["campagin"]
-	intance, err := contract2.NewCampaign(contractAddress, re.Config.Client)
+	contractAddress := re.ChainConfig.Dpor.Contracts["campagin"]
+	intance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
 		log.Warn("NewCampaign error", address, err)
 	}
@@ -123,7 +124,7 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 		return 0, err
 	}
 	txvs := int64(0)
-	signer := types.NewPrivTxSupportEIP155Signer(re.Config.ChainConfig.ChainID)
+	signer := types.NewPrivTxSupportEIP155Signer(re.ChainConfig.ChainID)
 	txs := block.Transactions()
 	for _, tx := range txs {
 		sender, err := signer.Sender(tx)
@@ -145,7 +146,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	if ifRnode != true {
 		return 3, nil
 	}
-	if re.Config.ChainConfig.ChainID.Uint64() == uint64(4) {
+	if re.ChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
 	header, err := re.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
@@ -153,7 +154,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 		log.Warn("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
-	number = number%re.Config.DporConfig.TermLen - 1
+	number = number%re.ChainConfig.Dpor.TermLen - 1
 	leaderBytes := header.Extra[uint64(extraVanity)+number*common.AddressLength : uint64(extraVanity)+(number+1)*common.AddressLength]
 	leader := common.BytesToAddress(leaderBytes)
 
@@ -174,8 +175,8 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 // GetCoinAge is the func to get uploadnumber to rpt
 func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int64, error) {
 	uploadNumber := int64(0)
-	contractAddress := re.Config.DporConfig.Contracts["register"]
-	upload, err := pdash.NewRegister(contractAddress, re.Config.Client)
+	contractAddress := re.ChainConfig.Dpor.Contracts["register"]
+	upload, err := pdash.NewRegister(contractAddress, re.Client)
 	if err != nil {
 		log.Warn("NewRegister error", address, err)
 		return uploadNumber, err
@@ -192,8 +193,8 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	proxyCount = int64(0)
 	isProxy = int64(0)
 	var proxyAddresses []common.Address
-	contractAddress := re.Config.DporConfig.Contracts["pdash"]
-	pdash, err := pdash.NewPdash(contractAddress, re.Config.Client)
+	contractAddress := re.ChainConfig.Dpor.Contracts["pdash"]
+	pdash, err := pdash.NewPdash(contractAddress, re.Client)
 
 	if err != nil {
 		log.Warn("NewPdash error", address, err)
@@ -250,8 +251,20 @@ func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
 }
 
 func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
-	contractAddress := re.Config.DporConfig.Contracts["campagin"]
-	instance, err := contract2.NewCampaign(contractAddress, re.Config.Client)
+	if re == nil {
+		log.Fatal("re is nil")
+	}
+	if re.Client == nil {
+		log.Fatal("re is nil")
+	}
+	if re.ChainConfig == nil {
+		log.Fatal("re is nil")
+	}
+	if re.ChainConfig.Dpor == nil {
+		log.Fatal("re is nil")
+	}
+	contractAddress := re.ChainConfig.Dpor.Contracts["campaign"]
+	instance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
 		log.Warn("NewCampaign error", address, err)
 		return false, err
