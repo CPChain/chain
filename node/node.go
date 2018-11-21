@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package node
 
@@ -30,7 +17,6 @@ import (
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/internal/debug"
 	"github.com/ethereum/go-ethereum/event"
@@ -158,8 +144,6 @@ func (n *Node) Start() error {
 	// discovery databases.
 	n.serverConfig = n.config.P2P
 	n.serverConfig.PrivateKey = n.config.NodeKey()
-
-	n.config.RsaKeyStore, _ = n.config.RsaKey()
 
 	n.serverConfig.Name = n.config.NodeName()
 	n.serverConfig.Logger = n.log
@@ -659,9 +643,4 @@ func (n *Node) apis() []rpc.API {
 			Public:    true,
 		},
 	}
-}
-
-// getRSAKey gets RSA key pair from config.
-func (n *Node) RsaKey() (*rsakey.RsaKey, error) {
-	return n.config.RsaKey()
 }
