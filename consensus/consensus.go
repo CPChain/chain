@@ -202,14 +202,16 @@ type PbftStatus struct {
 
 // Protocol represents interfaces a protocol can provide
 type Protocol interface {
-	Name() string
-	Version() int
-	Length() int
+	Version() uint
+
+	Length() uint64
 
 	Available() bool
 
-	AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, error)
+	AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error)
+
 	RemovePeer(id string) error
+
 	HandleMsg(id string, msg p2p.Msg) error
 
 	NodeInfo() interface{}
