@@ -97,7 +97,7 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	}
 
 	// All basic checks passed, verify cascading fields
-	return c.dh.verifyCascadingFields(c, chain, header, parents, refHeader, true)
+	return c.dh.verifyCascadingFields(c, chain, header, parents, refHeader, seal)
 }
 
 // verifyCascadingFields verifies all the header fields that are not standalone,
