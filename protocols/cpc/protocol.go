@@ -27,7 +27,7 @@ var ProtocolName = "cpc"
 var ProtocolVersions = []uint{cpc1}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
-var ProtocolLengths = []uint64{16}
+var ProtocolLengths = []uint64{70}
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 
@@ -54,7 +54,7 @@ const (
 
 	// Pbft messages starts here
 
-	PbftMsgOutSet             = 0x43 // not a msg code, just used for msg code comparing
+	PbftMsgOutset             = 0x43 // not a msg code, just used for msg code comparing
 	PrepreparePendingBlockMsg = 0x43
 	PrepareSignedHeaderMsg    = 0x44
 	CommitSignedHeaderMsg     = 0x45
@@ -180,6 +180,10 @@ type blockBody struct {
 // blockBodiesData is the network packet for block content distribution.
 type blockBodiesData []*blockBody
 
-func IsPbftMsg(msg p2p.Msg) bool {
-	return msg.Code >= PbftMsgOutSet
+func IsSyncMsg(msg p2p.Msg) bool {
+	return msg.Code < PbftMsgOutset
+}
+
+func IsDporMsg(msg p2p.Msg) bool {
+	return msg.Code >= PbftMsgOutset
 }
