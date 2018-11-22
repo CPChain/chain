@@ -40,6 +40,7 @@ func TestNewHandler(t *testing.T) {
 	expectedResult.termLen = testConfig.TermLen
 	expectedResult.maxInitNumber = testConfig.MaxInitBlockNumber
 	expectedResult.signers = make(map[common.Address]*Signer)
+	expectedResult.knownBlocks = NewKnownBlocks()
 	expectedResult.pendingBlockCh = make(chan *types.Block)
 	expectedResult.quitSync = make(chan struct{})
 	expectedResult.dialed = false
