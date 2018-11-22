@@ -75,10 +75,10 @@ type Backend interface {
 	RemoteDB() database.RemoteDatabase // RemoteDB returns remote database instance.
 
 	//RNode API
-	RNode(view_idx *big.Int) []common.Address
+	RNode() []common.Address
 	CurrentView() uint64
 	CurrentTerm() uint64
-	CommitteMember(number *big.Int) []common.Address
+	CommitteMember() []common.Address
 	CalcRptInfo(address common.Address, blockNum uint64) int64
 }
 

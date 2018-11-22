@@ -23,6 +23,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -246,8 +247,12 @@ func (b *APIBackend) RemoteDB() database.RemoteDatabase {
 	return b.cpc.RemoteDB()
 }
 
-func (b *APIBackend) RNode(view_idx *big.Int) []common.Address {
-	return b.cpc.dpor.RNode(view_idx)
+func (b *APIBackend) RNode() []common.Address {
+	block := b.cpc.blockchain.CurrentBlock()
+	bn := block.Number()
+	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
+	Term := uint64(bn.Uint64()) / (vl * tl)
+	return b.cpc.engine.(*dpor.Dpor).RNode(big.NewInt(int64(Term)))
 }
 
 func (b *APIBackend) CurrentView() uint64 {
@@ -266,10 +271,15 @@ func (b *APIBackend) CurrentTerm() uint64 {
 	return Term
 }
 
-func (b *APIBackend) CommitteMember(number *big.Int) []common.Address {
-	return b.cpc.dpor.CommitteMember(number)
+func (b *APIBackend) CommitteMember() []common.Address {
+	block := b.cpc.blockchain.CurrentBlock()
+	bn := block.Number()
+	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
+	Term := uint64(bn.Uint64()) / (vl * tl)
+	return b.cpc.engine.(*dpor.Dpor).CommitteMember(big.NewInt(int64(Term)))
 }
 
 func (b *APIBackend) CalcRptInfo(address common.Address, blockNum uint64) int64 {
-	return b.cpc.rpt.CalcRptInfo(address, blockNum).Rpt
+	//	rp,err:=rpt.NewRptService(b.cpc.(*dpor.Dpor).,b.cpc.chainConfig.Dpor.Contracts["rpt"])
+	return b.cpc.engine.(*dpor.Dpor).GetCalcRptInfo(address, blockNum)
 }

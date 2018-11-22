@@ -18,7 +18,6 @@
 package cpc
 
 import (
-	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"errors"
 	"fmt"
 	"math/big"
@@ -110,9 +109,9 @@ type CpchainService struct {
 
 	remoteDB database.RemoteDatabase // remoteDB represents an remote distributed database.
 
-	dpor *dpor.Dpor
+	//	dpor *dpor.Dpor
 
-	rpt rpt.RptServiceImpl
+	//	rpt rpt.RptServiceImpl
 }
 
 func (s *CpchainService) AddLesServer(ls LesServer) {

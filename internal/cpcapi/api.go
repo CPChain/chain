@@ -483,15 +483,15 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 //}
 
 // Query RNodes.
-func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *big.Int) []cpclient.RNode {
+func (s *PublicBlockChainAPI) GetRNodes(view_idex *big.Int) []cpclient.RNode {
 	// TODO fill biz logic later
 	var rNodeAddress []common.Address
 	var committeAddress []common.Address
 
 	var RNodes []cpclient.RNode
 
-	rNodeAddress = s.b.RNode(view_idex)
-	committeAddress = s.b.CommitteMember(view_idex)
+	rNodeAddress = s.b.RNode()
+	committeAddress = s.b.CommitteMember()
 
 	for _, rodeAddr := range rNodeAddress {
 		for _, comAddr := range committeAddress {
@@ -509,7 +509,7 @@ func (s *PublicBlockChainAPI) GetRNodes(nodeAddress common.Address, view_idex *b
 		r := cpclient.RNode{
 			Address: rodeAddr,
 			Rpt:     score,
-			Status:  cpclient.Committe,
+			Status:  cpclient.Cadidate,
 		}
 		RNodes = append(RNodes, r)
 	}

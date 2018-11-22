@@ -22,6 +22,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/types"
@@ -397,4 +398,12 @@ func (d *Dpor) CommitteMember(number *big.Int) []common.Address {
 		copy(committee[i][:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
 	}
 	return committee
+}
+func (d *Dpor) GetCalcRptInfo(address common.Address, blockNum uint64) int64 {
+	instance, err := rpt.NewRptService(d.contractCaller.Client, d.config.Contracts["rpt"])
+	if err != nil {
+		log.Fatal("GetCalcRptInfo", "error", err)
+	}
+	rp := instance.CalcRptInfo(address, blockNum)
+	return rp.Rpt
 }
