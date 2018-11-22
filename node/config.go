@@ -16,7 +16,6 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/grpc"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -29,7 +28,6 @@ import (
 const (
 	datadirPrivateKey      = "nodekey"            // Path within the datadir to the node's private key
 	datadirDefaultKeyStore = "keystore"           // Path within the datadir to the keystore
-	datadirDefaultRsa      = "rsa"                // Path within the datadir to the rsa key
 	datadirStaticNodes     = "static-nodes.json"  // Path within the datadir to the static node list
 	datadirTrustedNodes    = "trusted-nodes.json" // Path within the datadir to the trusted node list
 	datadirNodeDatabase    = "nodes"              // Path within the datadir to store the node infos
@@ -232,6 +230,7 @@ func (c *Config) NodeName() string {
 	return name
 }
 
+// Get name from config or from program name.
 func (c *Config) name() string {
 	if c.Name == "" {
 		progname := strings.TrimSuffix(filepath.Base(os.Args[0]), ".exe")
@@ -241,13 +240,6 @@ func (c *Config) name() string {
 		return progname
 	}
 	return c.Name
-}
-
-func (c *Config) rsaDir() string {
-	if c.DataDir == "" {
-		return ""
-	}
-	return filepath.Join(c.DataDir, datadirDefaultRsa)
 }
 
 // resolvePath resolves path in the instance directory.
@@ -304,20 +296,6 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 		log.Error(fmt.Sprintf("Failed to persist node key: %v", err))
 	}
 	return key
-}
-
-func (c *Config) RsaKey() (*rsakey.RsaKey, error) {
-	rsaDir := c.rsaDir()
-	if err := os.MkdirAll(rsaDir, 0700); err != nil {
-		return nil, err
-	}
-
-	rsaKey, err := rsakey.NewRsaKey(rsaDir)
-	if err != nil {
-		log.Error(fmt.Sprintf("Failed to new rsa key: %v", err))
-		return nil, err
-	}
-	return rsaKey, nil
 }
 
 // StaticNodes returns a list of node enode URLs configured as static nodes.

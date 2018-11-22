@@ -250,7 +250,7 @@ func (api *PublicAdminAPI) NodeInfo() (*p2p.NodeInfo, error) {
 
 // Datadir retrieves the current data directory the node is using.
 func (api *PublicAdminAPI) Datadir() string {
-	return api.node.DataDir()
+	return api.node.InstanceDir()
 }
 
 // PublicDebugAPI is the collection of debugging related API methods exposed over

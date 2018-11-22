@@ -8,7 +8,6 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -53,11 +52,6 @@ func (ctx *ServiceContext) Service(service interface{}) error {
 		return nil
 	}
 	return ErrServiceUnknown
-}
-
-// RsaKey gets RSA key pair.
-func (ctx *ServiceContext) RsaKey() (*rsakey.RsaKey, error) {
-	return ctx.config.RsaKey()
 }
 
 // ServiceConstructor is the function signature of the constructors needed to be
