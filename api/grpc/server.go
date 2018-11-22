@@ -90,6 +90,8 @@ func (s *Server) startGrpc() error {
 		}
 	}(s.handler, listener)
 
+	// this listener won't be *automatically* closed when the above handler stops.
+	// we manually close it with Close.
 	s.gatewayListener, err = net.Listen("tcp", s.config.JsonHttpAddress())
 	if err != nil {
 		log.Error(err.Error())
