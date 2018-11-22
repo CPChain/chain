@@ -17,6 +17,10 @@
 package deploy
 
 import (
+	"context"
+	"fmt"
+	"math/big"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/proxy/proxy_contract"
@@ -35,4 +39,43 @@ func ProxyContractRegister() common.Address {
 	}
 	printTx(tx, err, client, contractAddress)
 	return contractAddress
+}
+
+func DeployProxy() common.Address {
+	client, err, privateKey, _, fromAddress := config.Connect()
+	printBalance(client, fromAddress)
+	// Launch contract deploy transaction.
+	auth := bind.NewKeyedTransactor(privateKey)
+	contractAddress, tx, _, err := contract.DeployProxy(auth, client)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	printTx(tx, err, client, contractAddress)
+	return contractAddress
+}
+
+func RegisterProxyAddress(proxyContratAddress, proxyAddress, realAddress common.Address) {
+	client, err, privateKey, _, fromAddress := config.Connect()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	printBalance(client, fromAddress)
+	proxyContractRegister, _ := contract.NewProxyContractRegister(proxyContratAddress, client)
+
+	auth := bind.NewKeyedTransactor(privateKey)
+	auth.Value = big.NewInt(500)
+	auth.GasLimit = 3000000
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	fmt.Println("gasPrice:", gasPrice)
+	auth.GasPrice = gasPrice
+
+	transaction, err := proxyContractRegister.RegisterProxyContract(auth, proxyAddress, realAddress)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	receipt, err := bind.WaitMined(context.Background(), client, transaction)
+	if err != nil {
+		log.Fatalf("failed to deploy contact when mining :%v", err)
+	}
+	fmt.Println("receipt.Status:", receipt.Status)
 }

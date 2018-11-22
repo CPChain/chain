@@ -21,31 +21,50 @@ import (
 )
 
 func main() {
-	deploy.FormatPrint("DeploySignerConnectionRegister")
-	contractAddress := deploy.DeploySignerConnectionRegister()
-	deploy.PrintContract(contractAddress)
+	// deploy init contract
+	deploy.FormatPrint("0.DeployProxyContractRegister")
+	proxyAddress := deploy.ProxyContractRegister()
+	deploy.PrintContract(proxyAddress)
 
-	deploy.FormatPrint("DeployAdmission")
-	contractAddress = deploy.DeployAdmission()
-	deploy.PrintContract(contractAddress)
+	deploy.FormatPrint("1.DeploySignerConnectionRegister")
+	signerAddress := deploy.DeploySignerConnectionRegister()
+	deploy.PrintContract(signerAddress)
 
-	deploy.FormatPrint("DeployCampaign")
-	contractAddress = deploy.DeployCampaign(contractAddress)
-	deploy.PrintContract(contractAddress)
+	deploy.FormatPrint("2.DeployAdmission")
+	admissionAddress := deploy.DeployAdmission()
+	deploy.PrintContract(admissionAddress)
 
-	deploy.FormatPrint("DeployProxyContractRegister")
-	contractAddress = deploy.ProxyContractRegister()
-	deploy.PrintContract(contractAddress)
+	deploy.FormatPrint("3.DeployCampaign")
+	campaignAddress := deploy.DeployCampaign(admissionAddress)
+	deploy.PrintContract(campaignAddress)
 
-	deploy.FormatPrint("DeployRpt")
-	contractAddress = deploy.DeployRpt()
-	deploy.PrintContract(contractAddress)
+	deploy.FormatPrint("4.DeployRpt")
+	rptAddress := deploy.DeployRpt()
+	deploy.PrintContract(rptAddress)
 
-	deploy.FormatPrint("DeployRegister")
-	contractAddress = deploy.DeployRegister()
-	deploy.PrintContract(contractAddress)
+	deploy.FormatPrint("5.DeployRegister")
+	registerAddress := deploy.DeployRegister()
+	deploy.PrintContract(registerAddress)
 
-	deploy.FormatPrint("DeployPdash")
-	contractAddress = deploy.DeployPdash()
-	deploy.PrintContract(contractAddress)
+	deploy.FormatPrint("6.DeployPdash")
+	pdashAddress := deploy.DeployPdash()
+	deploy.PrintContract(pdashAddress)
+
+	// register real biz contract on proxy contract
+	// 1.deploy proxy contract for SignerConnectionRegister && register
+	deploy.FormatPrint("1.1 register SignerConnectionRegister")
+	proxyForSignerConnectionRegister := deploy.DeployProxy()
+	deploy.PrintContract(proxyForSignerConnectionRegister)
+	deploy.RegisterProxyAddress(proxyAddress, proxyForSignerConnectionRegister, signerAddress)
+
+	// 2.deploy proxy contract for Admission && register
+
+	// 3.deploy proxy contract for Campaign && register
+
+	// 4.deploy proxy contract for Rpt && register
+
+	// 5.deploy proxy contract for Register && register
+
+	// 6.deploy proxy contract for Pdash && register
+
 }
