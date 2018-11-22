@@ -39,6 +39,8 @@ type Handler struct {
 	server *p2p.Server
 	rsaKey *rsakey.RsaKey
 
+	knownBlocks *RecentBlocks
+
 	// signer register contract related fields
 	contractAddress    common.Address
 	contractCaller     *ContractCaller
@@ -71,12 +73,8 @@ type Handler struct {
 	// this func is method from dpor, used for checking if a remote peer is signer
 	validateSignerFn ValidateSignerFn
 
-	pendingBlocks map[common.Hash]*types.Block // not enough signatures block cache
-	// pendingBlocks  *lru.Cache // not enough signatures block cache
 	pendingBlockCh chan *types.Block
 	quitSync       chan struct{}
-
-	currentPending *types.Block
 
 	dialed    bool
 	available bool
@@ -92,16 +90,12 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		termLen:         config.TermLen,
 		maxInitNumber:   config.MaxInitBlockNumber,
 		signers:         make(map[common.Address]*Signer),
+		knownBlocks:     NewKnownBlocks(),
 		pendingBlockCh:  make(chan *types.Block),
 		quitSync:        make(chan struct{}),
 		dialed:          false,
 		available:       false,
 	}
-
-	// pendingBlocks, _ := lru.New(maxPendingBlocks)
-	// h.pendingBlocks = pendingBlocks
-
-	h.pendingBlocks = make(map[common.Hash]*types.Block)
 
 	// TODO: fix this
 	h.mode = LBFTMode
@@ -128,48 +122,6 @@ func (h *Handler) Stop() {
 
 	return
 }
-
-// // Protocol returns a p2p protocol to handle dpor msgs
-// func (h *Handler) Protocol() p2p.Protocol {
-// 	return p2p.Protocol{
-// 		Name:    ProtocolName,
-// 		Version: ProtocolVersion,
-// 		Length:  ProtocolLength,
-// 		Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
-
-// 			if !h.IsAvailable() {
-// 				log.Debug("not available now")
-// 				return nil
-// 			}
-// 			log.Debug("available now!!!!!!!!")
-
-// 			cb := h.Signer()
-// 			validator := h.validateSignerFn
-
-// 			log.Debug("handshaking...")
-// 			ok, address, err := Handshake(p, rw, cb, validator)
-// 			if !ok || err != nil {
-// 				return err
-// 			}
-
-// 			log.Debug("done with handshake")
-
-// 			select {
-// 			case <-h.quitSync:
-// 				return p2p.DiscQuitting
-// 			default:
-// 				return h.handle(ProtocolVersion, p, rw, address)
-// 			}
-
-// 		},
-// 		NodeInfo: func() interface{} {
-// 			return h.statusFn()
-// 		},
-// 		PeerInfo: func(id discover.NodeID) interface{} {
-// 			return nil
-// 		},
-// 	}
-// }
 
 func (h *Handler) GetProtocol() consensus.Protocol {
 	return h
@@ -235,35 +187,6 @@ func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 	return h.handleMsg(signer, msg)
 }
 
-// func (h *Handler) handle(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
-// 	signer, err := h.addSigner(version, p, rw, address)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	defer h.removeSigner(address)
-
-// 	// main loop. handle incoming messages.
-// 	for {
-// 		msg, err := signer.rw.ReadMsg()
-// 		if err != nil {
-// 			log.Debug("err when readmsg", "err", err)
-// 			return err
-// 		}
-// 		if msg.Size > ProtocolMaxMsgSize {
-// 			return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-// 		}
-// 		err = h.handleMsg(signer, msg)
-// 		msg.Discard()
-
-// 		if err != nil {
-// 			p.Log().Debug("Cpchain message handling failed", "err", err)
-// 			return err
-// 		}
-
-// 	}
-// }
-
 func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*Signer, error) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -294,6 +217,8 @@ func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, addr
 }
 
 func (h *Handler) removeSigner(signer common.Address) error {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 
 	if _, ok := h.signers[signer]; ok {
 		delete(h.signers, signer)
@@ -335,6 +260,15 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 		block.ReceivedAt = msg.ReceivedAt
 		block.ReceivedFrom = p
 
+		log.Debug("received preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
+		// localBlock, err := h.GetPendingBlock(block.NumberU64())
+		// if localBlock != nil && err == nil {
+		// 	if localBlock.Block.Hash() == block.Hash() {
+		// 		go h.BroadcastPrepareSignedHeader(localBlock.Header())
+		// 	}
+		// }
+
 		// Verify the block
 		// if correct, sign it and broadcast as Prepare msg
 		// verify header, if basic fields are correct, broadcast prepare msg
@@ -342,19 +276,21 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 		case nil:
 			// basic fields are correct
 
-			// TODO: remove this line
-			go h.BroadcastMinedBlock(block)
+			log.Debug("validated preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 			// sign the block
 			header := block.RefHeader()
 			switch e := h.signHeaderFn(header, consensus.Preprepared); e {
 			case nil:
 
+				log.Debug("signed preprepare header, adding to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
 				// add block to pending block cache of blockchain
 				if err := h.AddPendingBlock(block); err != nil {
 					return err
 				}
-				h.currentPending = block
+
+				log.Debug("broadcasting signed prepare header to other signers", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 				// broadcast prepare msg
 				go h.BroadcastPrepareSignedHeader(header)
@@ -378,36 +314,53 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
+		log.Debug("received signed prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+
 		// verify the signed header
 		// if correct, insert the block into chain, broadcast it
 		switch err := h.verifyHeaderFn(header, consensus.Prepared); err {
 		case nil:
 			// with enough prepare sigs
 
-			block := h.currentPending
-			if header.Hash() != block.Hash() {
+			log.Debug("verified signed prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
-				block = h.GetPendingBlock(header.Hash())
-				if block == nil {
-					// TODO: remove this line
-					go h.BroadcastPrepareSignedHeader(header)
-					return nil
-				}
+			block, err := h.GetPendingBlock(header.Number.Uint64())
+			if block == nil {
+
+				// TODO: remove this line
+				go h.BroadcastPrepareSignedHeader(header)
+				return nil
 			}
 
-			err := h.insertChainFn(block)
+			log.Debug("inserting block to block chain", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+
+			err = h.insertChainFn(block.Block)
 			if err != nil {
 				log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
 				return err
 			}
 
+			log.Debug("broadcasting block to other peers", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+
+			err = h.UpdateBlockStatus(block.NumberU64(), Inserted)
+			if err != nil {
+				log.Warn("err when updating block status", "number", block.NumberU64(), "err", err)
+				return err
+			}
+
 			// broadcast the block
-			go h.broadcastBlockFn(block, true)
+			go h.broadcastBlockFn(block.Block, true)
 
 		case consensus.ErrNotEnoughSigs:
 			// sign the block
+
+			log.Debug("without enough sigs in siged prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+
 			switch e := h.signHeaderFn(header, consensus.Prepared); e {
 			case nil:
+
+				log.Debug("signed prepare header, broadcasting...", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+
 				go h.BroadcastPrepareSignedHeader(header)
 
 			default:
@@ -577,12 +530,12 @@ func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 			h.statusUpdateFn()
 			// now committed
 
-			if block := h.GetPendingBlock(header.Hash()); block != nil {
+			if block, err := h.GetPendingBlock(header.Number.Uint64()); block != nil && err == nil {
 
-				block = block.WithSeal(header)
+				blk := block.WithSeal(header)
 
 				// insert into chain
-				if err := h.insertChainFn(block); err != nil {
+				if err := h.insertChainFn(blk); err != nil {
 					return err
 				}
 
@@ -591,8 +544,8 @@ func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 				// now final-committed
 
 				// broadcast the block
-				go h.broadcastBlockFn(block, true)
-				go h.broadcastBlockFn(block, false)
+				go h.broadcastBlockFn(blk, true)
+				go h.broadcastBlockFn(blk, false)
 
 				// update dpor state and pbftstatus
 				h.statusUpdateFn()
@@ -631,7 +584,6 @@ func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 		if err != nil {
 			return err
 		}
-		h.currentPending = block
 
 		return nil
 	}
@@ -719,12 +671,19 @@ func (h *Handler) Disconnect() {
 }
 
 // GetPendingBlock returns a pending block with given hash
-func (h *Handler) GetPendingBlock(hash common.Hash) *types.Block {
+func (h *Handler) GetPendingBlock(number uint64) (*KnownBlock, error) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	block := h.pendingBlocks[hash]
-	return block
+	block, err := h.knownBlocks.GetKnownBlock(number)
+
+	if err != nil {
+		log.Debug("failed to get pending blocks", "number", number)
+	}
+
+	// log.Debug("got pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
+	return block, err
 }
 
 // AddPendingBlock adds a pending block with given hash
@@ -732,8 +691,17 @@ func (h *Handler) AddPendingBlock(block *types.Block) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	hash := block.Hash()
-	h.pendingBlocks[hash] = block
+	log.Debug("adding block to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-	return nil
+	err := h.knownBlocks.AddBlock(block)
+	return err
+}
+
+func (h *Handler) UpdateBlockStatus(number uint64, status BlockStatus) error {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	log.Debug("updating block status", "number", number, "status", status)
+
+	return h.knownBlocks.UpdateStatus(number, status)
 }
