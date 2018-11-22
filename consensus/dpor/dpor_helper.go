@@ -121,6 +121,7 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 
 	// Ensure that the block's parent is valid
 	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
+		log.Debug("consensus.ErrUnknownAncestor 3")
 		return consensus.ErrUnknownAncestor
 	}
 
@@ -243,6 +244,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			// If we have explicit parents, pick from there (enforced)
 			header = parents[len(parents)-1]
 			if header.Hash() != hash || header.Number.Uint64() != number {
+				log.Debug("consensus.ErrUnknownAncestor 1")
 				return nil, consensus.ErrUnknownAncestor
 			}
 			parents = parents[:len(parents)-1]
@@ -250,6 +252,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			// No explicit parents (or no more left), reach out to the database
 			header = chain.GetHeader(hash, number)
 			if header == nil {
+				log.Debug("consensus.ErrUnknownAncestor 2")
 				return nil, consensus.ErrUnknownAncestor
 			}
 		}
