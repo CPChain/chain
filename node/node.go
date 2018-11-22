@@ -107,13 +107,12 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
-		grpcServer:        grpc.NewSerever(conf.DataDir, conf.HTTPModules, &conf.GRpc),
+		grpcServer:        grpc.NewServer(conf.DataDir, conf.HTTPModules, &conf.GRpc),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
 		eventmux:          new(event.TypeMux),
 		log:               conf.Logger,
-		quitCh:            make(chan struct{}),
 	}, nil
 }
 
@@ -242,6 +241,9 @@ func (n *Node) Start() error {
 	// finish initializing the startup
 	n.server = p2pServer
 	n.services = services
+
+	// NB reset the channel because node supports restart
+	n.quitCh = make(chan struct{})
 
 	return nil
 }

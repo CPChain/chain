@@ -32,8 +32,7 @@ import (
 type Server struct {
 	config *Config
 
-	handler  *grpc.Server
-	listener net.Listener
+	handler *grpc.Server
 
 	gatewayListener net.Listener
 
@@ -46,7 +45,7 @@ type Server struct {
 }
 
 // NewServer creates a new implementation of a Server
-func NewSerever(dataDir string, modules []string, cfg *Config) *Server {
+func NewServer(dataDir string, modules []string, cfg *Config) *Server {
 	// update grpc config
 	cfg.DataDir = dataDir
 	cfg.Modules = make([]string, 0, len(modules))
@@ -76,29 +75,32 @@ func (s *Server) Start() error {
 
 func (s *Server) startGrpc() error {
 	s.handler = grpc.NewServer(s.serverOpts...)
-	c, err := net.Listen("tcp", s.config.Address())
+	listener, err := net.Listen("tcp", s.config.Address())
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	s.listener = c
 	go func(handler *grpc.Server, lis net.Listener) {
 		if err := handler.Serve(lis); err != nil {
-			log.Error(err.Error())
+			// the server could be stopped before its started.
+			// this happens when we run TestNodeLifeCycle
+			if err != grpc.ErrServerStopped {
+				log.Error(err.Error())
+			}
 		}
-	}(s.handler, s.listener)
+	}(s.handler, listener)
 
-	c, err = net.Listen("tcp", s.config.JsonHttpAddress())
+	s.gatewayListener, err = net.Listen("tcp", s.config.JsonHttpAddress())
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	s.gatewayListener = c
 	go func(lis net.Listener, mux *runtime.ServeMux) {
 		if err := http.Serve(lis, mux); err != nil {
-			log.Error(err.Error())
+			log.Warn(err.Error())
 		}
 	}(s.gatewayListener, s.mux)
+
 	return nil
 }
 
@@ -133,6 +135,18 @@ func (s *Server) Stop() {
 	s.stopIpc()
 }
 
+func (s *Server) stopGrpc() {
+	if s.handler != nil {
+		s.handler.Stop()
+		s.handler = nil
+	}
+
+	if s.gatewayListener != nil {
+		_ = s.gatewayListener.Close()
+		s.gatewayListener = nil
+	}
+}
+
 func (s *Server) stopIpc() {
 	if s.ipcHandler != nil {
 		s.ipcHandler.Stop()
@@ -140,28 +154,14 @@ func (s *Server) stopIpc() {
 	}
 
 	if s.ipcListener != nil {
-		s.ipcListener.Close()
+		if err := s.ipcListener.Close(); err != nil {
+			log.Error(err.Error())
+		}
 		s.ipcListener = nil
 	}
 }
 
-func (s *Server) stopGrpc() {
-	if s.handler != nil {
-		s.handler.Stop()
-		s.handler = nil
-	}
-	if s.listener != nil {
-		s.listener.Close()
-		s.listener = nil
-	}
-
-	if s.gatewayListener != nil {
-		s.gatewayListener.Close()
-		s.gatewayListener = nil
-	}
-}
-
-// Register regists all the given GApis
+// Register registers all the given GApis
 func (s *Server) Register(ctx context.Context, gapis []GApi) {
 	// Generate the whitelist based on the allowed modules
 	whitelist := make(map[string]bool)
