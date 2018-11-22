@@ -238,10 +238,8 @@ func (pm *ProtocolManager) update() {
 				log.Debug("broadcast updating block")
 
 				// TODO @liuq the logic should be fetch new blocks
-				//if currentBlock.NumberU64() > 0 {
 				go pm.BroadcastBlock(currentBlock, true)
 				go pm.BroadcastBlock(currentBlock, false)
-				//}
 			} else {
 				prev = current
 			}
