@@ -56,7 +56,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			ready := false
 
 			for !ready {
-				if h.Available() && len(h.signers) >= int(h.termLen) {
+				if h.Available() && len(h.signers) >= int(h.termLen)/2 {
 					ready = true
 				}
 				time.Sleep(1 * time.Second)
