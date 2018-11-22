@@ -22,7 +22,12 @@ const (
 	TermGapBetweenElectionAndMining = 3
 
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
-	MaxSizeOfRecentSigners = 5
+	// TODO: @shiyc MaxSizeOfRecentSigners is about to be removed later
+	//MaxSizeOfRecentValidators is the size of the RecentValidators
+	//MaxSizeOfRecentProposers is the size of the RecentProposers
+	MaxSizeOfRecentSigners    = 5
+	MaxSizeOfRecentValidators = 5
+	MaxSizeOfRecentProposers  = 5
 )
 
 var (
@@ -201,6 +206,38 @@ func (s *DporSnapshot) setRecentSigners(term uint64, signers []common.Address) {
 
 }
 
+func (s *DporSnapshot) setRecentValidators(term uint64, validators []common.Address) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	ss := make([]common.Address, len(validators))
+	copy(ss, validators)
+
+	s.RecentValidators[term] = ss
+
+	beforeTerm := uint64(math.Max(0, float64(term-MaxSizeOfRecentValidators)))
+	if _, ok := s.RecentValidators[beforeTerm]; ok {
+		delete(s.RecentValidators, beforeTerm)
+	}
+
+}
+
+func (s *DporSnapshot) setRecentProposers(term uint64, proposers []common.Address) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	ss := make([]common.Address, len(proposers))
+	copy(ss, proposers)
+
+	s.RecentProposers[term] = ss
+
+	beforeTerm := uint64(math.Max(0, float64(term-MaxSizeOfRecentProposers)))
+	if _, ok := s.RecentProposers[beforeTerm]; ok {
+		delete(s.RecentProposers, beforeTerm)
+	}
+
+}
+
 func (s *DporSnapshot) contractCaller() *backend.ContractCaller {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -266,18 +303,25 @@ func (s *DporSnapshot) store(db database.Database) error {
 // copy creates a deep copy of the Snapshot, though not the individual votes.
 func (s *DporSnapshot) copy() *DporSnapshot {
 	cpy := &DporSnapshot{
-		config:        s.config,
-		Number:        s.number(),
-		Hash:          s.hash(),
-		Candidates:    make([]common.Address, len(s.Candidates)),
-		RecentSigners: make(map[uint64][]common.Address),
+		config:           s.config,
+		Number:           s.number(),
+		Hash:             s.hash(),
+		Candidates:       make([]common.Address, len(s.Candidates)),
+		RecentSigners:    make(map[uint64][]common.Address),
+		RecentValidators: make(map[uint64][]common.Address),
+		RecentProposers:  make(map[uint64][]common.Address),
 	}
 
 	copy(cpy.Candidates, s.candidates())
 	for term, signers := range s.recentSigners() {
 		cpy.setRecentSigners(term, signers)
 	}
-
+	for term, proposer := range s.recentProposers() {
+		cpy.setRecentSigners(term, proposer)
+	}
+	for term, validator := range s.recentValidators() {
+		cpy.setRecentSigners(term, validator)
+	}
 	return cpy
 }
 
@@ -408,8 +452,13 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RptList, error) {
 	return rpts, nil
 }
 
+//TODO: @shiyc need to remove it later
 func (s *DporSnapshot) ifUseDefaultSigners() bool {
 	return s.number() < s.config.MaxInitBlockNumber
+}
+
+func (s *DporSnapshot) ifUseDefaultProposers() bool {
+	return s.Number < s.config.MaxInitBlockNumber
 }
 
 func (s *DporSnapshot) ifStartElection() bool {
@@ -417,6 +466,7 @@ func (s *DporSnapshot) ifStartElection() bool {
 }
 
 // updateSigner use rpt and election result to get new committee(signers)
+// TODO: @shiyc need to remove it later
 func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 
 	signers := s.candidates()[:s.config.TermLen]
@@ -436,7 +486,7 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 		}
 		log.Debug("seed", "seed", seed)
 		log.Debug("term length", "term", int(s.config.TermLen))
-		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
+		log.Debug("---------------------------")
 
 		signers := election.Elect(rpts, seed, int(s.config.TermLen))
 
@@ -455,12 +505,65 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 
 		s.setRecentSigners(term, signers)
 
-		log.Debug(",,,,,,,,,,,,,,,,,,,,,,,,,,,")
+		log.Debug("---------------------------")
 		signers = s.getRecentSigners(term)
 		log.Debug("stored elected signers")
 
 		for _, s := range signers {
 			log.Debug("signer", "addr", s.Hex())
+		}
+		log.Debug("---------------------------")
+
+	}
+
+	return nil
+}
+
+// updateProposer use rpt and election result to get new committee(signers)
+func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) error {
+
+	proposers := s.candidates()[:s.config.TermLen]
+
+	// Use default proposers
+	if s.ifUseDefaultProposers() {
+		s.setRecentProposers(s.Term()+1, proposers)
+	}
+
+	// Elect proposers
+	if s.ifStartElection() {
+		log.Debug("electing")
+		log.Debug("---------------------------")
+		log.Debug("rpts:")
+		for _, r := range rpts {
+			log.Debug("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
+		}
+		log.Debug("seed", "seed", seed)
+		log.Debug("term length", "term", int(s.config.TermLen))
+		log.Debug("---------------------------")
+
+		proposers := election.Elect(rpts, seed, int(s.config.TermLen))
+
+		log.Debug("elected proposers:")
+
+		for _, s := range proposers {
+			log.Debug("proposer", "addr", s.Hex())
+		}
+		log.Debug("---------------------------")
+
+		log.Debug("snap.number", "n", s.number())
+
+		term := s.FutureTermOf(s.number())
+
+		log.Debug("term idx", "eidx", term)
+
+		s.setRecentProposers(term, proposers)
+
+		log.Debug("---------------------------")
+		proposers = s.getRecentProposers(term)
+		log.Debug("stored elected proposers")
+
+		for _, s := range proposers {
+			log.Debug("proposer", "addr", s.Hex())
 		}
 		log.Debug("---------------------------")
 
@@ -504,7 +607,7 @@ func (s *DporSnapshot) ProposersOf(number uint64) []common.Address {
 	return s.getRecentProposers(s.TermOf(number))
 }
 
-// ValidatorViewOf returns validator's view with given signer address and block number
+// ValidatorViewOf returns validator's view with given validator's address and block number
 func (s *DporSnapshot) ValidatorViewOf(validator common.Address, number uint64) (int, error) {
 	for view, s := range s.ValidatorsOf(number) {
 		if s == validator {
@@ -514,7 +617,7 @@ func (s *DporSnapshot) ValidatorViewOf(validator common.Address, number uint64) 
 	return -1, errValidatorNotInCommittee
 }
 
-// ProposerViewof returns the proposer's view with given signer address and block number
+// ProposerViewOf returns the proposer's view with given proposer's address and block number
 func (s *DporSnapshot) ProposerViewOf(proposer common.Address, number uint64) (int, error) {
 	for view, s := range s.ProposersOf(number) {
 		if s == proposer {
@@ -581,9 +684,25 @@ func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
 	return s.getRecentSigners(s.FutureTermOf(number))
 }
 
+// FutureProposersOf returns future proposers of given block number
+func (s *DporSnapshot) FutureProposersOf(number uint64) []common.Address {
+	return s.getRecentProposers(s.FutureTermOf(number))
+}
+
 // FutureSignerViewOf returns the future signer view with given signer address and block number
+// TODO: @shiyc need to remove it later
 func (s *DporSnapshot) FutureSignerViewOf(signer common.Address, number uint64) (int, error) {
 	for view, s := range s.FutureSignersOf(number) {
+		if s == signer {
+			return view, nil
+		}
+	}
+	return -1, errSignerNotInCommittee
+}
+
+// FutureProposerViewOf returns the future signer view with given signer address and block number
+func (s *DporSnapshot) FutureProposerViewOf(signer common.Address, number uint64) (int, error) {
+	for view, s := range s.FutureProposersOf(number) {
 		if s == signer {
 			return view, nil
 		}
@@ -592,8 +711,15 @@ func (s *DporSnapshot) FutureSignerViewOf(signer common.Address, number uint64) 
 }
 
 // IsFutureSignerOf returns if an address is a future signer in the given block number
+// TODO: @shiyc need to remove it later
 func (s *DporSnapshot) IsFutureSignerOf(signer common.Address, number uint64) bool {
 	_, err := s.FutureSignerViewOf(signer, number)
+	return err == nil
+}
+
+//IsFutureProposerOf returns if an address is a future proposer in the given block number
+func (s *DporSnapshot) IsFutureProposerOf(proposer common.Address, number uint64) bool {
+	_, err := s.FutureProposerViewOf(proposer, number)
 	return err == nil
 }
 
