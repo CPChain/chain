@@ -25,8 +25,8 @@ func main() {
 	contractAddress := deploy.DeploySignerConnectionRegister()
 	deploy.PrintContract(contractAddress)
 
-	deploy.FormatPrint("DeployCampaignVerify")
-	contractAddress = deploy.DeployCampaignVerify()
+	deploy.FormatPrint("DeployAdmission")
+	contractAddress = deploy.DeployAdmission()
 	deploy.PrintContract(contractAddress)
 
 	deploy.FormatPrint("DeployCampaign")

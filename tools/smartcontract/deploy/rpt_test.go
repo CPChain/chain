@@ -1,59 +1,51 @@
 package deploy
 
 import (
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"context"
+	"fmt"
+	"math/big"
+	"testing"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	rpt "bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
-	"context"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-	"math/big"
-	"testing"
 )
 
 func TestRpt(t *testing.T) {
-	FormatPrint("DeploySignerConnectionRegister")
-	contractAddress := DeploySignerConnectionRegister()
-	PrintContract(contractAddress)
+	t.Skip("skip rpt integrate test")
 
-	//FormatPrint("DeployCampaignVerify")
-	//contractAddress = DeployCampaignVerify()
-	//PrintContract(contractAddress)
-
-	FormatPrint("DeployCampaign")
-	contractAddress = DeployCampaign(contractAddress)
-	PrintContract(contractAddress)
-
-	FormatPrint("DeployRegister")
-	contractAddress = DeployRegister()
-	PrintContract(contractAddress)
-
-	FormatPrint("DeployPdash")
-	contractAddress = DeployPdash()
-	PrintContract(contractAddress)
-
-	client, err, privateKey, _, fromAddress := config.Connect()
+	client, err, _, _, fromAddress := config.Connect()
 	ctx := context.Background()
 	printBalance(client, fromAddress)
-	// Launch contract deploy transaction.
-	auth := bind.NewKeyedTransactor(privateKey)
-	_, tx, rpt, err := rpt.DeployRpt(auth, client)
-	receipt, err := bind.WaitMined(ctx, client, tx)
-	code, err := client.CodeAt(ctx, receipt.ContractAddress, nil)
+
+	addr := common.HexToAddress("0x5af979ebb310248f5c139c601e46b1aca9890827")
+	r, err := rpt.NewRpt(addr, client)
+
+	code, err := client.CodeAt(ctx, addr, nil)
 	fmt.Println("****************************************")
-	fmt.Println("code:", code)
+	if len(code) > 0 {
+		fmt.Println("contract code exist")
+	} else {
+		fmt.Errorf("contract code not exist")
+	}
 	fmt.Println("*****************************************")
 	if err != nil {
 		println("DeployRpt")
 		log.Fatal(err.Error())
 	}
 
-	a, err := rpt.GetRpt(nil, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d85"), big.NewInt(0))
+	a, err := r.GetRpt(nil, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d85"), big.NewInt(0))
 	if err != nil {
 		println("GetRpt", "error:", err)
 		log.Fatal(err.Error())
 	}
 	fmt.Println("rpt is :", a)
 
+	b, err := r.GetRpt(nil, common.HexToAddress("0xE94B7b6C5A0e526A4D97f9768AD6097bdE25c62a"), big.NewInt(0))
+	if err != nil {
+		println("GetRpt", "error:", err)
+		log.Fatal(err.Error())
+	}
+	fmt.Println("rpt is :", b)
 }

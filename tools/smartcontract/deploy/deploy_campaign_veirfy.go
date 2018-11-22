@@ -26,7 +26,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func DeployCampaignVerify() common.Address {
+func DeployAdmission() common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect()
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.

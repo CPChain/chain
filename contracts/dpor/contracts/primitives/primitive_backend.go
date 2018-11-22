@@ -21,7 +21,6 @@ package primitives
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"sort"
 
@@ -31,6 +30,7 @@ import (
 	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 //go:generate abigen --sol contracts/primitive_contracts_inst.sol --pkg contracts --out contracts/primitive_contracts_inst.go
@@ -91,10 +91,11 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
 	}
-	contractAddress := re.ChainConfig.Dpor.Contracts["campagin"]
+	contractAddress := re.ChainConfig.Dpor.Contracts["campaign"]
+	log.Info("campaign", "contractAddress", contractAddress)
 	intance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewCampaign error", "erroe", err)
+		log.Warn("NewCampaign error", "error", err)
 	}
 	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil {

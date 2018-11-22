@@ -34,8 +34,8 @@ echo "Please check the IPFS daemon running on localhost."
 
 cpchain=$proj_dir/build/bin/cpchain
 
-#$cpchain $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
-#         --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000" 2>data/logs/1.log &
+$cpchain $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
+         --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000" 2>data/logs/1.log &
 
 # dlv --headless --listen=:2345 --api-version=2 dlv-cpchain bitbucket.org/cpchain/chain/cmd/cpchain -- $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000"
 
