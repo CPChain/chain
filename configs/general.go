@@ -42,14 +42,14 @@ var (
 			TermLen:               4,
 			ViewLen:               3,
 			MaxInitBlockNumber:    96,
-			ProxyContractRegister: common.HexToAddress("0xa1eed2ff7af329d58f12f15275b75509d4183e18"),
+			ProxyContractRegister: common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
 			Contracts: map[string]common.Address{
-				"campaign": common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
-				"signer":   common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
+				"campaign": common.HexToAddress("0x0ddf4057eedfb80d58029be49bab09bbc45bc500"),
+				"signer":   common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
 				// TODO @hmw make the name more concrete
-				"register": common.HexToAddress("0xd6e4bdcc9b4d1744cf16ce904b9ede5e78751002"),
-				"rpt":      common.HexToAddress("0x5af979ebb310248f5c139c601e46b1aca9890827"),
-				"pdash":    common.HexToAddress("0x721adc4d993380e60e1c98efc6767dfe4cfbbeb4"),
+				"register": common.HexToAddress("0x019cc04ff9d88529b9e58ff26bfc53bce060e915"),
+				"rpt":      common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d"),
+				"pdash":    common.HexToAddress("0xaaae743244a7a5116470df8bd398e7d562ae8881"),
 			},
 		},
 	}

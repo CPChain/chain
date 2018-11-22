@@ -47,11 +47,12 @@ func printTx(tx *types.Transaction, err error, client *cpclient.Client, contract
 func printBalance(client *cpclient.Client, fromAddress common.Address) {
 	// Check balance.
 	bal, _ := client.BalanceAt(context.Background(), fromAddress, nil)
-	fmt.Println("balance:", bal)
+	_ = bal
+	// fmt.Println("balance:", bal)
 }
 
 func PrintContract(address common.Address) {
-	fmt.Println("================================================================")
+	// fmt.Println("================================================================")
 	fmt.Printf("Contract Address: 0x%x\n", address)
 	fmt.Println("================================================================")
 }
