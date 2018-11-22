@@ -449,10 +449,10 @@ func TestSnapshot_updateSigner(t *testing.T) {
 		t.Errorf("For the case snapshot uses default signer, updateSigner() =  \n%v, want \n%v\n", recentSigner, expectedResult)
 	}
 
-	//For the case testDporSnapshot.ifStartElection() == true
+	//For the case testDporSnapshot.isStartElection() == true
 	testDporSnapshot.Number = 2000
 	expectedResult.Number = 2000
-	fmt.Println("ifStarElection() = ", testDporSnapshot.ifStartElection())
+	fmt.Println("ifStarElection() = ", testDporSnapshot.isStartElection())
 	err = testDporSnapshot.updateSigners(testRptList, testSeed)
 	if err != nil {
 		t.Errorf("DporSnapshot.updateSigners returns an error message, as %v\n", err)
@@ -461,7 +461,7 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	expectedSigner := election.Elect(testRptList, testSeed, int(testEpoch))
 	testEpochIdx = testDporSnapshot.Term()
 	fmt.Println(testEpochIdx)
-	recentSigner = testDporSnapshot.getRecentSigners(testEpochIdx + TermGapBetweenElectionAndMining)
+	recentSigner = testDporSnapshot.getRecentSigners(testEpochIdx + TermDistBetweenElectionAndMining)
 	if !reflect.DeepEqual(expectedSigner, recentSigner) {
 		t.Errorf("For the case snapshot starts election, updateSigner() =  \n%v, want \n%v\n", recentSigner, expectedSigner)
 	}

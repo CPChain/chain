@@ -81,10 +81,10 @@ func (c *EthashConfig) String() string {
 
 // DporConfig is the consensus engine configs for proof-of-authority based sealing.
 type DporConfig struct {
-	Period                uint64                    `json:"period"                toml:"period"`  // Number of seconds between blocks to enforce
-	TermLen               uint64                    `json:"termLen"               toml:"termLen"` // Term length to reset votes and checkpoint
-	ViewLen               uint64                    `json:"viewLen"               toml:"viewLen"` // View length of blocks one signer can seal in one committee
-	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"    toml:"maxInitBlockNumber"`
+	Period                uint64                    `json:"period"                toml:"period"`             // Number of seconds between blocks to enforce
+	TermLen               uint64                    `json:"termLen"               toml:"termLen"`            // Term length to reset votes and checkpoint
+	ViewLen               uint64                    `json:"viewLen"               toml:"viewLen"`            // View length of blocks one signer can seal in one committee
+	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"    toml:"maxInitBlockNumber"` // The maximum block number which uses default proposers
 	Contracts             map[string]common.Address `json:"contracts"             toml:"contracts"`
 	ProxyContractRegister common.Address            `json:"proxyContractRegister" toml:"proxyContractRegister"`
 }
