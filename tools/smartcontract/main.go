@@ -23,48 +23,48 @@ import (
 func main() {
 	// deploy init contract
 	deploy.FormatPrint("0.DeployProxyContractRegister")
-	proxyAddress := deploy.ProxyContractRegister()
-	deploy.PrintContract(proxyAddress)
+	proxyContractRegisterAddress := deploy.ProxyContractRegister()
+	deploy.PrintContract(proxyContractRegisterAddress)
 
+	// 1
 	deploy.FormatPrint("1.DeploySignerConnectionRegister")
 	signerAddress := deploy.DeploySignerConnectionRegister()
 	deploy.PrintContract(signerAddress)
 
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, signerAddress)
+
+	// 2
 	deploy.FormatPrint("2.DeployAdmission")
 	admissionAddress := deploy.DeployAdmission()
 	deploy.PrintContract(admissionAddress)
 
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress)
+
+	// 3
 	deploy.FormatPrint("3.DeployCampaign")
 	campaignAddress := deploy.DeployCampaign(admissionAddress)
 	deploy.PrintContract(campaignAddress)
 
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, campaignAddress)
+
+	// 4
 	deploy.FormatPrint("4.DeployRpt")
 	rptAddress := deploy.DeployRpt()
 	deploy.PrintContract(rptAddress)
 
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, rptAddress)
+
+	// 5
 	deploy.FormatPrint("5.DeployRegister")
 	registerAddress := deploy.DeployRegister()
 	deploy.PrintContract(registerAddress)
 
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, signerAddress)
+
+	// 6
 	deploy.FormatPrint("6.DeployPdash")
 	pdashAddress := deploy.DeployPdash()
 	deploy.PrintContract(pdashAddress)
 
-	// register real biz contract on proxy contract
-	// 1.deploy proxy contract for SignerConnectionRegister && register
-	deploy.FormatPrint("1.1 register SignerConnectionRegister")
-	proxyForSignerConnectionRegister := deploy.DeployProxy()
-	deploy.PrintContract(proxyForSignerConnectionRegister)
-	deploy.RegisterProxyAddress(proxyAddress, proxyForSignerConnectionRegister, signerAddress)
-
-	// 2.deploy proxy contract for Admission && register
-
-	// 3.deploy proxy contract for Campaign && register
-
-	// 4.deploy proxy contract for Rpt && register
-
-	// 5.deploy proxy contract for Register && register
-
-	// 6.deploy proxy contract for Pdash && register
-
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress)
 }

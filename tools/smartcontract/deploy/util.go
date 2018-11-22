@@ -31,9 +31,9 @@ import (
 
 func printTx(tx *types.Transaction, err error, client *cpclient.Client, contractAddress common.Address) context.Context {
 	ctx := context.Background()
-	fmt.Printf("Transaction: 0x%x\n", tx.Hash())
+	// fmt.Printf("Transaction: 0x%x\n", tx.Hash())
 	startTime := time.Now()
-	fmt.Printf("TX start @:%s", time.Now())
+	// fmt.Printf("TX start @:%s", time.Now())
 	addressAfterMined, err := bind.WaitDeployed(ctx, client, tx)
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)

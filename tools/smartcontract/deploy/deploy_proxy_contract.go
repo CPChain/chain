@@ -54,28 +54,42 @@ func DeployProxy() common.Address {
 	return contractAddress
 }
 
-func RegisterProxyAddress(proxyContratAddress, proxyAddress, realAddress common.Address) {
+func RegisterProxyAddress(proxyContractAddress, realAddress common.Address) {
+	FormatPrint("register proxy address")
+	proxyAddress := DeployProxy()
+
+	PrintContract(proxyAddress)
+	fmt.Println("Register proxy contract proxy -> real:" + realAddress.Hex())
 	client, err, privateKey, _, fromAddress := config.Connect()
 	if err != nil {
 		log.Fatal(err.Error())
+		fmt.Println("failed")
+
 	}
 	printBalance(client, fromAddress)
-	proxyContractRegister, _ := contract.NewProxyContractRegister(proxyContratAddress, client)
+	proxyContractRegister, _ := contract.NewProxyContractRegister(proxyContractAddress, client)
 
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(500)
 	auth.GasLimit = 3000000
 	gasPrice, err := client.SuggestGasPrice(context.Background())
-	fmt.Println("gasPrice:", gasPrice)
+	// fmt.Println("gasPrice:", gasPrice)
 	auth.GasPrice = gasPrice
 
 	transaction, err := proxyContractRegister.RegisterProxyContract(auth, proxyAddress, realAddress)
 	if err != nil {
 		log.Fatal(err.Error())
+		fmt.Println("failed")
 	}
 	receipt, err := bind.WaitMined(context.Background(), client, transaction)
 	if err != nil {
+		fmt.Println("failed")
 		log.Fatalf("failed to deploy contact when mining :%v", err)
 	}
-	fmt.Println("receipt.Status:", receipt.Status)
+	// fmt.Println("receipt.Status:", receipt.Status)
+	if receipt.Status == 1 {
+		fmt.Println("success")
+	} else {
+		fmt.Println("failed")
+	}
 }
