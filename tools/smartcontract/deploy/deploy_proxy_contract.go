@@ -54,7 +54,7 @@ func DeployProxy() common.Address {
 	return contractAddress
 }
 
-func RegisterProxyAddress(proxyContractAddress, realAddress common.Address) {
+func RegisterProxyAddress(proxyContractAddress, realAddress common.Address) common.Address {
 	FormatPrint("register proxy address")
 	proxyAddress := DeployProxy()
 
@@ -92,4 +92,5 @@ func RegisterProxyAddress(proxyContractAddress, realAddress common.Address) {
 	} else {
 		fmt.Println("failed")
 	}
+	return proxyAddress
 }

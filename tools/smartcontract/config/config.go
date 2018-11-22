@@ -18,7 +18,6 @@ package config
 
 import (
 	"crypto/ecdsa"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -68,7 +67,7 @@ func Connect() (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, co
 
 	// Get contractAddress.
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	fmt.Println("from contractAddress:", fromAddress.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
+	// fmt.Println("from contractAddress:", fromAddress.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
 
 	return client, err, privateKey, publicKeyECDSA, fromAddress
 }

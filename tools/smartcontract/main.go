@@ -38,11 +38,11 @@ func main() {
 	admissionAddress := deploy.DeployAdmission()
 	deploy.PrintContract(admissionAddress)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress)
+	proxyAdmissionAddress := deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress)
 
 	// 3
 	deploy.FormatPrint("3.DeployCampaign")
-	campaignAddress := deploy.DeployCampaign(admissionAddress)
+	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress)
 	deploy.PrintContract(campaignAddress)
 
 	deploy.RegisterProxyAddress(proxyContractRegisterAddress, campaignAddress)
@@ -59,7 +59,7 @@ func main() {
 	registerAddress := deploy.DeployRegister()
 	deploy.PrintContract(registerAddress)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, signerAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, registerAddress)
 
 	// 6
 	deploy.FormatPrint("6.DeployPdash")
