@@ -45,8 +45,9 @@ type Dpor struct {
 
 	signedBlocks map[uint64]common.Hash // record signed blocks.
 
-	signer common.Address // Cpchain address of the signing key
-	signFn SignerFn       // Signer function to authorize hashes with
+	signer   common.Address // Cpchain address of the signing key
+	proposer common.Address // Cpchain address of the proposer
+	signFn   SignFn         // Sign function to authorize hashes with
 
 	handler *backend.Handler
 
@@ -262,10 +263,23 @@ func (d *Dpor) Signer() common.Address {
 	return d.signer
 }
 
+func (d *Dpor) Proposer() common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	return d.proposer
+}
+
 // ValidateSigner validates if given address is future signer
 func (d *Dpor) ValidateSigner(address common.Address) (bool, error) {
 	number := d.chain.CurrentHeader().Number.Uint64()
 	return d.IsFutureSigner(d.chain, address, number)
+}
+
+// validateProposer validates if given address is future proposer
+func (d *Dpor) ValidateProposer(address common.Address) (bool, error) {
+	number := d.chain.CurrentHeader().Number.Uint64()
+	return d.IsFutureProposer(d.chain, address, number)
 }
 
 // Protocol returns Dpor p2p protocol

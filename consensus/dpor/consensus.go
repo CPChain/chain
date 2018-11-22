@@ -112,9 +112,9 @@ var (
 	errWaitTransactions = errors.New("waiting for transactions")
 )
 
-// SignerFn is a signer callback function to request a hash to be signed by a
+// SignFn is a signer callback function to request a hash to be signed by a
 // backing account.
-type SignerFn func(accounts.Account, []byte) ([]byte, error)
+type SignFn func(accounts.Account, []byte) ([]byte, error)
 
 // Author implements consensus.Engine, returning the cpchain address recovered
 // from the signature in the header's extra-data section.
@@ -170,7 +170,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	}
 
 	// Set the correct difficulty
-	header.Difficulty = d.dh.calcDifficulty(snap, d.signer)
+	header.Difficulty = d.dh.calcDifficulty(snap, d.proposer)
 
 	// Ensure the extra data has all it's components
 	if len(header.Extra) < extraVanity {
@@ -179,12 +179,12 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	header.Extra = header.Extra[:extraVanity]
 
 	// if number%d.config.Epoch == 0 {
-	for _, signer := range snap.SignersOf(number) {
-		header.Extra = append(header.Extra, signer[:]...)
+	for _, proposer := range snap.ProposersOf(number) {
+		header.Extra = append(header.Extra, proposer[:]...)
 	}
 	// }
 	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
-	// We suppose each signer only produces one block.
+	// We suppose each proposer only produces one block.
 	header.Extra2 = make([]byte, extraSeal*int(d.config.TermLen)+1)
 
 	// Mix digest is reserved for now, set to empty
@@ -214,7 +214,7 @@ func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state
 
 // Authorize injects a private key into the consensus engine to mint new blocks
 // with.
-func (d *Dpor) Authorize(signer common.Address, signFn SignerFn) {
+func (d *Dpor) Authorize(signer common.Address, signFn SignFn) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -335,6 +335,7 @@ func (d *Dpor) GAPIs(chain consensus.ChainReader) []grpc.GApi {
 }
 
 // IsFutureSigner implements Validator.
+// TODO: @shiyc remove it later
 func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
@@ -357,6 +358,14 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 	// }
 
 	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
+}
+
+//IsFutureValidator implements proposer
+func (d *Dpor) IsFutureProposer(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	return true, nil
+	//TODO: @shiyc implement it
 }
 
 // State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).

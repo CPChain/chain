@@ -103,7 +103,7 @@ func TestDpor_Prepare(t *testing.T) {
 		signatures   *lru.ARCCache
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
-		signFn       SignerFn
+		signFn       SignFn
 	}
 	type args struct {
 		chain  consensus.ChainReader
@@ -143,7 +143,7 @@ func TestDpor_Seal(t *testing.T) {
 		signatures   *lru.ARCCache
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
-		signFn       SignerFn
+		signFn       SignFn
 		// lock         sync.RWMutex
 	}
 	type args struct {

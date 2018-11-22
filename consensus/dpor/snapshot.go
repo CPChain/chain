@@ -137,8 +137,8 @@ func (s *DporSnapshot) recentProposers() map[uint64][]common.Address {
 	defer s.lock.RUnlock()
 
 	recentProposers := make(map[uint64][]common.Address)
-	for term, proposers := range s.RecentProposers {
-		recentProposers[term] = proposers
+	for term, proposer := range s.RecentProposers {
+		recentProposers[term] = proposer
 	}
 	return recentProposers
 }
@@ -148,8 +148,8 @@ func (s *DporSnapshot) recentValidators() map[uint64][]common.Address {
 	defer s.lock.RUnlock()
 
 	recentValidators := make(map[uint64][]common.Address)
-	for term, signers := range s.RecentValidators {
-		recentValidators[term] = signers
+	for term, validator := range s.RecentValidators {
+		recentValidators[term] = validator
 	}
 	return recentValidators
 }
