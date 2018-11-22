@@ -53,23 +53,22 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 
 			log.Debug("generated new pending block, broadcasting")
 
-			// done := false
+			ready := false
 
-			// for !done {
-			// 	if h.Available() && len(h.signers) >= int(h.termLen) {
-			// 		// broadcast mined pending block to remote signers
-			// 		go h.BroadcastMinedBlock(pendingBlock)
-			// 		done = true
-			// 	}
-			// }
+			for !ready {
+				if h.Available() && len(h.signers) >= int(h.termLen) {
+					ready = true
+				}
+				time.Sleep(1 * time.Second)
 
-			// TODO: remove this
-			log.Debug("local block", "block", pendingBlock)
-
-			for i := 0; i < 30; i++ {
-				h.BroadcastMinedBlock(pendingBlock)
-				time.Sleep(3 * time.Second)
+				log.Debug("signer in dpor handler when broadcasting...")
+				for addr := range h.signers {
+					log.Debug("signer", "addr", addr.Hex())
+				}
 			}
+
+			// broadcast mined pending block to remote signers
+			go h.BroadcastMinedBlock(pendingBlock)
 
 		// case <-futureTimer.C:
 
