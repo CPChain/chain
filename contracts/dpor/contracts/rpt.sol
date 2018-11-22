@@ -97,36 +97,47 @@ contract Rpt {
     function getRpt(address _addr, uint _blockNumber) public view returns (uint rpt){
         require(_blockNumber <= block.number, "blockNumber is too large.");
         rpt = 0;
+        /*
         if(3 == _addr.getMaintenance(_blockNumber)) {
             return rpt;
         }
+        */
         rpt = rpt.add(alpha * getCoinage(_addr, _blockNumber));
         rpt = rpt.add(beta * getTx(_addr, _blockNumber));
+
         rpt = rpt.add(gamma * getProxyRep(_addr, _blockNumber));
+
         rpt = rpt.add(psi * getDataContribution(_addr, _blockNumber));
+
         rpt = rpt.add(omega * getBlockchainMaintenance(_addr, _blockNumber));
         return rpt;
     }
     
     function getCoinage(address _addr, uint _blockNumber) public view returns(uint) {
         uint rank = _addr.getRank(_blockNumber);
+        //uint rank = 8;
         if (rank < 2) return 100;
         if (rank < 5) return 90;
         if (rank < 15) return 80;
         if (rank < 35) return 70;
         if (rank < 60) return 60;
         if (rank < 80) return 40;
-        return 20;
+        return rank;
     }
     
     function getTx(address _addr, uint _blockNumber) public view returns(uint) {
+        /*
         uint txAmount = _addr.getTxVolume(_blockNumber);
         txAmount = txAmount.mul(5);
         if(txAmount > 100) return 100;
         return txAmount;
+        //*/
+        return 80;
     }
     
     function getProxyRep(address _addr, uint _blockNumber) public view returns(uint) {
+        return 3;
+        /*
         uint isProxy = _addr.isProxy(_blockNumber);
         if (isProxy == 0) {
             return 0;
@@ -137,21 +148,28 @@ contract Rpt {
         res = txAmount.mul(5).add(10);
         if(res > 100) return 100;
         return res;
+        //*/
     }
     
     function getDataContribution(address _addr, uint _blockNumber) public view returns(uint) {
+        return 8;
+        /*
         uint uploadNum;
         uint res;
         uploadNum = _addr.getUploadInfo(_blockNumber);
         res = uploadNum.mul(3);
         if(res > 100) return 100;
         return res;
+        //*/
     }
     
     function getBlockchainMaintenance(address _addr, uint _blockNumber) public view returns(uint) {
+        return 20;
+        /*
         uint node = _addr.getMaintenance(_blockNumber);
         if (node == 0) return 100;
         if (node == 1) return 80;
         return 60;
+        //*/
     }
 }

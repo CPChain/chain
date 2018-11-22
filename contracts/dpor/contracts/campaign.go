@@ -27,7 +27,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-//go:generate abigen --sol rpt/rpt.sol --pkg rpt --out rpt/rpt.go
+//go:generate abigen --sol rpt.sol --pkg dpor --out rpt.go
 
 ////go:generate abigen --sol contracts/campaign/campaign.sol --pkg contract --out contracts/campaign/campaign.go
 //need generate in dir:contracts/dpor

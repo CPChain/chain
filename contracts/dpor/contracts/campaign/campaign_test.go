@@ -48,7 +48,7 @@ func TestCampaign(t *testing.T) {
 
 	// create account.
 	// privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
-	file, _ := os.Open("../../../examples/cpchain/data/dd1/keystore/")
+	file, _ := os.Open("../../../../examples/cpchain/data/data1/keystore/")
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
 	kst := keystore.NewKeyStore(keyPath, 2, 1)
 	account := kst.Accounts()[0]
@@ -153,6 +153,7 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 	}
 	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
 	// see candidates of view zero.
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	candidates, err := instance.CandidatesOf(nil, big.NewInt(0))
 	if err != nil {
 		log.Fatal(err.Error())
@@ -161,5 +162,6 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 	for i := 0; i < len(candidates); i++ {
 		fmt.Println("number", i, candidates[i].Hex())
 	}
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	return numOfCampaign, deposit, startViewIdx, endViewIdx
 }

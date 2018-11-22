@@ -24,7 +24,6 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi"
-	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -150,7 +149,7 @@ func (c *BoundContract) Call(opts *CallOpts, result interface{}, method string, 
 		}
 	} else {
 		output, err = c.caller.CallContract(ctx, msg, nil)
-		log.Info("caller.CallContract", "output", output, "error", err)
+		//log.Info("caller.CallContract", "output", output, "error", err)
 		if err == nil && len(output) == 0 {
 			// Make sure we have a contract to operate on, and bail out otherwise.
 			if code, err = c.caller.CodeAt(ctx, c.address, nil); err != nil {

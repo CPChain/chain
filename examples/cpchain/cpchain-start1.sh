@@ -35,7 +35,7 @@ echo "Please check the IPFS daemon running on localhost."
 cpchain=$proj_dir/build/bin/cpchain
 
 #$cpchain $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
-#         --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000" 2>data/logs/1.log &
+         --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000" 2>data/logs/1.log &
 
 # dlv --headless --listen=:2345 --api-version=2 dlv-cpchain bitbucket.org/cpchain/chain/cmd/cpchain -- $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000"
 
@@ -62,7 +62,6 @@ $cpchain $args --datadir data/data8  --rpcaddr 127.0.0.1:8508 --grpcaddr 127.0.0
 
 $cpchain $args --datadir data/data9  --rpcaddr 127.0.0.1:8509 --grpcaddr 127.0.0.1:8609 --jsonrpchttpaddr 127.0.0.1:8709 --port 30319 --mine \
          --unlock "0xe4d51117832e84f1d082e9fc12439b771a57e7b2"  --password conf/password 2>data/logs/9.log &
-
 $cpchain $args --datadir data/data10  --rpcaddr 127.0.0.1:8510 --grpcaddr 127.0.0.1:8610 --jsonrpchttpaddr 127.0.0.1:8710 --port 30320 --mine \
          --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --password conf/password 2>data/logs/10.log &
 
