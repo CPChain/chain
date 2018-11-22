@@ -62,9 +62,9 @@ type DporSnapshot struct {
 	Hash       common.Hash      `json:"hash"`       // Block hash where the Snapshot was created
 	Candidates []common.Address `json:"candidates"` // Set of candidates read from campaign contract
 	// RecentSigners *lru.ARCCache    `json:"signers"`
-	RecentSigners    map[uint64][]common.Address `json:"signers"` // Set of recent signers
-	RecentProposers  map[uint64][]common.Address `json:"proposers"`
-	RecentValidators map[uint64][]common.Address `json:"validators"`
+	RecentSigners    map[uint64][]common.Address `json:"signers"`    // Set of recent signers
+	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
+	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
 
 	config         *configs.DporConfig // Consensus engine parameters to fine tune behavior
 	ContractCaller *backend.ContractCaller
@@ -120,6 +120,7 @@ func (s *DporSnapshot) setCandidates(candidates []common.Address) {
 	s.Candidates = cands
 }
 
+// TODO: @shiyc remove it later
 func (s *DporSnapshot) recentSigners() map[uint64][]common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -253,9 +254,9 @@ func (s *DporSnapshot) setContractCaller(contractCaller *backend.ContractCaller)
 }
 
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
-// method does not initialize the set of recent signers, so only ever use if for
+// method does not initialize the set of recent proposers, so only ever use if for
 // the genesis block.
-func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, signers []common.Address) *DporSnapshot {
+func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, proposers []common.Address) *DporSnapshot {
 	snap := &DporSnapshot{
 		config:           config,
 		Number:           number,
@@ -265,7 +266,9 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, si
 		RecentValidators: make(map[uint64][]common.Address),
 	}
 
-	snap.setRecentSigners(snap.Term(), signers)
+	// TODO: @shiyc need to remove setRecentSigners(), and consider whether we need setRecentValidators()
+	snap.setRecentSigners(snap.Term(), proposers)
+	snap.setRecentProposers(snap.Term(), proposers)
 	return snap
 }
 
@@ -360,7 +363,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.Co
 	return snap, nil
 }
 
-// applyHeader applys header to Snapshot to calculate reputations of candidates fetched from candidate contract
+// applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
 func (s *DporSnapshot) applyHeader(header *types.Header) error {
 
 	// Update Snapshot attributes.
@@ -394,10 +397,10 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	return nil
 }
 
-// updateCandidates updates candidates from campaign contract
+// updateCandidates updates proposer candidates from campaign contract
 func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 
-	// Default Signers/Candidates
+	// Default Proposers/Candidates
 	candidates := []common.Address{
 		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
 		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
@@ -519,7 +522,7 @@ func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
 	return nil
 }
 
-// updateProposer use rpt and election result to get new committee(signers)
+// updateProposer uses rpt and election result to get new proposers committee
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) error {
 
 	proposers := s.candidates()[:s.config.TermLen]
