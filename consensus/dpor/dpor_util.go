@@ -93,10 +93,13 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 		header.GasLimit,
 		header.GasUsed,
 		header.Time,
-		header.Extra[:len(header.Extra)-65],
+		header.Dpor.Proposers,
+		header.Dpor.Validators,
+		header.Extra,
 		header.MixHash,
 		header.Nonce,
 	})
+
 	hasher.Sum(hash[:0])
 	return hash
 }
@@ -109,8 +112,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 	hash := header.Hash()
 
-	// If header.Extra format is invalid, return
-	if len(header.Extra) < extraSeal {
+	if bytes.Equal(header.Dpor.Seal[:], new(types.DporSignature)[:]) {
 		return common.Address{}, []common.Address{}, errMissingSignature
 	}
 
@@ -119,18 +121,11 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	// header.Extra2[signer1-sig:...:signerN-sig]
 
 	// Retrieve leader's signature
-	leaderSig := header.Extra[len(header.Extra)-extraSeal:]
-
-	// Retrieve signers' signatures
-	ss, err := header.DecodedExtra2(types.TypeExtra2SignaturesDecoder)
-	if err != nil {
-		return common.Address{}, []common.Address{}, err
-	}
-	signersSig := ss.Data
+	leaderSig := header.Dpor.Seal
 
 	// Recover the public key and the cpchain address of leader.
 	var leader common.Address
-	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig)
+	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig[:])
 	if err != nil {
 		return common.Address{}, []common.Address{}, err
 	}
@@ -138,44 +133,39 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 	// Cache leader signature.
 	if sigs, known := sigcache.Get(hash); known {
-		sigs.(*Signatures).SetSig(leader, leaderSig)
+		sigs.(*Signatures).SetSig(leader, leaderSig[:])
 	} else {
 		sigs := &Signatures{
 			sigs: make(map[common.Address][]byte),
 		}
-		sigs.SetSig(leader, leaderSig)
+		sigs.SetSig(leader, leaderSig[:])
 		sigcache.Add(hash, sigs)
 	}
 
-	// Return if there is no signers' signatures.
-	if len(signersSig)%extraSeal != 0 {
-		return leader, []common.Address{}, errInvalidSigBytes
-	}
-
 	// Recover the public key and the cpchain address of signers one by one.
-	var signers []common.Address
-	for i := 0; i < len(signersSig)/extraSeal; i++ {
-		signerSig := signersSig[i*extraSeal : (i+1)*extraSeal]
+	var proposers []common.Address
+	for i := 0; i < len(header.Dpor.Sigs); i++ {
+		signerSig := header.Dpor.Sigs[i]
 
-		noSigner := bytes.Equal(signerSig, make([]byte, extraSeal))
+		noSigner := bytes.Equal(signerSig[:], make([]byte, extraSeal))
 		if !noSigner {
 			// Recover it!
-			signerPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), signerSig)
+			signerPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), signerSig[:])
 			if err != nil {
-				return common.Address{}, signers, err
+				return common.Address{}, proposers, err
 			}
-			var signer common.Address
-			copy(signer[:], crypto.Keccak256(signerPubkey[1:])[12:])
+			var proposer common.Address
+			copy(proposer[:], crypto.Keccak256(signerPubkey[1:])[12:])
 
 			// Cache it!
 			sigs, _ := sigcache.Get(hash)
-			sigs.(*Signatures).SetSig(signer, signerSig)
+			sigs.(*Signatures).SetSig(proposer, signerSig[:])
 
 			// Add signer to known signers
-			signers = append(signers, signer)
+			proposers = append(proposers, proposer)
 		}
 	}
-	return leader, signers, nil
+	return leader, proposers, nil
 }
 
 // acceptSigs checks that signatures have enough signatures to accept the block.

@@ -1270,7 +1270,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			return i, events, coalescedLogs, err
 		}
 
-		// Process block using the parent state as reference point.
+		// NB process block using the parent state as reference point.
 		pubReceipts, privReceipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB,
 			bc.vmConfig)
 		if err != nil {

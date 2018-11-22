@@ -44,9 +44,8 @@ func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func
 
 	engine := dpor.NewFaker(configs.AllCpchainProtocolChanges.Dpor, db)
 
-	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, engine, vm.Config{}, remoteDB, nil)
-
 	chain, _ := core.GenerateChain(gspec.Config, genesis, engine, db, remoteDB, blocks, generator)
+	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, engine, vm.Config{}, remoteDB, nil)
 
 	if _, err := blockchain.InsertChain(chain); err != nil {
 		panic(err)
@@ -146,7 +145,7 @@ func newTestPeer(name string, version int, pm *ProtocolManager, shake bool) (*te
 		select {
 		// one shot for a single peer
 		case pm.newPeerCh <- peer:
-			errc <- pm.handle(peer)
+			errc <- pm.addPeer(peer)
 		case <-pm.quitSync:
 			errc <- p2p.DiscQuitting
 		}

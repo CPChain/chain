@@ -20,12 +20,6 @@ const (
 	TestnetChainId = 43
 )
 
-// Genesis hashes to enforce below configs on.
-var (
-	// hash refers to default block.
-	MainnetGenesisHash = common.HexToHash("0x6a1455819a218618d870ad9c84257d4917ec6c6e10f4c133004dd1f8a687612a")
-)
-
 var (
 	// TODO: @AC define testnet configuration
 	TestnetChainConfig = &ChainConfig{
@@ -40,7 +34,7 @@ var (
 		Dpor: &DporConfig{
 			Period:                1,
 			TermLen:               4,
-			ViewLen:               3,
+			ViewLen:               1,
 			MaxInitBlockNumber:    96,
 			ProxyContractRegister: common.HexToAddress("0x7900dd1d71fc5c57ba56e4b768de3c2264253335"),
 			Contracts: map[string]common.Address{

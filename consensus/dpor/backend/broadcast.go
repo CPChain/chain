@@ -9,16 +9,22 @@ import (
 
 // BroadcastMinedBlock broadcasts generated block to committee
 func (h *Handler) BroadcastMinedBlock(block *types.Block) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	committee := h.signers
-	log.Debug("broadcast newly proposed block to the validators committee")
+	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
 	for addr, peer := range committee {
-		log.Debug("signer", "addr", addr.Hex())
+		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
 		peer.AsyncSendNewPendingBlock(block)
 	}
 }
 
 // BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
 func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	committee := h.signers
 	for _, peer := range committee {
 		peer.AsyncSendPrepareSignedHeader(header)
@@ -27,6 +33,9 @@ func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
 
 // BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
 func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	committee := h.signers
 	for _, peer := range committee {
 		peer.AsyncSendCommitSignedHeader(header)
@@ -43,6 +52,20 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 		case pendingBlock := <-h.pendingBlockCh:
 
 			log.Debug("proposed new pending block, broadcasting")
+
+			ready := false
+
+			for !ready {
+				if h.Available() && len(h.signers) >= int(h.termLen) {
+					ready = true
+				}
+				time.Sleep(1 * time.Second)
+
+				log.Debug("signer in dpor handler when broadcasting...")
+				for addr := range h.signers {
+					log.Debug("signer", "addr", addr.Hex())
+				}
+			}
 
 			// broadcast mined pending block to remote signers
 			go h.BroadcastMinedBlock(pendingBlock)

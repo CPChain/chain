@@ -20,8 +20,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
-	filename "github.com/keepeye/logrus-filename"
+	"bitbucket.org/cpchain/chain/commons/log/filename"
+	"bitbucket.org/cpchain/chain/commons/log/stack"
+	"github.com/sirupsen/logrus"
 )
 
 const errCtx = "Normalized odd number of arguments by adding nil"
@@ -74,6 +75,8 @@ func New(ctx ...interface{}) *Logger {
 		QuoteEmptyFields: true,
 		TimestampFormat:  termTimeFormat,
 	})
+
+	l.Logger.AddHook(stack.NewHook())
 
 	return l
 }

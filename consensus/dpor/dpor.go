@@ -189,14 +189,6 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		return d.SignHeader(d.chain, header, state)
 	}
 
-	addPendingBlockFn := func(block *types.Block) error {
-		return d.chain.AddPendingBlock(block)
-	}
-
-	getPendingBlockFn := func(hash common.Hash) *types.Block {
-		return d.chain.GetPendingBlock(hash)
-	}
-
 	broadcastBlockFn := func(block *types.Block, prop bool) {
 		go pmBroadcastBlockFn(block, prop)
 	}
@@ -226,8 +218,6 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		verifyHeaderFn,
 		validateBlockFn,
 		signHeaderFn,
-		addPendingBlockFn,
-		getPendingBlockFn,
 		broadcastBlockFn,
 		insertChainFn,
 		statusFn,
@@ -255,6 +245,7 @@ func (d *Dpor) Stop() {
 	return
 }
 
+// TODO: remove this
 // Signer return dpor.signer
 func (d *Dpor) Signer() common.Address {
 	d.lock.Lock()
@@ -283,8 +274,9 @@ func (d *Dpor) ValidateProposer(address common.Address) (bool, error) {
 }
 
 // Protocol returns Dpor p2p protocol
-func (d *Dpor) Protocol() p2p.Protocol {
-	return d.handler.Protocol()
+func (d *Dpor) Protocol() consensus.Protocol {
+	// return d.handler.Protocol()
+	return d.handler.GetProtocol()
 }
 
 // PbftStatus returns current state of dpor
@@ -300,4 +292,9 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
 	return d.handler.ReceiveMinedPendingBlock(block)
+}
+func (d *Dpor) Proposer() common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	return d.signer
 }

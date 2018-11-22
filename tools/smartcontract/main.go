@@ -27,6 +27,7 @@ func main() {
 
 	deploy.FormatPrint("DeployCampaignVerify")
 	contractAddress = deploy.DeployCampaignVerify()
+	deploy.PrintContract(contractAddress)
 
 	deploy.FormatPrint("DeployCampaign")
 	contractAddress = deploy.DeployCampaign(contractAddress)
@@ -34,5 +35,9 @@ func main() {
 
 	deploy.FormatPrint("DeployProxyContractRegister")
 	contractAddress = deploy.ProxyContractRegister()
+	deploy.PrintContract(contractAddress)
+
+	deploy.FormatPrint("DeployRpt")
+	contractAddress = deploy.DeployRpt()
 	deploy.PrintContract(contractAddress)
 }

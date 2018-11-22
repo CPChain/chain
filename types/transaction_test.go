@@ -183,7 +183,7 @@ func TestTransactionJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not generate key: %v", err)
 	}
-	signer := NewPrivTxSupportEIP155Signer(common.Big1)
+	signer := NewCep1Signer(common.Big1)
 
 	for i := uint64(0); i < 25; i++ {
 		var tx *Transaction
@@ -246,11 +246,11 @@ func TestTxCheckType(t *testing.T) {
 	}
 }
 
-// TestTxSetType tests Transaction's SetType(), Types() function.
+// TestTxSetType tests Transaction's SetType(), Type() function.
 func TestTxSetType(t *testing.T) {
 	tx := NewTransaction(0, common.HexToAddress("0xb794f5ea0ba39494ce83a213fffba74279579268"), new(big.Int), 0, new(big.Int), nil)
 	tx.SetType(TxTypePrivate)
-	if tx.Types() != TxTypePrivate {
+	if tx.Type() != TxTypePrivate {
 		t.Fatal("The returned types of transaction is not correct.")
 	}
 }

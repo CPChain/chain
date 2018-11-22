@@ -123,7 +123,7 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 		return 0, err
 	}
 	txvs := int64(0)
-	signer := types.NewPrivTxSupportEIP155Signer(re.Config.ChainConfig.ChainID)
+	signer := types.NewCep1Signer(re.Config.ChainConfig.ChainID)
 	txs := block.Transactions()
 	for _, tx := range txs {
 		sender, err := signer.Sender(tx)
@@ -154,8 +154,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 		return 0, err
 	}
 	number = number%re.Config.DporConfig.TermLen - 1
-	leaderBytes := header.Extra[uint64(extraVanity)+number*common.AddressLength : uint64(extraVanity)+(number+1)*common.AddressLength]
-	leader := common.BytesToAddress(leaderBytes)
+	leader := header.Dpor.Proposers[number]
 
 	log.Debug("leader.Hex is ", "hex", leader.Hex())
 
@@ -242,9 +241,9 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 }
 
 func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
-	committee := make([]common.Address, (len(header.Extra)-extraVanity-extraSeal)/common.AddressLength)
+	committee := make([]common.Address, len(header.Dpor.Proposers))
 	for i := 0; i < len(committee); i++ {
-		copy(committee[i][:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
+		copy(committee[i][:], header.Dpor.Proposers[i][:])
 	}
 	return committee
 }
