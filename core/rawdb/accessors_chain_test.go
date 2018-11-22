@@ -18,10 +18,9 @@ package rawdb
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"testing"
-
-	"fmt"
 
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
