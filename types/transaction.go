@@ -50,8 +50,8 @@ type Transaction struct {
 }
 
 type txdata struct {
-	// Types indicates the features assigned to the tx, e.g. private tx.
-	Types        uint64          `json:"type" gencodec:"required"`
+	// Type indicates the features assigned to the tx, e.g. private tx.
+	Type         uint64          `json:"type" gencodec:"required"`
 	AccountNonce uint64          `json:"nonce"    gencodec:"required"`
 	Price        *big.Int        `json:"gasPrice" gencodec:"required"`
 	GasLimit     uint64          `json:"gas"      gencodec:"required"`
@@ -70,7 +70,7 @@ type txdata struct {
 }
 
 type txdataMarshaling struct {
-	Types        hexutil.Uint64
+	Type        hexutil.Uint64
 	AccountNonce hexutil.Uint64
 	Price        *hexutil.Big
 	GasLimit     hexutil.Uint64
@@ -92,12 +92,12 @@ func NewContractCreation(nonce uint64, amount *big.Int, gasLimit uint64, gasPric
 	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data, BasicTx)
 }
 
-func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, types uint64) *Transaction {
+func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txtype uint64) *Transaction {
 	if len(data) > 0 {
 		data = common.CopyBytes(data)
 	}
 	d := txdata{
-		Types:        types,
+		Type:         txtype,
 		AccountNonce: nonce,
 		Recipient:    to,
 		Payload:      data,
@@ -131,9 +131,10 @@ func (tx *Transaction) Protected() bool {
 func isProtectedV(V *big.Int) bool {
 	if V.BitLen() <= 8 {
 		v := V.Uint64()
+		// cf. eip155 for details
 		return v != 27 && v != 28
 	}
-	// anything not 27 or 28 are considered unprotected
+	// anything not 27 or 28 are considered protected
 	return true
 }
 
@@ -265,23 +266,23 @@ func (tx *Transaction) RawSignatureValues() (*big.Int, *big.Int, *big.Int) {
 	return tx.data.V, tx.data.R, tx.data.S
 }
 
-func (tx *Transaction) Types() uint64 {
-	return tx.data.Types
+func (tx *Transaction) Type() uint64 {
+	return tx.data.Type
 }
 
 // CheckType checks the transaction's type.
 func (tx *Transaction) CheckType(t uint64) bool {
-	return tx.data.Types&t != 0
+	return tx.data.Type&t != 0
 }
 
 // SetType sets the type to the transaction.
 func (tx *Transaction) SetType(t uint64) {
-	tx.data.Types |= t
+	tx.data.Type |= t
 }
 
 // UnsetType clears the given type setting from the transaction.
 func (tx *Transaction) UnsetType(t uint64) {
-	tx.data.Types &= ^t
+	tx.data.Type &= ^t
 }
 
 // IsPrivate checks if the tx is private.

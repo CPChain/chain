@@ -17,8 +17,8 @@
 package dpor
 
 import (
-	"bytes"
 	"math/big"
+	"reflect"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -74,15 +74,6 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 	if len(header.Extra) < extraVanity {
 		return errMissingVanity
 	}
-	if len(header.Extra) < extraVanity+extraSeal {
-		return errMissingSignature
-	}
-
-	// Check if extraData is valid
-	signersBytes := len(header.Extra) - extraVanity - extraSeal
-	if signersBytes%common.AddressLength != 0 {
-		return errInvalidSigners
-	}
 
 	// Ensure that the mix digest is zero as we don't have fork protection currently
 	if header.MixHash != (common.Hash{}) {
@@ -136,39 +127,33 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 		return err
 	}
 
-	// Check signers bytes in extraData
-	signers := make([]byte, dpor.config.TermLen*common.AddressLength)
+	// Check proposers
+	proposers := make([]common.Address, dpor.config.TermLen)
 	for round, signer := range snap.SignersOf(number) {
-		copy(signers[round*common.AddressLength:(round+1)*common.AddressLength], signer[:])
+		proposers[round] = signer
 	}
-	extraSuffix := len(header.Extra) - extraSeal
-	if !bytes.Equal(header.Extra[extraVanity:extraSuffix], signers) {
+	if !reflect.DeepEqual(header.Dpor.Proposers, proposers) {
 		if NormalMode == dpor.fake {
-
-			log.Debug("err: invalid signer list")
-			signerBytes := header.Extra[extraVanity:extraSuffix]
-			extraSigners := make([]common.Address, dpor.config.TermLen)
-			for i := 0; i < len(signerBytes)/common.AddressLength; i++ {
-				extraSigners[i].SetBytes(signerBytes[i*common.AddressLength : (i+1)*common.AddressLength])
-			}
+			log.Debug("err: invalid proposer list")
+			ps := header.Dpor.Proposers
 
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
-			log.Debug("signers in block extra:")
-			for round, signer := range extraSigners {
+			log.Debug("proposers in block dpor snap:")
+			for round, signer := range ps {
 				log.Debug("signer", "addr", signer.Hex(), "idx", round)
 			}
 
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
-			log.Debug("signers in snapshot:")
+			log.Debug("proposers in snapshot:")
 			for round, signer := range snap.SignersOf(number) {
 				log.Debug("signer", "addr", signer.Hex(), "idx", round)
 			}
 
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
-			log.Debug("recent signers: ")
+			log.Debug("recent proposers: ")
 			for i := snap.TermOf(number); i < snap.TermOf(number)+5; i++ {
 				log.Debug("----------------------")
-				log.Debug("signers in snapshot of:", "term idx", i)
+				log.Debug("proposers in snapshot of:", "term idx", i)
 				for _, s := range snap.getRecentSigners(i) {
 					log.Debug("signer", "s", s.Hex())
 				}
@@ -176,7 +161,6 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 
 			return errInvalidSigners
 		}
-
 	}
 
 	// All basic checks passed, verify the seal and return
@@ -224,9 +208,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				// do nothing when test,empty signers assigned
 			} else {
 				// Create a snapshot from the genesis block
-				signers = make([]common.Address, (len(genesis.Extra)-extraVanity-extraSeal)/common.AddressLength)
+				signers = make([]common.Address, len(genesis.Dpor.Proposers))
 				for i := 0; i < len(signers); i++ {
-					copy(signers[i][:], genesis.Extra[extraVanity+i*common.AddressLength:])
+					copy(signers[i][:], genesis.Dpor.Proposers[i][:])
 				}
 			}
 
@@ -395,19 +379,14 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 	}
 
-	// Copy all signatures recovered to allSigs.
-	allSigs := make([]byte, int(dpor.config.TermLen)*extraSeal)
+	// Copy all signatures to allSigs
+	allSigs := make([]types.DporSignature, dpor.config.TermLen)
 	for round, signer := range snap.SignersOf(number) {
 		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
-			copy(allSigs[round*extraSeal:(round+1)*extraSeal], sigHash)
+			copy(allSigs[round][:], sigHash)
 		}
 	}
-
-	// Encode allSigs to header.extra2.
-	err = header.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
-	if err != nil {
-		return err
-	}
+	header.Dpor.Sigs = allSigs
 
 	// Sign the block if self is in the committee
 	if snap.IsSignerOf(dpor.signer, number) {
@@ -425,13 +404,8 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 		// Copy signer's signature to the right position in the allSigs
 		round, _ := snap.SignerViewOf(dpor.signer, number)
-		copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
-
-		// Encode to header.extra2
-		err = header.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
-		if err != nil {
-			return err
-		}
+		copy(allSigs[round][:], sighash)
+		header.Dpor.Sigs = allSigs
 
 		return nil
 	}

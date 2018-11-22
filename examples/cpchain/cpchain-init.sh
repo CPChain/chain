@@ -6,7 +6,8 @@ set -u
 set -e
 
 echo "[*] Cleaning up temporary data directories"
-rm -rf data
+rm -rf data/data*
+rm -rf data/logs/*
 mkdir -p data/logs
 
 proj_dir=../..

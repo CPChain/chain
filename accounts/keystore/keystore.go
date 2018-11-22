@@ -278,9 +278,9 @@ func (ks *KeyStore) SignTx(a accounts.Account, tx *types.Transaction, chainID *b
 	if !found {
 		return nil, ErrLocked
 	}
-	// Depending on the presence of the chain ID, sign with EIP155 or homestead
+	// Depending on the presence of the chain ID, sign with cep1 or homestead
 	if chainID != nil {
-		return types.SignTx(tx, types.NewPrivTxSupportEIP155Signer(chainID), unlockedKey.PrivateKey)
+		return types.SignTx(tx, types.NewCep1Signer(chainID), unlockedKey.PrivateKey)
 	}
 	return types.SignTx(tx, types.HomesteadSigner{}, unlockedKey.PrivateKey)
 }
@@ -308,7 +308,7 @@ func (ks *KeyStore) SignTxWithPassphrase(a accounts.Account, passphrase string, 
 
 	// Depending on the presence of the chain ID, sign with EIP155 or homestead
 	if chainID != nil {
-		return types.SignTx(tx, types.NewPrivTxSupportEIP155Signer(chainID), key.PrivateKey)
+		return types.SignTx(tx, types.NewCep1Signer(chainID), key.PrivateKey)
 	}
 	return types.SignTx(tx, types.HomesteadSigner{}, key.PrivateKey)
 }

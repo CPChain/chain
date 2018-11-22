@@ -34,15 +34,12 @@ import (
 func Test_dporHelper_verifyHeader(t *testing.T) {
 	dh := &defaultDporHelper{}
 
-	extra := "0x00000000000000000000000000000000"
-	fmt.Println("extra:", extra)
-	err2Extra := "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000"
-	fmt.Println("err2Extra:", err2Extra)
+	extraErr1 := "0x00000000000000000000000000000000"
+	fmt.Println("extraErr1:", extraErr1)
 
-	errInvalidSignersExtra := "0x0000000000000000000000000000000000000000000000000000000000000000cce94b7b6c5a0e526a4d97f9768ad6097bde25c62ac9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"
-	fmt.Println("errInvalidSignersExtra:", errInvalidSignersExtra)
-
-	rightExtra := "0x0000000000000000000000000000000000000000000000000000000000000000e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"
+	rightExtra := "0x0000000000000000000000000000000000000000000000000000000000000000"
+	rightSeal := "0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"
+	rightAddr := "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"
 
 	time1 := big.NewInt(time.Now().Unix() + 100)
 	time := big.NewInt(time.Now().Unix() - 100)
@@ -72,46 +69,51 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 		{"header.Extra error1", dh,
 			args{
 				header: &types.Header{
-					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(extra))},
-				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
-
-		{"header.Extra error2", dh,
-			args{
-				header: &types.Header{
-					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(err2Extra))},
-				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
-
-		{"errInvalidSigners", dh,
-			args{
-				header: &types.Header{
-					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(errInvalidSignersExtra))},
+					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(extraErr1))},
 				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"errInvalidMixHash", dh,
 			args{
 				header: &types.Header{
-					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
+					Number: big.NewInt(7),
+					Time:   time,
+					Extra:  hexutil.MustDecode(string(rightExtra)),
+					Dpor: types.DporSnap{
+						Seal: types.HexToDporSig(rightSeal),
+						Proposers: []common.Address{
+							common.HexToAddress(rightAddr),
+						},
+					},
 					MixHash: common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0")},
-				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
-
-		{"errInvalidUncleHash", dh,
-			args{
-				header: &types.Header{
-					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
-					MixHash: common.Hash{}},
 				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"errInvalidDifficulty", dh,
 			args{
 				header: &types.Header{
-					Number: big.NewInt(7), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
+					Number: big.NewInt(7),
+					Time:   time,
+					Extra:  hexutil.MustDecode(string(rightExtra)),
+					Dpor: types.DporSnap{
+						Seal: types.HexToDporSig(rightSeal),
+						Proposers: []common.Address{
+							common.HexToAddress(rightAddr),
+						},
+					},
 					MixHash: common.Hash{}},
 				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"success", dh,
 			args{
 				header: &types.Header{
-					Number: big.NewInt(0), Time: time, Extra: hexutil.MustDecode(string(rightExtra)),
+					Number: big.NewInt(0),
+					Time:   time,
+					Extra:  hexutil.MustDecode(string(rightExtra)),
+					Dpor: types.DporSnap{
+						Seal: types.HexToDporSig(rightSeal),
+						Proposers: []common.Address{
+							common.HexToAddress(rightAddr),
+						},
+					},
 					MixHash:    common.Hash{},
 					Difficulty: big.NewInt(2)},
 				c:       &Dpor{config: &configs.DporConfig{TermLen: 3}, dh: &defaultDporHelper{}},
@@ -131,7 +133,9 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 
 func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 	recents, _ := lru.NewARC(10)
-	rightExtra := "0x0000000000000000000000000000000000000000000000000000000000000000e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"
+	rightExtra := "0x0000000000000000000000000000000000000000000000000000000000000000"
+	seal := "0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"
+	proposer := "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"
 	time1 := big.NewInt(time.Now().Unix() - 100)
 	time2 := big.NewInt(time.Now().Unix() + 100)
 	header := &types.Header{Number: big.NewInt(0), Time: time1}
@@ -160,7 +164,9 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 		{"errInvalidSigners", &defaultDporHelper{},
 			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}, dh: &defaultDporHelper{}},
 				header: &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time2,
-					Extra: hexutil.MustDecode(rightExtra)},
+					Extra: hexutil.MustDecode(rightExtra), Dpor: types.DporSnap{Seal: types.HexToDporSig(seal),
+						Proposers: []common.Address{common.HexToAddress(proposer)}},
+				},
 				parents: []*types.Header{header}}, true},
 	}
 	for _, tt := range tests {
@@ -207,7 +213,9 @@ func Test_dporHelper_snapshot(t *testing.T) {
 
 func Test_dporHelper_verifySeal(t *testing.T) {
 
-	rightExtra := "0x0000000000000000000000000000000000000000000000000000000000000000e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"
+	rightExtra := "0x0000000000000000000000000000000000000000000000000000000000000000"
+	rightAddr := "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"
+	rightSeal := "0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"
 
 	time1 := big.NewInt(time.Now().Unix() - 100)
 
@@ -239,9 +247,15 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 					recents: recents, dh: &defaultDporHelper{}},
 				chain: &FakeReader{},
 				header: &types.Header{
-					Number:     big.NewInt(0),
-					Time:       time1,
-					Extra:      hexutil.MustDecode(string(rightExtra)),
+					Number: big.NewInt(0),
+					Time:   time1,
+					Extra:  hexutil.MustDecode(string(rightExtra)),
+					Dpor: types.DporSnap{
+						Proposers: []common.Address{
+							common.HexToAddress(rightAddr),
+						},
+						Seal: types.HexToDporSig(rightSeal),
+					},
 					MixHash:    common.Hash{},
 					Difficulty: big.NewInt(2)}},
 			true},

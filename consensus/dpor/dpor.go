@@ -244,6 +244,7 @@ func (d *Dpor) Stop() {
 	return
 }
 
+// TODO: remove this
 // Signer return dpor.signer
 func (d *Dpor) Signer() common.Address {
 	d.lock.Lock()
@@ -277,4 +278,9 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
 	return d.handler.ReceiveMinedPendingBlock(block)
+}
+func (d *Dpor) Proposer() common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	return d.signer
 }

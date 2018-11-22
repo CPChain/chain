@@ -1,6 +1,6 @@
 -*- mode: org; -*-
 
-* packages modified
+** packages modified
 ** go-ethereum/trie
    modification: we import from cpchain/database instead of go-ethereum/ethdb.
 

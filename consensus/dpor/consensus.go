@@ -26,6 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -42,6 +43,7 @@ const (
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
+
 )
 
 var (
@@ -89,9 +91,6 @@ var (
 
 	// errMultiBlocksInOneHeight is returned if there is multi blocks in one height in the chain.
 	errMultiBlocksInOneHeight = errors.New("multi blocks in one height")
-
-	// errInvalidSigBytes is returned if the signatures bytes in header.extra2 is not valid.
-	errInvalidSigBytes = errors.New("error signers sigs bytes")
 
 	// errInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	errInvalidSigners = errors.New("invalid signer list on checkpoint block")
@@ -172,21 +171,19 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	// Set the correct difficulty
 	header.Difficulty = d.dh.calcDifficulty(snap, d.signer)
 
-	// Ensure the extra data has all it's components
+	// Ensure the extra data has all its components
 	if len(header.Extra) < extraVanity {
 		header.Extra = append(header.Extra, bytes.Repeat([]byte{0x00}, extraVanity-len(header.Extra))...)
 	}
 	header.Extra = header.Extra[:extraVanity]
 
-	// if number%d.config.Epoch == 0 {
+	// TODO differentiate signer from validator/proposer
 	for _, signer := range snap.SignersOf(number) {
-		header.Extra = append(header.Extra, signer[:]...)
+		header.Dpor.Proposers = append(header.Dpor.Proposers, signer)
 	}
-	// }
-	header.Extra = append(header.Extra, make([]byte, extraSeal)...)
-	// We suppose each signer only produces one block.
-	header.Extra2 = make([]byte, extraSeal*int(d.config.TermLen)+1)
 
+	// TODO WRONG this should be validator set size
+	header.Dpor.Sigs = make([]types.DporSignature, d.config.TermLen)
 	// Mix digest is reserved for now, set to empty
 	header.MixHash = common.Hash{}
 
@@ -203,12 +200,17 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	return nil
 }
 
+func addCoinbaseReward(coinbase common.Address, state *state.StateDB) {
+	amount := big.NewInt(configs.Cep1BlockReward)
+	state.AddBalance(coinbase, amount)
+}
+
 // Finalize implements consensus.Engine, ensuring no uncles are set, nor block
 // rewards given, and returns the final block.
 func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
-	// No block rewards in PoA, so the state remains as is and uncles are dropped
+	addCoinbaseReward(header.Coinbase, state)
+	// last step
 	header.StateRoot = state.IntermediateRoot(true)
-
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil
 }
@@ -257,7 +259,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 
 	ok, err := snap.IsLeaderOf(d.signer, number)
 	if err != nil {
-		log.Warn("Error occurs when seal block", err)
+		log.Warn("Error occurs when seal block", "error", err)
 		return nil, err
 	}
 	if !ok {
@@ -283,28 +285,20 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		case <-time.After(delay):
 		}
 	*/
-	// set coinbase
-	header.Coinbase = signer
-
 	// Sign all the things!
 	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header).Bytes())
 	if err != nil {
 		return nil, err
 	}
-	copy(header.Extra[len(header.Extra)-extraSeal:], sighash)
 
-	// allSigs is a SignatureExtra2.
-	allSigs := make([]byte, int(d.config.TermLen)*extraSeal)
+	copy(header.Dpor.Seal[:], sighash)
+
+	header.Dpor.Sigs = make([]types.DporSignature, d.config.TermLen)
 
 	// Copy signature to the right position in allSigs.
 	round, _ := snap.SignerViewOf(signer, number)
-	copy(allSigs[round*extraSeal:(round+1)*extraSeal], sighash)
+	copy(header.Dpor.Sigs[round][:], sighash)
 
-	// Encode it to header.extra2.
-	err = header.EncodeToExtra2(types.Extra2Struct{Type: types.TypeExtra2Signatures, Data: allSigs})
-	if err != nil {
-		return nil, err
-	}
 	return block.WithSeal(header), nil
 }
 

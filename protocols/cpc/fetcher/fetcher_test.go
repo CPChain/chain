@@ -19,6 +19,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+// func init() {
+// 	log.SetLevel(log.DebugLevel)
+// }
+
 var (
 	testdb       = database.NewMemDatabase()
 	testRemoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
@@ -261,6 +265,8 @@ func verifyImportDone(t *testing.T, imported chan *types.Block) {
 func TestSequentialAnnouncements(t *testing.T) {
 	// Create a chain of blocks to import
 	targetBlocks := 4 * hashLimit
+	// hashes is in reverse order
+	// hashes[-1] should be the genesis block
 	hashes, blocks := makeChain(targetBlocks, 0, genesis)
 
 	tester := newTester()
@@ -269,8 +275,10 @@ func TestSequentialAnnouncements(t *testing.T) {
 
 	// Iteratively announce blocks until all are imported
 	imported := make(chan *types.Block)
+	// the hook is run by insert
 	tester.fetcher.importedHook = func(block *types.Block) { imported <- block }
 
+	// go from block 1 to the last block
 	for i := len(hashes) - 2; i >= 0; i-- {
 		tester.fetcher.Notify("valid", hashes[i], uint64(len(hashes)-i-1), time.Now().Add(-arriveTimeout), headerFetcher, bodyFetcher)
 		verifyImportEvent(t, imported, true)

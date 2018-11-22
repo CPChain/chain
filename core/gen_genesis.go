@@ -8,6 +8,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -22,7 +23,6 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 		Nonce      math.HexOrDecimal64                         `json:"nonce"      toml:"nonce"`
 		Timestamp  math.HexOrDecimal64                         `json:"timestamp"  toml:"timestamp"`
 		ExtraData  hexutil.Bytes                               `json:"extraData"  toml:"extraData"`
-		ExtraData2 hexutil.Bytes                               `json:"extraData2" toml:"extraData2"`
 		GasLimit   math.HexOrDecimal64                         `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
 		Mixhash    marshalHash                                 `json:"mixHash"    toml:"mixHash"`
@@ -31,13 +31,13 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 		Number     math.HexOrDecimal64                         `json:"number"     toml:"number"`
 		GasUsed    math.HexOrDecimal64                         `json:"gasUsed"    toml:"gasUsed"`
 		ParentHash common.Hash                                 `json:"parentHash" toml:"parentHash"`
+		Dpor       types.DporSnap                              `json:"dpor"       toml:"dpor"`
 	}
 	var enc Genesis
 	enc.Config = g.Config
 	enc.Nonce = math.HexOrDecimal64(g.Nonce)
 	enc.Timestamp = math.HexOrDecimal64(g.Timestamp)
 	enc.ExtraData = g.ExtraData
-	enc.ExtraData2 = g.ExtraData2
 	enc.GasLimit = math.HexOrDecimal64(g.GasLimit)
 	enc.Difficulty = (*math.HexOrDecimal256)(g.Difficulty)
 	enc.Mixhash = marshalHash(g.Mixhash)
@@ -51,6 +51,7 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 	enc.Number = math.HexOrDecimal64(g.Number)
 	enc.GasUsed = math.HexOrDecimal64(g.GasUsed)
 	enc.ParentHash = g.ParentHash
+	enc.Dpor = g.Dpor
 	return json.Marshal(&enc)
 }
 
@@ -61,7 +62,6 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 		Nonce      *math.HexOrDecimal64                        `json:"nonce"      toml:"nonce"`
 		Timestamp  *math.HexOrDecimal64                        `json:"timestamp"  toml:"timestamp"`
 		ExtraData  *hexutil.Bytes                              `json:"extraData"  toml:"extraData"`
-		ExtraData2 *hexutil.Bytes                              `json:"extraData2" toml:"extraData2"`
 		GasLimit   *math.HexOrDecimal64                        `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
 		Mixhash    *marshalHash                                `json:"mixHash"    toml:"mixHash"`
@@ -70,6 +70,7 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 		Number     *math.HexOrDecimal64                        `json:"number"     toml:"number"`
 		GasUsed    *math.HexOrDecimal64                        `json:"gasUsed"    toml:"gasUsed"`
 		ParentHash *common.Hash                                `json:"parentHash" toml:"parentHash"`
+		Dpor       *types.DporSnap                             `json:"dpor"       toml:"dpor"`
 	}
 	var dec Genesis
 	if err := json.Unmarshal(input, &dec); err != nil {
@@ -87,9 +88,6 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 	if dec.ExtraData != nil {
 		g.ExtraData = *dec.ExtraData
 	}
-	if dec.ExtraData2 != nil {
-		g.ExtraData2 = *dec.ExtraData2
-	}
 	if dec.GasLimit == nil {
 		return errors.New("missing required field 'gasLimit' for Genesis")
 	}
@@ -120,6 +118,9 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 	if dec.ParentHash != nil {
 		g.ParentHash = *dec.ParentHash
 	}
+	if dec.Dpor != nil {
+		g.Dpor = *dec.Dpor
+	}
 	return nil
 }
 
@@ -130,7 +131,6 @@ func (g Genesis) MarshalTOML() (interface{}, error) {
 		Nonce      math.HexOrDecimal64                         `json:"nonce"      toml:"nonce"`
 		Timestamp  math.HexOrDecimal64                         `json:"timestamp"  toml:"timestamp"`
 		ExtraData  hexutil.Bytes                               `json:"extraData"  toml:"extraData"`
-		ExtraData2 hexutil.Bytes                               `json:"extraData2" toml:"extraData2"`
 		GasLimit   math.HexOrDecimal64                         `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
 		Mixhash    marshalHash                                 `json:"mixHash"    toml:"mixHash"`
@@ -139,13 +139,13 @@ func (g Genesis) MarshalTOML() (interface{}, error) {
 		Number     math.HexOrDecimal64                         `json:"number"     toml:"number"`
 		GasUsed    math.HexOrDecimal64                         `json:"gasUsed"    toml:"gasUsed"`
 		ParentHash common.Hash                                 `json:"parentHash" toml:"parentHash"`
+		Dpor       types.DporSnap                              `json:"dpor"       toml:"dpor"`
 	}
 	var enc Genesis
 	enc.Config = g.Config
 	enc.Nonce = math.HexOrDecimal64(g.Nonce)
 	enc.Timestamp = math.HexOrDecimal64(g.Timestamp)
 	enc.ExtraData = g.ExtraData
-	enc.ExtraData2 = g.ExtraData2
 	enc.GasLimit = math.HexOrDecimal64(g.GasLimit)
 	enc.Difficulty = (*math.HexOrDecimal256)(g.Difficulty)
 	enc.Mixhash = marshalHash(g.Mixhash)
@@ -159,6 +159,7 @@ func (g Genesis) MarshalTOML() (interface{}, error) {
 	enc.Number = math.HexOrDecimal64(g.Number)
 	enc.GasUsed = math.HexOrDecimal64(g.GasUsed)
 	enc.ParentHash = g.ParentHash
+	enc.Dpor = g.Dpor
 	return &enc, nil
 }
 
@@ -169,7 +170,6 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		Nonce      *math.HexOrDecimal64                        `json:"nonce"      toml:"nonce"`
 		Timestamp  *math.HexOrDecimal64                        `json:"timestamp"  toml:"timestamp"`
 		ExtraData  *hexutil.Bytes                              `json:"extraData"  toml:"extraData"`
-		ExtraData2 *hexutil.Bytes                              `json:"extraData2" toml:"extraData2"`
 		GasLimit   *math.HexOrDecimal64                        `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
 		Mixhash    *marshalHash                                `json:"mixHash"    toml:"mixHash"`
@@ -178,6 +178,7 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		Number     *math.HexOrDecimal64                        `json:"number"     toml:"number"`
 		GasUsed    *math.HexOrDecimal64                        `json:"gasUsed"    toml:"gasUsed"`
 		ParentHash *common.Hash                                `json:"parentHash" toml:"parentHash"`
+		Dpor       *types.DporSnap                             `json:"dpor"       toml:"dpor"`
 	}
 	var dec Genesis
 	if err := unmarshal(&dec); err != nil {
@@ -195,9 +196,6 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	if dec.ExtraData != nil {
 		g.ExtraData = *dec.ExtraData
 	}
-	if dec.ExtraData2 != nil {
-		g.ExtraData2 = *dec.ExtraData2
-	}
 	if dec.GasLimit == nil {
 		return errors.New("missing required field 'gasLimit' for Genesis")
 	}
@@ -227,6 +225,9 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	}
 	if dec.ParentHash != nil {
 		g.ParentHash = *dec.ParentHash
+	}
+	if dec.Dpor != nil {
+		g.Dpor = *dec.Dpor
 	}
 	return nil
 }

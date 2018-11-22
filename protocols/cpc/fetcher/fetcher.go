@@ -288,13 +288,13 @@ func (f *Fetcher) loop() {
 	completeTimer := time.NewTimer(0)
 
 	for {
-		// Clean up any expired block fetches
+		// if the fetching of a block takes too long, we stop it.
 		for hash, announce := range f.fetching {
 			if time.Since(announce.time) > fetchTimeout {
 				f.forgetHash(hash)
 			}
 		}
-		// Import any queued blocks that could potentially fit
+		// import queued blocks (that are fetched)
 		height := f.chainHeight()
 		for !f.queue.Empty() {
 			op := f.queue.PopItem().(*inject)
@@ -316,6 +316,7 @@ func (f *Fetcher) loop() {
 				f.forgetBlock(hash)
 				continue
 			}
+			// announced remote blocks are finally inserted
 			f.insert(op.origin, op.block)
 		}
 
@@ -351,16 +352,20 @@ func (f *Fetcher) loop() {
 				break
 			}
 			f.announces[notification.origin] = count
+			// block hash -> announces containing the block
 			f.announced[notification.hash] = append(f.announced[notification.hash], notification)
 
 			if f.announceChangeHook != nil && len(f.announced[notification.hash]) == 1 {
+				// true means a block is added
 				f.announceChangeHook(notification.hash, true)
 			}
+			// force reschedule when we get the first announce
 			if len(f.announced) == 1 {
 				f.rescheduleFetch(fetchTimer)
 			}
 
 		case op := <-f.inject:
+			// when we have directly received a block
 			// A direct block insertion was requested, try and fill any pending gaps
 			propBroadcastInMeter.Mark(1)
 			f.enqueue(op.origin, op.block)
@@ -382,12 +387,13 @@ func (f *Fetcher) loop() {
 
 					// If the block still didn't arrive, queue for fetching
 					if f.getBlock(hash) == nil {
+						// peer id-> blocks it contains
 						request[announce.origin] = append(request[announce.origin], hash)
 						f.fetching[hash] = announce
 					}
 				}
 			}
-			// Send out all block header requests
+			// for the still-missing blocks in the above loop, we send out all block header requests
 			for peer, hashes := range request {
 				log.Debug("Fetching scheduled headers", "peer", peer, "list", hashes)
 
@@ -685,11 +691,13 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 			f.dropPeer(peer)
 			return
 		}
-		// Run the actual import and log any issues
+
+		// NB we actually insert the chain.  run the actual import and log any issues
 		if _, err := f.insertChain(types.Blocks{block}); err != nil {
 			log.Debug("Propagated block import failed", "peer", peer, "number", block.Number(), "hash", hash.Hex(), "err", err)
 			return
 		}
+
 		// If import succeeded, broadcast the block
 		propAnnounceOutTimer.UpdateSince(block.ReceivedAt)
 		go f.broadcastBlock(block, false)

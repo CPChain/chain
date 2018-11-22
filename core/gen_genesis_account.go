@@ -17,10 +17,10 @@ var _ = (*genesisAccountMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (g GenesisAccount) MarshalJSON() ([]byte, error) {
 	type GenesisAccount struct {
-		Code       hexutil.Bytes               `json:"code,omitempty" toml:"code,omitempty"`
-		Storage    map[marshalHash]marshalHash `json:"storage,omitempty" toml:"storage,omitempty"`
-		Balance    *math.HexOrDecimal256       `json:"balance" toml:"balance" gencodec:"required"`
-		Nonce      math.HexOrDecimal64         `json:"nonce,omitempty" toml:"nonce,omitempty"`
+		Code       hexutil.Bytes               `json:"code,omitempty"      toml:"code,omitempty"`
+		Storage    map[marshalHash]marshalHash `json:"storage,omitempty"   toml:"storage,omitempty"`
+		Balance    *math.HexOrDecimal256       `json:"balance"             toml:"balance"             gencodec:"required"`
+		Nonce      math.HexOrDecimal64         `json:"nonce,omitempty"     toml:"nonce,omitempty"`
 		PrivateKey hexutil.Bytes               `json:"secretKey,omitempty" toml:"secretKey,omitempty"`
 	}
 	var enc GenesisAccount
@@ -40,10 +40,10 @@ func (g GenesisAccount) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals from JSON.
 func (g *GenesisAccount) UnmarshalJSON(input []byte) error {
 	type GenesisAccount struct {
-		Code       *hexutil.Bytes              `json:"code,omitempty" toml:"code,omitempty"`
-		Storage    map[marshalHash]marshalHash `json:"storage,omitempty" toml:"storage,omitempty"`
-		Balance    *math.HexOrDecimal256       `json:"balance" toml:"balance" gencodec:"required"`
-		Nonce      *math.HexOrDecimal64        `json:"nonce,omitempty" toml:"nonce,omitempty"`
+		Code       *hexutil.Bytes              `json:"code,omitempty"      toml:"code,omitempty"`
+		Storage    map[marshalHash]marshalHash `json:"storage,omitempty"   toml:"storage,omitempty"`
+		Balance    *math.HexOrDecimal256       `json:"balance"             toml:"balance"             gencodec:"required"`
+		Nonce      *math.HexOrDecimal64        `json:"nonce,omitempty"     toml:"nonce,omitempty"`
 		PrivateKey *hexutil.Bytes              `json:"secretKey,omitempty" toml:"secretKey,omitempty"`
 	}
 	var dec GenesisAccount
@@ -75,10 +75,10 @@ func (g *GenesisAccount) UnmarshalJSON(input []byte) error {
 // MarshalTOML marshals as TOML.
 func (g GenesisAccount) MarshalTOML() (interface{}, error) {
 	type GenesisAccount struct {
-		Code       hexutil.Bytes               `json:"code,omitempty" toml:"code,omitempty"`
-		Storage    map[marshalHash]marshalHash `json:"storage,omitempty" toml:"storage,omitempty"`
-		Balance    *math.HexOrDecimal256       `json:"balance" toml:"balance" gencodec:"required"`
-		Nonce      math.HexOrDecimal64         `json:"nonce,omitempty" toml:"nonce,omitempty"`
+		Code       hexutil.Bytes               `json:"code,omitempty"      toml:"code,omitempty"`
+		Storage    map[marshalHash]marshalHash `json:"storage,omitempty"   toml:"storage,omitempty"`
+		Balance    *math.HexOrDecimal256       `json:"balance"             toml:"balance"             gencodec:"required"`
+		Nonce      math.HexOrDecimal64         `json:"nonce,omitempty"     toml:"nonce,omitempty"`
 		PrivateKey hexutil.Bytes               `json:"secretKey,omitempty" toml:"secretKey,omitempty"`
 	}
 	var enc GenesisAccount
@@ -98,10 +98,10 @@ func (g GenesisAccount) MarshalTOML() (interface{}, error) {
 // UnmarshalTOML unmarshals from TOML.
 func (g *GenesisAccount) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	type GenesisAccount struct {
-		Code       *hexutil.Bytes              `json:"code,omitempty" toml:"code,omitempty"`
-		Storage    map[marshalHash]marshalHash `json:"storage,omitempty" toml:"storage,omitempty"`
-		Balance    *math.HexOrDecimal256       `json:"balance" toml:"balance" gencodec:"required"`
-		Nonce      *math.HexOrDecimal64        `json:"nonce,omitempty" toml:"nonce,omitempty"`
+		Code       *hexutil.Bytes              `json:"code,omitempty"      toml:"code,omitempty"`
+		Storage    map[marshalHash]marshalHash `json:"storage,omitempty"   toml:"storage,omitempty"`
+		Balance    *math.HexOrDecimal256       `json:"balance"             toml:"balance"             gencodec:"required"`
+		Nonce      *math.HexOrDecimal64        `json:"nonce,omitempty"     toml:"nonce,omitempty"`
 		PrivateKey *hexutil.Bytes              `json:"secretKey,omitempty" toml:"secretKey,omitempty"`
 	}
 	var dec GenesisAccount
