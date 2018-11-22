@@ -339,13 +339,13 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	// return true, nil
+	return true, nil
 
 	// TODO
-	snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
-	if err != nil {
-		return false, err
-	}
+	// snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
+	// if err != nil {
+	// 	return false, err
+	// }
 
 	// if snap.ifUseDefaultSigners() {
 	// 	for _, signer := range snap.candidates() {
@@ -355,9 +355,9 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 	// 	}
 	// 	return false, nil
 	// }
-	log.Debug("checking signers...")
+	// log.Debug("checking signers...")
 
-	return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
+	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
 }
 
 // State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).

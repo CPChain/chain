@@ -262,12 +262,13 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 
 		log.Debug("received preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-		// localBlock, err := h.GetPendingBlock(block.NumberU64())
-		// if localBlock != nil && err == nil {
-		// 	if localBlock.Block.Hash() == block.Hash() {
-		// 		go h.BroadcastPrepareSignedHeader(localBlock.Header())
-		// 	}
-		// }
+		localBlock, err := h.GetPendingBlock(block.NumberU64())
+		if localBlock != nil && err == nil && localBlock.Block != nil {
+			if localBlock.Status == Inserted {
+				go h.broadcastBlockFn(localBlock.Block, true)
+				return nil
+			}
+		}
 
 		// Verify the block
 		// if correct, sign it and broadcast as Prepare msg
@@ -294,6 +295,8 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 
 				// broadcast prepare msg
 				go h.BroadcastPrepareSignedHeader(header)
+
+				return nil
 
 			default:
 				log.Warn("err when signing header", "hash", header.Hash, "number", header.Number.Uint64(), "err", err)
@@ -325,10 +328,8 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 			log.Debug("verified signed prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 			block, err := h.GetPendingBlock(header.Number.Uint64())
-			if block == nil {
-
+			if block == nil || block.Block == nil {
 				// TODO: remove this line
-				go h.BroadcastPrepareSignedHeader(header)
 				return nil
 			}
 
