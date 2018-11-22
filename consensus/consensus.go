@@ -108,14 +108,6 @@ type Validator interface {
 	IsFutureSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
 }
 
-// PoW is a consensus engine based on proof-of-work.
-type PoW interface {
-	Engine
-
-	// Hashrate returns the current mining hashrate of a PoW consensus engine.
-	Hashrate() float64
-}
-
 // Broadcast sends msg to all pbft peers.
 type Broadcast func(msg interface{}, pbftStatus uint8) error
 
