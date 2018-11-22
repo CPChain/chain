@@ -12,9 +12,6 @@ parentHash = "0x0000000000000000000000000000000000000000000000000000000000000000
 
 [config]
 chainId = 42
-eip155Block = 3
-eip158Block = 4
-byzantiumBlock = 0
 
 [config.dpor]
 period = 5

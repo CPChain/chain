@@ -30,7 +30,6 @@ var (
 	// TODO: @AC define testnet configuration
 	TestnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(TestnetChainId),
-		Ethash:  new(EthashConfig),
 	}
 
 	// 	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
@@ -54,12 +53,10 @@ var (
 
 	AllCpchainProtocolChanges = &ChainConfig{
 		ChainID: big.NewInt(CpchainChainId),
-		Ethash:  nil,
 		Dpor:    &DporConfig{Period: 1, TermLen: 4},
 	}
 
-	// TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil}
-	TestChainConfig = &ChainConfig{big.NewInt(CpchainChainId), nil, &DporConfig{Period: 0, TermLen: 4}}
+	TestChainConfig = &ChainConfig{big.NewInt(CpchainChainId), &DporConfig{Period: 0, TermLen: 4}}
 
 	TestRules = TestChainConfig.Rules(new(big.Int))
 )
@@ -73,16 +70,7 @@ type ChainConfig struct {
 	ChainID *big.Int `json:"chainId" toml:"chainId"` // chainId identifies the current chain and is used for replay protection
 
 	// Various consensus engines
-	Ethash *EthashConfig `json:"ethash,omitempty" toml:"ethash,omitempty"`
-	Dpor   *DporConfig   `json:"dpor,omitempty" toml:"dpor,omitempty"`
-}
-
-// EthashConfig is the consensus engine configs for proof-of-work based sealing.
-type EthashConfig struct{}
-
-// String implements the stringer interface, returning the consensus engine details.
-func (c *EthashConfig) String() string {
-	return "ethash"
+	Dpor *DporConfig `json:"dpor,omitempty" toml:"dpor,omitempty"`
 }
 
 // DporConfig is the consensus engine configs for proof-of-authority based sealing.
@@ -104,8 +92,6 @@ func (c *DporConfig) String() string {
 func (c *ChainConfig) String() string {
 	var engine interface{}
 	switch {
-	case c.Ethash != nil:
-		engine = c.Ethash
 	case c.Dpor != nil:
 		engine = c.Dpor
 	default:
