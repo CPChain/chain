@@ -30,8 +30,8 @@ import (
 
 func TestDefaultGenesisBlock(t *testing.T) {
 	block := DefaultGenesisBlock().ToBlock(nil)
-	if block.Hash() != configs.MainnetGenesisHash {
-		t.Errorf("wrong mainnet genesis hash, got %v, want %v", block.Hash().Hex(), configs.MainnetGenesisHash.Hex())
+	if block.Hash() != MainnetGenesisHash {
+		t.Errorf("wrong mainnet genesis hash, got %v, want %v", block.Hash().Hex(), MainnetGenesisHash.Hex())
 	}
 }
 
@@ -67,7 +67,7 @@ func TestSetupGenesis(t *testing.T) {
 			fn: func(db database.Database) (*configs.ChainConfig, common.Hash, error) {
 				return SetupGenesisBlock(db, nil)
 			},
-			wantHash:   configs.MainnetGenesisHash,
+			wantHash:   MainnetGenesisHash,
 			wantConfig: configs.MainnetChainConfig,
 		},
 		{
@@ -76,7 +76,7 @@ func TestSetupGenesis(t *testing.T) {
 				DefaultGenesisBlock().MustCommit(db)
 				return SetupGenesisBlock(db, nil)
 			},
-			wantHash:   configs.MainnetGenesisHash,
+			wantHash:   MainnetGenesisHash,
 			wantConfig: configs.MainnetChainConfig,
 		},
 		{

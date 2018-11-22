@@ -20,12 +20,6 @@ const (
 	TestnetChainId = 43
 )
 
-// Genesis hashes to enforce below configs on.
-var (
-	// hash refers to default block.
-	MainnetGenesisHash = common.HexToHash("0xb0d9b86767138ce7b1e8fd898642d6ec2aca73f7393be0deb496f95acfebc531")
-)
-
 var (
 	// TODO: @AC define testnet configuration
 	TestnetChainConfig = &ChainConfig{

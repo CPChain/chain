@@ -29,6 +29,7 @@ import (
 	"time"
 	"unsafe"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -149,8 +150,7 @@ func (h *Header) Hash() common.Hash {
 // sigHash returns hash of header
 func sigHash(header *Header) (hash common.Hash) {
 	hasher := sha3.NewKeccak256()
-
-	rlp.Encode(hasher, []interface{}{
+	err := rlp.Encode(hasher, []interface{}{
 		header.ParentHash,
 		header.Coinbase,
 		header.StateRoot,
@@ -168,6 +168,10 @@ func sigHash(header *Header) (hash common.Hash) {
 		header.MixHash,
 		header.Nonce,
 	})
+	if err != nil {
+		log.Error("invalid hash encoding", "error", err)
+		return common.Hash{}
+	}
 	hasher.Sum(hash[:0])
 	return hash
 }

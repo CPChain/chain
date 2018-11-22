@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package core
 
@@ -188,7 +175,7 @@ func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainCo
 			// Special case: don't change the existing config of a non-mainnet chain if no new
 			// config is supplied. These chains would get AllProtocolChanges (and a compat error)
 			// if we just continued here.
-			if stored != configs.MainnetGenesisHash {
+			if stored != MainnetGenesisHash {
 				return storedCfg, stored, nil
 			} else {
 				finalCfg = updateChainConfig(storedCfg, newCfg, db, stored)
@@ -227,12 +214,10 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 	switch {
 	case g != nil:
 		return g.Config
-	case ghash == configs.MainnetGenesisHash:
+	case ghash == MainnetGenesisHash:
 		return configs.MainnetChainConfig
 	default:
 		return configs.AllCpchainProtocolChanges
-		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
-		// check the ussage of `newcfg' in `setupGenesisBlock'.
 	}
 }
 
@@ -272,9 +257,12 @@ func (g *Genesis) ToBlock(db database.Database) *types.Block {
 	if g.Difficulty == nil {
 		head.Difficulty = configs.GenesisDifficulty
 	}
-	statedb.Commit(false)
-	statedb.Database().TrieDB().Commit(root, true)
-
+	if _, err := statedb.Commit(false); err != nil {
+		log.Error("Error in genesis", "error", err)
+	}
+	if err := statedb.Database().TrieDB().Commit(root, true); err != nil {
+		log.Error("Error in genesis", "error", err)
+	}
 	return types.NewBlock(head, nil, nil)
 }
 
@@ -316,6 +304,9 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 	g.Alloc = GenesisAlloc{addr: {Balance: balance}}
 	return g.MustCommit(db)
 }
+
+// Genesis hashes to enforce below configs on.
+var MainnetGenesisHash = common.HexToHash("0xb0d9b86767138ce7b1e8fd898642d6ec2aca73f7393be0deb496f95acfebc531")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {

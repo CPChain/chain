@@ -176,10 +176,12 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	}
 	header.Extra = header.Extra[:extraVanity]
 
+	// TODO differentiate signer from validator/proposer
 	for _, signer := range snap.SignersOf(number) {
 		header.Dpor.Proposers = append(header.Dpor.Proposers, signer)
 	}
 
+	// TODO WRONG this should be validator set size
 	header.Dpor.Sigs = make([]types.DporSignature, d.config.TermLen)
 	// Mix digest is reserved for now, set to empty
 	header.MixHash = common.Hash{}
