@@ -20,7 +20,7 @@ const (
 	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
-// Mode defines the type an dpor engine makes.
+// Mode defines the type a dpor engine makes.
 type Mode uint
 
 const (
