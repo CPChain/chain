@@ -200,6 +200,8 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 		}
 		return nil, nil
 	}
+	// end of genblock() function
+
 	for i := 0; i < n; i++ {
 		pubStatedb, err := state.New(parent.StateRoot(), state.NewDatabase(db))
 		if err != nil {
