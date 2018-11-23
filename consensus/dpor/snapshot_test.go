@@ -270,7 +270,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			if err := s.updateCandidates(tt.args.header); (err != nil) != tt.wantErr {
+			if err := s.updateCandidates(); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 			}
 		})
@@ -308,7 +308,7 @@ func TestSnapshot_updateRpts(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			got, err := s.updateRpts(tt.args.header)
+			got, err := s.updateRpts()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateRpts(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 				return

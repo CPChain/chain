@@ -28,7 +28,7 @@ func TestRpt(t *testing.T) {
 	if len(code) > 0 {
 		fmt.Println("contract code exist")
 	} else {
-		fmt.Errorf("contract code not exist")
+		fmt.Println("contract code not exist")
 	}
 	fmt.Println("*****************************************")
 	if err != nil {

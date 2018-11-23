@@ -59,7 +59,7 @@ func (pm *ProtocolManager) broadcastBlock(block *types.Block, propagate bool, if
 	// If propagation is requested, send to a subset of the peer
 	if propagate {
 		if parent := pm.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1); parent == nil {
-			log.Error("Propagating dangling block", "number", block.Number(), "hash", hash.Hex())
+			log.Warn("Propagating dangling block", "number", block.Number(), "hash", hash.Hex())
 			return
 		}
 

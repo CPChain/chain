@@ -200,6 +200,7 @@ func handleWallet(n *node.Node) {
 func startMining(ctx *cli.Context, n *node.Node) {
 	if ctx.Bool("mine") {
 		var cpchainService *cpc.CpchainService
+		// cpchainService will point to the real cpchain service in n.services
 		if err := n.Service(&cpchainService); err != nil {
 			log.Fatalf("Cpchain service not running: %v", err)
 		}

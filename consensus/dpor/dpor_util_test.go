@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -49,8 +50,17 @@ func Test_sigHash(t *testing.T) {
 		GasLimit:     uint64(3141592),
 		GasUsed:      uint64(21000),
 		Time:         big.NewInt(1426516743),
-		Extra:        []byte("0x0000000000000000000000000000000000000000000000000000000000000000e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac05302acebd0730e3a18a058d7d1cb1204c4a092ef3dd127de235f15ffb4fc0d71469d1339df64650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
-		//Extra2:      []byte("ext2"),
+		Extra:        common.Hex2Bytes("0000000000000000000000000000000000000000000000000000000000000000"),
+		Dpor: types.DporSnap{
+			Seal: types.HexToDporSig("0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+			Sigs: []types.DporSignature{},
+			Proposers: []common.Address{
+				common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+				common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+				common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+			},
+			Validators: []common.Address{},
+		},
 		MixHash: common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
 		Nonce:   types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
@@ -63,7 +73,7 @@ func Test_sigHash(t *testing.T) {
 		args     args
 		wantHash common.Hash
 	}{
-		{"sigHash", args{newHeader}, common.HexToHash("0xc6f2bbd217e8da9cd588950aec3a914fc5d288d171bfc2f2a370104996f49595")},
+		{"sigHash", args{newHeader}, common.HexToHash("0x0ee92e96b718c658a3177e6409f78ff3931268d70a59ef08fc2b2aa5548a0865")},
 	}
 
 	dporUtil := &defaultDporUtil{}
@@ -109,7 +119,7 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 }
 
 func Test_ecrecover(t *testing.T) {
-	addr := common.HexToAddress("0x25E63B2d49Cf1EDcd0595c30cFC58CeB4e0Bd6d5")
+	addr := common.HexToAddress("0x8a62173DF795a4eBC4e51A6062277121424b6469")
 	//addr := common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")
 
 	tx1 := types.NewTransaction(0, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d87"), big.NewInt(10), 50000, big.NewInt(10), nil)
@@ -127,44 +137,21 @@ func Test_ecrecover(t *testing.T) {
 		GasLimit:     uint64(3141592),
 		GasUsed:      uint64(21000),
 		Time:         big.NewInt(1426516743),
-		Extra:        hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-		Extra2:       hexutil.MustDecode("0x00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-		MixHash:      common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Nonce:        types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
-	}
-
-	errSigHeader := &types.Header{
-		ParentHash:   common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),
-		Coinbase:     common.HexToAddress("0x8888f1F195AFa192CfeE860698584c030f4c9dB1"),
-		StateRoot:    common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
-		TxsRoot:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
-		ReceiptsRoot: common.HexToHash("0xbc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52"),
-		Difficulty:   big.NewInt(131072),
-		Number:       big.NewInt(1),
-		GasLimit:     uint64(3141592),
-		GasUsed:      uint64(21000),
-		Time:         big.NewInt(1426516743),
-		Extra:        hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-		Extra2:       hexutil.MustDecode("0x00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00123456"),
-		MixHash:      common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Nonce:        types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
-	}
-
-	errExtra2TypeHeader := &types.Header{
-		ParentHash:   common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),
-		Coinbase:     common.HexToAddress("0x8888f1F195AFa192CfeE860698584c030f4c9dB1"),
-		StateRoot:    common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
-		TxsRoot:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
-		ReceiptsRoot: common.HexToHash("0xbc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52"),
-		Difficulty:   big.NewInt(131072),
-		Number:       big.NewInt(1),
-		GasLimit:     uint64(3141592),
-		GasUsed:      uint64(21000),
-		Time:         big.NewInt(1426516743),
-		Extra:        hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-		Extra2:       hexutil.MustDecode("0x05c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00123456"),
-		MixHash:      common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Nonce:        types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
+		Extra:        hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		Dpor: types.DporSnap{
+			Seal: types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+			Proposers: []common.Address{
+				common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+			},
+			Sigs: []types.DporSignature{
+				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+			},
+			Validators: []common.Address{},
+		},
+		MixHash: common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
+		Nonce:   types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
 
 	sigs := &Signatures{
@@ -178,6 +165,7 @@ func Test_ecrecover(t *testing.T) {
 	existingCache, _ := lru.NewARC(10)
 	fmt.Println("newHeader.Hash():", newHeader.Hash().Hex())
 	existingCache.Add(newHeader.Hash(), sigs)
+
 	dporUtil := &defaultDporUtil{}
 	// get extra2sig for test
 	//privateKey, _, loadedAddr := getAccount("$project_dir/src/bitbucket.org/cpchain/chain/examples/cpchain/data/data1/keystore/", "password")
@@ -186,16 +174,19 @@ func Test_ecrecover(t *testing.T) {
 	//fmt.Println("extra2Sig hex:", common.Bytes2Hex(extra2Sig))
 	//fmt.Println("loadedAddr hex:", loadedAddr.Hex())
 
-	invalidExtra2Header := &types.Header{
-		Extra2: []byte("0x11"),
-	}
-	invalidExtraHeader := &types.Header{
-		Extra: []byte("0x11"),
-	}
-
-	invalidSignerSigHeader := &types.Header{
-		Extra:  []byte("0x0000000000000000000000000000000000000000000000000000000000000000e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-		Extra2: hexutil.MustDecode("0x00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00c9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+	noSignerSigHeader := &types.Header{
+		Extra: []byte("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		Dpor: types.DporSnap{
+			Seal: types.DporSignature{},
+			Proposers: []common.Address{
+				common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+			},
+			Sigs: []types.DporSignature{
+				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+			},
+		},
 	}
 
 	type args struct {
@@ -209,13 +200,8 @@ func Test_ecrecover(t *testing.T) {
 		want1   []common.Address
 		wantErr bool
 	}{
-		{"invalidExtra2Header. fail", args{invalidExtra2Header, cache}, common.Address{}, []common.Address{}, true},
-		{"invalidExtraHeader. fail", args{invalidExtraHeader, cache}, common.Address{}, []common.Address{}, true},
-		{"invalidSignerSigHeader. fail", args{invalidSignerSigHeader, cache}, common.Address{}, []common.Address{}, true},
 		{"leaderSigHeader already cached,success", args{newHeader, cache}, addr, []common.Address{addr, addr, addr}, false},
-		{"no signers' signatures. fail", args{invalidSignerSigHeader, existingCache}, common.Address{}, []common.Address{}, true},
-		{"len(signersSig)%extraSeal != 0. fail", args{errSigHeader, cache}, addr, []common.Address{}, true},
-		{"decode invalid extra2. fail", args{errExtra2TypeHeader, cache}, common.Address{}, []common.Address{}, true},
+		{"no signers' signatures. fail", args{noSignerSigHeader, cache}, common.Address{}, []common.Address{}, true},
 		{"success", args{newHeader, cache}, addr, []common.Address{addr, addr, addr}, false},
 	}
 
@@ -230,7 +216,16 @@ func Test_ecrecover(t *testing.T) {
 				t.Errorf("ecrecover got = %v, want %v", got.Hex(), tt.want.Hex())
 			}
 			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("ecrecover got1 = %v, want %v", got1, tt.want1)
+				gotAddrs := []string{}
+				for _, addr := range got1 {
+					gotAddrs = append(gotAddrs, addr.Hex())
+				}
+				wantAddrs := []string{}
+				for _, addr := range tt.want1 {
+					wantAddrs = append(wantAddrs, addr.Hex())
+				}
+				t.Errorf("ecrecover got1 = %v, want %v", strings.Join(gotAddrs, ","),
+					strings.Join(wantAddrs, ","))
 			}
 		})
 	}

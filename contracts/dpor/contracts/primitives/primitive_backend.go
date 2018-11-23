@@ -45,13 +45,6 @@ const (
 	Finished
 )
 
-// CollectorConfig is the config of rpt info collector
-//type CollectorConfig struct {
-//	Client      bind.ContractBackend
-//	ChainConfig *configs.ChainConfig
-//	//	DporConfig  *configs.DporConfig
-//}
-
 type RptPrimitiveBackend interface {
 	// Rank returns the rank for given account address at the given block number.
 	Rank(address common.Address, number uint64) (int64, error)
@@ -124,7 +117,8 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 		return 0, err
 	}
 	txvs := int64(0)
-	signer := types.NewPrivTxSupportEIP155Signer(re.ChainConfig.ChainID)
+	signer := types.NewCep1Signer(re.ChainConfig.ChainID)
+
 	txs := block.Transactions()
 	for _, tx := range txs {
 		sender, err := signer.Sender(tx)
@@ -155,15 +149,14 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 		return 0, err
 	}
 	number = number%re.ChainConfig.Dpor.TermLen - 1
-	leaderBytes := header.Extra[uint64(extraVanity)+number*common.AddressLength : uint64(extraVanity)+(number+1)*common.AddressLength]
-	leader := common.BytesToAddress(leaderBytes)
+	leader := header.Dpor.Proposers[number]
 
 	log.Debug("leader.Hex is ", "hex", leader.Hex())
 
 	if leader == address {
 		ld = 0
 	} else {
-		for _, committee := range re.CommitteeMember(header) {
+		for _, committee := range header.Dpor.Proposers {
 			if address == committee {
 				ld = 1
 			}
@@ -242,13 +235,13 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	return isProxy, proxyCount, err
 }
 
-func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
-	committee := make([]common.Address, (len(header.Extra)-extraVanity-extraSeal)/common.AddressLength)
-	for i := 0; i < len(committee); i++ {
-		copy(committee[i][:], header.Extra[extraVanity+i*common.AddressLength:extraVanity+(i+1)*common.AddressLength])
-	}
-	return committee
-}
+//func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
+//	committee := make([]common.Address, len(header.Dpor.Proposers))
+//	for i := 0; i < len(committee); i++ {
+//		copy(committee[i][:], header.Dpor.Proposers[i][:])
+//	}
+//	return committee
+//}
 
 func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
 	contractAddress := re.ChainConfig.Dpor.Contracts["campaign"]
@@ -257,7 +250,6 @@ func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, erro
 		log.Fatal("NewCampaign error", "address", address, "error", err)
 		return false, err
 	}
-	//todo:fix error (abi: unmarshalling empty output)
 	rNdoeAddress, err := instance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil {
 		log.Fatal("CandidatesOf error", "error", err)

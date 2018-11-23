@@ -122,3 +122,9 @@ func (d *Dpor) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.Comm
 	d.committeeNetworkHandler = committeeNetworkHandler
 	return nil
 }
+
+func (d *Dpor) Proposer() common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	return d.signer
+}
