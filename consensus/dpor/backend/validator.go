@@ -21,7 +21,9 @@ const (
 
 var (
 	// ErrUnknownHandlerMode is returnd if in an unknown mode
-	ErrUnknownHandlerMode    = errors.New("unknown dpor handler mode")
+	ErrUnknownHandlerMode = errors.New("unknown dpor handler mode")
+
+	// ErrFailToAddPendingBlock is returned if failed to add block to pending
 	ErrFailToAddPendingBlock = errors.New("fail to add pending block")
 )
 
@@ -123,27 +125,33 @@ func (vh *ValidatorHandler) Stop() {
 	return
 }
 
+// GetProtocol returns validator handler protocol
 func (vh *ValidatorHandler) GetProtocol() consensus.Protocol {
 	return vh
 }
 
+// NodeInfo returns validator node status
 func (vh *ValidatorHandler) NodeInfo() interface{} {
 
 	return vh.statusFn()
 }
 
+// Name returns protocol name
 func (vh *ValidatorHandler) Name() string {
 	return ProtocolName
 }
 
+// Version returns protocol version
 func (vh *ValidatorHandler) Version() uint {
 	return ProtocolVersion
 }
 
+// Length returns protocol max msg code
 func (vh *ValidatorHandler) Length() uint64 {
 	return ProtocolLength
 }
 
+// Available returns if handler is available
 func (vh *ValidatorHandler) Available() bool {
 	vh.lock.RLock()
 	defer vh.lock.RUnlock()
@@ -151,6 +159,7 @@ func (vh *ValidatorHandler) Available() bool {
 	return vh.available
 }
 
+// AddPeer adds a p2p peer to local peer set
 func (vh *ValidatorHandler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error) {
 	coinbase := vh.Signer()
 	validator := vh.validateSignerFn
@@ -172,10 +181,12 @@ func (vh *ValidatorHandler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 	return address.Hex(), true, err
 }
 
+// RemovePeer removes a p2p peer with its addr
 func (vh *ValidatorHandler) RemovePeer(addr string) error {
 	return vh.removeSigner(common.HexToAddress(addr))
 }
 
+// HandleMsg handles a msg of peer with id "addr"
 func (vh *ValidatorHandler) HandleMsg(addr string, msg p2p.Msg) error {
 
 	signer, ok := vh.signers[common.HexToAddress(addr)]
@@ -201,14 +212,12 @@ func (vh *ValidatorHandler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWr
 
 	log.Debug("adding remote signer...", "signer", address.Hex())
 
-	// if signer.Peer == nil {
 	err := signer.SetSigner(version, p, rw)
 	if err != nil {
 
 		log.Debug("failed to set peer")
 		return nil, err
 	}
-	// }
 
 	go signer.signerBroadcast()
 
@@ -717,6 +726,7 @@ func (vh *ValidatorHandler) AddPendingBlock(block *types.Block) error {
 	return err
 }
 
+// UpdateBlockStatus updates known block status
 func (vh *ValidatorHandler) UpdateBlockStatus(number uint64, status BlockStatus) error {
 	vh.lock.Lock()
 	defer vh.lock.Unlock()
