@@ -95,16 +95,16 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	log.Info("campaign", "contractAddress", contractAddress)
 	intance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewCampaign error", "error", err)
+		log.Error("NewCampaign error", "error", err)
 	}
 	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("CandidatesOf error", "error", err)
+		log.Error("CandidatesOf error", "error", err)
 	}
 	for _, committee := range rNodeAddress {
 		balance, err := re.Client.BalanceAt(context.Background(), committee, big.NewInt(int64(number)))
 		if err != nil {
-			log.Warn("error with bc.BalanceAt", "error", err)
+			log.Error("error with bc.BalanceAt", "error", err)
 			return 0, err
 		}
 		balances = append(balances, float64(balance.Uint64()))
@@ -120,7 +120,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, error) {
 	block, err := re.Client.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("error with bc.getTxVolume", "error", err)
+		log.Error("error with bc.getTxVolume", "error", err)
 		return 0, err
 	}
 	txvs := int64(0)
@@ -151,7 +151,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	}
 	header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("error with bc.getIfLeader", "error", err)
+		log.Error("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
 	number = number%re.ChainConfig.Dpor.TermLen - 1
@@ -178,12 +178,12 @@ func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int6
 	contractAddress := re.ChainConfig.Dpor.Contracts[configs.ContractRegister]
 	upload, err := pdash.NewRegister(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewRegister error", "error", err)
+		log.Error("NewRegister error", "error", err)
 		return uploadNumber, err
 	}
 	fileNumber, err := upload.GetUploadCount(nil, address)
 	if err != nil {
-		log.Warn("GetUploadCount error", "error", err)
+		log.Error("GetUploadCount error", "error", err)
 		return uploadNumber, err
 	}
 	return fileNumber.Int64(), err
@@ -197,20 +197,20 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	pdash, err := pdash.NewPdash(contractAddress, re.Client)
 
 	if err != nil {
-		log.Warn("NewPdash error", "error", err)
+		log.Error("NewPdash error", "error", err)
 		return proxyCount, 0, err
 	}
 
 	len, err := pdash.BlockOrdersLength(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("BlockOrdersLength err", "error", err)
+		log.Error("BlockOrdersLength err", "error", err)
 		return proxyCount, 0, err
 	}
 
 	for i := 0; i < int(len.Int64()); i++ {
 		id, err := pdash.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
-			log.Warn("BlockOrders error", "error", err)
+			log.Error("BlockOrders error", "error", err)
 			break
 		}
 		OrderRecord, err := pdash.OrderRecords(nil, id)
@@ -227,7 +227,7 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	for i := 0; i < int(len.Int64()); i++ {
 		id, err := pdash.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
-			log.Warn("BlockOrders error", "error", err)
+			log.Error("BlockOrders error", "error", err)
 			break
 		}
 		OrderRecord, err := pdash.OrderRecords(nil, id)
@@ -254,13 +254,13 @@ func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, erro
 	contractAddress := re.ChainConfig.Dpor.Contracts[configs.ContractCampaign]
 	instance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
-		log.Fatal("NewCampaign error", "address", address, "error", err)
+		log.Error("NewCampaign error", "address", address, "error", err)
 		return false, err
 	}
 	//todo:fix error (abi: unmarshalling empty output)
 	rNdoeAddress, err := instance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Fatal("CandidatesOf error", "error", err)
+		log.Error("CandidatesOf error", "error", err)
 		return false, err
 	}
 	for _, rNode := range rNdoeAddress {

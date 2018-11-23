@@ -39,18 +39,15 @@ func (c *GetUploadReward) RequiredGas(input []byte) uint64 {
 func (c *GetUploadReward) Run(input []byte) ([]byte, error) {
 	addr, number, err := extractRptPrimitivesArgs(input)
 	if err != nil {
-		//log.Warnf("primitive_uploadreward got error %v", err)
-		log.Warn("primitive_uploadreward got error ", "error", err)
+		log.Error("primitive_uploadreward got error ", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-	//log.Infof("primitive_uploadreward, address %s, block number %d", addr.Hex(), number)
 	log.Info("primitive_uploadreward, address", addr.Hex(), "address", number)
 
 	// TODO: @AC get cpchain backend and read balance.
 	uploadReward, err := c.Backend.UploadCount(addr, number)
 	if err != nil {
-		//log.Fatal("NewBasicCollector,error", err)
-		log.Fatal("NewBasicCollector,error", "error", err)
+		log.Error("NewBasicCollector,error", "error", err)
 	}
 	ret := new(big.Int).SetInt64(int64(uploadReward))
 	return common.LeftPadBytes(ret.Bytes(), 32), nil

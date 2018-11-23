@@ -39,7 +39,7 @@ func (c *GetRank) RequiredGas(input []byte) uint64 {
 func (c *GetRank) Run(input []byte) ([]byte, error) {
 	addr, number, err := extractRptPrimitivesArgs(input)
 	if err != nil {
-		log.Warn("primitive_rank got error", "error", err)
+		log.Error("primitive_rank got error", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
 	//log.Infof("primitive_rank, address %s, block number %d\n", addr.Hex(), number)
@@ -48,7 +48,7 @@ func (c *GetRank) Run(input []byte) ([]byte, error) {
 	// TODO: @AC get cpchain Backend and read balance.
 	coinAge, err := c.Backend.Rank(addr, number)
 	if err != nil {
-		log.Fatal("NewBasicCollector,error", "error", err)
+		log.Error("NewBasicCollector,error", "error", err)
 	}
 	ret := new(big.Int).SetInt64(int64(coinAge))
 	return common.LeftPadBytes(ret.Bytes(), 32), nil
