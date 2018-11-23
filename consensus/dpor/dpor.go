@@ -46,6 +46,7 @@ type Dpor struct {
 	signedBlocks map[uint64]common.Hash // record signed blocks.
 
 	proposer common.Address // Cpchain address of the proposer
+	signer   common.Address // TODO: @shiyc remove it later
 	signFn   SignFn         // Sign function to authorize hashes with
 
 	// TODO: add proposerHandler here @shiyc
