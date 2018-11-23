@@ -152,7 +152,7 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 		log.Fatal(err.Error())
 	}
 	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
-	// see candidates of view zero.
+	// see candidates of view zero.git
 	candidates, err := instance.CandidatesOf(nil, big.NewInt(0))
 	if err != nil {
 		log.Fatal(err.Error())
