@@ -331,15 +331,15 @@ func (ec *Client) GetRNodesaddress(ctx context.Context) ([]common.Address, error
 	return result, err
 }
 
-func (ec *Client) GetCurrentRound(ctx context.Context) (uint64, error) {
+func (ec *Client) GetCurrentView(ctx context.Context) (uint64, error) {
 	var result uint64
-	err := ec.c.CallContext(ctx, &result, "eth_getCurrentRound")
+	err := ec.c.CallContext(ctx, &result, "eth_getCurrentView")
 	return result, err
 }
 
-func (ec *Client) GetCurrentEpoch(ctx context.Context) (uint64, error) {
+func (ec *Client) GetCurrentTerm(ctx context.Context) (uint64, error) {
 	var result uint64
-	err := ec.c.CallContext(ctx, &result, "eth_getCurrentEpoch")
+	err := ec.c.CallContext(ctx, &result, "eth_getCurrentTerm")
 	return result, err
 }
 
