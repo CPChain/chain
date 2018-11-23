@@ -30,14 +30,14 @@ import (
 
 func TestDefaultGenesisBlock(t *testing.T) {
 	block := DefaultGenesisBlock().ToBlock(nil)
-	if block.Hash() != configs.MainnetGenesisHash {
-		t.Errorf("wrong mainnet genesis hash, got %v, want %v", block.Hash(), configs.MainnetGenesisHash)
+	if block.Hash() != MainnetGenesisHash {
+		t.Errorf("wrong mainnet genesis hash, got %v, want %v", block.Hash().Hex(), MainnetGenesisHash.Hex())
 	}
 }
 
 func TestSetupGenesis(t *testing.T) {
 	var (
-		customghash = common.HexToHash("0x7cf8e056f4c8152dc3b0c6d861094f2d8089d97b7a94d7a8e09aaa6661fb9342")
+		customghash = common.HexToHash("0x4dfa8fbb89390d061617bc590ebb1626ffc798f29127ac01f68c7ff8d91efe3e")
 		customg     = Genesis{
 			Config: &configs.ChainConfig{},
 			Alloc: GenesisAlloc{
@@ -60,14 +60,14 @@ func TestSetupGenesis(t *testing.T) {
 				return SetupGenesisBlock(db, new(Genesis))
 			},
 			wantErr:    errGenesisNoConfig,
-			wantConfig: configs.AllCpchainProtocolChanges,
+			wantConfig: configs.DefaultChainConfig,
 		},
 		{
 			name: "no block in DB, genesis == nil",
 			fn: func(db database.Database) (*configs.ChainConfig, common.Hash, error) {
 				return SetupGenesisBlock(db, nil)
 			},
-			wantHash:   configs.MainnetGenesisHash,
+			wantHash:   MainnetGenesisHash,
 			wantConfig: configs.MainnetChainConfig,
 		},
 		{
@@ -76,7 +76,7 @@ func TestSetupGenesis(t *testing.T) {
 				DefaultGenesisBlock().MustCommit(db)
 				return SetupGenesisBlock(db, nil)
 			},
-			wantHash:   configs.MainnetGenesisHash,
+			wantHash:   MainnetGenesisHash,
 			wantConfig: configs.MainnetChainConfig,
 		},
 		{

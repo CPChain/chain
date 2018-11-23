@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
@@ -344,7 +345,7 @@ func (self *engine) makeCurrentWork(parent *types.Block, header *types.Header) e
 
 	work := &Work{
 		config:    self.config,
-		signer:    types.NewPrivTxSupportEIP155Signer(self.config.ChainID),
+		signer:    types.NewCep1Signer(self.config.ChainID),
 		pubState:  pubState,
 		privState: privState,
 		header:    header,
@@ -359,6 +360,7 @@ func (self *engine) makeCurrentWork(parent *types.Block, header *types.Header) e
 	return nil
 }
 
+// commitNewWork creates a new block.
 func (self *engine) commitNewWork() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -412,12 +414,17 @@ func (self *engine) commitNewWork() {
 	txs := types.NewTransactionsByPriceAndNonce(self.currentWork.signer, pending)
 	work.commitTransactions(self.mux, txs, self.chain, self.coinbase)
 
+
+	// TODO @jason please give a more unified api to access the signer
+	header.Coinbase = self.cons.(*dpor.Dpor).Proposer()
+
 	// Create the new block to seal with the consensus engine. Private tx's receipts are not involved computing block's
 	// receipts hash and receipts bloom as they are private and not guaranteeing identical in different nodes.
 	if work.Block, err = self.cons.Finalize(self.chain, header, work.pubState, work.txs, []*types.Header{}, work.pubReceipts); err != nil {
 		log.Error("Failed to finalize block for sealing", "err", err)
 		return
 	}
+
 	// We only care about logging if we're actually mining.
 	if atomic.LoadInt32(&self.mining) == 1 {
 		log.Info("Commit new mining work", "number", work.Block.Number(), "txs", work.tcount, "elapsed", common.PrettyDuration(time.Since(tstart)))

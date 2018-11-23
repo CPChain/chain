@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package core
 
@@ -53,7 +40,6 @@ type Genesis struct {
 	Nonce      uint64               `json:"nonce"      toml:"nonce"`
 	Timestamp  uint64               `json:"timestamp"  toml:"timestamp"`
 	ExtraData  []byte               `json:"extraData"  toml:"extraData"`
-	ExtraData2 []byte               `json:"extraData2" toml:"extraData2"`
 	GasLimit   uint64               `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 	Difficulty *big.Int             `json:"difficulty" toml:"difficulty" gencodec:"required"`
 	Mixhash    common.Hash          `json:"mixHash"    toml:"mixHash"`
@@ -62,9 +48,10 @@ type Genesis struct {
 
 	// These fields are used for consensus tests. Please don't use them
 	// in actual genesis blocks.
-	Number     uint64      `json:"number"     toml:"number"`
-	GasUsed    uint64      `json:"gasUsed"    toml:"gasUsed"`
-	ParentHash common.Hash `json:"parentHash" toml:"parentHash"`
+	Number     uint64         `json:"number"     toml:"number"`
+	GasUsed    uint64         `json:"gasUsed"    toml:"gasUsed"`
+	ParentHash common.Hash    `json:"parentHash" toml:"parentHash"`
+	Dpor       types.DporSnap `json:"dpor"       toml:"dpor"`
 }
 
 // GenesisAlloc specifies the initial state that is part of the genesis block.
@@ -96,7 +83,6 @@ type genesisSpecMarshaling struct {
 	Nonce      math.HexOrDecimal64
 	Timestamp  math.HexOrDecimal64
 	ExtraData  hexutil.Bytes
-	ExtraData2 hexutil.Bytes
 	GasLimit   math.HexOrDecimal64
 	GasUsed    math.HexOrDecimal64
 	Number     math.HexOrDecimal64
@@ -159,7 +145,7 @@ func (e *GenesisMismatchError) Error() string {
 // The returned chain configuration is never nil.
 func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainConfig, common.Hash, error) {
 	if genesis != nil && genesis.Config == nil {
-		return configs.AllCpchainProtocolChanges, common.Hash{}, errGenesisNoConfig
+		return configs.DefaultChainConfig, common.Hash{}, errGenesisNoConfig
 	}
 
 	stored := rawdb.ReadCanonicalHash(db, 0)
@@ -189,7 +175,7 @@ func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainCo
 			// Special case: don't change the existing config of a non-mainnet chain if no new
 			// config is supplied. These chains would get AllProtocolChanges (and a compat error)
 			// if we just continued here.
-			if stored != configs.MainnetGenesisHash {
+			if stored != MainnetGenesisHash {
 				return storedCfg, stored, nil
 			} else {
 				finalCfg = updateChainConfig(storedCfg, newCfg, db, stored)
@@ -228,12 +214,10 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 	switch {
 	case g != nil:
 		return g.Config
-	case ghash == configs.MainnetGenesisHash:
+	case ghash == MainnetGenesisHash:
 		return configs.MainnetChainConfig
 	default:
-		return configs.AllCpchainProtocolChanges
-		// TODO for cpchain, the default case should be `AllCpchainProtocolChanges'.
-		// check the ussage of `newcfg' in `setupGenesisBlock'.
+		return configs.DefaultChainConfig
 	}
 }
 
@@ -265,6 +249,7 @@ func (g *Genesis) ToBlock(db database.Database) *types.Block {
 		MixHash:    g.Mixhash,
 		Coinbase:   g.Coinbase,
 		StateRoot:  root,
+		Dpor:       g.Dpor,
 	}
 	if g.GasLimit == 0 {
 		head.GasLimit = configs.GenesisGasLimit
@@ -272,9 +257,12 @@ func (g *Genesis) ToBlock(db database.Database) *types.Block {
 	if g.Difficulty == nil {
 		head.Difficulty = configs.GenesisDifficulty
 	}
-	statedb.Commit(false)
-	statedb.Database().TrieDB().Commit(root, true)
-
+	if _, err := statedb.Commit(false); err != nil {
+		log.Error("Error in genesis", "error", err)
+	}
+	if err := statedb.Database().TrieDB().Commit(root, true); err != nil {
+		log.Error("Error in genesis", "error", err)
+	}
 	return types.NewBlock(head, nil, nil)
 }
 
@@ -294,7 +282,7 @@ func (g *Genesis) Commit(db database.Database) (*types.Block, error) {
 
 	config := g.Config
 	if config == nil {
-		config = configs.AllCpchainProtocolChanges
+		config = configs.DefaultChainConfig
 	}
 	rawdb.WriteChainConfig(db, block.Hash(), config)
 	return block, nil
@@ -317,14 +305,16 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 	return g.MustCommit(db)
 }
 
+// Genesis hashes to enforce below configs on.
+var MainnetGenesisHash = common.HexToHash("0xb0d9b86767138ce7b1e8fd898642d6ec2aca73f7393be0deb496f95acfebc531")
+
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
-		Config:     configs.MainnetChainConfig,
-		Timestamp:  1492009146,
-		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000c05302acebd0730e3a18a058d7d1cb1204c4a092e94b7b6c5a0e526a4d97f9768ad6097bde25c62aef3dd127de235f15ffb4fc0d71469d1339df64656e31e5b68a98dcd17264bd1ba547d0b3e874da1e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
-		ExtraData2: hexutil.MustDecode("0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:   4700000,
+		Config:    configs.MainnetChainConfig,
+		Timestamp: 1492009146,
+		ExtraData: hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:  4700000,
 		// GasLimit:   1000000000,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
@@ -346,6 +336,17 @@ func DefaultGenesisBlock() *Genesis {
 			common.HexToAddress("0x0000000000000000000000000000000000000002"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x00000000000000000000000000000000000000ff"): {Balance: big.NewInt(0x00000000000000000)},
 		},
+		Dpor: types.DporSnap{
+			Proposers: []common.Address{
+				common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
+				common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+				common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
+				common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
+			},
+			Seal:       types.DporSignature{},
+			Sigs:       make([]types.DporSignature, 4),
+			Validators: []common.Address{},
+		},
 	}
 }
 
@@ -353,15 +354,14 @@ func DefaultGenesisBlock() *Genesis {
 // be seeded with the
 func DeveloperGenesisBlock(period uint64, faucet common.Address) *Genesis {
 	// Override the default period to the user requested one
-	config := *configs.AllCpchainProtocolChanges
+	config := *configs.DefaultChainConfig
 	config.Dpor.Period = period
 
 	// Assemble and return the genesis with the precompiles and faucet pre-funded
 	return &Genesis{
 		Config:     &config,
 		Timestamp:  1492009146,
-		ExtraData:  append(append(make([]byte, 32), faucet[:]...), make([]byte, 65)...),
-		ExtraData2: hexutil.MustDecode("0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+		ExtraData:  make([]byte, 32),
 		GasLimit:   4700000,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
@@ -374,6 +374,14 @@ func DeveloperGenesisBlock(period uint64, faucet common.Address) *Genesis {
 			common.BytesToAddress([]byte{7}): {Balance: big.NewInt(1)}, // ECScalarMul
 			common.BytesToAddress([]byte{8}): {Balance: big.NewInt(1)}, // ECPairing
 			faucet: {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
+		},
+		Dpor: types.DporSnap{
+			Proposers: []common.Address{
+				faucet,
+			},
+			Seal:       types.DporSignature{},
+			Sigs:       make([]types.DporSignature, 4),
+			Validators: []common.Address{},
 		},
 	}
 }

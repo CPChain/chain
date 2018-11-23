@@ -20,7 +20,7 @@ const (
 	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
-// Mode defines the type and amount of PoW verification an ethash engine makes.
+// Mode defines the type a dpor engine makes.
 type Mode uint
 
 const (
@@ -121,4 +121,10 @@ func (d *Dpor) SetCommitteeNetworkHandler(committeeNetworkHandler consensus.Comm
 	defer d.lock.Unlock()
 	d.committeeNetworkHandler = committeeNetworkHandler
 	return nil
+}
+
+func (d *Dpor) Proposer() common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	return d.signer
 }

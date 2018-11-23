@@ -594,7 +594,7 @@ func (p *peer) readSignerStatus(signerStatus *signerStatusData, signerValidator 
 // String implements fmt.Stringer.
 func (p *peer) String() string {
 	return fmt.Sprintf("Peer %s [%s]", p.id,
-		fmt.Sprintf("eth/%2d", p.version),
+		fmt.Sprintf("cpc/%2d", p.version),
 	)
 }
 

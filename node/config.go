@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package node
 
@@ -29,7 +16,6 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/grpc"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -42,7 +28,6 @@ import (
 const (
 	datadirPrivateKey      = "nodekey"            // Path within the datadir to the node's private key
 	datadirDefaultKeyStore = "keystore"           // Path within the datadir to the keystore
-	datadirDefaultRsa      = "rsa"                // Path within the datadir to the rsa key
 	datadirStaticNodes     = "static-nodes.json"  // Path within the datadir to the static node list
 	datadirTrustedNodes    = "trusted-nodes.json" // Path within the datadir to the trusted node list
 	datadirNodeDatabase    = "nodes"              // Path within the datadir to store the node infos
@@ -154,8 +139,6 @@ type Config struct {
 
 	// Logger is a custom logger to use with the p2p.Server.
 	Logger log.Logger `toml:",omitempty"`
-
-	RsaKeyStore *rsakey.RsaKey `toml:"-"`
 }
 
 // IPCEndpoint resolves an IPC endpoint based on a configured value, taking into
@@ -247,6 +230,7 @@ func (c *Config) NodeName() string {
 	return name
 }
 
+// Get name from config or from program name.
 func (c *Config) name() string {
 	if c.Name == "" {
 		progname := strings.TrimSuffix(filepath.Base(os.Args[0]), ".exe")
@@ -256,13 +240,6 @@ func (c *Config) name() string {
 		return progname
 	}
 	return c.Name
-}
-
-func (c *Config) rsaDir() string {
-	if c.DataDir == "" {
-		return ""
-	}
-	return filepath.Join(c.DataDir, datadirDefaultRsa)
 }
 
 // resolvePath resolves path in the instance directory.
@@ -319,20 +296,6 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 		log.Error(fmt.Sprintf("Failed to persist node key: %v", err))
 	}
 	return key
-}
-
-func (c *Config) RsaKey() (*rsakey.RsaKey, error) {
-	rsaDir := c.rsaDir()
-	if err := os.MkdirAll(rsaDir, 0700); err != nil {
-		return nil, err
-	}
-
-	rsaKey, err := rsakey.NewRsaKey(rsaDir)
-	if err != nil {
-		log.Error(fmt.Sprintf("Failed to new rsa key: %v", err))
-		return nil, err
-	}
-	return rsaKey, nil
 }
 
 // StaticNodes returns a list of node enode URLs configured as static nodes.
