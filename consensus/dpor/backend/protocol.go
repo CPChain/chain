@@ -94,6 +94,11 @@ type signerStatusData struct {
 	Address         common.Address
 }
 
+type proposerStatusData struct {
+	ProtocolVersion uint32
+	Address         common.Address
+}
+
 func errResp(code errCode, format string, v ...interface{}) error {
 	return fmt.Errorf("%v - %v", code, fmt.Sprintf(format, v...))
 }
