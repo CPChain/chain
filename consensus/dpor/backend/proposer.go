@@ -227,7 +227,6 @@ func (p *Proposer) addValidators() error {
 	p.lock.Lock()
 	p.lock.Unlock()
 
-	go p.broadcastBlock()
 	return nil
 }
 
