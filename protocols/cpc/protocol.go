@@ -11,7 +11,6 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
@@ -48,16 +47,6 @@ const (
 	NodeDataMsg    = 0x0e
 	GetReceiptsMsg = 0x0f
 	ReceiptsMsg    = 0x10
-
-	// Protocol messages belonging to cpc/1
-	NewSignerMsg = 0x42
-
-	// Pbft messages starts here
-
-	PbftMsgOutset             = 0x43 // not a msg code, just used for msg code comparing
-	PrepreparePendingBlockMsg = 0x43
-	PrepareSignedHeaderMsg    = 0x44
-	CommitSignedHeaderMsg     = 0x45
 )
 
 type errCode int
@@ -179,11 +168,3 @@ type blockBody struct {
 
 // blockBodiesData is the network packet for block content distribution.
 type blockBodiesData []*blockBody
-
-func IsSyncMsg(msg p2p.Msg) bool {
-	return msg.Code < PbftMsgOutset
-}
-
-func IsDporMsg(msg p2p.Msg) bool {
-	return msg.Code >= PbftMsgOutset
-}
