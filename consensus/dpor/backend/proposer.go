@@ -166,7 +166,7 @@ func ProposerHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common
 	var proposerStatus proposerStatusData // safe to read after two values have been received from errs
 
 	go func() {
-		err := p2p.Send(rw, NewValidatorMsg, &signerStatusData{
+		err := p2p.Send(rw, NewValidatorMsg, &proposerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         proposerAddress,
 		})
@@ -223,10 +223,21 @@ func (p *Proposer) SendNewPendingBlock(block *types.Block) error {
 
 // AddValidators is to add validators in to Proposer.Validators
 // TODO: @chengx
-func (p *Proposer) addValidators() error {
+func (p *Proposer) addValidators(version int, peer *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) error {
 	p.lock.Lock()
 	p.lock.Unlock()
 
+	remoteValidator, ok := p.validators[address]
+
+	if !ok {
+		remoteValidator = NewRemoteValidator(p.term, address)
+	}
+	err := remoteValidator.SetValidatorPeer(version, peer, rw)
+	if err != nil {
+		log.Debug(err.Error())
+	}
+
+	p.validators[address] = remoteValidator
 	return nil
 }
 
