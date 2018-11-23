@@ -124,7 +124,7 @@ func (h *ValidatorHandler) DialAll() {
 }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.
-func (s *Signer) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
+func (s *RemoteValidator) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
 
 	address := s.address
 
@@ -145,7 +145,7 @@ func (s *Signer) fetchPubkey(contractInstance *contract.SignerConnectionRegister
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (s *Signer) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
+func (s *RemoteValidator) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
 	epochIdx, address := s.epochIdx, s.address
 
 	log.Debug("fetching nodeID of remote signer")
@@ -181,7 +181,7 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 }
 
 // updateNodeID encrypts my node id with this remote signer's public key and update to the contract.
-func (s *Signer) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
+func (s *RemoteValidator) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
 	epochIdx, address := s.epochIdx, s.address
 
 	log.Debug("fetched rsa pubkey")
@@ -223,7 +223,7 @@ func (s *Signer) updateNodeID(nodeID string, auth *bind.TransactOpts, contractIn
 }
 
 // dial dials the signer.
-func (s *Signer) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
+func (s *RemoteValidator) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -280,7 +280,7 @@ func (s *Signer) dial(server *p2p.Server, nodeID string, address common.Address,
 }
 
 // Dial dials the signer
-func (s *Signer) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) error {
+func (s *RemoteValidator) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) error {
 
 	succeed, err := s.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 	// succeed, err := func() (bool, error) { return true, nil }()

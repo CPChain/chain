@@ -24,7 +24,7 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 		contractCaller     *ContractCaller
 		contractInstance   *contract.SignerConnectionRegister
 		contractTransactor *bind.TransactOpts
-		signers            map[common.Address]*Signer
+		signers            map[common.Address]*RemoteValidator
 		snap               *consensus.PbftStatus
 		statusFn           StatusFn
 		statusUpdateFn     StatusUpdateFn

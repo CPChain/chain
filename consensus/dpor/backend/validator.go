@@ -49,7 +49,7 @@ type ValidatorHandler struct {
 	contractInstance   *contract.SignerConnectionRegister
 	contractTransactor *bind.TransactOpts
 
-	signers map[common.Address]*Signer
+	signers map[common.Address]*RemoteValidator
 
 	// previous stable pbft status
 	snap *consensus.PbftStatus
@@ -91,7 +91,7 @@ func NewValidatorHandler(config *configs.DporConfig, etherbase common.Address) *
 		contractAddress: config.Contracts["signer"],
 		termLen:         config.TermLen,
 		maxInitNumber:   config.MaxInitBlockNumber,
-		signers:         make(map[common.Address]*Signer),
+		signers:         make(map[common.Address]*RemoteValidator),
 		knownBlocks:     NewKnownBlocks(),
 		pendingBlockCh:  make(chan *types.Block),
 		quitSync:        make(chan struct{}),
@@ -198,7 +198,7 @@ func (vh *ValidatorHandler) HandleMsg(addr string, msg p2p.Msg) error {
 	return vh.handleMsg(signer, msg)
 }
 
-func (vh *ValidatorHandler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*Signer, error) {
+func (vh *ValidatorHandler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteValidator, error) {
 	vh.lock.Lock()
 	defer vh.lock.Unlock()
 
@@ -236,7 +236,7 @@ func (vh *ValidatorHandler) removeSigner(signer common.Address) error {
 	return nil
 }
 
-func (vh *ValidatorHandler) handleMsg(p *Signer, msg p2p.Msg) error {
+func (vh *ValidatorHandler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	log.Debug("handling msg", "msg", msg.Code)
 
 	if msg.Code == NewSignerMsg {
@@ -255,7 +255,7 @@ func (vh *ValidatorHandler) handleMsg(p *Signer, msg p2p.Msg) error {
 }
 
 // handleLbftMsg handles given msg with lbft (lightweighted bft) mode
-func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
+func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 	// TODO: @liuq fix this.
 	switch {
@@ -407,7 +407,7 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (vh *ValidatorHandler) handlePbftMsg(msg p2p.Msg, p *Signer) error {
+func (vh *ValidatorHandler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 	switch vh.statusFn().State {
 	case consensus.NewRound:
 		// if leader, send mined block with preprepare msg, enter preprepared
@@ -444,7 +444,7 @@ func (vh *ValidatorHandler) handlePbftMsg(msg p2p.Msg, p *Signer) error {
 }
 
 // handlePreprepareMsg handles received preprepare msg
-func (vh *ValidatorHandler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
+func (vh *ValidatorHandler) handlePreprepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 	switch {
 	case msg.Code == PrepreparePendingBlockMsg:
 
@@ -498,7 +498,7 @@ func (vh *ValidatorHandler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (vh *ValidatorHandler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
+func (vh *ValidatorHandler) handlePrepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 	switch {
 	case msg.Code == PrepareSignedHeaderMsg:
 
@@ -537,7 +537,7 @@ func (vh *ValidatorHandler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (vh *ValidatorHandler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
+func (vh *ValidatorHandler) handleCommitMsg(msg p2p.Msg, p *RemoteValidator) error {
 	switch {
 	case msg.Code == CommitSignedHeaderMsg:
 
