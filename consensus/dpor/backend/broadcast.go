@@ -8,11 +8,11 @@ import (
 )
 
 // BroadcastMinedBlock broadcasts generated block to committee
-func (h *Handler) BroadcastMinedBlock(block *types.Block) {
+func (h *ValidatorHandler) BroadcastMinedBlock(block *types.Block) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	committee := h.signers
+	committee := h.remoteValidators
 	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
 	for addr, peer := range committee {
 		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
@@ -21,29 +21,29 @@ func (h *Handler) BroadcastMinedBlock(block *types.Block) {
 }
 
 // BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
-func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
+func (h *ValidatorHandler) BroadcastPrepareSignedHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	committee := h.signers
+	committee := h.remoteValidators
 	for _, peer := range committee {
 		peer.AsyncSendPrepareSignedHeader(header)
 	}
 }
 
 // BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
-func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
+func (h *ValidatorHandler) BroadcastCommitSignedHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	committee := h.signers
+	committee := h.remoteValidators
 	for _, peer := range committee {
 		peer.AsyncSendCommitSignedHeader(header)
 	}
 }
 
 // PendingBlockBroadcastLoop loops to broadcast blocks
-func (h *Handler) PendingBlockBroadcastLoop() {
+func (h *ValidatorHandler) PendingBlockBroadcastLoop() {
 	futureTimer := time.NewTicker(10 * time.Second)
 	defer futureTimer.Stop()
 
@@ -56,13 +56,13 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			ready := false
 
 			for !ready {
-				if h.Available() && len(h.signers) >= int(h.termLen)/2 {
+				if h.Available() && len(h.remoteValidators) >= int(h.termLen)/2 {
 					ready = true
 				}
 				time.Sleep(1 * time.Second)
 
 				log.Debug("signer in dpor handler when broadcasting...")
-				for addr := range h.signers {
+				for addr := range h.remoteValidators {
 					log.Debug("signer", "addr", addr.Hex())
 				}
 			}

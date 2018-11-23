@@ -18,8 +18,8 @@ const (
 	handshakeTimeout = 5 * time.Second
 )
 
-// Signer represents a remote signer waiting to be connected and communicate with.
-type Signer struct {
+// RemoteValidator represents a remote signer waiting to be connected and communicate with.
+type RemoteValidator struct {
 	*p2p.Peer
 	rw      p2p.MsgReadWriter
 	version int
@@ -42,9 +42,9 @@ type Signer struct {
 	lock sync.RWMutex
 }
 
-// NewSigner creates a new NewSigner with given view idx and address.
-func NewSigner(epochIdx uint64, address common.Address) *Signer {
-	return &Signer{
+// NewRemoteValidator creates a new NewRemoteValidator with given view idx and address.
+func NewRemoteValidator(epochIdx uint64, address common.Address) *RemoteValidator {
+	return &RemoteValidator{
 		epochIdx: epochIdx,
 		address:  address,
 
@@ -56,7 +56,7 @@ func NewSigner(epochIdx uint64, address common.Address) *Signer {
 	}
 }
 
-func (s *Signer) disconnect(server *p2p.Server) error {
+func (s *RemoteValidator) disconnect(server *p2p.Server) error {
 	s.lock.Lock()
 	nodeID := s.nodeID
 	s.lock.Unlock()
@@ -69,8 +69,8 @@ func (s *Signer) disconnect(server *p2p.Server) error {
 	return nil
 }
 
-// SetSigner sets a signer
-func (s *Signer) SetSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
+// SetValidatorPeer sets a signer
+func (s *RemoteValidator) SetValidatorPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -79,10 +79,10 @@ func (s *Signer) SetSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error
 	return nil
 }
 
-// signerBroadcast is a write loop that multiplexes block propagations, announcements
+// broadcastLoop is a write loop that multiplexes block propagations, announcements
 // and transaction broadcasts into the remote peer. The goal is to have an async
 // writer that does not lock up node internals.
-func (s *Signer) signerBroadcast() {
+func (s *RemoteValidator) broadcastLoop() {
 	for {
 		select {
 		// blocks waiting for signatures
@@ -111,18 +111,18 @@ func (s *Signer) signerBroadcast() {
 }
 
 // SendNewSignerMsg sends a
-func (s *Signer) SendNewSignerMsg(eb common.Address) error {
+func (s *RemoteValidator) SendNewSignerMsg(eb common.Address) error {
 	return p2p.Send(s.rw, NewSignerMsg, eb)
 }
 
 // SendNewPendingBlock propagates an entire block to a remote peer.
-func (s *Signer) SendNewPendingBlock(block *types.Block) error {
+func (s *RemoteValidator) SendNewPendingBlock(block *types.Block) error {
 	return p2p.Send(s.rw, PrepreparePendingBlockMsg, block)
 }
 
 // AsyncSendNewPendingBlock queues an entire block for propagation to a remote peer. If
 // the peer's broadcast queue is full, the event is silently dropped.
-func (s *Signer) AsyncSendNewPendingBlock(block *types.Block) {
+func (s *RemoteValidator) AsyncSendNewPendingBlock(block *types.Block) {
 	select {
 	case s.queuedPendingBlocks <- block:
 	default:
@@ -131,13 +131,13 @@ func (s *Signer) AsyncSendNewPendingBlock(block *types.Block) {
 }
 
 // SendPrepareSignedHeader sends new signed block header.
-func (s *Signer) SendPrepareSignedHeader(header *types.Header) error {
+func (s *RemoteValidator) SendPrepareSignedHeader(header *types.Header) error {
 	err := p2p.Send(s.rw, PrepareSignedHeaderMsg, header)
 	return err
 }
 
 // AsyncSendPrepareSignedHeader adds a msg to broadcast channel
-func (s *Signer) AsyncSendPrepareSignedHeader(header *types.Header) {
+func (s *RemoteValidator) AsyncSendPrepareSignedHeader(header *types.Header) {
 	select {
 	case s.queuedPrepareSigs <- header:
 	default:
@@ -146,13 +146,13 @@ func (s *Signer) AsyncSendPrepareSignedHeader(header *types.Header) {
 }
 
 // SendCommitSignedHeader sends new signed block header.
-func (s *Signer) SendCommitSignedHeader(header *types.Header) error {
+func (s *RemoteValidator) SendCommitSignedHeader(header *types.Header) error {
 	err := p2p.Send(s.rw, CommitSignedHeaderMsg, header)
 	return err
 }
 
 // AsyncSendCommitSignedHeader sends new signed block header.
-func (s *Signer) AsyncSendCommitSignedHeader(header *types.Header) {
+func (s *RemoteValidator) AsyncSendCommitSignedHeader(header *types.Header) {
 	select {
 	case s.queuedCommitSigs <- header:
 	default:
@@ -160,21 +160,21 @@ func (s *Signer) AsyncSendCommitSignedHeader(header *types.Header) {
 	}
 }
 
-// Handshake tries to handshake with remote signer
-func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+// VVHandshake tries to handshake with remote validator
+func VVHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, verifyRemoteValidatorFn VerifyRemoteValidatorFn) (isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
-	var signerStatus signerStatusData // safe to read after two values have been received from errc
+	var validatorStatus ValidatorStatusData // safe to read after two values have been received from errc
 
 	go func() {
-		err := p2p.Send(rw, NewSignerMsg, &signerStatusData{
+		err := p2p.Send(rw, NewSignerMsg, &ValidatorStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         etherbase,
 		})
 		errc <- err
 	}()
 	go func() {
-		isSigner, address, err = ReadSignerStatus(p, rw, &signerStatus, signerValidator)
+		isValidator, address, err = ReadSignerStatus(p, rw, &validatorStatus, verifyRemoteValidatorFn)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -189,11 +189,11 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, sign
 			return false, common.Address{}, p2p.DiscReadTimeout
 		}
 	}
-	return isSigner, address, nil
+	return isValidator, address, nil
 }
 
 // ReadSignerStatus reads status of remote signer
-func ReadSignerStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerStatusData, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+func ReadSignerStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *ValidatorStatusData, signerValidator VerifyRemoteValidatorFn) (isSigner bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
 		return false, common.Address{}, err
