@@ -19,8 +19,8 @@ func TestRpt(t *testing.T) {
 	ctx := context.Background()
 	printBalance(client, fromAddress)
 
-	addr := common.HexToAddress("0xca53baf44e68a2f440cafee2bbcc23631ad2689e") // real
-	// addr := common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d") // proxy
+	// addr := common.HexToAddress("0xca53baf44e68a2f440cafee2bbcc23631ad2689e") // real
+	addr := common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d") // proxy
 	r, err := rpt.NewRpt(addr, client)
 
 	code, err := client.CodeAt(ctx, addr, nil)

@@ -55,15 +55,25 @@ func DeployProxy() common.Address {
 }
 
 func RegisterProxyAddress(proxyContractAddress, realAddress common.Address) common.Address {
-	FormatPrint("register proxy address")
 	proxyAddress := DeployProxy()
+	success := UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress)
+	if success {
+		return proxyAddress
+	} else {
+		return common.Address{}
+	}
+}
+
+func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress common.Address) bool {
+	FormatPrint("register proxy address")
 
 	PrintContract(proxyAddress)
 	fmt.Println("Register proxy contract proxy -> real:" + realAddress.Hex())
 	client, err, privateKey, _, fromAddress := config.Connect()
 	if err != nil {
-		log.Fatal(err.Error())
 		fmt.Println("failed")
+		log.Fatal(err.Error())
+		return false
 
 	}
 	printBalance(client, fromAddress)
@@ -78,19 +88,22 @@ func RegisterProxyAddress(proxyContractAddress, realAddress common.Address) comm
 
 	transaction, err := proxyContractRegister.RegisterProxyContract(auth, proxyAddress, realAddress)
 	if err != nil {
-		log.Fatal(err.Error())
 		fmt.Println("failed")
+		log.Fatal(err.Error())
+		return false
 	}
 	receipt, err := bind.WaitMined(context.Background(), client, transaction)
 	if err != nil {
 		fmt.Println("failed")
 		log.Fatalf("failed to deploy contact when mining :%v", err)
+		return false
 	}
 	// fmt.Println("receipt.Status:", receipt.Status)
 	if receipt.Status == 1 {
 		fmt.Println("success")
+		return true
 	} else {
 		fmt.Println("failed")
+		return false
 	}
-	return proxyAddress
 }
