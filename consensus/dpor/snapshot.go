@@ -355,7 +355,7 @@ func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 
 		rptBackend, err := s.rptBackend, error(nil)
 		if rptBackend == nil {
-			rptBackend, err = rpt.NewRptService(s.contractCaller().Client, s.config.Contracts["rpt"])
+			rptBackend, err = rpt.NewRptService(s.contractCaller().Client, s.config.Contracts[configs.ContractRpt])
 		}
 		rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
 		s.rptBackend = rptBackend

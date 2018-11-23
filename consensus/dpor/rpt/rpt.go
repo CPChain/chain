@@ -50,6 +50,12 @@ const (
 	Withdrawn
 )
 
+const (
+	cacheSize = 10
+	// 16 is the min rpt score
+	minRptScore = 16
+)
+
 // Rpt defines the name and reputation pair.
 type Rpt struct {
 	Address common.Address
@@ -85,8 +91,6 @@ type RptServiceImpl struct {
 	rptcache *lru.ARCCache
 }
 
-const cacheSize = 10
-
 //NewRptService creates a concrete RPT service instance.
 func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address) (RptService, error) {
 	cache, _ := lru.NewARC(cacheSize)
@@ -112,12 +116,14 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
 	instance, err := dpor.NewRpt(rs.rptContract, rs.client)
 	if err != nil {
-		log.Fatal("New primitivesContract error")
+		log.Error("New primitivesContract error")
+		return Rpt{Address: address, Rpt: minRptScore}
 	}
 	rpt := int64(0)
 	windowSize, err := instance.Window(nil)
 	if err != nil {
-		log.Fatal("Get windowSize error")
+		log.Error("Get windowSize error")
+		return Rpt{Address: address, Rpt: minRptScore}
 	}
 	for i := int64(blockNum); i >= 0 && i >= int64(blockNum)-windowSize.Int64(); i-- {
 		hash := RptHash(RptItems{Nodeaddress: address, Key: uint64(i)})
@@ -125,7 +131,8 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 		if !exists {
 			rptInfo, err := instance.GetRpt(nil, address, new(big.Int).SetInt64(i))
 			if err != nil {
-				log.Fatal("GetRpt error", "error", err)
+				log.Error("GetRpt error", "error", err)
+				return Rpt{Address: address, Rpt: minRptScore}
 			}
 			rs.rptcache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})
 			rpt += rptInfo.Int64()
@@ -136,8 +143,8 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 		}
 	}
 
-	if rpt <= 16 {
-		rpt = int64(16)
+	if rpt <= minRptScore {
+		rpt = minRptScore
 	}
 	return Rpt{Address: address, Rpt: rpt}
 }

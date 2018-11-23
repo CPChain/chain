@@ -91,7 +91,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
 	}
-	contractAddress := re.ChainConfig.Dpor.Contracts["campaign"]
+	contractAddress := re.ChainConfig.Dpor.Contracts[configs.ContractCampaign]
 	log.Info("campaign", "contractAddress", contractAddress)
 	intance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
@@ -175,7 +175,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 // GetCoinAge is the func to get uploadnumber to rpt
 func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int64, error) {
 	uploadNumber := int64(0)
-	contractAddress := re.ChainConfig.Dpor.Contracts["register"]
+	contractAddress := re.ChainConfig.Dpor.Contracts[configs.ContractRegister]
 	upload, err := pdash.NewRegister(contractAddress, re.Client)
 	if err != nil {
 		log.Warn("NewRegister error", "error", err)
@@ -193,7 +193,7 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	proxyCount = int64(0)
 	isProxy = int64(0)
 	var proxyAddresses []common.Address
-	contractAddress := re.ChainConfig.Dpor.Contracts["pdash"]
+	contractAddress := re.ChainConfig.Dpor.Contracts[configs.ContractRegister]
 	pdash, err := pdash.NewPdash(contractAddress, re.Client)
 
 	if err != nil {
@@ -251,7 +251,7 @@ func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
 }
 
 func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
-	contractAddress := re.ChainConfig.Dpor.Contracts["campaign"]
+	contractAddress := re.ChainConfig.Dpor.Contracts[configs.ContractCampaign]
 	instance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
 		log.Fatal("NewCampaign error", "address", address, "error", err)
