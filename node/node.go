@@ -578,6 +578,7 @@ func (n *Node) openDataDir() error {
 }
 
 // InstanceDir retrieves the instance directory used by the protocol stack.
+// It resides inside the DataDir.
 func (n *Node) InstanceDir() string {
 	return n.config.instanceDir()
 }
