@@ -265,7 +265,7 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 		localBlock, err := h.GetPendingBlock(block.NumberU64())
 		if localBlock != nil && err == nil && localBlock.Block != nil {
 			if localBlock.Status == Inserted {
-				go h.broadcastBlockFn(localBlock.Block, true)
+				// go h.broadcastBlockFn(localBlock.Block, true)
 				return nil
 			}
 		}
@@ -280,14 +280,14 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 			log.Debug("validated preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 			// sign the block
-			header := block.RefHeader()
+			header := block.Header()
 			switch e := h.signHeaderFn(header, consensus.Preprepared); e {
 			case nil:
 
 				log.Debug("signed preprepare header, adding to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 				// add block to pending block cache of blockchain
-				if err := h.AddPendingBlock(block); err != nil {
+				if err := h.AddPendingBlock(block.WithSeal(header)); err != nil {
 					return err
 				}
 
