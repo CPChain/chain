@@ -166,7 +166,7 @@ func PvHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Addre
 	var proposerStatus proposerStatusData // safe to read after two values have been received from errs
 
 	go func() {
-		err := p2p.Send(rw, NewSignerMsg, &signerStatusData{
+		err := p2p.Send(rw, NewValidatorMsg, &signerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         proposerAddress,
 		})
@@ -197,8 +197,8 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, proposerStatus *prop
 	if err != nil {
 		return false, common.Address{}, err
 	}
-	if msg.Code != NewSignerMsg {
-		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
+	if msg.Code != NewValidatorMsg {
+		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewValidatorMsg)
 	}
 	if msg.Size > ProtocolMaxMsgSize {
 		return false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)

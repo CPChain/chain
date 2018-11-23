@@ -112,7 +112,7 @@ func (s *RemoteValidator) signerBroadcast() {
 
 // SendNewSignerMsg sends a
 func (s *RemoteValidator) SendNewSignerMsg(eb common.Address) error {
-	return p2p.Send(s.rw, NewSignerMsg, eb)
+	return p2p.Send(s.rw, NewValidatorMsg, eb)
 }
 
 // SendNewPendingBlock propagates an entire block to a remote peer.
@@ -160,16 +160,16 @@ func (s *RemoteValidator) AsyncSendCommitSignedHeader(header *types.Header) {
 	}
 }
 
-// Handshake tries to handshake with remote signer
-func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+// Handshake tries to handshake with remote validator
+func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var signerStatus signerStatusData // safe to read after two values have been received from errc
 
 	go func() {
-		err := p2p.Send(rw, NewSignerMsg, &signerStatusData{
+		err := p2p.Send(rw, NewValidatorMsg, &signerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
-			Address:         etherbase,
+			Address:         coinbase,
 		})
 		errc <- err
 	}()
@@ -193,13 +193,13 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, sign
 }
 
 // ReadSignerStatus reads status of remote signer
-func ReadSignerStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerStatusData, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerStatusData, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
 		return false, common.Address{}, err
 	}
-	if msg.Code != NewSignerMsg {
-		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
+	if msg.Code != NewValidatorMsg {
+		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewValidatorMsg)
 	}
 	if msg.Size > ProtocolMaxMsgSize {
 		return false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
