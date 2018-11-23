@@ -225,6 +225,7 @@ func (d *Dpor) Authorize(signer common.Address, signFn SignerFn) {
 
 // Seal implements consensus.Engine, attempting to create a sealed block using
 // the local signing credentials.
+// NB please populate the correct field values.  we are now removing some fields such as nonce.
 func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error) {
 	header := block.Header()
 

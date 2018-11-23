@@ -444,7 +444,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 		s.protocolManager.engine.SetCommitteeNetworkHandler(s.protocolManager.committeeNetworkHandler)
 	}
 
-	log.Info("cpchainService started")
+	log.Info("CpchainService started")
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers

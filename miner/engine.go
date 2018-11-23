@@ -23,7 +23,6 @@ import (
 const (
 	resultQueueSize  = 10
 	miningLogAtDepth = 5
-
 	// txChanSize is the size of channel listening to NewTxsEvent.
 	// The number is referenced from the size of tx pool.
 	txChanSize = 4096
@@ -33,9 +32,11 @@ const (
 	chainSideChanSize = 10
 )
 
-// Worker can register themself with the engine
+// Worker can register itself with the engine
 type Worker interface {
+	// retrieve the channel to pass work to a worker
 	Work() chan<- *Work
+	// retrieve result from a worker
 	SetReturnCh(chan<- *Result)
 	Stop()
 	Start()
@@ -44,8 +45,8 @@ type Worker interface {
 // Work is the workers current environment and holds
 // all of the current state information
 type Work struct {
-	config *configs.ChainConfig
-	signer types.Signer
+	config *configs.ChainConfig // manifest which chain we are on
+	signer types.Signer         // the signer, e.g., cep1signer to recover the transaction sender
 
 	privState *state.StateDB          // apply public state changes here
 	pubState  *state.StateDB          // apply private state changes here
@@ -60,8 +61,8 @@ type Work struct {
 	pubReceipts  []*types.Receipt
 	privReceipts []*types.Receipt
 
-	createdAt time.Time
 	accm      *accounts.Manager
+	createdAt time.Time
 }
 
 type Result struct {
@@ -71,18 +72,18 @@ type Result struct {
 
 // engine is the main object which takes care of applying messages to the new state
 type engine struct {
+	mu sync.Mutex
+
 	config *configs.ChainConfig
 	cons   consensus.Engine
 
-	mu sync.Mutex
-
 	// update loop
 	mux          *event.TypeMux
-	txsCh        chan core.NewTxsEvent
+	txsCh        chan core.NewTxsEvent  // new transactions enter the transaction pool
 	txsSub       event.Subscription
-	chainHeadCh  chan core.ChainHeadEvent
+	chainHeadCh  chan core.ChainHeadEvent   // a new block has been inserted into the chain
 	chainHeadSub event.Subscription
-	chainSideCh  chan core.ChainSideEvent
+	chainSideCh  chan core.ChainSideEvent   // a side block has been inserted
 	chainSideSub event.Subscription
 	wg           sync.WaitGroup
 
@@ -104,7 +105,7 @@ type engine struct {
 	snapshotBlock *types.Block
 	snapshotState *state.StateDB
 
-	unconfirmed *unconfirmedBlocks // set of locally mined blocks pending canonicalness confirmations
+	unconfirmed *unconfirmedBlocks // set of locally mined blocks pending canonical confirmations
 
 	// atomic status counters
 	mining int32
@@ -123,11 +124,13 @@ func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase comm
 		chainDb:     backend.ChainDb(),
 		recv:        make(chan *Result, resultQueueSize),
 		chain:       backend.BlockChain(),
-		proc:        backend.BlockChain().Validator(),
+		proc:        backend.BlockChain().Validator(), // processor validator lock
 		coinbase:    coinbase,
 		workers:     make(map[Worker]struct{}),
+		// we don't really need this.  but keep it here for more debugging information.
 		unconfirmed: newUnconfirmedBlocks(backend.BlockChain(), miningLogAtDepth),
 	}
+
 	// Subscribe NewTxsEvent for tx pool
 	eng.txsSub = backend.TxPool().SubscribeNewTxsEvent(eng.txsCh)
 	// Subscribe events for blockchain
@@ -413,7 +416,6 @@ func (self *engine) commitNewWork() {
 	}
 	txs := types.NewTransactionsByPriceAndNonce(self.currentWork.signer, pending)
 	work.commitTransactions(self.mux, txs, self.chain, self.coinbase)
-
 
 	// TODO @jason please give a more unified api to access the signer
 	header.Coinbase = self.cons.(*dpor.Dpor).Proposer()
