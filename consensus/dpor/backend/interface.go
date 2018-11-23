@@ -76,8 +76,8 @@ type PbftHandler interface {
 
 }
 
-// ValidateSignerFn validates if a given address is signer of current epoch
-type ValidateSignerFn func(signer common.Address) (bool, error)
+// VerifyRemoteValidatorFn validates if a given address is signer of current epoch
+type VerifyRemoteValidatorFn func(signer common.Address) (bool, error)
 
 // VerifyHeaderFn verifies the given header
 // if in preprepared state, verify basic fields

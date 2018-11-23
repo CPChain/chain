@@ -89,7 +89,7 @@ var errorToString = map[int]string{
 	ErrSuspendedPeer:           "Suspended peer",
 }
 
-type signerStatusData struct {
+type ValidatorStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address
 }

@@ -80,7 +80,7 @@ func (h *ValidatorHandler) SetContractCaller(contractCaller *ContractCaller) err
 // UpdateSigners updates Handler's signers.
 func (h *ValidatorHandler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
 	h.lock.Lock()
-	remoteSigners := h.signers
+	remoteSigners := h.remoteValidators
 	h.lock.Unlock()
 
 	for _, signer := range signers {
@@ -92,7 +92,7 @@ func (h *ValidatorHandler) UpdateSigners(epochIdx uint64, signers []common.Addre
 
 	h.lock.Lock()
 	h.term = epochIdx
-	h.signers = remoteSigners
+	h.remoteValidators = remoteSigners
 	h.lock.Unlock()
 
 	return nil
@@ -103,7 +103,7 @@ func (h *ValidatorHandler) DialAll() {
 	h.lock.Lock()
 	rsaKey := h.rsaKey
 	nodeID, address := h.nodeId, h.coinbase
-	connected, signers, server := h.dialed, h.signers, h.server
+	connected, signers, server := h.dialed, h.remoteValidators, h.server
 	contractInstance, contractTransactor, client := h.contractInstance, h.contractTransactor, h.contractCaller.Client
 	h.lock.Unlock()
 
