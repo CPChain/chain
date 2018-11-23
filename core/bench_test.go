@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/configs"
-	// "bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
