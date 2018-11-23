@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"math/big"
 	"sync"
+
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -18,8 +21,8 @@ import (
 
 const (
 
-	// TermGapBetweenElectionAndMining is the the term gap between election and mining.
-	TermGapBetweenElectionAndMining = 3
+	// TermDistBetweenElectionAndMining is the the term gap between election and mining.
+	TermDistBetweenElectionAndMining = 2
 
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
 	// TODO: @shiyc MaxSizeOfRecentSigners is about to be removed later
@@ -136,9 +139,13 @@ func (s *DporSnapshot) recentProposers() map[uint64][]common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
+	// copy and return proposers
 	recentProposers := make(map[uint64][]common.Address)
-	for term, proposer := range s.RecentProposers {
-		recentProposers[term] = proposer
+	for term, proposers := range s.RecentProposers {
+		recentProposers[term] = make([]common.Address, len(proposers))
+		for i, p := range proposers {
+			copy(recentProposers[term][i][:], p[:])
+		}
 	}
 	return recentProposers
 }
@@ -147,9 +154,13 @@ func (s *DporSnapshot) recentValidators() map[uint64][]common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
+	// copy and return validators
 	recentValidators := make(map[uint64][]common.Address)
-	for term, validator := range s.RecentValidators {
-		recentValidators[term] = validator
+	for term, validators := range s.RecentValidators {
+		recentValidators[term] = make([]common.Address, len(validators))
+		for i, v := range validators {
+			copy(recentValidators[term][i][:], v[:])
+		}
 	}
 	return recentValidators
 }
@@ -357,9 +368,6 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.Co
 		}
 	}
 
-	snap.setNumber(headers[len(headers)-1].Number.Uint64())
-	snap.setHash(headers[len(headers)-1].Hash())
-
 	return snap, nil
 }
 
@@ -387,11 +395,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	// If in checkpoint, run election
 	if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
 		seed := header.Hash().Big().Int64()
-		err := s.updateSigners(rpts, seed)
-		if err != nil {
-			log.Warn("err when run election", "err", err)
-			return err
-		}
+		s.updateProposers(rpts, seed)
 	}
 
 	return nil
@@ -399,44 +403,30 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 
 // updateCandidates updates proposer candidates from campaign contract
 func (s *DporSnapshot) updateCandidates(header *types.Header) error {
+	contractCaller := s.contractCaller()
 
-	// Default Proposers/Candidates
-	candidates := []common.Address{
-		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
-		common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
-		common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"),
-		common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
-		common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
-		common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
-		common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
-	}
-
-	// contractCaller := s.contractCaller()
-
+	var candidates []common.Address
 	// If contractCaller is not nil, use it to update candidates from contract
-	// if contractCaller != nil {
+	if contractCaller != nil {
 
-	// 	// Creates an contract instance
-	// 	campaignAddress := s.config.Contracts["campaign"]
-	// 	contractInstance, err := contract.NewCampaign(campaignAddress, contractCaller.Client)
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		// Creates an contract instance
+		campaignAddress := s.config.Contracts["campaign"]
+		contractInstance, err := campaign.NewCampaign(campaignAddress, contractCaller.Client)
+		if err != nil {
+			return err
+		}
 
-	// 	// Read candidates from the contract instance
-	// 	cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		// Read candidates from the contract instance
+		cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
+		if err != nil {
+			return err
+		}
 
-	// 	// If useful, use it!
-	// 	if uint64(len(cds)) > s.config.TermLen {
-	// 		candidates = cds
-	// 	}
-	// }
+		// If useful, use it!
+		if uint64(len(cds)) > s.config.TermLen {
+			candidates = cds
+		}
+	}
 
 	s.setCandidates(candidates)
 	return nil
@@ -444,7 +434,6 @@ func (s *DporSnapshot) updateCandidates(header *types.Header) error {
 
 // updateRpts updates rpts of candidates
 func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RptList, error) {
-
 	// TODO: use rpt collector to update rpts.
 	var rpts rpt.RptList
 	for idx, candidate := range s.candidates() {
@@ -455,85 +444,19 @@ func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RptList, error) {
 	return rpts, nil
 }
 
-//TODO: @shiyc need to remove it later
-func (s *DporSnapshot) ifUseDefaultSigners() bool {
-	return s.number() < s.config.MaxInitBlockNumber
+// isUseDefaultProposers returns true if it should use predefined default proposers, otherwise false
+func (s *DporSnapshot) isUseDefaultProposers() bool {
+	return s.Number <= s.config.MaxInitBlockNumber
 }
 
-func (s *DporSnapshot) ifUseDefaultProposers() bool {
-	return s.Number < s.config.MaxInitBlockNumber
-}
-
-func (s *DporSnapshot) ifStartElection() bool {
-	return s.number() >= s.config.MaxInitBlockNumber-(s.config.TermLen*(TermGapBetweenElectionAndMining-1)*s.config.ViewLen)
-}
-
-// updateSigner use rpt and election result to get new committee(signers)
-// TODO: @shiyc need to remove it later
-func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
-
-	signers := s.candidates()[:s.config.TermLen]
-
-	// Use default signers
-	if s.ifUseDefaultSigners() {
-		s.setRecentSigners(s.Term()+1, signers)
-	}
-
-	// Elect signers
-	if s.ifStartElection() {
-		log.Debug("electing")
-		log.Debug("---------------------------")
-		log.Debug("rpts:")
-		for _, r := range rpts {
-			log.Debug("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
-		}
-		log.Debug("seed", "seed", seed)
-		log.Debug("term length", "term", int(s.config.TermLen))
-		log.Debug("---------------------------")
-
-		signers := election.Elect(rpts, seed, int(s.config.TermLen))
-
-		log.Debug("elected signers:")
-
-		for _, s := range signers {
-			log.Debug("signer", "addr", s.Hex())
-		}
-		log.Debug("---------------------------")
-
-		log.Debug("snap.number", "n", s.number())
-
-		term := s.FutureTermOf(s.number())
-
-		log.Debug("term idx", "eidx", term)
-
-		s.setRecentSigners(term, signers)
-
-		log.Debug("---------------------------")
-		signers = s.getRecentSigners(term)
-		log.Debug("stored elected signers")
-
-		for _, s := range signers {
-			log.Debug("signer", "addr", s.Hex())
-		}
-		log.Debug("---------------------------")
-
-	}
-
-	return nil
+func (s *DporSnapshot) isStartElection() bool {
+	return s.number() >= s.config.MaxInitBlockNumber-(TermDistBetweenElectionAndMining*s.config.TermLen*s.config.ViewLen)-1
 }
 
 // updateProposer uses rpt and election result to get new proposers committee
-func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) error {
-
-	proposers := s.candidates()[:s.config.TermLen]
-
-	// Use default proposers
-	if s.ifUseDefaultProposers() {
-		s.setRecentProposers(s.Term()+1, proposers)
-	}
-
+func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Elect proposers
-	if s.ifStartElection() {
+	if s.isStartElection() {
 		log.Debug("electing")
 		log.Debug("---------------------------")
 		log.Debug("rpts:")
@@ -572,28 +495,29 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) error {
 
 	}
 
-	return nil
+	// Set default proposer if it is in initial stage
+	if s.isUseDefaultProposers() {
+		// Use default proposers
+		proposers := s.candidates()[:s.config.TermLen]
+		s.setRecentProposers(s.Term()+1, proposers)
+	}
+
+	return
 }
 
-// Term returns the term index of current block number
+// Term returns the term index of current block number, which is 0-based
 func (s *DporSnapshot) Term() uint64 {
-	if s.number() == 0 {
-		return 0
-	}
-	return (s.number() - 1) / ((s.config.TermLen) * (s.config.ViewLen))
+	return s.TermOf(s.number())
 }
 
 // TermOf returns the term index of given block number
 func (s *DporSnapshot) TermOf(blockNum uint64) uint64 {
-	if blockNum == 0 {
-		return 0
-	}
-	return (blockNum - 1) / ((s.config.TermLen) * (s.config.ViewLen))
+	return blockNum / ((s.config.TermLen) * (s.config.ViewLen))
 }
 
 // FutureTermOf returns future term idx with given block number
 func (s *DporSnapshot) FutureTermOf(blockNum uint64) uint64 {
-	return s.TermOf(blockNum) + TermGapBetweenElectionAndMining
+	return s.TermOf(blockNum) + TermDistBetweenElectionAndMining
 }
 
 // SignersOf returns signers of given block number
@@ -733,4 +657,8 @@ func (s *DporSnapshot) InturnOf(number uint64, signer common.Address) bool {
 		return false
 	}
 	return ok
+}
+
+func (s *DporSnapshot) StartBlockNumberOfTerm(term uint64) uint64 {
+	return s.config.ViewLen * s.config.TermLen * term
 }
