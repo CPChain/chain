@@ -33,7 +33,7 @@ func TestNewHandler(t *testing.T) {
 	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
 
 	//Assign an expected handler
-	var expectedResult Handler
+	var expectedResult ValidatorHandler
 	expectedResult.mode = LBFTMode
 	expectedResult.coinbase = testEtherbase
 	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
@@ -49,7 +49,7 @@ func TestNewHandler(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *Handler
+		want *ValidatorHandler
 	}{
 		{"testHandler1", args{testConfig, testEtherbase}, &expectedResult},
 	}
@@ -67,7 +67,7 @@ func TestNewHandler(t *testing.T) {
 	}
 }
 func TestHandler_IsAvailable(t *testing.T) {
-	var testHandler Handler
+	var testHandler ValidatorHandler
 	testHandler.available = false
 	//Test IsAvailable()
 	if testHandler.IsAvailable() != false {

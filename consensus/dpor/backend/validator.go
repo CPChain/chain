@@ -25,8 +25,8 @@ var (
 	ErrFailToAddPendingBlock = errors.New("fail to add pending block")
 )
 
-// Handler implements PbftHandler
-type Handler struct {
+// ValidatorHandler implements PbftHandler
+type ValidatorHandler struct {
 	mode HandlerMode
 
 	term          uint64
@@ -83,8 +83,8 @@ type Handler struct {
 }
 
 // NewHandler creates a new Handler
-func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
-	h := &Handler{
+func NewHandler(config *configs.DporConfig, etherbase common.Address) *ValidatorHandler {
+	h := &ValidatorHandler{
 		coinbase:        etherbase,
 		contractAddress: config.Contracts["signer"],
 		termLen:         config.TermLen,
@@ -104,7 +104,7 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 }
 
 // Start starts pbft handler
-func (h *Handler) Start() {
+func (h *ValidatorHandler) Start() {
 
 	// Dail all remote signers
 	go h.DialAll()
@@ -116,42 +116,42 @@ func (h *Handler) Start() {
 }
 
 // Stop stops all
-func (h *Handler) Stop() {
+func (h *ValidatorHandler) Stop() {
 
 	close(h.quitSync)
 
 	return
 }
 
-func (h *Handler) GetProtocol() consensus.Protocol {
+func (h *ValidatorHandler) GetProtocol() consensus.Protocol {
 	return h
 }
 
-func (h *Handler) NodeInfo() interface{} {
+func (h *ValidatorHandler) NodeInfo() interface{} {
 
 	return h.statusFn()
 }
 
-func (h *Handler) Name() string {
+func (h *ValidatorHandler) Name() string {
 	return ProtocolName
 }
 
-func (h *Handler) Version() uint {
+func (h *ValidatorHandler) Version() uint {
 	return ProtocolVersion
 }
 
-func (h *Handler) Length() uint64 {
+func (h *ValidatorHandler) Length() uint64 {
 	return ProtocolLength
 }
 
-func (h *Handler) Available() bool {
+func (h *ValidatorHandler) Available() bool {
 	h.lock.RLock()
 	defer h.lock.RUnlock()
 
 	return h.available
 }
 
-func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error) {
+func (h *ValidatorHandler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error) {
 	coinbase := h.Signer()
 	validator := h.validateSignerFn
 
@@ -172,11 +172,11 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 	return address.Hex(), true, err
 }
 
-func (h *Handler) RemovePeer(addr string) error {
+func (h *ValidatorHandler) RemovePeer(addr string) error {
 	return h.removeSigner(common.HexToAddress(addr))
 }
 
-func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
+func (h *ValidatorHandler) HandleMsg(addr string, msg p2p.Msg) error {
 
 	signer, ok := h.signers[common.HexToAddress(addr)]
 	if !ok {
@@ -187,7 +187,7 @@ func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 	return h.handleMsg(signer, msg)
 }
 
-func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*Signer, error) {
+func (h *ValidatorHandler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*Signer, error) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -216,7 +216,7 @@ func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, addr
 	return signer, nil
 }
 
-func (h *Handler) removeSigner(signer common.Address) error {
+func (h *ValidatorHandler) removeSigner(signer common.Address) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -227,7 +227,7 @@ func (h *Handler) removeSigner(signer common.Address) error {
 	return nil
 }
 
-func (h *Handler) handleMsg(p *Signer, msg p2p.Msg) error {
+func (h *ValidatorHandler) handleMsg(p *Signer, msg p2p.Msg) error {
 	log.Debug("handling msg", "msg", msg.Code)
 
 	if msg.Code == NewSignerMsg {
@@ -246,7 +246,7 @@ func (h *Handler) handleMsg(p *Signer, msg p2p.Msg) error {
 }
 
 // handleLbftMsg handles given msg with lbft (lightweighted bft) mode
-func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
+func (h *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 
 	// TODO: @liuq fix this.
 	switch {
@@ -398,7 +398,7 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (h *Handler) handlePbftMsg(msg p2p.Msg, p *Signer) error {
+func (h *ValidatorHandler) handlePbftMsg(msg p2p.Msg, p *Signer) error {
 	switch h.statusFn().State {
 	case consensus.NewRound:
 		// if leader, send mined block with preprepare msg, enter preprepared
@@ -435,7 +435,7 @@ func (h *Handler) handlePbftMsg(msg p2p.Msg, p *Signer) error {
 }
 
 // handlePreprepareMsg handles received preprepare msg
-func (h *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
+func (h *ValidatorHandler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 	switch {
 	case msg.Code == PrepreparePendingBlockMsg:
 
@@ -489,7 +489,7 @@ func (h *Handler) handlePreprepareMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (h *Handler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
+func (h *ValidatorHandler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
 	switch {
 	case msg.Code == PrepareSignedHeaderMsg:
 
@@ -528,7 +528,7 @@ func (h *Handler) handlePrepareMsg(msg p2p.Msg, p *Signer) error {
 	return nil
 }
 
-func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
+func (h *ValidatorHandler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 	switch {
 	case msg.Code == CommitSignedHeaderMsg:
 
@@ -584,7 +584,7 @@ func (h *Handler) handleCommitMsg(msg p2p.Msg, p *Signer) error {
 }
 
 // ReadyToImpeach returns if its time to impeach leader
-func (h *Handler) ReadyToImpeach() bool {
+func (h *ValidatorHandler) ReadyToImpeach() bool {
 	snap := h.snap
 	head := h.statusFn()
 
@@ -597,7 +597,7 @@ func (h *Handler) ReadyToImpeach() bool {
 }
 
 // ReceiveMinedPendingBlock receives a block to add to pending block channel
-func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
+func (h *ValidatorHandler) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
 	case h.pendingBlockCh <- block:
 		err := h.AddPendingBlock(block)
@@ -610,7 +610,7 @@ func (h *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 }
 
 // SetFuncs sets some funcs
-func (h *Handler) SetFuncs(
+func (h *ValidatorHandler) SetFuncs(
 	validateSignerFn ValidateSignerFn,
 	verifyHeaderFn VerifyHeaderFn,
 	verifyBlockFn ValidateBlockFn, signHeaderFn SignHeaderFn,
@@ -635,7 +635,7 @@ func (h *Handler) SetFuncs(
 }
 
 // Signer returns handler.signer
-func (h *Handler) Signer() common.Address {
+func (h *ValidatorHandler) Signer() common.Address {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -643,7 +643,7 @@ func (h *Handler) Signer() common.Address {
 }
 
 // SetSigner sets signer of handler
-func (h *Handler) SetSigner(signer common.Address) {
+func (h *ValidatorHandler) SetSigner(signer common.Address) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -653,7 +653,7 @@ func (h *Handler) SetSigner(signer common.Address) {
 }
 
 // IsAvailable returns if handler is available
-func (h *Handler) IsAvailable() bool {
+func (h *ValidatorHandler) IsAvailable() bool {
 	h.lock.RLock()
 	defer h.lock.RUnlock()
 
@@ -661,7 +661,7 @@ func (h *Handler) IsAvailable() bool {
 }
 
 // SetAvailable sets available
-func (h *Handler) SetAvailable() {
+func (h *ValidatorHandler) SetAvailable() {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -669,7 +669,7 @@ func (h *Handler) SetAvailable() {
 }
 
 // Disconnect disconnects all.
-func (h *Handler) Disconnect() {
+func (h *ValidatorHandler) Disconnect() {
 	h.lock.Lock()
 	connected, signers, server := h.dialed, h.signers, h.server
 	h.lock.Unlock()
@@ -691,7 +691,7 @@ func (h *Handler) Disconnect() {
 }
 
 // GetPendingBlock returns a pending block with given hash
-func (h *Handler) GetPendingBlock(number uint64) (*KnownBlock, error) {
+func (h *ValidatorHandler) GetPendingBlock(number uint64) (*KnownBlock, error) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -707,7 +707,7 @@ func (h *Handler) GetPendingBlock(number uint64) (*KnownBlock, error) {
 }
 
 // AddPendingBlock adds a pending block with given hash
-func (h *Handler) AddPendingBlock(block *types.Block) error {
+func (h *ValidatorHandler) AddPendingBlock(block *types.Block) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -717,7 +717,7 @@ func (h *Handler) AddPendingBlock(block *types.Block) error {
 	return err
 }
 
-func (h *Handler) UpdateBlockStatus(number uint64, status BlockStatus) error {
+func (h *ValidatorHandler) UpdateBlockStatus(number uint64, status BlockStatus) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 

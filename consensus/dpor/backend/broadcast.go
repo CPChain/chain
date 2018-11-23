@@ -8,7 +8,7 @@ import (
 )
 
 // BroadcastMinedBlock broadcasts generated block to committee
-func (h *Handler) BroadcastMinedBlock(block *types.Block) {
+func (h *ValidatorHandler) BroadcastMinedBlock(block *types.Block) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -21,7 +21,7 @@ func (h *Handler) BroadcastMinedBlock(block *types.Block) {
 }
 
 // BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
-func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
+func (h *ValidatorHandler) BroadcastPrepareSignedHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -32,7 +32,7 @@ func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
 }
 
 // BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
-func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
+func (h *ValidatorHandler) BroadcastCommitSignedHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -43,7 +43,7 @@ func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
 }
 
 // PendingBlockBroadcastLoop loops to broadcast blocks
-func (h *Handler) PendingBlockBroadcastLoop() {
+func (h *ValidatorHandler) PendingBlockBroadcastLoop() {
 	futureTimer := time.NewTicker(10 * time.Second)
 	defer futureTimer.Stop()
 

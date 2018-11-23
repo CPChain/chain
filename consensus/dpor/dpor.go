@@ -48,7 +48,9 @@ type Dpor struct {
 	signer common.Address // Cpchain address of the signing key
 	signFn SignerFn       // Signer function to authorize hashes with
 
-	handler *backend.Handler
+	// TODO: add proposerHandler here @shiyc
+
+	validatorHandler *backend.ValidatorHandler
 
 	fake           Mode // used for test, always accept a block.
 	fakeFail       uint64
@@ -84,13 +86,13 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 	signedBlocks := make(map[uint64]common.Hash)
 
 	return &Dpor{
-		dh:           &defaultDporHelper{&defaultDporUtil{}},
-		config:       &conf,
-		handler:      backend.NewHandler(&conf, common.Address{}),
-		db:           db,
-		recents:      recents,
-		signatures:   signatures,
-		signedBlocks: signedBlocks,
+		dh:               &defaultDporHelper{&defaultDporUtil{}},
+		config:           &conf,
+		validatorHandler: backend.NewHandler(&conf, common.Address{}),
+		db:               db,
+		recents:          recents,
+		signatures:       signatures,
+		signedBlocks:     signedBlocks,
 	}
 }
 
@@ -127,10 +129,10 @@ func (d *Dpor) SetContractCaller(contractCaller *backend.ContractCaller) error {
 }
 
 // SetHandler sets dpor.handler
-func (d *Dpor) SetHandler(handler *backend.Handler) error {
+func (d *Dpor) SetHandler(handler *backend.ValidatorHandler) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-	d.handler = handler
+	d.validatorHandler = handler
 	return nil
 }
 
@@ -153,7 +155,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 
 	// create a pbft handler
 
-	handler := d.handler
+	handler := d.validatorHandler
 
 	if err := handler.SetContractCaller(contractCaller); err != nil {
 		return
@@ -224,12 +226,12 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		getEmptyBlockFn,
 	)
 
-	d.handler = handler
+	d.validatorHandler = handler
 
 	log.Debug("set available!!!!!!!!!!!!!!!!!")
-	d.handler.SetAvailable()
+	d.validatorHandler.SetAvailable()
 
-	go d.handler.Start()
+	go d.validatorHandler.Start()
 
 	return
 }
@@ -261,8 +263,7 @@ func (d *Dpor) ValidateSigner(address common.Address) (bool, error) {
 
 // Protocol returns Dpor p2p protocol
 func (d *Dpor) Protocol() consensus.Protocol {
-	// return d.handler.Protocol()
-	return d.handler.GetProtocol()
+	return d.validatorHandler.GetProtocol()
 }
 
 // PbftStatus returns current state of dpor
@@ -277,7 +278,7 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
-	return d.handler.ReceiveMinedPendingBlock(block)
+	return d.validatorHandler.ReceiveMinedPendingBlock(block)
 }
 func (d *Dpor) Proposer() common.Address {
 	d.lock.Lock()
