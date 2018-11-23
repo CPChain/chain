@@ -45,7 +45,7 @@ type Proposer struct {
 	contractInstance   *contract.SignerConnectionRegister
 	contractTransactor *bind.TransactOpts
 
-	termCh chan struct{} // Termination channel to stop the broadcaster
+	quitCh chan struct{} // Termination channel to stop the broadcaster
 
 	lock sync.RWMutex
 }
@@ -243,7 +243,7 @@ func (p *Proposer) broadcastBlock() {
 			}
 			p.Log().Trace("Broadcast proposed block", "number", block.Number(), "hash", block.Hash())
 
-		case <-p.termCh:
+		case <-p.quitCh:
 			return
 		}
 	}
