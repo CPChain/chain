@@ -153,7 +153,6 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 	}
 	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
 	// see candidates of view zero.
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	candidates, err := instance.CandidatesOf(nil, big.NewInt(0))
 	if err != nil {
 		log.Fatal(err.Error())
@@ -162,6 +161,5 @@ func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int
 	for i := 0; i < len(candidates); i++ {
 		fmt.Println("number", i, candidates[i].Hex())
 	}
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	return numOfCampaign, deposit, startViewIdx, endViewIdx
 }

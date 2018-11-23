@@ -440,7 +440,6 @@ func (ec *Client) PendingTransactionCount(ctx context.Context) (uint, error) {
 func (ec *Client) CallContract(ctx context.Context, msg cpchain.CallMsg, blockNumber *big.Int) ([]byte, error) {
 	var hex hexutil.Bytes
 	err := ec.c.CallContext(ctx, &hex, "eth_call", toCallArg(msg), toBlockNumArg(blockNumber))
-	//	log.Info("CallContract", "hex", len(hex), "error", err)
 	if err != nil {
 		return nil, err
 	}

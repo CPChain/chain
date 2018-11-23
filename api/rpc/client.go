@@ -290,7 +290,6 @@ func (c *Client) Call(result interface{}, method string, args ...interface{}) er
 // can also pass nil, in which case the result is ignored.
 func (c *Client) CallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error {
 	msg, err := c.newMessage(method, args...)
-	//log.Info("api/rpc/client.go,newMessage", "error", err)
 	if err != nil {
 		return err
 	}
@@ -298,10 +297,8 @@ func (c *Client) CallContext(ctx context.Context, result interface{}, method str
 
 	if c.isHTTP {
 		err = c.sendHTTP(ctx, op, msg)
-		//		log.Info("api/rpc/client.go,sendHTTP", "error", err)
 	} else {
 		err = c.send(ctx, op, msg)
-		//		log.Info("api/rpc/client.go,send", "error", err)
 	}
 	if err != nil {
 		return err
@@ -310,7 +307,6 @@ func (c *Client) CallContext(ctx context.Context, result interface{}, method str
 	// dispatch has accepted the request and will close the channel it when it quits.
 	switch resp, err := op.wait(ctx); {
 	case err != nil:
-		log.Info("api/rpc/client.go,wait", "error", err)
 		return err
 	case resp.Error != nil:
 		return resp.Error
