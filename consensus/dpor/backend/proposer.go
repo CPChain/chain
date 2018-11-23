@@ -159,8 +159,8 @@ func (p *Proposer) updateNodeId(nodeId string, auth *bind.TransactOpts, contract
 	return nil
 }
 
-// PvHandshake is to handshake between proposer and a validator from validators committee
-func PvHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Address, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
+// ProposerHandshake is to handshake between proposer and a validator from validators committee
+func ProposerHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Address, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errs := make(chan error, 2)
 	var proposerStatus proposerStatusData // safe to read after two values have been received from errs
