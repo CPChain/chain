@@ -276,7 +276,7 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	go pm.txsyncLoop()
 
 	// update, avoid stop
-	go pm.update()
+	// go pm.update()
 }
 
 // Periodically updates the block head
