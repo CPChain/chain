@@ -191,33 +191,6 @@ func ProposerHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common
 	return isValidator, address, nil
 }
 
-// ReadValidatorStatus reads status of remote validators
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, proposerStatus *proposerStatusData, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
-	msg, err := rw.ReadMsg()
-	if err != nil {
-		return false, common.Address{}, err
-	}
-	if msg.Code != NewValidatorMsg {
-		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewValidatorMsg)
-	}
-	if msg.Size > ProtocolMaxMsgSize {
-		return false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-	}
-	// Decode the handshake and make sure everything matches
-	if err := msg.Decode(&proposerStatus); err != nil {
-		return false, common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
-	}
-	if int(proposerStatus.ProtocolVersion) != ProtocolVersion {
-		return false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", proposerStatus.ProtocolVersion, ProtocolVersion)
-	}
-
-	// TODO: this (addr, ...) pair should be signed with its private key.
-	// @liuq
-
-	isValidator, err = validatorVerifier(proposerStatus.Address)
-	return isValidator, proposerStatus.Address, err
-}
-
 // AddPendingBlock adds a pending block with given hash
 func (p *Proposer) AddPendingBlock(block *types.Block) error {
 	p.lock.Lock()
@@ -230,7 +203,6 @@ func (p *Proposer) AddPendingBlock(block *types.Block) error {
 }
 
 // ReceiveMinedPendingBlock receives a block to add to pending block channel
-// It is invoked in ProposeBlock()
 // TODO: @Chengx to modify it
 func (p *Proposer) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
