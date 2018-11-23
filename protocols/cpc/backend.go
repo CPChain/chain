@@ -502,6 +502,7 @@ func (s *CpchainService) MakePrimitiveContracts(n *node.Node, contractCaller *co
 	//	log.Fatal("s.chainConfig is nil")
 	//}
 	//// we start from 100 to reserve enough space for upstream primitive contracts.
+
 	RptEvaluator, err := primitives.NewRptEvaluator(contractCaller.Client, s.chainConfig)
 	if err != nil {
 		log.Fatal("s.RptEvaluator is file")
