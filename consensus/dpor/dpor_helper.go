@@ -107,7 +107,11 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 	if len(parents) > 0 {
 		parent = parents[len(parents)-1]
 	} else {
-		parent = chain.GetHeader(header.ParentHash, number-1)
+		// parent = chain.GetHeader(header.ParentHash, number-1)
+		blk := chain.GetBlock(header.ParentHash, number-1)
+		if blk != nil {
+			parent = blk.Header()
+		}
 	}
 
 	// Ensure that the block's parent is valid
