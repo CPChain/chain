@@ -1,4 +1,5 @@
-1. Upload NodeID to a contract
-#. Get dialed from a set of validators, *addValidator* denoted as known validators
-#. For each known validator, *Proposer* invokes proposeHandshake() with it
+1. Upload encrypted NodeID to a contract
+#. Whenever get dialed from a validator, *addValidators()* is called to add this validator into *Proposer.validators*
+#. Before the return statement, *proposeHandshake()* is invoked to connect this validator
+#. In *proposeHandshake()*, the newly proposed block is broadcasted to
 #.
