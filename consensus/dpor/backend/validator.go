@@ -230,7 +230,7 @@ func (h *Handler) removeSigner(signer common.Address) error {
 func (h *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	log.Debug("handling msg", "msg", msg.Code)
 
-	if msg.Code == NewSignerMsg {
+	if msg.Code == NewValidatorMsg {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
 

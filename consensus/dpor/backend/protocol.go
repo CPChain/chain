@@ -22,8 +22,10 @@ const (
 
 	// Protocol messages belonging to cpc/01
 
-	// NewSignerMsg is a msg code used for committee network building
-	NewSignerMsg = 0x42
+	// NewValidatorMsg is a msg code used for committee network building
+	NewValidatorMsg = 0x42
+
+	NewProposerMsg = 0x43
 
 	// PbftMsgOutSet is not a msg code, just used for msg code comparing
 	PbftMsgOutSet = 0x43

@@ -13,7 +13,7 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -45,7 +45,6 @@ type Dpor struct {
 
 	signedBlocks map[uint64]common.Hash // record signed blocks.
 
-	signer   common.Address // Cpchain address of the signing key
 	proposer common.Address // Cpchain address of the proposer
 	signFn   SignFn         // Sign function to authorize hashes with
 
@@ -209,6 +208,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 
 	getEmptyBlockFn := func() (*types.Block, error) {
 		// TODO: fix this
+
 		return nil, nil
 	}
 
@@ -243,15 +243,6 @@ func (d *Dpor) Start() {
 // Stop stops dpor engine
 func (d *Dpor) Stop() {
 	return
-}
-
-// TODO: remove this
-// Signer return dpor.signer
-func (d *Dpor) Signer() common.Address {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-
-	return d.signer
 }
 
 func (d *Dpor) Proposer() common.Address {
@@ -292,9 +283,4 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
 	return d.handler.ReceiveMinedPendingBlock(block)
-}
-func (d *Dpor) Proposer() common.Address {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-	return d.signer
 }
