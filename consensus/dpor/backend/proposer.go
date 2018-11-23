@@ -146,11 +146,11 @@ func (p *Proposer) updateNodeId(nodeId string, auth *bind.TransactOpts, contract
 	return nil
 }
 
-// PVHandshake is to handshake between proposer and a validator from validators commmittee
-func PVHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Address, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+// PvHandshake is to handshake between proposer and a validator from validators committee
+func PvHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Address, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errs := make(chan error, 2)
-	var proposerStatus signerStatusData // safe to read after two values have been received from errs
+	var proposerStatus proposerStatusData // safe to read after two values have been received from errs
 
 	go func() {
 		err := p2p.Send(rw, NewSignerMsg, &signerStatusData{
@@ -160,7 +160,7 @@ func PVHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Addre
 		errs <- err
 	}()
 	go func() {
-		isSigner, address, err = ReadValidatorStatus(p, rw, &proposerStatus, signerValidator)
+		isValidator, address, err = ReadValidatorStatus(p, rw, &proposerStatus, validatorVerifier)
 		errs <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -175,11 +175,11 @@ func PVHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Addre
 			return false, common.Address{}, p2p.DiscReadTimeout
 		}
 	}
-	return isSigner, address, nil
+	return isValidator, address, nil
 }
 
-// ReadSignerStatus reads status of remote signer
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerStatusData, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+// ReadValidatorStatus reads status of remote validators
+func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, proposerStatus *proposerStatusData, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
 		return false, common.Address{}, err
@@ -191,16 +191,16 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signer
 		return false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 	}
 	// Decode the handshake and make sure everything matches
-	if err := msg.Decode(&signerStatus); err != nil {
+	if err := msg.Decode(&proposerStatus); err != nil {
 		return false, common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
-	if int(signerStatus.ProtocolVersion) != ProtocolVersion {
-		return false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatus.ProtocolVersion, ProtocolVersion)
+	if int(proposerStatus.ProtocolVersion) != ProtocolVersion {
+		return false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", proposerStatus.ProtocolVersion, ProtocolVersion)
 	}
 
 	// TODO: this (addr, ...) pair should be signed with its private key.
 	// @liuq
 
-	isSigner, err = signerValidator(signerStatus.Address)
-	return isSigner, signerStatus.Address, err
+	isValidator, err = validatorVerifier(proposerStatus.Address)
+	return isValidator, proposerStatus.Address, err
 }
