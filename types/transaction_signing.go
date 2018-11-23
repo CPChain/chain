@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package types
 
@@ -22,6 +9,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -30,6 +18,8 @@ import (
 var (
 	ErrInvalidChainId = errors.New("invalid chain id for signer")
 )
+
+var big8 = big.NewInt(8) // var used for offseting V, 35-27 = 8
 
 // sigCache is used to cache the derived sender and contains
 // the signer used to derive it.
@@ -40,7 +30,7 @@ type sigCache struct {
 
 // MakeSigner returns a Signer based on the given chain config and block number.
 func MakeSigner(config *configs.ChainConfig) Signer {
-	return NewPrivTxSupportEIP155Signer(config.ChainID)
+	return NewCep1Signer(config.ChainID)
 }
 
 // SignTx signs the transaction using the given signer and private key
@@ -93,80 +83,63 @@ type Signer interface {
 	Equal(Signer) bool
 }
 
-// PrivTxSupportEIP155Signer implements the signer which could be able to sign both public tx and private tx. It also implement EIP155 rules.
-// TODO: once the cpchain standards released, it will be rename <x>Signer where <x> is cpchain standard name such as CIP001.
-type PrivTxSupportEIP155Signer struct{ EIP155Signer }
-
-func NewPrivTxSupportEIP155Signer(chanId *big.Int) PrivTxSupportEIP155Signer {
-	return PrivTxSupportEIP155Signer{NewEIP155Signer(chanId)}
+// Cep1Signer is in accordance with EIP155Signer
+type Cep1Signer struct {
+	// cf. eip 155
+	// v = chain_id*2 + 8 + 27/28
+	chainId, chainIdMul *big.Int
 }
 
-func (s PrivTxSupportEIP155Signer) Hash(tx *Transaction) common.Hash {
+func NewCep1Signer(chainId *big.Int) Cep1Signer {
+	if chainId == nil {
+		chainId = new(big.Int)
+	}
+	return Cep1Signer{
+		chainId:    chainId,
+		chainIdMul: new(big.Int).Mul(chainId, big.NewInt(2)),
+	}
+}
+
+// Sender recovers sender address
+func (s Cep1Signer) Sender(tx *Transaction) (common.Address, error) {
+	if !tx.Protected() {
+		log.Warn("Deprecated signer with unprotected transaction")
+		return HomesteadSigner{}.Sender(tx)
+	}
+	// verify chain id
+	if tx.ChainId().Cmp(s.chainId) != 0 {
+		return common.Address{}, ErrInvalidChainId
+	}
+
+	V := new(big.Int).Sub(tx.data.V, s.chainIdMul)
+	V.Sub(V, big8)
+
+	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
+}
+
+func (s Cep1Signer) Hash(tx *Transaction) common.Hash {
 	return rlpHash([]interface{}{
+		tx.data.Type,
 		tx.data.AccountNonce,
 		tx.data.Price,
 		tx.data.GasLimit,
 		tx.data.Recipient,
 		tx.data.Amount,
 		tx.data.Payload,
-		tx.data.Types,
-		s.chainId, uint(0), uint(0),
+		s.chainId,
+		uint(0),
+		uint(0),
 	})
 }
 
-func (s PrivTxSupportEIP155Signer) Sender(tx *Transaction) (common.Address, error) {
-	if !tx.Protected() {
-		return HomesteadSigner{}.Sender(tx)
-	}
-	if tx.ChainId().Cmp(s.chainId) != 0 {
-		return common.Address{}, ErrInvalidChainId
-	}
-	V := new(big.Int).Sub(tx.data.V, s.chainIdMul)
-	V.Sub(V, big8)
-	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
-}
-
-// EIP155Transaction implements Signer using the EIP155 rules.
-type EIP155Signer struct {
-	chainId, chainIdMul *big.Int
-}
-
-func NewEIP155Signer(chainId *big.Int) EIP155Signer {
-	if chainId == nil {
-		chainId = new(big.Int)
-	}
-	return EIP155Signer{
-		chainId:    chainId,
-		chainIdMul: new(big.Int).Mul(chainId, big.NewInt(2)),
-	}
-}
-
-func (s EIP155Signer) Equal(s2 Signer) bool {
-	eip155, ok := s2.(EIP155Signer)
-	return ok && eip155.chainId.Cmp(s.chainId) == 0
-}
-
-var big8 = big.NewInt(8)
-
-func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
-	if !tx.Protected() {
-		return HomesteadSigner{}.Sender(tx)
-	}
-	if tx.ChainId().Cmp(s.chainId) != 0 {
-		return common.Address{}, ErrInvalidChainId
-	}
-	V := new(big.Int).Sub(tx.data.V, s.chainIdMul)
-	V.Sub(V, big8)
-	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
-}
-
-// WithSignature returns a new transaction with the given signature. This signature
+// Signature returns a new transaction with the given signature. This signature
 // needs to be in the [R || S || V] format where V is 0 or 1.
-func (s EIP155Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big.Int, err error) {
+func (s Cep1Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big.Int, err error) {
 	R, S, V, err = HomesteadSigner{}.SignatureValues(tx, sig)
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	// Sign == 0 only when chainId == 0
 	if s.chainId.Sign() != 0 {
 		V = big.NewInt(int64(sig[64] + 35))
 		V.Add(V, s.chainIdMul)
@@ -174,18 +147,9 @@ func (s EIP155Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big
 	return R, S, V, nil
 }
 
-// Hash returns the hash to be signed by the sender.
-// It does not uniquely identify the transaction.
-func (s EIP155Signer) Hash(tx *Transaction) common.Hash {
-	return rlpHash([]interface{}{
-		tx.data.AccountNonce,
-		tx.data.Price,
-		tx.data.GasLimit,
-		tx.data.Recipient,
-		tx.data.Amount,
-		tx.data.Payload,
-		s.chainId, uint(0), uint(0),
-	})
+func (s Cep1Signer) Equal(s2 Signer) bool {
+	cep1, ok := s2.(Cep1Signer)
+	return ok && cep1.chainId.Cmp(s.chainId) == 0
 }
 
 // HomesteadTransaction implements TransactionInterface using the
@@ -247,7 +211,9 @@ func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (commo
 	if Vb.BitLen() > 8 {
 		return common.Address{}, ErrInvalidSig
 	}
+	// v should be 0, 1 by now
 	V := byte(Vb.Uint64() - 27)
+
 	if !crypto.ValidateSignatureValues(V, R, S, homestead) {
 		return common.Address{}, ErrInvalidSig
 	}
@@ -270,13 +236,14 @@ func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (commo
 	return addr, nil
 }
 
-// deriveChainId derives the chain id from the given v parameter
+// deriveChainId derives the chain id from the given v parameter, cf. eip155.
 func deriveChainId(v *big.Int) *big.Int {
 	if v.BitLen() <= 64 {
 		v := v.Uint64()
 		if v == 27 || v == 28 {
 			return new(big.Int)
 		}
+		// according to eip155, v = chain_id*2 + 35/36
 		return new(big.Int).SetUint64((v - 35) / 2)
 	}
 	v = new(big.Int).Sub(v, big.NewInt(35))

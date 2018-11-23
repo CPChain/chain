@@ -7,7 +7,7 @@
 .PHONY: cpchain-linux-arm cpchain-linux-arm-5 cpchain-linux-arm-6 cpchain-linux-arm-7 cpchain-linux-arm64
 .PHONY: cpchain-darwin cpchain-darwin-386 cpchain-darwin-amd64
 .PHONY: cpchain-windows cpchain-windows-386 cpchain-windows-amd64
-.PHONY: dev-init 
+.PHONY: dev-init dev-tools
 .PHONY: docs docs-serve
 
 SHELL := $(shell which bash)
@@ -168,6 +168,9 @@ dev-test:
 dev-init:
 	@cp  dev/git-pre-commit-hook  .git/hooks/pre-commit
 	@echo "move pre-commit-hook to .git/hooks/pre-commit"
+
+dev-tools:
+	go get -u github.com/fjl/gencodec
 
 docs:
 	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --rm docs sphinx-build -b html ./ _build

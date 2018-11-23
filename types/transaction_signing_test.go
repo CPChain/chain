@@ -32,7 +32,7 @@ func TestEIP155Signing(t *testing.T) {
 	key, _ := crypto.GenerateKey()
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 
-	signer := NewEIP155Signer(big.NewInt(18))
+	signer := NewCep1Signer(big.NewInt(18))
 	tx, err := SignTx(NewTransaction(0, addr, new(big.Int), 0, new(big.Int), nil), signer, key)
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +51,7 @@ func TestEIP155ChainId(t *testing.T) {
 	key, _ := crypto.GenerateKey()
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 
-	signer := NewEIP155Signer(big.NewInt(18))
+	signer := NewCep1Signer(big.NewInt(18))
 	tx, err := SignTx(NewTransaction(0, addr, new(big.Int), 0, new(big.Int), nil), signer, key)
 	if err != nil {
 		t.Fatal(err)
@@ -80,6 +80,7 @@ func TestEIP155ChainId(t *testing.T) {
 }
 
 func TestEIP155SigningVitalik(t *testing.T) {
+	t.Skip("we use cep1 signer which also hashes tx.Type, so the addr differs")
 	// Test vectors come from http://vitalik.ca/files/eip155_testvec.txt
 	for i, test := range []struct {
 		txRlp, addr string
@@ -95,7 +96,8 @@ func TestEIP155SigningVitalik(t *testing.T) {
 		{"f86980088504a817c8088302e248943535353535353535353535353535353535353535820200808025a064b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c12a064b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10", "0x9bddad43f934d313c2b79ca28a432dd2b7281029"},
 		{"f86980098504a817c809830334509435353535353535353535353535353535353535358202d9808025a052f8f61201b2b11a78d6e866abc9c3db2ae8631fa656bfe5cb53668255367afba052f8f61201b2b11a78d6e866abc9c3db2ae8631fa656bfe5cb53668255367afb", "0x3c24d7329e92f84f08556ceb6df1cdb0104ca49f"},
 	} {
-		signer := NewEIP155Signer(big.NewInt(1))
+		// signer := NewEIP155Signer(big.NewInt(1))
+		signer := NewCep1Signer(big.NewInt(1))
 
 		var tx *Transaction
 		err := rlp.DecodeBytes(common.Hex2Bytes(test.txRlp), &tx)
@@ -124,27 +126,27 @@ func TestChainId(t *testing.T) {
 	tx := NewTransaction(0, common.Address{}, new(big.Int), 0, new(big.Int), nil)
 
 	var err error
-	tx, err = SignTx(tx, NewEIP155Signer(big.NewInt(1)), key)
+	tx, err = SignTx(tx, NewCep1Signer(big.NewInt(1)), key)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = Sender(NewEIP155Signer(big.NewInt(2)), tx)
+	_, err = Sender(NewCep1Signer(big.NewInt(2)), tx)
 	if err != ErrInvalidChainId {
 		t.Error("expected error:", ErrInvalidChainId)
 	}
 
-	_, err = Sender(NewEIP155Signer(big.NewInt(1)), tx)
+	_, err = Sender(NewCep1Signer(big.NewInt(1)), tx)
 	if err != nil {
 		t.Error("expected no error")
 	}
 
-	_, err = Sender(NewPrivTxSupportEIP155Signer(big.NewInt(2)), tx)
+	_, err = Sender(NewCep1Signer(big.NewInt(2)), tx)
 	if err != ErrInvalidChainId {
 		t.Error("expected error:", ErrInvalidChainId)
 	}
 
-	_, err = Sender(NewPrivTxSupportEIP155Signer(big.NewInt(1)), tx)
+	_, err = Sender(NewCep1Signer(big.NewInt(1)), tx)
 	if err != nil {
 		t.Error("expected no error")
 	}
@@ -154,7 +156,7 @@ func TestSigningPrivateTx(t *testing.T) {
 	key, _ := crypto.GenerateKey()
 	addr := crypto.PubkeyToAddress(key.PublicKey)
 
-	signer := NewPrivTxSupportEIP155Signer(big.NewInt(42))
+	signer := NewCep1Signer(big.NewInt(42))
 	testTx := NewTransaction(0, addr, new(big.Int), 0, new(big.Int), nil)
 	testTx.SetPrivate(true)
 	tx, err := SignTx(testTx, signer, key)
@@ -174,7 +176,7 @@ func TestSigningPrivateTx(t *testing.T) {
 func TestMakeSigner(t *testing.T) {
 	signer := MakeSigner(configs.MainnetChainConfig)
 	fmt.Printf("%T, %v", signer, signer)
-	if fmt.Sprintf("%T", signer) != "types.PrivTxSupportEIP155Signer" {
-		t.Error("The signer should be types.PrivTxSupportEIP155Signer, but got ", fmt.Sprintf("%T", signer))
+	if fmt.Sprintf("%T", signer) != "types.Cep1Signer" {
+		t.Error("The signer should be types.Cep1Signer, but got ", fmt.Sprintf("%T", signer))
 	}
 }

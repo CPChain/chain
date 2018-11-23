@@ -504,7 +504,7 @@ func TestChainTxReorgs(t *testing.T) {
 			},
 		}
 		genesis = gspec.MustCommit(db)
-		signer  = types.NewEIP155Signer(gspec.Config.ChainID)
+		signer  = types.NewCep1Signer(gspec.Config.ChainID)
 	)
 
 	// Create two transactions shared between the chains:
@@ -602,6 +602,7 @@ func TestChainTxReorgs(t *testing.T) {
 
 func TestLogReorgs(t *testing.T) {
 	t.Skip("=== Diff TestLogReorgs invalid memory address or nil pointer dereference")
+	// the signer is changed to cep1
 	var (
 		key1, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		addr1    = crypto.PubkeyToAddress(key1.PublicKey)
@@ -611,7 +612,7 @@ func TestLogReorgs(t *testing.T) {
 		code    = common.Hex2Bytes("60606040525b7f24ec1d3ff24c2f6ff210738839dbc339cd45a5294d85c79361016243157aae7b60405180905060405180910390a15b600a8060416000396000f360606040526008565b00")
 		gspec   = &Genesis{Config: configs.TestChainConfig, Alloc: GenesisAlloc{addr1: {Balance: big.NewInt(10000000000000)}}}
 		genesis = gspec.MustCommit(db)
-		signer  = types.NewEIP155Signer(gspec.Config.ChainID)
+		signer  = types.NewCep1Signer(gspec.Config.ChainID)
 	)
 
 	blockchain, _ := NewBlockChain(db, nil, gspec.Config, fakeDpor(db), vm.Config{}, remoteDB, nil)
@@ -650,6 +651,7 @@ func TestLogReorgs(t *testing.T) {
 
 func TestReorgSideEvent(t *testing.T) {
 	t.Skip("=== Diff TestReorgSideEvent")
+	// NB the signer is changed to cip1
 	var (
 		db       = database.NewMemDatabase()
 		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
@@ -660,7 +662,7 @@ func TestReorgSideEvent(t *testing.T) {
 			Alloc:  GenesisAlloc{addr1: {Balance: big.NewInt(10000000000000)}},
 		}
 		genesis = gspec.MustCommit(db)
-		signer  = types.NewEIP155Signer(gspec.Config.ChainID)
+		signer  = types.NewCep1Signer(gspec.Config.ChainID)
 	)
 
 	blockchain, _ := NewBlockChain(db, nil, gspec.Config, fakeDpor(db), vm.Config{}, nil, nil)

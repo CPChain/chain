@@ -17,15 +17,13 @@
 package types
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"math/big"
 	"sync/atomic"
-
 	"time"
-
-	"bytes"
-	"fmt"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
@@ -383,13 +381,13 @@ func (tx *TransactionOld) Size() common.StorageSize {
 }
 
 func (tx *TransactionOld) ToNewTx() *Transaction {
-	types := uint64(0)
+	txtype := uint64(0)
 	if tx.IsPrivate() {
-		types |= TxTypePrivate
+		txtype |= TxTypePrivate
 	}
 
 	d := txdata{
-		Types:        types,
+		Type:         txtype,
 		AccountNonce: tx.data.AccountNonce,
 		Recipient:    tx.data.Recipient,
 		Payload:      tx.data.Payload,
