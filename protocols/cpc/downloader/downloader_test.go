@@ -906,10 +906,6 @@ func TestInactiveDownloader(t *testing.T) {
 
 // Tests that a canceled download wipes all previously accumulated state.
 func TestCancel64Full(t *testing.T) {
-	testCancel(t, 64, FullSync)
-}
-
-func testCancel(t *testing.T, protocol int, mode SyncMode) {
 	t.Parallel()
 
 	tester := newTester()
@@ -925,7 +921,7 @@ func testCancel(t *testing.T, protocol int, mode SyncMode) {
 	}
 	hashes, headers, blocks, receipts := tester.makeChain(targetBlocks, 0, tester.genesis, nil, false)
 
-	tester.newPeer("peer", protocol, hashes, headers, blocks, receipts)
+	tester.newPeer("peer", 64, hashes, headers, blocks, receipts)
 
 	// Make sure canceling works with a pristine downloader
 	tester.downloader.Cancel()
@@ -933,7 +929,7 @@ func testCancel(t *testing.T, protocol int, mode SyncMode) {
 		t.Errorf("download queue not idle")
 	}
 	// Synchronise with the peer, but cancel afterwards
-	if err := tester.sync("peer", nil, mode); err != nil {
+	if err := tester.sync("peer", nil, FullSync); err != nil {
 		t.Fatalf("failed to synchronise blocks: %v", err)
 	}
 	tester.downloader.Cancel()
@@ -944,11 +940,6 @@ func testCancel(t *testing.T, protocol int, mode SyncMode) {
 
 // Tests that synchronisation from multiple peers works as intended (multi thread sanity test).
 func TestMultiSynchronisation64Full(t *testing.T) {
-	// t.Skip("TestMultiSynchronisation64Full")
-	testMultiSynchronisation(t, 64, FullSync)
-}
-
-func testMultiSynchronisation(t *testing.T, protocol int, mode SyncMode) {
 	t.Parallel()
 
 	tester := newTester()
@@ -961,9 +952,9 @@ func testMultiSynchronisation(t *testing.T, protocol int, mode SyncMode) {
 
 	for i := 0; i < targetPeers; i++ {
 		id := fmt.Sprintf("peer #%d", i)
-		tester.newPeer(id, protocol, hashes[i*blockCacheItems:], headers, blocks, receipts)
+		tester.newPeer(id, 64, hashes[i*blockCacheItems:], headers, blocks, receipts)
 	}
-	if err := tester.sync("peer #0", nil, mode); err != nil {
+	if err := tester.sync("peer #0", nil, FullSync); err != nil {
 		t.Fatalf("failed to synchronise blocks: %v", err)
 	}
 	assertOwnChain(t, tester, targetBlocks+1)
