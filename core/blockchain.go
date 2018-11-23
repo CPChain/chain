@@ -1235,19 +1235,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			}
 
 		case err == consensus.ErrNotEnoughSigs:
-			// log.debug("errnotenoughsigs err in blockchain.insertchain.")
-			// err := err.(*consensus.errnotenoughsigstype)
-			// err.notenoughsigsblockhash = block.hash()
-			// bc.pendingblocks.add(block.hash(), block)
-
-			return i, events, coalescedLogs, err
-
-		case err == consensus.ErrNewSignedHeader:
-			// log.Debug("ErrNewSignedHeader err in blockchain.insertChain.")
-			// err := err.(*consensus.ErrNewSignedHeaderType)
-			// err.SignedHeader = block.RefHeader()
-			// bc.pendingBlocks.Add(block.Hash(), block)
-
 			return i, events, coalescedLogs, err
 
 		case err != nil:

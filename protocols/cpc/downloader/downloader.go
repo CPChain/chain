@@ -328,15 +328,7 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 			d.dropPeer(id)
 		}
 	case consensus.ErrNotEnoughSigs:
-		// TODO: he will broadcast the blocks.
 		log.Debug("Not enough signatures, waiting", "err", err)
-
-		return err
-
-	case consensus.ErrNewSignedHeader:
-		// TODO: he will broadcast the header in err
-		log.Debug("Not enough signatures, signed it, waiting", "err", err)
-
 		return err
 
 	default:
@@ -1316,11 +1308,6 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 		log.Debug("Downloaded item processing failed", "number", results[index].Header.Number, "hash", results[index].Header.Hash(), "err", err)
 		// TODO: fix this.
 		if err == consensus.ErrNotEnoughSigs {
-			err := err.(*consensus.ErrNotEnoughSigsType)
-			return err
-		}
-		if err == consensus.ErrNewSignedHeader {
-			log.Debug("ErrNewSignedHeader err in downloader.importBlockResults.")
 			return err
 		}
 		return errInvalidChain

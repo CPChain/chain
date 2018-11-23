@@ -57,7 +57,6 @@ type headerVerifierFn func(header *types.Header, refHeader *types.Header) error
 
 // blockBroadcasterFn is a callback type for broadcasting a block to connected peers.
 type blockBroadcasterFn func(block *types.Block, propagate bool)
-type signedHeaderBroadcasterFn func(header *types.Header)
 
 // chainHeightFn is a callback type to retrieve the current chain height.
 type chainHeightFn func() uint64
@@ -67,8 +66,6 @@ type chainInsertFn func(types.Blocks) (int, error)
 
 // peerDropFn is a callback type for dropping a peer detected as malicious.
 type peerDropFn func(id string)
-
-type peerSendSignedHeaderFn func(id string, header *types.Header)
 
 // announce is the hash notification of the availability of a new block in the
 // network.
@@ -139,8 +136,6 @@ type Fetcher struct {
 	insertChain    chainInsertFn      // Injects a batch of blocks into the chain
 	dropPeer       peerDropFn         // Drops a peer for misbehaving
 
-	// broadcastSignedHeader signedHeaderBroadcasterFn // Broadcasts a signed header to connected committee
-
 	// Testing hooks
 	announceChangeHook func(common.Hash, bool) // Method to call upon adding or deleting a hash from the announce list
 	queueChangeHook    func(common.Hash, bool) // Method to call upon adding or deleting a block from the import queue
@@ -173,8 +168,6 @@ func New(getBlock blockRetrievalFn, verifyHeader headerVerifierFn, broadcastBloc
 		chainHeight:    chainHeight,
 		insertChain:    insertChain,
 		dropPeer:       dropPeer,
-
-		// broadcastSignedHeader: broadcastSignedHeader,
 	}
 }
 
@@ -669,12 +662,6 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 			propBroadcastOutTimer.UpdateSince(block.ReceivedAt)
 			// send out the block
 			go f.broadcastBlock(block, true)
-
-		case consensus.ErrNotEnoughSigs:
-			return
-
-		case consensus.ErrNewSignedHeader:
-			return
 
 		case consensus.ErrFutureBlock:
 			// Weird future block, don't fail, but neither propagate
