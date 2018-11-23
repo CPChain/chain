@@ -5,4 +5,4 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 ./cpchain-stop.sh 
 ./cpchain-init.sh
-./cpchain-start1.sh
+./cpchain-start.sh
