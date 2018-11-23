@@ -85,7 +85,7 @@ func (h *ValidatorHandler) UpdateSigners(epochIdx uint64, signers []common.Addre
 
 	for _, signer := range signers {
 		if _, ok := remoteSigners[signer]; !ok {
-			s := NewSigner(epochIdx, signer)
+			s := NewRemoteValidator(epochIdx, signer)
 			remoteSigners[signer] = s
 		}
 	}

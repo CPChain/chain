@@ -117,9 +117,9 @@ func TestHandler_SetContractCaller(t *testing.T) {
 func TestHandler_handlePreprepareMsg(t *testing.T) {
 	//t.Skip("skip for short test")
 	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
-	NewSigner(1, common.HexToAddress(addrHex))
+	NewRemoteValidator(1, common.HexToAddress(addrHex))
 
-	signer := NewSigner(1, common.HexToAddress(addrHex))
+	signer := NewRemoteValidator(1, common.HexToAddress(addrHex))
 	msg := p2p.Msg{Code: PrepareSignedHeaderMsg, Size: 1000, Payload: strings.NewReader("Test_Payload"), ReceivedAt: time.Now()}
 
 	var testConfig *configs.DporConfig

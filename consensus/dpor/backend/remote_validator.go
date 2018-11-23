@@ -42,8 +42,8 @@ type RemoteValidator struct {
 	lock sync.RWMutex
 }
 
-// NewSigner creates a new NewSigner with given view idx and address.
-func NewSigner(epochIdx uint64, address common.Address) *RemoteValidator {
+// NewRemoteValidator creates a new NewRemoteValidator with given view idx and address.
+func NewRemoteValidator(epochIdx uint64, address common.Address) *RemoteValidator {
 	return &RemoteValidator{
 		epochIdx: epochIdx,
 		address:  address,

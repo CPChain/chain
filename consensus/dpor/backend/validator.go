@@ -207,7 +207,7 @@ func (vh *ValidatorHandler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWr
 
 	if !ok {
 		// TODO: @liuq fix this
-		signer = NewSigner(vh.term, address)
+		signer = NewRemoteValidator(vh.term, address)
 	}
 
 	log.Debug("adding remote signer...", "signer", address.Hex())
