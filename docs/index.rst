@@ -11,6 +11,8 @@ Welcome to docs's documentation!
    :caption: Contents:
 
    consensus/dpor
+   consensus/proposer
+   consensus/validator
 
 
 
