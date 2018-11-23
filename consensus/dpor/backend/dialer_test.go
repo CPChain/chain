@@ -25,7 +25,7 @@ func TestSigner_fetchPubkey(t *testing.T) {
 		queuedPendingBlocks chan *types.Block
 		queuedPrepareSigs   chan *types.Header
 		queuedCommitSigs    chan *types.Header
-		term                chan struct{}
+		quitCh              chan struct{}
 	}
 	type args struct {
 		contractInstance *contract.SignerConnectionRegister
@@ -55,7 +55,7 @@ func TestSigner_fetchPubkey(t *testing.T) {
 				queuedPendingBlocks: tt.fields.queuedPendingBlocks,
 				queuedPrepareSigs:   tt.fields.queuedPrepareSigs,
 				queuedCommitSigs:    tt.fields.queuedCommitSigs,
-				term:                tt.fields.term,
+				quitCh:              tt.fields.quitCh,
 			}
 			if err := s.fetchPubkey(tt.args.contractInstance); (err != nil) != tt.wantErr {
 				t.Errorf("Signer.fetchPubkey() error = %v, wantErr %v", err, tt.wantErr)
