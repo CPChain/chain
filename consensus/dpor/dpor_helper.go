@@ -412,8 +412,8 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	return errValidatorNotInCommittee
 }
 
-// timeToDialCommittee checks if it is time to dial remote signers, and dials them if time is up
-func (dh *defaultDporHelper) timeToDialCommittee(dpor *Dpor, chain consensus.ChainReader) bool {
+// isTimeToDialValidators checks if it is time to dial remote signers, and dials them if time is up
+func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.ChainReader) bool {
 
 	header := chain.CurrentHeader()
 	number := header.Number.Uint64()
@@ -448,7 +448,7 @@ func (dh *defaultDporHelper) timeToDialCommittee(dpor *Dpor, chain consensus.Cha
 	return isCheckpoint && isFutureSigner && ifStartDynamic
 }
 
-func (dh *defaultDporHelper) dialCommittee(dpor *Dpor, snap *DporSnapshot, number uint64) error {
+func (dh *defaultDporHelper) dialValidators(dpor *Dpor, snap *DporSnapshot, number uint64) error {
 	log.Info("In future committee, building the committee network...")
 
 	term := snap.FutureTermOf(number)
