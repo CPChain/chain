@@ -221,9 +221,9 @@ func (p *Proposer) SendNewPendingBlock(block *types.Block) error {
 	return p2p.Send(p.rw, PrepreparePendingBlockMsg, block)
 }
 
-// AddValidator is to add validators in to Proposer.Validators
+// AddValidators is to add validators in to Proposer.Validators
 // TODO: @chengx
-func (p *Proposer) addValidator() error {
+func (p *Proposer) addValidators() error {
 	p.lock.Lock()
 	p.lock.Unlock()
 
