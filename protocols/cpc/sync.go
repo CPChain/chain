@@ -193,6 +193,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			// 	go pm.BroadcastBlock(waitingSignatureBlock, true)
 			// }
 			log.Warn("Got error", "error", err)
+			return
 		}
 
 		if err == consensus.ErrNewSignedHeader {
@@ -206,7 +207,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 			// // TODO: @liuq fix this.
 			// go pm.BroadcastSignedHeader(header)
 			// // go peer.AsyncSendNewSignedHeader(header)
-
+			return
 		}
 	}
 

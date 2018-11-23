@@ -54,11 +54,11 @@ type ChainReader interface {
 // ChainWriter reads and writes pending block to blockchain
 type ChainWriter interface {
 
-	// AddPendingBlock adds given block to pending blocks cache
-	AddPendingBlock(block *types.Block) error
+	// // AddPendingBlock adds given block to pending blocks cache
+	// AddPendingBlock(block *types.Block) error
 
-	// GetPendingBlock retrieves a block from cache with given hash
-	GetPendingBlock(hash common.Hash) *types.Block
+	// // GetPendingBlock retrieves a block from cache with given hash
+	// GetPendingBlock(hash common.Hash) *types.Block
 
 	// InsertChain inserts blocks to chain, returns fail index and error
 	InsertChain(chain types.Blocks) (int, error)

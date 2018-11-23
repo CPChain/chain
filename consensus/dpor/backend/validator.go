@@ -201,14 +201,14 @@ func (h *Handler) addSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter, addr
 
 	log.Debug("adding remote signer...", "signer", address.Hex())
 
-	if signer.Peer == nil {
-		err := signer.SetSigner(version, p, rw)
-		if err != nil {
+	// if signer.Peer == nil {
+	err := signer.SetSigner(version, p, rw)
+	if err != nil {
 
-			log.Debug("failed to set peer")
-			return nil, err
-		}
+		log.Debug("failed to set peer")
+		return nil, err
 	}
+	// }
 
 	go signer.signerBroadcast()
 
@@ -265,7 +265,7 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 		localBlock, err := h.GetPendingBlock(block.NumberU64())
 		if localBlock != nil && err == nil && localBlock.Block != nil {
 			if localBlock.Status == Inserted {
-				go h.broadcastBlockFn(localBlock.Block, true)
+				// go h.broadcastBlockFn(localBlock.Block, true)
 				return nil
 			}
 		}
@@ -280,14 +280,14 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			log.Debug("validated preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 			// sign the block
-			header := block.RefHeader()
+			header := block.Header()
 			switch e := h.signHeaderFn(header, consensus.Preprepared); e {
 			case nil:
 
 				log.Debug("signed preprepare header, adding to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 				// add block to pending block cache of blockchain
-				if err := h.AddPendingBlock(block); err != nil {
+				if err := h.AddPendingBlock(block.WithSeal(header)); err != nil {
 					return err
 				}
 
@@ -299,6 +299,10 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 				return nil
 
 			default:
+
+				// TODO: remove this
+				go h.BroadcastMinedBlock(block)
+
 				log.Warn("err when signing header", "hash", header.Hash, "number", header.Number.Uint64(), "err", err)
 				return e
 			}
@@ -333,9 +337,16 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 				return nil
 			}
 
+			blk := block.Block.WithSeal(header)
+			err = h.AddPendingBlock(blk)
+			if err != nil {
+				// TODO: remove this
+				return nil
+			}
+
 			log.Debug("inserting block to block chain", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
-			err = h.insertChainFn(block.Block)
+			err = h.insertChainFn(blk)
 			if err != nil {
 				log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
 				return err
@@ -350,7 +361,7 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			}
 
 			// broadcast the block
-			go h.broadcastBlockFn(block.Block, true)
+			go h.broadcastBlockFn(blk, true)
 
 		case consensus.ErrNotEnoughSigs:
 			// sign the block
@@ -365,6 +376,14 @@ func (h *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 				go h.BroadcastPrepareSignedHeader(header)
 
 			default:
+
+				// TODO: remove this
+				block, err := h.GetPendingBlock(header.Number.Uint64())
+				if block != nil && block.Block != nil {
+					h.BroadcastMinedBlock(block.Block)
+					return nil
+				}
+
 				log.Warn("err when signing header", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
 				return e
 			}
