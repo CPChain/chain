@@ -14,13 +14,16 @@ import (
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
 type Proposer struct {
+	*p2p.Peer
+	rw      p2p.MsgReadWriter
 	nodeId  string
-	termIdx uint64
+	term    uint64
 	address common.Address
 	pubkey  []byte
 
@@ -28,11 +31,21 @@ type Proposer struct {
 	server        *p2p.Server
 	rsaKey        *rsakey.RsaKey
 
+	knownBlocks *RecentBlocks
+
+	//A map for storing the addresses of validators that retrieve Proposer.NodeId
+	validators map[common.Address]*RemoteValidator
+
+	pendingBlockCh      chan *types.Block
+	queuedPendingBlocks chan *types.Block // Queue of blocks to broadcast to the signer
+
 	//Proposer register contract related fields
 	contractAddress    common.Address
 	contractCaller     *ContractCaller
 	contractInstance   *contract.SignerConnectionRegister
 	contractTransactor *bind.TransactOpts
+
+	quitCh chan struct{} // Termination channel to stop the broadcaster
 
 	lock sync.RWMutex
 }
@@ -103,7 +116,7 @@ func (p *Proposer) SetContractCaller(contractCaller *ContractCaller) error {
 // updateNodeID encrypts nodeId with this remote validator's public key and update to the contract.
 // It is invoked for each validator in validators committee
 func (p *Proposer) updateNodeId(nodeId string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
-	termIdx, address := p.termIdx, p.address
+	term, address := p.term, p.address
 
 	log.Debug("fetched rsa pubkey")
 	log.Debug(hex.Dump(p.pubkey))
@@ -111,7 +124,7 @@ func (p *Proposer) updateNodeId(nodeId string, auth *bind.TransactOpts, contract
 	pubkey, err := rsakey.NewRsaPublicKey(p.pubkey)
 
 	log.Debug("updating self nodeId with remote validator's public key")
-	log.Debug("term", "idx", termIdx)
+	log.Debug("term", "idx", term)
 	log.Debug("signer", "addr", address.Hex())
 	log.Debug("nodeID", "nodeID", nodeId)
 	log.Debug("pubkey", "pubkey", pubkey)
@@ -126,7 +139,7 @@ func (p *Proposer) updateNodeId(nodeId string, auth *bind.TransactOpts, contract
 	log.Debug("encryptedNodeId")
 	log.Debug(hex.Dump(encryptedNodeId))
 
-	transaction, err := contractInstance.AddNodeInfo(auth, big.NewInt(int64(termIdx)), address, encryptedNodeId)
+	transaction, err := contractInstance.AddNodeInfo(auth, big.NewInt(int64(term)), address, encryptedNodeId)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -146,8 +159,8 @@ func (p *Proposer) updateNodeId(nodeId string, auth *bind.TransactOpts, contract
 	return nil
 }
 
-// PvHandshake is to handshake between proposer and a validator from validators committee
-func PvHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Address, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
+// ProposerHandshake is to handshake between proposer and a validator from validators committee
+func ProposerHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Address, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errs := make(chan error, 2)
 	var proposerStatus proposerStatusData // safe to read after two values have been received from errs
@@ -178,29 +191,60 @@ func PvHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Addre
 	return isValidator, address, nil
 }
 
-// ReadValidatorStatus reads status of remote validators
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, proposerStatus *proposerStatusData, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
-	msg, err := rw.ReadMsg()
-	if err != nil {
-		return false, common.Address{}, err
-	}
-	if msg.Code != NewValidatorMsg {
-		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewValidatorMsg)
-	}
-	if msg.Size > ProtocolMaxMsgSize {
-		return false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-	}
-	// Decode the handshake and make sure everything matches
-	if err := msg.Decode(&proposerStatus); err != nil {
-		return false, common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
-	}
-	if int(proposerStatus.ProtocolVersion) != ProtocolVersion {
-		return false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", proposerStatus.ProtocolVersion, ProtocolVersion)
-	}
+// AddPendingBlock adds a pending block with given hash
+func (p *Proposer) AddPendingBlock(block *types.Block) error {
+	p.lock.Lock()
+	defer p.lock.Unlock()
 
-	// TODO: this (addr, ...) pair should be signed with its private key.
-	// @liuq
+	log.Debug("adding block to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-	isValidator, err = validatorVerifier(proposerStatus.Address)
-	return isValidator, proposerStatus.Address, err
+	err := p.knownBlocks.AddBlock(block)
+	return err
+}
+
+// ReceiveMinedPendingBlock receives a block to add to pending block channel
+// TODO: @Chengx to modify it
+func (p *Proposer) ReceiveMinedPendingBlock(block *types.Block) error {
+	select {
+	case p.pendingBlockCh <- block:
+		err := p.AddPendingBlock(block)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+// SendNewPendingBlock propagates an entire block to a remote peer.
+func (p *Proposer) SendNewPendingBlock(block *types.Block) error {
+	return p2p.Send(p.rw, PrepreparePendingBlockMsg, block)
+}
+
+// AddValidator is to add validators in to Proposer.Validators
+// TODO: @chengx
+func (p *Proposer) addValidator() error {
+	p.lock.Lock()
+	p.lock.Unlock()
+
+	go p.broadcastBlock()
+	return nil
+}
+
+// broadcastBlock is for proposing blocks and broadcasting to all known validators
+// TODO: @chengx
+func (p *Proposer) broadcastBlock() {
+	for {
+		select {
+		// blocks waiting for signatures
+		case block := <-p.queuedPendingBlocks:
+			if err := p.SendNewPendingBlock(block); err != nil {
+				return
+			}
+			p.Log().Trace("Broadcast proposed block", "number", block.Number(), "hash", block.Hash())
+
+		case <-p.quitCh:
+			return
+		}
+	}
 }
