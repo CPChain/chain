@@ -493,17 +493,12 @@ func (s *CpchainService) Stop() error {
 	return nil
 }
 
-func (s *CpchainService) MakePrimitiveContracts(n *node.Node, contractCaller *consensus.ContractCaller) map[common.Address]vm.PrimitiveContract {
+func (s *CpchainService) MakePrimitiveContracts(n *node.Node, client consensus.ClientBackend) map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
-	//if s.contractCaller == nil {
-	//	log.Fatal("s.contractCaller is nil")
-	//}
-	//if s.chainConfig == nil {
-	//	log.Fatal("s.chainConfig is nil")
-	//}
-	//// we start from 100 to reserve enough space for upstream primitive contracts.
 
-	RptEvaluator, err := primitives.NewRptEvaluator(contractCaller.Client, s.chainConfig)
+	// we start from 100 to reserve enough space for upstream primitive contracts.
+
+	RptEvaluator, err := primitives.NewRptEvaluator(client, s.chainConfig)
 	if err != nil {
 		log.Fatal("s.RptEvaluator is file")
 	}
