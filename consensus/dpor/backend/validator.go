@@ -166,7 +166,7 @@ func (vh *ValidatorHandler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 
 	log.Debug("do handshaking with remote peer...")
 
-	ok, address, err := VVHandshake(p, rw, coinbase, validator)
+	ok, address, err := ValidatorHandshake(p, rw, coinbase, validator)
 	if !ok || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "ok", ok)
 		return "", ok, err
@@ -241,7 +241,7 @@ func (vh *ValidatorHandler) removeRemoteValidator(addr string) error {
 func (vh *ValidatorHandler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	log.Debug("handling msg", "msg", msg.Code)
 
-	if msg.Code == NewSignerMsg {
+	if msg.Code == NewValidatorMsg {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
 
