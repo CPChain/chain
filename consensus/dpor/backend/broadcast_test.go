@@ -34,7 +34,7 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 		signHeaderFn       SignHeaderFn
 		insertChainFn      InsertChainFn
 		broadcastBlockFn   BroadcastBlockFn
-		validateSignerFn   ValidateSignerFn
+		validateSignerFn   VerifyRemoteValidatorFn
 		pendingBlockCh     chan *types.Block
 		quitSync           chan struct{}
 		dialed             bool
@@ -48,32 +48,32 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &Handler{
-				term:               tt.fields.epochIdx,
-				termLen:            tt.fields.epochLength,
-				nodeId:             tt.fields.nodeId,
-				coinbase:           tt.fields.coinbase,
-				server:             tt.fields.server,
-				rsaKey:             tt.fields.rsaKey,
-				contractAddress:    tt.fields.contractAddress,
-				contractCaller:     tt.fields.contractCaller,
-				contractInstance:   tt.fields.contractInstance,
-				contractTransactor: tt.fields.contractTransactor,
-				signers:            tt.fields.signers,
-				snap:               tt.fields.snap,
-				statusFn:           tt.fields.statusFn,
-				statusUpdateFn:     tt.fields.statusUpdateFn,
-				getEmptyBlockFn:    tt.fields.getEmptyBlockFn,
-				verifyHeaderFn:     tt.fields.verifyHeaderFn,
-				validateBlockFn:    tt.fields.verifyBlockFn,
-				signHeaderFn:       tt.fields.signHeaderFn,
-				insertChainFn:      tt.fields.insertChainFn,
-				broadcastBlockFn:   tt.fields.broadcastBlockFn,
-				validateSignerFn:   tt.fields.validateSignerFn,
-				pendingBlockCh:     tt.fields.pendingBlockCh,
-				quitSync:           tt.fields.quitSync,
-				dialed:             tt.fields.dialed,
-				available:          tt.fields.available,
+			h := &ValidatorHandler{
+				term:                    tt.fields.epochIdx,
+				termLen:                 tt.fields.epochLength,
+				nodeId:                  tt.fields.nodeId,
+				coinbase:                tt.fields.coinbase,
+				server:                  tt.fields.server,
+				rsaKey:                  tt.fields.rsaKey,
+				contractAddress:         tt.fields.contractAddress,
+				contractCaller:          tt.fields.contractCaller,
+				contractInstance:        tt.fields.contractInstance,
+				contractTransactor:      tt.fields.contractTransactor,
+				remoteValidators:        tt.fields.signers,
+				snap:                    tt.fields.snap,
+				statusFn:                tt.fields.statusFn,
+				statusUpdateFn:          tt.fields.statusUpdateFn,
+				getEmptyBlockFn:         tt.fields.getEmptyBlockFn,
+				verifyHeaderFn:          tt.fields.verifyHeaderFn,
+				validateBlockFn:         tt.fields.verifyBlockFn,
+				signHeaderFn:            tt.fields.signHeaderFn,
+				insertChainFn:           tt.fields.insertChainFn,
+				broadcastBlockFn:        tt.fields.broadcastBlockFn,
+				verifyRemoteValidatorFn: tt.fields.validateSignerFn,
+				pendingBlockCh:          tt.fields.pendingBlockCh,
+				quitSync:                tt.fields.quitSync,
+				dialed:                  tt.fields.dialed,
+				available:               tt.fields.available,
 			}
 			// TODO: this is wrong, fix this
 			h.PendingBlockBroadcastLoop()

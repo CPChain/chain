@@ -460,9 +460,9 @@ func (dh *defaultDporHelper) dialValidators(dpor *Dpor, snap *DporSnapshot, numb
 
 	go func(eIdx uint64, committee []common.Address) {
 		// Updates handler.signers
-		dpor.handler.UpdateSigners(eIdx, committee)
+		dpor.validatorHandler.UpdateSigners(eIdx, committee)
 		// Connect all
-		dpor.handler.DialAll()
+		dpor.validatorHandler.DialAll()
 	}(term, signers)
 
 	return nil

@@ -33,13 +33,13 @@ func TestNewHandler(t *testing.T) {
 	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
 
 	//Assign an expected handler
-	var expectedResult Handler
+	var expectedResult ValidatorHandler
 	expectedResult.mode = LBFTMode
 	expectedResult.coinbase = testEtherbase
 	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
 	expectedResult.termLen = testConfig.TermLen
 	expectedResult.maxInitNumber = testConfig.MaxInitBlockNumber
-	expectedResult.signers = make(map[common.Address]*RemoteValidator)
+	expectedResult.remoteValidators = make(map[common.Address]*RemoteValidator)
 	expectedResult.knownBlocks = NewKnownBlocks()
 	expectedResult.pendingBlockCh = make(chan *types.Block)
 	expectedResult.quitSync = make(chan struct{})
@@ -49,13 +49,13 @@ func TestNewHandler(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *Handler
+		want *ValidatorHandler
 	}{
 		{"testHandler1", args{testConfig, testEtherbase}, &expectedResult},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewHandler(tt.args.config, tt.args.etherbase)
+			got := NewValidatorHandler(tt.args.config, tt.args.etherbase)
 			//pendingBlockCh and quitSync are expected to be different
 			//Thus, before reflect.DeepEqual(), we set both variables equalling to the expected value
 			got.pendingBlockCh = expectedResult.pendingBlockCh
@@ -67,7 +67,7 @@ func TestNewHandler(t *testing.T) {
 	}
 }
 func TestHandler_IsAvailable(t *testing.T) {
-	var testHandler Handler
+	var testHandler ValidatorHandler
 	testHandler.available = false
 	//Test IsAvailable()
 	if testHandler.IsAvailable() != false {
@@ -117,16 +117,16 @@ func TestHandler_SetContractCaller(t *testing.T) {
 func TestHandler_handlePreprepareMsg(t *testing.T) {
 	//t.Skip("skip for short test")
 	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
-	NewSigner(1, common.HexToAddress(addrHex))
+	NewRemoteValidator(1, common.HexToAddress(addrHex))
 
-	signer := NewSigner(1, common.HexToAddress(addrHex))
+	signer := NewRemoteValidator(1, common.HexToAddress(addrHex))
 	msg := p2p.Msg{Code: PrepareSignedHeaderMsg, Size: 1000, Payload: strings.NewReader("Test_Payload"), ReceivedAt: time.Now()}
 
 	var testConfig *configs.DporConfig
 	testConfig = configs.MainnetChainConfig.Dpor
 	//define the parameter "etherbase" for NewHandler()
 	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
-	testHandler := NewHandler(testConfig, testEtherbase)
+	testHandler := NewValidatorHandler(testConfig, testEtherbase)
 	err := testHandler.handlePreprepareMsg(msg, signer)
 	if err != nil {
 		t.Errorf("handlePrePrepareMsg returns an error message, as %v\n", err)

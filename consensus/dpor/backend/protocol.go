@@ -27,8 +27,8 @@ const (
 
 	NewProposerMsg = 0x43
 
-	// PbftMsgOutSet is not a msg code, just used for msg code comparing
-	PbftMsgOutSet = 0x43
+	// PbftMsgOutset is not a msg code, just used for msg code comparing
+	PbftMsgOutset = 0x43
 
 	// PrepreparePendingBlockMsg is Preprepare phrase msg code
 	PrepreparePendingBlockMsg = 0x43
@@ -91,7 +91,7 @@ var errorToString = map[int]string{
 	ErrSuspendedPeer:           "Suspended peer",
 }
 
-type signerStatusData struct {
+type ValidatorStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address
 }
@@ -105,7 +105,10 @@ func errResp(code errCode, format string, v ...interface{}) error {
 	return fmt.Errorf("%v - %v", code, fmt.Sprintf(format, v...))
 }
 
-// IsPbftMsg checks if a msg is pbft msg
-func IsPbftMsg(msg p2p.Msg) bool {
-	return msg.Code >= PbftMsgOutSet
+func IsSyncMsg(msg p2p.Msg) bool {
+	return msg.Code < PbftMsgOutset
+}
+
+func IsDporMsg(msg p2p.Msg) bool {
+	return msg.Code >= PbftMsgOutset
 }

@@ -15,7 +15,7 @@ import (
 )
 
 // SetServer sets handler.server
-func (h *Handler) SetServer(server *p2p.Server) error {
+func (h *ValidatorHandler) SetServer(server *p2p.Server) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -26,7 +26,7 @@ func (h *Handler) SetServer(server *p2p.Server) error {
 }
 
 // SetRsaKey sets handler.rsaKey
-func (h *Handler) SetRsaKey(rsaReader RsaReader) error {
+func (h *ValidatorHandler) SetRsaKey(rsaReader RsaReader) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -37,7 +37,7 @@ func (h *Handler) SetRsaKey(rsaReader RsaReader) error {
 }
 
 // SetContractCaller sets handler.contractcaller.
-func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
+func (h *ValidatorHandler) SetContractCaller(contractCaller *ContractCaller) error {
 
 	// creates an contract instance
 	contractInstance, err := contract.NewSignerConnectionRegister(h.contractAddress, contractCaller.Client)
@@ -78,30 +78,30 @@ func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 }
 
 // UpdateSigners updates Handler's signers.
-func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
+func (h *ValidatorHandler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	remoteSigners := h.signers
+	remoteSigners := h.remoteValidators
 	for _, signer := range signers {
 		if _, ok := remoteSigners[signer]; !ok {
-			s := NewSigner(epochIdx, signer)
+			s := NewRemoteValidator(epochIdx, signer)
 			remoteSigners[signer] = s
 		}
 	}
 
 	h.term = epochIdx
-	h.signers = remoteSigners
+	h.remoteValidators = remoteSigners
 
 	return nil
 }
 
 // DialAll connects remote proposers.
-func (h *Handler) DialAll() {
+func (h *ValidatorHandler) DialAll() {
 	h.lock.Lock()
 	rsaKey := h.rsaKey
 	nodeID, address := h.nodeId, h.coinbase
-	connected, signers, server := h.dialed, h.signers, h.server
+	connected, signers, server := h.dialed, h.remoteValidators, h.server
 	contractInstance, contractTransactor, client := h.contractInstance, h.contractTransactor, h.contractCaller.Client
 	h.lock.Unlock()
 

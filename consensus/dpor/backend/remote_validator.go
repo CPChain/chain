@@ -42,8 +42,8 @@ type RemoteValidator struct {
 	lock sync.RWMutex
 }
 
-// NewSigner creates a new NewSigner with given view idx and address.
-func NewSigner(epochIdx uint64, address common.Address) *RemoteValidator {
+// NewRemoteValidator creates a new NewRemoteValidator with given view idx and address.
+func NewRemoteValidator(epochIdx uint64, address common.Address) *RemoteValidator {
 	return &RemoteValidator{
 		epochIdx: epochIdx,
 		address:  address,
@@ -69,8 +69,8 @@ func (s *RemoteValidator) disconnect(server *p2p.Server) error {
 	return nil
 }
 
-// SetSigner sets a signer
-func (s *RemoteValidator) SetSigner(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
+// SetValidatorPeer sets a signer
+func (s *RemoteValidator) SetValidatorPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -79,10 +79,10 @@ func (s *RemoteValidator) SetSigner(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 	return nil
 }
 
-// signerBroadcast is a write loop that multiplexes block propagations, announcements
+// broadcastLoop is a write loop that multiplexes block propagations, announcements
 // and transaction broadcasts into the remote peer. The goal is to have an async
 // writer that does not lock up node internals.
-func (s *RemoteValidator) signerBroadcast() {
+func (s *RemoteValidator) broadcastLoop() {
 	for {
 		select {
 		// blocks waiting for signatures
@@ -160,21 +160,21 @@ func (s *RemoteValidator) AsyncSendCommitSignedHeader(header *types.Header) {
 	}
 }
 
-// Handshake tries to handshake with remote validator
-func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+// VVHandshake tries to handshake with remote validator
+func VVHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, verifyRemoteValidatorFn VerifyRemoteValidatorFn) (isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
-	var signerStatus signerStatusData // safe to read after two values have been received from errc
+	var validatorStatus ValidatorStatusData // safe to read after two values have been received from errc
 
 	go func() {
-		err := p2p.Send(rw, NewValidatorMsg, &signerStatusData{
+		err := p2p.Send(rw, NewValidatorMsg, &ValidatorStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         coinbase,
 		})
 		errc <- err
 	}()
 	go func() {
-		isSigner, address, err = ReadSignerStatus(p, rw, &signerStatus, signerValidator)
+		isValidator, address, err = ReadSignerStatus(p, rw, &validatorStatus, verifyRemoteValidatorFn)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -189,11 +189,11 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, signe
 			return false, common.Address{}, p2p.DiscReadTimeout
 		}
 	}
-	return isSigner, address, nil
+	return isValidator, address, nil
 }
 
 // ReadSignerStatus reads status of remote signer
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *signerStatusData, signerValidator ValidateSignerFn) (isSigner bool, address common.Address, err error) {
+func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatus *ValidatorStatusData, signerValidator VerifyRemoteValidatorFn) (isSigner bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
 		return false, common.Address{}, err

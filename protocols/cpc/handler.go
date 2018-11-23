@@ -16,6 +16,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
@@ -171,14 +172,14 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 						}
 
 						switch {
-						case IsSyncMsg(msg):
+						case backend.IsSyncMsg(msg):
 							err = manager.handleSyncMsg(msg, peer)
 							if err != nil {
 								log.Error("err when handling sync msg", "err", err)
 								return err
 							}
 
-						case IsDporMsg(msg) && ok:
+						case backend.IsDporMsg(msg) && ok:
 							err = dporProtocol.HandleMsg(id, msg)
 							if err != nil {
 								log.Error("err when handling dpor msg", "err", err)

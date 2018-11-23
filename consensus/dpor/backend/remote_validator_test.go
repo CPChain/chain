@@ -13,7 +13,7 @@ func TestHandshake(t *testing.T) {
 		p               *p2p.Peer
 		rw              p2p.MsgReadWriter
 		etherbase       common.Address
-		signerValidator ValidateSignerFn
+		signerValidator VerifyRemoteValidatorFn
 	}
 	tests := []struct {
 		name         string
@@ -26,7 +26,7 @@ func TestHandshake(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotIsSigner, gotAddress, err := Handshake(tt.args.p, tt.args.rw, tt.args.etherbase, tt.args.signerValidator)
+			gotIsSigner, gotAddress, err := VVHandshake(tt.args.p, tt.args.rw, tt.args.etherbase, tt.args.signerValidator)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Handshake() error = %v, wantErr %v", err, tt.wantErr)
 				return
