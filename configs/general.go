@@ -16,7 +16,8 @@ const (
 )
 
 const (
-	CpchainChainId = 42
+	DefaultChainId = 41
+	MainnetChainId = 42
 	TestnetChainId = 43
 )
 
@@ -26,9 +27,9 @@ var (
 		ChainID: big.NewInt(TestnetChainId),
 	}
 
-	// 	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
+	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
 	MainnetChainConfig = &ChainConfig{
-		ChainID: big.NewInt(CpchainChainId),
+		ChainID: big.NewInt(MainnetChainId),
 
 		Dpor: &DporConfig{
 			Period:                1,
@@ -45,12 +46,14 @@ var (
 		},
 	}
 
-	AllCpchainProtocolChanges = &ChainConfig{
-		ChainID: big.NewInt(CpchainChainId),
+	// this contains all the changes we have made to the cpchain protocol.
+	// serves as the *default* config.
+	DefaultChainConfig = &ChainConfig{
+		ChainID: big.NewInt(DefaultChainId),
 		Dpor:    &DporConfig{Period: 1, TermLen: 4},
 	}
 
-	TestChainConfig = &ChainConfig{big.NewInt(CpchainChainId), &DporConfig{Period: 0, TermLen: 4}}
+	TestChainConfig = &ChainConfig{big.NewInt(MainnetChainId), &DporConfig{Period: 0, TermLen: 4}}
 
 	TestRules = TestChainConfig.Rules(new(big.Int))
 )
@@ -103,7 +106,7 @@ func (c *ChainConfig) IsCpchain() bool {
 		return false
 	}
 
-	return c.ChainID.Uint64() == CpchainChainId
+	return c.ChainID.Uint64() == MainnetChainId
 }
 
 // GasTable returns the gas table corresponding to the current phase (homestead or homestead reprice).

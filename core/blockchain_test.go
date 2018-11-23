@@ -43,7 +43,7 @@ var (
 )
 
 func fakeDpor(db database.Database) *dpor.Dpor {
-	return dpor.NewFaker(configs.AllCpchainProtocolChanges.Dpor, db)
+	return dpor.NewFaker(configs.DefaultChainConfig.Dpor, db)
 }
 
 // newCanonical creates a chain database, and injects a deterministic canonical
@@ -56,7 +56,7 @@ func newCanonical(engine consensus.Engine, n int, db database.Database) (*BlockC
 	)
 
 	// Initialize a fresh chain with only a genesis block
-	blockchain, _ := NewBlockChain(db, nil, configs.AllCpchainProtocolChanges, engine, vm.Config{}, remoteDB, nil)
+	blockchain, _ := NewBlockChain(db, nil, configs.DefaultChainConfig, engine, vm.Config{}, remoteDB, nil)
 	// Create and inject the requested chain
 	if n == 0 {
 		return blockchain, nil
