@@ -55,7 +55,7 @@ func TestNewHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewHandler(tt.args.config, tt.args.etherbase)
+			got := NewValidatorHandler(tt.args.config, tt.args.etherbase)
 			//pendingBlockCh and quitSync are expected to be different
 			//Thus, before reflect.DeepEqual(), we set both variables equalling to the expected value
 			got.pendingBlockCh = expectedResult.pendingBlockCh
@@ -126,7 +126,7 @@ func TestHandler_handlePreprepareMsg(t *testing.T) {
 	testConfig = configs.MainnetChainConfig.Dpor
 	//define the parameter "etherbase" for NewHandler()
 	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
-	testHandler := NewHandler(testConfig, testEtherbase)
+	testHandler := NewValidatorHandler(testConfig, testEtherbase)
 	err := testHandler.handlePreprepareMsg(msg, signer)
 	if err != nil {
 		t.Errorf("handlePrePrepareMsg returns an error message, as %v\n", err)

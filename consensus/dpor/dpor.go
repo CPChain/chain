@@ -88,7 +88,7 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 	return &Dpor{
 		dh:               &defaultDporHelper{&defaultDporUtil{}},
 		config:           &conf,
-		validatorHandler: backend.NewHandler(&conf, common.Address{}),
+		validatorHandler: backend.NewValidatorHandler(&conf, common.Address{}),
 		db:               db,
 		recents:          recents,
 		signatures:       signatures,

@@ -225,7 +225,7 @@ func (d *Dpor) Authorize(signer common.Address, signFn SignerFn) {
 	d.signFn = signFn
 
 	if d.validatorHandler == nil {
-		d.validatorHandler = backend.NewHandler(d.config, d.Signer())
+		d.validatorHandler = backend.NewValidatorHandler(d.config, d.Signer())
 	}
 	if d.validatorHandler.Signer() != signer {
 		d.validatorHandler.SetSigner(signer)
