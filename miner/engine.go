@@ -79,19 +79,18 @@ type engine struct {
 
 	// update loop
 	mux          *event.TypeMux
-	txsCh        chan core.NewTxsEvent  // new transactions enter the transaction pool
+	txsCh        chan core.NewTxsEvent // new transactions enter the transaction pool
 	txsSub       event.Subscription
-	chainHeadCh  chan core.ChainHeadEvent   // a new block has been inserted into the chain
+	chainHeadCh  chan core.ChainHeadEvent // a new block has been inserted into the chain
 	chainHeadSub event.Subscription
-	chainSideCh  chan core.ChainSideEvent   // a side block has been inserted
+	chainSideCh  chan core.ChainSideEvent // a side block has been inserted
 	chainSideSub event.Subscription
-	wg           sync.WaitGroup
 
-	workers map[Worker]struct{}
-	recv    chan *Result
+	workers map[Worker]struct{} // set of workers
+	recv    chan *Result        // the channel that receives the result from workers
 
-	backend Backend
-	chain   *core.BlockChain
+	backend Backend  // cpchain service backend
+	chain   *core.BlockChain  // pointer cuz we have only one canonical chain in the whole system
 	proc    core.Validator
 	chainDb database.Database
 
@@ -195,8 +194,6 @@ func (self *engine) start() {
 }
 
 func (self *engine) stop() {
-	self.wg.Wait()
-
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	if atomic.LoadInt32(&self.mining) == 1 {
