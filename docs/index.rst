@@ -13,7 +13,7 @@ Welcome to docs's documentation!
    consensus/dpor
    consensus/proposer
    consensus/validator
-
+   consensus/glossary
 
 
 .. Indices and tables

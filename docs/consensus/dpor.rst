@@ -1,4 +1,4 @@
-dpor
+Dpor
 ******
 ..
     +------------+------------+
@@ -49,24 +49,25 @@ dpor
 
 1. **Validator** and **Proposer** and **Ordinary** users
     a. Block validators, or validators refer to a group of users that can validate a newly proposed block
-        - The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
-        - Except for some abnormal cases, validators have no right producing blocks
-        - The validator committee follows *Practical Byzantine Fault Tolerance (PBFT)* protocol, and the size of number is always equaling to 3f+1, where f is a integer
+        - The validators committee consists of nodes nominated from CPC Foundation, governments and companies.
+        - Except for some abnormal cases, validators cannot producing blocks
+        - The validators committee follows *Practical Byzantine Fault Tolerance (PBFT)* protocol, and the size of number is always equaling to 3f+1, where f is a integer
     #. Block proposer, or proposer refers to the user that can propose block
-        - It is one member of the proposer committee
-        - The proposer committee is elected based on reputations of candidates and a random seed
-        - Each number in the proposer committee takes the responsibility of producing block one by one
+        - It is one member of the proposers committee
+        - The proposers committee is elected based on reputations of candidates and a random seed
+        - Each number in the proposers committee takes the responsibility of producing block one by one
     #. Ordinary users refer to the rest of users
         - An ordinary user can become a proposer if it claims campaign and is elected
 #. **Normal Case**
     a. Block production
         i. An ordinary user claims campaign and enters the *candidate list*
-        #. After being elected in a periodical election, a candidate enters a block proposer committee
-        #. The proposer encrypts his address with all public key of the validator committee to a contrast
+        #. After being elected in a periodical election, a candidate enters a block proposers committee
+        #. The proposer encrypts his address with all public key of the validators committee to a contrast
         #. If a validators receives the encrypted message, it is about to connect the proposer with its address
-        #. If the proposer receives 2f+1 connection from validators, it proposes a block and broadcasts to them
+        #. The proposer propose a new block
+        #. For any validator that connects to the proposer for the first time, the proposer broadcast the block to it
     #. Block validation
-        i. Once receives a newly proposed block, a validator in validator committee tries to validate the block.
+        i. Once receives a newly proposed block, a validator in validators committee tries to validate the block.
         #. If true, this validator broadcast PREPARE message to other validators.
         #. Once receives 2f+1 PREPARE messages, a validator broadcasts COMMIT message to other validators.
         #. Once received 2f+1 COMMIT messages, a validator inserts the block into local chain, and broadcasts VALIDATION message to all users.
@@ -79,27 +80,27 @@ dpor
     #. Abnormal Case 2: *Validators does not receive a block from the proposer*
         i. It is for the case when Step 2.a.v cannot be reached
         #. After a validator sends out its address to the proposer, it sets up a timer
-        #. If the timer expires, the validator committee activates *impeachment*, a three-phase protocol in PBFT manner to propose the block
+        #. If the timer expires, the validators committee activates *impeachment*, a three-phase protocol in PBFT manner to propose the block
     #. Abnormal Case 3: *The proposer proposes one or more faulty blocks*
         i. Faulty blocks cannot be validated in Step 2.b.i
-        #. The validator committee activates impeachment
+        #. The validators committee activates impeachment
     #. Abnormal Case 4: *The proposer proposes multiple valid blocks*
         i. Each validator can only validate one block for a same block number
         #. Thus, it is impossible for two or more blocks to receive 2f+1 PREPARE messages simultaneously. Only one block can enter Step 2.b.4
         #. It is possible that no block receives 2f+1 PREPARE messages
     #. Abnormal Case 5: *Some members in validators committee are faulty*
-        i. The validator committee follows the PBFT protocol.
+        i. The validators committee follows the PBFT protocol.
         #. The system can reach a consensus, as long as the number of total faulty validators are less than f.
     #. Abnormal Case 6:
         i. It is for the cases when 2f+1 PREPARE messages, COMMIT messages or 2f+1 VALIDATION messages cannot be collected
         #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATION messages
-        #. Any of these timer expires, the validator committee activates *impeachment*
+        #. Any of these timer expires, the validators committee activates *impeachment*
 
 #. **Impeachment**
     a. It is an abnormal handler when the proposer is either faulty, or non responding
     #. It is a two-phase protocol in PTBF manner, consisting of *prepare* and *commit* phases.
     #. Impeach steps:
-        a. A validator in committee generates a block on behalf of the faulty (or non responding) proposer
+        a. A validator in the committee generates a block on behalf of the faulty (or non responding) proposer
             i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+Period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, Period is the interval between two blocks and timeout is the threshold validator that triggers impeachment
             #. The *seal* in the header is set to be empty
             #. A penalty on proposer is the only transaction in the block's body
