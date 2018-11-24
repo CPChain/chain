@@ -339,16 +339,6 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 	return newPeer(pv, p, newMeteredMsgWriter(rw))
 }
 
-// SignerValidator validates if an address is a future signer
-func (pm *ProtocolManager) SignerValidator(address common.Address) (isSigner bool, err error) {
-	e, ok := pm.engine.(consensus.Validator)
-	if !ok {
-		return false, errBadEngine
-	}
-	isSigner, err = e.IsFutureSigner(pm.blockchain, address, pm.blockchain.CurrentHeader().Number.Uint64())
-	return isSigner, err
-}
-
 // addPeer is the callback invoked to manage the life cycle of cpchain peer.
 // when this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) addPeer(p *peer) error {
