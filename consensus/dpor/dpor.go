@@ -213,6 +213,14 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		return nil, nil
 	}
 
+	hasBlockInChain := func(hash common.Hash, number uint64) bool {
+		blk := d.chain.GetBlock(hash, number)
+		if blk != nil {
+			return true
+		}
+		return false
+	}
+
 	// set functions
 	handler.SetFuncs(
 		validateSignerFn,
@@ -224,6 +232,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		statusFn,
 		statusUpdateFn,
 		getEmptyBlockFn,
+		hasBlockInChain,
 	)
 
 	d.validatorHandler = handler
