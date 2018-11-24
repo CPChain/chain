@@ -65,7 +65,7 @@ Dpor
         #. The proposer encrypts his address with all public key of the validators committee to a contrast
         #. If a validators receives the encrypted message, it is about to connect the proposer with its address
         #. The proposer propose a new block
-        #. For any validator that connects to the proposer for the first time, the proposer broadcast the block to it
+        #. For any validator that connects to the proposer for the first time, the proposer broadcasts the block to it
     #. Block validation
         i. Once receives a newly proposed block, a validator in validators committee tries to validate the block.
         #. If true, this validator broadcast PREPARE message to other validators.
