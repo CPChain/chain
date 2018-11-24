@@ -169,12 +169,12 @@ func VVHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, etherbase common.Address, ve
 	go func() {
 		err := p2p.Send(rw, NewValidatorMsg, &ValidatorStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
-			Address:         coinbase,
+			Address:         etherbase,
 		})
 		errc <- err
 	}()
 	go func() {
-		isValidator, address, err = ReadSignerStatus(p, rw, &validatorStatus, verifyRemoteValidatorFn)
+		isValidator, address, err = ReadValidatorStatus(p, rw, &validatorStatus, verifyRemoteValidatorFn)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)

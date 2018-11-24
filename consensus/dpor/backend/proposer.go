@@ -160,20 +160,20 @@ func (p *Proposer) updateNodeId(nodeId string, auth *bind.TransactOpts, contract
 }
 
 // ProposerHandshake is to handshake between proposer and a validator from validators committee
-func ProposerHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Address, validatorVerifier VerifyValidatorFn) (isValidator bool, address common.Address, err error) {
+func ProposerHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, proposerAddress common.Address, validatorVerifier VerifyRemoteValidatorFn) (isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errs := make(chan error, 2)
-	var proposerStatus proposerStatusData // safe to read after two values have been received from errs
+	var validatorStatus ValidatorStatusData // safe to read after two values have been received from errs
 
 	go func() {
-		err := p2p.Send(rw, NewValidatorMsg, &proposerStatusData{
+		err := p2p.Send(rw, NewProposerMsg, &ProposerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         proposerAddress,
 		})
 		errs <- err
 	}()
 	go func() {
-		isValidator, address, err = ReadValidatorStatus(p, rw, &proposerStatus, validatorVerifier)
+		isValidator, address, err = ReadValidatorStatus(p, rw, &validatorStatus, validatorVerifier)
 		errs <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)

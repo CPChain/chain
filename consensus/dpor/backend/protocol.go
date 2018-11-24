@@ -96,7 +96,7 @@ type ValidatorStatusData struct {
 	Address         common.Address
 }
 
-type proposerStatusData struct {
+type ProposerStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address
 }

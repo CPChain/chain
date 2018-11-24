@@ -248,6 +248,13 @@ func (d *Dpor) Stop() {
 	return
 }
 
+func (d *Dpor) Signer() common.Address {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	return d.signer
+}
+
 func (d *Dpor) Proposer() common.Address {
 	d.lock.Lock()
 	defer d.lock.Unlock()
