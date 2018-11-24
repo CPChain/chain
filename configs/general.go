@@ -16,7 +16,8 @@ const (
 )
 
 const (
-	CpchainChainId = 42
+	DefaultChainId = 41
+	MainnetChainId = 42
 	TestnetChainId = 43
 )
 
@@ -24,12 +25,11 @@ var (
 	// TODO: @AC define testnet configuration
 	TestnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(TestnetChainId),
-		Ethash:  new(EthashConfig),
 	}
 
-	// 	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
+	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
 	MainnetChainConfig = &ChainConfig{
-		ChainID: big.NewInt(CpchainChainId),
+		ChainID: big.NewInt(MainnetChainId),
 
 		Dpor: &DporConfig{
 			Period:                1,
@@ -46,14 +46,14 @@ var (
 		},
 	}
 
-	AllCpchainProtocolChanges = &ChainConfig{
-		ChainID: big.NewInt(CpchainChainId),
-		Ethash:  nil,
+	// this contains all the changes we have made to the cpchain protocol.
+	// serves as the *default* config.
+	DefaultChainConfig = &ChainConfig{
+		ChainID: big.NewInt(DefaultChainId),
 		Dpor:    &DporConfig{Period: 1, TermLen: 4},
 	}
 
-	// TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, new(EthashConfig), nil}
-	TestChainConfig = &ChainConfig{big.NewInt(CpchainChainId), nil, &DporConfig{Period: 0, TermLen: 4}}
+	TestChainConfig = &ChainConfig{big.NewInt(MainnetChainId), &DporConfig{Period: 0, TermLen: 4}}
 
 	TestRules = TestChainConfig.Rules(new(big.Int))
 )
@@ -67,16 +67,7 @@ type ChainConfig struct {
 	ChainID *big.Int `json:"chainId" toml:"chainId"` // chainId identifies the current chain and is used for replay protection
 
 	// Various consensus engines
-	Ethash *EthashConfig `json:"ethash,omitempty" toml:"ethash,omitempty"`
-	Dpor   *DporConfig   `json:"dpor,omitempty" toml:"dpor,omitempty"`
-}
-
-// EthashConfig is the consensus engine configs for proof-of-work based sealing.
-type EthashConfig struct{}
-
-// String implements the stringer interface, returning the consensus engine details.
-func (c *EthashConfig) String() string {
-	return "ethash"
+	Dpor *DporConfig `json:"dpor,omitempty" toml:"dpor,omitempty"`
 }
 
 // DporConfig is the consensus engine configs for proof-of-authority based sealing.
@@ -98,8 +89,6 @@ func (c *DporConfig) String() string {
 func (c *ChainConfig) String() string {
 	var engine interface{}
 	switch {
-	case c.Ethash != nil:
-		engine = c.Ethash
 	case c.Dpor != nil:
 		engine = c.Dpor
 	default:
@@ -117,7 +106,7 @@ func (c *ChainConfig) IsCpchain() bool {
 		return false
 	}
 
-	return c.ChainID.Uint64() == CpchainChainId
+	return c.ChainID.Uint64() == MainnetChainId
 }
 
 // GasTable returns the gas table corresponding to the current phase (homestead or homestead reprice).

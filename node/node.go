@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package node
 
@@ -30,7 +17,6 @@ import (
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/internal/debug"
 	"github.com/ethereum/go-ethereum/event"
@@ -42,6 +28,8 @@ import (
 
 // Node is a container on which services can be registered.
 type Node struct {
+	lock sync.RWMutex
+
 	eventmux *event.TypeMux // Event multiplexer used between the services of a stack
 	config   *Config
 	accman   *accounts.Manager
@@ -73,8 +61,7 @@ type Node struct {
 	wsListener net.Listener // Websocket RPC listener socket to server API requests
 	wsHandler  *rpc.Server  // Websocket RPC request handler to process the API requests
 
-	stop chan struct{} // Channel to wait for termination notifications
-	lock sync.RWMutex
+	quitCh chan struct{} // Channel to wait for termination notifications
 
 	log log.Logger
 }
@@ -110,6 +97,7 @@ func New(conf *Config) (*Node, error) {
 		return nil, err
 	}
 	if conf.Logger == nil {
+		// TODO @xumx switch to cpchain logger.  need to add the trace function
 		conf.Logger = log.New()
 	}
 	// Note: any interaction with Config that would create/touch files
@@ -119,7 +107,7 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
-		grpcServer:        grpc.NewSerever(conf.DataDir, conf.HTTPModules, &conf.GRpc),
+		grpcServer:        grpc.NewServer(conf.DataDir, conf.HTTPModules, &conf.GRpc),
 		ipcEndpoint:       conf.IPCEndpoint(),
 		httpEndpoint:      conf.HTTPEndpoint(),
 		wsEndpoint:        conf.WSEndpoint(),
@@ -141,7 +129,7 @@ func (n *Node) Register(constructor ServiceConstructor) error {
 	return nil
 }
 
-// Start create a live P2P node and starts running it.
+// Start creates a p2p node and begins the service
 func (n *Node) Start() error {
 	n.lock.Lock()
 	defer n.lock.Unlock()
@@ -150,19 +138,16 @@ func (n *Node) Start() error {
 	if n.server != nil {
 		return ErrNodeRunning
 	}
+
 	if err := n.openDataDir(); err != nil {
 		return err
 	}
 
-	// Initialize the p2p server. This creates the node key and
-	// discovery databases.
+	// p2p setup
 	n.serverConfig = n.config.P2P
-	n.serverConfig.PrivateKey = n.config.NodeKey()
-
-	n.config.RsaKeyStore, _ = n.config.RsaKey()
-
 	n.serverConfig.Name = n.config.NodeName()
 	n.serverConfig.Logger = n.log
+	n.serverConfig.PrivateKey = n.config.NodeKey()
 	if n.serverConfig.StaticNodes == nil {
 		n.serverConfig.StaticNodes = n.config.StaticNodes()
 	}
@@ -170,10 +155,10 @@ func (n *Node) Start() error {
 		n.serverConfig.TrustedNodes = n.config.TrustedNodes()
 	}
 	if n.serverConfig.NodeDatabase == "" {
+		// e.g., cpchain/nodes directory
 		n.serverConfig.NodeDatabase = n.config.NodeDB()
 	}
-	// p2p server
-	running := &p2p.Server{Config: n.serverConfig}
+	p2pServer := &p2p.Server{Config: n.serverConfig}
 	n.log.Info("Starting peer-to-peer node", "instance", n.serverConfig.Name)
 
 	// create the services
@@ -186,89 +171,80 @@ func (n *Node) Start() error {
 			EventMux:       n.eventmux,
 			AccountManager: n.accman,
 		}
-		for kind, s := range services { // copy needed for threaded access
+		for kind, s := range services {
 			ctx.services[kind] = s
 		}
-		// Construct and save the service
+		// construct and save the service
 		service, err := constructor(ctx)
 		if err != nil {
 			return err
 		}
 		kind := reflect.TypeOf(service)
-		if _, exists := services[kind]; exists {
+		if _, ok := services[kind]; ok {
 			return &DuplicateServiceError{Kind: kind}
 		}
+		// accumulates the constructed services.
 		services[kind] = service
 	}
 
 	// gather the protocols and start the freshly assembled P2P server
+	// we don't have much services, e.g., cpchainservice
 	for _, service := range services {
-		running.Protocols = append(running.Protocols, service.Protocols()...)
+		p2pServer.Protocols = append(p2pServer.Protocols, service.Protocols()...)
 	}
-
-	// start the p2p server
-	if err := running.Start(); err != nil {
+	if err := p2pServer.Start(); err != nil {
+		// datadir might already be used.
 		return convertFileLockError(err)
 	}
 
 	// start each of the services
-	started := []reflect.Type{}
+	var started []reflect.Type
 	for kind, service := range services {
-		// Start the next service, stopping all previous upon failure
-		if err := service.Start(running); err != nil {
+		// start the next service, stopping all previous upon failure
+		// these are the upper layer p2p services
+		if err := service.Start(p2pServer); err != nil {
 			for _, kind := range started {
-				services[kind].Stop()
+				if err := services[kind].Stop(); err != nil {
+					n.log.Error("stop service failed", "error", err)
+				}
 			}
-			running.Stop()
-
+			p2pServer.Stop()
 			return err
 		}
-		// Mark the service started for potential cleanup
+		// mark the service started for potential cleanup
 		started = append(started, kind)
+	}
+
+	// start the configured rpc interfaces
+	if err := n.startRPC(services); err != nil {
+		for _, service := range services {
+			if err := service.Stop(); err != nil {
+				n.log.Error("rpc error", "error", err)
+			}
+		}
+		p2pServer.Stop()
+		return err
 	}
 
 	// start the configured grpc interfaces
 	if err := n.startGRPC(services); err != nil {
+		n.stopRPC()
 		for _, service := range services {
-			service.Stop()
+			if err := service.Stop(); err != nil {
+				n.log.Error("rpc error", "error", err)
+			}
 		}
-		running.Stop()
-		return err
-	}
-
-	// lastly start the configured rpc interfaces
-	if err := n.startRPC(services); err != nil {
-		for _, service := range services {
-			service.Stop()
-		}
-		running.Stop()
+		p2pServer.Stop()
 		return err
 	}
 
 	// finish initializing the startup
+	n.server = p2pServer
 	n.services = services
-	n.server = running
-	n.stop = make(chan struct{})
 
-	return nil
-}
+	// NB reset the channel because node supports restart
+	n.quitCh = make(chan struct{})
 
-func (n *Node) openDataDir() error {
-	if n.config.DataDir == "" {
-		return nil // ephemeral
-	}
-
-	instdir := filepath.Join(n.config.DataDir, n.config.name())
-	if err := os.MkdirAll(instdir, 0700); err != nil {
-		return err
-	}
-	// Lock the instance directory to prevent concurrent use by another instance as well as
-	// accidental use of the instance directory as a database.
-	release, _, err := flock.New(filepath.Join(instdir, "LOCK"))
-	if err != nil {
-		return convertFileLockError(err)
-	}
-	n.instanceDirLock = release
 	return nil
 }
 
@@ -286,6 +262,10 @@ func (n *Node) startGRPC(services map[reflect.Type]Service) error {
 		return err
 	}
 	return nil
+}
+
+func (n *Node) stopGRPC() {
+	n.grpcServer.Stop()
 }
 
 // startRPC is a helper method to start all the various RPC endpoint during node
@@ -321,6 +301,13 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 	return nil
 }
 
+func (n *Node) stopRPC() {
+	n.stopWS()
+	n.stopInProc()
+	n.stopIPC()
+	n.stopHTTP()
+}
+
 // startInProc initializes an in-process RPC endpoint.
 func (n *Node) startInProc(apis []rpc.API) error {
 	// Register all the APIs exposed by the services
@@ -329,7 +316,6 @@ func (n *Node) startInProc(apis []rpc.API) error {
 		if api.Namespace == "admission" {
 			api.Service.(admission.ApiBackend).RegisterInProcHandler(handler)
 		}
-
 		if err := handler.RegisterName(api.Namespace, api.Service); err != nil {
 			return err
 		}
@@ -398,7 +384,7 @@ func (n *Node) startHTTP(endpoint string, apis []rpc.API, modules []string, cors
 // stopHTTP terminates the HTTP RPC endpoint.
 func (n *Node) stopHTTP() {
 	if n.httpListener != nil {
-		n.httpListener.Close()
+		_ = n.httpListener.Close()
 		n.httpListener = nil
 
 		n.log.Info("HTTP endpoint closed", "url", fmt.Sprintf("http://%s", n.httpEndpoint))
@@ -431,9 +417,8 @@ func (n *Node) startWS(endpoint string, apis []rpc.API, modules []string, wsOrig
 // stopWS terminates the websocket RPC endpoint.
 func (n *Node) stopWS() {
 	if n.wsListener != nil {
-		n.wsListener.Close()
+		_ = n.wsListener.Close()
 		n.wsListener = nil
-
 		n.log.Info("WebSocket endpoint closed", "url", fmt.Sprintf("ws://%s", n.wsEndpoint))
 	}
 	if n.wsHandler != nil {
@@ -453,11 +438,9 @@ func (n *Node) Stop() error {
 		return ErrNodeStopped
 	}
 
-	// Terminate the API, services and the p2p server.
-	n.stopWS()
-	n.stopHTTP()
-	n.stopIPC()
-	n.grpcServer.Stop()
+	// terminate the api, services and the p2p server.
+	n.stopGRPC()
+	n.stopRPC()
 
 	n.rpcAPIs = nil
 	failure := &StopError{
@@ -481,7 +464,7 @@ func (n *Node) Stop() error {
 	}
 
 	// unblock n.Wait
-	close(n.stop)
+	close(n.quitCh)
 
 	// Remove the keystore if it was created ephemerally.
 	var keystoreErr error
@@ -506,7 +489,7 @@ func (n *Node) Wait() {
 		n.lock.RUnlock()
 		return
 	}
-	stop := n.stop
+	stop := n.quitCh
 	n.lock.RUnlock()
 
 	<-stop
@@ -556,7 +539,7 @@ func (n *Node) Server() *p2p.Server {
 	return n.server
 }
 
-// Service retrieves a currently running service registered of a specific type.
+// Service retrieves and sets a currently running service registered of a specific type.
 func (n *Node) Service(service interface{}) error {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
@@ -574,13 +557,28 @@ func (n *Node) Service(service interface{}) error {
 	return ErrServiceUnknown
 }
 
-// DataDir retrieves the current datadir used by the protocol stack.
-// Deprecated: No files should be stored in this directory, use InstanceDir instead.
-func (n *Node) DataDir() string {
-	return n.config.DataDir
+// creates the directory and adds the lock
+func (n *Node) openDataDir() error {
+	if n.config.DataDir == "" {
+		return nil // ephemeral
+	}
+
+	instdir := filepath.Join(n.config.DataDir, n.config.name())
+	if err := os.MkdirAll(instdir, 0700); err != nil {
+		return err
+	}
+	// lock the instance directory to prevent concurrent use by another instance as well as
+	// accidental use of the instance directory as a database.
+	release, _, err := flock.New(filepath.Join(instdir, "LOCK"))
+	if err != nil {
+		return convertFileLockError(err)
+	}
+	n.instanceDirLock = release
+	return nil
 }
 
 // InstanceDir retrieves the instance directory used by the protocol stack.
+// It resides inside the DataDir.
 func (n *Node) InstanceDir() string {
 	return n.config.instanceDir()
 }
@@ -626,8 +624,8 @@ func (n *Node) ResolvePath(x string) string {
 	return n.config.resolvePath(x)
 }
 
-// TODO: @sangh add builtin apis
 func (n *Node) gapis() []grpc.GApi {
+	// nothing enabled for node itself.
 	return []grpc.GApi{}
 }
 
@@ -659,9 +657,4 @@ func (n *Node) apis() []rpc.API {
 			Public:    true,
 		},
 	}
-}
-
-// getRSAKey gets RSA key pair from config.
-func (n *Node) RsaKey() (*rsakey.RsaKey, error) {
-	return n.config.RsaKey()
 }

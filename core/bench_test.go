@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/configs"
-	// "bitbucket.org/cpchain/chain/consensus/ethash"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -156,11 +155,11 @@ func benchInsertChain(b *testing.B, disk bool, gen func(int, *BlockGen)) {
 	genesis := gspec.MustCommit(db)
 
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
-	chain, _ := GenerateChain(gspec.Config, genesis, dpor.NewFaker(configs.AllCpchainProtocolChanges.Dpor, db), db, remoteDB, b.N, gen)
+	chain, _ := GenerateChain(gspec.Config, genesis, dpor.NewFaker(configs.DefaultChainConfig.Dpor, db), db, remoteDB, b.N, gen)
 
 	// Time the insertion of the new chain.
 	// State and blocks are stored in the same DB.
-	chainman, _ := NewBlockChain(db, nil, gspec.Config, dpor.NewFaker(configs.AllCpchainProtocolChanges.Dpor, db), vm.Config{}, remoteDB, nil)
+	chainman, _ := NewBlockChain(db, nil, gspec.Config, dpor.NewFaker(configs.DefaultChainConfig.Dpor, db), vm.Config{}, remoteDB, nil)
 	defer chainman.Stop()
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -273,7 +272,7 @@ func benchReadChain(b *testing.B, full bool, count uint64) {
 		if err != nil {
 			b.Fatalf("error opening database at %v: %v", dir, err)
 		}
-		chain, err := NewBlockChain(db, nil, configs.TestChainConfig, dpor.NewFaker(configs.AllCpchainProtocolChanges.Dpor, testdb), vm.Config{}, remoteDB, nil)
+		chain, err := NewBlockChain(db, nil, configs.TestChainConfig, dpor.NewFaker(configs.DefaultChainConfig.Dpor, testdb), vm.Config{}, remoteDB, nil)
 		if err != nil {
 			b.Fatalf("error creating chain: %v", err)
 		}

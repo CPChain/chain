@@ -52,7 +52,7 @@ type Config struct {
 func setDefaults(cfg *Config) {
 	if cfg.ChainConfig == nil {
 		cfg.ChainConfig = &configs.ChainConfig{
-			ChainID: big.NewInt(configs.CpchainChainId),
+			ChainID: big.NewInt(configs.MainnetChainId),
 		}
 	}
 
