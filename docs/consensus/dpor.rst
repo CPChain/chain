@@ -73,25 +73,21 @@ Dpor
         #. Once received 2f+1 COMMIT messages, a validator inserts the block into local chain, and broadcasts VALIDATION message to all users.
         #. All users insert the block into local chain, if they receive f+1 VALIDATION messages
 #. **Abnormal Cases**
-    a. Abnormal Case 1: *The proposer does not fetch at least 2f+1 Validators' addresses*
-        i. It is for the case when Step 2.a.iv cannot be reached
-        #. After the proposer write its encrypted address in contrast (Step 2.a.iii), it set up a timer
-        #. If the timer expires, and the proposer does not receive 2f+1 connections,  the proposer is about to retrieve the addresses from public
-    #. Abnormal Case 2: *Validators does not receive a block from the proposer*
-        i. It is for the case when Step 2.a.v cannot be reached
+    #. Abnormal Case 1: *Validators does not receive a block from the proposer*
+        i. It is for the case when Step 2.a.f cannot be reached
         #. After a validator sends out its address to the proposer, it sets up a timer
         #. If the timer expires, the validators committee activates *impeachment*, a three-phase protocol in PBFT manner to propose the block
-    #. Abnormal Case 3: *The proposer proposes one or more faulty blocks*
-        i. Faulty blocks cannot be validated in Step 2.b.i
+    #. Abnormal Case 2: *The proposer proposes one or more faulty blocks*
+        i. Faulty blocks cannot be validated in Step 2.b.a
         #. The validators committee activates impeachment
-    #. Abnormal Case 4: *The proposer proposes multiple valid blocks*
+    #. Abnormal Case 3: *The proposer proposes multiple valid blocks*
         i. Each validator can only validate one block for a same block number
         #. Thus, it is impossible for two or more blocks to receive 2f+1 PREPARE messages simultaneously. Only one block can enter Step 2.b.4
         #. It is possible that no block receives 2f+1 PREPARE messages
-    #. Abnormal Case 5: *Some members in validators committee are faulty*
+    #. Abnormal Case 4: *Some members in validators committee are faulty*
         i. The validators committee follows the PBFT protocol.
         #. The system can reach a consensus, as long as the number of total faulty validators are less than f.
-    #. Abnormal Case 6:
+    #. Abnormal Case 5:
         i. It is for the cases when 2f+1 PREPARE messages, COMMIT messages or 2f+1 VALIDATION messages cannot be collected
         #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATION messages
         #. Any of these timer expires, the validators committee activates *impeachment*

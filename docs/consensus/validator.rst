@@ -14,14 +14,20 @@ Validators
 #. After receiving the PREPARE message
     1. Return an ackPrepare to the sender of PREPARE message
     #. Cache the header
-    #. Verify 2f+1 PREPARE message
+    #. Verify 2f+1 PREPARE messages
     #. Sign *(header, COMMIT)* into header
     #. Broadcast COMMIT message to other validators
     #. wait an ack_commit message from other validators
 #. After receiving the COMMIT message
     1. Return an ackCommit
     #. Cache the header
-    #. Verify 2f+1 COMMIT message
+    #. Verify 2f+1 COMMIT messages
     #. Sign *(header, VALIDATION)* into header
     #. Insert the block into its local chain
     #. Broadcast FINAL_COMMIT messages to all nodes
+#. Abnormal validators:
+    1. A time-out validator
+        1.
+    #. Faulty
+
+
