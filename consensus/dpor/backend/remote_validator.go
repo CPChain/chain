@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -54,6 +55,18 @@ func NewRemoteValidator(epochIdx uint64, address common.Address) *RemoteValidato
 
 		quitCh: make(chan struct{}),
 	}
+}
+
+// AddStatic adds remote validator as a static peer
+func (s *RemoteValidator) AddStatic(srv *p2p.Server) error {
+
+	rawurl := fmt.Sprintf("enode://%v@%v", s.ID().String(), s.RemoteAddr().String())
+	nodeId, err := discover.ParseNode(rawurl)
+	if err != nil {
+		return err
+	}
+	srv.AddPeer(nodeId)
+	return nil
 }
 
 func (s *RemoteValidator) disconnect(server *p2p.Server) error {

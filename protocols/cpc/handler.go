@@ -144,7 +144,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					// Add peer to manager.peers, this is for basic msg syncing
 					err := manager.addPeer(peer)
 					if err != nil {
-						log.Error("faile to add peer to cpc protocol manager's peer set", "err", err)
+						log.Warn("faile to add peer to cpc protocol manager's peer set", "err", err)
 						return err
 					}
 					defer manager.removePeer(peer.id)
@@ -153,7 +153,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					id, ok := common.Address{}.Hex(), false
 					id, ok, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
 					if err != nil {
-						log.Error("faile to add peer to dpor's peer set", "err", err)
+						log.Warn("faile to add peer to dpor's peer set", "err", err)
 						return err
 					}
 					defer dporProtocol.RemovePeer(id)
@@ -175,19 +175,19 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 						case backend.IsSyncMsg(msg):
 							err = manager.handleSyncMsg(msg, peer)
 							if err != nil {
-								log.Error("err when handling sync msg", "err", err)
+								log.Warn("err when handling sync msg", "err", err)
 								return err
 							}
 
 						case backend.IsDporMsg(msg) && ok:
 							err = dporProtocol.HandleMsg(id, msg)
 							if err != nil {
-								log.Error("err when handling dpor msg", "err", err)
+								log.Warn("err when handling dpor msg", "err", err)
 								return err
 							}
 
 						default:
-							log.Error("unknown msg code", "msg", msg.Code)
+							log.Warn("unknown msg code", "msg", msg.Code)
 						}
 
 						msg.Discard()
@@ -276,7 +276,7 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	go pm.txsyncLoop()
 
 	// update, avoid stop
-	go pm.update()
+	// go pm.update()
 }
 
 // Periodically updates the block head

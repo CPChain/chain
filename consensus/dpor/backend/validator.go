@@ -214,8 +214,13 @@ func (vh *ValidatorHandler) addRemoteValidator(version int, p *p2p.Peer, rw p2p.
 
 	err := remoteValidator.SetValidatorPeer(version, p, rw)
 	if err != nil {
+		log.Debug("failed to set remote validator")
+		return nil, err
+	}
 
-		log.Debug("failed to set peer")
+	err = remoteValidator.AddStatic(vh.server)
+	if err != nil {
+		log.Debug("failed to add remote validator as static peer")
 		return nil, err
 	}
 
@@ -315,7 +320,7 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 				go vh.BroadcastMinedBlock(block)
 
 				log.Warn("err when signing header", "hash", header.Hash, "number", header.Number.Uint64(), "err", err)
-				return e
+				return nil
 			}
 
 		default:
@@ -348,15 +353,9 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 				return nil
 			}
 
-			blk := block.Block.WithSeal(header)
-			err = vh.AddPendingBlock(blk)
-			if err != nil {
-				// TODO: remove this
-				return nil
-			}
-
 			log.Debug("inserting block to block chain", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
+			blk := block.Block.WithSeal(header)
 			err = vh.insertChainFn(blk)
 			if err != nil {
 				log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
@@ -364,15 +363,20 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 			}
 
 			log.Debug("broadcasting block to other peers", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+			// broadcast the block
+			go vh.broadcastBlockFn(blk, true)
+
+			err = vh.AddPendingBlock(blk)
+			if err != nil {
+				// TODO: remove this
+				return nil
+			}
 
 			err = vh.UpdateBlockStatus(block.NumberU64(), Inserted)
 			if err != nil {
 				log.Warn("err when updating block status", "number", block.NumberU64(), "err", err)
-				return err
+				return nil
 			}
-
-			// broadcast the block
-			go vh.broadcastBlockFn(blk, true)
 
 		case consensus.ErrNotEnoughSigs:
 			// sign the block
@@ -396,7 +400,7 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 				}
 
 				log.Warn("err when signing header", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
-				return e
+				return nil
 			}
 
 		default:
