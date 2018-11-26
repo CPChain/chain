@@ -427,10 +427,12 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	testDporSnapshot := &DporSnapshot{
 		config: tt.config,
 		// sigcache:      tt.fields.sigcache,
-		Number:        tt.Number,
-		Hash:          tt.Hash,
-		Candidates:    tt.Candidates,
-		RecentSigners: tt.RecentSigners,
+		Number:           tt.Number,
+		Hash:             tt.Hash,
+		Candidates:       tt.Candidates,
+		RecentSigners:    tt.RecentSigners,
+		RecentProposers:  tt.RecentSigners,
+		RecentValidators: map[uint64][]common.Address{},
 	}
 	//fmt.Println("Candidates: ", testDporSnapshot.Candidates)
 	//fmt.Println("Recent signer: ", testDporSnapshot.RecentSigners)
@@ -438,10 +440,7 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	//testDporSnapshot.setRecentSigners(1, []common.Address{common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")})
 
 	//err here may never have a value, as the updateSigners always returns a nil error message
-	err := testDporSnapshot.updateSigners(testRptList, testSeed)
-	if err != nil {
-		t.Errorf("DporSnapshot.updateSigners returns an error message, as %v\n", err)
-	}
+	testDporSnapshot.updateProposers(testRptList, testSeed)
 	testEpochIdx := testDporSnapshot.Term()
 	fmt.Println(testEpochIdx)
 	recentSigner := testDporSnapshot.getRecentSigners(testEpochIdx + 1)
@@ -453,10 +452,7 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	testDporSnapshot.Number = 2000
 	expectedResult.Number = 2000
 	fmt.Println("ifStarElection() = ", testDporSnapshot.isStartElection())
-	err = testDporSnapshot.updateSigners(testRptList, testSeed)
-	if err != nil {
-		t.Errorf("DporSnapshot.updateSigners returns an error message, as %v\n", err)
-	}
+	testDporSnapshot.updateProposers(testRptList, testSeed)
 	testEpoch := testDporSnapshot.config.TermLen
 	expectedSigner := election.Elect(testRptList, testSeed, int(testEpoch))
 	testEpochIdx = testDporSnapshot.Term()

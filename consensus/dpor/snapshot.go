@@ -604,7 +604,7 @@ func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, e
 	b := view == int(((number-1)%(s.config.TermLen*s.config.ViewLen))/s.config.ViewLen)
 	return b, nil
 	//TODO: @shiyc finish it during the implement of impeachment
-	return false, nil
+	//return false, nil
 }
 
 // IsProposerOf returns if an address is a proposer in the given block number
