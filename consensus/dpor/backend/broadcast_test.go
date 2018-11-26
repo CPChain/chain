@@ -12,71 +12,64 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
-func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
+func TestHandler_BroadcastMinedBlock(t *testing.T) {
 	type fields struct {
-		epochIdx           uint64
-		epochLength        uint64
+		mode               HandlerMode
+		term               uint64
+		termLen            uint64
+		maxInitNumber      uint64
 		nodeId             string
 		coinbase           common.Address
 		server             *p2p.Server
 		rsaKey             *rsakey.RsaKey
+		knownBlocks        *RecentBlocks
 		contractAddress    common.Address
 		contractCaller     *ContractCaller
 		contractInstance   *contract.SignerConnectionRegister
 		contractTransactor *bind.TransactOpts
-		signers            map[common.Address]*RemoteValidator
+		remoteValidators   map[common.Address]*RemoteValidator
 		snap               *consensus.PbftStatus
-		statusFn           StatusFn
-		statusUpdateFn     StatusUpdateFn
-		getEmptyBlockFn    GetEmptyBlockFn
-		verifyHeaderFn     VerifyHeaderFn
-		verifyBlockFn      ValidateBlockFn
-		signHeaderFn       SignHeaderFn
-		insertChainFn      InsertChainFn
-		broadcastBlockFn   BroadcastBlockFn
-		validateSignerFn   VerifyRemoteValidatorFn
+		dpor               DporService
 		pendingBlockCh     chan *types.Block
 		quitSync           chan struct{}
 		dialed             bool
 		available          bool
 	}
+	type args struct {
+		block *types.Block
+	}
 	tests := []struct {
 		name   string
 		fields fields
+		args   args
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h := &Handler{
-				term:                    tt.fields.epochIdx,
-				termLen:                 tt.fields.epochLength,
-				nodeId:                  tt.fields.nodeId,
-				coinbase:                tt.fields.coinbase,
-				server:                  tt.fields.server,
-				rsaKey:                  tt.fields.rsaKey,
-				contractAddress:         tt.fields.contractAddress,
-				contractCaller:          tt.fields.contractCaller,
-				contractInstance:        tt.fields.contractInstance,
-				contractTransactor:      tt.fields.contractTransactor,
-				remoteValidators:        tt.fields.signers,
-				snap:                    tt.fields.snap,
-				statusFn:                tt.fields.statusFn,
-				statusUpdateFn:          tt.fields.statusUpdateFn,
-				getEmptyBlockFn:         tt.fields.getEmptyBlockFn,
-				verifyHeaderFn:          tt.fields.verifyHeaderFn,
-				validateBlockFn:         tt.fields.verifyBlockFn,
-				signHeaderFn:            tt.fields.signHeaderFn,
-				insertChainFn:           tt.fields.insertChainFn,
-				broadcastBlockFn:        tt.fields.broadcastBlockFn,
-				verifyRemoteValidatorFn: tt.fields.validateSignerFn,
-				pendingBlockCh:          tt.fields.pendingBlockCh,
-				quitSync:                tt.fields.quitSync,
-				dialed:                  tt.fields.dialed,
-				available:               tt.fields.available,
+				mode:               tt.fields.mode,
+				term:               tt.fields.term,
+				termLen:            tt.fields.termLen,
+				maxInitNumber:      tt.fields.maxInitNumber,
+				nodeId:             tt.fields.nodeId,
+				coinbase:           tt.fields.coinbase,
+				server:             tt.fields.server,
+				rsaKey:             tt.fields.rsaKey,
+				knownBlocks:        tt.fields.knownBlocks,
+				contractAddress:    tt.fields.contractAddress,
+				contractCaller:     tt.fields.contractCaller,
+				contractInstance:   tt.fields.contractInstance,
+				contractTransactor: tt.fields.contractTransactor,
+				remoteValidators:   tt.fields.remoteValidators,
+				snap:               tt.fields.snap,
+				dpor:               tt.fields.dpor,
+				pendingBlockCh:     tt.fields.pendingBlockCh,
+				quitSync:           tt.fields.quitSync,
+				dialed:             tt.fields.dialed,
+				available:          tt.fields.available,
 			}
-			// TODO: this is wrong, fix this
-			h.PendingBlockBroadcastLoop()
+			h.BroadcastMinedBlock(tt.args.block)
 		})
 	}
 }
