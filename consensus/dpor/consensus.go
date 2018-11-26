@@ -361,19 +361,3 @@ func (d *Dpor) State() consensus.State {
 	defer d.lock.Unlock()
 	return d.pbftState
 }
-
-// SignHeader signs the header and adds all known sigs to header
-func (d *Dpor) SignHeader(chain consensus.ChainReader, header *types.Header, state consensus.State) error {
-
-	switch err := d.dh.signHeader(d, chain, header, state); err {
-	case nil:
-		return nil
-	default:
-		return consensus.ErrWhenSigningHeader
-	}
-}
-
-// ValidateBlock validates a basic field excepts seal of a block.
-func (d *Dpor) ValidateBlock(chain consensus.ChainReader, block *types.Block) error {
-	return d.dh.validateBlock(d, chain, block)
-}
