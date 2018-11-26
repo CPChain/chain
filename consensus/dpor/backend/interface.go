@@ -60,20 +60,13 @@ type PbftHandler interface {
 
 	SetContractCaller(cc *ContractCaller) error
 
-	UpdateSigners(epochIdx uint64, signers []common.Address) error
+	UpdateValidators(epochIdx uint64, signers []common.Address) error
+
+	UpdateProposers(epochIdx uint64, signers []common.Address) error
 
 	Start() error
 
 	Stop() error
-
-	// SendMsg(addr common.Address, msg interface{}) error
-
-	// BroadcastMsg(msg interface{}) error
-
-	// DialAll() error
-
-	// Disconnect() error
-
 }
 
 type VerifyRemoteValidatorFn func(signer common.Address) (bool, error)
