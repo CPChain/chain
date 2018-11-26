@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/core/vm"
+	register "bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/protocols/cpc"
@@ -92,32 +92,12 @@ func registerChainService(cfg *cpc.Config, n *node.Node) {
 		// 	fullNode.AddLesServer(ls)
 		// }
 		//
-		//for addr, c := range fullNode.MakePrimitiveContracts(n, client) {
-		//	vm.RegisterPrimitiveContract(addr, c)
-		//}
 
 		return fullNode, err
 	})
 	if err != nil {
 		log.Fatalf("Failed to register the chain service: %v", err)
 	}
-}
-
-func makePrimitiveContracts(n *node.Node) {
-	var cpchainService *cpc.CpchainService
-	// cpchainService will point to the real cpchain service in n.services
-	if err := n.Service(&cpchainService); err != nil {
-		log.Fatalf("Cpchain service not running: %v", err)
-	}
-	rpcClient, err := n.Attach()
-	if err != nil {
-		log.Fatal("can't get rpc.client after start", "error", err)
-	}
-	client := cpclient.NewClient(rpcClient)
-	for addr, c := range cpchainService.MakePrimitiveContracts(n, client) {
-		vm.RegisterPrimitiveContract(addr, c)
-	}
-
 }
 
 // Creates a node with chain services registered
@@ -133,7 +113,8 @@ func startNode(n *node.Node) {
 	if err := n.Start(); err != nil {
 		log.Fatalf("Error starting protocol n: %v", err)
 	}
-	makePrimitiveContracts(n)
+	register.RegisterPrimitiveContracts(n)
+
 }
 
 // makePasswordList reads password lines from the file specified by the global --password flag.
@@ -233,10 +214,6 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		}
 		// // Set the gas price to the limits from the CLI and start mining
 		// cpchainService.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
-		//
-		//for addr, c := range cpchainService.MakePrimitiveContracts(n, client) {
-		//	vm.RegisterPrimitiveContract(addr, c)
-		//}
 
 		contractCaller := createContractCaller(ctx, n)
 
