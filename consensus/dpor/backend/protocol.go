@@ -3,6 +3,7 @@ package backend
 import (
 	"fmt"
 
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 )
@@ -31,11 +32,20 @@ const (
 	// PrepreparePendingBlockMsg is Preprepare phrase msg code
 	PrepreparePendingBlockMsg = 0x43
 
+	// PrepreparePendingEmptyBlockMsg is Preprepare phrase msg code for empty block
+	PrepreparePendingEmptyBlockMsg = 0x44
+
 	// PrepareSignedHeaderMsg is Prepare phrase msg code
-	PrepareSignedHeaderMsg = 0x44
+	PrepareSignedHeaderMsg = 0x45
+
+	// PrepareSignedEmptyHeaderMsg is Prepare phrase msg code for empty header
+	PrepareSignedEmptyHeaderMsg = 0x46
 
 	// CommitSignedHeaderMsg is Commit phrase msg code
-	CommitSignedHeaderMsg = 0x45
+	CommitSignedHeaderMsg = 0x47
+
+	// CommitSignedEmptyHeaderMsg is Commit phrase msg code for empty header
+	CommitSignedEmptyHeaderMsg = 0x48
 )
 
 // ProtocolMaxMsgSize Maximum cap on the size of a protocol message
@@ -104,4 +114,27 @@ func IsSyncMsg(msg p2p.Msg) bool {
 
 func IsDporMsg(msg p2p.Msg) bool {
 	return msg.Code >= PbftMsgOutset
+}
+
+// RecoverBlockFromMsg recovers a block from a p2p msg
+func RecoverBlockFromMsg(msg p2p.Msg, p *p2p.Peer) (*types.Block, error) {
+	// recover the block
+	var block *types.Block
+	if err := msg.Decode(&block); err != nil {
+		return nil, errResp(ErrDecode, "%v: %v", msg, err)
+	}
+	block.ReceivedAt = msg.ReceivedAt
+	block.ReceivedFrom = p
+
+	return block, nil
+}
+
+// RecoverHeaderFromMsg recovers a header from a p2p msg
+func RecoverHeaderFromMsg(msg p2p.Msg, p *p2p.Peer) (*types.Header, error) {
+	// retrieve the header
+	var header *types.Header
+	if err := msg.Decode(&header); err != nil {
+		return nil, errResp(ErrDecode, "msg %v: %v", msg, err)
+	}
+	return header, nil
 }

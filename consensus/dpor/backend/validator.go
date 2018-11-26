@@ -43,7 +43,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			// sign the block
 			header := block.Header()
-			switch e := vh.dpor.SignHeader(header, consensus.Preprepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Preparing); e {
 			case nil:
 
 				log.Debug("signed preprepare header, adding to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
@@ -88,7 +88,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		// verify the signed header
 		// if correct, insert the block into chain, broadcast it
-		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Committing); err {
 		case nil:
 			// with enough prepare sigs
 
@@ -131,7 +131,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			log.Debug("without enough sigs in siged prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
-			switch e := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); e {
+			switch e := vh.dpor.VerifyHeaderWithState(header, consensus.Committing); e {
 			case nil:
 
 				log.Debug("signed prepare header, broadcasting...", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
@@ -163,31 +163,31 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 	switch vh.dpor.Status().State {
-	case consensus.NewRound:
+	case consensus.Prepreparing:
 		// if leader, send mined block with preprepare msg, enter preprepared
 		// if not leader, wait for a new preprepare block, verify basic field, enter preprepared
 		// if timer expired, send new empty block, enter preprepared
 
 		vh.handlePreprepareMsg(msg, p)
 
-	case consensus.Preprepared:
+	case consensus.Preparing:
 
 		// broadcast prepare msg
 
 		// wait for enough(>2f+1, >2/3) prepare msg, if true, enter prepared
 		vh.handlePrepareMsg(msg, p)
 
-	case consensus.Prepared:
+	case consensus.Committing:
 
 		// broadcast commit msg
 
 		// wait for enough commit msg, if true, enter committed
 		vh.handleCommitMsg(msg, p)
 
-	case consensus.Committed:
+	case consensus.Validating:
 		// insert block to chain, if succeed, enter finalcommitted
 
-	case consensus.FinalCommitted:
+	case consensus.Inserting:
 		// broadcast block to normal peers, once finished, enter newround
 
 	default:
@@ -202,13 +202,11 @@ func (vh *Handler) handlePreprepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 	switch {
 	case msg.Code == PrepreparePendingBlockMsg:
 
-		// recover the block
-		var block *types.Block
-		if err := msg.Decode(&block); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
+		block, err := RecoverBlockFromMsg(msg, p.Peer)
+		if err != nil {
+			// TODO: fix this
+			return err
 		}
-		block.ReceivedAt = msg.ReceivedAt
-		block.ReceivedFrom = p
 
 		// Verify the block
 		// if correct, sign it and broadcast as Prepare msg
@@ -221,14 +219,12 @@ func (vh *Handler) handlePreprepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		// TODO: add empty view change block verification here
 
-		// verify header, if basic fields are correct, broadcast prepare msg
-		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Preprepared); err {
-
+		switch err := vh.dpor.ValidateBlock(block); err {
 		// basic fields are correct
 		case nil:
 
 			// sign the block
-			switch e := vh.dpor.SignHeader(header, consensus.Preprepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Preparing); e {
 			case nil:
 
 				// broadcast prepare msg
@@ -236,7 +232,8 @@ func (vh *Handler) handlePreprepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 				// update dpor status
 				vh.dpor.StatusUpdate()
-				// now prepared
+
+				// now preparing
 
 			default:
 				return e
@@ -245,6 +242,8 @@ func (vh *Handler) handlePreprepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 		default:
 			return err
 		}
+
+	case msg.Code == PrepareSignedHeaderMsg:
 
 	default:
 		log.Warn("receievd unwelcome msg in state Preprepare", "msg code", msg.Code)
@@ -264,12 +263,12 @@ func (vh *Handler) handlePrepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		// verify the signed header
 		// if correct, rebroadcast it as Commit msg
-		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Committing); err {
 
 		// with enough prepare sigs
 		case nil:
 			// sign the block
-			switch e := vh.dpor.SignHeader(header, consensus.Prepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Committing); e {
 			case nil:
 
 				// broadcast prepare msg
@@ -304,7 +303,7 @@ func (vh *Handler) handleCommitMsg(msg p2p.Msg, p *RemoteValidator) error {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
-		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Committed); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Validating); err {
 
 		// with enough commit sigs
 		case nil:
