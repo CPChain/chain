@@ -47,6 +47,9 @@ test-coverage: all
 test-race: all
 	build/env.sh go run build/ci.go raceTest
 
+test-nocache: all
+	build/env.sh go run build/ci.go noCacheTest
+
 lint: ## Run linters.
 	build/env.sh go run build/ci.go lint
 

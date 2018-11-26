@@ -351,13 +351,15 @@ func (s *CpchainService) Cpcbase() (eb common.Address, err error) {
 	return common.Address{}, fmt.Errorf("cpcbase must be explicitly specified")
 }
 
-// SetChainbase sets the mining reward address.
+// deprecated: use SetCoinbase
+// TODO add SetCoinbase
+// SetCoinbase sets the mining reward address.
 func (s *CpchainService) SetCpcbase(cpcbase common.Address) {
 	s.lock.Lock()
 	s.cpcbase = cpcbase
 	s.lock.Unlock()
 
-	s.miner.SetChainbase(cpcbase)
+	s.miner.SetCoinbase(cpcbase)
 }
 
 func (s *CpchainService) StartMining(local bool, contractCaller *consensus.ContractCaller) error {
@@ -374,7 +376,7 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 		}
 		dpor.Authorize(eb, wallet.SignHash)
 
-		log.Info("I am in s.StartMining")
+		log.Info("start mining...")
 		// TODO: fix this, update contract caller with private key here. Liu Qian
 		log.Info("s.pm.committeeNetworkHandler in s.StartMining", "s.pm.committeeNetworkHandler", s.protocolManager.committeeNetworkHandler)
 
@@ -405,8 +407,8 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 		// will ensure that private networks work in single miner mode too.
 		atomic.StoreUint32(&s.protocolManager.acceptTxs, 1)
 	}
-	go s.miner.Start(eb)
 
+	go s.miner.Start(eb)
 	// go s.AddCommittee()
 
 	return nil
@@ -454,7 +456,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 		s.protocolManager.engine.SetCommitteeNetworkHandler(s.protocolManager.committeeNetworkHandler)
 	}
 
-	log.Info("cpchainService started")
+	log.Info("CpchainService started")
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers

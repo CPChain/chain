@@ -1154,6 +1154,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		err := <-results
 		if err == nil {
+			// before validate state, we first validate block body
 			err = bc.Validator().ValidateBody(block)
 		}
 		switch {

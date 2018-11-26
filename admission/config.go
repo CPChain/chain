@@ -50,6 +50,7 @@ type Config struct {
 }
 
 // DefaultCampaignContractAddress default campaign contract address
+// TODO @chengx delete it.  associate the address with the chain it's on, either mainnet or testnet
 var DefaultCampaignContractAddress = "0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"
 
 // DefaultConfig default admission config.
@@ -59,6 +60,7 @@ var DefaultConfig = Config{
 	MemoryDifficulty:        MemoryDifficulty,
 	MemoryCpuLifeTime:       time.Duration(MemoryWorkTimeout * time.Second),
 	CampaignContractAddress: DefaultCampaignContractAddress,
+	// TODO @chengx no hardcoded numbers.
 	Deposit:                 int64(50),
 	NumberOfCampaignTimes:   int64(1),
 }

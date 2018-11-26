@@ -1,18 +1,5 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package types
 
@@ -38,6 +25,7 @@ var (
 const (
 	TxTypePrivate = 1 << iota
 
+	// TODO @chengx cleanup this.
 	BasicTx = 0
 )
 
@@ -70,7 +58,7 @@ type txdata struct {
 }
 
 type txdataMarshaling struct {
-	Type        hexutil.Uint64
+	Type         hexutil.Uint64
 	AccountNonce hexutil.Uint64
 	Price        *hexutil.Big
 	GasLimit     hexutil.Uint64
@@ -381,9 +369,10 @@ func NewTransactionsByPriceAndNonce(signer Signer, txs map[common.Address]Transa
 	heads := make(TxByPrice, 0, len(txs))
 	for from, accTxs := range txs {
 		heads = append(heads, accTxs[0])
-		// Ensure the sender address is from the signer
+		// get the sender
 		acc, _ := Sender(signer, accTxs[0])
 		txs[acc] = accTxs[1:]
+		// safety check.  from must be the same as acc
 		if from != acc {
 			delete(txs, from)
 		}

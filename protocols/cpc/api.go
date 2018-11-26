@@ -134,7 +134,7 @@ func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 	return true
 }
 
-// SetChainbase sets the cpcbase of the miner
+// SetCoinbase sets the cpcbase of the miner
 func (api *PrivateMinerAPI) SetCpcbase(cpcbase common.Address) bool {
 	api.c.SetCpcbase(cpcbase)
 	return true
