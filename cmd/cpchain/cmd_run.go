@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
-	register "bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/protocols/cpc"
@@ -114,7 +114,7 @@ func startNode(n *node.Node) {
 		log.Fatalf("Error starting protocol n: %v", err)
 	}
 	// TODO @xumx this is wrong!  please register vm primitive contracts before node is started.
-	register.RegisterPrimitiveContracts(n)
+	primitive_register.RegisterPrimitiveContracts(n)
 }
 
 // makePasswordList reads password lines from the file specified by the global --password flag.
