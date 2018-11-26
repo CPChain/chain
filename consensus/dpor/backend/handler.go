@@ -263,20 +263,6 @@ func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	}
 }
 
-// ReceiveMinedPendingBlock receives a block to add to pending block channel
-// TODO: move to proposer.go
-func (vh *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
-	select {
-	case vh.pendingBlockCh <- block:
-		err := vh.AddPendingBlock(block)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
 // SetFuncs sets some funcs
 // TODO: refact this
 func (vh *Handler) SetFuncs(
