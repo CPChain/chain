@@ -75,7 +75,7 @@ type Backend interface {
 	RemoteDB() database.RemoteDatabase // RemoteDB returns remote database instance.
 
 	//RNode API
-	RNode() []common.Address
+	RNode() ([]common.Address, uint64)
 	CurrentView() uint64
 	CurrentTerm() uint64
 	CommitteMember() []common.Address

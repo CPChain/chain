@@ -41,7 +41,7 @@ var (
 	_ = cpchain.PendingContractCaller(&cpclient.Client{})
 )
 
-func TestGetRNode(t *testing.T) {
+func TestGetRNodes(t *testing.T) {
 	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
@@ -52,31 +52,15 @@ func TestGetRNode(t *testing.T) {
 	rnodes, err := client.GetRNodes(context.Background())
 	fmt.Println(rnodes, err)
 
-	fmt.Println("rpt is :", "addr", rnodes.Address, "rpt", rnodes.Rpt, "status", rnodes.Status)
+	fmt.Println("rpt is :", "addr", rnodes[0].Address, "rpt", rnodes[0].Rpt, "status", rnodes[0].Status)
 
-	if rnodes.Rpt == 0 {
-		t.Errorf("GetRNodes failed")
-	}
-}
-
-func TestGetRNodeAddress(t *testing.T) {
-	t.Skip("skip test")
-	fmt.Println("*******************************************************")
-	client, err := cpclient.Dial("http://localhost:8501")
-	// local
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	rnodes, err := client.GetRNodesaddress(context.Background())
-	fmt.Println(rnodes, err)
-
-	if len(rnodes) == 0 {
+	if rnodes[0].Rpt == 0 {
 		t.Errorf("GetRNodes failed")
 	}
 }
 
 func TestGetCurrentTerm(t *testing.T) {
-	//t.Skip("skip test")
+	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	if err != nil {
@@ -91,7 +75,7 @@ func TestGetCurrentTerm(t *testing.T) {
 }
 
 func TestGetCurrentView(t *testing.T) {
-	//t.Skip("skip test")
+	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local

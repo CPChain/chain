@@ -483,20 +483,25 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 //}
 
 // Query RNodes.
-func (s *PublicBlockChainAPI) GetRNodes(view_idex *big.Int) []cpclient.RNode {
+func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNode {
 	// TODO fill biz logic later
 	var rNodeAddress []common.Address
 	var committeAddress []common.Address
+	var bn uint64
+
+	fmt.Println("sfdsfdsfsfdsfsdfds")
 
 	var RNodes []cpclient.RNode
 
-	rNodeAddress = s.b.RNode()
+	rNodeAddress, bn = s.b.RNode()
+	fmt.Println("the rNodeAddress is", len(rNodeAddress))
 	committeAddress = s.b.CommitteMember()
+	fmt.Println("the CommitteMember is", len(committeAddress))
 
 	for _, rodeAddr := range rNodeAddress {
 		for _, comAddr := range committeAddress {
 			if comAddr == rodeAddr {
-				score := s.b.CalcRptInfo(comAddr, view_idex.Uint64())
+				score := s.b.CalcRptInfo(comAddr, bn)
 				r := cpclient.RNode{
 					Address: comAddr,
 					Rpt:     score,
@@ -505,7 +510,7 @@ func (s *PublicBlockChainAPI) GetRNodes(view_idex *big.Int) []cpclient.RNode {
 				RNodes = append(RNodes, r)
 			}
 		}
-		score := s.b.CalcRptInfo(rodeAddr, view_idex.Uint64())
+		score := s.b.CalcRptInfo(rodeAddr, bn)
 		r := cpclient.RNode{
 			Address: rodeAddr,
 			Rpt:     score,
@@ -534,16 +539,17 @@ func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committee {
 
 	v := s.b.CurrentView()
 	t := s.b.CurrentTerm()
+	bn := s.b.CurrentBlock()
 	var committees []cpclient.Committee
 
 	for i := uint64(0); i < t; i++ {
-		header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber-rpc.BlockNumber(t-i))
+		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(bn.Header().Number.Uint64())-rpc.BlockNumber(i))
 		if err != nil {
 			log.Fatal("can't get header", err)
 		}
 		committee := cpclient.Committee{
 			//TODO fill PublicKey logic later
-			View: v, Term: t, Producer: header.Coinbase, PublicKey: "", Block: uint64(rpc.LatestBlockNumber - rpc.BlockNumber(t-i)),
+			View: v, Term: t, Producer: header.Coinbase, PublicKey: "", Block: uint64(rpc.BlockNumber(bn.Header().Number.Uint64()) - rpc.BlockNumber(i)),
 		}
 		committees = append(committees, committee)
 	}

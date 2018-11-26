@@ -247,12 +247,12 @@ func (b *APIBackend) RemoteDB() database.RemoteDatabase {
 	return b.cpc.RemoteDB()
 }
 
-func (b *APIBackend) RNode() []common.Address {
+func (b *APIBackend) RNode() ([]common.Address, uint64) {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
-	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
-	Term := uint64(bn.Uint64()) / (vl * tl)
-	return b.cpc.engine.(*dpor.Dpor).RNode(big.NewInt(int64(Term)))
+	api := b.cpc.engine.(*dpor.Dpor).APIs(b.cpc.blockchain)
+	sp, _ := api[0].Service.(*dpor.API).GetSnapshot(rpc.BlockNumber(bn.Uint64()))
+	return sp.Candidates, bn.Uint64()
 }
 
 func (b *APIBackend) CurrentView() uint64 {
@@ -273,10 +273,7 @@ func (b *APIBackend) CurrentTerm() uint64 {
 
 func (b *APIBackend) CommitteMember() []common.Address {
 	block := b.cpc.blockchain.CurrentBlock()
-	bn := block.Number()
-	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
-	Term := uint64(bn.Uint64()) / (vl * tl)
-	return b.cpc.engine.(*dpor.Dpor).CommitteMember(big.NewInt(int64(Term)))
+	return block.Header().Dpor.Proposers
 }
 
 func (b *APIBackend) CalcRptInfo(address common.Address, blockNum uint64) int64 {
