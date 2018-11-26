@@ -48,7 +48,7 @@ func TestHandler_PendingBlockBroadcastLoop(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &ValidatorHandler{
+			h := &Handler{
 				term:                    tt.fields.epochIdx,
 				termLen:                 tt.fields.epochLength,
 				nodeId:                  tt.fields.nodeId,

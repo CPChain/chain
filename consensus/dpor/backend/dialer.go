@@ -15,7 +15,7 @@ import (
 )
 
 // SetServer sets handler.server
-func (h *ValidatorHandler) SetServer(server *p2p.Server) error {
+func (h *Handler) SetServer(server *p2p.Server) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -26,7 +26,7 @@ func (h *ValidatorHandler) SetServer(server *p2p.Server) error {
 }
 
 // SetRsaKey sets handler.rsaKey
-func (h *ValidatorHandler) SetRsaKey(rsaReader RsaReader) error {
+func (h *Handler) SetRsaKey(rsaReader RsaReader) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -37,7 +37,7 @@ func (h *ValidatorHandler) SetRsaKey(rsaReader RsaReader) error {
 }
 
 // SetContractCaller sets handler.contractcaller.
-func (h *ValidatorHandler) SetContractCaller(contractCaller *ContractCaller) error {
+func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 
 	// creates an contract instance
 	contractInstance, err := contract.NewSignerConnectionRegister(h.contractAddress, contractCaller.Client)
@@ -78,7 +78,7 @@ func (h *ValidatorHandler) SetContractCaller(contractCaller *ContractCaller) err
 }
 
 // UpdateSigners updates Handler's signers.
-func (h *ValidatorHandler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
+func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
 	h.lock.Lock()
 	remoteSigners := h.remoteValidators
 	h.lock.Unlock()
@@ -99,7 +99,7 @@ func (h *ValidatorHandler) UpdateSigners(epochIdx uint64, signers []common.Addre
 }
 
 // DialAll connects remote signers.
-func (h *ValidatorHandler) DialAll() {
+func (h *Handler) DialAll() {
 	h.lock.Lock()
 	rsaKey := h.rsaKey
 	nodeID, address := h.nodeId, h.coinbase
