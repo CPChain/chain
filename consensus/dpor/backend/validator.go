@@ -35,7 +35,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 		// Verify the block
 		// if correct, sign it and broadcast as Prepare msg
 		// verify header, if basic fields are correct, broadcast prepare msg
-		switch err := vh.validateBlockFn(block); err {
+		switch err := vh.dpor.ValidateBlock(block); err {
 		case nil:
 			// basic fields are correct
 
@@ -43,7 +43,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			// sign the block
 			header := block.Header()
-			switch e := vh.signHeaderFn(header, consensus.Preprepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Preprepared); e {
 			case nil:
 
 				log.Debug("signed preprepare header, adding to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
@@ -62,7 +62,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			default:
 
-				if !vh.hasBlockInChain(block.Hash(), block.NumberU64()) {
+				if !vh.dpor.HasBlockInChain(block.Hash(), block.NumberU64()) {
 					go vh.BroadcastMinedBlock(block)
 				}
 
@@ -88,7 +88,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		// verify the signed header
 		// if correct, insert the block into chain, broadcast it
-		switch err := vh.verifyHeaderFn(header, consensus.Prepared); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
 		case nil:
 			// with enough prepare sigs
 
@@ -103,7 +103,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			log.Debug("inserting block to block chain", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 			blk := block.Block.WithSeal(header)
-			err = vh.insertChainFn(blk)
+			err = vh.dpor.InsertChain(blk)
 			if err != nil {
 				log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
 				return err
@@ -111,8 +111,8 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			log.Debug("broadcasting block to other peers", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 			// broadcast the block
-			go vh.broadcastBlockFn(blk, true)
-			go vh.broadcastBlockFn(blk, false)
+			go vh.dpor.BroadcastBlock(blk, true)
+			go vh.dpor.BroadcastBlock(blk, false)
 
 			err = vh.AddPendingBlock(blk)
 			if err != nil {
@@ -131,7 +131,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			log.Debug("without enough sigs in siged prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
-			switch e := vh.signHeaderFn(header, consensus.Prepared); e {
+			switch e := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); e {
 			case nil:
 
 				log.Debug("signed prepare header, broadcasting...", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
@@ -142,7 +142,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 				// TODO: remove this
 				block, err := vh.GetPendingBlock(header.Number.Uint64())
-				if block != nil && block.Block != nil && vh.hasBlockInChain(header.Hash(), header.Number.Uint64()) {
+				if block != nil && block.Block != nil && vh.dpor.HasBlockInChain(header.Hash(), header.Number.Uint64()) {
 					vh.BroadcastMinedBlock(block.Block)
 					return nil
 				}
@@ -162,7 +162,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 }
 
 func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
-	switch vh.statusFn().State {
+	switch vh.dpor.Status().State {
 	case consensus.NewRound:
 		// if leader, send mined block with preprepare msg, enter preprepared
 		// if not leader, wait for a new preprepare block, verify basic field, enter preprepared
@@ -222,20 +222,20 @@ func (vh *Handler) handlePreprepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 		// TODO: add empty view change block verification here
 
 		// verify header, if basic fields are correct, broadcast prepare msg
-		switch err := vh.verifyHeaderFn(header, consensus.Preprepared); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Preprepared); err {
 
 		// basic fields are correct
 		case nil:
 
 			// sign the block
-			switch e := vh.signHeaderFn(header, consensus.Preprepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Preprepared); e {
 			case nil:
 
 				// broadcast prepare msg
 				go vh.BroadcastPrepareSignedHeader(header)
 
 				// update dpor status
-				vh.statusUpdateFn()
+				vh.dpor.StatusUpdate()
 				// now prepared
 
 			default:
@@ -264,18 +264,18 @@ func (vh *Handler) handlePrepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		// verify the signed header
 		// if correct, rebroadcast it as Commit msg
-		switch err := vh.verifyHeaderFn(header, consensus.Prepared); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
 
 		// with enough prepare sigs
 		case nil:
 			// sign the block
-			switch e := vh.signHeaderFn(header, consensus.Prepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Prepared); e {
 			case nil:
 
 				// broadcast prepare msg
 				go vh.BroadcastCommitSignedHeader(header)
 
-				vh.statusUpdateFn()
+				vh.dpor.StatusUpdate()
 				// now prepared
 
 			default:
@@ -304,13 +304,13 @@ func (vh *Handler) handleCommitMsg(msg p2p.Msg, p *RemoteValidator) error {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
-		switch err := vh.verifyHeaderFn(header, consensus.Committed); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Committed); err {
 
 		// with enough commit sigs
 		case nil:
 
 			// update dpor state and pbftstatus
-			vh.statusUpdateFn()
+			vh.dpor.StatusUpdate()
 			// now committed
 
 			if block, err := vh.GetPendingBlock(header.Number.Uint64()); block != nil && err == nil {
@@ -318,20 +318,20 @@ func (vh *Handler) handleCommitMsg(msg p2p.Msg, p *RemoteValidator) error {
 				blk := block.WithSeal(header)
 
 				// insert into chain
-				if err := vh.insertChainFn(blk); err != nil {
+				if err := vh.dpor.InsertChain(blk); err != nil {
 					return err
 				}
 
 				// update dpor state and pbftstatus
-				vh.statusUpdateFn()
+				vh.dpor.StatusUpdate()
 				// now final-committed
 
 				// broadcast the block
-				go vh.broadcastBlockFn(blk, true)
-				go vh.broadcastBlockFn(blk, false)
+				go vh.dpor.BroadcastBlock(blk, true)
+				go vh.dpor.BroadcastBlock(blk, false)
 
 				// update dpor state and pbftstatus
-				vh.statusUpdateFn()
+				vh.dpor.StatusUpdate()
 				// now new-round
 
 			}
@@ -349,7 +349,7 @@ func (vh *Handler) handleCommitMsg(msg p2p.Msg, p *RemoteValidator) error {
 // ReadyToImpeach returns if its time to impeach leader
 func (vh *Handler) ReadyToImpeach() bool {
 	snap := vh.snap
-	head := vh.statusFn()
+	head := vh.dpor.Status()
 
 	if head.Head.Number.Uint64() <= snap.Head.Number.Uint64() {
 		return true

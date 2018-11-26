@@ -53,29 +53,7 @@ type Handler struct {
 
 	// previous stable pbft status
 	snap *consensus.PbftStatus
-
-	// this func is from dpor, to determine the state
-	statusFn       StatusFn
-	statusUpdateFn StatusUpdateFn
-
-	getEmptyBlockFn GetEmptyBlockFn
-
-	hasBlockInChain HasBlockInChain
-
-	// those three funcs are methods from dpor, used for header verification and signing
-	verifyHeaderFn  VerifyHeaderFn
-	validateBlockFn ValidateBlockFn
-	signHeaderFn    SignHeaderFn
-
-	// this func is method from blockchain, used for inserting a block to chain
-	insertChainFn InsertChainFn
-
-	// this func is method from cpc/handler(ProtocolManager),
-	// used for broadcasting a block to my normal peers
-	broadcastBlockFn BroadcastBlockFn
-
-	// this func is method from dpor, used for checking if a remote peer is validator
-	verifyRemoteValidatorFn VerifyRemoteValidatorFn
+	dpor DporService
 
 	pendingBlockCh chan *types.Block
 	quitSync       chan struct{}
@@ -135,7 +113,7 @@ func (vh *Handler) GetProtocol() consensus.Protocol {
 // NodeInfo returns node status
 func (vh *Handler) NodeInfo() interface{} {
 
-	return vh.statusFn()
+	return vh.dpor.Status()
 }
 
 // Name returns protocol name
@@ -164,7 +142,7 @@ func (vh *Handler) Available() bool {
 // AddPeer adds a p2p peer to local peer set
 func (vh *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error) {
 	coinbase := vh.Coinbase()
-	validator := vh.verifyRemoteValidatorFn
+	validator := vh.dpor.VerifyRemoteValidator
 
 	log.Debug("do handshaking with remote peer...")
 
@@ -263,31 +241,9 @@ func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	}
 }
 
-// SetFuncs sets some funcs
-// TODO: refact this
-func (vh *Handler) SetFuncs(
-	verifyRemoteValidatorFn VerifyRemoteValidatorFn, verifyHeaderFn VerifyHeaderFn,
-	verifyBlockFn ValidateBlockFn,
-	signHeaderFn SignHeaderFn,
-	broadcastBlockFn BroadcastBlockFn,
-	insertChainFn InsertChainFn,
-	statusFn StatusFn,
-	statusUpdateFn StatusUpdateFn,
-	getEmptyBlockFn GetEmptyBlockFn,
-	hasBlockInChain HasBlockInChain,
-) error {
-
-	vh.verifyRemoteValidatorFn = verifyRemoteValidatorFn
-	vh.verifyHeaderFn = verifyHeaderFn
-	vh.validateBlockFn = verifyBlockFn
-	vh.signHeaderFn = signHeaderFn
-	vh.broadcastBlockFn = broadcastBlockFn
-	vh.insertChainFn = insertChainFn
-	vh.statusFn = statusFn
-	vh.statusUpdateFn = statusUpdateFn
-	vh.getEmptyBlockFn = getEmptyBlockFn
-	vh.hasBlockInChain = hasBlockInChain
-
+// SetDporService sets dpor service to handler
+func (vh *Handler) SetDporService(dpor DporService) error {
+	vh.dpor = dpor
 	return nil
 }
 

@@ -76,6 +76,8 @@ type PbftHandler interface {
 
 }
 
+type VerifyRemoteValidatorFn func(signer common.Address) (bool, error)
+
 // DporService provides functions used by dpor handler
 type DporService interface {
 
@@ -93,12 +95,6 @@ type DporService interface {
 
 	// SignHeader signs the block if not signed it yet
 	SignHeader(header *types.Header, state consensus.State) error
-
-	// AddPendingBlock adds given block to pending blocks cache
-	AddPendingBlock(block *types.Block) error
-
-	// GetPendingBlock retrieves a block from cache with given hash
-	GetPendingBlock(hash common.Hash) *types.Block
 
 	// BroadcastBlock broadcasts a block to normal peers(not pbft replicas)
 	BroadcastBlock(block *types.Block, prop bool)
