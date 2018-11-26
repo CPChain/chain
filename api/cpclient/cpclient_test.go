@@ -66,8 +66,8 @@ func TestGetCurrentTerm(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	currentEpoch, err := client.GetCurrentTerm(context.Background())
-	fmt.Println("currentEpoch", currentEpoch)
+	currentTerm, err := client.GetCurrentTerm(context.Background())
+	fmt.Println("currentTerm", currentTerm)
 
 	if err != nil {
 		t.Errorf("GetCurrentTerm failed")
@@ -82,8 +82,8 @@ func TestGetCurrentView(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	currentRound, err := client.GetCurrentView(context.Background())
-	fmt.Println(currentRound)
+	currentView, err := client.GetCurrentView(context.Background())
+	fmt.Println("currentTerm", currentView)
 
 	if err != nil {
 		t.Errorf("GetCurrentView failed")

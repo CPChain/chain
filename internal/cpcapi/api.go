@@ -476,14 +476,14 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 //func (s *PublicBlockChainAPI) GetRNodesAddress(view_idex *big.Int) []common.Address {
 //	var rNodeAddress []common.Address
 //	if view_idex == big.NewInt(0) {
-//		rNodeAddress = s.b.RNode(big.NewInt(rpc.LatestBlockNumber.Int64()))
+//		rNodeAddress = s.b.RNodes(big.NewInt(rpc.LatestBlockNumber.Int64()))
 //	}
-//	rNodeAddress = s.b.RNode(view_idex)
+//	rNodeAddress = s.b.RNodes(view_idex)
 //	return rNodeAddress
 //}
 
 // Query RNodes.
-func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNode {
+func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	// TODO fill biz logic later
 	var rNodeAddress []common.Address
 	var committeAddress []common.Address
@@ -491,7 +491,7 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNode {
 
 	fmt.Println("sfdsfdsfsfdsfsdfds")
 
-	var RNodes []cpclient.RNode
+	var RNodes []cpclient.RNodes
 
 	rNodeAddress, bn = s.b.RNode()
 	fmt.Println("the rNodeAddress is", len(rNodeAddress))
@@ -502,19 +502,19 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNode {
 		for _, comAddr := range committeAddress {
 			if comAddr == rodeAddr {
 				score := s.b.CalcRptInfo(comAddr, bn)
-				r := cpclient.RNode{
+				r := cpclient.RNodes{
 					Address: comAddr,
 					Rpt:     score,
-					Status:  cpclient.Committe,
+					Status:  cpclient.Committee,
 				}
 				RNodes = append(RNodes, r)
 			}
 		}
 		score := s.b.CalcRptInfo(rodeAddr, bn)
-		r := cpclient.RNode{
+		r := cpclient.RNodes{
 			Address: rodeAddr,
 			Rpt:     score,
-			Status:  cpclient.Cadidate,
+			Status:  cpclient.Candidate,
 		}
 		RNodes = append(RNodes, r)
 	}
@@ -534,20 +534,20 @@ func (s *PublicBlockChainAPI) GetCurrentTerm() uint64 {
 	return CurrentTerm
 }
 
-func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committee {
+func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
 	// TODO fill biz logic later
 
 	v := s.b.CurrentView()
 	t := s.b.CurrentTerm()
 	bn := s.b.CurrentBlock()
-	var committees []cpclient.Committee
+	var committees []cpclient.Committees
 
 	for i := uint64(0); i < t; i++ {
 		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(bn.Header().Number.Uint64())-rpc.BlockNumber(i))
 		if err != nil {
 			log.Fatal("can't get header", err)
 		}
-		committee := cpclient.Committee{
+		committee := cpclient.Committees{
 			//TODO fill PublicKey logic later
 			View: v, Term: t, Producer: header.Coinbase, Block: uint64(rpc.BlockNumber(bn.Header().Number.Uint64()) - rpc.BlockNumber(i)),
 		}

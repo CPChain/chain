@@ -17,6 +17,12 @@
 package dpor
 
 import (
+	"bytes"
+	"errors"
+	"github.com/ethereum/go-ethereum/common"
+	"math/big"
+	"time"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
@@ -26,11 +32,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/types"
-	"bytes"
-	"errors"
-	"github.com/ethereum/go-ethereum/common"
-	"math/big"
-	"time"
 )
 
 // Dpor proof-of-reputation protocol constants.

@@ -37,7 +37,6 @@ type ChainBackend interface {
 	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
 	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
-	//	GetBlock(ctx context.Context, blockHash common.Hash) (*types.Block, error)
 }
 
 // ContractBackend  is the contract client operation interface
