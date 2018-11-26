@@ -90,7 +90,9 @@ func main() {
 	case "install":
 		doInstall(os.Args[2:], false)
 	case "test":
-		doTest(os.Args[2:])
+		doTest(os.Args[2:], false)
+	case "noCacheTest":
+		doTest(os.Args[2:], true)
 	case "raceTest":
 		doRaceTest(os.Args[2:])
 	case "raceInstall":
@@ -218,6 +220,7 @@ func goToolArch(arch string, cc string, subcmd string, args ...string) *exec.Cmd
 	if cc != "" {
 		cmd.Env = append(cmd.Env, "CC="+cc)
 	}
+
 	for _, e := range os.Environ() {
 		if strings.HasPrefix(e, "GOPATH=") || strings.HasPrefix(e, "GOBIN=") {
 			continue
@@ -231,7 +234,7 @@ func goToolArch(arch string, cc string, subcmd string, args ...string) *exec.Cmd
 //
 // "tests" also includes static analysis tools such as vet.
 
-func doTest(cmdline []string) {
+func doTest(cmdline []string, noCache bool) {
 	var (
 		coverage = flag.Bool("coverage", false, "Whether to record code coverage")
 	)
@@ -257,6 +260,9 @@ func doTest(cmdline []string) {
 	}
 
 	gotest.Args = append(gotest.Args, packages...)
+	if noCache {
+		gotest.Env = append(gotest.Env, "GOCACHE=off")
+	}
 	build.MustRun(gotest)
 }
 

@@ -264,7 +264,7 @@ type BasicCommitteeHandler struct {
 func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, cpcbase common.Address) (*BasicCommitteeHandler, error) {
 	bc := &BasicCommitteeHandler{
 		ownAddress:      cpcbase,
-		contractAddress: config.Contracts[configs.ContractSigner],
+		contractAddress: config.Contracts[configs.ContractProposer],
 		remoteSigners:   make([]*RemoteSigner, config.TermLen),
 		// remoteSigners:   make([]*RemoteSigner, config.Epoch-1),
 		connected: false,

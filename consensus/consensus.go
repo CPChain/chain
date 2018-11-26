@@ -29,7 +29,7 @@ import (
 )
 
 // ChainReader defines a small collection of methods needed to access the local
-// blockchain during header and/or uncle verification.
+// blockchain.
 type ChainReader interface {
 	// Config retrieves the blockchain's chain configuration.
 	Config() *configs.ChainConfig
