@@ -50,29 +50,16 @@ func TestGetRNode(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	rnodes, err := client.GetRNodes(context.Background())
-	fmt.Println(rnodes)
+	fmt.Println(rnodes, err)
 
-	if len(rnodes) < 1 {
+	fmt.Println("rpt is :", "addr", rnodes.Address, "rpt", rnodes.Rpt, "status", rnodes.Status)
+
+	if rnodes.Rpt == 0 {
 		t.Errorf("GetRNodes failed")
 	}
 }
 
-func TestGetCurrentEpoch(t *testing.T) {
-	t.Skip("skip test")
-	fmt.Println("*******************************************************")
-	client, err := cpclient.Dial("http://localhost:8501")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	currentEpoch, err := client.GetCurrentEpoch(context.Background())
-	fmt.Println(currentEpoch)
-
-	if err != nil {
-		t.Errorf("GetCurrentEpoch failed")
-	}
-}
-
-func TestGetCurrentRound(t *testing.T) {
+func TestGetRNodeAddress(t *testing.T) {
 	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
@@ -80,11 +67,42 @@ func TestGetCurrentRound(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	currentRound, err := client.GetCurrentRound(context.Background())
+	rnodes, err := client.GetRNodesaddress(context.Background())
+	fmt.Println(rnodes, err)
+
+	if len(rnodes) == 0 {
+		t.Errorf("GetRNodes failed")
+	}
+}
+
+func TestGetCurrentTerm(t *testing.T) {
+	//t.Skip("skip test")
+	fmt.Println("*******************************************************")
+	client, err := cpclient.Dial("http://localhost:8501")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	currentEpoch, err := client.GetCurrentTerm(context.Background())
+	fmt.Println("currentEpoch", currentEpoch)
+
+	if err != nil {
+		t.Errorf("GetCurrentTerm failed")
+	}
+}
+
+func TestGetCurrentView(t *testing.T) {
+	//t.Skip("skip test")
+	fmt.Println("*******************************************************")
+	client, err := cpclient.Dial("http://localhost:8501")
+	// local
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	currentRound, err := client.GetCurrentView(context.Background())
 	fmt.Println(currentRound)
 
 	if err != nil {
-		t.Errorf("GetCurrentRound failed")
+		t.Errorf("GetCurrentView failed")
 	}
 }
 
@@ -96,10 +114,10 @@ func TestGetCommittees(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	rnodes, err := client.GetCommittees(context.Background())
-	fmt.Println(rnodes)
+	committees, err := client.GetCommittees(context.Background())
+	fmt.Println("committees is :", committees)
 
-	if len(rnodes) < 1 {
+	if len(committees) < 1 {
 		t.Errorf("GetCommittees failed")
 	}
 }

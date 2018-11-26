@@ -107,6 +107,10 @@ type CpchainService struct {
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and cpcbase)
 
 	remoteDB database.RemoteDatabase // remoteDB represents an remote distributed database.
+
+	//	dpor *dpor.Dpor
+
+	//	rpt rpt.RptServiceImpl
 }
 
 func (s *CpchainService) AddLesServer(ls LesServer) {
