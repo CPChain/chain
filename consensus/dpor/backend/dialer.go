@@ -77,8 +77,29 @@ func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 	return nil
 }
 
-// UpdateSigners updates Handler's signers.
-func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
+// UpdateRemoteProposers updates Handler's signers.
+func (h *Handler) UpdateRemoteProposers(epochIdx uint64, signers []common.Address) error {
+	h.lock.Lock()
+	remoteProposers := h.remoteProposers
+	h.lock.Unlock()
+
+	for _, signer := range signers {
+		if _, ok := remoteProposers[signer]; !ok {
+			s := NewRemoteProposer(epochIdx, signer)
+			remoteProposers[signer] = s
+		}
+	}
+
+	h.lock.Lock()
+	h.term = epochIdx
+	h.remoteProposers = remoteProposers
+	h.lock.Unlock()
+
+	return nil
+}
+
+// UpdateRemoteValidators updates Handler's signers.
+func (h *Handler) UpdateRemoteValidators(epochIdx uint64, signers []common.Address) error {
 	h.lock.Lock()
 	remoteSigners := h.remoteValidators
 	h.lock.Unlock()
@@ -99,28 +120,33 @@ func (h *Handler) UpdateSigners(epochIdx uint64, signers []common.Address) error
 }
 
 // DialAll connects remote signers.
-func (h *Handler) DialAll() {
+func (h *Handler) DialAll(signers interface{}) error {
 	h.lock.Lock()
-	rsaKey := h.rsaKey
-	nodeID, address := h.nodeId, h.coinbase
-	connected, signers, server := h.dialed, h.remoteValidators, h.server
+	nodeID, address, rsaKey, server := h.nodeId, h.coinbase, h.rsaKey, h.server
 	contractInstance, contractTransactor, client := h.contractInstance, h.contractTransactor, h.contractCaller.Client
 	h.lock.Unlock()
 
-	if !connected {
-		log.Debug("connecting...")
+	log.Debug("connecting...")
 
-		for _, s := range signers {
-			err := s.Dial(server, nodeID, address, contractTransactor, contractInstance, client, rsaKey)
-			log.Debug("err when connect", "e", err)
+	for _, s := range signers.(map[common.Address]*RemoteSigner) {
+		err := s.Dial(server, nodeID, address, contractTransactor, contractInstance, client, rsaKey)
+		log.Debug("err when connect", "e", err)
+		if err != nil {
+			return err
 		}
-		connected = true
 	}
 
-	h.lock.Lock()
-	h.dialed = connected
-	h.lock.Unlock()
+	return nil
+}
 
+// DialAllRemoteProposers dials all remote proposers
+func (h *Handler) DialAllRemoteProposers() error {
+	return h.DialAll(h.remoteProposers)
+}
+
+// DialAllRemoteValidators dials all remote validators
+func (h *Handler) DialAllRemoteValidators() error {
+	return h.DialAll(h.remoteValidators)
 }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.

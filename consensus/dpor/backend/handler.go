@@ -49,6 +49,7 @@ type Handler struct {
 	contractInstance   *contract.SignerConnectionRegister
 	contractTransactor *bind.TransactOpts
 
+	remoteProposers  map[common.Address]*RemoteProposer
 	remoteValidators map[common.Address]*RemoteValidator
 
 	// previous stable pbft status
@@ -88,8 +89,10 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 // Start starts pbft handler
 func (vh *Handler) Start() {
 
-	// Dail all remote signers
-	go vh.DialAll()
+	// Dail all remote validators
+	go vh.DialAllRemoteValidators()
+
+	// TODO: dail all remote proposers
 
 	// Broadcast mined pending block, including empty block
 	go vh.PendingBlockBroadcastLoop()
