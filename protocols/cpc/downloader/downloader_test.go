@@ -828,7 +828,7 @@ func TestBoundedForkedSync64Full(t *testing.T) {
 }
 
 func testBoundedForkedSync(t *testing.T, protocol int, mode SyncMode) {
-	// t.Parallel()
+	t.Parallel()
 
 	tester := newTester()
 	defer tester.terminate()

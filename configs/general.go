@@ -21,19 +21,15 @@ const (
 	TestnetChainId = 43
 )
 
+// TODO @hmw make the name more meaningful.  add doc.
 const (
-	ContractCampaign = "campaign"
-	ContractSigner   = "signer"
-	ContractRegister = "register"
-	ContractRpt      = "rpt"
-	ContractPdash    = "pdash"
+	ContractCampaign = "campaign" // address of campaign contract,select rnode
+	ContractProposer = "proposer" // address of proposer_register contract, register proposer address in proposer_register contract
+	ContractRegister = "register" // address of register contract
+	ContractRpt      = "rpt"      // address of rpt contract,Calculation the rpt of rnode
+	ContractPdash    = "pdash"    // address of pdash
 )
 
-// Genesis hashes to enforce below configs on.
-var (
-	// hash refers to default block.
-	MainnetGenesisHash = common.HexToHash("0x6a1455819a218618d870ad9c84257d4917ec6c6e10f4c133004dd1f8a687612a")
-)
 var (
 	// TODO: @AC define testnet configuration
 	TestnetChainConfig = &ChainConfig{
@@ -52,7 +48,7 @@ var (
 			ProxyContractRegister: common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
 			Contracts: map[string]common.Address{
 				ContractCampaign: common.HexToAddress("0x0ddf4057eedfb80d58029be49bab09bbc45bc500"),
-				ContractSigner:   common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
+				ContractProposer: common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
 				ContractRegister: common.HexToAddress("0x019cc04ff9d88529b9e58ff26bfc53bce060e915"),
 				ContractRpt:      common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d"),
 				ContractPdash:    common.HexToAddress("0xaaae743244a7a5116470df8bd398e7d562ae8881"),

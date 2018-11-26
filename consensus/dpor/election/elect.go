@@ -18,11 +18,11 @@
 package election
 
 import (
-	"bitbucket.org/cpchain/chain/commons/log"
 	"math"
 	"math/rand"
 	"sort"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"github.com/ethereum/go-ethereum/common"
 )

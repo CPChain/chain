@@ -224,7 +224,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 	for term, signers := range s.recentSigners() {
 		cpy.setRecentSigners(term, signers)
 	}
-
+	cpy.rptBackend = s.rptBackend
 	return cpy
 }
 

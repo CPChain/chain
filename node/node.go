@@ -245,8 +245,6 @@ func (n *Node) Start() error {
 	// NB reset the channel because node supports restart
 	n.quitCh = make(chan struct{})
 
-	//Configuration the PrimitiveContracts
-
 	return nil
 }
 

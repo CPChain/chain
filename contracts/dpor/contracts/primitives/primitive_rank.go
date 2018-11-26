@@ -42,8 +42,7 @@ func (c *GetRank) Run(input []byte) ([]byte, error) {
 		log.Error("primitive_rank got error", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-	//log.Infof("primitive_rank, address %s, block number %d\n", addr.Hex(), number)
-	log.Info("primitive_rank, address", addr.Hex(), "address", number)
+	log.Info("primitive_rank, address", "addr", addr.Hex(), "number", number)
 
 	// TODO: @AC get cpchain Backend and read balance.
 	coinAge, err := c.Backend.Rank(addr, number)

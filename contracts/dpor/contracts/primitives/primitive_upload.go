@@ -42,7 +42,7 @@ func (c *GetUploadReward) Run(input []byte) ([]byte, error) {
 		log.Error("primitive_uploadreward got error ", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-	log.Info("primitive_uploadreward, address", addr.Hex(), "address", number)
+	log.Info("primitive_uploadreward, address", "addr", addr.Hex(), "number", number)
 
 	// TODO: @AC get cpchain backend and read balance.
 	uploadReward, err := c.Backend.UploadCount(addr, number)
