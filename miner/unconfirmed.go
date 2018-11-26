@@ -14,7 +14,7 @@ import (
 // headerRetriever is used by the unconfirmed block set to verify whether a previously
 // mined block is part of the canonical chain or not.
 type headerRetriever interface {
-	// GetHeaderByNumber retrieves the canonical header associated with a block number.
+	// GetHeaderByNumber retrieves the *canonical* header associated with a block number.
 	GetHeaderByNumber(number uint64) *types.Header
 }
 
@@ -37,6 +37,7 @@ type unconfirmedBlocks struct {
 }
 
 // newUnconfirmedBlocks returns new data structure to track currently unconfirmed blocks.
+// it doesn't store the block, only the number and the hash.
 func newUnconfirmedBlocks(chain headerRetriever, depth uint) *unconfirmedBlocks {
 	return &unconfirmedBlocks{
 		chain: chain,
@@ -46,16 +47,17 @@ func newUnconfirmedBlocks(chain headerRetriever, depth uint) *unconfirmedBlocks 
 
 // Insert adds a new block to the set of unconfirmed ones.
 func (set *unconfirmedBlocks) Insert(index uint64, hash common.Hash) {
-	// If a new block was mined locally, shift out any old enough blocks
+	// if a new block was mined locally, shift out any old enough blocks
 	set.Shift(index)
 
-	// Create the new item as its own ring
+	// create the new item as its own ring
 	item := ring.New(1)
 	item.Value = &unconfirmedBlock{
 		index: index,
 		hash:  hash,
 	}
-	// Set as the initial ring or append to the end
+
+	// set as the initial ring or append to the end
 	set.lock.Lock()
 	defer set.lock.Unlock()
 
@@ -77,21 +79,23 @@ func (set *unconfirmedBlocks) Shift(height uint64) {
 
 	for set.blocks != nil {
 		// Retrieve the next unconfirmed block and abort if too fresh
-		next := set.blocks.Value.(*unconfirmedBlock)
-		if next.index+uint64(set.depth) > height {
+		blk := set.blocks.Value.(*unconfirmedBlock)
+		// the ring buffer only contains #depth blocks
+		if blk.index+uint64(set.depth) > height {
 			break
 		}
-		// Block seems to exceed depth allowance, check for canonical status
-		header := set.chain.GetHeaderByNumber(next.index)
+		// block seems to exceed depth allowance, check for canonical status
+		header := set.chain.GetHeaderByNumber(blk.index)
 		switch {
 		case header == nil:
-			log.Warn("Failed to retrieve header of mined block", "number", next.index, "hash", next.hash.Hex())
-		case header.Hash() == next.hash:
-			log.Info("🔗 block reached canonical chain", "number", next.index, "hash", next.hash.Hex())
+			log.Warn("Failed to retrieve header of mined block", "number", blk.index, "hash", blk.hash.Hex())
+		case header.Hash() == blk.hash:
+			log.Info("🔗 block reached canonical chain", "number", blk.index, "hash", blk.hash.Hex())
 		default:
-			log.Info("⑂ block  became a side fork", "number", next.index, "hash", next.hash.Hex())
+			log.Info("⑂ block  became a side fork", "number", blk.index, "hash", blk.hash.Hex())
 		}
-		// Drop the block out of the ring
+		// drop the block out of the ring
+		// edge case when 1 == blocks.Len()
 		if set.blocks.Value == set.blocks.Next().Value {
 			set.blocks = nil
 		} else {
