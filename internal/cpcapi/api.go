@@ -549,7 +549,7 @@ func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committee {
 		}
 		committee := cpclient.Committee{
 			//TODO fill PublicKey logic later
-			View: v, Term: t, Producer: header.Coinbase, PublicKey: "", Block: uint64(rpc.BlockNumber(bn.Header().Number.Uint64()) - rpc.BlockNumber(i)),
+			View: v, Term: t, Producer: header.Coinbase, Block: uint64(rpc.BlockNumber(bn.Header().Number.Uint64()) - rpc.BlockNumber(i)),
 		}
 		committees = append(committees, committee)
 	}

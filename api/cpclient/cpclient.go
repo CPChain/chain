@@ -253,11 +253,11 @@ type rpcProgress struct {
 }
 
 type Committee struct {
-	View      uint64 // contain 21 round in each epoch
-	Term      uint64
-	Producer  common.Address
-	PublicKey string
-	Block     uint64 // hight
+	View     uint64 // contain 21 round in each epoch
+	Term     uint64
+	Producer common.Address
+	//PublicKey string
+	Block uint64 // hight
 }
 
 //node status
