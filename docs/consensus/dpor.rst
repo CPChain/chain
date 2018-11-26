@@ -50,8 +50,8 @@ dpor
 1. **Validator** and **Proposer** and **Ordinary** users
     a. Block validators, or validators refer to a group of users that can validate a newly proposed block
         - The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
-        - Except for some abnormal cases, validators have no right producing blocks
-        - The validator committee follows *Practical Byzantine Fault Tolerance (PBFT)* protocol, and the size of number is always equaling to 3f+1, where f is a integer
+        - Except for some abnormal cases, validators may not produce blocks
+        - The validator committee follows our improved *Practical Byzantine Fault Tolerance (PBFT)* protocol, and the size of number is always equaling to 3f+1, where f is the number of byzantine nodes.
     #. Block proposer, or proposer refers to the user that can propose block
         - It is one member of the proposer committee
         - The proposer committee is elected based on reputations of candidates and a random seed
@@ -60,10 +60,10 @@ dpor
         - An ordinary user can become a proposer if it claims campaign and is elected
 #. **Normal Case**
     a. Block production
-        i. An ordinary user claims campaign and enters the *candidate list*
+        i. An ordinary user claims campaign, undergoes the admission qualification, and then enters the *candidate list*
         #. After being elected in a periodical election, a candidate enters a block proposer committee
-        #. The proposer encrypts his address with all public key of the validator committee to a contrast
-        #. If a validators receives the encrypted message, it is about to connect the proposer with its address
+        #. The proposer encrypts his address with all public key of the validator committee to a contract
+        #. If a validators receives the encrypted message, it connects the proposer with its address
         #. If the proposer receives 2f+1 connection from validators, it proposes a block and broadcasts to them
     #. Block validation
         i. Once receives a newly proposed block, a validator in validator committee tries to validate the block.
