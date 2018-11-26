@@ -178,7 +178,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	header.Extra = header.Extra[:extraVanity]
 
 	// TODO differentiate signer from validator/proposer
-	for _, signer := range snap.SignersOf(number) {
+	for _, signer := range snap.ProposersOf(number) {
 		header.Dpor.Proposers = append(header.Dpor.Proposers, signer)
 	}
 
@@ -257,7 +257,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 
-	ok, err := snap.IsLeaderOf(d.signer, number)
+	ok, err := snap.IsProposerOf(d.signer, number)
 	if err != nil {
 		log.Warn("Error occurs when seal block", "error", err)
 		return nil, err
@@ -285,19 +285,15 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		case <-time.After(delay):
 		}
 	*/
-	// Sign all the things!
+	// Proposer seals the block with signature
 	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header).Bytes())
 	if err != nil {
 		return nil, err
 	}
-
 	copy(header.Dpor.Seal[:], sighash)
 
-	header.Dpor.Sigs = make([]types.DporSignature, d.config.TermLen)
-
-	// Copy signature to the right position in allSigs.
-	round, _ := snap.SignerViewOf(signer, number)
-	copy(header.Dpor.Sigs[round][:], sighash)
+	// Create a signature space for validators
+	header.Dpor.Sigs = make([]types.DporSignature, len(header.Dpor.Validators))
 
 	return block.WithSeal(header), nil
 }
@@ -378,6 +374,7 @@ func (d *Dpor) SignHeader(chain consensus.ChainReader, header *types.Header, sta
 	case nil:
 		return nil
 	default:
+		log.Warn("consensus signing header failed", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
 		return consensus.ErrWhenSigningHeader
 	}
 }

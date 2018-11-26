@@ -133,24 +133,24 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 
 	// Check proposers
 	proposers := make([]common.Address, dpor.config.TermLen)
-	for round, signer := range snap.SignersOf(number) {
-		proposers[round] = signer
+	for pos, signer := range snap.ProposersOf(number) {
+		proposers[pos] = signer
 	}
 	if !reflect.DeepEqual(header.Dpor.Proposers, proposers) {
 		if NormalMode == dpor.fake {
 			log.Debug("err: invalid proposer list")
-			ps := header.Dpor.Proposers
+			ps := snap.ProposersOf(number)
 
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
 			log.Debug("proposers in block dpor snap:")
 			for round, signer := range ps {
-				log.Debug("signer", "addr", signer.Hex(), "idx", round)
+				log.Debug("proposer", "addr", signer.Hex(), "idx", round)
 			}
 
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
 			log.Debug("proposers in snapshot:")
-			for round, signer := range snap.SignersOf(number) {
-				log.Debug("signer", "addr", signer.Hex(), "idx", round)
+			for round, signer := range snap.ValidatorsOf(number) {
+				log.Debug("validator", "addr", signer.Hex(), "idx", round)
 			}
 
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -158,7 +158,7 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 			for i := snap.TermOf(number); i < snap.TermOf(number)+5; i++ {
 				log.Debug("----------------------")
 				log.Debug("proposers in snapshot of:", "term idx", i)
-				for _, s := range snap.getRecentSigners(i) {
+				for _, s := range snap.getRecentProposers(i) {
 					log.Debug("signer", "s", s.Hex())
 				}
 			}
@@ -207,18 +207,16 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				return nil, err
 			}
 
-			var signers []common.Address
+			var proposers []common.Address
+			var validators []common.Address
 			if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
-				// do nothing when test,empty signers assigned
+				// do nothing when test,empty proposers assigned
 			} else {
 				// Create a snapshot from the genesis block
-				signers = make([]common.Address, len(genesis.Dpor.Proposers))
-				for i := 0; i < len(signers); i++ {
-					copy(signers[i][:], genesis.Dpor.Proposers[i][:])
-				}
+				proposers = genesis.Dpor.CopyProposers()
+				validators = genesis.Dpor.CopyValidators()
 			}
-
-			snap = newSnapshot(dpor.config, 0, genesis.Hash(), signers)
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}
@@ -316,15 +314,6 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return err
 	}
 
-	// Ensure that the difficulty corresponds to the turn-ness of the signer
-	inturn, _ := snap.IsProposerOf(leader, header.Number.Uint64())
-	if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
-		return errInvalidDifficulty
-	}
-	if !inturn && header.Difficulty.Cmp(diffNoTurn) != 0 {
-		return errInvalidDifficulty
-	}
-
 	// Some debug infos here
 	log.Debug("--------dpor.verifySeal start--------")
 	log.Debug("hash", "hash", hash.Hex())
@@ -336,7 +325,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		log.Debug("signer", "address", signer.Hex())
 	}
 	log.Debug("signers in snapshot: ")
-	for _, signer := range snap.SignersOf(number) {
+	for _, signer := range snap.ValidatorsOf(number) {
 		log.Debug("signer", "address", signer.Hex())
 	}
 
@@ -351,7 +340,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Check if accept the sigs and if leader is in the sigs
-	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.SignersOf(number), uint(dpor.config.TermLen))
+	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.ValidatorsOf(number), uint(dpor.config.TermLen))
 	if err != nil {
 		return err
 	}
@@ -385,9 +374,9 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 	// Copy all signatures to allSigs
 	allSigs := make([]types.DporSignature, dpor.config.TermLen)
-	for round, signer := range snap.SignersOf(number) {
+	for signPos, signer := range snap.ValidatorsOf(number) {
 		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
-			copy(allSigs[round][:], sigHash)
+			copy(allSigs[signPos][:], sigHash)
 		}
 	}
 	header.Dpor.Sigs = allSigs
@@ -407,8 +396,8 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 
 		// Copy signer's signature to the right position in the allSigs
-		round, _ := snap.SignerViewOf(dpor.signer, number)
-		copy(allSigs[round][:], sighash)
+		sigPos, _ := snap.ValidatorViewOf(dpor.signer, number)
+		copy(allSigs[sigPos][:], sighash)
 		header.Dpor.Sigs = allSigs
 
 		return nil

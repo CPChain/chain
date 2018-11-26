@@ -306,7 +306,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0xb0d9b86767138ce7b1e8fd898642d6ec2aca73f7393be0deb496f95acfebc531")
+var MainnetGenesisHash = common.HexToHash("0x36e647e629bb56aae3051c0477220b05c52ab15e8081cf5c37f66d6011c04152")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
@@ -343,9 +343,14 @@ func DefaultGenesisBlock() *Genesis {
 				common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
 				common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
 			},
-			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, 4),
-			Validators: []common.Address{},
+			Seal: types.DporSignature{},
+			Sigs: make([]types.DporSignature, 4),
+			Validators: []common.Address{
+				common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
+				common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
+				common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
+				common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
+			},
 		},
 	}
 }
@@ -373,7 +378,7 @@ func DeveloperGenesisBlock(period uint64, faucet common.Address) *Genesis {
 			common.BytesToAddress([]byte{6}): {Balance: big.NewInt(1)}, // ECAdd
 			common.BytesToAddress([]byte{7}): {Balance: big.NewInt(1)}, // ECScalarMul
 			common.BytesToAddress([]byte{8}): {Balance: big.NewInt(1)}, // ECPairing
-			faucet: {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
+			faucet:                           {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
 		},
 		Dpor: types.DporSnap{
 			Proposers: []common.Address{

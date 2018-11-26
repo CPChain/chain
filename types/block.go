@@ -327,10 +327,7 @@ func CopyDporSnap(d *DporSnap) *DporSnap {
 	// copy DporSnap
 	cpy := new(DporSnap)
 	// copy DporSnap.Proposers
-	cpy.Proposers = make([]common.Address, len(d.Proposers))
-	for i := 0; i < len(d.Proposers); i++ {
-		copy(cpy.Proposers[i][:], d.Proposers[i][:])
-	}
+	cpy.Proposers = d.CopyProposers()
 	// copy DporSnap.Sigs
 	cpy.Sigs = make([]DporSignature, len(d.Sigs))
 	for i := 0; i < len(d.Sigs); i++ {
@@ -339,11 +336,24 @@ func CopyDporSnap(d *DporSnap) *DporSnap {
 	// copy DporSnap.Seal
 	copy(cpy.Seal[:], d.Seal[:])
 	// copy DporSnap.Validators
-	cpy.Validators = make([]common.Address, len(d.Validators))
-	for i := 0; i < len(d.Validators); i++ {
-		copy(cpy.Validators[i][:], d.Validators[i][:])
-	}
+	cpy.Validators = d.CopyValidators()
 	return cpy
+}
+
+func (d *DporSnap) CopyProposers() []common.Address {
+	proposers := make([]common.Address, len(d.Proposers))
+	for i := 0; i < len(d.Proposers); i++ {
+		copy(proposers[i][:], d.Proposers[i][:])
+	}
+	return proposers
+}
+
+func (d *DporSnap) CopyValidators() []common.Address {
+	validators := make([]common.Address, len(d.Validators))
+	for i := 0; i < len(d.Validators); i++ {
+		copy(validators[i][:], d.Validators[i][:])
+	}
+	return validators
 }
 
 // DecodeRLP decodes the Ethereum

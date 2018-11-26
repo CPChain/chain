@@ -264,7 +264,8 @@ func (s *DporSnapshot) setContractCaller(contractCaller *backend.ContractCaller)
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
 // method does not initialize the set of recent proposers, so only ever use if for
 // the genesis block.
-func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, proposers []common.Address) *DporSnapshot {
+func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, proposers []common.Address,
+	validators []common.Address) *DporSnapshot {
 	snap := &DporSnapshot{
 		config:           config,
 		Number:           number,
@@ -277,6 +278,7 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, pr
 	// TODO: @shiyc need to remove setRecentSigners(), and consider whether we need setRecentValidators()
 	snap.setRecentSigners(snap.Term(), proposers)
 	snap.setRecentProposers(snap.Term(), proposers)
+	snap.setRecentValidators(snap.Term(), validators)
 	return snap
 }
 
@@ -393,6 +395,11 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
 		seed := header.Hash().Big().Int64()
 		s.updateProposers(rpts, seed)
+	}
+
+	if len(header.Dpor.Validators) != 0 && len(header.Dpor.Validators) > 4 { // 3f + 1, TODO: @AC add a config
+		term := s.TermOf(header.Number.Uint64())
+		s.setRecentValidators(term, header.Dpor.Validators)
 	}
 
 	return nil
@@ -534,12 +541,6 @@ func (s *DporSnapshot) FutureTermOf(blockNum uint64) uint64 {
 	return s.TermOf(blockNum) + TermDistBetweenElectionAndMining
 }
 
-// SignersOf returns signers of given block number
-// TODO: @shiyc need to be removed later
-func (s *DporSnapshot) SignersOf(number uint64) []common.Address {
-	return s.getRecentSigners(s.TermOf(number))
-}
-
 func (s *DporSnapshot) ValidatorsOf(number uint64) []common.Address {
 	return s.getRecentValidators(s.TermOf(number))
 }
@@ -568,43 +569,10 @@ func (s *DporSnapshot) ProposerViewOf(proposer common.Address, number uint64) (i
 	return -1, errProposerNotInCommittee
 }
 
-// SignerViewOf returns signer view with given signer address and block number
-func (s *DporSnapshot) SignerViewOf(signer common.Address, number uint64) (int, error) {
-	for view, s := range s.SignersOf(number) {
-		if s == signer {
-			return view, nil
-		}
-	}
-	return -1, errSignerNotInCommittee
-}
-
 // IsValidatorOf returns if an address is a validator in the given block number
 func (s *DporSnapshot) IsValidatorOf(validator common.Address, number uint64) bool {
 	_, err := s.ValidatorViewOf(validator, number)
 	return err == nil
-}
-
-// IsSignerOf returns if an address is a signer in the given block number
-// TODO: @shiyc need to removed later
-func (s *DporSnapshot) IsSignerOf(signer common.Address, number uint64) bool {
-	_, err := s.SignerViewOf(signer, number)
-	return err == nil
-}
-
-// IsLeaderOf returns if an address is the leader of the validators committee
-// It is invoked only in the scenario when impeachment is activated
-func (s *DporSnapshot) IsLeaderOf(signer common.Address, number uint64) (bool, error) {
-	if number == 0 {
-		return false, errGenesisBlockNumber
-	}
-	view, err := s.ProposerViewOf(signer, number)
-	if err != nil {
-		return false, err
-	}
-	b := view == int(((number-1)%(s.config.TermLen*s.config.ViewLen))/s.config.ViewLen)
-	return b, nil
-	//TODO: @shiyc finish it during the implement of impeachment
-	//return false, nil
 }
 
 // IsProposerOf returns if an address is a proposer in the given block number
