@@ -192,7 +192,7 @@ func (vh *Handler) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWr
 
 	log.Debug("adding remote validator...", "validator", address.Hex())
 
-	err := remoteValidator.SetValidatorPeer(version, p, rw)
+	err := remoteValidator.SetPeer(version, p, rw)
 	if err != nil {
 		log.Debug("failed to set remote validator")
 		return nil, err

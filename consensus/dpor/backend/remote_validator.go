@@ -19,20 +19,32 @@ const (
 	handshakeTimeout = 5 * time.Second
 )
 
-// RemoteValidator represents a remote signer waiting to be connected and communicate with.
-type RemoteValidator struct {
+type RemoteSigner struct {
 	*p2p.Peer
 	rw      p2p.MsgReadWriter
 	version int
 
-	epochIdx      uint64
-	pubkey        []byte
-	nodeID        string
-	address       common.Address
+	epochIdx uint64
+	pubkey   []byte
+	nodeID   string
+	address  common.Address
+
 	dialed        bool // bool to show if i already connected to this signer.
 	pubkeyFetched bool
 	nodeIDFetched bool
 	nodeIDUpdated bool // bool to show if i updated my nodeid encrypted with this signer's pubkey to the contract.
+
+	lock sync.RWMutex
+}
+
+// RemoteProposer represents a remote proposer waiting to be connected.
+type RemoteProposer struct {
+	*RemoteSigner
+}
+
+// RemoteValidator represents a remote signer waiting to be connected and communicate with.
+type RemoteValidator struct {
+	*RemoteSigner
 
 	queuedPendingBlocks chan *types.Block  // Queue of blocks to broadcast to the signer
 	queuedPrepareSigs   chan *types.Header // Queue of signatures to broadcast to the signer
@@ -40,14 +52,28 @@ type RemoteValidator struct {
 
 	quitCh chan struct{} // Termination channel to stop the broadcaster
 
-	lock sync.RWMutex
+}
+
+// NewRemoteSigner creates a new remote signer
+func NewRemoteSigner(epochIdx uint64, address common.Address) *RemoteSigner {
+	return &RemoteSigner{
+		epochIdx: epochIdx,
+		address:  address,
+	}
+
+}
+
+// NewRemoteProposer creates a new remote proposer
+func NewRemoteProposer(epochIdx uint64, address common.Address) *RemoteProposer {
+	return &RemoteProposer{
+		RemoteSigner: NewRemoteSigner(epochIdx, address),
+	}
 }
 
 // NewRemoteValidator creates a new NewRemoteValidator with given view idx and address.
 func NewRemoteValidator(epochIdx uint64, address common.Address) *RemoteValidator {
 	return &RemoteValidator{
-		epochIdx: epochIdx,
-		address:  address,
+		RemoteSigner: NewRemoteSigner(epochIdx, address),
 
 		queuedPendingBlocks: make(chan *types.Block, maxQueuedPendingBlocks),
 		queuedPrepareSigs:   make(chan *types.Header, maxQueuedSigs),
@@ -58,7 +84,7 @@ func NewRemoteValidator(epochIdx uint64, address common.Address) *RemoteValidato
 }
 
 // AddStatic adds remote validator as a static peer
-func (s *RemoteValidator) AddStatic(srv *p2p.Server) error {
+func (s *RemoteSigner) AddStatic(srv *p2p.Server) error {
 
 	rawurl := fmt.Sprintf("enode://%v@%v", s.ID().String(), s.RemoteAddr().String())
 	nodeId, err := discover.ParseNode(rawurl)
@@ -69,7 +95,7 @@ func (s *RemoteValidator) AddStatic(srv *p2p.Server) error {
 	return nil
 }
 
-func (s *RemoteValidator) disconnect(server *p2p.Server) error {
+func (s *RemoteSigner) disconnect(server *p2p.Server) error {
 	s.lock.Lock()
 	nodeID := s.nodeID
 	s.lock.Unlock()
@@ -82,8 +108,8 @@ func (s *RemoteValidator) disconnect(server *p2p.Server) error {
 	return nil
 }
 
-// SetValidatorPeer sets a signer
-func (s *RemoteValidator) SetValidatorPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
+// SetPeer sets a p2p peer
+func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
