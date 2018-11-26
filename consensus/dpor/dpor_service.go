@@ -25,14 +25,14 @@ func (d *Dpor) VerifyHeaderWithState(header *types.Header, state consensus.State
 
 // ValidateBlock validates a basic field excepts seal of a block.
 func (d *Dpor) ValidateBlock(block *types.Block) error {
-	return d.dh.validateBlock(d, chain, block)
+	return d.dh.validateBlock(d, d.chain, block)
 }
 
 // SignHeader signs the header and adds all known sigs to header
 func (d *Dpor) SignHeader(header *types.Header, state consensus.State) error {
 
 	// TODO: fix this, !!! state
-	switch err := d.dh.signHeader(d, chain, header, state); err {
+	switch err := d.dh.signHeader(d, d.chain, header, state); err {
 	case nil:
 		return nil
 	default:
@@ -42,7 +42,7 @@ func (d *Dpor) SignHeader(header *types.Header, state consensus.State) error {
 
 // BroadcastBlock broadcasts a block to normal peers(not pbft replicas)
 func (d *Dpor) BroadcastBlock(block *types.Block, prop bool) {
-	go d.pmBroadcastBlockFn(block)
+	go d.pmBroadcastBlockFn(block, prop)
 }
 
 // InsertChain inserts a block to chain

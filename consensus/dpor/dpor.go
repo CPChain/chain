@@ -151,7 +151,7 @@ func (d *Dpor) IfSigned(header *types.Header) bool {
 }
 
 // StartMining starts to create a handler and start it.
-func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller *backend.ContractCaller, server *p2p.Server, pmBroadcastBlockFn backend.BroadcastBlockFn) {
+func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller *backend.ContractCaller, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
 
 	d.chain = blockchain
 	d.contractCaller = contractCaller
@@ -169,74 +169,9 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		return
 	}
 
-	// TODO: set handler functions here
-
-	// validateSignerFn := func(signer common.Address) (bool, error) {
-	// 	// TODO: fix this
-	// 	// currentNumber := d.chain.CurrentHeader().Number.Uint64()
-	// 	// return d.IsFutureSigner(d.chain, signer, currentNumber)
-
-	// 	return true, nil
-	// }
-
-	// verifyHeaderFn := func(header *types.Header, state consensus.State) error {
-	// 	// TODO: fix this, !!! state
-	// 	return d.VerifyHeader(d.chain, header, true, header)
-	// }
-
-	// validateBlockFn := func(block *types.Block) error {
-	// 	// TODO: fix this, verify block
-	// 	return d.ValidateBlock(d.chain, block)
-	// }
-
-	// signHeaderFn := func(header *types.Header, state consensus.State) error {
-	// 	return d.SignHeader(d.chain, header, state)
-	// }
-
-	// broadcastBlockFn := func(block *types.Block, prop bool) {
-	// 	go pmBroadcastBlockFn(block, prop)
-	// }
-
-	// insertChainFn := func(block *types.Block) error {
-	// 	_, err := d.chain.InsertChain(types.Blocks{block})
-	// 	return err
-	// }
-
-	// statusFn := func() *consensus.PbftStatus {
-	// 	return d.PbftStatus()
-	// }
-
-	// statusUpdateFn := func() error {
-	// 	// TODO: fix this
-	// 	return nil
-	// }
-
-	// getEmptyBlockFn := func() (*types.Block, error) {
-	// 	// TODO: fix this
-	// 	return nil, nil
-	// }
-
-	// hasBlockInChain := func(hash common.Hash, number uint64) bool {
-	// 	blk := d.chain.GetBlock(hash, number)
-	// 	if blk != nil {
-	// 		return true
-	// 	}
-	// 	return false
-	// }
-
-	// set functions
-	handler.SetFuncs(
-		validateSignerFn,
-		verifyHeaderFn,
-		validateBlockFn,
-		signHeaderFn,
-		broadcastBlockFn,
-		insertChainFn,
-		statusFn,
-		statusUpdateFn,
-		getEmptyBlockFn,
-		hasBlockInChain,
-	)
+	if err := handler.SetDporService(d); err != nil {
+		return
+	}
 
 	d.validatorHandler = handler
 
