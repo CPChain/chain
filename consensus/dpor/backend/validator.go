@@ -15,12 +15,10 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 	case msg.Code == PrepreparePendingBlockMsg:
 		// sign the block and broadcast PrepareSignedHeaderMsg
 
-		var block *types.Block
-		if err := msg.Decode(&block); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
+		block, err := RecoverBlockFromMsg(msg, p.Peer)
+		if err != nil {
+			return err
 		}
-		block.ReceivedAt = msg.ReceivedAt
-		block.ReceivedFrom = p
 
 		log.Debug("received preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
@@ -78,12 +76,10 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 	case msg.Code == PrepareSignedHeaderMsg:
 		// add sigs to the header and broadcast, if ready to accept, accept
 
-		// retrieve the header
-		var header *types.Header
-		if err := msg.Decode(&header); err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		header, err := RecoverHeaderFromMsg(msg, p.Peer)
+		if err != nil {
+			return err
 		}
-
 		log.Debug("received signed prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 		// verify the signed header
