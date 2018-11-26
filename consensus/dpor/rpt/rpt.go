@@ -92,7 +92,7 @@ type RptServiceImpl struct {
 	rptcache *lru.ARCCache
 }
 
-//NewRptService creates a concrete RPT service instance.
+// NewRptService creates a concrete RPT service instance.
 func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address) (RptService, error) {
 	primitive_register.GetPrimitiveContractCheckerInstance().WaitInitCompleteUntilTimeout()
 

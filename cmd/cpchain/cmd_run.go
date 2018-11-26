@@ -113,8 +113,8 @@ func startNode(n *node.Node) {
 	if err := n.Start(); err != nil {
 		log.Fatalf("Error starting protocol n: %v", err)
 	}
+	// TODO @xumx this is wrong!  please register vm primitive contracts before node is started.
 	register.RegisterPrimitiveContracts(n)
-
 }
 
 // makePasswordList reads password lines from the file specified by the global --password flag.

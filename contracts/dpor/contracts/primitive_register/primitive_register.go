@@ -39,6 +39,7 @@ func (p *PrimitiveContractChecker) SetAvailable(available bool) {
 	p.available = available
 }
 
+// TODO time is not for synchronization! REWRITE THIS @xumx
 func (p *PrimitiveContractChecker) WaitInitCompleteUntilTimeout() {
 	for i := 0; i < 10; i++ {
 		if !p.IsAvailable() {

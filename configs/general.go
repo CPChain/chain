@@ -21,6 +21,7 @@ const (
 	TestnetChainId = 43
 )
 
+// TODO @hmw make the name more meaningful.  add doc.
 const (
 	ContractCampaign = "campaign"
 	ContractSigner   = "signer"
@@ -29,11 +30,6 @@ const (
 	ContractPdash    = "pdash"
 )
 
-// Genesis hashes to enforce below configs on.
-var (
-	// hash refers to default block.
-	MainnetGenesisHash = common.HexToHash("0x6a1455819a218618d870ad9c84257d4917ec6c6e10f4c133004dd1f8a687612a")
-)
 var (
 	// TODO: @AC define testnet configuration
 	TestnetChainConfig = &ChainConfig{
