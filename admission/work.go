@@ -9,11 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/crypto/scrypt"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"golang.org/x/crypto/scrypt"
 )
 
 type hashFn func([]byte) ([]byte, error)

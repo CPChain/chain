@@ -144,27 +144,13 @@ type Validator interface {
 	SealBlock(chain ChainReader, block *types.Block) error
 }
 
-// PoW is a consensus engine based on proof-of-work.
-type PoW interface {
-	Engine
-
-	// Hashrate returns the current mining hashrate of a PoW consensus engine.
-	Hashrate() float64
-}
-
 // PbftEngine is a pbft based consensus engine
 type PbftEngine interface {
 	Engine
 
-	// SetHandler sets a handler to engine
-	// SetHandler(handler backend.PbftHandler) error
-
 	// SignHeader signs the given header.
 	// Note: it doesn't check if the header is correct.
 	SignHeader(chain ChainReader, header *types.Header, state State) error
-
-	// IfSigned returns if have signed the block
-	IfSigned(header *types.Header) bool
 
 	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
 	State() State

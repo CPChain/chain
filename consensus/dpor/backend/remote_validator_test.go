@@ -8,34 +8,34 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
-func TestHandshake(t *testing.T) {
+func TestValidatorHandshake(t *testing.T) {
 	type args struct {
-		p               *p2p.Peer
-		rw              p2p.MsgReadWriter
-		etherbase       common.Address
-		signerValidator VerifyRemoteValidatorFn
+		p                       *p2p.Peer
+		rw                      p2p.MsgReadWriter
+		coinbase                common.Address
+		verifyRemoteValidatorFn VerifyRemoteValidatorFn
 	}
 	tests := []struct {
-		name         string
-		args         args
-		wantIsSigner bool
-		wantAddress  common.Address
-		wantErr      bool
+		name            string
+		args            args
+		wantIsValidator bool
+		wantAddress     common.Address
+		wantErr         bool
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotIsSigner, gotAddress, err := VVHandshake(tt.args.p, tt.args.rw, tt.args.etherbase, tt.args.signerValidator)
+			gotIsValidator, gotAddress, err := ValidatorHandshake(tt.args.p, tt.args.rw, tt.args.coinbase, tt.args.verifyRemoteValidatorFn)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Handshake() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ValidatorHandshake() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotIsSigner != tt.wantIsSigner {
-				t.Errorf("Handshake() gotIsSigner = %v, want %v", gotIsSigner, tt.wantIsSigner)
+			if gotIsValidator != tt.wantIsValidator {
+				t.Errorf("ValidatorHandshake() gotIsValidator = %v, want %v", gotIsValidator, tt.wantIsValidator)
 			}
 			if !reflect.DeepEqual(gotAddress, tt.wantAddress) {
-				t.Errorf("Handshake() gotAddress = %v, want %v", gotAddress, tt.wantAddress)
+				t.Errorf("ValidatorHandshake() gotAddress = %v, want %v", gotAddress, tt.wantAddress)
 			}
 		})
 	}

@@ -24,7 +24,7 @@ const (
 	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
-// Mode defines the type and amount of PoW verification an ethash engine makes.
+// Mode defines the type a dpor engine makes.
 type Mode uint
 
 const (
@@ -215,6 +215,14 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		return nil, nil
 	}
 
+	hasBlockInChain := func(hash common.Hash, number uint64) bool {
+		blk := d.chain.GetBlock(hash, number)
+		if blk != nil {
+			return true
+		}
+		return false
+	}
+
 	// set functions
 	handler.SetFuncs(
 		validateSignerFn,
@@ -226,6 +234,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		statusFn,
 		statusUpdateFn,
 		getEmptyBlockFn,
+		hasBlockInChain,
 	)
 
 	d.validatorHandler = handler

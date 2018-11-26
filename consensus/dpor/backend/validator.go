@@ -60,6 +60,8 @@ type ValidatorHandler struct {
 
 	getEmptyBlockFn GetEmptyBlockFn
 
+	hasBlockInChain HasBlockInChain
+
 	// those three funcs are methods from dpor, used for header verification and signing
 	verifyHeaderFn  VerifyHeaderFn
 	validateBlockFn ValidateBlockFn
@@ -166,7 +168,7 @@ func (vh *ValidatorHandler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 
 	log.Debug("do handshaking with remote peer...")
 
-	ok, address, err := VVHandshake(p, rw, coinbase, validator)
+	ok, address, err := ValidatorHandshake(p, rw, coinbase, validator)
 	if !ok || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "ok", ok)
 		return "", ok, err
@@ -214,8 +216,13 @@ func (vh *ValidatorHandler) addRemoteValidator(version int, p *p2p.Peer, rw p2p.
 
 	err := remoteValidator.SetValidatorPeer(version, p, rw)
 	if err != nil {
+		log.Debug("failed to set remote validator")
+		return nil, err
+	}
 
-		log.Debug("failed to set peer")
+	err = remoteValidator.AddStatic(vh.server)
+	if err != nil {
+		log.Debug("failed to add remote validator as static peer")
 		return nil, err
 	}
 
@@ -311,11 +318,12 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 
 			default:
 
-				// TODO: remove this
-				go vh.BroadcastMinedBlock(block)
+				if !vh.hasBlockInChain(block.Hash(), block.NumberU64()) {
+					go vh.BroadcastMinedBlock(block)
+				}
 
 				log.Warn("err when signing header", "hash", header.Hash, "number", header.Number.Uint64(), "err", err)
-				return e
+				return nil
 			}
 
 		default:
@@ -348,15 +356,9 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 				return nil
 			}
 
-			blk := block.Block.WithSeal(header)
-			err = vh.AddPendingBlock(blk)
-			if err != nil {
-				// TODO: remove this
-				return nil
-			}
-
 			log.Debug("inserting block to block chain", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
+			blk := block.Block.WithSeal(header)
 			err = vh.insertChainFn(blk)
 			if err != nil {
 				log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
@@ -364,15 +366,21 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 			}
 
 			log.Debug("broadcasting block to other peers", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+			// broadcast the block
+			go vh.broadcastBlockFn(blk, true)
+			go vh.broadcastBlockFn(blk, false)
+
+			err = vh.AddPendingBlock(blk)
+			if err != nil {
+				// TODO: remove this
+				return nil
+			}
 
 			err = vh.UpdateBlockStatus(block.NumberU64(), Inserted)
 			if err != nil {
 				log.Warn("err when updating block status", "number", block.NumberU64(), "err", err)
-				return err
+				return nil
 			}
-
-			// broadcast the block
-			go vh.broadcastBlockFn(blk, true)
 
 		case consensus.ErrNotEnoughSigs:
 			// sign the block
@@ -390,13 +398,13 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 
 				// TODO: remove this
 				block, err := vh.GetPendingBlock(header.Number.Uint64())
-				if block != nil && block.Block != nil {
+				if block != nil && block.Block != nil && vh.hasBlockInChain(header.Hash(), header.Number.Uint64()) {
 					vh.BroadcastMinedBlock(block.Block)
 					return nil
 				}
 
 				log.Warn("err when signing header", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
-				return e
+				return nil
 			}
 
 		default:
@@ -630,6 +638,7 @@ func (vh *ValidatorHandler) SetFuncs(
 	statusFn StatusFn,
 	statusUpdateFn StatusUpdateFn,
 	getEmptyBlockFn GetEmptyBlockFn,
+	hasBlockInChain HasBlockInChain,
 ) error {
 
 	vh.verifyRemoteValidatorFn = verifyRemoteValidatorFn
@@ -641,6 +650,7 @@ func (vh *ValidatorHandler) SetFuncs(
 	vh.statusFn = statusFn
 	vh.statusUpdateFn = statusUpdateFn
 	vh.getEmptyBlockFn = getEmptyBlockFn
+	vh.hasBlockInChain = hasBlockInChain
 
 	return nil
 }

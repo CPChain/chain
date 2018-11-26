@@ -145,7 +145,7 @@ func (e *GenesisMismatchError) Error() string {
 // The returned chain configuration is never nil.
 func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainConfig, common.Hash, error) {
 	if genesis != nil && genesis.Config == nil {
-		return configs.AllCpchainProtocolChanges, common.Hash{}, errGenesisNoConfig
+		return configs.DefaultChainConfig, common.Hash{}, errGenesisNoConfig
 	}
 
 	stored := rawdb.ReadCanonicalHash(db, 0)
@@ -217,7 +217,7 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 	case ghash == MainnetGenesisHash:
 		return configs.MainnetChainConfig
 	default:
-		return configs.AllCpchainProtocolChanges
+		return configs.DefaultChainConfig
 	}
 }
 
@@ -282,7 +282,7 @@ func (g *Genesis) Commit(db database.Database) (*types.Block, error) {
 
 	config := g.Config
 	if config == nil {
-		config = configs.AllCpchainProtocolChanges
+		config = configs.DefaultChainConfig
 	}
 	rawdb.WriteChainConfig(db, block.Hash(), config)
 	return block, nil
@@ -354,7 +354,7 @@ func DefaultGenesisBlock() *Genesis {
 // be seeded with the
 func DeveloperGenesisBlock(period uint64, faucet common.Address) *Genesis {
 	// Override the default period to the user requested one
-	config := *configs.AllCpchainProtocolChanges
+	config := *configs.DefaultChainConfig
 	config.Dpor.Period = period
 
 	// Assemble and return the genesis with the precompiles and faucet pre-funded

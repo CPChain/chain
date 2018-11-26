@@ -115,6 +115,9 @@ type StatusUpdateFn func() error
 // GetEmptyBlockFn returns an empty block for view change
 type GetEmptyBlockFn func() (*types.Block, error)
 
+// HasBlockInChain returns if a block is in local chain
+type HasBlockInChain func(hash common.Hash, number uint64) bool
+
 type HandlerMode uint
 
 const (

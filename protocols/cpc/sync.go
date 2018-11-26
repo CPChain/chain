@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -30,8 +29,8 @@ import (
 )
 
 const (
-	forceSyncCycle      = 10 * time.Second // Time interval to force syncs, even if few peers are available
-	minDesiredPeerCount = 5                // Amount of peers desired to start syncing
+	forceSyncCycle      = 5 * time.Second // Time interval to force syncs, even if few peers are available
+	minDesiredPeerCount = 5               // Amount of peers desired to start syncing
 
 	// This is the target size for the packs of transactions sent by txsyncLoop.
 	// A pack can get larger than this if a single transactions exceeds this size.
@@ -180,35 +179,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 
 	// full sync with the downloader
 	if err := pm.downloader.Synchronise(peer.id, pHead, pHt, downloader.FullSync); err != nil {
-		// TODO: @liuq check if there is any security problems!
-		if err == consensus.ErrNotEnoughSigs {
-			// log.Debug("--------I am in sync.Synchronise start--------")
-			// log.Debug("I am in sync Synchronise, now with not enough sigs, I also broadcast it to my peers...")
-			// log.Debug("--------I am in sync.Synchronise end--------")
-
-			// err := err.(*consensus.ErrNotEnoughSigsType)
-			// hash := err.NotEnoughSigsBlockHash
-			// if waitingSignatureBlock, known := pm.downloader.Blockchain.WaitingSignatureBlocks().Get(hash); known {
-			// 	waitingSignatureBlock := waitingSignatureBlock.(*types.Block)
-			// 	go pm.BroadcastBlock(waitingSignatureBlock, true)
-			// }
-			log.Warn("Got error", "error", err)
-			return
-		}
-
-		if err == consensus.ErrNewSignedHeader {
-			// err := err.(*consensus.ErrNewSignedHeaderType)
-			// header := err.SignedHeader
-
-			// log.Debug("--------I am in sync.Synchronise start--------")
-			// log.Debug("I am in sync Synchronise, now with not enough sigs, but signed the new block, I'll broadcast it to my peers...")
-			// log.Debug("--------I am in sync.Synchronise end--------")
-
-			// // TODO: @liuq fix this.
-			// go pm.BroadcastSignedHeader(header)
-			// // go peer.AsyncSendNewSignedHeader(header)
-			return
-		}
+		return
 	}
 
 	if atomic.LoadUint32(&pm.fastSync) == 1 {

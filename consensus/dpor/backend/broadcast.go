@@ -56,7 +56,7 @@ func (h *ValidatorHandler) PendingBlockBroadcastLoop() {
 			ready := false
 
 			for !ready {
-				if h.Available() && len(h.remoteValidators) >= int(h.termLen)/2 {
+				if h.Available() && len(h.remoteValidators) >= int(h.termLen) {
 					ready = true
 				}
 				time.Sleep(1 * time.Second)
