@@ -1,6 +1,9 @@
 package primitive_register
 
 import (
+	"sync"
+	"time"
+
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -8,6 +11,46 @@ import (
 	"bitbucket.org/cpchain/chain/core/vm"
 	"github.com/ethereum/go-ethereum/common"
 )
+
+type PrimitiveContractChecker struct {
+	available bool
+	lock      sync.RWMutex
+}
+
+var primitiveContractCheckerInstance *PrimitiveContractChecker
+var once sync.Once
+
+func GetPrimitiveContractCheckerInstance() *PrimitiveContractChecker {
+	once.Do(func() {
+		primitiveContractCheckerInstance = &PrimitiveContractChecker{}
+	})
+	return primitiveContractCheckerInstance
+}
+
+func (p *PrimitiveContractChecker) IsAvailable() bool {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+	return p.available
+}
+
+func (p *PrimitiveContractChecker) SetAvailable(available bool) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.available = available
+}
+
+func (p *PrimitiveContractChecker) WaitInitCompleteUntilTimeout() {
+	for i := 0; i < 10; i++ {
+		if !p.IsAvailable() {
+			time.Sleep(time.Duration(1) * time.Second)
+		} else {
+			log.Info("detect init Primitive Contract Complete")
+			return
+		}
+
+	}
+	log.Fatal("Init Primitive Contract Timeout,Exit")
+}
 
 type node interface {
 	Service(service interface{}) error
@@ -17,13 +60,17 @@ type node interface {
 func RegisterPrimitiveContracts(n node) {
 	rpcClient, err := n.Attach()
 	if err != nil {
-		log.Error("can't get rpc.client after start", "error", err)
+		log.Fatal("can't get rpc.client after start", "error", err)
 	}
 	client := cpclient.NewClient(rpcClient)
 	for addr, c := range MakePrimitiveContracts(client) {
-		vm.RegisterPrimitiveContract(addr, c)
+		err = vm.RegisterPrimitiveContract(addr, c)
+		if err != nil {
+			log.Fatal("register primitive contract error", "error", err, "addr", addr)
+		}
 	}
-
+	// change available to true
+	GetPrimitiveContractCheckerInstance().SetAvailable(true)
 }
 
 func MakePrimitiveContracts(client *cpclient.Client) map[common.Address]vm.PrimitiveContract {
