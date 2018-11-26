@@ -50,7 +50,7 @@ type Dpor struct {
 
 	// TODO: add proposerHandler here @shiyc
 
-	validatorHandler *backend.ValidatorHandler
+	validatorHandler *backend.Handler
 
 	fake           Mode // used for test, always accept a block.
 	fakeFail       uint64
@@ -88,7 +88,7 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 	return &Dpor{
 		dh:               &defaultDporHelper{&defaultDporUtil{}},
 		config:           &conf,
-		validatorHandler: backend.NewValidatorHandler(&conf, common.Address{}),
+		validatorHandler: backend.NewHandler(&conf, common.Address{}),
 		db:               db,
 		recents:          recents,
 		signatures:       signatures,
@@ -129,7 +129,7 @@ func (d *Dpor) SetContractCaller(contractCaller *backend.ContractCaller) error {
 }
 
 // SetHandler sets dpor.handler
-func (d *Dpor) SetHandler(handler *backend.ValidatorHandler) error {
+func (d *Dpor) SetHandler(handler *backend.Handler) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	d.validatorHandler = handler

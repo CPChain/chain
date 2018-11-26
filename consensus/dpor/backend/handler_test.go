@@ -33,7 +33,7 @@ func TestNewHandler(t *testing.T) {
 	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
 
 	//Assign an expected handler
-	var expectedResult ValidatorHandler
+	var expectedResult Handler
 	expectedResult.mode = LBFTMode
 	expectedResult.coinbase = testEtherbase
 	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
@@ -49,13 +49,13 @@ func TestNewHandler(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *ValidatorHandler
+		want *Handler
 	}{
 		{"testHandler1", args{testConfig, testEtherbase}, &expectedResult},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewValidatorHandler(tt.args.config, tt.args.etherbase)
+			got := NewHandler(tt.args.config, tt.args.etherbase)
 			//pendingBlockCh and quitSync are expected to be different
 			//Thus, before reflect.DeepEqual(), we set both variables equalling to the expected value
 			got.pendingBlockCh = expectedResult.pendingBlockCh
@@ -67,7 +67,7 @@ func TestNewHandler(t *testing.T) {
 	}
 }
 func TestHandler_IsAvailable(t *testing.T) {
-	var testHandler ValidatorHandler
+	var testHandler Handler
 	testHandler.available = false
 	//Test IsAvailable()
 	if testHandler.IsAvailable() != false {
@@ -126,7 +126,7 @@ func TestHandler_handlePreprepareMsg(t *testing.T) {
 	testConfig = configs.MainnetChainConfig.Dpor
 	//define the parameter "etherbase" for NewHandler()
 	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
-	testHandler := NewValidatorHandler(testConfig, testEtherbase)
+	testHandler := NewHandler(testConfig, testEtherbase)
 	err := testHandler.handlePreprepareMsg(msg, signer)
 	if err != nil {
 		t.Errorf("handlePrePrepareMsg returns an error message, as %v\n", err)
