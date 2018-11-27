@@ -32,7 +32,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer"
 	pdash "bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -42,7 +42,7 @@ var (
 	keyStoreFilePath = "./data/data1/keystore/"
 )
 
-func deploySigner() {
+func deployProposer() {
 
 	// Create client.
 	client, err := cpclient.Dial(endPoint)
@@ -102,7 +102,7 @@ func deploySigner() {
 	auth.GasPrice = gasPrice
 
 	// Launch contract deploy transaction.
-	address, tx, _, err := signerRegister.DeploySignerConnectionRegister(auth, client)
+	address, tx, _, err := proposer.DeployProposerRegister(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -386,7 +386,7 @@ func deployPdash() {
 }
 func main() {
 	deployCampaign()
-	deploySigner()
+	deployProposer()
 	deployPdash()
 	deployRegister()
 }

@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -180,7 +180,7 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 	fmt.Println("candidate info of", address.Hex(), ":", noc, deposit, startView, stopView)
 }
 
-func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address, rsaPubkey []byte) {
+func claimProposer(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address, rsaPubkey []byte) {
 	// Create client.
 	client, err := cpclient.Dial(endPoint)
 	if err != nil {
@@ -203,7 +203,7 @@ func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, addre
 
 	ctx := context.Background()
 
-	instance, err := signerRegister.NewSignerConnectionRegister(contractAddress, client)
+	instance, err := proposer.NewProposerRegister(contractAddress, client)
 
 	gasLimit := 3000000
 
@@ -237,13 +237,13 @@ func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, addre
 func main() {
 
 	campaignAddress := common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290")
-	signerAddress := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
+	proposerAddress := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
 
 	for i, kPair := range keystores {
 		fmt.Println(i)
 		keystoreFile, passphrase := kPair.keystorePath, kPair.passphrase
 		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase)
 		claimCampaign(privKey, pubKey, addr, campaignAddress)
-		claimSigner(privKey, pubKey, addr, signerAddress, rsaPubKey)
+		claimProposer(privKey, pubKey, addr, proposerAddress, rsaPubKey)
 	}
 }

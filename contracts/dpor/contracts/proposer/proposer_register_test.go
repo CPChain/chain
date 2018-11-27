@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
 
-package signer_register
+package proposer
 
 import (
 	"bytes"
@@ -47,14 +47,14 @@ func TestSignerRegister(t *testing.T) {
 	_ = proxyAddress
 	_ = realAddress
 
-	instance, _ = NewSignerConnectionRegister(common.HexToAddress(proxyAddress), client)
+	instance, _ = NewProposerRegister(common.HexToAddress(proxyAddress), client)
 
 	fmt.Println("*******************************************************")
 	registerSignerAndGet(t, privateKey, gasLimit, gasPrice, instance, ctx, client, fromAddress)
 	fmt.Println("*******************************************************")
 }
 
-func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *SignerConnectionRegister, context.Context) {
+func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *ProposerRegister, context.Context) {
 	// create client.
 	// client, err := cpchain.Dial("https://rinkeby.infura.io")
 	client, err := cpclient.Dial("http://localhost:8501")
@@ -97,7 +97,7 @@ func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int,
 	// in units
 	auth.GasPrice = gasPrice
 	// launch contract deploy transaction.
-	address, tx, instance, err := DeploySignerConnectionRegister(auth, client)
+	address, tx, instance, err := DeployProposerRegister(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -122,7 +122,7 @@ func deployContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int,
 	return client, privateKey, fromAddress, gasLimit, gasPrice, instance, ctx
 }
 
-func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, instance *SignerConnectionRegister, ctx context.Context, client *cpclient.Client, fromAddress common.Address) {
+func registerSignerAndGet(t *testing.T, privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, instance *ProposerRegister, ctx context.Context, client *cpclient.Client, fromAddress common.Address) {
 	// 1. load RsaPublicKey/PrivateKey
 	fmt.Println("1.load RsaPublicKey/PrivateKey")
 
