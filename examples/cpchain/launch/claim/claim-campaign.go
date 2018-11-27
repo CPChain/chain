@@ -122,7 +122,7 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 	return privateKey, publicKeyECDSA, fromAddress, key.RsaKey.PublicKey.RsaPublicKeyBytes
 }
 
-func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address) {
+func claimCampaign(privateKey *ecdsa.PrivateKey, address common.Address, contractAddress common.Address) {
 	// Create client.
 	client, err := cpclient.Dial(endPoint)
 	if err != nil {
@@ -154,11 +154,20 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 	cpuBlockNum := 100
 	memNonce := 345678
 	memBlockNum := 101
+	gasPrice = big.NewInt(1800000000)
 
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(int64(baseDeposit * numOfCampaign))
 	auth.GasLimit = uint64(gasLimit)
 	auth.GasPrice = gasPrice
+	// auth.Nonce
+
+	blockNumber := client.GetBlockNumber()
+	fmt.Println("blockNumber:", blockNumber)
+	nonce, err := client.NonceAt(context.Background(), contractAddress, blockNumber)
+	fmt.Println("nonce:", nonce)
+
+	auth.Nonce = big.NewInt(50)
 
 	tx, err := instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), uint64(cpuNonce), big.NewInt(int64(cpuBlockNum)),
 		uint64(memNonce), big.NewInt(int64(memBlockNum)))
@@ -243,7 +252,7 @@ func main() {
 		fmt.Println(i)
 		keystoreFile, passphrase := kPair.keystorePath, kPair.passphrase
 		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase)
-		claimCampaign(privKey, pubKey, addr, campaignAddress)
+		claimCampaign(privKey, addr, campaignAddress)
 		claimSigner(privKey, pubKey, addr, signerAddress, rsaPubKey)
 	}
 }

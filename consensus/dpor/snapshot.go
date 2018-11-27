@@ -20,8 +20,8 @@ import (
 
 const (
 	// TermGapBetweenElectionAndMining is the the term gap between election and mining.
-	TermGapBetweenElectionAndMining = 10
-	// TermGapBetweenElectionAndMining = 3
+	// TermGapBetweenElectionAndMining = 10
+	TermGapBetweenElectionAndMining = 3
 
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
 	MaxSizeOfRecentSigners = 5

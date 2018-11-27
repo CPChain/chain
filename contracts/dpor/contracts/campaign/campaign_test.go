@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
 
-package campaign
+package campaign_test
 
 import (
 	"bytes"
@@ -31,10 +31,80 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
+
+func TestCampaign1(t *testing.T) {
+	// t.Skip("we shall use a simulated backend.")
+
+	// create client.
+	client, err := cpclient.Dial("http://localhost:8501") // local
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// create account.
+	file, _ := os.Open("../../../../examples/cpchain/data/data1/keystore/")
+	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
+	kst := keystore.NewKeyStore(keyPath, 2, 1)
+	account := kst.Accounts()[0]
+	account, key, err := kst.GetDecryptedKey(account, "password")
+	privateKey := key.PrivateKey
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("error casting public key to ECDSA")
+	}
+
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	fmt.Println("from address:", fromAddress.Hex()) // 0x96216849c49358B10257cb55b28eA603c874b05E
+
+	bal, err := client.BalanceAt(context.Background(), fromAddress, nil)
+	fmt.Println("bal:", bal)
+	gasLimit := 3000000
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	fmt.Println("gasPrice:", gasPrice)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	auth := bind.NewKeyedTransactor(privateKey)
+	//auth.Nonce = big.NewInt(int64(nonce)) // not necessary
+	auth.Value = big.NewInt(0)       // in wei
+	auth.GasLimit = uint64(gasLimit) // in units
+	auth.GasPrice = gasPrice
+
+	// launch contract deploy transaction.
+	address := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
+	// instance, err := dpor.NewCampaignWrapper(auth, address, context.Background())
+
+	instance, err := campaign.NewCampaign(address, client)
+	if err != nil {
+		log.Error("err", "error", err)
+		return
+	}
+
+	startTime := time.Now()
+	fmt.Printf("TX start @:%s", time.Now())
+	ctx := context.Background()
+
+	fmt.Println("*******************************************************")
+	numOfCampaign, deposit, _, _ := ClaimCampaign(privateKey, gasLimit, gasPrice, err, instance, startTime, ctx, client, fromAddress)
+	assert(1, 50, numOfCampaign, deposit, t)
+
+	fmt.Println("*******************************************************")
+	numOfCampaign, deposit, _, _ = ClaimCampaign(privateKey, gasLimit, gasPrice, err, instance, startTime, ctx, client, fromAddress)
+	assert(2, 100, numOfCampaign, deposit, t)
+}
 
 func TestCampaign(t *testing.T) {
 	t.Skip("we shall use a simulated backend.")
@@ -84,10 +154,13 @@ func TestCampaign(t *testing.T) {
 	auth.GasPrice = gasPrice
 
 	// launch contract deploy transaction.
-	acAddr, _, _, _ := admission.DeployAdmission(auth, client, big.NewInt(50), big.NewInt(50))
-	address, tx, instance, err := DeployCampaign(auth, client, acAddr)
+	acAddr, _, _, err := admission.DeployAdmission(auth, client, big.NewInt(50), big.NewInt(50))
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("deploy admission error", "err", err.Error())
+	}
+	address, tx, instance, err := campaign.DeployCampaign(auth, client, acAddr)
+	if err != nil {
+		log.Fatal("deploy campaign error", "err", err.Error())
 	}
 
 	fmt.Printf("Contract pending deploy: 0x%x\n", address)
@@ -120,10 +193,10 @@ func assert(expectNum int64, expectDeposit int64, numOfCampaign *big.Int, deposi
 	}
 }
 
-func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *Campaign, startTime time.Time,
+func ClaimCampaign(privateKey *ecdsa.PrivateKey, gasLimit int, gasPrice *big.Int, err error, instance *campaign.Campaign, startTime time.Time,
 	ctx context.Context, client *cpclient.Client, fromAddress common.Address) (*big.Int, *big.Int, *big.Int, *big.Int) {
 	auth := bind.NewKeyedTransactor(privateKey)
-	auth.Value = big.NewInt(50)
+	auth.Value = big.NewInt(500)
 	// in wei
 	auth.GasLimit = uint64(gasLimit)
 	// in units
