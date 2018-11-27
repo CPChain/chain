@@ -65,6 +65,7 @@ var (
 		executablePath("abigen"),
 		executablePath("bootnode"),
 		executablePath("cpchain"),
+		executablePath("smartcontract"),
 	}
 )
 

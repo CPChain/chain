@@ -17,10 +17,22 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/deploy"
 )
 
 func main() {
+	log.Info("cmdline args", "args", os.Args)
+	if len(os.Args) != 3 {
+		fmt.Println("Usage: smartcontract <endpoint> <keystore path>")
+		return
+	}
+	config.SetConfig(os.Args[1], os.Args[2])
+
 	// deploy init contract
 	deploy.FormatPrint("0.DeployProxyContractRegister")
 	proxyContractRegisterAddress := deploy.ProxyContractRegister()

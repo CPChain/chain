@@ -30,7 +30,8 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	signerRegister "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -43,7 +44,7 @@ type keystorePair struct {
 
 var (
 	endPoint  = "http://localhost:8501"
-	dataDir   = "data/"
+	dataDir   = "examples/cpchain/data/"
 	keystores = []keystorePair{
 		{
 			"data1/keystore/",
@@ -235,9 +236,8 @@ func claimSigner(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, addre
 }
 
 func main() {
-
-	campaignAddress := common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290")
-	signerAddress := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
+	campaignAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
+	signerAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractProposer]
 
 	for i, kPair := range keystores {
 		fmt.Println(i)
