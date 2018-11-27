@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strings"
 
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/types"
@@ -20,7 +21,7 @@ const AdmissionInterfaceABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"_cpuN
 // AdmissionInterfaceBin is the compiled bytecode used for deploying new contracts.
 const AdmissionInterfaceBin = `0x`
 
-// DeployAdmissionInterface deploys a new Ethereum contract, binding an instance of AdmissionInterface to it.
+// DeployAdmissionInterface deploys a new cpchain contract, binding an instance of AdmissionInterface to it.
 func DeployAdmissionInterface(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *AdmissionInterface, error) {
 	parsed, err := abi.JSON(strings.NewReader(AdmissionInterfaceABI))
 	if err != nil {
@@ -33,29 +34,29 @@ func DeployAdmissionInterface(auth *bind.TransactOpts, backend bind.ContractBack
 	return address, tx, &AdmissionInterface{AdmissionInterfaceCaller: AdmissionInterfaceCaller{contract: contract}, AdmissionInterfaceTransactor: AdmissionInterfaceTransactor{contract: contract}, AdmissionInterfaceFilterer: AdmissionInterfaceFilterer{contract: contract}}, nil
 }
 
-// AdmissionInterface is an auto generated Go binding around an Ethereum contract.
+// AdmissionInterface is an auto generated Go binding around an cpchain contract.
 type AdmissionInterface struct {
 	AdmissionInterfaceCaller     // Read-only binding to the contract
 	AdmissionInterfaceTransactor // Write-only binding to the contract
 	AdmissionInterfaceFilterer   // Log filterer for contract events
 }
 
-// AdmissionInterfaceCaller is an auto generated read-only Go binding around an Ethereum contract.
+// AdmissionInterfaceCaller is an auto generated read-only Go binding around an cpchain contract.
 type AdmissionInterfaceCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// AdmissionInterfaceTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// AdmissionInterfaceTransactor is an auto generated write-only Go binding around an cpchain contract.
 type AdmissionInterfaceTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// AdmissionInterfaceFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// AdmissionInterfaceFilterer is an auto generated log filtering Go binding around an cpchain contract events.
 type AdmissionInterfaceFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// AdmissionInterfaceSession is an auto generated Go binding around an Ethereum contract,
+// AdmissionInterfaceSession is an auto generated Go binding around an cpchain contract,
 // with pre-set call and transact options.
 type AdmissionInterfaceSession struct {
 	Contract     *AdmissionInterface // Generic contract binding to set the session for
@@ -63,31 +64,31 @@ type AdmissionInterfaceSession struct {
 	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
 }
 
-// AdmissionInterfaceCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// AdmissionInterfaceCallerSession is an auto generated read-only Go binding around an cpchain contract,
 // with pre-set call options.
 type AdmissionInterfaceCallerSession struct {
 	Contract *AdmissionInterfaceCaller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts             // Call options to use throughout this session
 }
 
-// AdmissionInterfaceTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// AdmissionInterfaceTransactorSession is an auto generated write-only Go binding around an cpchain contract,
 // with pre-set transact options.
 type AdmissionInterfaceTransactorSession struct {
 	Contract     *AdmissionInterfaceTransactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts             // Transaction auth options to use throughout this session
 }
 
-// AdmissionInterfaceRaw is an auto generated low-level Go binding around an Ethereum contract.
+// AdmissionInterfaceRaw is an auto generated low-level Go binding around an cpchain contract.
 type AdmissionInterfaceRaw struct {
 	Contract *AdmissionInterface // Generic contract binding to access the raw methods on
 }
 
-// AdmissionInterfaceCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// AdmissionInterfaceCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
 type AdmissionInterfaceCallerRaw struct {
 	Contract *AdmissionInterfaceCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// AdmissionInterfaceTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// AdmissionInterfaceTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
 type AdmissionInterfaceTransactorRaw struct {
 	Contract *AdmissionInterfaceTransactor // Generic write-only contract binding to access the raw methods on
 }
@@ -205,9 +206,9 @@ func (_AdmissionInterface *AdmissionInterfaceCallerSession) Verify(_cpuNonce uin
 const CampaignABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_numOfCampaign\",\"type\":\"uint256\"},{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"}],\"name\":\"claimCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_viewIdx\",\"type\":\"uint256\"}],\"name\":\"candidatesOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"minNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"numPerRound\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"candidate\",\"type\":\"address\"},{\"name\":\"_viewIdx\",\"type\":\"uint256\"}],\"name\":\"punishCandidate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"baseDeposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_deposit\",\"type\":\"uint256\"}],\"name\":\"updateBaseDeposit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_maxNoc\",\"type\":\"uint256\"}],\"name\":\"updateMaxNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_minNoc\",\"type\":\"uint256\"}],\"name\":\"updateMinNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"viewIdx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"setAdmissionAddr\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"quitCampaign\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_candidate\",\"type\":\"address\"}],\"name\":\"candidateInfoOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"viewChange\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maxNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"startViewIdx\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"stopViewIdx\",\"type\":\"uint256\"}],\"name\":\"ClaimCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"payback\",\"type\":\"uint256\"}],\"name\":\"QuitCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"ViewChange\",\"type\":\"event\"}]"
 
 // CampaignBin is the compiled bytecode used for deploying new contracts.
-const CampaignBin = `0x60806040526000600155601560025560326003556001600455600a600555600060065534801561002e57600080fd5b50604051602080610f9c833981016040525160008054600160a060020a0319908116331790915560098054600160a060020a0390931692909116919091179055610f1f8061007d6000396000f3006080604052600436106100da5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166314b90a0281146100dc5780631984ab00146101015780633a713e37146101695780634b6b164b14610190578063604268ad146101a557806369474625146101c9578063855e5466146101de5780638cb59532146101f6578063a7e1f08b1461020e578063b07eaaf014610226578063c0e9e35e1461023b578063d0bdc65b1461025c578063db43826914610271578063db8e5580146102b8578063e2b28158146102c0575b005b6100da60043567ffffffffffffffff60243581169060443590606435166084356102d5565b34801561010d57600080fd5b506101196004356106e1565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561015557818101518382015260200161013d565b505050509050019250505060405180910390f35b34801561017557600080fd5b5061017e610750565b60408051918252519081900360200190f35b34801561019c57600080fd5b5061017e610756565b3480156101b157600080fd5b506100da600160a060020a036004351660243561075c565b3480156101d557600080fd5b5061017e610834565b3480156101ea57600080fd5b506100da60043561083a565b34801561020257600080fd5b506100da600435610856565b34801561021a57600080fd5b506100da600435610872565b34801561023257600080fd5b5061017e61088e565b34801561024757600080fd5b506100da600160a060020a0360043516610894565b34801561026857600080fd5b506100da6108da565b34801561027d57600080fd5b50610292600160a060020a03600435166109db565b604080519485526020850193909352838301919091526060830152519081900360800190f35b6100da610a0c565b3480156102cc57600080fd5b5061017e610bf3565b6000806102e460035488610bf9565b341461033a576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600954604080517f3395492e00000000000000000000000000000000000000000000000000000000815267ffffffffffffffff808a1660048301526024820189905287166044820152606481018690523360848201529051600160a060020a0390921691633395492e9160a4808201926020929091908290030181600087803b1580156103c657600080fd5b505af11580156103da573d6000803e3d6000fd5b505050506040513d60208110156103f057600080fd5b50511515610448576040805160e560020a62461bcd02815260206004820152601960248201527f637075206f72206d656d6f7279206e6f74207061737365642e00000000000000604482015290519081900360640190fd5b610450610c2f565b600160a060020a038216600090815260076020526040902054156104e4576040805160e560020a62461bcd02815260206004820152603760248201527f706c6561736520776169746520756e74696c20796f7572206c61737420726f7560448201527f6e6420656e64656420616e642074727920616761696e2e000000000000000000606482015290519081900360840190fd5b60045487101580156104f857506005548711155b151561054e576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b33600081815260076020526040902054909250610571908863ffffffff610c4516565b600160a060020a0383166000908152600760205260409020908155600101546105a0903463ffffffff610c4516565b600160a060020a038316600090815260076020526040902060019081019190915580546105d29163ffffffff610c4516565b600160a060020a0383166000908152600760205260409020600201819055610600908863ffffffff610c4516565b600160a060020a0383166000908152600760205260409020600380820192909255905460048201556002015490505b600160a060020a038216600090815260076020526040902060030154811015610679576000818152600860205260409020610670908363ffffffff610c5416565b5060010161062f565b600160a060020a038216600081815260076020908152604091829020600281015460039091015483519485529184015282820152517f8d468194bdd18296bee5d126aa15cc492d26bdf22a0585c4a47ec4490d3a0fcf9181900360600190a150505050505050565b60008181526008602090815260409182902060010180548351818402810184019094528084526060939283018282801561074457602002820191906000526020600020905b8154600160a060020a03168152600190910190602001808311610726575b50505050509050919050565b60045481565b60025481565b60008054600160a060020a0316331461077457600080fd5b50600160a060020a038216600090815260076020526040902060048101546001909101548111156107ef576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600160a060020a0383166000908152600760209081526040808320600101805485900390558483526008909152902061082e908463ffffffff610cdc16565b50505050565b60035481565b600054600160a060020a0316331461085157600080fd5b600355565b600054600160a060020a0316331461086d57600080fd5b600555565b600054600160a060020a0316331461088957600080fd5b600455565b60015481565b600054600160a060020a031633146108ab57600080fd5b6009805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b336000818152600760205260408120548110610966576040805160e560020a62461bcd02815260206004820152602960248201527f616c726561647920717569742063616d706169676e206f72206e6f206e65656460448201527f20746f20717569742e0000000000000000000000000000000000000000000000606482015290519081900360840190fd5b61096e610c2f565b600180546109819163ffffffff610c4516565b90505b600160a060020a0382166000908152600760205260409020600301548110156109ce5760008181526008602052604090206109c5908363ffffffff610cdc16565b50600101610984565b6109d782610e4e565b5050565b600160a060020a03166000908152600760205260409020805460018201546002830154600390930154919390929190565b600080600080610a1a610c2f565b60015460065410610a9b576040805160e560020a62461bcd02815260206004820152603e60248201527f4e6f7468696e672063616e2077697468647261772e20506c656173652077616960448201527f7420756e74696c207468697320766965772069732066696e69736865642e0000606482015290519081900360840190fd5b600154600654101561082e57600654600090815260086020526040812060010154945092505b83831015610be55760018054600090815260086020526040902001805484908110610ae857fe5b6000918252602080832090910154600160a060020a03168083526007909152604090912060048101546001919091015491935091508111610b9057600160a060020a038216600081815260076020526040808220600101805485900390555183156108fc0291849190818181858888f19350505050158015610b6e573d6000803e3d6000fd5b50600160a060020a038216600090815260076020526040902080546000190190555b600160a060020a0382166000908152600760205260409020541515610bda57600160a060020a03821660009081526007602052604081206002810182905560038101829055600401555b600190920191610ac1565b600680546001019055610a9b565b60055481565b600080831515610c0c5760009150610c28565b50828202828482811515610c1c57fe5b0414610c2457fe5b8091505b5092915050565b600254439081811515610c3e57fe5b0460015550565b600082820183811015610c2457fe5b600160a060020a03811660009081526020839052604081205460ff1615610c7d57506000610cd6565b50600160a060020a0381166000818152602084815260408220805460ff19166001908117909155858101805480830182559084529190922001805473ffffffffffffffffffffffffffffffffffffffff19169092179091555b92915050565b600160a060020a0381166000908152602083905260408120548190819060ff161515610d0b5760009250610e46565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b81811015610e415783600160a060020a03168560010182815481101515610d5757fe5b600091825260209091200154600160a060020a03161415610e39576001850180546000198401908110610d8657fe5b600091825260209091200154600186018054600160a060020a039092169183908110610dae57fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790556001850180546000198401908110610df857fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916905560018501805490610e33906000198301610eb3565b50610e41565b600101610d34565b600192505b505092915050565b600160a060020a03811660008181526007602052604080822060018101805484835590849055600282018490556003909101839055905190929183156108fc02918491818181858888f19350505050158015610eae573d6000803e3d6000fd5b505050565b815481835581811115610eae57600083815260209020610eae918101908301610ef091905b80821115610eec5760008155600101610ed8565b5090565b905600a165627a7a7230582080503faaf83686dab0c1ab8924ca6aa24d1289403199ab456b77977b9612b0fe0029`
+const CampaignBin = `0x60806040526000600155601560025560326003556001600455600a600555600060065534801561002e57600080fd5b50604051602080610f9c833981016040525160008054600160a060020a0319908116331790915560098054600160a060020a0390931692909116919091179055610f1f8061007d6000396000f3006080604052600436106100da5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166314b90a0281146100dc5780631984ab00146101015780633a713e37146101695780634b6b164b14610190578063604268ad146101a557806369474625146101c9578063855e5466146101de5780638cb59532146101f6578063a7e1f08b1461020e578063b07eaaf014610226578063c0e9e35e1461023b578063d0bdc65b1461025c578063db43826914610271578063db8e5580146102b8578063e2b28158146102c0575b005b6100da60043567ffffffffffffffff60243581169060443590606435166084356102d5565b34801561010d57600080fd5b506101196004356106e1565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561015557818101518382015260200161013d565b505050509050019250505060405180910390f35b34801561017557600080fd5b5061017e610750565b60408051918252519081900360200190f35b34801561019c57600080fd5b5061017e610756565b3480156101b157600080fd5b506100da600160a060020a036004351660243561075c565b3480156101d557600080fd5b5061017e610834565b3480156101ea57600080fd5b506100da60043561083a565b34801561020257600080fd5b506100da600435610856565b34801561021a57600080fd5b506100da600435610872565b34801561023257600080fd5b5061017e61088e565b34801561024757600080fd5b506100da600160a060020a0360043516610894565b34801561026857600080fd5b506100da6108da565b34801561027d57600080fd5b50610292600160a060020a03600435166109db565b604080519485526020850193909352838301919091526060830152519081900360800190f35b6100da610a0c565b3480156102cc57600080fd5b5061017e610bf3565b6000806102e460035488610bf9565b341461033a576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600954604080517f3395492e00000000000000000000000000000000000000000000000000000000815267ffffffffffffffff808a1660048301526024820189905287166044820152606481018690523360848201529051600160a060020a0390921691633395492e9160a4808201926020929091908290030181600087803b1580156103c657600080fd5b505af11580156103da573d6000803e3d6000fd5b505050506040513d60208110156103f057600080fd5b50511515610448576040805160e560020a62461bcd02815260206004820152601960248201527f637075206f72206d656d6f7279206e6f74207061737365642e00000000000000604482015290519081900360640190fd5b610450610c2f565b600160a060020a038216600090815260076020526040902054156104e4576040805160e560020a62461bcd02815260206004820152603760248201527f706c6561736520776169746520756e74696c20796f7572206c61737420726f7560448201527f6e6420656e64656420616e642074727920616761696e2e000000000000000000606482015290519081900360840190fd5b60045487101580156104f857506005548711155b151561054e576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b33600081815260076020526040902054909250610571908863ffffffff610c4516565b600160a060020a0383166000908152600760205260409020908155600101546105a0903463ffffffff610c4516565b600160a060020a038316600090815260076020526040902060019081019190915580546105d29163ffffffff610c4516565b600160a060020a0383166000908152600760205260409020600201819055610600908863ffffffff610c4516565b600160a060020a0383166000908152600760205260409020600380820192909255905460048201556002015490505b600160a060020a038216600090815260076020526040902060030154811015610679576000818152600860205260409020610670908363ffffffff610c5416565b5060010161062f565b600160a060020a038216600081815260076020908152604091829020600281015460039091015483519485529184015282820152517f8d468194bdd18296bee5d126aa15cc492d26bdf22a0585c4a47ec4490d3a0fcf9181900360600190a150505050505050565b60008181526008602090815260409182902060010180548351818402810184019094528084526060939283018282801561074457602002820191906000526020600020905b8154600160a060020a03168152600190910190602001808311610726575b50505050509050919050565b60045481565b60025481565b60008054600160a060020a0316331461077457600080fd5b50600160a060020a038216600090815260076020526040902060048101546001909101548111156107ef576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600160a060020a0383166000908152600760209081526040808320600101805485900390558483526008909152902061082e908463ffffffff610cdc16565b50505050565b60035481565b600054600160a060020a0316331461085157600080fd5b600355565b600054600160a060020a0316331461086d57600080fd5b600555565b600054600160a060020a0316331461088957600080fd5b600455565b60015481565b600054600160a060020a031633146108ab57600080fd5b6009805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b336000818152600760205260408120548110610966576040805160e560020a62461bcd02815260206004820152602960248201527f616c726561647920717569742063616d706169676e206f72206e6f206e65656460448201527f20746f20717569742e0000000000000000000000000000000000000000000000606482015290519081900360840190fd5b61096e610c2f565b600180546109819163ffffffff610c4516565b90505b600160a060020a0382166000908152600760205260409020600301548110156109ce5760008181526008602052604090206109c5908363ffffffff610cdc16565b50600101610984565b6109d782610e4e565b5050565b600160a060020a03166000908152600760205260409020805460018201546002830154600390930154919390929190565b600080600080610a1a610c2f565b60015460065410610a9b576040805160e560020a62461bcd02815260206004820152603e60248201527f4e6f7468696e672063616e2077697468647261772e20506c656173652077616960448201527f7420756e74696c207468697320766965772069732066696e69736865642e0000606482015290519081900360840190fd5b600154600654101561082e57600654600090815260086020526040812060010154945092505b83831015610be55760018054600090815260086020526040902001805484908110610ae857fe5b6000918252602080832090910154600160a060020a03168083526007909152604090912060048101546001919091015491935091508111610b9057600160a060020a038216600081815260076020526040808220600101805485900390555183156108fc0291849190818181858888f19350505050158015610b6e573d6000803e3d6000fd5b50600160a060020a038216600090815260076020526040902080546000190190555b600160a060020a0382166000908152600760205260409020541515610bda57600160a060020a03821660009081526007602052604081206002810182905560038101829055600401555b600190920191610ac1565b600680546001019055610a9b565b60055481565b600080831515610c0c5760009150610c28565b50828202828482811515610c1c57fe5b0414610c2457fe5b8091505b5092915050565b600254439081811515610c3e57fe5b0460015550565b600082820183811015610c2457fe5b600160a060020a03811660009081526020839052604081205460ff1615610c7d57506000610cd6565b50600160a060020a0381166000818152602084815260408220805460ff19166001908117909155858101805480830182559084529190922001805473ffffffffffffffffffffffffffffffffffffffff19169092179091555b92915050565b600160a060020a0381166000908152602083905260408120548190819060ff161515610d0b5760009250610e46565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b81811015610e415783600160a060020a03168560010182815481101515610d5757fe5b600091825260209091200154600160a060020a03161415610e39576001850180546000198401908110610d8657fe5b600091825260209091200154600186018054600160a060020a039092169183908110610dae57fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790556001850180546000198401908110610df857fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916905560018501805490610e33906000198301610eb3565b50610e41565b600101610d34565b600192505b505092915050565b600160a060020a03811660008181526007602052604080822060018101805484835590849055600282018490556003909101839055905190929183156108fc02918491818181858888f19350505050158015610eae573d6000803e3d6000fd5b505050565b815481835581811115610eae57600083815260209020610eae918101908301610ef091905b80821115610eec5760008155600101610ed8565b5090565b905600a165627a7a723058208e9996d3518b163f8db5f0ff0b3939587d7de0b598e7a053ebb3146ace805c4b0029`
 
-// DeployCampaign deploys a new Ethereum contract, binding an instance of Campaign to it.
+// DeployCampaign deploys a new cpchain contract, binding an instance of Campaign to it.
 func DeployCampaign(auth *bind.TransactOpts, backend bind.ContractBackend, _addr common.Address) (common.Address, *types.Transaction, *Campaign, error) {
 	parsed, err := abi.JSON(strings.NewReader(CampaignABI))
 	if err != nil {
@@ -220,29 +221,29 @@ func DeployCampaign(auth *bind.TransactOpts, backend bind.ContractBackend, _addr
 	return address, tx, &Campaign{CampaignCaller: CampaignCaller{contract: contract}, CampaignTransactor: CampaignTransactor{contract: contract}, CampaignFilterer: CampaignFilterer{contract: contract}}, nil
 }
 
-// Campaign is an auto generated Go binding around an Ethereum contract.
+// Campaign is an auto generated Go binding around an cpchain contract.
 type Campaign struct {
 	CampaignCaller     // Read-only binding to the contract
 	CampaignTransactor // Write-only binding to the contract
 	CampaignFilterer   // Log filterer for contract events
 }
 
-// CampaignCaller is an auto generated read-only Go binding around an Ethereum contract.
+// CampaignCaller is an auto generated read-only Go binding around an cpchain contract.
 type CampaignCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// CampaignTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// CampaignTransactor is an auto generated write-only Go binding around an cpchain contract.
 type CampaignTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// CampaignFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// CampaignFilterer is an auto generated log filtering Go binding around an cpchain contract events.
 type CampaignFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// CampaignSession is an auto generated Go binding around an Ethereum contract,
+// CampaignSession is an auto generated Go binding around an cpchain contract,
 // with pre-set call and transact options.
 type CampaignSession struct {
 	Contract     *Campaign         // Generic contract binding to set the session for
@@ -250,31 +251,31 @@ type CampaignSession struct {
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// CampaignCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// CampaignCallerSession is an auto generated read-only Go binding around an cpchain contract,
 // with pre-set call options.
 type CampaignCallerSession struct {
 	Contract *CampaignCaller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts   // Call options to use throughout this session
 }
 
-// CampaignTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// CampaignTransactorSession is an auto generated write-only Go binding around an cpchain contract,
 // with pre-set transact options.
 type CampaignTransactorSession struct {
 	Contract     *CampaignTransactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
 }
 
-// CampaignRaw is an auto generated low-level Go binding around an Ethereum contract.
+// CampaignRaw is an auto generated low-level Go binding around an cpchain contract.
 type CampaignRaw struct {
 	Contract *Campaign // Generic contract binding to access the raw methods on
 }
 
-// CampaignCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// CampaignCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
 type CampaignCallerRaw struct {
 	Contract *CampaignCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// CampaignTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// CampaignTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
 type CampaignTransactorRaw struct {
 	Contract *CampaignTransactor // Generic write-only contract binding to access the raw methods on
 }
@@ -727,10 +728,10 @@ type CampaignClaimCampaignIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there
@@ -851,10 +852,10 @@ type CampaignQuitCampaignIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there
@@ -974,10 +975,10 @@ type CampaignViewChangeIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there
@@ -1092,9 +1093,9 @@ func (_Campaign *CampaignFilterer) WatchViewChange(opts *bind.WatchOpts, sink ch
 const SafeMathABI = "[]"
 
 // SafeMathBin is the compiled bytecode used for deploying new contracts.
-const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820ea646c523b4ea8129d3cbf0d0296df061ddb1c943f58e026c80dfd655ed0f6f80029`
+const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820084fc9d5d67cb092cdad77e619cdfdefcd4cae1fa71997d854cb1badf631be650029`
 
-// DeploySafeMath deploys a new Ethereum contract, binding an instance of SafeMath to it.
+// DeploySafeMath deploys a new cpchain contract, binding an instance of SafeMath to it.
 func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *SafeMath, error) {
 	parsed, err := abi.JSON(strings.NewReader(SafeMathABI))
 	if err != nil {
@@ -1107,29 +1108,29 @@ func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (comm
 	return address, tx, &SafeMath{SafeMathCaller: SafeMathCaller{contract: contract}, SafeMathTransactor: SafeMathTransactor{contract: contract}, SafeMathFilterer: SafeMathFilterer{contract: contract}}, nil
 }
 
-// SafeMath is an auto generated Go binding around an Ethereum contract.
+// SafeMath is an auto generated Go binding around an cpchain contract.
 type SafeMath struct {
 	SafeMathCaller     // Read-only binding to the contract
 	SafeMathTransactor // Write-only binding to the contract
 	SafeMathFilterer   // Log filterer for contract events
 }
 
-// SafeMathCaller is an auto generated read-only Go binding around an Ethereum contract.
+// SafeMathCaller is an auto generated read-only Go binding around an cpchain contract.
 type SafeMathCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SafeMathTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// SafeMathTransactor is an auto generated write-only Go binding around an cpchain contract.
 type SafeMathTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SafeMathFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// SafeMathFilterer is an auto generated log filtering Go binding around an cpchain contract events.
 type SafeMathFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SafeMathSession is an auto generated Go binding around an Ethereum contract,
+// SafeMathSession is an auto generated Go binding around an cpchain contract,
 // with pre-set call and transact options.
 type SafeMathSession struct {
 	Contract     *SafeMath         // Generic contract binding to set the session for
@@ -1137,31 +1138,31 @@ type SafeMathSession struct {
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// SafeMathCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// SafeMathCallerSession is an auto generated read-only Go binding around an cpchain contract,
 // with pre-set call options.
 type SafeMathCallerSession struct {
 	Contract *SafeMathCaller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts   // Call options to use throughout this session
 }
 
-// SafeMathTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// SafeMathTransactorSession is an auto generated write-only Go binding around an cpchain contract,
 // with pre-set transact options.
 type SafeMathTransactorSession struct {
 	Contract     *SafeMathTransactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
 }
 
-// SafeMathRaw is an auto generated low-level Go binding around an Ethereum contract.
+// SafeMathRaw is an auto generated low-level Go binding around an cpchain contract.
 type SafeMathRaw struct {
 	Contract *SafeMath // Generic contract binding to access the raw methods on
 }
 
-// SafeMathCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// SafeMathCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
 type SafeMathCallerRaw struct {
 	Contract *SafeMathCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// SafeMathTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// SafeMathTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
 type SafeMathTransactorRaw struct {
 	Contract *SafeMathTransactor // Generic write-only contract binding to access the raw methods on
 }
@@ -1253,9 +1254,9 @@ func (_SafeMath *SafeMathTransactorRaw) Transact(opts *bind.TransactOpts, method
 const SetABI = "[]"
 
 // SetBin is the compiled bytecode used for deploying new contracts.
-const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820cd8874489cf248c1ebd799927c6f36cce2643ef46d01a2d6eda677d6ce3766d80029`
+const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820ca6b1558f0b15355d6404ea1458db3c6125dd40b5b49cf4093e125dded2812e40029`
 
-// DeploySet deploys a new Ethereum contract, binding an instance of Set to it.
+// DeploySet deploys a new cpchain contract, binding an instance of Set to it.
 func DeploySet(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Set, error) {
 	parsed, err := abi.JSON(strings.NewReader(SetABI))
 	if err != nil {
@@ -1268,29 +1269,29 @@ func DeploySet(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Ad
 	return address, tx, &Set{SetCaller: SetCaller{contract: contract}, SetTransactor: SetTransactor{contract: contract}, SetFilterer: SetFilterer{contract: contract}}, nil
 }
 
-// Set is an auto generated Go binding around an Ethereum contract.
+// Set is an auto generated Go binding around an cpchain contract.
 type Set struct {
 	SetCaller     // Read-only binding to the contract
 	SetTransactor // Write-only binding to the contract
 	SetFilterer   // Log filterer for contract events
 }
 
-// SetCaller is an auto generated read-only Go binding around an Ethereum contract.
+// SetCaller is an auto generated read-only Go binding around an cpchain contract.
 type SetCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SetTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// SetTransactor is an auto generated write-only Go binding around an cpchain contract.
 type SetTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SetFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// SetFilterer is an auto generated log filtering Go binding around an cpchain contract events.
 type SetFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// SetSession is an auto generated Go binding around an Ethereum contract,
+// SetSession is an auto generated Go binding around an cpchain contract,
 // with pre-set call and transact options.
 type SetSession struct {
 	Contract     *Set              // Generic contract binding to set the session for
@@ -1298,31 +1299,31 @@ type SetSession struct {
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// SetCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// SetCallerSession is an auto generated read-only Go binding around an cpchain contract,
 // with pre-set call options.
 type SetCallerSession struct {
 	Contract *SetCaller    // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts // Call options to use throughout this session
 }
 
-// SetTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// SetTransactorSession is an auto generated write-only Go binding around an cpchain contract,
 // with pre-set transact options.
 type SetTransactorSession struct {
 	Contract     *SetTransactor    // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// SetRaw is an auto generated low-level Go binding around an Ethereum contract.
+// SetRaw is an auto generated low-level Go binding around an cpchain contract.
 type SetRaw struct {
 	Contract *Set // Generic contract binding to access the raw methods on
 }
 
-// SetCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// SetCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
 type SetCallerRaw struct {
 	Contract *SetCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// SetTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// SetTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
 type SetTransactorRaw struct {
 	Contract *SetTransactor // Generic write-only contract binding to access the raw methods on
 }

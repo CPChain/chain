@@ -16,9 +16,9 @@ import (
 const ProxyABI = "[]"
 
 // ProxyBin is the compiled bytecode used for deploying new contracts.
-const ProxyBin = `0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a72305820cbc484bf00b46016a380dd0eb2f4931f6ca4902e646f2f72f7bb8f7bc72493080029`
+const ProxyBin = `0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a7230582069d7e18c42980577afc8dcb8a8ce319d744106c1901042bc714cc7015dfabc620029`
 
-// DeployProxy deploys a new Ethereum contract, binding an instance of Proxy to it.
+// DeployProxy deploys a new cpchain contract, binding an instance of Proxy to it.
 func DeployProxy(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Proxy, error) {
 	parsed, err := abi.JSON(strings.NewReader(ProxyABI))
 	if err != nil {
@@ -31,29 +31,29 @@ func DeployProxy(auth *bind.TransactOpts, backend bind.ContractBackend) (common.
 	return address, tx, &Proxy{ProxyCaller: ProxyCaller{contract: contract}, ProxyTransactor: ProxyTransactor{contract: contract}, ProxyFilterer: ProxyFilterer{contract: contract}}, nil
 }
 
-// Proxy is an auto generated Go binding around an Ethereum contract.
+// Proxy is an auto generated Go binding around an cpchain contract.
 type Proxy struct {
 	ProxyCaller     // Read-only binding to the contract
 	ProxyTransactor // Write-only binding to the contract
 	ProxyFilterer   // Log filterer for contract events
 }
 
-// ProxyCaller is an auto generated read-only Go binding around an Ethereum contract.
+// ProxyCaller is an auto generated read-only Go binding around an cpchain contract.
 type ProxyCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// ProxyTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// ProxyTransactor is an auto generated write-only Go binding around an cpchain contract.
 type ProxyTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// ProxyFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// ProxyFilterer is an auto generated log filtering Go binding around an cpchain contract events.
 type ProxyFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// ProxySession is an auto generated Go binding around an Ethereum contract,
+// ProxySession is an auto generated Go binding around an cpchain contract,
 // with pre-set call and transact options.
 type ProxySession struct {
 	Contract     *Proxy            // Generic contract binding to set the session for
@@ -61,31 +61,31 @@ type ProxySession struct {
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// ProxyCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// ProxyCallerSession is an auto generated read-only Go binding around an cpchain contract,
 // with pre-set call options.
 type ProxyCallerSession struct {
 	Contract *ProxyCaller  // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts // Call options to use throughout this session
 }
 
-// ProxyTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// ProxyTransactorSession is an auto generated write-only Go binding around an cpchain contract,
 // with pre-set transact options.
 type ProxyTransactorSession struct {
 	Contract     *ProxyTransactor  // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// ProxyRaw is an auto generated low-level Go binding around an Ethereum contract.
+// ProxyRaw is an auto generated low-level Go binding around an cpchain contract.
 type ProxyRaw struct {
 	Contract *Proxy // Generic contract binding to access the raw methods on
 }
 
-// ProxyCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// ProxyCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
 type ProxyCallerRaw struct {
 	Contract *ProxyCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// ProxyTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// ProxyTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
 type ProxyTransactorRaw struct {
 	Contract *ProxyTransactor // Generic write-only contract binding to access the raw methods on
 }
