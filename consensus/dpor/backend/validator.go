@@ -322,7 +322,7 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 					go vh.BroadcastMinedBlock(block)
 				}
 
-				log.Warn("err when signing header", "hash", header.Hash(), "number", header.Number.Uint64(), "err", e)
+				log.Warn("err when signing header", "hash", header.Hash().Hex(), "number", header.Number.Uint64(), "err", e)
 				return nil
 			}
 
@@ -403,7 +403,7 @@ func (vh *ValidatorHandler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error
 					return nil
 				}
 
-				log.Warn("err when signing header", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
+				log.Warn("err when signing header", "hash", header.Hash().Hex(), "number", header.Number.Uint64(), "err", err)
 				return nil
 			}
 

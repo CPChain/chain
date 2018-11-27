@@ -294,6 +294,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 
 	// Create a signature space for validators
 	header.Dpor.Sigs = make([]types.DporSignature, len(header.Dpor.Validators))
+	log.Info("sealed the block", "hash", header.Hash().Hex(), "number", header.Number)
 
 	return block.WithSeal(header), nil
 }

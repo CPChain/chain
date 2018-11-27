@@ -181,6 +181,7 @@ func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 
 	signers, ok := s.RecentProposers[term]
 	if !ok {
+		log.Warn("proposers for the term not exist", "term", term)
 		return nil
 	}
 
@@ -330,10 +331,10 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 		cpy.setRecentSigners(term, signers)
 	}
 	for term, proposer := range s.recentProposers() {
-		cpy.setRecentSigners(term, proposer)
+		cpy.setRecentProposers(term, proposer)
 	}
 	for term, validator := range s.recentValidators() {
-		cpy.setRecentSigners(term, validator)
+		cpy.setRecentValidators(term, validator)
 	}
 	return cpy
 }
@@ -521,6 +522,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		// Use default proposers
 		proposers := s.candidates()[:s.config.TermLen]
 		s.setRecentProposers(s.Term()+1, proposers)
+		log.Info("use default proposers", "term", s.Term()+1, "proposers", proposers)
 	}
 
 	return
@@ -533,7 +535,10 @@ func (s *DporSnapshot) Term() uint64 {
 
 // TermOf returns the term index of given block number
 func (s *DporSnapshot) TermOf(blockNum uint64) uint64 {
-	return blockNum / ((s.config.TermLen) * (s.config.ViewLen))
+	if blockNum == 0 {
+		return 0 // block number 0 is a special case, its term is set to 0
+	}
+	return (blockNum - 1) / ((s.config.TermLen) * (s.config.ViewLen))
 }
 
 // FutureTermOf returns future term idx with given block number
@@ -559,7 +564,7 @@ func (s *DporSnapshot) ValidatorViewOf(validator common.Address, number uint64) 
 	return -1, errValidatorNotInCommittee
 }
 
-// ProposerViewOf returns the proposer's view with given proposer's address and block number
+// ProposerViewOf returns the proposer's view(turn) with given proposer's address and block number
 func (s *DporSnapshot) ProposerViewOf(proposer common.Address, number uint64) (int, error) {
 	for view, s := range s.ProposersOf(number) {
 		if s == proposer {

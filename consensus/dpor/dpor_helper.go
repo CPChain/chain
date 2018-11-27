@@ -182,25 +182,28 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		headers []*types.Header
 		snap    *DporSnapshot
 	)
+
+	numberIter := number
 	for snap == nil {
 		// If an in-memory Snapshot was found, use that
-		if s, ok := dpor.recents.Get(hash); ok {
-			snap = s.(*DporSnapshot)
-			break
-		}
+		// TODO: @AC disable cache as the cache contains an invalid snapshot
+		// if s, ok := dpor.recents.Get(hash); ok {
+		// 	snap = s.(*DporSnapshot)
+		// 	break
+		// }
 
 		// If an on-disk checkpoint Snapshot can be found, use that
 		// if number%checkpointInterval == 0 {
-		if IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen) {
+		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
 			if s, err := loadSnapshot(dpor.config, dpor.db, hash); err == nil {
-				log.Debug("Loaded voting Snapshot from disk", "number", number, "hash", hash)
+				log.Debug("Loaded voting Snapshot from disk", "number", numberIter, "hash", hash)
 				snap = s
 				break
 			}
 		}
 
 		// If we're at block zero, make a Snapshot
-		if number == 0 {
+		if numberIter == 0 {
 			// Retrieve genesis block and verify it
 			genesis := chain.GetHeaderByNumber(0)
 			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil, true); err != nil {
@@ -229,21 +232,21 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		if len(parents) > 0 {
 			// If we have explicit parents, pick from there (enforced)
 			header = parents[len(parents)-1]
-			if header.Hash() != hash || header.Number.Uint64() != number {
+			if header.Hash() != hash || header.Number.Uint64() != numberIter {
 				log.Debug("consensus.ErrUnknownAncestor 1")
 				return nil, consensus.ErrUnknownAncestor
 			}
 			parents = parents[:len(parents)-1]
 		} else {
 			// No explicit parents (or no more left), reach out to the database
-			header = chain.GetHeader(hash, number)
+			header = chain.GetHeader(hash, numberIter)
 			if header == nil {
 				log.Debug("consensus.ErrUnknownAncestor 2")
 				return nil, consensus.ErrUnknownAncestor
 			}
 		}
 		headers = append(headers, header)
-		number, hash = number-1, header.ParentHash
+		numberIter, hash = numberIter-1, header.ParentHash
 	}
 
 	// Previous Snapshot found, apply any pending headers on top of it
@@ -256,22 +259,22 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	dpor.lock.Unlock()
 
 	// Apply headers to the snapshot and updates RPTs
-	snap, err := snap.apply(headers, contractCaller)
+	newSnap, err := snap.apply(headers, contractCaller)
 	if err != nil {
 		return nil, err
 	}
 
 	// Save to cache
-	dpor.recents.Add(snap.hash(), snap)
+	dpor.recents.Add(newSnap.hash(), newSnap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if IsCheckPoint(snap.number(), dpor.config.TermLen, dpor.config.ViewLen) && len(headers) > 0 {
-		if err = snap.store(dpor.db); err != nil {
+	if IsCheckPoint(newSnap.number(), dpor.config.TermLen, dpor.config.ViewLen) && len(headers) > 0 {
+		if err = newSnap.store(dpor.db); err != nil {
 			return nil, err
 		}
-		log.Debug("Stored voting Snapshot to disk", "number", snap.number(), "hash", snap.hash())
+		log.Debug("Stored voting Snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 	}
-	return snap, err
+	return newSnap, err
 }
 
 // verifySeal checks whether the signature contained in the header satisfies the
