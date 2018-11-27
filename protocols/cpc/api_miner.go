@@ -123,8 +123,8 @@ func (api *MinerManager) SetGasPrice(ctx context.Context, gasPrice *pb.GasPrice)
 	return &pb.IsOk{IsOk: true}, nil
 }
 
-// SetCoinbase sets the cpcbase of the miner
+// SetCoinbase sets the coinbase of the miner
 func (api *MinerManager) SetCoinbase(ctx context.Context, newAddress *pb.Address) (*pb.IsOk, error) {
-	api.c.SetCpcbase(common.HexToAddress(newAddress.Address))
+	api.c.SetCoinbase(common.HexToAddress(newAddress.Address))
 	return &pb.IsOk{IsOk: true}, nil
 }

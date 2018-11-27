@@ -19,6 +19,7 @@ package dpor
 import (
 	"bytes"
 	"errors"
+	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"time"
 
@@ -28,9 +29,9 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // Dpor proof-of-reputation protocol constants.
@@ -343,4 +344,12 @@ func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Addres
 	// }
 
 	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
+}
+func (d *Dpor) GetCalcRptInfo(address common.Address, blockNum uint64) int64 {
+	instance, err := rpt.NewRptService(d.contractCaller.Client, d.config.Contracts[configs.ContractRpt])
+	if err != nil {
+		log.Fatal("GetCalcRptInfo", "error", err)
+	}
+	rp := instance.CalcRptInfo(address, blockNum)
+	return rp.Rpt
 }

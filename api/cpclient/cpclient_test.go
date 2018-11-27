@@ -41,7 +41,7 @@ var (
 	_ = cpchain.PendingContractCaller(&cpclient.Client{})
 )
 
-func TestGetRNode(t *testing.T) {
+func TestGetRNodes(t *testing.T) {
 	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
@@ -50,29 +50,31 @@ func TestGetRNode(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	rnodes, err := client.GetRNodes(context.Background())
-	fmt.Println(rnodes)
+	fmt.Println(rnodes, err)
 
-	if len(rnodes) < 1 {
+	fmt.Println("rpt is :", "addr", rnodes[0].Address, "rpt", rnodes[0].Rpt, "status", rnodes[0].Status)
+
+	if rnodes[0].Rpt == 0 {
 		t.Errorf("GetRNodes failed")
 	}
 }
 
-func TestGetCurrentEpoch(t *testing.T) {
+func TestGetCurrentTerm(t *testing.T) {
 	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	currentEpoch, err := client.GetCurrentEpoch(context.Background())
-	fmt.Println(currentEpoch)
+	currentTerm, err := client.GetCurrentTerm(context.Background())
+	fmt.Println("currentTerm", currentTerm)
 
 	if err != nil {
-		t.Errorf("GetCurrentEpoch failed")
+		t.Errorf("GetCurrentTerm failed")
 	}
 }
 
-func TestGetCurrentRound(t *testing.T) {
+func TestGetCurrentView(t *testing.T) {
 	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
@@ -80,11 +82,11 @@ func TestGetCurrentRound(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	currentRound, err := client.GetCurrentRound(context.Background())
-	fmt.Println(currentRound)
+	currentView, err := client.GetCurrentView(context.Background())
+	fmt.Println("currentTerm", currentView)
 
 	if err != nil {
-		t.Errorf("GetCurrentRound failed")
+		t.Errorf("GetCurrentView failed")
 	}
 }
 
@@ -96,10 +98,10 @@ func TestGetCommittees(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	rnodes, err := client.GetCommittees(context.Background())
-	fmt.Println(rnodes)
+	committees, err := client.GetCommittees(context.Background())
+	fmt.Println("committees is :", committees)
 
-	if len(rnodes) < 1 {
+	if len(committees) < 1 {
 		t.Errorf("GetCommittees failed")
 	}
 }

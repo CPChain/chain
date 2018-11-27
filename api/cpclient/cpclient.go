@@ -252,12 +252,24 @@ type rpcProgress struct {
 	KnownStates   hexutil.Uint64
 }
 
-type Committee struct {
-	Epoch     uint64 // contain 21 round in each epoch
-	Round     uint64
-	Producer  common.Address
-	PublicKey string
-	Block     uint64 // hight
+type Committees struct {
+	View     uint64 // contain View in each Term
+	Term     uint64
+	Producer common.Address
+	Block    uint64 // high
+}
+
+// node status
+const (
+	Committee = iota
+	Candidate
+	Civilian
+)
+
+type RNodes struct {
+	Address common.Address // RNodes address
+	Rpt     int64
+	Status  int
 }
 
 // SyncProgress retrieves the current progress of the sync algorithm. If there's
@@ -306,26 +318,26 @@ func (ec *Client) NetworkID(ctx context.Context) (*big.Int, error) {
 	return version, nil
 }
 
-func (ec *Client) GetRNodes(ctx context.Context) ([]common.Address, error) {
-	var result []common.Address
+func (ec *Client) GetRNodes(ctx context.Context) ([]RNodes, error) {
+	var result []RNodes
 	err := ec.c.CallContext(ctx, &result, "eth_getRNodes")
 	return result, err
 }
 
-func (ec *Client) GetCurrentRound(ctx context.Context) (uint64, error) {
+func (ec *Client) GetCurrentView(ctx context.Context) (uint64, error) {
 	var result uint64
-	err := ec.c.CallContext(ctx, &result, "eth_getCurrentRound")
+	err := ec.c.CallContext(ctx, &result, "eth_getCurrentView")
 	return result, err
 }
 
-func (ec *Client) GetCurrentEpoch(ctx context.Context) (uint64, error) {
+func (ec *Client) GetCurrentTerm(ctx context.Context) (uint64, error) {
 	var result uint64
-	err := ec.c.CallContext(ctx, &result, "eth_getCurrentEpoch")
+	err := ec.c.CallContext(ctx, &result, "eth_getCurrentTerm")
 	return result, err
 }
 
-func (ec *Client) GetCommittees(ctx context.Context) ([]Committee, error) {
-	var result []Committee
+func (ec *Client) GetCommittees(ctx context.Context) ([]Committees, error) {
+	var result []Committees
 	err := ec.c.CallContext(ctx, &result, "eth_getCommittees")
 	return result, err
 }
