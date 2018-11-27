@@ -59,7 +59,7 @@ func printReceipt(backend *backends.SimulatedBackend, tx *types.Transaction, msg
 	}
 }
 
-func TestSignerRegister(t *testing.T) {
+func TestProposerRegister(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
 	contractAddr, _, register, err := deployRegister(key, big.NewInt(0), contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
