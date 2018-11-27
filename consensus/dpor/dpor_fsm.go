@@ -39,5 +39,6 @@ const (
 )
 
 func FSM(input interface{}, inputType dataType, msg msgCode, s state) (interface{}, action, dataType, msgCode, error) {
+
 	return nil, 0, 0, 0, nil
 }
