@@ -225,7 +225,7 @@ func (d *Dpor) Authorize(signer common.Address, signFn SignFn) {
 	d.signFn = signFn
 
 	if d.validatorHandler == nil {
-		d.validatorHandler = backend.NewValidatorHandler(d.config, d.Signer())
+		d.validatorHandler = backend.NewHandler(d.config, d.Signer())
 	}
 	if d.validatorHandler.Coinbase() != signer {
 		d.validatorHandler.SetCoinbase(signer)
@@ -366,21 +366,4 @@ func (d *Dpor) State() consensus.State {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	return d.pbftState
-}
-
-// SignHeader signs the header and adds all known sigs to header
-func (d *Dpor) SignHeader(chain consensus.ChainReader, header *types.Header, state consensus.State) error {
-
-	switch err := d.dh.signHeader(d, chain, header, state); err {
-	case nil:
-		return nil
-	default:
-		log.Warn("consensus signing header failed", "hash", header.Hash(), "number", header.Number.Uint64(), "err", err)
-		return consensus.ErrWhenSigningHeader
-	}
-}
-
-// ValidateBlock validates a basic field excepts seal of a block.
-func (d *Dpor) ValidateBlock(chain consensus.ChainReader, block *types.Block) error {
-	return d.dh.validateBlock(d, chain, block)
 }

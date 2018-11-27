@@ -168,20 +168,20 @@ type PbftEngine interface {
 type State uint8
 
 const (
-	// NewRound is a state in pbft notes that replica enters a new round
-	NewRound State = iota
+	// Prepreparing is a state in pbft notes that replica enters a new round
+	Prepreparing State = iota
 
-	// Preprepared is set if Preprepare msg is already sent, or received Preprepare msg and not entered Prepared yet, starting to broadcast
-	Preprepared
+	// Preparing is set if Preprepare msg is already sent, or received Preprepare msg and not entered Prepared yet, starting to broadcast
+	Preparing
 
-	// Prepared is set if received > 2f+1 same Preprepare msg from different replica, starting to broadcast Commit msg
-	Prepared
+	// Committing is set if received > 2f+1 same Preprepare msg from different replica, starting to broadcast Committing msg
+	Committing
 
-	// Committed is set if received > 2f+1 same Prepare msg
-	Committed
+	// Validating is set if received > 2f+1 same Prepare msg
+	Validating
 
-	// FinalCommitted is set if succeed to insert block into local chain
-	FinalCommitted
+	// Inserting is set if succeed to insert block into local chain
+	Inserting
 )
 
 // PbftStatus represents a state of a dpor replica

@@ -452,9 +452,9 @@ func (dh *defaultDporHelper) dialValidators(dpor *Dpor, snap *DporSnapshot, numb
 
 	go func(eIdx uint64, committee []common.Address) {
 		// Updates handler.signers
-		dpor.validatorHandler.UpdateSigners(eIdx, committee)
+		dpor.validatorHandler.UpdateRemoteProposers(eIdx, committee)
 		// Connect all
-		dpor.validatorHandler.DialAll()
+		// dpor.validatorHandler.DialAll()
 	}(term, signers)
 
 	return nil

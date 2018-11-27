@@ -60,63 +60,53 @@ type PbftHandler interface {
 
 	SetContractCaller(cc *ContractCaller) error
 
-	UpdateSigners(epochIdx uint64, signers []common.Address) error
+	UpdateValidators(epochIdx uint64, signers []common.Address) error
+
+	UpdateProposers(epochIdx uint64, signers []common.Address) error
 
 	Start() error
 
 	Stop() error
-
-	// SendMsg(addr common.Address, msg interface{}) error
-
-	// BroadcastMsg(msg interface{}) error
-
-	// DialAll() error
-
-	// Disconnect() error
-
 }
 
-// VerifyRemoteValidatorFn validates if a given address is signer of current epoch
 type VerifyRemoteValidatorFn func(signer common.Address) (bool, error)
 
-// VerifyValidatorFn is to verify whether a validator is legal in current term
-type VerifyValidatorFn func(validator common.Address) (bool, error)
+// DporService provides functions used by dpor handler
+type DporService interface {
 
-// VerifyHeaderFn verifies the given header
-// if in preprepared state, verify basic fields
-// if in prepared state, verify if enough prepare sigs
-// if in committed state, verify if enough commit sigs
-type VerifyHeaderFn func(header *types.Header, state consensus.State) error
+	// VerifyRemoteValidator validates if a given address is signer of current epoch
+	VerifyRemoteValidator(signer common.Address) (bool, error)
 
-// ValidateBlockFn verifies a block
-type ValidateBlockFn func(block *types.Block) error
+	// VerifyHeaderWithState verifies the given header
+	// if in preprepared state, verify basic fields
+	// if in prepared state, verify if enough prepare sigs
+	// if in committed state, verify if enough commit sigs
+	VerifyHeaderWithState(header *types.Header, state consensus.State) error
 
-// SignHeaderFn signs the block if not signed it yet
-type SignHeaderFn func(header *types.Header, state consensus.State) error
+	// ValidateBlock verifies a block
+	ValidateBlock(block *types.Block) error
 
-// AddPendingBlockFn adds given block to pending blocks cache
-type AddPendingBlockFn func(block *types.Block) error
+	// SignHeader signs the block if not signed it yet
+	SignHeader(header *types.Header, state consensus.State) error
 
-// GetPendingBlockFn retrieves a block from cache with given hash
-type GetPendingBlockFn func(hash common.Hash) *types.Block
+	// BroadcastBlock broadcasts a block to normal peers(not pbft replicas)
+	BroadcastBlock(block *types.Block, prop bool)
 
-// BroadcastBlockFn broadcasts a block to normal peers(not pbft replicas)
-type BroadcastBlockFn func(block *types.Block, prop bool)
+	// InsertChain inserts a block to chain
+	InsertChain(block *types.Block) error
 
-// InsertChainFn inserts a block to chain
-type InsertChainFn func(block *types.Block) error
+	// Status returns a pbft replica's status
+	Status() *consensus.PbftStatus
 
-// StatusFn returns a pbft replica's status
-type StatusFn func() *consensus.PbftStatus
+	// StatusUpdate updates status of dpor
+	StatusUpdate() error
 
-// StatusUpdateFn updates status of dpor
-type StatusUpdateFn func() error
+	// GetEmptyBlock returns an empty block for view change
+	GetEmptyBlock() (*types.Block, error)
 
-// GetEmptyBlockFn returns an empty block for view change
-type GetEmptyBlockFn func() (*types.Block, error)
-
-// HasBlockInChain returns if a block is in local chain
-type HasBlockInChain func(hash common.Hash, number uint64) bool
+	// HasBlockInChain returns if a block is in local chain
+	HasBlockInChain(hash common.Hash, number uint64) bool
+}
 
 type HandlerMode uint
 

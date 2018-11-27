@@ -1,134 +1,79 @@
 package backend
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"reflect"
-	"strings"
 	"testing"
-	"time"
 
-	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
+	"bitbucket.org/cpchain/chain/consensus"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
-// launch the chain
-// new a committee_network_handler
-// build the network.
-
-func TestNewHandler(t *testing.T) {
-	type args struct {
-		config    *configs.DporConfig
-		etherbase common.Address
+func TestHandler_handleLbftMsg(t *testing.T) {
+	type fields struct {
+		mode               HandlerMode
+		term               uint64
+		termLen            uint64
+		maxInitNumber      uint64
+		nodeId             string
+		coinbase           common.Address
+		server             *p2p.Server
+		rsaKey             *rsakey.RsaKey
+		knownBlocks        *RecentBlocks
+		contractAddress    common.Address
+		contractCaller     *ContractCaller
+		contractInstance   *contract.SignerConnectionRegister
+		contractTransactor *bind.TransactOpts
+		remoteValidators   map[common.Address]*RemoteValidator
+		snap               *consensus.PbftStatus
+		dpor               DporService
+		pendingBlockCh     chan *types.Block
+		quitSync           chan struct{}
+		dialed             bool
+		available          bool
 	}
-
-	//define the parameter "config" of NewHandler()
-	var testConfig *configs.DporConfig
-	testConfig = configs.MainnetChainConfig.Dpor
-	//define the parameter "etherbase" for NewHandler()
-	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
-
-	//Assign an expected handler
-	var expectedResult ValidatorHandler
-	expectedResult.mode = LBFTMode
-	expectedResult.coinbase = testEtherbase
-	expectedResult.contractAddress = common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
-	expectedResult.termLen = testConfig.TermLen
-	expectedResult.maxInitNumber = testConfig.MaxInitBlockNumber
-	expectedResult.remoteValidators = make(map[common.Address]*RemoteValidator)
-	expectedResult.knownBlocks = NewKnownBlocks()
-	expectedResult.pendingBlockCh = make(chan *types.Block)
-	expectedResult.quitSync = make(chan struct{})
-	expectedResult.dialed = false
-	expectedResult.available = false
-
+	type args struct {
+		msg p2p.Msg
+		p   *RemoteValidator
+	}
 	tests := []struct {
-		name string
-		args args
-		want *ValidatorHandler
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
 	}{
-		{"testHandler1", args{testConfig, testEtherbase}, &expectedResult},
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewValidatorHandler(tt.args.config, tt.args.etherbase)
-			//pendingBlockCh and quitSync are expected to be different
-			//Thus, before reflect.DeepEqual(), we set both variables equalling to the expected value
-			got.pendingBlockCh = expectedResult.pendingBlockCh
-			got.quitSync = expectedResult.quitSync
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewHandler() = %v, \n want %v\n", got, tt.want)
+			vh := &Handler{
+				mode:               tt.fields.mode,
+				term:               tt.fields.term,
+				termLen:            tt.fields.termLen,
+				maxInitNumber:      tt.fields.maxInitNumber,
+				nodeId:             tt.fields.nodeId,
+				coinbase:           tt.fields.coinbase,
+				server:             tt.fields.server,
+				rsaKey:             tt.fields.rsaKey,
+				knownBlocks:        tt.fields.knownBlocks,
+				contractAddress:    tt.fields.contractAddress,
+				contractCaller:     tt.fields.contractCaller,
+				contractInstance:   tt.fields.contractInstance,
+				contractTransactor: tt.fields.contractTransactor,
+				remoteValidators:   tt.fields.remoteValidators,
+				snap:               tt.fields.snap,
+				dpor:               tt.fields.dpor,
+				pendingBlockCh:     tt.fields.pendingBlockCh,
+				quitSync:           tt.fields.quitSync,
+				dialed:             tt.fields.dialed,
+				available:          tt.fields.available,
+			}
+			if err := vh.handleLbftMsg(tt.args.msg, tt.args.p); (err != nil) != tt.wantErr {
+				t.Errorf("Handler.handleLbftMsg() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
-	}
-}
-func TestHandler_IsAvailable(t *testing.T) {
-	var testHandler ValidatorHandler
-	testHandler.available = false
-	//Test IsAvailable()
-	if testHandler.IsAvailable() != false {
-		t.Errorf("IsAvailable() = %v, want %v\n", testHandler.IsAvailable(), false)
-	}
-	//Test SetAvailable()
-	testHandler.SetAvailable()
-	if testHandler.IsAvailable() != true {
-		t.Errorf("SetAvailale() does not work\n")
-	}
-}
-
-// Load account. Used for create ContractCaller
-func getAccount(keyStoreFilePath string, passphrase string, t *testing.T) keystore.Key {
-	ff, err := filepath.Abs("../../../")
-	file, err := os.Open(ff + "/examples/cpchain/data/" + keyStoreFilePath)
-	if err != nil {
-		t.Fatalf("KeyStoreFilePath error, got %v\n", err)
-	}
-
-	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
-	if err != nil {
-		t.Fatalf("KeyStoreFilePath error, got %v\n", err)
-	}
-
-	kst := keystore.NewKeyStore(keyPath, 2, 1)
-
-	// Get account.
-	account := kst.Accounts()[0]
-	account, key, err := kst.GetDecryptedKey(account, passphrase)
-	if err != nil {
-		t.Fatalf("Get account failed, got %v", err)
-	}
-
-	return *key
-
-}
-
-func TestHandler_SetContractCaller(t *testing.T) {
-	t.Skip("skip testing this function")
-	var key keystore.Key
-	key = getAccount("dd1/keystore/", "password", t)
-	fmt.Println("sucessfully print")
-	fmt.Println(key)
-}
-
-func TestHandler_handlePreprepareMsg(t *testing.T) {
-	//t.Skip("skip for short test")
-	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
-	NewRemoteValidator(1, common.HexToAddress(addrHex))
-
-	signer := NewRemoteValidator(1, common.HexToAddress(addrHex))
-	msg := p2p.Msg{Code: PrepareSignedHeaderMsg, Size: 1000, Payload: strings.NewReader("Test_Payload"), ReceivedAt: time.Now()}
-
-	var testConfig *configs.DporConfig
-	testConfig = configs.MainnetChainConfig.Dpor
-	//define the parameter "etherbase" for NewHandler()
-	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
-	testHandler := NewValidatorHandler(testConfig, testEtherbase)
-	err := testHandler.handlePreprepareMsg(msg, signer)
-	if err != nil {
-		t.Errorf("handlePrePrepareMsg returns an error message, as %v\n", err)
 	}
 }

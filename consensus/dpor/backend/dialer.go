@@ -15,7 +15,7 @@ import (
 )
 
 // SetServer sets handler.server
-func (h *ValidatorHandler) SetServer(server *p2p.Server) error {
+func (h *Handler) SetServer(server *p2p.Server) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -26,7 +26,7 @@ func (h *ValidatorHandler) SetServer(server *p2p.Server) error {
 }
 
 // SetRsaKey sets handler.rsaKey
-func (h *ValidatorHandler) SetRsaKey(rsaReader RsaReader) error {
+func (h *Handler) SetRsaKey(rsaReader RsaReader) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -37,7 +37,7 @@ func (h *ValidatorHandler) SetRsaKey(rsaReader RsaReader) error {
 }
 
 // SetContractCaller sets handler.contractcaller.
-func (h *ValidatorHandler) SetContractCaller(contractCaller *ContractCaller) error {
+func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 
 	// creates an contract instance
 	contractInstance, err := contract.NewSignerConnectionRegister(h.contractAddress, contractCaller.Client)
@@ -77,8 +77,27 @@ func (h *ValidatorHandler) SetContractCaller(contractCaller *ContractCaller) err
 	return nil
 }
 
-// UpdateSigners updates Handler's signers.
-func (h *ValidatorHandler) UpdateSigners(epochIdx uint64, signers []common.Address) error {
+// UpdateRemoteProposers updates Handler's signers.
+func (h *Handler) UpdateRemoteProposers(epochIdx uint64, signers []common.Address) error {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	remoteProposers := h.remoteProposers
+	for _, signer := range signers {
+		if _, ok := remoteProposers[signer]; !ok {
+			s := NewRemoteProposer(epochIdx, signer)
+			remoteProposers[signer] = s
+		}
+	}
+
+	h.term = epochIdx
+	h.remoteProposers = remoteProposers
+
+	return nil
+}
+
+// UpdateRemoteValidators updates Handler's signers.
+func (h *Handler) UpdateRemoteValidators(epochIdx uint64, signers []common.Address) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -96,33 +115,38 @@ func (h *ValidatorHandler) UpdateSigners(epochIdx uint64, signers []common.Addre
 	return nil
 }
 
-// DialAll connects remote proposers.
-func (h *ValidatorHandler) DialAll() {
-	h.lock.Lock()
-	rsaKey := h.rsaKey
-	nodeID, address := h.nodeId, h.coinbase
-	connected, signers, server := h.dialed, h.remoteValidators, h.server
-	contractInstance, contractTransactor, client := h.contractInstance, h.contractTransactor, h.contractCaller.Client
-	h.lock.Unlock()
+// // DialAll connects remote signers.
+// func (h *Handler) DialAll(signers interface{}) error {
+// 	h.lock.Lock()
+// 	nodeID, address, rsaKey, server := h.nodeId, h.coinbase, h.rsaKey, h.server
+// 	contractInstance, contractTransactor, client := h.contractInstance, h.contractTransactor, h.contractCaller.Client
+// 	h.lock.Unlock()
 
-	if !connected {
-		log.Debug("connecting...")
+// 	log.Debug("connecting...")
 
-		for _, s := range signers {
-			err := s.Dial(server, nodeID, address, contractTransactor, contractInstance, client, rsaKey)
-			log.Debug("err when connect", "e", err)
-		}
-		connected = true
-	}
+// 	for _, s := range signers.(map[common.Address]*RemoteSigner) {
+// 		err := s.Dial(server, nodeID, address, contractTransactor, contractInstance, client, rsaKey)
+// 		log.Debug("err when connect", "e", err)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	h.lock.Lock()
-	h.dialed = connected
-	h.lock.Unlock()
+// 	return nil
+// }
 
-}
+// // DialAllRemoteProposers dials all remote proposers
+// func (h *Handler) DialAllRemoteProposers() error {
+// 	return h.DialAll(h.remoteProposers)
+// }
+
+// // DialAllRemoteValidators dials all remote validators
+// func (h *Handler) DialAllRemoteValidators() error {
+// 	return h.DialAll(h.remoteValidators)
+// }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.
-func (s *RemoteValidator) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
+func (s *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
 
 	address := s.address
 
@@ -143,7 +167,7 @@ func (s *RemoteValidator) fetchPubkey(contractInstance *contract.SignerConnectio
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (s *RemoteValidator) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
+func (s *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
 	epochIdx, address := s.epochIdx, s.address
 
 	log.Debug("fetching nodeID of remote signer")
@@ -179,7 +203,7 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 }
 
 // updateNodeID encrypts my node id with this remote signer's public key and update to the contract.
-func (s *RemoteValidator) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
+func (s *RemoteSigner) updateNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
 	epochIdx, address := s.epochIdx, s.address
 
 	log.Debug("fetched rsa pubkey")
@@ -221,7 +245,7 @@ func (s *RemoteValidator) updateNodeID(nodeID string, auth *bind.TransactOpts, c
 }
 
 // dial dials the signer.
-func (s *RemoteValidator) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
+func (s *RemoteSigner) dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -278,7 +302,7 @@ func (s *RemoteValidator) dial(server *p2p.Server, nodeID string, address common
 }
 
 // Dial dials the signer
-func (s *RemoteValidator) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) error {
+func (s *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) error {
 
 	succeed, err := s.dial(server, nodeID, address, auth, contractInstance, client, rsaKey)
 	// succeed, err := func() (bool, error) { return true, nil }()
