@@ -16,7 +16,7 @@ import (
 const PrimitiveContractsInterfaceABI = "[]"
 
 // PrimitiveContractsInterfaceBin is the compiled bytecode used for deploying new contracts.
-const PrimitiveContractsInterfaceBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a723058204deabd917d23f45ec4db939d19017a01652b738d7a81222fdbcf609776f6c8680029`
+const PrimitiveContractsInterfaceBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820c10985a8ec8cbb1362c9a1db0859203a02b216e46d6d4775c1f26baa4c969c090029`
 
 // DeployPrimitiveContractsInterface deploys a new cpchain contract, binding an instance of PrimitiveContractsInterface to it.
 func DeployPrimitiveContractsInterface(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *PrimitiveContractsInterface, error) {

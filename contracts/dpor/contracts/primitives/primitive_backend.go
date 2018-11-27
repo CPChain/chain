@@ -28,7 +28,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
+	pdash "bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )

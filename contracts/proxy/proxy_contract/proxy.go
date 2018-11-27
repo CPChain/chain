@@ -16,7 +16,7 @@ import (
 const ProxyABI = "[]"
 
 // ProxyBin is the compiled bytecode used for deploying new contracts.
-const ProxyBin = `0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a7230582069d7e18c42980577afc8dcb8a8ce319d744106c1901042bc714cc7015dfabc620029`
+const ProxyBin = `0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a72305820cbc484bf00b46016a380dd0eb2f4931f6ca4902e646f2f72f7bb8f7bc72493080029`
 
 // DeployProxy deploys a new cpchain contract, binding an instance of Proxy to it.
 func DeployProxy(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Proxy, error) {
