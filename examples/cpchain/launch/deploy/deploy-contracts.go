@@ -384,6 +384,7 @@ func deployPdash() {
 		log.Fatalf("mined address :%s,before mined address:%s", addressAfterMined, address)
 	}
 }
+
 func main() {
 	deployCampaign()
 	deploySigner()
