@@ -132,10 +132,10 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 // leader:0,committee:1,rNode:2,nil:3
 func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int64, error) {
 	ld := int64(2)
-	ifRnode, err := re.RNode(address, number)
-	if ifRnode != true {
-		return 3, nil
-	}
+	// ifRnode, err := re.RNode(address, number)
+	// if ifRnode != true {
+	// 	return 3, nil
+	// }
 	if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
@@ -144,6 +144,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 		log.Error("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
+
 	number = number%configs.MainnetChainConfig.Dpor.TermLen - 1
 	leader := header.Dpor.Proposers[number]
 
@@ -238,23 +239,23 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 //	}
 //	return committee
 //}
-
-func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
-	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
-	instance, err := contract2.NewCampaign(contractAddress, re.Client)
-	if err != nil {
-		log.Error("NewCampaign error", "address", address, "error", err)
-		return false, err
-	}
-	rNdoeAddress, err := instance.CandidatesOf(nil, big.NewInt(int64(number)))
-	if err != nil {
-		log.Error("CandidatesOf error", "error", err)
-		return false, err
-	}
-	for _, rNode := range rNdoeAddress {
-		if rNode == address {
-			return true, nil
-		}
-	}
-	return false, nil
-}
+//
+// func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
+// 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
+// 	instance, err := contract2.NewCampaign(contractAddress, re.Client)
+// 	if err != nil {
+// 		log.Error("NewCampaign error", "address", address, "error", err)
+// 		return false, err
+// 	}
+// 	rNdoeAddress, err := instance.CandidatesOf(nil, big.NewInt(int64(number)))
+// 	if err != nil {
+// 		log.Error("CandidatesOf error", "error", err)
+// 		return false, err
+// 	}
+// 	for _, rNode := range rNdoeAddress {
+// 		if rNode == address {
+// 			return true, nil
+// 		}
+// 	}
+// 	return false, nil
+// }

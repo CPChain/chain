@@ -97,9 +97,11 @@ contract Rpt {
     function getRpt(address _addr, uint _blockNumber) public view returns (uint rpt){
         require(_blockNumber <= block.number, "blockNumber is too large.");
         rpt = 0;
+        /*
         if(3 == _addr.getMaintenance(_blockNumber)) {
             return rpt;
         }
+        */
         rpt = rpt.add(alpha * getCoinage(_addr, _blockNumber));
         rpt = rpt.add(beta * getTx(_addr, _blockNumber));
         rpt = rpt.add(gamma * getProxyRep(_addr, _blockNumber));

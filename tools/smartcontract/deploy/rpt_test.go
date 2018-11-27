@@ -13,7 +13,7 @@ import (
 )
 
 func TestRpt(t *testing.T) {
-	t.Skip("skip rpt integrate test")
+	//	t.Skip("skip rpt integrate test")
 
 	client, err, _, _, fromAddress := config.Connect()
 	ctx := context.Background()
@@ -49,4 +49,11 @@ func TestRpt(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	fmt.Println("rpt is :", b)
+
+	windowsize, err := r.Window(nil)
+	if err != nil {
+		log.Fatal("get windowzie is error")
+	}
+	println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	println("winodowsize is:", windowsize.Uint64())
 }

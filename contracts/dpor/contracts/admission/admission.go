@@ -19,7 +19,7 @@ const AdmissionABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"memoryDifficu
 // AdmissionBin is the compiled bytecode used for deploying new contracts.
 const AdmissionBin = `0x608060405234801561001057600080fd5b506040516040806105ca83398101604052805160209091015160048054600160a060020a0319163317905561004d82640100000000610066810204565b61005f816401000000006100f9810204565b505061018a565b6101008111801590610079575060008110155b15156100e657604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b610100811180159061010c575060008110155b151561017957604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60038190556101000360020a600155565b610431806101996000396000f30060806040526004361061008d5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166317e6b96681146100925780633395492e146100b95780634bda8957146101155780636ac03dcc146101565780638b654613146101975780638da5cb5b146101ac578063be981db8146101ea578063e171894614610204575b600080fd5b34801561009e57600080fd5b506100a761021c565b60408051918252519081900360200190f35b3480156100c557600080fd5b5061010167ffffffffffffffff600435811690602435906044351660643573ffffffffffffffffffffffffffffffffffffffff60843516610222565b604080519115158252519081900360200190f35b34801561012157600080fd5b5061010173ffffffffffffffffffffffffffffffffffffffff6004351667ffffffffffffffff60243516604435606435610251565b34801561016257600080fd5b5061010173ffffffffffffffffffffffffffffffffffffffff6004351667ffffffffffffffff6024351660443560643561028d565b3480156101a357600080fd5b506100a76102bf565b3480156101b857600080fd5b506101c16102c5565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b3480156101f657600080fd5b506102026004356102e1565b005b34801561021057600080fd5b50610202600435610374565b60035481565b600061023282878760025461028d565b80156102475750610247828585600354610251565b9695505050505050565b600060405185815284602082015283406040820152826060820152602081608083606b600019fa151561028357600080fd5b5195945050505050565b600060405185815284602082015283406040820152826060820152602081608083606a600019fa151561028357600080fd5b60025481565b60045473ffffffffffffffffffffffffffffffffffffffff1681565b61010081118015906102f4575060008110155b151561036157604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b6101008111801590610387575060008110155b15156103f457604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60038190556101000360020a6001555600a165627a7a72305820ee9e629f71278701463502be768067637bf7473e0552b793f6e99110b17ce2ee0029`
 
-// DeployAdmission deploys a new Ethereum contract, binding an instance of Admission to it.
+// DeployAdmission deploys a new cpchain contract, binding an instance of Admission to it.
 func DeployAdmission(auth *bind.TransactOpts, backend bind.ContractBackend, _cpuDifficulty *big.Int, _memoryDifficulty *big.Int) (common.Address, *types.Transaction, *Admission, error) {
 	parsed, err := abi.JSON(strings.NewReader(AdmissionABI))
 	if err != nil {
@@ -32,29 +32,29 @@ func DeployAdmission(auth *bind.TransactOpts, backend bind.ContractBackend, _cpu
 	return address, tx, &Admission{AdmissionCaller: AdmissionCaller{contract: contract}, AdmissionTransactor: AdmissionTransactor{contract: contract}, AdmissionFilterer: AdmissionFilterer{contract: contract}}, nil
 }
 
-// Admission is an auto generated Go binding around an Ethereum contract.
+// Admission is an auto generated Go binding around an cpchain contract.
 type Admission struct {
 	AdmissionCaller     // Read-only binding to the contract
 	AdmissionTransactor // Write-only binding to the contract
 	AdmissionFilterer   // Log filterer for contract events
 }
 
-// AdmissionCaller is an auto generated read-only Go binding around an Ethereum contract.
+// AdmissionCaller is an auto generated read-only Go binding around an cpchain contract.
 type AdmissionCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// AdmissionTransactor is an auto generated write-only Go binding around an Ethereum contract.
+// AdmissionTransactor is an auto generated write-only Go binding around an cpchain contract.
 type AdmissionTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// AdmissionFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+// AdmissionFilterer is an auto generated log filtering Go binding around an cpchain contract events.
 type AdmissionFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// AdmissionSession is an auto generated Go binding around an Ethereum contract,
+// AdmissionSession is an auto generated Go binding around an cpchain contract,
 // with pre-set call and transact options.
 type AdmissionSession struct {
 	Contract     *Admission        // Generic contract binding to set the session for
@@ -62,31 +62,31 @@ type AdmissionSession struct {
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// AdmissionCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// AdmissionCallerSession is an auto generated read-only Go binding around an cpchain contract,
 // with pre-set call options.
 type AdmissionCallerSession struct {
 	Contract *AdmissionCaller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts    // Call options to use throughout this session
 }
 
-// AdmissionTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// AdmissionTransactorSession is an auto generated write-only Go binding around an cpchain contract,
 // with pre-set transact options.
 type AdmissionTransactorSession struct {
 	Contract     *AdmissionTransactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts    // Transaction auth options to use throughout this session
 }
 
-// AdmissionRaw is an auto generated low-level Go binding around an Ethereum contract.
+// AdmissionRaw is an auto generated low-level Go binding around an cpchain contract.
 type AdmissionRaw struct {
 	Contract *Admission // Generic contract binding to access the raw methods on
 }
 
-// AdmissionCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+// AdmissionCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
 type AdmissionCallerRaw struct {
 	Contract *AdmissionCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// AdmissionTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+// AdmissionTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
 type AdmissionTransactorRaw struct {
 	Contract *AdmissionTransactor // Generic write-only contract binding to access the raw methods on
 }
