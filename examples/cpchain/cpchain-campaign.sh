@@ -8,14 +8,14 @@ set -e
 # launch campaign for proposer committee
 echo "launch committee start"
 sleep 5   # sleep 5 seconds to wait cpchain get ready
-curl -X POST '0.0.0.0:8501' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
-curl -X POST '0.0.0.0:8502' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
-curl -X POST '0.0.0.0:8503' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
-curl -X POST '0.0.0.0:8504' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
-curl -X POST '0.0.0.0:8505' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
-curl -X POST '0.0.0.0:8506' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
-curl -X POST '0.0.0.0:8507' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
-curl -X POST '0.0.0.0:8508' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
+curl -X POST 'localhost:8501' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
+curl -X POST 'localhost:8502' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
+curl -X POST 'localhost:8503' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
+curl -X POST 'localhost:8504' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
+curl -X POST 'localhost:8505' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
+curl -X POST 'localhost:8506' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
+curl -X POST 'localhost:8507' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
+curl -X POST 'localhost:8508' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
 
 
 # dlv is useful for debugging.  do not remove.
