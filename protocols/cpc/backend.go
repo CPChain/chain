@@ -98,12 +98,12 @@ type CpchainService struct {
 
 	miner    *miner.Miner
 	gasPrice *big.Int
-	cpcbase  common.Address
+	coinbase common.Address
 
 	networkID     uint64
 	netRPCService *cpcapi.PublicNetAPI
 
-	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and cpcbase)
+	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and coinbase)
 
 	remoteDB database.RemoteDatabase // remoteDB represents an remote distributed database.
 }
@@ -147,7 +147,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		shutdownChan:   make(chan bool),
 		networkID:      config.NetworkId,
 		gasPrice:       config.GasPrice,
-		cpcbase:        config.Cpcbase,
+		coinbase:       config.Cpcbase,
 		bloomRequests:  make(chan chan *bloombits.Retrieval),
 		bloomIndexer:   NewBloomIndexer(chainDb, configs.BloomBitsBlocks),
 		remoteDB:       remoteDB,
@@ -183,10 +183,10 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.txPool = core.NewTxPool(config.TxPool, cpc.chainConfig, cpc.blockchain)
 
-	cpc.Cpcbase()
-	log.Debug("cpcbase in backend", "eb", cpc.cpcbase)
+	cpc.Coinbase()
+	log.Debug("coinbase in backend", "coinbase", cpc.coinbase)
 
-	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.SyncMode, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.cpcbase); err != nil {
+	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.SyncMode, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.coinbase); err != nil {
 		return nil, err
 	}
 
@@ -199,7 +199,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		gpoParams.Default = config.GasPrice
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
-	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.cpcbase, cpc.config.Admission)
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission)
 	return cpc, nil
 }
 
@@ -323,50 +323,48 @@ func (s *CpchainService) ResetWithGenesisBlock(gb *types.Block) {
 	s.blockchain.ResetWithGenesisBlock(gb)
 }
 
-func (s *CpchainService) Cpcbase() (eb common.Address, err error) {
+func (s *CpchainService) Coinbase() (coinbase common.Address, err error) {
 	s.lock.RLock()
-	cpcbase := s.cpcbase
+	coinbase = s.coinbase
 	s.lock.RUnlock()
 
-	if cpcbase != (common.Address{}) {
-		return cpcbase, nil
+	if coinbase != (common.Address{}) {
+		return coinbase, nil
 	}
 	if wallets := s.AccountManager().Wallets(); len(wallets) > 0 {
-		if accounts := wallets[0].Accounts(); len(accounts) > 0 {
-			cpcbase := accounts[0].Address
+		if accs := wallets[0].Accounts(); len(accs) > 0 {
+			coinbase = accs[0].Address
 
 			s.lock.Lock()
-			s.cpcbase = cpcbase
+			s.coinbase = coinbase
 			s.lock.Unlock()
 
-			log.Info("Cpcbase automatically configured", "address", cpcbase)
-			return cpcbase, nil
+			log.Info("Coinbase automatically configured", "address", coinbase)
+			return coinbase, nil
 		}
 	}
-	return common.Address{}, fmt.Errorf("cpcbase must be explicitly specified")
+	return common.Address{}, fmt.Errorf("coinbase must be explicitly specified")
 }
 
-// deprecated: use SetCoinbase
-// TODO add SetCoinbase
 // SetCoinbase sets the mining reward address.
-func (s *CpchainService) SetCpcbase(cpcbase common.Address) {
+func (s *CpchainService) SetCoinbase(coinbase common.Address) {
 	s.lock.Lock()
-	s.cpcbase = cpcbase
+	s.coinbase = coinbase
 	s.lock.Unlock()
 
-	s.miner.SetCoinbase(cpcbase)
+	s.miner.SetCoinbase(coinbase)
 }
 
 func (s *CpchainService) StartMining(local bool, contractCaller *consensus.ContractCaller) error {
-	eb, err := s.Cpcbase()
+	eb, err := s.Coinbase()
 	if err != nil {
-		log.Error("Cannot start mining without cpcbase", "err", err)
-		return fmt.Errorf("cpcbase missing: %v", err)
+		log.Error("Cannot start mining without coinbase", "err", err)
+		return fmt.Errorf("coinbase missing: %v", err)
 	}
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 		if wallet == nil || err != nil {
-			log.Error("Cpcbase account unavailable locally", "err", err)
+			log.Error("Coinbase account unavailable locally", "err", err)
 			return fmt.Errorf("signer missing: %v", err)
 		}
 		dpor.Authorize(eb, wallet.SignHash)

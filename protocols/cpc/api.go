@@ -51,12 +51,12 @@ func NewPublicCpchainAPI(e *CpchainService) *PublicCpchainAPI {
 	return &PublicCpchainAPI{e}
 }
 
-// Cpcbase is the address that mining rewards will be send to
+// Coinbase is the address that mining rewards will be send to
 func (api *PublicCpchainAPI) Cpcbase() (common.Address, error) {
-	return api.c.Cpcbase()
+	return api.c.Coinbase()
 }
 
-// Coinbase is the address that mining rewards will be send to (alias for Cpcbase)
+// Coinbase is the address that mining rewards will be send to (alias for Coinbase)
 func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
 	return api.Cpcbase()
 }
@@ -134,9 +134,8 @@ func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 	return true
 }
 
-// SetCoinbase sets the cpcbase of the miner
-func (api *PrivateMinerAPI) SetCpcbase(cpcbase common.Address) bool {
-	api.c.SetCpcbase(cpcbase)
+func (api *PrivateMinerAPI) SetCoinbase(coinbase common.Address) bool {
+	api.c.SetCoinbase(coinbase)
 	return true
 }
 

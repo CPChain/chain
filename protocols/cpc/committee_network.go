@@ -261,9 +261,9 @@ type BasicCommitteeHandler struct {
 }
 
 // NewBasicCommitteeNetworkHandler creates a BasicCommitteeNetworkHandler instance
-func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, cpcbase common.Address) (*BasicCommitteeHandler, error) {
+func NewBasicCommitteeNetworkHandler(config *configs.DporConfig, coinbase common.Address) (*BasicCommitteeHandler, error) {
 	bc := &BasicCommitteeHandler{
-		ownAddress:      cpcbase,
+		ownAddress:      coinbase,
 		contractAddress: config.Contracts[configs.ContractProposer],
 		remoteSigners:   make([]*RemoteSigner, config.TermLen),
 		// remoteSigners:   make([]*RemoteSigner, config.Epoch-1),

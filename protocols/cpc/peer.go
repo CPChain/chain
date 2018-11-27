@@ -535,17 +535,17 @@ type ValidateSigner func(signer common.Address) (bool, error)
 
 // Handshake executes the eth protocol handshake, negotiating version number,
 // network IDs, difficulties, head and genesis blocks.
-func (p *peer) CommitteeHandshake(cpcbase common.Address, signerValidator ValidateSigner) (isSigner bool, err error) {
+func (p *peer) CommitteeHandshake(coinbase common.Address, signerValidator ValidateSigner) (isSigner bool, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var signerStatus signerStatusData // safe to read after two values have been received from errc
 
-	log.Debug("my cpcbase", "address", cpcbase)
+	log.Debug("my coinbase", "address", coinbase)
 
 	go func() {
 		errc <- p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
 			ProtocolVersion: uint32(p.version),
-			Address:         cpcbase,
+			Address:         coinbase,
 		})
 	}()
 	go func() {

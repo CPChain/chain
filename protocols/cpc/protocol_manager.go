@@ -79,7 +79,7 @@ type ProtocolManager struct {
 
 	server                  *p2p.Server
 	engine                  consensus.Engine
-	cpcbase                 common.Address
+	coinbase                common.Address
 	committeeNetworkHandler *BasicCommitteeHandler
 
 	// wait group is used for graceful shutdowns during downloading and processing
@@ -88,7 +88,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new sub protocol manager. The cpchain sub protocol manages peers capable
 // with the cpchain network.
-func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, cpcbase common.Address) (*ProtocolManager, error) {
+func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, coinbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -102,12 +102,12 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		txsyncCh:    make(chan *txsync),
 		quitSync:    make(chan struct{}),
 
-		engine:  engine,
-		cpcbase: cpcbase,
+		engine:   engine,
+		coinbase: coinbase,
 	}
 
 	if config.Dpor != nil {
-		manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(config.Dpor, cpcbase)
+		manager.committeeNetworkHandler, _ = NewBasicCommitteeNetworkHandler(config.Dpor, coinbase)
 	}
 
 	// initiate a sub-protocol for every implemented version we can handle
@@ -306,7 +306,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		height  = head.Number
 	)
 
-	log.Debug("my cpcbase", "address", pm.cpcbase)
+	log.Debug("my coinbase", "address", pm.coinbase)
 
 	// Do normal handshake
 	err := p.Handshake(pm.networkID, height, hash, genesis.Hash())
@@ -317,7 +317,7 @@ func (pm *ProtocolManager) handle(p *peer) error {
 	}
 
 	// Do committee handshake
-	isSigner, err := p.CommitteeHandshake(pm.cpcbase, pm.SignerValidator)
+	isSigner, err := p.CommitteeHandshake(pm.coinbase, pm.SignerValidator)
 
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
 		rw.Init(p.version)
@@ -404,7 +404,7 @@ func (pm *ProtocolManager) handlePbftMsg(msg p2p.Msg, p *peer) error {
 		if isSigner && err != nil {
 			err := p2p.Send(p.rw, NewSignerMsg, &signerStatusData{
 				ProtocolVersion: uint32(p.version),
-				Address:         pm.cpcbase,
+				Address:         pm.coinbase,
 			})
 			if err != nil {
 				return nil

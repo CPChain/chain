@@ -203,20 +203,8 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		if err := n.Service(&cpchainService); err != nil {
 			log.Fatalf("Cpchain service not running: %v", err)
 		}
-		// Use a reduced number of threads if requested
-		if threads := ctx.Int("minethreads"); threads > 0 {
-			type threaded interface {
-				SetThreads(threads int)
-			}
-			if th, ok := cpchainService.Engine().(threaded); ok {
-				th.SetThreads(threads)
-			}
-		}
-		// // Set the gas price to the limits from the CLI and start mining
-		// cpchainService.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
 
 		contractCaller := createContractCaller(ctx, n)
-
 		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
 		if err := cpchainService.StartMining(true, contractCaller); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
