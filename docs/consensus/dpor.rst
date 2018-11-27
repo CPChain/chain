@@ -72,16 +72,16 @@ Dpor
         #. Once received 2f+1 COMMIT messages, a validator inserts the block into local chain, and broadcasts VALIDATION message to all users.
         #. All users insert the block into local chain, if they receive f+1 VALIDATION messages
 #. **Abnormal Cases**
-    #. Abnormal Case 1: *Validators does not receive a block from the proposer*
-        i. It is for the case when Step 2.a.f cannot be reached
+    a. Abnormal Case 1: *Validators does not receive a block from the proposer*
+        i. It is for the case when Step 3.a.f cannot be reached
         #. After a validator sends out its address to the proposer, it sets up a timer
         #. If the timer expires, the validators committee activates *impeachment*, a three-phase protocol in PBFT manner to propose the block
     #. Abnormal Case 2: *The proposer proposes one or more faulty blocks*
-        i. Faulty blocks cannot be validated in Step 2.b.a
+        i. Faulty blocks cannot be validated in Step 3.b.a
         #. The validators committee activates impeachment
     #. Abnormal Case 3: *The proposer proposes multiple valid blocks*
         i. Each validator can only validate one block for a same block number
-        #. Thus, it is impossible for two or more blocks to receive 2f+1 PREPARE messages simultaneously. Only one block can enter Step 2.b.4
+        #. Thus, it is impossible for two or more blocks to receive 2f+1 PREPARE messages simultaneously. Only one block can enter Step 3.b.d
         #. It is possible that no block receives 2f+1 PREPARE messages
     #. Abnormal Case 4: *Some members in validators committee are faulty*
         i. The validators committee follows the PBFT protocol.
