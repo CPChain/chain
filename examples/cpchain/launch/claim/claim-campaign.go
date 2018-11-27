@@ -44,7 +44,7 @@ type keystorePair struct {
 
 var (
 	endPoint  = "http://localhost:8501"
-	dataDir   = "data/"
+	dataDir   = "examples/cpchain/data/"
 	keystores = []keystorePair{
 		{
 			"data1/keystore/",
@@ -167,7 +167,7 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, address common.Address, contrac
 	nonce, err := client.NonceAt(context.Background(), contractAddress, blockNumber)
 	fmt.Println("nonce:", nonce)
 
-	auth.Nonce = big.NewInt(50)
+	auth.Nonce = big.NewInt(51)
 
 	tx, err := instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), uint64(cpuNonce), big.NewInt(int64(cpuBlockNum)),
 		uint64(memNonce), big.NewInt(int64(memBlockNum)))
@@ -252,7 +252,9 @@ func main() {
 		fmt.Println(i)
 		keystoreFile, passphrase := kPair.keystorePath, kPair.passphrase
 		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase)
+		fmt.Println("=== claimCampaign")
 		claimCampaign(privKey, addr, campaignAddress)
-		claimProposer(privKey,pubKey, addr, proposerAddress, rsaPubKey)
+		fmt.Println("=== claimProposer")
+		claimProposer(privKey, pubKey, addr, proposerAddress, rsaPubKey)
 	}
 }

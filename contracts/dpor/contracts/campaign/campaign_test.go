@@ -39,7 +39,7 @@ import (
 )
 
 func TestCampaign1(t *testing.T) {
-	// t.Skip("we shall use a simulated backend.")
+	t.Skip("we shall use a simulated backend.")
 
 	// create client.
 	client, err := cpclient.Dial("http://localhost:8501") // local
