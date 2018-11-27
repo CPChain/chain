@@ -259,7 +259,7 @@ type Committees struct {
 	Block    uint64 // high
 }
 
-//node status
+// node status
 const (
 	Committee = iota
 	Candidate
@@ -267,7 +267,7 @@ const (
 )
 
 type RNodes struct {
-	Address common.Address //RNodes address
+	Address common.Address // RNodes address
 	Rpt     int64
 	Status  int
 }
