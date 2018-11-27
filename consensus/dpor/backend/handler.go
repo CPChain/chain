@@ -90,7 +90,7 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 func (vh *Handler) Start() {
 
 	// Dail all remote validators
-	go vh.DialAllRemoteValidators()
+	// go vh.DialAllRemoteValidators()
 
 	// TODO: dail all remote proposers
 

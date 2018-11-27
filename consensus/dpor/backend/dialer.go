@@ -119,35 +119,35 @@ func (h *Handler) UpdateRemoteValidators(epochIdx uint64, signers []common.Addre
 	return nil
 }
 
-// DialAll connects remote signers.
-func (h *Handler) DialAll(signers interface{}) error {
-	h.lock.Lock()
-	nodeID, address, rsaKey, server := h.nodeId, h.coinbase, h.rsaKey, h.server
-	contractInstance, contractTransactor, client := h.contractInstance, h.contractTransactor, h.contractCaller.Client
-	h.lock.Unlock()
+// // DialAll connects remote signers.
+// func (h *Handler) DialAll(signers interface{}) error {
+// 	h.lock.Lock()
+// 	nodeID, address, rsaKey, server := h.nodeId, h.coinbase, h.rsaKey, h.server
+// 	contractInstance, contractTransactor, client := h.contractInstance, h.contractTransactor, h.contractCaller.Client
+// 	h.lock.Unlock()
 
-	log.Debug("connecting...")
+// 	log.Debug("connecting...")
 
-	for _, s := range signers.(map[common.Address]*RemoteSigner) {
-		err := s.Dial(server, nodeID, address, contractTransactor, contractInstance, client, rsaKey)
-		log.Debug("err when connect", "e", err)
-		if err != nil {
-			return err
-		}
-	}
+// 	for _, s := range signers.(map[common.Address]*RemoteSigner) {
+// 		err := s.Dial(server, nodeID, address, contractTransactor, contractInstance, client, rsaKey)
+// 		log.Debug("err when connect", "e", err)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-// DialAllRemoteProposers dials all remote proposers
-func (h *Handler) DialAllRemoteProposers() error {
-	return h.DialAll(h.remoteProposers)
-}
+// // DialAllRemoteProposers dials all remote proposers
+// func (h *Handler) DialAllRemoteProposers() error {
+// 	return h.DialAll(h.remoteProposers)
+// }
 
-// DialAllRemoteValidators dials all remote validators
-func (h *Handler) DialAllRemoteValidators() error {
-	return h.DialAll(h.remoteValidators)
-}
+// // DialAllRemoteValidators dials all remote validators
+// func (h *Handler) DialAllRemoteValidators() error {
+// 	return h.DialAll(h.remoteValidators)
+// }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.
 func (s *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {

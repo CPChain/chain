@@ -462,7 +462,7 @@ func (dh *defaultDporHelper) dialCommittee(dpor *Dpor, snap *DporSnapshot, numbe
 		// Updates handler.signers
 		dpor.validatorHandler.UpdateRemoteProposers(eIdx, committee)
 		// Connect all
-		dpor.validatorHandler.DialAll()
+		// dpor.validatorHandler.DialAll()
 	}(term, signers)
 
 	return nil
