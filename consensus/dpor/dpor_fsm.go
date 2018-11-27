@@ -3,6 +3,8 @@ package dpor
 import (
 	"errors"
 
+	"fmt"
+
 	"bitbucket.org/cpchain/chain/types"
 )
 
@@ -31,7 +33,7 @@ const (
 	prepareMsg
 	commitMsg
 	validateMsg
-	emtpyPrepareMsg
+	emptyPrepareMsg
 )
 
 //Type enumerator for FSM states
@@ -47,7 +49,7 @@ const (
 )
 
 //verifyBlock is a func to verify whether the block is legal
-func verifyBlock (block *types.Block) bool{
+func verifyBlock(block *types.Block) bool {
 	return true
 	//TODO: @shiyc
 }
@@ -57,6 +59,7 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 	var inputHeader *types.Header
 	var inputBlock *types.Block
 	var err error
+	var ret interface{}
 
 	switch inputType {
 	case header:
@@ -66,17 +69,21 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 	case emptyBlock:
 		inputBlock = input.(*types.Block)
 	default:
-		err = errors.New("an unexpected input data type"))
+		err = errors.New("an unexpected input data type")
 		return nil, 0, 0, 0, err
 	}
 	switch state {
 	case idle:
 		if verifyBlock(inputBlock) {
-
-		}else{
+			fmt.Println("hao!")
+		} else {
 			err = errors.New("the proposed block is illegal")
-			return *types.Block{}, insertBlock, block, emtpyPrepareMsg, err
+
+			return ret, insertBlock, block, emptyPrepareMsg, err
+			//TODO: return a empty block
 		}
+
 	}
+
 	return nil, 0, 0, 0, nil
 }
