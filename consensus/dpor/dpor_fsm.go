@@ -3,8 +3,6 @@ package dpor
 import (
 	"errors"
 
-	"fmt"
-
 	"bitbucket.org/cpchain/chain/types"
 )
 
@@ -12,7 +10,8 @@ import (
 type action uint8
 
 const (
-	broadcastMsg action = iota
+	noAction action = iota
+	broadcastMsg
 	insertBlock
 )
 
@@ -20,7 +19,8 @@ const (
 type dataType uint8
 
 const (
-	header dataType = iota
+	noType dataType = iota
+	header
 	block
 	emptyBlock
 )
@@ -29,7 +29,8 @@ const (
 type msgCode uint8
 
 const (
-	preprepareMsg msgCode = iota
+	noMsg msg = iota
+	preprepareMsg
 	prepareMsg
 	commitMsg
 	validateMsg
@@ -51,16 +52,56 @@ const (
 //verifyBlock is a func to verify whether the block is legal
 func verifyBlock(block *types.Block) bool {
 	return true
-	//TODO: @shiyc
+	//TODO: @shiyc implement it
 }
 
-//Fsm is the finite state machine for a validator, to output the correct state given on current state and inputs
-func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (interface{}, action, dataType, msgCode, error) {
+// commitCertificate is true if the validator has collected 2f+1 commit messages
+func commitCertificate(h *types.Header) bool {
+	return true
+	//TODO: @shiyc implement it
+}
+
+//composeValidateMsg is to compose a validate message
+func composeValidateMsg(h *types.Header) *types.Header {
+	return h
+	//TODO: @shiyc implement it
+}
+
+//Add one to the counter of commit messages
+func commitMsgPlus(h *types.Header) {
+	//TODO: @shiyc implement it
+
+}
+
+func composeCommitMsg(h *types.Header) *types.Header {
+	return h
+	//TODO: @shiyc implement it
+}
+
+//prepareCertificate is true if the validator has collects 2f+1 prepare messages
+func prepareCertificate(h *types.Header) bool {
+	return true
+	//TODO: @shiyc implement it
+}
+
+//Add one to the counter of prepare messages
+func prepareMsgPlus(h *types.Header) {
+	//TODO: @shiyc implement it
+}
+
+//It is used to propose an empty block
+func proposeEmptyBlock() *types.Block {
+	var b *types.Block
+	return b
+}
+
+// Fsm is the finite state machine for a validator, to output the correct state given on current state and inputs
+func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (interface{}, action, dataType, msgCode, FsmState, error) {
 	var inputHeader *types.Header
 	var inputBlock *types.Block
 	var err error
-	var ret interface{}
 
+	// Determine the input is a header or a block
 	switch inputType {
 	case header:
 		inputHeader = input.(*types.Header)
@@ -70,20 +111,40 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 		inputBlock = input.(*types.Block)
 	default:
 		err = errors.New("an unexpected input data type")
-		return nil, 0, 0, 0, err
+		return nil, noAction, noType, noMsg, idle, err
 	}
+
 	switch state {
+	// The case of idle state
 	case idle:
+		switch msg {
+		// Jump to inserting state if receives validate message
+		case validateMsg:
+			return composeValidateMsg(inputHeader), insertBlock, noType, noMsg, inserting, nil
+		//
+		case commitMsg:
+			if commitCertificate(inputHeader) {
+				return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, inserting, nil
+			} else {
+				commitMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, idle, nil
+			}
+		case prepareMsg:
+			if prepareCertificate(inputHeader) {
+				return
+			} else {
+
+			}
+		}
 		if verifyBlock(inputBlock) {
-			fmt.Println("hao!")
+
 		} else {
 			err = errors.New("the proposed block is illegal")
-
-			return ret, insertBlock, block, emptyPrepareMsg, err
-			//TODO: return a empty block
+			return proposeEmptyBlock(), insertBlock, block, emptyPrepareMsg, idle, err
+			//TODO: return an empty block
 		}
 
 	}
 
-	return nil, 0, 0, 0, nil
+	return nil, doNothing, 0, 0, state, nil
 }
