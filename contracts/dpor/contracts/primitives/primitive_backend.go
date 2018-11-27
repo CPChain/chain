@@ -232,13 +232,13 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	return isProxy, proxyCount, err
 }
 
-//func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
+// func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
 //	committee := make([]common.Address, len(header.Dpor.Proposers))
 //	for i := 0; i < len(committee); i++ {
 //		copy(committee[i][:], header.Dpor.Proposers[i][:])
 //	}
 //	return committee
-//}
+// }
 //
 // func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
 // 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
