@@ -164,10 +164,12 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, address common.Address, contrac
 
 	blockNumber := client.GetBlockNumber()
 	fmt.Println("blockNumber:", blockNumber)
-	nonce, err := client.NonceAt(context.Background(), contractAddress, blockNumber)
+	// nonce, err := client.NonceAt(context.Background(), contractAddress, blockNumber)
+	nonce, err := client.NonceAt(context.Background(), address, blockNumber)
 	fmt.Println("nonce:", nonce)
 
-	auth.Nonce = big.NewInt(51)
+	auth.Nonce = big.NewInt(1)
+	auth.Nonce = new(big.Int).SetUint64(nonce)
 
 	tx, err := instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), uint64(cpuNonce), big.NewInt(int64(cpuBlockNum)),
 		uint64(memNonce), big.NewInt(int64(memBlockNum)))
