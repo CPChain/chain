@@ -13,7 +13,7 @@ import (
 )
 
 func TestRpt(t *testing.T) {
-	//	t.Skip("skip rpt integrate test")
+	t.Skip("skip rpt integrate test")
 
 	client, err, _, _, fromAddress := config.Connect()
 	ctx := context.Background()
