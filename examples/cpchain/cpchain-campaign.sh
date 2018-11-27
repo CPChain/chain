@@ -8,6 +8,7 @@ set -e
 # launch campaign for proposer committee
 echo "launch committee start"
 sleep 5   # sleep 5 seconds to wait cpchain get ready
+# for the id part, cf. https://ethereum.stackexchange.com/a/50650/30355
 curl -X POST 'localhost:8501' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
 curl -X POST 'localhost:8502' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
 curl -X POST 'localhost:8503' -H 'content-type: application/json' --data '{"jsonrpc":"2.0","method":"admission_campaign","params":[],"id":64}'
