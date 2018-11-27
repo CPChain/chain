@@ -22,7 +22,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -30,18 +30,18 @@ import (
 ////go:generate abigen --sol contract/signerRegister.sol --pkg contract --out contract/signerRegister.go
 
 type SignerConnectionRegister struct {
-	*signer_register.SignerConnectionRegisterSession
+	*proposer.ProposerRegisterSession
 	contractBackend bind.ContractBackend
 }
 
 func NewSignerConnectionRegister(transactOpts *bind.TransactOpts, contractAddr common.Address, contractBackend Backend) (*SignerConnectionRegister, error) {
-	c, err := signer_register.NewSignerConnectionRegister(contractAddr, contractBackend)
+	c, err := proposer.NewProposerRegister(contractAddr, contractBackend)
 	if err != nil {
 		return nil, err
 	}
 
 	return &SignerConnectionRegister{
-		&signer_register.SignerConnectionRegisterSession{
+		&proposer.ProposerRegisterSession{
 			Contract:     c,
 			TransactOpts: *transactOpts,
 		},
@@ -50,7 +50,7 @@ func NewSignerConnectionRegister(transactOpts *bind.TransactOpts, contractAddr c
 }
 
 func DeploySignerConnectionRegister(transactOpts *bind.TransactOpts, contractBackend Backend) (common.Address, *types.Transaction, *SignerConnectionRegister, error) {
-	contractAddr, tx, _, err := signer_register.DeploySignerConnectionRegister(transactOpts, contractBackend)
+	contractAddr, tx, _, err := proposer.DeployProposerRegister(transactOpts, contractBackend)
 	if err != nil {
 		return contractAddr, tx, nil, err
 	}
