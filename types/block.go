@@ -20,6 +20,9 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"sort"
@@ -28,8 +31,6 @@ import (
 	"unsafe"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"encoding/hex"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -123,27 +124,40 @@ func (m *DporSignature) MarshalText() ([]byte, error) {
 }
 
 type DporSnap struct {
-	Seal       DporSignature    // the signature of the block's producer
-	Sigs       []DporSignature  // the signatures of validators to endorse the block
-	Proposers  []common.Address // current proposers committee
-	Validators []common.Address // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
+	Seal       DporSignature    `json:"seal"`       // the signature of the block's producer
+	Sigs       []DporSignature  `json:"sigs"`       // the signatures of validators to endorse the block
+	Proposers  []common.Address `json:"proposers"`  // current proposers committee
+	Validators []common.Address `json:"validators"` // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
 }
 
-// func (m *DporSnap) UnmarshalText(text []byte) error {
-// 	text = bytes.TrimPrefix(text, []byte("0x"))
-// 	if _, err := hex.Decode(m[:], text); err != nil {
-// 		fmt.Println(err)
-// 		return fmt.Errorf("invalid hex storage key/value %q", text)
-// 	}
-// 	return nil
-// }
-//
-// func (m *DporSnap) MarshalText() ([]byte, error) {
-// 	// return hexutil.Bytes(m[:]).MarshalText()
-// 	// hexutil.
-// 	// return hexutil.Bytes(m[:]).MarshalText()
-// 	return nil, nil
-// }
+type dporSnapMarshaling struct {
+	Seal       DporSignature    `json:"seal"`
+	Sigs       []DporSignature  `json:"sigs"`
+	Proposers  []common.Address `json:"proposers"`
+	Validators []common.Address `json:"validators"`
+}
+
+func (s DporSnap) MarshalJSON() ([]byte, error) {
+	var snap dporSnapMarshaling
+	snap.Seal = s.Seal
+	snap.Sigs = s.Sigs
+	snap.Proposers = s.Proposers
+	snap.Validators = s.Validators
+	return json.Marshal(&snap)
+}
+
+func (s DporSnap) UnmarshalJSON(input []byte) error {
+
+	var snap dporSnapMarshaling
+	if err := json.Unmarshal(input, &snap); err != nil {
+		return err
+	}
+	s.Seal = snap.Seal
+	s.Sigs = snap.Sigs
+	s.Proposers = snap.Proposers
+	s.Validators = snap.Validators
+	return nil
+}
 
 // field type overrides for gencodec
 type headerMarshaling struct {

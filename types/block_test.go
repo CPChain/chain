@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"
@@ -203,4 +204,40 @@ func TestBlock_WithSeal(t *testing.T) {
 		t.Error("Unmarshal error", "error", err)
 	}
 	fmt.Println(ss)
+}
+
+func TestUnmarshalDporSnap(t *testing.T) {
+	dpor := DporSnap{
+		Seal:       seal,
+		Sigs:       []DporSignature{sig1, sig2},
+		Proposers:  []common.Address{addr1, addr2},
+		Validators: []common.Address{addr1, addr2},
+	}
+	jsonBytes, err := json.Marshal(dpor)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	string1 := string(jsonBytes)
+	fmt.Println("json:", string1)
+	fmt.Println("============================================================")
+
+	var dporSnap DporSnap
+	err = json.Unmarshal(jsonBytes, &dporSnap)
+	if err != nil {
+		t.Error("Unmarshal error", "error", err)
+	}
+	fmt.Println("Seal:", dporSnap.Seal)
+	fmt.Println("Sigs:", dporSnap.Sigs)
+	fmt.Println("Proposers:", dporSnap.Proposers)
+	fmt.Println("Validators:", dporSnap.Validators)
+	fmt.Println("============================================================")
+
+	jsonBytes, err = json.Marshal(dpor)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	string2 := string(jsonBytes)
+	fmt.Println("new json:", string2)
+
+	assert.Equal(t, string1, string2)
 }
