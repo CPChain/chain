@@ -354,7 +354,6 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.Co
 
 // applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
 func (s *DporSnapshot) applyHeader(header *types.Header) error {
-
 	// Update Snapshot attributes.
 	s.setNumber(header.Number.Uint64())
 	s.setHash(header.Hash())
@@ -379,9 +378,11 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 		s.updateProposers(rpts, seed)
 	}
 
+	term := s.TermOf(header.Number.Uint64())
 	if len(header.Dpor.Validators) != 0 && len(header.Dpor.Validators) > 4 { // 3f + 1, TODO: @AC add a config
-		term := s.TermOf(header.Number.Uint64())
-		s.setRecentValidators(term, header.Dpor.Validators)
+		s.setRecentValidators(term+1, header.Dpor.Validators)
+	} else if IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
+		s.setRecentValidators(term+1, s.getRecentValidators(term))
 	}
 
 	return nil
