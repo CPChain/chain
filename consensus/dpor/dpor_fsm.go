@@ -35,6 +35,8 @@ const (
 	commitMsg
 	validateMsg
 	emptyPrepareMsg
+	emptyCommitMsg
+	emptyValidateMsg
 )
 
 //Type enumerator for FSM states
@@ -46,7 +48,8 @@ const (
 	prepared
 	committed
 	inserting
-	impeachmentPreprepared
+	impeachmentPrepared
+	impeachment
 )
 
 //verifyBlock is a func to verify whether the block is legal
@@ -129,7 +132,7 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if commitCertificate(inputHeader) {
-				return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, committed, nil
+				return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
 			} else {
 				// Add one to the counter of commit messages
 				commitMsgPlus(inputHeader)
@@ -168,7 +171,7 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 			// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if commitCertificate(inputHeader) {
-				return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, committed, nil
+				return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
 			} else {
 				// Add one to the counter of commit messages
 				commitMsgPlus(inputHeader)
@@ -196,7 +199,7 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 		// convert to committed state if collects commit certificate
 		case commitMsg:
 			if commitCertificate(inputHeader) {
-				return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, committed, nil
+				return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
 			} else {
 				// Add one to the counter of commit messages
 				commitMsgPlus(inputHeader)
@@ -207,7 +210,7 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 
 	// Broadcast a validate message and then enter inserting state
 	case committed:
-		return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, inserting, nil
+		return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, inserting, nil
 
 	// Insert the block and go back to idle state
 	case inserting:
