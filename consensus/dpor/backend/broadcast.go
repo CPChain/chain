@@ -44,7 +44,7 @@ func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
 
 // PendingBlockBroadcastLoop loops to broadcast blocks
 func (h *Handler) PendingBlockBroadcastLoop() {
-	futureTimer := time.NewTicker(10 * time.Second)
+	futureTimer := time.NewTicker(time.Duration(h.dpor.ImpeachTimeout()))
 	defer futureTimer.Stop()
 
 	for {
@@ -70,18 +70,19 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			// broadcast mined pending block to remote signers
 			go h.BroadcastMinedBlock(pendingBlock)
 
-		// case <-futureTimer.C:
+		case <-futureTimer.C:
 
-		// 	// check if still not received new block, if true, continue
-		// 	if h.ReadyToImpeach() {
+			// check if still not received new block, if true, continue
+			if h.ReadyToImpeach() {
+				// get empty block
+				if impeachBlock, err := h.dpor.CreateImpeachBlock(); err == nil {
 
-		// 		// get empty block
-		// 		if emptyBlock, err := h.getEmptyBlockFn(); err == nil {
-
-		// 			// broadcast the empty block
-		// 			h.BroadcastGeneratedBlock(emptyBlock)
-		// 		}
-		// 	}
+					// broadcast the empty block
+					// h.BroadcastGeneratedBlock(emptyBlock)
+					_ = impeachBlock
+					go h.BroadcastMinedBlock(impeachBlock) // TODO: @liuq BroadcastMinedBlock sends PREPREPARE message, which should be PREPARE message. We need to create a new function to let it calls.
+				}
+			}
 
 		case <-h.quitSync:
 			return
