@@ -2,7 +2,6 @@ package dpor
 
 import (
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"math/big"
@@ -83,7 +82,7 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	impeachHeader := &types.Header{
 		ParentHash: parentHeader.Hash(),
 		Number:     num.Add(num, common.Big1),
-		GasLimit:   core.CalcGasLimit(parent),
+		GasLimit:   parent.GasLimit(),
 		Extra:      make([]byte, extraVanity),
 		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout())+int64(d.config.Period))),
 		Coinbase:   common.Address{},

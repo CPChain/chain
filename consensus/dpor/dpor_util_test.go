@@ -296,8 +296,8 @@ func Test_calcDifficulty(t *testing.T) {
 		args args
 		want *big.Int
 	}{
-		{name: "WhenSnapshotIsNotLeader", args: args{snapshot, signers[0]}, want: big.NewInt(2)},
-		{name: "WhenSnapshotIsLeader", args: args{snapshot, signers[1]}, want: big.NewInt(1)},
+		{name: "WhenSnapshotSigner1", args: args{snapshot, signers[0]}, want: big.NewInt(1)},
+		{name: "WhenSnapshotSigner2", args: args{snapshot, signers[1]}, want: big.NewInt(1)},
 	}
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
