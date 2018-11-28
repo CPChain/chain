@@ -112,7 +112,7 @@ func newTester() *downloadTester {
 func (dl *downloadTester) makeChain(n int, seed byte, parent *types.Block, parentReceipts types.Receipts, heavy bool) ([]common.Hash, map[common.Hash]*types.Header, map[common.Hash]*types.Block, map[common.Hash]types.Receipts) {
 	// Generate the block chain
 
-	config := configs.MainnetChainConfig.Dpor
+	config := configs.TestChainConfig.Dpor
 	d := dpor.NewFaker(config, testdb)
 	blocks, receipts := core.GenerateChain(configs.TestChainConfig, parent, d, dl.peerDb, nil, n, func(i int, block *core.BlockGen) {
 		block.SetCoinbase(common.Address{seed})

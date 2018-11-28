@@ -24,6 +24,10 @@ import (
 	"fmt"
 	"math/big"
 
+	"time"
+
+	"strconv"
+
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/types"
@@ -138,6 +142,24 @@ func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.H
 		err = cpchain.NotFound
 	}
 	return head, err
+}
+
+type Block struct {
+	Number string
+}
+
+func (ec *Client) GetBlockNumber() *big.Int {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var lastBlock Block
+	err := ec.c.CallContext(ctx, &lastBlock, "eth_getBlockByNumber", "latest", true)
+	if err != nil {
+		fmt.Println("can't get latest block:", err)
+		return big.NewInt(0)
+	}
+	number, err := strconv.ParseInt(lastBlock.Number, 0, 64)
+	return big.NewInt(number)
 }
 
 type rpcTransaction struct {

@@ -30,6 +30,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer"
 	"github.com/ethereum/go-ethereum/common"
@@ -43,7 +44,7 @@ type keystorePair struct {
 
 var (
 	endPoint  = "http://localhost:8501"
-	dataDir   = "data/"
+	dataDir   = "examples/cpchain/data/"
 	keystores = []keystorePair{
 		{
 			"data1/keystore/",
@@ -121,7 +122,7 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 	return privateKey, publicKeyECDSA, fromAddress, key.RsaKey.PublicKey.RsaPublicKeyBytes
 }
 
-func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address) {
+func claimCampaign(privateKey *ecdsa.PrivateKey, address common.Address, contractAddress common.Address) {
 	// Create client.
 	client, err := cpclient.Dial(endPoint)
 	if err != nil {
@@ -153,11 +154,22 @@ func claimCampaign(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 	cpuBlockNum := 100
 	memNonce := 345678
 	memBlockNum := 101
+	gasPrice = big.NewInt(1800000000)
 
 	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Value = big.NewInt(int64(baseDeposit * numOfCampaign))
 	auth.GasLimit = uint64(gasLimit)
 	auth.GasPrice = gasPrice
+	// auth.Nonce
+
+	blockNumber := client.GetBlockNumber()
+	fmt.Println("blockNumber:", blockNumber)
+	// nonce, err := client.NonceAt(context.Background(), contractAddress, blockNumber)
+	nonce, err := client.NonceAt(context.Background(), address, blockNumber)
+	fmt.Println("nonce:", nonce)
+
+	auth.Nonce = big.NewInt(1)
+	auth.Nonce = new(big.Int).SetUint64(nonce)
 
 	tx, err := instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), uint64(cpuNonce), big.NewInt(int64(cpuBlockNum)),
 		uint64(memNonce), big.NewInt(int64(memBlockNum)))
@@ -235,15 +247,16 @@ func claimProposer(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 }
 
 func main() {
-
-	campaignAddress := common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290")
-	proposerAddress := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C")
+	campaignAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
+	proposerAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractProposer]
 
 	for i, kPair := range keystores {
 		fmt.Println(i)
 		keystoreFile, passphrase := kPair.keystorePath, kPair.passphrase
 		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase)
-		claimCampaign(privKey, pubKey, addr, campaignAddress)
+		fmt.Println("=== claimCampaign")
+		claimCampaign(privKey, addr, campaignAddress)
+		fmt.Println("=== claimProposer")
 		claimProposer(privKey, pubKey, addr, proposerAddress, rsaPubKey)
 	}
 }

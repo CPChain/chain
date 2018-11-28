@@ -8,7 +8,7 @@ proj_dir=$run_dir/../../
 init=$run_dir/cpchain-init.sh
 start=$run_dir/cpchain-start.sh
 stop=$run_dir/cpchain-stop.sh
-deploy=$proj_dir/tools/smartcontract/main.go
+deploy=$run_dir/deploy-contracts.sh
 
 echo $run_dir
 echo $proj_dir
@@ -36,4 +36,4 @@ sleep 1
 
 echo "[*] deploying"
 # smart contract deploy
-eval "env CPCHAIN_KEYSTORE_FILEPATH=data/data1/keystore/ go run $deploy"
+eval "env CPCHAIN_KEYSTORE_FILEPATH=data/data1/keystore/ $deploy"
