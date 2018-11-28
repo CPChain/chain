@@ -29,7 +29,7 @@ const (
 type msgCode uint8
 
 const (
-	noMsg msg = iota
+	noMsg msgCode = iota
 	preprepareMsg
 	prepareMsg
 	commitMsg
@@ -61,9 +61,9 @@ func commitCertificate(h *types.Header) bool {
 	//TODO: @shiyc implement it
 }
 
-//composeValidateMsg is to compose a validate message
-func composeValidateMsg(h *types.Header) *types.Header {
-	return h
+//composeValidateMsg is to return the validate message, which is the proposed block or empty block
+func composeValidateMsg(h *types.Header) *types.Block {
+	return
 	//TODO: @shiyc implement it
 }
 
@@ -87,6 +87,10 @@ func prepareCertificate(h *types.Header) bool {
 //Add one to the counter of prepare messages
 func prepareMsgPlus(h *types.Header) {
 	//TODO: @shiyc implement it
+}
+
+func composePrepareMsg(h *types.Block) *types.Header {
+	return h.Header()
 }
 
 //It is used to propose an empty block
@@ -120,31 +124,95 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 		switch msg {
 		// Jump to inserting state if receives validate message
 		case validateMsg:
-			return composeValidateMsg(inputHeader), insertBlock, noType, noMsg, inserting, nil
-		//
+			return inputBlock, noAction, noType, noMsg, inserting, nil
+
+		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if commitCertificate(inputHeader) {
-				return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, inserting, nil
+				return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, committed, nil
 			} else {
+				// Add one to the counter of commit messages
 				commitMsgPlus(inputHeader)
 				return input, noAction, noType, noMsg, idle, nil
 			}
+
+		// Jump to prepared state if receive 2f+1 prepare message
 		case prepareMsg:
 			if prepareCertificate(inputHeader) {
-				return
+				return composeCommitMsg(inputHeader), broadcastMsg, header, commitMsg, prepared, nil
 			} else {
+				// Add one to the counter of prepare messages
+				prepareMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, idle, nil
+			}
 
+		// For the case that receive the newly proposes block or pre-prepare message
+		case preprepareMsg:
+			if verifyBlock(inputBlock) {
+				return composePrepareMsg(inputBlock), broadcastMsg, header, prepareMsg, preprepared, nil
+			} else {
+				err = errors.New("the proposed block is illegal")
+				return proposeEmptyBlock(), insertBlock, block, emptyPrepareMsg, idle, err
+				//TODO: return an empty block
 			}
 		}
-		if verifyBlock(inputBlock) {
+		err = errors.New("not a proper input for idle state")
 
-		} else {
-			err = errors.New("the proposed block is illegal")
-			return proposeEmptyBlock(), insertBlock, block, emptyPrepareMsg, idle, err
-			//TODO: return an empty block
+	// The case of pre-prepared state
+	case preprepared:
+		switch msg {
+		// Jump to inserting state if receive a validate message
+		case validateMsg:
+			return inputBlock, noAction, noType, noMsg, inserting, nil
+
+			// Jump to committed state if receive 2f+1 commit messages
+		case commitMsg:
+			if commitCertificate(inputHeader) {
+				return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, committed, nil
+			} else {
+				// Add one to the counter of commit messages
+				commitMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, preprepared, nil
+			}
+		// Convert to prepared state if collect prepare certificate
+		case prepareMsg:
+			if prepareCertificate(inputHeader) {
+				return composeCommitMsg(inputHeader), broadcastMsg, header, commitMsg, prepared, nil
+			} else {
+				// Add one to the counter of prepare messages
+				prepareMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, idle, nil
+			}
 		}
+		err = errors.New("not a proper input for pre-prepared state")
 
+	// The case of prepared stage
+	case prepared:
+		switch msg {
+		// Jump to inserting state if receive a validate message
+		case validateMsg:
+			return inputBlock, noAction, noType, noMsg, inserting, nil
+
+		// convert to committed state if collects commit certificate
+		case commitMsg:
+			if commitCertificate(inputHeader) {
+				return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, committed, nil
+			} else {
+				// Add one to the counter of commit messages
+				commitMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, preprepared, nil
+			}
+		}
+		err = errors.New("not a proper input for prepared state")
+
+	// Broadcast a validate message and then enter inserting state
+	case committed:
+		return composeValidateMsg(inputHeader), broadcastMsg, header, validateMsg, inserting, nil
+
+	// Insert the block and go back to idle state
+	case inserting:
+		return inputBlock, insertBlock, block, noMsg, idle, nil
 	}
 
-	return nil, doNothing, 0, 0, state, nil
+	return nil, noAction, noType, noMsg, state, err
 }
