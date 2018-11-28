@@ -62,6 +62,9 @@ type Handler struct {
 	dialed    bool
 	available bool
 
+	isProposer  bool
+	isValidator bool
+
 	lock sync.RWMutex
 }
 
@@ -89,14 +92,8 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 // Start starts pbft handler
 func (vh *Handler) Start() {
 
-	// Dail all remote validators
-	// go vh.DialAllRemoteValidators()
-
-	// TODO: dail all remote proposers
-
 	// Broadcast mined pending block, including empty block
 	go vh.PendingBlockBroadcastLoop()
-
 	return
 }
 
