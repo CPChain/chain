@@ -18,13 +18,16 @@ package admission
 
 import (
 	"time"
+
+	"bitbucket.org/cpchain/chain/configs"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type WorkStatus = uint32
 
 const (
-	CpuDifficulty     = 8
-	MemoryDifficulty  = 8
+	CpuDifficulty     = 3
+	MemoryDifficulty  = 3
 	CpuWorkTimeout    = 10
 	MemoryWorkTimeout = 10
 )
@@ -42,16 +45,12 @@ type Config struct {
 	MemoryCpuLifeTime time.Duration
 	// CampaignContractAddress public campaign's contract address.
 	// common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290")
-	CampaignContractAddress string
+	CampaignContractAddress common.Address
 	// Deposit to mortgage
 	Deposit int64
 	// NumberOfCampaign wants to campaign times
 	NumberOfCampaignTimes int64
 }
-
-// DefaultCampaignContractAddress default campaign contract address
-// TODO @chengx delete it.  associate the address with the chain it's on, either mainnet or testnet
-var DefaultCampaignContractAddress = "0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290"
 
 // DefaultConfig default admission config.
 var DefaultConfig = Config{
@@ -59,8 +58,8 @@ var DefaultConfig = Config{
 	CpuLifeTime:             time.Duration(CpuWorkTimeout * time.Second),
 	MemoryDifficulty:        MemoryDifficulty,
 	MemoryCpuLifeTime:       time.Duration(MemoryWorkTimeout * time.Second),
-	CampaignContractAddress: DefaultCampaignContractAddress,
+	CampaignContractAddress: configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign],
 	// TODO @chengx no hardcoded numbers.
-	Deposit:                 int64(50),
-	NumberOfCampaignTimes:   int64(1),
+	Deposit:               int64(50),
+	NumberOfCampaignTimes: int64(1),
 }

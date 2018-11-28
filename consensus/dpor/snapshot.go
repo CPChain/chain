@@ -306,42 +306,36 @@ func (s *DporSnapshot) updateCandidates() error {
 	var candidates []common.Address
 
 	if s.Mode == NormalMode && s.ifStartElection() {
-		log.Info("===== 88888 updateCandidates 1 =====")
 		contractCaller := s.contractCaller()
-		log.Info("===== 88888 updateCandidates 2 =====")
-
 		// If contractCaller is not nil, use it to update candidates from contract
 		if contractCaller != nil {
-			log.Info("===== 88888 updateCandidates 3 =====")
 			// Creates an contract instance
-			campaignAddress := s.config.Contracts["campaign"]
-			log.Info("===== 88888 updateCandidates 4 =====", "campaignAddress", campaignAddress)
+			campaignAddress := s.config.Contracts[configs.ContractCampaign]
+			log.Info("campaignAddress", "addr", campaignAddress.Hex())
 			contractInstance, err := campaign.NewCampaign(campaignAddress, contractCaller.Client)
 			if err != nil {
-				log.Info("===== 88888 updateCandidates 4.1 =====")
+				log.Error("new Campaign error", err)
 				return err
 			}
-			log.Info("===== 88888 updateCandidates 5 =====")
 
+			term := s.TermOf(s.Number)
 			// Read candidates from the contract instance
-			cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
-			log.Info("===== 88888 updateCandidates 6 =====", "cds", cds)
+			cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 			if err != nil {
-				log.Info("===== 88888 updateCandidates 7 =====", "err", err)
+				log.Error("read Candidates error", "err", err)
 				return err
 			}
 
-			log.Info("===== 88888 updateCandidates 8 =====", "len(cds)", len(cds))
+			log.Info("candidates Of term", "len(candidates)", len(cds), "term", term)
 			// If useful, use it!
 			if uint64(len(cds)) >= s.config.TermLen {
-				log.Info("===== 88888 updateCandidates 9 =====")
 				candidates = cds
 			}
 		}
 	}
 
 	if uint64(len(candidates)) < s.config.TermLen {
-		log.Info("===== 88888 no enough candidates,use default 10 candidates =====")
+		log.Debug("no enough candidates,use default candidates")
 		candidates = configs.DefaultCandidates
 	}
 

@@ -161,9 +161,7 @@ func (ac *AdmissionControl) sendCampaignResult() {
 
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 	transactOpts.Value = big.NewInt(ac.config.Deposit)
-	// TODO @xumx add gas price settings
-	transactOpts.GasPrice = big.NewInt(180000)
-	instance, err := dpor.NewCampaignWrapper(transactOpts, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
+	instance, err := dpor.NewCampaignWrapper(transactOpts, ac.config.CampaignContractAddress, ac.contractBackend)
 	if err != nil {
 		ac.err = err
 		return
