@@ -20,8 +20,6 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
-	"fmt"
 	"io"
 	"math/big"
 	"sort"
@@ -30,6 +28,8 @@ import (
 	"unsafe"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"encoding/hex"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -130,7 +130,11 @@ type DporSnap struct {
 }
 
 // func (m *DporSnap) UnmarshalText(text []byte) error {
-//
+// 	text = bytes.TrimPrefix(text, []byte("0x"))
+// 	if _, err := hex.Decode(m[:], text); err != nil {
+// 		fmt.Println(err)
+// 		return fmt.Errorf("invalid hex storage key/value %q", text)
+// 	}
 // 	return nil
 // }
 //

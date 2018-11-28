@@ -102,7 +102,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	var rank int64
 	sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
 	index := sort.SearchFloat64s(balances, float64(myBalance.Uint64()))
-	rank = int64(index / 21)
+	rank = int64(index/21) * 100
 	return rank, err
 }
 

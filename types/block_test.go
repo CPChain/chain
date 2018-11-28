@@ -182,9 +182,25 @@ func TestBlockDporJson(t *testing.T) {
 	var ss DporSnap
 	err = json.Unmarshal(jsonBytes, &ss)
 	if err != nil {
-		t.Error("MarshalText error", "error", err)
+		t.Error("Unmarshal error", "error", err)
 	}
 	fmt.Println(ss.Proposers)
 	fmt.Println(ss.Seal)
 
+}
+
+func TestBlock_WithSeal(t *testing.T) {
+	jsonBytes, err := json.Marshal(sig1)
+
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	fmt.Println("jsonBytes:", string(jsonBytes))
+
+	var ss DporSignature
+	err = json.Unmarshal(jsonBytes, &ss)
+	if err != nil {
+		t.Error("Unmarshal error", "error", err)
+	}
+	fmt.Println(ss)
 }

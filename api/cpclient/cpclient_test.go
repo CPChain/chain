@@ -42,7 +42,7 @@ var (
 )
 
 func TestGetRNodes(t *testing.T) {
-	t.Skip("skip test")
+	// t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
@@ -51,7 +51,6 @@ func TestGetRNodes(t *testing.T) {
 	}
 	rnodes, err := client.GetRNodes(context.Background())
 	fmt.Println(rnodes, err)
-
 	fmt.Println("rpt is :", "addr", rnodes[0].Address, "rpt", rnodes[0].Rpt, "status", rnodes[0].Status)
 
 	if rnodes[0].Rpt == 0 {
