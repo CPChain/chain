@@ -12,7 +12,7 @@ func (h *Handler) BroadcastMinedBlock(block *types.Block) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	committee := h.remoteValidators
+	committee := h.dialer.remoteValidators
 	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
 	for addr, peer := range committee {
 		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
@@ -25,7 +25,7 @@ func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	committee := h.remoteValidators
+	committee := h.dialer.remoteValidators
 	for _, peer := range committee {
 		peer.AsyncSendPrepareSignedHeader(header)
 	}
@@ -36,7 +36,7 @@ func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	committee := h.remoteValidators
+	committee := h.dialer.remoteValidators
 	for _, peer := range committee {
 		peer.AsyncSendCommitSignedHeader(header)
 	}
@@ -56,13 +56,13 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			ready := false
 
 			for !ready {
-				if h.Available() && len(h.remoteValidators) >= int(h.termLen) {
+				if h.Available() && len(h.dialer.remoteValidators) >= int(h.config.TermLen) {
 					ready = true
 				}
 				time.Sleep(1 * time.Second)
 
 				log.Debug("signer in dpor handler when broadcasting...")
-				for addr := range h.remoteValidators {
+				for addr := range h.dialer.remoteValidators {
 					log.Debug("signer", "addr", addr.Hex())
 				}
 			}

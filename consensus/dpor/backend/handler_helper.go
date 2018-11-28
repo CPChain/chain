@@ -35,7 +35,7 @@ type RecentBlocks struct {
 	lock   sync.RWMutex
 }
 
-func NewKnownBlocks() *RecentBlocks {
+func newKnownBlocks() *RecentBlocks {
 	return &RecentBlocks{
 		blocks: make(map[uint64]*KnownBlock),
 		latest: 0,
