@@ -31,18 +31,32 @@ var (
 	addr2 = common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092")
 	addr3 = common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")
 	addr4 = common.HexToAddress("0x3333333333333333333333333333333333333333")
+
+	validator1 = common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992")
+	validator2 = common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1")
+	validator3 = common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2")
+	validator4 = common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51")
 )
 
-func getSignerAddress() []common.Address {
-	signersAddr := make([]common.Address, 3)
-	signersAddr[0] = addr1
-	signersAddr[1] = addr2
-	signersAddr[2] = addr3
-	return signersAddr
+func getProposerAddress() []common.Address {
+	proposers := make([]common.Address, 3)
+	proposers[0] = addr1
+	proposers[1] = addr2
+	proposers[2] = addr3
+	return proposers
+}
+
+func getValidatorAddress() []common.Address {
+	validators := make([]common.Address, 4)
+	validators[0] = validator1
+	validators[1] = validator2
+	validators[2] = validator3
+	validators[3] = validator4
+	return validators
 }
 
 func getCandidates() []common.Address {
-	return getSignerAddress()
+	return getProposerAddress()
 }
 
 func recents() map[uint64]common.Address {
