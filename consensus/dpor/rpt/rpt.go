@@ -125,7 +125,7 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 	rpt := int64(0)
 	windowSize, err := instance.Window(nil)
 	if err != nil {
-		log.Error("Get windowSize error", "error", err)
+		log.Fatal("Get windowSize error", "error", err)
 		return Rpt{Address: address, Rpt: minRptScore}
 	}
 	for i := int64(blockNum); i >= 0 && i >= int64(blockNum)-windowSize.Int64(); i-- {

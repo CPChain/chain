@@ -129,6 +129,18 @@ type DporSnap struct {
 	Validators []common.Address // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
 }
 
+// func (m *DporSnap) UnmarshalText(text []byte) error {
+//
+// 	return nil
+// }
+//
+// func (m *DporSnap) MarshalText() ([]byte, error) {
+// 	// return hexutil.Bytes(m[:]).MarshalText()
+// 	// hexutil.
+// 	// return hexutil.Bytes(m[:]).MarshalText()
+// 	return nil, nil
+// }
+
 // field type overrides for gencodec
 type headerMarshaling struct {
 	Difficulty *hexutil.Big

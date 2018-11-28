@@ -151,8 +151,8 @@ contract Rpt {
     }
     
     function getBlockchainMaintenance(address _addr, uint _blockNumber) public view returns(uint) {
-        //return 20;
-        ///*
+        return 20;
+        /*
         uint node = _addr.getMaintenance(_blockNumber);
         if (node == 0) return 100;
         if (node == 1) return 80;

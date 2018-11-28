@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"testing"
 
+	"encoding/json"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"
@@ -137,4 +138,53 @@ func TestCopyDporSnap(t *testing.T) {
 	if !reflect.DeepEqual(dpor.Sigs[0], sig1) || !reflect.DeepEqual(dpor.Sigs[1], sig2) {
 		t.Error("The validator signatures are wrong")
 	}
+}
+
+func TestBlockDporRlp(t *testing.T) {
+	newHeader := &Header{}
+	newHeader.Extra = append(common.FromHex("0x0000000000000000000000000000000000000000000000000000000000000000"))
+	newHeader.Dpor.Proposers = []common.Address{addr1, addr2}
+	newHeader.Dpor.Seal = seal
+	newHeader.Dpor.Sigs = []DporSignature{sig1, sig2}
+	dpor := CopyDporSnap(&newHeader.Dpor)
+
+	bb, err := rlp.EncodeToBytes(&dpor)
+	// txt, err := dpor.MarshalText()
+	if err != nil {
+		t.Error("MarshalText error", "error", err)
+	}
+
+	fmt.Println("bb", bb)
+	xx := DporSnap{}
+	err = rlp.DecodeBytes(bb, &xx)
+	// err = dpor.UnmarshalText(bb)
+	if err != nil {
+		t.Error("UnmarshalText error", "error", err)
+	}
+	fmt.Println(bb)
+}
+
+func TestBlockDporJson(t *testing.T) {
+	newHeader := &Header{}
+	newHeader.Extra = append(common.FromHex("0x0000000000000000000000000000000000000000000000000000000000000000"))
+	newHeader.Dpor.Proposers = []common.Address{addr1, addr2}
+	newHeader.Dpor.Seal = seal
+	newHeader.Dpor.Sigs = []DporSignature{sig1, sig2}
+	dpor := CopyDporSnap(&newHeader.Dpor)
+
+	jsonBytes, err := json.Marshal(dpor)
+
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	fmt.Println("jsonBytes:", string(jsonBytes))
+
+	var ss DporSnap
+	err = json.Unmarshal(jsonBytes, &ss)
+	if err != nil {
+		t.Error("MarshalText error", "error", err)
+	}
+	fmt.Println(ss.Proposers)
+	fmt.Println(ss.Seal)
+
 }
