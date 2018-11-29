@@ -115,14 +115,14 @@ func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) e
 	return nil
 }
 
-// ValidatorHandshake tries to handshake with remote validator
-func ValidatorHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyRemoteValidatorFn VerifyFutureSignerFn) (isValidator bool, address common.Address, err error) {
+// Handshake tries to handshake with remote validator
+func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyProposerFn VerifyFutureSignerFn, verifyValidatorFn VerifyFutureSignerFn) (isProposer bool, isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
-	var validatorStatus ValidatorStatusData // safe to read after two values have been received from errc
+	var signerStatus SignerStatusData // safe to read after two values have been received from errc
 
 	go func() {
-		err := p2p.Send(rw, NewValidatorMsg, &ValidatorStatusData{
+		err := p2p.Send(rw, NewSignerMsg, &SignerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         coinbase,
 			Term:            term,
@@ -130,7 +130,7 @@ func ValidatorHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Addre
 		errc <- err
 	}()
 	go func() {
-		isValidator, address, err = ReadValidatorStatus(p, rw, &validatorStatus, verifyRemoteValidatorFn)
+		isProposer, isValidator, address, err = ReadValidatorStatus(p, rw, &signerStatus, verifyProposerFn, verifyValidatorFn)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -140,41 +140,42 @@ func ValidatorHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Addre
 		case err := <-errc:
 			if err != nil {
 				log.Debug("err when handshaking", "err", err)
-				return false, common.Address{}, err
+				return false, false, common.Address{}, err
 			}
 		case <-timeout.C:
 			log.Debug("handshaking time out", "err", err)
-			return false, common.Address{}, p2p.DiscReadTimeout
+			return false, false, common.Address{}, p2p.DiscReadTimeout
 		}
 	}
-	return isValidator, address, nil
+	return false, isValidator, address, nil
 }
 
 // ReadValidatorStatus reads status of remote validator
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, validatorStatus *ValidatorStatusData, verifyValidatorFn VerifyFutureSignerFn) (isValidator bool, address common.Address, err error) {
+func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *SignerStatusData, verifyProposerFn VerifyFutureSignerFn, verifyValidatorFn VerifyFutureSignerFn) (isProposer bool, isValidator bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
-		return false, common.Address{}, err
+		return false, false, common.Address{}, err
 	}
-	if msg.Code != NewValidatorMsg {
-		return false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewValidatorMsg)
+	if msg.Code != NewSignerMsg {
+		return false, false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
 	}
 	if msg.Size > ProtocolMaxMsgSize {
-		return false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+		return false, false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 	}
 	// Decode the handshake and make sure everything matches
-	if err := msg.Decode(&validatorStatus); err != nil {
-		return false, common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
+	if err := msg.Decode(&signerStatusData); err != nil {
+		return false, false, common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
-	if int(validatorStatus.ProtocolVersion) != ProtocolVersion {
-		return false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", validatorStatus.ProtocolVersion, ProtocolVersion)
+	if int(signerStatusData.ProtocolVersion) != ProtocolVersion {
+		return false, false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatusData.ProtocolVersion, ProtocolVersion)
 	}
 
 	// TODO: this (addr, ...) pair should be signed with its private key.
 	// @liuq
 
-	isValidator, err = verifyValidatorFn(validatorStatus.Address, validatorStatus.Term)
-	return isValidator, validatorStatus.Address, err
+	isProposer, err = verifyProposerFn(signerStatusData.Address, signerStatusData.Term)
+	isValidator, err = verifyValidatorFn(signerStatusData.Address, signerStatusData.Term)
+	return isProposer, isValidator, signerStatusData.Address, err
 }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.

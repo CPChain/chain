@@ -23,6 +23,10 @@ var (
 
 	// ErrFailToAddPendingBlock is returned if failed to add block to pending
 	ErrFailToAddPendingBlock = errors.New("fail to add pending block")
+
+	// ErrNotSigner is returned if i am not a signer when handshaking
+	// with remote signer
+	ErrNotSigner = errors.New("i am not a signer")
 )
 
 // Handler implements PbftHandler
@@ -121,12 +125,19 @@ func (vh *Handler) Available() bool {
 }
 
 // AddPeer adds a p2p peer to local peer set
-func (vh *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error) {
+func (vh *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
 	coinbase := vh.Coinbase()
-	verifyFn := vh.dpor.VerifyValidatorOf
-
 	term := vh.dpor.FutureTermOf(vh.dpor.GetCurrentBlock().NumberU64())
-	return vh.dialer.AddPeer(version, p, rw, coinbase, term, verifyFn)
+	verifyProposerFn := vh.dpor.VerifyProposerOf
+	verifyValidatorFn := vh.dpor.VerifyValidatorOf
+
+	amProposer, _ := verifyProposerFn(coinbase, term)
+	amValidator, _ := verifyValidatorFn(coinbase, term)
+	if !amProposer && !amValidator {
+		return "", false, false, ErrNotSigner
+	}
+
+	return vh.dialer.AddPeer(version, p, rw, coinbase, term, verifyProposerFn, verifyValidatorFn)
 }
 
 // RemovePeer removes a p2p peer with its addr
@@ -149,7 +160,7 @@ func (vh *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	log.Debug("handling msg", "msg", msg.Code)
 
-	if msg.Code == NewValidatorMsg {
+	if msg.Code == NewSignerMsg {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
 

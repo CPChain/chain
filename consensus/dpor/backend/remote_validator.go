@@ -64,7 +64,7 @@ func (s *RemoteValidator) broadcastLoop() {
 
 // SendNewSignerMsg sends a
 func (s *RemoteValidator) SendNewSignerMsg(eb common.Address) error {
-	return p2p.Send(s.rw, NewValidatorMsg, eb)
+	return p2p.Send(s.rw, NewSignerMsg, eb)
 }
 
 // SendNewPendingBlock propagates an entire block to a remote peer.
