@@ -18,7 +18,6 @@ package cpc
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
