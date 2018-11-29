@@ -108,8 +108,14 @@ func (sm *DporSm) commitCertificate(h *types.Header) bool {
 }
 
 //composeValidateMsg is to return the validate message, which is the proposed block or impeach block
+<<<<<<< HEAD
 func (sm *DporSm) composeValidateMsg(h *types.Header) *types.Block {
 	return sm.lastBlock
+=======
+func composeValidateMsg(h *types.Header) *types.Block {
+	return nil
+	//TODO: @shiyc implement it
+>>>>>>> 5e49279... CHAIN-331 update dpor_fsm.go, changed the names containing "empty" to "impeach"
 }
 
 //Add one to the counter of commit messages
