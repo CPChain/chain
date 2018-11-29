@@ -4,12 +4,9 @@ import (
 	"errors"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -29,55 +26,39 @@ var (
 
 // Handler implements PbftHandler
 type Handler struct {
-	mode HandlerMode
+	mode   HandlerMode
+	config *configs.DporConfig
 
-	term          uint64
-	termLen       uint64
-	maxInitNumber uint64
+	available   bool
+	isProposer  bool
+	isValidator bool
 
-	nodeId   string
 	coinbase common.Address
 
-	server *p2p.Server
-	rsaKey *rsakey.RsaKey
+	dialer *Dialer
+	snap   *consensus.PbftStatus
+	dpor   DporService
 
-	knownBlocks *RecentBlocks
-
-	// signer register contract related fields
-	contractAddress    common.Address
-	contractCaller     *ContractCaller
-	contractInstance   *contract.SignerConnectionRegister
-	contractTransactor *bind.TransactOpts
-
-	remoteProposers  map[common.Address]*RemoteProposer
-	remoteValidators map[common.Address]*RemoteValidator
-
-	// previous stable pbft status
-	snap *consensus.PbftStatus
-	dpor DporService
-
+	knownBlocks    *RecentBlocks
 	pendingBlockCh chan *types.Block
 	quitSync       chan struct{}
-
-	dialed    bool
-	available bool
 
 	lock sync.RWMutex
 }
 
 // NewHandler creates a new Handler
 func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
+	proposers := make(map[common.Address]*RemoteProposer, config.TermLen)
+	validators := make(map[common.Address]*RemoteValidator)
+
 	vh := &Handler{
-		coinbase:         etherbase,
-		contractAddress:  config.Contracts["signer"],
-		termLen:          config.TermLen,
-		maxInitNumber:    config.MaxInitBlockNumber,
-		remoteValidators: make(map[common.Address]*RemoteValidator),
-		knownBlocks:      NewKnownBlocks(),
-		pendingBlockCh:   make(chan *types.Block),
-		quitSync:         make(chan struct{}),
-		dialed:           false,
-		available:        false,
+		config:         config,
+		coinbase:       etherbase,
+		knownBlocks:    newKnownBlocks(),
+		dialer:         newDialer(etherbase, proposers, validators),
+		pendingBlockCh: make(chan *types.Block),
+		quitSync:       make(chan struct{}),
+		available:      false,
 	}
 
 	// TODO: fix this
@@ -89,14 +70,8 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 // Start starts pbft handler
 func (vh *Handler) Start() {
 
-	// Dail all remote validators
-	// go vh.DialAllRemoteValidators()
-
-	// TODO: dail all remote proposers
-
 	// Broadcast mined pending block, including empty block
 	go vh.PendingBlockBroadcastLoop()
-
 	return
 }
 
@@ -145,85 +120,26 @@ func (vh *Handler) Available() bool {
 // AddPeer adds a p2p peer to local peer set
 func (vh *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error) {
 	coinbase := vh.Coinbase()
-	validator := vh.dpor.VerifyRemoteValidator
+	verifyFn := vh.dpor.VerifyRemoteValidator
 
-	log.Debug("do handshaking with remote peer...")
-
-	ok, address, err := ValidatorHandshake(p, rw, coinbase, validator)
-	if !ok || err != nil {
-		log.Debug("failed to handshake in dpor", "err", err, "ok", ok)
-		return "", ok, err
-	}
-	remoteValidator, err := vh.addRemoteValidator(version, p, rw, address)
-
-	log.Debug("after add remote validator", "validator", remoteValidator.ID(), "err", err)
-	for addr, s := range vh.remoteValidators {
-		log.Debug("validators in handler", "addr", addr.Hex(), "id", s.ID())
-	}
-
-	return address.Hex(), true, err
+	return vh.dialer.AddPeer(version, p, rw, coinbase, verifyFn)
 }
 
 // RemovePeer removes a p2p peer with its addr
 func (vh *Handler) RemovePeer(addr string) error {
-	return vh.removeRemoteValidator(addr)
+	return vh.dialer.removeRemoteValidator(addr)
 }
 
 // HandleMsg handles a msg of peer with id "addr"
 func (vh *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 
-	remoteValidator, ok := vh.remoteValidators[common.HexToAddress(addr)]
+	remoteValidator, ok := vh.dialer.getValidator(addr)
 	if !ok {
 		// TODO: return new err
 		return nil
 	}
 
 	return vh.handleMsg(remoteValidator, msg)
-}
-
-func (vh *Handler) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteValidator, error) {
-	vh.lock.Lock()
-	defer vh.lock.Unlock()
-
-	// TODO: add lock here
-	remoteValidator, ok := vh.remoteValidators[address]
-
-	if !ok {
-		// TODO: @liuq fix this
-		remoteValidator = NewRemoteValidator(vh.term, address)
-	}
-
-	log.Debug("adding remote validator...", "validator", address.Hex())
-
-	err := remoteValidator.SetPeer(version, p, rw)
-	if err != nil {
-		log.Debug("failed to set remote validator")
-		return nil, err
-	}
-
-	err = remoteValidator.AddStatic(vh.server)
-	if err != nil {
-		log.Debug("failed to add remote validator as static peer")
-		return nil, err
-	}
-
-	go remoteValidator.broadcastLoop()
-
-	vh.remoteValidators[address] = remoteValidator
-	return remoteValidator, nil
-}
-
-func (vh *Handler) removeRemoteValidator(addr string) error {
-	vh.lock.Lock()
-	defer vh.lock.Unlock()
-
-	validatorAddr := common.HexToAddress(addr)
-
-	if _, ok := vh.remoteValidators[validatorAddr]; ok {
-		delete(vh.remoteValidators, validatorAddr)
-	}
-
-	return nil
 }
 
 func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
@@ -242,6 +158,14 @@ func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	default:
 		return ErrUnknownHandlerMode
 	}
+}
+
+func (vh *Handler) SetContractCaller(contractCaller *ContractCaller) error {
+	return vh.dialer.SetContractCaller(contractCaller)
+}
+
+func (vh *Handler) SetServer(server *p2p.Server) error {
+	return vh.dialer.SetServer(server)
 }
 
 // SetDporService sets dpor service to handler
@@ -284,28 +208,6 @@ func (vh *Handler) SetAvailable() {
 	vh.available = true
 }
 
-// Disconnect disconnects all.
-func (vh *Handler) Disconnect() {
-	vh.lock.Lock()
-	connected, remoteValidators, server := vh.dialed, vh.remoteValidators, vh.server
-	vh.lock.Unlock()
-
-	if connected {
-		log.Debug("disconnecting...")
-
-		for _, s := range remoteValidators {
-			err := s.disconnect(server)
-			log.Debug("err when disconnect", "e", err)
-		}
-
-		vh.dialed = false
-	}
-
-	vh.lock.Lock()
-	vh.dialed = connected
-	vh.lock.Unlock()
-}
-
 // GetPendingBlock returns a pending block with given hash
 func (vh *Handler) GetPendingBlock(number uint64) (*KnownBlock, error) {
 	vh.lock.Lock()
@@ -341,4 +243,12 @@ func (vh *Handler) UpdateBlockStatus(number uint64, status BlockStatus) error {
 	log.Debug("updating block status", "number", number, "status", status)
 
 	return vh.knownBlocks.UpdateStatus(number, status)
+}
+
+func (vh *Handler) UpdateRemoteValidators(term uint64, validators []common.Address) error {
+	return vh.dialer.UpdateRemoteValidators(term, validators)
+}
+
+func (vh *Handler) UploadEncryptedNodeInfo() error {
+	return vh.dialer.UploadEncryptedNodeInfo()
 }

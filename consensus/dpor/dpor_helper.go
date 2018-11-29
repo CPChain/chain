@@ -82,7 +82,7 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 
 	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
 	if number > 0 {
-		if header.Difficulty == nil || (header.Difficulty.Cmp(diffInTurn) != 0 && header.Difficulty.Cmp(diffNoTurn) != 0) {
+		if header.Difficulty == nil || header.Difficulty.Cmp(dporDifficulty) != 0 {
 			return errInvalidDifficulty
 		}
 	}
@@ -353,6 +353,10 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return consensus.ErrNotEnoughSigs
 	}
 
+	if dh.isTimeToDialValidators(dpor, chain) {
+		go dh.uploadNodeInfo(dpor, snap, number)
+	}
+
 	return nil
 }
 
@@ -439,22 +443,27 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 	// If in a checkpoint and self is in the future committee, try to build the committee network
 	isCheckpoint := IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen)
 	isFutureSigner := snap.IsFutureSignerOf(dpor.signer, number)
-	ifStartDynamic := number >= dpor.config.MaxInitBlockNumber
+	ifStartDynamic := snap.isStartElection()
 
 	return isCheckpoint && isFutureSigner && ifStartDynamic
 }
 
-func (dh *defaultDporHelper) dialValidators(dpor *Dpor, snap *DporSnapshot, number uint64) error {
+func (dh *defaultDporHelper) uploadNodeInfo(dpor *Dpor, snap *DporSnapshot, number uint64) error {
 	log.Info("In future committee, building the committee network...")
 
 	term := snap.FutureTermOf(number)
+	// TODO: @chengx add FutureValidatorsOf in snapshot.go
 	signers := snap.FutureSignersOf(number)
 
 	go func(eIdx uint64, committee []common.Address) {
 		// Updates handler.signers
-		dpor.validatorHandler.UpdateRemoteProposers(eIdx, committee)
+		err := dpor.validatorHandler.UpdateRemoteValidators(eIdx, committee)
+		log.Debug("err when updating remote validators", "err", err)
+
 		// Connect all
-		// dpor.validatorHandler.DialAll()
+		err = dpor.validatorHandler.UploadEncryptedNodeInfo()
+		log.Debug("err when uploading my node info", "err", err)
+
 	}(term, signers)
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"math/big"
 )
 
 // VerifyRemoteValidator validates if a given address is signer of current epoch
@@ -63,12 +64,6 @@ func (d *Dpor) StatusUpdate() error {
 	return nil
 }
 
-// GetEmptyBlock returns an empty block for view change
-func (d *Dpor) GetEmptyBlock() (*types.Block, error) {
-	// TODO: fix this
-	return nil, nil
-}
-
 // HasBlockInChain returns if a block is in local chain
 func (d *Dpor) HasBlockInChain(hash common.Hash, number uint64) bool {
 	blk := d.chain.GetBlock(hash, number)
@@ -76,4 +71,28 @@ func (d *Dpor) HasBlockInChain(hash common.Hash, number uint64) bool {
 		return true
 	}
 	return false
+}
+
+// CreateImpeachBlock creates an impeachment block
+func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
+	parentHeader := d.chain.CurrentHeader()
+	parent := d.chain.GetBlock(parentHeader.Hash(), parentHeader.Number.Uint64())
+
+	num := parentHeader.Number
+	impeachHeader := &types.Header{
+		ParentHash: parentHeader.Hash(),
+		Number:     num.Add(num, common.Big1),
+		GasLimit:   parent.GasLimit(),
+		Extra:      make([]byte, extraVanity),
+		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout())+int64(d.config.Period))),
+		Coinbase:   common.Address{},
+		Nonce:      types.BlockNonce{},
+		Difficulty: dporDifficulty,
+		MixHash:    common.Hash{},
+		StateRoot:  parentHeader.StateRoot,
+	}
+
+	impeach := types.NewBlock(impeachHeader, []*types.Transaction{}, []*types.Receipt{})
+
+	return impeach, nil
 }

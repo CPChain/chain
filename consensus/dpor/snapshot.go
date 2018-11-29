@@ -37,25 +37,6 @@ var (
 	errGenesisBlockNumber      = errors.New("genesis block has no leader")
 )
 
-// Snapshot is used to check if a received block is valid by create a snapshot from previous blocks
-type Snapshot interface {
-	store(db database.Database) error
-	copy() *Snapshot
-	apply(headers []*types.Header) (*Snapshot, error)
-	applyHeader(header *types.Header) error
-	updateCandidates(header *types.Header) error
-	updateRpts(header *types.Header) (rpt.RptList, error)
-	updateSigner(rpts rpt.RptList, seed int64, viewLength int) error
-	signers() []common.Address
-	proposerViewOf(Signer common.Address) (int, error)
-	validatorViewOf(signer common.Address) (int, error)
-	signerViewOf(signer common.Address) (int, error)
-	isSigner(signer common.Address) bool
-	isLeader(signer common.Address, number uint64) (bool, error)
-	candidates() []common.Address
-	inturn(number uint64, signer common.Address) bool
-}
-
 // DporSnapshot is the state of the authorization voting at a given point in time.
 type DporSnapshot struct {
 	Number     uint64           `json:"number"`     // Block number where the Snapshot was created
@@ -373,7 +354,6 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.Co
 
 // applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
 func (s *DporSnapshot) applyHeader(header *types.Header) error {
-
 	// Update Snapshot attributes.
 	s.setNumber(header.Number.Uint64())
 	s.setHash(header.Hash())
@@ -398,9 +378,11 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 		s.updateProposers(rpts, seed)
 	}
 
+	term := s.TermOf(header.Number.Uint64())
 	if len(header.Dpor.Validators) != 0 && len(header.Dpor.Validators) > 4 { // 3f + 1, TODO: @AC add a config
-		term := s.TermOf(header.Number.Uint64())
-		s.setRecentValidators(term, header.Dpor.Validators)
+		s.setRecentValidators(term+1, header.Dpor.Validators)
+	} else if IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
+		s.setRecentValidators(term+1, s.getRecentValidators(term))
 	}
 
 	return nil

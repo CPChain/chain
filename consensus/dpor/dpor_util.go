@@ -209,5 +209,5 @@ func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
-	return new(big.Int).Set(diffNoTurn)
+	return new(big.Int).Set(dporDifficulty)
 }
