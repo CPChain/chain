@@ -60,7 +60,7 @@ func TestGetRNodes(t *testing.T) {
 }
 
 func TestGetCurrentTerm(t *testing.T) {
-	// t.Skip("skip test")
+	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	if err != nil {
@@ -75,7 +75,7 @@ func TestGetCurrentTerm(t *testing.T) {
 }
 
 func TestGetCurrentView(t *testing.T) {
-	// t.Skip("skip test")
+	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
