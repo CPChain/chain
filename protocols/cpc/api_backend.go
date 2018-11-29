@@ -260,7 +260,7 @@ func (b *APIBackend) CurrentView() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.TermLen
-	View := (uint64(bn.Uint64()) % (vl * tl)) / (vl + 1)
+	View := bn.Uint64() % (vl * tl) / (vl + 1)
 	fmt.Println("the View is :", View)
 	return View
 }
@@ -269,7 +269,7 @@ func (b *APIBackend) CurrentTerm() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
-	Term := uint64(bn.Uint64()-1) / (vl * tl)
+	Term := bn.Uint64() - 1/(vl*tl)
 	return Term
 }
 
