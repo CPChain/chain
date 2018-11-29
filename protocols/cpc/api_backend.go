@@ -33,7 +33,6 @@ import (
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/types"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/event"
@@ -261,7 +260,7 @@ func (b *APIBackend) CurrentView() uint64 {
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.TermLen
 	View := bn.Uint64() % (vl * tl) / vl
-	fmt.Println("the View is :", View, "number", bn)
+	// fmt.Println("the View is :", View, "number", bn)
 	return View
 }
 
