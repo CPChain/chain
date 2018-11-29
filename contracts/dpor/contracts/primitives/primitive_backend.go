@@ -132,21 +132,19 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 // leader:0,committee:1,rNode:2,nil:3
 func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int64, error) {
 	ld := int64(2)
-	// ifRnode, err := re.RNode(address, number)
-	// if ifRnode != true {
-	// 	return 3, nil
-	// }
 	if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
-	header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
+	block, err := re.Client.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Error("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
+	header := block.Header()
 
-	number = number%configs.MainnetChainConfig.Dpor.TermLen - 1
-	leader := header.Dpor.Proposers[number]
+	// TODO fix this give a blockNumber get the Proposers of this block
+	// log.Info("the number of Proposers :", "number:", number, "proposer:", len(header.Dpor.Proposers))
+	leader := header.Coinbase
 
 	log.Debug("leader.Hex is ", "hex", leader.Hex())
 
@@ -162,7 +160,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	return ld, nil
 }
 
-// GetCoinAge is the func to get uploadnumber to rpt
+// UploadCount is the func to get uploadnumber to rpt
 func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int64, error) {
 	uploadNumber := int64(0)
 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractRegister]
@@ -179,6 +177,7 @@ func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int6
 	return fileNumber.Int64(), err
 }
 
+// ProxyInfo func return the node is proxy or not
 func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProxy int64, proxyCount int64, err error) {
 	proxyCount = int64(0)
 	isProxy = int64(0)
