@@ -18,6 +18,7 @@ package cpc
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -33,7 +34,6 @@ import (
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/types"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/event"
