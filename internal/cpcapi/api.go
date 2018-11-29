@@ -548,7 +548,7 @@ func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
 			log.Fatal("can't get header", err)
 		}
 		committee := cpclient.Committees{
-			//TODO fill PublicKey logic later
+			// TODO fill PublicKey logic later
 			View: v, Term: t, Producer: header.Coinbase, Block: uint64(rpc.BlockNumber(bn.Header().Number.Uint64()) - rpc.BlockNumber(i)),
 		}
 		committees = append(committees, committee)
