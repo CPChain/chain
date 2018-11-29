@@ -519,7 +519,7 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 		RNodes = append(RNodes, r)
 	}
 	return RNodes
-	//return []common.Address{common.HexToAddress("01"), common.HexToAddress("02")}
+	// return []common.Address{common.HexToAddress("01"), common.HexToAddress("02")}
 }
 
 func (s *PublicBlockChainAPI) GetCurrentView() uint64 {

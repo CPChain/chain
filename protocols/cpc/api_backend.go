@@ -269,7 +269,7 @@ func (b *APIBackend) CurrentTerm() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
-	Term := uint64(bn.Uint64()) / ((vl * tl) + 1)
+	Term := uint64(bn.Uint64()-1) / (vl * tl)
 	return Term
 }
 
