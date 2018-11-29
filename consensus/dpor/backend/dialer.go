@@ -59,21 +59,50 @@ func newDialer(
 
 // AddPeer adds a peer to local dpor peer set:
 // remote proposers or remote validators
-func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyFn VerifyFutureSignerFn) (string, bool, error) {
+func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyProposerFn VerifyFutureSignerFn, verifyValidatorFn VerifyFutureSignerFn) (string, bool, bool, error) {
 
 	log.Debug("do handshaking with remote peer...")
 
-	// TODO: add signer handshake to determine whether validator handshake
-	// or proposer handshake
-
-	ok, address, err := ValidatorHandshake(p, rw, coinbase, term, verifyFn)
-	if !ok || err != nil {
-		log.Debug("failed to handshake in dpor", "err", err, "ok", ok)
-		return "", ok, err
+	isProposer, isValidator, address, err := Handshake(p, rw, coinbase, term, verifyProposerFn, verifyValidatorFn)
+	if (!isProposer && !isValidator) || err != nil {
+		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)
+		return "", isProposer, isValidator, err
 	}
-	remoteValidator, err := d.addRemoteValidator(version, p, rw, address, term)
-	log.Debug("after add remote validator", "validator", remoteValidator.ID(), "err", err)
-	return address.Hex(), true, err
+
+	if isProposer {
+		remoteProposer, err := d.addRemoteProposer(version, p, rw, address, term)
+		log.Debug("after add remote proposer", "proposer", remoteProposer.ID(), "err", err)
+
+	}
+	if isValidator {
+		remoteValidator, err := d.addRemoteValidator(version, p, rw, address, term)
+		log.Debug("after add remote validator", "validator", remoteValidator.ID(), "err", err)
+	}
+	return address.Hex(), isProposer, isValidator, err
+}
+
+func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address, term uint64) (*RemoteProposer, error) {
+	remoteProposer, ok := d.getProposer(address.Hex())
+	if !ok {
+		remoteProposer = NewRemoteProposer(term, address)
+	}
+
+	log.Debug("adding remote proposer...", "proposer", address.Hex())
+
+	err := remoteProposer.SetPeer(version, p, rw)
+	if err != nil {
+		log.Debug("failed to set remote proposer")
+		return nil, err
+	}
+
+	err = remoteProposer.AddStatic(d.server)
+	if err != nil {
+		log.Debug("failed to add remote proposer as static peer")
+		return nil, err
+	}
+
+	d.setProposer(address.Hex(), remoteProposer)
+	return remoteProposer, nil
 }
 
 func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address, term uint64) (*RemoteValidator, error) {

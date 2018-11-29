@@ -150,9 +150,13 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					defer manager.removePeer(peer.id)
 
 					// add peer to dpor.handler.peers, this is for pbft/lbft msg handling
-					id, ok := common.Address{}.Hex(), false
-					id, ok, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
-					if err != nil {
+					id, isProposer, isValidator := common.Address{}.Hex(), false, false
+					id, isProposer, isValidator, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
+					switch err {
+					case nil:
+					case backend.ErrNotSigner:
+
+					default:
 						log.Warn("faile to add peer to dpor's peer set", "err", err)
 						return err
 					}
@@ -179,7 +183,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 								return err
 							}
 
-						case backend.IsDporMsg(msg) && ok:
+						case backend.IsDporMsg(msg) && (isProposer || isValidator):
 							err = dporProtocol.HandleMsg(id, msg)
 							if err != nil {
 								log.Warn("err when handling dpor msg", "err", err)

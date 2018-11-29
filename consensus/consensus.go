@@ -198,7 +198,7 @@ type Protocol interface {
 
 	Available() bool
 
-	AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error)
+	AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error)
 
 	RemovePeer(id string) error
 

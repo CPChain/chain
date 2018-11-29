@@ -6,7 +6,7 @@ import "bitbucket.org/cpchain/chain/types"
 func (vh *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 	select {
 	case vh.pendingBlockCh <- block:
-		err := vh.AddPendingBlock(block)
+		err := vh.knownBlocks.AddBlock(block)
 		if err != nil {
 			return err
 		}

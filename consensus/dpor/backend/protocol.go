@@ -23,10 +23,8 @@ const (
 
 	// Protocol messages belonging to cpc/01
 
-	// NewValidatorMsg is a msg code used for committee network building
-	NewValidatorMsg = 0x42
-
-	NewProposerMsg = 0x43
+	// NewSignerMsg is a msg code used for network building
+	NewSignerMsg = 0x42
 
 	// PbftMsgOutset is not a msg code, just used for msg code comparing
 	PbftMsgOutset = 0x43
@@ -101,13 +99,7 @@ var errorToString = map[int]string{
 	ErrSuspendedPeer:           "Suspended peer",
 }
 
-type ValidatorStatusData struct {
-	ProtocolVersion uint32
-	Address         common.Address
-	Term            uint64
-}
-
-type ProposerStatusData struct {
+type SignerStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address
 	Term            uint64
