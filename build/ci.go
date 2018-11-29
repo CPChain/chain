@@ -23,12 +23,16 @@ Usage: go run build/ci.go <command> <command flags/arguments>
 
 Available commands are:
 
-   install    [ -arch architecture ] [ -cc compiler ] [ packages... ]                          -- builds packages and executables
-   test       [ -coverage ] [ packages... ]                                                    -- runs the tests
+   install    		[ -arch architecture ] [ -cc compiler ] [ packages... ]                          -- builds packages and executables
+   raceInstall      [ -arch architecture ] [ -cc compiler ] [ packages... ]                          -- builds packages and executables
+   test       		[ -coverage ] [ packages... ]                                                    -- runs the tests
+   noCacheTest      [ -coverage ] [ packages... ]                                                    -- runs the tests
+   raceTest      	[ -coverage ] [ packages... ]                                                    -- runs the tests
+   noCacheRaceTest  [ -coverage ] [ packages... ]                                                    -- runs the tests
    lint                                                                                        -- runs certain pre-selected linters
-   archive    [ -arch architecture ] [ -type zip|tar ] [ -signer key-envvar ] [ -upload dest ] -- archives build artefacts
+   archive    		[ -arch architecture ] [ -type zip|tar ] [ -signer key-envvar ] [ -upload dest ] -- archives build artefacts
    nsis                                                                                        -- creates a Windows NSIS installer
-   xgo        [ -alltools ] [ options ]                                                        -- cross builds according to options
+   xgo        		[ -alltools ] [ options ]                                                        -- cross builds according to options
 
 For all commands, -n prevents execution of external programs (dry run mode).
 
@@ -89,14 +93,16 @@ func main() {
 	switch os.Args[1] {
 	case "install":
 		doInstall(os.Args[2:], false)
+	case "raceInstall":
+		doInstall(os.Args[2:], true)
 	case "test":
 		doTest(os.Args[2:], false)
 	case "noCacheTest":
 		doTest(os.Args[2:], true)
 	case "raceTest":
-		doRaceTest(os.Args[2:])
-	case "raceInstall":
-		doInstall(os.Args[2:], true)
+		doRaceTest(os.Args[2:], false)
+	case "noCacheRaceTest":
+		doRaceTest(os.Args[2:], true)
 	case "lint":
 		doLint(os.Args[2:])
 	case "archive":
@@ -266,7 +272,7 @@ func doTest(cmdline []string, noCache bool) {
 	build.MustRun(gotest)
 }
 
-func doRaceTest(cmdline []string) {
+func doRaceTest(cmdline []string, noCache bool) {
 	flag.CommandLine.Parse(cmdline)
 	env := build.Env()
 	packages := build.ReadExcludedPackagesList("build/race_test_dirs")
@@ -282,6 +288,9 @@ func doRaceTest(cmdline []string) {
 	gotest.Args = append(gotest.Args, "-race")
 
 	gotest.Args = append(gotest.Args, packages...)
+	if noCache {
+		gotest.Env = append(gotest.Env, "GOCACHE=off")
+	}
 	build.MustRun(gotest)
 }
 
