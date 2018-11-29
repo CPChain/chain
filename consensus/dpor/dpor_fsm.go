@@ -1,6 +1,7 @@
 package dpor
 
 import (
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"errors"
 
 	"bitbucket.org/cpchain/chain/types"
@@ -53,10 +54,13 @@ const (
 	impeach
 )
 
+type DporSm struct {
+	service backend.DporService
+}
+
 //verifyBlock is a func to verify whether the block is legal
-func verifyBlock(block *types.Block) bool {
-	return true
-	//TODO: @shiyc implement it
+func (sm *DporSm) verifyBlock(block *types.Block) bool {
+	return sm.service.ValidateBlock(block) == nil
 }
 
 // commitCertificate is true if the validator has collected 2f+1 commit messages
@@ -104,7 +108,7 @@ func proposeEmptyBlock() *types.Block {
 }
 
 // Fsm is the finite state machine for a validator, to output the correct state given on current state and inputs
-func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (interface{}, action, dataType, msgCode, FsmState, error) {
+func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (interface{}, action, dataType, msgCode, FsmState, error) {
 	var inputHeader *types.Header
 	var inputBlock *types.Block
 	var err error
@@ -152,7 +156,7 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 
 		// For the case that receive the newly proposes block or pre-prepare message
 		case preprepareMsg:
-			if verifyBlock(inputBlock) {
+			if sm.verifyBlock(inputBlock) {
 				return composePrepareMsg(inputBlock), broadcastMsg, header, prepareMsg, preprepared, nil
 			} else {
 				err = errors.New("the proposed block is illegal")

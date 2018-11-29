@@ -117,13 +117,13 @@ type SignFn func(accounts.Account, []byte) ([]byte, error)
 // Author implements consensus.Engine, returning the cpchain address recovered
 // from the signature in the header's extra-data section.
 func (d *Dpor) Author(header *types.Header) (common.Address, error) {
-	leader, _, err := d.dh.ecrecover(header, d.signatures)
-	return leader, err
+	proposer, _, err := d.dh.ecrecover(header, d.signatures)
+	return proposer, err
 }
 
 // VerifyHeader checks whether a header conforms to the consensus rules.
 func (d *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool, refHeader *types.Header) error {
-	return d.dh.verifyHeader(d, chain, header, nil, refHeader, true)
+	return d.dh.verifyHeader(d, chain, header, nil, refHeader)
 }
 
 // VerifyHeaders is similar to VerifyHeader, but verifies a batch of headers. The
@@ -135,7 +135,7 @@ func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Heade
 
 	go func() {
 		for i, header := range headers {
-			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i], true)
+			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i])
 
 			select {
 			case <-abort:

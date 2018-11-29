@@ -109,7 +109,7 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 }
 
 // ecrecover extracts the cpchain account address from a signed header.
-// the return value is (leader_address, signer_addresses, error)
+// the return value is (the_proposer_address, validators_committee_addresses, error)
 func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
@@ -120,34 +120,30 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		return common.Address{}, []common.Address{}, errMissingSignature
 	}
 
-	// NOTE: Header extraData field format:
-	// header.Extra[extraVanity:Committee:leader-sig]
-	// header.Extra2[signer1-sig:...:signerN-sig]
-
 	// Retrieve leader's signature
-	leaderSig := header.Dpor.Seal
+	proposerSig := header.Dpor.Seal
 
 	// Recover the public key and the cpchain address of leader.
-	var leader common.Address
-	leaderPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), leaderSig[:])
+	var propser common.Address
+	proposerPubKey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), proposerSig[:])
 	if err != nil {
 		return common.Address{}, []common.Address{}, err
 	}
-	copy(leader[:], crypto.Keccak256(leaderPubkey[1:])[12:])
+	copy(propser[:], crypto.Keccak256(proposerPubKey[1:])[12:])
 
 	// Cache leader signature.
 	if sigs, known := sigcache.Get(hash); known {
-		sigs.(*Signatures).SetSig(leader, leaderSig[:])
+		sigs.(*Signatures).SetSig(propser, proposerSig[:])
 	} else {
 		sigs := &Signatures{
 			sigs: make(map[common.Address][]byte),
 		}
-		sigs.SetSig(leader, leaderSig[:])
+		sigs.SetSig(propser, proposerSig[:])
 		sigcache.Add(hash, sigs)
 	}
 
 	// Recover the public key and the cpchain address of signers one by one.
-	var proposers []common.Address
+	var validators []common.Address
 	for i := 0; i < len(header.Dpor.Sigs); i++ {
 		signerSig := header.Dpor.Sigs[i]
 
@@ -156,20 +152,21 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 			// Recover it!
 			signerPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), signerSig[:])
 			if err != nil {
-				return common.Address{}, proposers, err
+				continue
 			}
-			var proposer common.Address
-			copy(proposer[:], crypto.Keccak256(signerPubkey[1:])[12:])
+
+			var validator common.Address
+			copy(validator[:], crypto.Keccak256(signerPubkey[1:])[12:])
 
 			// Cache it!
 			sigs, _ := sigcache.Get(hash)
-			sigs.(*Signatures).SetSig(proposer, signerSig[:])
+			sigs.(*Signatures).SetSig(validator, signerSig[:])
 
 			// Add signer to known signers
-			proposers = append(proposers, proposer)
+			validators = append(validators, validator)
 		}
 	}
-	return leader, proposers, nil
+	return propser, validators, nil
 }
 
 // acceptSigs checks that signatures have enough signatures to accept the block.
@@ -178,7 +175,6 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 	defer d.lock.Unlock()
 
 	numSigs := uint(0)
-	accept := false
 	hash := header.Hash()
 
 	// Retrieve signatures of this header from cache
@@ -192,12 +188,7 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 		return false, errNoSigsInCache
 	}
 
-	// num of sigs must > 2/3 * termLen, leader must be in the sigs.
-	if d.percentagePBFT(numSigs, termLen) {
-		accept = true
-	}
-
-	return accept, nil
+	return numSigs == termLen, nil
 }
 
 // percentagePBFT returns n is large than pctPBFT * N.
