@@ -67,7 +67,7 @@ func commitCertificate(h *types.Header) bool {
 
 //composeValidateMsg is to return the validate message, which is the proposed block or impeach block
 func composeValidateMsg(h *types.Header) *types.Block {
-	return
+	return nil
 	//TODO: @shiyc implement it
 }
 
