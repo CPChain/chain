@@ -218,18 +218,6 @@ func (d *Dpor) Proposer() common.Address {
 	return d.proposer
 }
 
-// // ValidateSigner validates if given address is future signer
-// func (d *Dpor) ValidateSigner(address common.Address) (bool, error) {
-// 	number := d.chain.CurrentHeader().Number.Uint64()
-// 	return d.IsFutureSigner(d.chain, address, number)
-// }
-
-// // validateProposer validates if given address is future proposer
-// func (d *Dpor) ValidateProposer(address common.Address) (bool, error) {
-// 	number := d.chain.CurrentHeader().Number.Uint64()
-// 	return d.IsFutureProposer(d.chain, address, number)
-// }
-
 // Protocol returns Dpor p2p protocol
 func (d *Dpor) Protocol() consensus.Protocol {
 	return d.validatorHandler.GetProtocol()
