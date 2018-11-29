@@ -372,6 +372,7 @@ func (s *CpchainService) StartMining(local bool, contractCaller *consensus.Contr
 		log.Info("start mining...")
 		// TODO: fix this, update contract caller with private key here. Liu Qian
 		log.Info("s.pm.committeeNetworkHandler in s.StartMining", "s.pm.committeeNetworkHandler", s.protocolManager.committeeNetworkHandler)
+		dpor.SetContractCaller(contractCaller)
 
 		//		s.RptEvaluator, err = primitives.NewRptEvaluator(contractCaller.Client, s.chainConfig)
 		if err != nil {

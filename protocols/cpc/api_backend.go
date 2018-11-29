@@ -18,6 +18,7 @@ package cpc
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -259,7 +260,7 @@ func (b *APIBackend) CurrentView() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.TermLen
-	View := bn.Uint64() % (vl * tl) / vl
+	View := (bn.Uint64() % (vl * tl)) / vl
 	// fmt.Println("the View is :", View, "number", bn)
 	return View
 }

@@ -28,7 +28,7 @@ contract Campaign {
     // The current round number.
     uint public viewIdx = 0;
     // 21 candidates and 21 blocks per round.
-    uint public numPerRound = 21;
+    uint public numPerRound = 12; // @AC use termLen * viewLen instead of hardcoded 21
     // 50 wei per round.
     uint public baseDeposit = 50;
     // The minimun and maximun round to claim.
