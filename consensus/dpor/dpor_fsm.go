@@ -1,8 +1,11 @@
 package dpor
 
 import (
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"errors"
+	"sync"
 
 	"bitbucket.org/cpchain/chain/types"
 )
@@ -41,6 +44,10 @@ const (
 	impeachValidateMsg
 )
 
+var (
+	errBlockTooOld = errors.New("the block is too old")
+)
+
 //Type enumerator for FSM states
 type FsmState uint8
 
@@ -54,56 +61,147 @@ const (
 	impeach
 )
 
-type DporSm struct {
-	service backend.DporService
+type sigRecord struct {
+	prepareSigs Signatures
+	commitSigs  Signatures
 }
 
-//verifyBlock is a func to verify whether the block is legal
+type DporSm struct {
+	lock sync.RWMutex
+
+	service   backend.DporService
+	state     map[uint64]*sigRecord
+	f         uint64
+	lastBlock *types.Block
+}
+
+// getSigState returns the pointer to the message state of a specified block number
+func (sm *DporSm) getSigState(h *types.Header) *sigRecord {
+	rec, found := sm.state[h.Number.Uint64()]
+	if !found {
+		rec = &sigRecord{}
+		sm.state[h.Number.Uint64()] = rec
+	}
+	return rec
+}
+
+// resetMsgState resets a messsage state of a specified block number
+func (sm *DporSm) resetMsgState(h *types.Header) {
+	sm.state[h.Number.Uint64()] = &sigRecord{}
+}
+
+// verifyBlock is a func to verify whether the block is legal
 func (sm *DporSm) verifyBlock(block *types.Block) bool {
+	sm.lock.RLock()
+	defer sm.lock.RUnlock()
+
 	return sm.service.ValidateBlock(block) == nil
 }
 
 // commitCertificate is true if the validator has collected 2f+1 commit messages
-func commitCertificate(h *types.Header) bool {
-	return true
-	//TODO: @shiyc implement it
+func (sm *DporSm) commitCertificate(h *types.Header) bool {
+	sm.lock.RLock()
+	defer sm.lock.RUnlock()
+
+	state := sm.getSigState(h)
+	return uint64(len(state.commitSigs.sigs)) >= 2*sm.f+1
 }
 
 //composeValidateMsg is to return the validate message, which is the proposed block or impeach block
-func composeValidateMsg(h *types.Header) *types.Block {
-	return nil
-	//TODO: @shiyc implement it
+func (sm *DporSm) composeValidateMsg(h *types.Header) *types.Block {
+	return sm.lastBlock
 }
 
 //Add one to the counter of commit messages
-func commitMsgPlus(h *types.Header) {
-	//TODO: @shiyc implement it
+func (sm *DporSm) commitMsgPlus(h *types.Header) {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
 
+	state := sm.getSigState(h)
+	signers, err := sm.service.EcrecoverSigs(h, consensus.Committing)
+	if err != nil {
+		log.Warn("failed to recover signatures of committing phase", "error", err)
+		return
+	}
+
+	validators, _ := sm.service.ValidatorsOf(h.Number.Uint64())
+	// merge signature to state
+	for i, s := range signers {
+		for _, v := range validators {
+			if s == v {
+				state.commitSigs.SetSig(s, h.Dpor.Sigs[i][:])
+				break
+			}
+		}
+	}
 }
 
-func composeCommitMsg(h *types.Header) *types.Header {
-	return h
-	//TODO: @shiyc implement it
+func (sm *DporSm) composeCommitMsg(h *types.Header) (*types.Header, error) {
+	if sm.lastBlock.Number().Cmp(h.Number) >= 0 {
+		return nil, errBlockTooOld
+	}
+
+	validators, _ := sm.service.ValidatorsOf(h.Number.Uint64())
+	// clean up PREPARE signatures
+	h.Dpor.Sigs = make([]types.DporSignature, len(validators))
+	sm.service.SignHeader(h, consensus.Committing)
+	log.Info("sign block by validator at commit phase", "blocknum", sm.lastBlock.Number(), "sigs", sm.lastBlock.RefHeader().Dpor.SigsFormatText())
+	return h, nil
 }
 
 //prepareCertificate is true if the validator has collects 2f+1 prepare messages
-func prepareCertificate(h *types.Header) bool {
-	return true
-	//TODO: @shiyc implement it
+func (sm *DporSm) prepareCertificate(h *types.Header) bool {
+	sm.lock.RLock()
+	defer sm.lock.RUnlock()
+
+	return uint64(len(sm.getSigState(h).prepareSigs.sigs)) >= 2*sm.f+1
 }
 
 //Add one to the counter of prepare messages
-func prepareMsgPlus(h *types.Header) {
-	//TODO: @shiyc implement it
+func (sm *DporSm) prepareMsgPlus(h *types.Header) {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	state := sm.getSigState(h)
+	signers, err := sm.service.EcrecoverSigs(h, consensus.Preparing)
+	if err != nil {
+		log.Warn("failed to recover signatures of preparing phase", "error", err)
+		return
+	}
+
+	validators, _ := sm.service.ValidatorsOf(h.Number.Uint64())
+	// merge signature to state
+	for i, s := range signers {
+		for _, v := range validators {
+			if s == v {
+				state.prepareSigs.SetSig(s, h.Dpor.Sigs[i][:])
+				break
+			}
+		}
+	}
 }
 
-func composePrepareMsg(h *types.Block) *types.Header {
-	return h.Header()
+func (sm *DporSm) composePrepareMsg(b *types.Block) (*types.Header, error) {
+	if sm.lastBlock.Number().Cmp(b.Number()) >= 0 {
+		return nil, errBlockTooOld
+	}
+
+	sm.lastBlock = b
+	sm.resetMsgState(b.Header())
+	// validator signs the block
+	sm.service.SignHeader(b.RefHeader(), consensus.Preparing)
+	log.Info("sign block by validator at prepare phase", "blocknum", sm.lastBlock.Number(), "sigs", sm.lastBlock.RefHeader().Dpor.SigsFormatText())
+
+	return b.Header(), nil
 }
 
 //It is used to propose an impeach block
-func proposeEmptyBlock() *types.Block {
-	var b *types.Block
+func (sm *DporSm) proposeImpeachBlock() *types.Block {
+	b, e := sm.service.CreateImpeachBlock()
+	if e != nil {
+		log.Warn("creating impeachment block failed", "error", e)
+		return nil
+	}
 	return b
 }
 
@@ -136,32 +234,39 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 
 		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
-			if commitCertificate(inputHeader) {
-				return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
+			if sm.commitCertificate(inputHeader) {
+				return sm.composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
 			} else {
 				// Add one to the counter of commit messages
-				commitMsgPlus(inputHeader)
+				sm.commitMsgPlus(inputHeader)
 				return input, noAction, noType, noMsg, idle, nil
 			}
 
 		// Jump to prepared state if receive 2f+1 prepare message
 		case prepareMsg:
-			if prepareCertificate(inputHeader) {
-				return composeCommitMsg(inputHeader), broadcastMsg, header, commitMsg, prepared, nil
+			if sm.prepareCertificate(inputHeader) {
+				ret, err := sm.composeCommitMsg(inputHeader)
+				if err != nil {
+					return nil, noAction, noType, noMsg, idle, err
+				}
+				return ret, broadcastMsg, header, commitMsg, prepared, nil
 			} else {
 				// Add one to the counter of prepare messages
-				prepareMsgPlus(inputHeader)
+				sm.prepareMsgPlus(inputHeader)
 				return input, noAction, noType, noMsg, idle, nil
 			}
 
 		// For the case that receive the newly proposes block or pre-prepare message
 		case preprepareMsg:
 			if sm.verifyBlock(inputBlock) {
-				return composePrepareMsg(inputBlock), broadcastMsg, header, prepareMsg, preprepared, nil
+				ret, err := sm.composePrepareMsg(inputBlock)
+				if err != nil {
+					return nil, noAction, noType, noMsg, idle, err
+				}
+				return ret, broadcastMsg, header, prepareMsg, preprepared, nil
 			} else {
 				err = errors.New("the proposed block is illegal")
-				return proposeEmptyBlock(), insertBlock, block, impeachPrepareMsg, idle, err
-				//TODO: return an impeach block
+				return sm.proposeImpeachBlock(), insertBlock, block, impeachPrepareMsg, idle, err
 			}
 		}
 		err = errors.New("not a proper input for idle state")
@@ -175,20 +280,24 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 
 		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
-			if commitCertificate(inputHeader) {
-				return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
+			if sm.commitCertificate(inputHeader) {
+				return sm.composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
 			} else {
 				// Add one to the counter of commit messages
-				commitMsgPlus(inputHeader)
+				sm.commitMsgPlus(inputHeader)
 				return input, noAction, noType, noMsg, preprepared, nil
 			}
 		// Convert to prepared state if collect prepare certificate
 		case prepareMsg:
-			if prepareCertificate(inputHeader) {
-				return composeCommitMsg(inputHeader), broadcastMsg, header, commitMsg, prepared, nil
+			if sm.prepareCertificate(inputHeader) {
+				ret, err := sm.composeCommitMsg(inputHeader)
+				if err != nil {
+					return nil, noAction, noType, noMsg, preprepared, nil
+				}
+				return ret, broadcastMsg, header, commitMsg, prepared, nil
 			} else {
 				// Add one to the counter of prepare messages
-				prepareMsgPlus(inputHeader)
+				sm.prepareMsgPlus(inputHeader)
 				return input, noAction, noType, noMsg, idle, nil
 			}
 		}
@@ -203,11 +312,11 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 
 		// convert to committed state if collects commit certificate
 		case commitMsg:
-			if commitCertificate(inputHeader) {
-				return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
+			if sm.commitCertificate(inputHeader) {
+				return sm.composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
 			} else {
 				// Add one to the counter of commit messages
-				commitMsgPlus(inputHeader)
+				sm.commitMsgPlus(inputHeader)
 				return input, noAction, noType, noMsg, preprepared, nil
 			}
 		}
@@ -215,7 +324,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 
 	// Broadcast a validate message and then go back to idle state
 	case committed:
-		return composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
+		return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
 
 		// Insert the block and go back to idle state
 		//case inserting:

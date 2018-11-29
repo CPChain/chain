@@ -17,11 +17,11 @@
 package dpor
 
 import (
+	"bitbucket.org/cpchain/chain/accounts"
 	"math/big"
 	"reflect"
 	"time"
 
-	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
@@ -397,10 +397,16 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 		return errInvalidValidatorSigs
 	}
 
+	count := 0
 	for i, v := range validators {
-		if v != expectValidators[i] {
-			return errInvalidValidatorSigs
+		if v == expectValidators[i] {
+			count++
 		}
+	}
+
+	// if not reached to 2f + 1, the validation fails
+	if count < (len(validators)-1)/3*2+1 {
+		return errInvalidValidatorSigs
 	}
 
 	// pass
@@ -409,7 +415,6 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 
 // signHeader signs the given refHeader if self is in the committee
 func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error {
-	hash := header.Hash()
 	number := header.Number.Uint64()
 
 	// Retrieve the Snapshot needed to verify this header and cache it
@@ -418,41 +423,28 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		return err
 	}
 
-	// Retrieve signatures of the block in cache
-	s, ok := dpor.signatures.Get(hash)
-	if !ok {
-		s = &Signatures{
-			sigs: make(map[common.Address][]byte),
-		}
-	}
-
-	// Copy all signatures to allSigs
-	allSigs := make([]types.DporSignature, dpor.config.TermLen)
-	for signPos, signer := range snap.ValidatorsOf(number) {
-		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
-			copy(allSigs[signPos][:], sigHash)
-		}
-	}
-	header.Dpor.Sigs = allSigs
-
 	// Sign the block if self is in the committee
 	if snap.IsValidatorOf(dpor.signer, number) {
-
 		// NOTE: sign a block only once
 		if signedHash, signed := dpor.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {
 			return errMultiBlocksInOneHeight
 		}
 
-		// Sign it!
-		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, dpor.dh.sigHash(header).Bytes())
+		var bytesToHash []byte
+		// Sign it
+		if state == consensus.Preparing {
+			bytesToHash = append([]byte{'P'}, dpor.dh.sigHash(header).Bytes()...) // Preparing block signed by 'P'+hash
+		} else {
+			bytesToHash = dpor.dh.sigHash(header).Bytes()
+		}
+		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, bytesToHash)
 		if err != nil {
 			return err
 		}
 
 		// Copy signer's signature to the right position in the allSigs
 		sigPos, _ := snap.ValidatorViewOf(dpor.signer, number)
-		copy(allSigs[sigPos][:], sighash)
-		header.Dpor.Sigs = allSigs
+		copy(header.Dpor.Sigs[sigPos][:], sighash)
 
 		return nil
 	}

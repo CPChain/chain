@@ -87,6 +87,9 @@ type DporService interface {
 	// VerifyValidatorOf verifies if an address is a validator of given term
 	VerifyValidatorOf(signer common.Address, term uint64) (bool, error)
 
+	// ValidatorsOf returns the list of validators in committee for the specified block number
+	ValidatorsOf(number uint64) ([]common.Address, error)
+
 	// VerifyHeaderWithState verifies the given header
 	// if in preprepared state, verify basic fields
 	// if in prepared state, verify if enough prepare sigs
@@ -122,6 +125,9 @@ type DporService interface {
 
 	// ImpeachTimeout returns the timeout for impeachment
 	ImpeachTimeout() time.Duration
+
+	// Recover signer address from signatures
+	EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, error)
 }
 
 type HandlerMode uint
