@@ -139,9 +139,11 @@ func ValidatorHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Addre
 		select {
 		case err := <-errc:
 			if err != nil {
+				log.Debug("err when handshaking", "err", err)
 				return false, common.Address{}, err
 			}
 		case <-timeout.C:
+			log.Debug("handshaking time out", "err", err)
 			return false, common.Address{}, p2p.DiscReadTimeout
 		}
 	}

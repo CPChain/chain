@@ -20,14 +20,13 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			return err
 		}
 
+		number := block.NumberU64()
+		hash := block.Hash()
+
 		log.Debug("received preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-		localBlock, err := vh.GetPendingBlock(block.NumberU64())
-		if localBlock != nil && err == nil && localBlock.Block != nil {
-			if localBlock.Status == Inserted {
-				// go h.broadcastBlockFn(localBlock.Block, true)
-				return nil
-			}
+		if vh.dpor.HasBlockInChain(hash, number) {
+			return nil
 		}
 
 		// Verify the block
@@ -47,7 +46,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 				log.Debug("signed preprepare header, adding to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 				// add block to pending block cache of blockchain
-				if err := vh.AddPendingBlock(block.WithSeal(header)); err != nil {
+				if err := vh.knownBlocks.AddBlock(block.WithSeal(header)); err != nil {
 					return err
 				}
 
@@ -90,15 +89,15 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			log.Debug("verified signed prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
-			block, err := vh.GetPendingBlock(header.Number.Uint64())
-			if block == nil || block.Block == nil {
+			block, err := vh.knownBlocks.GetBlock(header.Number.Uint64())
+			if block == nil {
 				// TODO: remove this line
 				return nil
 			}
 
 			log.Debug("inserting block to block chain", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
-			blk := block.Block.WithSeal(header)
+			blk := block.WithSeal(header)
 			err = vh.dpor.InsertChain(blk)
 			if err != nil {
 				log.Warn("err when inserting header", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
@@ -110,15 +109,9 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			go vh.dpor.BroadcastBlock(blk, true)
 			go vh.dpor.BroadcastBlock(blk, false)
 
-			err = vh.AddPendingBlock(blk)
+			err = vh.knownBlocks.AddBlock(blk)
 			if err != nil {
 				// TODO: remove this
-				return nil
-			}
-
-			err = vh.UpdateBlockStatus(block.NumberU64(), Inserted)
-			if err != nil {
-				log.Warn("err when updating block status", "number", block.NumberU64(), "err", err)
 				return nil
 			}
 
@@ -127,7 +120,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			log.Debug("without enough sigs in siged prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
-			switch e := vh.dpor.VerifyHeaderWithState(header, consensus.Committing); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Committing); e {
 			case nil:
 
 				log.Debug("signed prepare header, broadcasting...", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
@@ -137,9 +130,9 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			default:
 
 				// TODO: remove this
-				block, err := vh.GetPendingBlock(header.Number.Uint64())
-				if block != nil && block.Block != nil && vh.dpor.HasBlockInChain(header.Hash(), header.Number.Uint64()) {
-					vh.BroadcastMinedBlock(block.Block)
+				block, err := vh.knownBlocks.GetBlock(header.Number.Uint64())
+				if block != nil && !vh.dpor.HasBlockInChain(header.Hash(), header.Number.Uint64()) {
+					vh.BroadcastMinedBlock(block)
 					return nil
 				}
 
@@ -209,7 +202,7 @@ func (vh *Handler) handlePreprepareMsg(msg p2p.Msg, p *RemoteValidator) error {
 		header := block.RefHeader()
 
 		// add block to pending block cache of blockchain
-		if err := vh.AddPendingBlock(block); err != nil {
+		if err := vh.knownBlocks.AddBlock(block); err != nil {
 			return err
 		}
 
@@ -308,7 +301,7 @@ func (vh *Handler) handleCommitMsg(msg p2p.Msg, p *RemoteValidator) error {
 			vh.dpor.StatusUpdate()
 			// now committed
 
-			if block, err := vh.GetPendingBlock(header.Number.Uint64()); block != nil && err == nil {
+			if block, err := vh.knownBlocks.GetBlock(header.Number.Uint64()); block != nil && err == nil {
 
 				blk := block.WithSeal(header)
 

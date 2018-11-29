@@ -9,10 +9,27 @@ import (
 
 // BroadcastMinedBlock broadcasts generated block to committee
 func (h *Handler) BroadcastMinedBlock(block *types.Block) {
-	h.lock.Lock()
-	defer h.lock.Unlock()
 
+	log.Debug("proposed new pending block, broadcasting")
+
+	ready := false
 	term := h.dpor.TermOf(block.NumberU64())
+
+	for !ready {
+		time.Sleep(1 * time.Second)
+
+		validators := h.dialer.ValidatorsOf(term)
+
+		log.Debug("signer in dpor handler when broadcasting...")
+		for addr := range validators {
+			log.Debug("signer", "addr", addr.Hex())
+		}
+
+		if len(validators) >= int(h.config.TermLen) {
+			ready = true
+		}
+	}
+
 	committee := h.dialer.ValidatorsOf(term)
 
 	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
@@ -56,26 +73,6 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 	for {
 		select {
 		case pendingBlock := <-h.pendingBlockCh:
-
-			log.Debug("proposed new pending block, broadcasting")
-
-			ready := false
-			term := h.dpor.TermOf(pendingBlock.NumberU64())
-
-			for !ready {
-				time.Sleep(1 * time.Second)
-
-				validators := h.dialer.ValidatorsOf(term)
-
-				log.Debug("signer in dpor handler when broadcasting...")
-				for addr := range validators {
-					log.Debug("signer", "addr", addr.Hex())
-				}
-
-				if len(validators) >= int(h.config.TermLen) {
-					ready = true
-				}
-			}
 
 			// broadcast mined pending block to remote signers
 			go h.BroadcastMinedBlock(pendingBlock)
