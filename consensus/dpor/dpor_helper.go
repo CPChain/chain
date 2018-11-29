@@ -30,7 +30,7 @@ import (
 
 type dporHelper interface {
 	dporUtil
-	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
+	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, verifySigs bool) error
 	snapshot(d *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error)
 	verifySeal(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	verifySigs(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
@@ -46,14 +46,15 @@ type defaultDporHelper struct {
 // validateBlock checks basic fields in a block
 func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block) error {
 	// TODO: @AC consider if we need to verify body, as well as process txs and validate state
-	return dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader())
+	return dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), false)
 }
 
 // verifyHeader checks whether a header conforms to the consensus rules.The
 // caller may optionally pass in a batch of parents (ascending order) to avoid
 // looking those up from the database. This is useful for concurrently verifying
 // a batch of new headers.
-func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header,
+	refHeader *types.Header, verifySigs bool) error {
 	if header.Number == nil {
 		return errUnknownBlock
 	}
@@ -117,10 +118,18 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 		return err
 	}
 
-	// Verify dpor seal
-	if err := d.dh.verifySeal(d, chain, header, parents, refHeader); err != nil {
+	// verify dpor seal
+	if err := dh.verifySeal(d, chain, header, parents, refHeader); err != nil {
 		log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
 		return err
+	}
+
+	// verify dpor sigs if required
+	if verifySigs {
+		if err := dh.verifySigs(d, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
+			return err
+		}
 	}
 	return nil
 }
@@ -211,7 +220,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		if numberIter == 0 {
 			// Retrieve genesis block and verify it
 			genesis := chain.GetHeaderByNumber(0)
-			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil); err != nil {
+			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil, false); err != nil {
 				return nil, err
 			}
 
@@ -303,12 +312,6 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return nil
 	}
 
-	inserted := chain.GetHeaderByHash(hash)
-	// Already in chain
-	if inserted != nil {
-		return nil
-	}
-
 	// Resolve the authorization key and check against signers
 	proposer, _, err := dh.ecrecover(header, dpor.signatures)
 	if err != nil {
@@ -316,22 +319,17 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Retrieve the Snapshot needed to verify this header and cache it
-	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
+	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents[:len(parents)-1])
 	if err != nil {
 		return err
 	}
 
 	// Some debug infos here
-	log.Debug("--------dpor.verifySeal start--------")
+	log.Debug("--------dpor.verifySeal--------")
 	log.Debug("hash", "hash", hash.Hex())
 	log.Debug("number", "number", number)
 	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
-	log.Debug("leader", "address", proposer.Hex())
-	log.Debug("validators recovered from header: ")
-	log.Debug("validators in snapshot: ")
-	for _, signer := range snap.ValidatorsOf(number) {
-		log.Debug("validator", "address", signer.Hex())
-	}
+	log.Debug("proposer", "address", proposer.Hex())
 
 	// Check if the proposer is right proposer
 	ok, err := snap.IsProposerOf(proposer, number)
@@ -348,9 +346,64 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 // verifySigs verifies whether the signatures of the header is signed by correct validator committee
 func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+	number := header.Number.Uint64()
 
-	dpor.currentSnapshot = snap
+	// Verifying the genesis block is not supported
+	if number == 0 {
+		return errUnknownBlock
+	}
 
+	// Fake Dpor doesn't do seal check
+	if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
+		time.Sleep(dpor.fakeDelay)
+		if dpor.fakeFail == number {
+			return errFakerFail
+		}
+		return nil
+	}
+
+	// Resolve the authorization keys
+	proposer, validators, err := dh.ecrecover(header, dpor.signatures)
+	if err != nil {
+		return err
+	}
+
+	// Retrieve the Snapshot needed to verify this header and cache it
+
+	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents[:len(parents)-1])
+	if err != nil {
+		return err
+	}
+
+	expectValidators := snap.ValidatorsOf(number)
+
+	hash := header.Hash()
+	// Some debug infos here
+	log.Debug("--------dpor.verifySigs--------")
+	log.Debug("hash", "hash", hash.Hex())
+	log.Debug("number", "number", number)
+	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
+	log.Debug("proposer", "address", proposer.Hex())
+	log.Debug("validators recovered from header: ")
+	for idx, validator := range validators {
+		log.Debug("validator", "addr", validator.Hex(), "idx", idx)
+	}
+	log.Debug("validators in snapshot: ")
+	for idx, signer := range expectValidators {
+		log.Debug("validator", "addr", signer.Hex(), "idx", idx)
+	}
+
+	if len(validators) != len(expectValidators) {
+		return errInvalidValidatorSigs
+	}
+
+	for i, v := range validators {
+		if v != expectValidators[i] {
+			return errInvalidValidatorSigs
+		}
+	}
+
+	// pass
 	return nil
 }
 

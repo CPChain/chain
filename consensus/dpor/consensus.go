@@ -94,6 +94,9 @@ var (
 	// errInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	errInvalidSigners = errors.New("invalid signer list on checkpoint block")
 
+	// errInvalidValidatorSigs is returned if the dpor sigs are not sigend by correct validator committtee.
+	errInvalidValidatorSigs = errors.New("invalid validator signatures")
+
 	// errNoSigsInCache is returned if the cache is unable to store and return sigs.
 	errNoSigsInCache = errors.New("signatures not found in cache")
 
@@ -122,20 +125,20 @@ func (d *Dpor) Author(header *types.Header) (common.Address, error) {
 }
 
 // VerifyHeader checks whether a header conforms to the consensus rules.
-func (d *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool, refHeader *types.Header) error {
-	return d.dh.verifyHeader(d, chain, header, nil, refHeader)
+func (d *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, verifySigs bool, refHeader *types.Header) error {
+	return d.dh.verifyHeader(d, chain, header, nil, refHeader, verifySigs)
 }
 
 // VerifyHeaders is similar to VerifyHeader, but verifies a batch of headers. The
 // method returns a quit channel to abort the operations and a results channel to
 // retrieve the async verifications (the order is that of the input slice).
-func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, seals []bool, refHeaders []*types.Header) (chan<- struct{}, <-chan error) {
+func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, verifySigs []bool, refHeaders []*types.Header) (chan<- struct{}, <-chan error) {
 	abort := make(chan struct{})
 	results := make(chan error, len(headers))
 
 	go func() {
 		for i, header := range headers {
-			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i])
+			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i], verifySigs[i])
 
 			select {
 			case <-abort:
@@ -151,6 +154,10 @@ func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Heade
 // in the header satisfies the consensus protocol requirements.
 func (d *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, refHeader *types.Header) error {
 	return d.dh.verifySeal(d, chain, header, nil, refHeader)
+}
+
+func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, refHeader *types.Header) error {
+	return d.dh.verifySigs(d, chain, header, nil, refHeader)
 }
 
 // PrepareBlock implements consensus.Engine, preparing all the consensus fields of the
