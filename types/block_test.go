@@ -165,48 +165,25 @@ func TestBlockDporRlp(t *testing.T) {
 	fmt.Println(bb)
 }
 
-func TestBlockDporJson(t *testing.T) {
-	newHeader := &Header{}
-	newHeader.Extra = append(common.FromHex("0x0000000000000000000000000000000000000000000000000000000000000000"))
-	newHeader.Dpor.Proposers = []common.Address{addr1, addr2}
-	newHeader.Dpor.Seal = seal
-	newHeader.Dpor.Sigs = []DporSignature{sig1, sig2}
-	dpor := CopyDporSnap(&newHeader.Dpor)
-
-	jsonBytes, err := json.Marshal(dpor)
+func TestDporSignatureJsonEncoding(t *testing.T) {
+	sig := HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00")
+	jsonBytes, err := json.Marshal(sig)
 
 	if err != nil {
-		fmt.Println("err:", err)
+		t.Error("error:", err)
 	}
 	fmt.Println("jsonBytes:", string(jsonBytes))
 
-	var ss DporSnap
-	err = json.Unmarshal(jsonBytes, &ss)
+	var aa DporSignature
+	err = json.Unmarshal(jsonBytes, &aa)
 	if err != nil {
-		t.Error("Unmarshal error", "error", err)
+		t.Error("error:", err)
 	}
-	fmt.Println(ss.Proposers)
-	fmt.Println(ss.Seal)
-
+	fmt.Printf("\nunmarshal:%+v\n", aa)
+	assert.Equal(t, sig, aa)
 }
 
-func TestBlock_WithSeal(t *testing.T) {
-	jsonBytes, err := json.Marshal(sig1)
-
-	if err != nil {
-		fmt.Println("err:", err)
-	}
-	fmt.Println("jsonBytes:", string(jsonBytes))
-
-	var ss DporSignature
-	err = json.Unmarshal(jsonBytes, &ss)
-	if err != nil {
-		t.Error("Unmarshal error", "error", err)
-	}
-	fmt.Println(ss)
-}
-
-func TestUnmarshalDporSnap(t *testing.T) {
+func TestDporSnapJsonEncoding(t *testing.T) {
 	dpor := DporSnap{
 		Seal:       seal,
 		Sigs:       []DporSignature{sig1, sig2},
@@ -232,7 +209,7 @@ func TestUnmarshalDporSnap(t *testing.T) {
 	fmt.Println("Validators:", dporSnap.Validators)
 	fmt.Println("============================================================")
 
-	jsonBytes, err = json.Marshal(dpor)
+	jsonBytes, err = json.Marshal(dporSnap)
 	if err != nil {
 		fmt.Println("err:", err)
 	}
@@ -240,4 +217,6 @@ func TestUnmarshalDporSnap(t *testing.T) {
 	fmt.Println("new json:", string2)
 
 	assert.Equal(t, string1, string2)
+	assert.Equal(t, dpor, dporSnap)
+
 }
