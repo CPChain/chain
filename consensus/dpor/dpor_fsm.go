@@ -126,9 +126,9 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 	// The case of idle state
 	case idle:
 		switch msg {
-		// Jump to inserting state if receives validate message
+		// Jump to committed state if receives validate message
 		case validateMsg:
-			return inputBlock, noAction, noType, noMsg, inserting, nil
+			return inputBlock, noAction, noType, noMsg, committed, nil
 
 		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
@@ -165,11 +165,11 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 	// The case of pre-prepared state
 	case preprepared:
 		switch msg {
-		// Jump to inserting state if receive a validate message
+		// Jump to committed state if receive a validate message
 		case validateMsg:
-			return inputBlock, noAction, noType, noMsg, inserting, nil
+			return inputBlock, noAction, noType, noMsg, committed, nil
 
-			// Jump to committed state if receive 2f+1 commit messages
+		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if commitCertificate(inputHeader) {
 				return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
@@ -193,9 +193,9 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 	// The case of prepared stage
 	case prepared:
 		switch msg {
-		// Jump to inserting state if receive a validate message
+		// Jump to committed state if receive a validate message
 		case validateMsg:
-			return inputBlock, noAction, noType, noMsg, inserting, nil
+			return inputBlock, noAction, noType, noMsg, committed, nil
 
 		// convert to committed state if collects commit certificate
 		case commitMsg:
@@ -209,13 +209,13 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 		}
 		err = errors.New("not a proper input for prepared state")
 
-	// Broadcast a validate message and then enter inserting state
+	// Broadcast a validate message and then go back to idle state
 	case committed:
-		return composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, inserting, nil
+		return composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
 
-	// Insert the block and go back to idle state
-	case inserting:
-		return inputBlock, insertBlock, block, noMsg, idle, nil
+		// Insert the block and go back to idle state
+		//case inserting:
+		//	return inputBlock, insertBlock, block, noMsg, idle, nil
 	}
 
 	return nil, noAction, noType, noMsg, state, err
