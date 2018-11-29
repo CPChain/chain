@@ -260,6 +260,7 @@ func (b *APIBackend) RNode() ([]common.Address, uint64) {
 func (b *APIBackend) CurrentView() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
+	ct := b.CurrentTerm()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.TermLen
 	view := ((bn.Uint64() - 1) % (vl * tl)) / vl
 	return view
