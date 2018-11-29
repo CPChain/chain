@@ -349,6 +349,8 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 // verifySigs verifies whether the signatures of the header is signed by correct validator committee
 func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 
+	dpor.currentSnapshot = snap
+
 	return nil
 }
 
@@ -453,7 +455,7 @@ func (dh *defaultDporHelper) uploadNodeInfo(dpor *Dpor, snap *DporSnapshot, numb
 		log.Debug("err when updating remote validators", "err", err)
 
 		// Connect all
-		err = dpor.validatorHandler.UploadEncryptedNodeInfo()
+		err = dpor.validatorHandler.UploadEncryptedNodeInfo(eIdx)
 		log.Debug("err when uploading my node info", "err", err)
 
 	}(term, signers)

@@ -295,6 +295,8 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	header.Dpor.Sigs = make([]types.DporSignature, len(header.Dpor.Validators))
 	log.Info("sealed the block", "hash", header.Hash().Hex(), "number", header.Number)
 
+	d.currentSnapshot = snap
+
 	return block.WithSeal(header), nil
 }
 

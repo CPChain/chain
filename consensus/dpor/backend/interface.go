@@ -70,13 +70,22 @@ type PbftHandler interface {
 	Stop() error
 }
 
-type VerifyRemoteValidatorFn func(signer common.Address) (bool, error)
+// VerifyFutureSignerFn verifies if a signer is a future signer at given term
+type VerifyFutureSignerFn func(signer common.Address, term uint64) (bool, error)
 
 // DporService provides functions used by dpor handler
 type DporService interface {
+	// TermOf returns the term number of given block number
+	TermOf(number uint64) uint64
 
-	// VerifyRemoteValidator validates if a given address is signer of current epoch
-	VerifyRemoteValidator(signer common.Address) (bool, error)
+	// FutureTermOf returns the future term number of given block number
+	FutureTermOf(number uint64) uint64
+
+	// VerifyProposerOf verifies if an address is a proposer of given term
+	VerifyProposerOf(signer common.Address, term uint64) (bool, error)
+
+	// VerifyValidatorOf verifies if an address is a validator of given term
+	VerifyValidatorOf(signer common.Address, term uint64) (bool, error)
 
 	// VerifyHeaderWithState verifies the given header
 	// if in preprepared state, verify basic fields
@@ -104,6 +113,9 @@ type DporService interface {
 
 	// CreateImpeachBlock returns an impeachment block for view change
 	CreateImpeachBlock() (*types.Block, error)
+
+	// GetCurrentBlock returns current block
+	GetCurrentBlock() *types.Block
 
 	// HasBlockInChain returns if a block is in local chain
 	HasBlockInChain(hash common.Hash, number uint64) bool

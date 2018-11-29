@@ -47,6 +47,8 @@ type Dpor struct {
 
 	signedBlocks map[uint64]common.Hash // record signed blocks.
 
+	currentSnapshot *DporSnapshot
+
 	proposer common.Address // Cpchain address of the proposer
 	signer   common.Address // signer is the validator
 	signFn   SignFn         // Sign function to authorize hashes with
@@ -179,6 +181,12 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	log.Debug("set available!!!!!!!!!!!!!!!!!")
 	d.validatorHandler.SetAvailable()
 
+	header := d.chain.CurrentHeader()
+	number := header.Number.Uint64()
+	hash := header.Hash()
+
+	d.currentSnapshot, _ = d.dh.snapshot(d, d.chain, number, hash, nil)
+
 	go d.validatorHandler.Start()
 
 	return
@@ -210,17 +218,17 @@ func (d *Dpor) Proposer() common.Address {
 	return d.proposer
 }
 
-// ValidateSigner validates if given address is future signer
-func (d *Dpor) ValidateSigner(address common.Address) (bool, error) {
-	number := d.chain.CurrentHeader().Number.Uint64()
-	return d.IsFutureSigner(d.chain, address, number)
-}
+// // ValidateSigner validates if given address is future signer
+// func (d *Dpor) ValidateSigner(address common.Address) (bool, error) {
+// 	number := d.chain.CurrentHeader().Number.Uint64()
+// 	return d.IsFutureSigner(d.chain, address, number)
+// }
 
-// validateProposer validates if given address is future proposer
-func (d *Dpor) ValidateProposer(address common.Address) (bool, error) {
-	number := d.chain.CurrentHeader().Number.Uint64()
-	return d.IsFutureProposer(d.chain, address, number)
-}
+// // validateProposer validates if given address is future proposer
+// func (d *Dpor) ValidateProposer(address common.Address) (bool, error) {
+// 	number := d.chain.CurrentHeader().Number.Uint64()
+// 	return d.IsFutureProposer(d.chain, address, number)
+// }
 
 // Protocol returns Dpor p2p protocol
 func (d *Dpor) Protocol() consensus.Protocol {
