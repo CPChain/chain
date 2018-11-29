@@ -30,10 +30,9 @@ import (
 
 var (
 	endPoint                = "http://localhost:8501"
-	// @xumx cleanup.  why absolute path?
-	keyStoreFilePath        = "/chain/examples/cpchain/data/data1/keystore/"
-	DefaultCPUDifficulty    = uint64(25)
-	DefaultMemoryDifficulty = uint64(25)
+	keyStoreFilePath        = "./chain/examples/cpchain/data/data1/keystore/"
+	DefaultCPUDifficulty    = uint64(3)
+	DefaultMemoryDifficulty = uint64(3)
 )
 
 // overwrite from environment variables
@@ -41,6 +40,11 @@ func init() {
 	if val := os.Getenv("CPCHAIN_KEYSTORE_FILEPATH"); val != "" {
 		keyStoreFilePath = val
 	}
+}
+
+func SetConfig(ep, ksPath string) {
+	endPoint = ep
+	keyStoreFilePath = ksPath
 }
 
 func Connect() (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {

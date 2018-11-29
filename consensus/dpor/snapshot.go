@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"math/big"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -11,13 +12,13 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
-
 	// TermGapBetweenElectionAndMining is the the term gap between election and mining.
 	TermGapBetweenElectionAndMining = 3
 
@@ -26,8 +27,9 @@ const (
 )
 
 var (
-	errSignerNotInCommittee = errors.New("signer not in committee")
-	errGenesisBlockNumber   = errors.New("genesis block has no leader")
+	errSignerNotInCommittee   = errors.New("signer not in committee")
+	errGenesisBlockNumber     = errors.New("genesis block has no leader")
+	errInsufficientCandidates = errors.New("insufficient candidates")
 )
 
 // Snapshot is used to check if a received block is valid by create a snapshot from previous blocks
@@ -252,7 +254,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *consensus.
 	for _, header := range headers {
 		err := snap.applyHeader(header)
 		if err != nil {
-			log.Warn("DporSnapshot apply header error.", err)
+			log.Warn("DporSnapshot apply header error.", "err", err)
 			return nil, err
 		}
 	}
@@ -297,46 +299,44 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	return nil
 }
 
-// updateCandidates updates candidates from campaign contract
+// updateCandidates updates proposer candidates from campaign contract
 func (s *DporSnapshot) updateCandidates() error {
 
-	// Default Signers/Candidates
-	candidates := []common.Address{
-		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
-		common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
-		common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"),
-		common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
-		common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
-		common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
-		common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
+	var candidates []common.Address
+
+	if s.Mode == NormalMode && s.ifStartElection() {
+		contractCaller := s.contractCaller()
+		// If contractCaller is not nil, use it to update candidates from contract
+		if contractCaller != nil {
+			// Creates an contract instance
+			campaignAddress := s.config.Contracts[configs.ContractCampaign]
+			log.Info("campaignAddress", "addr", campaignAddress.Hex())
+			contractInstance, err := campaign.NewCampaign(campaignAddress, contractCaller.Client)
+			if err != nil {
+				log.Error("new Campaign error", err)
+				return err
+			}
+
+			term := s.TermOf(s.Number)
+			// Read candidates from the contract instance
+			cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
+			if err != nil {
+				log.Error("read Candidates error", "err", err)
+				return err
+			}
+
+			log.Info("candidates Of term", "len(candidates)", len(cds), "term", term)
+			// If useful, use it!
+			if uint64(len(cds)) >= s.config.TermLen {
+				candidates = cds
+			}
+		}
 	}
 
-	// contractCaller := s.contractCaller()
-
-	// If contractCaller is not nil, use it to update candidates from contract
-	// if contractCaller != nil {
-
-	// 	// Creates an contract instance
-	// 	campaignAddress := s.config.Contracts["campaign"]
-	// 	contractInstance, err := contract.NewCampaign(campaignAddress, contractCaller.Client)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// Read candidates from the contract instance
-	// 	cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// If useful, use it!
-	// 	if uint64(len(cds)) > s.config.TermLen {
-	// 		candidates = cds
-	// 	}
-	// }
+	if uint64(len(candidates)) < s.config.TermLen {
+		log.Debug("no enough candidates,use default candidates")
+		candidates = configs.DefaultCandidates
+	}
 
 	s.setCandidates(candidates)
 	return nil
@@ -382,6 +382,10 @@ func (s *DporSnapshot) ifStartElection() bool {
 
 // updateView use rpt and election result to get new committee(signers)
 func (s *DporSnapshot) updateSigners(rpts rpt.RptList, seed int64) error {
+	if uint64(len(s.candidates())) < s.config.TermLen {
+		log.Warn("Insufficient candidates", "want", s.config.TermLen, "got", len(s.candidates()))
+		return errInsufficientCandidates
+	}
 
 	signers := s.candidates()[:s.config.TermLen]
 
