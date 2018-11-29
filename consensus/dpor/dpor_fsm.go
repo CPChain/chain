@@ -13,6 +13,7 @@ const (
 	noAction action = iota
 	broadcastMsg
 	insertBlock
+	broadcastAndInsertBlock
 )
 
 //Type enumerator for FSM output
