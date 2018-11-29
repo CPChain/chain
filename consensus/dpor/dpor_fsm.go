@@ -23,7 +23,7 @@ const (
 	noType dataType = iota
 	header
 	block
-	emptyBlock
+	impeachBlock
 )
 
 //Type enumerator for FSM message type
@@ -35,9 +35,9 @@ const (
 	prepareMsg
 	commitMsg
 	validateMsg
-	emptyPrepareMsg
-	emptyCommitMsg
-	emptyValidateMsg
+	impeachPrepareMsg
+	impeachCommitMsg
+	impeachValidateMsg
 )
 
 //Type enumerator for FSM states
@@ -49,8 +49,8 @@ const (
 	prepared
 	committed
 	inserting
-	impeachmentPrepared
-	impeachment
+	impeachPrepared
+	impeach
 )
 
 //verifyBlock is a func to verify whether the block is legal
@@ -65,7 +65,7 @@ func commitCertificate(h *types.Header) bool {
 	//TODO: @shiyc implement it
 }
 
-//composeValidateMsg is to return the validate message, which is the proposed block or empty block
+//composeValidateMsg is to return the validate message, which is the proposed block or impeach block
 func composeValidateMsg(h *types.Header) *types.Block {
 	return
 	//TODO: @shiyc implement it
@@ -97,7 +97,7 @@ func composePrepareMsg(h *types.Block) *types.Header {
 	return h.Header()
 }
 
-//It is used to propose an empty block
+//It is used to propose an impeach block
 func proposeEmptyBlock() *types.Block {
 	var b *types.Block
 	return b
@@ -115,7 +115,7 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 		inputHeader = input.(*types.Header)
 	case block:
 		inputBlock = input.(*types.Block)
-	case emptyBlock:
+	case impeachBlock:
 		inputBlock = input.(*types.Block)
 	default:
 		err = errors.New("an unexpected input data type")
@@ -156,8 +156,8 @@ func Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (in
 				return composePrepareMsg(inputBlock), broadcastMsg, header, prepareMsg, preprepared, nil
 			} else {
 				err = errors.New("the proposed block is illegal")
-				return proposeEmptyBlock(), insertBlock, block, emptyPrepareMsg, idle, err
-				//TODO: return an empty block
+				return proposeEmptyBlock(), insertBlock, block, impeachPrepareMsg, idle, err
+				//TODO: return an impeach block
 			}
 		}
 		err = errors.New("not a proper input for idle state")
