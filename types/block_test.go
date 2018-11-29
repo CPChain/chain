@@ -232,7 +232,7 @@ func TestUnmarshalDporSnap(t *testing.T) {
 	fmt.Println("Validators:", dporSnap.Validators)
 	fmt.Println("============================================================")
 
-	jsonBytes, err = json.Marshal(dpor)
+	jsonBytes, err = json.Marshal(dporSnap)
 	if err != nil {
 		fmt.Println("err:", err)
 	}
