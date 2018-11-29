@@ -33,6 +33,7 @@ import (
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"bitbucket.org/cpchain/chain/types"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/event"
@@ -258,9 +259,9 @@ func (b *APIBackend) RNode() ([]common.Address, uint64) {
 func (b *APIBackend) CurrentView() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
-	ct := b.CurrentTerm()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.TermLen
-	View := (uint64(bn.Uint64()) - ct*(vl*tl)) / vl
+	View := (uint64(bn.Uint64()) % (vl * tl)) / (vl + 1)
+	fmt.Println("the View is :", View)
 	return View
 }
 
@@ -268,7 +269,7 @@ func (b *APIBackend) CurrentTerm() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
-	Term := uint64(bn.Uint64()) / (vl * tl)
+	Term := uint64(bn.Uint64()) / ((vl * tl) + 1)
 	return Term
 }
 
