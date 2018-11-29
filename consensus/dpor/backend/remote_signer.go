@@ -30,10 +30,10 @@ type RemoteSigner struct {
 	rw      p2p.MsgReadWriter
 	version int
 
-	epochIdx uint64
-	pubkey   []byte
-	nodeID   string
-	address  common.Address
+	term    uint64
+	pubkey  []byte
+	nodeID  string
+	address common.Address
 
 	dialed        bool // bool to show if i already connected to this signer.
 	pubkeyFetched bool
@@ -49,19 +49,35 @@ type RemoteProposer struct {
 }
 
 // NewRemoteSigner creates a new remote signer
-func NewRemoteSigner(epochIdx uint64, address common.Address) *RemoteSigner {
+func NewRemoteSigner(term uint64, address common.Address) *RemoteSigner {
 	return &RemoteSigner{
-		epochIdx: epochIdx,
-		address:  address,
+		term:    term,
+		address: address,
 	}
 
 }
 
 // NewRemoteProposer creates a new remote proposer
-func NewRemoteProposer(epochIdx uint64, address common.Address) *RemoteProposer {
+func NewRemoteProposer(term uint64, address common.Address) *RemoteProposer {
 	return &RemoteProposer{
-		RemoteSigner: NewRemoteSigner(epochIdx, address),
+		RemoteSigner: NewRemoteSigner(term, address),
 	}
+}
+
+// SetTerm sets term of signer
+func (s *RemoteSigner) SetTerm(term uint64) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.term = term
+}
+
+// GetTerm sets term of signer
+func (s *RemoteSigner) GetTerm() uint64 {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	return s.term
 }
 
 // AddStatic adds remote validator as a static peer
@@ -100,7 +116,7 @@ func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) e
 }
 
 // ValidatorHandshake tries to handshake with remote validator
-func ValidatorHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, verifyRemoteValidatorFn VerifyRemoteValidatorFn) (isValidator bool, address common.Address, err error) {
+func ValidatorHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyRemoteValidatorFn VerifyFutureSignerFn) (isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var validatorStatus ValidatorStatusData // safe to read after two values have been received from errc
@@ -109,6 +125,7 @@ func ValidatorHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Addre
 		err := p2p.Send(rw, NewValidatorMsg, &ValidatorStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         coinbase,
+			Term:            term,
 		})
 		errc <- err
 	}()
@@ -132,7 +149,7 @@ func ValidatorHandshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Addre
 }
 
 // ReadValidatorStatus reads status of remote validator
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, validatorStatus *ValidatorStatusData, verifyValidatorFn VerifyRemoteValidatorFn) (isValidator bool, address common.Address, err error) {
+func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, validatorStatus *ValidatorStatusData, verifyValidatorFn VerifyFutureSignerFn) (isValidator bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
 		return false, common.Address{}, err
@@ -154,7 +171,7 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, validatorStatus *Val
 	// TODO: this (addr, ...) pair should be signed with its private key.
 	// @liuq
 
-	isValidator, err = verifyValidatorFn(validatorStatus.Address)
+	isValidator, err = verifyValidatorFn(validatorStatus.Address, validatorStatus.Term)
 	return isValidator, validatorStatus.Address, err
 }
 
@@ -181,13 +198,13 @@ func (s *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionRe
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
 func (s *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
-	epochIdx, address := s.epochIdx, s.address
+	term, address := s.term, s.address
 
 	log.Debug("fetching nodeID of remote signer")
-	log.Debug("epoch", "idx", epochIdx)
+	log.Debug("epoch", "idx", term)
 	log.Debug("signer", "addr", address.Hex())
 
-	encryptedNodeID, err := fetchNodeID(epochIdx, address, contractInstance)
+	encryptedNodeID, err := fetchNodeID(term, address, contractInstance)
 	nodeid, err := rsaKey.RsaDecrypt(encryptedNodeID)
 	if err != nil {
 		log.Debug("encryptedNodeID")
@@ -207,8 +224,8 @@ func (s *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRe
 	return nil
 }
 
-func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *contract.SignerConnectionRegister) ([]byte, error) {
-	encryptedNodeID, err := contractInstance.GetNodeInfo(nil, big.NewInt(int64(epochIdx)), address)
+func fetchNodeID(term uint64, address common.Address, contractInstance *contract.SignerConnectionRegister) ([]byte, error) {
+	encryptedNodeID, err := contractInstance.GetNodeInfo(nil, big.NewInt(int64(term)), address)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +234,7 @@ func fetchNodeID(epochIdx uint64, address common.Address, contractInstance *cont
 
 // uploadNodeID encrypts my node id with this remote signer's public key and update to the contract.
 func (s *RemoteSigner) uploadNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
-	epochIdx, address := s.epochIdx, s.address
+	term, address := s.term, s.address
 
 	log.Debug("fetched rsa pubkey")
 	log.Debug(hex.Dump(s.pubkey))
@@ -225,7 +242,7 @@ func (s *RemoteSigner) uploadNodeID(nodeID string, auth *bind.TransactOpts, cont
 	pubkey, err := rsakey.NewRsaPublicKey(s.pubkey)
 
 	log.Debug("updating self nodeID with remote signer's public key")
-	log.Debug("epoch", "idx", epochIdx)
+	log.Debug("epoch", "idx", term)
 	log.Debug("signer", "addr", address.Hex())
 	log.Debug("nodeID", "nodeID", nodeID)
 	log.Debug("pubkey", "pubkey", pubkey)
@@ -239,7 +256,7 @@ func (s *RemoteSigner) uploadNodeID(nodeID string, auth *bind.TransactOpts, cont
 	log.Debug("encryptedNodeID")
 	log.Debug(hex.Dump(encryptedNodeID))
 
-	transaction, err := contractInstance.AddNodeInfo(auth, big.NewInt(int64(epochIdx)), address, encryptedNodeID)
+	transaction, err := contractInstance.AddNodeInfo(auth, big.NewInt(int64(term)), address, encryptedNodeID)
 	if err != nil {
 		return err
 	}
@@ -280,7 +297,7 @@ func (s *RemoteSigner) uploadNodeInfo(
 		}
 	}
 
-	nodeid, err := fetchNodeID(s.epochIdx, address, contractInstance)
+	nodeid, err := fetchNodeID(s.term, address, contractInstance)
 	if err != nil {
 		return false, err
 	}

@@ -6,11 +6,62 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// VerifyRemoteValidator validates if a given address is signer of current epoch
-func (d *Dpor) VerifyRemoteValidator(signer common.Address) (bool, error) {
+// TermOf returns the term number of given block number
+func (d *Dpor) TermOf(number uint64) uint64 {
+	return d.currentSnapshot.TermOf(number)
+}
+
+// FutureTermOf returns the future term number of given block number
+func (d *Dpor) FutureTermOf(number uint64) uint64 {
+	return d.currentSnapshot.FutureTermOf(number)
+}
+
+// GetCurrentBlock returns current block
+func (d *Dpor) GetCurrentBlock() *types.Block {
+	hash := d.chain.CurrentHeader().Hash()
+	number := d.chain.CurrentHeader().Number.Uint64()
+	block := d.chain.GetBlock(hash, number)
+	return block
+}
+
+// VerifyProposerOf verifies if an address is a proposer of given term
+func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error) {
+
+	// TODO: remove this
+	if term <= 6 {
+		return true, nil
+	}
+	snap := d.currentSnapshot
+	proposers := snap.getRecentProposers(term)
+
+	for _, p := range proposers {
+		if p == signer {
+			return true, nil
+		}
+	}
 
 	// TODO: fix this
-	return true, nil
+	return false, nil
+}
+
+// VerifyValidatorOf verifies if an address is a validator of given term
+func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, error) {
+
+	// TODO: remove this
+	if term <= 6 {
+		return true, nil
+	}
+	snap := d.currentSnapshot
+	validators := snap.getRecentValidators(term)
+
+	for _, p := range validators {
+		if p == signer {
+			return true, nil
+		}
+	}
+
+	// TODO: fix this
+	return false, nil
 }
 
 // VerifyHeaderWithState verifies the given header

@@ -104,11 +104,13 @@ var errorToString = map[int]string{
 type ValidatorStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address
+	Term            uint64
 }
 
 type ProposerStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address
+	Term            uint64
 }
 
 func errResp(code errCode, format string, v ...interface{}) error {

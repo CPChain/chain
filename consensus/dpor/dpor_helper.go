@@ -357,6 +357,8 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		go dh.uploadNodeInfo(dpor, snap, number)
 	}
 
+	dpor.currentSnapshot = snap
+
 	return nil
 }
 
@@ -461,7 +463,7 @@ func (dh *defaultDporHelper) uploadNodeInfo(dpor *Dpor, snap *DporSnapshot, numb
 		log.Debug("err when updating remote validators", "err", err)
 
 		// Connect all
-		err = dpor.validatorHandler.UploadEncryptedNodeInfo()
+		err = dpor.validatorHandler.UploadEncryptedNodeInfo(eIdx)
 		log.Debug("err when uploading my node info", "err", err)
 
 	}(term, signers)

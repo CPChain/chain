@@ -3,6 +3,7 @@ package backend
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -48,14 +49,12 @@ type Handler struct {
 
 // NewHandler creates a new Handler
 func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
-	proposers := make(map[common.Address]*RemoteProposer, config.TermLen)
-	validators := make(map[common.Address]*RemoteValidator)
 
 	vh := &Handler{
 		config:         config,
 		coinbase:       etherbase,
 		knownBlocks:    newKnownBlocks(),
-		dialer:         newDialer(etherbase, proposers, validators),
+		dialer:         newDialer(etherbase),
 		pendingBlockCh: make(chan *types.Block),
 		quitSync:       make(chan struct{}),
 		available:      false,
@@ -69,6 +68,10 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 
 // Start starts pbft handler
 func (vh *Handler) Start() {
+
+	if vh.isValidator {
+		go vh.dialLoop()
+	}
 
 	// Broadcast mined pending block, including empty block
 	go vh.PendingBlockBroadcastLoop()
@@ -120,14 +123,15 @@ func (vh *Handler) Available() bool {
 // AddPeer adds a p2p peer to local peer set
 func (vh *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, error) {
 	coinbase := vh.Coinbase()
-	verifyFn := vh.dpor.VerifyRemoteValidator
+	verifyFn := vh.dpor.VerifyValidatorOf
 
-	return vh.dialer.AddPeer(version, p, rw, coinbase, verifyFn)
+	term := vh.dpor.FutureTermOf(vh.dpor.GetCurrentBlock().NumberU64())
+	return vh.dialer.AddPeer(version, p, rw, coinbase, term, verifyFn)
 }
 
 // RemovePeer removes a p2p peer with its addr
 func (vh *Handler) RemovePeer(addr string) error {
-	return vh.dialer.removeRemoteValidator(addr)
+	return vh.dialer.removeRemoteProposers(addr)
 }
 
 // HandleMsg handles a msg of peer with id "addr"
@@ -249,6 +253,33 @@ func (vh *Handler) UpdateRemoteValidators(term uint64, validators []common.Addre
 	return vh.dialer.UpdateRemoteValidators(term, validators)
 }
 
-func (vh *Handler) UploadEncryptedNodeInfo() error {
-	return vh.dialer.UploadEncryptedNodeInfo()
+func (vh *Handler) UploadEncryptedNodeInfo(term uint64) error {
+	return vh.dialer.UploadEncryptedNodeInfo(term)
+}
+
+func (vh *Handler) dialLoop() {
+
+	futureTimer := time.NewTicker(1 * time.Second)
+	defer futureTimer.Stop()
+
+	var block *types.Block
+
+	for {
+		select {
+		case <-futureTimer.C:
+			blk := vh.dpor.GetCurrentBlock()
+			if block != nil {
+				if blk.Number().Cmp(block.Number()) > 0 {
+					// if there is an updated block, try to dial future proposers
+					number := blk.NumberU64()
+					go vh.dialer.DialAllRemoteProposers(number)
+				}
+			} else {
+				block = blk
+			}
+
+		case <-vh.quitSync:
+			return
+		}
+	}
 }
