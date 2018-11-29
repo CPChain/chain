@@ -3,6 +3,7 @@ package backend
 import (
 	"context"
 	"math/big"
+	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -110,14 +111,17 @@ type DporService interface {
 	// StatusUpdate updates status of dpor
 	StatusUpdate() error
 
-	// GetEmptyBlock returns an empty block for view change
-	GetEmptyBlock() (*types.Block, error)
+	// CreateImpeachBlock returns an impeachment block for view change
+	CreateImpeachBlock() (*types.Block, error)
 
 	// GetCurrentBlock returns current block
 	GetCurrentBlock() *types.Block
 
 	// HasBlockInChain returns if a block is in local chain
 	HasBlockInChain(hash common.Hash, number uint64) bool
+
+	// ImpeachTimeout returns the timeout for impeachment
+	ImpeachTimeout() time.Duration
 }
 
 type HandlerMode uint

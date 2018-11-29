@@ -52,8 +52,8 @@ func (*fakeDb) NewBatch() database.Batch {
 }
 
 func Test_newSnapshot(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress())
-	equal := reflect.DeepEqual(snap.SignersOf(1), getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress())
+	equal := reflect.DeepEqual(snap.ProposersOf(1), getProposerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
@@ -128,7 +128,7 @@ func TestSnapshot_store(t *testing.T) {
 				cache,
 				1,
 				common.Hash{},
-				getSignerAddress(),
+				getProposerAddress(),
 				// map[uint64][]common.Address{0: getSignerAddress()},
 			},
 			args{&fakeDb{}},
@@ -152,12 +152,12 @@ func TestSnapshot_store(t *testing.T) {
 }
 
 func TestSnapshot_copy(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress())
 	snap.Candidates = getCandidates()
 
 	cpySnap := snap.copy()
 
-	equal := reflect.DeepEqual(cpySnap.SignersOf(1), getSignerAddress())
+	equal := reflect.DeepEqual(cpySnap.ProposersOf(1), getProposerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
 	}
@@ -185,7 +185,7 @@ func TestSnapshot_apply(t *testing.T) {
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
 	expectedResult.config = &testConfig
-	expectedResult.Candidates = getSignerAddress()
+	expectedResult.Candidates = getProposerAddress()
 	//testHeader := make([]*types.Header, 0)
 	tests := []struct {
 		name    string
@@ -199,7 +199,7 @@ func TestSnapshot_apply(t *testing.T) {
 				testCache,
 				1,
 				common.Hash{},
-				getSignerAddress(),
+				getProposerAddress(),
 			},
 			args{
 				nil,
@@ -249,7 +249,7 @@ func TestSnapshot_applyHeader(t *testing.T) {
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
 	expectedResult.config = &testConfig
-	expectedResult.Candidates = getSignerAddress()
+	expectedResult.Candidates = getProposerAddress()
 	tests := []struct {
 		name    string
 		fields  fields
@@ -261,7 +261,7 @@ func TestSnapshot_applyHeader(t *testing.T) {
 				testCache,
 				1,
 				common.Hash{},
-				getSignerAddress(),
+				getProposerAddress(),
 			},
 			args{
 				nil,
@@ -305,7 +305,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
 	expectedResult.config = &testConfig
-	expectedResult.Candidates = getSignerAddress()
+	expectedResult.Candidates = getProposerAddress()
 	tests := []struct {
 		name    string
 		fields  fields
@@ -317,7 +317,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 				testCache,
 				1,
 				common.Hash{},
-				getSignerAddress(),
+				getProposerAddress(),
 			},
 			args{
 				nil,
@@ -402,7 +402,7 @@ func TestSnapshot_updateSigner(t *testing.T) {
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
 	expectedResult.config = &testConfig
-	expectedResult.Candidates = getSignerAddress()
+	expectedResult.Candidates = getProposerAddress()
 	fmt.Println("candidates: ", expectedResult.Candidates)
 	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
 	var testRpt int64
@@ -420,7 +420,7 @@ func TestSnapshot_updateSigner(t *testing.T) {
 		//testCache,
 		1,
 		common.Hash{},
-		getSignerAddress(),
+		getProposerAddress(),
 		make(map[uint64][]common.Address),
 	}
 	//construct a DporSnapshot for testing, with above settings
@@ -466,8 +466,8 @@ func TestSnapshot_updateSigner(t *testing.T) {
 
 func TestSnapshot_signers(t *testing.T) {
 	snap := createSnapshot()
-	signers := snap.SignersOf(snap.Number)
-	equalSigner := reflect.DeepEqual(signers, getSignerAddress())
+	proposers := snap.ProposersOf(snap.Number)
+	equalSigner := reflect.DeepEqual(proposers, getProposerAddress())
 	if !equalSigner {
 		t.Errorf("expected isEqualSigner is %v,get %v", true, equalSigner)
 	}
@@ -504,7 +504,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			got, err := s.SignerViewOf(tt.args.signer, tt.fields.Number)
+			got, err := s.ProposerViewOf(tt.args.signer, tt.fields.Number)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.signerRound(%v) error = %v, wantErr %v", tt.args.signer, err, tt.wantErr)
 				return
@@ -517,12 +517,12 @@ func TestSnapshot_signerRound(t *testing.T) {
 }
 
 func TestSnapshot_isSigner(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getSignerAddress()[1:2])
-	isSinger := snap.IsSignerOf(addr1, 1)
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress()[1:2], getValidatorAddress())
+	isSinger, _ := snap.IsProposerOf(addr1, 1)
 	if isSinger {
 		t.Errorf("expected isSinger %v,get %v", false, isSinger)
 	}
-	isSinger = snap.IsSignerOf(addr2, 1)
+	isSinger, _ = snap.IsProposerOf(addr2, 1)
 	if !isSinger {
 		t.Errorf("expected isSinger %v,get %v", true, isSinger)
 	}
@@ -566,7 +566,7 @@ func TestSnapshot_isNotLeader(t *testing.T) {
 
 func TestSnapshot_signerRoundFail(t *testing.T) {
 	snap := createSnapshot()
-	round, err := snap.SignerViewOf(addr4, snap.Number)
+	round, err := snap.ProposerViewOf(addr4, snap.Number)
 	if err == nil || round != -1 {
 		t.Errorf("expect round %v, get %v", -1, round)
 	}
@@ -574,27 +574,28 @@ func TestSnapshot_signerRoundFail(t *testing.T) {
 
 func TestSnapshot_signerRoundOk(t *testing.T) {
 	snap := createSnapshot()
-	round, err := snap.SignerViewOf(addr1, snap.Number)
+	round, err := snap.ProposerViewOf(addr1, snap.Number)
 	if err != nil || round != 0 {
 		t.Errorf("expect round %v, get %v", 0, round)
 	}
 
-	round, err = snap.SignerViewOf(addr2, snap.Number)
+	round, err = snap.ProposerViewOf(addr2, snap.Number)
 	if err != nil || round != 1 {
 		t.Errorf("expect round %v, get %v", 1, round)
 	}
 
-	round, err = snap.SignerViewOf(addr3, snap.Number)
+	round, err = snap.ProposerViewOf(addr3, snap.Number)
 	if err != nil || round != 2 {
 		t.Errorf("expect round %v, get %v", 2, round)
 	}
 }
 
 func createSnapshot() *DporSnapshot {
-	signers := getSignerAddress()
+	proposers := getProposerAddress()
+	validators := getValidatorAddress()
 	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	// cache, _ := lru.NewARC(inmemorySnapshots)
-	snap := newSnapshot(config, 1, common.Hash{}, signers)
+	snap := newSnapshot(config, 1, common.Hash{}, proposers, validators)
 	return snap
 }
 
@@ -632,10 +633,10 @@ func TestSnapshot_candidates(t *testing.T) {
 }
 
 func TestSnapshot_inturn(t *testing.T) {
-	signers := getSignerAddress()
+	proposers := getProposerAddress()
 	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	// cache, _ := lru.NewARC(inmemorySnapshots)
-	snap := newSnapshot(config, 1, common.Hash{}, signers)
+	snap := newSnapshot(config, 1, common.Hash{}, proposers, getValidatorAddress())
 
 	tests := []struct {
 		number         uint64

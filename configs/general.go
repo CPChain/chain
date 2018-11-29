@@ -6,6 +6,7 @@ package configs
 import (
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -21,6 +22,10 @@ const (
 	TestnetChainId = 43
 )
 
+const (
+	DefaultBlockPeriod = 1
+)
+
 var (
 	// TODO: @AC define testnet configuration
 	TestnetChainConfig = &ChainConfig{
@@ -30,9 +35,8 @@ var (
 	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
 	MainnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(MainnetChainId),
-
 		Dpor: &DporConfig{
-			Period:                1,
+			Period:                DefaultBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
 			MaxInitBlockNumber:    96,
@@ -43,6 +47,7 @@ var (
 				// TODO @hmw make the name more concrete
 				"register": common.HexToAddress("3A220f351252089D385b29beca14e27F204c296A"),
 			},
+			ImpeachTimeout: time.Second * DefaultBlockPeriod * 2,
 		},
 	}
 
@@ -78,6 +83,7 @@ type DporConfig struct {
 	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"    toml:"maxInitBlockNumber"` // The maximum block number which uses default proposers
 	Contracts             map[string]common.Address `json:"contracts"             toml:"contracts"`
 	ProxyContractRegister common.Address            `json:"proxyContractRegister" toml:"proxyContractRegister"`
+	ImpeachTimeout        time.Duration             `json:"impeachTimeout" toml:"impeachTimeout"`
 }
 
 // String implements the stringer interface, returning the consensus engine details.

@@ -344,12 +344,12 @@ func (vh *Handler) handleCommitMsg(msg p2p.Msg, p *RemoteValidator) error {
 // ReadyToImpeach returns if its time to impeach leader
 func (vh *Handler) ReadyToImpeach() bool {
 	snap := vh.snap
-	head := vh.dpor.Status()
+	current := vh.dpor.Status()
 
-	if head.Head.Number.Uint64() <= snap.Head.Number.Uint64() {
+	if current.Head.Number.Uint64() <= snap.Head.Number.Uint64() {
 		return true
 	}
 
-	vh.snap = head
+	vh.snap = current
 	return false
 }

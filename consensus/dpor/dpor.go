@@ -194,11 +194,13 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 
 // Start starts dpor engine to handle different phrases
 func (d *Dpor) Start() {
+	log.Info("Dpor started")
 	return
 }
 
 // Stop stops dpor engine
 func (d *Dpor) Stop() {
+	log.Info("Dpor stopped")
 	return
 }
 
@@ -246,4 +248,8 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
 	return d.validatorHandler.ReceiveMinedPendingBlock(block)
+}
+
+func (d *Dpor) ImpeachTimeout() time.Duration {
+	return d.config.ImpeachTimeout
 }

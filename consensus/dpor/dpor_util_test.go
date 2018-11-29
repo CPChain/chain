@@ -242,7 +242,7 @@ func Test_acceptSigs(t *testing.T) {
 	sigs := &Signatures{
 		sigs: make(map[common.Address][]byte),
 	}
-	for _, signer := range getSignerAddress() {
+	for _, signer := range getProposerAddress() {
 		sigs.SetSig(signer, []byte("ok"))
 	}
 
@@ -262,9 +262,9 @@ func Test_acceptSigs(t *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		{"should be true when signer not in cache", args{header, cache, getSignerAddress()[1:2], 4}, false, false},
-		{"should be true when signer not in cache", args{header, emptyCache, getSignerAddress(), 4}, false, true},
-		{"should be true when signer in cache", args{header, cache, getSignerAddress(), 4}, true, false},
+		{"should be true when signer not in cache", args{header, cache, getProposerAddress()[1:2], 4}, false, false},
+		{"should be true when signer not in cache", args{header, emptyCache, getProposerAddress(), 4}, false, true},
+		{"should be true when signer in cache", args{header, cache, getProposerAddress(), 4}, true, false},
 	}
 
 	dporUtil := &defaultDporUtil{}
@@ -283,9 +283,9 @@ func Test_acceptSigs(t *testing.T) {
 }
 
 func Test_calcDifficulty(t *testing.T) {
-	signers := getSignerAddress()
+	signers := getProposerAddress()
 	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	snapshot := newSnapshot(config, 1, common.Hash{}, signers)
+	snapshot := newSnapshot(config, 1, common.Hash{}, signers, []common.Address{})
 
 	type args struct {
 		snap   *DporSnapshot
@@ -296,8 +296,8 @@ func Test_calcDifficulty(t *testing.T) {
 		args args
 		want *big.Int
 	}{
-		{name: "WhenSnapshotIsNotLeader", args: args{snapshot, signers[0]}, want: big.NewInt(2)},
-		{name: "WhenSnapshotIsLeader", args: args{snapshot, signers[1]}, want: big.NewInt(1)},
+		{name: "WhenSnapshotSigner1", args: args{snapshot, signers[0]}, want: big.NewInt(1)},
+		{name: "WhenSnapshotSigner2", args: args{snapshot, signers[1]}, want: big.NewInt(1)},
 	}
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
