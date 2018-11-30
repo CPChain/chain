@@ -1,11 +1,12 @@
 package dpor
 
 import (
+	"errors"
+	"sync"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"errors"
-	"sync"
 
 	"bitbucket.org/cpchain/chain/types"
 )
@@ -39,6 +40,7 @@ const (
 	prepareMsg
 	commitMsg
 	validateMsg
+	impeachPreprepareMsg
 	impeachPrepareMsg
 	impeachCommitMsg
 	impeachValidateMsg
@@ -55,10 +57,11 @@ const (
 	idle FsmState = iota
 	preprepared
 	prepared
-	committed
-	inserting
+	//committed
+	//inserting
+	impeachPreprepared
 	impeachPrepared
-	impeach
+	//impeachCommited
 )
 
 type sigRecord struct {
@@ -205,6 +208,35 @@ func (sm *DporSm) proposeImpeachBlock() *types.Block {
 	return b
 }
 
+//It returns true if the timer expires
+func impeachTimer() bool {
+	//TODO: @shiyc
+	return false
+}
+
+// It returns true it collects 2f+1 impeach prepare messages
+func impeachPrepareCertificate(h *types.Header) bool {
+	//TODO @shiyc implement it
+	return true
+}
+
+func impeachPrepareMsgPlus(h *types.Header) {
+	//TODO @shiyc
+}
+
+func composeImpeachCommitMsg(h *types.Header) *types.Header {
+	return h
+}
+
+func impeachCommitCertificate(h *types.Header) bool {
+	//TODO @shiyc implement it
+	return true
+}
+
+func impeachCommitMsgPlus(h *types.Header) {
+	//TODO @shiyc implement it
+}
+
 // Fsm is the finite state machine for a validator, to output the correct state given on current state and inputs
 func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (interface{}, action, dataType, msgCode, FsmState, error) {
 	var inputHeader *types.Header
@@ -228,14 +260,14 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 	// The case of idle state
 	case idle:
 		switch msg {
-		// Jump to committed state if receives validate message
+		// Stay in idle state if receives validate message, and we should insert the block
 		case validateMsg:
-			return inputBlock, noAction, noType, noMsg, committed, nil
+			return inputBlock, insertBlock, block, noMsg, idle, nil
 
 		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
+				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
 			} else {
 				// Add one to the counter of commit messages
 				sm.commitMsgPlus(inputHeader)
@@ -266,8 +298,32 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 				return ret, broadcastMsg, header, prepareMsg, preprepared, nil
 			} else {
 				err = errors.New("the proposed block is illegal")
-				return sm.proposeImpeachBlock(), insertBlock, block, impeachPrepareMsg, idle, err
+				return sm.proposeImpeachBlock(), insertBlock, block, impeachPrepareMsg, impeachPreprepared, err
+				//TODO: return an impeach block
 			}
+
+		// Transit to impeach committed state if the validator collects 2f+1 impeach commit messages
+		case impeachCommitMsg:
+			if impeachCommitCertificate(inputHeader) {
+				return inputHeader, broadcastMsg, header, impeachCommitMsg, idle, nil
+			} else {
+				impeachCommitMsgPlus(inputHeader)
+				return inputHeader, noAction, noType, noMsg, idle, nil
+			}
+
+		// Transit to impeach prepared state if it collects 2f+1 impeach prepare messages
+		case impeachPrepareMsg:
+			if impeachPrepareCertificate(inputHeader) {
+				return inputHeader, broadcastMsg, header, impeachCommitMsg, impeachPrepared, nil
+			} else {
+				impeachPrepareMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, idle, nil
+			}
+
+		// Transit to impeach pre-prepared state if the timers expires (receiving a impeach pre-prepared message),
+		// then generate the impeachment block and broadcast the impeach prepare massage
+		case impeachPreprepareMsg:
+			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, impeachPreprepared, nil
 		}
 		err = errors.New("not a proper input for idle state")
 
@@ -276,12 +332,12 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		switch msg {
 		// Jump to committed state if receive a validate message
 		case validateMsg:
-			return inputBlock, noAction, noType, noMsg, committed, nil
+			return inputBlock, insertBlock, block, noMsg, idle, nil
 
 		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
+				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
 			} else {
 				// Add one to the counter of commit messages
 				sm.commitMsgPlus(inputHeader)
@@ -308,12 +364,12 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		switch msg {
 		// Jump to committed state if receive a validate message
 		case validateMsg:
-			return inputBlock, noAction, noType, noMsg, committed, nil
+			return inputBlock, insertBlock, block, noMsg, idle, nil
 
 		// convert to committed state if collects commit certificate
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastMsg, block, validateMsg, committed, nil
+				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
 			} else {
 				// Add one to the counter of commit messages
 				sm.commitMsgPlus(inputHeader)
@@ -322,9 +378,12 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		}
 		err = errors.New("not a proper input for prepared state")
 
-	// Broadcast a validate message and then go back to idle state
-	case committed:
-		return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
+		// Broadcast a validate message and then go back to idle state
+		//case committed:
+		///return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
+		// Broadcast a validate message and then go back to idle state
+		//case committed:
+		//	return composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
 
 		// Insert the block and go back to idle state
 		//case inserting:
