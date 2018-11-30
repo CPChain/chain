@@ -1,15 +1,12 @@
 package backend
 
 import (
-	"context"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"sync"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
@@ -31,21 +28,14 @@ type RemoteSigner struct {
 	version int
 
 	term    uint64
-	pubkey  []byte
 	nodeID  string
 	address common.Address
 
 	dialed        bool // bool to show if i already connected to this signer.
-	pubkeyFetched bool
 	nodeIDFetched bool
 	nodeIDUpdated bool // bool to show if i updated my nodeid encrypted with this signer's pubkey to the contract.
 
 	lock sync.RWMutex
-}
-
-// RemoteProposer represents a remote proposer waiting to be connected.
-type RemoteProposer struct {
-	*RemoteSigner
 }
 
 // NewRemoteSigner creates a new remote signer
@@ -55,13 +45,6 @@ func NewRemoteSigner(term uint64, address common.Address) *RemoteSigner {
 		address: address,
 	}
 
-}
-
-// NewRemoteProposer creates a new remote proposer
-func NewRemoteProposer(term uint64, address common.Address) *RemoteProposer {
-	return &RemoteProposer{
-		RemoteSigner: NewRemoteSigner(term, address),
-	}
 }
 
 // SetTerm sets term of signer
@@ -84,11 +67,11 @@ func (s *RemoteSigner) GetTerm() uint64 {
 func (s *RemoteSigner) AddStatic(srv *p2p.Server) error {
 
 	rawurl := fmt.Sprintf("enode://%v@%v", s.ID().String(), s.RemoteAddr().String())
-	nodeId, err := discover.ParseNode(rawurl)
+	nodeID, err := discover.ParseNode(rawurl)
 	if err != nil {
 		return err
 	}
-	srv.AddPeer(nodeId)
+	srv.AddPeer(nodeID)
 	return nil
 }
 
@@ -178,193 +161,15 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *Si
 	return isProposer, isValidator, signerStatusData.Address, err
 }
 
-// fetchPubkey fetches the public key of the remote signer from the contract.
-func (s *RemoteSigner) fetchPubkey(contractInstance *dpor.ProposerRegister) error {
-
-	address := s.address
-
-	log.Debug("fetching public key of remote signer")
-	log.Debug("signer", "addr", address)
-
-	pubkey, err := contractInstance.GetPublicKey(nil, address)
-	if err != nil {
-		return err
+// fetchNodeID fetches node id of proposer encrypted with validator's public key
+func fetchNodeID(term uint64, proposer common.Address, validator common.Address, contractInstance *dpor.ProposerRegister) ([]byte, error) {
+	callOpts := &bind.CallOpts{
+		From: validator,
 	}
-
-	s.pubkey = pubkey
-	s.pubkeyFetched = true
-
-	log.Debug("fetched public key of remote signer", "pubkey", pubkey)
-
-	return nil
-}
-
-// fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (s *RemoteSigner) fetchNodeID(contractInstance *dpor.ProposerRegister, rsaKey *rsakey.RsaKey) error {
-	term, address := s.term, s.address
-
-	log.Debug("fetching nodeID of remote signer")
-	log.Debug("epoch", "idx", term)
-	log.Debug("signer", "addr", address.Hex())
-
-	encryptedNodeID, err := fetchNodeID(term, address, contractInstance)
-	nodeid, err := rsaKey.RsaDecrypt(encryptedNodeID)
-	if err != nil {
-		log.Debug("encryptedNodeID")
-		log.Debug(hex.Dump(encryptedNodeID))
-		log.Debug("my pubkey")
-		log.Debug(hex.Dump(rsaKey.PublicKey.RsaPublicKeyBytes))
-		log.Debug("privKey", "privKey", rsaKey.PrivateKey)
-		return err
-	}
-
-	nodeID := string(nodeid)
-	s.nodeID = nodeID
-	s.nodeIDFetched = true
-
-	log.Debug("fetched nodeID of remote signer", "nodeID", nodeID)
-
-	return nil
-}
-
-func fetchNodeID(term uint64, address common.Address, contractInstance *dpor.ProposerRegister) ([]byte, error) {
-	encryptedNodeID, err := contractInstance.GetNodeInfo(nil, big.NewInt(int64(term)), address)
+	fmt.Println("contract instance", contractInstance)
+	encryptedNodeID, err := contractInstance.GetNodeInfo(callOpts, big.NewInt(int64(term)), proposer)
 	if err != nil {
 		return nil, err
 	}
 	return encryptedNodeID, nil
-}
-
-// uploadNodeID encrypts my node id with this remote signer's public key and update to the contract.
-func (s *RemoteSigner) uploadNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *dpor.ProposerRegister, client ClientBackend) error {
-	term, address := s.term, s.address
-
-	log.Debug("fetched rsa pubkey")
-	log.Debug(hex.Dump(s.pubkey))
-
-	pubkey, err := rsakey.NewRsaPublicKey(s.pubkey)
-
-	log.Debug("updating self nodeID with remote signer's public key")
-	log.Debug("epoch", "idx", term)
-	log.Debug("signer", "addr", address.Hex())
-	log.Debug("nodeID", "nodeID", nodeID)
-	log.Debug("pubkey", "pubkey", pubkey)
-
-	if err != nil {
-		return err
-	}
-
-	encryptedNodeID, err := pubkey.RsaEncrypt([]byte(nodeID))
-
-	log.Debug("encryptedNodeID")
-	log.Debug(hex.Dump(encryptedNodeID))
-
-	transaction, err := contractInstance.AddNodeInfo(auth, big.NewInt(int64(term)), address, encryptedNodeID)
-	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-	_, err = bind.WaitMined(ctx, client, transaction)
-	if err != nil {
-		return err
-	}
-
-	s.nodeIDUpdated = true
-
-	log.Debug("updated self nodeID")
-
-	return nil
-}
-
-// uploadNodeInfo upload my nodeID the signer.
-func (s *RemoteSigner) uploadNodeInfo(
-	nodeID string,
-	address common.Address,
-	auth *bind.TransactOpts,
-	contractInstance *dpor.ProposerRegister,
-	client ClientBackend,
-) (bool, error) {
-
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	log.Debug("dialing to remote signer", "signer", s)
-
-	// fetch remote signer's public key if there is no one.
-	if !s.pubkeyFetched {
-		err := s.fetchPubkey(contractInstance)
-		if err != nil {
-			log.Warn("err when fetching signer's pubkey from contract", "err", err)
-			return false, err
-		}
-	}
-
-	nodeid, err := fetchNodeID(s.term, address, contractInstance)
-	if err != nil {
-		return false, err
-	}
-
-	// update my nodeID to contract if already know the public key of the remote signer and not updated yet.
-	if s.pubkeyFetched && len(nodeid) == 0 {
-		err := s.uploadNodeID(nodeID, auth, contractInstance, client)
-		if err != nil {
-			log.Warn("err when updating my node id to contract", "err", err)
-			return false, err
-		}
-	}
-
-	return true, nil
-}
-
-func (s *RemoteSigner) fetchNodeInfoAndDial(
-	server *p2p.Server,
-	rsaKey *rsakey.RsaKey,
-	contractInstance *dpor.ProposerRegister,
-) (bool, error) {
-
-	// fetch the nodeID of the remote signer if not fetched yet.
-	if !s.nodeIDFetched {
-		err := s.fetchNodeID(contractInstance, rsaKey)
-		if err != nil {
-			log.Warn("err when fetching signer's nodeID from contract", "err", err)
-			return false, err
-		}
-	}
-
-	// dial the signer with his nodeID if not dialed yet.
-	if s.nodeIDFetched && !s.dialed {
-		node, err := discover.ParseNode(s.nodeID)
-		if err != nil {
-			log.Warn("err when dialing remote signer with his nodeID", "err", err)
-			return false, err
-		}
-		if server != nil {
-			server.AddPeer(node)
-		} else {
-			log.Warn("invalid server", "server", server)
-		}
-		s.dialed = true
-	}
-
-	return s.dialed, nil
-}
-
-// Dial dials the signer
-func (s *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *dpor.ProposerRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
-
-	succeed, err := s.uploadNodeInfo(nodeID, address, auth, contractInstance, client)
-	if !succeed || err != nil {
-		return false, err
-	}
-
-	succeed, err = s.fetchNodeInfoAndDial(server, rsaKey, contractInstance)
-	if !succeed || err != nil {
-		return false, err
-	}
-
-	log.Debug("result of rs.dial", "succeed", succeed)
-	log.Debug("result of rs.dial", "err", err)
-
-	return true, nil
 }

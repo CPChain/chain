@@ -36,15 +36,14 @@ type Dialer struct {
 	recentProposers  *lru.ARCCache
 	recentValidators *lru.ARCCache
 
-	dialed bool
-
 	lock           sync.RWMutex
 	proposersLock  sync.RWMutex
 	validatorsLock sync.RWMutex
 }
 
-func newDialer(
+func NewDialer(
 	coinbase common.Address,
+	contractAddr common.Address,
 ) *Dialer {
 
 	proposers, _ := lru.NewARC(maxTermsOfRemoteSigners)
@@ -52,6 +51,7 @@ func newDialer(
 
 	return &Dialer{
 		coinbase:         coinbase,
+		contractAddress:  contractAddr,
 		recentProposers:  proposers,
 		recentValidators: validators,
 	}
@@ -142,16 +142,23 @@ func (d *Dialer) removeRemoteProposers(addr string) error {
 // SetServer sets dialer.server
 func (d *Dialer) SetServer(server *p2p.Server) error {
 	d.lock.Lock()
-	defer d.lock.Unlock()
-
 	d.server = server
-	d.nodeID = server.Self().String()
+	d.lock.Unlock()
+
+	nodeID := server.Self().String()
+	d.SetNodeID(nodeID)
 
 	return nil
 }
 
-// SetRsaKey sets handler.rsaKey
-func (d *Dialer) SetRsaKey(rsaReader RsaReader) error {
+func (d *Dialer) SetNodeID(nodeID string) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	d.nodeID = nodeID
+}
+
+// setRsaKey sets handler.rsaKey
+func (d *Dialer) setRsaKey(rsaReader RsaReader) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -185,7 +192,7 @@ func (d *Dialer) SetContractCaller(contractCaller *ContractCaller) error {
 	rsaReader := func() (*rsakey.RsaKey, error) {
 		return contractCaller.Key.RsaKey, nil
 	}
-	err = d.SetRsaKey(rsaReader)
+	err = d.setRsaKey(rsaReader)
 	if err != nil {
 		return err
 	}
@@ -239,13 +246,14 @@ func (d *Dialer) DialAllRemoteProposers(term uint64) error {
 
 	d.lock.RLock()
 	rsaKey, server := d.rsaKey, d.server
+	validator := d.coinbase
 	contractInstance := d.contractInstance
 	d.lock.RUnlock()
 
 	proposers := d.ProposersOf(term)
 
 	for _, p := range proposers {
-		_, err := p.fetchNodeInfoAndDial(server, rsaKey, contractInstance)
+		_, err := p.FetchNodeInfoAndDial(validator, server, rsaKey, contractInstance)
 		if err != nil {
 			return err
 		}
@@ -258,14 +266,14 @@ func (d *Dialer) DialAllRemoteProposers(term uint64) error {
 func (d *Dialer) UploadEncryptedNodeInfo(term uint64) error {
 
 	d.lock.RLock()
-	nodeID, address := d.nodeID, d.coinbase
+	nodeID := d.nodeID
 	contractInstance, contractTransactor, client := d.contractInstance, d.contractTransactor, d.contractCaller.Client
 	d.lock.RUnlock()
 
 	validators := d.ValidatorsOf(term)
 
 	for _, v := range validators {
-		_, err := v.uploadNodeInfo(nodeID, address, contractTransactor, contractInstance, client)
+		_, err := v.UploadNodeInfo(nodeID, contractTransactor, contractInstance, client)
 		if err != nil {
 			return err
 		}
@@ -277,25 +285,17 @@ func (d *Dialer) UploadEncryptedNodeInfo(term uint64) error {
 // Disconnect disconnects all proposers.
 func (d *Dialer) Disconnect(term uint64) {
 	d.lock.RLock()
-	connected, server := d.dialed, d.server
+	server := d.server
 	d.lock.RUnlock()
 
 	proposers := d.ProposersOf(term)
 
-	if connected {
-		log.Debug("disconnecting...")
+	log.Debug("disconnecting...")
 
-		for _, p := range proposers {
-			err := p.disconnect(server)
-			log.Debug("err when disconnect", "e", err)
-		}
-
-		connected = false
+	for _, p := range proposers {
+		err := p.disconnect(server)
+		log.Debug("err when disconnect", "e", err)
 	}
-
-	d.lock.Lock()
-	d.dialed = connected
-	d.lock.Unlock()
 }
 
 func (d *Dialer) getProposer(addr string) (*RemoteProposer, bool) {

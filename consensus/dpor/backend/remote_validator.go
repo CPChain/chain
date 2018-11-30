@@ -1,6 +1,14 @@
 package backend
 
 import (
+	"context"
+	"encoding/hex"
+	"math/big"
+
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
+	"bitbucket.org/cpchain/chain/commons/log"
+	dpor "bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -9,6 +17,9 @@ import (
 // RemoteValidator represents a remote signer waiting to be connected and communicate with.
 type RemoteValidator struct {
 	*RemoteSigner
+
+	pubkey        []byte
+	pubkeyFetched bool
 
 	queuedPendingBlocks chan *types.Block  // Queue of blocks to broadcast to the signer
 	queuedPrepareSigs   chan *types.Header // Queue of signatures to broadcast to the signer
@@ -19,9 +30,9 @@ type RemoteValidator struct {
 }
 
 // NewRemoteValidator creates a new NewRemoteValidator with given view idx and address.
-func NewRemoteValidator(epochIdx uint64, address common.Address) *RemoteValidator {
+func NewRemoteValidator(term uint64, address common.Address) *RemoteValidator {
 	return &RemoteValidator{
-		RemoteSigner: NewRemoteSigner(epochIdx, address),
+		RemoteSigner: NewRemoteSigner(term, address),
 
 		queuedPendingBlocks: make(chan *types.Block, maxQueuedPendingBlocks),
 		queuedPrepareSigs:   make(chan *types.Header, maxQueuedSigs),
@@ -29,6 +40,116 @@ func NewRemoteValidator(epochIdx uint64, address common.Address) *RemoteValidato
 
 		quitCh: make(chan struct{}),
 	}
+}
+
+// fetchPubkey fetches the public key of the remote validator from the contract.
+func (s *RemoteValidator) fetchPubkey(contractInstance *dpor.ProposerRegister) error {
+
+	address := s.address
+
+	log.Debug("fetching public key of remote signer")
+	log.Debug("signer", "addr", address)
+
+	pubkey, err := contractInstance.GetPublicKey(nil, address)
+	if err != nil {
+		return err
+	}
+
+	s.pubkey = pubkey
+	s.pubkeyFetched = true
+
+	log.Debug("fetched public key of remote signer", "pubkey", pubkey)
+
+	return nil
+}
+
+// uploadNodeID encrypts proposer's node id with this remote validator's public key and update to the contract.
+func (s *RemoteValidator) uploadNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *dpor.ProposerRegister, client ClientBackend) error {
+	term, validator := s.term, s.address
+
+	log.Debug("fetched rsa pubkey")
+	log.Debug(hex.Dump(s.pubkey))
+
+	pubkey, err := rsakey.NewRsaPublicKey(s.pubkey)
+
+	log.Debug("updating self nodeID with remote validator's public key")
+	log.Debug("term", "term", term)
+	log.Debug("validator", "addr", validator.Hex())
+	log.Debug("proposer(me)", "addr", auth.From.Hex())
+	log.Debug("nodeID", "nodeID", nodeID)
+	log.Debug("pubkey", "pubkey", pubkey)
+
+	if err != nil {
+		return err
+	}
+
+	encryptedNodeID, err := pubkey.RsaEncrypt([]byte(nodeID))
+
+	log.Debug("encryptedNodeID")
+	log.Debug(hex.Dump(encryptedNodeID))
+
+	transaction, err := contractInstance.AddNodeInfo(auth, big.NewInt(int64(term)), validator, encryptedNodeID)
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	_, err = bind.WaitMined(ctx, client, transaction)
+	if err != nil {
+		return err
+	}
+
+	s.nodeIDUpdated = true
+
+	log.Debug("updated self nodeID")
+
+	return nil
+}
+
+// UploadNodeInfo upload my nodeID the signer.
+func (s *RemoteValidator) UploadNodeInfo(
+	nodeID string,
+	auth *bind.TransactOpts,
+	contractInstance *dpor.ProposerRegister,
+	client ClientBackend,
+) (bool, error) {
+
+	log.Debug("dialing to remote signer", "signer", s)
+
+	// fetch remote signer's public key if there is no one.
+	if !s.pubkeyFetched {
+		err := s.fetchPubkey(contractInstance)
+		if err != nil {
+			log.Warn("err when fetching signer's pubkey from contract", "err", err)
+			return false, err
+		}
+	}
+
+	proposer := auth.From
+	validator := s.address
+
+	nodeid, err := fetchNodeID(s.term, proposer, validator, contractInstance)
+	if err != nil {
+		return false, err
+	}
+
+	// update my nodeID to contract if already know the public key of the remote signer and not updated yet.
+	if s.pubkeyFetched && len(nodeid) == 0 {
+		err := s.uploadNodeID(nodeID, auth, contractInstance, client)
+		if err != nil {
+			log.Warn("err when updating my node id to contract", "err", err)
+			return false, err
+		}
+	}
+
+	nodeid, err = fetchNodeID(s.term, proposer, validator, contractInstance)
+	if err != nil {
+		return false, err
+	}
+
+	log.Debug("fetched node id", "nodeid", nodeid)
+
+	return true, nil
 }
 
 // broadcastLoop is a write loop that multiplexes block propagations, announcements
