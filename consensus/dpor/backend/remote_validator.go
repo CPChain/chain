@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"math/big"
+	"sync"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
@@ -19,7 +20,7 @@ type RemoteValidator struct {
 	*RemoteSigner
 
 	pubkey        []byte
-	pubkeyFetched bool
+	nodeIDUpdated bool // bool to show if i updated my nodeid encrypted with this signer's pubkey to the contract.
 
 	queuedPendingBlocks chan *types.Block  // Queue of blocks to broadcast to the signer
 	queuedPrepareSigs   chan *types.Header // Queue of signatures to broadcast to the signer
@@ -27,6 +28,7 @@ type RemoteValidator struct {
 
 	quitCh chan struct{} // Termination channel to stop the broadcaster
 
+	validatorLock sync.RWMutex
 }
 
 // NewRemoteValidator creates a new NewRemoteValidator with given view idx and address.
@@ -42,10 +44,17 @@ func NewRemoteValidator(term uint64, address common.Address) *RemoteValidator {
 	}
 }
 
+func (s *RemoteValidator) getPublicKey() []byte {
+	s.validatorLock.RLock()
+	defer s.validatorLock.RUnlock()
+
+	return s.pubkey
+}
+
 // fetchPubkey fetches the public key of the remote validator from the contract.
 func (s *RemoteValidator) fetchPubkey(contractInstance *dpor.ProposerRegister) error {
 
-	address := s.address
+	address := s.Coinbase()
 
 	log.Debug("fetching public key of remote signer")
 	log.Debug("signer", "addr", address)
@@ -55,8 +64,9 @@ func (s *RemoteValidator) fetchPubkey(contractInstance *dpor.ProposerRegister) e
 		return err
 	}
 
+	s.validatorLock.Lock()
 	s.pubkey = pubkey
-	s.pubkeyFetched = true
+	s.validatorLock.Unlock()
 
 	log.Debug("fetched public key of remote signer", "pubkey", pubkey)
 
@@ -65,12 +75,12 @@ func (s *RemoteValidator) fetchPubkey(contractInstance *dpor.ProposerRegister) e
 
 // uploadNodeID encrypts proposer's node id with this remote validator's public key and update to the contract.
 func (s *RemoteValidator) uploadNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *dpor.ProposerRegister, client ClientBackend) error {
-	term, validator := s.term, s.address
+	term, validator := s.GetTerm(), s.Coinbase()
 
 	log.Debug("fetched rsa pubkey")
-	log.Debug(hex.Dump(s.pubkey))
+	log.Debug(hex.Dump(s.getPublicKey()))
 
-	pubkey, err := rsakey.NewRsaPublicKey(s.pubkey)
+	pubkey, err := rsakey.NewRsaPublicKey(s.getPublicKey())
 
 	log.Debug("updating self nodeID with remote validator's public key")
 	log.Debug("term", "term", term)
@@ -99,7 +109,9 @@ func (s *RemoteValidator) uploadNodeID(nodeID string, auth *bind.TransactOpts, c
 		return err
 	}
 
+	s.validatorLock.Lock()
 	s.nodeIDUpdated = true
+	s.validatorLock.Unlock()
 
 	log.Debug("updated self nodeID")
 
@@ -117,7 +129,7 @@ func (s *RemoteValidator) UploadNodeInfo(
 	log.Debug("dialing to remote signer", "signer", s)
 
 	// fetch remote signer's public key if there is no one.
-	if !s.pubkeyFetched {
+	if len(s.getPublicKey()) == 0 {
 		err := s.fetchPubkey(contractInstance)
 		if err != nil {
 			log.Warn("err when fetching signer's pubkey from contract", "err", err)
@@ -125,16 +137,17 @@ func (s *RemoteValidator) UploadNodeInfo(
 		}
 	}
 
+	term := s.GetTerm()
 	proposer := auth.From
-	validator := s.address
+	validator := s.Coinbase()
 
-	nodeid, err := fetchNodeID(s.term, proposer, validator, contractInstance)
+	nodeid, err := fetchNodeID(term, proposer, validator, contractInstance)
 	if err != nil {
 		return false, err
 	}
 
 	// update my nodeID to contract if already know the public key of the remote signer and not updated yet.
-	if s.pubkeyFetched && len(nodeid) == 0 {
+	if len(s.getPublicKey()) != 0 && len(nodeid) == 0 {
 		err := s.uploadNodeID(nodeID, auth, contractInstance, client)
 		if err != nil {
 			log.Warn("err when updating my node id to contract", "err", err)
@@ -142,7 +155,7 @@ func (s *RemoteValidator) UploadNodeInfo(
 		}
 	}
 
-	nodeid, err = fetchNodeID(s.term, proposer, validator, contractInstance)
+	nodeid, err = fetchNodeID(term, proposer, validator, contractInstance)
 	if err != nil {
 		return false, err
 	}

@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"sync"
@@ -12,6 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
+)
+
+var (
+	errNilPeer = errors.New("nil Peer in RemoteSigner")
 )
 
 const (
@@ -28,12 +33,7 @@ type RemoteSigner struct {
 	version int
 
 	term    uint64
-	nodeID  string
 	address common.Address
-
-	dialed        bool // bool to show if i already connected to this signer.
-	nodeIDFetched bool
-	nodeIDUpdated bool // bool to show if i updated my nodeid encrypted with this signer's pubkey to the contract.
 
 	lock sync.RWMutex
 }
@@ -45,6 +45,13 @@ func NewRemoteSigner(term uint64, address common.Address) *RemoteSigner {
 		address: address,
 	}
 
+}
+
+func (s *RemoteSigner) Coinbase() common.Address {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	return s.address
 }
 
 // SetTerm sets term of signer
@@ -65,26 +72,29 @@ func (s *RemoteSigner) GetTerm() uint64 {
 
 // AddStatic adds remote validator as a static peer
 func (s *RemoteSigner) AddStatic(srv *p2p.Server) error {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 
+	if s.Peer != nil {
+		rawurl := fmt.Sprintf("enode://%v@%v", s.ID().String(), s.RemoteAddr().String())
+		nodeID, err := discover.ParseNode(rawurl)
+		if err != nil {
+			return err
+		}
+		srv.AddPeer(nodeID)
+		return nil
+	}
+	log.Warn("remote signer's Peer is nil")
+	return errNilPeer
+}
+
+func (s *RemoteSigner) disconnect(server *p2p.Server) error {
 	rawurl := fmt.Sprintf("enode://%v@%v", s.ID().String(), s.RemoteAddr().String())
 	nodeID, err := discover.ParseNode(rawurl)
 	if err != nil {
 		return err
 	}
-	srv.AddPeer(nodeID)
-	return nil
-}
-
-func (s *RemoteSigner) disconnect(server *p2p.Server) error {
-	s.lock.Lock()
-	nodeID := s.nodeID
-	s.lock.Unlock()
-
-	node, err := discover.ParseNode(nodeID)
-	if err != nil {
-		return err
-	}
-	server.RemovePeer(node)
+	server.RemovePeer(nodeID)
 	return nil
 }
 
