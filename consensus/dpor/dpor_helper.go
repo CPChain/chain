@@ -187,7 +187,9 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 // verifValidators verifies dpor validators
 
 // Snapshot retrieves the authorization Snapshot at a given point in time.
-func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error) {
+// @param chainSeg  the segment of a chain, composed by ancesters and the block(sepcified by parameter [number] and [hash])
+// in the order of ascending block number.
+func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, chainSeg []*types.Header) (*DporSnapshot, error) {
 	// Search for a Snapshot in memory or on disk for checkpoints
 	var (
 		headers []*types.Header
@@ -240,17 +242,17 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 		// No Snapshot for this header, gather the header and move backward
 		var header *types.Header
-		if len(parents) > 0 {
-			// If we have explicit parents, pick from there (enforced)
-			header = parents[len(parents)-1]
+		if len(chainSeg) > 0 {
+			// If we have explicit chainSeg, pick from there (enforced)
+			header = chainSeg[len(chainSeg)-1]
 			if header.Hash() != hash || header.Number.Uint64() != numberIter {
 				log.Info("8888888888888", "hash1", header.Hash().Hex(), "hash2", hash.Hex(), "number1", header.Number.Uint64(), "number2", numberIter)
 				log.Debug("consensus.ErrUnknownAncestor 1")
 				return nil, consensus.ErrUnknownAncestor
 			}
-			parents = parents[:len(parents)-1]
+			chainSeg = chainSeg[:len(chainSeg)-1]
 		} else {
-			// No explicit parents (or no more left), reach out to the database
+			// No explicit chainSeg (or no more left), reach out to the database
 			header = chain.GetHeader(hash, numberIter)
 			if header == nil {
 				log.Debug("consensus.ErrUnknownAncestor 2", "number", numberIter)
@@ -317,7 +319,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Retrieve the Snapshot needed to verify this header and cache it
-	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents[:len(parents)-1])
+	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
 	}
@@ -368,7 +370,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 
 	// Retrieve the Snapshot needed to verify this header and cache it
 
-	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents[:len(parents)-1])
+	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
 	}
@@ -418,6 +420,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	// Retrieve the Snapshot needed to verify this header and cache it
 	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, nil)
 	if err != nil {
+		log.Warn("getting dpor snapshot failed", "error", err)
 		return err
 	}
 
@@ -428,16 +431,22 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			return errMultiBlocksInOneHeight
 		}
 
-		var bytesToHash []byte
+		var hashToSign []byte
 		// Sign it
 		if state == consensus.Preparing {
-			bytesToHash = append([]byte{'P'}, dpor.dh.sigHash(header).Bytes()...) // Preparing block signed by 'P'+hash
+			hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
 		} else {
-			bytesToHash = dpor.dh.sigHash(header).Bytes()
+			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		}
-		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, bytesToHash)
+		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, hashToSign)
 		if err != nil {
+			log.Warn("signing block header failed", "error", err)
 			return err
+		}
+
+		// if the sigs length is wrong, reset it with correct length(termLen)
+		if len(header.Dpor.Sigs) != int(snap.config.TermLen) {
+			header.Dpor.Sigs = make([]types.DporSignature, snap.config.TermLen)
 		}
 
 		// Copy signer's signature to the right position in the allSigs
@@ -446,6 +455,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 		return nil
 	}
+	log.Warn("signing block failed", "error", errValidatorNotInCommittee)
 	return errValidatorNotInCommittee
 }
 

@@ -64,7 +64,7 @@ func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
 }
 
 type dporUtil interface {
-	sigHash(header *types.Header) (hash common.Hash)
+	sigHash(header *types.Header, salt []byte) (hash common.Hash)
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)
 	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, termLen uint) (bool, error)
 	percentagePBFT(n uint, N uint) bool
@@ -82,10 +82,10 @@ type defaultDporUtil struct {
 // Note, the method requires the extra data to be at least 65 bytes, otherwise it
 // panics. This is done to avoid accidentally using both forms (signature present
 // or not), which could be abused to produce different hashes for the same header.
-func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
+func (d *defaultDporUtil) sigHash(header *types.Header, salt []byte) (hash common.Hash) {
 	hasher := sha3.NewKeccak256()
 
-	rlp.Encode(hasher, []interface{}{
+	contentToHash := []interface{}{
 		header.ParentHash,
 		header.Coinbase,
 		header.StateRoot,
@@ -102,7 +102,9 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 		header.Extra,
 		header.MixHash,
 		header.Nonce,
-	})
+	}
+	contentToHash = append(contentToHash, salt)
+	rlp.Encode(hasher, contentToHash)
 
 	hasher.Sum(hash[:0])
 	return hash
@@ -125,7 +127,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 	// Recover the public key and the cpchain address of leader.
 	var propser common.Address
-	proposerPubKey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), proposerSig[:])
+	proposerPubKey, err := crypto.Ecrecover(d.sigHash(header, []byte{}).Bytes(), proposerSig[:])
 	if err != nil {
 		return common.Address{}, []common.Address{}, err
 	}
@@ -150,7 +152,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		noSigner := bytes.Equal(signerSig[:], make([]byte, extraSeal))
 		if !noSigner {
 			// Recover it!
-			signerPubkey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), signerSig[:])
+			signerPubkey, err := crypto.Ecrecover(d.sigHash(header, []byte{}).Bytes(), signerSig[:])
 			if err != nil {
 				continue
 			}

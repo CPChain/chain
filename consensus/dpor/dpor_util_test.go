@@ -79,7 +79,7 @@ func Test_sigHash(t *testing.T) {
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotHash := dporUtil.sigHash(tt.args.header); !reflect.DeepEqual(gotHash, tt.wantHash) {
+			if gotHash := dporUtil.sigHash(tt.args.header, []byte{}); !reflect.DeepEqual(gotHash, tt.wantHash) {
 				t.Errorf("sigHash(%v) = %v, want %v", tt.args.header, gotHash, tt.wantHash)
 			}
 		})
