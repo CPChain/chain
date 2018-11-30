@@ -47,7 +47,7 @@ const (
 )
 
 var (
-	dporDifficulty = big.NewInt(1) // Block difficulty for out-of-turn signatures
+	DporDifficulty = big.NewInt(1) // Block difficulty for out-of-turn signatures
 )
 
 // Various error messages to mark blocks invalid. These should be private to
@@ -168,6 +168,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	header.Nonce = types.BlockNonce{}
 
 	number := header.Number.Uint64()
+
 	// Assemble the voting Snapshot to check which votes make sense
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
 	if err != nil {

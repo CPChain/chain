@@ -188,7 +188,7 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 		return false, errNoSigsInCache
 	}
 
-	return numSigs == termLen, nil
+	return numSigs >= (termLen-1)/3*2+1, nil
 }
 
 // percentagePBFT returns n is large than pctPBFT * N.
@@ -200,5 +200,5 @@ func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
-	return new(big.Int).Set(dporDifficulty)
+	return new(big.Int).Set(DporDifficulty)
 }

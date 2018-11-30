@@ -73,31 +73,28 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 		return nil
 	}
 
-	// Ensure the block's parent is valid
-	var parent *types.Header
-	if len(parents) > 0 {
-		parent = parents[len(parents)-1]
-	} else {
-		// parent = chain.GetHeader(header.ParentHash, number-1)
-		blk := chain.GetBlock(header.ParentHash, number-1)
-		if blk != nil {
-			parent = blk.Header()
+	if header.Number.Uint64() > 0 {
+		// Ensure the block's parent is valid
+		var parent *types.Header
+		if len(parents) > 0 {
+			parent = parents[len(parents)-1]
+		} else {
+			// parent = chain.GetHeader(header.ParentHash, number-1)
+			blk := chain.GetBlock(header.ParentHash, number-1)
+			if blk != nil {
+				parent = blk.Header()
+			}
 		}
-	}
-	// Ensure that the block's parent is valid
-	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
-		log.Debug("consensus.ErrUnknownAncestor 3")
-		return consensus.ErrUnknownAncestor
-	}
+		// Ensure that the block's parent is valid
+		if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
+			log.Debug("consensus.ErrUnknownAncestor 3")
+			return consensus.ErrUnknownAncestor
+		}
 
-	// Ensure that the block's timestamp is valid
-	if parent.Time.Uint64()+d.config.Period > header.Time.Uint64() {
-		return ErrInvalidTimestamp
-	}
-
-	// Check that the extra-data contains both the vanity and signature
-	if len(header.Extra) < extraVanity {
-		return errMissingVanity
+		// Ensure that the block's timestamp is valid
+		if parent.Time.Uint64()+d.config.Period > header.Time.Uint64() {
+			return ErrInvalidTimestamp
+		}
 	}
 
 	// Ensure that the mix digest is zero as we don't have fork protection currently
@@ -107,8 +104,14 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 
 	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
 	if number > 0 {
-		if header.Difficulty == nil || header.Difficulty.Cmp(dporDifficulty) != 0 {
+		if header.Difficulty == nil || (header.Difficulty.Cmp(DporDifficulty) != 0 && header.Difficulty.Uint64() != 0) {
 			return errInvalidDifficulty
+		}
+
+		// verify dpor seal, genesis block not need this check
+		if err := dh.verifySeal(d, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
+			return err
 		}
 	}
 
@@ -118,14 +121,8 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 		return err
 	}
 
-	// verify dpor seal
-	if err := dh.verifySeal(d, chain, header, parents, refHeader); err != nil {
-		log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
-		return err
-	}
-
 	// verify dpor sigs if required
-	if verifySigs {
+	if number > 0 && verifySigs {
 		if err := dh.verifySigs(d, chain, header, parents, refHeader); err != nil {
 			log.Warn("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
 			return err
@@ -247,6 +244,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			// If we have explicit parents, pick from there (enforced)
 			header = parents[len(parents)-1]
 			if header.Hash() != hash || header.Number.Uint64() != numberIter {
+				log.Info("8888888888888", "hash1", header.Hash().Hex(), "hash2", hash.Hex(), "number1", header.Number.Uint64(), "number2", numberIter)
 				log.Debug("consensus.ErrUnknownAncestor 1")
 				return nil, consensus.ErrUnknownAncestor
 			}
@@ -255,7 +253,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			// No explicit parents (or no more left), reach out to the database
 			header = chain.GetHeader(hash, numberIter)
 			if header == nil {
-				log.Debug("consensus.ErrUnknownAncestor 2")
+				log.Debug("consensus.ErrUnknownAncestor 2", "number", numberIter)
 				return nil, consensus.ErrUnknownAncestor
 			}
 		}

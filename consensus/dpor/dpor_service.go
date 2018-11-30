@@ -143,7 +143,7 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout())+int64(d.config.Period))),
 		Coinbase:   common.Address{},
 		Nonce:      types.BlockNonce{},
-		Difficulty: dporDifficulty,
+		Difficulty: DporDifficulty,
 		MixHash:    common.Hash{},
 		StateRoot:  parentHeader.StateRoot,
 	}
