@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 	"sync"
-	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -162,8 +161,6 @@ func (ac *AdmissionControl) sendCampaignResult() {
 
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 	transactOpts.Value = big.NewInt(ac.config.Deposit)
-	transactOpts.Nonce = big.NewInt(time.Now().Unix())
-	log.Info("admission", "nonce", transactOpts.Nonce)
 	instance, err := dpor.NewCampaignWrapper(transactOpts, ac.config.CampaignContractAddress, ac.contractBackend)
 	if err != nil {
 		ac.err = err
