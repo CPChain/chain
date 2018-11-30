@@ -133,7 +133,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	}
 	copy(propser[:], crypto.Keccak256(proposerPubKey[1:])[12:])
 
-	// Cache leader signature.
+	// Cache proposer signature.
 	if sigs, known := sigcache.Get(hash); known {
 		sigs.(*Signatures).SetSig(propser, proposerSig[:])
 	} else {

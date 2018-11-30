@@ -346,6 +346,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 // verifySigs verifies whether the signatures of the header is signed by correct validator committee
 func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+	hash := header.Hash()
 	number := header.Number.Uint64()
 
 	// Verifying the genesis block is not supported
@@ -369,7 +370,6 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Retrieve the Snapshot needed to verify this header and cache it
-
 	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
@@ -377,7 +377,6 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 
 	expectValidators := snap.ValidatorsOf(number)
 
-	hash := header.Hash()
 	// Some debug infos here
 	log.Debug("--------dpor.verifySigs--------")
 	log.Debug("hash", "hash", hash.Hex())
@@ -393,20 +392,18 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 		log.Debug("validator", "addr", signer.Hex(), "idx", idx)
 	}
 
-	if len(validators) != len(expectValidators) {
-		return errInvalidValidatorSigs
-	}
-
 	count := 0
-	for i, v := range validators {
-		if v == expectValidators[i] {
-			count++
+	for _, v := range validators {
+		for _, ev := range expectValidators {
+			if v == ev {
+				count++
+			}
 		}
 	}
 
 	// if not reached to 2f + 1, the validation fails
 	if count < (len(validators)-1)/3*2+1 {
-		return errInvalidValidatorSigs
+		return consensus.ErrNotEnoughSigs
 	}
 
 	// pass
@@ -415,6 +412,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 
 // signHeader signs the given refHeader if self is in the committee
 func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error {
+	hash := header.Hash()
 	number := header.Number.Uint64()
 
 	// Retrieve the Snapshot needed to verify this header and cache it
@@ -423,6 +421,30 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		log.Warn("getting dpor snapshot failed", "error", err)
 		return err
 	}
+
+	// Retrieve signatures of the block in cache
+	s, ok := dpor.signatures.Get(hash)
+	if !ok {
+		s = &Signatures{
+			sigs: make(map[common.Address][]byte),
+		}
+		dpor.signatures.Add(hash, s)
+	}
+
+	// Copy all signatures to allSigs
+	allSigs := make([]types.DporSignature, dpor.config.TermLen)
+	validators := snap.ValidatorsOf(number)
+	if dpor.config.TermLen != uint64(len(validators)) {
+		log.Warn("validator committee length not equal to term length", "termLen", dpor.config.TermLen, "validatorLen", len(validators))
+	}
+
+	// fulfill all known validator signatures to dpor.sigs to accumulate
+	for signPos, signer := range snap.ValidatorsOf(number) {
+		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
+			copy(allSigs[signPos][:], sigHash)
+		}
+	}
+	header.Dpor.Sigs = allSigs
 
 	// Sign the block if self is in the committee
 	if snap.IsValidatorOf(dpor.signer, number) {
@@ -434,7 +456,8 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		var hashToSign []byte
 		// Sign it
 		if state == consensus.Preparing {
-			hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
+			//hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
+			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		} else {
 			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		}
@@ -452,6 +475,9 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		// Copy signer's signature to the right position in the allSigs
 		sigPos, _ := snap.ValidatorViewOf(dpor.signer, number)
 		copy(header.Dpor.Sigs[sigPos][:], sighash)
+
+		// Record new sig to signature cache
+		s.(*Signatures).SetSig(dpor.signer, sighash)
 
 		return nil
 	}
