@@ -223,43 +223,6 @@ func (vh *Handler) SetAvailable() {
 	vh.available = true
 }
 
-// // GetPendingBlock returns a pending block with given hash
-// func (vh *Handler) GetPendingBlock(number uint64) (*KnownBlock, error) {
-// 	vh.lock.Lock()
-// 	defer vh.lock.Unlock()
-
-// 	block, err := vh.knownBlocks.GetKnownBlock(number)
-
-// 	if err != nil {
-// 		log.Debug("failed to get pending blocks", "number", number)
-// 	}
-
-// 	// log.Debug("got pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
-
-// 	return block, err
-// }
-
-// // AddPendingBlock adds a pending block with given hash
-// func (vh *Handler) AddPendingBlock(block *types.Block) error {
-// 	vh.lock.Lock()
-// 	defer vh.lock.Unlock()
-
-// 	log.Debug("adding block to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
-
-// 	err := vh.knownBlocks.AddBlock(block)
-// 	return err
-// }
-
-// // UpdateBlockStatus updates known block status
-// func (vh *Handler) UpdateBlockStatus(number uint64, status BlockStatus) error {
-// 	vh.lock.Lock()
-// 	defer vh.lock.Unlock()
-
-// 	log.Debug("updating block status", "number", number, "status", status)
-
-// 	return vh.knownBlocks.UpdateStatus(number, status)
-// }
-
 func (vh *Handler) UpdateRemoteValidators(term uint64, validators []common.Address) error {
 	return vh.dialer.UpdateRemoteValidators(term, validators)
 }
