@@ -2,6 +2,7 @@ package backend_test
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"testing"
@@ -11,12 +12,16 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
+
+func init() {
+	log.SetLevel(log.FatalLevel)
+}
 
 func loadDefaultAccount(idx int) (common.Address, *keystore.Key) {
 	filename := "../../../examples/cpchain/conf/keys/"
@@ -42,10 +47,10 @@ func createSimulatedBackend(alloc core.GenesisAlloc) *backends.SimulatedBackend 
 	return contractBackend
 }
 
-func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *contract.SignerConnectionRegister, error) {
+func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *contract.ProposerRegister, error) {
 
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, tx, instance, err := contract.DeploySignerConnectionRegister(deployTransactor, backend)
+	addr, tx, instance, err := contract.DeployProposerRegister(deployTransactor, backend)
 
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
@@ -67,120 +72,73 @@ func TestDial(t *testing.T) {
 
 	// create parameters
 
-	// create two accounts, one as local peer, one as remote signer
-	addr1, key1 := loadDefaultAccount(1)
-	addr2, key2 := loadDefaultAccount(2)
+	// create two accounts, one as validator, one as proposer
+	vAddr, vKey := loadDefaultAccount(1)
+	pAddr, pKey := loadDefaultAccount(2)
 
-	fmt.Println("addr1", addr1, "key1", key1)
-	fmt.Println("addr2", addr2, "key2", key2)
+	fmt.Println("validator address", vAddr.Hex())
+	fmt.Println("proposer address", pAddr.Hex())
 
-	epochIdx := uint64(1)
-	ownAddr := addr1
+	term := uint64(1)
 
-	fmt.Println("epoch", epochIdx)
-	fmt.Println("own address", ownAddr)
+	fmt.Println("term", term)
 
-	id1, id2 := "ID1", "ID2"
-
-	_, _ = id1, id2
+	pID := "enode://helloworld@1.2.3.4:8888"
+	_ = pID
 
 	// create a server
 
 	// new a simulated backend
 	alloc := core.GenesisAlloc{
-		addr1: {Balance: big.NewInt(1000000000000)},
-		addr2: {Balance: big.NewInt(1000000000000)},
+		vAddr: {Balance: big.NewInt(1000000000000)},
+		pAddr: {Balance: big.NewInt(1000000000000)},
 	}
-
 	backend := createSimulatedBackend(alloc)
 
 	// create transactors
-	transactor1 := createTransactor(key1.PrivateKey)
-	transactor2 := createTransactor(key2.PrivateKey)
+	vTransactor := createTransactor(vKey.PrivateKey)
+	pTransactor := createTransactor(pKey.PrivateKey)
 
-	_, _ = transactor1, transactor2
+	_, _ = vTransactor, pTransactor
 
 	// deploy the contract
-	contractAddr, tx, register, err := deployRegister(key1.PrivateKey, big.NewInt(0), backend)
+	contractAddr, tx, register, err := deployRegister(vKey.PrivateKey, big.NewInt(0), backend)
 	_, _, _, _ = contractAddr, tx, register, err
-
 	backend.Commit()
 
 	fmt.Println("contract addr", contractAddr.Hex())
 
-	fmt.Println("RegisterPublicKey tx:", tx.Hash().Hex())
-
-	tx, err = register.RegisterPublicKey(transactor1, key1.RsaKey.PublicKey.RsaPublicKeyBytes)
+	// register validator's public key
+	tx, err = register.RegisterPublicKey(vTransactor, vKey.RsaKey.PublicKey.RsaPublicKeyBytes)
 	_, _ = tx, err
+	backend.Commit()
 
-	tx, err = register.RegisterPublicKey(transactor2, key2.RsaKey.PublicKey.RsaPublicKeyBytes)
-	_, _ = tx, err
+	// proposer fetches validator's public key
+	vPubBytes, err := register.GetPublicKey(nil, vAddr)
+	vPubkey, err := rsakey.NewRsaPublicKey(vPubBytes)
+	_, _ = vPubkey, err
 
-	pub1bytes, err := register.GetPublicKey(nil, addr1)
-	pub2bytes, err := register.GetPublicKey(nil, addr2)
+	fmt.Println("validator's pubkey from contract \n", hex.Dump(vPubBytes))
 
-	pub1, err := rsakey.NewRsaPublicKey(pub1bytes)
+	// proposer encrypts his nodeID with the pubkey
+	encryptedNodeID, err := vPubkey.RsaEncrypt([]byte(pID))
+	fmt.Println("encrypted proposer's nodeID \n", hex.Dump(encryptedNodeID), "err", err)
 
-	_, _ = pub1, err
+	// proposer uploads this encrypted nodeID to the contract
+	termB := big.NewInt(int64(term))
+	tx, err = register.AddNodeInfo(pTransactor, termB, vAddr, encryptedNodeID)
+	fmt.Println("tx", tx.Hash().Hex(), "err", err)
 
-	fmt.Println("pubkey from contract 1", pub1bytes)
-	fmt.Println("pubkey from contract 2", pub2bytes)
+	backend.Commit()
 
-	// create a RemoteSigner
-	// rs := NewRemoteSigner(epochIdx, addr2)
-	// _ = rs
+	// validator fetches the encrypted nodeID from the contract
+	vCallOpts := &bind.CallOpts{
+		From: vAddr,
+	}
+	eNodeIDBytes, err := register.GetNodeInfo(vCallOpts, termB, pAddr)
+	fmt.Println("fetched encrypted nodeID from contract \n", hex.Dump(eNodeIDBytes), "err", err)
 
-	// // set fields
-
-	// transactor2 = createTransactor(key2.PrivateKey)
-	// // upload id2
-	// encryptedid2, err := pub1.RsaEncrypt([]byte(id2))
-	// tx, err = register.AddNodeInfo(transactor2, big.NewInt(1), addr1, encryptedid2)
-	// fmt.Println("err when update node id 2", err)
-
-	// backend.Commit()
-
-	// ctx := context.Background()
-	// receipt, err := backend.TransactionReceipt(ctx, tx.Hash())
-	// fmt.Println("status", receipt.Status)
-
-	// callopts1 := &bind.CallOpts{
-	// 	From:    addr1,
-	// 	Pending: true,
-	// 	Context: ctx,
-	// }
-	// x, err := register.GetNodeInfo(callopts1, big.NewInt(1), addr2)
-	// fmt.Println(x, err)
-
-	// callopts2 := &bind.CallOpts{
-	// 	From:    addr2,
-	// 	Pending: true,
-	// 	Context: ctx,
-	// }
-
-	// x, err = register.GetNodeInfo(callopts2, big.NewInt(1), addr1)
-	// fmt.Println(x, err)
-
-	// // // fetch pub2
-	// nodeid, err := rs.fetchPubkey(register)
-	// fmt.Println(nodeid, err)
-
-	// // fetch id1
-	// nodeid, err = fetchNodeID(rs.epochIdx, addr1, addr1, register)
-	// fmt.Println("fetched id of node1", nodeid, "err", err)
-
-	// nodeid, err = register.GetNodeInfo(nil, big.NewInt(int64(rs.epochIdx)), addr1)
-	// fmt.Println("fetched id of node1", nodeid, "err", err)
-
-	// transactor1 = createTransactor(key1.PrivateKey)
-	// err = rs.updateNodeID(id1, transactor1, register, backend)
-	// fmt.Println("err when update node id 1", err)
-
-	// backend.Commit()
-
-	// // fetch id2
-	// id, err := rs.fetchNodeID(addr1, register, key1.RsaKey)
-	// fmt.Println(id)
-	// fmt.Println("fetched id of node2", rs.nodeID, "err", err)
+	nodeID, err := vKey.RsaKey.RsaDecrypt(eNodeIDBytes)
+	fmt.Println("decrypted nodeID", string(nodeID), "err", err)
 
 }

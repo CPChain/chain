@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	lru "github.com/hashicorp/golang-lru"
@@ -30,7 +30,7 @@ type Dialer struct {
 	// signer register contract related fields
 	contractAddress    common.Address
 	contractCaller     *ContractCaller
-	contractInstance   *contract.SignerConnectionRegister
+	contractInstance   *contract.ProposerRegister
 	contractTransactor *bind.TransactOpts
 
 	recentProposers  *lru.ARCCache
@@ -165,7 +165,7 @@ func (d *Dialer) SetRsaKey(rsaReader RsaReader) error {
 func (d *Dialer) SetContractCaller(contractCaller *ContractCaller) error {
 
 	// creates an contract instance
-	contractInstance, err := contract.NewSignerConnectionRegister(d.contractAddress, contractCaller.Client)
+	contractInstance, err := contract.NewProposerRegister(d.contractAddress, contractCaller.Client)
 	if err != nil {
 		return err
 	}

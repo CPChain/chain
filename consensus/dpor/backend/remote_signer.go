@@ -11,7 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/signer_register"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -179,7 +179,7 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *Si
 }
 
 // fetchPubkey fetches the public key of the remote signer from the contract.
-func (s *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionRegister) error {
+func (s *RemoteSigner) fetchPubkey(contractInstance *contract.ProposerRegister) error {
 
 	address := s.address
 
@@ -200,7 +200,7 @@ func (s *RemoteSigner) fetchPubkey(contractInstance *contract.SignerConnectionRe
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (s *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRegister, rsaKey *rsakey.RsaKey) error {
+func (s *RemoteSigner) fetchNodeID(contractInstance *contract.ProposerRegister, rsaKey *rsakey.RsaKey) error {
 	term, address := s.term, s.address
 
 	log.Debug("fetching nodeID of remote signer")
@@ -227,7 +227,7 @@ func (s *RemoteSigner) fetchNodeID(contractInstance *contract.SignerConnectionRe
 	return nil
 }
 
-func fetchNodeID(term uint64, address common.Address, contractInstance *contract.SignerConnectionRegister) ([]byte, error) {
+func fetchNodeID(term uint64, address common.Address, contractInstance *contract.ProposerRegister) ([]byte, error) {
 	encryptedNodeID, err := contractInstance.GetNodeInfo(nil, big.NewInt(int64(term)), address)
 	if err != nil {
 		return nil, err
@@ -236,7 +236,7 @@ func fetchNodeID(term uint64, address common.Address, contractInstance *contract
 }
 
 // uploadNodeID encrypts my node id with this remote signer's public key and update to the contract.
-func (s *RemoteSigner) uploadNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend) error {
+func (s *RemoteSigner) uploadNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *contract.ProposerRegister, client ClientBackend) error {
 	term, address := s.term, s.address
 
 	log.Debug("fetched rsa pubkey")
@@ -282,7 +282,7 @@ func (s *RemoteSigner) uploadNodeInfo(
 	nodeID string,
 	address common.Address,
 	auth *bind.TransactOpts,
-	contractInstance *contract.SignerConnectionRegister,
+	contractInstance *contract.ProposerRegister,
 	client ClientBackend,
 ) (bool, error) {
 
@@ -320,7 +320,7 @@ func (s *RemoteSigner) uploadNodeInfo(
 func (s *RemoteSigner) fetchNodeInfoAndDial(
 	server *p2p.Server,
 	rsaKey *rsakey.RsaKey,
-	contractInstance *contract.SignerConnectionRegister,
+	contractInstance *contract.ProposerRegister,
 ) (bool, error) {
 
 	// fetch the nodeID of the remote signer if not fetched yet.
@@ -351,7 +351,7 @@ func (s *RemoteSigner) fetchNodeInfoAndDial(
 }
 
 // Dial dials the signer
-func (s *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.SignerConnectionRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
+func (s *RemoteSigner) Dial(server *p2p.Server, nodeID string, address common.Address, auth *bind.TransactOpts, contractInstance *contract.ProposerRegister, client ClientBackend, rsaKey *rsakey.RsaKey) (bool, error) {
 
 	succeed, err := s.uploadNodeInfo(nodeID, address, auth, contractInstance, client)
 	if !succeed || err != nil {
