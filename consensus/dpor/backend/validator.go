@@ -1,11 +1,41 @@
 package backend
 
 import (
+	"time"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/p2p"
 )
+
+// dialLoop loops to dial remote proposer if local peer is a validator
+func (vh *Handler) dialLoop() {
+
+	futureTimer := time.NewTicker(1 * time.Second)
+	defer futureTimer.Stop()
+
+	var block *types.Block
+
+	for {
+		select {
+		case <-futureTimer.C:
+			blk := vh.dpor.GetCurrentBlock()
+			if block != nil {
+				if blk.Number().Cmp(block.Number()) > 0 {
+					// if there is an updated block, try to dial future proposers
+					number := blk.NumberU64()
+					go vh.dialer.DialAllRemoteProposers(number)
+				}
+			} else {
+				block = blk
+			}
+
+		case <-vh.quitSync:
+			return
+		}
+	}
+}
 
 // handleLbftMsg handles given msg with lbft (lightweighted bft) mode
 func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {

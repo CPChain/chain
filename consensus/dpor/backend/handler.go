@@ -3,7 +3,6 @@ package backend
 import (
 	"errors"
 	"sync"
-	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -54,7 +53,7 @@ type Handler struct {
 // NewHandler creates a new Handler
 func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 
-	vh := &Handler{
+	h := &Handler{
 		config:         config,
 		coinbase:       etherbase,
 		knownBlocks:    newKnownBlocks(),
@@ -65,71 +64,71 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 	}
 
 	// TODO: fix this
-	vh.mode = LBFTMode
+	h.mode = LBFTMode
 
-	return vh
+	return h
 }
 
 // Start starts pbft handler
-func (vh *Handler) Start() {
+func (h *Handler) Start() {
 
-	if vh.isValidator {
-		go vh.dialLoop()
+	if h.isValidator {
+		go h.dialLoop()
 	}
 
 	// broadcast mined pending block, including empty block
-	go vh.PendingBlockBroadcastLoop()
+	go h.PendingBlockBroadcastLoop()
 	return
 }
 
 // Stop stops all
-func (vh *Handler) Stop() {
+func (h *Handler) Stop() {
 
-	close(vh.quitSync)
+	close(h.quitSync)
 
 	return
 }
 
 // GetProtocol returns handler protocol
-func (vh *Handler) GetProtocol() consensus.Protocol {
-	return vh
+func (h *Handler) GetProtocol() consensus.Protocol {
+	return h
 }
 
 // NodeInfo returns node status
-func (vh *Handler) NodeInfo() interface{} {
+func (h *Handler) NodeInfo() interface{} {
 
-	return vh.dpor.Status()
+	return h.dpor.Status()
 }
 
 // Name returns protocol name
-func (vh *Handler) Name() string {
+func (h *Handler) Name() string {
 	return ProtocolName
 }
 
 // Version returns protocol version
-func (vh *Handler) Version() uint {
+func (h *Handler) Version() uint {
 	return ProtocolVersion
 }
 
 // Length returns protocol max msg code
-func (vh *Handler) Length() uint64 {
+func (h *Handler) Length() uint64 {
 	return ProtocolLength
 }
 
 // Available returns if handler is available
-func (vh *Handler) Available() bool {
-	vh.lock.RLock()
-	defer vh.lock.RUnlock()
+func (h *Handler) Available() bool {
+	h.lock.RLock()
+	defer h.lock.RUnlock()
 
-	return vh.available
+	return h.available
 }
 
 // AddPeer adds a p2p peer to local peer set
-func (vh *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
-	coinbase := vh.Coinbase()
-	term := vh.dpor.FutureTermOf(vh.dpor.GetCurrentBlock().NumberU64())
-	verifyProposerFn := vh.dpor.VerifyProposerOf
-	verifyValidatorFn := vh.dpor.VerifyValidatorOf
+func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
+	coinbase := h.Coinbase()
+	term := h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
+	verifyProposerFn := h.dpor.VerifyProposerOf
+	verifyValidatorFn := h.dpor.VerifyValidatorOf
 
 	amProposer, _ := verifyProposerFn(coinbase, term)
 	amValidator, _ := verifyValidatorFn(coinbase, term)
@@ -137,27 +136,27 @@ func (vh *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (stri
 		return "", false, false, ErrNotSigner
 	}
 
-	return vh.dialer.AddPeer(version, p, rw, coinbase, term, verifyProposerFn, verifyValidatorFn)
+	return h.dialer.AddPeer(version, p, rw, coinbase, term, verifyProposerFn, verifyValidatorFn)
 }
 
 // RemovePeer removes a p2p peer with its addr
-func (vh *Handler) RemovePeer(addr string) error {
-	return vh.dialer.removeRemoteProposers(addr)
+func (h *Handler) RemovePeer(addr string) error {
+	return h.dialer.removeRemoteProposers(addr)
 }
 
 // HandleMsg handles a msg of peer with id "addr"
-func (vh *Handler) HandleMsg(addr string, msg p2p.Msg) error {
+func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 
-	remoteValidator, ok := vh.dialer.getValidator(addr)
+	remoteValidator, ok := h.dialer.getValidator(addr)
 	if !ok {
 		// TODO: return new err
 		return nil
 	}
 
-	return vh.handleMsg(remoteValidator, msg)
+	return h.handleMsg(remoteValidator, msg)
 }
 
-func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
+func (h *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	log.Debug("handling msg", "msg", msg.Code)
 
 	if msg.Code == NewSignerMsg {
@@ -165,102 +164,62 @@ func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	}
 
 	// TODO: @liuq fix this.
-	switch vh.mode {
+	switch h.mode {
 	case LBFTMode:
-		return vh.handleLbftMsg(msg, p)
+		return h.handleLbftMsg(msg, p)
 	case PBFTMode:
-		return vh.handlePbftMsg(msg, p)
+		return h.handlePbftMsg(msg, p)
 	default:
 		return ErrUnknownHandlerMode
 	}
 }
 
 // SetContractCaller sets dialer.contractCaller
-func (vh *Handler) SetContractCaller(contractCaller *ContractCaller) error {
-	return vh.dialer.SetContractCaller(contractCaller)
+func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
+	return h.dialer.SetContractCaller(contractCaller)
 }
 
 // SetServer sets dialer.server
-func (vh *Handler) SetServer(server *p2p.Server) error {
-	return vh.dialer.SetServer(server)
+func (h *Handler) SetServer(server *p2p.Server) error {
+	return h.dialer.SetServer(server)
 }
 
 // SetDporService sets dpor service to handler
-func (vh *Handler) SetDporService(dpor DporService) error {
-	vh.dpor = dpor
+func (h *Handler) SetDporService(dpor DporService) error {
+	h.dpor = dpor
 	return nil
 }
 
 // Coinbase returns handler.signer
-func (vh *Handler) Coinbase() common.Address {
-	vh.lock.Lock()
-	defer vh.lock.Unlock()
+func (h *Handler) Coinbase() common.Address {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 
-	return vh.coinbase
+	return h.coinbase
 }
 
 // SetCoinbase sets coinbase of handler
-func (vh *Handler) SetCoinbase(coinbase common.Address) {
-	vh.lock.Lock()
-	defer vh.lock.Unlock()
+func (h *Handler) SetCoinbase(coinbase common.Address) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 
-	if vh.coinbase != coinbase {
-		vh.coinbase = coinbase
+	if h.coinbase != coinbase {
+		h.coinbase = coinbase
 	}
 }
 
 // IsAvailable returns if handler is available
-func (vh *Handler) IsAvailable() bool {
-	vh.lock.RLock()
-	defer vh.lock.RUnlock()
+func (h *Handler) IsAvailable() bool {
+	h.lock.RLock()
+	defer h.lock.RUnlock()
 
-	return vh.available
+	return h.available
 }
 
 // SetAvailable sets available
-func (vh *Handler) SetAvailable() {
-	vh.lock.Lock()
-	defer vh.lock.Unlock()
+func (h *Handler) SetAvailable() {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 
-	vh.available = true
-}
-
-// UpdateRemoteValidators updates handler.dialer.remoteValidators
-// this is called if local peer is a future proposer
-func (vh *Handler) UpdateRemoteValidators(term uint64, validators []common.Address) error {
-	return vh.dialer.UpdateRemoteValidators(term, validators)
-}
-
-// UploadEncryptedNodeInfo uploads local peer's nodeID to contract
-// this is called after UpdateRemoteValidators being done
-func (vh *Handler) UploadEncryptedNodeInfo(term uint64) error {
-	return vh.dialer.UploadEncryptedNodeInfo(term)
-}
-
-// dialLoop loops to dial remote proposer if local peer is a validator
-func (vh *Handler) dialLoop() {
-
-	futureTimer := time.NewTicker(1 * time.Second)
-	defer futureTimer.Stop()
-
-	var block *types.Block
-
-	for {
-		select {
-		case <-futureTimer.C:
-			blk := vh.dpor.GetCurrentBlock()
-			if block != nil {
-				if blk.Number().Cmp(block.Number()) > 0 {
-					// if there is an updated block, try to dial future proposers
-					number := blk.NumberU64()
-					go vh.dialer.DialAllRemoteProposers(number)
-				}
-			} else {
-				block = blk
-			}
-
-		case <-vh.quitSync:
-			return
-		}
-	}
+	h.available = true
 }
