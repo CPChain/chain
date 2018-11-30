@@ -420,6 +420,14 @@ func (b *SimulatedBackend) Blockchain() *core.BlockChain {
 	return b.blockchain
 }
 
+func (b *SimulatedBackend) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
+	return b.blockchain.GetHeaderByNumber(number.Uint64()), nil
+}
+
+func (b *SimulatedBackend) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
+	return b.blockchain.GetBlockByNumber(number.Uint64()), nil
+}
+
 // callmsg implements core.Message to allow passing it as a transaction simulator.
 type callmsg struct {
 	cpchain.CallMsg

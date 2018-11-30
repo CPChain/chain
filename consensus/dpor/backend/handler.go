@@ -58,7 +58,7 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		config:         config,
 		coinbase:       etherbase,
 		knownBlocks:    newKnownBlocks(),
-		dialer:         newDialer(etherbase),
+		dialer:         NewDialer(etherbase, config.Contracts["signer"]), // TODO: fix this
 		pendingBlockCh: make(chan *types.Block),
 		quitSync:       make(chan struct{}),
 		available:      false,
@@ -77,7 +77,7 @@ func (vh *Handler) Start() {
 		go vh.dialLoop()
 	}
 
-	// Broadcast mined pending block, including empty block
+	// broadcast mined pending block, including empty block
 	go vh.PendingBlockBroadcastLoop()
 	return
 }
@@ -175,10 +175,12 @@ func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	}
 }
 
+// SetContractCaller sets dialer.contractCaller
 func (vh *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 	return vh.dialer.SetContractCaller(contractCaller)
 }
 
+// SetServer sets dialer.server
 func (vh *Handler) SetServer(server *p2p.Server) error {
 	return vh.dialer.SetServer(server)
 }
@@ -223,51 +225,19 @@ func (vh *Handler) SetAvailable() {
 	vh.available = true
 }
 
-// // GetPendingBlock returns a pending block with given hash
-// func (vh *Handler) GetPendingBlock(number uint64) (*KnownBlock, error) {
-// 	vh.lock.Lock()
-// 	defer vh.lock.Unlock()
-
-// 	block, err := vh.knownBlocks.GetKnownBlock(number)
-
-// 	if err != nil {
-// 		log.Debug("failed to get pending blocks", "number", number)
-// 	}
-
-// 	// log.Debug("got pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
-
-// 	return block, err
-// }
-
-// // AddPendingBlock adds a pending block with given hash
-// func (vh *Handler) AddPendingBlock(block *types.Block) error {
-// 	vh.lock.Lock()
-// 	defer vh.lock.Unlock()
-
-// 	log.Debug("adding block to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
-
-// 	err := vh.knownBlocks.AddBlock(block)
-// 	return err
-// }
-
-// // UpdateBlockStatus updates known block status
-// func (vh *Handler) UpdateBlockStatus(number uint64, status BlockStatus) error {
-// 	vh.lock.Lock()
-// 	defer vh.lock.Unlock()
-
-// 	log.Debug("updating block status", "number", number, "status", status)
-
-// 	return vh.knownBlocks.UpdateStatus(number, status)
-// }
-
+// UpdateRemoteValidators updates handler.dialer.remoteValidators
+// this is called if local peer is a future proposer
 func (vh *Handler) UpdateRemoteValidators(term uint64, validators []common.Address) error {
 	return vh.dialer.UpdateRemoteValidators(term, validators)
 }
 
+// UploadEncryptedNodeInfo uploads local peer's nodeID to contract
+// this is called after UpdateRemoteValidators being done
 func (vh *Handler) UploadEncryptedNodeInfo(term uint64) error {
 	return vh.dialer.UploadEncryptedNodeInfo(term)
 }
 
+// dialLoop loops to dial remote proposer if local peer is a validator
 func (vh *Handler) dialLoop() {
 
 	futureTimer := time.NewTicker(1 * time.Second)
