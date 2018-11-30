@@ -27,6 +27,7 @@ const (
 	handshakeTimeout = 5 * time.Second
 )
 
+// RemoteSigner represents a remote peer, ether proposer or validator
 type RemoteSigner struct {
 	*p2p.Peer
 	rw      p2p.MsgReadWriter
@@ -47,6 +48,7 @@ func NewRemoteSigner(term uint64, address common.Address) *RemoteSigner {
 
 }
 
+// Coinbase returns remote peer's addr
 func (s *RemoteSigner) Coinbase() common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()

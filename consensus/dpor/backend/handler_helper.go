@@ -4,7 +4,6 @@ import (
 	"errors"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -17,6 +16,7 @@ var (
 	errNilBlock = errors.New("nil block")
 )
 
+// RecentBlocks caches recent received blocks
 type RecentBlocks struct {
 	blocks *lru.ARCCache
 	latest uint64
@@ -34,6 +34,7 @@ func newKnownBlocks() *RecentBlocks {
 	}
 }
 
+// AddBlock adds a block to caches
 func (rb *RecentBlocks) AddBlock(block *types.Block) error {
 	rb.lock.Lock()
 	defer rb.lock.Unlock()
@@ -48,6 +49,7 @@ func (rb *RecentBlocks) AddBlock(block *types.Block) error {
 	return nil
 }
 
+// GetBlock returns a block
 func (rb *RecentBlocks) GetBlock(number uint64) (*types.Block, error) {
 	rb.lock.Lock()
 	defer rb.lock.Unlock()
@@ -55,7 +57,6 @@ func (rb *RecentBlocks) GetBlock(number uint64) (*types.Block, error) {
 	if blk, ok := rb.blocks.Get(number); ok {
 		return blk.(*types.Block), nil
 	}
-	log.Debug("!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!")
 
 	return nil, errNilBlock
 }

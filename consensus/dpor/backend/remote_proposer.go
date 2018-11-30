@@ -29,6 +29,7 @@ func NewRemoteProposer(term uint64, address common.Address) *RemoteProposer {
 	}
 }
 
+// Dialed returns if already dialed the remote proposer
 func (s *RemoteProposer) Dialed() bool {
 	s.proposerLock.RLock()
 	defer s.proposerLock.RUnlock()
@@ -36,6 +37,7 @@ func (s *RemoteProposer) Dialed() bool {
 	return s.dialed
 }
 
+// ToggleDialed toggles dialed
 func (s *RemoteProposer) ToggleDialed() {
 	s.proposerLock.Lock()
 	defer s.proposerLock.Unlock()
@@ -84,6 +86,7 @@ func (s *RemoteProposer) fetchNodeID(contractInstance *dpor.ProposerRegister, rs
 	return nil
 }
 
+// FetchNodeInfoAndDial fetches remote proposer's nodeID from contract and dial with it
 func (s *RemoteProposer) FetchNodeInfoAndDial(
 	validator common.Address,
 	server *p2p.Server,
