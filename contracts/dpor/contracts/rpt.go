@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strings"
 
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/types"
@@ -854,10 +855,10 @@ type RptSetExpIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there
@@ -978,10 +979,10 @@ type RptUpdateConfigsIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there
@@ -1100,10 +1101,10 @@ type RptUpdateOneConfigIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there

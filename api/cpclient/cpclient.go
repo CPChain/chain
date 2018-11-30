@@ -99,11 +99,9 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	var head *types.Header
 	var body rpcBlock
 	if err := json.Unmarshal(raw, &head); err != nil {
-		// log.Fatal("getBlock head Unmarshal error", "error", err)
 		return nil, err
 	}
 	if err := json.Unmarshal(raw, &body); err != nil {
-		// log.Fatal("getBlock body Unmarshal error", "error", err)
 		return nil, err
 	}
 	// Quick-verify transaction and uncle lists. This mostly helps with debugging the server.
@@ -146,7 +144,7 @@ func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.H
 	return head, err
 }
 
-type Block struct {
+type BlockNumber struct {
 	Number string
 }
 
@@ -154,7 +152,7 @@ func (ec *Client) GetBlockNumber() *big.Int {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var lastBlock Block
+	var lastBlock BlockNumber
 	err := ec.c.CallContext(ctx, &lastBlock, "eth_getBlockByNumber", "latest", true)
 	if err != nil {
 		fmt.Println("can't get latest block:", err)

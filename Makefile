@@ -47,14 +47,17 @@ smartcontract:
 test: all
 	build/env.sh go run build/ci.go test
 
+test-nocache: all
+	build/env.sh go run build/ci.go noCacheTest
+
 test-coverage: all
 	build/env.sh go run build/ci.go test -coverage
 
 test-race: all
 	build/env.sh go run build/ci.go raceTest
 
-test-nocache: all
-	build/env.sh go run build/ci.go noCacheTest
+test-race-nocache: all
+	build/env.sh go run build/ci.go noCacheRaceTest
 
 lint: ## Run linters.
 	build/env.sh go run build/ci.go lint
