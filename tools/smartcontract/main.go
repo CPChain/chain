@@ -21,8 +21,8 @@ import (
 )
 
 func main() {
-	deploy.FormatPrint("DeploySignerConnectionRegister")
-	contractAddress := deploy.DeploySignerConnectionRegister()
+	deploy.FormatPrint("DeployProposerRegister")
+	contractAddress := deploy.DeployProposerRegister()
 	deploy.PrintContract(contractAddress)
 
 	deploy.FormatPrint("DeployCampaignVerify")
