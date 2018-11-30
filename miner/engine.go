@@ -88,8 +88,8 @@ type engine struct {
 	workers map[Worker]struct{} // set of workers
 	recv    chan *Result        // the channel that receives the result from workers
 
-	backend Backend  // cpchain service backend
-	chain   *core.BlockChain  // pointer cuz we have only one canonical chain in the whole system
+	backend Backend          // cpchain service backend
+	chain   *core.BlockChain // pointer cuz we have only one canonical chain in the whole system
 	proc    core.Validator
 	chainDb database.Database
 
@@ -383,7 +383,7 @@ func (self *engine) commitNewWork() {
 	tstart := time.Now()
 	// tstamp is the timestamp for the block
 	tstamp := tstart.Unix()
-	parent := self.chain.CurrentBlock()  // the head of the blockchain
+	parent := self.chain.CurrentBlock() // the head of the blockchain
 	if parent.Time().Cmp(new(big.Int).SetInt64(tstamp)) >= 0 {
 		tstamp = parent.Time().Int64() + 1
 		log.Warn("Adjust mining block tstamp", "tstamp", tstamp)

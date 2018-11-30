@@ -1,18 +1,19 @@
 package admission
 
 import (
+	"errors"
+	"math"
+	"math/big"
+	"sync"
+	"time"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
-	"errors"
 	"github.com/ethereum/go-ethereum/common"
-	"math"
-	"math/big"
-	"sync"
-	"time"
 )
 
 // Result is admission control examination result
