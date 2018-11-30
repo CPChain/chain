@@ -17,6 +17,7 @@
 package core
 
 import (
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"fmt"
 	"math/big"
 
@@ -242,6 +243,7 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 	header.StateRoot = state.IntermediateRoot(true)
 	header.Coinbase = parent.Coinbase()
 	header.GasLimit = CalcGasLimit(parent)
+	header.Difficulty = dpor.DporDifficulty
 
 	header.Time = time
 

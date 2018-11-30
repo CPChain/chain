@@ -17,11 +17,11 @@
 package dpor
 
 import (
+	"bitbucket.org/cpchain/chain/accounts"
 	"math/big"
 	"reflect"
 	"time"
 
-	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
@@ -30,10 +30,11 @@ import (
 
 type dporHelper interface {
 	dporUtil
-	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error
-	verifyCascadingFields(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error
+	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, verifySigs bool) error
 	snapshot(d *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error)
 	verifySeal(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
+	verifySigs(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
+	verifyProposers(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error
 	validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block) error
 }
@@ -44,6 +45,7 @@ type defaultDporHelper struct {
 
 // validateBlock checks basic fields in a block
 func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block) error {
+	// TODO: @AC consider if we need to verify body, as well as process txs and validate state
 	return dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), false)
 }
 
@@ -51,7 +53,8 @@ func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader,
 // caller may optionally pass in a batch of parents (ascending order) to avoid
 // looking those up from the database. This is useful for concurrently verifying
 // a batch of new headers.
-func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error {
+func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header,
+	refHeader *types.Header, verifySigs bool) error {
 	if header.Number == nil {
 		return errUnknownBlock
 	}
@@ -63,16 +66,35 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 		return consensus.ErrFutureBlock
 	}
 
-	switch c.fake {
+	switch d.fake {
 	case DoNothingFakeMode:
 		// do nothing
 	case FakeMode:
 		return nil
 	}
 
-	// Check that the extra-data contains both the vanity and signature
-	if len(header.Extra) < extraVanity {
-		return errMissingVanity
+	if header.Number.Uint64() > 0 {
+		// Ensure the block's parent is valid
+		var parent *types.Header
+		if len(parents) > 0 {
+			parent = parents[len(parents)-1]
+		} else {
+			// parent = chain.GetHeader(header.ParentHash, number-1)
+			blk := chain.GetBlock(header.ParentHash, number-1)
+			if blk != nil {
+				parent = blk.Header()
+			}
+		}
+		// Ensure that the block's parent is valid
+		if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
+			log.Debug("consensus.ErrUnknownAncestor 3")
+			return consensus.ErrUnknownAncestor
+		}
+
+		// Ensure that the block's timestamp is valid
+		if parent.Time.Uint64()+d.config.Period > header.Time.Uint64() {
+			return ErrInvalidTimestamp
+		}
 	}
 
 	// Ensure that the mix digest is zero as we don't have fork protection currently
@@ -82,47 +104,39 @@ func (dh *defaultDporHelper) verifyHeader(c *Dpor, chain consensus.ChainReader, 
 
 	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
 	if number > 0 {
-		if header.Difficulty == nil || header.Difficulty.Cmp(dporDifficulty) != 0 {
+		if header.Difficulty == nil || (header.Difficulty.Cmp(DporDifficulty) != 0 && header.Difficulty.Uint64() != 0) {
 			return errInvalidDifficulty
+		}
+
+		// verify dpor seal, genesis block not need this check
+		if err := dh.verifySeal(d, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
+			return err
 		}
 	}
 
-	// All basic checks passed, verify cascading fields
-	return c.dh.verifyCascadingFields(c, chain, header, parents, refHeader, seal)
+	// verify proposers
+	if err := d.dh.verifyProposers(d, chain, header, parents, refHeader); err != nil {
+		log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
+		return err
+	}
+
+	// verify dpor sigs if required
+	if number > 0 && verifySigs {
+		if err := dh.verifySigs(d, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
+			return err
+		}
+	}
+	return nil
 }
 
-// verifyCascadingFields verifies all the header fields that are not standalone,
-// rather depend on a batch of previous headers. The caller may optionally pass
-// in a batch of parents (ascending order) to avoid looking those up from the
-// database. This is useful for concurrently verifying a batch of new headers.
-func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, seal bool) error {
+// verifyProposers verifies dpor proposers
+func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	// The genesis block is the always valid dead-end
 	number := header.Number.Uint64()
 	if number == 0 {
 		return nil
-	}
-
-	// Ensure that the block's timestamp isn't too close to it's parent
-	var parent *types.Header
-	if len(parents) > 0 {
-		parent = parents[len(parents)-1]
-	} else {
-		// parent = chain.GetHeader(header.ParentHash, number-1)
-		blk := chain.GetBlock(header.ParentHash, number-1)
-		if blk != nil {
-			parent = blk.Header()
-		}
-	}
-
-	// Ensure that the block's parent is valid
-	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
-		log.Debug("consensus.ErrUnknownAncestor 3")
-		return consensus.ErrUnknownAncestor
-	}
-
-	// Ensure that the block's timestamp is valid
-	if parent.Time.Uint64()+dpor.config.Period > header.Time.Uint64() {
-		return ErrInvalidTimestamp
 	}
 
 	// Retrieve the Snapshot needed to verify this header and cache it
@@ -167,16 +181,15 @@ func (dh *defaultDporHelper) verifyCascadingFields(dpor *Dpor, chain consensus.C
 		}
 	}
 
-	// All basic checks passed, verify the seal and return
-	if seal {
-		return dh.verifySeal(dpor, chain, header, parents, refHeader)
-	}
-
 	return nil
 }
 
+// verifValidators verifies dpor validators
+
 // Snapshot retrieves the authorization Snapshot at a given point in time.
-func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error) {
+// @param chainSeg  the segment of a chain, composed by ancesters and the block(sepcified by parameter [number] and [hash])
+// in the order of ascending block number.
+func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, chainSeg []*types.Header) (*DporSnapshot, error) {
 	// Search for a Snapshot in memory or on disk for checkpoints
 	var (
 		headers []*types.Header
@@ -206,7 +219,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		if numberIter == 0 {
 			// Retrieve genesis block and verify it
 			genesis := chain.GetHeaderByNumber(0)
-			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil, true); err != nil {
+			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil, false); err != nil {
 				return nil, err
 			}
 
@@ -229,19 +242,20 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 		// No Snapshot for this header, gather the header and move backward
 		var header *types.Header
-		if len(parents) > 0 {
-			// If we have explicit parents, pick from there (enforced)
-			header = parents[len(parents)-1]
+		if len(chainSeg) > 0 {
+			// If we have explicit chainSeg, pick from there (enforced)
+			header = chainSeg[len(chainSeg)-1]
 			if header.Hash() != hash || header.Number.Uint64() != numberIter {
+				log.Info("8888888888888", "hash1", header.Hash().Hex(), "hash2", hash.Hex(), "number1", header.Number.Uint64(), "number2", numberIter)
 				log.Debug("consensus.ErrUnknownAncestor 1")
 				return nil, consensus.ErrUnknownAncestor
 			}
-			parents = parents[:len(parents)-1]
+			chainSeg = chainSeg[:len(chainSeg)-1]
 		} else {
-			// No explicit parents (or no more left), reach out to the database
+			// No explicit chainSeg (or no more left), reach out to the database
 			header = chain.GetHeader(hash, numberIter)
 			if header == nil {
-				log.Debug("consensus.ErrUnknownAncestor 2")
+				log.Debug("consensus.ErrUnknownAncestor 2", "number", numberIter)
 				return nil, consensus.ErrUnknownAncestor
 			}
 		}
@@ -277,10 +291,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	return newSnap, err
 }
 
-// verifySeal checks whether the signature contained in the header satisfies the
-// consensus protocol requirements. The method accepts an optional list of parent
-// headers that aren't yet part of the local blockchain to generate the snapshots
-// from.
+// verifySeal checks whether the dpor seal is signature of a correct proposer.
+// The method accepts an optional list of parent headers that aren't yet part of the local blockchain to generate
+// the snapshots from.
 func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	hash := header.Hash()
 	number := header.Number.Uint64()
@@ -299,14 +312,8 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return nil
 	}
 
-	inserted := chain.GetHeaderByHash(hash)
-	// Already in chain
-	if inserted != nil {
-		return nil
-	}
-
 	// Resolve the authorization key and check against signers
-	leader, signers, err := dpor.dh.ecrecover(header, dpor.signatures)
+	proposer, _, err := dh.ecrecover(header, dpor.signatures)
 	if err != nil {
 		return err
 	}
@@ -318,47 +325,88 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Some debug infos here
-	log.Debug("--------dpor.verifySeal start--------")
+	log.Debug("--------dpor.verifySeal--------")
 	log.Debug("hash", "hash", hash.Hex())
 	log.Debug("number", "number", number)
 	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
-	log.Debug("leader", "address", leader.Hex())
-	log.Debug("signers recovered from header: ")
-	for _, signer := range signers {
-		log.Debug("signer", "address", signer.Hex())
-	}
-	log.Debug("signers in snapshot: ")
-	for _, signer := range snap.ValidatorsOf(number) {
-		log.Debug("signer", "address", signer.Hex())
-	}
+	log.Debug("proposer", "address", proposer.Hex())
 
-	// Check if the leader is the real leader
-	ok, err := snap.IsProposerOf(leader, number)
+	// Check if the proposer is right proposer
+	ok, err := snap.IsProposerOf(proposer, number)
 	if err != nil {
 		return err
 	}
-	// If leader is a wrong leader, return err
+	// If proposer is a wrong leader, return err
 	if !ok {
 		return consensus.ErrUnauthorized
 	}
 
-	// Check if accept the sigs and if leader is in the sigs
-	accept, err := dpor.dh.acceptSigs(header, dpor.signatures, snap.ValidatorsOf(number), uint(dpor.config.TermLen))
+	return nil
+}
+
+// verifySigs verifies whether the signatures of the header is signed by correct validator committee
+func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+	hash := header.Hash()
+	number := header.Number.Uint64()
+
+	// Verifying the genesis block is not supported
+	if number == 0 {
+		return errUnknownBlock
+	}
+
+	// Fake Dpor doesn't do seal check
+	if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
+		time.Sleep(dpor.fakeDelay)
+		if dpor.fakeFail == number {
+			return errFakerFail
+		}
+		return nil
+	}
+
+	// Resolve the authorization keys
+	proposer, validators, err := dh.ecrecover(header, dpor.signatures)
 	if err != nil {
 		return err
 	}
 
-	// We haven't reached the 2/3 rule
-	if !accept {
+	// Retrieve the Snapshot needed to verify this header and cache it
+	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
+	if err != nil {
+		return err
+	}
+
+	expectValidators := snap.ValidatorsOf(number)
+
+	// Some debug infos here
+	log.Debug("--------dpor.verifySigs--------")
+	log.Debug("hash", "hash", hash.Hex())
+	log.Debug("number", "number", number)
+	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
+	log.Debug("proposer", "address", proposer.Hex())
+	log.Debug("validators recovered from header: ")
+	for idx, validator := range validators {
+		log.Debug("validator", "addr", validator.Hex(), "idx", idx)
+	}
+	log.Debug("validators in snapshot: ")
+	for idx, signer := range expectValidators {
+		log.Debug("validator", "addr", signer.Hex(), "idx", idx)
+	}
+
+	count := 0
+	for _, v := range validators {
+		for _, ev := range expectValidators {
+			if v == ev {
+				count++
+			}
+		}
+	}
+
+	// if not reached to 2f + 1, the validation fails
+	if count < (len(validators)-1)/3*2+1 {
 		return consensus.ErrNotEnoughSigs
 	}
 
-	if dh.isTimeToDialValidators(dpor, chain) {
-		go dh.uploadNodeInfo(dpor, snap, number)
-	}
-
-	dpor.currentSnapshot = snap
-
+	// pass
 	return nil
 }
 
@@ -370,6 +418,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	// Retrieve the Snapshot needed to verify this header and cache it
 	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, nil)
 	if err != nil {
+		log.Warn("getting dpor snapshot failed", "error", err)
 		return err
 	}
 
@@ -379,10 +428,17 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		s = &Signatures{
 			sigs: make(map[common.Address][]byte),
 		}
+		dpor.signatures.Add(hash, s)
 	}
 
 	// Copy all signatures to allSigs
 	allSigs := make([]types.DporSignature, dpor.config.TermLen)
+	validators := snap.ValidatorsOf(number)
+	if dpor.config.TermLen != uint64(len(validators)) {
+		log.Warn("validator committee length not equal to term length", "termLen", dpor.config.TermLen, "validatorLen", len(validators))
+	}
+
+	// fulfill all known validator signatures to dpor.sigs to accumulate
 	for signPos, signer := range snap.ValidatorsOf(number) {
 		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
 			copy(allSigs[signPos][:], sigHash)
@@ -392,25 +448,40 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 	// Sign the block if self is in the committee
 	if snap.IsValidatorOf(dpor.signer, number) {
-
 		// NOTE: sign a block only once
 		if signedHash, signed := dpor.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {
 			return errMultiBlocksInOneHeight
 		}
 
-		// Sign it!
-		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, dpor.dh.sigHash(header).Bytes())
+		var hashToSign []byte
+		// Sign it
+		if state == consensus.Preparing {
+			//hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
+			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
+		} else {
+			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
+		}
+		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, hashToSign)
 		if err != nil {
+			log.Warn("signing block header failed", "error", err)
 			return err
+		}
+
+		// if the sigs length is wrong, reset it with correct length(termLen)
+		if len(header.Dpor.Sigs) != int(snap.config.TermLen) {
+			header.Dpor.Sigs = make([]types.DporSignature, snap.config.TermLen)
 		}
 
 		// Copy signer's signature to the right position in the allSigs
 		sigPos, _ := snap.ValidatorViewOf(dpor.signer, number)
-		copy(allSigs[sigPos][:], sighash)
-		header.Dpor.Sigs = allSigs
+		copy(header.Dpor.Sigs[sigPos][:], sighash)
+
+		// Record new sig to signature cache
+		s.(*Signatures).SetSig(dpor.signer, sighash)
 
 		return nil
 	}
+	log.Warn("signing block failed", "error", errValidatorNotInCommittee)
 	return errValidatorNotInCommittee
 }
 

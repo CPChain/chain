@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 )
 
@@ -65,6 +66,12 @@ func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, erro
 	return false, nil
 }
 
+func (d *Dpor) ValidatorsOf(number uint64) ([]common.Address, error) {
+	snap := d.currentSnapshot
+	term := snap.TermOf(number)
+	return snap.getRecentValidators(term), nil
+}
+
 // VerifyHeaderWithState verifies the given header
 // if in preprepared state, verify basic fields
 // if in prepared state, verify if enough prepare sigs
@@ -82,13 +89,11 @@ func (d *Dpor) ValidateBlock(block *types.Block) error {
 
 // SignHeader signs the header and adds all known sigs to header
 func (d *Dpor) SignHeader(header *types.Header, state consensus.State) error {
-
-	// TODO: fix this, !!! state
 	switch err := d.dh.signHeader(d, d.chain, header, state); err {
 	case nil:
 		return nil
 	default:
-		return consensus.ErrWhenSigningHeader
+		return err
 	}
 }
 
@@ -138,7 +143,7 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout())+int64(d.config.Period))),
 		Coinbase:   common.Address{},
 		Nonce:      types.BlockNonce{},
-		Difficulty: dporDifficulty,
+		Difficulty: DporDifficulty,
 		MixHash:    common.Hash{},
 		StateRoot:  parentHeader.StateRoot,
 	}
@@ -146,4 +151,25 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	impeach := types.NewBlock(impeachHeader, []*types.Transaction{}, []*types.Receipt{})
 
 	return impeach, nil
+}
+
+func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, error) {
+	var hashBytes []byte
+
+	sigs := header.Dpor.Sigs
+	addrs := make([]common.Address, len(sigs))
+	for i, sig := range sigs {
+		if state == consensus.Preparing {
+			hashBytes = d.dh.sigHash(header, []byte{'P'}).Bytes()
+		} else {
+			hashBytes = d.dh.sigHash(header, []byte{}).Bytes()
+		}
+		proposerPubKey, err := crypto.Ecrecover(hashBytes, sig[:])
+		if err != nil {
+			return []common.Address{}, err
+		}
+
+		copy(addrs[i][:], crypto.Keccak256(proposerPubKey[1:])[12:])
+	}
+	return addrs, nil
 }

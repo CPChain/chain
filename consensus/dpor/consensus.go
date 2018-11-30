@@ -47,7 +47,7 @@ const (
 )
 
 var (
-	dporDifficulty = big.NewInt(1) // Block difficulty for out-of-turn signatures
+	DporDifficulty = big.NewInt(1) // Block difficulty for out-of-turn signatures
 )
 
 // Various error messages to mark blocks invalid. These should be private to
@@ -94,6 +94,9 @@ var (
 	// errInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	errInvalidSigners = errors.New("invalid signer list on checkpoint block")
 
+	// errInvalidValidatorSigs is returned if the dpor sigs are not sigend by correct validator committtee.
+	errInvalidValidatorSigs = errors.New("invalid validator signatures")
+
 	// errNoSigsInCache is returned if the cache is unable to store and return sigs.
 	errNoSigsInCache = errors.New("signatures not found in cache")
 
@@ -117,25 +120,25 @@ type SignFn func(accounts.Account, []byte) ([]byte, error)
 // Author implements consensus.Engine, returning the cpchain address recovered
 // from the signature in the header's extra-data section.
 func (d *Dpor) Author(header *types.Header) (common.Address, error) {
-	leader, _, err := d.dh.ecrecover(header, d.signatures)
-	return leader, err
+	proposer, _, err := d.dh.ecrecover(header, d.signatures)
+	return proposer, err
 }
 
 // VerifyHeader checks whether a header conforms to the consensus rules.
-func (d *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool, refHeader *types.Header) error {
-	return d.dh.verifyHeader(d, chain, header, nil, refHeader, true)
+func (d *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, verifySigs bool, refHeader *types.Header) error {
+	return d.dh.verifyHeader(d, chain, header, nil, refHeader, verifySigs)
 }
 
 // VerifyHeaders is similar to VerifyHeader, but verifies a batch of headers. The
 // method returns a quit channel to abort the operations and a results channel to
 // retrieve the async verifications (the order is that of the input slice).
-func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, seals []bool, refHeaders []*types.Header) (chan<- struct{}, <-chan error) {
+func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, verifySigs []bool, refHeaders []*types.Header) (chan<- struct{}, <-chan error) {
 	abort := make(chan struct{})
 	results := make(chan error, len(headers))
 
 	go func() {
 		for i, header := range headers {
-			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i], true)
+			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i], verifySigs[i])
 
 			select {
 			case <-abort:
@@ -153,6 +156,10 @@ func (d *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, ref
 	return d.dh.verifySeal(d, chain, header, nil, refHeader)
 }
 
+func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, refHeader *types.Header) error {
+	return d.dh.verifySigs(d, chain, header, nil, refHeader)
+}
+
 // PrepareBlock implements consensus.Engine, preparing all the consensus fields of the
 // header for running the transactions on top.
 func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
@@ -161,6 +168,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	header.Nonce = types.BlockNonce{}
 
 	number := header.Number.Uint64()
+
 	// Assemble the voting Snapshot to check which votes make sense
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
 	if err != nil {
@@ -285,7 +293,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		}
 	*/
 	// Proposer seals the block with signature
-	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header).Bytes())
+	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header, []byte{}).Bytes())
 	if err != nil {
 		return nil, err
 	}

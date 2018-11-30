@@ -25,6 +25,7 @@ import (
 	"io"
 	"math/big"
 	"sort"
+	"strings"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -127,6 +128,14 @@ type DporSnap struct {
 	Sigs       []DporSignature  // the signatures of validators to endorse the block
 	Proposers  []common.Address // current proposers committee
 	Validators []common.Address // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
+}
+
+func (d *DporSnap) SigsFormatText() string {
+	items := make([]string, len(d.Sigs))
+	for idx, sig := range d.Sigs {
+		items[idx] = fmt.Sprintf("#%d %s", idx, common.Bytes2Hex(sig[:]))
+	}
+	return strings.Join(items, ",")
 }
 
 // field type overrides for gencodec
