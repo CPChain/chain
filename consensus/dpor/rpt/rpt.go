@@ -144,7 +144,6 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 				rpt += value.Rpt
 			}
 		}
-		// fmt.Println("the CalcRptInfo is:", rpt)
 	}
 
 	if rpt <= minRptScore {

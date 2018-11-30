@@ -73,7 +73,7 @@ func newAuth(client *cpclient.Client, privateKey *ecdsa.PrivateKey, fromAddress 
 	// fmt.Println("blockNumber:", blockNumber)
 	nonce, err := client.NonceAt(context.Background(), fromAddress, blockNumber)
 	if err != nil {
-		fmt.Errorf("get nonce failed")
+		fmt.Println("get nonce failed")
 	}
 	// fmt.Println("nonce:", nonce)
 	auth.Nonce = new(big.Int).SetUint64(nonce)

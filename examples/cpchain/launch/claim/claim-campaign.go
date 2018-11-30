@@ -31,7 +31,6 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -122,76 +121,6 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 	return privateKey, publicKeyECDSA, fromAddress, key.RsaKey.PublicKey.RsaPublicKeyBytes
 }
 
-func claimCampaign(privateKey *ecdsa.PrivateKey, address common.Address, contractAddress common.Address) {
-	// Create client.
-	client, err := cpclient.Dial(endPoint)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	fmt.Println("from address:", address.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
-
-	// Check balance.
-	bal, err := client.BalanceAt(context.Background(), address, nil)
-	fmt.Println("balance:", bal)
-
-	gasPrice, err := client.SuggestGasPrice(context.Background())
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	fmt.Println("gasPrice:", gasPrice)
-
-	startTime := time.Now()
-	fmt.Printf("transaction start at: %s\n", time.Now())
-
-	ctx := context.Background()
-
-	instance, err := campaign.NewCampaign(contractAddress, client)
-
-	baseDeposit := 50
-	gasLimit := 3000000
-	numOfCampaign := 10
-	cpuNonce := 345678
-	cpuBlockNum := 100
-	memNonce := 345678
-	memBlockNum := 101
-	gasPrice = big.NewInt(1800000000)
-
-	auth := bind.NewKeyedTransactor(privateKey)
-	auth.Value = big.NewInt(int64(baseDeposit * numOfCampaign))
-	auth.GasLimit = uint64(gasLimit)
-	auth.GasPrice = gasPrice
-	// auth.Nonce
-
-	blockNumber := client.GetBlockNumber()
-	fmt.Println("blockNumber:", blockNumber)
-	// nonce, err := client.NonceAt(context.Background(), contractAddress, blockNumber)
-	nonce, err := client.NonceAt(context.Background(), address, blockNumber)
-	fmt.Println("nonce:", nonce)
-
-	auth.Nonce = big.NewInt(1)
-	auth.Nonce = new(big.Int).SetUint64(nonce)
-
-	tx, err := instance.ClaimCampaign(auth, big.NewInt(int64(numOfCampaign)), uint64(cpuNonce), big.NewInt(int64(cpuBlockNum)),
-		uint64(memNonce), big.NewInt(int64(memBlockNum)))
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	fmt.Println("transaction hash: ", tx.Hash().Hex())
-
-	startTime = time.Now()
-	receipt, err := bind.WaitMined(ctx, client, tx)
-	if err != nil {
-		log.Fatalf("failed to deploy contact when mining :%v", err)
-	}
-
-	fmt.Printf("tx mining take time:%s\n", time.Since(startTime))
-	fmt.Println("receipt.Status:", receipt.Status)
-
-	noc, deposit, startView, stopView, err := instance.CandidateInfoOf(nil, address)
-	fmt.Println("candidate info of", address.Hex(), ":", noc, deposit, startView, stopView)
-}
-
 func claimProposer(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, address common.Address, contractAddress common.Address, rsaPubkey []byte) {
 	// Create client.
 	client, err := cpclient.Dial(endPoint)
@@ -247,16 +176,12 @@ func claimProposer(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 }
 
 func main() {
-	campaignAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
 	proposerAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractProposer]
 
 	for i, kPair := range keystores {
 		fmt.Println(i)
 		keystoreFile, passphrase := kPair.keystorePath, kPair.passphrase
 		privKey, pubKey, addr, rsaPubKey := getAccount(keystoreFile, passphrase)
-		fmt.Println("=== claimCampaign")
-		claimCampaign(privKey, addr, campaignAddress)
-		fmt.Println("=== claimProposer")
 		claimProposer(privKey, pubKey, addr, proposerAddress, rsaPubKey)
 	}
 }

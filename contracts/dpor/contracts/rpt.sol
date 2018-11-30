@@ -101,7 +101,7 @@ contract Rpt {
         if(3 == _addr.getMaintenance(_blockNumber)) {
             return rpt;
         }
-        */
+        //*/
         rpt = rpt.add(alpha * getCoinage(_addr, _blockNumber));
         rpt = rpt.add(beta * getTx(_addr, _blockNumber));
         rpt = rpt.add(gamma * getProxyRep(_addr, _blockNumber));
