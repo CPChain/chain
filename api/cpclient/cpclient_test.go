@@ -107,7 +107,7 @@ func TestGetCommittees(t *testing.T) {
 }
 
 func TestClient_BlockByNumber(t *testing.T) {
-	// t.Skip("skip test")
+	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
