@@ -27,20 +27,22 @@ type Dialer struct {
 	rsaKey   *rsakey.RsaKey
 	coinbase common.Address
 
-	// signer register contract related fields
+	// proposer register contract related fields
 	contractAddress    common.Address
 	contractCaller     *ContractCaller
 	contractInstance   *dpor.ProposerRegister
 	contractTransactor *bind.TransactOpts
 
+	// use lru caches to cache recent proposers and validators
 	recentProposers  *lru.ARCCache
 	recentValidators *lru.ARCCache
 
-	lock           sync.RWMutex
-	proposersLock  sync.RWMutex
-	validatorsLock sync.RWMutex
+	lock           sync.RWMutex // to protect basic fields
+	proposersLock  sync.RWMutex // to protect recent proposers
+	validatorsLock sync.RWMutex // to protect recent validators
 }
 
+// NewDialer creates a new dialer to dial remote peers
 func NewDialer(
 	coinbase common.Address,
 	contractAddr common.Address,
@@ -81,6 +83,7 @@ func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbas
 	return address.Hex(), isProposer, isValidator, err
 }
 
+// addRemoteProposer adds a p2p peer to local proposers set
 func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address, term uint64) (*RemoteProposer, error) {
 	remoteProposer, ok := d.getProposer(address.Hex())
 	if !ok {
@@ -105,6 +108,7 @@ func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWrite
 	return remoteProposer, nil
 }
 
+// addRemoteValidator adds a p2p peer to local validators set
 func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address, term uint64) (*RemoteValidator, error) {
 	remoteValidator, ok := d.getValidator(address.Hex())
 	if !ok {
@@ -131,6 +135,7 @@ func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 	return remoteValidator, nil
 }
 
+// removeRemoteProposers removes remote proposer by it's addr
 func (d *Dialer) removeRemoteProposers(addr string) error {
 	d.proposersLock.Lock()
 	defer d.proposersLock.Unlock()
@@ -151,6 +156,7 @@ func (d *Dialer) SetServer(server *p2p.Server) error {
 	return nil
 }
 
+// SetNodeID sets dialer.nodeID
 func (d *Dialer) SetNodeID(nodeID string) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
@@ -168,7 +174,7 @@ func (d *Dialer) setRsaKey(rsaReader RsaReader) error {
 	return err
 }
 
-// SetContractCaller sets dialer.contractcaller.
+// SetContractCaller sets contract calling related fields in dialer
 func (d *Dialer) SetContractCaller(contractCaller *ContractCaller) error {
 
 	// creates an contract instance
@@ -334,6 +340,7 @@ func (d *Dialer) setValidator(addr string, validator *RemoteValidator) {
 	d.recentValidators.Add(addr, validator)
 }
 
+// ProposersOf returns all proposers of given term
 func (d *Dialer) ProposersOf(term uint64) map[common.Address]*RemoteProposer {
 	d.proposersLock.RLock()
 	defer d.proposersLock.RUnlock()
@@ -351,6 +358,7 @@ func (d *Dialer) ProposersOf(term uint64) map[common.Address]*RemoteProposer {
 	return proposers
 }
 
+// ValidatorsOf returns all validators of given term
 func (d *Dialer) ValidatorsOf(term uint64) map[common.Address]*RemoteValidator {
 	// TODO: @AC @liuq the returned result include non-validator, will correct it
 	d.validatorsLock.RLock()

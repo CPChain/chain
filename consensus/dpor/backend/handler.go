@@ -77,7 +77,7 @@ func (vh *Handler) Start() {
 		go vh.dialLoop()
 	}
 
-	// Broadcast mined pending block, including empty block
+	// broadcast mined pending block, including empty block
 	go vh.PendingBlockBroadcastLoop()
 	return
 }
@@ -175,10 +175,12 @@ func (vh *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	}
 }
 
+// SetContractCaller sets dialer.contractCaller
 func (vh *Handler) SetContractCaller(contractCaller *ContractCaller) error {
 	return vh.dialer.SetContractCaller(contractCaller)
 }
 
+// SetServer sets dialer.server
 func (vh *Handler) SetServer(server *p2p.Server) error {
 	return vh.dialer.SetServer(server)
 }
@@ -223,14 +225,19 @@ func (vh *Handler) SetAvailable() {
 	vh.available = true
 }
 
+// UpdateRemoteValidators updates handler.dialer.remoteValidators
+// this is called if local peer is a future proposer
 func (vh *Handler) UpdateRemoteValidators(term uint64, validators []common.Address) error {
 	return vh.dialer.UpdateRemoteValidators(term, validators)
 }
 
+// UploadEncryptedNodeInfo uploads local peer's nodeID to contract
+// this is called after UpdateRemoteValidators being done
 func (vh *Handler) UploadEncryptedNodeInfo(term uint64) error {
 	return vh.dialer.UploadEncryptedNodeInfo(term)
 }
 
+// dialLoop loops to dial remote proposer if local peer is a validator
 func (vh *Handler) dialLoop() {
 
 	futureTimer := time.NewTicker(1 * time.Second)
