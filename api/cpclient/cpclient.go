@@ -30,7 +30,6 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"
-	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -100,11 +99,11 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	var head *types.Header
 	var body rpcBlock
 	if err := json.Unmarshal(raw, &head); err != nil {
-		log.Fatal("getBlock head Unmarshal error", "error", err)
+		// log.Fatal("getBlock head Unmarshal error", "error", err)
 		return nil, err
 	}
 	if err := json.Unmarshal(raw, &body); err != nil {
-		log.Fatal("getBlock body Unmarshal error", "error", err)
+		// log.Fatal("getBlock body Unmarshal error", "error", err)
 		return nil, err
 	}
 	// Quick-verify transaction and uncle lists. This mostly helps with debugging the server.

@@ -24,6 +24,7 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/cpclient"
+	"math/big"
 )
 
 // Verify that Client implements the ethereum interfaces.
@@ -103,4 +104,23 @@ func TestGetCommittees(t *testing.T) {
 	if len(committees) < 1 {
 		t.Errorf("GetCommittees failed")
 	}
+}
+
+func TestClient_BlockByNumber(t *testing.T) {
+	// t.Skip("skip test")
+	fmt.Println("*******************************************************")
+	client, err := cpclient.Dial("http://localhost:8501")
+	// local
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	block, err := client.BlockByNumber(context.Background(), big.NewInt(138))
+	if err != nil {
+		log.Fatal("BlockByNumber is error: ", err)
+	}
+	Number := block.Number()
+	tx := block.Transactions()
+	fmt.Println("block Transactions is :", tx)
+	fmt.Println("the blcok number is :", Number)
+
 }
