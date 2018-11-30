@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+cd ./docs
+
+sphinx-build -b html ./ _build
+
+cd _build
+
+python -m http.server
