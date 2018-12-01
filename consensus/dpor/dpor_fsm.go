@@ -47,7 +47,14 @@ const (
 )
 
 var (
-	errBlockTooOld = errors.New("the block is too old")
+	errBlockTooOld                     = errors.New("the block is too old")
+	errFsmWrongDataType                = errors.New("an unexpected FSM input data type")
+	errFsmFaultyBlock                  = errors.New("the newly proposed block is faulty")
+	errFsmWrongIdleIpunt               = errors.New("not a proper input for idle state")
+	errFsmWrongPrepreparedInput        = errors.New("not a proper input for pre-prepared state")
+	errFsmWrongPreparedInput           = errors.New("not a proper input for prepared state")
+	errFsmWrongImpeachPrepreparedInput = errors.New("not a proper input for impeach pre-prepared state")
+	errFsmWrongImpeachPreparedInput    = errors.New("not a proper input for impeach prepared state")
 )
 
 //Type enumerator for FSM states
@@ -247,7 +254,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 	case impeachBlock:
 		inputBlock = input.(*types.Block)
 	default:
-		err = errors.New("an unexpected input data type")
+		err = errFsmWrongDataType
 		return nil, noAction, noType, noMsg, consensus.Idle, err
 	}
 
@@ -292,7 +299,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 				}
 				return ret, broadcastMsg, header, prepareMsg, consensus.Preprepared, nil
 			} else {
-				err = errors.New("the proposed block is illegal")
+				err = errFsmFaultyBlock
 				return sm.proposeImpeachBlock(), insertBlock, block, impeachPrepareMsg, consensus.ImpeachPreprepared, err
 			}
 
@@ -323,7 +330,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		case impeachPreprepareMsg:
 			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
 		}
-		err = errors.New("not a proper input for consensus.Idle state")
+		err = errFsmWrongIdleIpunt
 
 	// The case of pre-prepared state
 	case consensus.Preprepared:
@@ -380,7 +387,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
 
 		}
-		err = errors.New("not a proper input for pre-prepared state")
+		err = errFsmWrongPrepreparedInput
 
 	// The case of consensus.Prepared stage
 	case consensus.Prepared:
@@ -425,7 +432,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		case impeachPreprepareMsg:
 			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
 		}
-		err = errors.New("not a proper input for consensus.Prepared state")
+		err = errFsmWrongPreparedInput
 
 	case consensus.ImpeachPreprepared:
 		switch msg {
@@ -452,6 +459,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 				return input, noAction, noType, noMsg, consensus.ImpeachPreprepared, nil
 			}
 		}
+		err = errFsmWrongImpeachPrepreparedInput
 
 	case consensus.ImpeachPrepared:
 		switch msg {
@@ -468,8 +476,9 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 				sm.impeachCommitMsgPlus(inputHeader)
 				return input, noAction, noType, noMsg, consensus.ImpeachPrepared, nil
 			}
-
 		}
+		err = errFsmWrongPreparedInput
+
 		// Broadcast a validate message and then go back to consensus.Idle state
 		//case committed:
 		///return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
