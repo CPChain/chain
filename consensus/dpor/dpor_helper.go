@@ -17,10 +17,11 @@
 package dpor
 
 import (
-	"bitbucket.org/cpchain/chain/accounts"
 	"math/big"
 	"reflect"
 	"time"
+
+	"bitbucket.org/cpchain/chain/accounts"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"

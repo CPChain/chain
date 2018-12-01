@@ -168,6 +168,7 @@ type PbftEngine interface {
 type State uint8
 
 const (
+	// TODO: remove redundant states
 	// Prepreparing is a state in pbft notes that replica enters a new round
 	Prepreparing State = iota
 
@@ -182,6 +183,17 @@ const (
 
 	// Inserting is set if succeed to insert block into local chain
 	Inserting
+
+	//
+	Idle
+
+	Preprepared
+
+	Prepared
+
+	ImpeachPreprepared
+
+	ImpeachPrepared
 )
 
 // PbftStatus represents a state of a dpor replica

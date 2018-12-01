@@ -51,18 +51,6 @@ var (
 )
 
 //Type enumerator for FSM states
-type FsmState uint8
-
-const (
-	idle FsmState = iota
-	preprepared
-	prepared
-	//committed
-	//inserting
-	impeachPreprepared
-	impeachPrepared
-	//impeachCommited
-)
 
 type sigRecord struct {
 	prepareSigs Signatures
@@ -86,6 +74,8 @@ func (sm *DporSm) getSigState(h *types.Header) *sigRecord {
 		sm.state[h.Number.Uint64()] = rec
 	}
 	return rec
+
+	//TODO: sm.state cannot use block.number as key, @chengx
 }
 
 // resetMsgState resets a messsage state of a specified block number
@@ -121,7 +111,7 @@ func (sm *DporSm) commitMsgPlus(h *types.Header) {
 	defer sm.lock.Unlock()
 
 	state := sm.getSigState(h)
-	signers, err := sm.service.EcrecoverSigs(h, consensus.Committing)
+	signers, err := sm.service.EcrecoverSigs(h, consensus.Prepared)
 	if err != nil {
 		log.Warn("failed to recover signatures of committing phase", "error", err)
 		return
@@ -166,7 +156,7 @@ func (sm *DporSm) prepareMsgPlus(h *types.Header) {
 	defer sm.lock.Unlock()
 
 	state := sm.getSigState(h)
-	signers, err := sm.service.EcrecoverSigs(h, consensus.Preparing)
+	signers, err := sm.service.EcrecoverSigs(h, consensus.Preprepared)
 	if err != nil {
 		log.Warn("failed to recover signatures of preparing phase", "error", err)
 		return
@@ -214,31 +204,36 @@ func impeachTimer() bool {
 	return false
 }
 
+//composeImpeachValidateMsg is to return the impeachment validate message, which is the proposed block or impeach block
+func (sm *DporSm) composeImpeachValidateMsg(h *types.Header) *types.Block {
+	return sm.lastBlock
+}
+
 // It returns true it collects 2f+1 impeach prepare messages
-func impeachPrepareCertificate(h *types.Header) bool {
+func (sm *DporSm) impeachPrepareCertificate(h *types.Header) bool {
 	//TODO @shiyc implement it
 	return true
 }
 
-func impeachPrepareMsgPlus(h *types.Header) {
+func (sm *DporSm) impeachPrepareMsgPlus(h *types.Header) {
 	//TODO @shiyc
 }
 
-func composeImpeachCommitMsg(h *types.Header) *types.Header {
+func (sm *DporSm) composeImpeachCommitMsg(h *types.Header) *types.Header {
 	return h
 }
 
-func impeachCommitCertificate(h *types.Header) bool {
+func (sm *DporSm) impeachCommitCertificate(h *types.Header) bool {
 	//TODO @shiyc implement it
 	return true
 }
 
-func impeachCommitMsgPlus(h *types.Header) {
+func (sm *DporSm) impeachCommitMsgPlus(h *types.Header) {
 	//TODO @shiyc implement it
 }
 
 // Fsm is the finite state machine for a validator, to output the correct state given on current state and inputs
-func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state FsmState) (interface{}, action, dataType, msgCode, FsmState, error) {
+func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state consensus.State) (interface{}, action, dataType, msgCode, consensus.State, error) {
 	var inputHeader *types.Header
 	var inputBlock *types.Block
 	var err error
@@ -253,39 +248,39 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		inputBlock = input.(*types.Block)
 	default:
 		err = errors.New("an unexpected input data type")
-		return nil, noAction, noType, noMsg, idle, err
+		return nil, noAction, noType, noMsg, consensus.Idle, err
 	}
 
 	switch state {
-	// The case of idle state
-	case idle:
+	// The case of consensus.Idle state
+	case consensus.Idle:
 		switch msg {
-		// Stay in idle state if receives validate message, and we should insert the block
+		// Stay in consensus.Idle state if receives validate message, and we should insert the block
 		case validateMsg:
-			return inputBlock, insertBlock, block, noMsg, idle, nil
+			return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
 
-		// Jump to committed state if receive 2f+1 commit messages
+		// Stay in consensus.Idle state to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
+				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
 				sm.commitMsgPlus(inputHeader)
-				return input, noAction, noType, noMsg, idle, nil
+				return input, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
-		// Jump to prepared state if receive 2f+1 prepare message
+		// Jump to consensus.Prepared state if receive 2f+1 prepare message
 		case prepareMsg:
 			if sm.prepareCertificate(inputHeader) {
 				ret, err := sm.composeCommitMsg(inputHeader)
 				if err != nil {
-					return nil, noAction, noType, noMsg, idle, err
+					return nil, noAction, noType, noMsg, consensus.Idle, err
 				}
-				return ret, broadcastMsg, header, commitMsg, prepared, nil
+				return ret, broadcastMsg, header, commitMsg, consensus.Prepared, nil
 			} else {
 				// Add one to the counter of prepare messages
 				sm.prepareMsgPlus(inputHeader)
-				return input, noAction, noType, noMsg, idle, nil
+				return input, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
 		// For the case that receive the newly proposes block or pre-prepare message
@@ -293,101 +288,198 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			if sm.verifyBlock(inputBlock) {
 				ret, err := sm.composePrepareMsg(inputBlock)
 				if err != nil {
-					return nil, noAction, noType, noMsg, idle, err
+					return nil, noAction, noType, noMsg, consensus.Idle, err
 				}
-				return ret, broadcastMsg, header, prepareMsg, preprepared, nil
+				return ret, broadcastMsg, header, prepareMsg, consensus.Preprepared, nil
 			} else {
 				err = errors.New("the proposed block is illegal")
-				return sm.proposeImpeachBlock(), insertBlock, block, impeachPrepareMsg, impeachPreprepared, err
-				//TODO: return an impeach block
+				return sm.proposeImpeachBlock(), insertBlock, block, impeachPrepareMsg, consensus.ImpeachPreprepared, err
 			}
 
-		// Transit to impeach committed state if the validator collects 2f+1 impeach commit messages
+		// Stay in consensus.Idle state and insert an impeachment block when receiving an impeach validate message
+		case impeachValidateMsg:
+			return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
+
+		// Stay in consensus.Idle state if the validator collects 2f+1 impeach commit messages
 		case impeachCommitMsg:
-			if impeachCommitCertificate(inputHeader) {
-				return inputHeader, broadcastMsg, header, impeachCommitMsg, idle, nil
+			if sm.impeachCommitCertificate(inputHeader) {
+				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
 			} else {
-				impeachCommitMsgPlus(inputHeader)
-				return inputHeader, noAction, noType, noMsg, idle, nil
+				sm.impeachCommitMsgPlus(inputHeader)
+				return inputHeader, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
-		// Transit to impeach prepared state if it collects 2f+1 impeach prepare messages
+		// Transit to impeach consensus.Prepared state if it collects 2f+1 impeach prepare messages
 		case impeachPrepareMsg:
-			if impeachPrepareCertificate(inputHeader) {
-				return inputHeader, broadcastMsg, header, impeachCommitMsg, impeachPrepared, nil
+			if sm.impeachPrepareCertificate(inputHeader) {
+				return inputHeader, broadcastMsg, header, impeachCommitMsg, consensus.ImpeachPrepared, nil
 			} else {
-				impeachPrepareMsgPlus(inputHeader)
-				return input, noAction, noType, noMsg, idle, nil
+				sm.impeachPrepareMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
 		// Transit to impeach pre-prepared state if the timers expires (receiving a impeach pre-prepared message),
 		// then generate the impeachment block and broadcast the impeach prepare massage
 		case impeachPreprepareMsg:
-			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, impeachPreprepared, nil
+			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
 		}
-		err = errors.New("not a proper input for idle state")
+		err = errors.New("not a proper input for consensus.Idle state")
 
 	// The case of pre-prepared state
-	case preprepared:
+	case consensus.Preprepared:
 		switch msg {
 		// Jump to committed state if receive a validate message
 		case validateMsg:
-			return inputBlock, insertBlock, block, noMsg, idle, nil
+			return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
 
 		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
+				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
 				sm.commitMsgPlus(inputHeader)
-				return input, noAction, noType, noMsg, preprepared, nil
+				return input, noAction, noType, noMsg, consensus.Preprepared, nil
 			}
-		// Convert to prepared state if collect prepare certificate
+		// Convert to consensus.Prepared state if collect prepare certificate
 		case prepareMsg:
 			if sm.prepareCertificate(inputHeader) {
 				ret, err := sm.composeCommitMsg(inputHeader)
 				if err != nil {
-					return nil, noAction, noType, noMsg, preprepared, nil
+					return nil, noAction, noType, noMsg, consensus.Preprepared, nil
 				}
-				return ret, broadcastMsg, header, commitMsg, prepared, nil
+				return ret, broadcastMsg, header, commitMsg, consensus.Prepared, nil
 			} else {
 				// Add one to the counter of prepare messages
 				sm.prepareMsgPlus(inputHeader)
-				return input, noAction, noType, noMsg, idle, nil
+				return input, noAction, noType, noMsg, consensus.Preprepared, nil
 			}
+		case impeachValidateMsg:
+			return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
+
+		// Stay in consensus.Idle state to committed state if receive 2f+1 commit messages
+		case impeachCommitMsg:
+			if sm.impeachCommitCertificate(inputHeader) {
+				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+			} else {
+				// Add one to the counter of commit messages
+				sm.commitMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, consensus.Idle, nil
+			}
+
+		// Transit to impeach consensus.Prepared state if it collects 2f+1 impeach prepare messages
+		case impeachPrepareMsg:
+			if sm.impeachPrepareCertificate(inputHeader) {
+				return inputHeader, broadcastMsg, header, impeachCommitMsg, consensus.ImpeachPrepared, nil
+			} else {
+				sm.impeachPrepareMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, consensus.Preprepared, nil
+			}
+
+		case impeachPreprepareMsg:
+			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
+
 		}
 		err = errors.New("not a proper input for pre-prepared state")
 
-	// The case of prepared stage
-	case prepared:
+	// The case of consensus.Prepared stage
+	case consensus.Prepared:
 		switch msg {
 		// Jump to committed state if receive a validate message
 		case validateMsg:
-			return inputBlock, insertBlock, block, noMsg, idle, nil
+			return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
 
 		// convert to committed state if collects commit certificate
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
+				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
 				sm.commitMsgPlus(inputHeader)
-				return input, noAction, noType, noMsg, preprepared, nil
+				return input, noAction, noType, noMsg, consensus.Preprepared, nil
+			}
+
+		// Transit to consensus.Idle state to insert impeach block
+		case impeachValidateMsg:
+			return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
+
+		// Transit to consensus.Idle state to committed state if receive 2f+1 commit messages
+		case impeachCommitMsg:
+			if sm.impeachCommitCertificate(inputHeader) {
+				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+			} else {
+				// Add one to the counter of commit messages
+				sm.impeachCommitMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, consensus.Prepared, nil
+			}
+
+		// Transit to impeach consensus.Prepared state if it collects 2f+1 impeach prepare messages
+		case impeachPrepareMsg:
+			if sm.impeachPrepareCertificate(inputHeader) {
+				return inputHeader, broadcastMsg, header, impeachCommitMsg, consensus.ImpeachPrepared, nil
+			} else {
+				sm.impeachPrepareMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, consensus.Prepared, nil
+			}
+
+		case impeachPreprepareMsg:
+			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
+		}
+		err = errors.New("not a proper input for consensus.Prepared state")
+
+	case consensus.ImpeachPreprepared:
+		switch msg {
+		// Transit to consensus.Idle state when receiving impeach validate message
+		case impeachValidateMsg:
+			return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
+
+		// Stay in consensus.Idle state to committed state if receive 2f+1 commit messages
+		case impeachCommitMsg:
+			if sm.impeachCommitCertificate(inputHeader) {
+				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+			} else {
+				// Add one to the counter of commit messages
+				sm.impeachCommitMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, consensus.ImpeachPreprepared, nil
+			}
+
+		// Transit to impeach consensus.Prepared state if it collects 2f+1 impeach prepare messages
+		case impeachPrepareMsg:
+			if sm.impeachPrepareCertificate(inputHeader) {
+				return inputHeader, broadcastMsg, header, impeachCommitMsg, consensus.ImpeachPrepared, nil
+			} else {
+				sm.impeachPrepareMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, consensus.ImpeachPreprepared, nil
 			}
 		}
-		err = errors.New("not a proper input for prepared state")
 
-		// Broadcast a validate message and then go back to idle state
-		//case committed:
-		///return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
-		// Broadcast a validate message and then go back to idle state
-		//case committed:
-		//	return composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, idle, nil
+	case consensus.ImpeachPrepared:
+		switch msg {
+		// Transit to consensus.Idle state when receiving impeach validate message
+		case impeachValidateMsg:
+			return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
 
-		// Insert the block and go back to idle state
+		// Stay in consensus.Idle state to committed state if receive 2f+1 commit messages
+		case impeachCommitMsg:
+			if sm.impeachCommitCertificate(inputHeader) {
+				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+			} else {
+				// Add one to the counter of commit messages
+				sm.impeachCommitMsgPlus(inputHeader)
+				return input, noAction, noType, noMsg, consensus.ImpeachPrepared, nil
+			}
+
+		}
+		// Broadcast a validate message and then go back to consensus.Idle state
+		//case committed:
+		///return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
+		// Broadcast a validate message and then go back to consensus.Idle state
+		//case committed:
+		//	return composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
+
+		// Insert the block and go back to consensus.Idle state
 		//case inserting:
-		//	return inputBlock, insertBlock, block, noMsg, idle, nil
+		//	return inputBlock, insertBlock, block, noMsg, consensus.Idle, nil
 	}
 
 	return nil, noAction, noType, noMsg, state, err

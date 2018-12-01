@@ -1,11 +1,12 @@
 package dpor
 
 import (
+	"math/big"
+
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"math/big"
 )
 
 // TermOf returns the term number of given block number
@@ -159,7 +160,7 @@ func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]com
 	sigs := header.Dpor.Sigs
 	addrs := make([]common.Address, len(sigs))
 	for i, sig := range sigs {
-		if state == consensus.Preparing {
+		if state == consensus.Preprepared {
 			hashBytes = append([]byte{'P'}, d.dh.sigHash(header).Bytes()...)
 		} else {
 			hashBytes = d.dh.sigHash(header).Bytes()
