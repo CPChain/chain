@@ -150,11 +150,6 @@ var MinerFlags = []cli.Flag{
 		Name:  "mine",
 		Usage: "Enable mining",
 	},
-	cli.IntFlag{
-		Name:  "minethreads",
-		Usage: "Thread count for mining",
-		Value: 4,
-	},
 }
 
 // const (

@@ -44,12 +44,13 @@ type Miner struct {
 
 func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, cons consensus.Engine) *Miner {
 	miner := &Miner{
-		backend:  backend,
 		mux:      mux,
+		eng:	  newEngine(config, cons, common.Address{}, backend, mux),
+		backend:  backend,
 		cons:     cons,
-		eng:      newEngine(config, cons, common.Address{}, backend, mux),
 		canStart: 1,
 	}
+
 	miner.Register(NewNativeWorker(backend.BlockChain(), cons))
 	go miner.update()
 
@@ -92,7 +93,7 @@ out:
 
 func (self *Miner) Start(coinbase common.Address) {
 	atomic.StoreInt32(&self.shouldStart, 1)
-	self.SetChainbase(coinbase)
+	self.SetCoinbase(coinbase)
 
 	if atomic.LoadInt32(&self.canStart) == 0 {
 		log.Info("Network syncing, will start miner afterwards")
@@ -148,7 +149,7 @@ func (self *Miner) PendingBlock() *types.Block {
 	return self.eng.pendingBlock()
 }
 
-func (self *Miner) SetChainbase(addr common.Address) {
+func (self *Miner) SetCoinbase(addr common.Address) {
 	self.coinbase = addr
 	self.eng.setCoinbase(addr)
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"math/big"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -11,6 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -39,6 +41,7 @@ var (
 
 // DporSnapshot is the state of the authorization voting at a given point in time.
 type DporSnapshot struct {
+	Mode       Mode             `json:"mode"`
 	Number     uint64           `json:"number"`     // Block number where the Snapshot was created
 	Hash       common.Hash      `json:"hash"`       // Block hash where the Snapshot was created
 	Candidates []common.Address `json:"candidates"` // Set of candidates read from campaign contract
@@ -49,6 +52,7 @@ type DporSnapshot struct {
 
 	config         *configs.DporConfig // Consensus engine parameters to fine tune behavior
 	ContractCaller *backend.ContractCaller
+	rptBackend     rpt.RptService
 
 	lock sync.RWMutex
 }
@@ -247,8 +251,9 @@ func (s *DporSnapshot) setContractCaller(contractCaller *backend.ContractCaller)
 // method does not initialize the set of recent proposers, so only ever use if for
 // the genesis block.
 func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, proposers []common.Address,
-	validators []common.Address) *DporSnapshot {
+	validators []common.Address, mode Mode) *DporSnapshot {
 	snap := &DporSnapshot{
+		Mode:             mode,
 		config:           config,
 		Number:           number,
 		Hash:             hash,
@@ -317,6 +322,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 	for term, validator := range s.recentValidators() {
 		cpy.setRecentValidators(term, validator)
 	}
+	cpy.rptBackend = s.rptBackend
 	return cpy
 }
 
@@ -344,7 +350,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.Co
 	for _, header := range headers {
 		err := snap.applyHeader(header)
 		if err != nil {
-			log.Warn("DporSnapshot apply header error.", err)
+			log.Warn("DporSnapshot apply header error.", "err", err)
 			return nil, err
 		}
 	}
@@ -359,14 +365,14 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	s.setHash(header.Hash())
 
 	// Update candidates
-	err := s.updateCandidates(header)
+	err := s.updateCandidates()
 	if err != nil {
 		log.Warn("err when update candidates", "err", err)
 		return err
 	}
 
 	// Update rpts
-	rpts, err := s.updateRpts(header)
+	rpts, err := s.updateRpts()
 	if err != nil {
 		log.Warn("err when update rpts", "err", err)
 		return err
@@ -389,63 +395,76 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 }
 
 // updateCandidates updates proposer candidates from campaign contract
-func (s *DporSnapshot) updateCandidates(header *types.Header) error {
-	// Default Candidates
-	candidates := []common.Address{
-		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"),
-		common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
-		common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"),
-		common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
-		common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
-		common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
-		common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
+func (s *DporSnapshot) updateCandidates() error {
+
+	var candidates []common.Address
+
+	if s.Mode == NormalMode && s.isStartElection() {
+		contractCaller := s.contractCaller()
+		// If contractCaller is not nil, use it to update candidates from contract
+		if contractCaller != nil {
+			// Creates an contract instance
+			campaignAddress := s.config.Contracts[configs.ContractCampaign]
+			log.Info("campaignAddress", "addr", campaignAddress.Hex())
+			contractInstance, err := campaign.NewCampaign(campaignAddress, contractCaller.Client)
+			if err != nil {
+				log.Error("new Campaign error", err)
+				return err
+			}
+
+			term := s.TermOf(s.Number)
+			// Read candidates from the contract instance
+			cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
+			if err != nil {
+				log.Error("read Candidates error", "err", err)
+				return err
+			}
+
+			log.Info("candidates Of term", "len(candidates)", len(cds), "term", term)
+			// If useful, use it!
+			if uint64(len(cds)) >= s.config.TermLen {
+				candidates = cds
+			}
+		}
 	}
 
-	// contractCaller := s.contractCaller()
-
-	// var candidates []common.Address
-	// // If contractCaller is not nil, use it to update candidates from contract
-	// if contractCaller != nil {
-
-	// 	// Creates an contract instance
-	// 	campaignAddress := s.config.Contracts["campaign"]
-	// 	contractInstance, err := campaign.NewCampaign(campaignAddress, contractCaller.Client)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// Read candidates from the contract instance
-	// 	cds, err := contractInstance.CandidatesOf(nil, big.NewInt(1))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// If useful, use it!
-	// 	if uint64(len(cds)) > s.config.TermLen {
-	// 		candidates = cds
-	// 	}
-	// }
-
-	// s.setCandidates(candidates)
-	// return nil
+	if uint64(len(candidates)) < s.config.TermLen {
+		log.Debug("no enough candidates,use default candidates")
+		candidates = configs.DefaultCandidates
+	}
 
 	s.setCandidates(candidates)
 	return nil
 }
 
 // updateRpts updates rpts of candidates
-func (s *DporSnapshot) updateRpts(header *types.Header) (rpt.RptList, error) {
-	// TODO: use rpt collector to update rpts.
-	var rpts rpt.RptList
-	for idx, candidate := range s.candidates() {
-		r := rpt.Rpt{Address: candidate, Rpt: int64(idx)}
-		rpts = append(rpts, r)
+func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
+
+	if s.contractCaller() == nil && s.Mode == NormalMode {
+		log.Warn("snapshot contract caller is nil")
+		s.Mode = FakeMode
 	}
 
-	return rpts, nil
+	switch {
+	case s.Mode == NormalMode && s.isStartElection():
+
+		rptBackend, err := s.rptBackend, error(nil)
+		if rptBackend == nil {
+			rptBackend, err = rpt.NewRptService(s.contractCaller().Client, s.config.Contracts[configs.ContractRpt])
+		}
+		rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
+		s.rptBackend = rptBackend
+
+		return rpts, err
+	default:
+		var rpts rpt.RptList
+		for idx, candidate := range s.candidates() {
+			r := rpt.Rpt{Address: candidate, Rpt: int64(idx)}
+			rpts = append(rpts, r)
+		}
+
+		return rpts, nil
+	}
 }
 
 // isUseDefaultProposers returns true if it should use predefined default proposers, otherwise false

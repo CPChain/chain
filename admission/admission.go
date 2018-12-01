@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
@@ -61,6 +62,7 @@ func NewAdmissionControl(chain consensus.ChainReader, address common.Address, co
 
 // Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
 func (ac *AdmissionControl) Campaign() {
+	log.Info("Start campaign for dpor proposers committee")
 	ac.mutex.Lock()
 	defer ac.mutex.Unlock()
 
@@ -159,7 +161,7 @@ func (ac *AdmissionControl) sendCampaignResult() {
 
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 	transactOpts.Value = big.NewInt(ac.config.Deposit)
-	instance, err := dpor.NewCampaignWrapper(transactOpts, common.HexToAddress(ac.config.CampaignContractAddress), ac.contractBackend)
+	instance, err := dpor.NewCampaignWrapper(transactOpts, ac.config.CampaignContractAddress, ac.contractBackend)
 	if err != nil {
 		ac.err = err
 		return
@@ -171,8 +173,11 @@ func (ac *AdmissionControl) sendCampaignResult() {
 		memResult.Nonce, new(big.Int).SetInt64(memResult.BlockNumber))
 	if err != nil {
 		ac.err = err
+		log.Warn("Error in claiming campaign", "error", err)
 		return
 	}
+	log.Info("Claimed for campaign", "NumberOfCampaignTimes", ac.config.NumberOfCampaignTimes, "CpuPowResult", cpuResult.Nonce,
+		"MemPowResult", memResult.Nonce, "CpuBlockNumber", cpuResult.BlockNumber, "MemBlockNumber", memResult.BlockNumber)
 }
 
 func (ac *AdmissionControl) setClientBackend(client *cpclient.Client) {

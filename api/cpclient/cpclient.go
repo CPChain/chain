@@ -23,6 +23,8 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
+	"time"
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"
@@ -140,6 +142,24 @@ func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.H
 	return head, err
 }
 
+type BlockNumber struct {
+	Number string
+}
+
+func (ec *Client) GetBlockNumber() *big.Int {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var lastBlock BlockNumber
+	err := ec.c.CallContext(ctx, &lastBlock, "eth_getBlockByNumber", "latest", true)
+	if err != nil {
+		fmt.Println("can't get latest block:", err)
+		return big.NewInt(0)
+	}
+	number, err := strconv.ParseInt(lastBlock.Number, 0, 64)
+	return big.NewInt(number)
+}
+
 type rpcTransaction struct {
 	tx *types.Transaction
 	txExtraInfo
@@ -252,12 +272,24 @@ type rpcProgress struct {
 	KnownStates   hexutil.Uint64
 }
 
-type Committee struct {
-	Epoch     uint64 // contain 21 round in each epoch
-	Round     uint64
-	Producer  common.Address
-	PublicKey string
-	Block     uint64 // hight
+type Committees struct {
+	View     uint64 // contain View in each Term
+	Term     uint64
+	Producer common.Address
+	Block    uint64 // high
+}
+
+// node status
+const (
+	Committee = iota
+	Candidate
+	Civilian
+)
+
+type RNodes struct {
+	Address common.Address // RNodes address
+	Rpt     int64
+	Status  int
 }
 
 // SyncProgress retrieves the current progress of the sync algorithm. If there's
@@ -306,26 +338,26 @@ func (ec *Client) NetworkID(ctx context.Context) (*big.Int, error) {
 	return version, nil
 }
 
-func (ec *Client) GetRNodes(ctx context.Context) ([]common.Address, error) {
-	var result []common.Address
+func (ec *Client) GetRNodes(ctx context.Context) ([]RNodes, error) {
+	var result []RNodes
 	err := ec.c.CallContext(ctx, &result, "eth_getRNodes")
 	return result, err
 }
 
-func (ec *Client) GetCurrentRound(ctx context.Context) (uint64, error) {
+func (ec *Client) GetCurrentView(ctx context.Context) (uint64, error) {
 	var result uint64
-	err := ec.c.CallContext(ctx, &result, "eth_getCurrentRound")
+	err := ec.c.CallContext(ctx, &result, "eth_getCurrentView")
 	return result, err
 }
 
-func (ec *Client) GetCurrentEpoch(ctx context.Context) (uint64, error) {
+func (ec *Client) GetCurrentTerm(ctx context.Context) (uint64, error) {
 	var result uint64
-	err := ec.c.CallContext(ctx, &result, "eth_getCurrentEpoch")
+	err := ec.c.CallContext(ctx, &result, "eth_getCurrentTerm")
 	return result, err
 }
 
-func (ec *Client) GetCommittees(ctx context.Context) ([]Committee, error) {
-	var result []Committee
+func (ec *Client) GetCommittees(ctx context.Context) ([]Committees, error) {
+	var result []Committees
 	err := ec.c.CallContext(ctx, &result, "eth_getCommittees")
 	return result, err
 }

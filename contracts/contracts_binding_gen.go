@@ -28,7 +28,7 @@ package contracts
 
 //go:generate abigen --sol ./dpor/contracts/rpt.sol --pkg dpor --out ./dpor/contracts/rpt.go
 
-//go:generate abigen --sol ./pdash/sol/pdash.sol --pkg pdash --out ./pdash/sol/pdash.go
+//go:generate abigen --sol ./pdash/sol/pdash.sol --pkg sol --out ./pdash/sol/pdash.go
 
 //go:generate abigen --sol ./pdash/sol/register.sol --pkg sol --out ./pdash/sol/register.go
 
