@@ -116,7 +116,7 @@ contract Rpt {
         if (rank < 35) return 70;
         if (rank < 60) return 60;
         if (rank < 80) return 40;
-        return 20;
+        return rank;
     }
     
     function getTx(address _addr, uint _blockNumber) public view returns(uint) {
@@ -149,9 +149,12 @@ contract Rpt {
     }
     
     function getBlockchainMaintenance(address _addr, uint _blockNumber) public view returns(uint) {
+        //return 20;
+        ///*
         uint node = _addr.getMaintenance(_blockNumber);
         if (node == 0) return 100;
         if (node == 1) return 80;
         return 60;
+        //*/
     }
 }

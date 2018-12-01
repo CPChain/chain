@@ -27,10 +27,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-//go:generate abigen --sol rpt/rpt.sol --pkg rpt --out rpt/rpt.go
+//go:generate abigen --sol rpt.sol --pkg dpor --out rpt.go
 
-////go:generate abigen --sol contracts/campaign/campaign.sol --pkg contract --out contracts/campaign/campaign.go
-//need generate in dir:contracts/dpor
+//go:generate abigen --sol campaign/campaign.sol --pkg campaign --out campaign/campaign.go
 
 // Backend wraps all methods required for campaign operation.
 type Backend interface {

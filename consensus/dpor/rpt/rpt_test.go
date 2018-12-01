@@ -29,6 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
@@ -199,6 +200,7 @@ func TestRptServiceImpl_CalcRptInfoList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			primitive_register.GetPrimitiveContractCheckerInstance().SetAvailable(true)
 			rs, _ := rpt.NewRptService(tt.fields.Client, tt.fields.RptContract)
 			tt.prepare()
 			log.Printf("Testcase [%s], RPT: %v", tt.name, rs.CalcRptInfoList(tt.args.addresses, tt.args.number)[0].Rpt)

@@ -40,15 +40,15 @@ func (c *GetTxVolume) RequiredGas(input []byte) uint64 {
 func (c *GetTxVolume) Run(input []byte) ([]byte, error) {
 	addr, number, err := extractRptPrimitivesArgs(input)
 	if err != nil {
-		log.Warnf("primitive_txvolume got error %v", err)
+		log.Error("primitive_txvolume got error", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-	log.Infof("primitive_txvolume, address %s, block number %d", addr.Hex(), number)
+	log.Info("primitive_txvolume", "addr", addr, "block number", number)
 
 	// TODO: @AC get cpchain backend and read balance.
 	txVolume, err := c.Backend.TxVolume(addr, number)
 	if err != nil {
-		log.Fatal("NewBasicCollector,error", err)
+		log.Error("NewBasicCollector,error", "error", err)
 	}
 	ret := new(big.Int).SetInt64(int64(txVolume))
 	return common.LeftPadBytes(ret.Bytes(), 32), nil

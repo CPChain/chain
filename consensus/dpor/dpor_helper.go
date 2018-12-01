@@ -17,11 +17,11 @@
 package dpor
 
 import (
-	"bitbucket.org/cpchain/chain/accounts"
 	"math/big"
 	"reflect"
 	"time"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
@@ -232,7 +232,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				proposers = genesis.Dpor.CopyProposers()
 				validators = genesis.Dpor.CopyValidators()
 			}
-			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators)
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators, FakeMode)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}

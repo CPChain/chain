@@ -17,27 +17,66 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/deploy"
 )
 
 func main() {
-	deploy.FormatPrint("DeployProposerRegister")
-	contractAddress := deploy.DeployProposerRegister()
-	deploy.PrintContract(contractAddress)
+	log.Info("cmdline args", "args", os.Args)
+	if len(os.Args) != 3 {
+		fmt.Println("Usage: smartcontract <endpoint> <keystore path>")
+		return
+	}
+	config.SetConfig(os.Args[1], os.Args[2])
 
-	deploy.FormatPrint("DeployCampaignVerify")
-	contractAddress = deploy.DeployCampaignVerify()
-	deploy.PrintContract(contractAddress)
+	// deploy init contract
+	deploy.FormatPrint("0.DeployProxyContractRegister")
+	proxyContractRegisterAddress := deploy.ProxyContractRegister()
+	deploy.PrintContract(proxyContractRegisterAddress)
 
-	deploy.FormatPrint("DeployCampaign")
-	contractAddress = deploy.DeployCampaign(contractAddress)
-	deploy.PrintContract(contractAddress)
+	// 1
+	deploy.FormatPrint("1.DeploySignerConnectionRegister")
+	signerAddress := deploy.DeployProposerRegister()
+	deploy.PrintContract(signerAddress)
 
-	deploy.FormatPrint("DeployProxyContractRegister")
-	contractAddress = deploy.ProxyContractRegister()
-	deploy.PrintContract(contractAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, signerAddress)
 
-	deploy.FormatPrint("DeployRpt")
-	contractAddress = deploy.DeployRpt()
-	deploy.PrintContract(contractAddress)
+	// 2
+	deploy.FormatPrint("2.DeployAdmission")
+	admissionAddress := deploy.DeployAdmission()
+	deploy.PrintContract(admissionAddress)
+
+	proxyAdmissionAddress := deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress)
+
+	// 3
+	deploy.FormatPrint("3.DeployCampaign")
+	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress)
+	deploy.PrintContract(campaignAddress)
+
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, campaignAddress)
+
+	// 4
+	deploy.FormatPrint("4.DeployRpt")
+	rptAddress := deploy.DeployRpt()
+	deploy.PrintContract(rptAddress)
+
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, rptAddress)
+
+	// 5
+	deploy.FormatPrint("5.DeployRegister")
+	registerAddress := deploy.DeployRegister()
+	deploy.PrintContract(registerAddress)
+
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, registerAddress)
+
+	// 6
+	deploy.FormatPrint("6.DeployPdash")
+	pdashAddress := deploy.DeployPdash()
+	deploy.PrintContract(pdashAddress)
+
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress)
 }

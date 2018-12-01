@@ -1,3 +1,4 @@
+// Copyright 2018 The cpchain authors
 // Copyright 2015 The go-ethereum Authors
 
 package miner
@@ -13,81 +14,91 @@ import (
 type NativeWorker struct {
 	mu sync.Mutex
 
-	workCh        chan *Work
-	stop          chan struct{}
-	quitCurrentOp chan struct{}
-	returnCh      chan<- *Result
+	workCh          chan *Work  // miner.engine must call this to send in work
+	quitCh          chan struct{}
+	quitCurrentOpCh chan struct{}
+	returnCh        chan<- *Result  // miner.engine must set this to retrieve the mined block
 
-	chain consensus.ChainReader
-	cons  consensus.Engine
+	chain consensus.ChainReader  // need to access blocks
+	cons  consensus.Engine  // need to seal methods
 
-	isMining int32 // isMining indicates whether the agent is currently mining
+	isMining int32  // isMining indicates whether the agent is currently mining
 }
 
 func NewNativeWorker(chain consensus.ChainReader, cons consensus.Engine) *NativeWorker {
-	miner := &NativeWorker{
+	worker := &NativeWorker{
 		chain:  chain,
 		cons:   cons,
-		stop:   make(chan struct{}, 1),
 		workCh: make(chan *Work, 1),
+		quitCh: make(chan struct{}, 1),
 	}
-	return miner
+	return worker
 }
 
-func (self *NativeWorker) Work() chan<- *Work            { return self.workCh }
-func (self *NativeWorker) SetReturnCh(ch chan<- *Result) { self.returnCh = ch }
+func (nw *NativeWorker) Work() chan<- *Work            { return nw.workCh }
+func (nw *NativeWorker) SetReturnCh(ch chan<- *Result) { nw.returnCh = ch }
 
-func (self *NativeWorker) Stop() {
-	if !atomic.CompareAndSwapInt32(&self.isMining, 1, 0) {
-		return // agent already stopped
+func (nw *NativeWorker) Stop() {
+	if !atomic.CompareAndSwapInt32(&nw.isMining, 1, 0) {
+		return // worker already stopped
 	}
-	self.stop <- struct{}{}
+	nw.quitCh <- struct{}{}
 done:
-	// Empty work channel
+	// empty work channel
 	for {
 		select {
-		case <-self.workCh:
+		case <-nw.workCh:
 		default:
 			break done
 		}
 	}
 }
 
-func (self *NativeWorker) Start() {
-	if !atomic.CompareAndSwapInt32(&self.isMining, 0, 1) {
-		return // agent already started
+func (nw *NativeWorker) Start() {
+	// ensure no start twice
+	if !atomic.CompareAndSwapInt32(&nw.isMining, 0, 1) {
+		return
 	}
-	go self.update()
+	go nw.update()
 }
 
-func (self *NativeWorker) update() {
+// update spawns a new goroutine to mine blocks and abort the previous mining goroutines.
+func (nw *NativeWorker) update() {
 out:
 	for {
 		select {
-		case work := <-self.workCh:
-			self.mu.Lock()
-			if self.quitCurrentOp != nil {
-				close(self.quitCurrentOp)
+		case work := <-nw.workCh:
+			nw.mu.Lock()
+
+			if nw.quitCurrentOpCh != nil {
+				// abort the current mining operations
+				close(nw.quitCurrentOpCh)
 			}
-			self.quitCurrentOp = make(chan struct{})
-			go self.mine(work, self.quitCurrentOp)
-			self.mu.Unlock()
-		case <-self.stop:
-			self.mu.Lock()
-			if self.quitCurrentOp != nil {
-				close(self.quitCurrentOp)
-				self.quitCurrentOp = nil
+			nw.quitCurrentOpCh = make(chan struct{})
+			// spawn a new go routine to mine the blocks
+			go nw.mine(work, nw.quitCurrentOpCh)
+
+			nw.mu.Unlock()
+
+		case <-nw.quitCh:
+			nw.mu.Lock()
+			// signal the mining goroutines to quit
+			if nw.quitCurrentOpCh != nil {
+				close(nw.quitCurrentOpCh)
+				nw.quitCurrentOpCh = nil
 			}
-			self.mu.Unlock()
+			nw.mu.Unlock()
 			break out
 		}
 	}
 }
 
-func (self *NativeWorker) mine(work *Work, stop <-chan struct{}) {
-	if result, err := self.cons.Seal(self.chain, work.Block, stop); result != nil {
+// mine invokes the consensus engine to seal a block.
+// note, finalize is called in miner's engine, not here.
+func (nw *NativeWorker) mine(work *Work, quitCh <-chan struct{}) {
+	if result, err := nw.cons.Seal(nw.chain, work.Block, quitCh); result != nil {
 		log.Info("Successfully sealed new block", "number", result.Number(), "hash", result.Hash().Hex())
-		self.returnCh <- &Result{work, result}
+		nw.returnCh <- &Result{work, result}
 	} else {
 		if err != nil {
 			if err == consensus.ErrUnauthorized {
@@ -96,6 +107,7 @@ func (self *NativeWorker) mine(work *Work, stop <-chan struct{}) {
 				log.Warn("Block sealing failed", "err", err)
 			}
 		}
-		self.returnCh <- nil
+		// ok. failed to seal.
+		nw.returnCh <- nil
 	}
 }

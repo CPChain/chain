@@ -16,10 +16,10 @@ type API struct {
 }
 
 // GetSnapshot retrieves the state Snapshot at a given block.
-func (api *API) GetSnapshot(number *rpc.BlockNumber) (*DporSnapshot, error) {
+func (api *API) GetSnapshot(number rpc.BlockNumber) (*DporSnapshot, error) {
 	// Retrieve the requested block number (or current if none requested)
 	var header *types.Header
-	if number == nil || *number == rpc.LatestBlockNumber {
+	if number == 0 || number == rpc.LatestBlockNumber {
 		header = api.chain.CurrentHeader()
 	} else {
 		header = api.chain.GetHeaderByNumber(uint64(number.Int64()))
