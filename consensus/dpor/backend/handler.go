@@ -51,13 +51,13 @@ type Handler struct {
 }
 
 // NewHandler creates a new Handler
-func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
+func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 
 	h := &Handler{
 		config:         config,
-		coinbase:       etherbase,
+		coinbase:       coinbase,
 		knownBlocks:    newKnownBlocks(),
-		dialer:         NewDialer(etherbase, config.Contracts[configs.ContractProposer]), // TODO: fix this
+		dialer:         NewDialer(coinbase, config.Contracts[configs.ContractProposer]),
 		pendingBlockCh: make(chan *types.Block),
 		quitSync:       make(chan struct{}),
 		available:      false,
