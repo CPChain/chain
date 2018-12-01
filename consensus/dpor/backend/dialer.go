@@ -352,6 +352,7 @@ func (d *Dialer) ProposersOf(term uint64) map[common.Address]*RemoteProposer {
 }
 
 func (d *Dialer) ValidatorsOf(term uint64) map[common.Address]*RemoteValidator {
+	// TODO: @AC @liuq the returned result include non-validator, will correct it
 	d.validatorsLock.RLock()
 	defer d.validatorsLock.RUnlock()
 

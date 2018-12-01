@@ -144,7 +144,7 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout())+int64(d.config.Period))),
 		Coinbase:   common.Address{},
 		Nonce:      types.BlockNonce{},
-		Difficulty: dporDifficulty,
+		Difficulty: DporDifficulty,
 		MixHash:    common.Hash{},
 		StateRoot:  parentHeader.StateRoot,
 	}
@@ -161,9 +161,9 @@ func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]com
 	addrs := make([]common.Address, len(sigs))
 	for i, sig := range sigs {
 		if state == consensus.Preprepared {
-			hashBytes = append([]byte{'P'}, d.dh.sigHash(header).Bytes()...)
+			hashBytes = d.dh.sigHash(header, []byte{'P'}).Bytes()
 		} else {
-			hashBytes = d.dh.sigHash(header).Bytes()
+			hashBytes = d.dh.sigHash(header, []byte{}).Bytes()
 		}
 		proposerPubKey, err := crypto.Ecrecover(hashBytes, sig[:])
 		if err != nil {

@@ -39,7 +39,6 @@ func TestRemoteSigner_fetchPubkey(t *testing.T) {
 				Peer:          tt.fields.Peer,
 				rw:            tt.fields.rw,
 				version:       tt.fields.version,
-				epochIdx:      tt.fields.epochIdx,
 				pubkey:        tt.fields.pubkey,
 				nodeID:        tt.fields.nodeID,
 				address:       tt.fields.address,

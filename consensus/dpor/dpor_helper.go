@@ -74,31 +74,28 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 		return nil
 	}
 
-	// Ensure the block's parent is valid
-	var parent *types.Header
-	if len(parents) > 0 {
-		parent = parents[len(parents)-1]
-	} else {
-		// parent = chain.GetHeader(header.ParentHash, number-1)
-		blk := chain.GetBlock(header.ParentHash, number-1)
-		if blk != nil {
-			parent = blk.Header()
+	if header.Number.Uint64() > 0 {
+		// Ensure the block's parent is valid
+		var parent *types.Header
+		if len(parents) > 0 {
+			parent = parents[len(parents)-1]
+		} else {
+			// parent = chain.GetHeader(header.ParentHash, number-1)
+			blk := chain.GetBlock(header.ParentHash, number-1)
+			if blk != nil {
+				parent = blk.Header()
+			}
 		}
-	}
-	// Ensure that the block's parent is valid
-	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
-		log.Debug("consensus.ErrUnknownAncestor 3")
-		return consensus.ErrUnknownAncestor
-	}
+		// Ensure that the block's parent is valid
+		if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
+			log.Debug("consensus.ErrUnknownAncestor 3")
+			return consensus.ErrUnknownAncestor
+		}
 
-	// Ensure that the block's timestamp is valid
-	if parent.Time.Uint64()+d.config.Period > header.Time.Uint64() {
-		return ErrInvalidTimestamp
-	}
-
-	// Check that the extra-data contains both the vanity and signature
-	if len(header.Extra) < extraVanity {
-		return errMissingVanity
+		// Ensure that the block's timestamp is valid
+		if parent.Time.Uint64()+d.config.Period > header.Time.Uint64() {
+			return ErrInvalidTimestamp
+		}
 	}
 
 	// Ensure that the mix digest is zero as we don't have fork protection currently
@@ -108,8 +105,14 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 
 	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
 	if number > 0 {
-		if header.Difficulty == nil || header.Difficulty.Cmp(dporDifficulty) != 0 {
+		if header.Difficulty == nil || (header.Difficulty.Cmp(DporDifficulty) != 0 && header.Difficulty.Uint64() != 0) {
 			return errInvalidDifficulty
+		}
+
+		// verify dpor seal, genesis block not need this check
+		if err := dh.verifySeal(d, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
+			return err
 		}
 	}
 
@@ -119,14 +122,8 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 		return err
 	}
 
-	// verify dpor seal
-	if err := dh.verifySeal(d, chain, header, parents, refHeader); err != nil {
-		log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
-		return err
-	}
-
 	// verify dpor sigs if required
-	if verifySigs {
+	if number > 0 && verifySigs {
 		if err := dh.verifySigs(d, chain, header, parents, refHeader); err != nil {
 			log.Warn("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
 			return err
@@ -191,7 +188,9 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 // verifValidators verifies dpor validators
 
 // Snapshot retrieves the authorization Snapshot at a given point in time.
-func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error) {
+// @param chainSeg  the segment of a chain, composed by ancesters and the block(sepcified by parameter [number] and [hash])
+// in the order of ascending block number.
+func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, chainSeg []*types.Header) (*DporSnapshot, error) {
 	// Search for a Snapshot in memory or on disk for checkpoints
 	var (
 		headers []*types.Header
@@ -244,19 +243,20 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 		// No Snapshot for this header, gather the header and move backward
 		var header *types.Header
-		if len(parents) > 0 {
-			// If we have explicit parents, pick from there (enforced)
-			header = parents[len(parents)-1]
+		if len(chainSeg) > 0 {
+			// If we have explicit chainSeg, pick from there (enforced)
+			header = chainSeg[len(chainSeg)-1]
 			if header.Hash() != hash || header.Number.Uint64() != numberIter {
+				log.Info("8888888888888", "hash1", header.Hash().Hex(), "hash2", hash.Hex(), "number1", header.Number.Uint64(), "number2", numberIter)
 				log.Debug("consensus.ErrUnknownAncestor 1")
 				return nil, consensus.ErrUnknownAncestor
 			}
-			parents = parents[:len(parents)-1]
+			chainSeg = chainSeg[:len(chainSeg)-1]
 		} else {
-			// No explicit parents (or no more left), reach out to the database
+			// No explicit chainSeg (or no more left), reach out to the database
 			header = chain.GetHeader(hash, numberIter)
 			if header == nil {
-				log.Debug("consensus.ErrUnknownAncestor 2")
+				log.Debug("consensus.ErrUnknownAncestor 2", "number", numberIter)
 				return nil, consensus.ErrUnknownAncestor
 			}
 		}
@@ -320,7 +320,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Retrieve the Snapshot needed to verify this header and cache it
-	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents[:len(parents)-1])
+	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
 	}
@@ -347,6 +347,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 // verifySigs verifies whether the signatures of the header is signed by correct validator committee
 func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+	hash := header.Hash()
 	number := header.Number.Uint64()
 
 	// Verifying the genesis block is not supported
@@ -370,15 +371,13 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Retrieve the Snapshot needed to verify this header and cache it
-
-	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents[:len(parents)-1])
+	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
 	}
 
 	expectValidators := snap.ValidatorsOf(number)
 
-	hash := header.Hash()
 	// Some debug infos here
 	log.Debug("--------dpor.verifySigs--------")
 	log.Debug("hash", "hash", hash.Hex())
@@ -394,20 +393,18 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 		log.Debug("validator", "addr", signer.Hex(), "idx", idx)
 	}
 
-	if len(validators) != len(expectValidators) {
-		return errInvalidValidatorSigs
-	}
-
 	count := 0
-	for i, v := range validators {
-		if v == expectValidators[i] {
-			count++
+	for _, v := range validators {
+		for _, ev := range expectValidators {
+			if v == ev {
+				count++
+			}
 		}
 	}
 
 	// if not reached to 2f + 1, the validation fails
 	if count < (len(validators)-1)/3*2+1 {
-		return errInvalidValidatorSigs
+		return consensus.ErrNotEnoughSigs
 	}
 
 	// pass
@@ -416,13 +413,39 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 
 // signHeader signs the given refHeader if self is in the committee
 func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error {
+	hash := header.Hash()
 	number := header.Number.Uint64()
 
 	// Retrieve the Snapshot needed to verify this header and cache it
 	snap, err := dh.snapshot(dpor, chain, number-1, header.ParentHash, nil)
 	if err != nil {
+		log.Warn("getting dpor snapshot failed", "error", err)
 		return err
 	}
+
+	// Retrieve signatures of the block in cache
+	s, ok := dpor.signatures.Get(hash)
+	if !ok {
+		s = &Signatures{
+			sigs: make(map[common.Address][]byte),
+		}
+		dpor.signatures.Add(hash, s)
+	}
+
+	// Copy all signatures to allSigs
+	allSigs := make([]types.DporSignature, dpor.config.TermLen)
+	validators := snap.ValidatorsOf(number)
+	if dpor.config.TermLen != uint64(len(validators)) {
+		log.Warn("validator committee length not equal to term length", "termLen", dpor.config.TermLen, "validatorLen", len(validators))
+	}
+
+	// fulfill all known validator signatures to dpor.sigs to accumulate
+	for signPos, signer := range snap.ValidatorsOf(number) {
+		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
+			copy(allSigs[signPos][:], sigHash)
+		}
+	}
+	header.Dpor.Sigs = allSigs
 
 	// Sign the block if self is in the committee
 	if snap.IsValidatorOf(dpor.signer, number) {
@@ -431,24 +454,35 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			return errMultiBlocksInOneHeight
 		}
 
-		var bytesToHash []byte
+		var hashToSign []byte
 		// Sign it
 		if state == consensus.Preparing {
-			bytesToHash = append([]byte{'P'}, dpor.dh.sigHash(header).Bytes()...) // Preparing block signed by 'P'+hash
+			//hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
+			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		} else {
-			bytesToHash = dpor.dh.sigHash(header).Bytes()
+			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		}
-		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, bytesToHash)
+		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, hashToSign)
 		if err != nil {
+			log.Warn("signing block header failed", "error", err)
 			return err
+		}
+
+		// if the sigs length is wrong, reset it with correct length(termLen)
+		if len(header.Dpor.Sigs) != int(snap.config.TermLen) {
+			header.Dpor.Sigs = make([]types.DporSignature, snap.config.TermLen)
 		}
 
 		// Copy signer's signature to the right position in the allSigs
 		sigPos, _ := snap.ValidatorViewOf(dpor.signer, number)
 		copy(header.Dpor.Sigs[sigPos][:], sighash)
 
+		// Record new sig to signature cache
+		s.(*Signatures).SetSig(dpor.signer, sighash)
+
 		return nil
 	}
+	log.Warn("signing block failed", "error", errValidatorNotInCommittee)
 	return errValidatorNotInCommittee
 }
 

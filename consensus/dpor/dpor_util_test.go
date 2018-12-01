@@ -79,7 +79,7 @@ func Test_sigHash(t *testing.T) {
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotHash := dporUtil.sigHash(tt.args.header); !reflect.DeepEqual(gotHash, tt.wantHash) {
+			if gotHash := dporUtil.sigHash(tt.args.header, []byte{}); !reflect.DeepEqual(gotHash, tt.wantHash) {
 				t.Errorf("sigHash(%v) = %v, want %v", tt.args.header, gotHash, tt.wantHash)
 			}
 		})
@@ -242,7 +242,7 @@ func Test_acceptSigs(t *testing.T) {
 	sigs := &Signatures{
 		sigs: make(map[common.Address][]byte),
 	}
-	for _, signer := range getProposerAddress() {
+	for _, signer := range getValidatorAddress() {
 		sigs.SetSig(signer, []byte("ok"))
 	}
 
@@ -262,9 +262,9 @@ func Test_acceptSigs(t *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		{"should be true when signer not in cache", args{header, cache, getProposerAddress()[1:2], 4}, false, false},
-		{"should be true when signer not in cache", args{header, emptyCache, getProposerAddress(), 4}, false, true},
-		{"should be true when signer in cache", args{header, cache, getProposerAddress(), 4}, true, false},
+		{"should be false when signer not in cache", args{header, cache, getValidatorAddress()[1:2], 4}, false, false},
+		{"should be false when signer not in cache", args{header, emptyCache, getValidatorAddress(), 4}, false, true},
+		{"should be true when signer in cache", args{header, cache, getValidatorAddress(), 4}, true, false},
 	}
 
 	dporUtil := &defaultDporUtil{}
