@@ -57,7 +57,7 @@ func NewHandler(config *configs.DporConfig, etherbase common.Address) *Handler {
 		config:         config,
 		coinbase:       etherbase,
 		knownBlocks:    newKnownBlocks(),
-		dialer:         NewDialer(etherbase, config.Contracts["signer"]), // TODO: fix this
+		dialer:         NewDialer(etherbase, config.Contracts[configs.ContractProposer]), // TODO: fix this
 		pendingBlockCh: make(chan *types.Block),
 		quitSync:       make(chan struct{}),
 		available:      false,
