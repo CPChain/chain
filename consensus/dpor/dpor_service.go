@@ -154,23 +154,55 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	return impeach, nil
 }
 
-func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, error) {
+// EcrecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
+// addresses if one of the sigs are illegal
+func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error) {
 	var hashBytes []byte
 
 	sigs := header.Dpor.Sigs
-	addrs := make([]common.Address, len(sigs))
-	for i, sig := range sigs {
-		if state == consensus.Preprepared {
-			hashBytes = d.dh.sigHash(header, []byte{'P'}).Bytes()
-		} else {
-			hashBytes = d.dh.sigHash(header, []byte{}).Bytes()
-		}
-		proposerPubKey, err := crypto.Ecrecover(hashBytes, sig[:])
-		if err != nil {
-			return []common.Address{}, err
-		}
+	addrs := make([]common.Address, 0, len(sigs))
+	validSigs := make([]types.DporSignature, 0, len(sigs))
+	for _, sig := range sigs {
+		if !sig.IsEmpty() {
+			if state == consensus.Preprepared {
+				hashBytes = d.dh.sigHash(header, []byte{'P'}).Bytes()
+			} else {
+				hashBytes = d.dh.sigHash(header, []byte{}).Bytes()
+			}
+			proposerPubKey, err := crypto.Ecrecover(hashBytes, sig[:])
+			if err != nil {
+				return []common.Address{}, []types.DporSignature{}, err
+			}
 
-		copy(addrs[i][:], crypto.Keccak256(proposerPubKey[1:])[12:])
+			addr := common.Address{}
+			copy(addr[:], crypto.Keccak256(proposerPubKey[1:])[12:])
+			addrs = append(addrs, addr)
+			validSigs = append(validSigs, sig)
+		}
 	}
-	return addrs, nil
+	return addrs, validSigs, nil
+}
+
+// Update the signature to prepare signature cache(two kinds of sigs, one for prepared, another for final)
+func (d *Dpor) UpdatePrepareSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature) {
+	s, ok := d.prepareSigs.Get(hash)
+	if !ok {
+		s = &Signatures{
+			sigs: make(map[common.Address][]byte),
+		}
+		d.prepareSigs.Add(hash, s)
+	}
+	s.(*Signatures).SetSig(validator, sig[:])
+}
+
+// Update the signature to final signature cache(two kinds of sigs, one for prepared, another for final)
+func (d *Dpor) UpdateFinalSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature) {
+	s, ok := d.finalSigs.Get(hash)
+	if !ok {
+		s = &Signatures{
+			sigs: make(map[common.Address][]byte),
+		}
+		d.finalSigs.Add(hash, s)
+	}
+	s.(*Signatures).SetSig(validator, sig[:])
 }

@@ -126,8 +126,15 @@ type DporService interface {
 	// ImpeachTimeout returns the timeout for impeachment
 	ImpeachTimeout() time.Duration
 
-	// Recover signer address from signatures
-	EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, error)
+	// EcrecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
+	// addresses if one of the sigs are illegal
+	EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error)
+
+	// Update the signature to prepare signature cache(two kinds of sigs, one for prepared, another for final)
+	UpdatePrepareSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature)
+
+	// Update the signature to final signature cache(two kinds of sigs, one for prepared, another for final)
+	UpdateFinalSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature)
 }
 
 type HandlerMode uint

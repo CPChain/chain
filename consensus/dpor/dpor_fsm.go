@@ -1,14 +1,16 @@
 package dpor
 
 import (
+	"bytes"
 	"errors"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/hashicorp/golang-lru"
 )
 
 //Type enumerator for FSM action
@@ -55,39 +57,55 @@ var (
 	errFsmWrongPreparedInput           = errors.New("not a proper input for prepared state")
 	errFsmWrongImpeachPrepreparedInput = errors.New("not a proper input for impeach pre-prepared state")
 	errFsmWrongImpeachPreparedInput    = errors.New("not a proper input for impeach prepared state")
+	errBlockNotExist                   = errors.New("the block does not exist")
 )
 
 //Type enumerator for FSM states
 
-type sigRecord struct {
-	prepareSigs Signatures
-	commitSigs  Signatures
+// address -> blockSigItem -> (hash, sig)
+type sigState map[common.Address]*blockSigItem
+
+type blockSigItem struct {
+	hash common.Hash         // the block's hash
+	sig  types.DporSignature // signature of the block
 }
+
+const cacheSize = 10
 
 type DporSm struct {
 	lock sync.RWMutex
 
-	service   backend.DporService
-	state     map[uint64]*sigRecord
-	f         uint64
-	lastBlock *types.Block
+	service         backend.DporService
+	prepareSigState sigState
+	commitSigState  sigState
+	f               uint64 // f is the parameter of 3f+1 nodes in Byzantine
+	bcache          *lru.ARCCache
+	lastHeight      uint64
 }
 
-// getSigState returns the pointer to the message state of a specified block number
-func (sm *DporSm) getSigState(h *types.Header) *sigRecord {
-	rec, found := sm.state[h.Number.Uint64()]
-	if !found {
-		rec = &sigRecord{}
-		sm.state[h.Number.Uint64()] = rec
+func NewDporSm(service backend.DporService, f uint64) *DporSm {
+	bc, _ := lru.NewARC(cacheSize)
+
+	return &DporSm{
+		service:         service,
+		prepareSigState: make(map[common.Address]*blockSigItem),
+		commitSigState:  make(map[common.Address]*blockSigItem),
+		f:               f,
+		bcache:          bc,
+		lastHeight:      0,
 	}
-	return rec
-
-	//TODO: sm.state cannot use block.number as key, @chengx
 }
 
-// resetMsgState resets a messsage state of a specified block number
-func (sm *DporSm) resetMsgState(h *types.Header) {
-	sm.state[h.Number.Uint64()] = &sigRecord{}
+// refreshWhenNewerHeight resets a signature state for a renewed block number(height)
+func (sm *DporSm) refreshWhenNewerHeight(height uint64) {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	if height > sm.lastHeight {
+		sm.lastHeight = height
+		sm.prepareSigState = make(map[common.Address]*blockSigItem)
+		sm.commitSigState = make(map[common.Address]*blockSigItem)
+	}
 }
 
 // verifyBlock is a func to verify whether the block is legal
@@ -103,49 +121,103 @@ func (sm *DporSm) commitCertificate(h *types.Header) bool {
 	sm.lock.RLock()
 	defer sm.lock.RUnlock()
 
-	state := sm.getSigState(h)
-	return uint64(len(state.commitSigs.sigs)) >= 2*sm.f+1
-}
-
-//composeValidateMsg is to return the validate message, which is the proposed block or impeach block
-func (sm *DporSm) composeValidateMsg(h *types.Header) *types.Block {
-	return sm.lastBlock
-}
-
-//Add one to the counter of commit messages
-func (sm *DporSm) commitMsgPlus(h *types.Header) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	state := sm.getSigState(h)
-	signers, err := sm.service.EcrecoverSigs(h, consensus.Prepared)
-	if err != nil {
-		log.Warn("failed to recover signatures of committing phase", "error", err)
-		return
+	hash := h.Hash()
+	var count uint64 = 0
+	for _, item := range sm.commitSigState {
+		if bytes.Equal(item.hash[:], hash[:]) {
+			// TODO: @AC it had better to check whether the signature is valid for safety, consider add the check in future
+			count++
+		}
 	}
+	return count >= 2*sm.f+1
+}
 
-	validators, _ := sm.service.ValidatorsOf(h.Number.Uint64())
-	// merge signature to state
-	for i, s := range signers {
-		for _, v := range validators {
-			if s == v {
-				state.commitSigs.SetSig(s, h.Dpor.Sigs[i][:])
-				break
+// composeValidateMsg is to return the validate message, which is the proposed block or impeach block
+func (sm *DporSm) composeValidateMsg(h *types.Header) (*types.Block, error) {
+	sm.lock.RLock()
+	defer sm.lock.RUnlock()
+
+	hash := h.Hash()
+	b, got := sm.bcache.Get(hash)
+	if !got {
+		log.Warn("failed to retrieve block from cache", "hash", hash)
+		return nil, errBlockNotExist
+	}
+	theBlock := b.(*types.Block)
+
+	// make up the all signatures if missing
+	validators := h.Dpor.Validators
+	for i, v := range validators {
+		if bytes.Equal(theBlock.Dpor().Sigs[i][:], types.DporSignature{}[:]) { // if the sig is empty, try make up it
+			// try to find the sig in cache
+			state := sm.commitSigState[v]
+			if state.hash == hash { // if the validator signed the block, use its signature
+				copy(theBlock.Dpor().Sigs[i][:], state.sig[:])
 			}
 		}
 	}
+
+	return theBlock, nil
+}
+
+// commitMsgPlus merge the signatures of commit messages
+func (sm *DporSm) commitMsgPlus(h *types.Header) error {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	sm.refreshWhenNewerHeight(h.Number.Uint64())
+
+	// retrieve signers for checking
+	signers, sigs, err := sm.service.EcrecoverSigs(h, consensus.Prepared)
+	if err != nil {
+		log.Warn("failed to recover signatures of committing phase", "error", err)
+		return err
+	}
+
+	// check the signers are validators
+	validators, _ := sm.service.ValidatorsOf(h.Number.Uint64())
+	var checkErr error = nil
+	for _, s := range signers {
+		isValidator := false
+		for _, v := range validators {
+			if s == v {
+				isValidator = true
+			}
+		}
+		if !isValidator {
+			log.Warn("a signer is not in validator committee", "signer", s.Hex())
+			checkErr = errInvalidSigners
+		}
+	}
+	if checkErr != nil {
+		return checkErr
+	}
+
+	// merge signature to state
+	hash := h.Hash()
+	for i, s := range signers {
+		sm.commitSigState[s] = &blockSigItem{
+			hash: hash,
+			sig:  sigs[i],
+		}
+	}
+	return nil
 }
 
 func (sm *DporSm) composeCommitMsg(h *types.Header) (*types.Header, error) {
-	if sm.lastBlock.Number().Cmp(h.Number) >= 0 {
+	if sm.lastHeight > h.Number.Uint64() {
 		return nil, errBlockTooOld
 	}
 
-	validators, _ := sm.service.ValidatorsOf(h.Number.Uint64())
-	// clean up PREPARE signatures
-	h.Dpor.Sigs = make([]types.DporSignature, len(validators))
-	sm.service.SignHeader(h, consensus.Committing)
-	log.Info("sign block by validator at commit phase", "blocknum", sm.lastBlock.Number(), "sigs", sm.lastBlock.RefHeader().Dpor.SigsFormatText())
+	sm.refreshWhenNewerHeight(h.Number.Uint64())
+
+	// validator signs the block, update final sigs cache first
+	for v, item := range sm.commitSigState {
+		sm.service.UpdateFinalSigsCache(v, item.hash, item.sig)
+	}
+	sm.service.SignHeader(h, consensus.Prepared)
+	log.Info("sign block by validator at commit msg", "blocknum", sm.lastHeight, "sigs", h.Dpor.SigsFormatText())
+
 	return h, nil
 }
 
@@ -154,43 +226,74 @@ func (sm *DporSm) prepareCertificate(h *types.Header) bool {
 	sm.lock.RLock()
 	defer sm.lock.RUnlock()
 
-	return uint64(len(sm.getSigState(h).prepareSigs.sigs)) >= 2*sm.f+1
+	hash := h.Hash()
+	var count uint64 = 0
+	for _, item := range sm.prepareSigState {
+		if bytes.Equal(item.hash[:], hash[:]) {
+			// TODO: @AC it had better to check whether the signature is valid for safety, consider add the check in future
+			count++
+		}
+	}
+	return count >= 2*sm.f+1
 }
 
 //Add one to the counter of prepare messages
-func (sm *DporSm) prepareMsgPlus(h *types.Header) {
+func (sm *DporSm) prepareMsgPlus(h *types.Header) error {
 	sm.lock.Lock()
 	defer sm.lock.Unlock()
 
-	state := sm.getSigState(h)
-	signers, err := sm.service.EcrecoverSigs(h, consensus.Preprepared)
+	sm.refreshWhenNewerHeight(h.Number.Uint64())
+
+	// retrieve signers for checking
+	signers, sigs, err := sm.service.EcrecoverSigs(h, consensus.Prepared)
 	if err != nil {
 		log.Warn("failed to recover signatures of preparing phase", "error", err)
-		return
+		return err
 	}
 
+	// check the signers are validators
 	validators, _ := sm.service.ValidatorsOf(h.Number.Uint64())
-	// merge signature to state
-	for i, s := range signers {
+	var checkErr error = nil
+	for _, s := range signers {
+		isValidator := false
 		for _, v := range validators {
 			if s == v {
-				state.prepareSigs.SetSig(s, h.Dpor.Sigs[i][:])
-				break
+				isValidator = true
 			}
 		}
+		if !isValidator {
+			log.Warn("a signer is not in validator committee", "signer", s.Hex())
+			checkErr = errInvalidSigners
+		}
 	}
+	if checkErr != nil {
+		return checkErr
+	}
+
+	// merge signature to state
+	hash := h.Hash()
+	for i, s := range signers {
+		sm.prepareSigState[s] = &blockSigItem{
+			hash: hash,
+			sig:  sigs[i],
+		}
+	}
+	return nil
 }
 
 func (sm *DporSm) composePrepareMsg(b *types.Block) (*types.Header, error) {
-	if sm.lastBlock.Number().Cmp(b.Number()) >= 0 {
+	if sm.lastHeight >= b.NumberU64() {
 		return nil, errBlockTooOld
 	}
 
-	sm.lastBlock = b
-	sm.resetMsgState(b.Header())
+	sm.refreshWhenNewerHeight(b.NumberU64())
+	sm.bcache.Add(b.Hash(), b) // add to cache
 	// validator signs the block
-	sm.service.SignHeader(b.RefHeader(), consensus.Preparing)
-	log.Info("sign block by validator at prepare phase", "blocknum", sm.lastBlock.Number(), "sigs", sm.lastBlock.RefHeader().Dpor.SigsFormatText())
+	for v, item := range sm.prepareSigState {
+		sm.service.UpdatePrepareSigsCache(v, item.hash, item.sig)
+	}
+	sm.service.SignHeader(b.RefHeader(), consensus.Preprepared)
+	log.Info("sign block by validator at prepare msg", "blocknum", sm.lastHeight, "sigs", b.RefHeader().Dpor.SigsFormatText())
 
 	return b.Header(), nil
 }
@@ -202,41 +305,10 @@ func (sm *DporSm) proposeImpeachBlock() *types.Block {
 		log.Warn("creating impeachment block failed", "error", e)
 		return nil
 	}
+
+	sm.service.SignHeader(b.RefHeader(), consensus.Preprepared)
+	log.Info("proposed a impeachment block", "hash", b.Hash().Hex(), "sigs", b.Header().Dpor.SigsFormatText())
 	return b
-}
-
-//It returns true if the timer expires
-func impeachTimer() bool {
-	//TODO: @shiyc
-	return false
-}
-
-//composeImpeachValidateMsg is to return the impeachment validate message, which is the proposed block or impeach block
-func (sm *DporSm) composeImpeachValidateMsg(h *types.Header) *types.Block {
-	return sm.lastBlock
-}
-
-// It returns true it collects 2f+1 impeach prepare messages
-func (sm *DporSm) impeachPrepareCertificate(h *types.Header) bool {
-	//TODO @shiyc implement it
-	return true
-}
-
-func (sm *DporSm) impeachPrepareMsgPlus(h *types.Header) {
-	//TODO @shiyc
-}
-
-func (sm *DporSm) composeImpeachCommitMsg(h *types.Header) *types.Header {
-	return h
-}
-
-func (sm *DporSm) impeachCommitCertificate(h *types.Header) bool {
-	//TODO @shiyc implement it
-	return true
-}
-
-func (sm *DporSm) impeachCommitMsgPlus(h *types.Header) {
-	//TODO @shiyc implement it
 }
 
 // Fsm is the finite state machine for a validator, to output the correct state given on current state and inputs

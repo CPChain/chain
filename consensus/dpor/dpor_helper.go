@@ -314,7 +314,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Resolve the authorization key and check against signers
-	proposer, _, err := dh.ecrecover(header, dpor.signatures)
+	proposer, _, err := dh.ecrecover(header, dpor.finalSigs)
 	if err != nil {
 		return err
 	}
@@ -365,7 +365,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Resolve the authorization keys
-	proposer, validators, err := dh.ecrecover(header, dpor.signatures)
+	proposer, validators, err := dh.ecrecover(header, dpor.finalSigs)
 	if err != nil {
 		return err
 	}
@@ -423,13 +423,26 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		return err
 	}
 
+	var s interface{}
 	// Retrieve signatures of the block in cache
-	s, ok := dpor.signatures.Get(hash)
-	if !ok {
-		s = &Signatures{
-			sigs: make(map[common.Address][]byte),
+	if state == consensus.Prepared {
+		s, ok := dpor.finalSigs.Get(hash)
+		if !ok {
+			s = &Signatures{
+				sigs: make(map[common.Address][]byte),
+			}
+			dpor.finalSigs.Add(hash, s)
 		}
-		dpor.signatures.Add(hash, s)
+	} else if state == consensus.Preprepared {
+		s, ok := dpor.prepareSigs.Get(hash)
+		if !ok {
+			s = &Signatures{
+				sigs: make(map[common.Address][]byte),
+			}
+			dpor.prepareSigs.Add(hash, s)
+		}
+	} else {
+		log.Warn("the state is unexpected for signing header", "state", state)
 	}
 
 	// Copy all signatures to allSigs
