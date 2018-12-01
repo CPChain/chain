@@ -184,15 +184,22 @@ const (
 	// Inserting is set if succeed to insert block into local chain
 	Inserting
 
-	//
+	// Idle state is served as the first state in PBFT, ready to receive the proposed block
 	Idle
 
+	// Pre-prepared state is the second state. The validator can enter this state after receiving proposed block (pre-prepare) message.
+	// It is ready to send prepare messages
 	Preprepared
 
+	// Prepared state is the third state. The validator can enter it after collecting prepare certificate
+	// It is about to broadcast commit messages
 	Prepared
 
+	// The validator transit to impeach pre-prepared state whenever the timer expires
+	// It is about to broadcast impeach prepare messages
 	ImpeachPreprepared
 
+	// Once a impeach prepare certificate is collected, a validator enters impeach prepared state
 	ImpeachPrepared
 )
 
