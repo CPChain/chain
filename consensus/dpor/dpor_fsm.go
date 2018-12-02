@@ -148,7 +148,7 @@ func (sm *DporSm) composeValidateMsg(h *types.Header) (*types.Block, error) {
 	// make up the all signatures if missing
 	validators := h.Dpor.Validators
 	for i, v := range validators {
-		if bytes.Equal(theBlock.Dpor().Sigs[i][:], types.DporSignature{}[:]) { // if the sig is empty, try make up it
+		if theBlock.Dpor().Sigs[i].IsEmpty() { // if the sig is empty, try make up it
 			// try to find the sig in cache
 			state := sm.commitSigState[v]
 			if state.hash == hash { // if the validator signed the block, use its signature
@@ -311,6 +311,26 @@ func (sm *DporSm) proposeImpeachBlock() *types.Block {
 	return b
 }
 
+func (sm *DporSm) impeachCommitCertificate(h *types.Header) bool {
+	return sm.commitCertificate(h)
+}
+
+func (sm *DporSm) composeImpeachValidateMsg(h *types.Header) (*types.Block, error) {
+	return sm.composeValidateMsg(h)
+}
+
+func (sm *DporSm) impeachCommitMsgPlus(h *types.Header) error {
+	return sm.commitMsgPlus(h)
+}
+
+func (sm *DporSm) impeachPrepareCertificate(h *types.Header) bool {
+	return sm.prepareCertificate(h)
+}
+
+func (sm *DporSm) impeachPrepareMsgPlus(h *types.Header) error {
+	return sm.prepareMsgPlus(h)
+}
+
 // Fsm is the finite state machine for a validator, to output the correct state given on current state and inputs
 func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state consensus.State) (interface{}, action, dataType, msgCode, consensus.State, error) {
 	var inputHeader *types.Header
@@ -341,10 +361,19 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// Stay in consensus.Idle state to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
+				b, err := sm.composeValidateMsg(inputHeader)
+				if err != nil {
+					log.Warn("error when handling commitMsg on Idle state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Idle, err
+				}
+				return b, broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
-				sm.commitMsgPlus(inputHeader)
+				err := sm.commitMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling commitMsg on Idle state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Idle, err
+				}
 				return input, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
@@ -358,7 +387,11 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 				return ret, broadcastMsg, header, commitMsg, consensus.Prepared, nil
 			} else {
 				// Add one to the counter of prepare messages
-				sm.prepareMsgPlus(inputHeader)
+				err := sm.prepareMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling prepareMsg on Idle state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Idle, err
+				}
 				return input, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
@@ -367,6 +400,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			if sm.verifyBlock(inputBlock) {
 				ret, err := sm.composePrepareMsg(inputBlock)
 				if err != nil {
+					log.Warn("error when handling preprepareMsg on Idle state", "error", err)
 					return nil, noAction, noType, noMsg, consensus.Idle, err
 				}
 				return ret, broadcastMsg, header, prepareMsg, consensus.Preprepared, nil
@@ -382,9 +416,18 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// Stay in consensus.Idle state if the validator collects 2f+1 impeach commit messages
 		case impeachCommitMsg:
 			if sm.impeachCommitCertificate(inputHeader) {
-				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+				b, err := sm.composeImpeachValidateMsg(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on Idle state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Idle, err
+				}
+				return b, broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
 			} else {
-				sm.impeachCommitMsgPlus(inputHeader)
+				err := sm.impeachCommitMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on Idle state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Idle, err
+				}
 				return inputHeader, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
@@ -393,7 +436,11 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			if sm.impeachPrepareCertificate(inputHeader) {
 				return inputHeader, broadcastMsg, header, impeachCommitMsg, consensus.ImpeachPrepared, nil
 			} else {
-				sm.impeachPrepareMsgPlus(inputHeader)
+				err := sm.impeachPrepareMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachPrepareMsg on Idle state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Idle, err
+				}
 				return input, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
@@ -414,10 +461,19 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// Jump to committed state if receive 2f+1 commit messages
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
+				b, err := sm.composeValidateMsg(inputHeader)
+				if err != nil {
+					log.Warn("error when handling commitMsg on Preprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Idle, err
+				}
+				return b, broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
-				sm.commitMsgPlus(inputHeader)
+				err := sm.commitMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling commitMsg on Preprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Idle, err
+				}
 				return input, noAction, noType, noMsg, consensus.Preprepared, nil
 			}
 		// Convert to consensus.Prepared state if collect prepare certificate
@@ -425,12 +481,16 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			if sm.prepareCertificate(inputHeader) {
 				ret, err := sm.composeCommitMsg(inputHeader)
 				if err != nil {
-					return nil, noAction, noType, noMsg, consensus.Preprepared, nil
+					return nil, noAction, noType, noMsg, consensus.Preprepared, err
 				}
 				return ret, broadcastMsg, header, commitMsg, consensus.Prepared, nil
 			} else {
 				// Add one to the counter of prepare messages
-				sm.prepareMsgPlus(inputHeader)
+				err := sm.prepareMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling prepareMsg on Preprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Preprepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.Preprepared, nil
 			}
 		case impeachValidateMsg:
@@ -439,10 +499,19 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// Stay in consensus.Idle state to committed state if receive 2f+1 commit messages
 		case impeachCommitMsg:
 			if sm.impeachCommitCertificate(inputHeader) {
-				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+				b, err := sm.composeImpeachValidateMsg(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on Preprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Preprepared, err
+				}
+				return b, broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
-				sm.commitMsgPlus(inputHeader)
+				err := sm.commitMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on Preprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Preprepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.Idle, nil
 			}
 
@@ -451,7 +520,11 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			if sm.impeachPrepareCertificate(inputHeader) {
 				return inputHeader, broadcastMsg, header, impeachCommitMsg, consensus.ImpeachPrepared, nil
 			} else {
-				sm.impeachPrepareMsgPlus(inputHeader)
+				err := sm.impeachPrepareMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachPrepareMsg on Preprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Preprepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.Preprepared, nil
 			}
 
@@ -471,10 +544,19 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// convert to committed state if collects commit certificate
 		case commitMsg:
 			if sm.commitCertificate(inputHeader) {
-				return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
+				b, err := sm.composeValidateMsg(inputHeader)
+				if err != nil {
+					log.Warn("error when handling commitMsg on Prepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Prepared, err
+				}
+				return b, broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
-				sm.commitMsgPlus(inputHeader)
+				err := sm.commitMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling commitMsg on Prepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Prepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.Preprepared, nil
 			}
 
@@ -485,10 +567,19 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// Transit to consensus.Idle state to committed state if receive 2f+1 commit messages
 		case impeachCommitMsg:
 			if sm.impeachCommitCertificate(inputHeader) {
-				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+				b, err := sm.composeImpeachValidateMsg(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on Prepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Prepared, err
+				}
+				return b, broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
-				sm.impeachCommitMsgPlus(inputHeader)
+				err := sm.impeachCommitMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on Prepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Prepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.Prepared, nil
 			}
 
@@ -497,7 +588,11 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			if sm.impeachPrepareCertificate(inputHeader) {
 				return inputHeader, broadcastMsg, header, impeachCommitMsg, consensus.ImpeachPrepared, nil
 			} else {
-				sm.impeachPrepareMsgPlus(inputHeader)
+				err := sm.impeachPrepareMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachPrepareMsg on Prepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.Prepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.Prepared, nil
 			}
 
@@ -515,10 +610,19 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// Stay in consensus.Idle state to committed state if receive 2f+1 commit messages
 		case impeachCommitMsg:
 			if sm.impeachCommitCertificate(inputHeader) {
-				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+				b, err := sm.composeImpeachValidateMsg(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on ImpeachPreprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.ImpeachPreprepared, err
+				}
+				return b, broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
-				sm.impeachCommitMsgPlus(inputHeader)
+				err := sm.impeachCommitMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on ImpeachPreprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.ImpeachPreprepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.ImpeachPreprepared, nil
 			}
 
@@ -527,7 +631,11 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			if sm.impeachPrepareCertificate(inputHeader) {
 				return inputHeader, broadcastMsg, header, impeachCommitMsg, consensus.ImpeachPrepared, nil
 			} else {
-				sm.impeachPrepareMsgPlus(inputHeader)
+				err := sm.impeachPrepareMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachPrepareMsg on ImpeachPreprepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.ImpeachPreprepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.ImpeachPreprepared, nil
 			}
 		}
@@ -542,10 +650,19 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// Stay in consensus.Idle state to committed state if receive 2f+1 commit messages
 		case impeachCommitMsg:
 			if sm.impeachCommitCertificate(inputHeader) {
-				return sm.composeImpeachValidateMsg(inputHeader), broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
+				b, err := sm.composeImpeachValidateMsg(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on ImpeachPrepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.ImpeachPrepared, err
+				}
+				return b, broadcastAndInsertBlock, block, impeachValidateMsg, consensus.Idle, nil
 			} else {
 				// Add one to the counter of commit messages
-				sm.impeachCommitMsgPlus(inputHeader)
+				err := sm.impeachCommitMsgPlus(inputHeader)
+				if err != nil {
+					log.Warn("error when handling impeachCommitMsg on ImpeachPrepared state", "error", err)
+					return nil, noAction, noType, noMsg, consensus.ImpeachPrepared, err
+				}
 				return input, noAction, noType, noMsg, consensus.ImpeachPrepared, nil
 			}
 		}
