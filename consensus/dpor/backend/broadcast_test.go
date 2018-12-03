@@ -50,7 +50,7 @@ func TestHandler_BroadcastMinedBlock(t *testing.T) {
 				pendingBlockCh: tt.fields.pendingBlockCh,
 				quitSync:       tt.fields.quitSync,
 			}
-			h.BroadcastMinedBlock(tt.args.block)
+			h.BroadcastPreprepareBlock(tt.args.block)
 		})
 	}
 }

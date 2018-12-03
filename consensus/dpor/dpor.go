@@ -163,8 +163,10 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	d.contractCaller = contractCaller
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
 
-	// create a pbft handler
+	// TODO: @liq read f from config
+	fsm := backend.NewDporSm(d, 1)
 
+	// create a pbft handler
 	handler := d.validatorHandler
 
 	if err := handler.SetContractCaller(contractCaller); err != nil {
@@ -176,6 +178,10 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	}
 
 	if err := handler.SetDporService(d); err != nil {
+		return
+	}
+
+	if err := handler.SetDporSm(fsm); err != nil {
 		return
 	}
 

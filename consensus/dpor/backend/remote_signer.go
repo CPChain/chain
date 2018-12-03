@@ -20,9 +20,9 @@ var (
 )
 
 const (
-	maxQueuedPendingBlocks      = 8
+	maxQueuedBlocks             = 8
 	maxQueuedPendingBlockHashes = 8
-	maxQueuedSigs               = 8
+	maxQueuedHeaders            = 8
 
 	handshakeTimeout = 5 * time.Second
 )
