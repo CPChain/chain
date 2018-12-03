@@ -51,7 +51,7 @@ var (
 	errBlockTooOld                     = errors.New("the block is too old")
 	errFsmWrongDataType                = errors.New("an unexpected FSM input data type")
 	errFsmFaultyBlock                  = errors.New("the newly proposed block is faulty")
-	errFsmWrongIdleIpunt               = errors.New("not a proper input for idle state")
+	errFsmWrongIdleInput               = errors.New("not a proper input for idle state")
 	errFsmWrongPrepreparedInput        = errors.New("not a proper input for pre-prepared state")
 	errFsmWrongPreparedInput           = errors.New("not a proper input for prepared state")
 	errFsmWrongImpeachPrepreparedInput = errors.New("not a proper input for impeach pre-prepared state")
@@ -491,7 +491,7 @@ func (sm *DporSm) fsm(input interface{}, inputType dataType, msg msgCode, state 
 		case impeachPreprepareMsgCode:
 			return sm.proposeImpeachBlock(), broadcastMsgAction, blockType, impeachPrepareMsgCode, consensus.ImpeachPreprepared, nil
 		default:
-			err = errFsmWrongIdleIpunt
+			err = errFsmWrongIdleInput
 		}
 
 	// The case of pre-prepared state
