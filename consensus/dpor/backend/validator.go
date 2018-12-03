@@ -62,6 +62,13 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		input, inputType, msgCode = block, blockType, preprepareMsgCode
 
+		err = vh.knownBlocks.AddBlock(block)
+		if err != nil {
+			return err
+		}
+
+		log.Debug("received preprepare block msg", "number", block.NumberU64())
+
 	case PrepareHeaderMsg:
 		header, err := RecoverHeaderFromMsg(msg, p.Peer)
 		if err != nil {
@@ -69,6 +76,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 		}
 
 		input, inputType, msgCode = header, headerType, prepareMsgCode
+
+		log.Debug("received prepare header msg", "number", header.Number.Uint64())
 
 	case CommitHeaderMsg:
 		header, err := RecoverHeaderFromMsg(msg, p.Peer)
@@ -78,13 +87,22 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		input, inputType, msgCode = header, headerType, commitMsgCode
 
-	case PreprepareImpeachBlockMsg:
-		block, err := RecoverBlockFromMsg(msg, p.Peer)
-		if err != nil {
-			return err
-		}
+		log.Debug("received commit header msg", "number", header.Number.Uint64())
 
-		input, inputType, msgCode = block, blockType, impeachPreprepareMsgCode
+	// case PreprepareImpeachBlockMsg:
+	// 	block, err := RecoverBlockFromMsg(msg, p.Peer)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+
+	// 	err = vh.knownBlocks.AddBlock(block)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+
+	// 	input, inputType, msgCode = block, blockType, impeachPreprepareMsgCode
+
+	// 	log.Debug("received preprepare impeach block msg", "number", block.NumberU64())
 
 	case PrepareImpeachHeaderMsg:
 		header, err := RecoverHeaderFromMsg(msg, p.Peer)
@@ -94,6 +112,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		input, inputType, msgCode = header, headerType, impeachPrepareMsgCode
 
+		log.Debug("received prepare impeach header msg", "number", header.Number.Uint64())
+
 	case CommitImpeachHeaderMsg:
 		header, err := RecoverHeaderFromMsg(msg, p.Peer)
 		if err != nil {
@@ -101,6 +121,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 		}
 
 		input, inputType, msgCode = header, headerType, impeachCommitMsgCode
+
+		log.Debug("received commit impeach header msg", "number", header.Number.Uint64())
 
 	default:
 		return nil
@@ -119,16 +141,24 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			switch msgCode {
 			case prepareMsgCode:
-				vh.BroadcastPrepareHeader(header)
+				go vh.BroadcastPrepareHeader(header)
+
+				log.Debug("broadcasting prepare header", "number", header.Number.Uint64())
 
 			case commitMsgCode:
-				vh.BroadcastCommitHeader(header)
+				go vh.BroadcastCommitHeader(header)
+
+				log.Debug("broadcasting commit header", "number", header.Number.Uint64())
 
 			case impeachPrepareMsgCode:
-				vh.BroadcastPrepareImpeachHeader(header)
+				go vh.BroadcastPrepareImpeachHeader(header)
+
+				log.Debug("broadcasting prepare impeach header", "number", header.Number.Uint64())
 
 			case impeachCommitMsgCode:
-				vh.BroadcastCommitImpeachHeader(header)
+				go vh.BroadcastCommitImpeachHeader(header)
+
+				log.Debug("broadcasting commit impeach header", "number", header.Number.Uint64())
 
 			default:
 				log.Warn("unknown msg code when broadcasting header", "msg code", msgCode)
@@ -138,8 +168,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			block := output.(*types.Block)
 
 			switch msgCode {
-			case preprepareMsgCode:
-				go vh.BroadcastPreprepareBlock(block)
+			case validateMsgCode:
+				go vh.dpor.BroadcastBlock(block, true)
 
 			default:
 				log.Warn("unknown msg code when broadcasting block", "msg code", msgCode)
@@ -149,9 +179,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			block := output.(*types.Block)
 
 			switch msgCode {
-			case impeachPreprepareMsgCode:
-				// TODO: fix this
-				go vh.BroadcastPreprepareImpeachBlock(block)
+			case impeachValidateMsgCode:
+				go vh.dpor.BroadcastBlock(block, true)
 
 			default:
 				log.Warn("unknown msg code when broadcasting block", "msg code", msgCode)
@@ -191,7 +220,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			if err != nil {
 				return err
 			}
-			go vh.BroadcastPreprepareBlock(block)
+			go vh.dpor.BroadcastBlock(block, true)
 
 		case impeachBlockType:
 			block := input.(*types.Block)
@@ -199,8 +228,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			if err != nil {
 				return err
 			}
-			// TODO: fix this
-			go vh.BroadcastPreprepareImpeachBlock(block)
+			go vh.dpor.BroadcastBlock(block, true)
 
 		default:
 			log.Warn("unknown data type when inserting and broadcasting block", "data type", dtype)

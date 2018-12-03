@@ -26,7 +26,8 @@ func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 			log.Debug("signer", "addr", addr.Hex())
 		}
 
-		if len(validators) >= int(h.config.TermLen) {
+		// if len(validators) >= int(h.config.TermLen) {
+		if len(validators) >= 9 {
 			ready = true
 		}
 	}
@@ -142,13 +143,14 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			// check if still not received new block, if true, continue
 			if h.ReadyToImpeach() {
 				// get empty block
-				if impeachBlock, err := h.dpor.CreateImpeachBlock(); err == nil {
 
-					// broadcast the empty block
-					// h.BroadcastGeneratedBlock(emptyBlock)
-					_ = impeachBlock
-					go h.BroadcastPreprepareBlock(impeachBlock) // TODO: @liuq BroadcastMinedBlock sends PREPREPARE message, which should be PREPARE message. We need to create a new function to let it calls.
+				impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, impeachPreprepareMsgCode)
+
+				if impeachHeader != nil && act == broadcastMsgAction && dtype == headerType && msg == prepareMsgCode && err == nil {
+					header := impeachHeader.(*types.Header)
+					go h.BroadcastPrepareImpeachHeader(header)
 				}
+
 			}
 
 		case <-h.quitSync:
