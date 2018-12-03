@@ -457,8 +457,9 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		// then generate the impeachment block and broadcast the impeach prepare massage
 		case impeachPreprepareMsg:
 			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
+		default:
+			err = errFsmWrongIdleIpunt
 		}
-		err = errFsmWrongIdleIpunt
 
 	// The case of pre-prepared state
 	case consensus.Preprepared:
@@ -539,9 +540,9 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 
 		case impeachPreprepareMsg:
 			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
-
+		default:
+			err = errFsmWrongPrepreparedInput
 		}
-		err = errFsmWrongPrepreparedInput
 
 	// The case of consensus.Prepared stage
 	case consensus.Prepared:
@@ -607,8 +608,10 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 
 		case impeachPreprepareMsg:
 			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
+		default:
+			err = errFsmWrongPreparedInput
+
 		}
-		err = errFsmWrongPreparedInput
 
 	case consensus.ImpeachPreprepared:
 		switch msg {
@@ -647,8 +650,9 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 				}
 				return input, noAction, noType, noMsg, consensus.ImpeachPreprepared, nil
 			}
+		default:
+			err = errFsmWrongImpeachPrepreparedInput
 		}
-		err = errFsmWrongImpeachPrepreparedInput
 
 	case consensus.ImpeachPrepared:
 		switch msg {
@@ -674,8 +678,9 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 				}
 				return input, noAction, noType, noMsg, consensus.ImpeachPrepared, nil
 			}
+		default:
+			err = errFsmWrongPreparedInput
 		}
-		err = errFsmWrongPreparedInput
 
 		// Broadcast a validate message and then go back to consensus.Idle state
 		//case committed:

@@ -328,7 +328,7 @@ func (vh *Handler) handleCommitMsg(msg p2p.Msg, p *RemoteValidator) error {
 		}
 
 	default:
-		log.Warn("receievd unwelcome msg in state Prepare", "msg code", msg.Code)
+		log.Warn("received unwelcome msg in state Prepare", "msg code", msg.Code)
 	}
 
 	return nil
