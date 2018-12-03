@@ -18,12 +18,11 @@ package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"reflect"
 	"testing"
-
-	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -149,20 +148,19 @@ func TestBlockDporRlp(t *testing.T) {
 	newHeader.Dpor.Sigs = []DporSignature{sig1, sig2}
 	dpor := CopyDporSnap(&newHeader.Dpor)
 
-	bb, err := rlp.EncodeToBytes(&dpor)
+	dp, err := rlp.EncodeToBytes(&dpor)
 	// txt, err := dpor.MarshalText()
 	if err != nil {
 		t.Error("MarshalText error", "error", err)
 	}
 
-	fmt.Println("bb", bb)
-	xx := DporSnap{}
-	err = rlp.DecodeBytes(bb, &xx)
-	// err = dpor.UnmarshalText(bb)
+	fmt.Println("dp", dp)
+	ds := DporSnap{}
+	err = rlp.DecodeBytes(dp, &ds)
 	if err != nil {
 		t.Error("UnmarshalText error", "error", err)
 	}
-	fmt.Println(bb)
+	fmt.Println(dp)
 }
 
 func TestDporSignatureJsonEncoding(t *testing.T) {

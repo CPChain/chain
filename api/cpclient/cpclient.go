@@ -23,10 +23,8 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-
-	"time"
-
 	"strconv"
+	"time"
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"

@@ -238,23 +238,3 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 //	}
 //	return committee
 // }
-//
-// func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
-// 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
-// 	instance, err := contract2.NewCampaign(contractAddress, re.Client)
-// 	if err != nil {
-// 		log.Error("NewCampaign error", "address", address, "error", err)
-// 		return false, err
-// 	}
-// 	rNdoeAddress, err := instance.CandidatesOf(nil, big.NewInt(int64(number)))
-// 	if err != nil {
-// 		log.Error("CandidatesOf error", "error", err)
-// 		return false, err
-// 	}
-// 	for _, rNode := range rNdoeAddress {
-// 		if rNode == address {
-// 			return true, nil
-// 		}
-// 	}
-// 	return false, nil
-// }
