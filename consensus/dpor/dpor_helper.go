@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
@@ -178,7 +177,7 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 				}
 			}
 
-			return errInvalidSigners
+			return consensus.ErrInvalidSigners
 		}
 	}
 

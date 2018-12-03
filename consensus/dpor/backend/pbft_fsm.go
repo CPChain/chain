@@ -1,4 +1,4 @@
-package dpor
+package backend
 
 import (
 	"bytes"
@@ -7,7 +7,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/golang-lru"
@@ -74,7 +73,7 @@ const cacheSize = 10
 type DporSm struct {
 	lock sync.RWMutex
 
-	service         backend.DporService
+	service         DporService
 	prepareSigState sigState
 	commitSigState  sigState
 	f               uint64        // f is the parameter of 3f+1 nodes in Byzantine
@@ -82,7 +81,7 @@ type DporSm struct {
 	lastHeight      uint64
 }
 
-func NewDporSm(service backend.DporService, f uint64) *DporSm {
+func NewDporSm(service DporService, f uint64) *DporSm {
 	bc, _ := lru.NewARC(cacheSize)
 
 	return &DporSm{
@@ -185,7 +184,7 @@ func (sm *DporSm) commitMsgPlus(h *types.Header) error {
 		}
 		if !isValidator {
 			log.Warn("a signer is not in validator committee", "signer", s.Hex())
-			checkErr = errInvalidSigners
+			checkErr = consensus.ErrInvalidSigners
 		}
 	}
 	if checkErr != nil {
@@ -262,7 +261,7 @@ func (sm *DporSm) prepareMsgPlus(h *types.Header) error {
 		}
 		if !isValidator {
 			log.Warn("a signer is not in validator committee", "signer", s.Hex())
-			checkErr = errInvalidSigners
+			checkErr = consensus.ErrInvalidSigners
 		}
 	}
 	if checkErr != nil {
