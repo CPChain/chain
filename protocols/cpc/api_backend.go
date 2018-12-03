@@ -259,8 +259,7 @@ func (b *APIBackend) CurrentView() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.TermLen
-	View := (bn.Uint64() % (vl * tl)) / vl
-	// fmt.Println("the View is :", View, "number", bn)
+	View := ((bn.Uint64() - 1) % (vl * tl)) / vl
 	return View
 }
 
