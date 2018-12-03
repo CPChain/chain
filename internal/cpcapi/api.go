@@ -473,7 +473,7 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
 }
 
-// Query RNodes.
+//  GetCurrentView return current RNodes
 func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	// TODO fill biz logic later
 	var rNodeAddress []common.Address
@@ -519,12 +519,14 @@ func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
 	return CurrentView
 }
 
+// GetCurrentTerm return current term
 func (s *PublicBlockChainAPI) GetCurrentTerm() uint64 {
 	// TODO fill biz logic later
 	CurrentTerm := s.b.CurrentTerm()
 	return CurrentTerm
 }
 
+// GetCommittees return current committees
 func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
 	// TODO fill biz logic later
 
@@ -536,10 +538,10 @@ func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
 	for i := uint64(0); i < v; i++ {
 		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(bn.Header().Number.Uint64())-rpc.BlockNumber(i))
 		if err != nil {
-			log.Fatal("can't get header", err)
+			log.Error("can't get header", "error", err)
+			return committees
 		}
 		committee := cpclient.Committees{
-			// TODO fill PublicKey logic later
 			View: v, Term: t, Producer: header.Coinbase, Block: uint64(rpc.BlockNumber(bn.Header().Number.Uint64()) - rpc.BlockNumber(i)),
 		}
 		committees = append(committees, committee)
