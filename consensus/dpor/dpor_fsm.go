@@ -60,8 +60,6 @@ var (
 	errBlockNotExist                   = errors.New("the block does not exist")
 )
 
-//Type enumerator for FSM states
-
 // address -> blockSigItem -> (hash, sig)
 type sigState map[common.Address]*blockSigItem
 
@@ -72,6 +70,7 @@ type blockSigItem struct {
 
 const cacheSize = 10
 
+//DporSm is a struct containing variables used for state transition in FSM
 type DporSm struct {
 	lock sync.RWMutex
 
@@ -237,7 +236,7 @@ func (sm *DporSm) prepareCertificate(h *types.Header) bool {
 	return count >= 2*sm.f+1
 }
 
-//Add one to the counter of prepare messages
+// Add one to the counter of prepare messages
 func (sm *DporSm) prepareMsgPlus(h *types.Header) error {
 	sm.lock.Lock()
 	defer sm.lock.Unlock()
@@ -281,6 +280,7 @@ func (sm *DporSm) prepareMsgPlus(h *types.Header) error {
 	return nil
 }
 
+// It is used to compose prepare message given a newly proposed block
 func (sm *DporSm) composePrepareMsg(b *types.Block) (*types.Header, error) {
 	if sm.lastHeight >= b.NumberU64() {
 		return nil, errBlockTooOld
@@ -332,12 +332,21 @@ func (sm *DporSm) impeachPrepareMsgPlus(h *types.Header) error {
 }
 
 // Fsm is the finite state machine for a validator, to output the correct state given on current state and inputs
+// input is either a header or a block, referring to message or proposed (impeach) block
+// inputType indicates the type of input
+// msg indicates what type of message or block input is
+// state is the current state of the validator
+// the output interface is the message or block validator should handle
+// the output action refers to what the validator should do with the output interface
+// the output dataType indicates whether the output interface is block or header
+// the output msgCode represents the type the output block or message
+// the output consensus.State indicates the validator's next state
 func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state consensus.State) (interface{}, action, dataType, msgCode, consensus.State, error) {
 	var inputHeader *types.Header
 	var inputBlock *types.Block
 	var err error
 
-	// Determine the input is a header or a block
+	// Determine the input is a header or a block by inputType
 	switch inputType {
 	case header:
 		inputHeader = input.(*types.Header)
