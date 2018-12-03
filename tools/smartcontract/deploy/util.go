@@ -19,9 +19,8 @@ package deploy
 import (
 	"bytes"
 	"context"
-	"fmt"
-
 	"crypto/ecdsa"
+	"fmt"
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"

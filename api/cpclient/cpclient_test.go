@@ -43,7 +43,7 @@ var (
 )
 
 func TestGetRNodes(t *testing.T) {
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
@@ -60,7 +60,7 @@ func TestGetRNodes(t *testing.T) {
 }
 
 func TestGetCurrentTerm(t *testing.T) {
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	if err != nil {
@@ -75,7 +75,7 @@ func TestGetCurrentTerm(t *testing.T) {
 }
 
 func TestGetCurrentView(t *testing.T) {
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
@@ -91,7 +91,7 @@ func TestGetCurrentView(t *testing.T) {
 }
 
 func TestGetCommittees(t *testing.T) {
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
@@ -107,8 +107,7 @@ func TestGetCommittees(t *testing.T) {
 }
 
 func TestClient_BlockByNumber(t *testing.T) {
-	// must start chain to test
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
