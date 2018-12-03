@@ -480,14 +480,10 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	var committeAddress []common.Address
 	var bn uint64
 
-	fmt.Println("sfdsfdsfsfdsfsdfds")
-
 	var RNodes []cpclient.RNodes
 
 	rNodeAddress, bn = s.b.RNode()
-	fmt.Println("the rNodeAddress is", len(rNodeAddress))
 	committeAddress = s.b.CommitteMember()
-	fmt.Println("the CommitteMember is", len(committeAddress))
 
 	for _, rodeAddr := range rNodeAddress {
 		for _, comAddr := range committeAddress {
@@ -510,25 +506,22 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 		RNodes = append(RNodes, r)
 	}
 	return RNodes
-	// return []common.Address{common.HexToAddress("01"), common.HexToAddress("02")}
 }
 
+// GetCommittees return current view
 func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
-	// TODO fill biz logic later
 	CurrentView := s.b.CurrentView()
 	return CurrentView
 }
 
 // GetCurrentTerm return current term
 func (s *PublicBlockChainAPI) GetCurrentTerm() uint64 {
-	// TODO fill biz logic later
 	CurrentTerm := s.b.CurrentTerm()
 	return CurrentTerm
 }
 
 // GetCommittees return current committees
 func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
-	// TODO fill biz logic later
 
 	v := s.b.CurrentView()
 	t := s.b.CurrentTerm()
