@@ -25,11 +25,11 @@ func (vh *Handler) dialLoop() {
 				if blk.Number().Cmp(block.Number()) > 0 {
 					// if there is an updated block, try to dial future proposers
 					number := blk.NumberU64()
-					go vh.dialer.DialAllRemoteProposers(number)
+					term := vh.dpor.FutureTermOf(number)
+					go vh.dialer.DialAllRemoteProposers(term)
 				}
-			} else {
-				block = blk
 			}
+			block = blk
 
 		case <-vh.quitSync:
 			return
