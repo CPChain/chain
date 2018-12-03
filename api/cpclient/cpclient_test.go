@@ -20,9 +20,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"testing"
-
 	"math/big"
+	"testing"
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/cpclient"
