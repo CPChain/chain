@@ -22,9 +22,10 @@ import (
 	"log"
 	"testing"
 
+	"math/big"
+
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/cpclient"
-	"math/big"
 )
 
 // Verify that Client implements the ethereum interfaces.
@@ -107,6 +108,7 @@ func TestGetCommittees(t *testing.T) {
 }
 
 func TestClient_BlockByNumber(t *testing.T) {
+	// must start chain to test
 	t.Skip("skip test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")

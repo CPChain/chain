@@ -52,7 +52,7 @@ var (
 			Period:                1,
 			TermLen:               4,
 			ViewLen:               3,
-			MaxInitBlockNumber:    96,
+			MaxInitBlockNumber:    120,
 			ProxyContractRegister: common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
 			Contracts: map[string]common.Address{
 				ContractCampaign: common.HexToAddress("0x0ddf4057eedfb80d58029be49bab09bbc45bc500"),

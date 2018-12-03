@@ -172,13 +172,13 @@ func TestDporSignatureJsonEncoding(t *testing.T) {
 	}
 	fmt.Println("jsonBytes:", string(jsonBytes))
 
-	var aa DporSignature
-	err = json.Unmarshal(jsonBytes, &aa)
+	var ds DporSignature
+	err = json.Unmarshal(jsonBytes, &ds)
 	if err != nil {
 		t.Error("error:", err)
 	}
-	fmt.Printf("\nunmarshal:%+v\n", aa)
-	assert.Equal(t, sig, aa)
+	fmt.Printf("\nunmarshal:%+v\n", ds)
+	assert.Equal(t, sig, ds)
 }
 
 func TestDporSnapJsonEncoding(t *testing.T) {

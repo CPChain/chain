@@ -141,9 +141,6 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 		return 0, err
 	}
 	header := block.Header()
-
-	// TODO fix this give a blockNumber get the Proposers of this block
-	// log.Info("the number of Proposers :", "number:", number, "proposer:", len(header.Dpor.Proposers))
 	leader := header.Coinbase
 
 	log.Debug("leader.Hex is ", "hex", leader.Hex())
