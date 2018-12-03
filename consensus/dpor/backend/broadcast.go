@@ -26,8 +26,7 @@ func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 			log.Debug("signer", "addr", addr.Hex())
 		}
 
-		// if len(validators) >= int(h.config.TermLen) {
-		if len(validators) >= 9 {
+		if len(validators) >= int(h.config.TermLen) {
 			ready = true
 		}
 	}
