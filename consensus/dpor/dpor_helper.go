@@ -469,7 +469,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 		var hashToSign []byte
 		// Sign it
-		if state == consensus.Preparing {
+		if state == consensus.Preprepared {
 			//hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
 			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		} else {

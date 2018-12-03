@@ -77,8 +77,8 @@ type DporSm struct {
 	service         backend.DporService
 	prepareSigState sigState
 	commitSigState  sigState
-	f               uint64 // f is the parameter of 3f+1 nodes in Byzantine
-	bcache          *lru.ARCCache
+	f               uint64        // f is the parameter of 3f+1 nodes in Byzantine
+	bcache          *lru.ARCCache // block cache
 	lastHeight      uint64
 }
 

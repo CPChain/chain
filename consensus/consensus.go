@@ -170,22 +170,22 @@ type State uint8
 const (
 	// TODO: remove redundant states
 	// Prepreparing is a state in pbft notes that replica enters a new round
-	Prepreparing State = iota
+	//Prepreparing State = iota
 
 	// Preparing is set if Preprepare msg is already sent, or received Preprepare msg and not entered Prepared yet, starting to broadcast
-	Preparing
+	//Preparing
 
 	// Committing is set if received > 2f+1 same Preprepare msg from different replica, starting to broadcast Committing msg
-	Committing
+	//Committing
 
 	// Validating is set if received > 2f+1 same Prepare msg
-	Validating
+	//Validating
 
 	// Inserting is set if succeed to insert block into local chain
-	Inserting
+	//Inserting
 
 	// Idle state is served as the first state in PBFT, ready to receive the proposed block
-	Idle
+	Idle = iota
 
 	// Pre-prepared state is the second state. The validator can enter this state after receiving proposed block (pre-prepare) message.
 	// It is ready to send prepare messages
