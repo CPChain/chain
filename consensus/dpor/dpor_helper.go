@@ -424,18 +424,19 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	var s interface{}
+	var ok bool
 	// Retrieve signatures of the block in cache
-	if state == consensus.Prepared {
-		s, ok := dpor.finalSigs.Get(hash)
-		if !ok {
+	if state == consensus.Prepared || state == consensus.Committing || state == consensus.Validating || state == consensus.ImpeachPrepared {
+		s, ok = dpor.finalSigs.Get(hash)
+		if !ok || s == nil {
 			s = &Signatures{
 				sigs: make(map[common.Address][]byte),
 			}
 			dpor.finalSigs.Add(hash, s)
 		}
-	} else if state == consensus.Preprepared {
-		s, ok := dpor.prepareSigs.Get(hash)
-		if !ok {
+	} else if state == consensus.Preprepared || state == consensus.Preparing || state == consensus.ImpeachPreprepared {
+		s, ok = dpor.prepareSigs.Get(hash)
+		if !ok || s == nil {
 			s = &Signatures{
 				sigs: make(map[common.Address][]byte),
 			}
@@ -443,6 +444,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 	} else {
 		log.Warn("the state is unexpected for signing header", "state", state)
+		return errInvalidStateForSign
 	}
 
 	// Copy all signatures to allSigs
@@ -469,7 +471,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 		var hashToSign []byte
 		// Sign it
-		if state == consensus.Preparing {
+		if state == consensus.Preprepared {
 			//hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
 			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		} else {
