@@ -426,7 +426,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	var s interface{}
 	var ok bool
 	// Retrieve signatures of the block in cache
-	if state == consensus.Prepared || state == consensus.Committing || state == consensus.Validating || state == consensus.ImpeachPrepared {
+	if state == consensus.Prepared || state == consensus.ImpeachPrepared {
 		s, ok = dpor.finalSigs.Get(hash)
 		if !ok || s == nil {
 			s = &Signatures{
@@ -434,7 +434,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			}
 			dpor.finalSigs.Add(hash, s)
 		}
-	} else if state == consensus.Preprepared || state == consensus.Preparing || state == consensus.ImpeachPreprepared {
+	} else if state == consensus.Preprepared || state == consensus.ImpeachPreprepared {
 		s, ok = dpor.prepareSigs.Get(hash)
 		if !ok || s == nil {
 			s = &Signatures{

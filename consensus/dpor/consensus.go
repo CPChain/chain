@@ -112,6 +112,8 @@ var (
 	// on an instant chain (0 second period). It's important to refuse these as the
 	// block reward is zero, so an empty block just bloats the chain... fast.
 	errWaitTransactions = errors.New("waiting for transactions")
+
+	errInvalidStateForSign = errors.New("the state is unexpected for signing header")
 )
 
 // SignFn is a signer callback function to request a hash to be signed by a
