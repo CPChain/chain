@@ -112,6 +112,8 @@ var (
 	// on an instant chain (0 second period). It's important to refuse these as the
 	// block reward is zero, so an empty block just bloats the chain... fast.
 	errWaitTransactions = errors.New("waiting for transactions")
+
+	errInvalidStateForSign = errors.New("the state is unexpected for signing header")
 )
 
 // SignFn is a signer callback function to request a hash to be signed by a
@@ -121,7 +123,7 @@ type SignFn func(accounts.Account, []byte) ([]byte, error)
 // Author implements consensus.Engine, returning the cpchain address recovered
 // from the signature in the header's extra-data section.
 func (d *Dpor) Author(header *types.Header) (common.Address, error) {
-	proposer, _, err := d.dh.ecrecover(header, d.signatures)
+	proposer, _, err := d.dh.ecrecover(header, d.finalSigs)
 	return proposer, err
 }
 

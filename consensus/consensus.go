@@ -168,20 +168,39 @@ type PbftEngine interface {
 type State uint8
 
 const (
+	// TODO: remove redundant states
 	// Prepreparing is a state in pbft notes that replica enters a new round
-	Prepreparing State = iota
+	//Prepreparing State = iota
 
 	// Preparing is set if Preprepare msg is already sent, or received Preprepare msg and not entered Prepared yet, starting to broadcast
-	Preparing
+	//Preparing
 
 	// Committing is set if received > 2f+1 same Preprepare msg from different replica, starting to broadcast Committing msg
-	Committing
+	//Committing
 
 	// Validating is set if received > 2f+1 same Prepare msg
-	Validating
+	//Validating
 
 	// Inserting is set if succeed to insert block into local chain
-	Inserting
+	//Inserting
+
+	// Idle state is served as the first state in PBFT, ready to receive the proposed block
+	Idle = iota
+
+	// Pre-prepared state is the second state. The validator can enter this state after receiving proposed block (pre-prepare) message.
+	// It is ready to send prepare messages
+	Preprepared
+
+	// Prepared state is the third state. The validator can enter it after collecting prepare certificate
+	// It is about to broadcast commit messages
+	Prepared
+
+	// The validator transit to impeach pre-prepared state whenever the timer expires
+	// It is about to broadcast impeach prepare messages
+	ImpeachPreprepared
+
+	// Once a impeach prepare certificate is collected, a validator enters impeach prepared state
+	ImpeachPrepared
 )
 
 // PbftStatus represents a state of a dpor replica

@@ -87,7 +87,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			// sign the block
 			header := block.Header()
-			switch e := vh.dpor.SignHeader(header, consensus.Preparing); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Preprepared); e {
 			case nil:
 
 				log.Debug("signed preprepare header, adding to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
@@ -130,7 +130,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		// verify the signed header
 		// if correct, insert the block into chain, broadcast it
-		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Committing); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
 		case nil:
 			// with enough prepare sigs
 
@@ -167,7 +167,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 			log.Debug("without enough sigs in siged prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
-			switch e := vh.dpor.SignHeader(header, consensus.Committing); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Prepared); e {
 			case nil:
 
 				log.Debug("signed prepare header, broadcasting...", "number", header.Number.Uint64(), "hash", header.Hash().Hex())

@@ -19,8 +19,8 @@ import (
 type BroadcastBlockFn func(block *types.Block, prop bool)
 
 const (
-	inmemorySnapshots  = 10 // Number of recent vote snapshots to keep in memory
-	inmemorySignatures = 10 // Number of recent block signatures to keep in memory
+	inmemorySnapshots  = 50  // Number of recent vote snapshots to keep in memory
+	inmemorySignatures = 100 // Number of recent block signatures to keep in memory
 
 	pctA = 2
 	pctB = 3 // only when n > 2/3 * N, accept the block
@@ -42,8 +42,9 @@ type Dpor struct {
 	db     database.Database   // Database to store and retrieve Snapshot checkpoints
 	config *configs.DporConfig // Consensus engine configuration parameters
 
-	recents    *lru.ARCCache // Snapshots for recent block to speed up reorgs
-	signatures *lru.ARCCache // Signatures of recent blocks to speed up mining
+	recents     *lru.ARCCache // Snapshots for recent block to speed up reorgs
+	finalSigs   *lru.ARCCache // Final signatures of recent blocks to speed up mining
+	prepareSigs *lru.ARCCache // The signatures of recent blocks for 'prepared' state
 
 	signedBlocks map[uint64]common.Hash // record signed blocks.
 
@@ -87,7 +88,8 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 
 	// Allocate the Snapshot caches and create the engine
 	recents, _ := lru.NewARC(inmemorySnapshots)
-	signatures, _ := lru.NewARC(inmemorySignatures)
+	finalSigs, _ := lru.NewARC(inmemorySignatures)
+	preparedSigs, _ := lru.NewARC(inmemorySignatures)
 
 	signedBlocks := make(map[uint64]common.Hash)
 
@@ -97,7 +99,8 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 		validatorHandler: backend.NewHandler(&conf, common.Address{}),
 		db:               db,
 		recents:          recents,
-		signatures:       signatures,
+		finalSigs:        finalSigs,
+		prepareSigs:      preparedSigs,
 		signedBlocks:     signedBlocks,
 	}
 }

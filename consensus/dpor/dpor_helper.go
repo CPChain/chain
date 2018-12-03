@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
@@ -313,7 +314,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Resolve the authorization key and check against signers
-	proposer, _, err := dh.ecrecover(header, dpor.signatures)
+	proposer, _, err := dh.ecrecover(header, dpor.finalSigs)
 	if err != nil {
 		return err
 	}
@@ -364,7 +365,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Resolve the authorization keys
-	proposer, validators, err := dh.ecrecover(header, dpor.signatures)
+	proposer, validators, err := dh.ecrecover(header, dpor.finalSigs)
 	if err != nil {
 		return err
 	}
@@ -422,13 +423,28 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		return err
 	}
 
+	var s interface{}
+	var ok bool
 	// Retrieve signatures of the block in cache
-	s, ok := dpor.signatures.Get(hash)
-	if !ok {
-		s = &Signatures{
-			sigs: make(map[common.Address][]byte),
+	if state == consensus.Prepared || state == consensus.ImpeachPrepared {
+		s, ok = dpor.finalSigs.Get(hash)
+		if !ok || s == nil {
+			s = &Signatures{
+				sigs: make(map[common.Address][]byte),
+			}
+			dpor.finalSigs.Add(hash, s)
 		}
-		dpor.signatures.Add(hash, s)
+	} else if state == consensus.Preprepared || state == consensus.ImpeachPreprepared {
+		s, ok = dpor.prepareSigs.Get(hash)
+		if !ok || s == nil {
+			s = &Signatures{
+				sigs: make(map[common.Address][]byte),
+			}
+			dpor.prepareSigs.Add(hash, s)
+		}
+	} else {
+		log.Warn("the state is unexpected for signing header", "state", state)
+		return errInvalidStateForSign
 	}
 
 	// Copy all signatures to allSigs
@@ -455,7 +471,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 		var hashToSign []byte
 		// Sign it
-		if state == consensus.Preparing {
+		if state == consensus.Preprepared {
 			//hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
 			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		} else {
