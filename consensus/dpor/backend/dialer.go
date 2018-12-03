@@ -216,9 +216,9 @@ func (d *Dialer) SetContractCaller(contractCaller *ContractCaller) error {
 }
 
 // UpdateRemoteProposers updates dialer.remoteProposers.
-func (d *Dialer) UpdateRemoteProposers(term uint64, signers []common.Address) error {
+func (d *Dialer) UpdateRemoteProposers(term uint64, proposers []common.Address) error {
 
-	for _, signer := range signers {
+	for _, signer := range proposers {
 		proposer, ok := d.getProposer(signer.Hex())
 		if !ok {
 			p := NewRemoteProposer(term, signer)
@@ -232,9 +232,9 @@ func (d *Dialer) UpdateRemoteProposers(term uint64, signers []common.Address) er
 }
 
 // UpdateRemoteValidators updates dialer.remoteValidators.
-func (d *Dialer) UpdateRemoteValidators(term uint64, signers []common.Address) error {
+func (d *Dialer) UpdateRemoteValidators(term uint64, validators []common.Address) error {
 
-	for _, signer := range signers {
+	for _, signer := range validators {
 		validator, ok := d.getValidator(signer.Hex())
 		if !ok {
 			p := NewRemoteValidator(term, signer)
@@ -256,7 +256,7 @@ func (d *Dialer) DialAllRemoteProposers(term uint64) error {
 	contractInstance := d.contractInstance
 	d.lock.RUnlock()
 
-	proposers := d.ProposersOf(term)
+	proposers := d.ProposersOfTerm(term)
 
 	for _, p := range proposers {
 		_, err := p.FetchNodeInfoAndDial(validator, server, rsaKey, contractInstance)
@@ -276,7 +276,7 @@ func (d *Dialer) UploadEncryptedNodeInfo(term uint64) error {
 	contractInstance, contractTransactor, client := d.contractInstance, d.contractTransactor, d.contractCaller.Client
 	d.lock.RUnlock()
 
-	validators := d.ValidatorsOf(term)
+	validators := d.ValidatorsOfTerm(term)
 
 	for _, v := range validators {
 		_, err := v.UploadNodeInfo(nodeID, contractTransactor, contractInstance, client)
@@ -294,7 +294,7 @@ func (d *Dialer) Disconnect(term uint64) {
 	server := d.server
 	d.lock.RUnlock()
 
-	proposers := d.ProposersOf(term)
+	proposers := d.ProposersOfTerm(term)
 
 	log.Debug("disconnecting...")
 
@@ -340,8 +340,8 @@ func (d *Dialer) setValidator(addr string, validator *RemoteValidator) {
 	d.recentValidators.Add(addr, validator)
 }
 
-// ProposersOf returns all proposers of given term
-func (d *Dialer) ProposersOf(term uint64) map[common.Address]*RemoteProposer {
+// ProposersOfTerm returns all proposers of given term
+func (d *Dialer) ProposersOfTerm(term uint64) map[common.Address]*RemoteProposer {
 	d.proposersLock.RLock()
 	defer d.proposersLock.RUnlock()
 
@@ -358,8 +358,8 @@ func (d *Dialer) ProposersOf(term uint64) map[common.Address]*RemoteProposer {
 	return proposers
 }
 
-// ValidatorsOf returns all validators of given term
-func (d *Dialer) ValidatorsOf(term uint64) map[common.Address]*RemoteValidator {
+// ValidatorsOfTerm returns all validators of given term
+func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidator {
 	// TODO: @AC @liuq the returned result include non-validator, will correct it
 	d.validatorsLock.RLock()
 	defer d.validatorsLock.RUnlock()

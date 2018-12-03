@@ -72,6 +72,15 @@ type DporService interface {
 	// ValidatorsOf returns the list of validators in committee for the specified block number
 	ValidatorsOf(number uint64) ([]common.Address, error)
 
+	// ProposersOf returns the list of proposers in committee for the specified block number
+	ProposersOf(number uint64) ([]common.Address, error)
+
+	// ValidatorsOfTerm returns the list of validators in committee for the specified term
+	ValidatorsOfTerm(term uint64) ([]common.Address, error)
+
+	// ProposersOfTerm returns the list of proposers in committee for the specified term
+	ProposersOfTerm(term uint64) ([]common.Address, error)
+
 	// VerifyHeaderWithState verifies the given header
 	// if in preprepared state, verify basic fields
 	// if in prepared state, verify if enough prepare sigs

@@ -531,11 +531,11 @@ func (dh *defaultDporHelper) uploadNodeInfo(dpor *Dpor, snap *DporSnapshot, numb
 	go func(eIdx uint64, committee []common.Address) {
 		// Updates handler.signers
 		err := dpor.validatorHandler.UpdateRemoteValidators(eIdx, committee)
-		log.Debug("err when updating remote validators", "err", err)
+		log.Warn("err when updating remote validators", "err", err)
 
 		// Connect all
 		err = dpor.validatorHandler.UploadEncryptedNodeInfo(eIdx)
-		log.Debug("err when uploading my node info", "err", err)
+		log.Warn("err when uploading my node info", "err", err)
 
 	}(term, signers)
 

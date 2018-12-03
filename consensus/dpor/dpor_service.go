@@ -1,11 +1,12 @@
 package dpor
 
 import (
+	"math/big"
+
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"math/big"
 )
 
 // TermOf returns the term number of given block number
@@ -70,6 +71,22 @@ func (d *Dpor) ValidatorsOf(number uint64) ([]common.Address, error) {
 	snap := d.currentSnapshot
 	term := snap.TermOf(number)
 	return snap.getRecentValidators(term), nil
+}
+
+func (d *Dpor) ProposersOf(number uint64) ([]common.Address, error) {
+	snap := d.currentSnapshot
+	term := snap.TermOf(number)
+	return snap.getRecentProposers(term), nil
+}
+
+func (d *Dpor) ValidatorsOfTerm(term uint64) ([]common.Address, error) {
+	snap := d.currentSnapshot
+	return snap.getRecentValidators(term), nil
+}
+
+func (d *Dpor) ProposersOfTerm(term uint64) ([]common.Address, error) {
+	snap := d.currentSnapshot
+	return snap.getRecentProposers(term), nil
 }
 
 // VerifyHeaderWithState verifies the given header

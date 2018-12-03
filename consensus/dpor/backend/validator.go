@@ -26,6 +26,17 @@ func (vh *Handler) dialLoop() {
 					// if there is an updated block, try to dial future proposers
 					number := blk.NumberU64()
 					term := vh.dpor.FutureTermOf(number)
+
+					proposers, err := vh.dpor.ProposersOfTerm(term)
+					if err != nil {
+						log.Warn("err when call proposers of term", "err", err)
+					}
+
+					err = vh.dialer.UpdateRemoteProposers(term, proposers)
+					if err != nil {
+						log.Warn("err when update remote proposers", "err", err)
+					}
+
 					go vh.dialer.DialAllRemoteProposers(term)
 				}
 			}
