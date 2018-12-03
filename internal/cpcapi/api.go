@@ -475,7 +475,6 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 
 //  GetCurrentView return current RNodes
 func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
-	// TODO fill biz logic later
 	var rNodeAddress []common.Address
 	var committeAddress []common.Address
 	var bn uint64
