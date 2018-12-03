@@ -473,15 +473,6 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
 }
 
-//func (s *PublicBlockChainAPI) GetRNodesAddress(view_idex *big.Int) []common.Address {
-//	var rNodeAddress []common.Address
-//	if view_idex == big.NewInt(0) {
-//		rNodeAddress = s.b.RNodes(big.NewInt(rpc.LatestBlockNumber.Int64()))
-//	}
-//	rNodeAddress = s.b.RNodes(view_idex)
-//	return rNodeAddress
-//}
-
 // Query RNodes.
 func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	// TODO fill biz logic later
