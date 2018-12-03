@@ -247,6 +247,7 @@ func (b *APIBackend) RemoteDB() database.RemoteDatabase {
 	return b.cpc.RemoteDB()
 }
 
+// RNode returns current RNode information
 func (b *APIBackend) RNode() ([]common.Address, uint64) {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
@@ -255,6 +256,7 @@ func (b *APIBackend) RNode() ([]common.Address, uint64) {
 	return sp.Candidates, bn.Uint64()
 }
 
+// CurrentView return current view
 func (b *APIBackend) CurrentView() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
@@ -263,6 +265,7 @@ func (b *APIBackend) CurrentView() uint64 {
 	return view
 }
 
+// CurrentTerm return current term
 func (b *APIBackend) CurrentTerm() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
@@ -271,6 +274,7 @@ func (b *APIBackend) CurrentTerm() uint64 {
 	return term
 }
 
+// CommitteMember return current committe
 func (b *APIBackend) CommitteMember() []common.Address {
 	block := b.cpc.blockchain.CurrentBlock()
 	return block.Header().Dpor.Proposers
