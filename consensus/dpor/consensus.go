@@ -29,6 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -164,7 +165,6 @@ func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, ref
 // header for running the transactions on top.
 func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
 	// If the block isn't a checkpoint, cast a random vote (good enough for now)
-	header.Coinbase = common.Address{}
 	header.Nonce = types.BlockNonce{}
 
 	number := header.Number.Uint64()
@@ -241,6 +241,7 @@ func (d *Dpor) Authorize(signer common.Address, signFn SignFn) {
 
 // Seal implements consensus.Engine, attempting to create a sealed block using
 // the local signing credentials.
+// NB please populate the correct field values.  we are now removing some fields such as nonce.
 func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error) {
 	header := block.Header()
 
@@ -375,4 +376,13 @@ func (d *Dpor) State() consensus.State {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	return d.pbftState
+}
+
+func (d *Dpor) GetCalcRptInfo(address common.Address, blockNum uint64) int64 {
+	instance, err := rpt.NewRptService(d.contractCaller.Client, d.config.Contracts[configs.ContractRpt])
+	if err != nil {
+		log.Fatal("GetCalcRptInfo", "error", err)
+	}
+	rp := instance.CalcRptInfo(address, blockNum)
+	return rp.Rpt
 }

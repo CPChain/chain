@@ -233,7 +233,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				proposers = genesis.Dpor.CopyProposers()
 				validators = genesis.Dpor.CopyValidators()
 			}
-			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators)
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators, FakeMode)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}

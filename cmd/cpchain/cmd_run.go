@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/core/vm"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/protocols/cpc"
@@ -91,9 +91,7 @@ func registerChainService(cfg *cpc.Config, n *node.Node) {
 		// 	ls, _ := les.NewLesServer(fullNode, cfg)
 		// 	fullNode.AddLesServer(ls)
 		// }
-		for addr, c := range fullNode.MakePrimitiveContracts(n) {
-			vm.RegisterPrimitiveContract(addr, c)
-		}
+		//
 
 		return fullNode, err
 	})
@@ -115,6 +113,8 @@ func startNode(n *node.Node) {
 	if err := n.Start(); err != nil {
 		log.Fatalf("Error starting protocol n: %v", err)
 	}
+	// TODO @xumx this is wrong!  please register vm primitive contracts before node is started.
+	primitive_register.RegisterPrimitiveContracts(n)
 }
 
 // makePasswordList reads password lines from the file specified by the global --password flag.
@@ -203,20 +203,8 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		if err := n.Service(&cpchainService); err != nil {
 			log.Fatalf("Cpchain service not running: %v", err)
 		}
-		// Use a reduced number of threads if requested
-		if threads := ctx.Int("minethreads"); threads > 0 {
-			type threaded interface {
-				SetThreads(threads int)
-			}
-			if th, ok := cpchainService.Engine().(threaded); ok {
-				th.SetThreads(threads)
-			}
-		}
-		// // Set the gas price to the limits from the CLI and start mining
-		// cpchainService.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
 
 		contractCaller := createContractCaller(ctx, n)
-
 		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
 		if err := cpchainService.StartMining(true, contractCaller); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)

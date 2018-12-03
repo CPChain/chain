@@ -24,12 +24,11 @@ import (
 	"math/big"
 	"sort"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	"bitbucket.org/cpchain/chain/contracts/pdash/sol"
+	pdash "bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -45,13 +44,6 @@ const (
 	Created = iota
 	Finished
 )
-
-// CollectorConfig is the config of rpt info collector
-type CollectorConfig struct {
-	Client      bind.ContractBackend
-	ChainConfig *configs.ChainConfig
-	DporConfig  *configs.DporConfig
-}
 
 type RptPrimitiveBackend interface {
 	// Rank returns the rank for given account address at the given block number.
@@ -72,14 +64,12 @@ type RptPrimitiveBackend interface {
 }
 
 type RptEvaluator struct {
-	backend.ChainBackend
-	Config CollectorConfig
+	Client backend.ClientBackend
 }
 
-func NewCollectorConfig(Client backend.ChainBackend, config *CollectorConfig) (*RptEvaluator, error) {
+func NewRptEvaluator(Client backend.ClientBackend) (*RptEvaluator, error) {
 	bc := &RptEvaluator{
-		ChainBackend: Client,
-		Config:       *config,
+		Client: Client,
 	}
 	return bc, nil
 }
@@ -87,23 +77,24 @@ func NewCollectorConfig(Client backend.ChainBackend, config *CollectorConfig) (*
 // GetCoinAge is the func to get rank to rpt
 func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, error) {
 	var balances []float64
-	myBalance, err := re.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
+	myBalance, err := re.Client.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
 	}
-	contractAddress := re.Config.DporConfig.Contracts["campagin"]
-	intance, err := contract2.NewCampaign(contractAddress, re.Config.Client)
+	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
+	log.Info("campaign", "contractAddress", contractAddress)
+	intance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewCampaign error", address, err)
+		log.Error("NewCampaign error", "error", err)
 	}
 	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("CandidatesOf error", address, err)
+		log.Error("CandidatesOf error", "error", err)
 	}
 	for _, committee := range rNodeAddress {
-		balance, err := re.BalanceAt(context.Background(), committee, big.NewInt(int64(number)))
+		balance, err := re.Client.BalanceAt(context.Background(), committee, big.NewInt(int64(number)))
 		if err != nil {
-			log.Warn("error with bc.BalanceAt", "error", err)
+			log.Error("error with bc.BalanceAt", "error", err)
 			return 0, err
 		}
 		balances = append(balances, float64(balance.Uint64()))
@@ -117,13 +108,13 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 
 // GetCoinAge is the func to get txVolume to rpt
 func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, error) {
-	block, err := re.BlockByNumber(context.Background(), big.NewInt(int64(number)))
+	block, err := re.Client.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("error with bc.getTxVolume", "error", err)
+		log.Error("error with bc.getTxVolume", "error", err)
 		return 0, err
 	}
 	txvs := int64(0)
-	signer := types.NewCep1Signer(re.Config.ChainConfig.ChainID)
+	signer := types.NewCep1Signer(configs.MainnetChainConfig.ChainID)
 	txs := block.Transactions()
 	for _, tx := range txs {
 		sender, err := signer.Sender(tx)
@@ -145,15 +136,15 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	if ifRnode != true {
 		return 3, nil
 	}
-	if re.Config.ChainConfig.ChainID.Uint64() == uint64(4) {
+	if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
-	header, err := re.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
+	header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("error with bc.getIfLeader", "error", err)
+		log.Error("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
-	number = number%re.Config.DporConfig.TermLen - 1
+	number = number%configs.MainnetChainConfig.Dpor.TermLen - 1
 	leader := header.Dpor.Proposers[number]
 
 	log.Debug("leader.Hex is ", "hex", leader.Hex())
@@ -161,7 +152,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	if leader == address {
 		ld = 0
 	} else {
-		for _, committee := range re.CommitteeMember(header) {
+		for _, committee := range header.Dpor.Proposers {
 			if address == committee {
 				ld = 1
 			}
@@ -173,15 +164,15 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 // GetCoinAge is the func to get uploadnumber to rpt
 func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int64, error) {
 	uploadNumber := int64(0)
-	contractAddress := re.Config.DporConfig.Contracts["register"]
-	upload, err := pdash.NewRegister(contractAddress, re.Config.Client)
+	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractRegister]
+	upload, err := pdash.NewRegister(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewRegister error", address, err)
+		log.Error("NewRegister error", "error", err)
 		return uploadNumber, err
 	}
 	fileNumber, err := upload.GetUploadCount(nil, address)
 	if err != nil {
-		log.Warn("GetUploadCount error", address, err)
+		log.Error("GetUploadCount error", "error", err)
 		return uploadNumber, err
 	}
 	return fileNumber.Int64(), err
@@ -191,24 +182,24 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	proxyCount = int64(0)
 	isProxy = int64(0)
 	var proxyAddresses []common.Address
-	contractAddress := re.Config.DporConfig.Contracts["pdash"]
-	pdash, err := pdash.NewPdash(contractAddress, re.Config.Client)
+	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractPdash]
+	pdash, err := pdash.NewPdash(contractAddress, re.Client)
 
 	if err != nil {
-		log.Warn("NewPdash error", address, err)
+		log.Error("NewPdash error", "error", err)
 		return proxyCount, 0, err
 	}
 
 	len, err := pdash.BlockOrdersLength(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("BlockOrdersLength err", address, err)
+		log.Error("BlockOrdersLength err", "error", err)
 		return proxyCount, 0, err
 	}
 
 	for i := 0; i < int(len.Int64()); i++ {
 		id, err := pdash.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
-			log.Warn("BlockOrders error", address, err)
+			log.Error("BlockOrders error", "error", err)
 			break
 		}
 		OrderRecord, err := pdash.OrderRecords(nil, id)
@@ -225,7 +216,7 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	for i := 0; i < int(len.Int64()); i++ {
 		id, err := pdash.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
-			log.Warn("BlockOrders error", address, err)
+			log.Error("BlockOrders error", "error", err)
 			break
 		}
 		OrderRecord, err := pdash.OrderRecords(nil, id)
@@ -240,24 +231,24 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	return isProxy, proxyCount, err
 }
 
-func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
-	committee := make([]common.Address, len(header.Dpor.Proposers))
-	for i := 0; i < len(committee); i++ {
-		copy(committee[i][:], header.Dpor.Proposers[i][:])
-	}
-	return committee
-}
+//func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
+//	committee := make([]common.Address, len(header.Dpor.Proposers))
+//	for i := 0; i < len(committee); i++ {
+//		copy(committee[i][:], header.Dpor.Proposers[i][:])
+//	}
+//	return committee
+//}
 
 func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
-	contractAddress := re.Config.DporConfig.Contracts["campagin"]
-	instance, err := contract2.NewCampaign(contractAddress, re.Config.Client)
+	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
+	instance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
-		log.Warn("NewCampaign error", address, err)
+		log.Error("NewCampaign error", "address", address, "error", err)
 		return false, err
 	}
 	rNdoeAddress, err := instance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Warn("CandidatesOf error", address, err)
+		log.Error("CandidatesOf error", "error", err)
 		return false, err
 	}
 	for _, rNode := range rNdoeAddress {

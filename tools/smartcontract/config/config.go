@@ -18,7 +18,6 @@ package config
 
 import (
 	"crypto/ecdsa"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -31,10 +30,22 @@ import (
 
 var (
 	endPoint                = "http://localhost:8501"
-	keyStoreFilePath        = "/chain/examples/cpchain/data/data1/keystore/"
-	DefaultCPUDifficulty    = uint64(25)
-	DefaultMemoryDifficulty = uint64(25)
+	keyStoreFilePath        = "./chain/examples/cpchain/data/data1/keystore/"
+	DefaultCPUDifficulty    = uint64(3)
+	DefaultMemoryDifficulty = uint64(3)
 )
+
+// overwrite from environment variables
+func init() {
+	if val := os.Getenv("CPCHAIN_KEYSTORE_FILEPATH"); val != "" {
+		keyStoreFilePath = val
+	}
+}
+
+func SetConfig(ep, ksPath string) {
+	endPoint = ep
+	keyStoreFilePath = ksPath
+}
 
 func Connect() (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
 	// Create client.
@@ -68,7 +79,7 @@ func Connect() (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, co
 
 	// Get contractAddress.
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	fmt.Println("from contractAddress:", fromAddress.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
+	// fmt.Println("from contractAddress:", fromAddress.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
 
 	return client, err, privateKey, publicKeyECDSA, fromAddress
 }

@@ -52,7 +52,7 @@ func (*fakeDb) NewBatch() database.Batch {
 }
 
 func Test_newSnapshot(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress(), FakeMode)
 	equal := reflect.DeepEqual(snap.ProposersOf(1), getProposerAddress())
 	if !equal {
 		t.Errorf("expect %v,get %v", true, equal)
@@ -152,7 +152,7 @@ func TestSnapshot_store(t *testing.T) {
 }
 
 func TestSnapshot_copy(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress(), FakeMode)
 	snap.Candidates = getCandidates()
 
 	cpySnap := snap.copy()
@@ -336,7 +336,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			if err := s.updateCandidates(tt.args.header); (err != nil) != tt.wantErr {
+			if err := s.updateCandidates(); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 			}
 		})
@@ -374,7 +374,7 @@ func TestSnapshot_updateRpts(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			got, err := s.updateRpts(tt.args.header)
+			got, err := s.updateRpts()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateRpts(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 				return
@@ -517,7 +517,7 @@ func TestSnapshot_signerRound(t *testing.T) {
 }
 
 func TestSnapshot_isSigner(t *testing.T) {
-	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress()[1:2], getValidatorAddress())
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress()[1:2], getValidatorAddress(), FakeMode)
 	isSinger, _ := snap.IsProposerOf(addr1, 1)
 	if isSinger {
 		t.Errorf("expected isSinger %v,get %v", false, isSinger)
@@ -595,7 +595,7 @@ func createSnapshot() *DporSnapshot {
 	validators := getValidatorAddress()
 	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	// cache, _ := lru.NewARC(inmemorySnapshots)
-	snap := newSnapshot(config, 1, common.Hash{}, proposers, validators)
+	snap := newSnapshot(config, 1, common.Hash{}, proposers, validators, FakeMode)
 	return snap
 }
 
@@ -636,7 +636,7 @@ func TestSnapshot_inturn(t *testing.T) {
 	proposers := getProposerAddress()
 	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
 	// cache, _ := lru.NewARC(inmemorySnapshots)
-	snap := newSnapshot(config, 1, common.Hash{}, proposers, getValidatorAddress())
+	snap := newSnapshot(config, 1, common.Hash{}, proposers, getValidatorAddress(), FakeMode)
 
 	tests := []struct {
 		number         uint64

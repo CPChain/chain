@@ -16,7 +16,7 @@ GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
 
-all: cpchain bootnode abigen
+all: cpchain bootnode abigen smartcontract
 
 cpchain:
 	build/env.sh go run build/ci.go install ./cmd/cpchain
@@ -38,8 +38,17 @@ abigen:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/abigen\" to launch abigen."
 
+smartcontract:
+	build/env.sh go run build/ci.go install ./tools/smartcontract
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/smartcontracts\" to launch smartcontract."
+
+
 test: all
 	build/env.sh go run build/ci.go test
+
+test-nocache: all
+	build/env.sh go run build/ci.go noCacheTest
 
 test-coverage: all
 	build/env.sh go run build/ci.go test -coverage
@@ -47,8 +56,8 @@ test-coverage: all
 test-race: all
 	build/env.sh go run build/ci.go raceTest
 
-test-nocache: all
-	build/env.sh go run build/ci.go noCacheTest
+test-race-nocache: all
+	build/env.sh go run build/ci.go noCacheRaceTest
 
 lint: ## Run linters.
 	build/env.sh go run build/ci.go lint

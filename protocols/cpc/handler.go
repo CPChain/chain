@@ -78,10 +78,9 @@ type ProtocolManager struct {
 	quitSync    chan struct{}
 	noMorePeers chan struct{}
 
-	server    *p2p.Server
-	engine    consensus.Engine
-	cpcbase   common.Address
-	etherbase common.Address
+	server   *p2p.Server
+	engine   consensus.Engine
+	coinbase common.Address
 
 	// wait group is used for graceful shutdowns during downloading and processing
 	wg sync.WaitGroup
@@ -89,7 +88,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new sub protocol manager. The cpchain sub protocol manages peers capable
 // with the cpchain network.
-func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, cpcbase common.Address) (*ProtocolManager, error) {
+func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, coinbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -103,8 +102,8 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 		txsyncCh:    make(chan *txsync),
 		quitSync:    make(chan struct{}),
 
-		engine:  engine,
-		cpcbase: cpcbase,
+		engine:   engine,
+		coinbase: coinbase,
 	}
 
 	// initialize a sub-protocol for every implemented version we can handle

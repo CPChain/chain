@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"sort"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -70,6 +71,11 @@ func findNearest(array []int64, target int64) (int64, int) {
 func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
+
+	log.Info("lenth of rpts", "len", len(rpts))
+	for _, r := range rpts {
+		log.Info("rptlist", "addr", r.Address, "rpt", r.Rpt)
+	}
 
 	randSource := rand.NewSource(seed)
 	myRand := rand.New(randSource)

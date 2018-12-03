@@ -11,7 +11,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // ClientBackend is the client operation interface
@@ -52,23 +51,6 @@ func NewContractCaller(key *keystore.Key, client ClientBackend, gasLimit uint64)
 
 // RsaReader reads a rsa key
 type RsaReader func() (*rsakey.RsaKey, error)
-
-// PbftHandler is a handler represents all possible methods a node can provide to do consensus protocol requests.
-type PbftHandler interface {
-	SetServer(srv *p2p.Server) error
-
-	SetRsaKey(rsaReader RsaReader) error
-
-	SetContractCaller(cc *ContractCaller) error
-
-	UpdateValidators(epochIdx uint64, signers []common.Address) error
-
-	UpdateProposers(epochIdx uint64, signers []common.Address) error
-
-	Start() error
-
-	Stop() error
-}
 
 // VerifyFutureSignerFn verifies if a signer is a future signer at given term
 type VerifyFutureSignerFn func(signer common.Address, term uint64) (bool, error)
