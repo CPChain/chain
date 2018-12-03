@@ -362,8 +362,13 @@ func (sm *DporSm) impeachPrepareMsgPlus(h *types.Header) error {
 // the output consensus.State indicates the validator's next state
 func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode) (interface{}, action, dataType, msgCode, error) {
 	state := sm.State()
+
+	log.Info("state machine input", "data type", inputType, "msg code", msg, "state", state)
+
 	output, act, dtype, msg, state, err := sm.fsm(input, inputType, msg, state)
 	sm.SetState(state)
+
+	log.Info("state machine result", "action", act, "data type", dtype, "msg code", msg, "state", state, "err", err)
 
 	return output, act, dtype, msg, err
 }
