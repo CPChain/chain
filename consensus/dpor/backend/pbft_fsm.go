@@ -147,6 +147,8 @@ func (sm *DporSm) commitCertificate(h *types.Header) bool {
 			count++
 		}
 	}
+
+	log.Debug("commit certificate", "count", count)
 	return count >= 2*sm.f+1
 }
 
