@@ -519,13 +519,18 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
 	log.Debug("term idx of block number", "block term index", snap.TermOf(number))
 
-	log.Debug("recent signers: ")
+	log.Debug("recent proposers: ")
 	for i := snap.TermOf(number); i < snap.TermOf(number)+5; i++ {
 		log.Debug("----------------------")
-		log.Debug("signers in snapshot of:", "term idx", i)
-		for _, s := range snap.getRecentSigners(i) {
-			log.Debug("signer", "s", s.Hex())
+		log.Debug("proposers in snapshot of:", "term idx", i)
+		for _, p := range snap.getRecentProposers(i) {
+			log.Debug("proposer", "s", p.Hex())
 		}
+		log.Debug("validators in snapshot of:", "term idx", i)
+		for _, v := range snap.getRecentValidators(i) {
+			log.Debug("validator", "s", v.Hex())
+		}
+		log.Debug("----------------------")
 	}
 
 	// If in a checkpoint and self is in the future committee, try to build the committee network
