@@ -143,9 +143,9 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			if h.ReadyToImpeach() {
 				// get empty block
 
-				impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, impeachPreprepareMsgCode)
+				impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, ImpeachPreprepareMsgCode)
 
-				if impeachHeader != nil && act == broadcastMsgAction && dtype == headerType && msg == prepareMsgCode && err == nil {
+				if impeachHeader != nil && act == BroadcastMsgAction && dtype == HeaderType && msg == PrepareMsgCode && err == nil {
 					header := impeachHeader.(*types.Header)
 					go h.BroadcastPrepareImpeachHeader(header)
 				}
