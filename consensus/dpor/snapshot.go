@@ -52,11 +52,11 @@ type DporSnapshot struct {
 	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
 	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
 
-	config         *configs.DporConfig     `json:"-"` // Consensus engine parameters to fine tune behavior
+	config         *configs.DporConfig     // Consensus engine parameters to fine tune behavior
 	ContractCaller *backend.ContractCaller `json:"-"`
-	rptBackend     rpt.RptService          `json:"-"`
+	rptBackend     rpt.RptService
 
-	lock sync.RWMutex `json:"-"`
+	lock sync.RWMutex
 }
 
 func (s *DporSnapshot) number() uint64 {
