@@ -211,11 +211,16 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 
 		case <-futureTimer.C:
 
+			log.Debug("checking if ready to impeach")
+
 			// check if still not received new block, if true, continue
 			if h.ReadyToImpeach() {
 				// get empty block
 
+				log.Debug("prepare impeach msg")
+
 				impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, ImpeachPreprepareMsgCode)
+				_, _, _, _, _ = impeachHeader, act, dtype, msg, err
 
 				if impeachHeader != nil && act == BroadcastMsgAction && dtype == HeaderType && msg == PrepareMsgCode && err == nil {
 					header := impeachHeader.(*types.Header)
