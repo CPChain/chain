@@ -81,12 +81,11 @@ func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
 // updateBootstrapNodes creates a list of bootstrap nodes from the command line
 // flags, reverting to pre-configured ones if none have been specified.
 func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
-	urls := configs.CpchainBootnodes // TODO: cpchain boot nodes should be mainnet
+	urls := configs.CpchainBootnodes
 	if ctx.IsSet(flags.BootnodesFlagName) {
 		urls = strings.Split(ctx.String(flags.BootnodesFlagName), ",")
 	}
 
-	// TODO should we switch to disv5? @jason
 	cfg.BootstrapNodes = make([]*discover.Node, 0, len(urls))
 	for _, url := range urls {
 		node, err := discover.ParseNode(url)
