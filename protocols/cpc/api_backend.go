@@ -18,7 +18,6 @@ package cpc
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -248,6 +247,7 @@ func (b *APIBackend) RemoteDB() database.RemoteDatabase {
 	return b.cpc.RemoteDB()
 }
 
+// RNode returns current RNode information
 func (b *APIBackend) RNode() ([]common.Address, uint64) {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
@@ -256,23 +256,26 @@ func (b *APIBackend) RNode() ([]common.Address, uint64) {
 	return sp.Candidates, bn.Uint64()
 }
 
+// CurrentView return current view
 func (b *APIBackend) CurrentView() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.TermLen
-	View := bn.Uint64() % (vl * tl) / (vl + 1)
-	fmt.Println("the View is :", View)
-	return View
+	// be cautious vl*tl does not overflow
+	view := ((bn.Uint64() - 1) % (vl * tl)) / vl
+	return view
 }
 
+// CurrentTerm return current term
 func (b *APIBackend) CurrentTerm() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.cpc.chainConfig.Dpor.ViewLen, b.cpc.chainConfig.Dpor.ViewLen
-	Term := bn.Uint64() - 1/(vl*tl)
-	return Term
+	term := (bn.Uint64() - 1) / (vl * tl)
+	return term
 }
 
+// CommitteMember return current committe
 func (b *APIBackend) CommitteMember() []common.Address {
 	block := b.cpc.blockchain.CurrentBlock()
 	return block.Header().Dpor.Proposers

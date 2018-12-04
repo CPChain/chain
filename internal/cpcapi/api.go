@@ -507,7 +507,7 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	return RNodes
 }
 
-// GetCurrentView return current view
+// GetCommittees return current view
 func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
 	CurrentView := s.b.CurrentView()
 	return CurrentView
@@ -521,12 +521,13 @@ func (s *PublicBlockChainAPI) GetCurrentTerm() uint64 {
 
 // GetCommittees return current committees
 func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
+
 	v := s.b.CurrentView()
 	t := s.b.CurrentTerm()
 	bn := s.b.CurrentBlock()
 	var committees []cpclient.Committees
 
-	for i := uint64(0); i < t; i++ {
+	for i := uint64(0); i < v; i++ {
 		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(bn.Header().Number.Uint64())-rpc.BlockNumber(i))
 		if err != nil {
 			log.Error("can't get header", "error", err)
