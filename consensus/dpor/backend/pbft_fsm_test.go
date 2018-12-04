@@ -2,7 +2,6 @@ package backend_test
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -48,15 +47,15 @@ func TestDporSm_Fsm(T *testing.T) {
 
 	_, _, _ = fsm, chain, blockchain
 
-	blk1, _ := dporEngine.Seal(blockchain, chain[0], nil)
+	// blk1, _ := dporEngine.Seal(blockchain, chain[0], nil)
 
-	fmt.Println("blk: ", blk1.Header())
-	fmt.Println("blockchain: ", blockchain)
+	// fmt.Println("blk: ", blk1.Header())
+	// fmt.Println("blockchain: ", blockchain)
 
-	// test handle preprepare block
-	input, inputType, msg := blk1, backend.BlockType, backend.PreprepareMsgCode
-	output, act, dtype, msg, err := fsm.Fsm(input, inputType, msg)
-	fmt.Println("output", output, "action", act, "data type", dtype, "msg code", msg, "error", err)
+	// // test handle preprepare block
+	// input, inputType, msg := blk1, backend.BlockType, backend.PreprepareMsgCode
+	// output, act, dtype, msg, err := fsm.Fsm(input, inputType, msg)
+	// fmt.Println("output", output, "action", act, "data type", dtype, "msg code", msg, "error", err)
 
 }
 
