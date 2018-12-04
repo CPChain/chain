@@ -79,6 +79,24 @@ func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 	defer h.lock.Unlock()
 
 	term := h.dpor.TermOf(header.Number.Uint64())
+
+	// wait until there is enough validators
+	ready := false
+	for !ready {
+		time.Sleep(1 * time.Second)
+
+		validators := h.dialer.ValidatorsOfTerm(term)
+
+		log.Debug("signer in dpor handler when broadcasting...")
+		for addr := range validators {
+			log.Debug("signer", "addr", addr.Hex())
+		}
+
+		if len(validators) >= int(h.config.TermLen) {
+			ready = true
+		}
+	}
+
 	committee := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range committee {
@@ -92,6 +110,24 @@ func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
 	defer h.lock.Unlock()
 
 	term := h.dpor.TermOf(header.Number.Uint64())
+
+	// wait until there is enough validators
+	ready := false
+	for !ready {
+		time.Sleep(1 * time.Second)
+
+		validators := h.dialer.ValidatorsOfTerm(term)
+
+		log.Debug("signer in dpor handler when broadcasting...")
+		for addr := range validators {
+			log.Debug("signer", "addr", addr.Hex())
+		}
+
+		if len(validators) >= int(h.config.TermLen) {
+			ready = true
+		}
+	}
+
 	committee := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range committee {
@@ -105,6 +141,24 @@ func (h *Handler) BroadcastCommitHeader(header *types.Header) {
 	defer h.lock.Unlock()
 
 	term := h.dpor.TermOf(header.Number.Uint64())
+
+	// wait until there is enough validators
+	ready := false
+	for !ready {
+		time.Sleep(1 * time.Second)
+
+		validators := h.dialer.ValidatorsOfTerm(term)
+
+		log.Debug("signer in dpor handler when broadcasting...")
+		for addr := range validators {
+			log.Debug("signer", "addr", addr.Hex())
+		}
+
+		if len(validators) >= int(h.config.TermLen) {
+			ready = true
+		}
+	}
+
 	committee := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range committee {
@@ -118,6 +172,24 @@ func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
 	defer h.lock.Unlock()
 
 	term := h.dpor.TermOf(header.Number.Uint64())
+
+	// wait until there is enough validators
+	ready := false
+	for !ready {
+		time.Sleep(1 * time.Second)
+
+		validators := h.dialer.ValidatorsOfTerm(term)
+
+		log.Debug("signer in dpor handler when broadcasting...")
+		for addr := range validators {
+			log.Debug("signer", "addr", addr.Hex())
+		}
+
+		if len(validators) >= int(h.config.TermLen) {
+			ready = true
+		}
+	}
+
 	committee := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range committee {
