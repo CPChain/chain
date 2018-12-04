@@ -89,6 +89,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 		log.Error("NewCampaign error", "error", err)
 		return 100, err // 100 represent give the address a default rank
 	}
+	// get the rnode in that block
 	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil || rNodeAddress == nil {
 		log.Error("CandidatesOf error", "error", err)
@@ -105,8 +106,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	var rank int64
 	sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
 	index := sort.SearchFloat64s(balances, float64(myBalance.Uint64()))
-	blockNumber := configs.MainnetChainConfig.Dpor.ViewLen * configs.MainnetChainConfig.Dpor.TermLen
-	rank = int64(float64(index) / float64(blockNumber) * 100) // solidity can't use float,so we magnify rank 100 times
+	rank = int64(float64(index) / float64(len(rNodeAddress)) * 100) // solidity can't use float,so we magnify rank 100 times
 	return rank, err
 }
 
