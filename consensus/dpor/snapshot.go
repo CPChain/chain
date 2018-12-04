@@ -52,8 +52,8 @@ type DporSnapshot struct {
 	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
 	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
 
-	config         *configs.DporConfig // Consensus engine parameters to fine tune behavior
-	ContractCaller *backend.ContractCaller
+	config         *configs.DporConfig     // Consensus engine parameters to fine tune behavior
+	ContractCaller *backend.ContractCaller `json:"-"`
 	rptBackend     rpt.RptService
 
 	lock sync.RWMutex
@@ -272,7 +272,8 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, pr
 }
 
 // loadSnapshot loads an existing Snapshot from the database.
-func loadSnapshot(config *configs.DporConfig, db database.Database, hash common.Hash) (*DporSnapshot, error) {
+func loadSnapshot(config *configs.DporConfig, caller *backend.ContractCaller, rpt rpt.RptService, db database.Database,
+	hash common.Hash) (*DporSnapshot, error) {
 
 	// Retrieve from db
 	blob, err := db.Get(append([]byte("dpor-"), hash[:]...))
@@ -286,6 +287,8 @@ func loadSnapshot(config *configs.DporConfig, db database.Database, hash common.
 		return nil, err
 	}
 	snap.config = config
+	snap.ContractCaller = caller
+	snap.rptBackend = rpt
 
 	return snap, nil
 }

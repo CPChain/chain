@@ -23,7 +23,9 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -196,6 +198,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		snap    *DporSnapshot
 	)
 
+	log.Info("defaultDporHelper snapshot", "number", number, "hash", hash.Hex(), "len(parent and itself)", len(chainSeg))
+
 	numberIter := number
 	for snap == nil {
 		// If an in-memory Snapshot was found, use that
@@ -208,10 +212,19 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		// If an on-disk checkpoint Snapshot can be found, use that
 		// if number%checkpointInterval == 0 {
 		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
-			if s, err := loadSnapshot(dpor.config, dpor.db, hash); err == nil {
+			log.Info("loading snapshot", "number", numberIter, "hash", hash)
+			var rptService rpt.RptService
+			if dpor.contractCaller != nil {
+				rptService, _ = rpt.NewRptService(dpor.contractCaller.Client, dpor.config.Contracts[configs.ContractRpt])
+			}
+
+			s, err := loadSnapshot(dpor.config, dpor.contractCaller, rptService, dpor.db, hash)
+			if err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", numberIter, "hash", hash)
 				snap = s
 				break
+			} else {
+				log.Debug("loading snapshot fails", "error", err)
 			}
 		}
 
@@ -284,6 +297,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	// If we've generated a new checkpoint Snapshot, save to disk
 	if IsCheckPoint(newSnap.number(), dpor.config.TermLen, dpor.config.ViewLen) && len(headers) > 0 {
 		if err = newSnap.store(dpor.db); err != nil {
+			log.Warn("failed to store dpor snapshot", "error", err)
 			return nil, err
 		}
 		log.Debug("Stored voting Snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())

@@ -6,7 +6,9 @@ import (
 	"reflect"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/database"
@@ -87,7 +89,7 @@ func Test_loadSnapshot(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := loadSnapshot(tt.args.config, tt.args.db, tt.args.hash)
+			got, err := loadSnapshot(tt.args.config, nil, nil, tt.args.db, tt.args.hash)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("loadSnapshot(%v, %v, %v, %v) error = %v, wantErr %v", tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash, err, tt.wantErr)
 				return
@@ -661,4 +663,29 @@ func TestSnapshot_inturn(t *testing.T) {
 			t.Errorf("expected result is %v,get %v,number:%v,addr:%v", tt.expectedResult, inturn, tt.number, tt.addr.Hex())
 		}
 	}
+}
+
+func Test_loadSnapshot_marshal(t *testing.T) {
+	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
+	db := database.NewMemDatabase()
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	recentP := make(map[uint64][]common.Address)
+	recentP[1] = proposers
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP}
+
+	hash := common.Hash{}
+	snapshot.setHash(hash)
+	snapshot.ContractCaller = &backend.ContractCaller{Client: &cpclient.Client{}}
+	snapshot.store(db)
+	got, err := loadSnapshot(cfg, snapshot.ContractCaller, snapshot.rptBackend, db, hash)
+	_ = got
+	if err != nil {
+		t.Error("should not fail", err)
+	}
+
+	if !reflect.DeepEqual(snapshot, got) {
+		t.Error("loaded snapshot does not equal to original one")
+	}
+
+	t.Log("snapshot loaded", got)
 }

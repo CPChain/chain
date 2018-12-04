@@ -27,7 +27,7 @@ const (
 	NewSignerMsg = 0x42
 
 	// PbftMsgOutset is not a msg code, just used for msg code comparing
-	PbftMsgOutset = 0x43
+	PbftMsgOutset = 0x42
 
 	// PreprepareBlockMsg is Preprepare phrase msg code
 	PreprepareBlockMsg = 0x43
