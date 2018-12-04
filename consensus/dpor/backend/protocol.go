@@ -29,23 +29,23 @@ const (
 	// PbftMsgOutset is not a msg code, just used for msg code comparing
 	PbftMsgOutset = 0x43
 
-	// PrepreparePendingBlockMsg is Preprepare phrase msg code
-	PrepreparePendingBlockMsg = 0x43
+	// PreprepareBlockMsg is Preprepare phrase msg code
+	PreprepareBlockMsg = 0x43
 
-	// PrepreparePendingEmptyBlockMsg is Preprepare phrase msg code for empty block
-	PrepreparePendingEmptyBlockMsg = 0x44
+	// PrepareHeaderMsg is Prepare phrase msg code
+	PrepareHeaderMsg = 0x44
 
-	// PrepareSignedHeaderMsg is Prepare phrase msg code
-	PrepareSignedHeaderMsg = 0x45
+	// CommitHeaderMsg is Commit phrase msg code
+	CommitHeaderMsg = 0x45
 
-	// PrepareSignedEmptyHeaderMsg is Prepare phrase msg code for empty header
-	PrepareSignedEmptyHeaderMsg = 0x46
+	// PreprepareImpeachBlockMsg is Preprepare phrase msg code for empty block
+	PreprepareImpeachBlockMsg = 0x46
 
-	// CommitSignedHeaderMsg is Commit phrase msg code
-	CommitSignedHeaderMsg = 0x47
+	// PrepareImpeachHeaderMsg is Prepare phrase msg code for empty header
+	PrepareImpeachHeaderMsg = 0x47
 
-	// CommitSignedEmptyHeaderMsg is Commit phrase msg code for empty header
-	CommitSignedEmptyHeaderMsg = 0x48
+	// CommitImpeachHeaderMsg is Commit phrase msg code for empty header
+	CommitImpeachHeaderMsg = 0x48
 )
 
 // ProtocolMaxMsgSize Maximum cap on the size of a protocol message

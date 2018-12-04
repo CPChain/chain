@@ -185,7 +185,7 @@ const (
 	//Inserting
 
 	// Idle state is served as the first state in PBFT, ready to receive the proposed block
-	Idle = iota
+	Idle State = iota
 
 	// Pre-prepared state is the second state. The validator can enter this state after receiving proposed block (pre-prepare) message.
 	// It is ready to send prepare messages

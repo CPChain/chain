@@ -41,6 +41,7 @@ type Handler struct {
 
 	dialer *Dialer
 	snap   *consensus.PbftStatus
+	fsm    *DporSm
 	dpor   DporService
 
 	knownBlocks    *RecentBlocks
@@ -187,6 +188,12 @@ func (h *Handler) SetServer(server *p2p.Server) error {
 // SetDporService sets dpor service to handler
 func (h *Handler) SetDporService(dpor DporService) error {
 	h.dpor = dpor
+	return nil
+}
+
+// SetDporSm sets dpor state machine
+func (h *Handler) SetDporSm(fsm *DporSm) error {
+	h.fsm = fsm
 	return nil
 }
 
