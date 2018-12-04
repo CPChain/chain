@@ -18,6 +18,7 @@ package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -137,4 +138,83 @@ func TestCopyDporSnap(t *testing.T) {
 	if !reflect.DeepEqual(dpor.Sigs[0], sig1) || !reflect.DeepEqual(dpor.Sigs[1], sig2) {
 		t.Error("The validator signatures are wrong")
 	}
+}
+
+func TestBlockDporRlp(t *testing.T) {
+	newHeader := &Header{}
+	newHeader.Extra = append(common.FromHex("0x0000000000000000000000000000000000000000000000000000000000000000"))
+	newHeader.Dpor.Proposers = []common.Address{addr1, addr2}
+	newHeader.Dpor.Seal = seal
+	newHeader.Dpor.Sigs = []DporSignature{sig1, sig2}
+	dpor := CopyDporSnap(&newHeader.Dpor)
+
+	dp, err := rlp.EncodeToBytes(&dpor)
+	// txt, err := dpor.MarshalText()
+	if err != nil {
+		t.Error("MarshalText error", "error", err)
+	}
+
+	fmt.Println("dp", dp)
+	ds := DporSnap{}
+	err = rlp.DecodeBytes(dp, &ds)
+	if err != nil {
+		t.Error("UnmarshalText error", "error", err)
+	}
+	fmt.Println(dp)
+}
+
+func TestDporSignatureJsonEncoding(t *testing.T) {
+	sig := HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00")
+	jsonBytes, err := json.Marshal(sig)
+
+	if err != nil {
+		t.Error("error:", err)
+	}
+	fmt.Println("jsonBytes:", string(jsonBytes))
+
+	var ds DporSignature
+	err = json.Unmarshal(jsonBytes, &ds)
+	if err != nil {
+		t.Error("error:", err)
+	}
+	fmt.Printf("\nunmarshal:%+v\n", ds)
+	assert.Equal(t, sig, ds)
+}
+
+func TestDporSnapJsonEncoding(t *testing.T) {
+	dpor := DporSnap{
+		Seal:       seal,
+		Sigs:       []DporSignature{sig1, sig2},
+		Proposers:  []common.Address{addr1, addr2},
+		Validators: []common.Address{addr1, addr2},
+	}
+	jsonBytes, err := json.Marshal(dpor)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	string1 := string(jsonBytes)
+	fmt.Println("json:", string1)
+	fmt.Println("============================================================")
+
+	var dporSnap DporSnap
+	err = json.Unmarshal(jsonBytes, &dporSnap)
+	if err != nil {
+		t.Error("Unmarshal error", "error", err)
+	}
+	fmt.Println("Seal:", dporSnap.Seal)
+	fmt.Println("Sigs:", dporSnap.Sigs)
+	fmt.Println("Proposers:", dporSnap.Proposers)
+	fmt.Println("Validators:", dporSnap.Validators)
+	fmt.Println("============================================================")
+
+	jsonBytes, err = json.Marshal(dporSnap)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	string2 := string(jsonBytes)
+	fmt.Println("new json:", string2)
+
+	assert.Equal(t, string1, string2)
+	assert.Equal(t, dpor, dporSnap)
+
 }

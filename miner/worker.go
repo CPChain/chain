@@ -14,15 +14,15 @@ import (
 type NativeWorker struct {
 	mu sync.Mutex
 
-	workCh          chan *Work  // miner.engine must call this to send in work
+	workCh          chan *Work // miner.engine must call this to send in work
 	quitCh          chan struct{}
 	quitCurrentOpCh chan struct{}
-	returnCh        chan<- *Result  // miner.engine must set this to retrieve the mined block
+	returnCh        chan<- *Result // miner.engine must set this to retrieve the mined block
 
-	chain consensus.ChainReader  // need to access blocks
-	cons  consensus.Engine  // need to seal methods
+	chain consensus.ChainReader // need to access blocks
+	cons  consensus.Engine      // need to seal methods
 
-	isMining int32  // isMining indicates whether the agent is currently mining
+	isMining int32 // isMining indicates whether the agent is currently mining
 }
 
 func NewNativeWorker(chain consensus.ChainReader, cons consensus.Engine) *NativeWorker {

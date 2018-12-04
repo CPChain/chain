@@ -291,8 +291,8 @@ func (self *engine) wait() {
 			// TODO: @liuq fix this.
 			// work := result.Work
 
-			// // Update the block hash in all logs since it is now available and not when the
-			// // receipt/log of individual transactions were created.
+			// Update the block hash in all logs since it is now available and not when the
+			// receipt/log of individual transactions were created.
 			// for _, r := range append(work.pubReceipts, work.privReceipts...) {
 			// 	for _, l := range r.Logs {
 			// 		// a log is associated with a blockhash
@@ -328,7 +328,6 @@ func (self *engine) wait() {
 
 			// // Insert the block into the set of pending ones to wait for confirmations
 			// self.unconfirmed.Insert(block.NumberU64(), block.Hash())
-
 		}
 	}
 }

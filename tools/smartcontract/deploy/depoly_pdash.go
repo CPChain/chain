@@ -1,7 +1,6 @@
 package deploy
 
 import (
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	pdash "bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
@@ -12,7 +11,7 @@ func DeployPdash() common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect()
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
-	auth := bind.NewKeyedTransactor(privateKey)
+	auth := newAuth(client, privateKey, fromAddress)
 	contractAddress, tx, _, err := pdash.DeployPdash(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())
