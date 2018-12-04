@@ -67,7 +67,7 @@ type blockSigItem struct {
 	sig  types.DporSignature // signature of the block
 }
 
-const cacheSize = 10
+const cacheSize = 200
 
 //DporSm is a struct containing variables used for state transition in FSM
 type DporSm struct {
@@ -306,7 +306,7 @@ func (sm *DporSm) proposeImpeachBlock() *types.Block {
 	}
 
 	sm.service.SignHeader(b.RefHeader(), consensus.Preprepared)
-	log.Info("proposed a impeachment block", "hash", b.Hash().Hex(), "sigs", b.Header().Dpor.SigsFormatText())
+	log.Info("proposed an impeachment block", "hash", b.Hash().Hex(), "sigs", b.Header().Dpor.SigsFormatText())
 	return b
 }
 
@@ -353,6 +353,11 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		inputBlock = input.(*types.Block)
 	case impeachBlock:
 		inputBlock = input.(*types.Block)
+	// If input == nil and inputType == noType, it means the the timer of validator expires
+	case noType:
+		if input != nil {
+			err = errFsmWrongDataType
+		}
 	default:
 		err = errFsmWrongDataType
 		return nil, noAction, noType, noMsg, consensus.Idle, err
@@ -681,7 +686,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 			err = errFsmWrongPreparedInput
 		}
 
-		// Broadcast a validate message and then go back to consensus.Idle state
+		// Broadcast a validate mess兖州age and then go back to consensus.Idle state
 		//case committed:
 		///return sm.composeValidateMsg(inputHeader), broadcastAndInsertBlock, block, validateMsg, consensus.Idle, nil
 		// Broadcast a validate message and then go back to consensus.Idle state
