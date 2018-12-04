@@ -17,7 +17,6 @@
 package dpor
 
 import (
-	"fmt"
 	"math/big"
 	"reflect"
 	"time"
@@ -81,8 +80,6 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 			parent = parents[len(parents)-1]
 		} else {
 			// parent = chain.GetHeader(header.ParentHash, number-1)
-			fmt.Println("helper header: ", header.ParentHash)
-			fmt.Println("helper chain:", chain)
 			blk := chain.GetBlock(header.ParentHash, number-1)
 			if blk != nil {
 				parent = blk.Header()
