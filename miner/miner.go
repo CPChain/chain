@@ -45,7 +45,7 @@ type Miner struct {
 func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, cons consensus.Engine) *Miner {
 	miner := &Miner{
 		mux:      mux,
-		eng:	  newEngine(config, cons, common.Address{}, backend, mux),
+		eng:      newEngine(config, cons, common.Address{}, backend, mux),
 		backend:  backend,
 		cons:     cons,
 		canStart: 1,

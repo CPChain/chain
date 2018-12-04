@@ -20,7 +20,6 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"math/big"
@@ -110,24 +109,11 @@ func (d *DporSignature) IsEmpty() bool {
 	return bytes.Equal(d[:], bytes.Repeat([]byte{0x00}, DporSigLength))
 }
 
-func (m *DporSignature) UnmarshalText(text []byte) error {
-	text = bytes.TrimPrefix(text, []byte("0x"))
-	if _, err := hex.Decode(m[:], text); err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("invalid hex storage key/value %q", text)
-	}
-	return nil
-}
-
-func (m *DporSignature) MarshalText() ([]byte, error) {
-	return hexutil.Bytes(m[:]).MarshalText()
-}
-
 type DporSnap struct {
-	Seal       DporSignature    // the signature of the block's producer
-	Sigs       []DporSignature  // the signatures of validators to endorse the block
-	Proposers  []common.Address // current proposers committee
-	Validators []common.Address // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
+	Seal       DporSignature    `json:"seal"`       // the signature of the block's producer
+	Sigs       []DporSignature  `json:"sigs"`       // the signatures of validators to endorse the block
+	Proposers  []common.Address `json:"proposers"`  // current proposers committee
+	Validators []common.Address `json:"validators"` // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
 }
 
 func (d *DporSnap) SigsFormatText() string {
@@ -163,7 +149,7 @@ type headerMarshaling struct {
 	Time       *hexutil.Big
 	Extra      hexutil.Bytes
 	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
-	Dpor       *DporSnap
+	Dpor       DporSnap
 }
 
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its

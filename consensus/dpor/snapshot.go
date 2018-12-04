@@ -38,6 +38,7 @@ var (
 	errProposerNotInCommittee  = errors.New("not a member in proposers committee")
 	errSignerNotInCommittee    = errors.New("not a member in signers committee")
 	errGenesisBlockNumber      = errors.New("genesis block has no leader")
+	errInsufficientCandidates  = errors.New("insufficient candidates")
 )
 
 // DporSnapshot is the state of the authorization voting at a given point in time.

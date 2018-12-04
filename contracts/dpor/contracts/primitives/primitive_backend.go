@@ -105,8 +105,8 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	var rank int64
 	sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
 	index := sort.SearchFloat64s(balances, float64(myBalance.Uint64()))
-	blockNumber := configs.MainnetChainConfig.Dpor.TermLen * configs.MainnetChainConfig.Dpor.ViewLen
-	rank = int64((float64(index) / float64(blockNumber)) * 100)
+	blockNumber := configs.MainnetChainConfig.Dpor.ViewLen * configs.MainnetChainConfig.Dpor.TermLen
+	rank = int64(float64(index) / float64(blockNumber) * 100) // solidity can't use float,so we magnify rank 100 times
 	return rank, err
 }
 
@@ -138,11 +138,15 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
-	header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
+	block, err := re.Client.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Error("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
+<<<<<<< HEAD
+=======
+	header := block.Header()
+>>>>>>> wip-dpor
 	leader := header.Coinbase
 
 	log.Debug("leader.Hex is ", "hex", leader.Hex())
@@ -159,7 +163,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	return ld, nil
 }
 
-// GetCoinAge is the func to get uploadnumber to rpt
+// UploadCount is the func to get uploadnumber to rpt
 func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int64, error) {
 	uploadNumber := int64(0)
 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractRegister]
@@ -176,6 +180,7 @@ func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int6
 	return fileNumber.Int64(), err
 }
 
+// ProxyInfo func return the node is proxy or not
 func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProxy int64, proxyCount int64, err error) {
 	proxyCount = int64(0)
 	isProxy = int64(0)
@@ -229,30 +234,10 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	return isProxy, proxyCount, err
 }
 
-//func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
+// func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
 //	committee := make([]common.Address, len(header.Dpor.Proposers))
 //	for i := 0; i < len(committee); i++ {
 //		copy(committee[i][:], header.Dpor.Proposers[i][:])
 //	}
 //	return committee
-//}
-
-func (re *RptEvaluator) RNode(address common.Address, number uint64) (bool, error) {
-	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
-	instance, err := contract2.NewCampaign(contractAddress, re.Client)
-	if err != nil {
-		log.Error("NewCampaign error", "address", address, "error", err)
-		return false, err
-	}
-	rNdoeAddress, err := instance.CandidatesOf(nil, big.NewInt(int64(number)))
-	if err != nil {
-		log.Error("CandidatesOf error", "error", err)
-		return false, err
-	}
-	for _, rNode := range rNdoeAddress {
-		if rNode == address {
-			return true, nil
-		}
-	}
-	return false, nil
-}
+// }

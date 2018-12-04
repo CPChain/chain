@@ -42,7 +42,7 @@ func (c *GetMaintenance) Run(input []byte) ([]byte, error) {
 		log.Error("primitive_maintenance got error", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-	//log.Info("primitive_maintenance, address , block number %d", addr.Hex(), number)
+	// log.Info("primitive_maintenance, address , block number %d", addr.Hex(), number)
 	log.Debug("primitive_maintenance", "address", addr.Hex(), "number", number)
 
 	// TODO: @AC get cpchain Backend and read balance.

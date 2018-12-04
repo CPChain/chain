@@ -7,8 +7,8 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 )
 
-// BroadcastMinedBlock broadcasts generated block to committee
-func (h *Handler) BroadcastMinedBlock(block *types.Block) {
+// BroadcastPreprepareBlock broadcasts generated block to committee
+func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 
 	log.Debug("proposed new pending block, broadcasting")
 
@@ -36,12 +36,45 @@ func (h *Handler) BroadcastMinedBlock(block *types.Block) {
 	committee := h.dialer.ValidatorsOfTerm(term)
 	for addr, peer := range committee {
 		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
-		peer.AsyncSendNewPendingBlock(block)
+		peer.AsyncSendPreprepareBlock(block)
 	}
 }
 
-// BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
-func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
+// BroadcastPreprepareImpeachBlock broadcasts generated impeach block to committee
+func (h *Handler) BroadcastPreprepareImpeachBlock(block *types.Block) {
+
+	log.Debug("proposed new pending block, broadcasting")
+
+	ready := false
+	term := h.dpor.TermOf(block.NumberU64())
+
+	// wait until there is enough validators
+	for !ready {
+		time.Sleep(1 * time.Second)
+
+		validators := h.dialer.ValidatorsOfTerm(term)
+
+		log.Debug("signer in dpor handler when broadcasting...")
+		for addr := range validators {
+			log.Debug("signer", "addr", addr.Hex())
+		}
+
+		if len(validators) >= int(h.config.TermLen) {
+			ready = true
+		}
+	}
+
+	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
+
+	committee := h.dialer.ValidatorsOfTerm(term)
+	for addr, peer := range committee {
+		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
+		peer.AsyncSendPreprepareImpeachBlock(block)
+	}
+}
+
+// BroadcastPrepareHeader broadcasts signed prepare header to remote committee
+func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -49,12 +82,12 @@ func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
 	committee := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range committee {
-		peer.AsyncSendPrepareSignedHeader(header)
+		peer.AsyncSendPrepareHeader(header)
 	}
 }
 
-// BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
-func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
+// BroadcastPrepareImpeachHeader broadcasts signed impeach prepare header to remote committee
+func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -62,7 +95,33 @@ func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
 	committee := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range committee {
-		peer.AsyncSendCommitSignedHeader(header)
+		peer.AsyncSendPrepareImpeachHeader(header)
+	}
+}
+
+// BroadcastCommitHeader broadcasts signed commit header to remote committee
+func (h *Handler) BroadcastCommitHeader(header *types.Header) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	term := h.dpor.TermOf(header.Number.Uint64())
+	committee := h.dialer.ValidatorsOfTerm(term)
+
+	for _, peer := range committee {
+		peer.AsyncSendCommitHeader(header)
+	}
+}
+
+// BroadcastCommitImpeachHeader broadcasts signed impeach commit header to remote committee
+func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	term := h.dpor.TermOf(header.Number.Uint64())
+	committee := h.dialer.ValidatorsOfTerm(term)
+
+	for _, peer := range committee {
+		peer.AsyncSendCommitImpeachHeader(header)
 	}
 }
 
@@ -76,20 +135,21 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 		case pendingBlock := <-h.pendingBlockCh:
 
 			// broadcast mined pending block to remote signers
-			go h.BroadcastMinedBlock(pendingBlock)
+			go h.BroadcastPreprepareBlock(pendingBlock)
 
 		case <-futureTimer.C:
 
 			// check if still not received new block, if true, continue
 			if h.ReadyToImpeach() {
 				// get empty block
-				if impeachBlock, err := h.dpor.CreateImpeachBlock(); err == nil {
 
-					// broadcast the empty block
-					// h.BroadcastGeneratedBlock(emptyBlock)
-					_ = impeachBlock
-					go h.BroadcastMinedBlock(impeachBlock) // TODO: @liuq BroadcastMinedBlock sends PREPREPARE message, which should be PREPARE message. We need to create a new function to let it calls.
+				impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, impeachPreprepareMsgCode)
+
+				if impeachHeader != nil && act == broadcastMsgAction && dtype == headerType && msg == prepareMsgCode && err == nil {
+					header := impeachHeader.(*types.Header)
+					go h.BroadcastPrepareImpeachHeader(header)
 				}
+
 			}
 
 		case <-h.quitSync:
