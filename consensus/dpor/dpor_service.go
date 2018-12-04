@@ -94,7 +94,7 @@ func (d *Dpor) SignHeader(header *types.Header, state consensus.State) error {
 	case nil:
 		return nil
 	default:
-		return consensus.ErrWhenSigningHeader
+		return err
 	}
 }
 

@@ -118,6 +118,7 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 // calcRptInfo return the Rpt of the rnode address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
 	instance, err := dpor.NewRpt(rs.rptContract, rs.client)
+	log.Info("calling to RPT contract", "contractAddr", rs.rptContract.Hex())
 	if err != nil {
 		log.Error("New primitivesContract error")
 		return Rpt{Address: address, Rpt: minRptScore}
@@ -134,7 +135,7 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 		if !exists {
 			rptInfo, err := instance.GetRpt(nil, address, new(big.Int).SetInt64(i))
 			if err != nil {
-				log.Error("GetRpt error", "error", err)
+				log.Error("GetRpt error", "error", err, "address", address.Hex())
 				return Rpt{Address: address, Rpt: minRptScore}
 			}
 			rs.rptcache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})

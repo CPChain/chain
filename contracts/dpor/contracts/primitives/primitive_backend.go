@@ -132,33 +132,34 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 // leader:0,committee:1,rNode:2,nil:3
 func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int64, error) {
 	ld := int64(2)
-	ifRnode, err := re.RNode(address, number)
-	if ifRnode != true {
-		return 3, nil
-	}
-	if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
-		return 0, nil
-	}
-	header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
-	if err != nil {
-		log.Error("error with bc.getIfLeader", "error", err)
-		return 0, err
-	}
-	number = number%configs.MainnetChainConfig.Dpor.TermLen - 1
-	leader := header.Dpor.Proposers[number]
-
-	log.Debug("leader.Hex is ", "hex", leader.Hex())
-
-	if leader == address {
-		ld = 0
-	} else {
-		for _, committee := range header.Dpor.Proposers {
-			if address == committee {
-				ld = 1
-			}
-		}
-	}
 	return ld, nil
+	// ifRnode, err := re.RNode(address, number)
+	// if ifRnode != true {
+	// 	return 3, nil
+	// }
+	// if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
+	// 	return 0, nil
+	// }
+	// header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
+	// if err != nil {
+	// 	log.Error("error with bc.getIfLeader", "error", err)
+	// 	return 0, err
+	// }
+	// number = number%configs.MainnetChainConfig.Dpor.TermLen - 1
+	// leader := header.Dpor.Proposers[number]
+	//
+	// log.Debug("leader.Hex is ", "hex", leader.Hex())
+	//
+	// if leader == address {
+	// 	ld = 0
+	// } else {
+	// 	for _, committee := range header.Dpor.Proposers {
+	// 		if address == committee {
+	// 			ld = 1
+	// 		}
+	// 	}
+	// }
+	// return ld, nil
 }
 
 // GetCoinAge is the func to get uploadnumber to rpt

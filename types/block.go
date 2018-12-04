@@ -138,6 +138,22 @@ func (d *DporSnap) SigsFormatText() string {
 	return strings.Join(items, ",")
 }
 
+func (d *DporSnap) ProposersFormatText() string {
+	items := make([]string, len(d.Proposers))
+	for idx, p := range d.Proposers {
+		items[idx] = fmt.Sprintf("[#%d %s]", idx, p.Hex())
+	}
+	return fmt.Sprintf("[%s]", strings.Join(items, ","))
+}
+
+func (d *DporSnap) ValidatorsFormatText() string {
+	items := make([]string, len(d.Validators))
+	for idx, v := range d.Validators {
+		items[idx] = fmt.Sprintf("[#%d %s]", idx, v.Hex())
+	}
+	return fmt.Sprintf("[%s]", strings.Join(items, ","))
+}
+
 // field type overrides for gencodec
 type headerMarshaling struct {
 	Difficulty *hexutil.Big
