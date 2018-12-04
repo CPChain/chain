@@ -28,9 +28,9 @@ const (
 	// TODO: @shiyc MaxSizeOfRecentSigners is about to be removed later
 	//MaxSizeOfRecentValidators is the size of the RecentValidators
 	//MaxSizeOfRecentProposers is the size of the RecentProposers
-	MaxSizeOfRecentSigners    = 5
-	MaxSizeOfRecentValidators = 5
-	MaxSizeOfRecentProposers  = 5
+	MaxSizeOfRecentSigners    = 200
+	MaxSizeOfRecentValidators = 200
+	MaxSizeOfRecentProposers  = 200
 )
 
 var (
