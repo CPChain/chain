@@ -325,6 +325,7 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 			// Timeouts can occur if e.g. compaction hits at the wrong time, and can be ignored
 			log.Warn("Downloader wants to drop peer, but peerdrop-function is not set", "peer", id)
 		} else {
+			log.Warn("dropping peer in downloader", "peer", id)
 			d.dropPeer(id)
 		}
 	case consensus.ErrNotEnoughSigs:
@@ -853,6 +854,7 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 			// Header retrieval timed out, consider the peer bad and drop
 			p.log.Debug("Header request timed out", "elapsed", ttl)
 			headerTimeoutMeter.Mark(1)
+			log.Warn("dropping peer in downloader", "peer", p.id)
 			d.dropPeer(p.id)
 
 			// Finish the sync gracefully instead of dumping the gathered data though
@@ -1073,6 +1075,7 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 							// Timeouts can occur if e.g. compaction hits at the wrong time, and can be ignored
 							peer.log.Warn("Downloader wants to drop peer, but peerdrop-function is not set", "peer", pid)
 						} else {
+							log.Warn("dropping peer in downloader", "peer", pid)
 							d.dropPeer(pid)
 						}
 					}
