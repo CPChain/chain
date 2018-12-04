@@ -143,10 +143,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 		log.Error("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
-<<<<<<< HEAD
-=======
 	header := block.Header()
->>>>>>> wip-dpor
 	leader := header.Coinbase
 
 	log.Debug("leader.Hex is ", "hex", leader.Hex())
