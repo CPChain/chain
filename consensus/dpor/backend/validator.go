@@ -201,7 +201,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 	case InsertBlockAction:
 		switch dtype {
 		case BlockType:
-			block := input.(*types.Block)
+			block := output.(*types.Block)
 			err := vh.dpor.InsertChain(block)
 			if err != nil {
 				return err
@@ -210,7 +210,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			log.Debug("inserting block", "number", block.NumberU64())
 
 		case ImpeachBlockType:
-			block := input.(*types.Block)
+			block := output.(*types.Block)
 			err := vh.dpor.InsertChain(block)
 			if err != nil {
 				return err
@@ -225,7 +225,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 	case BroadcastAndInsertBlockAction:
 		switch dtype {
 		case BlockType:
-			block := input.(*types.Block)
+			block := output.(*types.Block)
 			err := vh.dpor.InsertChain(block)
 			if err != nil {
 				return err
@@ -235,7 +235,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			log.Debug("inserting and broadcasting validate block", "number", block.NumberU64())
 
 		case ImpeachBlockType:
-			block := input.(*types.Block)
+			block := output.(*types.Block)
 			err := vh.dpor.InsertChain(block)
 			if err != nil {
 				return err
