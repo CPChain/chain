@@ -143,9 +143,10 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					// Add peer to manager.peers, this is for basic msg syncing
 					err := manager.addPeer(peer)
 					if err != nil {
-						log.Warn("faile to add peer to cpc protocol manager's peer set", "err", err)
+						log.Warn("8888 faile to add peer to cpc protocol manager's peer set", "err", err)
 						return err
 					}
+
 					defer manager.removePeer(peer.id)
 
 					// add peer to dpor.handler.peers, this is for pbft/lbft msg handling
@@ -156,13 +157,11 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					case backend.ErrNotSigner:
 
 					default:
-						log.Warn("faile to add peer to dpor's peer set", "err", err)
+						log.Warn("8888 faile to add peer to dpor's peer set", "err", err)
 						return err
 					}
 
-					if isProposer {
-						defer dporProtocol.RemovePeer(id)
-					}
+					defer dporProtocol.RemovePeer(id)
 
 					// send local pending transactions to the peer.
 					// new transactions appearing after this will be sent via broadcasts.
@@ -171,9 +170,11 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					for {
 						msg, err := peer.rw.ReadMsg()
 						if err != nil {
+							log.Warn("8888 err when reading msg", "err", err)
 							return err
 						}
 						if msg.Size > ProtocolMaxMsgSize {
+							log.Warn("8888 err when checking msg size", "size", msg.Size)
 							return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 						}
 
@@ -181,19 +182,19 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 						case backend.IsSyncMsg(msg):
 							err = manager.handleSyncMsg(msg, peer)
 							if err != nil {
-								log.Warn("err when handling sync msg", "err", err)
+								log.Warn("8888 err when handling sync msg", "err", err)
 								return err
 							}
 
 						case backend.IsDporMsg(msg) && (isProposer || isValidator):
 							err = dporProtocol.HandleMsg(id, msg)
 							if err != nil {
-								log.Warn("err when handling dpor msg", "err", err)
+								log.Warn("8888 err when handling dpor msg", "err", err)
 								return err
 							}
 
 						default:
-							log.Warn("unknown msg code", "msg", msg.Code)
+							log.Warn("8888 unknown msg code", "msg", msg.Code)
 						}
 
 						msg.Discard()
