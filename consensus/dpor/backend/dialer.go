@@ -27,6 +27,8 @@ type Dialer struct {
 	rsaKey   *rsakey.RsaKey
 	coinbase common.Address
 
+	dpor DporService
+
 	// proposer register contract related fields
 	contractAddress    common.Address
 	contractCaller     *ContractCaller
@@ -59,9 +61,19 @@ func NewDialer(
 	}
 }
 
+func (d *Dialer) SetDporService(dpor DporService) {
+	d.dpor = dpor
+}
+
 // AddPeer adds a peer to local dpor peer set:
 // remote proposers or remote validators
-func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyProposerFn VerifyFutureSignerFn, verifyValidatorFn VerifyFutureSignerFn) (string, bool, bool, error) {
+func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, futureTerm uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (string, bool, bool, error) {
+	address, isProposer, isValidator, err := d.addPeer(version, p, rw, coinbase, term, verifyProposerFn, verifyValidatorFn)
+	address, isFutureProposer, isFutureValidator, err := d.addPeer(version, p, rw, coinbase, futureTerm, verifyProposerFn, verifyValidatorFn)
+	return address, isProposer || isFutureProposer, isValidator || isFutureValidator, err
+}
+
+func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (string, bool, bool, error) {
 
 	log.Debug("do handshaking with remote peer...")
 
@@ -87,7 +99,7 @@ func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbas
 func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address, term uint64) (*RemoteProposer, error) {
 	remoteProposer, ok := d.getProposer(address.Hex())
 	if !ok {
-		remoteProposer = NewRemoteProposer(term, address)
+		remoteProposer = NewRemoteProposer(address)
 	}
 
 	log.Debug("adding remote proposer...", "proposer", address.Hex())
@@ -141,6 +153,15 @@ func (d *Dialer) removeRemoteProposers(addr string) error {
 	defer d.proposersLock.Unlock()
 
 	d.recentProposers.Remove(addr)
+	return nil
+}
+
+// removeRemoteValidators removes remote proposer by it's addr
+func (d *Dialer) removeRemoteValidators(addr string) error {
+	d.validatorsLock.Lock()
+	defer d.validatorsLock.Unlock()
+
+	d.recentValidators.Remove(addr)
 	return nil
 }
 
@@ -219,12 +240,10 @@ func (d *Dialer) SetContractCaller(contractCaller *ContractCaller) error {
 func (d *Dialer) UpdateRemoteProposers(term uint64, proposers []common.Address) error {
 
 	for _, signer := range proposers {
-		proposer, ok := d.getProposer(signer.Hex())
+		_, ok := d.getProposer(signer.Hex())
 		if !ok {
-			p := NewRemoteProposer(term, signer)
+			p := NewRemoteProposer(signer)
 			d.setProposer(signer.Hex(), p)
-		} else {
-			proposer.SetTerm(term)
 		}
 	}
 
@@ -235,12 +254,10 @@ func (d *Dialer) UpdateRemoteProposers(term uint64, proposers []common.Address) 
 func (d *Dialer) UpdateRemoteValidators(term uint64, validators []common.Address) error {
 
 	for _, signer := range validators {
-		validator, ok := d.getValidator(signer.Hex())
+		_, ok := d.getValidator(signer.Hex())
 		if !ok {
 			p := NewRemoteValidator(term, signer)
 			d.setValidator(signer.Hex(), p)
-		} else {
-			validator.SetTerm(term)
 		}
 	}
 
@@ -259,7 +276,7 @@ func (d *Dialer) DialAllRemoteProposers(term uint64) error {
 	proposers := d.ProposersOfTerm(term)
 
 	for _, p := range proposers {
-		_, err := p.FetchNodeInfoAndDial(validator, server, rsaKey, contractInstance)
+		_, err := p.FetchNodeInfoAndDial(term, validator, server, rsaKey, contractInstance)
 		if err != nil {
 			return err
 		}
@@ -279,7 +296,7 @@ func (d *Dialer) UploadEncryptedNodeInfo(term uint64) error {
 	validators := d.ValidatorsOfTerm(term)
 
 	for _, v := range validators {
-		_, err := v.UploadNodeInfo(nodeID, contractTransactor, contractInstance, client)
+		_, err := v.UploadNodeInfo(term, nodeID, contractTransactor, contractInstance, client)
 		if err != nil {
 			return err
 		}
@@ -345,14 +362,16 @@ func (d *Dialer) ProposersOfTerm(term uint64) map[common.Address]*RemoteProposer
 	d.proposersLock.RLock()
 	defer d.proposersLock.RUnlock()
 
+	verifyFn := d.dpor.VerifyProposerOf
+
 	addrs := d.recentProposers.Keys()
 	proposers := make(map[common.Address]*RemoteProposer)
 	for _, addr := range addrs {
 		address := addr.(string)
-		proposer, _ := d.recentProposers.Get(addr)
-		// if proposer.(*RemoteProposer).GetTerm() == term {
-		proposers[common.HexToAddress(address)] = proposer.(*RemoteProposer)
-		// }
+		if ok, err := verifyFn(common.HexToAddress(address), term); ok && err == nil {
+			proposer, _ := d.recentProposers.Get(addr)
+			proposers[common.HexToAddress(address)] = proposer.(*RemoteProposer)
+		}
 	}
 
 	return proposers
@@ -364,14 +383,16 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 	d.validatorsLock.RLock()
 	defer d.validatorsLock.RUnlock()
 
+	verifyFn := d.dpor.VerifyValidatorOf
+
 	addrs := d.recentValidators.Keys()
 	validators := make(map[common.Address]*RemoteValidator)
 	for _, addr := range addrs {
 		address := addr.(string)
-		validator, _ := d.recentValidators.Get(addr)
-		// if validator.(*RemoteValidator).GetTerm() == term {
-		validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
-		// }
+		if ok, err := verifyFn(common.HexToAddress(address), term); ok && err == nil {
+			validator, _ := d.recentValidators.Get(addr)
+			validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
+		}
 	}
 
 	return validators
