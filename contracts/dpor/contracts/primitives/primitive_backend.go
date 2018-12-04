@@ -80,29 +80,33 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	myBalance, err := re.Client.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
+		return 100, err // 100 represent give the address a default rank
 	}
 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
 	log.Info("campaign", "contractAddress", contractAddress)
 	intance, err := contract2.NewCampaign(contractAddress, re.Client)
 	if err != nil {
 		log.Error("NewCampaign error", "error", err)
+		return 100, err // 100 represent give the address a default rank
 	}
 	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(number)))
-	if err != nil {
+	if err != nil || rNodeAddress == nil {
 		log.Error("CandidatesOf error", "error", err)
+		return 100, err // 100 represent give the address a default rank
 	}
 	for _, committee := range rNodeAddress {
 		balance, err := re.Client.BalanceAt(context.Background(), committee, big.NewInt(int64(number)))
 		if err != nil {
 			log.Error("error with bc.BalanceAt", "error", err)
-			return 0, err
+			return 100, err // 100 represent give the address a default rank
 		}
 		balances = append(balances, float64(balance.Uint64()))
 	}
 	var rank int64
 	sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
 	index := sort.SearchFloat64s(balances, float64(myBalance.Uint64()))
-	rank = int64(index / 21)
+	blockNumber := configs.MainnetChainConfig.Dpor.TermLen * configs.MainnetChainConfig.Dpor.ViewLen
+	rank = int64((float64(index) / float64(blockNumber)) * 100)
 	return rank, err
 }
 
@@ -122,7 +126,6 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 			continue
 		}
 		if sender == address {
-			//		txvs += float64(tx.Value().Uint64())
 			txvs += 1
 		}
 	}
@@ -132,34 +135,28 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 // leader:0,committee:1,rNode:2,nil:3
 func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int64, error) {
 	ld := int64(2)
+	if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
+		return 0, nil
+	}
+	header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
+	if err != nil {
+		log.Error("error with bc.getIfLeader", "error", err)
+		return 0, err
+	}
+	leader := header.Coinbase
+
+	log.Debug("leader.Hex is ", "hex", leader.Hex())
+
+	if leader == address {
+		ld = 0
+	} else {
+		for _, committee := range header.Dpor.Proposers {
+			if address == committee {
+				ld = 1
+			}
+		}
+	}
 	return ld, nil
-	// ifRnode, err := re.RNode(address, number)
-	// if ifRnode != true {
-	// 	return 3, nil
-	// }
-	// if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
-	// 	return 0, nil
-	// }
-	// header, err := re.Client.HeaderByNumber(context.Background(), big.NewInt(int64(number)))
-	// if err != nil {
-	// 	log.Error("error with bc.getIfLeader", "error", err)
-	// 	return 0, err
-	// }
-	// number = number%configs.MainnetChainConfig.Dpor.TermLen - 1
-	// leader := header.Dpor.Proposers[number]
-	//
-	// log.Debug("leader.Hex is ", "hex", leader.Hex())
-	//
-	// if leader == address {
-	// 	ld = 0
-	// } else {
-	// 	for _, committee := range header.Dpor.Proposers {
-	// 		if address == committee {
-	// 			ld = 1
-	// 		}
-	// 	}
-	// }
-	// return ld, nil
 }
 
 // GetCoinAge is the func to get uploadnumber to rpt
