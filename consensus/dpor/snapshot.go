@@ -3,6 +3,7 @@ package dpor
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"sync"
@@ -37,6 +38,7 @@ var (
 	errProposerNotInCommittee  = errors.New("not a member in proposers committee")
 	errSignerNotInCommittee    = errors.New("not a member in signers committee")
 	errGenesisBlockNumber      = errors.New("genesis block has no leader")
+	errInsufficientCandidates  = errors.New("insufficient candidates")
 )
 
 // DporSnapshot is the state of the authorization voting at a given point in time.
@@ -347,6 +349,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.Co
 	// Iterate through the headers and create a new Snapshot
 	snap := s.copy()
 	snap.setContractCaller(contractCaller)
+	log.Info("apply headers", "len(headers)", len(headers))
 	for _, header := range headers {
 		err := snap.applyHeader(header)
 		if err != nil {
@@ -416,11 +419,14 @@ func (s *DporSnapshot) updateCandidates() error {
 			// Read candidates from the contract instance
 			cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 			if err != nil {
-				log.Error("read Candidates error", "err", err)
-				return err
+				log.Error("read Candidates error, use default candidates instead", "err", err)
+				// use default candidates instead
+				s.setCandidates(configs.DefaultCandidates)
+				return nil // swallow the error as it has been handled properly
 			}
 
-			log.Info("candidates Of term", "len(candidates)", len(cds), "term", term)
+			log.Info("got candidates from contract of term", "len(candidates)", len(cds), "term", term)
+
 			// If useful, use it!
 			if uint64(len(cds)) >= s.config.TermLen {
 				candidates = cds
@@ -431,6 +437,11 @@ func (s *DporSnapshot) updateCandidates() error {
 	if uint64(len(candidates)) < s.config.TermLen {
 		log.Debug("no enough candidates,use default candidates")
 		candidates = configs.DefaultCandidates
+	}
+
+	log.Info("set candidates", "len(candidates)", len(candidates))
+	for i, c := range candidates {
+		log.Info(fmt.Sprintf("candidate #%d", i), "candidate", c.Hex())
 	}
 
 	s.setCandidates(candidates)
@@ -452,7 +463,13 @@ func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 		if rptBackend == nil {
 			rptBackend, err = rpt.NewRptService(s.contractCaller().Client, s.config.Contracts[configs.ContractRpt])
 		}
-		rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
+		// rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
+		cs := s.candidates()
+		rpts := make(rpt.RptList, len(cs))
+		for i, c := range cs {
+			rpts[i] = rpt.Rpt{Address: c, Rpt: 100}
+		}
+
 		s.rptBackend = rptBackend
 
 		return rpts, err
@@ -473,33 +490,33 @@ func (s *DporSnapshot) isUseDefaultProposers() bool {
 }
 
 func (s *DporSnapshot) isStartElection() bool {
-	return s.number() >= s.config.MaxInitBlockNumber-(TermDistBetweenElectionAndMining*s.config.TermLen*s.config.ViewLen)-1
+	return s.number() >= s.config.MaxInitBlockNumber-(TermDistBetweenElectionAndMining*s.config.TermLen*s.config.ViewLen)
 }
 
 // updateProposer uses rpt and election result to get new proposers committee
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Elect proposers
 	if s.isStartElection() {
-		log.Debug("electing")
-		log.Debug("---------------------------")
-		log.Debug("rpts:")
+		log.Info("electing")
+		log.Info("---------------------------")
+		log.Info("rpts:")
 		for _, r := range rpts {
-			log.Debug("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
+			log.Info("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
 		}
-		log.Debug("seed", "seed", seed)
-		log.Debug("term length", "term", int(s.config.TermLen))
-		log.Debug("---------------------------")
+		log.Info("seed", "seed", seed)
+		log.Info("term length", "term", int(s.config.TermLen))
+		log.Info("---------------------------")
 
 		proposers := election.Elect(rpts, seed, int(s.config.TermLen))
 
-		log.Debug("elected proposers:")
+		log.Info("elected proposers:")
 
 		for _, s := range proposers {
-			log.Debug("proposer", "addr", s.Hex())
+			log.Info("proposer", "addr", s.Hex())
 		}
-		log.Debug("---------------------------")
+		log.Info("---------------------------")
 
-		log.Debug("snap.number", "n", s.number())
+		log.Info("snap.number", "n", s.number())
 
 		term := s.FutureTermOf(s.number())
 
@@ -507,15 +524,22 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 
 		s.setRecentProposers(term, proposers)
 
-		log.Debug("---------------------------")
+		log.Info("---------------------------")
 		proposers = s.getRecentProposers(term)
-		log.Debug("stored elected proposers")
+		log.Info("stored elected proposers")
 
 		for _, s := range proposers {
-			log.Debug("proposer", "addr", s.Hex())
+			log.Info("proposer", "addr", s.Hex())
 		}
-		log.Debug("---------------------------")
+		log.Info("---------------------------")
 
+		if uint64(len(proposers)) != s.config.TermLen {
+			log.Warn("proposer length wrong", "expect", s.config.TermLen, "actual", len(proposers))
+			log.Warn("---------- proposers --------")
+			for _, s := range proposers {
+				log.Warn("proposer", "addr", s.Hex())
+			}
+		}
 	}
 
 	// Set default proposer if it is in initial stage
@@ -523,7 +547,10 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		// Use default proposers
 		proposers := s.candidates()[:s.config.TermLen]
 		s.setRecentProposers(s.Term()+1, proposers)
-		log.Info("use default proposers", "term", s.Term()+1, "proposers", proposers)
+		log.Info("use default proposers", "term", s.Term()+1, "proposers", len(proposers))
+		for i, p := range proposers {
+			log.Info(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
+		}
 	}
 
 	return
@@ -544,7 +571,7 @@ func (s *DporSnapshot) TermOf(blockNum uint64) uint64 {
 
 // FutureTermOf returns future term idx with given block number
 func (s *DporSnapshot) FutureTermOf(blockNum uint64) uint64 {
-	return s.TermOf(blockNum) + TermDistBetweenElectionAndMining
+	return s.TermOf(blockNum) + TermDistBetweenElectionAndMining + 1
 }
 
 func (s *DporSnapshot) ValidatorsOf(number uint64) []common.Address {

@@ -49,4 +49,10 @@ func TestRpt(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	fmt.Println("rpt is :", b)
+
+	windowsize, err := r.Window(nil)
+	if err != nil {
+		log.Fatal("get windowzie is error")
+	}
+	fmt.Println("winodowsize is:", windowsize.Uint64())
 }

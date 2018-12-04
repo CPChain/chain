@@ -74,7 +74,7 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 
 	log.Info("lenth of rpts", "len", len(rpts))
 	for _, r := range rpts {
-		log.Info("rptlist", "addr", r.Address, "rpt", r.Rpt)
+		log.Info("rptlist", "addr", r.Address.Hex(), "rpt", r.Rpt)
 	}
 
 	randSource := rand.NewSource(seed)
@@ -110,5 +110,8 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 		scaledRpts = append(scaledRpts[:pos], scaledRpts[pos+1:]...)
 
 	}
+
+	log.Info("")
+
 	return elected
 }

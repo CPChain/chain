@@ -17,7 +17,6 @@
 package deploy
 
 import (
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
@@ -28,7 +27,7 @@ func DeployCampaign(acAddr common.Address) common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect()
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
-	auth := bind.NewKeyedTransactor(privateKey)
+	auth := newAuth(client, privateKey, fromAddress)
 	contractAddress, tx, _, err := campaign.DeployCampaign(auth, client, acAddr)
 	if err != nil {
 		log.Fatal(err.Error())

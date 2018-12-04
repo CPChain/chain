@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/big"
 	"testing"
 
 	"bitbucket.org/cpchain/chain"
@@ -42,7 +43,7 @@ var (
 )
 
 func TestGetRNodes(t *testing.T) {
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
@@ -51,7 +52,6 @@ func TestGetRNodes(t *testing.T) {
 	}
 	rnodes, err := client.GetRNodes(context.Background())
 	fmt.Println(rnodes, err)
-
 	fmt.Println("rpt is :", "addr", rnodes[0].Address, "rpt", rnodes[0].Rpt, "status", rnodes[0].Status)
 
 	if rnodes[0].Rpt == 0 {
@@ -60,7 +60,7 @@ func TestGetRNodes(t *testing.T) {
 }
 
 func TestGetCurrentTerm(t *testing.T) {
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	if err != nil {
@@ -75,7 +75,7 @@ func TestGetCurrentTerm(t *testing.T) {
 }
 
 func TestGetCurrentView(t *testing.T) {
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
@@ -91,7 +91,7 @@ func TestGetCurrentView(t *testing.T) {
 }
 
 func TestGetCommittees(t *testing.T) {
-	t.Skip("skip test")
+	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
@@ -104,4 +104,23 @@ func TestGetCommittees(t *testing.T) {
 	if len(committees) < 1 {
 		t.Errorf("GetCommittees failed")
 	}
+}
+
+func TestClient_BlockByNumber(t *testing.T) {
+	t.Skip("must start chain to test")
+	fmt.Println("*******************************************************")
+	client, err := cpclient.Dial("http://localhost:8501")
+	// local
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	block, err := client.BlockByNumber(context.Background(), big.NewInt(138))
+	if err != nil {
+		log.Fatal("BlockByNumber is error: ", err)
+	}
+	Number := block.Number()
+	tx := block.Transactions()
+	fmt.Println("block Transactions is :", tx)
+	fmt.Println("the blcok number is :", Number)
+
 }

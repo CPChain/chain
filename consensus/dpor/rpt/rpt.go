@@ -118,6 +118,7 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 // calcRptInfo return the Rpt of the rnode address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
 	instance, err := dpor.NewRpt(rs.rptContract, rs.client)
+	log.Info("calling to RPT contract", "contractAddr", rs.rptContract.Hex())
 	if err != nil {
 		log.Error("New primitivesContract error")
 		return Rpt{Address: address, Rpt: minRptScore}
@@ -125,7 +126,7 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 	rpt := int64(0)
 	windowSize, err := instance.Window(nil)
 	if err != nil {
-		log.Error("Get windowSize error")
+		log.Error("Get windowSize error", "error", err)
 		return Rpt{Address: address, Rpt: minRptScore}
 	}
 	for i := int64(blockNum); i >= 0 && i >= int64(blockNum)-windowSize.Int64(); i-- {
@@ -134,7 +135,7 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 		if !exists {
 			rptInfo, err := instance.GetRpt(nil, address, new(big.Int).SetInt64(i))
 			if err != nil {
-				log.Error("GetRpt error", "error", err)
+				log.Error("GetRpt error", "error", err, "address", address.Hex())
 				return Rpt{Address: address, Rpt: minRptScore}
 			}
 			rs.rptcache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})

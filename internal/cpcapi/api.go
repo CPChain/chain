@@ -849,6 +849,7 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (map[string]inter
 		"timestamp":        (*hexutil.Big)(head.Time),
 		"transactionsRoot": head.TxsRoot,
 		"receiptsRoot":     head.ReceiptsRoot,
+		"dpor":             head.Dpor,
 	}
 
 	if inclTx {
@@ -893,6 +894,8 @@ type RPCTransaction struct {
 	Gas              hexutil.Uint64  `json:"gas"`
 	GasPrice         *hexutil.Big    `json:"gasPrice"`
 	Hash             common.Hash     `json:"hash"`
+	Type             hexutil.Uint64  `json:"type"`
+	Extra            hexutil.Bytes   `json:"extra"`
 	Input            hexutil.Bytes   `json:"input"`
 	Nonce            hexutil.Uint64  `json:"nonce"`
 	To               *common.Address `json:"to"`
@@ -918,6 +921,8 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 		Gas:      hexutil.Uint64(tx.Gas()),
 		GasPrice: (*hexutil.Big)(tx.GasPrice()),
 		Hash:     tx.Hash(),
+		Type:     hexutil.Uint64(tx.Type()),
+		Extra:    hexutil.Bytes(tx.ExtraData()),
 		Input:    hexutil.Bytes(tx.Data()),
 		Nonce:    hexutil.Uint64(tx.Nonce()),
 		To:       tx.To(),

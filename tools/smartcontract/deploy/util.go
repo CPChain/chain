@@ -19,7 +19,9 @@ package deploy
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
 	"fmt"
+	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
@@ -61,4 +63,19 @@ func FormatPrint(msg string) {
 	fmt.Println("\n\n================================================================")
 	fmt.Println(msg)
 	fmt.Println("================================================================")
+}
+
+func newAuth(client *cpclient.Client, privateKey *ecdsa.PrivateKey, fromAddress common.Address) *bind.TransactOpts {
+	auth := bind.NewKeyedTransactor(privateKey)
+
+	blockNumber := client.GetBlockNumber()
+	// fmt.Println("blockNumber:", blockNumber)
+	nonce, err := client.NonceAt(context.Background(), fromAddress, blockNumber)
+	if err != nil {
+		fmt.Println("get nonce failed")
+	}
+	// fmt.Println("nonce:", nonce)
+	auth.Nonce = new(big.Int).SetUint64(nonce)
+	return auth
+
 }
