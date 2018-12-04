@@ -135,8 +135,10 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 	switch act {
 	case broadcastMsgAction:
+
 		switch dtype {
 		case headerType:
+
 			header := output.(*types.Header)
 
 			switch msgCode {
@@ -171,6 +173,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			case validateMsgCode:
 				go vh.dpor.BroadcastBlock(block, true)
 
+				log.Debug("broadcasting validate block", "number", block.NumberU64())
+
 			default:
 				log.Warn("unknown msg code when broadcasting block", "msg code", msgCode)
 			}
@@ -181,6 +185,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			switch msgCode {
 			case impeachValidateMsgCode:
 				go vh.dpor.BroadcastBlock(block, true)
+
+				log.Debug("broadcasting validate impeach block", "number", block.NumberU64())
 
 			default:
 				log.Warn("unknown msg code when broadcasting block", "msg code", msgCode)
@@ -201,12 +207,16 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 				return err
 			}
 
+			log.Debug("inserting block", "number", block.NumberU64())
+
 		case impeachBlockType:
 			block := input.(*types.Block)
 			err := vh.dpor.InsertChain(block)
 			if err != nil {
 				return err
 			}
+
+			log.Debug("inserting impeach block", "number", block.NumberU64())
 
 		default:
 			log.Warn("unknown data type when inserting block", "data type", dtype)
@@ -222,6 +232,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 			}
 			go vh.dpor.BroadcastBlock(block, true)
 
+			log.Debug("inserting and broadcasting validate block", "number", block.NumberU64())
+
 		case impeachBlockType:
 			block := input.(*types.Block)
 			err := vh.dpor.InsertChain(block)
@@ -229,6 +241,8 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 				return err
 			}
 			go vh.dpor.BroadcastBlock(block, true)
+
+			log.Debug("inserting and broadcasting validate impeach block", "number", block.NumberU64())
 
 		default:
 			log.Warn("unknown data type when inserting and broadcasting block", "data type", dtype)
