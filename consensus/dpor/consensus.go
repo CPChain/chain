@@ -92,9 +92,6 @@ var (
 	// errMultiBlocksInOneHeight is returned if there is multi blocks in one height in the chain.
 	errMultiBlocksInOneHeight = errors.New("multi blocks in one height")
 
-	// errInvalidSigners is returned if a block contains an invalid extra sigers bytes.
-	errInvalidSigners = errors.New("invalid signer list on checkpoint block")
-
 	// errInvalidValidatorSigs is returned if the dpor sigs are not sigend by correct validator committtee.
 	errInvalidValidatorSigs = errors.New("invalid validator signatures")
 

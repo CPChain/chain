@@ -18,7 +18,6 @@
 package cpc
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 	"sync"
@@ -28,7 +27,6 @@ import (
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -52,18 +50,12 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
-var (
-	errWrongRSAKey = errors.New("wrong RSAKey")
-)
-
 type LesServer interface {
 	Start(srvr *p2p.Server)
 	Stop()
 	Protocols() []p2p.Protocol
 	SetBloomBitsIndexer(bbIndexer *core.ChainIndexer)
 }
-
-type RSAReader func() (*rsakey.RsaKey, error)
 
 // CpchainService implements the CpchainService full node service.
 type CpchainService struct {

@@ -73,6 +73,22 @@ func (d *Dpor) ValidatorsOf(number uint64) ([]common.Address, error) {
 	return snap.getRecentValidators(term), nil
 }
 
+func (d *Dpor) ProposersOf(number uint64) ([]common.Address, error) {
+	snap := d.currentSnapshot
+	term := snap.TermOf(number)
+	return snap.getRecentProposers(term), nil
+}
+
+func (d *Dpor) ValidatorsOfTerm(term uint64) ([]common.Address, error) {
+	snap := d.currentSnapshot
+	return snap.getRecentValidators(term), nil
+}
+
+func (d *Dpor) ProposersOfTerm(term uint64) ([]common.Address, error) {
+	snap := d.currentSnapshot
+	return snap.getRecentProposers(term), nil
+}
+
 // VerifyHeaderWithState verifies the given header
 // if in preprepared state, verify basic fields
 // if in prepared state, verify if enough prepare sigs

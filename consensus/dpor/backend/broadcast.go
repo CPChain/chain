@@ -15,10 +15,11 @@ func (h *Handler) BroadcastMinedBlock(block *types.Block) {
 	ready := false
 	term := h.dpor.TermOf(block.NumberU64())
 
+	// wait until there is enough validators
 	for !ready {
 		time.Sleep(1 * time.Second)
 
-		validators := h.dialer.ValidatorsOf(term)
+		validators := h.dialer.ValidatorsOfTerm(term)
 
 		log.Debug("signer in dpor handler when broadcasting...")
 		for addr := range validators {
@@ -30,9 +31,9 @@ func (h *Handler) BroadcastMinedBlock(block *types.Block) {
 		}
 	}
 
-	committee := h.dialer.ValidatorsOf(term)
-
 	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
+
+	committee := h.dialer.ValidatorsOfTerm(term)
 	for addr, peer := range committee {
 		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
 		peer.AsyncSendNewPendingBlock(block)
@@ -45,7 +46,7 @@ func (h *Handler) BroadcastPrepareSignedHeader(header *types.Header) {
 	defer h.lock.Unlock()
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	committee := h.dialer.ValidatorsOf(term)
+	committee := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range committee {
 		peer.AsyncSendPrepareSignedHeader(header)
@@ -58,7 +59,7 @@ func (h *Handler) BroadcastCommitSignedHeader(header *types.Header) {
 	defer h.lock.Unlock()
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	committee := h.dialer.ValidatorsOf(term)
+	committee := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range committee {
 		peer.AsyncSendCommitSignedHeader(header)

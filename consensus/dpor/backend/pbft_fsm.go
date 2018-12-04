@@ -1,4 +1,4 @@
-package dpor
+package backend
 
 import (
 	"bytes"
@@ -7,7 +7,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/golang-lru"
@@ -52,7 +51,7 @@ var (
 	errBlockTooOld                     = errors.New("the block is too old")
 	errFsmWrongDataType                = errors.New("an unexpected FSM input data type")
 	errFsmFaultyBlock                  = errors.New("the newly proposed block is faulty")
-	errFsmWrongIdleIpunt               = errors.New("not a proper input for idle state")
+	errFsmWrongIdleInput               = errors.New("not a proper input for idle state")
 	errFsmWrongPrepreparedInput        = errors.New("not a proper input for pre-prepared state")
 	errFsmWrongPreparedInput           = errors.New("not a proper input for prepared state")
 	errFsmWrongImpeachPrepreparedInput = errors.New("not a proper input for impeach pre-prepared state")
@@ -74,7 +73,7 @@ const cacheSize = 10
 type DporSm struct {
 	lock sync.RWMutex
 
-	service         backend.DporService
+	service         DporService
 	prepareSigState sigState
 	commitSigState  sigState
 	f               uint64        // f is the parameter of 3f+1 nodes in Byzantine
@@ -82,7 +81,7 @@ type DporSm struct {
 	lastHeight      uint64
 }
 
-func NewDporSm(service backend.DporService, f uint64) *DporSm {
+func NewDporSm(service DporService, f uint64) *DporSm {
 	bc, _ := lru.NewARC(cacheSize)
 
 	return &DporSm{
@@ -185,7 +184,7 @@ func (sm *DporSm) commitMsgPlus(h *types.Header) error {
 		}
 		if !isValidator {
 			log.Warn("a signer is not in validator committee", "signer", s.Hex())
-			checkErr = errInvalidSigners
+			checkErr = consensus.ErrInvalidSigners
 		}
 	}
 	if checkErr != nil {
@@ -262,7 +261,7 @@ func (sm *DporSm) prepareMsgPlus(h *types.Header) error {
 		}
 		if !isValidator {
 			log.Warn("a signer is not in validator committee", "signer", s.Hex())
-			checkErr = errInvalidSigners
+			checkErr = consensus.ErrInvalidSigners
 		}
 	}
 	if checkErr != nil {
@@ -458,7 +457,7 @@ func (sm *DporSm) Fsm(input interface{}, inputType dataType, msg msgCode, state 
 		case impeachPreprepareMsg:
 			return sm.proposeImpeachBlock(), broadcastMsg, block, impeachPrepareMsg, consensus.ImpeachPreprepared, nil
 		default:
-			err = errFsmWrongIdleIpunt
+			err = errFsmWrongIdleInput
 		}
 
 	// The case of pre-prepared state

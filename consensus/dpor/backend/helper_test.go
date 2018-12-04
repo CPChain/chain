@@ -238,68 +238,98 @@ func TestRemoteSigner(T *testing.T) {
 
 }
 
-// //
-// gasLimit := uint64(100000)
+func TestDialerUploadAndFetch(T *testing.T) {
 
-// // create a dialer as proposer 1
-// dialer := backend.NewDialer(p1Addr, contractAddr)
-// dialer.SetNodeID("Hello World")
-// contractCaller, err := backend.NewContractCaller(p1Key, simulatedBackend, gasLimit)
-// dialer.SetContractCaller(contractCaller)
+	// prepare accouts
+	v1Addr, v1Key := loadDefaultAccount(1)
+	v2Addr, v2Key := loadDefaultAccount(2)
+	v3Addr, v3Key := loadDefaultAccount(5)
+	v4Addr, v4Key := loadDefaultAccount(6)
 
-// // set term and remote proposers
-// term := uint64(4)
-// validators := []common.Address{
-// 	v1Addr,
-// 	v2Addr,
-// 	v3Addr,
-// 	v4Addr,
-// }
+	p1Addr, p1Key := loadDefaultAccount(7)
 
-// err = dialer.UpdateRemoteValidators(term, validators)
-// fmt.Println("err when update remote validators", err)
+	// setup backend
 
-// // upload encrypted keys
-// go func() {
-// 	err = dialer.UploadEncryptedNodeInfo(term)
-// 	fmt.Println("err when upload encrypted node info", err)
-// }()
+	// new a simulated backend
+	alloc := core.GenesisAlloc{
+		v1Addr: {Balance: big.NewInt(1000000000000)},
+		v2Addr: {Balance: big.NewInt(1000000000000)},
+		v3Addr: {Balance: big.NewInt(1000000000000)},
+		v4Addr: {Balance: big.NewInt(1000000000000)},
 
-// done := make(chan struct{})
+		p1Addr: {Balance: big.NewInt(1000000000000)},
+	}
+	simulatedBackend := createSimulatedBackend(alloc)
 
-// go func() {
-// 	i := 0
-// 	for i < 5 {
-// 		i++
-// 		time.Sleep(1 * time.Second)
-// 		simulatedBackend.Commit()
-// 	}
-// 	close(done)
-// }()
+	// create validator transactors
+	v1Transactor := createTransactor(v1Key.PrivateKey)
+	v2Transactor := createTransactor(v2Key.PrivateKey)
+	v3Transactor := createTransactor(v3Key.PrivateKey)
+	v4Transactor := createTransactor(v4Key.PrivateKey)
 
-// <-done
+	// deploy the contract
+	contractAddr, tx, register, err := deployRegister(v1Key.PrivateKey, big.NewInt(0), simulatedBackend)
+	_, _, _, _ = contractAddr, tx, register, err
+	simulatedBackend.Commit()
 
-// // create a dialer as validator 1
-// dialer = backend.NewDialer(v1Addr, contractAddr)
-// contractCaller, err = backend.NewContractCaller(v1Key, simulatedBackend, gasLimit)
-// dialer.SetContractCaller(contractCaller)
+	fmt.Println("contract addr", contractAddr.Hex())
 
-// proposers := []common.Address{
-// 	p1Addr,
-// }
+	// register validator's public key
+	tx, err = register.RegisterPublicKey(v1Transactor, v1Key.RsaKey.PublicKey.RsaPublicKeyBytes)
+	simulatedBackend.Commit()
+	tx, err = register.RegisterPublicKey(v2Transactor, v2Key.RsaKey.PublicKey.RsaPublicKeyBytes)
+	simulatedBackend.Commit()
+	tx, err = register.RegisterPublicKey(v3Transactor, v3Key.RsaKey.PublicKey.RsaPublicKeyBytes)
+	simulatedBackend.Commit()
+	tx, err = register.RegisterPublicKey(v4Transactor, v4Key.RsaKey.PublicKey.RsaPublicKeyBytes)
+	simulatedBackend.Commit()
 
-// err = dialer.UpdateRemoteProposers(term, proposers)
-// fmt.Println("err when update proposers", err)
+	//
+	term := uint64(4)
+	gasLimit := uint64(1000000)
 
-// err = dialer.DialAllRemoteProposers(term)
-// fmt.Println("err when fetch and dial", err)
+	// as a proposer
+	p1NodeID := "enode://5293dc8aaa5c2fcc7905c21391ce38f4f877722ff1918f4fa86379347ad8a244c2995631f89866693d05bf5c94493c247f02716f19a90689fa406189b03a5243@127.0.0.1:30310"
 
-// callOpts := &bind.CallOpts{
-// 	From: v1Addr,
-// }
+	// contractCaller
+	v1ContractCaller, err := backend.NewContractCaller(v1Key, simulatedBackend, gasLimit)
+	p1ContractCaller, err := backend.NewContractCaller(p1Key, simulatedBackend, gasLimit)
 
-// eNodeIDBytes, err := register.GetNodeInfo(callOpts, big.NewInt(int64(term)), p1Addr)
-// fmt.Println("fetched encrypted nodeID from contract \n", hex.Dump(eNodeIDBytes), "err", err)
+	// validator committee
+	validators := []common.Address{
+		v1Addr,
+		v2Addr,
+		v3Addr,
+		v4Addr,
+	}
 
-// nodeID, err := v1Key.RsaKey.RsaDecrypt(eNodeIDBytes)
-// fmt.Println("decrypted nodeID", string(nodeID), "err", err)
+	pDialer := backend.NewDialer(p1Addr, contractAddr)
+	pDialer.SetNodeID(p1NodeID)
+	pDialer.SetContractCaller(p1ContractCaller)
+	pDialer.UpdateRemoteValidators(term, validators)
+
+	go func() {
+		err = pDialer.UploadEncryptedNodeInfo(term)
+		fmt.Println("err when upload encrypted node info", err)
+	}()
+
+	done := make(chan struct{})
+	go func() {
+		time.Sleep(1 * time.Second)
+		simulatedBackend.Commit()
+		close(done)
+	}()
+
+	<-done
+
+	proposers := []common.Address{
+		p1Addr,
+	}
+
+	v1Dialer := backend.NewDialer(v1Addr, contractAddr)
+	v1Dialer.SetContractCaller(v1ContractCaller)
+	v1Dialer.UpdateRemoteProposers(term, proposers)
+	err = v1Dialer.DialAllRemoteProposers(term)
+	fmt.Println("err when dial remote proposers", err)
+
+}

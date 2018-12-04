@@ -4,14 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
-	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/configs"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // launch the chain
@@ -105,23 +100,4 @@ func TestHandler_SetContractCaller(t *testing.T) {
 	key = getAccount("dd1/keystore/", "password", t)
 	fmt.Println("sucessfully print")
 	fmt.Println(key)
-}
-
-func TestHandler_handlePreprepareMsg(t *testing.T) {
-	//t.Skip("skip for short test")
-	addrHex := "0x4CE687F9dDd42F26ad580f435acD0dE39e8f9c9C"
-	NewRemoteValidator(1, common.HexToAddress(addrHex))
-
-	signer := NewRemoteValidator(1, common.HexToAddress(addrHex))
-	msg := p2p.Msg{Code: PrepareSignedHeaderMsg, Size: 1000, Payload: strings.NewReader("Test_Payload"), ReceivedAt: time.Now()}
-
-	var testConfig *configs.DporConfig
-	testConfig = configs.MainnetChainConfig.Dpor
-	//define the parameter "etherbase" for NewHandler()
-	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
-	testHandler := NewHandler(testConfig, testEtherbase)
-	err := testHandler.handlePreprepareMsg(msg, signer)
-	if err != nil {
-		t.Errorf("handlePrePrepareMsg returns an error message, as %v\n", err)
-	}
 }

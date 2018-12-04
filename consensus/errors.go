@@ -66,6 +66,9 @@ var (
 
 	// ErrUnknownLbftState is returned if committee handler's state is unknown
 	ErrUnknownLbftState = errors.New("unknown lbft state")
+
+	// ErrInvalidSigners is returned if a block contains an invalid extra sigers bytes.
+	ErrInvalidSigners = errors.New("invalid signer list on checkpoint block")
 )
 
 // ErrNotEnoughSigsType is returned if there is not enough signatures for a block.
