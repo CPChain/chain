@@ -101,12 +101,9 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	}
 	var rank int64
 	sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
-
-	// rank = calcuateRank(myBalance, balances)
-
 	index := sort.SearchFloat64s(balances, float64(myBalance.Uint64()))
 	blockNumber := configs.MainnetChainConfig.Dpor.ViewLen * configs.MainnetChainConfig.Dpor.TermLen
-	rank = int64(float64(uint64(index)/blockNumber) * 100) // solidity can't use float
+	rank = int64(float64(index) / float64(blockNumber) * 100) // solidity can't use float,so we magnify rank 100 times
 	return rank, err
 }
 
