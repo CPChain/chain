@@ -26,7 +26,7 @@ func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 			log.Debug("signer", "addr", addr.Hex())
 		}
 
-		if len(validators) >= int(h.config.TermLen) {
+		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
 			ready = true
 		}
 	}
@@ -59,7 +59,7 @@ func (h *Handler) BroadcastPreprepareImpeachBlock(block *types.Block) {
 			log.Debug("signer", "addr", addr.Hex())
 		}
 
-		if len(validators) >= int(h.config.TermLen) {
+		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
 			ready = true
 		}
 	}
