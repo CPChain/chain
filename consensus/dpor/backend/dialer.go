@@ -68,16 +68,15 @@ func (d *Dialer) SetDporService(dpor DporService) {
 // AddPeer adds a peer to local dpor peer set:
 // remote proposers or remote validators
 func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, futureTerm uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (string, bool, bool, error) {
-	address, isProposer, isValidator, err := d.addPeer(version, p, rw, coinbase, term, verifyProposerFn, verifyValidatorFn)
-	address, isFutureProposer, isFutureValidator, err := d.addPeer(version, p, rw, coinbase, futureTerm, verifyProposerFn, verifyValidatorFn)
-	return address, isProposer || isFutureProposer, isValidator || isFutureValidator, err
+	address, isProposer, isValidator, err := d.addPeer(version, p, rw, coinbase, term, futureTerm, verifyProposerFn, verifyValidatorFn)
+	return address, isProposer, isValidator, err
 }
 
-func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (string, bool, bool, error) {
+func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, futureTerm uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (string, bool, bool, error) {
 
 	log.Debug("do handshaking with remote peer...")
 
-	isProposer, isValidator, address, err := Handshake(p, rw, coinbase, term, verifyProposerFn, verifyValidatorFn)
+	isProposer, isValidator, address, err := Handshake(p, rw, coinbase, term, futureTerm, verifyProposerFn, verifyValidatorFn)
 	if (!isProposer && !isValidator) || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)
 		return "", isProposer, isValidator, err
