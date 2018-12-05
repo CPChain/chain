@@ -109,7 +109,7 @@ func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) e
 }
 
 // Handshake tries to handshake with remote validator
-func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (isProposer bool, isValidator bool, address common.Address, err error) {
+func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, futureTerm uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (isProposer bool, isValidator bool, address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var signerStatus SignerStatusData // safe to read after two values have been received from errc
@@ -122,7 +122,7 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term 
 		errc <- err
 	}()
 	go func() {
-		isProposer, isValidator, address, err = ReadValidatorStatus(p, rw, &signerStatus, verifyProposerFn, verifyValidatorFn, term)
+		isProposer, isValidator, address, err = ReadValidatorStatus(p, rw, &signerStatus, verifyProposerFn, verifyValidatorFn, term, futureTerm)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -143,7 +143,7 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term 
 }
 
 // ReadValidatorStatus reads status of remote validator
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *SignerStatusData, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn, term uint64) (isProposer bool, isValidator bool, address common.Address, err error) {
+func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *SignerStatusData, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn, term uint64, futureTerm uint64) (isProposer bool, isValidator bool, address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
 		return false, false, common.Address{}, err
@@ -165,8 +165,7 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *Si
 	// TODO: this (addr, ...) pair should be signed with its private key.
 	// @liuq
 
-	isProposer, err = verifyProposerFn(signerStatusData.Address, term)
-	isValidator, err = verifyValidatorFn(signerStatusData.Address, term)
+	isProposer, isValidator, err = VerifyFutureSigner(signerStatusData.Address, term, futureTerm, verifyProposerFn, verifyValidatorFn)
 	return isProposer, isValidator, signerStatusData.Address, err
 }
 
