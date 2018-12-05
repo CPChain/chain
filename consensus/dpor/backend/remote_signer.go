@@ -170,7 +170,6 @@ func fetchNodeID(term uint64, proposer common.Address, validator common.Address,
 	callOpts := &bind.CallOpts{
 		From: validator,
 	}
-	fmt.Println("contract instance", contractInstance)
 	encryptedNodeID, err := contractInstance.GetNodeInfo(callOpts, big.NewInt(int64(term)), proposer)
 	if err != nil {
 		return nil, err
