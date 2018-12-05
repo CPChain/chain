@@ -80,6 +80,7 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbas
 
 	isProposer, isValidator := true, true
 
+	// TODO: remove this later, not efficient, not usefull in practice
 	// isProposer, isValidator := false, false
 	// for t := term; t <= futureTerm; t++ {
 	// 	isP, _ := d.dpor.VerifyProposerOf(address, t)
@@ -403,7 +404,17 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 
 	for _, addr := range addrs {
 		address := addr.(string)
-		if ok, err := d.dpor.VerifyValidatorOf(common.HexToAddress(address), term); ok && err == nil {
+		ok, err := d.dpor.VerifyValidatorOf(common.HexToAddress(address), term)
+
+		// TODO: @chengx
+		log.Debug("verify validator of term", "term", term, "addr", addr, "ok", ok, "err", err)
+		log.Debug("validators in term", "term", term)
+		vs, _ := d.dpor.ValidatorsOfTerm(term)
+		for _, v := range vs {
+			log.Debug("validator", "term", term, "addr", v.Hex())
+		}
+
+		if ok && err == nil {
 			validator, _ := d.recentValidators.Get(addr)
 			validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
 		}
