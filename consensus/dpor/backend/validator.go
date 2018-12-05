@@ -405,12 +405,19 @@ func (vh *Handler) ReadyToImpeach() bool {
 	snap := vh.snap
 	current := vh.dpor.Status()
 
-	if snap == nil || current == nil {
+	if current == nil {
 		return false
 	}
 
-	if current.Head.Number.Uint64() <= snap.Head.Number.Uint64() {
-		return true
+	if snap != nil {
+
+		log.Debug("current", "number", current.Head.Number.Uint64())
+		log.Debug("snap", "number", snap.Head.Number.Uint64())
+
+		if current.Head.Number.Uint64() <= snap.Head.Number.Uint64() {
+			return true
+
+		}
 	}
 
 	vh.snap = current
