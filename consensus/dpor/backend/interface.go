@@ -52,8 +52,22 @@ func NewContractCaller(key *keystore.Key, client ClientBackend, gasLimit uint64)
 // RsaReader reads a rsa key
 type RsaReader func() (*rsakey.RsaKey, error)
 
-// VerifySignerFn verifies if a signer is a future signer at given term
-type VerifySignerFn func(signer common.Address, term uint64) (bool, error)
+// VerifySignerFn verifies if a signer is a signer at given term
+type VerifySignerFn func(address common.Address, term uint64) (bool, error)
+
+// VerifyFutureSigner verifies if a signer is proposer or validator from term to future term
+func VerifyFutureSigner(address common.Address, term uint64, futureTerm uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (bool, bool, error) {
+
+	isProposer, isValidator := false, false
+	for t := term; t <= futureTerm; t++ {
+		isP, _ := verifyProposerFn(address, t)
+		isV, _ := verifyValidatorFn(address, t)
+		isProposer = isProposer || isP
+		isValidator = isValidator || isV
+	}
+
+	return isProposer, isValidator, nil
+}
 
 // DporService provides functions used by dpor handler
 type DporService interface {
