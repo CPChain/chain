@@ -130,8 +130,6 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 	output, act, dtype, msgCode, err := vh.fsm.Fsm(input, inputType, msgCode)
 
-	log.Debug("fsm result", "output", output, "action", act, "data type", dtype, "msg code", msgCode, "error", err)
-
 	// fsm results
 	_, _, _, _, _ = output, act, dtype, msgCode, err
 
