@@ -133,10 +133,10 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 	verifyProposerFn := h.dpor.VerifyProposerOf
 	verifyValidatorFn := h.dpor.VerifyValidatorOf
 
-	amProposer, _ := verifyProposerFn(coinbase, term)
-	amValidator, _ := verifyValidatorFn(coinbase, term)
-	if !amProposer && !amValidator {
-		return "", false, false, ErrNotSigner
+	amProposer, amValidator, _ := VerifyFutureSigner(coinbase, term, futureTerm, verifyProposerFn, verifyValidatorFn)
+	continueHandshake := amProposer || amValidator
+	if !continueHandshake {
+		return common.Address{}.Hex(), false, false, ErrNotSigner
 	}
 
 	return h.dialer.AddPeer(version, p, rw, coinbase, term, futureTerm, verifyProposerFn, verifyValidatorFn)
