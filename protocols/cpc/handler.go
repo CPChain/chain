@@ -126,7 +126,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 
 				// return if dpor is still not initialized
 				if config.Dpor != nil && !dporProtocol.Available() {
-					log.Warn("dpor handler is not not available now")
+					log.Warn("8888 dpor handler is not not available now")
 					return nil
 				}
 
@@ -154,9 +154,8 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					id, isProposer, isValidator, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
 					switch err {
 					case nil:
-					case backend.ErrNotSigner:
-
 					default:
+
 						log.Warn("8888 faile to add peer to dpor's peer set", "err", err)
 						return err
 					}
@@ -173,6 +172,9 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 							log.Warn("8888 err when reading msg", "err", err)
 							return err
 						}
+
+						defer msg.Discard()
+
 						if msg.Size > ProtocolMaxMsgSize {
 							log.Warn("8888 err when checking msg size", "size", msg.Size)
 							return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
@@ -197,7 +199,6 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 							log.Warn("8888 unknown msg code", "msg", msg.Code)
 						}
 
-						msg.Discard()
 					}
 
 				case <-manager.quitSync:
