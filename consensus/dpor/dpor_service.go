@@ -31,10 +31,6 @@ func (d *Dpor) GetCurrentBlock() *types.Block {
 // VerifyProposerOf verifies if an address is a proposer of given term
 func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error) {
 
-	// // TODO: remove this
-	// if term <= 6 {
-	// 	return true, nil
-	// }
 	snap := d.currentSnapshot
 	proposers := snap.getRecentProposers(term)
 
@@ -53,10 +49,6 @@ func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error
 // VerifyValidatorOf verifies if an address is a validator of given term
 func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, error) {
 
-	// // TODO: remove this
-	// if term <= 6 {
-	// 	return true, nil
-	// }
 	snap := d.currentSnapshot
 	validators := snap.getRecentValidators(term)
 

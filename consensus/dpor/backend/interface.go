@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // ClientBackend is the client operation interface
@@ -62,8 +63,11 @@ func VerifyFutureSigner(address common.Address, term uint64, futureTerm uint64, 
 	for t := term; t <= futureTerm; t++ {
 		isP, _ := verifyProposerFn(address, t)
 		isV, _ := verifyValidatorFn(address, t)
+
 		isProposer = isProposer || isP
 		isValidator = isValidator || isV
+
+		log.Debug("addr when verify", "addr", address.Hex(), "isP", isP, "isV", isV, "isProposer", isProposer, "isValidator", isValidator)
 	}
 
 	return isProposer, isValidator, nil

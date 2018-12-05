@@ -154,13 +154,13 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 					id, isProposer, isValidator, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
 					switch err {
 					case nil:
+						defer dporProtocol.RemovePeer(id)
+
 					default:
 
 						log.Warn("8888 faile to add peer to dpor's peer set", "err", err)
 						return err
 					}
-
-					defer dporProtocol.RemovePeer(id)
 
 					// send local pending transactions to the peer.
 					// new transactions appearing after this will be sent via broadcasts.
