@@ -410,13 +410,8 @@ func (vh *Handler) ReadyToImpeach() bool {
 	}
 
 	if snap != nil {
-
-		log.Debug("current", "number", current.Head.Number.Uint64())
-		log.Debug("snap", "number", snap.Head.Number.Uint64())
-
 		if current.Head.Number.Uint64() <= snap.Head.Number.Uint64() {
 			return true
-
 		}
 	}
 
