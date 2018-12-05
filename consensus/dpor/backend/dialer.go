@@ -414,10 +414,10 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 			log.Debug("validator", "term", term, "addr", v.Hex())
 		}
 
-		if ok && err == nil {
-			validator, _ := d.recentValidators.Get(addr)
-			validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
-		}
+		// if ok && err == nil {
+		validator, _ := d.recentValidators.Get(addr)
+		validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
+		// }
 	}
 
 	return validators
