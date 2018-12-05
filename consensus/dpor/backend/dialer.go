@@ -361,13 +361,14 @@ func (d *Dialer) ProposersOfTerm(term uint64) map[common.Address]*RemoteProposer
 	d.proposersLock.RLock()
 	defer d.proposersLock.RUnlock()
 
-	verifyFn := d.dpor.VerifyProposerOf
-
 	addrs := d.recentProposers.Keys()
 	proposers := make(map[common.Address]*RemoteProposer)
+
+	log.Debug("proposers in dialer", "count", len(addrs))
+
 	for _, addr := range addrs {
 		address := addr.(string)
-		if ok, err := verifyFn(common.HexToAddress(address), term); ok && err == nil {
+		if ok, err := d.dpor.VerifyProposerOf(common.HexToAddress(address), term); ok && err == nil {
 			proposer, _ := d.recentProposers.Get(addr)
 			proposers[common.HexToAddress(address)] = proposer.(*RemoteProposer)
 		}
@@ -382,13 +383,14 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 	d.validatorsLock.RLock()
 	defer d.validatorsLock.RUnlock()
 
-	verifyFn := d.dpor.VerifyValidatorOf
-
 	addrs := d.recentValidators.Keys()
 	validators := make(map[common.Address]*RemoteValidator)
+
+	log.Debug("validators in dialer", "count", len(addrs))
+
 	for _, addr := range addrs {
 		address := addr.(string)
-		if ok, err := verifyFn(common.HexToAddress(address), term); ok && err == nil {
+		if ok, err := d.dpor.VerifyValidatorOf(common.HexToAddress(address), term); ok && err == nil {
 			validator, _ := d.recentValidators.Get(addr)
 			validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
 		}

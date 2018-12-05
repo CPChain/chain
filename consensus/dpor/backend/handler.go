@@ -144,6 +144,9 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 
 // RemovePeer removes a p2p peer with its addr
 func (h *Handler) RemovePeer(addr string) error {
+
+	log.Debug("removing dpor peer", "addr", addr)
+
 	_ = h.dialer.removeRemoteProposers(addr)
 	_ = h.dialer.removeRemoteValidators(addr)
 

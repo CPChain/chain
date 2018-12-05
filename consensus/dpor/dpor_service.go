@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // TermOf returns the term number of given block number
@@ -30,12 +31,14 @@ func (d *Dpor) GetCurrentBlock() *types.Block {
 // VerifyProposerOf verifies if an address is a proposer of given term
 func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error) {
 
-	// TODO: remove this
-	if term <= 6 {
-		return true, nil
-	}
+	// // TODO: remove this
+	// if term <= 6 {
+	// 	return true, nil
+	// }
 	snap := d.currentSnapshot
 	proposers := snap.getRecentProposers(term)
+
+	log.Debug("proposers in dpor current snapshot", "count", len(proposers), "term", term)
 
 	for _, p := range proposers {
 		if p == signer {
@@ -50,12 +53,14 @@ func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error
 // VerifyValidatorOf verifies if an address is a validator of given term
 func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, error) {
 
-	// TODO: remove this
-	if term <= 6 {
-		return true, nil
-	}
+	// // TODO: remove this
+	// if term <= 6 {
+	// 	return true, nil
+	// }
 	snap := d.currentSnapshot
 	validators := snap.getRecentValidators(term)
+
+	log.Debug("validators in dpor current snapshot", "count", len(validators), "term", term)
 
 	for _, p := range validators {
 		if p == signer {
