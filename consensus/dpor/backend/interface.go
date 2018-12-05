@@ -11,7 +11,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 // ClientBackend is the client operation interface
@@ -55,23 +54,6 @@ type RsaReader func() (*rsakey.RsaKey, error)
 
 // VerifySignerFn verifies if a signer is a signer at given term
 type VerifySignerFn func(address common.Address, term uint64) (bool, error)
-
-// VerifyFutureSigner verifies if a signer is proposer or validator from term to future term
-func VerifyFutureSigner(address common.Address, term uint64, futureTerm uint64, verifyProposerFn VerifySignerFn, verifyValidatorFn VerifySignerFn) (bool, bool, error) {
-
-	isProposer, isValidator := false, false
-	for t := term; t <= futureTerm; t++ {
-		isP, _ := verifyProposerFn(address, t)
-		isV, _ := verifyValidatorFn(address, t)
-
-		isProposer = isProposer || isP
-		isValidator = isValidator || isV
-
-		log.Debug("addr when verify", "addr", address.Hex(), "isP", isP, "isV", isV, "isProposer", isProposer, "isValidator", isValidator)
-	}
-
-	return isProposer, isValidator, nil
-}
 
 // DporService provides functions used by dpor handler
 type DporService interface {

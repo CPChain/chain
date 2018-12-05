@@ -130,10 +130,8 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 	coinbase := h.Coinbase()
 	term := h.dpor.TermOf(h.dpor.GetCurrentBlock().NumberU64())
 	futureTerm := h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
-	verifyProposerFn := h.dpor.VerifyProposerOf
-	verifyValidatorFn := h.dpor.VerifyValidatorOf
 
-	return h.dialer.AddPeer(version, p, rw, coinbase, term, futureTerm, verifyProposerFn, verifyValidatorFn)
+	return h.dialer.AddPeer(version, p, rw, coinbase, term, futureTerm)
 }
 
 // RemovePeer removes a p2p peer with its addr
