@@ -23,9 +23,9 @@ type RemoteProposer struct {
 }
 
 // NewRemoteProposer creates a new remote proposer
-func NewRemoteProposer(term uint64, address common.Address) *RemoteProposer {
+func NewRemoteProposer(address common.Address) *RemoteProposer {
 	return &RemoteProposer{
-		RemoteSigner: NewRemoteSigner(term, address),
+		RemoteSigner: NewRemoteSigner(address),
 	}
 }
 
@@ -60,8 +60,8 @@ func (s *RemoteProposer) setNodeID(nodeID string) {
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (s *RemoteProposer) fetchNodeID(contractInstance *dpor.ProposerRegister, rsaKey *rsakey.RsaKey, validator common.Address) error {
-	term, proposer := s.GetTerm(), s.Coinbase()
+func (s *RemoteProposer) fetchNodeID(term uint64, contractInstance *dpor.ProposerRegister, rsaKey *rsakey.RsaKey, validator common.Address) error {
+	proposer := s.Coinbase()
 
 	log.Debug("fetching nodeID of remote proposer")
 	log.Debug("term", "term", term)
@@ -88,6 +88,7 @@ func (s *RemoteProposer) fetchNodeID(contractInstance *dpor.ProposerRegister, rs
 
 // FetchNodeInfoAndDial fetches remote proposer's nodeID from contract and dial with it
 func (s *RemoteProposer) FetchNodeInfoAndDial(
+	term uint64,
 	validator common.Address,
 	server *p2p.Server,
 	rsaKey *rsakey.RsaKey,
@@ -96,7 +97,7 @@ func (s *RemoteProposer) FetchNodeInfoAndDial(
 
 	// fetch the nodeID of the remote signer if not fetched yet.
 	if len(s.getNodeID()) == 0 {
-		err := s.fetchNodeID(contractInstance, rsaKey, validator)
+		err := s.fetchNodeID(term, contractInstance, rsaKey, validator)
 		if err != nil {
 			log.Warn("err when fetching signer's nodeID from contract", "err", err)
 			return false, err
