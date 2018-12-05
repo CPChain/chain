@@ -217,7 +217,7 @@ func TestRemoteSigner(T *testing.T) {
 
 	// upload all
 	go func() {
-		succeed, err := remoteV.UploadNodeInfo(nodeID, auth, contractInstance, simulatedBackend)
+		succeed, err := remoteV.UploadNodeInfo(term, nodeID, auth, contractInstance, simulatedBackend)
 		fmt.Println("succeed", succeed, "err", err)
 	}()
 
@@ -232,8 +232,8 @@ func TestRemoteSigner(T *testing.T) {
 
 	// fetch it
 
-	remoteP := backend.NewRemoteProposer(term, p1Addr)
-	succeed, err := remoteP.FetchNodeInfoAndDial(v1Addr, nil, v1Key.RsaKey, contractInstance)
+	remoteP := backend.NewRemoteProposer(p1Addr)
+	succeed, err := remoteP.FetchNodeInfoAndDial(term, v1Addr, nil, v1Key.RsaKey, contractInstance)
 	fmt.Println("succeed", succeed, "err", err)
 
 }
