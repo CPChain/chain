@@ -62,11 +62,6 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
 		input, inputType, msgCode = block, BlockType, PreprepareMsgCode
 
-		err = vh.knownBlocks.AddBlock(block)
-		if err != nil {
-			return err
-		}
-
 		log.Debug("received preprepare block msg", "number", block.NumberU64())
 
 	case PrepareHeaderMsg:
@@ -258,7 +253,6 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 // handleLbftMsg handles given msg with lbft (lightweighted bft) mode
 func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 
-	// TODO: @liuq fix this.
 	switch {
 	case msg.Code == PreprepareBlockMsg:
 		// sign the block and broadcast PrepareSignedHeaderMsg
