@@ -302,6 +302,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		}
 		log.Debug("Stored voting Snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 	}
+
+	dpor.currentSnapshot = newSnap
+
 	return newSnap, err
 }
 
