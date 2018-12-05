@@ -85,8 +85,6 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbas
 
 		isProposer = isProposer || isP
 		isValidator = isValidator || isV
-
-		log.Debug("addr when verify", "term", t, "addr", address.Hex(), "isP", isP, "isV", isV, "isProposer", isProposer, "isValidator", isValidator)
 	}
 
 	if (!isProposer && !isValidator) || err != nil {
