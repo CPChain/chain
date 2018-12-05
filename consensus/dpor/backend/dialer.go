@@ -78,14 +78,16 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbas
 
 	address, err := Handshake(p, rw, coinbase, term, futureTerm)
 
-	isProposer, isValidator := false, false
-	for t := term; t <= futureTerm; t++ {
-		isP, _ := d.dpor.VerifyProposerOf(address, t)
-		isV, _ := d.dpor.VerifyValidatorOf(address, t)
+	isProposer, isValidator := true, true
 
-		isProposer = isProposer || isP
-		isValidator = isValidator || isV
-	}
+	// isProposer, isValidator := false, false
+	// for t := term; t <= futureTerm; t++ {
+	// 	isP, _ := d.dpor.VerifyProposerOf(address, t)
+	// 	isV, _ := d.dpor.VerifyValidatorOf(address, t)
+
+	// 	isProposer = isProposer || isP
+	// 	isValidator = isValidator || isV
+	// }
 
 	if (!isProposer && !isValidator) || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)
