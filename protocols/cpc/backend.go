@@ -360,6 +360,8 @@ func (s *CpchainService) StartMining(local bool, contractCaller *backend.Contrac
 			dpor.Authorize(eb, wallet.SignHash)
 		}
 
+		log.Debug("server.nodeid", "enode", s.server.NodeInfo().Enode)
+
 		go dpor.StartMining(s.blockchain, contractCaller, s.server, s.protocolManager.BroadcastBlock)
 	}
 	if local {

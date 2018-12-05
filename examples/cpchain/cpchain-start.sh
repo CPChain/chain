@@ -56,16 +56,16 @@ $cpchain $args --ipcaddr ${ipc_path_base}6 --datadir data/data6  --rpcaddr 127.0
          --unlock "0x22a672eab2b1a3ff3ed91563205a56ca5a560e08" --password conf/password 2>data/logs/6.log &
 
 $cpchain $args --ipcaddr ${ipc_path_base}7 --datadir data/data7  --rpcaddr 127.0.0.1:8507 --grpcaddr 127.0.0.1:8607 --jsonrpchttpaddr 127.0.0.1:8707 --port 30317 --mine \
-         --unlock "0x7b2f052a372951d02798853e39ee56c895109992" --password conf/password 2>data/logs/7.log &
+         --unlock "0x7b2f052a372951d02798853e39ee56c895109992" --password conf/password 2>data/logs/7.log  --nodekey conf/nodekeys/node7.key &
 
 $cpchain $args --ipcaddr ${ipc_path_base}8 --datadir data/data8  --rpcaddr 127.0.0.1:8508 --grpcaddr 127.0.0.1:8608 --jsonrpchttpaddr 127.0.0.1:8708 --port 30318 --mine \
-         --unlock "0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"  --password conf/password 2>data/logs/8.log &
+         --unlock "0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"  --password conf/password 2>data/logs/8.log  --nodekey conf/nodekeys/node8.key &
 
 $cpchain $args --ipcaddr ${ipc_path_base}9 --datadir data/data9  --rpcaddr 127.0.0.1:8509 --grpcaddr 127.0.0.1:8609 --jsonrpchttpaddr 127.0.0.1:8709 --port 30319 --mine \
-         --unlock "0xe4d51117832e84f1d082e9fc12439b771a57e7b2"  --password conf/password 2>data/logs/9.log &
+         --unlock "0xe4d51117832e84f1d082e9fc12439b771a57e7b2"  --password conf/password 2>data/logs/9.log  --nodekey conf/nodekeys/node9.key &
 
 $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcaddr 127.0.0.1:8510 --grpcaddr 127.0.0.1:8610 --jsonrpchttpaddr 127.0.0.1:8710 --port 30320 --mine \
-         --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --password conf/password 2>data/logs/10.log &
+         --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --password conf/password 2>data/logs/10.log --nodekey conf/nodekeys/node10.key &
 
 
 # dlv is useful for debugging.  do not remove.
