@@ -66,6 +66,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 
 	// TODO: fix this
 	h.mode = LBFTMode
+	// h.mode = PBFTMode
 
 	return h
 }
@@ -127,22 +128,21 @@ func (h *Handler) Available() bool {
 // AddPeer adds a p2p peer to local peer set
 func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
 	coinbase := h.Coinbase()
-	term := h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
-	verifyProposerFn := h.dpor.VerifyProposerOf
-	verifyValidatorFn := h.dpor.VerifyValidatorOf
+	term := h.dpor.TermOf(h.dpor.GetCurrentBlock().NumberU64())
+	futureTerm := h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
 
-	amProposer, _ := verifyProposerFn(coinbase, term)
-	amValidator, _ := verifyValidatorFn(coinbase, term)
-	if !amProposer && !amValidator {
-		return "", false, false, ErrNotSigner
-	}
-
-	return h.dialer.AddPeer(version, p, rw, coinbase, term, verifyProposerFn, verifyValidatorFn)
+	return h.dialer.AddPeer(version, p, rw, coinbase, term, futureTerm)
 }
 
 // RemovePeer removes a p2p peer with its addr
 func (h *Handler) RemovePeer(addr string) error {
-	return h.dialer.removeRemoteProposers(addr)
+
+	log.Debug("removing dpor peer", "addr", addr)
+
+	_ = h.dialer.removeRemoteProposers(addr)
+	_ = h.dialer.removeRemoteValidators(addr)
+
+	return nil
 }
 
 // HandleMsg handles a msg of peer with id "addr"
@@ -188,6 +188,7 @@ func (h *Handler) SetServer(server *p2p.Server) error {
 // SetDporService sets dpor service to handler
 func (h *Handler) SetDporService(dpor DporService) error {
 	h.dpor = dpor
+	h.dialer.SetDporService(dpor)
 	return nil
 }
 

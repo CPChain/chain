@@ -457,6 +457,7 @@ func (f *Fetcher) loop() {
 					// If the delivered header does not match the promised number, drop the announcer
 					if header.Number.Uint64() != announce.number {
 						log.Debug("Invalid block number fetched", "peer", announce.origin, "hash", header.Hash().Hex(), "announced", announce.number, "provided", header.Number)
+						log.Warn("dropping peer in fetcher", "peer", announce.origin)
 						f.dropPeer(announce.origin)
 						f.forgetHash(hash)
 						continue
@@ -673,6 +674,8 @@ func (f *Fetcher) insert(peer string, block *types.Block) {
 		default:
 			// Something went very wrong, drop the peer
 			log.Debug("Propagated block verification failed", "peer", peer, "number", block.Number(), "hash", hash.Hex(), "err", err)
+
+			log.Warn("dropping peer in fetcher", "peer", peer)
 			f.dropPeer(peer)
 			return
 		}

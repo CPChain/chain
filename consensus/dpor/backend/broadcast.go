@@ -26,14 +26,14 @@ func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 			log.Debug("signer", "addr", addr.Hex())
 		}
 
-		if len(validators) >= int(h.config.TermLen) {
+		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
 			ready = true
 		}
 	}
 
-	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
-
 	committee := h.dialer.ValidatorsOfTerm(term)
+	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64(), "len(commmittee)", len(committee))
+
 	for addr, peer := range committee {
 		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
 		peer.AsyncSendPreprepareBlock(block)
@@ -59,14 +59,14 @@ func (h *Handler) BroadcastPreprepareImpeachBlock(block *types.Block) {
 			log.Debug("signer", "addr", addr.Hex())
 		}
 
-		if len(validators) >= int(h.config.TermLen) {
+		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
 			ready = true
 		}
 	}
 
-	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64())
-
 	committee := h.dialer.ValidatorsOfTerm(term)
+	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64(), "len(commmittee)", len(committee))
+
 	for addr, peer := range committee {
 		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
 		peer.AsyncSendPreprepareImpeachBlock(block)
@@ -80,8 +80,10 @@ func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 
 	term := h.dpor.TermOf(header.Number.Uint64())
 	committee := h.dialer.ValidatorsOfTerm(term)
+	log.Debug("broadcast new generated block to commttee", "number", header.Number.Uint64(), "len(commmittee)", len(committee))
 
-	for _, peer := range committee {
+	for addr, peer := range committee {
+		log.Debug("broadcast prepare header to commttee", "addr", addr.Hex())
 		peer.AsyncSendPrepareHeader(header)
 	}
 }
@@ -106,8 +108,10 @@ func (h *Handler) BroadcastCommitHeader(header *types.Header) {
 
 	term := h.dpor.TermOf(header.Number.Uint64())
 	committee := h.dialer.ValidatorsOfTerm(term)
+	log.Debug("broadcast new generated block to commttee", "number", header.Number.Uint64(), "len(commmittee)", len(committee))
 
-	for _, peer := range committee {
+	for addr, peer := range committee {
+		log.Debug("broadcast commit header to commttee", "addr", addr.Hex())
 		peer.AsyncSendCommitHeader(header)
 	}
 }
@@ -140,10 +144,13 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 		case <-futureTimer.C:
 
 			// check if still not received new block, if true, continue
-			if h.ReadyToImpeach() {
+			if h.ReadyToImpeach() && h.mode == PBFTMode {
 				// get empty block
 
+				log.Debug("prepare impeach msg")
+
 				impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, ImpeachPreprepareMsgCode)
+				_, _, _, _, _ = impeachHeader, act, dtype, msg, err
 
 				if impeachHeader != nil && act == BroadcastMsgAction && dtype == HeaderType && msg == PrepareMsgCode && err == nil {
 					header := impeachHeader.(*types.Header)

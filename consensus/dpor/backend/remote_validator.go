@@ -38,7 +38,7 @@ type RemoteValidator struct {
 // NewRemoteValidator creates a new NewRemoteValidator with given view idx and address.
 func NewRemoteValidator(term uint64, address common.Address) *RemoteValidator {
 	return &RemoteValidator{
-		RemoteSigner: NewRemoteSigner(term, address),
+		RemoteSigner: NewRemoteSigner(address),
 
 		queuedPreprepareBlocks: make(chan *types.Block, maxQueuedBlocks),
 		queuedPrepareHeaders:   make(chan *types.Header, maxQueuedHeaders),
@@ -82,8 +82,8 @@ func (s *RemoteValidator) fetchPubkey(contractInstance *dpor.ProposerRegister) e
 }
 
 // uploadNodeID encrypts proposer's node id with this remote validator's public key and update to the contract.
-func (s *RemoteValidator) uploadNodeID(nodeID string, auth *bind.TransactOpts, contractInstance *dpor.ProposerRegister, client ClientBackend) error {
-	term, validator := s.GetTerm(), s.Coinbase()
+func (s *RemoteValidator) uploadNodeID(term uint64, nodeID string, auth *bind.TransactOpts, contractInstance *dpor.ProposerRegister, client ClientBackend) error {
+	validator := s.Coinbase()
 
 	log.Debug("fetched rsa pubkey")
 	log.Debug(hex.Dump(s.getPublicKey()))
@@ -128,6 +128,7 @@ func (s *RemoteValidator) uploadNodeID(nodeID string, auth *bind.TransactOpts, c
 
 // UploadNodeInfo upload my nodeID the signer.
 func (s *RemoteValidator) UploadNodeInfo(
+	term uint64,
 	nodeID string,
 	auth *bind.TransactOpts,
 	contractInstance *dpor.ProposerRegister,
@@ -145,7 +146,6 @@ func (s *RemoteValidator) UploadNodeInfo(
 		}
 	}
 
-	term := s.GetTerm()
 	proposer := auth.From
 	validator := s.Coinbase()
 
@@ -156,7 +156,7 @@ func (s *RemoteValidator) UploadNodeInfo(
 
 	// update my nodeID to contract if already know the public key of the remote signer and not updated yet.
 	if len(s.getPublicKey()) != 0 && len(nodeid) == 0 {
-		err := s.uploadNodeID(nodeID, auth, contractInstance, client)
+		err := s.uploadNodeID(term, nodeID, auth, contractInstance, client)
 		if err != nil {
 			log.Warn("err when updating my node id to contract", "err", err)
 			return false, err

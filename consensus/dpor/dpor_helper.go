@@ -302,6 +302,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		}
 		log.Debug("Stored voting Snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 	}
+
+	dpor.currentSnapshot = newSnap
+
 	return newSnap, err
 }
 
@@ -420,6 +423,10 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 		return consensus.ErrNotEnoughSigs
 	}
 
+	if dh.isTimeToDialValidators(dpor, dpor.chain) {
+		dh.uploadNodeInfo(dpor, snap, number)
+	}
+
 	// pass
 	return nil
 }
@@ -519,12 +526,7 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 
 	header := chain.CurrentHeader()
 	number := header.Number.Uint64()
-
-	// Retrieve the Snapshot needed to verify this header and cache it
-	snap, err := dh.snapshot(dpor, chain, number, header.Hash(), nil)
-	if err != nil {
-		return false
-	}
+	snap := dpor.currentSnapshot
 
 	// Some debug info
 	log.Debug("my address", "eb", dpor.signer.Hex())
@@ -549,7 +551,7 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 
 	// If in a checkpoint and self is in the future committee, try to build the committee network
 	isCheckpoint := IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen)
-	isFutureSigner := snap.IsFutureSignerOf(dpor.signer, number)
+	isFutureSigner := snap.IsFutureProposerOf(dpor.signer, number)
 	ifStartDynamic := snap.isStartElection()
 
 	return isCheckpoint && isFutureSigner && ifStartDynamic

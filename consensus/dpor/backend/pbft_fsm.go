@@ -73,9 +73,8 @@ const CacheSize = 200
 //DporSm is a struct containing variables used for state transition in FSM
 type DporSm struct {
 	lock      sync.RWMutex
+	state     consensus.State
 	stateLock sync.RWMutex
-
-	state consensus.State
 
 	service         DporService
 	prepareSigState SigState
@@ -148,6 +147,8 @@ func (sm *DporSm) commitCertificate(h *types.Header) bool {
 			count++
 		}
 	}
+
+	log.Debug("commit certificate", "count", count)
 	return count >= 2*sm.f+1
 }
 
@@ -181,8 +182,6 @@ func (sm *DporSm) composeValidateMsg(h *types.Header) (*types.Block, error) {
 
 // commitMsgPlus merge the signatures of commit messages
 func (sm *DporSm) commitMsgPlus(h *types.Header) error {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
 
 	sm.refreshWhenNewerHeight(h.Number.Uint64())
 
@@ -212,6 +211,8 @@ func (sm *DporSm) commitMsgPlus(h *types.Header) error {
 		return checkErr
 	}
 
+	sm.lock.Lock()
+
 	// merge signature to state
 	hash := h.Hash()
 	for i, s := range signers {
@@ -220,10 +221,14 @@ func (sm *DporSm) commitMsgPlus(h *types.Header) error {
 			sig:  sigs[i],
 		}
 	}
+
+	sm.lock.Unlock()
+
 	return nil
 }
 
 func (sm *DporSm) composeCommitMsg(h *types.Header) (*types.Header, error) {
+	// TODO: add lock here
 	if sm.lastHeight > h.Number.Uint64() {
 		return nil, ErrBlockTooOld
 	}
@@ -253,13 +258,12 @@ func (sm *DporSm) prepareCertificate(h *types.Header) bool {
 			count++
 		}
 	}
+	log.Debug("prepare certificate", "count", count)
 	return count >= 2*sm.f+1
 }
 
 // Add one to the counter of prepare messages
 func (sm *DporSm) prepareMsgPlus(h *types.Header) error {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
 
 	sm.refreshWhenNewerHeight(h.Number.Uint64())
 
@@ -289,6 +293,8 @@ func (sm *DporSm) prepareMsgPlus(h *types.Header) error {
 		return checkErr
 	}
 
+	sm.lock.Lock()
+
 	// merge signature to state
 	hash := h.Hash()
 	for i, s := range signers {
@@ -297,11 +303,14 @@ func (sm *DporSm) prepareMsgPlus(h *types.Header) error {
 			sig:  sigs[i],
 		}
 	}
+	sm.lock.Unlock()
+
 	return nil
 }
 
 // It is used to compose prepare message given a newly proposed block
 func (sm *DporSm) composePrepareMsg(b *types.Block) (*types.Header, error) {
+	// TODO: lock!
 	if sm.lastHeight >= b.NumberU64() {
 		return nil, ErrBlockTooOld
 	}

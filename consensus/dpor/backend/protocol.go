@@ -102,7 +102,6 @@ var errorToString = map[int]string{
 type SignerStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address
-	Term            uint64
 }
 
 func errResp(code errCode, format string, v ...interface{}) error {

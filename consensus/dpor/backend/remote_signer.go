@@ -33,16 +33,14 @@ type RemoteSigner struct {
 	rw      p2p.MsgReadWriter
 	version int
 
-	term    uint64
 	address common.Address
 
 	lock sync.RWMutex
 }
 
 // NewRemoteSigner creates a new remote signer
-func NewRemoteSigner(term uint64, address common.Address) *RemoteSigner {
+func NewRemoteSigner(address common.Address) *RemoteSigner {
 	return &RemoteSigner{
-		term:    term,
 		address: address,
 	}
 
@@ -56,21 +54,21 @@ func (s *RemoteSigner) Coinbase() common.Address {
 	return s.address
 }
 
-// SetTerm sets term of signer
-func (s *RemoteSigner) SetTerm(term uint64) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+// // SetTerm sets term of signer
+// func (s *RemoteSigner) SetTerm(term uint64) {
+// 	s.lock.Lock()
+// 	defer s.lock.Unlock()
 
-	s.term = term
-}
+// 	s.term = term
+// }
 
-// GetTerm sets term of signer
-func (s *RemoteSigner) GetTerm() uint64 {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
+// // GetTerm sets term of signer
+// func (s *RemoteSigner) GetTerm() uint64 {
+// 	s.lock.RLock()
+// 	defer s.lock.RUnlock()
 
-	return s.term
-}
+// 	return s.term
+// }
 
 // AddStatic adds remote validator as a static peer
 func (s *RemoteSigner) AddStatic(srv *p2p.Server) error {
@@ -111,7 +109,7 @@ func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) e
 }
 
 // Handshake tries to handshake with remote validator
-func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, verifyProposerFn VerifyFutureSignerFn, verifyValidatorFn VerifyFutureSignerFn) (isProposer bool, isValidator bool, address common.Address, err error) {
+func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, futureTerm uint64) (address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var signerStatus SignerStatusData // safe to read after two values have been received from errc
@@ -120,12 +118,11 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term 
 		err := p2p.Send(rw, NewSignerMsg, &SignerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
 			Address:         coinbase,
-			Term:            term,
 		})
 		errc <- err
 	}()
 	go func() {
-		isProposer, isValidator, address, err = ReadValidatorStatus(p, rw, &signerStatus, verifyProposerFn, verifyValidatorFn)
+		address, err = ReadValidatorStatus(p, rw, &signerStatus, term, futureTerm)
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -135,42 +132,37 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term 
 		case err := <-errc:
 			if err != nil {
 				log.Debug("err when handshaking", "err", err)
-				return false, false, common.Address{}, err
+				return common.Address{}, err
 			}
 		case <-timeout.C:
 			log.Debug("handshaking time out", "err", err)
-			return false, false, common.Address{}, p2p.DiscReadTimeout
+			return common.Address{}, p2p.DiscReadTimeout
 		}
 	}
-	return false, isValidator, address, nil
+	return address, nil
 }
 
 // ReadValidatorStatus reads status of remote validator
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *SignerStatusData, verifyProposerFn VerifyFutureSignerFn, verifyValidatorFn VerifyFutureSignerFn) (isProposer bool, isValidator bool, address common.Address, err error) {
+func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *SignerStatusData, term uint64, futureTerm uint64) (address common.Address, err error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
-		return false, false, common.Address{}, err
+		return common.Address{}, err
 	}
 	if msg.Code != NewSignerMsg {
-		return false, false, common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
+		return common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
 	}
 	if msg.Size > ProtocolMaxMsgSize {
-		return false, false, common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+		return common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 	}
 	// Decode the handshake and make sure everything matches
 	if err := msg.Decode(&signerStatusData); err != nil {
-		return false, false, common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
+		return common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
 	if int(signerStatusData.ProtocolVersion) != ProtocolVersion {
-		return false, false, common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatusData.ProtocolVersion, ProtocolVersion)
+		return common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatusData.ProtocolVersion, ProtocolVersion)
 	}
 
-	// TODO: this (addr, ...) pair should be signed with its private key.
-	// @liuq
-
-	isProposer, err = verifyProposerFn(signerStatusData.Address, signerStatusData.Term)
-	isValidator, err = verifyValidatorFn(signerStatusData.Address, signerStatusData.Term)
-	return isProposer, isValidator, signerStatusData.Address, err
+	return signerStatusData.Address, err
 }
 
 // fetchNodeID fetches node id of proposer encrypted with validator's public key
@@ -178,7 +170,6 @@ func fetchNodeID(term uint64, proposer common.Address, validator common.Address,
 	callOpts := &bind.CallOpts{
 		From: validator,
 	}
-	fmt.Println("contract instance", contractInstance)
 	encryptedNodeID, err := contractInstance.GetNodeInfo(callOpts, big.NewInt(int64(term)), proposer)
 	if err != nil {
 		return nil, err
