@@ -347,7 +347,11 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			case backend.IsDporMsg(msg) && dporEngine.Mode() == dpor.NormalMode:
 				// case backend.IsDporMsg(msg) && (isProposer || isValidator):
 				err = dporProtocol.HandleMsg(id, msg)
-				if err != nil {
+				switch err {
+				case nil:
+				case consensus.ErrUnknownAncestor:
+
+				default:
 					log.Warn("8888 err when handling dpor msg", "err", err)
 					return err
 				}

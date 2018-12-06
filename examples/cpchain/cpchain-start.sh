@@ -24,7 +24,7 @@ echo "[*] Starting cpchain nodes"
 #DebugLevel	5
 
 
-args="run --networkid 42 --verbosity 5 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber"
+args="run --networkid 42 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber"
 
 #start bootnode service
 ./bootnode-start.sh 2>data/logs/bootnode.log &
