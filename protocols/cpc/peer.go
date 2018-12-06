@@ -587,7 +587,7 @@ func (p *peer) readSignerStatus(signerStatus *signerStatusData, signerValidator 
 	}
 	isSigner, err = signerValidator(signerStatus.Address)
 	log.Debug("cpchain committee network handshaking...")
-	log.Debug("peer is signer", "peer", signerStatus.Address, isSigner)
+	log.Debug("peer is signer", "peer", signerStatus.Address, "isSigner", isSigner)
 	return isSigner, err
 }
 

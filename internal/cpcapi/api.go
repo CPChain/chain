@@ -485,26 +485,33 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	committeAddress = s.b.CommitteMember()
 
 	for _, rodeAddr := range rNodeAddress {
-		for _, comAddr := range committeAddress {
-			if comAddr == rodeAddr {
-				score := s.b.CalcRptInfo(comAddr, bn)
-				r := cpclient.RNodes{
-					Address: comAddr,
-					Rpt:     score,
-					Status:  cpclient.Committee,
-				}
-				RNodes = append(RNodes, r)
-			}
-		}
+		isCommittee := IsCommittee(rodeAddr, committeAddress)
+		role := getRole(isCommittee)
 		score := s.b.CalcRptInfo(rodeAddr, bn)
 		r := cpclient.RNodes{
 			Address: rodeAddr,
 			Rpt:     score,
-			Status:  cpclient.Candidate,
+			Status:  role,
 		}
 		RNodes = append(RNodes, r)
 	}
 	return RNodes
+}
+
+func IsCommittee(rodeAddr common.Address, committeAddress []common.Address) bool {
+	for _, comAddr := range committeAddress {
+		if comAddr == rodeAddr {
+			return true
+		}
+	}
+	return false
+}
+
+func getRole(isCommittee bool) int {
+	if isCommittee {
+		return cpclient.Committee
+	}
+	return cpclient.Candidate
 }
 
 // GetCommittees return current view
