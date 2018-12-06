@@ -326,7 +326,7 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 			log.Warn("Downloader wants to drop peer, but peerdrop-function is not set", "peer", id)
 		} else {
 			log.Warn("dropping peer in downloader", "peer", id)
-			d.dropPeer(id)
+			// d.dropPeer(id)
 		}
 
 	case consensus.ErrNotEnoughSigs:
@@ -414,9 +414,9 @@ func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, ht *big.I
 			d.mux.Post(DoneEvent{})
 		}
 	}()
-	if p.version < 62 {
-		return errTooOld
-	}
+	// if p.version < 62 {
+	// 	return errTooOld
+	// }
 
 	log.Debug("Synchronising with the network", "peer", p.id, "eth", p.version, "head", hash, "td", ht, "mode", d.mode)
 	defer func(start time.Time) {
