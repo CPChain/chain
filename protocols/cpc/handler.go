@@ -109,13 +109,6 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	// initialize a sub-protocol for every implemented version we can handle
 	manager.SubProtocols = make([]p2p.Protocol, 0, len(ProtocolVersions))
 
-	var dporProtocol consensus.Protocol
-	if config.Dpor != nil {
-		if dpor, ok := engine.(*dpor.Dpor); ok {
-			dporProtocol = dpor.Protocol()
-		}
-	}
-
 	for i, version := range ProtocolVersions {
 		// compatible; initialise the sub-protocol
 		manager.SubProtocols = append(manager.SubProtocols, p2p.Protocol{
@@ -123,88 +116,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 			Version: version,
 			Length:  ProtocolLengths[i],
 			Run: func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
-
-				// return if dpor is still not initialized
-				if config.Dpor != nil && !dporProtocol.Available() {
-					log.Warn("8888 dpor handler is not not available now")
-					return nil
-				}
-
-				// wrap up the peer
-				peer := manager.newPeer(int(version), p, rw)
-
-				// either we quit or we wait on accepting a new peer by syncer
-				select {
-				case manager.newPeerCh <- peer:
-					manager.wg.Add(1)
-					defer manager.wg.Done()
-					// stuck in the message loop on this peer
-
-					// Add peer to manager.peers, this is for basic msg syncing
-					err := manager.addPeer(peer)
-					if err != nil {
-						log.Warn("8888 faile to add peer to cpc protocol manager's peer set", "err", err)
-						return err
-					}
-
-					defer manager.removePeer(peer.id)
-
-					// add peer to dpor.handler.peers, this is for pbft/lbft msg handling
-					id, _, _ := common.Address{}.Hex(), false, false
-					id, _, _, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
-					switch err {
-					case nil:
-						defer dporProtocol.RemovePeer(id)
-
-					default:
-
-						log.Warn("8888 faile to add peer to dpor's peer set", "err", err)
-						return err
-					}
-
-					// send local pending transactions to the peer.
-					// new transactions appearing after this will be sent via broadcasts.
-					manager.syncTransactions(peer)
-
-					for {
-						msg, err := peer.rw.ReadMsg()
-						if err != nil {
-							log.Warn("8888 err when reading msg", "err", err)
-							return err
-						}
-
-						defer msg.Discard()
-
-						if msg.Size > ProtocolMaxMsgSize {
-							log.Warn("8888 err when checking msg size", "size", msg.Size)
-							return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-						}
-
-						switch {
-						case backend.IsSyncMsg(msg):
-							err = manager.handleSyncMsg(msg, peer)
-							if err != nil {
-								log.Warn("8888 err when handling sync msg", "err", err)
-								return err
-							}
-
-						case backend.IsDporMsg(msg):
-							// case backend.IsDporMsg(msg) && (isProposer || isValidator):
-							err = dporProtocol.HandleMsg(id, msg)
-							if err != nil {
-								log.Warn("8888 err when handling dpor msg", "err", err)
-								return err
-							}
-
-						default:
-							log.Warn("8888 unknown msg code", "msg", msg.Code)
-						}
-
-					}
-
-				case <-manager.quitSync:
-					return p2p.DiscQuitting
-				}
+				return manager.handlePeer(p, rw, version)
 			},
 			NodeInfo: func() interface{} {
 				// TODO: add dpor pbft status to this if dpor is available
@@ -284,38 +196,6 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	// sends out data
 	go pm.txsyncLoop()
 
-	// update, avoid stop
-	// go pm.update()
-}
-
-// Periodically updates the block head
-func (pm *ProtocolManager) update() {
-	futureTimer := time.NewTicker(10 * time.Second)
-	defer futureTimer.Stop()
-
-	prev := pm.blockchain.CurrentHeader()
-
-	for {
-		select {
-		case <-futureTimer.C:
-			current := pm.blockchain.CurrentHeader()
-
-			// if still not updated, notice my peers my status.
-			if prev.Number.Uint64() == current.Number.Uint64() {
-				currentBlock := pm.blockchain.CurrentBlock()
-				log.Debug("broadcast updating block")
-
-				// TODO @liuq the logic should be fetch new blocks
-				go pm.BroadcastBlock(currentBlock, true)
-				go pm.BroadcastBlock(currentBlock, false)
-			} else {
-				prev = current
-			}
-
-		case <-pm.quitSync:
-			return
-		}
-	}
 }
 
 // Stop stops all
@@ -392,22 +272,97 @@ func (pm *ProtocolManager) addPeer(p *peer) error {
 	return nil
 }
 
-// // handleMsg is invoked whenever an *inbound* message is received from a remote
-// // peer. The remote connection is torn down upon returning any error.
-// func (pm *ProtocolManager) handleMsg(p *peer) error {
+func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version uint) error {
 
-// 	// Read the next message from the remote peer, and ensure it's fully consumed
-// 	msg, err := p.rw.ReadMsg()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if msg.Size > ProtocolMaxMsgSize {
-// 		return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-// 	}
-// 	defer msg.Discard()
+	dporEngine := pm.engine.(*dpor.Dpor)
+	dporProtocol := dporEngine.Protocol()
 
-// 	return pm.handleSyncMsg(msg, p)
-// }
+	if dporEngine.Mode() == dpor.NormalMode && !dporProtocol.Available() {
+		// return if dpor is still not initialized
+		log.Warn("8888 dpor handler is not not available now")
+		return nil
+	}
+
+	// wrap up the peer
+	peer := pm.newPeer(int(version), p, rw)
+
+	// either we quit or we wait on accepting a new peer by syncer
+	select {
+	case pm.newPeerCh <- peer:
+		pm.wg.Add(1)
+		defer pm.wg.Done()
+		// stuck in the message loop on this peer
+
+		// Add peer to manager.peers, this is for basic msg syncing
+		err := pm.addPeer(peer)
+		if err != nil {
+			log.Warn("8888 faile to add peer to cpc protocol manager's peer set", "err", err)
+			return err
+		}
+
+		defer pm.removePeer(peer.id)
+
+		id, _, _ := common.Address{}.Hex(), false, false
+		if dporEngine.Mode() == dpor.NormalMode {
+			// add peer to dpor.handler.peers, this is for pbft/lbft msg handling
+			id, _, _, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
+			switch err {
+			case nil:
+				defer dporProtocol.RemovePeer(id)
+
+			default:
+
+				log.Warn("8888 faile to add peer to dpor's peer set", "err", err)
+				return err
+			}
+
+		}
+
+		// send local pending transactions to the peer.
+		// new transactions appearing after this will be sent via broadcasts.
+		pm.syncTransactions(peer)
+
+		for {
+			msg, err := peer.rw.ReadMsg()
+			if err != nil {
+				log.Warn("8888 err when reading msg", "err", err)
+				return err
+			}
+
+			defer msg.Discard()
+
+			if msg.Size > ProtocolMaxMsgSize {
+				log.Warn("8888 err when checking msg size", "size", msg.Size)
+				return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+			}
+
+			switch {
+			case backend.IsSyncMsg(msg):
+				err = pm.handleSyncMsg(msg, peer)
+				if err != nil {
+					log.Warn("8888 err when handling sync msg", "err", err)
+					return err
+				}
+
+			case backend.IsDporMsg(msg) && dporEngine.Mode() == dpor.NormalMode:
+				// case backend.IsDporMsg(msg) && (isProposer || isValidator):
+				err = dporProtocol.HandleMsg(id, msg)
+				if err != nil {
+					log.Warn("8888 err when handling dpor msg", "err", err)
+					return err
+				}
+
+			default:
+				log.Warn("8888 unknown msg code", "msg", msg.Code)
+			}
+
+		}
+
+	case <-pm.quitSync:
+		return p2p.DiscQuitting
+	}
+
+}
 
 func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 	// Handle the message depending on its contents
