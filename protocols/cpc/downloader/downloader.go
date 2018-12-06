@@ -316,8 +316,8 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 	case nil:
 	case errBusy:
 
-	case errTimeout, errBadPeer, errStallingPeer,
-		errEmptyHeaderSet, errPeersUnavailable, errTooOld,
+	case errTimeout, errStallingPeer,
+		errEmptyHeaderSet, errTooOld,
 		errInvalidAncestor, errInvalidChain:
 		log.Warn("Synchronisation failed, dropping peer", "peer", id, "err", err)
 		if d.dropPeer == nil {
@@ -326,8 +326,11 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 			log.Warn("Downloader wants to drop peer, but peerdrop-function is not set", "peer", id)
 		} else {
 			log.Warn("dropping peer in downloader", "peer", id)
-			// d.dropPeer(id)
+			d.dropPeer(id)
 		}
+
+	case errBadPeer, errPeersUnavailable:
+		// TODO: @liuq fix this
 
 	case consensus.ErrNotEnoughSigs:
 		log.Debug("Not enough signatures, waiting", "err", err)
