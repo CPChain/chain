@@ -8,9 +8,11 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/p2p/discover"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -39,6 +41,8 @@ type Dialer struct {
 	recentProposers  *lru.ARCCache
 	recentValidators *lru.ARCCache
 
+	defaultValidators []string
+
 	lock           sync.RWMutex // to protect basic fields
 	proposersLock  sync.RWMutex // to protect recent proposers
 	validatorsLock sync.RWMutex // to protect recent validators
@@ -54,10 +58,11 @@ func NewDialer(
 	validators, _ := lru.NewARC(maxTermsOfRemoteSigners)
 
 	return &Dialer{
-		coinbase:         coinbase,
-		contractAddress:  contractAddr,
-		recentProposers:  proposers,
-		recentValidators: validators,
+		coinbase:          coinbase,
+		contractAddress:   contractAddr,
+		recentProposers:   proposers,
+		recentValidators:  validators,
+		defaultValidators: configs.CpchainValidators,
 	}
 }
 
@@ -280,19 +285,31 @@ func (d *Dialer) UpdateRemoteValidators(term uint64, validators []common.Address
 // DialAllRemoteProposers dials all remote proposers
 func (d *Dialer) DialAllRemoteProposers(term uint64) error {
 
-	d.lock.RLock()
-	rsaKey, server := d.rsaKey, d.server
-	validator := d.coinbase
-	contractInstance := d.contractInstance
-	d.lock.RUnlock()
+	// d.lock.RLock()
+	// rsaKey, server := d.rsaKey, d.server
+	// validator := d.coinbase
+	// contractInstance := d.contractInstance
+	// d.lock.RUnlock()
 
-	proposers := d.ProposersOfTerm(term)
+	// proposers := d.ProposersOfTerm(term)
 
-	for _, p := range proposers {
-		_, err := p.FetchNodeInfoAndDial(term, validator, server, rsaKey, contractInstance)
+	// for _, p := range proposers {
+	// 	_, err := p.FetchNodeInfoAndDial(term, validator, server, rsaKey, contractInstance)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	return nil
+}
+
+func (d *Dialer) DialAllRemoteValidators(term uint64) error {
+	for _, validatorId := range d.defaultValidators {
+		node, err := discover.ParseNode(validatorId)
 		if err != nil {
-			return err
+			continue
 		}
+		d.server.AddPeer(node)
 	}
 
 	return nil
@@ -423,6 +440,10 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 		validator, _ := d.recentValidators.Get(addr)
 		validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
 		// }
+	}
+
+	if len(validators) < 4 {
+		go d.DialAllRemoteValidators(term)
 	}
 
 	return validators

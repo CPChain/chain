@@ -29,3 +29,8 @@ func (ph *Handler) UpdateRemoteValidators(term uint64, validators []common.Addre
 func (ph *Handler) UploadEncryptedNodeInfo(term uint64) error {
 	return ph.dialer.UploadEncryptedNodeInfo(term)
 }
+
+// TODO: @liuq fix this
+func (ph *Handler) DialAllRemoteValidators(term uint64) error {
+	return ph.dialer.DialAllRemoteValidators(term)
+}

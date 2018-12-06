@@ -570,8 +570,11 @@ func (dh *defaultDporHelper) uploadNodeInfo(dpor *Dpor, snap *DporSnapshot, numb
 		log.Warn("err when updating remote validators", "err", err)
 
 		// Connect all
-		err = dpor.validatorHandler.UploadEncryptedNodeInfo(eIdx)
-		log.Warn("err when uploading my node info", "err", err)
+		// err = dpor.validatorHandler.UploadEncryptedNodeInfo(eIdx)
+		// log.Warn("err when uploading my node info", "err", err)
+
+		err = dpor.validatorHandler.DialAllRemoteValidators(eIdx)
+		log.Warn("err when dialing remote validators", "err", err)
 
 	}(term, signers)
 

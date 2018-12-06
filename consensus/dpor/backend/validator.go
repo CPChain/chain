@@ -38,6 +38,7 @@ func (vh *Handler) dialLoop() {
 					}
 
 					go vh.dialer.DialAllRemoteProposers(term)
+					go vh.dialer.DialAllRemoteValidators(term)
 				}
 			}
 			block = blk
