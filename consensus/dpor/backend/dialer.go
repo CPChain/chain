@@ -442,9 +442,6 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 		// }
 	}
 
-	if len(validators) < 4 {
-		go d.DialAllRemoteValidators(term)
-	}
 
 	return validators
 }
