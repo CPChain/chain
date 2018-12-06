@@ -73,6 +73,10 @@ type Dpor struct {
 	lock sync.RWMutex // Protects the signer fields
 }
 
+func (d *Dpor) Mode() Mode {
+	return d.fake
+}
+
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
 func New(config *configs.DporConfig, db database.Database) *Dpor {
