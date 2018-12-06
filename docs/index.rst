@@ -7,13 +7,17 @@ Welcome to docs's documentation!
 ================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 4
+   :caption: Contents
 
+   deployment/deployment
    consensus/dpor
    consensus/proposer
    consensus/validator
    consensus/glossary
+   contract/smart_contract
+   api/web3.cpc
+
 
 
 .. Indices and tables

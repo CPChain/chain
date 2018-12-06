@@ -485,29 +485,36 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	committeAddress = s.b.CommitteMember()
 
 	for _, rodeAddr := range rNodeAddress {
-		for _, comAddr := range committeAddress {
-			if comAddr == rodeAddr {
-				score := s.b.CalcRptInfo(comAddr, bn)
-				r := cpclient.RNodes{
-					Address: comAddr,
-					Rpt:     score,
-					Status:  cpclient.Committee,
-				}
-				RNodes = append(RNodes, r)
-			}
-		}
+		isCommittee := IsCommittee(rodeAddr, committeAddress)
+		role := getRole(isCommittee)
 		score := s.b.CalcRptInfo(rodeAddr, bn)
 		r := cpclient.RNodes{
 			Address: rodeAddr,
 			Rpt:     score,
-			Status:  cpclient.Candidate,
+			Status:  role,
 		}
 		RNodes = append(RNodes, r)
 	}
 	return RNodes
 }
 
-// GetCurrentView return current view
+func IsCommittee(rodeAddr common.Address, committeAddress []common.Address) bool {
+	for _, comAddr := range committeAddress {
+		if comAddr == rodeAddr {
+			return true
+		}
+	}
+	return false
+}
+
+func getRole(isCommittee bool) int {
+	if isCommittee {
+		return cpclient.Committee
+	}
+	return cpclient.Candidate
+}
+
+// GetCommittees return current view
 func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
 	CurrentView := s.b.CurrentView()
 	return CurrentView
@@ -521,12 +528,13 @@ func (s *PublicBlockChainAPI) GetCurrentTerm() uint64 {
 
 // GetCommittees return current committees
 func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
+
 	v := s.b.CurrentView()
 	t := s.b.CurrentTerm()
 	bn := s.b.CurrentBlock()
 	var committees []cpclient.Committees
 
-	for i := uint64(0); i < t; i++ {
+	for i := uint64(0); i < v; i++ {
 		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(bn.Header().Number.Uint64())-rpc.BlockNumber(i))
 		if err != nil {
 			log.Error("can't get header", "error", err)

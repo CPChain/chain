@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	// bloomServiceThreads is the number of goroutines used globally by an Ethereum
+	// bloomServiceThreads is the number of goroutines used globally by a cpchain
 	// instance to service bloombits lookups for all running filters.
 	bloomServiceThreads = 16
 
@@ -49,20 +49,20 @@ const (
 
 // startBloomHandlers starts a batch of goroutines to accept bloom bit database
 // retrievals from possibly a range of filters and serving the data to satisfy.
-func (eth *CpchainService) startBloomHandlers() {
+func (s *CpchainService) startBloomHandlers() {
 	for i := 0; i < bloomServiceThreads; i++ {
 		go func() {
 			for {
 				select {
-				case <-eth.shutdownChan:
+				case <-s.shutdownChan:
 					return
 
-				case request := <-eth.bloomRequests:
+				case request := <-s.bloomRequests:
 					task := <-request
 					task.Bitsets = make([][]byte, len(task.Sections))
 					for i, section := range task.Sections {
-						head := rawdb.ReadCanonicalHash(eth.chainDb, (section+1)*configs.BloomBitsBlocks-1)
-						if compVector, err := rawdb.ReadBloomBits(eth.chainDb, task.Bit, section, head); err == nil {
+						head := rawdb.ReadCanonicalHash(s.chainDb, (section+1)*configs.BloomBitsBlocks-1)
+						if compVector, err := rawdb.ReadBloomBits(s.chainDb, task.Bit, section, head); err == nil {
 							if blob, err := bitutil.DecompressBytes(compVector, int(configs.BloomBitsBlocks)/8); err == nil {
 								task.Bitsets[i] = blob
 							} else {
@@ -90,7 +90,7 @@ const (
 )
 
 // BloomIndexer implements a core.ChainIndexer, building up a rotated bloom bits index
-// for the Ethereum header bloom filters, permitting blazing fast filtering.
+// for the cpchain header bloom filters, permitting blazing fast filtering.
 type BloomIndexer struct {
 	size uint64 // section size to generate bloombits for
 

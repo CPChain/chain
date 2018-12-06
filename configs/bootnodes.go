@@ -1,4 +1,4 @@
-// Copyright 2015 The cpchain authors
+// Copyright 2018 The cpchain authors
 
 package configs
 
