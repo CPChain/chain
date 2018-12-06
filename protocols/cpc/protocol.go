@@ -16,7 +16,7 @@ import (
 
 // Constants to match up protocol versions and messages
 const (
-	cpc1 = 64
+	cpc1 = 1
 )
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.

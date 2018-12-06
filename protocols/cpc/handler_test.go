@@ -63,7 +63,6 @@ func TestProtocolCompatibility(t *testing.T) {
 
 // Tests that block headers can be retrieved from a remote chain based on user queries.
 func TestGetBlockHeaders(t *testing.T) {
-	t.Skip("ignore temporarily") // TODO: @liuq will fix it
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxHashFetch+15, nil, nil)
 	peer, _ := newTestPeer("peer", 64, pm, true)
 	defer peer.close()
@@ -223,7 +222,6 @@ func TestGetBlockHeaders(t *testing.T) {
 
 // Tests that block contents can be retrieved from a remote chain based on their hashes.
 func TestGetBlockBodies(t *testing.T) {
-	t.Skip() // TODO: @liuq will fix it
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxBlockFetch+15, nil, nil)
 	peer, _ := newTestPeer("peer", 64, pm, true)
 	defer peer.close()
@@ -236,10 +234,10 @@ func TestGetBlockBodies(t *testing.T) {
 		available []bool        // Availability of explicitly requested blocks
 		expected  int           // Total number of existing blocks to expect
 	}{
-		{1, nil, nil, 1},             // A single random block should be retrievable
-		{10, nil, nil, 10},           // Multiple random blocks should be retrievable
-		{limit, nil, nil, limit},     // The maximum possible blocks should be retrievable
-		{limit + 1, nil, nil, limit}, // No more than the possible block count should be returned
+		{1, nil, nil, 1},                                                         // A single random block should be retrievable
+		{10, nil, nil, 10},                                                       // Multiple random blocks should be retrievable
+		{limit, nil, nil, limit},                                                 // The maximum possible blocks should be retrievable
+		{limit + 1, nil, nil, limit},                                             // No more than the possible block count should be returned
 		{0, []common.Hash{pm.blockchain.Genesis().Hash()}, []bool{true}, 1},      // The genesis block should be retrievable
 		{0, []common.Hash{pm.blockchain.CurrentBlock().Hash()}, []bool{true}, 1}, // The chains head block should be retrievable
 		{0, []common.Hash{{}}, []bool{false}, 0},                                 // A non existent block should not be returned
@@ -295,7 +293,6 @@ func TestGetBlockBodies(t *testing.T) {
 func TestGetNodeData64(t *testing.T) { testGetNodeData(t, 64) }
 
 func testGetNodeData(t *testing.T, protocol int) {
-	t.Skip() // TODO: @liuq will fix it
 
 	// Define three accounts to simulate transactions with
 	acc1Key, _ := crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
@@ -380,7 +377,6 @@ func testGetNodeData(t *testing.T, protocol int) {
 func TestGetReceipt64(t *testing.T) { testGetReceipt(t, 64) }
 
 func testGetReceipt(t *testing.T, protocol int) {
-	t.Skip() // TODO: @liuq will fix it
 	// Define three accounts to simulate transactions with
 	acc1Key, _ := crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
 	acc2Key, _ := crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")

@@ -80,7 +80,6 @@ func testStatusMsgErrors(t *testing.T, protocol int) {
 func TestRecvTransactionsCpc1(t *testing.T) { testRecvTransactions(t, 1) }
 
 func testRecvTransactions(t *testing.T, protocol int) {
-	t.Skip("the testcase hang up forever, it seems issue in P2P stuff") // TODO: @liuq fix it
 	txAdded := make(chan []*types.Transaction)
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 0, nil, txAdded)
 	pm.acceptTxs = 1 // mark synced to accept transactions
@@ -109,7 +108,6 @@ func testRecvTransactions(t *testing.T, protocol int) {
 func TestSendTransactionsCpc1(t *testing.T) { testSendTransactions(t, 1) }
 
 func testSendTransactions(t *testing.T, protocol int) {
-	t.Skip("the testcase hang up forever, it seems issue in P2P stuff") // TODO: @liuq fix it
 	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 0, nil, nil)
 	defer pm.Stop()
 
