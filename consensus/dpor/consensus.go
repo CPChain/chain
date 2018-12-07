@@ -175,7 +175,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	}
 
 	// Set the correct difficulty
-	header.Difficulty = d.dh.calcDifficulty(snap, d.proposer)
+	header.Difficulty = d.dh.calcDifficulty(snap, d.Coinbase())
 
 	// Ensure the extra data has all its components
 	if len(header.Extra) < extraVanity {
@@ -230,14 +230,14 @@ func (d *Dpor) Authorize(signer common.Address, signFn SignFn) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	d.signer = signer
+	d.coinbase = signer
 	d.signFn = signFn
 
-	if d.validatorHandler == nil {
-		d.validatorHandler = backend.NewHandler(d.config, d.Signer())
+	if d.handler == nil {
+		d.handler = backend.NewHandler(d.config, d.Coinbase())
 	}
-	if d.validatorHandler.Coinbase() != signer {
-		d.validatorHandler.SetCoinbase(signer)
+	if d.handler.Coinbase() != signer {
+		d.handler.SetCoinbase(signer)
 	}
 }
 
@@ -258,7 +258,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	}
 	// Don't hold the signer fields for the entire sealing procedure
 	d.lock.RLock()
-	signer, signFn := d.signer, d.signFn
+	signer, signFn := d.coinbase, d.signFn
 	d.lock.RUnlock()
 
 	// Bail out if we're unauthorized to sign a block
@@ -267,7 +267,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 
-	ok, err := snap.IsProposerOf(d.signer, number)
+	ok, err := snap.IsProposerOf(d.coinbase, number)
 	if err != nil {
 		log.Warn("Error occurs when seal block", "error", err)
 		return nil, err
@@ -319,7 +319,7 @@ func (d *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *
 	if err != nil {
 		return nil
 	}
-	return d.dh.calcDifficulty(snap, d.signer)
+	return d.dh.calcDifficulty(snap, d.coinbase)
 }
 
 // APIs implements consensus.Engine, returning the user facing RPC API to allow

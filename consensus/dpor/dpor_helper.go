@@ -483,7 +483,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	header.Dpor.Sigs = allSigs
 
 	// Sign the block if self is in the committee
-	if snap.IsValidatorOf(dpor.signer, number) {
+	if snap.IsValidatorOf(dpor.coinbase, number) {
 		// NOTE: sign a block only once
 		if signedHash, signed := dpor.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {
 			return errMultiBlocksInOneHeight
@@ -497,7 +497,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		} else {
 			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		}
-		sighash, err := dpor.signFn(accounts.Account{Address: dpor.signer}, hashToSign)
+		sighash, err := dpor.signFn(accounts.Account{Address: dpor.coinbase}, hashToSign)
 		if err != nil {
 			log.Warn("signing block header failed", "error", err)
 			return err
@@ -509,11 +509,11 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 
 		// Copy signer's signature to the right position in the allSigs
-		sigPos, _ := snap.ValidatorViewOf(dpor.signer, number)
+		sigPos, _ := snap.ValidatorViewOf(dpor.coinbase, number)
 		copy(header.Dpor.Sigs[sigPos][:], sighash)
 
 		// Record new sig to signature cache
-		s.(*Signatures).SetSig(dpor.signer, sighash)
+		s.(*Signatures).SetSig(dpor.coinbase, sighash)
 
 		return nil
 	}
@@ -529,10 +529,10 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 	snap := dpor.currentSnapshot
 
 	// Some debug info
-	log.Debug("my address", "eb", dpor.signer.Hex())
+	log.Debug("my address", "eb", dpor.coinbase.Hex())
 	log.Debug("current block number", "number", number)
 	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen))
-	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.signer, number))
+	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.coinbase, number))
 	log.Debug("term idx of block number", "block term index", snap.TermOf(number))
 
 	log.Debug("recent proposers: ")
@@ -551,7 +551,7 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 
 	// If in a checkpoint and self is in the future committee, try to build the committee network
 	isCheckpoint := IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen)
-	isFutureSigner := snap.IsFutureProposerOf(dpor.signer, number)
+	isFutureSigner := snap.IsFutureProposerOf(dpor.coinbase, number)
 	ifStartDynamic := snap.isStartElection()
 
 	return isCheckpoint && isFutureSigner && ifStartDynamic
@@ -566,14 +566,14 @@ func (dh *defaultDporHelper) uploadNodeInfo(dpor *Dpor, snap *DporSnapshot, numb
 
 	go func(eIdx uint64, committee []common.Address) {
 		// Updates handler.signers
-		err := dpor.validatorHandler.UpdateRemoteValidators(eIdx, committee)
+		err := dpor.handler.UpdateRemoteValidators(eIdx, committee)
 		log.Warn("err when updating remote validators", "err", err)
 
 		// Connect all
 		// err = dpor.validatorHandler.UploadEncryptedNodeInfo(eIdx)
 		// log.Warn("err when uploading my node info", "err", err)
 
-		err = dpor.validatorHandler.DialAllRemoteValidators(eIdx)
+		err = dpor.handler.DialAllRemoteValidators(eIdx)
 		log.Warn("err when dialing remote validators", "err", err)
 
 	}(term, signers)

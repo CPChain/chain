@@ -344,20 +344,20 @@ func (s *CpchainService) SetCoinbase(coinbase common.Address) {
 }
 
 func (s *CpchainService) StartMining(local bool, contractCaller *backend.ContractCaller) error {
-	eb, err := s.Coinbase()
+	coinbase, err := s.Coinbase()
 	if err != nil {
 		log.Error("Cannot start mining without coinbase", "err", err)
 		return fmt.Errorf("coinbase missing: %v", err)
 	}
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 
-		if dpor.Signer() != eb {
-			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
+		if dpor.Coinbase() != coinbase {
+			wallet, err := s.accountManager.Find(accounts.Account{Address: coinbase})
 			if wallet == nil || err != nil {
 				log.Error("Etherbase account unavailable locally", "err", err)
 				return nil
 			}
-			dpor.Authorize(eb, wallet.SignHash)
+			dpor.Authorize(coinbase, wallet.SignHash)
 		}
 
 		log.Debug("server.nodeid", "enode", s.server.NodeInfo().Enode)
@@ -371,7 +371,7 @@ func (s *CpchainService) StartMining(local bool, contractCaller *backend.Contrac
 		// will ensure that private networks work in single miner mode too.
 		atomic.StoreUint32(&s.protocolManager.acceptTxs, 1)
 	}
-	go s.miner.Start(eb)
+	go s.miner.Start(coinbase)
 
 	return nil
 }

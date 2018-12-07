@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/golang-lru"
 )
 
+// BroadcastBlockFn broadcasts a block to normal peers(not pbft replicas)
 type BroadcastBlockFn func(block *types.Block, prop bool)
 
 const (
@@ -50,13 +51,12 @@ type Dpor struct {
 
 	currentSnapshot *DporSnapshot
 
-	proposer common.Address // Cpchain address of the proposer
-	signer   common.Address // signer is the validator
+	coinbase common.Address // signer is the validator
 	signFn   SignFn         // Sign function to authorize hashes with
 
 	// TODO: add proposerHandler here @shiyc
 
-	validatorHandler *backend.Handler
+	handler *backend.Handler
 
 	fake           Mode // used for test, always accept a block.
 	fakeFail       uint64
@@ -98,14 +98,14 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 	signedBlocks := make(map[uint64]common.Hash)
 
 	return &Dpor{
-		dh:               &defaultDporHelper{&defaultDporUtil{}},
-		config:           &conf,
-		validatorHandler: backend.NewHandler(&conf, common.Address{}),
-		db:               db,
-		recents:          recents,
-		finalSigs:        finalSigs,
-		prepareSigs:      preparedSigs,
-		signedBlocks:     signedBlocks,
+		dh:           &defaultDporHelper{&defaultDporUtil{}},
+		config:       &conf,
+		handler:      backend.NewHandler(&conf, common.Address{}),
+		db:           db,
+		recents:      recents,
+		finalSigs:    finalSigs,
+		prepareSigs:  preparedSigs,
+		signedBlocks: signedBlocks,
 	}
 }
 
@@ -145,7 +145,7 @@ func (d *Dpor) SetContractCaller(contractCaller *backend.ContractCaller) error {
 func (d *Dpor) SetHandler(handler *backend.Handler) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-	d.validatorHandler = handler
+	d.handler = handler
 	return nil
 }
 
@@ -171,7 +171,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	fsm := backend.NewDporSm(d, 1)
 
 	// create a pbft handler
-	handler := d.validatorHandler
+	handler := d.handler
 
 	if err := handler.SetContractCaller(contractCaller); err != nil {
 		return
@@ -189,10 +189,10 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		return
 	}
 
-	d.validatorHandler = handler
+	d.handler = handler
 
-	log.Debug("set available!!!!!!!!!!!!!!!!!")
-	d.validatorHandler.SetAvailable()
+	log.Debug("set handler available!")
+	d.handler.SetAvailable()
 
 	header := d.chain.CurrentHeader()
 	number := header.Number.Uint64()
@@ -200,7 +200,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 
 	d.currentSnapshot, _ = d.dh.snapshot(d, d.chain, number, hash, nil)
 
-	go d.validatorHandler.Start()
+	go d.handler.Start()
 
 	return
 }
@@ -213,27 +213,22 @@ func (d *Dpor) Start() {
 
 // Stop stops dpor engine
 func (d *Dpor) Stop() {
-	log.Info("Dpor stopped")
+
+	d.handler.Stop()
 	return
 }
 
-func (d *Dpor) Signer() common.Address {
+// Coinbase returns current coinbase
+func (d *Dpor) Coinbase() common.Address {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	return d.signer
-}
-
-func (d *Dpor) Proposer() common.Address {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-
-	return d.proposer
+	return d.coinbase
 }
 
 // Protocol returns Dpor p2p protocol
 func (d *Dpor) Protocol() consensus.Protocol {
-	return d.validatorHandler.GetProtocol()
+	return d.handler.GetProtocol()
 }
 
 // PbftStatus returns current state of dpor
@@ -248,9 +243,10 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
-	return d.validatorHandler.ReceiveMinedPendingBlock(block)
+	return d.handler.ReceiveMinedPendingBlock(block)
 }
 
+// ImpeachTimeout returns impeach time out
 func (d *Dpor) ImpeachTimeout() time.Duration {
 	return d.config.ImpeachTimeout
 }

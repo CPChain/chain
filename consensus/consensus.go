@@ -54,12 +54,6 @@ type ChainReader interface {
 // ChainWriter reads and writes pending block to blockchain
 type ChainWriter interface {
 
-	// // AddPendingBlock adds given block to pending blocks cache
-	// AddPendingBlock(block *types.Block) error
-
-	// // GetPendingBlock retrieves a block from cache with given hash
-	// GetPendingBlock(hash common.Hash) *types.Block
-
 	// InsertChain inserts blocks to chain, returns fail index and error
 	InsertChain(chain types.Blocks) (int, error)
 }
@@ -119,11 +113,7 @@ type Engine interface {
 	GAPIs(chain ChainReader) []grpc.GApi
 }
 
-// Producer is used to produce a block in our PV(Producer-Validator) model.
-type Producer interface {
-	Engine
-}
-
+// Proposer is used to produce a block in our PV(Producer-Validator) model.
 type Proposer interface {
 	Engine
 }
@@ -131,26 +121,16 @@ type Proposer interface {
 // Validator is used to validate and sign a block
 type Validator interface {
 
-	// IsFutureSigner returns if a given address is a future signer.
-	IsFutureSigner(chain ChainReader, address common.Address, number uint64) (bool, error)
-
 	// ValidateBlock validates a basic field excepts seal of a block.
 	ValidateBlock(chain ChainReader, block *types.Block) error
 
 	// SignHeader signs a header in given state.
 	SignHeader(chain ChainReader, header *types.Header, state State) error
-
-	// SealBlock signs a block with own private key
-	SealBlock(chain ChainReader, block *types.Block) error
 }
 
 // PbftEngine is a pbft based consensus engine
 type PbftEngine interface {
 	Engine
-
-	// SignHeader signs the given header.
-	// Note: it doesn't check if the header is correct.
-	SignHeader(chain ChainReader, header *types.Header, state State) error
 
 	// State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
 	State() State
@@ -161,33 +141,17 @@ type PbftEngine interface {
 	// Stop stops all
 	Stop() error
 
-	Protocol() p2p.Protocol
+	Protocol() Protocol
 }
 
 // State is the pbft state
 type State uint8
 
 const (
-	// TODO: remove redundant states
-	// Prepreparing is a state in pbft notes that replica enters a new round
-	//Prepreparing State = iota
-
-	// Preparing is set if Preprepare msg is already sent, or received Preprepare msg and not entered Prepared yet, starting to broadcast
-	//Preparing
-
-	// Committing is set if received > 2f+1 same Preprepare msg from different replica, starting to broadcast Committing msg
-	//Committing
-
-	// Validating is set if received > 2f+1 same Prepare msg
-	//Validating
-
-	// Inserting is set if succeed to insert block into local chain
-	//Inserting
-
 	// Idle state is served as the first state in PBFT, ready to receive the proposed block
 	Idle State = iota
 
-	// Pre-prepared state is the second state. The validator can enter this state after receiving proposed block (pre-prepare) message.
+	// Preprepared state is the second state. The validator can enter this state after receiving proposed block (pre-prepare) message.
 	// It is ready to send prepare messages
 	Preprepared
 
@@ -195,11 +159,11 @@ const (
 	// It is about to broadcast commit messages
 	Prepared
 
-	// The validator transit to impeach pre-prepared state whenever the timer expires
+	// ImpeachPreprepared The validator transit to impeach pre-prepared state whenever the timer expires
 	// It is about to broadcast impeach prepare messages
 	ImpeachPreprepared
 
-	// Once a impeach prepare certificate is collected, a validator enters impeach prepared state
+	// ImpeachPrepared Once a impeach prepare certificate is collected, a validator enters impeach prepared state
 	ImpeachPrepared
 )
 

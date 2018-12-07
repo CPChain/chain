@@ -125,7 +125,7 @@ func TestDpor_Prepare(t *testing.T) {
 				recents:      tt.fields.recents,
 				finalSigs:    tt.fields.signatures,
 				signedBlocks: tt.fields.signedBlocks,
-				signer:       tt.fields.signer,
+				coinbase:     tt.fields.signer,
 				signFn:       tt.fields.signFn,
 			}
 			if err := c.PrepareBlock(tt.args.chain, tt.args.header); (err != nil) != tt.wantErr {
@@ -168,7 +168,7 @@ func TestDpor_Seal(t *testing.T) {
 				recents:      tt.fields.recents,
 				finalSigs:    tt.fields.signatures,
 				signedBlocks: tt.fields.signedBlocks,
-				signer:       tt.fields.signer,
+				coinbase:     tt.fields.signer,
 				signFn:       tt.fields.signFn,
 				// lock:         tt.fields.lock,
 			}
@@ -198,8 +198,8 @@ func TestDpor_CalcDifficulty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Dpor{
-				dh:     &fakeDporHelper{verifySuccess: tt.verifySuccess, snapshotSuccess: tt.snapshotSuccess, dporUtil: &fakeDporUtil{success: tt.verifySuccess}},
-				signer: addr1,
+				dh:       &fakeDporHelper{verifySuccess: tt.verifySuccess, snapshotSuccess: tt.snapshotSuccess, dporUtil: &fakeDporUtil{success: tt.verifySuccess}},
+				coinbase: addr1,
 			}
 
 			got := c.CalcDifficulty(&FakeReader{}, 0, newHeader())
