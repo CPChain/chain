@@ -17,12 +17,12 @@
 package core
 
 import (
-	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"fmt"
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"

@@ -51,11 +51,8 @@ import (
 var (
 	blockInsertTimer = metrics.NewRegisteredTimer("chain/inserts", nil)
 
-	ErrNoGenesis             = errors.New("Genesis not found in chain")
-	ErrFailToAddPendingBlock = errors.New("fail to add pending block")
+	ErrNoGenesis = errors.New("Genesis not found in chain")
 )
-
-type Verify func() bool
 
 const (
 	bodyCacheLimit             = 256
@@ -143,30 +140,6 @@ type BlockChain struct {
 	ErrChan chan error
 }
 
-// // GetPendingBlock returns a pending block with given hash
-// func (bc *BlockChain) GetPendingBlock(hash common.Hash) *types.Block {
-// 	bc.mu.Lock()
-// 	defer bc.mu.Unlock()
-
-// 	if block, ok := bc.pendingBlocks.Get(hash); ok {
-// 		return block.(*types.Block)
-// 	}
-// 	return nil
-// }
-
-// // AddPendingBlock adds a pending block with given hash
-// func (bc *BlockChain) AddPendingBlock(block *types.Block) error {
-// 	bc.mu.Lock()
-// 	defer bc.mu.Unlock()
-
-// 	hash := block.Hash()
-
-// 	if bc.pendingBlocks.Add(hash, block) {
-// 		return nil
-// 	}
-// 	return ErrFailToAddPendingBlock
-// }
-
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
@@ -184,23 +157,20 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 	futureBlocks, _ := lru.New(maxFutureBlocks)
 	badBlocks, _ := lru.New(badBlockLimit)
 
-	// waitingSignatureBlocks, _ := lru.New(waitingSignatureBlockLimit)
-
 	bc := &BlockChain{
-		chainConfig:  chainConfig,
-		cacheConfig:  cacheConfig,
-		db:           db,
-		triegc:       prque.New(),
-		stateCache:   state.NewDatabase(db),
-		Quit:         make(chan struct{}),
-		bodyCache:    bodyCache,
-		bodyRLPCache: bodyRLPCache,
-		blockCache:   blockCache,
-		futureBlocks: futureBlocks,
-		engine:       engine,
-		vmConfig:     vmConfig,
-		badBlocks:    badBlocks,
-		// pendingBlocks:     waitingSignatureBlocks,
+		chainConfig:       chainConfig,
+		cacheConfig:       cacheConfig,
+		db:                db,
+		triegc:            prque.New(),
+		stateCache:        state.NewDatabase(db),
+		Quit:              make(chan struct{}),
+		bodyCache:         bodyCache,
+		bodyRLPCache:      bodyRLPCache,
+		blockCache:        blockCache,
+		futureBlocks:      futureBlocks,
+		engine:            engine,
+		vmConfig:          vmConfig,
+		badBlocks:         badBlocks,
 		privateStateCache: state.NewDatabase(db),
 		remoteDB:          remoteDB,
 		ErrChan:           make(chan error),
@@ -767,26 +737,6 @@ func (bc *BlockChain) procFutureBlocks() {
 		}
 	}
 }
-
-// func (bc *BlockChain) procPendingBlocks() {
-// 	blocks := make([]*types.Block, 0, bc.pendingBlocks.Len())
-// 	for _, hash := range bc.pendingBlocks.Keys() {
-// 		if block, exist := bc.pendingBlocks.Peek(hash); exist {
-// 			blocks = append(blocks, block.(*types.Block))
-// 		}
-// 	}
-
-// 	if len(blocks) > 0 {
-// 		types.BlockBy(types.Number).Sort(blocks)
-
-// 		// Insert one by one as chain insertion needs contiguous ancestry between blocks
-// 		for i := range blocks {
-// 			_, err := bc.InsertChain(blocks[i : i+1])
-// 			bc.ErrChan <- err
-// 			log.Debug("err of pending insert, go to bc.ErrChan", "err", err)
-// 		}
-// 	}
-// }
 
 // WriteStatus status of write
 type WriteStatus byte
