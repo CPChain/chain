@@ -5,126 +5,112 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
-// BroadcastPreprepareBlock broadcasts generated block to committee
+func waitForEnoughValidator(h *Handler, term uint64) (validators map[common.Address]*RemoteValidator) {
+	ready := false
+	for !ready {
+
+		validators := h.dialer.ValidatorsOfTerm(term)
+
+		log.Debug("validators in dpor handler when broadcasting...")
+		for addr := range validators {
+			log.Debug("validator", "addr", addr.Hex())
+		}
+
+		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
+			ready = true
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+	return validators
+}
+
+// BroadcastPreprepareBlock broadcasts generated block to validators
 func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 
 	log.Debug("proposed new pending block, broadcasting")
 
-	ready := false
 	term := h.dpor.TermOf(block.NumberU64())
+	validators := waitForEnoughValidator(h, term)
 
-	// wait until there is enough validators
-	for !ready {
-		time.Sleep(1 * time.Second)
-
-		validators := h.dialer.ValidatorsOfTerm(term)
-
-		log.Debug("signer in dpor handler when broadcasting...")
-		for addr := range validators {
-			log.Debug("signer", "addr", addr.Hex())
-		}
-
-		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
-			ready = true
-		}
-	}
-
-	committee := h.dialer.ValidatorsOfTerm(term)
-	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64(), "len(commmittee)", len(committee))
-
-	for addr, peer := range committee {
-		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
+	for _, peer := range validators {
 		peer.AsyncSendPreprepareBlock(block)
 	}
 }
 
-// BroadcastPreprepareImpeachBlock broadcasts generated impeach block to committee
+// BroadcastPreprepareImpeachBlock broadcasts generated impeach block to validators
 func (h *Handler) BroadcastPreprepareImpeachBlock(block *types.Block) {
 
-	log.Debug("proposed new pending block, broadcasting")
+	log.Debug("proposed new pending impeach block, broadcasting")
 
-	ready := false
 	term := h.dpor.TermOf(block.NumberU64())
+	validators := waitForEnoughValidator(h, term)
 
-	// wait until there is enough validators
-	for !ready {
-		time.Sleep(1 * time.Second)
-
-		validators := h.dialer.ValidatorsOfTerm(term)
-
-		log.Debug("signer in dpor handler when broadcasting...")
-		for addr := range validators {
-			log.Debug("signer", "addr", addr.Hex())
-		}
-
-		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
-			ready = true
-		}
-	}
-
-	committee := h.dialer.ValidatorsOfTerm(term)
-	log.Debug("broadcast new generated block to commttee", "number", block.NumberU64(), "len(commmittee)", len(committee))
-
-	for addr, peer := range committee {
-		log.Debug("broadcast new generated block to commttee", "addr", addr.Hex())
+	for _, peer := range validators {
 		peer.AsyncSendPreprepareImpeachBlock(block)
 	}
 }
 
-// BroadcastPrepareHeader broadcasts signed prepare header to remote committee
+// BroadcastPrepareHeader broadcasts signed prepare header to remote validators
 func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	term := h.dpor.TermOf(header.Number.Uint64())
-	committee := h.dialer.ValidatorsOfTerm(term)
-	log.Debug("broadcast new generated block to commttee", "number", header.Number.Uint64(), "len(commmittee)", len(committee))
+	log.Debug("composed prepare header msg, broadcasting", "number", header.Number.Uint64())
 
-	for addr, peer := range committee {
-		log.Debug("broadcast prepare header to commttee", "addr", addr.Hex())
+	term := h.dpor.TermOf(header.Number.Uint64())
+	validators := waitForEnoughValidator(h, term)
+
+	for _, peer := range validators {
 		peer.AsyncSendPrepareHeader(header)
 	}
 }
 
-// BroadcastPrepareImpeachHeader broadcasts signed impeach prepare header to remote committee
+// BroadcastPrepareImpeachHeader broadcasts signed impeach prepare header to remote validators
 func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	term := h.dpor.TermOf(header.Number.Uint64())
-	committee := h.dialer.ValidatorsOfTerm(term)
+	log.Debug("composed prepare impeach header msg, broadcasting", "number", header.Number.Uint64())
 
-	for _, peer := range committee {
+	term := h.dpor.TermOf(header.Number.Uint64())
+	validators := waitForEnoughValidator(h, term)
+
+	for _, peer := range validators {
 		peer.AsyncSendPrepareImpeachHeader(header)
 	}
 }
 
-// BroadcastCommitHeader broadcasts signed commit header to remote committee
+// BroadcastCommitHeader broadcasts signed commit header to remote validators
 func (h *Handler) BroadcastCommitHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	term := h.dpor.TermOf(header.Number.Uint64())
-	committee := h.dialer.ValidatorsOfTerm(term)
-	log.Debug("broadcast new generated block to commttee", "number", header.Number.Uint64(), "len(commmittee)", len(committee))
+	log.Debug("composed commit header msg, broadcasting", "number", header.Number.Uint64())
 
-	for addr, peer := range committee {
-		log.Debug("broadcast commit header to commttee", "addr", addr.Hex())
+	term := h.dpor.TermOf(header.Number.Uint64())
+	validators := waitForEnoughValidator(h, term)
+
+	for _, peer := range validators {
 		peer.AsyncSendCommitHeader(header)
 	}
 }
 
-// BroadcastCommitImpeachHeader broadcasts signed impeach commit header to remote committee
+// BroadcastCommitImpeachHeader broadcasts signed impeach commit header to remote validators
 func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	term := h.dpor.TermOf(header.Number.Uint64())
-	committee := h.dialer.ValidatorsOfTerm(term)
+	log.Debug("composed commit impeach header msg, broadcasting", "number", header.Number.Uint64())
 
-	for _, peer := range committee {
+	term := h.dpor.TermOf(header.Number.Uint64())
+	validators := waitForEnoughValidator(h, term)
+
+	for _, peer := range validators {
 		peer.AsyncSendCommitImpeachHeader(header)
 	}
 }
@@ -147,7 +133,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 			if h.ReadyToImpeach() && h.mode == PBFTMode {
 				// get empty block
 
-				log.Debug("prepare impeach msg")
+				log.Debug("composing preprepare impeach block msg")
 
 				impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, ImpeachPreprepareMsgCode)
 				_, _, _, _, _ = impeachHeader, act, dtype, msg, err
