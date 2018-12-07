@@ -11,8 +11,9 @@ import (
 func waitForEnoughValidator(h *Handler, term uint64) (validators map[common.Address]*RemoteValidator) {
 	ready := false
 	for !ready {
+		time.Sleep(1 * time.Second)
 
-		validators := h.dialer.ValidatorsOfTerm(term)
+		validators = h.dialer.ValidatorsOfTerm(term)
 
 		log.Debug("validators in dpor handler when broadcasting...")
 		for addr := range validators {
@@ -20,13 +21,11 @@ func waitForEnoughValidator(h *Handler, term uint64) (validators map[common.Addr
 		}
 
 		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
-			ready = true
-			break
+			return
 		}
 
-		time.Sleep(1 * time.Second)
 	}
-	return validators
+	return
 }
 
 // BroadcastPreprepareBlock broadcasts generated block to validators
@@ -63,7 +62,7 @@ func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 	log.Debug("composed prepare header msg, broadcasting", "number", header.Number.Uint64())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := waitForEnoughValidator(h, term)
+	validators := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range validators {
 		peer.AsyncSendPrepareHeader(header)
@@ -78,7 +77,7 @@ func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
 	log.Debug("composed prepare impeach header msg, broadcasting", "number", header.Number.Uint64())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := waitForEnoughValidator(h, term)
+	validators := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range validators {
 		peer.AsyncSendPrepareImpeachHeader(header)
@@ -93,7 +92,7 @@ func (h *Handler) BroadcastCommitHeader(header *types.Header) {
 	log.Debug("composed commit header msg, broadcasting", "number", header.Number.Uint64())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := waitForEnoughValidator(h, term)
+	validators := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range validators {
 		peer.AsyncSendCommitHeader(header)
@@ -108,7 +107,7 @@ func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
 	log.Debug("composed commit impeach header msg, broadcasting", "number", header.Number.Uint64())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := waitForEnoughValidator(h, term)
+	validators := h.dialer.ValidatorsOfTerm(term)
 
 	for _, peer := range validators {
 		peer.AsyncSendCommitImpeachHeader(header)
