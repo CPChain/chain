@@ -259,7 +259,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			// If we have explicit chainSeg, pick from there (enforced)
 			header = chainSeg[len(chainSeg)-1]
 			if header.Hash() != hash || header.Number.Uint64() != numberIter {
-				log.Info("8888888888888", "hash1", header.Hash().Hex(), "hash2", hash.Hex(), "number1", header.Number.Uint64(), "number2", numberIter)
+				log.Info("unknown ancestor", "hash1", header.Hash().Hex(), "hash2", hash.Hex(), "number1", header.Number.Uint64(), "number2", numberIter)
 				log.Debug("consensus.ErrUnknownAncestor 1")
 				return nil, consensus.ErrUnknownAncestor
 			}

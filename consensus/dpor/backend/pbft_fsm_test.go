@@ -40,7 +40,7 @@ func TestDporSm_Fsm(T *testing.T) {
 
 	dporFakeEngine := dpor.NewFaker(dporConfig, db)
 
-	fsm := backend.NewDporSm(dporEngine, 1)
+	fsm := backend.NewDporStateMachine(dporEngine, 1)
 
 	chain, _ := core.GenerateChain(config, genesis, dporFakeEngine, db, remoteDB, n, nil)
 	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, dporEngine, vm.Config{}, remoteDB, nil)

@@ -54,16 +54,16 @@ import (
 // 		})
 // 	}
 // }
-func TestHandler_IsAvailable(t *testing.T) {
+func TestHandler_Available(t *testing.T) {
 	var testHandler Handler
 	testHandler.available = false
 	//Test IsAvailable()
-	if testHandler.IsAvailable() != false {
-		t.Errorf("IsAvailable() = %v, want %v\n", testHandler.IsAvailable(), false)
+	if testHandler.Available() != false {
+		t.Errorf("IsAvailable() = %v, want %v\n", testHandler.Available(), false)
 	}
 	//Test SetAvailable()
 	testHandler.SetAvailable()
-	if testHandler.IsAvailable() != true {
+	if testHandler.Available() != true {
 		t.Errorf("SetAvailale() does not work\n")
 	}
 }

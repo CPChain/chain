@@ -25,7 +25,7 @@ var (
 
 	// ErrNotSigner is returned if i am not a signer when handshaking
 	// with remote signer
-	ErrNotSigner = errors.New("i am not a signer")
+	ErrNotSigner = errors.New("local peer is not in the PV committees")
 )
 
 // Handler implements PbftHandler
@@ -41,7 +41,7 @@ type Handler struct {
 
 	dialer *Dialer
 	snap   *consensus.PbftStatus
-	fsm    *DporSm
+	fsm    *DporStateMachine
 	dpor   DporService
 
 	knownBlocks    *RecentBlocks
@@ -117,14 +117,6 @@ func (h *Handler) Length() uint64 {
 	return ProtocolLength
 }
 
-// Available returns if handler is available
-func (h *Handler) Available() bool {
-	h.lock.RLock()
-	defer h.lock.RUnlock()
-
-	return h.available
-}
-
 // AddPeer adds a p2p peer to local peer set
 func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
 	coinbase := h.Coinbase()
@@ -193,7 +185,7 @@ func (h *Handler) SetDporService(dpor DporService) error {
 }
 
 // SetDporSm sets dpor state machine
-func (h *Handler) SetDporSm(fsm *DporSm) error {
+func (h *Handler) SetDporSm(fsm *DporStateMachine) error {
 	h.fsm = fsm
 	return nil
 }
@@ -216,18 +208,18 @@ func (h *Handler) SetCoinbase(coinbase common.Address) {
 	}
 }
 
-// IsAvailable returns if handler is available
-func (h *Handler) IsAvailable() bool {
-	h.lock.RLock()
-	defer h.lock.RUnlock()
-
-	return h.available
-}
-
 // SetAvailable sets available
 func (h *Handler) SetAvailable() {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
 	h.available = true
+}
+
+// Available returns if handler is available
+func (h *Handler) Available() bool {
+	h.lock.RLock()
+	defer h.lock.RUnlock()
+
+	return h.available
 }

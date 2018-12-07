@@ -168,7 +168,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
 
 	// TODO: @liq read f from config
-	fsm := backend.NewDporSm(d, 1)
+	fsm := backend.NewDporStateMachine(d, 1)
 
 	// create a pbft handler
 	handler := d.handler

@@ -17,17 +17,17 @@ import (
 )
 
 const (
-	maxTermsOfRemoteSigners = 10
+	maxNumOfRemoteSignersInCache = 10
 )
 
 // Dialer dials a remote peer
 type Dialer struct {
+	lock        sync.RWMutex
+	nodeID      string
+	server      *p2p.Server
+	rsaKey      *rsakey.RsaKey
+	coinbase    common.Address
 	currentTerm uint64
-
-	nodeID   string
-	server   *p2p.Server
-	rsaKey   *rsakey.RsaKey
-	coinbase common.Address
 
 	dpor DporService
 
@@ -38,24 +38,20 @@ type Dialer struct {
 	contractTransactor *bind.TransactOpts
 
 	// use lru caches to cache recent proposers and validators
-	recentProposers  *lru.ARCCache
+	recentProposers *lru.ARCCache
+	proposersLock   sync.RWMutex // to protect recent proposers
+
 	recentValidators *lru.ARCCache
+	validatorsLock   sync.RWMutex // to protect recent validators
 
 	defaultValidators []string
-
-	lock           sync.RWMutex // to protect basic fields
-	proposersLock  sync.RWMutex // to protect recent proposers
-	validatorsLock sync.RWMutex // to protect recent validators
 }
 
 // NewDialer creates a new dialer to dial remote peers
-func NewDialer(
-	coinbase common.Address,
-	contractAddr common.Address,
-) *Dialer {
+func NewDialer(coinbase common.Address, contractAddr common.Address) *Dialer {
 
-	proposers, _ := lru.NewARC(maxTermsOfRemoteSigners)
-	validators, _ := lru.NewARC(maxTermsOfRemoteSigners)
+	proposers, _ := lru.NewARC(maxNumOfRemoteSignersInCache)
+	validators, _ := lru.NewARC(maxNumOfRemoteSignersInCache)
 
 	return &Dialer{
 		coinbase:          coinbase,
@@ -66,6 +62,7 @@ func NewDialer(
 	}
 }
 
+// SetDporService sets dpor service to dialer
 func (d *Dialer) SetDporService(dpor DporService) {
 	d.dpor = dpor
 }
@@ -441,7 +438,6 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 		validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
 		// }
 	}
-
 
 	return validators
 }
