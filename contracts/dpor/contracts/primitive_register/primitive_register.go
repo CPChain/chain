@@ -7,6 +7,8 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/apibackend_holder"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"github.com/ethereum/go-ethereum/common"
@@ -64,7 +66,9 @@ func RegisterPrimitiveContracts(n node) {
 		log.Fatal("can't get rpc.client after start", "error", err)
 	}
 	client := cpclient.NewClient(rpcClient)
-	for addr, c := range MakePrimitiveContracts(client) {
+	contractClient := client
+	chainClient := getChainClient(client)
+	for addr, c := range MakePrimitiveContracts(contractClient, chainClient) {
 		err = vm.RegisterPrimitiveContract(addr, c)
 		if err != nil {
 			log.Fatal("register primitive contract error", "error", err, "addr", addr)
@@ -74,12 +78,15 @@ func RegisterPrimitiveContracts(n node) {
 	GetPrimitiveContractCheckerInstance().SetAvailable(true)
 }
 
-func MakePrimitiveContracts(client *cpclient.Client) map[common.Address]vm.PrimitiveContract {
+func getChainClient(c *cpclient.Client) apibackend_holder.ChainApiClient {
+	return apibackend_holder.ChainApiClient{ApiBackend: apibackend_holder.GetApiBackendHolderInstance().ApiBackend}
+}
+
+func MakePrimitiveContracts(contractClient backend.ContractBackend, chainClient apibackend_holder.ChainApiClient) map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
 
 	// we start from 100 to reserve enough space for upstream primitive contracts.
-
-	RptEvaluator, err := primitives.NewRptEvaluator(client)
+	RptEvaluator, err := primitives.NewRptEvaluator(contractClient, chainClient)
 	if err != nil {
 		log.Fatal("s.RptEvaluator is file")
 	}

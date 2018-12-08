@@ -32,6 +32,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/apibackend_holder"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -194,6 +195,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission)
+	apibackend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend)
 	return cpc, nil
 }
 

@@ -24,9 +24,11 @@ import (
 	"math/big"
 	"sort"
 
+	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/apibackend_holder"
 	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	pdash "bitbucket.org/cpchain/chain/contracts/pdash/sol"
 	"bitbucket.org/cpchain/chain/types"
@@ -64,27 +66,37 @@ type RptPrimitiveBackend interface {
 }
 
 type RptEvaluator struct {
-	Client backend.ClientBackend
+	ContractClient backend.ContractBackend
+	ChainClient    apibackend_holder.ChainApiClient
 }
 
-func NewRptEvaluator(Client backend.ClientBackend) (*RptEvaluator, error) {
+func NewRptEvaluator(contractClient backend.ContractBackend, chainClient apibackend_holder.ChainApiClient) (*RptEvaluator, error) {
 	bc := &RptEvaluator{
-		Client: Client,
+		ContractClient: contractClient,
+		ChainClient:    chainClient,
 	}
 	return bc, nil
+}
+
+func getBalanceAt(ctx context.Context, apiBackend apibackend_holder.ChainAPIBackend, account common.Address, blockNumber *big.Int) (*big.Int, error) {
+	state, _, err := apiBackend.StateAndHeaderByNumber(ctx, rpc.BlockNumber(blockNumber.Uint64()), false)
+	if state == nil || err != nil {
+		return nil, err
+	}
+	return state.GetBalance(account), state.Error()
 }
 
 // GetCoinAge is the func to get rank to rpt
 func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, error) {
 	var balances []float64
-	myBalance, err := re.Client.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
+	myBalance, err := getBalanceAt(context.Background(), re.ChainClient.ApiBackend, address, big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
 		return 100, err // 100 represent give the address a default rank
 	}
 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
 	log.Info("campaign", "contractAddress", contractAddress)
-	intance, err := contract2.NewCampaign(contractAddress, re.Client)
+	intance, err := contract2.NewCampaign(contractAddress, re.ContractClient)
 	if err != nil {
 		log.Error("NewCampaign error", "error", err)
 		return 100, err // 100 represent give the address a default rank
@@ -96,7 +108,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 		return 100, err // 100 represent give the address a default rank
 	}
 	for _, committee := range rNodeAddress {
-		balance, err := re.Client.BalanceAt(context.Background(), committee, big.NewInt(int64(number)))
+		balance, err := getBalanceAt(context.Background(), re.ChainClient.ApiBackend, committee, big.NewInt(int64(number)))
 		if err != nil {
 			log.Error("error with bc.BalanceAt", "error", err)
 			return 100, err // 100 represent give the address a default rank
@@ -112,7 +124,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 
 // GetCoinAge is the func to get txVolume to rpt
 func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, error) {
-	block, err := re.Client.BlockByNumber(context.Background(), big.NewInt(int64(number)))
+	block, err := re.ChainClient.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Error("error with bc.getTxVolume", "error", err)
 		return 0, err
@@ -138,7 +150,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 	if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
-	block, err := re.Client.BlockByNumber(context.Background(), big.NewInt(int64(number)))
+	block, err := re.ChainClient.BlockByNumber(context.Background(), big.NewInt(int64(number)))
 	if err != nil {
 		log.Error("error with bc.getIfLeader", "error", err)
 		return 0, err
@@ -164,7 +176,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int64, error) {
 	uploadNumber := int64(0)
 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractRegister]
-	upload, err := pdash.NewRegister(contractAddress, re.Client)
+	upload, err := pdash.NewRegister(contractAddress, re.ContractClient)
 	if err != nil {
 		log.Error("NewRegister error", "error", err)
 		return uploadNumber, err
@@ -183,26 +195,26 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	isProxy = int64(0)
 	var proxyAddresses []common.Address
 	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractPdash]
-	pdash, err := pdash.NewPdash(contractAddress, re.Client)
+	pdashInstance, err := pdash.NewPdash(contractAddress, re.ContractClient)
 
 	if err != nil {
 		log.Error("NewPdash error", "error", err)
 		return proxyCount, 0, err
 	}
 
-	len, err := pdash.BlockOrdersLength(nil, big.NewInt(int64(number)))
+	len, err := pdashInstance.BlockOrdersLength(nil, big.NewInt(int64(number)))
 	if err != nil {
 		log.Error("BlockOrdersLength err", "error", err)
 		return proxyCount, 0, err
 	}
 
 	for i := 0; i < int(len.Int64()); i++ {
-		id, err := pdash.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
+		id, err := pdashInstance.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
 			log.Error("BlockOrders error", "error", err)
 			break
 		}
-		OrderRecord, err := pdash.OrderRecords(nil, id)
+		OrderRecord, err := pdashInstance.OrderRecords(nil, id)
 		proxyAddresses = append(proxyAddresses, OrderRecord.ProxyAddress)
 	}
 
@@ -214,12 +226,12 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	}
 
 	for i := 0; i < int(len.Int64()); i++ {
-		id, err := pdash.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
+		id, err := pdashInstance.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
 			log.Error("BlockOrders error", "error", err)
 			break
 		}
-		OrderRecord, err := pdash.OrderRecords(nil, id)
+		OrderRecord, err := pdashInstance.OrderRecords(nil, id)
 		if OrderRecord.ProxyAddress == address && OrderRecord.State == Finished {
 			proxyCount += 1
 			if proxyCount == 100 {
