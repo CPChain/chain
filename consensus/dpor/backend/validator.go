@@ -1,53 +1,11 @@
 package backend
 
 import (
-	"time"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/p2p"
 )
-
-// dialLoop loops to dial remote proposer if local peer is a validator
-func (vh *Handler) dialLoop() {
-
-	futureTimer := time.NewTicker(1 * time.Second)
-	defer futureTimer.Stop()
-
-	var block *types.Block
-
-	for {
-		select {
-		case <-futureTimer.C:
-			blk := vh.dpor.GetCurrentBlock()
-			if block != nil {
-				if blk.Number().Cmp(block.Number()) > 0 {
-					// if there is an updated block, try to dial future proposers
-					number := blk.NumberU64()
-					term := vh.dpor.FutureTermOf(number)
-
-					proposers, err := vh.dpor.ProposersOfTerm(term)
-					if err != nil {
-						log.Warn("err when call proposers of term", "err", err)
-					}
-
-					err = vh.dialer.UpdateRemoteProposers(term, proposers)
-					if err != nil {
-						log.Warn("err when update remote proposers", "err", err)
-					}
-
-					go vh.dialer.DialAllRemoteProposers(term)
-					go vh.dialer.DialAllRemoteValidators(term)
-				}
-			}
-			block = blk
-
-		case <-vh.quitSync:
-			return
-		}
-	}
-}
 
 // handlePbftMsg handles given msg with pbft mode
 func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteValidator) error {

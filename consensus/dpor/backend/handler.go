@@ -3,6 +3,7 @@ package backend
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -71,12 +72,37 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 	return h
 }
 
+// dialLoop loops to dial remote validators
+func (h *Handler) dialLoop() {
+
+	futureTimer := time.NewTicker(1 * time.Second)
+	defer futureTimer.Stop()
+
+	for {
+		select {
+		case <-futureTimer.C:
+
+			blk := h.dpor.GetCurrentBlock()
+			if blk != nil {
+				term := h.dpor.TermOf(blk.NumberU64())
+				if len(h.dialer.ValidatorsOfTerm(term)) < int(h.config.TermLen) {
+					go h.dialer.DialAllRemoteValidators(term)
+				}
+			} else {
+				go h.dialer.DialAllRemoteValidators(0)
+			}
+
+		case <-h.quitSync:
+			return
+		}
+	}
+}
+
 // Start starts pbft handler
 func (h *Handler) Start() {
 
-	if h.isValidator {
-		go h.dialLoop()
-	}
+	// always dial if there is not enough validators in peer set
+	go h.dialLoop()
 
 	// broadcast mined pending block, including empty block
 	go h.PendingBlockBroadcastLoop()
@@ -120,8 +146,14 @@ func (h *Handler) Length() uint64 {
 // AddPeer adds a p2p peer to local peer set
 func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
 	coinbase := h.Coinbase()
-	term := h.dpor.TermOf(h.dpor.GetCurrentBlock().NumberU64())
-	futureTerm := h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
+	var term, futureTerm uint64
+	blk := h.dpor.GetCurrentBlock()
+	if blk != nil {
+		term = h.dpor.TermOf(blk.NumberU64())
+		futureTerm = h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
+	} else {
+		term, futureTerm = 0, 0
+	}
 
 	return h.dialer.AddPeer(version, p, rw, coinbase, term, futureTerm)
 }
