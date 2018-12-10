@@ -276,25 +276,17 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, consensus.ErrUnauthorized
 	}
 
-	/*
-		// TODO: fix this logic.
-		// Sweet, the protocol permits us to sign the block, wait for our time
-		delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
-		if header.Difficulty.Cmp(diffNoTurn) == 0 {
-			// It's not our turn explicitly to sign, delay it a bit
-			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
-			delay += time.Duration(rand.Int63n(int64(wiggle)))
+	// Sweet, the protocol permits us to sign the block, wait for our time
+	delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
+	log.Debug("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
 
-			log.Debug("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
-		}
-		log.Debug("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
+	select {
+	case <-stop:
+		return nil, nil
+	case <-time.After(delay):
+		log.Debug("wait for seal", "delay", delay)
+	}
 
-		select {
-		case <-stop:
-			return nil, nil
-		case <-time.After(delay):
-		}
-	*/
 	// Proposer seals the block with signature
 	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header, []byte{}).Bytes())
 	if err != nil {

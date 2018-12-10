@@ -11,7 +11,6 @@ import (
 func waitForEnoughValidator(h *Handler, term uint64) (validators map[common.Address]*RemoteValidator) {
 	ready := false
 	for !ready {
-		time.Sleep(1 * time.Second)
 
 		validators = h.dialer.ValidatorsOfTerm(term)
 
@@ -24,6 +23,9 @@ func waitForEnoughValidator(h *Handler, term uint64) (validators map[common.Addr
 			return
 		}
 
+		go h.dialer.DialAllRemoteValidators(term)
+
+		time.Sleep(1 * time.Second)
 	}
 	return
 }

@@ -296,7 +296,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		// Add peer to manager.peers, this is for basic msg syncing
 		err := pm.addPeer(peer)
 		if err != nil {
-			log.Warn("8888 faile to add peer to cpc protocol manager's peer set", "err", err)
+			log.Warn("8888 fail to add peer to cpc protocol manager's peer set", "err", err)
 			return err
 		}
 
@@ -312,7 +312,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 			default:
 
-				log.Warn("8888 faile to add peer to dpor's peer set", "err", err)
+				log.Warn("8888 fail to add peer to dpor's peer set", "err", err)
 				return err
 			}
 

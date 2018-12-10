@@ -102,7 +102,9 @@ func (h *Handler) dialLoop() {
 func (h *Handler) Start() {
 
 	// always dial if there is not enough validators in peer set
-	go h.dialLoop()
+
+	go h.dialer.DialAllRemoteValidators(0)
+	// go h.dialLoop()
 
 	// broadcast mined pending block, including empty block
 	go h.PendingBlockBroadcastLoop()
