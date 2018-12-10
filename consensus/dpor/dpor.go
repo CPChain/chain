@@ -52,20 +52,22 @@ type Dpor struct {
 	currentSnapshot *DporSnapshot
 
 	coinbase common.Address // signer is the validator
-	signFn   SignFn         // Sign function to authorize hashes with
+	signFn   backend.SignFn // Sign function to authorize hashes with
 
 	// TODO: add proposerHandler here @shiyc
 
 	handler *backend.Handler
 
-	fake           Mode // used for test, always accept a block.
-	fakeFail       uint64
-	fakeDelay      time.Duration // Time delay to sleep for before returning from verify
-	contractCaller *backend.ContractCaller
+	fake      Mode // used for test, always accept a block.
+	fakeFail  uint64
+	fakeDelay time.Duration // Time delay to sleep for before returning from verify
+
+	// contractCaller *backend.ContractCaller
 
 	pbftState consensus.State
 
-	chain consensus.ChainReadWriter
+	client backend.ClientBackend
+	chain  consensus.ChainReadWriter
 
 	pmBroadcastBlockFn BroadcastBlockFn
 	quitSync           chan struct{}
@@ -133,13 +135,13 @@ func NewFakeDelayer(config *configs.DporConfig, db database.Database, delay time
 	return d
 }
 
-// SetContractCaller sets dpor.contractCaller
-func (d *Dpor) SetContractCaller(contractCaller *backend.ContractCaller) error {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-	d.contractCaller = contractCaller
-	return nil
-}
+// // SetContractCaller sets dpor.contractCaller
+// func (d *Dpor) SetContractCaller(contractCaller *backend.ContractCaller) error {
+// 	d.lock.Lock()
+// 	defer d.lock.Unlock()
+// 	d.contractCaller = contractCaller
+// 	return nil
+// }
 
 // SetHandler sets dpor.handler
 func (d *Dpor) SetHandler(handler *backend.Handler) error {
@@ -161,10 +163,10 @@ func (d *Dpor) IfSigned(header *types.Header) bool {
 }
 
 // StartMining starts to create a handler and start it.
-func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller *backend.ContractCaller, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
+func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, client backend.ClientBackend, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
 
 	d.chain = blockchain
-	d.contractCaller = contractCaller
+	d.client = client
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
 
 	// TODO: @liq read f from config
@@ -172,10 +174,6 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 
 	// create a pbft handler
 	handler := d.handler
-
-	if err := handler.SetContractCaller(contractCaller); err != nil {
-		return
-	}
 
 	if err := handler.SetServer(server); err != nil {
 		return
@@ -185,7 +183,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 		return
 	}
 
-	if err := handler.SetDporSm(fsm); err != nil {
+	if err := handler.SetDporStateMachine(fsm); err != nil {
 		return
 	}
 
@@ -205,14 +203,8 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, contractCaller 
 	return
 }
 
-// Start starts dpor engine to handle different phrases
-func (d *Dpor) Start() {
-	log.Info("Dpor started")
-	return
-}
-
-// Stop stops dpor engine
-func (d *Dpor) Stop() {
+// StopMining stops dpor engine
+func (d *Dpor) StopMining() {
 
 	d.handler.Stop()
 	return

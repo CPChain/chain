@@ -24,11 +24,11 @@ func (ph *Handler) UpdateRemoteValidators(term uint64, validators []common.Addre
 	return ph.dialer.UpdateRemoteValidators(term, validators)
 }
 
-// UploadEncryptedNodeInfo uploads local peer's nodeID to contract
-// this is called after UpdateRemoteValidators being done
-func (ph *Handler) UploadEncryptedNodeInfo(term uint64) error {
-	return ph.dialer.UploadEncryptedNodeInfo(term)
-}
+// // UploadEncryptedNodeInfo uploads local peer's nodeID to contract
+// // this is called after UpdateRemoteValidators being done
+// func (ph *Handler) UploadEncryptedNodeInfo(term uint64) error {
+// 	return ph.dialer.UploadEncryptedNodeInfo(term)
+// }
 
 // TODO: @liuq fix this
 func (ph *Handler) DialAllRemoteValidators(term uint64) error {

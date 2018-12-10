@@ -24,6 +24,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -103,7 +104,7 @@ func TestDpor_Prepare(t *testing.T) {
 		signatures   *lru.ARCCache
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
-		signFn       SignFn
+		signFn       backend.SignFn
 	}
 	type args struct {
 		chain  consensus.ChainReader
@@ -143,7 +144,7 @@ func TestDpor_Seal(t *testing.T) {
 		signatures   *lru.ARCCache
 		signedBlocks map[uint64]common.Hash
 		signer       common.Address
-		signFn       SignFn
+		signFn       backend.SignFn
 		// lock         sync.RWMutex
 	}
 	type args struct {

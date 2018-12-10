@@ -109,7 +109,7 @@ func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) e
 }
 
 // Handshake tries to handshake with remote validator
-func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, futureTerm uint64) (address common.Address, err error) {
+func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (address common.Address, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var signerStatus SignerStatusData // safe to read after two values have been received from errc
@@ -117,7 +117,8 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term 
 	go func() {
 		err := p2p.Send(rw, NewSignerMsg, &SignerStatusData{
 			ProtocolVersion: uint32(ProtocolVersion),
-			Address:         coinbase,
+			Mac:             mac,
+			Sig:             sig,
 		})
 		errc <- err
 	}()
@@ -162,7 +163,14 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *Si
 		return common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatusData.ProtocolVersion, ProtocolVersion)
 	}
 
-	return signerStatusData.Address, err
+	mac, sig := signerStatusData.Mac, signerStatusData.Sig
+	valid, address, err := ValidMacSig(mac, sig)
+	if valid {
+		return
+	}
+
+	address = common.Address{}
+	return
 }
 
 // fetchNodeID fetches node id of proposer encrypted with validator's public key

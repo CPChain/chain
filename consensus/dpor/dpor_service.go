@@ -2,11 +2,14 @@ package dpor
 
 import (
 	"math/big"
+	"time"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -218,4 +221,22 @@ func (d *Dpor) UpdateFinalSigsCache(validator common.Address, hash common.Hash, 
 		d.finalSigs.Add(hash, s)
 	}
 	s.(*Signatures).SetSig(validator, sig[:])
+}
+
+// GetMac signs a Mac
+func (d *Dpor) GetMac() (mac string, sig []byte, err error) {
+	prefix := "cpchain"
+	t := time.Now().Format(time.RFC3339)
+	split := "|"
+	mac = prefix + split + t
+
+	var hash common.Hash
+	hasher := sha3.NewKeccak256()
+	hasher.Write([]byte(mac))
+	hasher.Sum(hash[:0])
+
+	log.Debug("generated mac", "mac", mac)
+
+	sig, err = d.signFn(accounts.Account{Address: d.Coinbase()}, hash.Bytes())
+	return mac, sig, err
 }

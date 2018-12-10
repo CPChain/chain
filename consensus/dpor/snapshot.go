@@ -52,9 +52,9 @@ type DporSnapshot struct {
 	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
 	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
 
-	config         *configs.DporConfig     // Consensus engine parameters to fine tune behavior
-	ContractCaller *backend.ContractCaller `json:"-"`
-	rptBackend     rpt.RptService
+	config     *configs.DporConfig   // Consensus engine parameters to fine tune behavior
+	Client     backend.ClientBackend `json:"-"`
+	rptBackend rpt.RptService
 
 	lock sync.RWMutex
 }
@@ -235,18 +235,18 @@ func (s *DporSnapshot) setRecentProposers(term uint64, proposers []common.Addres
 
 }
 
-func (s *DporSnapshot) contractCaller() *backend.ContractCaller {
+func (s *DporSnapshot) client() backend.ClientBackend {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	return s.ContractCaller
+	return s.Client
 }
 
-func (s *DporSnapshot) setContractCaller(contractCaller *backend.ContractCaller) {
+func (s *DporSnapshot) setClient(client backend.ClientBackend) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.ContractCaller = contractCaller
+	s.Client = client
 }
 
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
@@ -272,7 +272,7 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, pr
 }
 
 // loadSnapshot loads an existing Snapshot from the database.
-func loadSnapshot(config *configs.DporConfig, caller *backend.ContractCaller, rpt rpt.RptService, db database.Database,
+func loadSnapshot(config *configs.DporConfig, client backend.ClientBackend, rpt rpt.RptService, db database.Database,
 	hash common.Hash) (*DporSnapshot, error) {
 
 	// Retrieve from db
@@ -287,7 +287,7 @@ func loadSnapshot(config *configs.DporConfig, caller *backend.ContractCaller, rp
 		return nil, err
 	}
 	snap.config = config
-	snap.ContractCaller = caller
+	snap.Client = client
 	snap.rptBackend = rpt
 
 	return snap, nil
@@ -333,7 +333,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 
 // apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.ContractCaller) (*DporSnapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBackend) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
@@ -351,7 +351,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, contractCaller *backend.Co
 
 	// Iterate through the headers and create a new Snapshot
 	snap := s.copy()
-	snap.setContractCaller(contractCaller)
+	snap.setClient(client)
 	log.Info("apply headers", "len(headers)", len(headers))
 	for _, header := range headers {
 		err := snap.applyHeader(header)
@@ -406,13 +406,13 @@ func (s *DporSnapshot) updateCandidates() error {
 	var candidates []common.Address
 
 	if s.Mode == NormalMode && s.isStartElection() {
-		contractCaller := s.contractCaller()
+		client := s.client()
 		// If contractCaller is not nil, use it to update candidates from contract
-		if contractCaller != nil {
+		if client != nil {
 			// Creates an contract instance
 			campaignAddress := s.config.Contracts[configs.ContractCampaign]
 			log.Info("campaignAddress", "addr", campaignAddress.Hex())
-			contractInstance, err := campaign.NewCampaign(campaignAddress, contractCaller.Client)
+			contractInstance, err := campaign.NewCampaign(campaignAddress, client)
 			if err != nil {
 				log.Error("new Campaign error", err)
 				return err
@@ -454,7 +454,7 @@ func (s *DporSnapshot) updateCandidates() error {
 // updateRpts updates rpts of candidates
 func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 
-	if s.contractCaller() == nil && s.Mode == NormalMode {
+	if s.client() == nil && s.Mode == NormalMode {
 		log.Warn("snapshot contract caller is nil")
 		s.Mode = FakeMode
 	}
@@ -464,7 +464,7 @@ func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 
 		rptBackend, err := s.rptBackend, error(nil)
 		if rptBackend == nil {
-			rptBackend, err = rpt.NewRptService(s.contractCaller().Client, s.config.Contracts[configs.ContractRpt])
+			rptBackend, err = rpt.NewRptService(s.client(), s.config.Contracts[configs.ContractRpt])
 		}
 		// rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
 		cs := s.candidates()

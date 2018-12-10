@@ -3,14 +3,19 @@ package backend
 import (
 	"context"
 	"math/big"
+	"strings"
 	"time"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
 // ClientBackend is the client operation interface
@@ -54,6 +59,10 @@ type RsaReader func() (*rsakey.RsaKey, error)
 
 // VerifySignerFn verifies if a signer is a signer at given term
 type VerifySignerFn func(address common.Address, term uint64) (bool, error)
+
+// SignFn is a signer callback function to request a hash to be signed by a
+// backing account.
+type SignFn func(accounts.Account, []byte) ([]byte, error)
 
 // DporService provides functions used by dpor handler
 type DporService interface {
@@ -126,6 +135,9 @@ type DporService interface {
 
 	// Update the signature to final signature cache(two kinds of sigs, one for prepared, another for final)
 	UpdateFinalSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature)
+
+	// GetMac signs a Mac
+	GetMac() (string, []byte, error)
 }
 
 type HandlerMode uint
@@ -134,3 +146,53 @@ const (
 	PBFTMode HandlerMode = iota
 	LBFTMode
 )
+
+// ValidMacSig recovers an address from a signature
+func ValidMacSig(mac string, sig []byte) (valid bool, signer common.Address, err error) {
+
+	log.Debug("received mac", "mac", mac)
+
+	// check if mac prefix is valid
+	split := "|"
+	s := strings.Split(mac, split)
+	if len(s) != 2 {
+		log.Debug("wrong mac format", "mac", mac)
+		return
+	}
+	prefix, timeString := s[0], s[1]
+	if prefix != "cpchain" {
+		log.Debug("wrong mac prefix", "prefix", prefix)
+		return
+	}
+
+	// check if remote time is valid
+	remoteTime, err := time.Parse(time.RFC3339, timeString)
+	if err != nil {
+		log.Debug("err when parsing time string", "time", timeString)
+		return
+	}
+	timeGap := time.Now().Sub(remoteTime)
+	log.Debug("remote time", "time", remoteTime.Format(time.RFC3339))
+	log.Debug("time gap", "seconds", timeGap.Seconds())
+
+	if timeGap.Seconds() > 3 {
+		return
+	}
+
+	var hash common.Hash
+	hasher := sha3.NewKeccak256()
+	hasher.Write([]byte(mac))
+	hasher.Sum(hash[:0])
+
+	// recover address
+	pubkey, err := crypto.Ecrecover(hash.Bytes(), sig)
+	if err != nil {
+		return
+	}
+	copy(signer[:], crypto.Keccak256(pubkey[1:])[12:])
+
+	// check passed
+	valid = true
+
+	return
+}

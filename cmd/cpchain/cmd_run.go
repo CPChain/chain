@@ -204,9 +204,17 @@ func startMining(ctx *cli.Context, n *node.Node) {
 			log.Fatalf("Cpchain service not running: %v", err)
 		}
 
+		// TODO: fix this, do not use *keystore.Key, use wallet instead
 		contractCaller := createContractCaller(ctx, n)
 		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
-		if err := cpchainService.StartMining(true, contractCaller); err != nil {
+
+		rpcClient, err := n.Attach()
+		if err != nil {
+			log.Fatalf("Failed to attach to self: %v", err)
+		}
+		client := cpclient.NewClient(rpcClient)
+
+		if err := cpchainService.StartMining(true, client); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
 		}
 	}

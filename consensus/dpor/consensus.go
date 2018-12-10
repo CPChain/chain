@@ -113,10 +113,6 @@ var (
 	errInvalidStateForSign = errors.New("the state is unexpected for signing header")
 )
 
-// SignFn is a signer callback function to request a hash to be signed by a
-// backing account.
-type SignFn func(accounts.Account, []byte) ([]byte, error)
-
 // Author implements consensus.Engine, returning the cpchain address recovered
 // from the signature in the header's extra-data section.
 func (d *Dpor) Author(header *types.Header) (common.Address, error) {
@@ -226,7 +222,7 @@ func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state
 
 // Authorize injects a private key into the consensus engine to mint new blocks
 // with.
-func (d *Dpor) Authorize(signer common.Address, signFn SignFn) {
+func (d *Dpor) Authorize(signer common.Address, signFn backend.SignFn) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -373,7 +369,7 @@ func (d *Dpor) State() consensus.State {
 }
 
 func (d *Dpor) GetCalcRptInfo(address common.Address, blockNum uint64) int64 {
-	instance, err := rpt.NewRptService(d.contractCaller.Client, d.config.Contracts[configs.ContractRpt])
+	instance, err := rpt.NewRptService(d.client, d.config.Contracts[configs.ContractRpt])
 	if err != nil {
 		log.Fatal("GetCalcRptInfo", "error", err)
 	}

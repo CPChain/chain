@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
@@ -101,7 +100,9 @@ var errorToString = map[int]string{
 
 type SignerStatusData struct {
 	ProtocolVersion uint32
-	Address         common.Address
+	Mac             string
+	Sig             []byte
+	// Address         common.Address
 }
 
 func errResp(code errCode, format string, v ...interface{}) error {

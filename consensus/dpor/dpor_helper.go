@@ -214,11 +214,11 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
 			log.Info("loading snapshot", "number", numberIter, "hash", hash)
 			var rptService rpt.RptService
-			if dpor.contractCaller != nil {
-				rptService, _ = rpt.NewRptService(dpor.contractCaller.Client, dpor.config.Contracts[configs.ContractRpt])
+			if dpor.client != nil {
+				rptService, _ = rpt.NewRptService(dpor.client, dpor.config.Contracts[configs.ContractRpt])
 			}
 
-			s, err := loadSnapshot(dpor.config, dpor.contractCaller, rptService, dpor.db, hash)
+			s, err := loadSnapshot(dpor.config, dpor.client, rptService, dpor.db, hash)
 			if err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", numberIter, "hash", hash)
 				snap = s
@@ -282,11 +282,11 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	dpor.lock.Lock()
-	contractCaller := dpor.contractCaller
+	client := dpor.client
 	dpor.lock.Unlock()
 
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, contractCaller)
+	newSnap, err := snap.apply(headers, client)
 	if err != nil {
 		return nil, err
 	}

@@ -8,7 +8,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/database"
@@ -675,9 +674,9 @@ func Test_loadSnapshot_marshal(t *testing.T) {
 
 	hash := common.Hash{}
 	snapshot.setHash(hash)
-	snapshot.ContractCaller = &backend.ContractCaller{Client: &cpclient.Client{}}
+	snapshot.Client = &cpclient.Client{}
 	snapshot.store(db)
-	got, err := loadSnapshot(cfg, snapshot.ContractCaller, snapshot.rptBackend, db, hash)
+	got, err := loadSnapshot(cfg, snapshot.Client, snapshot.rptBackend, db, hash)
 	_ = got
 	if err != nil {
 		t.Error("should not fail", err)

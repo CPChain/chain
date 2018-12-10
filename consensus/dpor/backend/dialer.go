@@ -1,15 +1,11 @@
 package backend
 
 import (
-	"context"
-	"math/big"
 	"sync"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -31,11 +27,14 @@ type Dialer struct {
 
 	dpor DporService
 
-	// proposer register contract related fields
-	contractAddress    common.Address
-	contractCaller     *ContractCaller
-	contractInstance   *dpor.ProposerRegister
-	contractTransactor *bind.TransactOpts
+	client ClientBackend
+
+	// TODO: remove this
+	// // proposer register contract related fields
+	// contractAddress    common.Address
+	// contractCaller     *ContractCaller
+	// contractInstance   *dpor.ProposerRegister
+	// contractTransactor *bind.TransactOpts
 
 	// use lru caches to cache recent proposers and validators
 	recentProposers *lru.ARCCache
@@ -55,7 +54,6 @@ func NewDialer(coinbase common.Address, contractAddr common.Address) *Dialer {
 
 	return &Dialer{
 		coinbase:          coinbase,
-		contractAddress:   contractAddr,
 		recentProposers:   proposers,
 		recentValidators:  validators,
 		defaultValidators: configs.GetDefaultValidators(),
@@ -69,28 +67,27 @@ func (d *Dialer) SetDporService(dpor DporService) {
 
 // AddPeer adds a peer to local dpor peer set:
 // remote proposers or remote validators
-func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, futureTerm uint64) (string, bool, bool, error) {
-	address, isProposer, isValidator, err := d.addPeer(version, p, rw, coinbase, term, futureTerm)
+func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
+	address, isProposer, isValidator, err := d.addPeer(version, p, rw, mac, sig, term, futureTerm)
 	return address, isProposer, isValidator, err
 }
 
-func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, coinbase common.Address, term uint64, futureTerm uint64) (string, bool, bool, error) {
+func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
 
 	log.Debug("do handshaking with remote peer...")
 
-	address, err := Handshake(p, rw, coinbase, term, futureTerm)
+	address, err := Handshake(p, rw, mac, sig, term, futureTerm)
 
 	isProposer, isValidator := true, true
 
 	// TODO: remove this later, not efficient, not usefull in practice
-	// isProposer, isValidator := false, false
-	// for t := term; t <= futureTerm; t++ {
-	// 	isP, _ := d.dpor.VerifyProposerOf(address, t)
-	// 	isV, _ := d.dpor.VerifyValidatorOf(address, t)
+	for t := term; t <= futureTerm; t++ {
+		isP, _ := d.dpor.VerifyProposerOf(address, t)
+		isV, _ := d.dpor.VerifyValidatorOf(address, t)
 
-	// 	isProposer = isProposer || isP
-	// 	isValidator = isValidator || isV
-	// }
+		isProposer = isProposer || isP
+		isValidator = isValidator || isV
+	}
 
 	if (!isProposer && !isValidator) || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)
@@ -210,46 +207,55 @@ func (d *Dialer) setRsaKey(rsaReader RsaReader) error {
 	return err
 }
 
-// SetContractCaller sets contract calling related fields in dialer
-func (d *Dialer) SetContractCaller(contractCaller *ContractCaller) error {
-
-	// creates an contract instance
-	contractInstance, err := dpor.NewProposerRegister(d.contractAddress, contractCaller.Client)
-	if err != nil {
-		return err
-	}
-
-	// creates a keyed transactor
-	auth := bind.NewKeyedTransactor(contractCaller.Key.PrivateKey)
-
-	gasPrice, err := contractCaller.Client.SuggestGasPrice(context.Background())
-	if err != nil {
-		return err
-	}
-
-	auth.Value = big.NewInt(0)
-	auth.GasLimit = contractCaller.GasLimit
-	auth.GasPrice = gasPrice
-
-	rsaReader := func() (*rsakey.RsaKey, error) {
-		return contractCaller.Key.RsaKey, nil
-	}
-	err = d.setRsaKey(rsaReader)
-	if err != nil {
-		return err
-	}
-
+// SetClient sets contract calling related fields in dialer
+func (d *Dialer) SetClient(client ClientBackend) error {
 	d.lock.Lock()
+	defer d.lock.Unlock()
 
-	// assign
-	d.contractCaller = contractCaller
-	d.contractInstance = contractInstance
-	d.contractTransactor = auth
-
-	d.lock.Unlock()
-
+	d.client = client
 	return nil
 }
+
+// // SetClient sets contract calling related fields in dialer
+// func (d *Dialer) SetClient(contractCaller *ContractCaller) error {
+
+// 	// creates an contract instance
+// 	contractInstance, err := dpor.NewProposerRegister(d.contractAddress, contractCaller.Client)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// creates a keyed transactor
+// 	auth := bind.NewKeyedTransactor(contractCaller.Key.PrivateKey)
+
+// 	gasPrice, err := contractCaller.Client.SuggestGasPrice(context.Background())
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	auth.Value = big.NewInt(0)
+// 	auth.GasLimit = contractCaller.GasLimit
+// 	auth.GasPrice = gasPrice
+
+// 	rsaReader := func() (*rsakey.RsaKey, error) {
+// 		return contractCaller.Key.RsaKey, nil
+// 	}
+// 	err = d.setRsaKey(rsaReader)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	d.lock.Lock()
+
+// 	// assign
+// 	d.contractCaller = contractCaller
+// 	d.contractInstance = contractInstance
+// 	d.contractTransactor = auth
+
+// 	d.lock.Unlock()
+
+// 	return nil
+// }
 
 // UpdateRemoteProposers updates dialer.remoteProposers.
 func (d *Dialer) UpdateRemoteProposers(term uint64, proposers []common.Address) error {
@@ -312,25 +318,25 @@ func (d *Dialer) DialAllRemoteValidators(term uint64) error {
 	return nil
 }
 
-// UploadEncryptedNodeInfo dials all remote validators
-func (d *Dialer) UploadEncryptedNodeInfo(term uint64) error {
+// // UploadEncryptedNodeInfo dials all remote validators
+// func (d *Dialer) UploadEncryptedNodeInfo(term uint64) error {
 
-	d.lock.RLock()
-	nodeID := d.nodeID
-	contractInstance, contractTransactor, client := d.contractInstance, d.contractTransactor, d.contractCaller.Client
-	d.lock.RUnlock()
+// 	d.lock.RLock()
+// 	nodeID := d.nodeID
+// 	contractInstance, contractTransactor, client := d.contractInstance, d.contractTransactor, d.contractCaller.Client
+// 	d.lock.RUnlock()
 
-	validators := d.ValidatorsOfTerm(term)
+// 	validators := d.ValidatorsOfTerm(term)
 
-	for _, v := range validators {
-		_, err := v.UploadNodeInfo(term, nodeID, contractTransactor, contractInstance, client)
-		if err != nil {
-			return err
-		}
-	}
+// 	for _, v := range validators {
+// 		_, err := v.UploadNodeInfo(term, nodeID, contractTransactor, contractInstance, client)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 // Disconnect disconnects all proposers.
 func (d *Dialer) Disconnect(term uint64) {

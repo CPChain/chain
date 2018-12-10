@@ -147,7 +147,6 @@ func (h *Handler) Length() uint64 {
 
 // AddPeer adds a p2p peer to local peer set
 func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
-	coinbase := h.Coinbase()
 	var term, futureTerm uint64
 	blk := h.dpor.GetCurrentBlock()
 	if blk != nil {
@@ -157,7 +156,12 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 		term, futureTerm = 0, 0
 	}
 
-	return h.dialer.AddPeer(version, p, rw, coinbase, term, futureTerm)
+	mac, sig, err := h.dpor.GetMac()
+	if err != nil {
+		return "", false, false, err
+	}
+
+	return h.dialer.AddPeer(version, p, rw, mac, sig, term, futureTerm)
 }
 
 // RemovePeer removes a p2p peer with its addr
@@ -201,9 +205,9 @@ func (h *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	}
 }
 
-// SetContractCaller sets dialer.contractCaller
-func (h *Handler) SetContractCaller(contractCaller *ContractCaller) error {
-	return h.dialer.SetContractCaller(contractCaller)
+// SetClient sets dialer.contractCaller
+func (h *Handler) SetClient(client ClientBackend) error {
+	return h.dialer.SetClient(client)
 }
 
 // SetServer sets dialer.server
@@ -218,8 +222,8 @@ func (h *Handler) SetDporService(dpor DporService) error {
 	return nil
 }
 
-// SetDporSm sets dpor state machine
-func (h *Handler) SetDporSm(fsm *DporStateMachine) error {
+// SetDporStateMachine sets dpor state machine
+func (h *Handler) SetDporStateMachine(fsm *DporStateMachine) error {
 	h.fsm = fsm
 	return nil
 }

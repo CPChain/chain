@@ -345,7 +345,7 @@ func (s *CpchainService) SetCoinbase(coinbase common.Address) {
 	s.miner.SetCoinbase(coinbase)
 }
 
-func (s *CpchainService) StartMining(local bool, contractCaller *backend.ContractCaller) error {
+func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) error {
 	coinbase, err := s.Coinbase()
 	if err != nil {
 		log.Error("Cannot start mining without coinbase", "err", err)
@@ -364,7 +364,8 @@ func (s *CpchainService) StartMining(local bool, contractCaller *backend.Contrac
 
 		log.Debug("server.nodeid", "enode", s.server.NodeInfo().Enode)
 
-		go dpor.StartMining(s.blockchain, contractCaller, s.server, s.protocolManager.BroadcastBlock)
+		go dpor.StartMining(s.blockchain, client, s.server, s.protocolManager.BroadcastBlock)
+		// go dpor.StartMining(s.blockchain, contractCaller, s.server, s.protocolManager.BroadcastBlock)
 	}
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection
@@ -378,7 +379,15 @@ func (s *CpchainService) StartMining(local bool, contractCaller *backend.Contrac
 	return nil
 }
 
-func (s *CpchainService) StopMining()         { s.miner.Stop() }
+func (s *CpchainService) StopMining() {
+
+	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		dpor.StopMining()
+	}
+
+	s.miner.Stop()
+}
+
 func (s *CpchainService) IsMining() bool      { return s.miner.IsMining() }
 func (s *CpchainService) Miner() *miner.Miner { return s.miner }
 
