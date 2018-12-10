@@ -58,7 +58,7 @@ func NewDialer(coinbase common.Address, contractAddr common.Address) *Dialer {
 		contractAddress:   contractAddr,
 		recentProposers:   proposers,
 		recentValidators:  validators,
-		defaultValidators: configs.CpchainValidators,
+		defaultValidators: configs.GetDefaultValidators(),
 	}
 }
 

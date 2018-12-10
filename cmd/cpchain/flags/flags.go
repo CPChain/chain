@@ -231,6 +231,7 @@ const (
 	MaxPendingPeersFlagName = "maxpendpeers"
 	PortFlagName            = "port"
 	BootnodesFlagName       = "bootnodes"
+	ValidatorsFlagName      = "validators"
 	NodeKeyFileFlagName     = "nodekey"
 )
 
@@ -253,6 +254,11 @@ var P2pFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  BootnodesFlagName,
 		Usage: "Comma separated enode URLs for P2P discovery bootstrap (set v4+v5 instead for light servers)",
+		Value: "",
+	},
+	cli.StringFlag{
+		Name:  ValidatorsFlagName,
+		Usage: "Comma separated enode URLs for validators",
 		Value: "",
 	},
 	cli.StringFlag{

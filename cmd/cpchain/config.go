@@ -75,6 +75,7 @@ func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
 		cfg.ListenAddr = fmt.Sprintf(":%d", ctx.Int(flags.PortFlagName))
 	}
 	updateBootstrapNodes(ctx, cfg)
+	updateValidatorNodes(ctx)
 	updateNodeKey(ctx, cfg)
 }
 
@@ -95,6 +96,16 @@ func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 		}
 		cfg.BootstrapNodes = append(cfg.BootstrapNodes, node)
 	}
+}
+
+// updateValidatorNodes creates a list of validator nodes from the command line
+// flags, reverting to pre-configured ones if none have been specified.
+func updateValidatorNodes(ctx *cli.Context) {
+	urls := configs.CpchainValidators
+	if ctx.IsSet(flags.ValidatorsFlagName) {
+		urls = strings.Split(ctx.String(flags.ValidatorsFlagName), ",")
+	}
+	configs.InitDefaultValidators(urls)
 }
 
 // Update node key from a specified file
