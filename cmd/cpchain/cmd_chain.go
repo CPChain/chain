@@ -53,6 +53,7 @@ var chainCommand = cli.Command{
 			Usage: "Bootstrap and initialize a new genesis block",
 			Flags: append([]cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
+				flags.GetByName(flags.RunModeFlagName),
 			}, flags.LogFlags...),
 			Action:    initChain,
 			ArgsUsage: "[/path/to/genesis.toml]",
@@ -148,9 +149,14 @@ Use "cpchain chain dump 0" to dump the genesis block.`,
 
 // initChain creates a genesis block from a toml format file
 func initChain(ctx *cli.Context) error {
-	// Make sure we have a valid genesis TOML.
+	// Make sure we have a valid genesis TOML and run with suitable runmode.
 	genesisPath := ctx.Args().First()
 	var genesis *core.Genesis
+
+	runMode := ctx.String(flags.RunModeFlagName)
+	configs.SetRunMode(runMode)
+	log.Info("runMode", "runMode", configs.GetRunMode())
+
 	if len(genesisPath) == 0 {
 		genesis = core.DefaultGenesisBlock()
 	} else {
