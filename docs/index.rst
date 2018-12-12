@@ -13,10 +13,7 @@ Welcome to developer's documentation!
    deployment/deployment
    contract/smart_contract
    api/cpc_fusion.cpc
-   consensus/dpor
-   consensus/glossary
-   consensus/proposer
-   consensus/validator
+   consensus/consensus
 
 
 
