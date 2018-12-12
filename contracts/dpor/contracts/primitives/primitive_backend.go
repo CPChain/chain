@@ -94,7 +94,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 		log.Warn("error with getReputationnode", "error", err)
 		return 100, err // 100 represent give the address a default rank
 	}
-	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
+	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
 	log.Info("campaign", "contractAddress", contractAddress)
 	intance, err := contract2.NewCampaign(contractAddress, re.ContractClient)
 	if err != nil {
@@ -130,7 +130,7 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 		return 0, err
 	}
 	txvs := int64(0)
-	signer := types.NewCep1Signer(configs.MainnetChainConfig.ChainID)
+	signer := types.NewCep1Signer(configs.ChainConfigInfo().ChainID)
 	txs := block.Transactions()
 	for _, tx := range txs {
 		sender, err := signer.Sender(tx)
@@ -147,7 +147,7 @@ func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, 
 // leader:0,committee:1,rNode:2,nil:3
 func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int64, error) {
 	ld := int64(2)
-	if configs.MainnetChainConfig.ChainID.Uint64() == uint64(4) {
+	if configs.ChainConfigInfo().ChainID.Uint64() == uint64(4) {
 		return 0, nil
 	}
 	block, err := re.ChainClient.BlockByNumber(context.Background(), big.NewInt(int64(number)))
@@ -175,7 +175,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 // UploadCount is the func to get uploadnumber to rpt
 func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int64, error) {
 	uploadNumber := int64(0)
-	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractRegister]
+	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRegister]
 	upload, err := pdash.NewRegister(contractAddress, re.ContractClient)
 	if err != nil {
 		log.Error("NewRegister error", "error", err)
@@ -194,7 +194,7 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	proxyCount = int64(0)
 	isProxy = int64(0)
 	var proxyAddresses []common.Address
-	contractAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractPdash]
+	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractPdash]
 	pdashInstance, err := pdash.NewPdash(contractAddress, re.ContractClient)
 
 	if err != nil {

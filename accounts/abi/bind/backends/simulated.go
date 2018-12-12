@@ -72,7 +72,7 @@ func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 	genesis.MustCommit(db)
 
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
-	config := configs.MainnetChainConfig.Dpor
+	config := configs.ChainConfigInfo().Dpor
 	d := dpor.NewFaker(config, db)
 
 	blockchain, _ := core.NewBlockChain(db, nil, genesis.Config, d, vm.Config{}, remoteDB, nil)
@@ -108,7 +108,7 @@ func (b *SimulatedBackend) Rollback() {
 }
 
 func (b *SimulatedBackend) rollback() {
-	config := configs.MainnetChainConfig.Dpor
+	config := configs.ChainConfigInfo().Dpor
 	d := dpor.NewFaker(config, b.database)
 
 	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), d, b.database, nil, 1, func(int, *core.BlockGen) {})
@@ -315,7 +315,7 @@ func (b *SimulatedBackend) SendTransaction(ctx context.Context, tx *types.Transa
 		panic(fmt.Errorf("invalid transaction nonce: got %d, want %d", tx.Nonce(), nonce))
 	}
 
-	config := configs.MainnetChainConfig.Dpor
+	config := configs.ChainConfigInfo().Dpor
 	d := dpor.NewFaker(config, b.database)
 
 	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), d, b.database, nil, 1, func(number int, block *core.BlockGen) {
@@ -398,7 +398,7 @@ func (b *SimulatedBackend) AdjustTime(adjustment time.Duration) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	config := configs.MainnetChainConfig.Dpor
+	config := configs.ChainConfigInfo().Dpor
 	d := dpor.New(config, b.database)
 
 	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), d, b.database, nil, 1, func(number int, block *core.BlockGen) {

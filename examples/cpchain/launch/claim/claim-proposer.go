@@ -176,7 +176,7 @@ func claimProposer(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 }
 
 func main() {
-	proposerAddress := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractProposer]
+	proposerAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractProposer]
 
 	for i, kPair := range keystores {
 		fmt.Println(i)

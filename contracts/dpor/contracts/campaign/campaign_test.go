@@ -59,7 +59,7 @@ func TestCampaignCandidateInfoOf(t *testing.T) {
 
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 	// launch contract deploy transaction.
-	address := configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign]
+	address := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
 
 	instance, err := campaign.NewCampaign(address, client)
 	if err != nil {

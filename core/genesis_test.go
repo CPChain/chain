@@ -60,7 +60,7 @@ func TestSetupGenesis(t *testing.T) {
 				return SetupGenesisBlock(db, new(Genesis))
 			},
 			wantErr:    errGenesisNoConfig,
-			wantConfig: configs.DefaultChainConfig,
+			wantConfig: configs.ChainConfigInfo(),
 		},
 		{
 			name: "no block in DB, genesis == nil",
@@ -68,7 +68,7 @@ func TestSetupGenesis(t *testing.T) {
 				return SetupGenesisBlock(db, nil)
 			},
 			wantHash:   MainnetGenesisHash,
-			wantConfig: configs.MainnetChainConfig,
+			wantConfig: configs.ChainConfigInfo(),
 		},
 		{
 			name: "mainnet block in DB, genesis == nil",
@@ -77,7 +77,7 @@ func TestSetupGenesis(t *testing.T) {
 				return SetupGenesisBlock(db, nil)
 			},
 			wantHash:   MainnetGenesisHash,
-			wantConfig: configs.MainnetChainConfig,
+			wantConfig: configs.ChainConfigInfo(),
 		},
 		{
 			name: "custom block in DB, genesis == nil",

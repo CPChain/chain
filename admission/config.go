@@ -58,7 +58,7 @@ var DefaultConfig = Config{
 	CpuLifeTime:             time.Duration(CpuWorkTimeout * time.Second),
 	MemoryDifficulty:        MemoryDifficulty,
 	MemoryCpuLifeTime:       time.Duration(MemoryWorkTimeout * time.Second),
-	CampaignContractAddress: configs.MainnetChainConfig.Dpor.Contracts[configs.ContractCampaign],
+	CampaignContractAddress: configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign],
 	// TODO @chengx no hardcoded numbers.
 	Deposit:               int64(50),
 	NumberOfCampaignTimes: int64(1),

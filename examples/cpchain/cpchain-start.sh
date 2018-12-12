@@ -42,11 +42,13 @@ ipc_path_base=data/
 $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
          --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password \
          --validators "${validators}" \
+         --runmode dev \
          --rpccorsdomain "http://orange:8000" 2>data/logs/1.log &
 
 # dlv --headless --listen=:2345 --api-version=2 dlv-cpchain bitbucket.org/cpchain/chain/cmd/cpchain -- $args --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf/password --rpccorsdomain "http://orange:8000"
 
 $cpchain $args --ipcaddr ${ipc_path_base}2 --datadir data/data2  --rpcaddr 127.0.0.1:8502 --grpcaddr 127.0.0.1:8602 --jsonrpchttpaddr 127.0.0.1:8702 --port 30312 --mine \
+         --runmode dev \
          --unlock "0xc05302acebd0730e3a18a058d7d1cb1204c4a092" --password conf/password 2>data/logs/2.log &
 
 $cpchain $args --ipcaddr ${ipc_path_base}3 --datadir data/data3  --rpcaddr 127.0.0.1:8503 --grpcaddr 127.0.0.1:8603 --jsonrpchttpaddr 127.0.0.1:8703 --port 30313 --mine \

@@ -174,7 +174,7 @@ func TestSigningPrivateTx(t *testing.T) {
 }
 
 func TestMakeSigner(t *testing.T) {
-	signer := MakeSigner(configs.MainnetChainConfig)
+	signer := MakeSigner(configs.ChainConfigInfo())
 	fmt.Printf("%T, %v", signer, signer)
 	if fmt.Sprintf("%T", signer) != "types.Cep1Signer" {
 		t.Error("The signer should be types.Cep1Signer, but got ", fmt.Sprintf("%T", signer))

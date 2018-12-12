@@ -29,6 +29,13 @@ type config struct {
 	Node node.Config
 }
 
+func updateRunModeFlag(ctx *cli.Context, cfg *node.Config) {
+	if ctx.IsSet(flags.RunModeFlagName) {
+		runMode := ctx.String(flags.RunModeFlagName)
+		configs.SetRunMode(runMode)
+	}
+}
+
 func updateDataDirFlag(ctx *cli.Context, cfg *node.Config) {
 	if ctx.IsSet(flags.DataDirFlagName) {
 		cfg.DataDir = ctx.String(flags.DataDirFlagName)
@@ -287,6 +294,9 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 		Eth:  cpc.DefaultConfig,
 		Node: node.DefaultConfig,
 	}
+	// update run mode
+	updateRunModeFlag(ctx, &cfg.Node)
+
 	// update data dir first
 	updateDataDirFlag(ctx, &cfg.Node)
 

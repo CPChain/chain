@@ -17,9 +17,15 @@ const (
 )
 
 const (
-	DefaultChainId = 41
+	DevChainId     = 41
 	MainnetChainId = 42
 	TestnetChainId = 43
+)
+
+const (
+	DEV     = "dev"
+	TESTNET = "testnet"
+	MAINNET = "prod"
 )
 
 const (
@@ -36,66 +42,53 @@ const (
 )
 
 var (
-	DefaultCandidates = []common.Address{
-		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"), // #2
-		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"), // #1
-		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"), // #3
-		common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"), // #5
-		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"), // #4
-		common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"), // #6
+	chainConfigMap = map[string]*ChainConfig{
+		DEV:     devChainConfig,
+		TESTNET: testnetChainConfig,
+		MAINNET: mainnetChainConfig,
 	}
 
-	// TODO: @AC define testnet configuration
-	TestnetChainConfig = &ChainConfig{
-		ChainID: big.NewInt(TestnetChainId),
-
-		Dpor: &DporConfig{
-			Period:                1,
-			TermLen:               4,
-			ViewLen:               3,
-			MaxInitBlockNumber:    120,
-			ProxyContractRegister: common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
-			Contracts: map[string]common.Address{
-				ContractCampaign: common.HexToAddress("0x0ddf4057eedfb80d58029be49bab09bbc45bc500"),
-				ContractProposer: common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
-				ContractRegister: common.HexToAddress("0x019cc04ff9d88529b9e58ff26bfc53bce060e915"),
-				ContractRpt:      common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d"),
-				ContractPdash:    common.HexToAddress("0xaaae743244a7a5116470df8bd398e7d562ae8881"),
-			},
-		},
+	proposersMap = map[string][]common.Address{
+		DEV:     devProposers,
+		TESTNET: testnetProposers,
+		MAINNET: mainnetProposers,
 	}
 
-	// MainnetChainConfig is the chain parameters to run a node on the cpchain main network.
-	MainnetChainConfig = &ChainConfig{
-		ChainID: big.NewInt(MainnetChainId),
-		Dpor: &DporConfig{
-			Period:                DefaultBlockPeriod,
-			TermLen:               4,
-			ViewLen:               3,
-			MaxInitBlockNumber:    72,
-			ProxyContractRegister: common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
-			Contracts: map[string]common.Address{
-				ContractCampaign: common.HexToAddress("0x0ddf4057eedfb80d58029be49bab09bbc45bc500"),
-				ContractProposer: common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
-				ContractRegister: common.HexToAddress("0x019cc04ff9d88529b9e58ff26bfc53bce060e915"),
-				ContractRpt:      common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d"),
-				ContractPdash:    common.HexToAddress("0xaaae743244a7a5116470df8bd398e7d562ae8881"),
-			},
-			ImpeachTimeout: time.Second * DefaultBlockPeriod * 2,
-		},
+	candidatesMap = map[string][]common.Address{
+		DEV:     devDefaultCandidates,
+		TESTNET: testnetDefaultCandidates,
+		MAINNET: mainnetDefaultCandidates,
 	}
 
-	// this contains all the changes we have made to the cpchain protocol.
-	// serves as the *default* config.
-	DefaultChainConfig = &ChainConfig{
-		ChainID: big.NewInt(DefaultChainId),
-		Dpor:    &DporConfig{Period: 1, TermLen: 4},
+	validatorsMap = map[string][]common.Address{
+		DEV:     devValidators,
+		TESTNET: testnetValidators,
+		MAINNET: mainnetValidators,
 	}
-
-	TestChainConfig = &ChainConfig{big.NewInt(MainnetChainId), &DporConfig{Period: 0, TermLen: 4}}
-
-	TestRules = TestChainConfig.Rules(new(big.Int))
 )
+
+var (
+	// just for test
+	TestChainConfig = &ChainConfig{big.NewInt(MainnetChainId), &DporConfig{Period: 0, TermLen: 4}}
+)
+
+// this contains all the changes we have made to the cpchain protocol.
+// serves as the *default* config.
+func ChainConfigInfo() *ChainConfig {
+	return chainConfigMap[GetRunMode()]
+}
+
+func Candidates() []common.Address {
+	return candidatesMap[GetRunMode()]
+}
+
+func Proposers() []common.Address {
+	return proposersMap[GetRunMode()]
+}
+
+func Validators() []common.Address {
+	return validatorsMap[GetRunMode()]
+}
 
 // ChainConfig is the core config which determines the blockchain settings.
 //

@@ -36,7 +36,7 @@ func TestHeaderVerification(t *testing.T) {
 
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 
-	config := configs.MainnetChainConfig.Dpor
+	config := configs.ChainConfigInfo().Dpor
 	d := dpor.NewFaker(config, testdb)
 
 	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)
@@ -103,7 +103,7 @@ func testHeaderConcurrentVerification(t *testing.T, threads int) {
 
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 
-	config := configs.MainnetChainConfig.Dpor
+	config := configs.ChainConfigInfo().Dpor
 	d := dpor.NewDoNothingFaker(config, testdb)
 
 	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)
@@ -186,7 +186,7 @@ func testHeaderConcurrentAbortion(t *testing.T, threads int) {
 
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 
-	config := configs.MainnetChainConfig.Dpor
+	config := configs.ChainConfigInfo().Dpor
 	d := dpor.NewFaker(config, testdb)
 
 	blocks, _ := GenerateChain(genesis.Config, genesisBlock, d, testdb, remoteDB, 8, nil)

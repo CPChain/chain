@@ -73,6 +73,7 @@ var ConfigFileFlag = cli.StringFlag{
 
 const (
 	DataDirFlagName = "datadir"
+	RunModeFlagName = "runmode"
 )
 
 var GeneralFlags = []cli.Flag{
@@ -80,6 +81,11 @@ var GeneralFlags = []cli.Flag{
 		Name:  DataDirFlagName,
 		Usage: "Data directory for the database and keystore",
 		Value: node.DefaultDataDir(),
+	},
+	cli.StringFlag{
+		Name:  RunModeFlagName,
+		Usage: "Run mode for switch node configuration, eg:dev|testnet|prod",
+		Value: "dev",
 	},
 }
 

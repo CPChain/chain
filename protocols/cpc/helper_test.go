@@ -42,7 +42,7 @@ func newTestProtocolManager(mode downloader.SyncMode, blocks int, generator func
 	gspec.Alloc = core.GenesisAlloc{testBank: {Balance: big.NewInt(1000000)}}
 	genesis := gspec.MustCommit(db)
 
-	engine := dpor.NewFaker(configs.DefaultChainConfig.Dpor, db)
+	engine := dpor.NewFaker(configs.ChainConfigInfo().Dpor, db)
 
 	chain, _ := core.GenerateChain(gspec.Config, genesis, engine, db, remoteDB, blocks, generator)
 	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, engine, vm.Config{}, remoteDB, nil)

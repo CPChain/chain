@@ -424,7 +424,7 @@ func (s *DporSnapshot) updateCandidates() error {
 			if err != nil {
 				log.Error("read Candidates error, use default candidates instead", "err", err)
 				// use default candidates instead
-				s.setCandidates(configs.DefaultCandidates)
+				s.setCandidates(configs.Candidates())
 				return nil // swallow the error as it has been handled properly
 			}
 
@@ -439,7 +439,7 @@ func (s *DporSnapshot) updateCandidates() error {
 
 	if uint64(len(candidates)) < s.config.TermLen {
 		log.Debug("no enough candidates,use default candidates")
-		candidates = configs.DefaultCandidates
+		candidates = configs.Candidates()
 	}
 
 	log.Info("set candidates", "len(candidates)", len(candidates))

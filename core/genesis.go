@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"strings"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -21,7 +20,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/rlp"
 )
 
 //go:generate gencodec -type Genesis -formats json,toml -field-override genesisSpecMarshaling -out gen_genesis.go
@@ -145,7 +143,7 @@ func (e *GenesisMismatchError) Error() string {
 // The returned chain configuration is never nil.
 func SetupGenesisBlock(db database.Database, genesis *Genesis) (*configs.ChainConfig, common.Hash, error) {
 	if genesis != nil && genesis.Config == nil {
-		return configs.DefaultChainConfig, common.Hash{}, errGenesisNoConfig
+		return configs.ChainConfigInfo(), common.Hash{}, errGenesisNoConfig
 	}
 
 	stored := rawdb.ReadCanonicalHash(db, 0)
@@ -214,10 +212,8 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *configs.ChainConfig {
 	switch {
 	case g != nil:
 		return g.Config
-	case ghash == MainnetGenesisHash:
-		return configs.MainnetChainConfig
 	default:
-		return configs.DefaultChainConfig
+		return configs.ChainConfigInfo()
 	}
 }
 
@@ -282,7 +278,7 @@ func (g *Genesis) Commit(db database.Database) (*types.Block, error) {
 
 	config := g.Config
 	if config == nil {
-		config = configs.DefaultChainConfig
+		config = configs.ChainConfigInfo()
 	}
 	rawdb.WriteChainConfig(db, block.Hash(), config)
 	return block, nil
@@ -306,30 +302,38 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0x36e647e629bb56aae3051c0477220b05c52ab15e8081cf5c37f66d6011c04152")
+var MainnetGenesisHash = common.HexToHash("0x5084f56e090d122a517db818b9bb9e3496795f6d509474874a0bae50fef2bba8")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
+	if configs.IsDev() {
+		return newGenesisBlock()
+	}
+	if configs.IsTestnet() {
+		return newGenesisBlock()
+	}
+	if configs.IsProd() {
+		return newGenesisBlock()
+	}
+	return newGenesisBlock()
+}
+
+func newGenesisBlock() *Genesis {
+	candidates := configs.Candidates()
 	return &Genesis{
-		Config:    configs.MainnetChainConfig,
+		Config:    configs.ChainConfigInfo(),
 		Timestamp: 1492009146,
 		ExtraData: hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
 		GasLimit:  4700000,
 		// GasLimit:   1000000000,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
-			common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"): {Balance: big.NewInt(math.MaxInt64)},
-			common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"): {Balance: big.NewInt(math.MaxInt64)},
-			common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"): {Balance: big.NewInt(math.MaxInt64)},
-
-			common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"): {Balance: big.NewInt(math.MaxInt64)},
-			common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"): {Balance: big.NewInt(math.MaxInt64)},
-
-			common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"): {Balance: big.NewInt(math.MaxInt64)},
-			common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"): {Balance: big.NewInt(math.MaxInt64)},
-			common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"): {Balance: big.NewInt(math.MaxInt64)},
-			common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"): {Balance: big.NewInt(math.MaxInt64)},
-			common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"): {Balance: big.NewInt(math.MaxInt64)},
+			candidates[0]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[1]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[2]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[3]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[4]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[5]: {Balance: big.NewInt(math.MaxInt64)},
 
 			common.HexToAddress("0x0000000000000000000000000000000000000000"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000001"): {Balance: big.NewInt(0x00000000000000000)},
@@ -337,68 +341,10 @@ func DefaultGenesisBlock() *Genesis {
 			common.HexToAddress("0x00000000000000000000000000000000000000ff"): {Balance: big.NewInt(0x00000000000000000)},
 		},
 		Dpor: types.DporSnap{
-			Proposers: []common.Address{
-				common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-				common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-				common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-				common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
-			},
-			Seal: types.DporSignature{},
-			Sigs: make([]types.DporSignature, 4),
-			Validators: []common.Address{
-				common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),
-				common.HexToAddress("0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"),
-				common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
-				common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
-			},
-		},
-	}
-}
-
-// DeveloperGenesisBlock returns the 'cpchain --dev' genesis block. Note, this must
-// be seeded with the
-func DeveloperGenesisBlock(period uint64, faucet common.Address) *Genesis {
-	// Override the default period to the user requested one
-	config := *configs.DefaultChainConfig
-	config.Dpor.Period = period
-
-	// Assemble and return the genesis with the precompiles and faucet pre-funded
-	return &Genesis{
-		Config:     &config,
-		Timestamp:  1492009146,
-		ExtraData:  make([]byte, 32),
-		GasLimit:   4700000,
-		Difficulty: big.NewInt(1),
-		Alloc: map[common.Address]GenesisAccount{
-			common.BytesToAddress([]byte{1}): {Balance: big.NewInt(1)}, // ECRecover
-			common.BytesToAddress([]byte{2}): {Balance: big.NewInt(1)}, // SHA256
-			common.BytesToAddress([]byte{3}): {Balance: big.NewInt(1)}, // RIPEMD
-			common.BytesToAddress([]byte{4}): {Balance: big.NewInt(1)}, // Identity
-			common.BytesToAddress([]byte{5}): {Balance: big.NewInt(1)}, // ModExp
-			common.BytesToAddress([]byte{6}): {Balance: big.NewInt(1)}, // ECAdd
-			common.BytesToAddress([]byte{7}): {Balance: big.NewInt(1)}, // ECScalarMul
-			common.BytesToAddress([]byte{8}): {Balance: big.NewInt(1)}, // ECPairing
-			faucet:                           {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
-		},
-		Dpor: types.DporSnap{
-			Proposers: []common.Address{
-				faucet,
-			},
+			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
 			Sigs:       make([]types.DporSignature, 4),
-			Validators: []common.Address{},
+			Validators: configs.Validators(),
 		},
 	}
-}
-
-func decodePrealloc(data string) GenesisAlloc {
-	var p []struct{ Addr, Balance *big.Int }
-	if err := rlp.NewStream(strings.NewReader(data), 0).Decode(&p); err != nil {
-		panic(err)
-	}
-	ga := make(GenesisAlloc, len(p))
-	for _, account := range p {
-		ga[common.BigToAddress(account.Addr)] = GenesisAccount{Balance: account.Balance}
-	}
-	return ga
 }
