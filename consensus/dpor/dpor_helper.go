@@ -423,9 +423,10 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 		return consensus.ErrNotEnoughSigs
 	}
 
-	if dh.isTimeToDialValidators(dpor, dpor.chain) {
-		dh.uploadNodeInfo(dpor, snap, number)
-	}
+	// TODO: @liuq will fix the below code
+	// if dh.isTimeToDialValidators(dpor, dpor.chain) {
+	// 	dh.uploadNodeInfo(dpor, snap, number)
+	// }
 
 	// pass
 	return nil
