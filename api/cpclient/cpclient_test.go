@@ -106,6 +106,21 @@ func TestGetCommittees(t *testing.T) {
 	}
 }
 
+func TestGetCommitteeNumber(t *testing.T) {
+	t.Skip("must start chain to test")
+	fmt.Println("*******************************************************")
+	client, err := cpclient.Dial("http://localhost:8501")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	committeesNum, err := client.GetCommitteeNumber(context.Background())
+	fmt.Println("committees is :", committeesNum)
+
+	if committeesNum != 4 {
+		t.Errorf("GetCommittees failed")
+	}
+}
+
 func TestClient_BlockByNumber(t *testing.T) {
 	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")

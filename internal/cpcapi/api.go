@@ -526,6 +526,11 @@ func (s *PublicBlockChainAPI) GetCurrentTerm() uint64 {
 	return CurrentTerm
 }
 
+func (s *PublicBlockChainAPI) GetCommitteeNumber() int {
+	committeeNumber := s.b.CommitteMember()
+	return len(committeeNumber)
+}
+
 // GetCommittees return current committees
 func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
 

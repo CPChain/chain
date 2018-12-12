@@ -356,6 +356,12 @@ func (ec *Client) GetCurrentTerm(ctx context.Context) (uint64, error) {
 	return result, err
 }
 
+func (ec *Client) GetCommitteeNumber(ctx context.Context) (int, error) {
+	var result int
+	err := ec.c.CallContext(ctx, &result, "eth_getCommitteeNumber")
+	return result, err
+}
+
 func (ec *Client) GetCommittees(ctx context.Context) ([]Committees, error) {
 	var result []Committees
 	err := ec.c.CallContext(ctx, &result, "eth_getCommittees")
