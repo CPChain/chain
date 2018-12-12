@@ -56,6 +56,16 @@ func updateLogConfig(ctx *cli.Context) {
 			log.ShowFilename()
 		}
 	}
+
+	if ctx.IsSet(flags.LogFileFlagName) {
+		filename := ctx.String(flags.LogFileFlagName)
+		f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		if err != nil {
+			log.Error("Error: create output file of logger")
+		} else {
+			log.SetOutput(f)
+		}
+	}
 }
 
 func updateNodeGeneralConfig(ctx *cli.Context, cfg *node.Config) {

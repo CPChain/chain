@@ -66,13 +66,23 @@ func main() {
 		runv5       = flag.Bool("v5", false, "run a v5 topic discovery bootnode")
 		verbosity   = flag.Int("verbosity", int(log.LvlInfo), "log verbosity (0-9)")
 		vmodule     = flag.String("vmodule", "", "log verbosity pattern")
+		logfile     = flag.String("logfile", "", "bootnode log file")
 
 		nodeKey *ecdsa.PrivateKey
 		err     error
 	)
 	flag.Parse()
 
-	glogger := log.NewGlogHandler(log.StreamHandler(os.Stderr, log.TerminalFormat(false)))
+	writer := os.Stderr
+
+	if *logfile != "" {
+		fileWriter, err := os.OpenFile(*logfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		if err != nil {
+			Fatalf("Error: %v", err)
+		}
+		writer = fileWriter
+	}
+	glogger := log.NewGlogHandler(log.StreamHandler(writer, log.TerminalFormat(false)))
 	glogger.Verbosity(log.Lvl(*verbosity))
 	glogger.Vmodule(*vmodule)
 	log.Root().SetHandler(glogger)

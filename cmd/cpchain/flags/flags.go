@@ -73,6 +73,7 @@ var ConfigFileFlag = cli.StringFlag{
 
 const (
 	DataDirFlagName = "datadir"
+	LogFileFlagName = "logfile"
 	RunModeFlagName = "runmode"
 )
 
@@ -81,6 +82,11 @@ var GeneralFlags = []cli.Flag{
 		Name:  DataDirFlagName,
 		Usage: "Data directory for the database and keystore",
 		Value: node.DefaultDataDir(),
+	},
+	cli.StringFlag{
+		Name:  LogFileFlagName,
+		Usage: "Log file for the logger output",
+		Value: "cpchain.log",
 	},
 	cli.StringFlag{
 		Name:  RunModeFlagName,

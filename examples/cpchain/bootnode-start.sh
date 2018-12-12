@@ -20,4 +20,4 @@ if [ $all_params ]; then
 fi
 echo "boot_key:${boot_key}"
 
-$bootnode -nodekey conf/${boot_key} -verbosity 9 -addr :30310
+$bootnode -nodekey conf/${boot_key} -verbosity 9 -addr :30310 -logfile data/logs/bootnode.log

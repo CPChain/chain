@@ -74,7 +74,6 @@ var Flags = []cli.Flag{
 
 func init() {
 	log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
 	log.SetOutput(os.Stderr)
 }
 
