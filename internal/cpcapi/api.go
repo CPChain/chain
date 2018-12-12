@@ -534,7 +534,7 @@ func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
 	bn := s.b.CurrentBlock()
 	var committees []cpclient.Committees
 
-	for i := uint64(0); i < v; i++ {
+	for i := uint64(0); i < t; i++ {
 		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(bn.Header().Number.Uint64())-rpc.BlockNumber(i))
 		if err != nil {
 			log.Error("can't get header", "error", err)
