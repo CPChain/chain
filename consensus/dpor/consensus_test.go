@@ -123,7 +123,7 @@ func TestDpor_Prepare(t *testing.T) {
 			c := &Dpor{
 				config:       tt.fields.config,
 				db:           tt.fields.db,
-				recents:      tt.fields.recents,
+				recentSnaps:  tt.fields.recents,
 				finalSigs:    tt.fields.signatures,
 				signedBlocks: tt.fields.signedBlocks,
 				coinbase:     tt.fields.signer,
@@ -166,7 +166,7 @@ func TestDpor_Seal(t *testing.T) {
 			c := &Dpor{
 				config:       tt.fields.config,
 				db:           tt.fields.db,
-				recents:      tt.fields.recents,
+				recentSnaps:  tt.fields.recents,
 				finalSigs:    tt.fields.signatures,
 				signedBlocks: tt.fields.signedBlocks,
 				coinbase:     tt.fields.signer,

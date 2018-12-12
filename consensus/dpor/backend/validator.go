@@ -1,10 +1,13 @@
 package backend
 
 import (
+	"time"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // handlePbftMsg handles given msg with pbft mode
@@ -216,7 +219,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 	case msg.Code == PreprepareBlockMsg:
 		// sign the block and broadcast PrepareSignedHeaderMsg
 
-		block, err := RecoverBlockFromMsg(msg, p.Peer)
+		block, err := RecoverBlockFromMsg(msg, p)
 		if err != nil {
 			return err
 		}
@@ -268,15 +271,22 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 				return nil
 			}
 
+		case consensus.ErrFutureBlock:
+			_ = vh.knownBlocks.AddFutureBlock(block)
+
+		case consensus.ErrUnknownAncestor:
+			_ = vh.knownBlocks.AddUnknownAncestor(block)
+
 		default:
 			log.Warn("err when validating block", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
-			return err
 		}
+
+		return err
 
 	case msg.Code == PrepareHeaderMsg:
 		// add sigs to the header and broadcast, if ready to accept, accept
 
-		header, err := RecoverHeaderFromMsg(msg, p.Peer)
+		header, err := RecoverHeaderFromMsg(msg, p)
 		if err != nil {
 			return err
 		}
@@ -368,4 +378,51 @@ func (vh *Handler) ReadyToImpeach() bool {
 
 	vh.snap = current
 	return false
+}
+
+func (vh *Handler) procUnhandledBlocks() {
+	timer := time.NewTimer(3)
+	for {
+		select {
+		case <-timer.C:
+			for _, n := range vh.knownBlocks.GetFutureBlockNumbers() {
+				// get the block
+				blk, _ := vh.knownBlocks.GetFutureBlock(n.(uint64))
+
+				// make a msg
+				size, r, err := rlp.EncodeToReader(blk)
+				if err != nil {
+					continue
+				}
+				msg := p2p.Msg{Code: PreprepareBlockMsg, Size: uint32(size), Payload: r}
+
+				// handle it as received from remote unknown peer
+				err = vh.handleLbftMsg(msg, nil)
+				if err == nil {
+					vh.knownBlocks.futureBlocks.Remove(n)
+				}
+			}
+
+			for _, n := range vh.knownBlocks.GetUnknownAncestorBlockNumbers() {
+				// get the block
+				blk, _ := vh.knownBlocks.GetUnknownAncestor(n.(uint64))
+
+				// make a msg
+				size, r, err := rlp.EncodeToReader(blk)
+				if err != nil {
+					continue
+				}
+				msg := p2p.Msg{Code: PreprepareBlockMsg, Size: uint32(size), Payload: r}
+
+				// handle it as received from remote unknown peer
+				err = vh.handleLbftMsg(msg, nil)
+				if err == nil {
+					vh.knownBlocks.unknownAncestors.Remove(n)
+				}
+			}
+
+		case <-vh.quitCh:
+			return
+		}
+	}
 }

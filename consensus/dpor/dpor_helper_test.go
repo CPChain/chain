@@ -160,14 +160,14 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 		wantErr bool
 	}{
 		{"success when block 0", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}},
+			args{d: &Dpor{recentSnaps: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}},
 				header: &types.Header{Number: big.NewInt(0), ParentHash: parentHash}, chain: chain}, false},
 		{"fail with parent block", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}},
+			args{d: &Dpor{recentSnaps: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}},
 				header:  &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time1},
 				parents: []*types.Header{header}, chain: chain}, true},
 		{"errInvalidSigners", &defaultDporHelper{},
-			args{d: &Dpor{recents: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}, dh: &defaultDporHelper{}},
+			args{d: &Dpor{recentSnaps: recents, config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 4}, dh: &defaultDporHelper{}},
 				header: &types.Header{Number: big.NewInt(1), ParentHash: parentHash, Time: time2,
 					Extra: hexutil.MustDecode(rightExtra), Dpor: types.DporSnap{Seal: types.HexToDporSig(seal),
 						Proposers: []common.Address{common.HexToAddress(proposer)}},
@@ -247,9 +247,9 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 		{"fail when block number is 0", &defaultDporHelper{},
 			args{
 				c: &Dpor{
-					config:  &configs.DporConfig{Period: 3},
-					db:      &fakeDb{1},
-					recents: recents, dh: &defaultDporHelper{}},
+					config:      &configs.DporConfig{Period: 3},
+					db:          &fakeDb{1},
+					recentSnaps: recents, dh: &defaultDporHelper{}},
 				chain: &FakeReader{},
 				header: &types.Header{
 					Number: big.NewInt(0),

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -20,8 +21,8 @@ import (
 type BroadcastBlockFn func(block *types.Block, prop bool)
 
 const (
-	inmemorySnapshots  = 50  // Number of recent vote snapshots to keep in memory
-	inmemorySignatures = 100 // Number of recent block signatures to keep in memory
+	inMemorySnapshots  = 50  // Number of recent vote snapshots to keep in memory
+	inMemorySignatures = 100 // Number of recent block signatures to keep in memory
 
 	pctA = 2
 	pctB = 3 // only when n > 2/3 * N, accept the block
@@ -43,39 +44,54 @@ type Dpor struct {
 	db     database.Database   // Database to store and retrieve Snapshot checkpoints
 	config *configs.DporConfig // Consensus engine configuration parameters
 
-	recents     *lru.ARCCache // Snapshots for recent block to speed up reorgs
+	recentSnaps *lru.ARCCache // Snapshots for recent block to speed up reorgs
 	finalSigs   *lru.ARCCache // Final signatures of recent blocks to speed up mining
 	prepareSigs *lru.ARCCache // The signatures of recent blocks for 'prepared' state
 
-	signedBlocks map[uint64]common.Hash // record signed blocks.
+	signedBlocks     map[uint64]common.Hash // Record signed blocks.
+	signedBlocksLock sync.RWMutex
 
-	currentSnapshot *DporSnapshot
+	currentSnap     *DporSnapshot // Current snapshot
+	currentSnapLock sync.RWMutex
 
-	coinbase common.Address // signer is the validator
-	signFn   backend.SignFn // Sign function to authorize hashes with
-
-	// TODO: add proposerHandler here @shiyc
+	coinbase     common.Address // Coinbase of the miner(proposer or validator)
+	signFn       backend.SignFn // Sign function to authorize hashes with
+	coinbaseLock sync.RWMutex   // Protects the signer fields
 
 	handler *backend.Handler
 
 	isMiner     bool
 	isMinerLock sync.RWMutex
 
-	fake      Mode // used for test, always accept a block.
+	mode      Mode // used for test, always accept a block.
 	fakeFail  uint64
 	fakeDelay time.Duration // Time delay to sleep for before returning from verify
-
-	// contractCaller *backend.ContractCaller
+	modeLock  sync.RWMutex
 
 	pbftState consensus.State
+	stateLock sync.RWMutex
 
-	client backend.ClientBackend
-	chain  consensus.ChainReadWriter
+	client     backend.ClientBackend
+	clientLock sync.RWMutex
+
+	chain consensus.ChainReadWriter
 
 	pmBroadcastBlockFn BroadcastBlockFn
-	quitSync           chan struct{}
 
-	lock sync.RWMutex // Protects the signer fields
+	quitSync chan struct{}
+}
+
+// SignHash signs a hash msg with dpor coinbase account
+func (d *Dpor) SignHash(hash []byte) ([]byte, error) {
+	d.coinbaseLock.Lock()
+	defer d.coinbaseLock.Unlock()
+
+	var (
+		coinbase = d.coinbase
+		account  = accounts.Account{Address: coinbase}
+	)
+
+	return d.signFn(account, hash)
 }
 
 func (d *Dpor) IsMiner() bool {
@@ -92,8 +108,42 @@ func (d *Dpor) SetAsMiner(isMiner bool) {
 	d.isMiner = isMiner
 }
 
+// Mode returns dpor mode
 func (d *Dpor) Mode() Mode {
-	return d.fake
+	d.modeLock.RLock()
+	defer d.modeLock.RUnlock()
+
+	return d.mode
+}
+
+// CurrentSnap returns current dpor snapshot
+func (d *Dpor) CurrentSnap() *DporSnapshot {
+	d.currentSnapLock.RLock()
+	defer d.currentSnapLock.RUnlock()
+
+	return d.currentSnap
+}
+
+// SetCurrentSnap sets current dpor snapshot
+func (d *Dpor) SetCurrentSnap(snap *DporSnapshot) {
+	d.currentSnapLock.Lock()
+	defer d.currentSnapLock.Unlock()
+
+	d.currentSnap = snap
+}
+
+func (d *Dpor) Client() backend.ClientBackend {
+	d.clientLock.RLock()
+	defer d.clientLock.RUnlock()
+
+	return d.client
+}
+
+func (d *Dpor) SetClient(client backend.ClientBackend) {
+	d.clientLock.Lock()
+	defer d.clientLock.Unlock()
+
+	d.client = client
 }
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
@@ -110,9 +160,9 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 	}
 
 	// Allocate the Snapshot caches and create the engine
-	recents, _ := lru.NewARC(inmemorySnapshots)
-	finalSigs, _ := lru.NewARC(inmemorySignatures)
-	preparedSigs, _ := lru.NewARC(inmemorySignatures)
+	recentSnaps, _ := lru.NewARC(inMemorySnapshots)
+	finalSigs, _ := lru.NewARC(inMemorySignatures)
+	preparedSigs, _ := lru.NewARC(inMemorySignatures)
 
 	signedBlocks := make(map[uint64]common.Hash)
 
@@ -121,7 +171,7 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 		config:       &conf,
 		handler:      backend.NewHandler(&conf, common.Address{}),
 		db:           db,
-		recents:      recents,
+		recentSnaps:  recentSnaps,
 		finalSigs:    finalSigs,
 		prepareSigs:  preparedSigs,
 		signedBlocks: signedBlocks,
@@ -130,13 +180,13 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 
 func NewFaker(config *configs.DporConfig, db database.Database) *Dpor {
 	d := New(config, db)
-	d.fake = FakeMode
+	d.mode = FakeMode
 	return d
 }
 
 func NewDoNothingFaker(config *configs.DporConfig, db database.Database) *Dpor {
 	d := New(config, db)
-	d.fake = DoNothingFakeMode
+	d.mode = DoNothingFakeMode
 	return d
 }
 
@@ -152,44 +202,35 @@ func NewFakeDelayer(config *configs.DporConfig, db database.Database, delay time
 	return d
 }
 
-// // SetContractCaller sets dpor.contractCaller
-// func (d *Dpor) SetContractCaller(contractCaller *backend.ContractCaller) error {
-// 	d.lock.Lock()
-// 	defer d.lock.Unlock()
-// 	d.contractCaller = contractCaller
-// 	return nil
-// }
-
 // SetHandler sets dpor.handler
 func (d *Dpor) SetHandler(handler *backend.Handler) error {
-	d.lock.Lock()
-	defer d.lock.Unlock()
 	d.handler = handler
 	return nil
 }
 
 // IfSigned returns if already signed the block
-func (d *Dpor) IfSigned(header *types.Header) bool {
-	d.lock.Lock()
-	defer d.lock.Unlock()
+func (d *Dpor) IfSigned(number uint64) (common.Hash, bool) {
+	d.signedBlocksLock.RLock()
+	defer d.signedBlocksLock.RUnlock()
 
-	if _, ok := d.signedBlocks[header.Number.Uint64()]; ok {
-		return true
+	if hash, ok := d.signedBlocks[number]; ok {
+		return hash, true
 	}
-	return false
+	return common.Hash{}, false
 }
 
 // StartMining starts to create a handler and start it.
 func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, client backend.ClientBackend, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
 
 	d.chain = blockchain
-	d.client = client
+
+	d.SetClient(client)
+
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
 
 	// TODO: @liq read f from config
 	fsm := backend.NewDporStateMachine(d, 1)
 
-	// create a pbft handler
 	handler := d.handler
 
 	if err := handler.SetServer(server); err != nil {
@@ -204,16 +245,20 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, client backend.
 		return
 	}
 
+	handler.SetAvailable()
+
 	d.handler = handler
 
-	log.Debug("set handler available!")
-	d.handler.SetAvailable()
+	log.Debug("set dpor handler available!")
 
-	header := d.chain.CurrentHeader()
-	number := header.Number.Uint64()
-	hash := header.Hash()
+	var (
+		header = d.chain.CurrentHeader()
+		hash   = header.Hash()
+		number = header.Number.Uint64()
+	)
 
-	d.currentSnapshot, _ = d.dh.snapshot(d, d.chain, number, hash, nil)
+	snap, _ := d.dh.snapshot(d, d.chain, number, hash, nil)
+	d.SetCurrentSnap(snap)
 
 	go d.handler.Start()
 
@@ -229,8 +274,8 @@ func (d *Dpor) StopMining() {
 
 // Coinbase returns current coinbase
 func (d *Dpor) Coinbase() common.Address {
-	d.lock.Lock()
-	defer d.lock.Unlock()
+	d.coinbaseLock.RLock()
+	defer d.coinbaseLock.RUnlock()
 
 	return d.coinbase
 }
@@ -252,6 +297,7 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
+
 	return d.handler.ReceiveMinedPendingBlock(block)
 }
 

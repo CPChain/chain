@@ -48,7 +48,7 @@ func TestHandler_BroadcastMinedBlock(t *testing.T) {
 				dpor:           tt.fields.dpor,
 				knownBlocks:    tt.fields.knownBlocks,
 				pendingBlockCh: tt.fields.pendingBlockCh,
-				quitSync:       tt.fields.quitSync,
+				quitCh:         tt.fields.quitSync,
 			}
 			h.BroadcastPreprepareBlock(tt.args.block)
 		})

@@ -47,7 +47,7 @@ type Handler struct {
 
 	knownBlocks    *RecentBlocks
 	pendingBlockCh chan *types.Block
-	quitSync       chan struct{}
+	quitCh         chan struct{}
 
 	lock sync.RWMutex
 }
@@ -61,7 +61,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 		knownBlocks:    newKnownBlocks(),
 		dialer:         NewDialer(coinbase, config.Contracts[configs.ContractProposer]),
 		pendingBlockCh: make(chan *types.Block),
-		quitSync:       make(chan struct{}),
+		quitCh:         make(chan struct{}),
 		available:      false,
 	}
 
@@ -92,7 +92,7 @@ func (h *Handler) dialLoop() {
 				go h.dialer.DialAllRemoteValidators(0)
 			}
 
-		case <-h.quitSync:
+		case <-h.quitCh:
 			return
 		}
 	}
@@ -102,9 +102,9 @@ func (h *Handler) dialLoop() {
 func (h *Handler) Start() {
 
 	// always dial if there is not enough validators in peer set
-
 	go h.dialer.DialAllRemoteValidators(0)
-	// go h.dialLoop()
+
+	go h.procUnhandledBlocks()
 
 	// broadcast mined pending block, including empty block
 	go h.PendingBlockBroadcastLoop()
@@ -114,7 +114,7 @@ func (h *Handler) Start() {
 // Stop stops all
 func (h *Handler) Stop() {
 
-	close(h.quitSync)
+	close(h.quitCh)
 
 	return
 }
@@ -165,14 +165,13 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 }
 
 // RemovePeer removes a p2p peer with its addr
-func (h *Handler) RemovePeer(addr string) error {
+func (h *Handler) RemovePeer(addr string) {
 
 	log.Debug("removing dpor peer", "addr", addr)
 
 	_ = h.dialer.removeRemoteProposers(addr)
 	_ = h.dialer.removeRemoteValidators(addr)
 
-	return nil
 }
 
 // HandleMsg handles a msg of peer with id "addr"

@@ -118,7 +118,7 @@ func IsDporMsg(msg p2p.Msg) bool {
 }
 
 // RecoverBlockFromMsg recovers a block from a p2p msg
-func RecoverBlockFromMsg(msg p2p.Msg, p *p2p.Peer) (*types.Block, error) {
+func RecoverBlockFromMsg(msg p2p.Msg, p interface{}) (*types.Block, error) {
 	// recover the block
 	var block *types.Block
 	if err := msg.Decode(&block); err != nil {
@@ -131,7 +131,7 @@ func RecoverBlockFromMsg(msg p2p.Msg, p *p2p.Peer) (*types.Block, error) {
 }
 
 // RecoverHeaderFromMsg recovers a header from a p2p msg
-func RecoverHeaderFromMsg(msg p2p.Msg, p *p2p.Peer) (*types.Header, error) {
+func RecoverHeaderFromMsg(msg p2p.Msg, p interface{}) (*types.Header, error) {
 	// retrieve the header
 	var header *types.Header
 	if err := msg.Decode(&header); err != nil {

@@ -72,7 +72,7 @@ func Test_loadSnapshot(t *testing.T) {
 		hash     common.Hash
 	}
 	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	cache, _ := lru.NewARC(inmemorySnapshots)
+	cache, _ := lru.NewARC(inMemorySnapshots)
 	expectedDporSnapshot := new(DporSnapshot)
 	expectedDporSnapshot.config = &testConfig
 	tests := []struct {
@@ -114,7 +114,7 @@ func TestSnapshot_store(t *testing.T) {
 		db database.Database
 	}
 
-	cache, _ := lru.NewARC(inmemorySnapshots)
+	cache, _ := lru.NewARC(inMemorySnapshots)
 	config := &configs.DporConfig{Period: 3, TermLen: 3}
 
 	tests := []struct {
@@ -182,7 +182,7 @@ func TestSnapshot_apply(t *testing.T) {
 		headers []*types.Header
 	}
 	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	testCache, _ := lru.NewARC(inmemorySnapshots)
+	testCache, _ := lru.NewARC(inMemorySnapshots)
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
 	expectedResult.config = &testConfig
@@ -246,7 +246,7 @@ func TestSnapshot_applyHeader(t *testing.T) {
 		header *types.Header
 	}
 	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	testCache, _ := lru.NewARC(inmemorySnapshots)
+	testCache, _ := lru.NewARC(inMemorySnapshots)
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
 	expectedResult.config = &testConfig
@@ -302,7 +302,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 		header *types.Header
 	}
 	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	testCache, _ := lru.NewARC(inmemorySnapshots)
+	testCache, _ := lru.NewARC(inMemorySnapshots)
 	expectedResult := new(DporSnapshot)
 	expectedResult.Number = 1
 	expectedResult.config = &testConfig

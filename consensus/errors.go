@@ -18,9 +18,6 @@ package consensus
 
 import (
 	"errors"
-
-	"bitbucket.org/cpchain/chain/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 var (
@@ -41,28 +38,10 @@ var (
 	ErrInvalidNumber = errors.New("invalid block number")
 
 	// ErrNotEnoughSigs is returned if there is not enough signatures for a block.
-	ErrNotEnoughSigs = &ErrNotEnoughSigsType{NotEnoughSigsBlockHash: common.Hash{}}
-
-	// ErrPreprepareHeader is returned if a header in Preprepare phrase is invalid.
-	ErrPreprepareHeader = errors.New("invalid preprepare header")
-
-	// ErrPrepareHeader is returned if a header in Prepare phrase is invalid.
-	ErrPrepareHeader = errors.New("invalid prepare header")
-
-	// ErrCommitHeader is returned if a header in Commit phrase is invalid.
-	ErrCommitHeader = errors.New("invalid commit header")
-
-	// ErrWhenSigningHeader is returned if there is an error when signing header.
-	ErrWhenSigningHeader = errors.New("error when signing header")
+	ErrNotEnoughSigs = errors.New("not enough signatures in block")
 
 	// ErrUnauthorized is returned if a header is signed by a non-authorized entity.
 	ErrUnauthorized = errors.New("unauthorized leader")
-
-	// ErrNewSignedHeader is returned if i sign the block, but not accept the block yet.
-	ErrNewSignedHeader = &ErrNewSignedHeaderType{SignedHeader: &types.Header{}}
-
-	// ErrUnknownPbftState is returned if committee handler's state is unknown
-	ErrUnknownPbftState = errors.New("unknown pbft state")
 
 	// ErrUnknownLbftState is returned if committee handler's state is unknown
 	ErrUnknownLbftState = errors.New("unknown lbft state")
@@ -70,21 +49,3 @@ var (
 	// ErrInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	ErrInvalidSigners = errors.New("invalid signer list on checkpoint block")
 )
-
-// ErrNotEnoughSigsType is returned if there is not enough signatures for a block.
-type ErrNotEnoughSigsType struct {
-	NotEnoughSigsBlockHash common.Hash
-}
-
-func (e *ErrNotEnoughSigsType) Error() string {
-	return "not enough sigs: block hash: " + e.NotEnoughSigsBlockHash.Hex()
-}
-
-// ErrNewSignedHeaderType is type for ErrNewSignedHeader.
-type ErrNewSignedHeaderType struct {
-	SignedHeader *types.Header
-}
-
-func (e *ErrNewSignedHeaderType) Error() string {
-	return "signed the header: header hash: " + e.SignedHeader.Hash().Hex()
-}

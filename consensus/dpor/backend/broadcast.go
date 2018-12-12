@@ -146,7 +146,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 
 			}
 
-		case <-h.quitSync:
+		case <-h.quitCh:
 			return
 		}
 	}

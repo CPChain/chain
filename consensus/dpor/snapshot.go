@@ -568,6 +568,8 @@ func (s *DporSnapshot) TermOf(blockNum uint64) uint64 {
 	if blockNum == 0 {
 		return 0 // block number 0 is a special case, its term is set to 0
 	}
+
+	// TODO: fix RACE here. s.config.*
 	return (blockNum - 1) / ((s.config.TermLen) * (s.config.ViewLen))
 }
 

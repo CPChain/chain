@@ -183,7 +183,7 @@ type Protocol interface {
 
 	AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error)
 
-	RemovePeer(id string) error
+	RemovePeer(id string)
 
 	HandleMsg(id string, msg p2p.Msg) error
 

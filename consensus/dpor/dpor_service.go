@@ -15,12 +15,12 @@ import (
 
 // TermOf returns the term number of given block number
 func (d *Dpor) TermOf(number uint64) uint64 {
-	return d.currentSnapshot.TermOf(number)
+	return d.currentSnap.TermOf(number)
 }
 
 // FutureTermOf returns the future term number of given block number
 func (d *Dpor) FutureTermOf(number uint64) uint64 {
-	return d.currentSnapshot.FutureTermOf(number)
+	return d.currentSnap.FutureTermOf(number)
 }
 
 // GetCurrentBlock returns current block
@@ -34,7 +34,7 @@ func (d *Dpor) GetCurrentBlock() *types.Block {
 // VerifyProposerOf verifies if an address is a proposer of given term
 func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error) {
 
-	snap := d.currentSnapshot
+	snap := d.currentSnap
 	proposers := snap.getRecentProposers(term)
 
 	log.Debug("proposers in dpor current snapshot", "count", len(proposers), "term", term)
@@ -52,7 +52,7 @@ func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error
 // VerifyValidatorOf verifies if an address is a validator of given term
 func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, error) {
 
-	snap := d.currentSnapshot
+	snap := d.currentSnap
 	validators := snap.getRecentValidators(term)
 
 	log.Debug("validators in dpor current snapshot", "count", len(validators), "term", term)
@@ -68,24 +68,24 @@ func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, erro
 }
 
 func (d *Dpor) ValidatorsOf(number uint64) ([]common.Address, error) {
-	snap := d.currentSnapshot
+	snap := d.currentSnap
 	term := snap.TermOf(number)
 	return snap.getRecentValidators(term), nil
 }
 
 func (d *Dpor) ProposersOf(number uint64) ([]common.Address, error) {
-	snap := d.currentSnapshot
+	snap := d.currentSnap
 	term := snap.TermOf(number)
 	return snap.getRecentProposers(term), nil
 }
 
 func (d *Dpor) ValidatorsOfTerm(term uint64) ([]common.Address, error) {
-	snap := d.currentSnapshot
+	snap := d.currentSnap
 	return snap.getRecentValidators(term), nil
 }
 
 func (d *Dpor) ProposersOfTerm(term uint64) ([]common.Address, error) {
-	snap := d.currentSnapshot
+	snap := d.currentSnap
 	return snap.getRecentProposers(term), nil
 }
 

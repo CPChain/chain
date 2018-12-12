@@ -22,7 +22,6 @@ import (
 	"math/big"
 	"time"
 
-	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -37,14 +36,12 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	termLen = uint(4) // Default number of signers.
+	termLen = uint(4) // Default number of proposers.
 	viewLen = uint(4) // Default number of blocks one signer can generate in one committee.
-
-	// blockPeriod = uint(1) // Default minimum difference between two consecutive block's timestamps
+	period  = uint(1) // Default minimum difference between two consecutive block's timestamps
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
-
 )
 
 var (
@@ -152,6 +149,7 @@ func (d *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, ref
 	return d.dh.verifySeal(d, chain, header, nil, refHeader)
 }
 
+// VerifySigs checks if header has enough signatures of validators.
 func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, refHeader *types.Header) error {
 	return d.dh.verifySigs(d, chain, header, nil, refHeader)
 }
@@ -159,16 +157,16 @@ func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, ref
 // PrepareBlock implements consensus.Engine, preparing all the consensus fields of the
 // header for running the transactions on top.
 func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
-	// If the block isn't a checkpoint, cast a random vote (good enough for now)
-	header.Nonce = types.BlockNonce{}
-
 	number := header.Number.Uint64()
 
-	// Assemble the voting Snapshot to check which votes make sense
+	// Create a snapshot
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
 	if err != nil {
 		return err
 	}
+
+	// Set nil Nonce
+	header.Nonce = types.BlockNonce{}
 
 	// Set the correct difficulty
 	header.Difficulty = d.dh.calcDifficulty(snap, d.Coinbase())
@@ -179,16 +177,16 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	}
 	header.Extra = header.Extra[:extraVanity]
 
-	// TODO differentiate signer from validator/proposer
-	for _, signer := range snap.ProposersOf(number) {
-		header.Dpor.Proposers = append(header.Dpor.Proposers, signer)
+	for _, proposer := range snap.ProposersOf(number) {
+		header.Dpor.Proposers = append(header.Dpor.Proposers, proposer)
 	}
 
-	log.Info("prepare a block", "number", header.Number, "proposers", header.Dpor.ProposersFormatText(),
+	log.Info("prepare a block", "number", header.Number.Uint64(), "proposers", header.Dpor.ProposersFormatText(),
 		"validators", header.Dpor.ValidatorsFormatText())
 
-	// TODO WRONG this should be validator set size
-	header.Dpor.Sigs = make([]types.DporSignature, d.config.TermLen)
+	// Set correct signatures size
+	header.Dpor.Sigs = make([]types.DporSignature, d.config.ValidatorsLen)
+
 	// Mix digest is reserved for now, set to empty
 	header.MixHash = common.Hash{}
 
@@ -223,11 +221,10 @@ func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state
 // Authorize injects a private key into the consensus engine to mint new blocks
 // with.
 func (d *Dpor) Authorize(signer common.Address, signFn backend.SignFn) {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-
+	d.coinbaseLock.Lock()
 	d.coinbase = signer
 	d.signFn = signFn
+	d.coinbaseLock.Unlock()
 
 	if d.handler == nil {
 		d.handler = backend.NewHandler(d.config, d.Coinbase())
@@ -241,21 +238,25 @@ func (d *Dpor) Authorize(signer common.Address, signFn backend.SignFn) {
 // the local signing credentials.
 // NB please populate the correct field values.  we are now removing some fields such as nonce.
 func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error) {
-	header := block.Header()
+	var (
+		header = block.Header()
+		number = header.Number.Uint64()
+
+		coinbase = d.Coinbase()
+		signFn   = d.SignHash
+	)
 
 	// Sealing the genesis block is not supported
-	number := header.Number.Uint64()
 	if number == 0 {
 		return nil, errUnknownBlock
 	}
+
 	// For 0-period chains, refuse to seal empty blocks (no reward but would spin sealing)
 	if d.config.Period == 0 && len(block.Transactions()) == 0 {
 		return nil, errWaitTransactions
 	}
+
 	// Don't hold the signer fields for the entire sealing procedure
-	d.lock.RLock()
-	signer, signFn := d.coinbase, d.signFn
-	d.lock.RUnlock()
 
 	// Bail out if we're unauthorized to sign a block
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
@@ -263,7 +264,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, err
 	}
 
-	ok, err := snap.IsProposerOf(d.coinbase, number)
+	ok, err := snap.IsProposerOf(coinbase, number)
 	if err != nil {
 		log.Warn("Error occurs when seal block", "error", err)
 		return nil, err
@@ -284,7 +285,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	}
 
 	// Proposer seals the block with signature
-	sighash, err := signFn(accounts.Account{Address: signer}, d.dh.sigHash(header, []byte{}).Bytes())
+	sighash, err := signFn(d.dh.sigHash(header, []byte{}).Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +295,8 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	header.Dpor.Sigs = make([]types.DporSignature, len(header.Dpor.Validators))
 	log.Info("sealed the block", "hash", header.Hash().Hex(), "number", header.Number)
 
-	d.currentSnapshot = snap
+	// Update dpor current snapshot
+	d.SetCurrentSnap(snap)
 
 	return block.WithSeal(header), nil
 }
@@ -307,7 +309,7 @@ func (d *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *
 	if err != nil {
 		return nil
 	}
-	return d.dh.calcDifficulty(snap, d.coinbase)
+	return d.dh.calcDifficulty(snap, d.Coinbase())
 }
 
 // APIs implements consensus.Engine, returning the user facing RPC API to allow
@@ -326,50 +328,16 @@ func (d *Dpor) GAPIs(chain consensus.ChainReader) []grpc.GApi {
 	return []grpc.GApi{}
 }
 
-// IsFutureSigner implements Validator.
-// TODO: @shiyc remove it later
-func (d *Dpor) IsFutureSigner(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-
-	return true, nil
-
-	// TODO
-	// snap, err := d.dh.snapshot(d, chain, number-1, chain.GetHeaderByNumber(number).ParentHash, nil)
-	// if err != nil {
-	// 	return false, err
-	// }
-
-	// if snap.ifUseDefaultSigners() {
-	// 	for _, signer := range snap.candidates() {
-	// 		if signer == address {
-	// 			return true, nil
-	// 		}
-	// 	}
-	// 	return false, nil
-	// }
-	// log.Debug("checking signers...")
-
-	// return snap.IsFutureSignerOf(address, number) || snap.IsSignerOf(address, number), nil
-}
-
-//IsFutureValidator implements proposer
-func (d *Dpor) IsFutureProposer(chain consensus.ChainReader, address common.Address, number uint64) (bool, error) {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-	return true, nil
-	//TODO: @shiyc implement it
-}
-
 // State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).
 func (d *Dpor) State() consensus.State {
-	d.lock.Lock()
-	defer d.lock.Unlock()
+	d.stateLock.Lock()
+	defer d.stateLock.Unlock()
 	return d.pbftState
 }
 
+// GetCalcRptInfo get the rpt value of an address at specific block number
 func (d *Dpor) GetCalcRptInfo(address common.Address, blockNum uint64) int64 {
-	instance, err := rpt.NewRptService(d.client, d.config.Contracts[configs.ContractRpt])
+	instance, err := rpt.NewRptService(d.Client(), d.config.Contracts[configs.ContractRpt])
 	if err != nil {
 		log.Fatal("GetCalcRptInfo", "error", err)
 	}

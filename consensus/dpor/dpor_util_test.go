@@ -246,8 +246,8 @@ func Test_acceptSigs(t *testing.T) {
 		sigs.SetSig(signer, []byte("ok"))
 	}
 
-	emptyCache, _ := lru.NewARC(inmemorySnapshots)
-	cache, _ := lru.NewARC(inmemorySnapshots)
+	emptyCache, _ := lru.NewARC(inMemorySnapshots)
+	cache, _ := lru.NewARC(inMemorySnapshots)
 	cache.Add(header.Hash(), sigs)
 
 	type args struct {

@@ -300,21 +300,23 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			return err
 		}
 
-		defer pm.removePeer(peer.id)
-
-		id, _, _ := common.Address{}.Hex(), false, false
+		id, isProposer, isValidator := common.Address{}.Hex(), false, false
 		if dporMode == dpor.NormalMode && isMiner && remoteIsMiner {
 			// add peer to dpor.handler.peers, this is for pbft/lbft msg handling
-			id, _, _, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
+			id, isProposer, isValidator, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
 			switch err {
 			case nil:
-				defer dporProtocol.RemovePeer(id)
-
 			default:
 				log.Warn("8888 fail to add peer to dpor's peer set", "err", err)
-				return err
 			}
 		}
+
+		defer func() {
+			// TODO: if isMiner, call this
+			dporProtocol.RemovePeer(id)
+
+			pm.removePeer(peer.id)
+		}()
 
 		// send local pending transactions to the peer.
 		// new transactions appearing after this will be sent via broadcasts.
@@ -343,12 +345,12 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 					return err
 				}
 
-			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner:
-				// case backend.IsDporMsg(msg) && (isProposer || isValidator):
+			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner && (isProposer || isValidator):
 				err = dporProtocol.HandleMsg(id, msg)
 				switch err {
 				case nil:
 				case consensus.ErrUnknownAncestor:
+					go pm.synchronise(peer)
 
 				default:
 					log.Warn("8888 err when handling dpor msg", "err", err)

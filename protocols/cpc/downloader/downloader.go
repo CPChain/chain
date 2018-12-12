@@ -331,10 +331,10 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 
 	case errBadPeer, errPeersUnavailable:
 		// TODO: @liuq fix this
+		log.Debug("err when sync with peer", "err", err)
 
 	case consensus.ErrNotEnoughSigs:
 		log.Debug("Not enough signatures, waiting", "err", err)
-		return err
 
 	default:
 		log.Warn("Synchronisation failed, retrying", "err", err)
@@ -1139,6 +1139,7 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 				}
 				running = true
 			}
+			// TODO: fix this
 			// Make sure that we have peers available for fetching. If all peers have been tried
 			// and all failed throw an error
 			if !progressed && !throttled && !running && len(idles) == total && pending() > 0 {

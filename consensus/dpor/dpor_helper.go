@@ -21,7 +21,6 @@ import (
 	"reflect"
 	"time"
 
-	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -56,7 +55,7 @@ func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader,
 // caller may optionally pass in a batch of parents (ascending order) to avoid
 // looking those up from the database. This is useful for concurrently verifying
 // a batch of new headers.
-func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header,
+func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header,
 	refHeader *types.Header, verifySigs bool, verifyProposers bool) error {
 	if header.Number == nil {
 		return errUnknownBlock
@@ -69,7 +68,7 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 		return consensus.ErrFutureBlock
 	}
 
-	switch d.fake {
+	switch dpor.Mode() {
 	case DoNothingFakeMode:
 		// do nothing
 	case FakeMode:
@@ -82,7 +81,6 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 		if len(parents) > 0 {
 			parent = parents[len(parents)-1]
 		} else {
-			// parent = chain.GetHeader(header.ParentHash, number-1)
 			blk := chain.GetBlock(header.ParentHash, number-1)
 			if blk != nil {
 				parent = blk.Header()
@@ -90,12 +88,19 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 		}
 		// Ensure that the block's parent is valid
 		if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
+
 			log.Debug("consensus.ErrUnknownAncestor 3")
+			log.Debug("parent", "parent", parent)
+			if parent != nil {
+				log.Debug("parent.number", "number", parent.Number.Uint64(), "number-1", number-1)
+				log.Debug("parent.hash", "hash", parent.Hash(), "header.ParentHash", header.ParentHash)
+			}
+
 			return consensus.ErrUnknownAncestor
 		}
 
 		// Ensure that the block's timestamp is valid
-		if parent.Time.Uint64()+d.config.Period > header.Time.Uint64() {
+		if parent.Time.Uint64()+dpor.config.Period > header.Time.Uint64() {
 			return ErrInvalidTimestamp
 		}
 	}
@@ -115,7 +120,7 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 
 	if verifyProposers {
 		// verify proposers
-		if err := d.dh.verifyProposers(d, chain, header, parents, refHeader); err != nil {
+		if err := dpor.dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
 			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
 			return err
 		}
@@ -123,7 +128,7 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 
 	// verify dpor sigs if required
 	if number > 0 && verifySigs {
-		if err := dh.verifySigs(d, chain, header, parents, refHeader); err != nil {
+		if err := dh.verifySigs(dpor, chain, header, parents, refHeader); err != nil {
 			log.Warn("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
 			return err
 		}
@@ -148,7 +153,7 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 	// Check proposers
 	proposers := snap.ProposersOf(number)
 	if !reflect.DeepEqual(header.Dpor.Proposers, proposers) {
-		if NormalMode == dpor.fake {
+		if dpor.Mode() == NormalMode {
 			log.Debug("err: invalid proposer list")
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
 			log.Debug("proposers in block dpor snap:")
@@ -180,8 +185,6 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 	return nil
 }
 
-// verifValidators verifies dpor validators
-
 // Snapshot retrieves the authorization Snapshot at a given point in time.
 // @param chainSeg  the segment of a chain, composed by ancesters and the block(sepcified by parameter [number] and [hash])
 // in the order of ascending block number.
@@ -196,23 +199,16 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 	numberIter := number
 	for snap == nil {
-		// If an in-memory Snapshot was found, use that
-		// TODO: @AC disable cache as the cache contains an invalid snapshot
-		// if s, ok := dpor.recents.Get(hash); ok {
-		// 	snap = s.(*DporSnapshot)
-		// 	break
-		// }
-
 		// If an on-disk checkpoint Snapshot can be found, use that
-		// if number%checkpointInterval == 0 {
 		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
 			log.Info("loading snapshot", "number", numberIter, "hash", hash)
 			var rptService rpt.RptService
-			if dpor.client != nil {
-				rptService, _ = rpt.NewRptService(dpor.client, dpor.config.Contracts[configs.ContractRpt])
+			client := dpor.Client()
+			if client != nil {
+				rptService, _ = rpt.NewRptService(client, dpor.config.Contracts[configs.ContractRpt])
 			}
 
-			s, err := loadSnapshot(dpor.config, dpor.client, rptService, dpor.db, hash)
+			s, err := loadSnapshot(dpor.config, client, rptService, dpor.db, hash)
 			if err == nil {
 				log.Debug("Loaded voting Snapshot from disk", "number", numberIter, "hash", hash)
 				snap = s
@@ -232,7 +228,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 			var proposers []common.Address
 			var validators []common.Address
-			if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
+			if dpor.Mode() == FakeMode || dpor.Mode() == DoNothingFakeMode {
 				// do nothing when test,empty proposers assigned
 			} else {
 				// Create a snapshot from the genesis block
@@ -275,9 +271,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		headers[i], headers[len(headers)-1-i] = headers[len(headers)-1-i], headers[i]
 	}
 
-	dpor.lock.Lock()
-	client := dpor.client
-	dpor.lock.Unlock()
+	client := dpor.Client()
 
 	// Apply headers to the snapshot and updates RPTs
 	newSnap, err := snap.apply(headers, client)
@@ -286,7 +280,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	// Save to cache
-	dpor.recents.Add(newSnap.hash(), newSnap)
+	// TODO: check if it needs a lock
+	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
 	if IsCheckPoint(newSnap.number(), dpor.config.TermLen, dpor.config.ViewLen) && len(headers) > 0 {
@@ -297,7 +292,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		log.Debug("Stored voting Snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 	}
 
-	dpor.currentSnapshot = newSnap
+	dpor.SetCurrentSnap(newSnap)
 
 	return newSnap, err
 }
@@ -315,7 +310,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Fake Dpor doesn't do seal check
-	if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
+	if dpor.Mode() == FakeMode || dpor.Mode() == DoNothingFakeMode {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
 			return errFakerFail
@@ -324,7 +319,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Resolve the authorization key and check against signers
-	proposer, _, err := dh.ecrecover(header, dpor.finalSigs)
+	proposer, _, err := dh.ecrecover(header, dpor.finalSigs) // TODO: check if it needs a lock
 	if err != nil {
 		return err
 	}
@@ -366,7 +361,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Fake Dpor doesn't do seal check
-	if dpor.fake == FakeMode || dpor.fake == DoNothingFakeMode {
+	if dpor.Mode() == FakeMode || dpor.Mode() == DoNothingFakeMode {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
 			return errFakerFail
@@ -418,7 +413,10 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	if dpor.IsMiner() && dh.isTimeToDialValidators(dpor, dpor.chain) {
-		dh.uploadNodeInfo(dpor, snap, number)
+		err = dh.updateAndDial(dpor, snap, number)
+		if err != nil {
+			return err
+		}
 	}
 
 	// pass
@@ -441,7 +439,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	var ok bool
 	// Retrieve signatures of the block in cache
 	if state == consensus.Prepared || state == consensus.ImpeachPrepared {
-		s, ok = dpor.finalSigs.Get(hash)
+		s, ok = dpor.finalSigs.Get(hash) // check if it needs a lock
 		if !ok || s == nil {
 			s = &Signatures{
 				sigs: make(map[common.Address][]byte),
@@ -477,9 +475,9 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	header.Dpor.Sigs = allSigs
 
 	// Sign the block if self is in the committee
-	if snap.IsValidatorOf(dpor.coinbase, number) {
+	if snap.IsValidatorOf(dpor.Coinbase(), number) {
 		// NOTE: sign a block only once
-		if signedHash, signed := dpor.signedBlocks[header.Number.Uint64()]; signed && signedHash != header.Hash() {
+		if signedHash, signed := dpor.IfSigned(number); signed && signedHash != header.Hash() {
 			return errMultiBlocksInOneHeight
 		}
 
@@ -491,7 +489,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		} else {
 			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		}
-		sighash, err := dpor.signFn(accounts.Account{Address: dpor.coinbase}, hashToSign)
+		sighash, err := dpor.SignHash(hashToSign)
 		if err != nil {
 			log.Warn("signing block header failed", "error", err)
 			return err
@@ -503,11 +501,11 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 
 		// Copy signer's signature to the right position in the allSigs
-		sigPos, _ := snap.ValidatorViewOf(dpor.coinbase, number)
+		sigPos, _ := snap.ValidatorViewOf(dpor.Coinbase(), number)
 		copy(header.Dpor.Sigs[sigPos][:], sighash)
 
 		// Record new sig to signature cache
-		s.(*Signatures).SetSig(dpor.coinbase, sighash)
+		s.(*Signatures).SetSig(dpor.Coinbase(), sighash)
 
 		return nil
 	}
@@ -520,13 +518,13 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 
 	header := chain.CurrentHeader()
 	number := header.Number.Uint64()
-	snap := dpor.currentSnapshot
+	snap := dpor.CurrentSnap()
 
 	// Some debug info
-	log.Debug("my address", "eb", dpor.coinbase.Hex())
+	log.Debug("my address", "eb", dpor.Coinbase().Hex())
 	log.Debug("current block number", "number", number)
 	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen))
-	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.coinbase, number))
+	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.Coinbase(), number))
 	log.Debug("term idx of block number", "block term index", snap.TermOf(number))
 
 	log.Debug("recent proposers: ")
@@ -545,32 +543,35 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 
 	// If in a checkpoint and self is in the future committee, try to build the committee network
 	isCheckpoint := IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen)
-	isFutureSigner := snap.IsFutureProposerOf(dpor.coinbase, number)
+	isFutureSigner := snap.IsFutureProposerOf(dpor.Coinbase(), number)
 	ifStartDynamic := snap.isStartElection()
 
 	return isCheckpoint && isFutureSigner && ifStartDynamic
 }
 
-func (dh *defaultDporHelper) uploadNodeInfo(dpor *Dpor, snap *DporSnapshot, number uint64) error {
+func (dh *defaultDporHelper) updateAndDial(dpor *Dpor, snap *DporSnapshot, number uint64) error {
 	log.Info("In future committee, building the committee network...")
 
 	term := snap.FutureTermOf(number)
-	// TODO: @chengx add FutureValidatorsOf in snapshot.go
-	signers := snap.FutureSignersOf(number)
 
-	go func(eIdx uint64, committee []common.Address) {
-		// Updates handler.signers
-		err := dpor.handler.UpdateRemoteValidators(eIdx, committee)
-		log.Warn("err when updating remote validators", "err", err)
+	// TODO: I need FutureValidatorsOf
+	validators := snap.FutureSignersOf(number)
 
-		// Connect all
-		// err = dpor.validatorHandler.UploadEncryptedNodeInfo(eIdx)
-		// log.Warn("err when uploading my node info", "err", err)
+	go func(term uint64, remoteValidators []common.Address) {
 
-		err = dpor.handler.DialAllRemoteValidators(eIdx)
-		log.Warn("err when dialing remote validators", "err", err)
+		// Updates RemoteValidators in handler
+		err := dpor.handler.UpdateRemoteValidators(term, remoteValidators)
+		if err != nil {
+			log.Warn("err when updating remote validators", "err", err)
+		}
 
-	}(term, signers)
+		// Dial all remote validators
+		err = dpor.handler.DialAllRemoteValidators(term)
+		if err != nil {
+			log.Warn("err when dialing remote validators", "err", err)
+		}
+
+	}(term, validators)
 
 	return nil
 }

@@ -29,7 +29,8 @@ const (
 )
 
 const (
-	DefaultBlockPeriod = 1
+	DefaultBlockPeriod   = 1
+	DefaultValidatorsLen = 4
 )
 
 // TODO @hmw make the name more meaningful.  add doc.
@@ -107,6 +108,7 @@ type DporConfig struct {
 	Period                uint64                    `json:"period"                toml:"period"`             // Number of seconds between blocks to enforce
 	TermLen               uint64                    `json:"termLen"               toml:"termLen"`            // Term length to reset votes and checkpoint
 	ViewLen               uint64                    `json:"viewLen"               toml:"viewLen"`            // View length of blocks one signer can seal in one committee
+	ValidatorsLen         uint64                    `json:"validatorsLen"         toml:"validatorsLen"`      // Number of validators
 	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"    toml:"maxInitBlockNumber"` // The maximum block number which uses default proposers
 	Contracts             map[string]common.Address `json:"contracts"             toml:"contracts"`
 	ProxyContractRegister common.Address            `json:"proxyContractRegister" toml:"proxyContractRegister"`

@@ -35,6 +35,7 @@ var (
 			Period:                DefaultBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
+			ValidatorsLen:         4,
 			MaxInitBlockNumber:    72,
 			ProxyContractRegister: common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
 			Contracts:             devContractAddressMap,
