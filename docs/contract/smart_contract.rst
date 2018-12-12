@@ -6,8 +6,8 @@ Environment setup
 
 Install Solc
 *************
-Currently, CPC smart contracts programming depends on the vm of Ethereum. In future we will become independent of
-Ethereum.Developers need install solc to compile the contracts code.
+Currently, CPC smart contracts programming depends on the Ethereum's VM. In future we will become independent of
+Ethereum. Developers need install solc to compile the contracts code.
 
 npm / Node.js
 
@@ -20,7 +20,7 @@ Use npm for a convenient and portable way to install solc.
 Docker
 
 Ethereum provide up to date docker builds for the compiler.The stable repository contains released versions while
-the nightly repository contains potentially unstable changes in the develop branch.
+the nightly repository contains potentially unstable changes in the develop branch. So we fix solc version on 0.4.24
 
 .. code::
 
@@ -28,7 +28,7 @@ the nightly repository contains potentially unstable changes in the develop bran
 
 Deploy Smart Contract
 *********************
-Cpchain already write 5 init smart contracts to maintain the normal operation of Dpor. Developers should deploy them when
+Cpchain already write 5 init smart contracts to maintain normal operation of Dpor. Developers should deploy them when
 chain started.
 
 .. code::
@@ -38,15 +38,15 @@ chain started.
    go run ${gopath}/src/bitbucket.org/cpchain/chain/tools/smartcontract/main.go
    replace ${gopath} with real env path. ex:/home/${user}/workspace/chain_dev
 
-init smart contract
+Init Smart Contract
 -------------------
 
-ProxyContractRegister contract
+ProxyContractRegister Contract
 ******************************
 
    Developers can call ProxyContractRegister contract's function
    ``registerProxyContract()`` to bind proxy contract address
-   and deployed or updated contract address.Thus,developers not need to modify the contract address on Go or Solidity when the contract is update.
+   and real contract address.Thus,developers not need to modify the contract address on Go or Solidity when the contract is update.
    Developers can use function
    ``getRealContract()`` to get real contract address.
 
@@ -58,9 +58,9 @@ RPT Contract
    **Transaction(TX)**,
    **Data Contribution(DC)**,
    **Blockchain Maintenance(BM)**,
-   **Proxy Reputation(PR)**. you can call function
+   **Proxy Reputation(PR)**. `Here <https://github.com/CPChain/pdash>`_ is detail of Rnode and RPT. Developers can call function
    ``getRpt()`` to get node's RPT. Rpt Contract can be update by contract depolyer to avoid some evil node maliciously increase it RPT.
-   you can update the weight of the 5 dimensions and windowSize by
+   Developers can update the weight of the 5 dimensions and windowSize by
    call RPT contract's function
    ``updateAlpha()``,
    ``updateBeta()``,
@@ -96,14 +96,14 @@ Pdash Contract
 **************
 
    The Pdash contract is a important Dapp on cpchain,it help RPT contract calculation the RNode's Proxy Reputation(PR).
-   You can click here https://github.com/CPChain/pdash to get more detail.
+   You can click `here <https://github.com/CPChain/pdash>`_ to get more detail.
 
 Register Contract
 *****************
 
    Register will recoding the upload history of nodes,it help RPT contract to calculation node's Data Contribution.
 
-private Contract
+Private Contract
 ----------------
    We designed the data privacy mechanism, which allows users to deploy and call private contract on cpchain for completing their
    private transactions in a secure way. Besides the agent P(validator and intermediary) and the account accepted by deployer,
@@ -111,9 +111,23 @@ private Contract
    are not the transaction's participants, some sophisticated key data is recorded and maintained in blockchain and the
    data could be used for audition and validation for private transactions whenever it requires.
 
-   Here we offer a privateContract example.
+   User Scenario Steps
 
-   .. code::
+   1. Seller A registers an item via the private contract CT. An item includes name, ipfs_cid, price, description and so on.
+
+   2. Buyer B checked the registered items on contract CT and choose some items to buy.
+
+   3. Buyer B pays money to the escrow contract CE.
+
+   4. Buyer B sends contract CT an order about which item to buy and his public key, which is used to encrypt the item's symmetric key(e.g. AES).
+
+   5. Seller A notices the order from contract CT, and checks if the buyer have enough money from the escrow contract CE.
+
+   6. Seller A sends contract CT the confirmation message attached with the symmetric key encrypted by the buyer's public key.
+
+   7. Buyer B received the encrypted symmetric key, and then decrypt it. With the symmetric key, the buyer B can decrypt the data on IPFS and then confirm that it is what they need.
+
+   8. The agent P notice the confirmation and transfer money to seller A.
 
 
 

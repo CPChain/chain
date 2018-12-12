@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to docs's documentation!
+Welcome to developer's documentation!
 ================================
 
 .. toctree::
@@ -11,12 +11,12 @@ Welcome to docs's documentation!
    :caption: Contents
 
    deployment/deployment
+   contract/smart_contract
+   api/cpc_fusion.cpc
    consensus/dpor
+   consensus/glossary
    consensus/proposer
    consensus/validator
-   consensus/glossary
-   contract/smart_contract
-   api/web3.cpc
 
 
 

@@ -1,11 +1,11 @@
-web3.cpc API
+Cpc_fusion API
 =============
 
-.. py:module:: web3.cpc
+.. py:module:: cpc_fusion.cpc
 
 .. py:class:: Cpc
 
-The ``web3.cpc`` object exposes the following properties and methods to
+The ``cpc_fusion.cpc`` object exposes the following properties and methods to
 interact with the RPC APIs under the ``cpc_`` namespace.
 
 Often, when a property or method returns a mapping of keys to values, it
@@ -15,7 +15,7 @@ you can find the latest block number in these two ways:
 
     .. code-block:: python
 
-        >>> block = web3.cpc.getBlock('latest')
+        >>> block = cpc_fusion.cpc.getBlock('latest')
         AttributeDict({
           'hash': '0xe8ad537a261e6fff80d551d8d087ee0f2202da9b09b64d172a5f45e818eb472a',
           'number': 4022281,
@@ -35,7 +35,7 @@ you can find the latest block number in these two ways:
 Properties
 ----------
 
-The following properties are available on the ``web3.cpc`` namespace.
+The following properties are available on the ``cpc_fusion.cpc`` namespace.
 
 
 .. py:attribute:: Cpc.defaultAccount
@@ -59,7 +59,7 @@ The following properties are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.syncing
+        >>> cpc_fusion.cpc.syncing
         AttributeDict({
             'currentBlock': 2177557,
             'highestBlock': 2211611,
@@ -77,7 +77,7 @@ The following properties are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.coinbase
+        >>> cpc_fusion.cpc.coinbase
         '0xd3cda913deb6f67967b99d67acdfa1712c293601'
 
 
@@ -89,7 +89,7 @@ The following properties are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.mining
+        >>> cpc_fusion.cpc.mining
         False
 
 
@@ -101,7 +101,7 @@ The following properties are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.hashrate
+        >>> cpc_fusion.cpc.hashrate
         906
 
 
@@ -113,7 +113,7 @@ The following properties are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.gasPrice
+        >>> cpc_fusion.cpc.gasPrice
         20000000000
 
 
@@ -125,7 +125,7 @@ The following properties are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.accounts
+        >>> cpc_fusion.cpc.accounts
         ['0xd3cda913deb6f67967b99d67acdfa1712c293601']
 
 
@@ -137,14 +137,14 @@ The following properties are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.blockNumber
+        >>> cpc_fusion.cpc.blockNumber
         2206939
 
 
 Methods
 -------
 
-The following methods are available on the ``web3.cpc`` namespace.
+The following methods are available on the ``cpc_fusion.cpc`` namespace.
 
 
 .. py:method:: Cpc.getBalance(account, block_identifier=cpc.defaultBlock)
@@ -158,7 +158,7 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.getBalance('0xd3cda913deb6f67967b99d67acdfa1712c293601')
+        >>> cpc_fusion.cpc.getBalance('0xd3cda913deb6f67967b99d67acdfa1712c293601')
         77320681768999138915
 
 
@@ -173,7 +173,7 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.getStorageAt('0x6c8f2a135f6ed072de4503bd7c4999a1a17f824b', 0)
+        >>> cpc_fusion.cpc.getStorageAt('0x6c8f2a135f6ed072de4503bd7c4999a1a17f824b', 0)
         '0x00000000000000000000000000000000000000000000000000120a0b063499d4'
 
 
@@ -189,10 +189,10 @@ The following methods are available on the ``web3.cpc`` namespace.
     .. code-block:: python
 
         # For a contract address.
-        >>> web3.cpc.getCode('0x6c8f2a135f6ed072de4503bd7c4999a1a17f824b')
+        >>> cpc_fusion.cpc.getCode('0x6c8f2a135f6ed072de4503bd7c4999a1a17f824b')
         '0x6060604052361561027c5760e060020a60003504630199.....'
         # For a private key address.
-        >>> web3.cpc.getCode('0xd3cda913deb6f67967b99d67acdfa1712c293601')
+        >>> cpc_fusion.cpc.getCode('0xd3cda913deb6f67967b99d67acdfa1712c293601')
         '0x'
 
 
@@ -307,9 +307,9 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.getBlockTransactionCount(46147)
+        >>> cpc_fusion.cpc.getBlockTransactionCount(46147)
         1
-        >>> web3.cpc.getBlockTransactionCount('0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd')  # block 46147
+        >>> cpc_fusion.cpc.getBlockTransactionCount('0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd')  # block 46147
         1
 
 
@@ -323,7 +323,7 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.getTransaction('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
+        >>> cpc_fusion.cpc.getTransaction('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
         AttributeDict({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
             'blockNumber': 46147,
@@ -359,7 +359,7 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.getTransactionFromBlock(46147, 0)
+        >>> cpc_fusion.cpc.getTransactionFromBlock(46147, 0)
         AttributeDict({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
             'blockNumber': 46147,
@@ -373,7 +373,7 @@ The following methods are available on the ``web3.cpc`` namespace.
             'transactionIndex': 0,
             'value': 31337,
         })
-        >>> web3.cpc.getTransactionFromBlock('0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd', 0)
+        >>> cpc_fusion.cpc.getTransactionFromBlock('0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd', 0)
         AttributeDict({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
             'blockNumber': 46147,
@@ -396,11 +396,11 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     Optionally, specify a ``timeout`` in seconds. If timeout elapses before the transaction
     is added to a block, then :meth:`~Cpc.waitForTransactionReceipt` raises a
-    :class:`web3.exceptions.TimeExhausted` exception.
+    :class:`cpc_fusion.exceptions.TimeExhausted` exception.
 
     .. code-block:: python
 
-        >>> web3.cpc.waitForTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
+        >>> cpc_fusion.cpc.waitForTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
         # If transaction is not yet in a block, time passes, while the thread sleeps...
         # ...
         # Then when the transaction is added to a block, its receipt is returned:
@@ -427,10 +427,10 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.getTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')  # not yet mined
+        >>> cpc_fusion.cpc.getTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')  # not yet mined
         None
         # wait for it to be mined....
-        >>> web3.cpc.getTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
+        >>> cpc_fusion.cpc.getTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
         AttributeDict({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
             'blockNumber': 46147,
@@ -446,7 +446,7 @@ The following methods are available on the ``web3.cpc`` namespace.
         })
 
 
-.. py:method:: Cpc.getTransactionCount(account, block_identifier=web3.cpc.defaultBlock)
+.. py:method:: Cpc.getTransactionCount(account, block_identifier=cpc_fusion.cpc.defaultBlock)
 
     * Delegates to ``eth_getTransactionCount`` RPC Method
 
@@ -457,7 +457,7 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.getTransactionCount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
+        >>> cpc_fusion.cpc.getTransactionCount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
         340
 
 
@@ -470,7 +470,7 @@ The following methods are available on the ``web3.cpc`` namespace.
     The ``transaction`` parameter should be a dictionary with the following fields.
 
     * ``from``: ``bytes or text``, hex address or ENS name - (optional, default:
-      ``web3.cpc.defaultAccount``) The address the transaction is send from.
+      ``cpc_fusion.cpc.defaultAccount``) The address the transaction is send from.
     * ``to``: ``bytes or text``, hex address or ENS name - (optional when creating new
       contract) The address the transaction is directed to.
     * ``gas``: ``integer`` - (optional, default: 90000) Integer of the gas
@@ -487,15 +487,15 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     If the ``transaction`` specifies a ``data`` value but does not specify
     ``gas`` then the ``gas`` value will be populated using the
-    :meth:`~web3.cpc.Cpc.estimateGas()` function with an additional buffer of ``100000``
+    :meth:`~cpc_fusion.cpc.Cpc.estimateGas()` function with an additional buffer of ``100000``
     gas up to the ``gasLimit`` of the latest block.  In the event that the
-    value returned by :meth:`~web3.cpc.Cpc.estimateGas()` method is greater than the
+    value returned by :meth:`~cpc_fusion.cpc.Cpc.estimateGas()` method is greater than the
     ``gasLimit`` a ``ValueError`` will be raised.
 
 
     .. code-block:: python
 
-        >>> web3.cpc.sendTransaction({'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601', 'from': web3.cpc.coinbase, 'value': 12345})
+        >>> cpc_fusion.cpc.sendTransaction({'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601', 'from': cpc_fusion.cpc.coinbase, 'value': 12345})
         '0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331'
 
 
@@ -507,9 +507,9 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> signed_txn = w3.cpc.account.signTransaction(dict(
-            nonce=w3.cpc.getTransactionCount(w3.cpc.coinbase),
-            gasPrice=w3.cpc.gasPrice,
+        >>> signed_txn = cf.cpc.account.signTransaction(dict(
+            nonce=cf.cpc.getTransactionCount(cf.cpc.coinbase),
+            gasPrice=cf.cpc.gasPrice,
             gas=100000,
             to='0xd3cda913deb6f67967b99d67acdfa1712c293601',
             value=12345,
@@ -517,7 +517,7 @@ The following methods are available on the ``web3.cpc`` namespace.
           ),
           private_key_for_senders_account,
         )
-        >>> w3.cpc.sendRawTransaction(signed_txn.rawTransaction)
+        >>> cf.cpc.sendRawTransaction(signed_txn.rawTransaction)
         '0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331'
 
 
@@ -530,7 +530,7 @@ The following methods are available on the ``web3.cpc`` namespace.
     The ``transaction_hash`` must be the hash of a pending transaction.
 
     The ``new_transaction`` parameter should be a dictionary with transaction fields
-    as required by :meth:`~web3.cpc.Cpc.sendTransaction`. It will be used to entirely
+    as required by :meth:`~cpc_fusion.cpc.Cpc.sendTransaction`. It will be used to entirely
     replace the transaction of ``transaction_hash`` without using any of the pending
     transaction's values.
 
@@ -551,15 +551,15 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> tx = web3.cpc.sendTransaction({
+        >>> tx = cpc_fusion.cpc.sendTransaction({
                 'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601',
-                'from': web3.cpc.coinbase,
+                'from': cpc_fusion.cpc.coinbase,
                 'value': 1000
             })
         '0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331'
-        >>> web3.cpc.replaceTransaction('0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331', {
+        >>> cpc_fusion.cpc.replaceTransaction('0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331', {
                 'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601',
-                'from': web3.cpc.coinbase,
+                'from': cpc_fusion.cpc.coinbase,
                 'value': 2000
             })
 
@@ -571,23 +571,23 @@ The following methods are available on the ``web3.cpc`` namespace.
     Sends a transaction that modifies the transaction with ``transaction_hash``.
 
     ``transaction_params`` are keyword arguments that correspond to valid transaction
-    parameters as required by :meth:`~web3.cpc.Cpc.sendTransaction`. The parameter values
+    parameters as required by :meth:`~cpc_fusion.cpc.Cpc.sendTransaction`. The parameter values
     will override the pending transaction's values to create the replacement transaction
     to send.
 
-    The same validation and defaulting rules of :meth:`~web3.cpc.Cpc.replaceTransaction` apply.
+    The same validation and defaulting rules of :meth:`~cpc_fusion.cpc.Cpc.replaceTransaction` apply.
 
     This method returns the transaction hash of the newly modified transaction.
 
     .. code-block:: python
 
-        >>> tx = web3.cpc.sendTransaction({
+        >>> tx = cpc_fusion.cpc.sendTransaction({
                 'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601',
-                'from': web3.cpc.coinbase,
+                'from': cpc_fusion.cpc.coinbase,
                 'value': 1000
             })
         '0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331'
-        >>> web3.cpc.modifyTransaction('0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331', value=2000)
+        >>> cpc_fusion.cpc.modifyTransaction('0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331', value=2000)
 
 
 .. py:method:: Cpc.sign(account, data=None, hexstr=None, text=None)
@@ -603,23 +603,23 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> web3.cpc.sign(
+        >>> cpc_fusion.cpc.sign(
               '0xd3cda913deb6f67967b99d67acdfa1712c293601',
               text='some-text-tö-sign')
         '0x1a8bbe6eab8c72a219385681efefe565afd3accee35f516f8edf5ae82208fbd45a58f9f9116d8d88ba40fcd29076d6eada7027a3b412a9db55a0164547810cc401'
 
-        >>> web3.cpc.sign(
+        >>> cpc_fusion.cpc.sign(
               '0xd3cda913deb6f67967b99d67acdfa1712c293601',
               data=b'some-text-t\xc3\xb6-sign')
         '0x1a8bbe6eab8c72a219385681efefe565afd3accee35f516f8edf5ae82208fbd45a58f9f9116d8d88ba40fcd29076d6eada7027a3b412a9db55a0164547810cc401'
 
-        >>> web3.cpc.sign(
+        >>> cpc_fusion.cpc.sign(
               '0xd3cda913deb6f67967b99d67acdfa1712c293601',
               hexstr='0x736f6d652d746578742d74c3b62d7369676e')
         '0x1a8bbe6eab8c72a219385681efefe565afd3accee35f516f8edf5ae82208fbd45a58f9f9116d8d88ba40fcd29076d6eada7027a3b412a9db55a0164547810cc401'
 
 
-.. py:method:: Cpc.call(transaction, block_identifier=web3.cpc.defaultBlock)
+.. py:method:: Cpc.call(transaction, block_identifier=cpc_fusion.cpc.defaultBlock)
 
     * Delegates to ``eth_call`` RPC Method
 
@@ -627,7 +627,7 @@ The following methods are available on the ``web3.cpc`` namespace.
     on the blockchain.  Returns the return value of the executed contract.
 
     The ``transaction`` parameter is handled in the same manner as the
-    :meth:`~web3.cpc.Cpc.sendTransaction()` method.
+    :meth:`~cpc_fusion.cpc.Cpc.sendTransaction()` method.
 
     .. code-block:: python
 
@@ -639,7 +639,7 @@ The following methods are available on the ``web3.cpc`` namespace.
         >>> we3.cpc.call({'value': 0, 'gas': 21736, 'gasPrice': 1, 'to': '0xc305c901078781C232A2a521C2aF7980f8385ee9', 'data': '0x477a5c98'})
         HexBytes('0x0000000000000000000000000000000000000000000000000000000000000001')
 
-    In most cases it is better to make contract function call through the :py:class:`web3.contract.Contract` interface.
+    In most cases it is better to make contract function call through the :py:class:`cpc_fusion.contract.Contract` interface.
 
 
 .. py:method:: Cpc.estimateGas(transaction, block_identifier=None)
@@ -651,11 +651,11 @@ The following methods are available on the ``web3.cpc`` namespace.
     be used as a gas estimate.
 
     The ``transaction`` and ``block_identifier`` parameters are handled in the
-    same manner as the :meth:`~web3.cpc.call()` method.
+    same manner as the :meth:`~cpc_fusion.cpc.call()` method.
 
     .. code-block:: python
 
-        >>> web3.cpc.estimateGas({'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601', 'from': web3.cpc.coinbase, 'value': 12345})
+        >>> cpc_fusion.cpc.estimateGas({'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601', 'from': cpc_fusion.cpc.coinbase, 'value': 12345})
         21000
 
     .. note::
@@ -674,22 +674,22 @@ The following methods are available on the ``web3.cpc`` namespace.
 
     .. code-block:: python
 
-        >>> Web3.cpc.generateGasPrice()
+        >>> cpc_fusion.cpc.generateGasPrice()
         20000000000
 
     .. note::
-        For information about how gas price can be customized in web3 see
+        For information about how gas price can be customized in cpc_fusion see
         :ref:`Gas_Price`.
 
 .. py:method:: Cpc.setGasPriceStrategy(gas_price_strategy)
 
     Set the selected gas price strategy. It must be a method of the signature
-    ``(web3, transaction_params)`` and return a gas price denominated in wei.
+    ``(cpc_fusion, transaction_params)`` and return a gas price denominated in wei.
 
 Filters
 -------
 
-The following methods are available on the ``web3.cpc`` object for interacting
+The following methods are available on the ``cpc_fusion.cpc`` object for interacting
 with the filtering API.
 
 
@@ -713,7 +713,7 @@ with the filtering API.
       that will be called for all log entries that match the provided
       ``filter_params``.
 
-    This method returns a ``web3.utils.filters.Filter`` object which can then
+    This method returns a ``cpc_fusion.utils.filters.Filter`` object which can then
     be used to either directly fetch the results of the filter or to register
     callbacks which will be called with each result of the filter.
 
@@ -739,11 +739,11 @@ with the filtering API.
 
     .. code-block:: python
 
-        >>> web3.cpc.filter('latest')
+        >>> cpc_fusion.cpc.filter('latest')
         <BlockFilter at 0x10b72dc28>
-        >>> web3.cpc.filter('pending')
+        >>> cpc_fusion.cpc.filter('pending')
         <TransactionFilter at 0x10b780340>
-        >>> web3.cpc.filter({'fromBlock': 1000000, 'toBlock': 1000100, 'address': '0x6c8f2a135f6ed072de4503bd7c4999a1a17f824b'})
+        >>> cpc_fusion.cpc.filter({'fromBlock': 1000000, 'toBlock': 1000100, 'address': '0x6c8f2a135f6ed072de4503bd7c4999a1a17f824b'})
         <LogFilter at 0x10b7803d8>
 
 .. py:method:: Cpc.getFilterChanges(self, filter_id)
@@ -755,8 +755,8 @@ with the filtering API.
 
     .. code-block:: python
 
-        >>> filt = web3.cpc.filter()
-        >>> web3.cpc.getFilterChanges(filt.filter_id)
+        >>> filt = cpc_fusion.cpc.filter()
+        >>> cpc_fusion.cpc.getFilterChanges(filt.filter_id)
         [
             {
                 'address': '0xdc3a9db694bcdd55ebae4a89b22ac6d12b3f0c24',
@@ -782,8 +782,8 @@ with the filtering API.
 
     .. code-block:: python
 
-        >>> filt = web3.cpc.filter()
-        >>> web3.cpc.getFilterLogs(filt.filter_id)
+        >>> filt = cpc_fusion.cpc.filter()
+        >>> cpc_fusion.cpc.getFilterLogs(filt.filter_id)
         [
             {
                 'address': '0xdc3a9db694bcdd55ebae4a89b22ac6d12b3f0c24',
@@ -810,10 +810,10 @@ with the filtering API.
 
     .. code-block:: python
 
-        >>> filt = web3.cpc.filter()
-        >>> web3.cpc.uninstallFilter(filt.filter_id)
+        >>> filt = cpc_fusion.cpc.filter()
+        >>> cpc_fusion.cpc.uninstallFilter(filt.filter_id)
         True
-        >>> web3.cpc.uninstallFilter(filt.filter_id)
+        >>> cpc_fusion.cpc.uninstallFilter(filt.filter_id)
         False  # already uninstalled.
 
 
@@ -835,14 +835,14 @@ Contracts
 
     .. code-block:: python
 
-        from web3 import Web3
+        from cpc_fusion import Web3
 
-        w3 = Web3(...)
+        cf = Web3(...)
 
-        contract = w3.cpc.contract(address='0x000000000000000000000000000000000000dead', abi=...)
+        contract = cf.cpc.contract(address='0x000000000000000000000000000000000000dead', abi=...)
 
         # alternatively:
-        contract = w3.cpc.contract(address='mycontract.cpc', abi=...)
+        contract = cf.cpc.contract(address='mycontract.cpc', abi=...)
 
     .. note::
 
@@ -856,11 +856,11 @@ Contracts
 
     .. code-block:: python
 
-        from web3 import Web3
+        from cpc_fusion import Web3
 
-        w3 = Web3(...)
+        cf = Web3(...)
 
-        Contract = w3.cpc.contract(abi=...)
+        Contract = cf.cpc.contract(abi=...)
 
         # later, initialize contracts with the same metadata at different addresses:
         contract1 = Contract(address='0x000000000000000000000000000000000000dead')
