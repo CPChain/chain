@@ -3,7 +3,6 @@ package dpor
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"sync"
@@ -352,7 +351,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBacke
 	// Iterate through the headers and create a new Snapshot
 	snap := s.copy()
 	snap.setClient(client)
-	log.Info("apply headers", "len(headers)", len(headers))
+	// log.Info("apply headers", "len(headers)", len(headers))
 	for _, header := range headers {
 		err := snap.applyHeader(header)
 		if err != nil {
@@ -411,7 +410,7 @@ func (s *DporSnapshot) updateCandidates() error {
 		if client != nil {
 			// Creates an contract instance
 			campaignAddress := s.config.Contracts[configs.ContractCampaign]
-			log.Info("campaignAddress", "addr", campaignAddress.Hex())
+			// log.Info("campaignAddress", "addr", campaignAddress.Hex())
 			contractInstance, err := campaign.NewCampaign(campaignAddress, client)
 			if err != nil {
 				log.Error("new Campaign error", err)
@@ -428,7 +427,7 @@ func (s *DporSnapshot) updateCandidates() error {
 				return nil // swallow the error as it has been handled properly
 			}
 
-			log.Info("got candidates from contract of term", "len(candidates)", len(cds), "term", term)
+			log.Debug("got candidates from contract of term", "num", s.Number, "len(candidates)", len(cds), "term", term)
 
 			// If useful, use it!
 			if uint64(len(cds)) >= s.config.TermLen {
@@ -442,10 +441,10 @@ func (s *DporSnapshot) updateCandidates() error {
 		candidates = configs.Candidates()
 	}
 
-	log.Info("set candidates", "len(candidates)", len(candidates))
-	for i, c := range candidates {
-		log.Info(fmt.Sprintf("candidate #%d", i), "candidate", c.Hex())
-	}
+	// log.Info("set candidates", "len(candidates)", len(candidates))
+	// for i, c := range candidates {
+	// log.Info(fmt.Sprintf("candidate #%d", i), "candidate", c.Hex())
+	// }
 
 	s.setCandidates(candidates)
 	return nil
@@ -455,7 +454,7 @@ func (s *DporSnapshot) updateCandidates() error {
 func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 
 	if s.client() == nil && s.Mode == NormalMode {
-		log.Warn("snapshot contract caller is nil")
+		// log.Warn("snapshot contract caller is nil")
 		s.Mode = FakeMode
 	}
 
@@ -500,49 +499,49 @@ func (s *DporSnapshot) isStartElection() bool {
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Elect proposers
 	if s.isStartElection() {
-		log.Info("electing")
-		log.Info("---------------------------")
-		log.Info("rpts:")
-		for _, r := range rpts {
-			log.Info("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
-		}
-		log.Info("seed", "seed", seed)
-		log.Info("term length", "term", int(s.config.TermLen))
-		log.Info("---------------------------")
+		// log.Info("electing")
+		// log.Info("---------------------------")
+		// log.Info("rpts:")
+		// for _, r := range rpts {
+		// 	log.Info("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
+		// }
+		// log.Info("seed", "seed", seed)
+		// log.Info("term length", "term", int(s.config.TermLen))
+		// log.Info("---------------------------")
 
 		proposers := election.Elect(rpts, seed, int(s.config.TermLen))
 
-		log.Info("elected proposers:")
+		// log.Info("elected proposers:")
 
-		for _, s := range proposers {
-			log.Info("proposer", "addr", s.Hex())
-		}
-		log.Info("---------------------------")
+		// for _, s := range proposers {
+		// 	log.Info("proposer", "addr", s.Hex())
+		// }
+		// log.Info("---------------------------")
 
-		log.Info("snap.number", "n", s.number())
+		// log.Info("snap.number", "n", s.number())
 
 		term := s.FutureTermOf(s.number())
 
-		log.Debug("term idx", "eidx", term)
+		// log.Debug("term idx", "eidx", term)
 
 		s.setRecentProposers(term, proposers)
 
-		log.Info("---------------------------")
-		proposers = s.getRecentProposers(term)
-		log.Info("stored elected proposers")
+		// log.Info("---------------------------")
+		// proposers = s.getRecentProposers(term)
+		// log.Info("stored elected proposers")
 
-		for _, s := range proposers {
-			log.Info("proposer", "addr", s.Hex())
-		}
-		log.Info("---------------------------")
+		// for _, s := range proposers {
+		// 	log.Info("proposer", "addr", s.Hex())
+		// }
+		// log.Info("---------------------------")
 
-		if uint64(len(proposers)) != s.config.TermLen {
-			log.Warn("proposer length wrong", "expect", s.config.TermLen, "actual", len(proposers))
-			log.Warn("---------- proposers --------")
-			for _, s := range proposers {
-				log.Warn("proposer", "addr", s.Hex())
-			}
-		}
+		// if uint64(len(proposers)) != s.config.TermLen {
+		// 	log.Warn("proposer length wrong", "expect", s.config.TermLen, "actual", len(proposers))
+		// 	log.Warn("---------- proposers --------")
+		// 	for _, s := range proposers {
+		// 		log.Warn("proposer", "addr", s.Hex())
+		// 	}
+		// }
 	}
 
 	// Set default proposer if it is in initial stage
@@ -550,10 +549,10 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		// Use default proposers
 		proposers := s.candidates()[:s.config.TermLen]
 		s.setRecentProposers(s.Term()+1, proposers)
-		log.Info("use default proposers", "term", s.Term()+1, "proposers", len(proposers))
-		for i, p := range proposers {
-			log.Info(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
-		}
+		// log.Info("use default proposers", "term", s.Term()+1, "proposers", len(proposers))
+		// for i, p := range proposers {
+		// 	log.Info(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
+		// }
 	}
 
 	return

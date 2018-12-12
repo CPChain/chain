@@ -320,7 +320,7 @@ func (p *peer) RequestReceipts(hashes []common.Hash) error {
 
 // Handshake executes the cpchain protocol handshake, negotiating version number,
 // network IDs, head and genesis blocks.
-func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis common.Hash) error {
+func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis common.Hash, isMiner bool) (bool, error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var status statusData // safe to read after two values have been received from errc
@@ -331,6 +331,7 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 			Height:          ht,
 			CurrentBlock:    head,
 			GenesisBlock:    genesis,
+			IsMiner:         isMiner,
 		})
 	}()
 	// readStatus reads the handshake from the opposite side.
@@ -343,14 +344,14 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 		select {
 		case err := <-errc:
 			if err != nil {
-				return err
+				return false, err
 			}
 		case <-timeout.C:
-			return p2p.DiscReadTimeout
+			return false, p2p.DiscReadTimeout
 		}
 	}
 	p.ht, p.head = status.Height, status.CurrentBlock
-	return nil
+	return status.IsMiner, nil
 }
 
 func (p *peer) readStatus(network uint64, status *statusData, genesis common.Hash) (err error) {

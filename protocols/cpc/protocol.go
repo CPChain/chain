@@ -100,6 +100,7 @@ type statusData struct {
 	Height          *big.Int
 	CurrentBlock    common.Hash
 	GenesisBlock    common.Hash
+	IsMiner         bool
 }
 type signerStatusData struct {
 	ProtocolVersion uint32

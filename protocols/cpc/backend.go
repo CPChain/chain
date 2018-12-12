@@ -177,14 +177,9 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.txPool = core.NewTxPool(config.TxPool, cpc.chainConfig, cpc.blockchain)
 
-	cpc.Coinbase()
-	log.Debug("coinbase in backend", "coinbase", cpc.coinbase)
-
 	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.SyncMode, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.coinbase); err != nil {
 		return nil, err
 	}
-
-	cpc.miner = miner.New(cpc, cpc.chainConfig, cpc.EventMux(), cpc.engine)
 
 	cpc.APIBackend = &APIBackend{cpc, nil}
 
@@ -194,6 +189,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		gpoParams.Default = config.GasPrice
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
+	// TODO: fix this, @Xumx
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission)
 	apibackend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend)
 	return cpc, nil
@@ -209,6 +205,15 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 		db.Meter("eth/db/chaindata/")
 	}
 	return db, nil
+}
+
+// InitMiner sets mining state of cpchain service
+func (s *CpchainService) InitMiner() {
+
+	if s.chainConfig.Dpor != nil {
+		s.engine.(*dpor.Dpor).SetAsMiner(true)
+	}
+	s.miner = miner.New(s, s.chainConfig, s.EventMux(), s.engine)
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service

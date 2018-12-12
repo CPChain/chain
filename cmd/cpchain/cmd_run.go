@@ -78,7 +78,7 @@ func run(ctx *cli.Context) error {
 }
 
 // Register chain services for a *full* node.
-func registerChainService(cfg *cpc.Config, n *node.Node) {
+func registerChainService(cfg *cpc.Config, n *node.Node, cliCtx *cli.Context) {
 	// TODO adjust to the sync mode
 	// if cfg.SyncMode != downloader.FullSync {
 	// 	log.Fatalf("We only support full sync currently.")
@@ -86,13 +86,10 @@ func registerChainService(cfg *cpc.Config, n *node.Node) {
 
 	err := n.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 		fullNode, err := cpc.New(ctx, cfg)
-		// no plan for les server.
-		// if fullNode != nil && cfg.LightServ > 0 {
-		// 	ls, _ := les.NewLesServer(fullNode, cfg)
-		// 	fullNode.AddLesServer(ls)
-		// }
-		//
 
+		if cliCtx.Bool("mine") {
+			fullNode.InitMiner()
+		}
 		return fullNode, err
 	})
 	if err != nil {
@@ -103,7 +100,7 @@ func registerChainService(cfg *cpc.Config, n *node.Node) {
 // Creates a node with chain services registered
 func createNode(ctx *cli.Context) *node.Node {
 	cfg, n := newConfigNode(ctx)
-	registerChainService(&cfg.Eth, n)
+	registerChainService(&cfg.Eth, n, ctx)
 	return n
 }
 
@@ -206,7 +203,9 @@ func startMining(ctx *cli.Context, n *node.Node) {
 
 		// TODO: fix this, do not use *keystore.Key, use wallet instead
 		contractCaller := createContractCaller(ctx, n)
-		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
+		if contractCaller != nil {
+			cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
+		}
 
 		rpcClient, err := n.Attach()
 		if err != nil {

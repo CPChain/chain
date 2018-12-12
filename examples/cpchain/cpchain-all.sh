@@ -29,8 +29,12 @@ cd $run_dir
 echo "[*] initing"
 eval $init
 
+eval $run_dir/cpchain-init-viewer.sh
+
 echo "[*] starting"
 eval "env CPC_VERBOSITY=5 $start"
+
+$run_dir/cpchain-start-viewer.sh
 
 sleep 1
 

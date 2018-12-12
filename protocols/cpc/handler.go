@@ -230,12 +230,12 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 
 // addPeer is the callback invoked to manage the life cycle of cpchain peer.
 // when this function terminates, the peer is disconnected.
-func (pm *ProtocolManager) addPeer(p *peer) error {
+func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
 	// ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
-		return p2p.DiscTooManyPeers
+		return false, p2p.DiscTooManyPeers
 	}
-	p.Log().Debug("Cpchain peer connected", "name", p.Name())
+	log.Debug("Cpchain peer connected", "name", p.Name())
 
 	// Execute the cpchain handshake
 	var (
@@ -246,11 +246,11 @@ func (pm *ProtocolManager) addPeer(p *peer) error {
 	)
 
 	// Do normal handshake
-	err := p.Handshake(pm.networkID, height, hash, genesis.Hash())
+	remoteIsMiner, err := p.Handshake(pm.networkID, height, hash, genesis.Hash(), isMiner)
 
 	if err != nil {
-		p.Log().Debug("Cpchain handshake failed", "err", err)
-		return err
+		log.Debug("Cpchain handshake failed", "err", err)
+		return false, err
 	}
 
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
@@ -260,25 +260,26 @@ func (pm *ProtocolManager) addPeer(p *peer) error {
 	// add the peer to peerset
 	if err := pm.peers.Register(p); err != nil {
 		log.Debug("register new peer ")
-		p.Log().Error("Cpchain peer registration failed", "err", err)
-		return err
+		return false, err
 	}
 
 	// Register the peer in the downloader. If the downloader considers it banned, we disconnect
 	if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return remoteIsMiner, nil
 }
 
 func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version uint) error {
+	var (
+		dporEngine   = pm.engine.(*dpor.Dpor)
+		isMiner      = dporEngine.IsMiner()
+		dporMode     = dporEngine.Mode()
+		dporProtocol = dporEngine.Protocol()
+	)
 
-	dporEngine := pm.engine.(*dpor.Dpor)
-	dporProtocol := dporEngine.Protocol()
-
-	if dporEngine.Mode() == dpor.NormalMode && !dporProtocol.Available() {
-		// return if dpor is still not initialized
+	if dporMode == dpor.NormalMode && isMiner && !dporProtocol.Available() {
 		log.Warn("8888 dpor handler is not not available now")
 		return nil
 	}
@@ -291,10 +292,9 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 	case pm.newPeerCh <- peer:
 		pm.wg.Add(1)
 		defer pm.wg.Done()
-		// stuck in the message loop on this peer
 
 		// Add peer to manager.peers, this is for basic msg syncing
-		err := pm.addPeer(peer)
+		remoteIsMiner, err := pm.addPeer(peer, isMiner)
 		if err != nil {
 			log.Warn("8888 fail to add peer to cpc protocol manager's peer set", "err", err)
 			return err
@@ -303,7 +303,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		defer pm.removePeer(peer.id)
 
 		id, _, _ := common.Address{}.Hex(), false, false
-		if dporEngine.Mode() == dpor.NormalMode {
+		if dporMode == dpor.NormalMode && isMiner && remoteIsMiner {
 			// add peer to dpor.handler.peers, this is for pbft/lbft msg handling
 			id, _, _, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
 			switch err {
@@ -311,17 +311,16 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 				defer dporProtocol.RemovePeer(id)
 
 			default:
-
 				log.Warn("8888 fail to add peer to dpor's peer set", "err", err)
 				return err
 			}
-
 		}
 
 		// send local pending transactions to the peer.
 		// new transactions appearing after this will be sent via broadcasts.
 		pm.syncTransactions(peer)
 
+		// stuck in the message loop on this peer
 		for {
 			msg, err := peer.rw.ReadMsg()
 			if err != nil {
@@ -344,7 +343,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 					return err
 				}
 
-			case backend.IsDporMsg(msg) && dporEngine.Mode() == dpor.NormalMode:
+			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner:
 				// case backend.IsDporMsg(msg) && (isProposer || isValidator):
 				err = dporProtocol.HandleMsg(id, msg)
 				switch err {
@@ -433,7 +432,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 				)
 				if next <= current {
 					infos, _ := json.MarshalIndent(p.Peer.Info(), "", "  ")
-					p.Log().Warn("GetBlockHeaders skip overflow attack", "current", current, "skip", query.Skip, "next", next, "attacker", infos)
+					log.Warn("GetBlockHeaders skip overflow attack", "current", current, "skip", query.Skip, "next", next, "attacker", infos)
 					unknown = true
 				} else {
 					if header := pm.blockchain.GetHeaderByNumber(next); header != nil {

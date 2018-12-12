@@ -58,6 +58,9 @@ type Dpor struct {
 
 	handler *backend.Handler
 
+	isMiner     bool
+	isMinerLock sync.RWMutex
+
 	fake      Mode // used for test, always accept a block.
 	fakeFail  uint64
 	fakeDelay time.Duration // Time delay to sleep for before returning from verify
@@ -73,6 +76,20 @@ type Dpor struct {
 	quitSync           chan struct{}
 
 	lock sync.RWMutex // Protects the signer fields
+}
+
+func (d *Dpor) IsMiner() bool {
+	d.isMinerLock.RLock()
+	defer d.isMinerLock.RUnlock()
+
+	return d.isMiner
+}
+
+func (d *Dpor) SetAsMiner(isMiner bool) {
+	d.isMinerLock.Lock()
+	defer d.isMinerLock.Unlock()
+
+	d.isMiner = isMiner
 }
 
 func (d *Dpor) Mode() Mode {
