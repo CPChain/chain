@@ -51,9 +51,9 @@ var chainCommand = cli.Command{
 		{
 			Name:  "init",
 			Usage: "Bootstrap and initialize a new genesis block",
-			Flags: []cli.Flag{
+			Flags: append([]cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
-			},
+			}, flags.LogFlags...),
 			Action:    initChain,
 			ArgsUsage: "[/path/to/genesis.toml]",
 			Description: fmt.Sprintf(`The default genesis file path is: %v.
@@ -62,9 +62,9 @@ If no genesis file is found, the initialization is aborted.`, defaultGenesisPath
 		{
 			Name:  "cleandb",
 			Usage: "Clean blockchain and state databases",
-			Flags: []cli.Flag{
+			Flags: append([]cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
-			},
+			}, flags.LogFlags...),
 			Action:      cleanDB,
 			ArgsUsage:   " ",
 			Description: `Remove blockchain and state databases`,
@@ -74,13 +74,13 @@ If no genesis file is found, the initialization is aborted.`, defaultGenesisPath
 			Name:      "import",
 			Usage:     "Import a blockchain file",
 			ArgsUsage: "<filename>",
-			Flags: []cli.Flag{
+			Flags: append([]cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.NoCompactionFlagName),
 				flags.GetByName(flags.CacheFlagName),
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
-			},
+			}, flags.LogFlags...),
 			Description: `The import command imports blocks from an RLP-encoded form. The form can be one file
 with several RLP-encoded blocks, or several files can be used.
 
@@ -92,12 +92,12 @@ processing will proceed even if an individual RLP-file import failure occurs.`,
 			Name:      "export",
 			Usage:     "Export blockchain into file",
 			ArgsUsage: "<output file> [blockNumFirst blockNumLast]",
-			Flags: []cli.Flag{
+			Flags: append([]cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.CacheFlagName),
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
-			},
+			}, flags.LogFlags...),
 			Description: `Requires a first argument of the file to write to.
 Optional second and third arguments control the first and
 last block to write. In this mode, the file will be appended
@@ -108,12 +108,12 @@ if already existing.`,
 			Name:      "import-preimages",
 			Usage:     "Import the preimage database from an RLP stream",
 			ArgsUsage: "<datafile>",
-			Flags: []cli.Flag{
+			Flags: append([]cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.CacheFlagName),
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
-			},
+			}, flags.LogFlags...),
 			Description: `The import-preimages command imports hash preimages from an RLP encoded stream.`,
 		},
 		{
@@ -121,12 +121,12 @@ if already existing.`,
 			Name:      "export-preimages",
 			Usage:     "Export the preimage database into an RLP stream",
 			ArgsUsage: "<dumpfile>",
-			Flags: []cli.Flag{
+			Flags: append([]cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.CacheFlagName),
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
-			},
+			}, flags.LogFlags...),
 			Description: `The export-preimages command export hash preimages to an RLP encoded stream`,
 		},
 		{
@@ -134,12 +134,12 @@ if already existing.`,
 			Name:      "dump",
 			Usage:     "Dump a specific block from storage",
 			ArgsUsage: "<blockHash | blockNum> [blockHash | blockNum]...",
-			Flags: []cli.Flag{
+			Flags: append([]cli.Flag{
 				flags.GetByName(flags.DataDirFlagName),
 				flags.GetByName(flags.CacheFlagName),
 				flags.GetByName(flags.CacheDatabaseFlagName),
 				flags.GetByName(flags.CacheGCFlagName),
-			},
+			}, flags.LogFlags...),
 			Description: `The arguments are interpreted as block numbers or hashes.
 Use "cpchain chain dump 0" to dump the genesis block.`,
 		},

@@ -32,13 +32,14 @@ import (
 
 type dporHelper interface {
 	dporUtil
-	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, verifySigs bool) error
+	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header,
+		verifySigs bool, verifyProposers bool) error
 	snapshot(d *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error)
 	verifySeal(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	verifySigs(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	verifyProposers(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error
-	validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block) error
+	validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error
 }
 
 type defaultDporHelper struct {
@@ -46,9 +47,9 @@ type defaultDporHelper struct {
 }
 
 // validateBlock checks basic fields in a block
-func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block) error {
+func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error {
 	// TODO: @AC consider if we need to verify body, as well as process txs and validate state
-	return dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), false)
+	return dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), verifySigs, verifyProposers)
 }
 
 // verifyHeader checks whether a header conforms to the consensus rules.The
@@ -56,7 +57,7 @@ func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader,
 // looking those up from the database. This is useful for concurrently verifying
 // a batch of new headers.
 func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header,
-	refHeader *types.Header, verifySigs bool) error {
+	refHeader *types.Header, verifySigs bool, verifyProposers bool) error {
 	if header.Number == nil {
 		return errUnknownBlock
 	}
@@ -110,17 +111,14 @@ func (dh *defaultDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, 
 			return errInvalidDifficulty
 		}
 
-		// verify dpor seal, genesis block not need this check
-		if err := dh.verifySeal(d, chain, header, parents, refHeader); err != nil {
-			log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
-			return err
-		}
 	}
 
-	// verify proposers
-	if err := d.dh.verifyProposers(d, chain, header, parents, refHeader); err != nil {
-		log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
-		return err
+	if verifyProposers {
+		// verify proposers
+		if err := d.dh.verifyProposers(d, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
+			return err
+		}
 	}
 
 	// verify dpor sigs if required
@@ -148,24 +146,19 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 	}
 
 	// Check proposers
-	proposers := make([]common.Address, dpor.config.TermLen)
-	for pos, signer := range snap.ProposersOf(number) {
-		proposers[pos] = signer
-	}
+	proposers := snap.ProposersOf(number)
 	if !reflect.DeepEqual(header.Dpor.Proposers, proposers) {
 		if NormalMode == dpor.fake {
 			log.Debug("err: invalid proposer list")
-			ps := snap.ProposersOf(number)
-
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
 			log.Debug("proposers in block dpor snap:")
-			for round, signer := range ps {
+			for round, signer := range header.Dpor.Proposers {
 				log.Debug("proposer", "addr", signer.Hex(), "idx", round)
 			}
 
 			log.Debug("~~~~~~~~~~~~~~~~~~~~~~~~")
 			log.Debug("proposers in snapshot:")
-			for round, signer := range snap.ValidatorsOf(number) {
+			for round, signer := range proposers {
 				log.Debug("validator", "addr", signer.Hex(), "idx", round)
 			}
 
@@ -180,6 +173,7 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 			}
 
 			return consensus.ErrInvalidSigners
+			//return nil
 		}
 	}
 
@@ -232,7 +226,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		if numberIter == 0 {
 			// Retrieve genesis block and verify it
 			genesis := chain.GetHeaderByNumber(0)
-			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil, false); err != nil {
+			if err := dpor.dh.verifyHeader(dpor, chain, genesis, nil, nil, false, false); err != nil {
 				return nil, err
 			}
 

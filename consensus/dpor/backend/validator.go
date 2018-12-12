@@ -233,7 +233,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 		// Verify the block
 		// if correct, sign it and broadcast as Prepare msg
 		// verify header, if basic fields are correct, broadcast prepare msg
-		switch err := vh.dpor.ValidateBlock(block); err {
+		switch err := vh.dpor.ValidateBlock(block, false, false); err {
 		case nil:
 			// basic fields are correct
 

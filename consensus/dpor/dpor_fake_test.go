@@ -63,7 +63,7 @@ func (f *fakeDporHelper) verifySigs(d *Dpor, chain consensus.ChainReader, header
 	panic("implement me")
 }
 
-func (f *fakeDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, verifySigs bool) error {
+func (f *fakeDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, verifySigs bool, verifyProposers bool) error {
 	if f.verifySuccess {
 		return nil
 	} else {
@@ -75,7 +75,7 @@ func (*fakeDporHelper) verifyProposers(c *Dpor, chain consensus.ChainReader, hea
 	panic("implement me")
 }
 
-func (*fakeDporHelper) validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block) error {
+func (*fakeDporHelper) validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error {
 	return nil
 }
 

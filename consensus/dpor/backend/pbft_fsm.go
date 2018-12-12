@@ -131,7 +131,7 @@ func (dsm *DporStateMachine) verifyBlock(block *types.Block) bool {
 	dsm.lock.RLock()
 	defer dsm.lock.RUnlock()
 
-	return dsm.service.ValidateBlock(block) == nil
+	return dsm.service.ValidateBlock(block, false, true) == nil
 }
 
 // commitCertificate is true if the validator has collected 2f+1 commit messages

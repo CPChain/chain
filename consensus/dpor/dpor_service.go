@@ -100,8 +100,8 @@ func (d *Dpor) VerifyHeaderWithState(header *types.Header, state consensus.State
 }
 
 // ValidateBlock validates a basic field excepts seal of a block.
-func (d *Dpor) ValidateBlock(block *types.Block) error {
-	return d.dh.validateBlock(d, d.chain, block)
+func (d *Dpor) ValidateBlock(block *types.Block, verifySigs bool, verifyProposers bool) error {
+	return d.dh.validateBlock(d, d.chain, block, verifySigs, verifyProposers)
 }
 
 // SignHeader signs the header and adds all known sigs to header

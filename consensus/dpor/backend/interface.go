@@ -97,7 +97,7 @@ type DporService interface {
 	VerifyHeaderWithState(header *types.Header, state consensus.State) error
 
 	// ValidateBlock verifies a block
-	ValidateBlock(block *types.Block) error
+	ValidateBlock(block *types.Block, verifySigs bool, verifyProposers bool) error
 
 	// SignHeader signs the block if not signed it yet
 	SignHeader(header *types.Header, state consensus.State) error

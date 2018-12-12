@@ -122,7 +122,7 @@ func (d *Dpor) Author(header *types.Header) (common.Address, error) {
 
 // VerifyHeader checks whether a header conforms to the consensus rules.
 func (d *Dpor) VerifyHeader(chain consensus.ChainReader, header *types.Header, verifySigs bool, refHeader *types.Header) error {
-	return d.dh.verifyHeader(d, chain, header, nil, refHeader, verifySigs)
+	return d.dh.verifyHeader(d, chain, header, nil, refHeader, verifySigs, false)
 }
 
 // VerifyHeaders is similar to VerifyHeader, but verifies a batch of headers. The
@@ -134,7 +134,7 @@ func (d *Dpor) VerifyHeaders(chain consensus.ChainReader, headers []*types.Heade
 
 	go func() {
 		for i, header := range headers {
-			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i], verifySigs[i])
+			err := d.dh.verifyHeader(d, chain, header, headers[:i], refHeaders[i], verifySigs[i], false)
 
 			select {
 			case <-abort:
