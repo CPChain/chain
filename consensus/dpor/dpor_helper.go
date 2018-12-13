@@ -197,6 +197,10 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 	log.Info("defaultDporHelper snapshot", "number", number, "hash", hash.Hex(), "len(parent and itself)", len(chainSeg))
 
+	if got, ok := dpor.recentSnaps.Get(hash); ok {
+		snap = got.(*DporSnapshot)
+	}
+
 	numberIter := number
 	for snap == nil {
 		// If an on-disk checkpoint Snapshot can be found, use that
@@ -262,6 +266,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				return nil, consensus.ErrUnknownAncestor
 			}
 		}
+
+		// TODO: @AC try to retrieve parent's snapshot from cache and stop upward backtracking
+
 		headers = append(headers, header)
 		numberIter, hash = numberIter-1, header.ParentHash
 	}

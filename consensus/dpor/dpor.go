@@ -21,7 +21,7 @@ import (
 type BroadcastBlockFn func(block *types.Block, prop bool)
 
 const (
-	inMemorySnapshots  = 50  // Number of recent vote snapshots to keep in memory
+	inMemorySnapshots  = 100 // Number of recent vote snapshots to keep in memory
 	inMemorySignatures = 100 // Number of recent block signatures to keep in memory
 
 	pctA = 2

@@ -20,7 +20,9 @@ package rpt
 // then calculates the reputations of candidates.
 
 import (
+	"fmt"
 	"math/big"
+	"strings"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -52,7 +54,7 @@ const (
 )
 
 const (
-	cacheSize = 10
+	cacheSize = 120
 	// 16 is the min rpt score
 	minRptScore = 16
 )
@@ -70,6 +72,14 @@ type RptItems struct {
 
 // RptList is an array of Rpt.
 type RptList []Rpt
+
+func (r *RptList) FormatString() string {
+	items := make([]string, len(*r))
+	for i, v := range *r {
+		items[i] = fmt.Sprintf("[%s, %d]", v.Address.Hex(), v.Rpt)
+	}
+	return strings.Join(items, ",")
+}
 
 // This is used for sorting.
 func (a RptList) Len() int      { return len(a) }

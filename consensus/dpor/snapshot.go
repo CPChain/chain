@@ -3,6 +3,7 @@ package dpor
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"sync"
@@ -21,7 +22,7 @@ import (
 const (
 
 	// TermDistBetweenElectionAndMining is the the term gap between election and mining.
-	TermDistBetweenElectionAndMining = 2
+	TermDistBetweenElectionAndMining = 2 // TermDistBetweenElectionAndMining = effective term - current term(last block)
 
 	// MaxSizeOfRecentSigners is the size of the RecentSigners.
 	// TODO: @shiyc MaxSizeOfRecentSigners is about to be removed later
@@ -50,9 +51,9 @@ type DporSnapshot struct {
 	RecentSigners    map[uint64][]common.Address `json:"signers"`    // Set of recent signers
 	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
 	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
+	Client           backend.ClientBackend       `json:"-"`
 
-	config     *configs.DporConfig   // Consensus engine parameters to fine tune behavior
-	Client     backend.ClientBackend `json:"-"`
+	config     *configs.DporConfig // Consensus engine parameters to fine tune behavior
 	rptBackend rpt.RptService
 
 	lock sync.RWMutex
@@ -351,7 +352,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBacke
 	// Iterate through the headers and create a new Snapshot
 	snap := s.copy()
 	snap.setClient(client)
-	// log.Info("apply headers", "len(headers)", len(headers))
+	log.Debug("apply headers", "len(headers)", len(headers))
 	for _, header := range headers {
 		err := snap.applyHeader(header)
 		if err != nil {
@@ -370,21 +371,32 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 	s.setHash(header.Hash())
 
 	// Update candidates
+	log.Debug("start updating candidates")
 	err := s.updateCandidates()
 	if err != nil {
 		log.Warn("err when update candidates", "err", err)
 		return err
 	}
+	log.Debug("candidates updated", "len(candidates)", len(s.candidates()), "number", s.number())
+	for i, c := range s.candidates() {
+		log.Debug(fmt.Sprintf("candiate #%d", i), "addr", c.Hex())
+	}
 
 	// Update rpts
+	log.Debug("start updating rpts")
 	rpts, err := s.updateRpts()
 	if err != nil {
 		log.Warn("err when update rpts", "err", err)
 		return err
 	}
+	log.Debug("rpts updated", "len(rpts)", len(rpts), "number", s.number())
+	for i, r := range rpts {
+		log.Debug(fmt.Sprintf("rpt #%d", i), "addr", r.Address.Hex(), "score", r.Rpt)
+	}
 
 	// If in checkpoint, run election
 	if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
+		log.Debug("update proposers committee", "number", s.number())
 		seed := header.Hash().Big().Int64()
 		s.updateProposers(rpts, seed)
 	}
@@ -405,6 +417,7 @@ func (s *DporSnapshot) updateCandidates() error {
 	var candidates []common.Address
 
 	if s.Mode == NormalMode && s.isStartElection() {
+		log.Debug("read candidates from contract", "number", s.number())
 		client := s.client()
 		// If contractCaller is not nil, use it to update candidates from contract
 		if client != nil {
@@ -441,10 +454,10 @@ func (s *DporSnapshot) updateCandidates() error {
 		candidates = configs.Candidates()
 	}
 
-	// log.Info("set candidates", "len(candidates)", len(candidates))
-	// for i, c := range candidates {
-	// log.Info(fmt.Sprintf("candidate #%d", i), "candidate", c.Hex())
-	// }
+	log.Debug("set candidates", "len(candidates)", len(candidates))
+	for i, c := range candidates {
+		log.Debug(fmt.Sprintf("candidate #%d", i), "candidate", c.Hex())
+	}
 
 	s.setCandidates(candidates)
 	return nil
@@ -454,27 +467,23 @@ func (s *DporSnapshot) updateCandidates() error {
 func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 
 	if s.client() == nil && s.Mode == NormalMode {
-		// log.Warn("snapshot contract caller is nil")
+		log.Warn("snapshot contract caller is nil")
 		s.Mode = FakeMode
 	}
 
 	switch {
 	case s.Mode == NormalMode && s.isStartElection():
-
-		rptBackend, err := s.rptBackend, error(nil)
-		if rptBackend == nil {
-			rptBackend, err = rpt.NewRptService(s.client(), s.config.Contracts[configs.ContractRpt])
+		if s.rptBackend == nil {
+			var err error
+			s.rptBackend, err = rpt.NewRptService(s.client(), s.config.Contracts[configs.ContractRpt])
+			if err != nil {
+				return rpt.RptList{}, err
+			}
 		}
-		// rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
-		cs := s.candidates()
-		rpts := make(rpt.RptList, len(cs))
-		for i, c := range cs {
-			rpts[i] = rpt.Rpt{Address: c, Rpt: 100}
-		}
-
-		s.rptBackend = rptBackend
-
-		return rpts, err
+		rptBackend := s.rptBackend
+		rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
+		log.Debug("called contract to get rpts", "rpts", rpts.FormatString())
+		return rpts, nil
 	default:
 		var rpts rpt.RptList
 		for idx, candidate := range s.candidates() {
@@ -499,49 +508,50 @@ func (s *DporSnapshot) isStartElection() bool {
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Elect proposers
 	if s.isStartElection() {
-		// log.Info("electing")
-		// log.Info("---------------------------")
-		// log.Info("rpts:")
-		// for _, r := range rpts {
-		// 	log.Info("rpt:", "addr", r.Address.Hex(), "rpt value", r.Rpt)
-		// }
-		// log.Info("seed", "seed", seed)
-		// log.Info("term length", "term", int(s.config.TermLen))
-		// log.Info("---------------------------")
+		log.Debug("start election")
+		log.Debug("electing")
+		log.Debug("---------------------------")
+		log.Debug("rpts:")
+		for _, r := range rpts {
+			log.Debug("rpt:", "addr", r.Address.Hex(), "value", r.Rpt)
+		}
+		log.Debug("seed", "seed", seed)
+		log.Debug("term length", "term", int(s.config.TermLen))
+		log.Debug("---------------------------")
 
 		proposers := election.Elect(rpts, seed, int(s.config.TermLen))
 
-		// log.Info("elected proposers:")
+		log.Debug("elected proposers:")
 
-		// for _, s := range proposers {
-		// 	log.Info("proposer", "addr", s.Hex())
-		// }
-		// log.Info("---------------------------")
+		for _, s := range proposers {
+			log.Info("proposer", "addr", s.Hex())
+		}
+		log.Debug("---------------------------")
 
-		// log.Info("snap.number", "n", s.number())
+		log.Debug("snap.number", "n", s.number())
 
 		term := s.FutureTermOf(s.number())
 
-		// log.Debug("term idx", "eidx", term)
+		log.Debug("term idx", "eidx", term)
 
 		s.setRecentProposers(term, proposers)
 
-		// log.Info("---------------------------")
-		// proposers = s.getRecentProposers(term)
-		// log.Info("stored elected proposers")
+		log.Debug("---------------------------")
+		proposers = s.getRecentProposers(term)
+		log.Debug("stored elected proposers")
 
-		// for _, s := range proposers {
-		// 	log.Info("proposer", "addr", s.Hex())
-		// }
-		// log.Info("---------------------------")
+		for _, s := range proposers {
+			log.Debug("proposer", "addr", s.Hex())
+		}
+		log.Info("---------------------------")
 
-		// if uint64(len(proposers)) != s.config.TermLen {
-		// 	log.Warn("proposer length wrong", "expect", s.config.TermLen, "actual", len(proposers))
-		// 	log.Warn("---------- proposers --------")
-		// 	for _, s := range proposers {
-		// 		log.Warn("proposer", "addr", s.Hex())
-		// 	}
-		// }
+		if uint64(len(proposers)) != s.config.TermLen {
+			log.Debug("proposer length wrong", "expect", s.config.TermLen, "actual", len(proposers))
+			log.Debug("---------- proposers --------")
+			for _, s := range proposers {
+				log.Debug("proposer", "addr", s.Hex())
+			}
+		}
 	}
 
 	// Set default proposer if it is in initial stage
@@ -549,10 +559,10 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		// Use default proposers
 		proposers := s.candidates()[:s.config.TermLen]
 		s.setRecentProposers(s.Term()+1, proposers)
-		// log.Info("use default proposers", "term", s.Term()+1, "proposers", len(proposers))
-		// for i, p := range proposers {
-		// 	log.Info(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
-		// }
+		log.Debug("use default proposers", "term", s.Term()+1, "proposers", len(proposers))
+		for i, p := range proposers {
+			log.Debug(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
+		}
 	}
 
 	return
