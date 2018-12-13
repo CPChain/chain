@@ -197,27 +197,24 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 	log.Info("defaultDporHelper snapshot", "number", number, "hash", hash.Hex(), "len(parent and itself)", len(chainSeg))
 
-	if got, ok := dpor.recentSnaps.Get(hash); ok {
-		snap = got.(*DporSnapshot)
-	}
-
 	numberIter := number
 	for snap == nil {
+
+		// If an in-memory snapshot can be found, use it
+		if got, ok := dpor.recentSnaps.Get(hash); ok {
+			snap = got.(*DporSnapshot)
+			break
+		}
+
 		// If an on-disk checkpoint Snapshot can be found, use that
 		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
 			log.Info("loading snapshot", "number", numberIter, "hash", hash)
-			var rptService rpt.RptService
-			client := dpor.Client()
-			if client != nil {
-				rptService, _ = rpt.NewRptService(client, dpor.config.Contracts[configs.ContractRpt])
-			}
-
-			s, err := loadSnapshot(dpor.config, client, rptService, dpor.db, hash)
+			s, err := loadSnapshot(dpor.config, dpor.db, hash)
 			if err == nil {
-				log.Debug("Loaded voting Snapshot from disk", "number", numberIter, "hash", hash)
+				log.Debug("Loaded checkpoint Snapshot from disk", "number", numberIter, "hash", hash)
 				snap = s
 				break
-			} else {
+			} else if numberIter != number {
 				log.Debug("loading snapshot fails", "error", err)
 			}
 		}
@@ -267,8 +264,6 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			}
 		}
 
-		// TODO: @AC try to retrieve parent's snapshot from cache and stop upward backtracking
-
 		headers = append(headers, header)
 		numberIter, hash = numberIter-1, header.ParentHash
 	}
@@ -278,7 +273,21 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		headers[i], headers[len(headers)-1-i] = headers[len(headers)-1-i], headers[i]
 	}
 
-	client := dpor.Client()
+	var (
+		client     = snap.client()
+		rptBackend = snap.rptBackend
+	)
+
+	if client == nil {
+		client = dpor.Client()
+	}
+	if rptBackend == nil && client != nil {
+		rptBackend, _ = rpt.NewRptService(client, dpor.config.Contracts[configs.ContractRpt])
+	}
+
+	// Set correct client and rptBackend
+	snap.setClient(client)
+	snap.rptBackend = rptBackend
 
 	// Apply headers to the snapshot and updates RPTs
 	newSnap, err := snap.apply(headers, client)

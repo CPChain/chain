@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
@@ -88,7 +87,7 @@ func Test_loadSnapshot(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := loadSnapshot(tt.args.config, nil, nil, tt.args.db, tt.args.hash)
+			got, err := loadSnapshot(tt.args.config, tt.args.db, tt.args.hash)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("loadSnapshot(%v, %v, %v, %v) error = %v, wantErr %v", tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash, err, tt.wantErr)
 				return
@@ -674,9 +673,8 @@ func Test_loadSnapshot_marshal(t *testing.T) {
 
 	hash := common.Hash{}
 	snapshot.setHash(hash)
-	snapshot.Client = &cpclient.Client{}
 	snapshot.store(db)
-	got, err := loadSnapshot(cfg, snapshot.Client, snapshot.rptBackend, db, hash)
+	got, err := loadSnapshot(cfg, db, hash)
 	_ = got
 	if err != nil {
 		t.Error("should not fail", err)

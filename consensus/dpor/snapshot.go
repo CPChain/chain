@@ -272,8 +272,7 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, pr
 }
 
 // loadSnapshot loads an existing Snapshot from the database.
-func loadSnapshot(config *configs.DporConfig, client backend.ClientBackend, rpt rpt.RptService, db database.Database,
-	hash common.Hash) (*DporSnapshot, error) {
+func loadSnapshot(config *configs.DporConfig, db database.Database, hash common.Hash) (*DporSnapshot, error) {
 
 	// Retrieve from db
 	blob, err := db.Get(append([]byte("dpor-"), hash[:]...))
@@ -287,8 +286,6 @@ func loadSnapshot(config *configs.DporConfig, client backend.ClientBackend, rpt 
 		return nil, err
 	}
 	snap.config = config
-	snap.Client = client
-	snap.rptBackend = rpt
 
 	return snap, nil
 }
