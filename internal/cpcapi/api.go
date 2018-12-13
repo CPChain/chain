@@ -514,7 +514,7 @@ func getRole(isCommittee bool) int {
 	return cpclient.Candidate
 }
 
-// GetCommittees return current view
+// GetCommittee return current view
 func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
 	CurrentView := s.b.CurrentView()
 	return CurrentView
@@ -531,27 +531,29 @@ func (s *PublicBlockChainAPI) GetCommitteeNumber() int {
 	return len(committeeNumber)
 }
 
-// GetCommittees return current committees
-func (s *PublicBlockChainAPI) GetCommittees() []cpclient.Committees {
+// GetBlockGenerationInfo return current committee and it's Info
+func (s *PublicBlockChainAPI) GetBlockGenerationInfo() []cpclient.BlockGenerationInfo {
 
 	v := s.b.CurrentView()
 	t := s.b.CurrentTerm()
-	bn := s.b.CurrentBlock()
-	var committees []cpclient.Committees
+	b := s.b.CurrentBlock()
+	vl, tl := s.b.ViewLen(), s.b.TermLen()
+	cm := len(s.b.CommitteMember())
+	var blockGenerationInfo []cpclient.BlockGenerationInfo
 
-	for i := uint64(0); i < t; i++ {
-		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(bn.Header().Number.Uint64())-rpc.BlockNumber(i))
+	for i := t * vl * tl; i < b.Header().Number.Uint64(); i++ {
+		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(i))
 		if err != nil {
 			log.Error("can't get header", "error", err)
-			return committees
+			return blockGenerationInfo
 		}
-		committee := cpclient.Committees{
-			View: v, Term: t, Producer: header.Coinbase, Block: uint64(rpc.BlockNumber(bn.Header().Number.Uint64()) - rpc.BlockNumber(i)),
+		gen := cpclient.BlockGenerationInfo{
+			View: v, Term: t, Proposer: header.Coinbase, BlockNumber: uint64(rpc.BlockNumber(i)), TermLen: cm,
 		}
-		committees = append(committees, committee)
+		blockGenerationInfo = append(blockGenerationInfo, gen)
 	}
 
-	return committees
+	return blockGenerationInfo
 
 }
 

@@ -90,7 +90,7 @@ func TestGetCurrentView(t *testing.T) {
 	}
 }
 
-func TestGetCommittees(t *testing.T) {
+func TestGetBlockGenerationInfoList(t *testing.T) {
 	t.Skip("must start chain to test")
 	fmt.Println("*******************************************************")
 	client, err := cpclient.Dial("http://localhost:8501")
@@ -98,11 +98,11 @@ func TestGetCommittees(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	committees, err := client.GetCommittees(context.Background())
-	fmt.Println("committees is :", committees)
+	blockGenInfoList, err := client.GetBlockGenerationInfoList(context.Background())
+	fmt.Println("committee is:", blockGenInfoList, len(blockGenInfoList))
 
-	if len(committees) < 1 {
-		t.Errorf("GetCommittees failed")
+	if len(blockGenInfoList) == 0 || len(blockGenInfoList) > 12 {
+		t.Errorf("GetBlockGenerationInfoList failed")
 	}
 }
 
@@ -117,7 +117,7 @@ func TestGetCommitteeNumber(t *testing.T) {
 	fmt.Println("committees is :", committeesNum)
 
 	if committeesNum != 4 {
-		t.Errorf("GetCommittees failed")
+		t.Errorf("GetCommittee failed")
 	}
 }
 

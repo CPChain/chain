@@ -80,6 +80,8 @@ type Backend interface {
 	CurrentTerm() uint64
 	CommitteMember() []common.Address
 	CalcRptInfo(address common.Address, blockNum uint64) int64
+	ViewLen() uint64
+	TermLen() uint64
 }
 
 func GetGAPIs(b Backend) []grpc.GApi {

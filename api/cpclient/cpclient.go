@@ -272,11 +272,12 @@ type rpcProgress struct {
 	KnownStates   hexutil.Uint64
 }
 
-type Committees struct {
-	View     uint64 // contain View in each Term
-	Term     uint64
-	Producer common.Address
-	Block    uint64 // high
+type BlockGenerationInfo struct {
+	View        uint64 // contain View in each Term
+	Term        uint64
+	Proposer    common.Address
+	BlockNumber uint64 // high
+	TermLen     int
 }
 
 // node status
@@ -362,9 +363,9 @@ func (ec *Client) GetCommitteeNumber(ctx context.Context) (int, error) {
 	return result, err
 }
 
-func (ec *Client) GetCommittees(ctx context.Context) ([]Committees, error) {
-	var result []Committees
-	err := ec.c.CallContext(ctx, &result, "eth_getCommittees")
+func (ec *Client) GetBlockGenerationInfoList(ctx context.Context) ([]BlockGenerationInfo, error) {
+	var result []BlockGenerationInfo
+	err := ec.c.CallContext(ctx, &result, "eth_getBlockGenerationInfo")
 	return result, err
 }
 
