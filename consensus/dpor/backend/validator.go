@@ -290,7 +290,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 		if err != nil {
 			return err
 		}
-		log.Debug("received signed prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+		log.Debug("received signed prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex(), "sigs", header.Dpor.SigsFormatText())
 
 		// verify the signed header
 		// if correct, insert the block into chain, broadcast it

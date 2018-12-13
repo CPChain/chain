@@ -181,6 +181,8 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		return nil, err
 	}
 
+	cpc.miner = miner.New(cpc, cpc.chainConfig, cpc.EventMux(), cpc.engine)
+
 	cpc.APIBackend = &APIBackend{cpc, nil}
 
 	// gas related
@@ -207,13 +209,11 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 	return db, nil
 }
 
-// InitMiner sets mining state of cpchain service
-func (s *CpchainService) InitMiner() {
-
-	if s.chainConfig.Dpor != nil {
-		s.engine.(*dpor.Dpor).SetAsMiner(true)
+// SetAsMiner sets dpor engine as miner
+func (s *CpchainService) SetAsMiner(isMiner bool) {
+	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		dpor.SetAsMiner(isMiner)
 	}
-	s.miner = miner.New(s, s.chainConfig, s.EventMux(), s.engine)
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
@@ -369,8 +369,8 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 
 		log.Debug("server.nodeid", "enode", s.server.NodeInfo().Enode)
 
+		dpor.SetAsMiner(true)
 		go dpor.StartMining(s.blockchain, client, s.server, s.protocolManager.BroadcastBlock)
-		// go dpor.StartMining(s.blockchain, contractCaller, s.server, s.protocolManager.BroadcastBlock)
 	}
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection
@@ -388,6 +388,7 @@ func (s *CpchainService) StopMining() {
 
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		dpor.StopMining()
+		dpor.SetAsMiner(false)
 	}
 
 	s.miner.Stop()

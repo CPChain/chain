@@ -59,7 +59,7 @@ func updateLogConfig(ctx *cli.Context) {
 
 	if ctx.IsSet(flags.LogFileFlagName) {
 		filename := ctx.String(flags.LogFileFlagName)
-		f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
 			log.Error("Error: create output file of logger")
 		} else {

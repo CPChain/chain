@@ -76,7 +76,7 @@ func main() {
 	writer := os.Stderr
 
 	if *logfile != "" {
-		fileWriter, err := os.OpenFile(*logfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		fileWriter, err := os.OpenFile(*logfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
 			Fatalf("Error: %v", err)
 		}

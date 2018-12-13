@@ -88,7 +88,7 @@ func registerChainService(cfg *cpc.Config, n *node.Node, cliCtx *cli.Context) {
 		fullNode, err := cpc.New(ctx, cfg)
 
 		if cliCtx.Bool("mine") {
-			fullNode.InitMiner()
+			fullNode.SetAsMiner(true)
 		}
 		return fullNode, err
 	})
