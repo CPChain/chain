@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// mainnet configuration
+// Mainnet configuration
 var (
 	// contract
 	mainnetProxyContractRegister = devProxyContractRegister

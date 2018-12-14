@@ -47,7 +47,7 @@ func (c *GetRank) Run(input []byte) ([]byte, error) {
 	// TODO: @AC get cpchain Backend and read balance.
 	coinAge, err := c.Backend.Rank(addr, number)
 	if err != nil {
-		log.Error("NewBasicCollector,error", "error", err)
+		log.Error("NewBasicCollector,error", "error", err, "addr", addr.Hex())
 	}
 	ret := new(big.Int).SetInt64(int64(coinAge))
 	return common.LeftPadBytes(ret.Bytes(), 32), nil

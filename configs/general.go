@@ -40,27 +40,27 @@ const (
 
 var (
 	chainConfigMap = map[string]*ChainConfig{
-		DEV:     devChainConfig,
-		TESTNET: testnetChainConfig,
-		MAINNET: mainnetChainConfig,
+		Dev:     devChainConfig,
+		Testnet: testnetChainConfig,
+		Mainnet: mainnetChainConfig,
 	}
 
 	proposersMap = map[string][]common.Address{
-		DEV:     devProposers,
-		TESTNET: testnetProposers,
-		MAINNET: mainnetProposers,
+		Dev:     devProposers,
+		Testnet: testnetProposers,
+		Mainnet: mainnetProposers,
 	}
 
 	candidatesMap = map[string][]common.Address{
-		DEV:     devDefaultCandidates,
-		TESTNET: testnetDefaultCandidates,
-		MAINNET: mainnetDefaultCandidates,
+		Dev:     devDefaultCandidates,
+		Testnet: testnetDefaultCandidates,
+		Mainnet: mainnetDefaultCandidates,
 	}
 
 	validatorsMap = map[string][]common.Address{
-		DEV:     devValidators,
-		TESTNET: testnetValidators,
-		MAINNET: mainnetValidators,
+		Dev:     devValidators,
+		Testnet: testnetValidators,
+		Mainnet: mainnetValidators,
 	}
 )
 

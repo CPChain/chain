@@ -18,9 +18,6 @@ package admission
 
 import (
 	"time"
-
-	"bitbucket.org/cpchain/chain/configs"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 type WorkStatus = uint32
@@ -43,9 +40,6 @@ type Config struct {
 	CpuLifeTime       time.Duration
 	MemoryDifficulty  uint64
 	MemoryCpuLifeTime time.Duration
-	// CampaignContractAddress public campaign's contract address.
-	// common.HexToAddress("0x1a9fAE75908752d0ABf4DCa45ebcaC311C376290")
-	CampaignContractAddress common.Address
 	// Deposit to mortgage
 	Deposit int64
 	// NumberOfCampaign wants to campaign times
@@ -54,11 +48,10 @@ type Config struct {
 
 // DefaultConfig default admission config.
 var DefaultConfig = Config{
-	CpuDifficulty:           CpuDifficulty,
-	CpuLifeTime:             time.Duration(CpuWorkTimeout * time.Second),
-	MemoryDifficulty:        MemoryDifficulty,
-	MemoryCpuLifeTime:       time.Duration(MemoryWorkTimeout * time.Second),
-	CampaignContractAddress: configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign],
+	CpuDifficulty:     CpuDifficulty,
+	CpuLifeTime:       time.Duration(CpuWorkTimeout * time.Second),
+	MemoryDifficulty:  MemoryDifficulty,
+	MemoryCpuLifeTime: time.Duration(MemoryWorkTimeout * time.Second),
 	// TODO @chengx no hardcoded numbers.
 	Deposit:               int64(50),
 	NumberOfCampaignTimes: int64(1),

@@ -49,7 +49,7 @@ func (c *GetProxyCount) Run(input []byte) ([]byte, error) {
 	// TODO: @AC get cpchain Backend and read balance.
 	_, proxyCount, err := c.Backend.ProxyInfo(addr, number)
 	if err != nil {
-		log.Warn("NewBasicCollector,error", "error", err)
+		log.Warn("NewBasicCollector,error", "error", err, "address", addr.Hex())
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
 	ret := new(big.Int).SetInt64(int64(proxyCount))
@@ -70,12 +70,11 @@ func (c *IsProxy) Run(input []byte) ([]byte, error) {
 		log.Error("primitive_is_proxy got error", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-	//	log.Infof("primitive_is_proxy, address %s, block number %d", addr.Hex(), number)
 	log.Info("primitive_is_proxy", "address", addr.Hex(), "number", number)
 
 	isProxy, _, err := c.Backend.ProxyInfo(addr, number)
 	if err != nil {
-		log.Error("NewBasicCollector,error", "error", err)
+		log.Error("NewBasicCollector,error", "error", err, "address", addr.Hex())
 		ret := new(big.Int).SetInt64(int64(0))
 		return common.LeftPadBytes(ret.Bytes(), 32), nil
 	}

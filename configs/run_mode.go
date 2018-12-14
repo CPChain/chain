@@ -8,14 +8,14 @@ import (
 )
 
 const (
-	DEV     = "dev"
-	TESTNET = "testnet"
-	MAINNET = "mainnet"
+	Dev     = "dev"
+	Testnet = "testnet"
+	Mainnet = "mainnet"
 )
 
-var DefaultRunMode = DEV
+var DefaultRunMode = Dev
 
-// Run mode for switch node configuration, eg:dev|testnet|prod
+// Run mode for switch node configuration, eg:dev|Testnet|prod
 var runModeValue = DefaultRunMode
 
 func GetRunMode() string {
@@ -27,9 +27,9 @@ func SetRunMode(runMode string) error {
 		runModeValue = DefaultRunMode
 	} else {
 		switch runMode {
-		case DEV:
-		case MAINNET:
-		case TESTNET:
+		case Dev:
+		case Mainnet:
+		case Testnet:
 		default:
 			log.Error("unknown runModeValue", "runModeValue", runMode)
 			return errors.New("unknown runModeValue" + runMode)
@@ -41,13 +41,13 @@ func SetRunMode(runMode string) error {
 }
 
 func IsDev() bool {
-	return DEV == runModeValue
+	return Dev == runModeValue
 }
 
 func IsMainnet() bool {
-	return MAINNET == runModeValue
+	return Mainnet == runModeValue
 }
 
 func IsTestnet() bool {
-	return TESTNET == runModeValue
+	return Testnet == runModeValue
 }

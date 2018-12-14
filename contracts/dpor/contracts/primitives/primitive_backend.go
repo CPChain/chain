@@ -95,22 +95,21 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 		return 100, err // 100 represent give the address a default rank
 	}
 	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
-	log.Info("campaign", "contractAddress", contractAddress)
 	intance, err := contract2.NewCampaign(contractAddress, re.ContractClient)
 	if err != nil {
-		log.Error("NewCampaign error", "error", err)
+		log.Error("NewCampaign error", "error", err, "contractAddress", contractAddress.Hex())
 		return 100, err // 100 represent give the address a default rank
 	}
 	// get the rnode in that block
 	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(number)))
 	if err != nil || rNodeAddress == nil {
-		log.Error("CandidatesOf error", "error", err)
+		log.Error("CandidatesOf error", "error", err, "contractAddress", contractAddress.Hex())
 		return 100, err // 100 represent give the address a default rank
 	}
 	for _, committee := range rNodeAddress {
 		balance, err := getBalanceAt(context.Background(), re.ChainClient.ApiBackend, committee, big.NewInt(int64(number)))
 		if err != nil {
-			log.Error("error with bc.BalanceAt", "error", err)
+			log.Error("error with bc.BalanceAt", "error", err, "contractAddress", contractAddress.Hex())
 			return 100, err // 100 represent give the address a default rank
 		}
 		balances = append(balances, float64(balance.Uint64()))
@@ -178,12 +177,12 @@ func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int6
 	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRegister]
 	upload, err := pdash.NewRegister(contractAddress, re.ContractClient)
 	if err != nil {
-		log.Error("NewRegister error", "error", err)
+		log.Error("NewRegister error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
 		return uploadNumber, err
 	}
 	fileNumber, err := upload.GetUploadCount(nil, address)
 	if err != nil {
-		log.Error("GetUploadCount error", "error", err)
+		log.Error("GetUploadCount error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
 		return uploadNumber, err
 	}
 	return fileNumber.Int64(), err
@@ -198,20 +197,20 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	pdashInstance, err := pdash.NewPdash(contractAddress, re.ContractClient)
 
 	if err != nil {
-		log.Error("NewPdash error", "error", err)
+		log.Error("NewPdash error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
 		return proxyCount, 0, err
 	}
 
 	len, err := pdashInstance.BlockOrdersLength(nil, big.NewInt(int64(number)))
 	if err != nil {
-		log.Error("BlockOrdersLength err", "error", err)
+		log.Error("BlockOrdersLength err", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
 		return proxyCount, 0, err
 	}
 
 	for i := 0; i < int(len.Int64()); i++ {
 		id, err := pdashInstance.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
-			log.Error("BlockOrders error", "error", err)
+			log.Error("BlockOrders error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
 			break
 		}
 		OrderRecord, err := pdashInstance.OrderRecords(nil, id)
@@ -228,7 +227,7 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 	for i := 0; i < int(len.Int64()); i++ {
 		id, err := pdashInstance.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
 		if err != nil {
-			log.Error("BlockOrders error", "error", err)
+			log.Error("BlockOrders error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
 			break
 		}
 		OrderRecord, err := pdashInstance.OrderRecords(nil, id)

@@ -410,11 +410,9 @@ func (s *DporSnapshot) applyHeader(header *types.Header) error {
 
 // updateCandidates updates proposer candidates from campaign contract
 func (s *DporSnapshot) updateCandidates() error {
-
 	var candidates []common.Address
 
 	if s.Mode == NormalMode && s.isStartElection() {
-		log.Debug("read candidates from contract", "number", s.number())
 		client := s.client()
 		// If contractCaller is not nil, use it to update candidates from contract
 		if client != nil {

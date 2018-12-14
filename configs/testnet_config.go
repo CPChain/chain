@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// testnet configuration
+// Testnet configuration
 var (
 	// contract
 	testnetProxyContractRegister = common.HexToAddress("0xa6a8ac0cad2150e076de638aa492042eeb823c6b")
@@ -38,7 +38,7 @@ var (
 			TermLen:               4,
 			ViewLen:               3,
 			ValidatorsLen:         4,
-			MaxInitBlockNumber:    72,
+			MaxInitBlockNumber:    120,
 			ProxyContractRegister: testnetProxyContractRegister,
 			Contracts:             testnetContractAddressMap,
 			ImpeachTimeout:        time.Second * DefaultBlockPeriod * 2,

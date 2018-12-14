@@ -104,6 +104,7 @@ type RptServiceImpl struct {
 
 // NewRptService creates a concrete RPT service instance.
 func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address) (RptService, error) {
+	log.Debug("rptContractAddr", "contractAddr", rptContractAddr.Hex())
 	primitive_register.GetPrimitiveContractCheckerInstance().WaitInitCompleteUntilTimeout()
 
 	cache, _ := lru.NewARC(cacheSize)
@@ -128,7 +129,7 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 // calcRptInfo return the Rpt of the rnode address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
 	instance, err := dpor.NewRpt(rs.rptContract, rs.client)
-	log.Info("calling to RPT contract", "contractAddr", rs.rptContract.Hex())
+	log.Debug("calling to RPT contract", "contractAddr", rs.rptContract.Hex())
 	if err != nil {
 		log.Error("New primitivesContract error")
 		return Rpt{Address: address, Rpt: minRptScore}
