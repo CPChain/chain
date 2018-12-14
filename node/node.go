@@ -107,12 +107,12 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
-		grpcServer:        grpc.NewServer(conf.DataDir, conf.HTTPModules, &conf.GRpc),
-		ipcEndpoint:       conf.IPCEndpoint(),
-		httpEndpoint:      conf.HTTPEndpoint(),
-		wsEndpoint:        conf.WSEndpoint(),
-		eventmux:          new(event.TypeMux),
-		log:               conf.Logger,
+		// grpcServer:        grpc.NewServer(conf.DataDir, conf.HTTPModules, &conf.GRpc),
+		ipcEndpoint:  conf.IPCEndpoint(),
+		httpEndpoint: conf.HTTPEndpoint(),
+		wsEndpoint:   conf.WSEndpoint(),
+		eventmux:     new(event.TypeMux),
+		log:          conf.Logger,
 	}, nil
 }
 
@@ -227,16 +227,16 @@ func (n *Node) Start() error {
 	}
 
 	// start the configured grpc interfaces
-	if err := n.startGRPC(services); err != nil {
-		n.stopRPC()
-		for _, service := range services {
-			if err := service.Stop(); err != nil {
-				n.log.Error("rpc error", "error", err)
-			}
-		}
-		p2pServer.Stop()
-		return err
-	}
+	// if err := n.startGRPC(services); err != nil {
+	// 	n.stopRPC()
+	// 	for _, service := range services {
+	// 		if err := service.Stop(); err != nil {
+	// 			n.log.Error("rpc error", "error", err)
+	// 		}
+	// 	}
+	// 	p2pServer.Stop()
+	// 	return err
+	// }
 
 	// finish initializing the startup
 	n.server = p2pServer
@@ -439,7 +439,7 @@ func (n *Node) Stop() error {
 	}
 
 	// terminate the api, services and the p2p server.
-	n.stopGRPC()
+	// n.stopGRPC()
 	n.stopRPC()
 
 	n.rpcAPIs = nil

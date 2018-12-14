@@ -302,7 +302,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0x5084f56e090d122a517db818b9bb9e3496795f6d509474874a0bae50fef2bba8")
+var MainnetGenesisHash = common.HexToHash("0xe63ee6efb6a59a43f5a564201d15673c1ac5ac08c3263e54400af8295c24e392")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
@@ -324,7 +324,7 @@ func newGenesisBlock() *Genesis {
 		Config:    configs.ChainConfigInfo(),
 		Timestamp: 1492009146,
 		ExtraData: hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:  4700000,
+		GasLimit:  4700000 * 10,
 		// GasLimit:   1000000000,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
