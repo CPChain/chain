@@ -100,7 +100,7 @@ func registerChainService(cfg *cpc.Config, n *node.Node, cliCtx *cli.Context) {
 // Creates a node with chain services registered
 func createNode(ctx *cli.Context) *node.Node {
 	cfg, n := newConfigNode(ctx)
-	registerChainService(&cfg.Eth, n, ctx)
+	registerChainService(&cfg.Cpc, n, ctx)
 	return n
 }
 

@@ -6,15 +6,17 @@ package configs
 import (
 	"math/big"
 	"time"
-
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // mainnet configuration
 var (
-	mainnetDefaultCandidates  = devDefaultCandidates
-	mainnetContractAddressMap = devContractAddressMap
-	mainnetChainConfig        = &ChainConfig{
+	// contract
+	mainnetProxyContractRegister = devProxyContractRegister
+	mainnetContractAddressMap    = devContractAddressMap
+
+	// config
+	mainnetDefaultCandidates = devDefaultCandidates
+	mainnetChainConfig       = &ChainConfig{
 		ChainID: big.NewInt(MainnetChainId),
 		Dpor: &DporConfig{
 			Period:                DefaultBlockPeriod,
@@ -22,8 +24,8 @@ var (
 			ViewLen:               3,
 			ValidatorsLen:         4,
 			MaxInitBlockNumber:    72,
-			ProxyContractRegister: common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
-			Contracts:             devContractAddressMap,
+			ProxyContractRegister: mainnetProxyContractRegister,
+			Contracts:             mainnetContractAddressMap,
 			ImpeachTimeout:        time.Second * DefaultBlockPeriod * 2,
 		},
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/ecdsa"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,11 +26,11 @@ import (
 )
 
 type config struct {
-	Eth  cpc.Config
+	Cpc  cpc.Config
 	Node node.Config
 }
 
-func updateRunModeFlag(ctx *cli.Context, cfg *node.Config) {
+func updateRunModeFlag(ctx *cli.Context) {
 	if ctx.IsSet(flags.RunModeFlagName) {
 		runMode := ctx.String(flags.RunModeFlagName)
 		configs.SetRunMode(runMode)
@@ -69,6 +70,8 @@ func updateLogConfig(ctx *cli.Context) {
 }
 
 func updateNodeGeneralConfig(ctx *cli.Context, cfg *node.Config) {
+	updateRunModeFlag(ctx)
+
 	// log update
 	updateLogConfig(ctx)
 
@@ -299,13 +302,20 @@ func updateConfigFromFile(ctx *cli.Context, cfg *config) {
 
 // Creates a config and a node
 func newConfigNode(ctx *cli.Context) (config, *node.Node) {
+	// set runmode at first
+	updateRunModeFlag(ctx)
+
+	defaultConfig, err := json.Marshal(cpc.DefaultConfig)
+	if err != nil {
+		log.Info("Marshal defaultConfig error", "err", err)
+	}
+	log.Debug("defaultConfig", "DefaultConfig json", string(defaultConfig))
+
 	// default
 	cfg := config{
-		Eth:  cpc.DefaultConfig,
+		Cpc:  cpc.DefaultConfig,
 		Node: node.DefaultConfig,
 	}
-	// update run mode
-	updateRunModeFlag(ctx, &cfg.Node)
 
 	// update data dir first
 	updateDataDirFlag(ctx, &cfg.Node)
@@ -322,7 +332,7 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 	}
 
 	// update chain config
-	updateChainConfig(ctx, &cfg.Eth, n)
+	updateChainConfig(ctx, &cfg.Cpc, n)
 
 	return cfg, n
 }

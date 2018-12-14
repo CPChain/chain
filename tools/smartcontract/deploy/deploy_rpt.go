@@ -7,8 +7,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func DeployRpt() common.Address {
-	client, err, privateKey, _, fromAddress := config.Connect()
+func DeployRpt(password string) common.Address {
+	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
 	auth := newAuth(client, privateKey, fromAddress)

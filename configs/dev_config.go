@@ -12,6 +12,17 @@ import (
 
 // dev configuration
 var (
+	// contract
+	devProxyContractRegister = common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290")
+	devContractAddressMap    = map[string]common.Address{
+		ContractCampaign: common.HexToAddress("0x0ddf4057eedfb80d58029be49bab09bbc45bc500"),
+		ContractProposer: common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
+		ContractRegister: common.HexToAddress("0x019cc04ff9d88529b9e58ff26bfc53bce060e915"),
+		ContractRpt:      common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d"),
+		ContractPdash:    common.HexToAddress("0xaaae743244a7a5116470df8bd398e7d562ae8881"),
+	}
+
+	// config
 	devDefaultCandidates = []common.Address{
 		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"), // #2
 		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"), // #1
@@ -20,15 +31,6 @@ var (
 		common.HexToAddress("0x3a18598184ef84198db90c28fdfdfdf56544f747"), // #4
 		common.HexToAddress("0x22a672eab2b1a3ff3ed91563205a56ca5a560e08"), // #6
 	}
-
-	devContractAddressMap = map[string]common.Address{
-		ContractCampaign: common.HexToAddress("0x0ddf4057eedfb80d58029be49bab09bbc45bc500"),
-		ContractProposer: common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
-		ContractRegister: common.HexToAddress("0x019cc04ff9d88529b9e58ff26bfc53bce060e915"),
-		ContractRpt:      common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d"),
-		ContractPdash:    common.HexToAddress("0xaaae743244a7a5116470df8bd398e7d562ae8881"),
-	}
-
 	devChainConfig = &ChainConfig{
 		ChainID: big.NewInt(DevChainId),
 		Dpor: &DporConfig{
@@ -37,7 +39,7 @@ var (
 			ViewLen:               3,
 			ValidatorsLen:         4,
 			MaxInitBlockNumber:    72,
-			ProxyContractRegister: common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290"),
+			ProxyContractRegister: devProxyContractRegister,
 			Contracts:             devContractAddressMap,
 			ImpeachTimeout:        time.Second * DefaultBlockPeriod * 2,
 		},

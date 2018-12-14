@@ -27,56 +27,59 @@ import (
 
 func main() {
 	log.Info("cmdline args", "args", os.Args)
-	if len(os.Args) != 3 {
-		fmt.Println("Usage: smartcontract <endpoint> <keystore path>")
+	if len(os.Args) != 4 {
+		fmt.Println("Usage: smartcontract <endpoint> <keystore path> <password>")
 		return
 	}
 	config.SetConfig(os.Args[1], os.Args[2])
 
+	password := os.Args[3]
+	log.Info("contract deploy node's password", "password", password)
+
 	// deploy init contract
 	deploy.FormatPrint("0.DeployProxyContractRegister")
-	proxyContractRegisterAddress := deploy.ProxyContractRegister()
+	proxyContractRegisterAddress := deploy.ProxyContractRegister(password)
 	deploy.PrintContract(proxyContractRegisterAddress)
 
 	// 1
-	deploy.FormatPrint("1.DeploySignerConnectionRegister")
-	signerAddress := deploy.DeployProposerRegister()
+	deploy.FormatPrint("1.DeployProposer")
+	signerAddress := deploy.DeployProposerRegister(password)
 	deploy.PrintContract(signerAddress)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, signerAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, signerAddress, password)
 
 	// 2
 	deploy.FormatPrint("2.DeployAdmission")
-	admissionAddress := deploy.DeployAdmission()
+	admissionAddress := deploy.DeployAdmission(password)
 	deploy.PrintContract(admissionAddress)
 
-	proxyAdmissionAddress := deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress)
+	proxyAdmissionAddress := deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress, password)
 
 	// 3
 	deploy.FormatPrint("3.DeployCampaign")
-	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress)
+	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress, password)
 	deploy.PrintContract(campaignAddress)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, campaignAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, campaignAddress, password)
 
 	// 4
 	deploy.FormatPrint("4.DeployRpt")
-	rptAddress := deploy.DeployRpt()
+	rptAddress := deploy.DeployRpt(password)
 	deploy.PrintContract(rptAddress)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, rptAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, rptAddress, password)
 
 	// 5
 	deploy.FormatPrint("5.DeployRegister")
-	registerAddress := deploy.DeployRegister()
+	registerAddress := deploy.DeployRegister(password)
 	deploy.PrintContract(registerAddress)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, registerAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, registerAddress, password)
 
 	// 6
 	deploy.FormatPrint("6.DeployPdash")
-	pdashAddress := deploy.DeployPdash()
+	pdashAddress := deploy.DeployPdash(password)
 	deploy.PrintContract(pdashAddress)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress, password)
 }

@@ -278,8 +278,8 @@ type PrivateDebugAPI struct {
 
 // NewPrivateDebugAPI creates a new API definition for the full node-related
 // private debug methods of the cpchain service.
-func NewPrivateDebugAPI(config *configs.ChainConfig, eth *CpchainService) *PrivateDebugAPI {
-	return &PrivateDebugAPI{config: config, cpc: eth}
+func NewPrivateDebugAPI(config *configs.ChainConfig, service *CpchainService) *PrivateDebugAPI {
+	return &PrivateDebugAPI{config: config, cpc: service}
 }
 
 // Preimage is a debug API function that returns the preimage for a sha3 hash, if known.

@@ -4,10 +4,12 @@
 package configs
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -20,12 +22,6 @@ const (
 	DevChainId     = 41
 	MainnetChainId = 42
 	TestnetChainId = 43
-)
-
-const (
-	DEV     = "dev"
-	TESTNET = "testnet"
-	MAINNET = "prod"
 )
 
 const (
@@ -70,13 +66,22 @@ var (
 
 var (
 	// just for test
-	TestChainConfig = &ChainConfig{big.NewInt(MainnetChainId), &DporConfig{Period: 0, TermLen: 4}}
+	TestChainConfig = &ChainConfig{big.NewInt(DevChainId), &DporConfig{Period: 0, TermLen: 4}}
 )
 
 // this contains all the changes we have made to the cpchain protocol.
 // serves as the *default* config.
 func ChainConfigInfo() *ChainConfig {
-	return chainConfigMap[GetRunMode()]
+	runModeValue := GetRunMode()
+	chainConfig, ok := chainConfigMap[runModeValue]
+	if ok {
+		ccString, err := json.Marshal(chainConfig)
+		if err != nil {
+			log.Info("marshal chainConfig error")
+		}
+		log.Info("chainConfig", "json", string(ccString))
+	}
+	return chainConfig
 }
 
 func Candidates() []common.Address {

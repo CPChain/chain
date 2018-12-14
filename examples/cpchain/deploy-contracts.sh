@@ -9,9 +9,10 @@ proj_dir=../..
 
 # deploy smartcontracts
 echo  "Deploy smartcontracts start"
+echo "password is $1"
 sleep 5
 smartcontract=$proj_dir/build/bin/smartcontract
-$smartcontract http://localhost:8501 data/data1/keystore/
+$smartcontract http://localhost:8501 data/data1/keystore/ $1
 
 
 echo "Deploy smartcontracts stop"

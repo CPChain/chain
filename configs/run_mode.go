@@ -7,10 +7,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	DEV     = "dev"
+	TESTNET = "testnet"
+	MAINNET = "mainnet"
+)
+
+var DefaultRunMode = DEV
+
 // Run mode for switch node configuration, eg:dev|testnet|prod
 var runModeValue = DefaultRunMode
-
-var DefaultRunMode = "dev"
 
 func GetRunMode() string {
 	return runModeValue
@@ -21,9 +27,9 @@ func SetRunMode(runMode string) error {
 		runModeValue = DefaultRunMode
 	} else {
 		switch runMode {
-		case "dev":
-		case "prod":
-		case "testnet":
+		case DEV:
+		case MAINNET:
+		case TESTNET:
 		default:
 			log.Error("unknown runModeValue", "runModeValue", runMode)
 			return errors.New("unknown runModeValue" + runMode)
@@ -35,13 +41,13 @@ func SetRunMode(runMode string) error {
 }
 
 func IsDev() bool {
-	return "dev" == runModeValue
+	return DEV == runModeValue
 }
 
-func IsProd() bool {
-	return "prod" == runModeValue
+func IsMainnet() bool {
+	return MAINNET == runModeValue
 }
 
 func IsTestnet() bool {
-	return "testnet" == runModeValue
+	return TESTNET == runModeValue
 }

@@ -312,7 +312,7 @@ func DefaultGenesisBlock() *Genesis {
 	if configs.IsTestnet() {
 		return newGenesisBlock()
 	}
-	if configs.IsProd() {
+	if configs.IsMainnet() {
 		return newGenesisBlock()
 	}
 	return newGenesisBlock()

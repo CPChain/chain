@@ -27,7 +27,7 @@ func init() {
 }
 
 func loadDefaultAccount(idx int) (common.Address, *keystore.Key) {
-	filename := "../../../examples/cpchain/conf/keys/"
+	filename := "../../../examples/cpchain/conf-dev/keys/"
 	kst := keystore.NewKeyStore(filename, 2, 1)
 	account := kst.Accounts()[idx]
 	account, key, err := kst.GetDecryptedKey(account, "password")

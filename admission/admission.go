@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
@@ -161,7 +162,10 @@ func (ac *AdmissionControl) sendCampaignResult() {
 
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 	transactOpts.Value = big.NewInt(ac.config.Deposit)
-	instance, err := dpor.NewCampaignWrapper(transactOpts, ac.config.CampaignContractAddress, ac.contractBackend)
+
+	campaignContractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
+	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
+	instance, err := dpor.NewCampaignWrapper(transactOpts, campaignContractAddress, ac.contractBackend)
 	if err != nil {
 		ac.err = err
 		return

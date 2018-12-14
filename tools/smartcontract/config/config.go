@@ -47,7 +47,7 @@ func SetConfig(ep, ksPath string) {
 	keyStoreFilePath = ksPath
 }
 
-func Connect() (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
+func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
 	// Create client.
 	client, err := cpclient.Dial(endPoint)
 	if err != nil {
@@ -65,7 +65,7 @@ func Connect() (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, co
 	// Create keystore and get account.
 	kst := keystore.NewKeyStore(keyPath, 2, 1)
 	account := kst.Accounts()[0]
-	account, key, err := kst.GetDecryptedKey(account, "password")
+	account, key, err := kst.GetDecryptedKey(account, password)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

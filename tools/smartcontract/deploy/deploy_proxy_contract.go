@@ -28,8 +28,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func ProxyContractRegister() common.Address {
-	client, err, privateKey, _, fromAddress := config.Connect()
+func ProxyContractRegister(password string) common.Address {
+	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
 	auth := newAuth(client, privateKey, fromAddress)
@@ -41,8 +41,8 @@ func ProxyContractRegister() common.Address {
 	return contractAddress
 }
 
-func DeployProxy() common.Address {
-	client, err, privateKey, _, fromAddress := config.Connect()
+func DeployProxy(password string) common.Address {
+	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
 	auth := bind.NewKeyedTransactor(privateKey)
@@ -54,9 +54,9 @@ func DeployProxy() common.Address {
 	return contractAddress
 }
 
-func RegisterProxyAddress(proxyContractAddress, realAddress common.Address) common.Address {
-	proxyAddress := DeployProxy()
-	success := UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress)
+func RegisterProxyAddress(proxyContractAddress, realAddress common.Address, password string) common.Address {
+	proxyAddress := DeployProxy(password)
+	success := UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress, password)
 	if success {
 		return proxyAddress
 	} else {
@@ -64,12 +64,12 @@ func RegisterProxyAddress(proxyContractAddress, realAddress common.Address) comm
 	}
 }
 
-func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress common.Address) bool {
+func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress common.Address, password string) bool {
 	FormatPrint("register proxy address")
 
 	PrintContract(proxyAddress)
 	fmt.Println("Register proxy contract proxy -> real:" + realAddress.Hex())
-	client, err, privateKey, _, fromAddress := config.Connect()
+	client, err, privateKey, _, fromAddress := config.Connect(password)
 	if err != nil {
 		fmt.Println("failed")
 		log.Fatal(err.Error())

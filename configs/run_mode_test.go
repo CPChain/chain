@@ -9,26 +9,26 @@ import (
 )
 
 func TestSetRunModeToDev(t *testing.T) {
-	SetRunMode("dev")
+	SetRunMode(DEV)
 	runMode := GetRunMode()
-	assert.Equal(t, "dev", runMode)
+	assert.Equal(t, DEV, runMode)
 	assert.Equal(t, true, IsDev())
 }
 
 func TestSetRunModeToProd(t *testing.T) {
-	SetRunMode("prod")
+	SetRunMode(MAINNET)
 	runMode := GetRunMode()
-	assert.Equal(t, "prod", runMode)
-	assert.Equal(t, true, IsProd())
-	SetRunMode("dev")
+	assert.Equal(t, MAINNET, runMode)
+	assert.Equal(t, true, IsMainnet())
+	SetRunMode(DEV)
 }
 
 func TestSetRunModeToTestnet(t *testing.T) {
-	SetRunMode("testnet")
+	SetRunMode(TESTNET)
 	runMode := GetRunMode()
-	assert.Equal(t, "testnet", runMode)
+	assert.Equal(t, TESTNET, runMode)
 	assert.Equal(t, true, IsTestnet())
-	SetRunMode("dev")
+	SetRunMode(DEV)
 }
 
 func TestSetRunModeToUnknown(t *testing.T) {
@@ -36,11 +36,11 @@ func TestSetRunModeToUnknown(t *testing.T) {
 	if err == nil {
 		t.Error("set Unknown runmode should be error")
 	}
-	SetRunMode("dev")
+	SetRunMode(DEV)
 }
 
 func TestSetRunModeToNil(t *testing.T) {
 	SetRunMode("")
-	assert.Equal(t, "dev", runModeValue)
+	assert.Equal(t, DEV, runModeValue)
 	assert.Equal(t, true, IsDev())
 }

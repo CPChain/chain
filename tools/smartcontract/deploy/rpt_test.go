@@ -15,7 +15,7 @@ import (
 func TestRpt(t *testing.T) {
 	t.Skip("skip rpt integrate test")
 
-	client, err, _, _, fromAddress := config.Connect()
+	client, err, _, _, fromAddress := config.Connect("password")
 	ctx := context.Background()
 	printBalance(client, fromAddress)
 

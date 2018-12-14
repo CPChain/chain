@@ -226,7 +226,7 @@ func importChain(ctx *cli.Context) error {
 
 	log.Info("Begin import")
 	cfg, node := newConfigNode(ctx)
-	chain, chainDb := commons.OpenChain(ctx, node, &cfg.Eth)
+	chain, chainDb := commons.OpenChain(ctx, node, &cfg.Cpc)
 	defer chainDb.Close()
 
 	// Start periodically gathering memory profiles
@@ -316,7 +316,7 @@ func exportChain(ctx *cli.Context) error {
 	}
 	cfg, node := newConfigNode(ctx)
 
-	chain, _ := commons.OpenChain(ctx, node, &cfg.Eth)
+	chain, _ := commons.OpenChain(ctx, node, &cfg.Cpc)
 	start := time.Now()
 
 	var err error
@@ -350,7 +350,7 @@ func importPreimages(ctx *cli.Context) error {
 		log.Fatalf("This command requires an argument.")
 	}
 	cfg, stack := newConfigNode(ctx)
-	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*database.LDBDatabase)
+	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Cpc.DatabaseCache).(*database.LDBDatabase)
 
 	start := time.Now()
 	if err := commons.ImportPreimages(diskdb, ctx.Args().First()); err != nil {
@@ -366,7 +366,7 @@ func exportPreimages(ctx *cli.Context) error {
 		log.Fatal("This command requires an argument.")
 	}
 	cfg, stack := newConfigNode(ctx)
-	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Eth.DatabaseCache).(*database.LDBDatabase)
+	diskdb := commons.MakeChainDatabase(ctx, stack, cfg.Cpc.DatabaseCache).(*database.LDBDatabase)
 
 	start := time.Now()
 	if err := commons.ExportPreimages(diskdb, ctx.Args().First()); err != nil {
@@ -383,7 +383,7 @@ func dump(ctx *cli.Context) error {
 	}
 
 	cfg, stack := newConfigNode(ctx)
-	chain, chainDb := commons.OpenChain(ctx, stack, &cfg.Eth)
+	chain, chainDb := commons.OpenChain(ctx, stack, &cfg.Cpc)
 	for _, arg := range ctx.Args() {
 		var block *types.Block
 		if hashish(arg) {

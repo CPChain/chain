@@ -9,15 +9,9 @@ proj_dir=../..
 
 echo "[*] Starting bootnode"
 bootnode=$proj_dir/build/bin/bootnode
-boot_key="boot.key"
-all_params=$@
-if [ $all_params ]; then
-    idx=${1}
+boot_key="boot${1}.key"
+runmode="${2}"
 
-    if [ ${idx} ]; then
-        boot_key="boot${idx}.key"
-    fi
-fi
-echo "boot_key:${boot_key}"
+echo "boot_key:${boot_key},runmode:${runmode}"
 
-$bootnode -nodekey conf/${boot_key} -verbosity 9 -addr :30310 -logfile data/logs/bootnode.log
+$bootnode -nodekey conf-${runmode}/bootnodes/${boot_key} -verbosity 9 -addr :30310 -logfile data/logs/bootnode.log

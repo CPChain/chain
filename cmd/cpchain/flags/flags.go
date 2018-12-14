@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/node"
 	"github.com/urfave/cli"
 )
@@ -91,7 +92,7 @@ var GeneralFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  RunModeFlagName,
 		Usage: "Run mode for switch node configuration, eg:dev|testnet|prod",
-		Value: "dev",
+		Value: configs.DefaultRunMode,
 	},
 }
 

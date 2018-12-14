@@ -5,10 +5,27 @@ proj_dir=$run_dir/../../
 # mac doesn't have the -f option
 # proj_dir="$(readlink -f $proj_dir)"
 
-init=$run_dir/cpchain-init.sh
-start=$run_dir/cpchain-start.sh
-stop=$run_dir/cpchain-stop.sh
-deploy=$run_dir/deploy-contracts.sh
+runmode=""
+pwd=""
+if [ ! $1 ]; then
+    runmode='dev'
+else
+    runmode=$1
+fi
+if [ ! $2 ]; then
+    pwd='password'
+else
+    pwd=$2
+fi
+
+echo "runmode:${runmode}"
+echo "password:${pwd}"
+
+init="$run_dir/cpchain-init.sh ${runmode}"
+echo "init: ${init}"
+start="$run_dir/cpchain-start-${runmode}.sh"
+stop="$run_dir/cpchain-stop.sh"
+deploy="$run_dir/deploy-contracts.sh ${pwd}"
 
 echo $run_dir
 echo $proj_dir
@@ -27,17 +44,18 @@ make all
 cd $run_dir
 
 echo "[*] initing"
-eval $init
-
-eval $run_dir/cpchain-init-viewer.sh
+eval $init $runmode
 
 echo "[*] starting"
 eval "env CPC_VERBOSITY=5 $start"
 
-$run_dir/cpchain-start-viewer.sh
+if [ "dev" == ${runmode} ]; then
+    eval $run_dir/cpchain-init-dev-viewer.sh ${runmode}
 
+    $run_dir/cpchain-start-dev-viewer.sh
+fi
 sleep 1
 
-echo "[*] deploying"
+echo "[*] deploying ${deploy}"
 # smart contract deploy
-eval "env CPCHAIN_KEYSTORE_FILEPATH=data/data1/keystore/ $deploy"
+eval "env CPCHAIN_KEYSTORE_FILEPATH=data/data1/keystore/ ${deploy}"
