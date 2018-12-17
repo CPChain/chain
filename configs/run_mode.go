@@ -3,8 +3,9 @@
 package configs
 
 import (
+	"errors"
+
 	"bitbucket.org/cpchain/chain/commons/log"
-	"github.com/pkg/errors"
 )
 
 const (
