@@ -73,7 +73,6 @@ func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 }
 
 func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
-
 	log.Debug("do handshaking with remote peer...")
 
 	address, err := Handshake(p, rw, mac, sig, term, futureTerm)
