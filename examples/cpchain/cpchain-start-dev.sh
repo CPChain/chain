@@ -31,11 +31,12 @@ nohup ./bootnode-start.sh 1 dev &
 echo "Please check the IPFS daemon running on localhost."
 
 cpchain=$proj_dir/build/bin/cpchain
-ipc_path_base=data/
+ipc_path_base=data/cpc-
 
-nohup $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
+nohup $cpchain $args  --ipcaddr ${ipc_path_base}1.ipc --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
          --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf-dev/passwords/password \
          --validators "${validators}" \
+         --profile data/data1 \
          --rpccorsdomain "http://orange:8000" --logfile data/logs/1.log 2>/dev/null &
 
 nohup $cpchain $args --ipcaddr ${ipc_path_base}2 --datadir data/data2  --rpcaddr 127.0.0.1:8502 --grpcaddr 127.0.0.1:8602 --jsonrpchttpaddr 127.0.0.1:8702 --port 30312 --mine \

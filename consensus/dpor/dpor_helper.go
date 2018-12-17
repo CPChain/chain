@@ -64,7 +64,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 	number := header.Number.Uint64()
 
 	// Don't waste time checking blocks from the future
-	if header.Time.Cmp(big.NewInt(time.Now().Unix())) > 0 {
+	if header.Time.Cmp(big.NewInt(time.Now().UnixNano())) > 0 {
 		return consensus.ErrFutureBlock
 	}
 
@@ -101,7 +101,9 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 
 		// Ensure that the block's timestamp is valid
 		if parent.Time.Uint64()+dpor.config.Period > header.Time.Uint64() {
-			return ErrInvalidTimestamp
+			if dpor.Mode() == NormalMode {
+				return ErrInvalidTimestamp
+			}
 		}
 	}
 

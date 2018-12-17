@@ -13,4 +13,6 @@ for i in {11..12}
 do
     echo "[*] Configuring node $i"
     mkdir -p data/data$i/keystore && cp conf-${runmode}/keys/key$i data/data$i/keystore/
+
+    $cpchain chain init --datadir data/data$i conf-dev/genesis.toml
 done

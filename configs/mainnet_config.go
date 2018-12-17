@@ -22,11 +22,11 @@ var (
 			Period:                DefaultBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
-			ValidatorsLen:         4,
+			ValidatorsLen:         DefaultValidatorsLen,
 			MaxInitBlockNumber:    72,
 			ProxyContractRegister: mainnetProxyContractRegister,
 			Contracts:             mainnetContractAddressMap,
-			ImpeachTimeout:        time.Second * DefaultBlockPeriod * 2,
+			ImpeachTimeout:        time.Nanosecond * DefaultBlockPeriod * 2,
 		},
 	}
 	mainnetProposers  = devProposers

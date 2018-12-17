@@ -1,7 +1,6 @@
 package miner
 
 import (
-	"math/big"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -382,28 +381,14 @@ func (self *engine) commitNewWork() {
 	self.currentMu.Lock()
 	defer self.currentMu.Unlock()
 
-	tstart := time.Now()
-	// tstamp is the timestamp for the block
-	tstamp := tstart.Unix()
 	parent := self.chain.CurrentBlock() // the head of the blockchain
-	if parent.Time().Cmp(new(big.Int).SetInt64(tstamp)) >= 0 {
-		tstamp = parent.Time().Int64() + 1
-		log.Warn("Adjust mining block tstamp", "tstamp", tstamp)
-	}
-	// wait till `now' reaches the tstamp
-	if now := time.Now().Unix(); now < tstamp {
-		wait := time.Duration(tstamp-now) * time.Second
-		log.Info("Mining too far in the future", "wait", common.PrettyDuration(wait))
-		time.Sleep(wait)
-	}
-
+	tstart := time.Now()
 	num := parent.Number()
 	header := &types.Header{
 		ParentHash: parent.Hash(),
 		Number:     num.Add(num, common.Big1),
 		GasLimit:   core.CalcGasLimit(parent),
 		Extra:      self.extra,
-		Time:       big.NewInt(tstamp),
 	}
 	// Only set the coinbase if we are mining (avoid spurious block rewards)
 	if atomic.LoadInt32(&self.mining) == 1 {

@@ -37,11 +37,11 @@ var (
 			Period:                DefaultBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
-			ValidatorsLen:         4,
+			ValidatorsLen:         DefaultValidatorsLen,
 			MaxInitBlockNumber:    120,
 			ProxyContractRegister: devProxyContractRegister,
 			Contracts:             devContractAddressMap,
-			ImpeachTimeout:        time.Second * DefaultBlockPeriod * 2,
+			ImpeachTimeout:        time.Nanosecond * DefaultBlockPeriod * 2,
 		},
 	}
 

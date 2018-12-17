@@ -197,8 +197,8 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 		return consensus.ErrUnknownAncestor
 	}
 	header.Time = new(big.Int).Add(parent.Time, new(big.Int).SetUint64(d.config.Period))
-	if header.Time.Int64() < time.Now().Unix() {
-		header.Time = big.NewInt(time.Now().Unix())
+	if header.Time.Int64() < time.Now().UnixNano() {
+		header.Time = big.NewInt(time.Now().UnixNano())
 	}
 	return nil
 }
@@ -274,7 +274,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	}
 
 	// Sweet, the protocol permits us to sign the block, wait for our time
-	delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) // nolint: gosimple
+	delay := time.Duration(header.Time.Int64() - time.Now().UnixNano())
 	log.Debug("Waiting for slot to sign and propagate", "delay", common.PrettyDuration(delay))
 
 	select {
