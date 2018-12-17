@@ -9,7 +9,7 @@ using ``pip`` as follows:
 
 .. code-block:: shell
 
-   $ pip install cpc_fusion
+   $ pip install cpc-fusion
 
 
 
