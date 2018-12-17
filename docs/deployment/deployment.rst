@@ -1,8 +1,12 @@
 
-Deployment
+Quick Start
 =====================
 
 In this section, you will learn how to download our code, build the project and run it on you own system. You can create a private network or access our Testnet.
+
+.. NOTE:: All code starting with a ``$`` is meant to run on your terminal.
+    All code starting with a ``>>>`` is meant to run in a python interpreter,
+    like `ipython <https://pypi.org/project/ipython/>`_.
 
 Download & Run
 -----------------
@@ -17,15 +21,15 @@ You can click `here <https://github.com/CPChain/chain>`_ to access source code, 
 .. code::
     
     # open a $GOPATH
-    cd $GOPATH/src
+    $ cd $GOPATH/src
 
     # TODO: if module name be changed..., or using go.mod
-    mkdir -p bitbucket/cpchain/
+    $ mkdir -p bitbucket/cpchain/
     
-    cd bitbucket/cpchain
+    $ cd bitbucket/cpchain
     
     # TODO: chain url
-    git clone https://github.com/CPChain/chain
+    $ git clone https://github.com/CPChain/chain
 
 
 Build
@@ -35,16 +39,16 @@ Run the command to compile and generate binary file in the `chain` directory.
 
 .. code::
 
-    cd chain
-    make clean
-    make all
+    $ cd chain
+    $ make clean
+    $ make all
 
 You can find several executables in `build/bin` directory after build the project.
 
 .. code::
 
-    cd build/bin
-    ls
+    $ cd build/bin
+    $ ls
 
 
 ========  ============
@@ -66,8 +70,10 @@ Run following commands to create a cpchain's account.
 
 .. code::
 
-    cd build/bin
-    ./cpchain account new --datadir ./datadir
+    $ cd build/bin
+    $ ./cpchain account new --datadir ./datadir
+
+.. image:: create_account.png
 
 
 
@@ -78,25 +84,30 @@ Run the command to run a local node.
 
 .. code::
 
-    ./cpchain run --datadir ./datadir --unlock <You Address>
+    $ ./cpchain run --datadir ./datadir --unlock <You Address>
+
+.. image:: run.png
 
 
-Creating a private network
+Creating A Private Network
 ***************************
 
 We offer a cpchain example in `examples/cpchain`, following commands:
 
 .. code::
 
-    cd examples/cpchain
+    $ cd examples/cpchain
     # Run network
-    ./cpchain-all.sh
+    $ ./cpchain-all.sh
 
-    # Deploy Contracts
-    ./deploy-contracts.sh
+.. image:: all.png
+
+.. code::
 
     # check logs
-    tail -f data/logs/*.log | grep number=
+    $ tail -f data/logs/*.log | grep number=
+
+.. image:: log.png
 
 Docker
 ------------
@@ -118,7 +129,7 @@ Pull Image
 .. code::
 
     # TODO: Publish Docker Image
-    docker pull ..
+    $ docker pull ..
 
 Run
 ******
@@ -127,15 +138,29 @@ Run
 
     # TODO: docker-compose.yml
     # open source folder
-    cd docker/docker-compose
-    docker-compose up -d
+    $ cd docker/docker-compose
+    $ docker-compose up -d
 
 
 
-Access TestNet
+Access Testnet
 ----------------
 
-Connect to Testnet
+Connect to our Testnet. There is our bootnodes'address:
+
+.. code::
+
+    1. enode://...@xx.xx.xx.xx:xxxx
+    2. enode://...@yy.yy.yy.yy:yyyy
+    ...
+
+Start your cpchain node:
+
+.. code::
+
+    $ ./cpchain run --datadir ./datadir --unlock <You Address> --bootnode <bootnodes>
+
+.. image:: TestNet.png
 
 
 

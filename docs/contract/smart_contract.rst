@@ -15,7 +15,7 @@ Use npm for a convenient and portable way to install solc.
 
 .. code::
 
-   npm install -g solc@ 0.4.24
+   $ npm install -g solc@ 0.4.24
 
 Docker
 
@@ -24,7 +24,7 @@ the nightly repository contains potentially unstable changes in the develop bran
 
 .. code::
 
-   docker run ethereum/solc:stable solc ---0.4.24
+   $ docker run ethereum/solc:stable solc ---0.4.24
 
 Deploy Smart Contract
 *********************
@@ -33,10 +33,9 @@ chain started.
 
 .. code::
 
-   export GOPATH=${gopath}
-   cd ../../
-   go run ${gopath}/src/bitbucket.org/cpchain/chain/tools/smartcontract/main.go
-   replace ${gopath} with real env path. ex:/home/${user}/workspace/chain_dev
+   $ ./deploy-contracts.sh
+
+.. image:: deploy-contract.png
 
 Init Smart Contract
 -------------------
@@ -53,13 +52,15 @@ ProxyContractRegister Contract
 RPT Contract
 ************
 
-   RPT Contract will calculation the Rnode's reputation value(RPT).Reputation value is consists of 5 dimensions,
+   RPT Contract will calculation the Rnode's reputation value.It's an important part of the RNode Ecosystem Structure.
+   `Here <https://cpchain.io/rnodes/>`_ is detail of the RNode Ecosystem Structure.
+   Reputation value consists of 5 dimensions,
    **Account Balance（AB)**,
    **Transaction(TX)**,
    **Data Contribution(DC)**,
    **Blockchain Maintenance(BM)**,
-   **Proxy Reputation(PR)**. `Here <https://github.com/CPChain/pdash>`_ is detail of Rnode and RPT. Developers can call function
-   ``getRpt()`` to get node's RPT. Rpt Contract can be update by contract depolyer to avoid some evil node maliciously increase it RPT.
+   **Proxy Reputation(PR)**.Developers can call function
+   ``getRpt()`` to get node's reputation value. RPT Contract can be update by contract depolyer to avoid some evil node maliciously increase it RPT.
    Developers can update the weight of the 5 dimensions and windowSize by
    call RPT contract's function
    ``updateAlpha()``,
@@ -128,6 +129,8 @@ Private Contract
    7. Buyer B received the encrypted symmetric key, and then decrypt it. With the symmetric key, the buyer B can decrypt the data on IPFS and then confirm that it is what they need.
 
    8. The agent P notice the confirmation and transfer money to seller A.
+
+.. image:: process.png
 
 
 
