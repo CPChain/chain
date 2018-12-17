@@ -85,7 +85,7 @@ func ExampleGenerateChain() {
 	fmt.Println("balance of addr1:", state.GetBalance(addr1))
 	fmt.Println("balance of addr2:", state.GetBalance(addr2))
 
-	sub := new(big.Int).Mul(big.NewInt(configs.Cep1BlockReward), big.NewInt(int64(n-2)))
+	sub := new(big.Int).Mul(configs.Cep1BlockReward, big.NewInt(int64(n-2)))
 	balanceAddr3 := new(big.Int).Sub(state.GetBalance(addr3), sub)
 	fmt.Println("balance of addr3 (adjusted):", balanceAddr3)
 	// Output:

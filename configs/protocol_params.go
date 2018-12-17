@@ -80,6 +80,6 @@ var (
 	DurationLimit          = big.NewInt(13)     // The decision boundary on the blocktime duration used to determine whether difficulty should go up or not.
 )
 
-const (
-	Cep1BlockReward = 5e+18 // Block reward in wei for successfully mining a block
+var (
+	Cep1BlockReward = new(big.Int).Mul(big.NewInt(500), big.NewInt(1e+18)) // 500e+18 Block reward 500 cpc for successfully mining a block
 )
