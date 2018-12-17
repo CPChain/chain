@@ -25,7 +25,7 @@ ipc_path_base=data/
 
 echo "start viewer unlock"
 nohup $cpchain $args --ipcaddr ${ipc_path_base}11 --datadir data/data11  --rpcaddr 127.0.0.1:8511 --grpcaddr 127.0.0.1:8611 --jsonrpchttpaddr 127.0.0.1:8711 --port 30321 \
-         --unlock "0xbc131722d837b7d867212568baceb3a981181443"  --password conf/password --logfile data/logs/11.log 2>/dev/null &
+         --unlock "0xbc131722d837b7d867212568baceb3a981181443"  --password conf-dev/passwords/password --logfile data/logs/11.log 2>/dev/null &
 
 echo "start viewer no unlock"
 nohup $cpchain $args --ipcaddr ${ipc_path_base}12 --datadir data/data12  --rpcaddr 127.0.0.1:8512 --grpcaddr 127.0.0.1:8612 --jsonrpchttpaddr 127.0.0.1:8712 --port 30322 \
