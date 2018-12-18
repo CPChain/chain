@@ -29,13 +29,6 @@ type Dialer struct {
 
 	client ClientBackend
 
-	// TODO: remove this
-	// // proposer register contract related fields
-	// contractAddress    common.Address
-	// contractCaller     *ContractCaller
-	// contractInstance   *dpor.ProposerRegister
-	// contractTransactor *bind.TransactOpts
-
 	// use lru caches to cache recent proposers and validators
 	recentProposers *lru.ARCCache
 	proposersLock   sync.RWMutex // to protect recent proposers
