@@ -80,6 +80,9 @@ var (
 	// than some meaningful limit a user might use. This is not a consensus error
 	// making the transaction invalid, rather a DOS protection.
 	ErrOversizedData = errors.New("oversized data")
+
+	// ErrExceedQueueMapSize is returned if exceed txpool.queue map size
+	ErrExceedQueueMapSize = errors.New("exceeds queue map size")
 )
 
 var (
@@ -215,23 +218,24 @@ type TxPool struct {
 }
 
 // setMapItem sets txlist of given addr, change it or add it
-func setMapItem(m map[common.Address]*txList, addr common.Address, txlist *txList) {
+func setMapItem(m map[common.Address]*txList, addr common.Address, txlist *txList) bool {
 	// change old list
 	_, ok := m[addr]
 	if ok {
 		// change it
 		m[addr] = txlist
-		return
+		return true
 	}
 
 	// add new tx list
 	// out of limit
 	if len(m) >= MaxTxMapSize {
 		log.Warn("size limit of pending txList reached, discarding")
-		return
+		return false
 	}
 	// add it
 	m[addr] = txlist
+	return true
 }
 
 func (pool *TxPool) getPendingTxList(addr common.Address) *txList {
@@ -242,12 +246,12 @@ func (pool *TxPool) getQueueTxList(addr common.Address) *txList {
 	return pool.queue[addr]
 }
 
-func (pool *TxPool) setPendingTxList(addr common.Address, txlist *txList) {
-	setMapItem(pool.pending, addr, txlist)
+func (pool *TxPool) setPendingTxList(addr common.Address, txlist *txList) bool {
+	return setMapItem(pool.pending, addr, txlist)
 }
 
-func (pool *TxPool) setQueueTxList(addr common.Address, txlist *txList) {
-	setMapItem(pool.queue, addr, txlist)
+func (pool *TxPool) setQueueTxList(addr common.Address, txlist *txList) bool {
+	return setMapItem(pool.queue, addr, txlist)
 }
 
 func (pool *TxPool) deletePendingTxList(addr common.Address) {
@@ -724,7 +728,10 @@ func (pool *TxPool) enqueueTx(hash common.Hash, tx *types.Transaction) (bool, er
 	// Try to insert the transaction into the future queue
 	from, _ := types.Sender(pool.signer, tx) // already validated
 	if pool.getQueueTxList(from) == nil {
-		pool.setQueueTxList(from, newTxList(false))
+		ok := pool.setQueueTxList(from, newTxList(false))
+		if !ok {
+			return false, ErrExceedQueueMapSize
+		}
 	}
 	inserted, old := pool.getQueueTxList(from).Add(tx, pool.config.PriceBump)
 	if !inserted {
@@ -764,7 +771,10 @@ func (pool *TxPool) journalTx(from common.Address, tx *types.Transaction) {
 func (pool *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.Transaction) bool {
 	// Try to insert the transaction into the pending queue
 	if pool.getPendingTxList(addr) == nil {
-		pool.setPendingTxList(addr, newTxList(true))
+		ok := pool.setPendingTxList(addr, newTxList(true))
+		if !ok {
+			return false
+		}
 	}
 	list := pool.getPendingTxList(addr)
 
