@@ -333,14 +333,14 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 			GenesisBlock:    genesis,
 			IsMiner:         isMiner,
 		}
-		//log.Info("sendStatus(network, &status, genesis)", "status", sd.FormatString(), "peer", p.id)
+		//log.Log("sendStatus(network, &status, genesis)", "status", sd.FormatString(), "peer", p.id)
 
 		errc <- p2p.Send(p.rw, StatusMsg, &sd)
 	}()
 	// readStatus reads the handshake from the opposite side.
 	go func() {
 		errc <- p.readStatus(network, &status, genesis)
-		//log.Info("p.readStatus(network, &status, genesis)", "status", status.FormatString(), "peer", p.id)
+		//log.Log("p.readStatus(network, &status, genesis)", "status", status.FormatString(), "peer", p.id)
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
 	defer timeout.Stop()
