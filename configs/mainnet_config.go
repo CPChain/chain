@@ -23,7 +23,7 @@ var (
 			TermLen:               4,
 			ViewLen:               3,
 			ValidatorsLen:         DefaultValidatorsLen,
-			MaxInitBlockNumber:    72,
+			MaxInitBlockNumber:    DefaultMaxInitBlockNumber,
 			ProxyContractRegister: mainnetProxyContractRegister,
 			Contracts:             mainnetContractAddressMap,
 			ImpeachTimeout:        time.Nanosecond * DefaultBlockPeriod * 2,

@@ -26,8 +26,9 @@ const (
 
 const (
 	// DefaultBlockPeriod   = 2e8 // 2 * 10 ^ 8 Nanosecond, 200 Millisecond, 0.2 Second
-	DefaultBlockPeriod   = 1e9 // 1 * 10 ^ 9 Nanosecond, 1000 Millisecond, 1 Second
-	DefaultValidatorsLen = 4
+	DefaultBlockPeriod        = 1e9 // 1 * 10 ^ 9 Nanosecond, 1000 Millisecond, 1 Second
+	DefaultValidatorsLen      = 4
+	DefaultMaxInitBlockNumber = 240
 )
 
 // TODO @hmw make the name more meaningful.  add doc.
