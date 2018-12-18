@@ -198,9 +198,13 @@ func doInstall(cmdline []string, isRace bool) {
 
 func buildFlags(env build.Environment) (flags []string) {
 	var ld []string
-	if env.Commit != "" {
-		ld = append(ld, "-X", "main.gitCommit="+env.Commit)
+	version := "unspecified"
+	if env.Tag != "" {
+		version = env.Tag
+	} else if env.Commit != "" {
+		version = env.Commit
 	}
+	ld = append(ld, "-X", "bitbucket.org/cpchain/chain/configs.Version="+version)
 	if runtime.GOOS == "darwin" {
 		ld = append(ld, "-s")
 	}

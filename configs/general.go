@@ -13,8 +13,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+var Version string
+
 const (
-	Version          = "0.0.1"
 	ClientIdentifier = "cpchain" // Client identifier to advertise over the network
 )
 
