@@ -35,7 +35,7 @@ import (
 // DefaultConfig contains default settings for use on the cpchain main net.
 var DefaultConfig = Config{
 	SyncMode:      downloader.FullSync,
-	NetworkId:     1,
+	NetworkId:     142,
 	LightPeers:    100,
 	DatabaseCache: 768,
 	TrieCache:     256,
