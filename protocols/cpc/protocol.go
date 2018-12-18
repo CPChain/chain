@@ -16,14 +16,14 @@ import (
 
 // Constants to match up protocol versions and messages
 const (
-	cpc1 = 1
+	Cpc1 = 1
 )
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.
 var ProtocolName = "cpc"
 
 // ProtocolVersions are the versions of the cpchain protocol (first is primary).
-var ProtocolVersions = []uint{cpc1}
+var ProtocolVersions = []uint{Cpc1}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
 var ProtocolLengths = []uint64{80}

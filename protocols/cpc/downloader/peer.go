@@ -37,6 +37,7 @@ import (
 const (
 	maxLackingHashes  = 4096 // Maximum number of entries allowed on the list or lacking items
 	measurementImpact = 0.1  // The impact a single measurement has on a peer's final throughput value.
+	peerMinVersion    = 1    // the minimum version of peer which is supported
 )
 
 var (
@@ -146,8 +147,8 @@ func (p *peerConnection) Reset() {
 // FetchHeaders sends a header retrieval request to the remote peer.
 func (p *peerConnection) FetchHeaders(from uint64, count int) error {
 	// Sanity check the protocol version
-	if p.version < 1 {
-		panic(fmt.Sprintf("header fetch [cpc/1+] requested on cpc/%d", p.version))
+	if p.version < peerMinVersion {
+		panic(fmt.Sprintf("header fetch [cpc/%d+] requested on cpc/%d", peerMinVersion, p.version))
 	}
 	// Short circuit if the peer is already fetching
 	if !atomic.CompareAndSwapInt32(&p.headerIdle, 0, 1) {
@@ -166,8 +167,8 @@ func (p *peerConnection) FetchBodies(request *fetchRequest) error {
 	log.Info("fetch bodies")
 
 	// Sanity check the protocol version
-	if p.version < 1 {
-		panic(fmt.Sprintf("body fetch [cpc/1+] requested on cpc/%d", p.version))
+	if p.version < peerMinVersion {
+		panic(fmt.Sprintf("body fetch [cpc/%d+] requested on cpc/%d", peerMinVersion, p.version))
 	}
 	// Short circuit if the peer is already fetching
 	if !atomic.CompareAndSwapInt32(&p.blockIdle, 0, 1) {
@@ -188,8 +189,8 @@ func (p *peerConnection) FetchBodies(request *fetchRequest) error {
 // FetchReceipts sends a receipt retrieval request to the remote peer.
 func (p *peerConnection) FetchReceipts(request *fetchRequest) error {
 	// Sanity check the protocol version
-	if p.version < 1 {
-		panic(fmt.Sprintf("body fetch [cpc/1+] requested on cpc/%d", p.version))
+	if p.version < peerMinVersion {
+		panic(fmt.Sprintf("body fetch [cpc/%d+] requested on cpc/%d", peerMinVersion, p.version))
 	}
 	// Short circuit if the peer is already fetching
 	if !atomic.CompareAndSwapInt32(&p.receiptIdle, 0, 1) {
@@ -210,8 +211,8 @@ func (p *peerConnection) FetchReceipts(request *fetchRequest) error {
 // FetchNodeData sends a node state data retrieval request to the remote peer.
 func (p *peerConnection) FetchNodeData(hashes []common.Hash) error {
 	// Sanity check the protocol version
-	if p.version < 1 {
-		panic(fmt.Sprintf("node data fetch [cpc/1+] requested on cpc/%d", p.version))
+	if p.version < peerMinVersion {
+		panic(fmt.Sprintf("node data fetch [cpc/%d+] requested on cpc/%d", peerMinVersion, p.version))
 	}
 	// Short circuit if the peer is already fetching
 	if !atomic.CompareAndSwapInt32(&p.stateIdle, 0, 1) {
@@ -479,7 +480,7 @@ func (ps *peerSet) HeaderIdlePeers() ([]*peerConnection, int) {
 		defer p.lock.RUnlock()
 		return p.headerThroughput
 	}
-	return ps.idlePeers(0, 64, idle, throughput)
+	return ps.idlePeers(peerMinVersion, 64, idle, throughput)
 }
 
 // BodyIdlePeers retrieves a flat list of all the currently body-idle peers within
@@ -493,7 +494,7 @@ func (ps *peerSet) BodyIdlePeers() ([]*peerConnection, int) {
 		defer p.lock.RUnlock()
 		return p.blockThroughput
 	}
-	return ps.idlePeers(0, 64, idle, throughput)
+	return ps.idlePeers(peerMinVersion, 64, idle, throughput)
 }
 
 // ReceiptIdlePeers retrieves a flat list of all the currently receipt-idle peers
@@ -507,7 +508,7 @@ func (ps *peerSet) ReceiptIdlePeers() ([]*peerConnection, int) {
 		defer p.lock.RUnlock()
 		return p.receiptThroughput
 	}
-	return ps.idlePeers(0, 64, idle, throughput)
+	return ps.idlePeers(peerMinVersion, 64, idle, throughput)
 }
 
 // NodeDataIdlePeers retrieves a flat list of all the currently node-data-idle
@@ -521,7 +522,7 @@ func (ps *peerSet) NodeDataIdlePeers() ([]*peerConnection, int) {
 		defer p.lock.RUnlock()
 		return p.stateThroughput
 	}
-	return ps.idlePeers(0, 64, idle, throughput)
+	return ps.idlePeers(peerMinVersion, 64, idle, throughput)
 }
 
 // idlePeers retrieves a flat list of all currently idle peers satisfying the
