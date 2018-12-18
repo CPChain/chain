@@ -71,8 +71,7 @@ func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
 }
 
-//go:generate gencodec -type Header -field-override headerMarshaling -out gen_header_json.go
-
+//go:generate gencodec -type Header -formats json,toml -field-override headerMarshaling -out gen_header_json.go
 const (
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -98,6 +97,16 @@ type Header struct {
 }
 
 type DporSignature [DporSigLength]byte
+
+// MarshalText encodes n as a hex string with 0x prefix.
+func (n DporSignature) MarshalText() ([]byte, error) {
+	return hexutil.Bytes(n[:]).MarshalText()
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (n *DporSignature) UnmarshalText(input []byte) error {
+	return hexutil.UnmarshalFixedText("DporSignature", input, n[:])
+}
 
 func HexToDporSig(s string) DporSignature {
 	var a DporSignature
