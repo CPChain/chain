@@ -23,7 +23,6 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/prometheus/prometheus/util/flock"
-	"golang.org/x/net/context"
 )
 
 // Node is a container on which services can be registered.
@@ -226,6 +225,7 @@ func (n *Node) Start() error {
 		return err
 	}
 
+	// TODO: @ac remove or refactor GRPC stuff
 	// start the configured grpc interfaces
 	// if err := n.startGRPC(services); err != nil {
 	// 	n.stopRPC()
@@ -248,25 +248,26 @@ func (n *Node) Start() error {
 	return nil
 }
 
-func (n *Node) startGRPC(services map[reflect.Type]Service) error {
-	// Gather all the possible APIs to surface
-	apis := n.gapis()
-	for _, service := range services {
-		apis = append(apis, service.GAPIs()...)
-	}
-
-	ctx := context.Background()
-
-	n.grpcServer.Register(ctx, apis)
-	if err := n.grpcServer.Start(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (n *Node) stopGRPC() {
-	n.grpcServer.Stop()
-}
+// TODO: @ac remove or refactor GRPC code
+// func (n *Node) startGRPC(services map[reflect.Type]Service) error {
+// 	// Gather all the possible APIs to surface
+// 	apis := n.gapis()
+// 	for _, service := range services {
+// 		apis = append(apis, service.GAPIs()...)
+// 	}
+//
+// 	ctx := context.Background()
+//
+// 	n.grpcServer.Register(ctx, apis)
+// 	if err := n.grpcServer.Start(); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+//
+// func (n *Node) stopGRPC() {
+// 	n.grpcServer.Stop()
+// }
 
 // startRPC is a helper method to start all the various RPC endpoint during node
 // startup. It's not meant to be called at any time afterwards as it makes certain
@@ -439,8 +440,9 @@ func (n *Node) Stop() error {
 	}
 
 	// terminate the api, services and the p2p server.
+
+	// TODO: @ac remove or refactor GRPC stuff
 	// n.stopGRPC()
-	n.stopRPC()
 
 	n.rpcAPIs = nil
 	failure := &StopError{

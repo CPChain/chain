@@ -1006,6 +1006,7 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 			return errCancel
 
 		case packet := <-deliveryCh:
+			//log.Debug(" <-deliveryCh")
 			// If the peer was previously banned and failed to deliver its pack
 			// in a reasonable time frame, ignore its message.
 			if peer := d.peers.Peer(packet.PeerId()); peer != nil {
@@ -1023,10 +1024,13 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 				// Issue a log to the user to see what's going on
 				switch {
 				case err == nil && packet.Items() == 0:
+					//log.Debug("Requested data not delivered", "type", kind)
 					peer.log.Debug("Requested data not delivered", "type", kind)
 				case err == nil:
+					//log.Debug("Delivered new batch of data", "type", kind, "count", packet.Stats())
 					peer.log.Debug("Delivered new batch of data", "type", kind, "count", packet.Stats())
 				default:
+					//log.Debug("Failed to deliver retrieved data", "type", kind, "err", err)
 					peer.log.Debug("Failed to deliver retrieved data", "type", kind, "err", err)
 				}
 			}
@@ -1037,6 +1041,7 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 			}
 
 		case cont := <-wakeCh:
+			//log.Debug(" <-wakeCh")
 			// The header fetcher sent a continuation flag, check if it's done
 			if !cont {
 				finished = true
@@ -1048,6 +1053,7 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 			}
 
 		case <-ticker.C:
+			//log.Debug(" <-ticker.C")
 			// Sanity check update the progress
 			select {
 			case update <- struct{}{}:
@@ -1098,6 +1104,8 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 			idles, total := idle()
 
 			for _, peer := range idles {
+				//log.Info("fetch body from peer", "peer", peer.id)
+
 				// Short circuit if throttling activated
 				if throttle() {
 					throttled = true
@@ -1143,6 +1151,8 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 			// Make sure that we have peers available for fetching. If all peers have been tried
 			// and all failed throw an error
 			if !progressed && !throttled && !running && len(idles) == total && pending() > 0 {
+				//log.Debug("errPeersUnavailable", "progressed", progressed, "throttled", throttled, "running", running,
+				//	"len(idles)", len(idles), "total", total, "pending()", pending())
 				return errPeersUnavailable
 			}
 		}
