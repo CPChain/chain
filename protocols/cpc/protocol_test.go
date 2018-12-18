@@ -48,7 +48,7 @@ func testStatusMsgErrors(t *testing.T, protocol int) {
 		},
 		{
 			code: StatusMsg, data: statusData{uint32(protocol), 999, ht, head.Hash(), genesis.Hash(), false},
-			wantError: errResp(ErrNetworkIdMismatch, "999 (!= 1)"),
+			wantError: errResp(ErrNetworkIdMismatch, "999 (!= 142)"),
 		},
 		{
 			code: StatusMsg, data: statusData{uint32(protocol), DefaultConfig.NetworkId, ht, head.Hash(), common.Hash{3}, false},
@@ -69,7 +69,7 @@ func testStatusMsgErrors(t *testing.T, protocol int) {
 			} else if err.Error() != test.wantError.Error() {
 				t.Errorf("test %d: wrong error: got %q, want %q", i, err, test.wantError)
 			}
-		case <-time.After(2 * time.Second):
+		case <-time.After(10 * time.Second):
 			t.Errorf("protocol did not shut down within 2 seconds")
 		}
 		p.close()
