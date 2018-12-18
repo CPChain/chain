@@ -41,8 +41,7 @@ const (
 )
 
 const (
-	MaxPendingTxMapSize = 1024
-	MaxQueueTxMapSize   = 1024
+	MaxTxMapSize = 1024
 )
 
 var (
@@ -227,7 +226,7 @@ func setMapItem(m map[common.Address]*txList, addr common.Address, txlist *txLis
 
 	// add new tx list
 	// out of limit
-	if len(m) >= MaxPendingTxMapSize {
+	if len(m) >= MaxTxMapSize {
 		log.Warn("size limit of pending txList reached, discarding")
 		return
 	}
