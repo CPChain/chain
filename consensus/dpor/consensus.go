@@ -204,7 +204,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 }
 
 func addCoinbaseReward(coinbase common.Address, state *state.StateDB) {
-	amount := big.NewInt(configs.Cep1BlockReward)
+	amount := new(big.Int).Set(configs.Cep1BlockReward)
 	state.AddBalance(coinbase, amount)
 }
 
