@@ -102,6 +102,18 @@ type statusData struct {
 	GenesisBlock    common.Hash
 	IsMiner         bool
 }
+
+func (s *statusData) FormatString() string {
+	var height uint64
+	if s.Height != nil {
+		height = s.Height.Uint64()
+	} else {
+		height = 0
+	}
+	return fmt.Sprintf("{ ProtocolVersion: %d, \nNetworkId: %d, \nHeight: %d, \nCurrentBlock: %s, \nGenesisBlock: %s, \nIsMiner: %v }",
+		s.ProtocolVersion, s.NetworkId, height, s.CurrentBlock.Hex(), s.GenesisBlock.Hex(), s.IsMiner)
+}
+
 type signerStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address
