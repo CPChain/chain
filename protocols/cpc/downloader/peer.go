@@ -534,9 +534,9 @@ func (ps *peerSet) idlePeers(minProtocol, maxProtocol int, idleCheck func(*peerC
 	defer ps.lock.RUnlock()
 
 	idle, total := make([]*peerConnection, 0, len(ps.peers)), 0
-	//log.Info("idle peers", "len(peers)", len(ps.peers))
+	// log.Info("idle peers", "len(peers)", len(ps.peers))
 	for _, p := range ps.peers {
-		//log.Log("peer", "version", p.version)
+		// log.Debug("peer", "version", p.version)
 		if p.version >= minProtocol && p.version <= maxProtocol {
 			if idleCheck(p) {
 				idle = append(idle, p)
