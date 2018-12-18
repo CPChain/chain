@@ -352,6 +352,14 @@ func (s *CpchainService) SetCoinbase(coinbase common.Address) {
 	s.miner.SetCoinbase(coinbase)
 }
 
+func (s *CpchainService) SetClientForDpor(client backend.ClientBackend) {
+	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		dpor.SetClient(client)
+		return
+	}
+	panic("must set dpor consensus engine")
+}
+
 func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) error {
 	coinbase, err := s.Coinbase()
 	if err != nil {
@@ -372,7 +380,8 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		log.Debug("server.nodeid", "enode", s.server.NodeInfo().Enode)
 
 		dpor.SetAsMiner(true)
-		go dpor.StartMining(s.blockchain, client, s.server, s.protocolManager.BroadcastBlock)
+		dpor.SetClient(client)
+		go dpor.StartMining(s.blockchain, s.server, s.protocolManager.BroadcastBlock)
 	}
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection
