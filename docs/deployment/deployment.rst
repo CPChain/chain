@@ -8,13 +8,13 @@ In this section, you will learn how to download our code, build the project and 
     All code starting with a ``>>>`` is meant to run in a python interpreter,
     like `ipython <https://pypi.org/project/ipython/>`_.
 
-Download & Run
------------------
+Downloaing & Building the Source
+----------------------------------
 
 First, make sure you have installed `go <https://golang.org/>`_, and configured the $GOPATH.
 
-Get Repository
-**************
+Getting repository
+**********************
 
 You can click `here <https://github.com/CPChain/chain>`_ to access source code, or execute the following commands to clone code on github.
 
@@ -32,8 +32,8 @@ You can click `here <https://github.com/CPChain/chain>`_ to access source code, 
     $ git clone https://github.com/CPChain/chain
 
 
-Build
-********
+Building
+************
 
 Run the command to compile and generate binary file in the `chain` directory.
 
@@ -42,6 +42,9 @@ Run the command to compile and generate binary file in the `chain` directory.
     $ cd chain
     $ make clean
     $ make all
+
+Executables
+*************
 
 You can find several executables in `build/bin` directory after build the project.
 
@@ -63,8 +66,8 @@ bootnode  A lightweight bootstrap node to aid in finding peers in private networ
 
 
 
-Create Account
-***************
+Creating Account
+------------------
 
 Run following commands to create a cpchain's account.
 
@@ -77,20 +80,69 @@ Run following commands to create a cpchain's account.
 
 
 
-Run
-*****
+Running CPChain
+------------------
 
-Run the command to run a local node. 
+Full node on the CPChain testnet
+***********************************
+
+Bootnodes
+^^^^^^^^^^^
+
+Connect to our Testnet. There is our bootnodes'address:
 
 .. code::
 
-    $ ./cpchain run --datadir ./datadir --unlock <You Address>
+    1. enode://...@xx.xx.xx.xx:xxxx
+    2. enode://...@yy.yy.yy.yy:yyyy
+    ...
 
-.. image:: run.png
+Starting your CPChain node
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. code::
 
-Creating A Private Network
-***************************
+    $ ./cpchain run --datadir ./datadir --unlock <You Address> --bootnode <bootnodes>
+
+.. image:: TestNet.png
+
+Docker quick start
+^^^^^^^^^^^^^^^^^^^^
+
+Downloading docker
+####################
+
+Click following links to download and install docker:
+
++ **Windows**: https://docs.docker.com/docker-for-windows/install/
++ **Mac OS**: https://docs.docker.com/docker-for-mac/install/
++ **Ubuntu**: https://docs.docker.com/install/linux/docker-ce/ubuntu/
++ **CentOS**: https://docs.docker.com/install/linux/docker-ce/centos/
++ **Other**: https://docs.docker.com/install/linux/docker-ce/binaries/
+
+Pulling image
+##############
+
+.. code::
+
+    # TODO: Publish Docker Image
+    $ docker pull ..
+
+Running
+###########
+
+.. code::
+
+    # TODO: docker-compose.yml
+    # open source folder
+    $ cd docker/docker-compose
+    $ docker-compose up -d
+
+Creating a private network
+*****************************
+
+running a private network
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We offer a cpchain example in `examples/cpchain`, following commands:
 
@@ -109,61 +161,15 @@ We offer a cpchain example in `examples/cpchain`, following commands:
 
 .. image:: log.png
 
-Docker
-------------
+Running a local node
+^^^^^^^^^^^^^^^^^^^^^^^
 
-Download Docker
-****************
-
-Click following links to download and install docker:
-
-+ **Windows**: https://docs.docker.com/docker-for-windows/install/
-+ **Mac OS**: https://docs.docker.com/docker-for-mac/install/
-+ **Ubuntu**: https://docs.docker.com/install/linux/docker-ce/ubuntu/
-+ **CentOS**: https://docs.docker.com/install/linux/docker-ce/centos/
-+ **Other**: https://docs.docker.com/install/linux/docker-ce/binaries/
-
-Pull Image
-***********
+Run the command to run a local node. 
 
 .. code::
 
-    # TODO: Publish Docker Image
-    $ docker pull ..
+    $ ./cpchain run --datadir ./datadir --unlock <You Address>
 
-Run
-******
-
-.. code::
-
-    # TODO: docker-compose.yml
-    # open source folder
-    $ cd docker/docker-compose
-    $ docker-compose up -d
-
-
-
-Access Testnet
-----------------
-
-Connect to our Testnet. There is our bootnodes'address:
-
-.. code::
-
-    1. enode://...@xx.xx.xx.xx:xxxx
-    2. enode://...@yy.yy.yy.yy:yyyy
-    ...
-
-Start your cpchain node:
-
-.. code::
-
-    $ ./cpchain run --datadir ./datadir --unlock <You Address> --bootnode <bootnodes>
-
-.. image:: TestNet.png
-
-
-
-
+.. image:: run.png
 
 

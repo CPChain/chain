@@ -1,41 +1,44 @@
-Smart Contract
+Introduction
 =====================
 
-Environment setup
------------------
+Smart Contract
+^^^^^^^^^^^^^^^^^
 
-Install Solc
-*************
-Currently, CPC smart contracts programming depends on the Ethereum's VM. In future we will become independent of
-Ethereum. Developers need install solc to compile the contracts code.
+.. Environment setup
+.. -------------------
 
-npm / Node.js
+.. Install Solc
+.. *************
+.. Currently, CPC smart contracts programming depends on the Ethereum's VM. In future we will become independent of
+.. Ethereum. Developers need install solc to compile the contracts code.
 
-Use npm for a convenient and portable way to install solc.
+.. npm / Node.js
 
-.. code::
+.. Use npm for a convenient and portable way to install solc.
 
-   $ npm install -g solc@ 0.4.24
+.. .. code::
 
-Docker
+..    $ npm install -g solc@ 0.4.24
 
-Ethereum provide up to date docker builds for the compiler.The stable repository contains released versions while
-the nightly repository contains potentially unstable changes in the develop branch. So we fix solc version on 0.4.24
+.. Docker
 
-.. code::
+.. Ethereum provide up to date docker builds for the compiler.The stable repository contains released versions while
+.. the nightly repository contains potentially unstable changes in the develop branch. So we fix solc version on 0.4.24
 
-   $ docker run ethereum/solc:stable solc ---0.4.24
+.. .. code::
 
-Deploy Smart Contract
-*********************
-Cpchain already write 5 init smart contracts to maintain normal operation of Dpor. Developers should deploy them when
-chain started.
+..    $ docker run ethereum/solc:stable solc ---0.4.24
 
-.. code::
+.. Deploy Smart Contract
+.. *********************
+.. Cpchain already write 5 init smart contracts to maintain normal operation of Dpor. Developers should deploy them when
+.. chain started.
 
-   $ ./deploy-contracts.sh
+.. .. code::
 
-.. image:: deploy-contract.png
+..    $ ./deploy-contracts.sh
+
+.. .. image:: deploy-contract.png
 
 Init Smart Contract
 -------------------
