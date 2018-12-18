@@ -370,7 +370,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 }
 
 func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
-	log.Info("hanle sync message", "msgCode", msg.Code)
+	log.Debug("handle sync message", "msgCode", msg.Code)
 
 	// Handle the message depending on its contents
 	switch {
