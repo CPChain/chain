@@ -8,22 +8,18 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/core"
+	cconfigs "bitbucket.org/cpchain/chain/protocols/cpc/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-// Constants to match up protocol versions and messages
-const (
-	cpc1 = 1
-)
-
 // ProtocolName is the official short name of the protocol used during capability negotiation.
 var ProtocolName = "cpc"
 
 // ProtocolVersions are the versions of the cpchain protocol (first is primary).
-var ProtocolVersions = []uint{cpc1}
+var ProtocolVersions = []uint{cconfigs.Cpc1}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
 var ProtocolLengths = []uint64{80}
@@ -102,6 +98,18 @@ type statusData struct {
 	GenesisBlock    common.Hash
 	IsMiner         bool
 }
+
+func (s *statusData) FormatString() string {
+	var height uint64
+	if s.Height != nil {
+		height = s.Height.Uint64()
+	} else {
+		height = 0
+	}
+	return fmt.Sprintf("{ ProtocolVersion: %d, \nNetworkId: %d, \nHeight: %d, \nCurrentBlock: %s, \nGenesisBlock: %s, \nIsMiner: %v }",
+		s.ProtocolVersion, s.NetworkId, height, s.CurrentBlock.Hex(), s.GenesisBlock.Hex(), s.IsMiner)
+}
+
 type signerStatusData struct {
 	ProtocolVersion uint32
 	Address         common.Address

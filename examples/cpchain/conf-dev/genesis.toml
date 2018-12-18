@@ -19,7 +19,7 @@ period = 200_000_000
 termLen = 4
 viewLen = 3
 validatorsLen = 4
-maxInitBlockNumber = 120
+maxInitBlockNumber = 240
 proxyContractRegister = "0x1a9fae75908752d0abf4dca45ebcac311c376290"
 impeachTimeout = 2000000000
 

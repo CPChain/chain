@@ -370,6 +370,8 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 }
 
 func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
+	log.Info("hanle sync message", "msgCode", msg.Code)
+
 	// Handle the message depending on its contents
 	switch {
 	case msg.Code == StatusMsg:
@@ -514,6 +516,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		// A batch of block bodies arrived to one of our previous requests
 		var request blockBodiesData
 		if err := msg.Decode(&request); err != nil {
+			log.Warn("decode BlockBodiesMsg failed", "error", err)
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 		// Deliver them all to the downloader for queuing

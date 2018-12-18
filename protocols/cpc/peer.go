@@ -325,18 +325,22 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 	errc := make(chan error, 2)
 	var status statusData // safe to read after two values have been received from errc
 	go func() {
-		errc <- p2p.Send(p.rw, StatusMsg, &statusData{
+		sd := statusData{
 			ProtocolVersion: uint32(p.version),
 			NetworkId:       network,
 			Height:          ht,
 			CurrentBlock:    head,
 			GenesisBlock:    genesis,
 			IsMiner:         isMiner,
-		})
+		}
+		//log.Log("sendStatus(network, &status, genesis)", "status", sd.FormatString(), "peer", p.id)
+
+		errc <- p2p.Send(p.rw, StatusMsg, &sd)
 	}()
 	// readStatus reads the handshake from the opposite side.
 	go func() {
 		errc <- p.readStatus(network, &status, genesis)
+		//log.Log("p.readStatus(network, &status, genesis)", "status", status.FormatString(), "peer", p.id)
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
 	defer timeout.Stop()
@@ -351,6 +355,7 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 		}
 	}
 	p.ht, p.head = status.Height, status.CurrentBlock
+	//log.Info("handshake", "height", p.ht.Uint64(), "head", p.head.Hex())
 	return status.IsMiner, nil
 }
 
