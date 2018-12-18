@@ -205,8 +205,6 @@ type TxPool struct {
 	locals  *accountSet // Set of local transaction to exempt from eviction rules
 	journal *txJournal  // Journal of local transaction to back up to disk
 
-	// NOTE: check this https://ethereum.stackexchange.com/questions/3831/what-is-the-max-size-of-transactions-can-clients-like-geth-keep-in-txpool
-	// TODO: there is not size limit for those two map, add a size restriction
 	pending map[common.Address]*txList // All currently processable transactions
 	queue   map[common.Address]*txList // Queued but non-processable transactions
 
