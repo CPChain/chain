@@ -266,8 +266,12 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 
 	ok, err := snap.IsProposerOf(coinbase, number)
 	if err != nil {
-		log.Debug("Error occurs when seal block", "error", err)
-		return nil, err
+		if err == errProposerNotInCommittee {
+			return nil, consensus.ErrNotInProposerCommittee
+		} else {
+			log.Debug("Error occurs when seal block", "error", err)
+			return nil, err
+		}
 	}
 	if !ok {
 		return nil, consensus.ErrUnauthorized

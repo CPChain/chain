@@ -79,14 +79,14 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 
 	isProposer, isValidator := true, true
 
-	// TODO: remove this later, not efficient, not usefull in practice
-	for t := term; t <= futureTerm; t++ {
-		isP, _ := d.dpor.VerifyProposerOf(address, t)
-		isV, _ := d.dpor.VerifyValidatorOf(address, t)
-
-		isProposer = isProposer || isP
-		isValidator = isValidator || isV
-	}
+	// TODO: @liuq check the qualification of the peer, only propsers or validators are allowed
+	// for t := term; t <= futureTerm; t++ {
+	// 	isP, _ := d.dpor.VerifyProposerOf(address, t)
+	// 	isV, _ := d.dpor.VerifyValidatorOf(address, t)
+	//
+	// 	isProposer = isProposer || isP
+	// 	isValidator = isValidator || isV
+	// }
 
 	if (!isProposer && !isValidator) || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)

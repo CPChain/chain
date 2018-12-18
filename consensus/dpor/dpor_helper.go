@@ -533,10 +533,14 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 // isTimeToDialValidators checks if it is time to dial remote signers, and dials them if time is up
 func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.ChainReader) bool {
-
 	header := chain.CurrentHeader()
 	number := header.Number.Uint64()
 	snap := dpor.CurrentSnap()
+
+	isStartElec := snap.isStartElection()
+	if !isStartElec {
+		return false
+	}
 
 	// Some debug info
 	log.Debug("my address", "eb", dpor.Coinbase().Hex())
@@ -562,9 +566,8 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 	// If in a checkpoint and self is in the future committee, try to build the committee network
 	isCheckpoint := IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen)
 	isFutureSigner := snap.IsFutureProposerOf(dpor.Coinbase(), number)
-	ifStartDynamic := snap.isStartElection()
 
-	return isCheckpoint && isFutureSigner && ifStartDynamic
+	return isCheckpoint && isFutureSigner
 }
 
 func (dh *defaultDporHelper) updateAndDial(dpor *Dpor, snap *DporSnapshot, number uint64) error {
