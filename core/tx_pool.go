@@ -41,7 +41,7 @@ const (
 )
 
 const (
-	MaxTxMapSize = 1024
+	DefaultMaxTxMapSize = 1024
 )
 
 var (
@@ -142,6 +142,8 @@ type TxPoolConfig struct {
 	AccountQueue uint64 // Maximum number of non-executable transaction slots permitted per account
 	GlobalQueue  uint64 // Maximum number of non-executable transaction slots for all accounts
 
+	MaxTxMapSize uint64 // Maximum number of pending transactions
+
 	Lifetime time.Duration // Maximum amount of time non-executable transaction are queued
 }
 
@@ -158,6 +160,8 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	GlobalSlots:  4096,
 	AccountQueue: 64,
 	GlobalQueue:  1024,
+
+	MaxTxMapSize: DefaultMaxTxMapSize,
 
 	Lifetime: 3 * time.Hour,
 }
@@ -178,6 +182,11 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 		log.Warn("Sanitizing invalid txpool price bump", "provided", conf.PriceBump, "updated", DefaultTxPoolConfig.PriceBump)
 		conf.PriceBump = DefaultTxPoolConfig.PriceBump
 	}
+	if conf.MaxTxMapSize < 1024 {
+		log.Warn("Sanitizing invalid txpool map size ", "provided", conf.MaxTxMapSize, "updated", DefaultTxPoolConfig.MaxTxMapSize)
+		conf.MaxTxMapSize = DefaultTxPoolConfig.MaxTxMapSize
+	}
+
 	return conf
 }
 
@@ -218,7 +227,7 @@ type TxPool struct {
 }
 
 // setMapItem sets txlist of given addr, change it or add it
-func setMapItem(m map[common.Address]*txList, addr common.Address, txlist *txList) bool {
+func setMapItem(m map[common.Address]*txList, addr common.Address, txlist *txList, maxSize uint64) bool {
 	// change old list
 	_, ok := m[addr]
 	if ok {
@@ -229,10 +238,11 @@ func setMapItem(m map[common.Address]*txList, addr common.Address, txlist *txLis
 
 	// add new tx list
 	// out of limit
-	if len(m) >= MaxTxMapSize {
+	if len(m) >= int(maxSize) {
 		log.Warn("size limit of pending txList reached, discarding")
 		return false
 	}
+
 	// add it
 	m[addr] = txlist
 	return true
@@ -247,11 +257,11 @@ func (pool *TxPool) getQueueTxList(addr common.Address) *txList {
 }
 
 func (pool *TxPool) setPendingTxList(addr common.Address, txlist *txList) bool {
-	return setMapItem(pool.pending, addr, txlist)
+	return setMapItem(pool.pending, addr, txlist, pool.config.MaxTxMapSize)
 }
 
 func (pool *TxPool) setQueueTxList(addr common.Address, txlist *txList) bool {
-	return setMapItem(pool.queue, addr, txlist)
+	return setMapItem(pool.queue, addr, txlist, pool.config.MaxTxMapSize)
 }
 
 func (pool *TxPool) deletePendingTxList(addr common.Address) {

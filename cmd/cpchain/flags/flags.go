@@ -126,6 +126,7 @@ const (
 	CacheFlagName         = "cache"
 	CacheDatabaseFlagName = "cache.database"
 	CacheGCFlagName       = "cache.gc"
+	MaxTxMapSize          = "txpoolsize"
 )
 
 var ChainFlags = []cli.Flag{
@@ -155,6 +156,10 @@ var ChainFlags = []cli.Flag{
 		Name:  CacheGCFlagName,
 		Usage: "Percentage of cache memory allowance to use for trie pruning",
 		Value: 25,
+	},
+	cli.IntFlag{
+		Name:  MaxTxMapSize,
+		Usage: "Maximum number of pending transactions",
 	},
 }
 

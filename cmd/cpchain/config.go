@@ -233,7 +233,9 @@ func updateBaseAccount(ctx *cli.Context, ks *keystore.KeyStore, cfg *cpc.Config)
 
 // Updates transaction pool configurations
 func updateTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
-
+	if ctx.IsSet(flags.MaxTxMapSize) {
+		cfg.MaxTxMapSize = ctx.Uint64(flags.MaxTxMapSize)
+	}
 }
 
 func updateChainGeneralConfig(ctx *cli.Context, cfg *cpc.Config) {
