@@ -679,7 +679,13 @@ func (bc *BlockChain) Stop() {
 
 	bc.wg.Wait()
 
-	// Ensure the state of a recent block is also stored to disk before exiting.
+	bc.CommitStateDB()
+
+	log.Info("Blockchain manager stopped")
+}
+
+func (bc *BlockChain) CommitStateDB() {
+	// Ensure the state of a recent block is also stored to disk.
 	// We're writing three different states to catch different restart scenarios:
 	//  - HEAD:     So we don't need to reprocess any blocks in the general case
 	//  - HEAD-1:   So we don't do large reorgs if our HEAD becomes an uncle
@@ -715,7 +721,6 @@ func (bc *BlockChain) Stop() {
 			log.Error("Dangling trie nodes(private statedb) after full cleanup")
 		}
 	}
-	log.Info("Blockchain manager stopped")
 }
 
 func (bc *BlockChain) procFutureBlocks() {
@@ -1053,6 +1058,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 	n, events, logs, err := bc.insertChain(chain)
 	bc.PostChainEvents(events, logs)
+	bc.CommitStateDB()
 	return n, err
 }
 
