@@ -72,9 +72,9 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
 
-	log.Info("lenth of rpts", "len", len(rpts))
+	log.Debug("lenth of rpts", "len", len(rpts))
 	for _, r := range rpts {
-		log.Info("rptlist", "addr", r.Address.Hex(), "rpt", r.Rpt)
+		log.Debug("rptlist", "addr", r.Address.Hex(), "rpt", r.Rpt)
 	}
 
 	randSource := rand.NewSource(seed)

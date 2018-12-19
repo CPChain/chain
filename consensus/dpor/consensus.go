@@ -181,7 +181,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 		header.Dpor.Proposers = append(header.Dpor.Proposers, proposer)
 	}
 
-	log.Info("prepare a block", "number", header.Number.Uint64(), "proposers", header.Dpor.ProposersFormatText(),
+	log.Debug("prepare a block", "number", header.Number.Uint64(), "proposers", header.Dpor.ProposersFormatText(),
 		"validators", header.Dpor.ValidatorsFormatText())
 
 	// Set correct signatures size
