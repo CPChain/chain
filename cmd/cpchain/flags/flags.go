@@ -131,7 +131,7 @@ const (
 var ChainFlags = []cli.Flag{
 	cli.Uint64Flag{
 		Name:  NetworkIDFlagName,
-		Usage: "Network identifier (integer, mainnet=0, testnet=1)",
+		Usage: "Network identifier (integer, mainnet=0,dev=1,testnet=2)",
 	},
 	cli.StringFlag{
 		Name:  "account",
