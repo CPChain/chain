@@ -160,6 +160,7 @@ var ChainFlags = []cli.Flag{
 	cli.IntFlag{
 		Name:  MaxTxMapSizeFlagName,
 		Usage: "Maximum number of pending transactions",
+		Value: 1024,
 	},
 }
 
