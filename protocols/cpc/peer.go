@@ -9,11 +9,12 @@ import (
 	"sync"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
-	"gopkg.in/fatih/set.v0"
+	set "gopkg.in/fatih/set.v0"
 )
 
 var (
@@ -321,9 +322,13 @@ func (p *peer) RequestReceipts(hashes []common.Hash) error {
 // Handshake executes the cpchain protocol handshake, negotiating version number,
 // network IDs, head and genesis blocks.
 func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis common.Hash, isMiner bool) (bool, error) {
-	// Send out own handshake in a new thread
+
+	log.Debug("handshaking with remote cpc peer...", "network", network, "blockchain hight", ht.Uint64(), "head", head.Hex(), "genesis", genesis.Hex(), "is Miner", isMiner)
+
 	errc := make(chan error, 2)
 	var status statusData // safe to read after two values have been received from errc
+
+	// Send out own handshake in a new thread
 	go func() {
 		sd := statusData{
 			ProtocolVersion: uint32(p.version),
@@ -337,13 +342,16 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 
 		errc <- p2p.Send(p.rw, StatusMsg, &sd)
 	}()
-	// readStatus reads the handshake from the opposite side.
+
+	// Reads the status of remote peer from the opposite side.
 	go func() {
 		errc <- p.readStatus(network, &status, genesis)
 		//log.Log("p.readStatus(network, &status, genesis)", "status", status.FormatString(), "peer", p.id)
 	}()
+
 	timeout := time.NewTimer(handshakeTimeout)
 	defer timeout.Stop()
+
 	for i := 0; i < 2; i++ {
 		select {
 		case err := <-errc:
@@ -354,6 +362,7 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 			return false, p2p.DiscReadTimeout
 		}
 	}
+
 	p.ht, p.head = status.Height, status.CurrentBlock
 	//log.Info("handshake", "height", p.ht.Uint64(), "head", p.head.Hex())
 	return status.IsMiner, nil

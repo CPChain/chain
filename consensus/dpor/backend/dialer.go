@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"strings"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
@@ -429,12 +430,27 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 
 			log.Debug("verify validator of term", "term", term, "addr", addr, "ok", ok, "err", err)
 
-			if ok && err == nil {
-				validator, _ := d.recentValidators.Get(addr)
-				validators[common.HexToAddress(address)] = validator.(*RemoteValidator)
+			v, _ := d.recentValidators.Get(addr)
+			validator := v.(*RemoteValidator)
+
+			if isDefaultValidator(validator, d.defaultValidators) || (ok && err == nil) {
+				validators[common.HexToAddress(address)] = validator
 			}
 		}
 	}
 
 	return validators
+}
+
+// isDefaultValidator checks if a validator is a default validator
+func isDefaultValidator(validator *RemoteValidator, defaultValidators []string) bool {
+	enode := validator.ID().String()
+	for _, dv := range defaultValidators {
+		log.Debug("verify validator", "enode", enode, "default validator", dv)
+		if strings.Contains(dv, enode) {
+			log.Debug("this is a default validator", "enode", enode)
+			return true
+		}
+	}
+	return false
 }

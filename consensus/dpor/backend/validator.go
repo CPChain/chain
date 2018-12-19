@@ -325,6 +325,25 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteValidator) error {
 				// TODO: remove this
 				return nil
 			}
+		case consensus.ErrFutureBlock:
+
+			log.Debug("received future block header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
+
+			errCh := make(chan error, 1)
+			go func() {
+				delay := time.Duration((header.Time.Int64() - (time.Now().UnixNano() * int64(time.Nanosecond) / int64(time.Millisecond))) * int64(time.Millisecond) / int64(time.Nanosecond))
+
+				log.Debug("delay of future block header", "delay", delay)
+
+				if delay <= 1e9 {
+					<-time.After(delay)
+					errCh <- vh.handleLbftMsg(msg, p)
+				} else {
+					close(errCh)
+				}
+			}()
+
+			return <-errCh
 
 		case consensus.ErrNotEnoughSigs:
 			// sign the block
@@ -381,7 +400,9 @@ func (vh *Handler) ReadyToImpeach() bool {
 }
 
 func (vh *Handler) procUnhandledBlocks() {
-	timer := time.NewTimer(3)
+	timer := time.NewTicker(200 * time.Millisecond)
+	defer timer.Stop()
+
 	for {
 		select {
 		case <-timer.C:

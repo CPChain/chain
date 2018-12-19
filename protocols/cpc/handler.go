@@ -235,7 +235,6 @@ func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
 		return false, p2p.DiscTooManyPeers
 	}
-	log.Debug("Cpchain peer connected", "name", p.Name())
 
 	// Execute the cpchain handshake
 	var (
@@ -268,6 +267,8 @@ func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
 		return false, err
 	}
 
+	log.Debug("Cpchain peer connected", "name", p.Name())
+
 	return remoteIsMiner, nil
 }
 
@@ -283,6 +284,9 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		log.Warn("dpor handler is not not available now")
 		return nil
 	}
+
+	log.Debug("received new peer", "peer", p.ID().String())
+	log.Debug("is miner", "bool", isMiner)
 
 	// wrap up the peer
 	peer := pm.newPeer(int(version), p, rw)
@@ -385,6 +389,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		if err := msg.Decode(&query); err != nil {
 			return errResp(ErrDecode, "%v: %v", msg, err)
 		}
+
+		log.Debug("received GetBlockHeadersMsg", "hash", query.Origin.Hash.Hex(), "number", query.Origin.Number)
+
 		hashMode := query.Origin.Hash != (common.Hash{})
 		first := true
 		maxNonCanonical := uint64(100)
@@ -472,6 +479,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		if err := msg.Decode(&headers); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
+
+		log.Debug("received BlockHeadersMsg", "len", len(headers))
+
 		// Filter out any explicitly requested headers, deliver the rest to the downloader
 		filter := len(headers) == 1
 		if filter {
@@ -497,6 +507,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 			bytes  int
 			bodies []rlp.RawValue
 		)
+
+		log.Debug("received GetBlockBodiesMsg")
+
 		for bytes < softResponseLimit && len(bodies) < downloader.MaxBlockFetch {
 			// Retrieve the hash of the next block
 			if err := msgStream.Decode(&hash); err == rlp.EOL {
@@ -521,6 +534,8 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		}
 		// Deliver them all to the downloader for queuing
 		transactions := make([][]*types.Transaction, len(request))
+
+		log.Debug("received BlockBodiesMsg", "len", len(request))
 
 		for i, body := range request {
 			transactions[i] = body.Transactions
@@ -549,6 +564,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 			bytes int
 			data  [][]byte
 		)
+
+		log.Debug("received GetNodeDataMsg")
+
 		for bytes < softResponseLimit && len(data) < downloader.MaxStateFetch {
 			// Retrieve the hash of the next state entry
 			if err := msgStream.Decode(&hash); err == rlp.EOL {
@@ -570,6 +588,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		if err := msg.Decode(&data); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
+
+		log.Debug("received NodeDataMsg", "len", len(data))
+
 		// Deliver all to the downloader
 		if err := pm.downloader.DeliverNodeData(p.id, data); err != nil {
 			log.Debug("Failed to deliver node state data", "err", err)
@@ -581,6 +602,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		if _, err := msgStream.List(); err != nil {
 			return err
 		}
+
+		log.Debug("received GetReceiptsMsg")
+
 		// Gather state data until the fetch or network limits is reached
 		var (
 			hash     common.Hash
@@ -617,6 +641,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		if err := msg.Decode(&receipts); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
+
+		log.Debug("received ReceiptsMsg", "len")
+
 		// Deliver all to the downloader
 		if err := pm.downloader.DeliverReceipts(p.id, receipts); err != nil {
 			log.Debug("Failed to deliver receipts", "err", err)
@@ -627,6 +654,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		if err := msg.Decode(&announces); err != nil {
 			return errResp(ErrDecode, "%v: %v", msg, err)
 		}
+
+		log.Debug("received NewBlockHashesMsg", "len", len(announces))
+
 		// Mark the hashes as present at the remote node
 		for _, block := range announces {
 			p.MarkBlock(block.Hash)
@@ -651,6 +681,8 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		}
 		request.Block.ReceivedAt = msg.ReceivedAt
 		request.Block.ReceivedFrom = p
+
+		log.Debug("received NewBlockMsg", "hash", request.Block.Hash().Hex(), "number", request.Block.NumberU64())
 
 		// mark the peer as owning the block and schedule it for import
 		p.MarkBlock(request.Block.Hash())
@@ -681,6 +713,9 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		if err := msg.Decode(&txs); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
+
+		log.Debug("received TxMsg", "len", len(txs))
+
 		for i, tx := range txs {
 			// Validate and mark the remote transaction
 			if tx == nil {

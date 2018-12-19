@@ -55,13 +55,12 @@ var (
 )
 
 const (
-	bodyCacheLimit             = 256
-	blockCacheLimit            = 256
-	maxFutureBlocks            = 256
-	maxTimeFutureBlocks        = 30
-	badBlockLimit              = 10
-	waitingSignatureBlockLimit = 10
-	triesInMemory              = 128
+	bodyCacheLimit      = 256
+	blockCacheLimit     = 256
+	maxFutureBlocks     = 256
+	maxTimeFutureBlocks = 30
+	badBlockLimit       = 10
+	triesInMemory       = 128
 
 	// BlockChainVersion ensures that an incompatible database forces a resync from scratch.
 	BlockChainVersion = 3
@@ -698,12 +697,12 @@ func (bc *BlockChain) CommitStateDB() {
 			if number := bc.CurrentBlock().NumberU64(); number > offset {
 				recent := bc.GetBlockByNumber(number - offset)
 
-				log.Info("Writing cached state to disk", "block", recent.Number(), "hash", recent.Hash().Hex(), "root", recent.StateRoot())
+				log.Debug("Writing cached state to disk", "block", recent.Number(), "hash", recent.Hash().Hex(), "root", recent.StateRoot())
 				if err := triedb.Commit(recent.StateRoot(), true); err != nil {
 					log.Error("Failed to commit recent state trie", "err", err)
 				}
 
-				log.Info("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash().Hex(), "root", recent.StateRoot())
+				log.Debug("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash().Hex(), "root", recent.StateRoot())
 				if err := privTrieDB.Commit(GetPrivateStateRoot(bc.db, recent.StateRoot()), true); err != nil {
 					log.Error("Failed to commit recent private state trie", "err", err)
 				}
@@ -1045,7 +1044,6 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 		bc.insert(block)
 	}
 	bc.futureBlocks.Remove(block.Hash())
-	// bc.pendingBlocks.Remove(block.Hash())
 	return status, nil
 }
 
@@ -1465,7 +1463,6 @@ func (bc *BlockChain) update() {
 		select {
 		case <-futureTimer.C:
 			bc.procFutureBlocks()
-			// bc.procPendingBlocks()
 
 		case <-bc.Quit:
 			return
