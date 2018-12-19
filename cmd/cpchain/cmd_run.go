@@ -194,25 +194,25 @@ func handleWallet(n *node.Node) {
 }
 
 func startMining(ctx *cli.Context, n *node.Node) {
-	if ctx.Bool("mine") {
-		var cpchainService *cpc.CpchainService
-		// cpchainService will point to the real cpchain service in n.services
-		if err := n.Service(&cpchainService); err != nil {
-			log.Fatalf("Cpchain service not running: %v", err)
-		}
+	var cpchainService *cpc.CpchainService
+	// cpchainService will point to the real cpchain service in n.services
+	if err := n.Service(&cpchainService); err != nil {
+		log.Fatalf("Cpchain service not running: %v", err)
+	}
 
+	rpcClient, err := n.Attach()
+	if err != nil {
+		log.Fatalf("Failed to attach to self: %v", err)
+	}
+	client := cpclient.NewClient(rpcClient)
+	cpchainService.SetClientForDpor(client)
+
+	if ctx.Bool(flags.MineFlagName) {
 		// TODO: fix this, do not use *keystore.Key, use wallet instead
 		contractCaller := createContractCaller(ctx, n)
 		if contractCaller != nil {
 			cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
 		}
-
-		rpcClient, err := n.Attach()
-		if err != nil {
-			log.Fatalf("Failed to attach to self: %v", err)
-		}
-		client := cpclient.NewClient(rpcClient)
-
 		if err := cpchainService.StartMining(true, client); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
 		}

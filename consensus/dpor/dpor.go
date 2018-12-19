@@ -220,11 +220,9 @@ func (d *Dpor) IfSigned(number uint64) (common.Hash, bool) {
 }
 
 // StartMining starts to create a handler and start it.
-func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, client backend.ClientBackend, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
+func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
 
 	d.chain = blockchain
-
-	d.SetClient(client)
 
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
 
