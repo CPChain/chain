@@ -14,7 +14,7 @@ Welcome to CPChain documentation!
    overview/overview
    installation/installation
    configuration/configuration
-   api/cpc_fusion.cpc
+   api/cpc_fusion
    FAQ/FAQ
    glossary/glossary
 
