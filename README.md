@@ -33,6 +33,7 @@ computing, with you and with everyone! Please come and join us.
 - [Documentation](#documentation)
 - [Tools and Libraries](#tools-and-libraries)
 - [Contributing](#contributing)
+- [FAQ](#faq)
 - [Partners](#partners-and-consumers)
 - [Contact](#contact)
 - [License](#license)
@@ -69,7 +70,14 @@ Please fork on bitbucket and make pull request [there](https://bitbucket.org/cpc
 Here is a short-list of our partners and customers.
 ![customers](https://i.imgur.com/G867Osr.png)
 
+---
+## FAQ
+- When will the mainnet be formally launched?
 
+  The scheduled launch time is in late March, 2019.
+
+
+---
 ## Contact
 Shout to us at one of the following places!
 
