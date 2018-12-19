@@ -13,9 +13,7 @@ parentHash = "0x0000000000000000000000000000000000000000000000000000000000000000
 chainId = 41
 
 [config.dpor]
-period = 200_000_000
-#period = 500_000_000
-#period = 1_000_000_000
+period = 200
 termLen = 4
 viewLen = 3
 validatorsLen = 4

@@ -43,6 +43,9 @@ var (
 	// ErrUnauthorized is returned if a header is signed by a non-authorized entity.
 	ErrUnauthorized = errors.New("unauthorized leader")
 
+	// ErrNotInProposerCommittee is returned  if the account is not in proposer committee.
+	ErrNotInProposerCommittee = errors.New("not in proposer committee")
+
 	// ErrUnknownLbftState is returned if committee handler's state is unknown
 	ErrUnknownLbftState = errors.New("unknown lbft state")
 
