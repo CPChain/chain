@@ -64,7 +64,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 	number := header.Number.Uint64()
 
 	// Don't waste time checking blocks from the future
-	if header.Time.Cmp(big.NewInt(time.Now().UnixNano())) > 0 {
+	if header.Time.Cmp(big.NewInt(nanosecondToMillisecond(time.Now().UnixNano()))) > 0 {
 		return consensus.ErrFutureBlock
 	}
 
