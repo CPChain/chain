@@ -462,7 +462,7 @@ func (s *DporSnapshot) updateCandidates() error {
 func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 
 	if s.client() == nil && s.Mode == NormalMode {
-		log.Warn("snapshot contract caller is nil")
+		log.Debug("snapshot client is nil")
 		s.Mode = FakeMode
 	}
 
@@ -519,7 +519,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		log.Debug("elected proposers:")
 
 		for _, s := range proposers {
-			log.Info("proposer", "addr", s.Hex())
+			log.Debug("proposer", "addr", s.Hex())
 		}
 		log.Debug("---------------------------")
 
@@ -538,7 +538,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		for _, s := range proposers {
 			log.Debug("proposer", "addr", s.Hex())
 		}
-		log.Info("---------------------------")
+		log.Debug("---------------------------")
 
 		if uint64(len(proposers)) != s.config.TermLen {
 			log.Debug("proposer length wrong", "expect", s.config.TermLen, "actual", len(proposers))

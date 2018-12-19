@@ -197,7 +197,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		snap    *DporSnapshot
 	)
 
-	log.Info("defaultDporHelper snapshot", "number", number, "hash", hash.Hex(), "len(parent and itself)", len(chainSeg))
+	log.Debug("defaultDporHelper snapshot", "number", number, "hash", hash.Hex(), "len(parent and itself)", len(chainSeg))
 
 	numberIter := number
 	for snap == nil {
@@ -210,7 +210,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 		// If an on-disk checkpoint Snapshot can be found, use that
 		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
-			log.Info("loading snapshot", "number", numberIter, "hash", hash)
+			log.Debug("loading snapshot", "number", numberIter, "hash", hash)
 			s, err := loadSnapshot(dpor.config, dpor.db, hash)
 			if err == nil {
 				log.Debug("Loaded checkpoint Snapshot from disk", "number", numberIter, "hash", hash)
