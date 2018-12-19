@@ -17,15 +17,17 @@ echo "[*] Starting cpchain nodes"
 #InfoLevel	4
 #DebugLevel	5
 
+bootnodes="enode://ebe4f6b0485f906aecc7fe35234d2d4f11bdb0a4965f5b3214f0301b58b76a3711290cfb1beb44c314e73f18af5d68fd7b34a930117a28aa76ffd92bb55cc13b@127.0.0.1:30310"
+
 validators="enode://5f11492af45df3c06fbdc435e4a66615baa58dc58a4918a3b693bf67c5baad4098ea5e0ca63a26ed55890865b8aa30550727ebff32b6826b72ad5c9dd28b4313@127.0.0.1:30317,\
 enode://f22094e4153d73d304d0e362704ecfec5fa928e56b62703b599a66e445c7bfa5b7a525118dc7e41fdf98267e428bda4d98cb3405f50ae509add6fc5aa87c98b9@127.0.0.1:30318,\
 enode://13925c2c99a2bc8ebb05d0946ee673d18fb1e2905b3e1e7ea4c840dd6cac5fc769ac54d1c791b158dbba3734494422fb0110aac4384f932d214aba69e0b49518@127.0.0.1:30319,\
 enode://d4175e2c796a6591e52e788483261bb54cfc337e0ba881f033cafd12a3ea94d22f3c84fa8652a343b2cb155b6443d3494a9010a1b993e63841374e9311382513@127.0.0.1:30320,"
 
-args="run --networkid 143 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber --runmode testnet"
+args="run --networkid 2 --bootnodes ${bootnodes} --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber --runmode testnet"
 
 #start bootnode service
-nohup ./bootnode-start.sh 1 testnet &
+nohup ./bootnode-start.sh 3 testnet &
 
 
 echo "Please check the IPFS daemon running on localhost."
@@ -33,7 +35,7 @@ echo "Please check the IPFS daemon running on localhost."
 cpchain=$proj_dir/build/bin/cpchain
 ipc_path_base=data/
 
-nohup $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
          --unlock "0x2a15146f434c0205cfae639de2ac4bb543539b24" --password conf-testnet/passwords/password1 \
          --validators "${validators}" \
          --rpccorsdomain "http://orange:8000" --logfile data/logs/1.log 2>/dev/null &

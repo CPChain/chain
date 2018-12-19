@@ -21,6 +21,8 @@ do
     echo "[*] Configuring node $i"
     mkdir -p data/data$i/keystore && cp conf-${runmode}/keys/key$i data/data$i/keystore/
 
-    # no longer needed
-    $cpchain chain init --datadir data/data$i conf-dev/genesis.toml
+
+    if [ "dev" == ${runmode} ]; then
+        $cpchain chain init --datadir data/data$i conf-dev/genesis.toml
+    fi
 done

@@ -306,16 +306,16 @@ var MainnetGenesisHash = common.HexToHash("0xe63ee6efb6a59a43f5a564201d15673c1ac
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
-	if configs.IsDev() {
+	switch {
+	case configs.IsDev():
+		return newGenesisBlock()
+	case configs.IsTestnet():
+		return newTestnetGenesisBlock()
+	case configs.IsMainnet():
+		return newGenesisBlock()
+	default:
 		return newGenesisBlock()
 	}
-	if configs.IsTestnet() {
-		return newGenesisBlock()
-	}
-	if configs.IsMainnet() {
-		return newGenesisBlock()
-	}
-	return newGenesisBlock()
 }
 
 func newGenesisBlock() *Genesis {
@@ -339,6 +339,35 @@ func newGenesisBlock() *Genesis {
 			common.HexToAddress("0x0000000000000000000000000000000000000001"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000002"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x00000000000000000000000000000000000000ff"): {Balance: big.NewInt(0x00000000000000000)},
+		},
+		Dpor: types.DporSnap{
+			Proposers:  configs.Proposers(),
+			Seal:       types.DporSignature{},
+			Sigs:       make([]types.DporSignature, 4),
+			Validators: configs.Validators(),
+		},
+	}
+}
+
+func newTestnetGenesisBlock() *Genesis {
+	candidates := configs.Candidates()
+	return &Genesis{
+		Config:    configs.ChainConfigInfo(),
+		Timestamp: 1492009146,
+		ExtraData: hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:  4700000 * 10,
+		// GasLimit:   1000000000,
+		Difficulty: big.NewInt(1),
+		Alloc: map[common.Address]GenesisAccount{
+			candidates[0]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[1]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[2]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[3]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[4]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[5]: {Balance: big.NewInt(math.MaxInt64)},
+
+			// faucet node
+			common.HexToAddress("0xe83a71428655b9f52ff6dc556e2b37043f39f194"): {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),

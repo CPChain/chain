@@ -35,7 +35,7 @@ func ProxyContractRegister(password string) common.Address {
 	auth := newAuth(client, privateKey, fromAddress)
 	contractAddress, tx, _, err := contract.DeployProxyContractRegister(auth, client)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(err.Error(), "fromAddress", fromAddress.Hex(), "contractAddress:", contractAddress.Hex())
 	}
 	printTx(tx, err, client, contractAddress)
 	return contractAddress
@@ -48,7 +48,7 @@ func DeployProxy(password string) common.Address {
 	auth := bind.NewKeyedTransactor(privateKey)
 	contractAddress, tx, _, err := contract.DeployProxy(auth, client)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(err.Error(), "fromAddress", fromAddress.Hex(), "contractAddress:", contractAddress.Hex())
 	}
 	printTx(tx, err, client, contractAddress)
 	return contractAddress
@@ -72,7 +72,7 @@ func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress 
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	if err != nil {
 		fmt.Println("failed")
-		log.Fatal(err.Error())
+		log.Fatal(err.Error(), "fromAddress", fromAddress, "proxyAddress", proxyAddress.Hex(), "realAddress:", realAddress.Hex())
 		return false
 
 	}
@@ -89,7 +89,7 @@ func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress 
 	transaction, err := proxyContractRegister.RegisterProxyContract(auth, proxyAddress, realAddress)
 	if err != nil {
 		fmt.Println("failed")
-		log.Fatal(err.Error())
+		log.Fatal(err.Error(), "fromAddress", fromAddress, "proxyAddress", proxyAddress.Hex(), "realAddress:", realAddress.Hex())
 		return false
 	}
 	receipt, err := bind.WaitMined(context.Background(), client, transaction)

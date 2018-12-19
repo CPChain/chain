@@ -26,8 +26,14 @@ const (
 )
 
 const (
-	// DefaultBlockPeriod   = 2e8 // 2 * 10 ^ 8 Nanosecond, 200 Millisecond, 0.2 Second
-	DefaultBlockPeriod        = 1e9 // 1 * 10 ^ 9 Nanosecond, 1000 Millisecond, 1 Second
+	MainnetNetworkId = 0
+	DevNetworkId     = 1
+	TestnetNetworkId = 2
+)
+
+const (
+	DefaultBlockPeriod        = 2e2 //  200 Millisecond, 0.2 Second
+	TestnetBlockPeriod        = 3e3 //  3000 Millisecond, 3 Second
 	DefaultValidatorsLen      = 4
 	DefaultMaxInitBlockNumber = 240
 )
@@ -42,25 +48,25 @@ const (
 )
 
 var (
-	chainConfigMap = map[string]*ChainConfig{
+	chainConfigMap = map[RunMode]*ChainConfig{
 		Dev:     devChainConfig,
 		Testnet: testnetChainConfig,
 		Mainnet: mainnetChainConfig,
 	}
 
-	proposersMap = map[string][]common.Address{
+	proposersMap = map[RunMode][]common.Address{
 		Dev:     devProposers,
 		Testnet: testnetProposers,
 		Mainnet: mainnetProposers,
 	}
 
-	candidatesMap = map[string][]common.Address{
+	candidatesMap = map[RunMode][]common.Address{
 		Dev:     devDefaultCandidates,
 		Testnet: testnetDefaultCandidates,
 		Mainnet: mainnetDefaultCandidates,
 	}
 
-	validatorsMap = map[string][]common.Address{
+	validatorsMap = map[RunMode][]common.Address{
 		Dev:     devValidators,
 		Testnet: testnetValidators,
 		Mainnet: mainnetValidators,

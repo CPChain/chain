@@ -3,40 +3,35 @@
 package configs
 
 import (
-	"errors"
+	"fmt"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 )
 
+type RunMode string
 const (
-	Dev     = "dev"
-	Testnet = "testnet"
-	Mainnet = "mainnet"
+	Dev RunMode = "dev"
+	Testnet RunMode = "testnet"
+	Mainnet RunMode = "mainnet"
 )
 
-var DefaultRunMode = Dev
+// Run mode for switch node configuration, eg:dev|testnet|mainnet
+var runModeValue = Dev
 
-// Run mode for switch node configuration, eg:dev|Testnet|prod
-var runModeValue = DefaultRunMode
-
-func GetRunMode() string {
+func GetRunMode() RunMode {
 	return runModeValue
 }
 
-func SetRunMode(runMode string) error {
-	if len(runMode) == 0 {
-		runModeValue = DefaultRunMode
-	} else {
-		switch runMode {
-		case Dev:
-		case Mainnet:
-		case Testnet:
-		default:
-			log.Error("unknown runModeValue", "runModeValue", runMode)
-			return errors.New("unknown runModeValue" + runMode)
-		}
-		runModeValue = runMode
+func SetRunMode(runMode RunMode) error {
+	switch runMode {
+	case Dev:
+	case Mainnet:
+	case Testnet:
+	default:
+		log.Error(fmt.Sprintf("unknown runModeValue, revert to default mode: %s", runModeValue), "runModeValue", runMode)
+		return fmt.Errorf("unknown runModeValue %s", runMode)
 	}
+	runModeValue = runMode
 	log.Debug("init runModeValue", "runModeValue", runModeValue)
 	return nil
 }

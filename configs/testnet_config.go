@@ -34,7 +34,7 @@ var (
 	testnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(TestnetChainId),
 		Dpor: &DporConfig{
-			Period:                DefaultBlockPeriod,
+			Period:                TestnetBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
 			ValidatorsLen:         DefaultValidatorsLen,
@@ -52,5 +52,10 @@ var (
 		common.HexToAddress("0x832062f84f982050c820b5ec986c1825d000ec8e"),
 		common.HexToAddress("0x2da372d6026573aa5e1863ba3fa724a231c477d6"),
 		common.HexToAddress("0x08e86c815665de506a210ff4b8e8572b8c201009"),
+	}
+
+	testnetBootnodes = []string{
+		"enode://18c444f813e3fbef9848748306a4a4b2fa2d90090a21e59c1dcdfa55a7435a18abaabffcd205fa976a2f4f9b1822ffd361b1e53bcef6b052823dd442b1722bf8@13.250.251.238:32000",
+		"enode://9eedb4aa96949a2db1307a5860e604f5149a2933b82f70c7ac3080362db170a17513de101e39d36634994a22003c1f77980699d72636d9f747ece888e0c98895@52.74.85.139:32000",
 	}
 )

@@ -20,14 +20,23 @@ import (
 	"bytes"
 	"math/big"
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
+
+func nanosecondToMillisecond(t int64) int64 {
+	return t * int64(time.Nanosecond) / int64(time.Millisecond)
+}
+
+func millisecondToNanosecond(t int64) int64 {
+	return t * int64(time.Millisecond) / int64(time.Nanosecond)
+}
 
 // Signatures stores sigs in a block
 type Signatures struct {

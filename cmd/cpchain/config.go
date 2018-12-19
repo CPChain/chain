@@ -32,7 +32,7 @@ type config struct {
 
 func updateRunModeFlag(ctx *cli.Context) {
 	if ctx.IsSet(flags.RunModeFlagName) {
-		runMode := ctx.String(flags.RunModeFlagName)
+		runMode := configs.RunMode(ctx.String(flags.RunModeFlagName))
 		configs.SetRunMode(runMode)
 	}
 }
@@ -102,7 +102,7 @@ func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
 // updateBootstrapNodes creates a list of bootstrap nodes from the command line
 // flags, reverting to pre-configured ones if none have been specified.
 func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
-	urls := configs.CpchainBootnodes
+	urls := configs.Bootnodes()
 	if ctx.IsSet(flags.BootnodesFlagName) {
 		urls = strings.Split(ctx.String(flags.BootnodesFlagName), ",")
 	}
@@ -240,9 +240,28 @@ func updateTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 
 func updateChainGeneralConfig(ctx *cli.Context, cfg *cpc.Config) {
 	// network id setup
-	if ctx.IsSet("networkid") {
-		cfg.NetworkId = ctx.Uint64("networkid")
+	// default
+	cfg.NetworkId = configs.DevNetworkId
+
+	// general
+	if ctx.IsSet(flags.RunModeFlagName) {
+		runMode := configs.RunMode(ctx.String(flags.RunModeFlagName))
+		log.Debug("runMode", "runMode", runMode)
+		switch runMode {
+		case configs.Dev:
+			cfg.NetworkId = configs.DevNetworkId
+		case configs.Testnet:
+			cfg.NetworkId = configs.TestnetNetworkId
+		case configs.Mainnet:
+			cfg.NetworkId = configs.MainnetNetworkId
+		}
 	}
+
+	// specific
+	if ctx.IsSet(flags.NetworkIDFlagName) {
+		cfg.NetworkId = ctx.Uint64(flags.NetworkIDFlagName)
+	}
+	log.Info("update networkId", "networkId", cfg.NetworkId)
 }
 
 // Updates chain configuration
