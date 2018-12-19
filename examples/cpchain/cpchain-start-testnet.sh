@@ -33,7 +33,7 @@ nohup ./bootnode-start.sh 3 testnet &
 echo "Please check the IPFS daemon running on localhost."
 
 cpchain=$proj_dir/build/bin/cpchain
-ipc_path_base=data/
+ipc_path_base=data/cpc-
 
 nohup $cpchain $args --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
          --unlock "0x2a15146f434c0205cfae639de2ac4bb543539b24" --password conf-testnet/passwords/password1 \

@@ -21,7 +21,7 @@ echo "[*] Starting cpchain viewer nodes"
 args="run --networkid 1 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber"
 
 cpchain=$proj_dir/build/bin/cpchain
-ipc_path_base=data/
+ipc_path_base=data/cpc-
 
 echo "start viewer unlock"
 nohup $cpchain $args --ipcaddr ${ipc_path_base}11 --datadir data/data11  --rpcaddr 127.0.0.1:8511 --grpcaddr 127.0.0.1:8611 --jsonrpchttpaddr 127.0.0.1:8711 --port 30321 \
