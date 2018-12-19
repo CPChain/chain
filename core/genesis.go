@@ -306,16 +306,16 @@ var MainnetGenesisHash = common.HexToHash("0xe63ee6efb6a59a43f5a564201d15673c1ac
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
-	if configs.IsDev() {
+	switch {
+	case configs.IsDev():
 		return newGenesisBlock()
-	}
-	if configs.IsTestnet() {
+	case configs.IsTestnet():
 		return newTestnetGenesisBlock()
-	}
-	if configs.IsMainnet() {
+	case configs.IsMainnet():
+		return newGenesisBlock()
+	default:
 		return newGenesisBlock()
 	}
-	return newGenesisBlock()
 }
 
 func newGenesisBlock() *Genesis {

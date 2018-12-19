@@ -3,14 +3,14 @@
 package configs
 
 func Bootnodes() []string {
-	if IsDev() {
+	switch {
+	case IsDev():
+		return devBootnodes
+	case IsTestnet():
+		return testnetBootnodes
+	case IsMainnet():
+		return mainnetBootnodes
+	default:
 		return devBootnodes
 	}
-	if IsTestnet() {
-		return testnetBootnodes
-	}
-	if IsMainnet() {
-		return mainnetBootnodes
-	}
-	return devBootnodes
 }

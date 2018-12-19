@@ -32,7 +32,7 @@ type config struct {
 
 func updateRunModeFlag(ctx *cli.Context) {
 	if ctx.IsSet(flags.RunModeFlagName) {
-		runMode := ctx.String(flags.RunModeFlagName)
+		runMode := configs.RunMode(ctx.String(flags.RunModeFlagName))
 		configs.SetRunMode(runMode)
 	}
 }
@@ -243,7 +243,7 @@ func updateChainGeneralConfig(ctx *cli.Context, cfg *cpc.Config) {
 
 	// general
 	if ctx.IsSet(flags.RunModeFlagName) {
-		runMode := ctx.String(flags.RunModeFlagName)
+		runMode := configs.RunMode(ctx.String(flags.RunModeFlagName))
 		log.Debug("runMode", "runMode", runMode)
 		switch runMode {
 		case configs.Dev:

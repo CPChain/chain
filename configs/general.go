@@ -48,25 +48,25 @@ const (
 )
 
 var (
-	chainConfigMap = map[string]*ChainConfig{
+	chainConfigMap = map[RunMode]*ChainConfig{
 		Dev:     devChainConfig,
 		Testnet: testnetChainConfig,
 		Mainnet: mainnetChainConfig,
 	}
 
-	proposersMap = map[string][]common.Address{
+	proposersMap = map[RunMode][]common.Address{
 		Dev:     devProposers,
 		Testnet: testnetProposers,
 		Mainnet: mainnetProposers,
 	}
 
-	candidatesMap = map[string][]common.Address{
+	candidatesMap = map[RunMode][]common.Address{
 		Dev:     devDefaultCandidates,
 		Testnet: testnetDefaultCandidates,
 		Mainnet: mainnetDefaultCandidates,
 	}
 
-	validatorsMap = map[string][]common.Address{
+	validatorsMap = map[RunMode][]common.Address{
 		Dev:     devValidators,
 		Testnet: testnetValidators,
 		Mainnet: mainnetValidators,
