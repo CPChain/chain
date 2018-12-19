@@ -40,10 +40,6 @@ const (
 	chainHeadChanSize = 10
 )
 
-const (
-	DefaultMaxTxMapSize = 1024
-)
-
 var (
 	// ErrInvalidSender is returned if the transaction contains an invalid signature.
 	ErrInvalidSender = errors.New("invalid sender")
@@ -160,9 +156,7 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	GlobalSlots:  4096,
 	AccountQueue: 64,
 	GlobalQueue:  1024,
-
-	MaxTxMapSize: DefaultMaxTxMapSize,
-
+	MaxTxMapSize: 1024,
 	Lifetime: 3 * time.Hour,
 }
 
@@ -182,7 +176,7 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 		log.Warn("Sanitizing invalid txpool price bump", "provided", conf.PriceBump, "updated", DefaultTxPoolConfig.PriceBump)
 		conf.PriceBump = DefaultTxPoolConfig.PriceBump
 	}
-	if conf.MaxTxMapSize < 1024 {
+	if conf.MaxTxMapSize < DefaultTxPoolConfig.MaxTxMapSize {
 		log.Warn("Sanitizing invalid txpool map size ", "provided", conf.MaxTxMapSize, "updated", DefaultTxPoolConfig.MaxTxMapSize)
 		conf.MaxTxMapSize = DefaultTxPoolConfig.MaxTxMapSize
 	}
