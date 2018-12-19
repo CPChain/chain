@@ -158,9 +158,13 @@ var ChainFlags = []cli.Flag{
 	},
 }
 
+const (
+	MineFlagName = "mine"
+)
+
 var MinerFlags = []cli.Flag{
 	cli.BoolFlag{
-		Name:  "mine",
+		Name:  MineFlagName,
 		Usage: "Enable mining",
 	},
 }

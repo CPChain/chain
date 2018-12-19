@@ -207,7 +207,7 @@ func startMining(ctx *cli.Context, n *node.Node) {
 	client := cpclient.NewClient(rpcClient)
 	cpchainService.SetClientForDpor(client)
 
-	if ctx.Bool("mine") {
+	if ctx.Bool(flags.MineFlagName) {
 		// TODO: fix this, do not use *keystore.Key, use wallet instead
 		contractCaller := createContractCaller(ctx, n)
 		if contractCaller != nil {
