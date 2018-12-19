@@ -685,7 +685,7 @@ func (bc *BlockChain) Stop() {
 }
 
 func (bc *BlockChain) CommitStateDB() {
-	// Ensure the state of a recent block is also stored to disk before exiting.
+	// Ensure the state of a recent block is also stored to disk.
 	// We're writing three different states to catch different restart scenarios:
 	//  - HEAD:     So we don't need to reprocess any blocks in the general case
 	//  - HEAD-1:   So we don't do large reorgs if our HEAD becomes an uncle
