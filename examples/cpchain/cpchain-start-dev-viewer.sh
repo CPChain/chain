@@ -18,7 +18,7 @@ echo "[*] Starting cpchain viewer nodes"
 #DebugLevel	5
 
 
-args="run --networkid 142 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber"
+args="run --networkid 1 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber"
 
 cpchain=$proj_dir/build/bin/cpchain
 ipc_path_base=data/
