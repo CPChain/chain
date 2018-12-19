@@ -1,0 +1,62 @@
+Installation
+~~~~~~~~~~~~~~
+
+In this section, you will learn how to download our code, build the project and run it on you own system.
+
+.. NOTE:: All code starting with a ``$`` is meant to run in your terminal.
+    All code starting with a ``>>>`` is meant to run in a python interpreter,
+    like `ipython <https://pypi.org/project/ipython/>`_.
+
+
+First, make sure you have installed `go <https://golang.org/>`_, and configured the $GOPATH.
+
+Getting repository
+************************
+
+You can click `here <https://github.com/CPChain/chain>`_ to access source code, or execute the following commands to clone code on github.
+
+.. code::
+    
+    # open a $GOPATH
+    $ cd $GOPATH/src
+
+    # TODO: if module name be changed..., or using go.mod
+    $ mkdir -p bitbucket/cpchain/
+    
+    $ cd bitbucket/cpchain
+    
+    # TODO: chain url
+    $ git clone https://github.com/CPChain/chain
+
+
+Building
+************
+
+Run the command to compile and generate binary file in the `chain` directory.
+
+.. code::
+
+    $ cd chain
+    $ make clean
+    $ make all
+
+Executables
+*************
+
+You can find several executables in `build/bin` directory after building the project.
+
+.. code::
+
+    $ cd build/bin
+    $ ls
+
+
+========  ============
+Command   Description
+========  ============
+cpchain   Executable for the cpchain blockchain networks
+--------  ------------
+abigen    Source code generator to convert CPChain contract definitions into easy to use, compile-time type-safe Go packages. 
+--------  ------------
+bootnode  A lightweight bootstrap node to aid in finding peers in private networks.
+========  ============
