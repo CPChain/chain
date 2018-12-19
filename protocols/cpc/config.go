@@ -32,10 +32,10 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-// DefaultConfig contains default settings for use on the cpchain main net.
+// DefaultConfig contains default settings for use on the cpchain test net.
 var DefaultConfig = Config{
 	SyncMode:      downloader.FullSync,
-	NetworkId:     1,
+	NetworkId:     configs.DevNetworkId,
 	LightPeers:    100,
 	DatabaseCache: 768,
 	TrieCache:     256,

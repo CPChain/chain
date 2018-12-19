@@ -238,9 +238,25 @@ func updateTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 
 func updateChainGeneralConfig(ctx *cli.Context, cfg *cpc.Config) {
 	// network id setup
-	if ctx.IsSet("networkid") {
-		cfg.NetworkId = ctx.Uint64("networkid")
+	if ctx.IsSet(flags.NetworkIDFlagName) {
+		cfg.NetworkId = ctx.Uint64(flags.NetworkIDFlagName)
+	} else {
+		if ctx.IsSet(flags.RunModeFlagName) {
+			runMode := ctx.String(flags.RunModeFlagName)
+			log.Debug("runMode", "runMode", runMode)
+			switch runMode {
+			case configs.Dev:
+				cfg.NetworkId = configs.DevNetworkId
+			case configs.Testnet:
+				cfg.NetworkId = configs.TestnetNetworkId
+			case configs.Mainnet:
+				cfg.NetworkId = configs.MainnetNetworkId
+			default:
+				cfg.NetworkId = configs.DevNetworkId
+			}
+		}
 	}
+	log.Info("update networkId", "networkId", cfg.NetworkId)
 }
 
 // Updates chain configuration

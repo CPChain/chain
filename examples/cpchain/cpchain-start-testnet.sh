@@ -22,7 +22,7 @@ enode://f22094e4153d73d304d0e362704ecfec5fa928e56b62703b599a66e445c7bfa5b7a52511
 enode://13925c2c99a2bc8ebb05d0946ee673d18fb1e2905b3e1e7ea4c840dd6cac5fc769ac54d1c791b158dbba3734494422fb0110aac4384f932d214aba69e0b49518@127.0.0.1:30319,\
 enode://d4175e2c796a6591e52e788483261bb54cfc337e0ba881f033cafd12a3ea94d22f3c84fa8652a343b2cb155b6443d3494a9010a1b993e63841374e9311382513@127.0.0.1:30320,"
 
-args="run --networkid 143 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber --runmode testnet"
+args="run --networkid 2 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber --runmode testnet"
 
 #start bootnode service
 nohup ./bootnode-start.sh 1 testnet &

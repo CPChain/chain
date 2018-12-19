@@ -26,6 +26,12 @@ const (
 )
 
 const (
+	MainnetNetworkId = 0
+	DevNetworkId     = 1
+	TestnetNetworkId = 2
+)
+
+const (
 	DefaultBlockPeriod        = 2e2 //  200 Millisecond, 0.2 Second
 	DefaultValidatorsLen      = 4
 	DefaultMaxInitBlockNumber = 240
