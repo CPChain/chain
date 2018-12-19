@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/ecdsa"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -323,15 +322,6 @@ func updateConfigFromFile(ctx *cli.Context, cfg *config) {
 
 // Creates a config and a node
 func newConfigNode(ctx *cli.Context) (config, *node.Node) {
-	// set runmode at first
-	updateRunModeFlag(ctx)
-
-	defaultConfig, err := json.Marshal(cpc.DefaultConfig)
-	if err != nil {
-		log.Info("Marshal defaultConfig error", "err", err)
-	}
-	log.Debug("defaultConfig", "DefaultConfig json", string(defaultConfig))
-
 	// default
 	cfg := config{
 		Cpc:  cpc.DefaultConfig,
@@ -340,10 +330,11 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 
 	// update data dir first
 	updateDataDirFlag(ctx, &cfg.Node)
-
 	updateConfigFromFile(ctx, &cfg)
 
 	// now update from command line arguments
+	// set runmode at first
+	updateRunModeFlag(ctx)
 	updateNodeConfig(ctx, &cfg.Node)
 
 	// create node

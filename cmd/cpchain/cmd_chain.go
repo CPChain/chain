@@ -153,8 +153,9 @@ func initChain(ctx *cli.Context) error {
 	genesisPath := ctx.Args().First()
 	var genesis *core.Genesis
 
-	runMode := configs.RunMode(ctx.String(flags.RunModeFlagName))
-	configs.SetRunMode(runMode)
+	if ctx.IsSet(flags.RunModeFlagName) {
+		_ = configs.SetRunMode(configs.RunMode(ctx.String(flags.RunModeFlagName)))
+	}
 	log.Info("runMode", "runMode", configs.GetRunMode())
 
 	if len(genesisPath) == 0 {

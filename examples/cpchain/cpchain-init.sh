@@ -26,3 +26,4 @@ do
         $cpchain chain init --datadir data/data$i conf-dev/genesis.toml
     fi
 done
+ 
