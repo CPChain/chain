@@ -58,4 +58,10 @@ var (
 		common.HexToAddress("0xe4d51117832e84f1d082e9fc12439b771a57e7b2"),
 		common.HexToAddress("0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"),
 	}
+
+	// CpchainBootnodes are the enode URLs of the P2P bootstrap nodes running on
+	// the dev cpchain network.
+	devBootnodes = []string{
+		"enode://5293dc8aaa5c2fcc7905c21391ce38f4f877722ff1918f4fa86379347ad8a244c2995631f89866693d05bf5c94493c247f02716f19a90689fa406189b03a5243@127.0.0.1:30310", // localhost
+	}
 )

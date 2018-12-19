@@ -33,6 +33,7 @@ const (
 
 const (
 	DefaultBlockPeriod        = 2e2 //  200 Millisecond, 0.2 Second
+	TestnetBlockPeriod        = 3e3 //  3000 Millisecond, 3 Second
 	DefaultValidatorsLen      = 4
 	DefaultMaxInitBlockNumber = 240
 )

@@ -31,4 +31,9 @@ var (
 	}
 	mainnetProposers  = devProposers
 	mainnetValidators = devValidators
+
+	// coming soon ...
+	mainnetBootnodes = []string{
+		"enode://5293dc8aaa5c2fcc7905c21391ce38f4f877722ff1918f4fa86379347ad8a244c2995631f89866693d05bf5c94493c247f02716f19a90689fa406189b03a5243@127.0.0.1:30310", // localhost
+	}
 )

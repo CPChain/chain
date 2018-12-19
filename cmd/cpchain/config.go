@@ -102,7 +102,7 @@ func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
 // updateBootstrapNodes creates a list of bootstrap nodes from the command line
 // flags, reverting to pre-configured ones if none have been specified.
 func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
-	urls := configs.CpchainBootnodes
+	urls := configs.Bootnodes()
 	if ctx.IsSet(flags.BootnodesFlagName) {
 		urls = strings.Split(ctx.String(flags.BootnodesFlagName), ",")
 	}
