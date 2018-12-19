@@ -26,8 +26,7 @@ const (
 )
 
 const (
-	DefaultBlockPeriod = 2e8 // 2 * 10 ^ 8 Nanosecond, 200 Millisecond, 0.2 Second
-	// DefaultBlockPeriod        = 1e9 // 1 * 10 ^ 9 Nanosecond, 1000 Millisecond, 1 Second
+	DefaultBlockPeriod        = 2e2 //  200 Millisecond, 0.2 Second
 	DefaultValidatorsLen      = 4
 	DefaultMaxInitBlockNumber = 240
 )

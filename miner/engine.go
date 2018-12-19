@@ -137,8 +137,6 @@ func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase comm
 	go eng.update()
 	go eng.wait()
 
-	eng.commitNewWork() //TODO: @ac it is not required and cause a bug, comment it out and observe if there is something I overlooked
-
 	return eng
 }
 

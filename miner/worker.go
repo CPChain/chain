@@ -102,7 +102,9 @@ func (nw *NativeWorker) mine(work *Work, quitCh <-chan struct{}) {
 	} else {
 		if err != nil {
 			if err == consensus.ErrUnauthorized {
-				log.Warn("Not your turn", "err", err, "number", work.Block.Number())
+				log.Info("Not your turn", "err", err, "number", work.Block.Number())
+			} else if err == consensus.ErrNotInProposerCommittee {
+				log.Info("Not in proposer committee", "err", err, "number", work.Block.Number())
 			} else {
 				log.Warn("Block sealing failed", "err", err)
 			}

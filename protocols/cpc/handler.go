@@ -280,7 +280,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 	)
 
 	if dporMode == dpor.NormalMode && isMiner && !dporProtocol.Available() {
-		log.Warn("8888 dpor handler is not not available now")
+		log.Warn("dpor handler is not not available now")
 		return nil
 	}
 
@@ -296,7 +296,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		// Add peer to manager.peers, this is for basic msg syncing
 		remoteIsMiner, err := pm.addPeer(peer, isMiner)
 		if err != nil {
-			log.Warn("8888 fail to add peer to cpc protocol manager's peer set", "err", err)
+			log.Warn("fail to add peer to cpc protocol manager's peer set", "err", err)
 			return err
 		}
 
@@ -307,7 +307,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			switch err {
 			case nil:
 			default:
-				log.Warn("8888 fail to add peer to dpor's peer set", "err", err)
+				log.Warn("fail to add peer to dpor's peer set", "err", err)
 			}
 		}
 
@@ -326,14 +326,14 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		for {
 			msg, err := peer.rw.ReadMsg()
 			if err != nil {
-				log.Warn("8888 err when reading msg", "err", err)
+				log.Warn("err when reading msg", "err", err)
 				return err
 			}
 
 			defer msg.Discard()
 
 			if msg.Size > ProtocolMaxMsgSize {
-				log.Warn("8888 err when checking msg size", "size", msg.Size)
+				log.Warn("err when checking msg size", "size", msg.Size)
 				return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 			}
 
@@ -341,7 +341,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			case backend.IsSyncMsg(msg):
 				err = pm.handleSyncMsg(msg, peer)
 				if err != nil {
-					log.Warn("8888 err when handling sync msg", "err", err)
+					log.Warn("err when handling sync msg", "err", err)
 					return err
 				}
 
@@ -353,12 +353,12 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 					go pm.synchronise(peer)
 
 				default:
-					log.Warn("8888 err when handling dpor msg", "err", err)
+					log.Warn("err when handling dpor msg", "err", err)
 					return err
 				}
 
 			default:
-				log.Warn("8888 unknown msg code", "msg", msg.Code)
+				log.Warn("unknown msg code", "msg", msg.Code)
 			}
 
 		}
