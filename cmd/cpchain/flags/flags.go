@@ -126,7 +126,7 @@ const (
 	CacheFlagName         = "cache"
 	CacheDatabaseFlagName = "cache.database"
 	CacheGCFlagName       = "cache.gc"
-	MaxTxMapSize          = "txpoolsize"
+	MaxTxMapSizeFlagName  = "txpoolsize"
 )
 
 var ChainFlags = []cli.Flag{
@@ -158,7 +158,7 @@ var ChainFlags = []cli.Flag{
 		Value: 25,
 	},
 	cli.IntFlag{
-		Name:  MaxTxMapSize,
+		Name:  MaxTxMapSizeFlagName,
 		Usage: "Maximum number of pending transactions",
 	},
 }
