@@ -443,7 +443,7 @@ func (n *Node) Stop() error {
 
 	// TODO: @ac remove or refactor GRPC stuff
 	// n.stopGRPC()
-
+	n.stopRPC()
 	n.rpcAPIs = nil
 	failure := &StopError{
 		Services: make(map[reflect.Type]error),
