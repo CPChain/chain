@@ -76,6 +76,9 @@ var (
 	// than some meaningful limit a user might use. This is not a consensus error
 	// making the transaction invalid, rather a DOS protection.
 	ErrOversizedData = errors.New("oversized data")
+
+	// ErrExceedQueueMapSize is returned if exceed txpool.queue map size
+	ErrExceedQueueMapSize = errors.New("exceeds queue map size")
 )
 
 var (
@@ -135,6 +138,8 @@ type TxPoolConfig struct {
 	AccountQueue uint64 // Maximum number of non-executable transaction slots permitted per account
 	GlobalQueue  uint64 // Maximum number of non-executable transaction slots for all accounts
 
+	MaxTxMapSize uint64 // Maximum number of pending transactions
+
 	Lifetime time.Duration // Maximum amount of time non-executable transaction are queued
 }
 
@@ -151,7 +156,7 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	GlobalSlots:  4096,
 	AccountQueue: 64,
 	GlobalQueue:  1024,
-
+	MaxTxMapSize: 1024,
 	Lifetime: 3 * time.Hour,
 }
 
@@ -171,6 +176,11 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 		log.Warn("Sanitizing invalid txpool price bump", "provided", conf.PriceBump, "updated", DefaultTxPoolConfig.PriceBump)
 		conf.PriceBump = DefaultTxPoolConfig.PriceBump
 	}
+	if conf.MaxTxMapSize < DefaultTxPoolConfig.MaxTxMapSize {
+		log.Warn("Sanitizing invalid txpool map size ", "provided", conf.MaxTxMapSize, "updated", DefaultTxPoolConfig.MaxTxMapSize)
+		conf.MaxTxMapSize = DefaultTxPoolConfig.MaxTxMapSize
+	}
+
 	return conf
 }
 
@@ -200,13 +210,60 @@ type TxPool struct {
 	locals  *accountSet // Set of local transaction to exempt from eviction rules
 	journal *txJournal  // Journal of local transaction to back up to disk
 
-	pending map[common.Address]*txList   // All currently processable transactions
-	queue   map[common.Address]*txList   // Queued but non-processable transactions
-	beats   map[common.Address]time.Time // Last heartbeat from each known account
-	all     *txLookup                    // All transactions to allow lookups
-	priced  *txPricedList                // All transactions sorted by price
+	pending map[common.Address]*txList // All currently processable transactions
+	queue   map[common.Address]*txList // Queued but non-processable transactions
+
+	beats  map[common.Address]time.Time // Last heartbeat from each known account
+	all    *txLookup                    // All transactions to allow lookups
+	priced *txPricedList                // All transactions sorted by price
 
 	wg sync.WaitGroup // for shutdown sync
+}
+
+// setMapItem sets txlist of given addr, change it or add it
+func setMapItem(m map[common.Address]*txList, addr common.Address, txlist *txList, maxSize uint64) bool {
+	// change old list
+	_, ok := m[addr]
+	if ok {
+		// change it
+		m[addr] = txlist
+		return true
+	}
+
+	// add new tx list
+	// out of limit
+	if len(m) >= int(maxSize) {
+		log.Warn("size limit of pending txList reached, discarding")
+		return false
+	}
+
+	// add it
+	m[addr] = txlist
+	return true
+}
+
+func (pool *TxPool) getPendingTxList(addr common.Address) *txList {
+	return pool.pending[addr]
+}
+
+func (pool *TxPool) getQueueTxList(addr common.Address) *txList {
+	return pool.queue[addr]
+}
+
+func (pool *TxPool) setPendingTxList(addr common.Address, txlist *txList) bool {
+	return setMapItem(pool.pending, addr, txlist, pool.config.MaxTxMapSize)
+}
+
+func (pool *TxPool) setQueueTxList(addr common.Address, txlist *txList) bool {
+	return setMapItem(pool.queue, addr, txlist, pool.config.MaxTxMapSize)
+}
+
+func (pool *TxPool) deletePendingTxList(addr common.Address) {
+	delete(pool.pending, addr)
+}
+
+func (pool *TxPool) deleteQueueTxList(addr common.Address) {
+	delete(pool.queue, addr)
 }
 
 // NewTxPool creates a new transaction pool to gather, sort and filter inbound
@@ -312,7 +369,7 @@ func (pool *TxPool) loop() {
 				}
 				// Any non-locals old enough should be removed
 				if time.Since(pool.beats[addr]) > pool.config.Lifetime {
-					for _, tx := range pool.queue[addr].Flatten() {
+					for _, tx := range pool.getQueueTxList(addr).Flatten() {
 						pool.removeTx(tx.Hash(), true)
 					}
 				}
@@ -535,10 +592,10 @@ func (pool *TxPool) Pending() (map[common.Address]types.Transactions, error) {
 func (pool *TxPool) local() map[common.Address]types.Transactions {
 	txs := make(map[common.Address]types.Transactions)
 	for addr := range pool.locals.accounts {
-		if pending := pool.pending[addr]; pending != nil {
+		if pending := pool.getPendingTxList(addr); pending != nil {
 			txs[addr] = append(txs[addr], pending.Flatten()...)
 		}
-		if queued := pool.queue[addr]; queued != nil {
+		if queued := pool.getQueueTxList(addr); queued != nil {
 			txs[addr] = append(txs[addr], queued.Flatten()...)
 		}
 	}
@@ -629,7 +686,7 @@ func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
 	}
 	// If the transaction is replacing an already pending one, do directly
 	from, _ := types.Sender(pool.signer, tx) // already validated
-	if list := pool.pending[from]; list != nil && list.Overlaps(tx) {
+	if list := pool.getPendingTxList(from); list != nil && list.Overlaps(tx) {
 		// Nonce already pending, check if required price bump is met
 		inserted, old := list.Add(tx, pool.config.PriceBump)
 		if !inserted {
@@ -674,10 +731,13 @@ func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
 func (pool *TxPool) enqueueTx(hash common.Hash, tx *types.Transaction) (bool, error) {
 	// Try to insert the transaction into the future queue
 	from, _ := types.Sender(pool.signer, tx) // already validated
-	if pool.queue[from] == nil {
-		pool.queue[from] = newTxList(false)
+	if pool.getQueueTxList(from) == nil {
+		ok := pool.setQueueTxList(from, newTxList(false))
+		if !ok {
+			return false, ErrExceedQueueMapSize
+		}
 	}
-	inserted, old := pool.queue[from].Add(tx, pool.config.PriceBump)
+	inserted, old := pool.getQueueTxList(from).Add(tx, pool.config.PriceBump)
 	if !inserted {
 		// An older transaction was better, discard this
 		queuedDiscardCounter.Inc(1)
@@ -714,10 +774,13 @@ func (pool *TxPool) journalTx(from common.Address, tx *types.Transaction) {
 // Note, this method assumes the pool lock is held!
 func (pool *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.Transaction) bool {
 	// Try to insert the transaction into the pending queue
-	if pool.pending[addr] == nil {
-		pool.pending[addr] = newTxList(true)
+	if pool.getPendingTxList(addr) == nil {
+		ok := pool.setPendingTxList(addr, newTxList(true))
+		if !ok {
+			return false
+		}
 	}
-	list := pool.pending[addr]
+	list := pool.getPendingTxList(addr)
 
 	inserted, old := list.Add(tx, pool.config.PriceBump)
 	if !inserted {
@@ -836,7 +899,7 @@ func (pool *TxPool) Status(hashes []common.Hash) []TxStatus {
 	for i, hash := range hashes {
 		if tx := pool.all.Get(hash); tx != nil {
 			from, _ := types.Sender(pool.signer, tx) // already validated
-			if pool.pending[from] != nil && pool.pending[from].txs.items[tx.Nonce()] != nil {
+			if pool.getPendingTxList(from) != nil && pool.getPendingTxList(from).txs.items[tx.Nonce()] != nil {
 				status[i] = TxStatusPending
 			} else {
 				status[i] = TxStatusQueued
@@ -868,11 +931,11 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 		pool.priced.Removed()
 	}
 	// Remove the transaction from the pending lists and reset the account nonce
-	if pending := pool.pending[addr]; pending != nil {
+	if pending := pool.getPendingTxList(addr); pending != nil {
 		if removed, invalids := pending.Remove(tx); removed {
 			// If no more pending transactions are left, remove the list
 			if pending.Empty() {
-				delete(pool.pending, addr)
+				pool.deletePendingTxList(addr)
 				delete(pool.beats, addr)
 			}
 			// Postpone any invalidated transactions
@@ -887,10 +950,10 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 		}
 	}
 	// Transaction is in the future queue
-	if future := pool.queue[addr]; future != nil {
+	if future := pool.getQueueTxList(addr); future != nil {
 		future.Remove(tx)
 		if future.Empty() {
-			delete(pool.queue, addr)
+			pool.deleteQueueTxList(addr)
 		}
 	}
 }
@@ -911,7 +974,7 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 	}
 	// Iterate over all accounts and promote any executable transactions
 	for _, addr := range accounts {
-		list := pool.queue[addr]
+		list := pool.getQueueTxList(addr)
 		if list == nil {
 			continue // Just in case someone calls with a non existing account
 		}
@@ -951,7 +1014,7 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		}
 		// Delete the entire queue entry if it became empty.
 		if list.Empty() {
-			delete(pool.queue, addr)
+			pool.deleteQueueTxList(addr)
 		}
 	}
 	// Notify subsystem for new promoted transactions.
@@ -983,12 +1046,12 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 			// Equalize balances until all the same or below threshold
 			if len(offenders) > 1 {
 				// Calculate the equalization threshold for all current offenders
-				threshold := pool.pending[offender.(common.Address)].Len()
+				threshold := pool.getPendingTxList(offender.(common.Address)).Len()
 
 				// Iteratively reduce all offenders until below limit or threshold reached
-				for pending > pool.config.GlobalSlots && pool.pending[offenders[len(offenders)-2]].Len() > threshold {
+				for pending > pool.config.GlobalSlots && pool.getPendingTxList(offenders[len(offenders)-2]).Len() > threshold {
 					for i := 0; i < len(offenders)-1; i++ {
-						list := pool.pending[offenders[i]]
+						list := pool.getPendingTxList(offenders[i])
 						for _, tx := range list.Cap(list.Len() - 1) {
 							// Drop the transaction from the global pools too
 							hash := tx.Hash()
@@ -1008,9 +1071,9 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		}
 		// If still above threshold, reduce to limit or min allowance
 		if pending > pool.config.GlobalSlots && len(offenders) > 0 {
-			for pending > pool.config.GlobalSlots && uint64(pool.pending[offenders[len(offenders)-1]].Len()) > pool.config.AccountSlots {
+			for pending > pool.config.GlobalSlots && uint64(pool.getPendingTxList(offenders[len(offenders)-1]).Len()) > pool.config.AccountSlots {
 				for _, addr := range offenders {
-					list := pool.pending[addr]
+					list := pool.getPendingTxList(addr)
 					for _, tx := range list.Cap(list.Len() - 1) {
 						// Drop the transaction from the global pools too
 						hash := tx.Hash()
@@ -1047,7 +1110,7 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		// Drop transactions until the total is below the limit or only locals remain
 		for drop := queued - pool.config.GlobalQueue; drop > 0 && len(addresses) > 0; {
 			addr := addresses[len(addresses)-1]
-			list := pool.queue[addr.address]
+			list := pool.getQueueTxList(addr.address)
 
 			addresses = addresses[:len(addresses)-1]
 
@@ -1110,7 +1173,7 @@ func (pool *TxPool) demoteUnexecutables() {
 		}
 		// Delete the entire queue entry if it became empty.
 		if list.Empty() {
-			delete(pool.pending, addr)
+			pool.deletePendingTxList(addr)
 			delete(pool.beats, addr)
 		}
 	}
