@@ -330,7 +330,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 
 // apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBackend) (*DporSnapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBackend, isMiner bool) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
@@ -351,7 +351,11 @@ func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBacke
 	snap.setClient(client)
 	log.Debug("apply headers", "len(headers)", len(headers))
 	for _, header := range headers {
-		err := snap.applyHeader(header)
+
+		// TODO: write a function to do this
+		ifUpdateCommittee := isMiner
+
+		err := snap.applyHeader(header, ifUpdateCommittee)
 		if err != nil {
 			log.Warn("DporSnapshot apply header error.", "err", err)
 			return nil, err
@@ -362,40 +366,45 @@ func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBacke
 }
 
 // applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
-func (s *DporSnapshot) applyHeader(header *types.Header) error {
+func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool) error {
 	// Update Snapshot attributes.
 	s.setNumber(header.Number.Uint64())
 	s.setHash(header.Hash())
 
-	// Update candidates
-	log.Debug("start updating candidates")
-	err := s.updateCandidates()
-	if err != nil {
-		log.Warn("err when update candidates", "err", err)
-		return err
-	}
-	log.Debug("candidates updated", "len(candidates)", len(s.candidates()), "number", s.number())
-	for i, c := range s.candidates() {
-		log.Debug(fmt.Sprintf("candiate #%d", i), "addr", c.Hex())
-	}
+	// When ifUpdateCommittee is true, update candidates, rpts, and run election if necessary
+	if ifUpdateCommittee {
 
-	// Update rpts
-	log.Debug("start updating rpts")
-	rpts, err := s.updateRpts()
-	if err != nil {
-		log.Warn("err when update rpts", "err", err)
-		return err
-	}
-	log.Debug("rpts updated", "len(rpts)", len(rpts), "number", s.number())
-	for i, r := range rpts {
-		log.Debug(fmt.Sprintf("rpt #%d", i), "addr", r.Address.Hex(), "score", r.Rpt)
-	}
+		// Update candidates
+		log.Debug("start updating candidates")
+		err := s.updateCandidates()
+		if err != nil {
+			log.Warn("err when update candidates", "err", err)
+			return err
+		}
+		log.Debug("candidates updated", "len(candidates)", len(s.candidates()), "number", s.number())
+		for i, c := range s.candidates() {
+			log.Debug(fmt.Sprintf("candiate #%d", i), "addr", c.Hex())
+		}
 
-	// If in checkpoint, run election
-	if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
-		log.Debug("update proposers committee", "number", s.number())
-		seed := header.Hash().Big().Int64()
-		s.updateProposers(rpts, seed)
+		// Update rpts
+		log.Debug("start updating rpts")
+		rpts, err := s.updateRpts()
+		if err != nil {
+			log.Warn("err when update rpts", "err", err)
+			return err
+		}
+		log.Debug("rpts updated", "len(rpts)", len(rpts), "number", s.number())
+		for i, r := range rpts {
+			log.Debug(fmt.Sprintf("rpt #%d", i), "addr", r.Address.Hex(), "score", r.Rpt)
+		}
+
+		// If in checkpoint, run election
+		if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
+			log.Debug("update proposers committee", "number", s.number())
+			seed := header.Hash().Big().Int64()
+			s.updateProposers(rpts, seed)
+		}
+
 	}
 
 	term := s.TermOf(header.Number.Uint64())

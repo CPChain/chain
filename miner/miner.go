@@ -52,7 +52,6 @@ func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, cons 
 	}
 
 	miner.Register(NewNativeWorker(backend.BlockChain(), cons))
-	go miner.update()
 
 	return miner
 }
@@ -61,7 +60,7 @@ func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, cons 
 // It's entered once and as soon as `Done` or `Failed` has been broadcasted the events are unregistered and
 // the loop is exited. This to prevent a major security vuln where external parties can DOS you with blocks
 // and halt your mining operation for as long as the DOS continues.
-func (self *Miner) update() {
+func (self *Miner) downloaderSync() {
 	events := self.mux.Subscribe(downloader.StartEvent{}, downloader.DoneEvent{}, downloader.FailedEvent{})
 out:
 	for ev := range events.Chan() {
@@ -102,6 +101,13 @@ func (self *Miner) Start(coinbase common.Address) {
 	atomic.StoreInt32(&self.isMining, 1)
 
 	log.Info("Starting mining operation")
+
+	go self.downloaderSync()
+
+	// TODO: check if correct
+	go self.eng.update()
+	go self.eng.wait()
+
 	self.eng.start()
 	self.eng.commitNewWork()
 }
@@ -129,7 +135,7 @@ func (self *Miner) IsMining() bool {
 
 func (self *Miner) SetExtra(extra []byte) error {
 	if uint64(len(extra)) > configs.MaximumExtraDataSize {
-		return fmt.Errorf("Extra exceeds max length. %d > %v", len(extra), configs.MaximumExtraDataSize)
+		return fmt.Errorf("extra exceeds max length. %d > %v", len(extra), configs.MaximumExtraDataSize)
 	}
 	self.eng.setExtra(extra)
 	return nil
