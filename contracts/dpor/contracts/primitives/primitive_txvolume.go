@@ -43,7 +43,7 @@ func (c *GetTxVolume) Run(input []byte) ([]byte, error) {
 		log.Error("primitive_txvolume got error", "error", err)
 		return common.LeftPadBytes(new(big.Int).Bytes(), 32), nil
 	}
-	log.Info("primitive_txvolume", "addr", addr, "block number", number)
+	log.Debug("primitive_txvolume", "addr", addr, "block number", number)
 
 	// TODO: @AC get cpchain backend and read balance.
 	txVolume, err := c.Backend.TxVolume(addr, number)

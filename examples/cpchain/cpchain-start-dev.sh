@@ -57,6 +57,7 @@ nohup $cpchain $args --ipcaddr ${ipc_path_base}6 --datadir data/data6  --rpcaddr
          --unlock "0x22a672eab2b1a3ff3ed91563205a56ca5a560e08" --password conf-dev/passwords/password --logfile data/logs/6.log 2>/dev/null &
 
 nohup $cpchain $args --ipcaddr ${ipc_path_base}7 --datadir data/data7  --rpcaddr 127.0.0.1:8507 --grpcaddr 127.0.0.1:8607 --jsonrpchttpaddr 127.0.0.1:8707 --port 30317 --mine \
+         --profile data/data7 \
          --unlock "0x7b2f052a372951d02798853e39ee56c895109992" --password conf-dev/passwords/password --logfile data/logs/7.log  --nodekey conf-dev/validators/node7.key 2>/dev/null &
 
 nohup $cpchain $args --ipcaddr ${ipc_path_base}8 --datadir data/data8  --rpcaddr 127.0.0.1:8508 --grpcaddr 127.0.0.1:8608 --jsonrpchttpaddr 127.0.0.1:8708 --port 30318 --mine \

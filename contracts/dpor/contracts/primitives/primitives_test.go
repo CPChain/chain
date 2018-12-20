@@ -121,7 +121,7 @@ func TestDeployPrimitiveContracts(t *testing.T) {
 	//TODO:need add more test  @HMW
 	//maximumNoc
 	rank, err := primitiveContracts.GetRank(nil, addr, new(big.Int).SetUint64(2))
-	log.Infof("GetRank: %v", rank)
+	log.Debugf("GetRank: %v", rank)
 	checkError(t, "GetRank error: %v", err)
 	if rank.Uint64() != expectedRankResult {
 		t.Error("Expected", expectedRankResult, ", but got", rank)
@@ -129,7 +129,7 @@ func TestDeployPrimitiveContracts(t *testing.T) {
 	checkPassedParams(t, addr, 2)
 
 	tx, err := primitiveContracts.GetTxVolume(nil, addr, new(big.Int).SetUint64(1))
-	log.Infof("GetTxVolume: %v", tx)
+	log.Debugf("GetTxVolume: %v", tx)
 	checkError(t, "GetTxVolume error: %v", err)
 	if tx.Uint64() != expectedVolume {
 		t.Error("Expected", expectedVolume, ", but got", tx)
@@ -137,7 +137,7 @@ func TestDeployPrimitiveContracts(t *testing.T) {
 	checkPassedParams(t, addr, 1)
 
 	pr, err := primitiveContracts.GetProxyCount(nil, addr, new(big.Int).SetUint64(3))
-	log.Infof("GetProxyInfo: %v", pr)
+	log.Debugf("GetProxyInfo: %v", pr)
 	checkError(t, "GetProxyInfo error: %v", err)
 	if pr.Uint64() != expectedProxyCount {
 		t.Error("Expected", expectedProxyCount, ", but got", pr)
@@ -145,7 +145,7 @@ func TestDeployPrimitiveContracts(t *testing.T) {
 	checkPassedParams(t, addr, 3)
 
 	ip, err := primitiveContracts.IsProxy(nil, addr, new(big.Int).SetUint64(2))
-	log.Infof("GetIsProxyInfo: %v", ip)
+	log.Debugf("GetIsProxyInfo: %v", ip)
 	checkError(t, "GetISProxyInfo error: %v", err)
 	if ip.Uint64() != expectedIsProxy {
 		t.Error("Expected", expectedIsProxy, ", but got", ip)
@@ -153,7 +153,7 @@ func TestDeployPrimitiveContracts(t *testing.T) {
 	checkPassedParams(t, addr, 2)
 
 	ur, err := primitiveContracts.GetUploadInfo(nil, addr, new(big.Int).SetUint64(4))
-	log.Infof("GetUploadInfo: %v", ur)
+	log.Debugf("GetUploadInfo: %v", ur)
 	checkError(t, "GetUploadInfo error: %v", err)
 	if ur.Uint64() != expectedUploadCount {
 		t.Error("Expected", expectedUploadCount, ", but got", ur)
@@ -162,7 +162,7 @@ func TestDeployPrimitiveContracts(t *testing.T) {
 
 	addr2 := common.BytesToAddress([]byte{10, 10, 20, 20})
 	mt, err := primitiveContracts.GetMaintenance(nil, addr2, new(big.Int).SetUint64(2))
-	log.Infof("GetMaintenance: %v", mt)
+	log.Debugf("GetMaintenance: %v", mt)
 	checkError(t, "GetMaintenance error: %v", err)
 	if mt.Uint64() != expectedMaintenance {
 		t.Error("Expected", expectedMaintenance, ", but got", mt)

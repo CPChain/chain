@@ -4,7 +4,6 @@
 package configs
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"time"
@@ -83,12 +82,8 @@ var (
 func ChainConfigInfo() *ChainConfig {
 	runModeValue := GetRunMode()
 	chainConfig, ok := chainConfigMap[runModeValue]
-	if ok {
-		ccString, err := json.Marshal(chainConfig)
-		if err != nil {
-			log.Info("marshal chainConfig error")
-		}
-		log.Info("chainConfig", "json", string(ccString))
+	if !ok {
+		log.Fatal("get chainConfig failed", "runModeValue", runModeValue)
 	}
 	return chainConfig
 }

@@ -23,7 +23,6 @@ import (
 	"io"
 	"math/big"
 	mrand "math/rand"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -1259,7 +1258,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		cache, _ := bc.stateCache.TrieDB().Size()
 
-		log.Info("Imported new block: " + strconv.Itoa(int(chain[i].Number().Int64())) + " hash: " + chain[i].Hash().Hex())
+		log.Info("Imported new block", "number", chain[i].Number().Int64(), "hash", chain[i].Hash().Hex())
 		stats.report(chain, i, cache)
 	}
 	// Append a single chain head event if we've progressed the chain
