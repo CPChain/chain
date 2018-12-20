@@ -214,8 +214,8 @@ compiled_trading = compile_source(trading_src)['<stdin>:Trading']
 
 GWEI = int(math.pow(10, 9))
 
-trading_contract_addr = "0x4f8447b19cc84ef7c906a378678bb6a157227d30"
-escrow_contract_addr = "0xF1c2E522e1De308B7348E8A8Ec4CC3C519e60Af8"
+trading_contract_addr = None
+escrow_contract_addr = None
 
 
 def get_web3_inst(num):
@@ -267,14 +267,12 @@ def set_items():
     w3 = get_web3_inst(1)
     t = get_trading_contract_inst(w3)
     e = get_escrow_contract_inst(w3)
-    print(t)
-    print(e)
 
     tx_hash = t.functions.setItem(120000000 * GWEI, "A secret data", "You may want to get it!").transact(
         {
             'from': w3.cpc.accounts[0],
             'gas': 3000000,
-            'isPrivate': False,
+            'isPrivate': True,
             'participants': group1
         }
     )
@@ -288,8 +286,8 @@ def read_items():
     ''')
     w3 = get_web3_inst(2)
     t = get_trading_contract_inst(w3)
-    name = t.functions.getItemName().call({'isPrivate': False, 'participants': group1})
-    price = t.functions.getItemPrice().call({'isPrivate': False, 'participants': group1})
+    name = t.functions.getItemName().call({'isPrivate': True, 'participants': group1})
+    price = t.functions.getItemPrice().call({'isPrivate': True, 'participants': group1})
     print("item name: %s, item price: %d" % (name, price))
 
 
@@ -299,7 +297,10 @@ def trans_escrow_money():
     ''')
     w3 = get_web3_inst(2)
     e = get_escrow_contract_inst(w3)
-    tx_hash = e.functions.prepay().transact({'gas': 200000, 'isPrivate': False, 'value': 120000000 * GWEI})
+    tx_hash = e.functions.prepay().transact({
+        'gas': 200000,
+        'value': 120000000 * GWEI,
+        'from': w3.cpc.accounts[0]})
     w3.cpc.waitForTransactionReceipt(tx_hash)
 
     prepaied = e.functions.getBalance().call()
@@ -310,9 +311,13 @@ def create_order():
     print('4. Party B then sends contract CT an order.')
     w3 = get_web3_inst(2)
     t = get_trading_contract_inst(w3)
-    tx_hash = t.functions.buy(pubkey2).transact({'gas': 3000000, 'isPrivate': False, 'participants': group1})
+    tx_hash = t.functions.buy(pubkey2).transact({
+        'gas': 3000000,
+        'isPrivate': True,
+        'participants': group1,
+        'from': w3.cpc.accounts[0]})
     w3.cpc.waitForTransactionReceipt(tx_hash)
-    order = t.functions._order().call({'isPrivate': False})
+    order = t.functions._order().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
     print(f"the order is {order}")
 
 
@@ -324,11 +329,12 @@ def deliver():
     t = get_trading_contract_inst(w3)
     tx_hash = t.functions.deliver('cid1', 'symmetric-key-encrypted-by-pubkey').transact({
         'gas': 3000000,
-        'isPrivate': False,
+        'isPrivate': True,
         'participants': group1,
+        'from': w3.cpc.accounts[0],
     })
     w3.cpc.waitForTransactionReceipt(tx_hash)
-    d = t.functions._delivery.call({'isPrivate': False})
+    d = t.functions._delivery().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
     print(f"the delivery is {d}")
 
 
@@ -336,9 +342,14 @@ def confirm():
     print('6. Party B receives the delivery and send confirmation message')
     w3 = get_web3_inst(2)
     t = get_trading_contract_inst(w3)
-    tx = t.functions.confirm().transact({'gas': 3000000, 'isPrivate': False, 'participants': group1})
+    tx = t.functions.confirm().transact({
+        'gas': 3000000,
+        'isPrivate': True,
+        'participants': group1,
+        'from': w3.cpc.accounts[0],
+    })
     w3.cpc.waitForTransactionReceipt(tx)
-    d = t.functions._delivery().call({'isPrivate': False})
+    d = t.functions._delivery().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
     print(f"status of delivery has been changed, {d}")
 
 def done_tx():
@@ -346,13 +357,13 @@ def done_tx():
     w3 = get_web3_inst(3)
     t = get_trading_contract_inst(w3)
     e = get_escrow_contract_inst(w3)
-    balance = e.functions.getBalance().call({'gas': 200000})
+    balance = e.functions.getBalance().call({'gas': 200000, 'from': w3.cpc.accounts[0]})
     print(f"before transfer the balance is {balance}")
 
-    fee = t.functions.getItemName().call({'isPrivate': True})
-    tx = e.functions.payTo(account1, fee).transact({'gas': 200000})
+    fee = t.functions.getItemPrice().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
+    tx = e.functions.payTo(w3.toChecksumAddress(account1), fee).transact({'gas': 200000, 'from': w3.cpc.accounts[0]})
     w3.cpc.waitForTransactionReceipt(tx)
-    balance = e.functions.getBalance().call({'gas': 200000})
+    balance = e.functions.getBalance().call({'gas': 200000, 'from': w3.cpc.accounts[0]})
     print(f"the fee has been transferred to seller, as a result the balance is {balance}")
 
 
@@ -360,7 +371,7 @@ def other_party_inspect():
     print('8. Other parties could not get any information about the transaction between A and B')
     w3 = get_web3_inst(4)
     t = get_trading_contract_inst(w3)
-    item = t.functions.getItemName().call({'isPrivate': False})
+    item = t.functions.getItemName().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
     print(f"expect that it would be failed to get information of the private transaction from non-participate party ")
     print(f"the result is {item}")
 
