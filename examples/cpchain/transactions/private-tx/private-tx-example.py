@@ -371,9 +371,11 @@ def other_party_inspect():
     print('8. Other parties could not get any information about the transaction between A and B')
     w3 = get_web3_inst(4)
     t = get_trading_contract_inst(w3)
-    item = t.functions.getItemName().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
-    print(f"expect that it would be failed to get information of the private transaction from non-participate party ")
-    print(f"the result is {item}")
+    try:
+        item = t.functions.getItemName().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
+    except:
+        print('the thrown exception is expected, because the node does not have permission.')
+        print('expect that it would be failed to get information of the private transaction from non-participate party')
 
 
 if __name__ == '__main__':
