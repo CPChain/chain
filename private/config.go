@@ -17,7 +17,7 @@
 package private
 
 const (
-	DefaultIpfsUrl = " ipfs-casper.farm.cpchain.io:5001"
+	DefaultIpfsUrl = "3.0.198.89:5001"
 	IPFS           = "ipfs"
 	Swarm          = "swarm"
 )
