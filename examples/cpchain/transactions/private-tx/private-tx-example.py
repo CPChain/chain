@@ -238,7 +238,7 @@ def deploy_trading_contract():
     w3.cpc.defaultAccount = w3.cpc.accounts[0]
     print(w3.cpc.defaultAccount)
     contract = w3.cpc.contract(abi=compiled_trading['abi'], bytecode=compiled_trading['bin'])
-    tx_hash = contract.constructor().transact({'from': w3.cpc.accounts[0]})
+    tx_hash = contract.constructor().transact({'from': w3.cpc.accounts[0], 'isPrivate': True, 'participants': group1})
     tx_receipt = w3.cpc.waitForTransactionReceipt(tx_hash)
     global trading_contract_addr
     trading_contract_addr = w3.toChecksumAddress(tx_receipt['contractAddress'])
