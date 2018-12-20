@@ -39,20 +39,104 @@ computing, with you and with everyone! Please come and join us.
 - [License](#license)
 
 ---
+
 ## Installation
 
+### Download stable binaries
 
+All versions of cpchain are built and available for download at https://bitbucket.org/cpchain/chain/downloads/.
+
+The download page provides a zip file, containing the executable files that can be used without installing.
+
+### Building from source
+
+Install latest distribution of [Go](https://golang.org/) if it has yet to be installed. Then clone the repository to a directory that you'd like:
+
+```shell
+git clone https://bitbucket.org/cpchain/chain.git
+```
+
+Finally, build the programs using the following commands.
+
+```shell
+cd chain
+make all
+```
+
+You can now use `build/bin/cpchain` to start node.
+
+---
 ## Features
 ### LBFT Consensus
+
+We propose LBFT (Lightweight Byzantine Fault Tolerance), 
+a two-phase algorithm aiming to achieve a fast consensus among the committee.
+The two phases are prepare and verification respectively. 
+
+
+In prepare phase, the leader of the committee member constructs a block and broadcasts to all members in the committee. 
+Each committee member that receives the block is about to verify the block enters the verification phase. 
+It signs a verified block, and broadcasts to other members. 
+Once a member collects signatures from two thirds of committee members, 
+it commits the block to the network. 
+This two-phase process provides the robustness of our system 
+when at most one third of committee members delay or act unexpectedly.
+
+
+We further improve our LBFT algorithm to version 2.0, providing higher robust 
+to achieve a consensus among the committee while retaining the properties of liveness and safety. 
+The core ideas are **bipartite committee** and **impeachment** process.
+
+The figure below illustrate the detailed steps of LBFT 2.0: ![LBFT 2.0](https://i.imgur.com/44njmCj.jpg)
+
+The bipartite committee refers to two separate committees, namely, 
+the **proposers committee** and the **validators committee**. A Proposer is a node elected 
+based on its reputation. It takes the responsibility of proposing a block and broadcasting to validators.
+All proposers of a certain term constitute the proposers committee.
+
+Meanwhile, the validator committee consists of nodes nominated by CPC Foundation, governments and companies.
+Unlike proposers, validators cannot propose a block in normal cases. 
+This committee validates a newly proposed block in three phases, 
+similar to PBFT (Practical Byzantine Fault Tolerance). 
+And it can also tolerate at most one third faulty or non-responding members. 
+
+
+This bipartite structure eliminates the role of the primary node of traditional PBFT protocol. 
+In addition, it guarantees the independence of block proposal and validation, which decreases 
+the risk and feasibility of byzantine faults. 
+
+
+To handle abnormal cases, we propose **impeachment**, 
+a novel two-phase protocol assuring the properties of both liveness and safety in LBFT 2.0. 
+When a validator suspects the proposer is faulty, it proposes an impeach
+block on behalf of the faulty proposer. The validators committee is about to 
+achieve a consensus on this impeach block if a quorum of validators considers 
+the proposer faulty. 
+
+
+
 ### Private Transactions
 
-## Quick Start
+We design a data privacy mechanism that allows users to conduct private transactions on cpchain in a
+secure manner. Other than the valid participants, no one else has the ability to see the
+transaction. While private transactions are invisible for outsiders, we keep critical footprint of a
+transaction on chain for later audition.
 
+A user scenario:
+![private transaction user scenario](https://i.imgur.com/H3L1vJN.png)
+
+---
+## Quick Start
+    
 ---
 ## Documentation
 The above should be enough to get you up to speed. For details, please visit our [documentation portal](https://docs.cpchain.io).
 
 
+
+
+
+---
 ## Tools and Libraries
 ### CPChain Blockchain Explorer
     It shows the ongoing transactions and blocks.
@@ -68,7 +152,7 @@ Please fork on bitbucket and make pull request [there](https://bitbucket.org/cpc
 ---
 ## Partners and Customers
 Here is a short-list of our partners and customers.
-![customers](https://i.imgur.com/G867Osr.png)
+![customers](https://i.imgur.com/u2t59HQ.png)
 
 ---
 ## FAQ
@@ -86,7 +170,6 @@ Shout to us at one of the following places!
 - Telegram at [cpchain](https://t.me/cpchain)
 
 ---
-
 ## License
 Unless otherwise specified in the source files (or the vanilla files from go-ethereum), the licence by
 default is [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
