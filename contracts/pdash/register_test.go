@@ -52,9 +52,7 @@ func sigHash(testfile file) (hash common.Hash) {
 func deployTestRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *RegisterWrapper, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	addr, instance, err := DeployRegisterAndReturnWrapper(deployTransactor, backend)
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	fmt.Println("contract address :", addr.Hex())
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)

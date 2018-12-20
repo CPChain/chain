@@ -63,7 +63,6 @@ func GetByName(name string) cli.Flag {
 }
 
 // begin flags
-// **********************************************************************************************************
 
 // this should be a global option
 var ConfigFileFlag = cli.StringFlag{

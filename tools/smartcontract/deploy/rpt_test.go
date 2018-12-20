@@ -24,13 +24,11 @@ func TestRpt(t *testing.T) {
 	r, err := rpt.NewRpt(addr, client)
 
 	code, err := client.CodeAt(ctx, addr, nil)
-	fmt.Println("****************************************")
 	if len(code) > 0 {
 		fmt.Println("contract code exist")
 	} else {
 		fmt.Println("contract code not exist")
 	}
-	fmt.Println("*****************************************")
 	if err != nil {
 		println("DeployRpt")
 		log.Fatal(err.Error())

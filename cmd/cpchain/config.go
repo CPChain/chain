@@ -200,7 +200,7 @@ func updateNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	}
 }
 
-// begin chain configs ********************************************************************88
+// begin chain configs
 
 // Updates the account for cfg.Coinbase
 func updateBaseAccount(ctx *cli.Context, ks *keystore.KeyStore, cfg *cpc.Config) {

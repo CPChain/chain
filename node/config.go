@@ -391,7 +391,6 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 }
 
 // begin defaults
-// ************************************************************************************************
 
 const (
 	DefaultHTTPHost = "localhost" // Default host interface for the HTTP RPC server

@@ -17,18 +17,15 @@
 package contract
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
-
 	"testing"
-
 	"time"
-
-	"bytes"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -43,9 +40,7 @@ func TestProxyContractRegister(t *testing.T) {
 
 	client, privateKey, fromAddress, gasLimit, gasPrice, instance, ctx, contractAddress := deployProxyContract()
 
-	fmt.Println("*******************************************************")
 	registerProxyAndGet(t, privateKey, gasLimit, gasPrice, instance, ctx, client, fromAddress, contractAddress)
-	fmt.Println("*******************************************************")
 }
 
 func deployProxyContract() (*cpclient.Client, *ecdsa.PrivateKey, common.Address, int, *big.Int, *ProxyContractRegister, context.Context, common.Address) {
