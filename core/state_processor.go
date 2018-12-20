@@ -151,6 +151,7 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 		privReceipt, err = tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, accm)
 		if err != nil {
 			if err == NoPermissionError {
+				err = nil // NoPermissionError should not be propagate
 				log.Info("No permission to process the transaction.")
 			} else {
 				log.Error("Cannot process the transaction.", err)
