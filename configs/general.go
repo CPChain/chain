@@ -31,10 +31,15 @@ const (
 )
 
 const (
-	DefaultBlockPeriod        = 2e2 //  200 Millisecond, 0.2 Second
-	TestnetBlockPeriod        = 3e3 //  3000 Millisecond, 3 Second
-	DefaultValidatorsLen      = 4
-	DefaultMaxInitBlockNumber = 240
+	DefaultBlockPeriod   = 4e2 //  400 Millisecond, 0.4 Second
+	TestnetBlockPeriod   = 3e3 //  3000 Millisecond, 3 Second
+	DefaultValidatorsLen = 4
+)
+
+const (
+	DefaultDevMaxInitBlockNumber     = 480
+	DefaultTestnetMaxInitBlockNumber = 240
+	DefaultMainnetMaxInitBlockNumber = 240
 )
 
 // TODO @hmw make the name more meaningful.  add doc.

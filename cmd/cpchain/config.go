@@ -120,7 +120,7 @@ func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 // updateValidatorNodes creates a list of validator nodes from the command line
 // flags, reverting to pre-configured ones if none have been specified.
 func updateValidatorNodes(ctx *cli.Context) {
-	urls := configs.CpchainValidators
+	urls := []string{}
 	if ctx.IsSet(flags.ValidatorsFlagName) {
 		urls = strings.Split(ctx.String(flags.ValidatorsFlagName), ",")
 	}

@@ -1194,6 +1194,7 @@ func TestSyncProgressCpc1Full(t *testing.T) {
 }
 
 func testSyncProgress(t *testing.T, protocol int, mode SyncMode) {
+	fmt.Println("runMode:", configs.GetRunMode())
 	t.Parallel()
 
 	tester := newTester()
