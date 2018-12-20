@@ -52,7 +52,7 @@ func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, cons 
 	}
 
 	miner.Register(NewNativeWorker(backend.BlockChain(), cons))
-	go miner.update()
+	// go miner.update()
 
 	return miner
 }
@@ -102,6 +102,12 @@ func (self *Miner) Start(coinbase common.Address) {
 	atomic.StoreInt32(&self.isMining, 1)
 
 	log.Info("Starting mining operation")
+
+	// TODO: check if correct
+	go self.update()
+	go self.eng.update()
+	go self.eng.wait()
+
 	self.eng.start()
 	self.eng.commitNewWork()
 }

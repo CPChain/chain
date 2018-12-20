@@ -134,8 +134,8 @@ func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase comm
 	eng.chainHeadSub = backend.BlockChain().SubscribeChainHeadEvent(eng.chainHeadCh)
 	eng.chainSideSub = backend.BlockChain().SubscribeChainSideEvent(eng.chainSideCh)
 
-	go eng.update()
-	go eng.wait()
+	// go eng.update()
+	// go eng.wait()
 
 	return eng
 }
