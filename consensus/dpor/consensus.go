@@ -69,9 +69,6 @@ var (
 	// to contain a 65 byte secp256k1 signature.
 	errMissingSignature = errors.New("extra-data 65 byte suffix signature missing")
 
-	// errInvalidMixHash is returned if a block's mix digest is non-zero.
-	errInvalidMixHash = errors.New("non-zero mix digest")
-
 	// errInvalidDifficulty is returned if the difficulty of a block is not either
 	// of 1 or 2, or if the value does not match the turn of the signer.
 	errInvalidDifficulty = errors.New("invalid difficulty")
@@ -165,9 +162,6 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 		return err
 	}
 
-	// Set nil Nonce
-	header.Nonce = types.BlockNonce{}
-
 	// Set the correct difficulty
 	header.Difficulty = d.dh.calcDifficulty(snap, d.Coinbase())
 
@@ -186,9 +180,6 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 
 	// Set correct signatures size
 	header.Dpor.Sigs = make([]types.DporSignature, d.config.ValidatorsLen)
-
-	// Mix digest is reserved for now, set to empty
-	header.MixHash = common.Hash{}
 
 	// Ensure the timestamp has the correct delay
 	parent := chain.GetHeader(header.ParentHash, number-1)
