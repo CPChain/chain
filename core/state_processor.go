@@ -154,7 +154,7 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 				return pubReceipt, privReceipt, gas, nil
 			} else {
 				log.Error("Cannot process the transaction.", err)
-				return nil, nil, 0, err
+				return pubReceipt, privReceipt, 0, err
 			}
 		}
 	}
