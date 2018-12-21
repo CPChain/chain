@@ -213,5 +213,5 @@ func tryApplyPrivateTx(config *configs.ChainConfig, bc ChainContext, author *com
 	receipt.Logs = privateStateDb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
-	return receipt, err
+	return receipt, nil
 }
