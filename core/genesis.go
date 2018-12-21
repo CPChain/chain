@@ -35,12 +35,10 @@ var (
 // fork switch-over blocks through the chain configuration.
 type Genesis struct {
 	Config     *configs.ChainConfig `json:"config"     toml:"config"`
-	Nonce      uint64               `json:"nonce"      toml:"nonce"`
 	Timestamp  uint64               `json:"timestamp"  toml:"timestamp"`
 	ExtraData  []byte               `json:"extraData"  toml:"extraData"`
 	GasLimit   uint64               `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 	Difficulty *big.Int             `json:"difficulty" toml:"difficulty" gencodec:"required"`
-	Mixhash    common.Hash          `json:"mixHash"    toml:"mixHash"`
 	Coinbase   common.Address       `json:"coinbase"   toml:"coinbase"`
 	Alloc      GenesisAlloc         `json:"alloc"      toml:"alloc"      gencodec:"required"`
 
@@ -78,14 +76,12 @@ type GenesisAccount struct {
 
 // field type overrides for gencodec
 type genesisSpecMarshaling struct {
-	Nonce      math.HexOrDecimal64
 	Timestamp  math.HexOrDecimal64
 	ExtraData  hexutil.Bytes
 	GasLimit   math.HexOrDecimal64
 	GasUsed    math.HexOrDecimal64
 	Number     math.HexOrDecimal64
 	Difficulty *math.HexOrDecimal256
-	Mixhash    marshalHash
 	Alloc      map[common.UnprefixedAddress]GenesisAccount
 }
 
@@ -235,14 +231,12 @@ func (g *Genesis) ToBlock(db database.Database) *types.Block {
 	root := statedb.IntermediateRoot(false)
 	head := &types.Header{
 		Number:     new(big.Int).SetUint64(g.Number),
-		Nonce:      types.EncodeNonce(g.Nonce),
 		Time:       new(big.Int).SetUint64(g.Timestamp),
 		ParentHash: g.ParentHash,
 		Extra:      g.ExtraData,
 		GasLimit:   g.GasLimit,
 		GasUsed:    g.GasUsed,
 		Difficulty: g.Difficulty,
-		MixHash:    g.Mixhash,
 		Coinbase:   g.Coinbase,
 		StateRoot:  root,
 		Dpor:       g.Dpor,
