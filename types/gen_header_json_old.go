@@ -28,9 +28,9 @@ func (h HeaderOld) MarshalJSON() ([]byte, error) {
 		GasUsed      hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time         *hexutil.Big   `json:"timestamp"        gencodec:"required"`
 		Extra        hexutil.Bytes  `json:"extraData"        gencodec:"required"`
-		Extra2       hexutil.Bytes  `json:"extraData2"       gencodec:"required"`
 		MixHash      common.Hash    `json:"mixHash"          gencodec:"required"`
 		Nonce        BlockNonce     `json:"nonce"            gencodec:"required"`
+		Dpor         DporSnap       `json:"dpor"             gencodec:"required"`
 		Hash         common.Hash    `json:"hash"`
 	}
 	var enc HeaderOld
@@ -46,9 +46,9 @@ func (h HeaderOld) MarshalJSON() ([]byte, error) {
 	enc.GasUsed = hexutil.Uint64(h.GasUsed)
 	enc.Time = (*hexutil.Big)(h.Time)
 	enc.Extra = h.Extra
-	enc.Extra2 = h.Extra2
 	enc.MixHash = h.MixHash
 	enc.Nonce = h.Nonce
+	enc.Dpor = h.Dpor
 	enc.Hash = h.Hash()
 	return json.Marshal(&enc)
 }
@@ -68,9 +68,9 @@ func (h *HeaderOld) UnmarshalJSON(input []byte) error {
 		GasUsed      *hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time         *hexutil.Big    `json:"timestamp"        gencodec:"required"`
 		Extra        *hexutil.Bytes  `json:"extraData"        gencodec:"required"`
-		Extra2       *hexutil.Bytes  `json:"extraData2"       gencodec:"required"`
 		MixHash      *common.Hash    `json:"mixHash"          gencodec:"required"`
 		Nonce        *BlockNonce     `json:"nonce"            gencodec:"required"`
+		Dpor         *DporSnap       `json:"dpor"             gencodec:"required"`
 	}
 	var dec HeaderOld
 	if err := json.Unmarshal(input, &dec); err != nil {
@@ -124,10 +124,6 @@ func (h *HeaderOld) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'extraData' for HeaderOld")
 	}
 	h.Extra = *dec.Extra
-	if dec.Extra2 == nil {
-		return errors.New("missing required field 'extraData2' for HeaderOld")
-	}
-	h.Extra2 = *dec.Extra2
 	if dec.MixHash == nil {
 		return errors.New("missing required field 'mixHash' for HeaderOld")
 	}
@@ -136,5 +132,9 @@ func (h *HeaderOld) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'nonce' for HeaderOld")
 	}
 	h.Nonce = *dec.Nonce
+	if dec.Dpor == nil {
+		return errors.New("missing required field 'dpor' for HeaderOld")
+	}
+	h.Dpor = *dec.Dpor
 	return nil
 }

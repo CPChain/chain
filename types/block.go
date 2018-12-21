@@ -91,8 +91,6 @@ type Header struct {
 	GasUsed      uint64         `json:"gasUsed"          gencodec:"required"`
 	Time         *big.Int       `json:"timestamp"        gencodec:"required"`
 	Extra        []byte         `json:"extraData"        gencodec:"required"`
-	MixHash      common.Hash    `json:"mixHash"          gencodec:"required"`
-	Nonce        BlockNonce     `json:"nonce"            gencodec:"required"`
 	Dpor         DporSnap       `json:"dpor"             gencodec:"required"`
 }
 
@@ -185,8 +183,8 @@ func sigHash(header *Header) (hash common.Hash) {
 		header.Dpor.Proposers,
 		header.Dpor.Validators,
 		header.Extra,
-		header.MixHash,
-		header.Nonce,
+		common.Hash{},
+		BlockNonce{},
 	})
 	if err != nil {
 		log.Error("invalid hash encoding", "error", err)
@@ -426,8 +424,6 @@ func (b *Block) Difficulty() *big.Int { return new(big.Int).Set(b.header.Difficu
 func (b *Block) Time() *big.Int       { return new(big.Int).Set(b.header.Time) }
 
 func (b *Block) NumberU64() uint64         { return b.header.Number.Uint64() }
-func (b *Block) MixHash() common.Hash      { return b.header.MixHash }
-func (b *Block) Nonce() uint64             { return binary.BigEndian.Uint64(b.header.Nonce[:]) }
 func (b *Block) LogsBloom() Bloom          { return b.header.LogsBloom }
 func (b *Block) Coinbase() common.Address  { return b.header.Coinbase }
 func (b *Block) StateRoot() common.Hash    { return b.header.StateRoot }
