@@ -3,9 +3,8 @@
 import math
 
 import cpc_fusion as cpc
-from cpc_fusion.contract import ConciseContract
 from solc import compile_source
-
+from time import sleep
 
 account1 = "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"
 account2 = "0xc05302acebd0730e3a18a058d7d1cb1204c4a092"
@@ -199,6 +198,13 @@ contract Trading {
         _delivery = Delivery(true, cid, symKey, false);
         emit ItemDelivered(cid, _order.seller, _order.buyer, symKey);
     }
+    
+    /**
+     * @dev Get delivery.
+     */
+    function getDelivery() public view returns (Delivery) {
+        return _delivery;
+    }
 
     function confirm() public onlyBuyer {
         require(_delivery.available == true);
@@ -317,7 +323,7 @@ def create_order():
         'participants': group1,
         'from': w3.cpc.accounts[0]})
     w3.cpc.waitForTransactionReceipt(tx_hash)
-    order = t.functions._order().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
+    order = t.functions._order().call({'isPrivate': True, 'participants': group1, 'from': w3.cpc.accounts[0]})
     print(f"the order is {order}")
 
 
@@ -333,9 +339,12 @@ def deliver():
         'participants': group1,
         'from': w3.cpc.accounts[0],
     })
+    print('tx hash', tx_hash)
     w3.cpc.waitForTransactionReceipt(tx_hash)
-    d = t.functions._delivery().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
-    print(f"the delivery is {d}")
+    for i in range(5):
+        d = t.functions._delivery().call({'isPrivate': True, 'participants': group1, 'from': w3.cpc.accounts[0]})
+        print(f"the delivery is {d}")
+        sleep(3)
 
 
 def confirm():
@@ -349,7 +358,7 @@ def confirm():
         'from': w3.cpc.accounts[0],
     })
     w3.cpc.waitForTransactionReceipt(tx)
-    d = t.functions._delivery().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
+    d = t.functions._delivery().call({'isPrivate': True, 'participants': group1, 'from': w3.cpc.accounts[0]})
     print(f"status of delivery has been changed, {d}")
 
 def done_tx():
@@ -360,7 +369,7 @@ def done_tx():
     balance = e.functions.getBalance().call({'gas': 200000, 'from': w3.cpc.accounts[0]})
     print(f"before transfer the balance is {balance}")
 
-    fee = t.functions.getItemPrice().call({'isPrivate': True, 'from': w3.cpc.accounts[0]})
+    fee = t.functions.getItemPrice().call({'isPrivate': True, 'participants': group1, 'from': w3.cpc.accounts[0]})
     tx = e.functions.payTo(w3.toChecksumAddress(account1), fee).transact({'gas': 200000, 'from': w3.cpc.accounts[0]})
     w3.cpc.waitForTransactionReceipt(tx)
     balance = e.functions.getBalance().call({'gas': 200000, 'from': w3.cpc.accounts[0]})
@@ -385,6 +394,7 @@ if __name__ == '__main__':
     set_items()
     read_items()
     trans_escrow_money()
+    create_order()
     deliver()
     confirm()
     done_tx()
