@@ -29,23 +29,6 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-type headerTest struct {
-	ParentHash   common.Hash
-	Coinbase     common.Address
-	StateRoot    common.Hash
-	TxsRoot      common.Hash
-	ReceiptsRoot common.Hash
-	LogsBloom    types.Bloom
-	Difficulty   *big.Int
-	Number       *big.Int
-	GasLimit     uint64
-	GasUsed      uint64
-	Time         *big.Int
-	Proposers    []common.Address
-	Validators   []common.Address
-	Extra        []byte
-}
-
 // Tests block header storage and retrieval operations.
 func TestHeaderStorage(t *testing.T) {
 	db := database.NewMemDatabase()
@@ -71,7 +54,7 @@ func TestHeaderStorage(t *testing.T) {
 		fmt.Println("headerFromRLP extra:", string(headerFromRLP.Extra))
 
 		// remove extra2 field from RLP to align with code in header.Hash
-		tmpHeader := headerTest{
+		tmpHeader := []interface{}{
 			headerFromRLP.ParentHash,
 			headerFromRLP.Coinbase,
 			headerFromRLP.StateRoot,
@@ -86,6 +69,8 @@ func TestHeaderStorage(t *testing.T) {
 			headerFromRLP.Dpor.Proposers,
 			headerFromRLP.Dpor.Validators,
 			headerFromRLP.Extra,
+			common.Hash{},
+			types.BlockNonce{},
 		}
 		tmpHeaderBytes, _ := rlp.EncodeToBytes(tmpHeader)
 
