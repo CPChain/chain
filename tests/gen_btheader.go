@@ -7,9 +7,9 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/types"
-	"bitbucket.org/cpchain/chain/vendor/github.com/ethereum/go-ethereum/common"
-	"bitbucket.org/cpchain/chain/vendor/github.com/ethereum/go-ethereum/common/hexutil"
-	"bitbucket.org/cpchain/chain/vendor/github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 var _ = (*btHeaderMarshaling)(nil)
