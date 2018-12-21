@@ -27,8 +27,8 @@ computing, with you and with everyone! Please come and join us.
 [go-ethereum](https://github.com/ethereum/go-ethereum) for the initial codebase.*
 
 # Table of Contents
-- [Installation](#installation)
 - [Features](#features)
+- [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Documentation](#documentation)
 - [Tools and Libraries](#tools-and-libraries)
@@ -38,32 +38,6 @@ computing, with you and with everyone! Please come and join us.
 - [Contact](#contact)
 - [License](#license)
 
----
-
-## Installation
-
-### Download stable binaries
-
-All versions of cpchain are built and available for download at https://bitbucket.org/cpchain/chain/downloads/.
-
-The download page provides a zip file, containing the executable files that can be used without installing.
-
-### Building from source
-
-Install latest distribution of [Go](https://golang.org/) if it has yet to be installed. Then clone the repository to a directory that you'd like:
-
-```shell
-git clone https://bitbucket.org/cpchain/chain.git
-```
-
-Finally, build the programs using the following commands.
-
-```shell
-cd chain
-make all
-```
-
-You can now use `build/bin/cpchain` to start node.
 
 ---
 ## Features
@@ -125,8 +99,70 @@ transaction on chain for later audition.
 A user scenario:
 ![private transaction user scenario](https://i.imgur.com/H3L1vJN.png)
 
+
+---
+
+## Installation
+
+### Download stable binaries
+
+All versions of cpchain are built and available for download [here](https://bitbucket.org/cpchain/chain/downloads/).
+
+The download page provides a zip file, containing the executable files that can be used without installing.
+
+### Building from source
+
+Install latest distribution of [Go](https://golang.org/) if it has yet to be installed. Do not forget to configure $GOPATH. Then clone the repository to a directory that you'd like:
+
+```shell
+git clone https://bitbucket.org/cpchain/chain.git
+```
+
+Finally, build the programs using the following commands.
+
+```shell
+cd chain
+make clear
+make all
+```
+
+
+
+
 ---
 ## Quick Start
+
+After installation, you are able to start running cpchain. 
+Refer to `./build/bin/cpchain --help` to check the help menu.
+
+### Connect to testnet
+```shell
+cd build/bin
+./cpchain run --runmode testnet
+```
+
+### Create an account
+```shell
+./cpchain account new --datadir ./datadir
+```
+
+### Run a private network
+```shell
+cd examples/cpchain
+./cpchain-all.sh
+
+check logs
+tail -f data/logs/*.log | grep number=
+```
+
+##4 Run a local node
+```shell
+./cpchain run --datadir ./datadir --unlock <You Address>
+```
+
+
+
+
     
 ---
 ## Documentation
@@ -139,7 +175,8 @@ The above should be enough to get you up to speed. For details, please visit our
 ---
 ## Tools and Libraries
 ### CPChain Blockchain Explorer
-    It shows the ongoing transactions and blocks.
+Check our [website repository](https://github.com/CPChain/cpchain-website).
+It shows the ongoing transactions and blocks.
 
 
 

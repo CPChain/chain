@@ -20,6 +20,7 @@ import (
 	"errors"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -27,15 +28,13 @@ import (
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/types"
-	"github.com/ethereum/go-ethereum/crypto"
-
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
-	RemoteDBAbsenceError = errors.New("RemoteDB is not set, no capacibility of processing private transaction.")
-	NoPermissionError    = errors.New("The node doesn't have the permission/responsibility to process the private tx.")
+	RemoteDBAbsenceError = errors.New("remoteDB is not set, no capability of processing private transaction")
+	NoPermissionError    = errors.New("the node doesn't have the permission/responsibility to process the private tx")
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning
@@ -132,7 +131,7 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 	*usedGas += gas
 
 	// Create a new pubReceipt for the transaction, storing the intermediate root and gas used by the tx
-	// based on the eip phase, we're passing wether the root touch-delete accounts.
+	// based on the eip phase, we're passing whether the root touch-delete accounts.
 	pubReceipt := types.NewReceipt([]byte{}, failed, *usedGas)
 	pubReceipt.TxHash = tx.Hash()
 	pubReceipt.GasUsed = gas
@@ -146,15 +145,16 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 
 	var privReceipt *types.Receipt
 	// For private tx, it should process its real private tx payload in participant's node. If account manager is nil,
-	// doen't process private tx.
+	// doesn't process private tx.
 	if tx.IsPrivate() && accm != nil {
 		privReceipt, err = tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, accm)
 		if err != nil {
 			if err == NoPermissionError {
 				log.Info("No permission to process the transaction.")
+				return pubReceipt, privReceipt, gas, nil
 			} else {
 				log.Error("Cannot process the transaction.", err)
-				return nil, nil, 0, err
+				return pubReceipt, privReceipt, 0, err
 			}
 		}
 	}
