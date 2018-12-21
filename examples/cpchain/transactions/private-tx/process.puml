@@ -1,0 +1,53 @@
+@startuml
+participant "Party A" as A
+participant "Party B" as B
+participant "Agent P" as P
+participant "Private Contract CT" as CT
+participant "Public Contract CE" as CE
+
+note over of CT
+	The private contract is used
+	for private transactions.
+
+	It is invisible for others.
+end note
+
+note over of CE
+	The public contract is escrow contract.
+
+	It keeps the money of a trade between
+	seller and buyer, and pay money to seller
+	once buyer confirms that the seller has
+	delivered trading items.
+end note
+
+A -> CT: registers items for sale
+B -> CT: query items for sale
+activate B
+CT --> B: items for sale
+B --> CE: send money for escrow
+B -> CT: order
+deactivate B
+
+CT --> A: notify the order
+activate A
+A -> CE: check B's balance
+A -> CT: send item's key
+deactivate A
+
+B -> CT: get item's key
+activate B
+CT -->B: item's key
+B -> CT: confirm
+deactivate B
+
+P -> CT: get confirmation
+activate P
+CT --> P: confirmation of A and B
+P -> CE: ask to send money
+activate CE
+CE -> A: send money
+deactivate P
+deactivate CE
+
+@enduml
