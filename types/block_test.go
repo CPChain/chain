@@ -46,10 +46,8 @@ func TestBlockEncoding(t *testing.T) {
 	check("GasLimit", block.GasLimit(), uint64(3141592))
 	check("GasUsed", block.GasUsed(), uint64(21000))
 	check("Coinbase", block.Coinbase(), common.HexToAddress("8888f1f195afa192cfee860698584c030f4c9db1"))
-	check("MixHash", block.MixHash(), common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"))
 	check("StateRoot", block.StateRoot(), common.HexToHash("ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"))
 	check("Hash", block.Hash(), common.HexToHash("418d8a22b474ebf5131e11f9c994bfc70d5f4d8f091f94294a1891b98b0e12c9"))
-	check("Nonce", block.Nonce(), uint64(0xa13a5a8c8f2bb1c4))
 	check("Time", block.Time(), big.NewInt(1426516743))
 	check("Size", block.Size(), common.StorageSize(len(blockEnc)))
 
@@ -88,8 +86,6 @@ func TestBlockEncodingBuildHex(t *testing.T) {
 		GasLimit:     uint64(3141592),
 		GasUsed:      uint64(21000),
 		Time:         big.NewInt(1426516743),
-		MixHash:      common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Nonce:        EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
 
 	newBlock := NewBlockWithHeader(newHeader)

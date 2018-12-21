@@ -44,8 +44,6 @@ type headerTest struct {
 	Proposers    []common.Address
 	Validators   []common.Address
 	Extra        []byte
-	MixHash      common.Hash
-	Nonce        types.BlockNonce
 }
 
 // Tests block header storage and retrieval operations.
@@ -88,8 +86,6 @@ func TestHeaderStorage(t *testing.T) {
 			headerFromRLP.Dpor.Proposers,
 			headerFromRLP.Dpor.Validators,
 			headerFromRLP.Extra,
-			headerFromRLP.MixHash,
-			headerFromRLP.Nonce,
 		}
 		tmpHeaderBytes, _ := rlp.EncodeToBytes(tmpHeader)
 

@@ -27,8 +27,6 @@ var customGenesisTests = []struct {
 			difficulty  = "0x20000"
 			extraData   = ""
 			gasLimit    = "0x2fefd8"
-			nonce       = "0x0000000000000042"
-			mixHash     = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			parentHash  = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			timestamp   = "0x00"
 			[alloc]
@@ -43,8 +41,6 @@ var customGenesisTests = []struct {
 			difficulty  = "0x20000"
 			extraData   = ""
 			gasLimit    = "0x2fefd8"
-			nonce       = "0x0000000000000042"
-			mixHash     = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			parentHash  = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			timestamp   = "0x00"
             [alloc]
@@ -60,8 +56,6 @@ var customGenesisTests = []struct {
 			difficulty  = "0x20000"
 			extraData   = ""
 			gasLimit    = "0x2fefd8"
-			nonce       = "0x0000000000000042"
-			mixHash     = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			parentHash  = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			timestamp   = "0x00"
 	       [config]

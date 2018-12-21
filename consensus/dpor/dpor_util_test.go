@@ -61,8 +61,6 @@ func Test_sigHash(t *testing.T) {
 			},
 			Validators: []common.Address{},
 		},
-		MixHash: common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Nonce:   types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
 
 	type args struct {
@@ -150,8 +148,6 @@ func Test_ecrecover(t *testing.T) {
 			},
 			Validators: []common.Address{},
 		},
-		MixHash: common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Nonce:   types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
 
 	sigs := &Signatures{

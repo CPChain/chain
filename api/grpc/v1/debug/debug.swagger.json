@@ -231,13 +231,6 @@
         "parentHash": {
           "type": "string"
         },
-        "nonce": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "mixHash": {
-          "type": "string"
-        },
         "logsBloom": {
           "type": "string",
           "format": "byte"

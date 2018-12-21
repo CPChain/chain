@@ -213,8 +213,6 @@ func GRPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (*pb.Block, erro
 		Number:           head.Number.Uint64(),
 		Hash:             b.Hash().Hex(),
 		ParentHash:       head.ParentHash.Hex(),
-		Nonce:            head.Nonce.Uint64(),
-		MixHash:          head.MixHash.Hex(),
 		StateRoot:        head.StateRoot.Hex(),
 		Miner:            head.Coinbase.Hex(),
 		Difficulty:       head.Difficulty.Uint64(),
@@ -269,7 +267,6 @@ func (s *ChainReader) GetBlockByNumber(ctx context.Context, req *cpc.ChainReader
 		if err == nil && rpc.BlockNumber(req.BlockNumber) == rpc.PendingBlockNumber {
 			// Pending blocks need to nil out a few fields
 			response.Hash = ""
-			response.Nonce = 0
 			response.Miner = ""
 		}
 		return response, err

@@ -20,12 +20,10 @@ var _ = (*genesisSpecMarshaling)(nil)
 func (g Genesis) MarshalJSON() ([]byte, error) {
 	type Genesis struct {
 		Config     *configs.ChainConfig                        `json:"config"     toml:"config"`
-		Nonce      math.HexOrDecimal64                         `json:"nonce"      toml:"nonce"`
 		Timestamp  math.HexOrDecimal64                         `json:"timestamp"  toml:"timestamp"`
 		ExtraData  hexutil.Bytes                               `json:"extraData"  toml:"extraData"`
 		GasLimit   math.HexOrDecimal64                         `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
-		Mixhash    marshalHash                                 `json:"mixHash"    toml:"mixHash"`
 		Coinbase   common.Address                              `json:"coinbase"   toml:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      toml:"alloc"      gencodec:"required"`
 		Number     math.HexOrDecimal64                         `json:"number"     toml:"number"`
@@ -35,12 +33,10 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 	}
 	var enc Genesis
 	enc.Config = g.Config
-	enc.Nonce = math.HexOrDecimal64(g.Nonce)
 	enc.Timestamp = math.HexOrDecimal64(g.Timestamp)
 	enc.ExtraData = g.ExtraData
 	enc.GasLimit = math.HexOrDecimal64(g.GasLimit)
 	enc.Difficulty = (*math.HexOrDecimal256)(g.Difficulty)
-	enc.Mixhash = marshalHash(g.Mixhash)
 	enc.Coinbase = g.Coinbase
 	if g.Alloc != nil {
 		enc.Alloc = make(map[common.UnprefixedAddress]GenesisAccount, len(g.Alloc))
@@ -59,12 +55,10 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 func (g *Genesis) UnmarshalJSON(input []byte) error {
 	type Genesis struct {
 		Config     *configs.ChainConfig                        `json:"config"     toml:"config"`
-		Nonce      *math.HexOrDecimal64                        `json:"nonce"      toml:"nonce"`
 		Timestamp  *math.HexOrDecimal64                        `json:"timestamp"  toml:"timestamp"`
 		ExtraData  *hexutil.Bytes                              `json:"extraData"  toml:"extraData"`
 		GasLimit   *math.HexOrDecimal64                        `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
-		Mixhash    *marshalHash                                `json:"mixHash"    toml:"mixHash"`
 		Coinbase   *common.Address                             `json:"coinbase"   toml:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      toml:"alloc"      gencodec:"required"`
 		Number     *math.HexOrDecimal64                        `json:"number"     toml:"number"`
@@ -78,9 +72,6 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 	}
 	if dec.Config != nil {
 		g.Config = dec.Config
-	}
-	if dec.Nonce != nil {
-		g.Nonce = uint64(*dec.Nonce)
 	}
 	if dec.Timestamp != nil {
 		g.Timestamp = uint64(*dec.Timestamp)
@@ -96,9 +87,6 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'difficulty' for Genesis")
 	}
 	g.Difficulty = (*big.Int)(dec.Difficulty)
-	if dec.Mixhash != nil {
-		g.Mixhash = common.Hash(*dec.Mixhash)
-	}
 	if dec.Coinbase != nil {
 		g.Coinbase = *dec.Coinbase
 	}
@@ -128,12 +116,10 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 func (g Genesis) MarshalTOML() (interface{}, error) {
 	type Genesis struct {
 		Config     *configs.ChainConfig                        `json:"config"     toml:"config"`
-		Nonce      math.HexOrDecimal64                         `json:"nonce"      toml:"nonce"`
 		Timestamp  math.HexOrDecimal64                         `json:"timestamp"  toml:"timestamp"`
 		ExtraData  hexutil.Bytes                               `json:"extraData"  toml:"extraData"`
 		GasLimit   math.HexOrDecimal64                         `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
-		Mixhash    marshalHash                                 `json:"mixHash"    toml:"mixHash"`
 		Coinbase   common.Address                              `json:"coinbase"   toml:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      toml:"alloc"      gencodec:"required"`
 		Number     math.HexOrDecimal64                         `json:"number"     toml:"number"`
@@ -143,12 +129,10 @@ func (g Genesis) MarshalTOML() (interface{}, error) {
 	}
 	var enc Genesis
 	enc.Config = g.Config
-	enc.Nonce = math.HexOrDecimal64(g.Nonce)
 	enc.Timestamp = math.HexOrDecimal64(g.Timestamp)
 	enc.ExtraData = g.ExtraData
 	enc.GasLimit = math.HexOrDecimal64(g.GasLimit)
 	enc.Difficulty = (*math.HexOrDecimal256)(g.Difficulty)
-	enc.Mixhash = marshalHash(g.Mixhash)
 	enc.Coinbase = g.Coinbase
 	if g.Alloc != nil {
 		enc.Alloc = make(map[common.UnprefixedAddress]GenesisAccount, len(g.Alloc))
@@ -167,12 +151,10 @@ func (g Genesis) MarshalTOML() (interface{}, error) {
 func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	type Genesis struct {
 		Config     *configs.ChainConfig                        `json:"config"     toml:"config"`
-		Nonce      *math.HexOrDecimal64                        `json:"nonce"      toml:"nonce"`
 		Timestamp  *math.HexOrDecimal64                        `json:"timestamp"  toml:"timestamp"`
 		ExtraData  *hexutil.Bytes                              `json:"extraData"  toml:"extraData"`
 		GasLimit   *math.HexOrDecimal64                        `json:"gasLimit"   toml:"gasLimit"   gencodec:"required"`
 		Difficulty *math.HexOrDecimal256                       `json:"difficulty" toml:"difficulty" gencodec:"required"`
-		Mixhash    *marshalHash                                `json:"mixHash"    toml:"mixHash"`
 		Coinbase   *common.Address                             `json:"coinbase"   toml:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      toml:"alloc"      gencodec:"required"`
 		Number     *math.HexOrDecimal64                        `json:"number"     toml:"number"`
@@ -186,9 +168,6 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	}
 	if dec.Config != nil {
 		g.Config = dec.Config
-	}
-	if dec.Nonce != nil {
-		g.Nonce = uint64(*dec.Nonce)
 	}
 	if dec.Timestamp != nil {
 		g.Timestamp = uint64(*dec.Timestamp)
@@ -204,9 +183,6 @@ func (g *Genesis) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		return errors.New("missing required field 'difficulty' for Genesis")
 	}
 	g.Difficulty = (*big.Int)(dec.Difficulty)
-	if dec.Mixhash != nil {
-		g.Mixhash = common.Hash(*dec.Mixhash)
-	}
 	if dec.Coinbase != nil {
 		g.Coinbase = *dec.Coinbase
 	}
