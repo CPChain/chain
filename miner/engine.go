@@ -135,6 +135,7 @@ func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase comm
 	eng.chainHeadSub = backend.BlockChain().SubscribeChainHeadEvent(eng.chainHeadCh)
 	eng.chainSideSub = backend.BlockChain().SubscribeChainSideEvent(eng.chainSideCh)
 
+	// TODO: @AC launch the two goroutines when started mining and stop them when stopped mining
 	go eng.update()
 	go eng.wait()
 
@@ -229,7 +230,10 @@ func (self *engine) update() {
 		select {
 		// a new block has been inserted.  we start to mine based on this new tip.
 		case <-self.chainHeadCh:
-			self.commitNewWork()
+			if atomic.LoadInt32(&self.mining) == 1 {
+				// call commitNewWork only when status is mining
+				self.commitNewWork()
+			}
 
 		// handle chainsideevent
 		// we don't have uncle blocks
@@ -266,11 +270,11 @@ func (self *engine) update() {
 
 		// System stopped
 		case err := <-self.txsSub.Err():
-			log.Warn("txsSub got error", "error", err)
+			log.Error("txsSub got error", "error", err)
 		case err := <-self.chainHeadSub.Err():
-			log.Warn("chainHeadSub got error", "error", err)
+			log.Error("chainHeadSub got error", "error", err)
 		case err := <-self.chainSideSub.Err():
-			log.Warn("chainSideSub got error", "error", err)
+			log.Error("chainSideSub got error", "error", err)
 		}
 	}
 }
@@ -290,6 +294,7 @@ func (self *engine) wait() {
 
 			if block.NumberU64() <= last {
 				// ignore the same height new block or old block
+				log.Warn("detected duplicate blocks with same block number", "number", block.NumberU64())
 				continue
 			}
 			last = block.NumberU64()

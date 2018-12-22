@@ -334,7 +334,7 @@ def deliver():
         'participants': group1,
         'from': w3.cpc.accounts[0],
     })
-    print('tx hash', tx_hash)
+    print('tx hash', '0x'+tx_hash.hex())
     w3.cpc.waitForTransactionReceipt(tx_hash)
     d = t.functions._delivery().call({'isPrivate': True, 'participants': group1, 'from': w3.cpc.accounts[0]})
     print(f"the delivery is {d}")
