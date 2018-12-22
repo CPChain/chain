@@ -26,7 +26,7 @@ import (
 	"sync/atomic"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"gopkg.in/fatih/set.v0"
+	set "gopkg.in/fatih/set.v0"
 )
 
 const MetadataApi = "rpc"

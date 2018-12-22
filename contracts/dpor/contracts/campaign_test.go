@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package dpor_test
+package contracts_test
 
 import (
 	"context"
@@ -57,7 +57,7 @@ func TestDeployCampaign(t *testing.T) {
 	checkError(t, "deploy contract: expected no error, got %v", err)
 
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := dpor.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
+	campaign, err := contracts.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = contractAddr
 	contractBackend.Commit()
@@ -104,7 +104,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := dpor.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
+	campaign, err := contracts.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = contractAddr
 	printBalance(contractBackend)
@@ -198,7 +198,7 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := dpor.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
+	campaign, err := contracts.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = contractAddr
 	printBalance(contractBackend)
@@ -255,7 +255,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := dpor.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
+	campaign, err := contracts.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = contractAddr
 	printBalance(contractBackend)
@@ -353,14 +353,14 @@ func waitForViewChange(contractBackend *backends.SimulatedBackend, viewIdx int) 
 	}
 }
 
-func verifyDeposit(campaign *dpor.CampaignWrapper, t *testing.T, amount *big.Int) {
+func verifyDeposit(campaign *contracts.CampaignWrapper, t *testing.T, amount *big.Int) {
 	_, deposit, _, _, _ := campaign.CandidateInfoOf(addr)
 	if deposit.Cmp(amount) != 0 {
 		t.Fatal("Deposit ", deposit, " != ", amount)
 	}
 }
 
-func verifyCandidates(campaign *dpor.CampaignWrapper, t *testing.T, viewIdx *big.Int, candidateLengh int) {
+func verifyCandidates(campaign *contracts.CampaignWrapper, t *testing.T, viewIdx *big.Int, candidateLengh int) {
 	candidates, err := campaign.CandidatesOf(viewIdx)
 	checkError(t, "CandidatesOf error: %v", err)
 	fmt.Println("len(candidates):", len(candidates))

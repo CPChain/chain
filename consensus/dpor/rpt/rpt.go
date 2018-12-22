@@ -31,7 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -128,7 +128,7 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 
 // calcRptInfo return the Rpt of the rnode address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
-	instance, err := dpor.NewRpt(rs.rptContract, rs.client)
+	instance, err := contracts.NewRpt(rs.rptContract, rs.client)
 	log.Debug("calling to RPT contract", "contractAddr", rs.rptContract.Hex())
 	if err != nil {
 		log.Error("New primitivesContract error")

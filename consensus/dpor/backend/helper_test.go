@@ -50,10 +50,10 @@ func createSimulatedBackend(alloc core.GenesisAlloc) *backends.SimulatedBackend 
 	return contractBackend
 }
 
-func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *dpor.ProposerRegister, error) {
+func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *contracts.ProposerRegister, error) {
 
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, tx, instance, err := dpor.DeployProposerRegister(deployTransactor, backend)
+	addr, tx, instance, err := contracts.DeployProposerRegister(deployTransactor, backend)
 
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
@@ -205,7 +205,7 @@ func TestRemoteSigner(T *testing.T) {
 	contractCaller, err := backend.NewContractCaller(p1Key, simulatedBackend, gasLimit)
 
 	// creates an contract instance
-	contractInstance, err := dpor.NewProposerRegister(contractAddr, contractCaller.Client)
+	contractInstance, err := contracts.NewProposerRegister(contractAddr, contractCaller.Client)
 
 	// creates a keyed transactor
 	auth := bind.NewKeyedTransactor(contractCaller.Key.PrivateKey)
