@@ -270,11 +270,14 @@ func (self *engine) update() {
 
 		// System stopped
 		case err := <-self.txsSub.Err():
-			log.Error("txsSub got error", "error", err)
+			log.Warn("txsSub got error", "error", err)
+			return
 		case err := <-self.chainHeadSub.Err():
-			log.Error("chainHeadSub got error", "error", err)
+			log.Warn("chainHeadSub got error", "error", err)
+			return
 		case err := <-self.chainSideSub.Err():
-			log.Error("chainSideSub got error", "error", err)
+			log.Warn("chainSideSub got error", "error", err)
+			return
 		}
 	}
 }
