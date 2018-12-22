@@ -466,7 +466,7 @@ func (bc *BlockChain) repair(head **types.Block) error {
 			}
 		}
 		// Otherwise rewind one block and recheck state availability there
-		(*head) = bc.GetBlock((*head).ParentHash(), (*head).NumberU64()-1)
+		*head = bc.GetBlock((*head).ParentHash(), (*head).NumberU64()-1)
 	}
 }
 

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	set "gopkg.in/fatih/set.v0"
+	"gopkg.in/fatih/set.v0"
 )
 
 // fileCache is a cache of files seen during scan of keystore.

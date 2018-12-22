@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/types"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 )
 
 const (

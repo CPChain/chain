@@ -23,7 +23,7 @@ import (
 	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/trie"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 )
 
 // Trie cache generation limit after which to evict trie nodes from memory.

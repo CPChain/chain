@@ -28,11 +28,10 @@ import (
 	"testing"
 	"testing/quick"
 
-	check "gopkg.in/check.v1"
-
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"gopkg.in/check.v1"
 )
 
 // Tests that updating a state trie does not leak any database writes prior to

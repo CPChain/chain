@@ -6,7 +6,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	dpor "bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"

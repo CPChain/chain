@@ -3,7 +3,7 @@ package configs
 
 import "bitbucket.org/cpchain/chain/commons/log"
 
-var defaultValidatorNodes = []string{}
+var defaultValidatorNodes []string
 
 func GetDefaultValidators() []string {
 	return defaultValidatorNodes

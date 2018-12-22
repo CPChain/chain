@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	dpor "bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )

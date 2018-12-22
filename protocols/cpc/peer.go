@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
-	set "gopkg.in/fatih/set.v0"
+	"gopkg.in/fatih/set.v0"
 )
 
 var (
