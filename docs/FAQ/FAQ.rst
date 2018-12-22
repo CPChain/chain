@@ -3,7 +3,7 @@ FAQ
 
 - How to interact with CPChain
 
-You can ``cpc_fusion`` to interact with CPChain in a python interpreter.
+You can utilize ``cpc_fusion`` to interact with CPChain in a python interpreter.
 
 .. code-block:: python
 

@@ -9,7 +9,7 @@ using ``pip`` as follows:
 
 .. code-block:: shell
 
-   $ pip install cpc-fusion
+   $ pip3 install cpc-fusion
 
 
 
@@ -18,13 +18,13 @@ following command.
 
 .. code-block:: shell
 
-   $ pip install .
+   $ pip3 install .
 
 
 Using Fusion
 ----------------
 
-To use the web3 library you will need to initialize the
+To use the web3 library, you are required to initialize the
 :class:`~web3.Web3` class.
 
 Use the ``auto`` module to :ref:`guess at common node connection options
@@ -38,11 +38,11 @@ Use the ``auto`` module to :ref:`guess at common node connection options
     34341
 
 
-.. NOTE:: If you get the result ``UnhandledRequest: No providers responded to the RPC request``
+.. NOTE:: If you get the result ``UnhandledRequest: No providers responded to the RPC request``,
     then you are not connected to a node.
 .. _first_w3_use:
 
-API renference
+API reference
 -----------------
 
 
@@ -53,9 +53,9 @@ API renference
 The ``cpc_fusion.cpc`` object exposes the following properties and methods to
 interact with the RPC APIs under the ``cpc_`` namespace.
 
-Often, when a property or method returns a mapping of keys to values, it
-will return an ``AttributeDict`` which acts like a ``dict`` but you can
-access the keys as attributes and cannot modify its fields. For example,
+Often, when a property or method returns a map from keys to values, it
+also returns an ``AttributeDict`` which acts like a ``dict`` that you can
+access the keys as attributes but cannot modify its fields. For example,
 you can find the latest block number in these two ways:
 
     .. code-block:: python
@@ -128,7 +128,7 @@ Transaction
 
 .. py:method:: Cpc.getTransactionFromBlock(block_identifier, transaction_index)
 
-  .. note:: This method is deprecated and replaced by
+  .. note:: This method is obsolete and replaced by
     ``Cpc.getTransactionByBlock``
 
 
@@ -489,7 +489,7 @@ Contract
 
 .. py:method:: Cpc.setContractFactory(contractFactoryClass)
 
-    Modify the default contract factory from ``Contract`` to ``contractFactoryClass``.
+    Modifies the default contract factory from ``Contract`` to ``contractFactoryClass``.
     Future calls to ``Cpc.contract()`` will then default to ``contractFactoryClass``.
 
     An example of an alternative Contract Factory is ``ConciseContract``.

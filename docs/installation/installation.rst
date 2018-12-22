@@ -1,7 +1,7 @@
 Installation
 ~~~~~~~~~~~~~~
 
-In this section, you will learn how to download our code, build the project and run it on you own system.
+In this section, you are going to learn how to download our code, build the project and run it on you own system.
 
 .. NOTE:: All code starting with a ``$`` is meant to run in your terminal.
     All code starting with a ``>>>`` is meant to run in a python interpreter,
@@ -54,7 +54,7 @@ You can find several executables in `build/bin` directory after building the pro
 ========  ============
 Command   Description
 ========  ============
-cpchain   Executable for the cpchain blockchain networks
+cpchain   Executable for the cpchain blockchain networks.
 --------  ------------
 abigen    Source code generator to convert CPChain contract definitions into easy to use, compile-time type-safe Go packages. 
 --------  ------------
