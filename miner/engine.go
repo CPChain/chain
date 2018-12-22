@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"math/big"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -134,8 +135,8 @@ func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase comm
 	eng.chainHeadSub = backend.BlockChain().SubscribeChainHeadEvent(eng.chainHeadCh)
 	eng.chainSideSub = backend.BlockChain().SubscribeChainSideEvent(eng.chainSideCh)
 
-	// go eng.update()
-	// go eng.wait()
+	go eng.update()
+	go eng.wait()
 
 	return eng
 }
@@ -264,18 +265,20 @@ func (self *engine) update() {
 			}
 
 		// System stopped
-		case <-self.txsSub.Err():
-			return
-		case <-self.chainHeadSub.Err():
-			return
-		case <-self.chainSideSub.Err():
-			return
+		case err := <-self.txsSub.Err():
+			log.Warn("txsSub got error", "error", err)
+		case err := <-self.chainHeadSub.Err():
+			log.Warn("chainHeadSub got error", "error", err)
+		case err := <-self.chainSideSub.Err():
+			log.Warn("chainSideSub got error", "error", err)
 		}
 	}
 }
 
 // wait handles mined blocks.
 func (self *engine) wait() {
+	last := uint64(0)
+
 	for {
 		for result := range self.recv {
 			atomic.AddInt32(&self.atWork, -1)
@@ -284,6 +287,12 @@ func (self *engine) wait() {
 				continue
 			}
 			block := result.Block
+
+			if block.NumberU64() <= last {
+				// ignore the same height new block or old block
+				continue
+			}
+			last = block.NumberU64()
 
 			// TODO: @liuq fix this.
 			// work := result.Work
@@ -384,7 +393,7 @@ func (self *engine) commitNewWork() {
 	num := parent.Number()
 	header := &types.Header{
 		ParentHash: parent.Hash(),
-		Number:     num.Add(num, common.Big1),
+		Number:     big.NewInt(0).SetUint64(num.Uint64() + 1),
 		GasLimit:   core.CalcGasLimit(parent),
 		Extra:      self.extra,
 	}

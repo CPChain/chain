@@ -104,10 +104,6 @@ func (self *Miner) Start(coinbase common.Address) {
 
 	go self.downloaderSync()
 
-	// TODO: check if correct
-	go self.eng.update()
-	go self.eng.wait()
-
 	self.eng.start()
 	self.eng.commitNewWork()
 }
