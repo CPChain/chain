@@ -37,7 +37,7 @@ func TestRpt(t *testing.T) {
 
 	// addr := common.HexToAddress("0xca53baf44e68a2f440cafee2bbcc23631ad2689e") // real
 	addr := common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d") // proxy
-	r, err := dpor.NewRpt(addr, client)
+	r, err := contracts.NewRpt(addr, client)
 
 	code, err := client.CodeAt(ctx, addr, nil)
 	if len(code) > 0 {

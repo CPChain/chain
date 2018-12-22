@@ -142,7 +142,7 @@ func registerPrimitives(backend primitives.RptPrimitiveBackend) {
 
 func deploy(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, _, _, err := dpor.DeployRpt(deployTransactor, backend)
+	addr, _, _, err := contracts.DeployRpt(deployTransactor, backend)
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
 		return common.Address{}, err

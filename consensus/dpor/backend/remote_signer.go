@@ -174,7 +174,7 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *Si
 }
 
 // fetchNodeID fetches node id of proposer encrypted with validator's public key
-func fetchNodeID(term uint64, proposer common.Address, validator common.Address, contractInstance *dpor.ProposerRegister) ([]byte, error) {
+func fetchNodeID(term uint64, proposer common.Address, validator common.Address, contractInstance *contracts.ProposerRegister) ([]byte, error) {
 	callOpts := &bind.CallOpts{
 		From: validator,
 	}

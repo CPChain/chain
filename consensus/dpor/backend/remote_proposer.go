@@ -60,7 +60,7 @@ func (s *RemoteProposer) setNodeID(nodeID string) {
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (s *RemoteProposer) fetchNodeID(term uint64, contractInstance *dpor.ProposerRegister, rsaKey *rsakey.RsaKey, validator common.Address) error {
+func (s *RemoteProposer) fetchNodeID(term uint64, contractInstance *contracts.ProposerRegister, rsaKey *rsakey.RsaKey, validator common.Address) error {
 	proposer := s.Coinbase()
 
 	log.Debug("fetching nodeID of remote proposer")
@@ -92,7 +92,7 @@ func (s *RemoteProposer) FetchNodeInfoAndDial(
 	validator common.Address,
 	server *p2p.Server,
 	rsaKey *rsakey.RsaKey,
-	contractInstance *dpor.ProposerRegister,
+	contractInstance *contracts.ProposerRegister,
 ) (bool, error) {
 
 	// fetch the nodeID of the remote signer if not fetched yet.

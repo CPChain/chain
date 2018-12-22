@@ -144,7 +144,7 @@ func claimProposer(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 
 	ctx := context.Background()
 
-	instance, err := dpor.NewProposerRegister(contractAddress, client)
+	instance, err := contracts.NewProposerRegister(contractAddress, client)
 
 	gasLimit := 3000000
 

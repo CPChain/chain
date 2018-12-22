@@ -28,7 +28,7 @@ func DeployRpt(password string) common.Address {
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
 	auth := newAuth(client, privateKey, fromAddress)
-	contractAddress, tx, _, err := dpor.DeployRpt(auth, client)
+	contractAddress, tx, _, err := contracts.DeployRpt(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

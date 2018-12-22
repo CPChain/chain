@@ -28,7 +28,7 @@ func DeployProposerRegister(password string) common.Address {
 	printBalance(client, fromAddress)
 	// launch contract deploy transaction.
 	auth := newAuth(client, privateKey, fromAddress)
-	contractAddress, tx, _, err := dpor.DeployProposerRegister(auth, client)
+	contractAddress, tx, _, err := contracts.DeployProposerRegister(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

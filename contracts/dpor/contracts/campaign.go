@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-package dpor
+package contracts
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-//go:generate abigen --sol rpt.sol --pkg dpor --out rpt.go
+//go:generate abigen --sol rpt.sol --pkg contracts --out rpt.go
 
 //go:generate abigen --sol campaign/campaign.sol --pkg campaign --out campaign/campaign.go
 

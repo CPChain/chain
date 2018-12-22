@@ -31,7 +31,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"golang.org/x/net/websocket"
-	"gopkg.in/fatih/set.v0"
+	set "gopkg.in/fatih/set.v0"
 )
 
 // websocketJSONCodec is a custom JSON codec with payload size enforcement and

@@ -39,7 +39,7 @@ type AdmissionControl struct {
 	address         common.Address
 	chain           consensus.ChainReader
 	key             *keystore.Key
-	contractBackend dpor.Backend
+	contractBackend contracts.Backend
 
 	mutex      sync.RWMutex
 	wg         *sync.WaitGroup
@@ -165,7 +165,7 @@ func (ac *AdmissionControl) sendCampaignResult() {
 
 	campaignContractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
-	instance, err := dpor.NewCampaignWrapper(transactOpts, campaignContractAddress, ac.contractBackend)
+	instance, err := contracts.NewCampaignWrapper(transactOpts, campaignContractAddress, ac.contractBackend)
 	if err != nil {
 		ac.err = err
 		return
