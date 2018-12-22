@@ -12,7 +12,6 @@ import (
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 var customGenesisTests = []struct {
@@ -27,8 +26,6 @@ var customGenesisTests = []struct {
 			difficulty  = "0x20000"
 			extraData   = ""
 			gasLimit    = "0x2fefd8"
-			nonce       = "0x0000000000000042"
-			mixHash     = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			parentHash  = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			timestamp   = "0x00"
 			[alloc]
@@ -43,8 +40,6 @@ var customGenesisTests = []struct {
 			difficulty  = "0x20000"
 			extraData   = ""
 			gasLimit    = "0x2fefd8"
-			nonce       = "0x0000000000000042"
-			mixHash     = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			parentHash  = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			timestamp   = "0x00"
             [alloc]
@@ -60,8 +55,6 @@ var customGenesisTests = []struct {
 			difficulty  = "0x20000"
 			extraData   = ""
 			gasLimit    = "0x2fefd8"
-			nonce       = "0x0000000000000042"
-			mixHash     = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			parentHash  = "0x0000000000000000000000000000000000000000000000000000000000000000"
 			timestamp   = "0x00"
 	       [config]
@@ -88,11 +81,11 @@ func TestCustomGenesis(t *testing.T) {
 		runCpchain(t, "chain", "init", toml, "--datadir", datadir).WaitExit()
 
 		// Check result
-		checkGenesisNonceHex(t, datadir, tt.result, tt.success)
+		checkGenesis(t, datadir, tt.result, tt.success)
 	}
 }
 
-func checkGenesisNonceHex(t *testing.T, datadir string, nonceHex string, wantSuccess bool) {
+func checkGenesis(t *testing.T, datadir string, nonceHex string, wantSuccess bool) {
 	dbPath := filepath.Join(datadir, "/cpchain/"+configs.DatabaseName)
 	db, _ := database.NewLDBDatabase(dbPath, 0, 0)
 	number := uint64(0)
@@ -108,17 +101,6 @@ func checkGenesisNonceHex(t *testing.T, datadir string, nonceHex string, wantSuc
 		if !wantSuccess {
 			t.Error("Want to fail to create genesis block, but the genesis block has been created successfully.")
 		}
-	}
-
-	block := rawdb.ReadBlock(db, hash, number)
-	if block != nil {
-		wantNonce, _ := hexutil.DecodeUint64(nonceHex)
-
-		if block.Nonce() != wantNonce {
-			t.Errorf("Genesis block is not expected. Want %v, Got %v", wantNonce, block.Nonce())
-		}
-	} else {
-		t.Fatal("Genesis block is missing.")
 	}
 	return
 }

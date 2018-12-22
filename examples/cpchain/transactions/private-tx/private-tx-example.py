@@ -198,13 +198,6 @@ contract Trading {
         _delivery = Delivery(true, cid, symKey, false);
         emit ItemDelivered(cid, _order.seller, _order.buyer, symKey);
     }
-    
-    /**
-     * @dev Get delivery.
-     */
-    function getDelivery() public view returns (Delivery) {
-        return _delivery;
-    }
 
     function confirm() public onlyBuyer {
         require(_delivery.available == true);
@@ -314,7 +307,9 @@ def trans_escrow_money():
 
 
 def create_order():
-    print('4. Party B then sends contract CT an order.')
+    print('''
+    4. Party B then sends contract CT an order.
+    ''')
     w3 = get_web3_inst(2)
     t = get_trading_contract_inst(w3)
     tx_hash = t.functions.buy(pubkey2).transact({
@@ -341,14 +336,14 @@ def deliver():
     })
     print('tx hash', tx_hash)
     w3.cpc.waitForTransactionReceipt(tx_hash)
-    for i in range(5):
-        d = t.functions._delivery().call({'isPrivate': True, 'participants': group1, 'from': w3.cpc.accounts[0]})
-        print(f"the delivery is {d}")
-        sleep(3)
+    d = t.functions._delivery().call({'isPrivate': True, 'participants': group1, 'from': w3.cpc.accounts[0]})
+    print(f"the delivery is {d}")
 
 
 def confirm():
-    print('6. Party B receives the delivery and send confirmation message')
+    print('''
+    6. Party B receives the delivery and send confirmation message
+    ''')
     w3 = get_web3_inst(2)
     t = get_trading_contract_inst(w3)
     tx = t.functions.confirm().transact({
@@ -362,7 +357,9 @@ def confirm():
     print(f"status of delivery has been changed, {d}")
 
 def done_tx():
-    print('7. Agent P notice the confirmation and transfer money to Party A')
+    print('''
+    7. Agent P notice the confirmation and transfer money to Party A
+    ''')
     w3 = get_web3_inst(3)
     t = get_trading_contract_inst(w3)
     e = get_escrow_contract_inst(w3)
@@ -377,7 +374,9 @@ def done_tx():
 
 
 def other_party_inspect():
-    print('8. Other parties could not get any information about the transaction between A and B')
+    print('''
+    8. Other parties could not get any information about the transaction between A and B
+    ''')
     w3 = get_web3_inst(4)
     t = get_trading_contract_inst(w3)
     try:

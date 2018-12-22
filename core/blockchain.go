@@ -1054,8 +1054,8 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 // After insertion is done, all accumulated events will be fired.
 func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 	n, events, logs, err := bc.insertChain(chain)
-	bc.PostChainEvents(events, logs)
 	bc.CommitStateDB()
+	bc.PostChainEvents(events, logs)
 	return n, err
 }
 
@@ -1396,7 +1396,7 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 			logFn = log.Warn
 		}
 		logFn("Chain split detected", "number", commonBlock.Number(), "hash", commonBlock.Hash().Hex(),
-			"drop", len(oldChain), "dropfrom", oldChain[0].Hash().Hex(), "add", len(newChain), "addfrom", newChain[0].Hash())
+			"drop", len(oldChain), "dropfrom", oldChain[0].Hash().Hex(), "add", len(newChain), "addfrom", newChain[0].Hash().Hex())
 	} else {
 		log.Error("Impossible reorg, please file an issue", "oldnum", oldBlock.Number(), "oldhash", oldBlock.Hash().Hex(), "newnum", newBlock.Number(), "newhash", newBlock.Hash().Hex())
 	}

@@ -61,8 +61,6 @@ func Test_sigHash(t *testing.T) {
 			},
 			Validators: []common.Address{},
 		},
-		MixHash: common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Nonce:   types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
 
 	type args struct {
@@ -73,14 +71,14 @@ func Test_sigHash(t *testing.T) {
 		args     args
 		wantHash common.Hash
 	}{
-		{"sigHash", args{newHeader}, common.HexToHash("0x0ee92e96b718c658a3177e6409f78ff3931268d70a59ef08fc2b2aa5548a0865")},
+		{"sigHash", args{newHeader}, common.HexToHash("0x6bec641135280f927f60fe58ca9cb19dec92413bcc932eed8ac6b6e62c2d8e3d")},
 	}
 
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if gotHash := dporUtil.sigHash(tt.args.header, []byte{}); !reflect.DeepEqual(gotHash, tt.wantHash) {
-				t.Errorf("sigHash(%v) = %v, want %v", tt.args.header, gotHash, tt.wantHash)
+				t.Errorf("sigHash(%v) = %v, want %v", tt.args.header, gotHash.Hex(), tt.wantHash.Hex())
 			}
 		})
 	}
@@ -119,7 +117,7 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 }
 
 func Test_ecrecover(t *testing.T) {
-	addr := common.HexToAddress("0x8a62173DF795a4eBC4e51A6062277121424b6469")
+	addr := common.HexToAddress("0x175090470028dB72b52aA818698b73007b4F2F93")
 	//addr := common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")
 
 	tx1 := types.NewTransaction(0, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d87"), big.NewInt(10), 50000, big.NewInt(10), nil)
@@ -150,8 +148,6 @@ func Test_ecrecover(t *testing.T) {
 			},
 			Validators: []common.Address{},
 		},
-		MixHash: common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"),
-		Nonce:   types.EncodeNonce(uint64(0xa13a5a8c8f2bb1c4)),
 	}
 
 	sigs := &Signatures{

@@ -8,12 +8,10 @@ Modify ``genesis.toml`` in the directory examples/cpchain/conf-dev to configure 
 
 .. code::
 
-	nonce = 0
 	timestamp = 1492009146
 	#extraData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 	gasLimit = 47000000
 	difficulty = 1
-	mixHash = "0x0000000000000000000000000000000000000000000000000000000000000000"
 	coinbase = "0x0000000000000000000000000000000000000000"
 	number = 0
 	gasUsed = 0

@@ -72,8 +72,6 @@ message Block {
     uint64 number = 1;
     string hash = 2;
     string parentHash = 3;
-    uint64 nonce = 4;
-    string mixHash = 5;
     bytes logsBloom = 6;
     string stateRoot = 7;
     string miner = 8;

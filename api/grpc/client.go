@@ -96,7 +96,6 @@ func (c *Client) getBlock(ctx context.Context, method string, in *cpc.ChainReade
 
 func GRPCUnMarshalHeader(b *pb.Block) *types.Header {
 	header := new(types.Header)
-	header.Nonce = types.EncodeNonce(b.Nonce)
 	header.LogsBloom = types.BytesToBloom(b.LogsBloom)
 	header.Number = new(big.Int).SetUint64(b.Number)
 	header.GasUsed = b.GasUsed
@@ -109,7 +108,6 @@ func GRPCUnMarshalHeader(b *pb.Block) *types.Header {
 	header.Difficulty = new(big.Int).SetUint64(b.Difficulty)
 	header.GasLimit = b.GasLimit
 	header.StateRoot = common.HexToHash(b.StateRoot)
-	header.MixHash = common.HexToHash(b.MixHash)
 	return header
 }
 

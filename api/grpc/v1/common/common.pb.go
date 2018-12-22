@@ -5,9 +5,10 @@ package common
 
 import (
 	fmt "fmt"
+	math "math"
+
 	proto "github.com/golang/protobuf/proto"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -606,8 +607,6 @@ type Block struct {
 	Number               uint64            `protobuf:"varint,1,opt,name=number,proto3" json:"number,omitempty"`
 	Hash                 string            `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
 	ParentHash           string            `protobuf:"bytes,3,opt,name=parentHash,proto3" json:"parentHash,omitempty"`
-	Nonce                uint64            `protobuf:"varint,4,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	MixHash              string            `protobuf:"bytes,5,opt,name=mixHash,proto3" json:"mixHash,omitempty"`
 	LogsBloom            []byte            `protobuf:"bytes,6,opt,name=logsBloom,proto3" json:"logsBloom,omitempty"`
 	StateRoot            string            `protobuf:"bytes,7,opt,name=stateRoot,proto3" json:"stateRoot,omitempty"`
 	Miner                string            `protobuf:"bytes,8,opt,name=miner,proto3" json:"miner,omitempty"`
@@ -668,20 +667,6 @@ func (m *Block) GetHash() string {
 func (m *Block) GetParentHash() string {
 	if m != nil {
 		return m.ParentHash
-	}
-	return ""
-}
-
-func (m *Block) GetNonce() uint64 {
-	if m != nil {
-		return m.Nonce
-	}
-	return 0
-}
-
-func (m *Block) GetMixHash() string {
-	if m != nil {
-		return m.MixHash
 	}
 	return ""
 }

@@ -851,8 +851,6 @@ func RPCMarshalBlock(b *types.Block, inclTx bool, fullTx bool) (map[string]inter
 		"number":           (*hexutil.Big)(head.Number),
 		"hash":             b.Hash(),
 		"parentHash":       head.ParentHash,
-		"nonce":            head.Nonce,
-		"mixHash":          head.MixHash,
 		"logsBloom":        head.LogsBloom,
 		"stateRoot":        head.StateRoot,
 		"miner":            head.Coinbase,

@@ -109,8 +109,8 @@ func (d *defaultDporUtil) sigHash(header *types.Header, salt []byte) (hash commo
 		header.Dpor.Proposers,
 		header.Dpor.Validators,
 		header.Extra,
-		header.MixHash,
-		header.Nonce,
+		common.Hash{},
+		types.BlockNonce{},
 	}
 	if len(salt) > 0 { // if salt is empty, not append because even an empty slice will change hash, not meet the caller's intention.
 		contentToHash = append(contentToHash, salt)

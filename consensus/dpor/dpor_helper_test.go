@@ -74,21 +74,6 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 					Number: big.NewInt(5), Time: time, Extra: hexutil.MustDecode(string(extraErr1))},
 				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
-		{"errInvalidMixHash", dh,
-			args{
-				header: &types.Header{
-					Number: big.NewInt(7),
-					Time:   time,
-					Extra:  hexutil.MustDecode(string(rightExtra)),
-					Dpor: types.DporSnap{
-						Seal: types.HexToDporSig(rightSeal),
-						Proposers: []common.Address{
-							common.HexToAddress(rightAddr),
-						},
-					},
-					MixHash: common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0")},
-				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
-
 		{"errInvalidDifficulty", dh,
 			args{
 				header: &types.Header{
@@ -100,8 +85,7 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 						Proposers: []common.Address{
 							common.HexToAddress(rightAddr),
 						},
-					},
-					MixHash: common.Hash{}},
+					}},
 				c: &Dpor{config: &configs.DporConfig{TermLen: 3}}}, true},
 
 		{"success", dh,
@@ -116,7 +100,6 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 							common.HexToAddress(rightAddr),
 						},
 					},
-					MixHash:    common.Hash{},
 					Difficulty: big.NewInt(2)},
 				c:       &Dpor{config: &configs.DporConfig{TermLen: 3}, dh: &defaultDporHelper{}},
 				chain:   &FakeReader{},
@@ -261,28 +244,8 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 						},
 						Seal: types.HexToDporSig(rightSeal),
 					},
-					MixHash:    common.Hash{},
 					Difficulty: big.NewInt(2)}},
 			true},
-
-		//{"fail when block number is 1", &defaultDporHelper{},
-		//	args{
-		//		c: &Dpor{
-		//			config:  &params.DporConfig{Period: 3},
-		//			db:      &fakeDb{1},
-		//			recents: recents,
-		//			dh:      &fakeDporHelper{},
-		//			du:      &fakeDporUtil{true}},
-		//		chain: &FakeReader{},
-		//		header: &types.Header{
-		//			Number:     big.NewInt(1),
-		//			Time:       time1,
-		//			Extra:      hexutil.MustDecode(string(rightExtra)),
-		//			Extra2:     hexutil.MustDecode(rightExtra2),
-		//			MixHash:  common.Hash{},
-		//			UncleHash:  types.CalcUncleHash(nil),
-		//			Difficulty: big.NewInt(2)}},
-		//	true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -88,9 +88,9 @@ type HeaderOld struct {
 	GasUsed      uint64         `json:"gasUsed"          gencodec:"required"`
 	Time         *big.Int       `json:"timestamp"        gencodec:"required"`
 	Extra        []byte         `json:"extraData"        gencodec:"required"`
-	Extra2       []byte         `json:"extraData2"       gencodec:"required"`
 	MixHash      common.Hash    `json:"mixHash"          gencodec:"required"`
 	Nonce        BlockNonce     `json:"nonce"            gencodec:"required"`
+	Dpor         DporSnap       `json:"dpor"             gencodec:"required"`
 }
 
 func (h *HeaderOld) ToNewType() *Header {
@@ -107,38 +107,10 @@ func (h *HeaderOld) ToNewType() *Header {
 		GasUsed:      h.GasUsed,
 		Time:         h.Time,
 		Extra:        h.Extra,
-		MixHash:      h.MixHash,
-		Nonce:        h.Nonce,
 	}
 	// update dpor field
-	newHeader.Dpor = *h.extractDporSnap()
+	newHeader.Dpor = h.Dpor
 	return newHeader
-}
-
-func (h *HeaderOld) extractDporSnap() *DporSnap {
-	dpor := new(DporSnap)
-	// Update dpor snap every time, not consider performance hit because it is temporary code. @AC
-	if len(h.Extra)-extraVanity > 0 {
-		proBuf := h.Extra[extraVanity : len(h.Extra)-extraSeal]
-		proCount := len(proBuf) / common.AddressLength
-		dpor.Proposers = make([]common.Address, proCount)
-		for i := 0; i < proCount; i++ {
-			dpor.Proposers[i] = common.BytesToAddress(proBuf[i*common.AddressLength : (i+1)*common.AddressLength])
-		}
-
-		sealBuf := h.Extra[len(h.Extra)-extraSeal:]
-		dpor.Seal = DporSignature{}
-		copy(dpor.Seal[:], sealBuf)
-	}
-
-	if len(h.Extra2) > 0 {
-		sigCount := len(h.Extra2) / DporSigLength
-		dpor.Sigs = make([]DporSignature, sigCount)
-		for i := 0; i < sigCount; i++ {
-			copy(dpor.Sigs[i][:], h.Extra2[i*DporSigLength:(i+1)*DporSigLength])
-		}
-	}
-	return dpor
 }
 
 func (header *HeaderOld) Hash() (hash common.Hash) {
@@ -157,8 +129,6 @@ func (header *HeaderOld) Hash() (hash common.Hash) {
 		header.GasUsed,
 		header.Time,
 		header.Extra,
-		header.MixHash,
-		header.Nonce,
 	})
 	hasher.Sum(hash[:0])
 	return hash
@@ -172,7 +142,6 @@ type headerOldMarshaling struct {
 	GasUsed    hexutil.Uint64
 	Time       *hexutil.Big
 	Extra      hexutil.Bytes
-	Extra2     hexutil.Bytes
 	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
 }
 
