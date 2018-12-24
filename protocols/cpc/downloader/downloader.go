@@ -318,6 +318,8 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 
 	case errTimeout, errStallingPeer,
 		errEmptyHeaderSet, errTooOld,
+		errPeersUnavailable,
+		errBadPeer,
 		errInvalidAncestor, errInvalidChain:
 		log.Warn("Synchronisation failed, dropping peer", "peer", id, "err", err)
 		if d.dropPeer == nil {
@@ -328,10 +330,6 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 			log.Warn("dropping peer in downloader", "peer", id)
 			d.dropPeer(id)
 		}
-
-	case errBadPeer, errPeersUnavailable:
-		// TODO: @liuq fix this
-		log.Debug("err when sync with peer", "err", err)
 
 	case consensus.ErrNotEnoughSigs:
 		log.Debug("Not enough signatures, waiting", "err", err)
