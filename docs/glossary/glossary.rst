@@ -44,3 +44,39 @@ Glossary
 |                           | aiming to propose an impeach block |
 |                           | on behalf of the a faulty proposer |
 +---------------------------+------------------------------------+
+| Term                      | A term refers a period that a batch|
+|                           | of proposers elected for a certain |
+|                           | proposers committee. Term is a     |
+|                           | monotone increasing integer, whose |
+|                           | value is added by one each time    |
+|                           | it changes                         |
++---------------------------+------------------------------------+
+| Epoch                     | An obsolete variable name for      |
+|                           | *term*                             |
+|                           |                                    |
++---------------------------+------------------------------------+
+| TermLen                   | Short for term length. It refers to|
+|                           | the number of proposers in a       |
+|                           | certain term. This value limits    |
+|                           | the size of proposers committee,   |
+|                           | and remains a constant unless the  |
+|                           | consensus model adjusts            |
++---------------------------+------------------------------------+
+| View                      | It represents the index of the     |
+|                           | proposer in the committee in a     |
+|                           | certain term. This value is an     |
+|                           | integer varying from 1 to TermLen  |
+|                           |                                    |
+|                           |                                    |
++---------------------------+------------------------------------+
+| Round                     | An obsolete variable name for      |
+|                           | *view*                             |
+|                           |                                    |
++---------------------------+------------------------------------+
+| ViewLen                   | A proposer is able to propose one  |
+|                           | or more blocks when it comes to its|
+|                           | view. The number of blocks it can  |
+|                           | propose is ViewLen. It is also     |
+|                           | fixed unless the consensus model   |
+|                           | adjusts                            |
++---------------------------+------------------------------------+

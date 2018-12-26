@@ -110,8 +110,9 @@ type Downloader struct {
 	syncStatsState       stateSyncStats
 	syncStatsLock        sync.RWMutex // Lock protecting the sync stats fields
 
+	// TODO: remove lightchain
 	lightchain LightChain
-	Blockchain BlockChain
+	blockchain BlockChain
 
 	// Callbacks
 	dropPeer peerDropFn // Drops a peer for misbehaving
@@ -123,17 +124,17 @@ type Downloader struct {
 	committed       int32
 
 	// Channels
-	headerCh      chan dataPack        // [eth/62] Channel receiving inbound block headers
-	bodyCh        chan dataPack        // [eth/62] Channel receiving inbound block bodies
-	receiptCh     chan dataPack        // [eth/63] Channel receiving inbound receipts
-	bodyWakeCh    chan bool            // [eth/62] Channel to signal the block body fetcher of new tasks
-	receiptWakeCh chan bool            // [eth/63] Channel to signal the receipt fetcher of new tasks
-	headerProcCh  chan []*types.Header // [eth/62] Channel to feed the header processor new tasks
+	headerCh      chan dataPack        // [cpc/1] Channel receiving inbound block headers
+	bodyCh        chan dataPack        // [cpc/1] Channel receiving inbound block bodies
+	receiptCh     chan dataPack        // [cpc/1] Channel receiving inbound receipts
+	bodyWakeCh    chan bool            // [cpc/1] Channel to signal the block body fetcher of new tasks
+	receiptWakeCh chan bool            // [cpc/1] Channel to signal the receipt fetcher of new tasks
+	headerProcCh  chan []*types.Header // [cpc/1] Channel to feed the header processor new tasks
 
 	// for stateFetcher
 	stateSyncStart chan *stateSync
 	trackStateReq  chan *stateReq
-	stateCh        chan dataPack // [eth/63] Channel receiving inbound node state data
+	stateCh        chan dataPack // [cpc/1] Channel receiving inbound node state data
 
 	// Cancellation and termination
 	cancelPeer string         // Identifier of the peer currently being used as the master (cancel on drop)
@@ -212,7 +213,7 @@ func New(mode SyncMode, stateDb database.Database, mux *event.TypeMux, chain Blo
 		peers:          newPeerSet(),
 		rttEstimate:    uint64(rttMaxEstimate),
 		rttConfidence:  uint64(1000000),
-		Blockchain:     chain,
+		blockchain:     chain,
 		lightchain:     lightchain,
 		dropPeer:       dropPeer,
 		headerCh:       make(chan dataPack, 1),
@@ -249,7 +250,7 @@ func (d *Downloader) Progress() cpchain.SyncProgress {
 	current := uint64(0)
 	switch d.mode {
 	case FullSync:
-		current = d.Blockchain.CurrentBlock().NumberU64()
+		current = d.blockchain.CurrentBlock().NumberU64()
 	}
 	return cpchain.SyncProgress{
 		StartingBlock: d.syncStatsChainOrigin,
@@ -280,17 +281,18 @@ func (d *Downloader) RegisterPeer(id string, version int, peer Peer) error {
 	return nil
 }
 
-// RegisterLightPeer injects a light client peer, wrapping it so it appears as a regular peer.
-func (d *Downloader) RegisterLightPeer(id string, version int, peer LightPeer) error {
-	return d.RegisterPeer(id, version, &lightPeerWrapper{peer})
-}
+// // RegisterLightPeer injects a light client peer, wrapping it so it appears as a regular peer.
+// func (d *Downloader) RegisterLightPeer(id string, version int, peer LightPeer) error {
+// 	return d.RegisterPeer(id, version, &lightPeerWrapper{peer})
+// }
 
 // UnregisterPeer remove a peer from the known list, preventing any action from
 // the specified peer. An effort is also made to return any pending fetches into
 // the queue.
 func (d *Downloader) UnregisterPeer(id string) error {
 	// Unregister the peer from the active peer set and revoke any fetch tasks
-	logger := log.New("peer", id)
+	// logger := log.New("peer", id)
+	logger := log.Root()
 	logger.Debug("Unregistering sync peer")
 	if err := d.peers.Unregister(id); err != nil {
 		logger.Error("Failed to unregister sync peer", "err", err)
@@ -313,22 +315,31 @@ func (d *Downloader) UnregisterPeer(id string) error {
 // adding various sanity checks as well as wrapping it with various log entries.
 func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode SyncMode) error {
 	err := d.synchronise(id, head, ht, mode)
+
+	log.Debug("err when synchronise", "err", err)
+
 	switch err {
 	case nil:
 	case errBusy:
 
-	case errTimeout, errStallingPeer,
-		errEmptyHeaderSet, errTooOld,
-		errPeersUnavailable,
+	// case errBadPeer:
+	// 	// TODO: fix this
+
+	case errStallingPeer,
+		errTimeout,
 		errBadPeer,
-		errInvalidAncestor, errInvalidChain:
+		errInvalidChain,
+		errEmptyHeaderSet,
+		errTooOld,
+		errPeersUnavailable,
+		errInvalidAncestor:
 		log.Warn("Synchronisation failed, dropping peer", "peer", id, "err", err)
 		if d.dropPeer == nil {
 			// The dropPeer method is nil when `--copydb` is used for a local copy.
 			// Timeouts can occur if e.g. compaction hits at the wrong time, and can be ignored
 			log.Warn("Downloader wants to drop peer, but peerdrop-function is not set", "peer", id)
 		} else {
-			log.Warn("dropping peer in downloader", "peer", id)
+			log.Warn("Dropping peer in downloader", "peer", id)
 			d.dropPeer(id)
 		}
 
@@ -416,9 +427,6 @@ func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, ht *big.I
 			d.mux.Post(DoneEvent{})
 		}
 	}()
-	// if p.version < 62 {
-	// 	return errTooOld
-	// }
 
 	log.Debug("Synchronising with the network", "peer", p.id, "eth", p.version, "head", hash, "td", ht, "mode", d.mode)
 	defer func(start time.Time) {
@@ -584,10 +592,10 @@ func (d *Downloader) fetchHeight(p *peerConnection) (*types.Header, error) {
 // the head links match), we do a binary search to find the common ancestor.
 func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, error) {
 	// Figure out the valid ancestor range to prevent rewrite attacks
-	floor, ceil := int64(-1), d.lightchain.CurrentHeader().Number.Uint64()
+	floor, ceil := int64(-1), d.blockchain.CurrentBlock().NumberU64()
 
 	if d.mode == FullSync {
-		ceil = d.Blockchain.CurrentBlock().NumberU64()
+		ceil = d.blockchain.CurrentBlock().NumberU64()
 	}
 	if ceil >= MaxForkAncestry {
 		floor = int64(ceil - MaxForkAncestry)
@@ -649,7 +657,7 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 					continue
 				}
 				// Otherwise check if we already know the header or not
-				if (d.mode == FullSync && d.Blockchain.HasBlock(headers[i].Hash(), headers[i].Number.Uint64())) || (d.mode != FullSync && d.lightchain.HasHeader(headers[i].Hash(), headers[i].Number.Uint64())) {
+				if (d.mode == FullSync && d.blockchain.HasBlock(headers[i].Hash(), headers[i].Number.Uint64())) || (d.mode != FullSync && d.lightchain.HasHeader(headers[i].Hash(), headers[i].Number.Uint64())) {
 					number, hash = headers[i].Number.Uint64(), headers[i].Hash()
 
 					// If every header is known, even future ones, the peer straight out lied about its head
@@ -714,7 +722,7 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 				arrived = true
 
 				// Modify the search interval based on the response
-				if (d.mode == FullSync && !d.Blockchain.HasBlock(headers[0].Hash(), headers[0].Number.Uint64())) || (d.mode != FullSync && !d.lightchain.HasHeader(headers[0].Hash(), headers[0].Number.Uint64())) {
+				if (d.mode == FullSync && !d.blockchain.HasBlock(headers[0].Hash(), headers[0].Number.Uint64())) || (d.mode != FullSync && !d.lightchain.HasHeader(headers[0].Hash(), headers[0].Number.Uint64())) {
 					end = check
 					break
 				}
@@ -1146,12 +1154,11 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 				}
 				running = true
 			}
-			// TODO: fix this
 			// Make sure that we have peers available for fetching. If all peers have been tried
 			// and all failed throw an error
 			if !progressed && !throttled && !running && len(idles) == total && pending() > 0 {
-				//log.Debug("errPeersUnavailable", "progressed", progressed, "throttled", throttled, "running", running,
-				//	"len(idles)", len(idles), "total", total, "pending()", pending())
+				log.Debug("errPeersUnavailable", "progressed", progressed, "throttled", throttled, "running", running,
+					"len(idles)", len(idles), "total", total, "pending()", pending())
 				return errPeersUnavailable
 			}
 		}
@@ -1173,14 +1180,14 @@ func (d *Downloader) processHeaders(origin uint64, pivot uint64, ht *big.Int) er
 			}
 			lastHeader, lastFastBlock, lastBlock := d.lightchain.CurrentHeader().Number, common.Big0, common.Big0
 			if d.mode == FullSync {
-				lastFastBlock = d.Blockchain.CurrentFastBlock().Number()
-				lastBlock = d.Blockchain.CurrentBlock().Number()
+				lastFastBlock = d.blockchain.CurrentFastBlock().Number()
+				lastBlock = d.blockchain.CurrentBlock().Number()
 			}
 			d.lightchain.Rollback(hashes)
 			curFastBlock, curBlock := common.Big0, common.Big0
 			if d.mode == FullSync {
-				curFastBlock = d.Blockchain.CurrentFastBlock().Number()
-				curBlock = d.Blockchain.CurrentBlock().Number()
+				curFastBlock = d.blockchain.CurrentFastBlock().Number()
+				curBlock = d.blockchain.CurrentBlock().Number()
 			}
 			log.Warn("Rolled back headers", "count", len(hashes),
 				"header", fmt.Sprintf("%d->%d", lastHeader, d.lightchain.CurrentHeader().Number),
@@ -1220,8 +1227,8 @@ func (d *Downloader) processHeaders(origin uint64, pivot uint64, ht *big.Int) er
 				// L: Request new headers up from 11 (R's TD was higher, it must have something)
 				// R: Nothing to give
 				if d.mode == FullSync {
-					head := d.Blockchain.CurrentBlock()
-					if !gotHeaders && ht.Cmp(d.Blockchain.GetTd(head.Hash(), head.NumberU64())) > 0 {
+					head := d.blockchain.CurrentBlock()
+					if !gotHeaders && ht.Cmp(d.blockchain.GetTd(head.Hash(), head.NumberU64())) > 0 {
 						return errStallingPeer
 					}
 				}
@@ -1321,7 +1328,7 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 	for i, result := range results {
 		blocks[i] = types.NewBlockWithHeader(result.Header).WithBody(result.Transactions)
 	}
-	if index, err := d.Blockchain.InsertChain(blocks); err != nil {
+	if index, err := d.blockchain.InsertChain(blocks); err != nil {
 		log.Debug("Downloaded item processing failed", "number", results[index].Header.Number, "hash", results[index].Header.Hash(), "err", err)
 		// TODO: fix this.
 		if err == consensus.ErrNotEnoughSigs {
@@ -1468,7 +1475,7 @@ func (d *Downloader) commitFastSyncData(results []*fetchResult, stateSync *state
 		blocks[i] = types.NewBlockWithHeader(result.Header).WithBody(result.Transactions)
 		receipts[i] = result.Receipts
 	}
-	if index, err := d.Blockchain.InsertReceiptChain(blocks, receipts); err != nil {
+	if index, err := d.blockchain.InsertReceiptChain(blocks, receipts); err != nil {
 		log.Debug("Downloaded item processing failed", "number", results[index].Header.Number, "hash", results[index].Header.Hash(), "err", err)
 		return errInvalidChain
 	}
@@ -1478,10 +1485,10 @@ func (d *Downloader) commitFastSyncData(results []*fetchResult, stateSync *state
 func (d *Downloader) commitPivotBlock(result *fetchResult) error {
 	block := types.NewBlockWithHeader(result.Header).WithBody(result.Transactions)
 	log.Debug("Committing fast sync pivot as new head", "number", block.Number(), "hash", block.Hash())
-	if _, err := d.Blockchain.InsertReceiptChain([]*types.Block{block}, []types.Receipts{result.Receipts}); err != nil {
+	if _, err := d.blockchain.InsertReceiptChain([]*types.Block{block}, []types.Receipts{result.Receipts}); err != nil {
 		return err
 	}
-	if err := d.Blockchain.FastSyncCommitHead(block.Hash()); err != nil {
+	if err := d.blockchain.FastSyncCommitHead(block.Hash()); err != nil {
 		return err
 	}
 	atomic.StoreInt32(&d.committed, 1)

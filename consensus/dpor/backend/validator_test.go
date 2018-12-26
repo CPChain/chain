@@ -20,14 +20,15 @@ func TestHandler_handleLbftMsg(t *testing.T) {
 		coinbase       common.Address
 		dialer         *Dialer
 		snap           *consensus.PbftStatus
+		fsm            *DporStateMachine
 		dpor           DporService
 		knownBlocks    *RecentBlocks
 		pendingBlockCh chan *types.Block
-		quitSync       chan struct{}
+		quitCh         chan struct{}
 	}
 	type args struct {
 		msg p2p.Msg
-		p   *RemoteValidator
+		p   *RemoteSigner
 	}
 	tests := []struct {
 		name    string
@@ -48,10 +49,11 @@ func TestHandler_handleLbftMsg(t *testing.T) {
 				coinbase:       tt.fields.coinbase,
 				dialer:         tt.fields.dialer,
 				snap:           tt.fields.snap,
+				fsm:            tt.fields.fsm,
 				dpor:           tt.fields.dpor,
 				knownBlocks:    tt.fields.knownBlocks,
 				pendingBlockCh: tt.fields.pendingBlockCh,
-				quitCh:         tt.fields.quitSync,
+				quitCh:         tt.fields.quitCh,
 			}
 			if err := vh.handleLbftMsg(tt.args.msg, tt.args.p); (err != nil) != tt.wantErr {
 				t.Errorf("Handler.handleLbftMsg() error = %v, wantErr %v", err, tt.wantErr)

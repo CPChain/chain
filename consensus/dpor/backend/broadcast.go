@@ -8,24 +8,31 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func waitForEnoughValidator(h *Handler, term uint64) (validators map[common.Address]*RemoteValidator) {
+func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
 	ready := false
 	for !ready {
-
-		validators = h.dialer.ValidatorsOfTerm(term)
-
-		log.Debug("validators in dpor handler when broadcasting...")
-		for addr := range validators {
-			log.Debug("validator", "addr", addr.Hex())
-		}
-
-		if len(validators) >= int(h.config.TermLen-h.fsm.f) {
+		select {
+		case <-quitCh:
 			return
+
+		default:
+
+			validators = h.dialer.ValidatorsOfTerm(term)
+
+			log.Debug("validators in dpor handler when broadcasting...")
+			for addr := range validators {
+				log.Debug("validator", "addr", addr.Hex())
+			}
+
+			if len(validators) >= int(h.config.TermLen-h.fsm.f)-1 {
+				return
+			}
+
+			go h.dialer.DialAllRemoteValidators(term)
+
+			time.Sleep(1 * time.Second)
+
 		}
-
-		go h.dialer.DialAllRemoteValidators(term)
-
-		time.Sleep(1 * time.Second)
 	}
 	return
 }
@@ -36,7 +43,7 @@ func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 	log.Debug("proposed new pending block, broadcasting")
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForEnoughValidator(h, term)
+	validators := waitForEnoughValidator(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPreprepareBlock(block)
@@ -49,7 +56,7 @@ func (h *Handler) BroadcastPreprepareImpeachBlock(block *types.Block) {
 	log.Debug("proposed new pending impeach block, broadcasting")
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForEnoughValidator(h, term)
+	validators := waitForEnoughValidator(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPreprepareImpeachBlock(block)
@@ -64,7 +71,7 @@ func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 	log.Debug("composed prepare header msg, broadcasting", "number", header.Number.Uint64())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := h.dialer.ValidatorsOfTerm(term)
+	validators := waitForEnoughValidator(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPrepareHeader(header)
@@ -79,7 +86,7 @@ func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
 	log.Debug("composed prepare impeach header msg, broadcasting", "number", header.Number.Uint64())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := h.dialer.ValidatorsOfTerm(term)
+	validators := waitForEnoughValidator(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPrepareImpeachHeader(header)
@@ -94,7 +101,7 @@ func (h *Handler) BroadcastCommitHeader(header *types.Header) {
 	log.Debug("composed commit header msg, broadcasting", "number", header.Number.Uint64())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := h.dialer.ValidatorsOfTerm(term)
+	validators := waitForEnoughValidator(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendCommitHeader(header)
@@ -109,7 +116,7 @@ func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
 	log.Debug("composed commit impeach header msg, broadcasting", "number", header.Number.Uint64())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := h.dialer.ValidatorsOfTerm(term)
+	validators := waitForEnoughValidator(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendCommitImpeachHeader(header)

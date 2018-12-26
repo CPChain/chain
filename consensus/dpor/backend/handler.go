@@ -59,7 +59,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 		config:         config,
 		coinbase:       coinbase,
 		knownBlocks:    newKnownBlocks(),
-		dialer:         NewDialer(coinbase, config.Contracts[configs.ContractProposer]),
+		dialer:         NewDialer(),
 		pendingBlockCh: make(chan *types.Block),
 		quitCh:         make(chan struct{}),
 		available:      false,
@@ -177,16 +177,18 @@ func (h *Handler) RemovePeer(addr string) {
 // HandleMsg handles a msg of peer with id "addr"
 func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 
-	remoteValidator, ok := h.dialer.getValidator(addr)
-	if !ok {
-		// TODO: return new err
-		return nil
-	}
+	remoteValidator, isV := h.dialer.getValidator(addr)
+	remoteProposer, isP := h.dialer.getValidator(addr)
 
-	return h.handleMsg(remoteValidator, msg)
+	if isV {
+		return h.handleMsg(remoteValidator.RemoteSigner, msg)
+	} else if isP {
+		return h.handleMsg(remoteProposer.RemoteSigner, msg)
+	}
+	return nil
 }
 
-func (h *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
+func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 	log.Debug("handling msg", "msg", msg.Code)
 
 	if msg.Code == NewSignerMsg {
@@ -202,11 +204,6 @@ func (h *Handler) handleMsg(p *RemoteValidator, msg p2p.Msg) error {
 	default:
 		return ErrUnknownHandlerMode
 	}
-}
-
-// SetClient sets dialer.contractCaller
-func (h *Handler) SetClient(client ClientBackend) error {
-	return h.dialer.SetClient(client)
 }
 
 // SetServer sets dialer.server
