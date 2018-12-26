@@ -18,9 +18,12 @@ package dpor
 
 import (
 	"bytes"
+	"encoding/binary"
 	"math/big"
 	"sync"
 	"time"
+
+	"bitbucket.org/cpchain/chain/database"
 
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -214,4 +217,62 @@ func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 // current signer.
 func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
 	return new(big.Int).Set(DporDifficulty)
+}
+
+const (
+	maxSignedBlocksRecordInCache = 1024
+)
+
+type signedBlocksRecord struct {
+	cache *lru.ARCCache
+	db    database.Database
+	lock  sync.RWMutex
+}
+
+func newSignedBlocksRecord(db database.Database) *signedBlocksRecord {
+	cache, _ := lru.NewARC(maxSignedBlocksRecordInCache)
+	return &signedBlocksRecord{
+		db:    db,
+		cache: cache,
+	}
+}
+
+func (sbr *signedBlocksRecord) IfAlreadySigned(number uint64) (common.Hash, bool) {
+	sbr.lock.RLock()
+	defer sbr.lock.RUnlock()
+
+	// retrieve from cache
+	h, ok := sbr.cache.Get(number)
+	if ok {
+		hash := h.(common.Hash)
+		return hash, ok
+	}
+
+	// retrieve from db
+	hb, err := sbr.db.Get(numberToBytes(number))
+	if err == nil {
+		hash, ok := common.BytesToHash(hb), true
+		return hash, ok
+	}
+
+	return common.Hash{}, false
+}
+
+func (sbr *signedBlocksRecord) MarkAsSigned(number uint64, hash common.Hash) (err error) {
+	sbr.lock.Lock()
+	defer sbr.lock.Unlock()
+
+	// add to cache
+	sbr.cache.Add(number, hash)
+
+	// add to db
+	err = sbr.db.Put(numberToBytes(number), hash.Bytes())
+
+	return
+}
+
+func numberToBytes(number uint64) []byte {
+	numberBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(numberBytes, number)
+	return numberBytes
 }

@@ -513,6 +513,12 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			header.Dpor.Sigs = make([]types.DporSignature, snap.config.TermLen)
 		}
 
+		// mark as signed
+		err = dpor.MarkAsSigned(number, hash)
+		if err != nil {
+			return err
+		}
+
 		// Copy signer's signature to the right position in the allSigs
 		sigPos, _ := snap.ValidatorViewOf(dpor.Coinbase(), number)
 		copy(header.Dpor.Sigs[sigPos][:], sighash)

@@ -268,7 +268,8 @@ func (d *Downloader) Synchronising() bool {
 // RegisterPeer injects a new download peer into the set of block source to be
 // used for fetching hashes and blocks from.
 func (d *Downloader) RegisterPeer(id string, version int, peer Peer) error {
-	logger := log.New("peer", id)
+	// logger := log.New("peer", id)
+	logger := log.Root()
 	logger.Debug("Registering sync peer")
 	if err := d.peers.Register(newPeerConnection(id, version, peer, logger)); err != nil {
 		logger.Error("Failed to register sync peer", "err", err)
@@ -312,13 +313,26 @@ func (d *Downloader) UnregisterPeer(id string) error {
 // adding various sanity checks as well as wrapping it with various log entries.
 func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode SyncMode) error {
 	err := d.synchronise(id, head, ht, mode)
+
+	log.Debug("err when synchronise", "err", err)
+
 	switch err {
 	case nil:
 	case errBusy:
 
-	case errTimeout, errStallingPeer,
+	case errTimeout:
+		// TODO: fix this
+
+	case errBadPeer:
+		// TODO: fix this
+
+	case errInvalidChain:
+		// TODO: fix this
+
+	case errStallingPeer,
 		errEmptyHeaderSet, errTooOld,
-		errInvalidAncestor, errInvalidChain:
+		errPeersUnavailable,
+		errInvalidAncestor:
 		log.Warn("Synchronisation failed, dropping peer", "peer", id, "err", err)
 		if d.dropPeer == nil {
 			// The dropPeer method is nil when `--copydb` is used for a local copy.
@@ -328,10 +342,6 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 			log.Warn("dropping peer in downloader", "peer", id)
 			d.dropPeer(id)
 		}
-
-	case errBadPeer, errPeersUnavailable:
-		// TODO: @liuq fix this
-		log.Debug("err when sync with peer", "err", err)
 
 	case consensus.ErrNotEnoughSigs:
 		log.Debug("Not enough signatures, waiting", "err", err)

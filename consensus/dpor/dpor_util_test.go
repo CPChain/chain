@@ -18,6 +18,7 @@ package dpor
 
 import (
 	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -25,10 +26,12 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -303,4 +306,68 @@ func Test_calcDifficulty(t *testing.T) {
 			}
 		})
 	}
+}
+
+type fakeDBForSignedBlocksRecord struct {
+	m map[string][]byte
+}
+
+func newFakeDBForSignedBlocksRecord() *fakeDBForSignedBlocksRecord {
+	return &fakeDBForSignedBlocksRecord{
+		m: make(map[string][]byte),
+	}
+}
+
+func (f *fakeDBForSignedBlocksRecord) Put(key []byte, value []byte) error {
+	fmt.Println("excuting put, key", key, "value", value)
+	f.m[string(key)] = value
+	return nil
+}
+
+func (f *fakeDBForSignedBlocksRecord) Delete(key []byte) error {
+	panic("not implemented")
+}
+
+func (f *fakeDBForSignedBlocksRecord) Get(key []byte) ([]byte, error) {
+	fmt.Println("excuting get, key", key)
+	value, ok := f.m[string(key)]
+	if ok {
+		return value, nil
+	}
+	return nil, errors.New("no value")
+}
+
+func (f *fakeDBForSignedBlocksRecord) Has(key []byte) (bool, error) {
+	panic("not implemented")
+}
+
+func (f *fakeDBForSignedBlocksRecord) Close() {
+	panic("not implemented")
+}
+
+func (f *fakeDBForSignedBlocksRecord) NewBatch() database.Batch {
+	panic("not implemented")
+}
+
+func Test_newSignedBlocksRecord(t *testing.T) {
+	db := newFakeDBForSignedBlocksRecord()
+	fsbr := newSignedBlocksRecord(db)
+
+	number, hash := generateNH()
+	fmt.Println(number, hash)
+
+	fsbr.MarkAsSigned(number, hash)
+	if h, ok := fsbr.IfAlreadySigned(number); h != hash || !ok {
+		t.Error("hh", "hash", h, "want", hash, "ok", ok)
+	}
+
+	// TODO: add more tests here
+
+}
+
+// generate random number and hash
+func generateNH() (number uint64, hash common.Hash) {
+	number = uint64(time.Now().UnixNano())
+	hash = common.BytesToHash(numberToBytes(number))
+	return
 }

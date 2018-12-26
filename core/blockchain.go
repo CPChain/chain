@@ -135,6 +135,8 @@ type BlockChain struct {
 	privateStateCache state.Database          // State database to reuse between imports (contains state cache)
 	remoteDB          database.RemoteDatabase // Remote database for huge amount data storage
 
+	insertChainProtectLock sync.RWMutex
+
 	ErrChan chan error
 }
 
@@ -1053,8 +1055,13 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 //
 // After insertion is done, all accumulated events will be fired.
 func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
+	bc.insertChainProtectLock.Lock()
+
 	n, events, logs, err := bc.insertChain(chain)
 	bc.CommitStateDB()
+
+	bc.insertChainProtectLock.Unlock()
+
 	bc.PostChainEvents(events, logs)
 	return n, err
 }

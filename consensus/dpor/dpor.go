@@ -48,8 +48,7 @@ type Dpor struct {
 	finalSigs   *lru.ARCCache // Final signatures of recent blocks to speed up mining
 	prepareSigs *lru.ARCCache // The signatures of recent blocks for 'prepared' state
 
-	signedBlocks     map[uint64]common.Hash // Record signed blocks.
-	signedBlocksLock sync.RWMutex
+	signedBlocks *signedBlocksRecord // Record signed blocks.
 
 	currentSnap     *DporSnapshot // Current snapshot
 	currentSnapLock sync.RWMutex
@@ -164,7 +163,7 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 	finalSigs, _ := lru.NewARC(inMemorySignatures)
 	preparedSigs, _ := lru.NewARC(inMemorySignatures)
 
-	signedBlocks := make(map[uint64]common.Hash)
+	signedBlocks := newSignedBlocksRecord(db)
 
 	return &Dpor{
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
@@ -208,15 +207,14 @@ func (d *Dpor) SetHandler(handler *backend.Handler) error {
 	return nil
 }
 
-// IfSigned returns if already signed the block
+// IfSigned checks if already signed a block
 func (d *Dpor) IfSigned(number uint64) (common.Hash, bool) {
-	d.signedBlocksLock.RLock()
-	defer d.signedBlocksLock.RUnlock()
+	return d.signedBlocks.IfAlreadySigned(number)
+}
 
-	if hash, ok := d.signedBlocks[number]; ok {
-		return hash, true
-	}
-	return common.Hash{}, false
+// MarkAsSigned marks signed a hash as signed
+func (d *Dpor) MarkAsSigned(number uint64, hash common.Hash) error {
+	return d.signedBlocks.MarkAsSigned(number, hash)
 }
 
 // StartMining starts to create a handler and start it.
