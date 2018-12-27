@@ -133,8 +133,10 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	if len(manager.SubProtocols) == 0 {
 		return nil, errIncompatibleConfig
 	}
+	// TODO: fix this
 	// downloader
-	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
+	manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, nil)
+	// manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
 	// fetcher specific
 	// verifies the header when insert into the chain
@@ -358,7 +360,6 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 				default:
 					log.Warn("err when handling dpor msg", "err", err)
-					return err
 				}
 
 			default:
