@@ -267,7 +267,7 @@ func doTest(cmdline []string, noCache bool) {
 	// and some tests run into timeouts under load.
 	gotest.Args = append(gotest.Args, "-p", "1")
 	if *coverage {
-		gotest.Args = append(gotest.Args, "-covermode=atomic", "-cover")
+		gotest.Args = append(gotest.Args, "-covermode=set", "-cover", "-coverprofile=build/_workspace/coverage.out")
 	}
 
 	gotest.Args = append(gotest.Args, packages...)

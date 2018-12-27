@@ -52,6 +52,10 @@ test-nocache: all
 
 test-coverage: all
 	build/env.sh go run build/ci.go test -coverage
+	#go tool cover -html=build/_workspace/coverage.out -o build/_workspace/coverage.html
+	#go tool cover -func=build/_workspace/coverage.out -o build/_workspace/coverage.txt
+	#go get github.com/t-yuki/gocover-cobertura
+	#gocover-cobertura < build/_workspace/coverage.out >  build/_workspace/cobertura.xml
 
 test-race: all
 	build/env.sh go run build/ci.go raceTest
