@@ -13,9 +13,10 @@ import (
 	"strings"
 	"sync"
 
+	"google.golang.org/grpc"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/internal/debug"
@@ -624,11 +625,6 @@ func (n *Node) OpenDatabase(name string, cache, handles int) (database.Database,
 // ResolvePath returns the absolute path of a resource in the instance directory.
 func (n *Node) ResolvePath(x string) string {
 	return n.config.resolvePath(x)
-}
-
-func (n *Node) gapis() []grpc.GApi {
-	// nothing enabled for node itself.
-	return []grpc.GApi{}
 }
 
 // apis returns the collection of RPC descriptors this node offers.
