@@ -31,10 +31,8 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 			go h.dialer.DialAllRemoteValidators(term)
 
 			time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
-
 		}
 	}
-	return
 }
 
 // BroadcastPreprepareBlock broadcasts generated block to validators
