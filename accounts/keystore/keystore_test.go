@@ -17,20 +17,21 @@
 package keystore
 
 import (
+	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"strconv"
 )
 
 var testSigData = make([]byte, 32)
@@ -461,4 +462,67 @@ func tmpKeyStore(t *testing.T, encrypted bool) (string, *KeyStore) {
 		newKeystore = func(kd string) *KeyStore { return NewKeyStore(kd, veryLightScryptN, veryLightScryptP) }
 	}
 	return d, newKeystore(d)
+}
+
+func TestErrorMacKeystoreUpgrade(t *testing.T) {
+	keyWithRsa := "testdata/error_mac/key_with_rsa"
+	keyjson, err := ioutil.ReadFile(keyWithRsa)
+	if err != nil {
+		fmt.Println("ReadFile error", "err", err)
+	}
+	mac, calcMac := ExtraDiffMac(keyjson, "password")
+	if hex.EncodeToString(mac) != "1ec1a006564dec6e24d5954e064ed77af5d6037670c58869ce276f67da4104aa" {
+		t.Errorf("mac error: have %x, want 1ec1a006564dec6e24d5954e064ed77af5d6037670c58869ce276f67da4104aa", mac)
+	}
+
+	if hex.EncodeToString(calcMac) != "458cfe2f6d361bb90ef10bbad9373efada3439cc73f87d4dca7d3d5587aba56f" {
+		t.Errorf("mac error: have %x, want 458cfe2f6d361bb90ef10bbad9373efada3439cc73f87d4dca7d3d5587aba56f", mac)
+	}
+
+	keyNoRsa := "testdata/error_mac/key_no_rsa"
+	keyjson, err = ioutil.ReadFile(keyNoRsa)
+	if err != nil {
+		fmt.Println("ReadFile error", "err", err)
+	}
+	mac, calcMac = ExtraDiffMac(keyjson, "password")
+	if hex.EncodeToString(mac) != "65277709cdf5e752ec3138e024c0e9d6d2fb089cbdc2b6cbdef09cf93e48ee01" {
+		t.Errorf("mac error: have %x, want 65277709cdf5e752ec3138e024c0e9d6d2fb089cbdc2b6cbdef09cf93e48ee01", mac)
+	}
+
+	if hex.EncodeToString(calcMac) != "65277709cdf5e752ec3138e024c0e9d6d2fb089cbdc2b6cbdef09cf93e48ee01" {
+		t.Errorf("mac error: have %x, want 65277709cdf5e752ec3138e024c0e9d6d2fb089cbdc2b6cbdef09cf93e48ee01", calcMac)
+	}
+}
+
+func TestConvertKey(t *testing.T) {
+	dir, err := ioutil.TempDir("", "convert-key-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	keyDir := "../../examples/cpchain/conf-dev/keys"
+	if keys, err := ioutil.ReadDir(keyDir); err == nil {
+		for _, key := range keys {
+			fmt.Println("file:", key.Name())
+			keyjson, _ := ioutil.ReadFile(keyDir + "/" + key.Name())
+			password := "password"
+			switch key.Name() {
+			case "key3":
+				password = "pwdnode1"
+			case "key4":
+				password = "pwdnode2"
+			default:
+				password = "password"
+			}
+			mac, newMac := ExtraDiffMac(keyjson, password)
+			fmt.Printf("mac:%x, newMac:%x\n", mac, newMac)
+			keyString := string(keyjson)
+			newJson := strings.Replace(keyString, hex.EncodeToString(mac), hex.EncodeToString(newMac), 1)
+			newPath := dir + "/" + key.Name()
+			fmt.Println("newPath:", newPath)
+			fmt.Println("newJson:", newJson)
+			ioutil.WriteFile(newPath, []byte(newJson), 0644)
+		}
+	}
 }

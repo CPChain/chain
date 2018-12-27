@@ -17,10 +17,11 @@
 package keystore
 
 import (
+	"bytes"
 	"io/ioutil"
+	"reflect"
 	"testing"
 
-	"bytes"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -101,5 +102,14 @@ func TestRsaKeyEncryptDecrypt(t *testing.T) {
 		if rsaKey == nil {
 			t.Errorf("failed to decrypt rsaKey")
 		}
+	}
+}
+
+func TestMergeBytes(t *testing.T) {
+	b1, b2 := []byte("bbb1"), []byte("aaaccc2")
+	b3 := mergeBytes(b1, b2)
+	expected := []byte("bbb1" + "aaaccc2")
+	if !reflect.DeepEqual(b3, expected) {
+		t.Errorf("merge bytes error: have %x, want %x", b3, expected)
 	}
 }

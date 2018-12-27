@@ -175,10 +175,7 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 
 // mergeBytes
 func mergeBytes(cipherText []byte, rsaCipherText []byte) []byte {
-	newBytes := make([]byte, len(cipherText)+len(rsaCipherText))
-	copy(newBytes, cipherText)
-	newBytes = append(newBytes, rsaCipherText...)
-	return newBytes
+	return append([]byte(cipherText), rsaCipherText...)
 }
 
 // DecryptKey decrypts a key from a json blob, returning the private key itself.
