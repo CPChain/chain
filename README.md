@@ -1,4 +1,4 @@
-# The Cyber Physical Blockchain
+# The Cyber Physical Chain
 
 ***Towards a trusted future with blockchain.***
 
