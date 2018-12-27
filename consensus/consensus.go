@@ -20,7 +20,6 @@ package consensus
 import (
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -108,9 +107,6 @@ type Engine interface {
 
 	// APIs returns the RPC APIs this consensus engine provides.
 	APIs(chain ChainReader) []rpc.API
-
-	// GAPIs returns the GRPC APIs this consensus engine provides.
-	GAPIs(chain ChainReader) []grpc.GApi
 }
 
 // Proposer is used to produce a block in our PV(Producer-Validator) model.
