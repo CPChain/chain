@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"math/rand"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -9,8 +10,7 @@ import (
 )
 
 func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
-	ready := false
-	for !ready {
+	for {
 		select {
 		case <-quitCh:
 			return
@@ -24,13 +24,13 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 				log.Debug("validator", "addr", addr.Hex())
 			}
 
-			if len(validators) >= int(h.config.TermLen-h.fsm.f)-1 {
+			if len(validators) >= int(h.config.TermLen-h.fsm.f) {
 				return
 			}
 
 			go h.dialer.DialAllRemoteValidators(term)
 
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
 
 		}
 	}
