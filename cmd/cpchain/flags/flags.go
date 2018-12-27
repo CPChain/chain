@@ -184,9 +184,7 @@ const (
 	IpcAddrFlagName = "ipcaddr"
 	RpcAddrFlagName = "rpcaddr"
 	// these two flags should be removed in the future
-	GrpcAddrFlagName        = "grpcaddr"
 	JsonRpcHttpAddrFlagName = "jsonrpchttpaddr"
-	GrpcIpcAddrFlagName     = "grpcipcaddr"
 	RpcCorsDomainFlagName   = "rpccorsdomain"
 	RpcApiFlagName          = "rpcapi"
 )
