@@ -227,16 +227,8 @@ var RpcFlags = []cli.Flag{
 		Usage: "RPC address whose format is <host:port>",
 	},
 	cli.StringFlag{
-		Name:  GrpcAddrFlagName,
-		Usage: "GRPC address whose format is <host:port>",
-	},
-	cli.StringFlag{
 		Name:  JsonRpcHttpAddrFlagName,
 		Usage: "GRPC gateway address whose format is <host:port>",
-	},
-	cli.StringFlag{
-		Name:  GrpcIpcAddrFlagName,
-		Usage: "Filename for IPC socket/pipe within the datadir (explicit paths escape it)",
 	},
 	cli.StringFlag{
 		Name:  RpcCorsDomainFlagName,

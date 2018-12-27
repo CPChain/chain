@@ -182,21 +182,11 @@ func updateRpcConfig(ctx *cli.Context, cfg *node.Config) {
 
 	// ws is omitted for now
 
-	// grpc setting
-	if ctx.IsSet(flags.GrpcAddrFlagName) {
-		addr := strings.Split(ctx.String(flags.GrpcAddrFlagName), ":")
-		if len(addr) != 2 {
-			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.GrpcAddrFlagName)
-		}
-	}
 	if ctx.IsSet(flags.JsonRpcHttpAddrFlagName) {
 		addr := strings.Split(ctx.String(flags.JsonRpcHttpAddrFlagName), ":")
 		if len(addr) != 2 {
 			log.Fatalf("Wrong number of arguments for --%v flag\n", flags.JsonRpcHttpAddrFlagName)
 		}
-	}
-	if ctx.IsSet(flags.GrpcIpcAddrFlagName) {
-		cfg.GRpc.IpcPath = ctx.String(flags.GrpcIpcAddrFlagName)
 	}
 	if ctx.IsSet(flags.RpcCorsDomainFlagName) {
 		cfg.HTTPCors = strings.Split(ctx.String(flags.RpcCorsDomainFlagName), ",")
