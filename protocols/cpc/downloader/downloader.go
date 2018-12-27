@@ -322,9 +322,6 @@ func (d *Downloader) Synchronise(id string, head common.Hash, ht *big.Int, mode 
 	case nil:
 	case errBusy:
 
-	// case errBadPeer:
-	// 	// TODO: fix this
-
 	case errStallingPeer,
 		errTimeout,
 		errBadPeer,
