@@ -33,47 +33,47 @@ echo "Please check the IPFS daemon running on localhost."
 cpchain=$proj_dir/build/bin/cpchain
 ipc_path_base=data/cpc-
 
-nohup $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --grpcaddr 0.0.0.0:8601 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
+nohup $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --jsonrpchttpaddr 0.0.0.0:8701 --port 30311 --mine \
          --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf-dev/passwords/password \
          --validators "${validators}" \
          --profile data/data1 \
          --rpccorsdomain "http://orange:8000" --logfile data/logs/1.log 2> data/logs/1.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}2 --datadir data/data2  --rpcaddr 127.0.0.1:8502 --grpcaddr 127.0.0.1:8602 --jsonrpchttpaddr 127.0.0.1:8702 --port 30312 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}2 --datadir data/data2  --rpcaddr 127.0.0.1:8502 --jsonrpchttpaddr 127.0.0.1:8702 --port 30312 --mine \
          --unlock "0xc05302acebd0730e3a18a058d7d1cb1204c4a092" --password conf-dev/passwords/password \
          --runmode dev \
          --profile data/data2 \
          --logfile data/logs/2.log 2> data/logs/2.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}3 --datadir data/data3  --rpcaddr 127.0.0.1:8503 --grpcaddr 127.0.0.1:8603 --jsonrpchttpaddr 127.0.0.1:8703 --port 30313 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}3 --datadir data/data3  --rpcaddr 127.0.0.1:8503 --jsonrpchttpaddr 127.0.0.1:8703 --port 30313 --mine \
          --profile data/data3 \
          --unlock "0xef3dd127de235f15ffb4fc0d71469d1339df6465" --password conf-dev/passwords/password1 --logfile data/logs/3.log 2> data/logs/3.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}4 --datadir data/data4  --rpcaddr 127.0.0.1:8504 --grpcaddr 127.0.0.1:8604 --jsonrpchttpaddr 127.0.0.1:8704 --port 30314 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}4 --datadir data/data4  --rpcaddr 127.0.0.1:8504 --jsonrpchttpaddr 127.0.0.1:8704 --port 30314 --mine \
          --profile data/data4 \
          --unlock "0x3a18598184ef84198db90c28fdfdfdf56544f747" --password conf-dev/passwords/password2 --logfile data/logs/4.log 2> data/logs/4.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}5 --datadir data/data5  --rpcaddr 127.0.0.1:8505 --grpcaddr 127.0.0.1:8605 --jsonrpchttpaddr 127.0.0.1:8705 --port 30315 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}5 --datadir data/data5  --rpcaddr 127.0.0.1:8505 --jsonrpchttpaddr 127.0.0.1:8705 --port 30315 --mine \
          --profile data/data5 \
          --unlock "0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e" --password conf-dev/passwords/password --logfile data/logs/5.log 2> data/logs/5.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}6 --datadir data/data6  --rpcaddr 127.0.0.1:8506 --grpcaddr 127.0.0.1:8606 --jsonrpchttpaddr 127.0.0.1:8706 --port 30316 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}6 --datadir data/data6  --rpcaddr 127.0.0.1:8506 --jsonrpchttpaddr 127.0.0.1:8706 --port 30316 --mine \
          --profile data/data6 \
          --unlock "0x22a672eab2b1a3ff3ed91563205a56ca5a560e08" --password conf-dev/passwords/password --logfile data/logs/6.log 2> data/logs/6.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}7 --datadir data/data7  --rpcaddr 127.0.0.1:8507 --grpcaddr 127.0.0.1:8607 --jsonrpchttpaddr 127.0.0.1:8707 --port 30317 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}7 --datadir data/data7  --rpcaddr 127.0.0.1:8507 --jsonrpchttpaddr 127.0.0.1:8707 --port 30317 --mine \
          --profile data/data7 \
          --unlock "0x7b2f052a372951d02798853e39ee56c895109992" --password conf-dev/passwords/password --logfile data/logs/7.log  --nodekey conf-dev/validators/node7.key 2> data/logs/7.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}8 --datadir data/data8  --rpcaddr 127.0.0.1:8508 --grpcaddr 127.0.0.1:8608 --jsonrpchttpaddr 127.0.0.1:8708 --port 30318 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}8 --datadir data/data8  --rpcaddr 127.0.0.1:8508 --jsonrpchttpaddr 127.0.0.1:8708 --port 30318 --mine \
          --profile data/data8 \
          --unlock "0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"  --password conf-dev/passwords/password --logfile data/logs/8.log  --nodekey conf-dev/validators/node8.key 2> data/logs/8.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}9 --datadir data/data9  --rpcaddr 127.0.0.1:8509 --grpcaddr 127.0.0.1:8609 --jsonrpchttpaddr 127.0.0.1:8709 --port 30319 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}9 --datadir data/data9  --rpcaddr 127.0.0.1:8509 --jsonrpchttpaddr 127.0.0.1:8709 --port 30319 --mine \
          --profile data/data9 \
          --unlock "0xe4d51117832e84f1d082e9fc12439b771a57e7b2"  --password conf-dev/passwords/password --logfile data/logs/9.log  --nodekey conf-dev/validators/node9.key 2> data/logs/9.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcaddr 127.0.0.1:8510 --grpcaddr 127.0.0.1:8610 --jsonrpchttpaddr 127.0.0.1:8710 --port 30320 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcaddr 127.0.0.1:8510 --jsonrpchttpaddr 127.0.0.1:8710 --port 30320 --mine \
          --profile data/data10 \
          --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --password conf-dev/passwords/password --logfile data/logs/10.log --nodekey conf-dev/validators/node10.key 2> data/logs/10.err.log &
 

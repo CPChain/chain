@@ -151,7 +151,7 @@ def launch_nodes():
     for i in range(0, 10):
         idx = i + 1
         logfile = f"data/logs/{idx}.log"
-        cmd = f"""{cpchain} {args} --ipcaddr {ipc_path_base}{idx} --datadir data/data{idx}  --rpcaddr 127.0.0.1:{8500+idx} --grpcaddr 127.0.0.1:{8600+idx} \ 
+        cmd = f"""{cpchain} {args} --ipcaddr {ipc_path_base}{idx} --datadir data/data{idx}  --rpcaddr 127.0.0.1:{8500+idx} \
         --jsonrpchttpaddr 127.0.0.1:{8700+idx} --port {30310+idx} --mine \
         --unlock {unlocks[i]} --password {passwds[i]} --logfile {logfile} 2>/dev/null
         """
