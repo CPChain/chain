@@ -43,7 +43,6 @@ loop foreach service in services
 n -> n : service.Start([**running**])
 end
 
-n -> n : startGRPC(services)
 n -> n : startRPC(services)
 activate n
 n -> n : startInProc(apis)

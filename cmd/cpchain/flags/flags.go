@@ -227,10 +227,6 @@ var RpcFlags = []cli.Flag{
 		Usage: "RPC address whose format is <host:port>",
 	},
 	cli.StringFlag{
-		Name:  JsonRpcHttpAddrFlagName,
-		Usage: "GRPC gateway address whose format is <host:port>",
-	},
-	cli.StringFlag{
 		Name:  RpcCorsDomainFlagName,
 		Usage: "Comma separated list of domains from which to accept cross origin requests (browser enforced)",
 	},
