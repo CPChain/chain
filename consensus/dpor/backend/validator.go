@@ -308,6 +308,10 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 
 		log.Debug("received signed prepare header", "number", number, "hash", hash.Hex(), "signatures", header.Dpor.SigsFormatText())
 
+		if vh.dpor.HasBlockInChain(hash, number) {
+			return nil
+		}
+
 		// verify the prepare header
 		// if correct, insert the block into chain, then broadcast it
 		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
@@ -321,9 +325,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 			// broadcast the header again
 			block, err := vh.knownBlocks.GetBlock(header.Number.Uint64())
 			if block == nil {
-				if !vh.dpor.HasBlockInChain(header.Hash(), header.Number.Uint64()) {
-					go vh.BroadcastPrepareHeader(header)
-				}
+				go vh.BroadcastPrepareHeader(header)
 				return nil
 			}
 
@@ -482,9 +484,7 @@ func (vh *Handler) procUnhandledBlocks() {
 
 				// handle it as received from remote unknown peer
 				err = vh.handleLbftMsg(msg, nil)
-				if err == nil {
-					vh.knownBlocks.futureBlocks.Remove(n)
-				}
+				vh.knownBlocks.futureBlocks.Remove(n)
 			}
 
 			for _, n := range vh.knownBlocks.GetUnknownAncestorBlockNumbers() {
@@ -500,9 +500,7 @@ func (vh *Handler) procUnhandledBlocks() {
 
 				// handle it as received from remote unknown peer
 				err = vh.handleLbftMsg(msg, nil)
-				if err == nil {
-					vh.knownBlocks.unknownAncestors.Remove(n)
-				}
+				vh.knownBlocks.unknownAncestors.Remove(n)
 			}
 
 		case <-vh.quitCh:
