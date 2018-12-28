@@ -25,7 +25,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -238,20 +237,6 @@ func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainCo
 		return dpor
 	}
 	return nil
-}
-
-// GAPIs return the collection of GRPC services the cpc package offers.
-// NOTE, some of these services probably need to be moved to somewhere else.
-func (s *CpchainService) GAPIs() []grpc.GApi {
-	apis := cpcapi.GetGAPIs(s.APIBackend)
-	return append(apis, []grpc.GApi{
-		// NewMinerReader(s),
-		NewCoinbase(s),
-		NewAdminManager(s),
-		NewMinerManager(s),
-		NewDebugDumper(s),
-		NewDebugManager(s),
-	}...)
 }
 
 // APIs return the collection of RPC services the cpc package offers.

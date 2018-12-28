@@ -6,7 +6,6 @@ import (
 	"reflect"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/event"
@@ -74,8 +73,6 @@ type Service interface {
 
 	// APIs retrieves the list of RPC descriptors the service provides
 	APIs() []rpc.API
-
-	GAPIs() []grpc.GApi
 
 	// Start is called after all services have been constructed and the networking
 	// layer was also initialized to spawn any goroutines required by the service.

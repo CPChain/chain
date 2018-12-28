@@ -15,7 +15,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/admission"
-	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/internal/debug"
@@ -41,8 +40,6 @@ type Node struct {
 
 	serviceFuncs []ServiceConstructor     // Service constructors (in dependency order)
 	services     map[reflect.Type]Service // Currently running services
-
-	grpcServer *grpc.Server
 
 	rpcAPIs       []rpc.API   // List of APIs currently provided by the node
 	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
@@ -106,12 +103,11 @@ func New(conf *Config) (*Node, error) {
 		ephemeralKeystore: ephemeralKeystore,
 		config:            conf,
 		serviceFuncs:      []ServiceConstructor{},
-		// grpcServer:        grpc.NewServer(conf.DataDir, conf.HTTPModules, &conf.GRpc),
-		ipcEndpoint:  conf.IPCEndpoint(),
-		httpEndpoint: conf.HTTPEndpoint(),
-		wsEndpoint:   conf.WSEndpoint(),
-		eventmux:     new(event.TypeMux),
-		log:          conf.Logger,
+		ipcEndpoint:       conf.IPCEndpoint(),
+		httpEndpoint:      conf.HTTPEndpoint(),
+		wsEndpoint:        conf.WSEndpoint(),
+		eventmux:          new(event.TypeMux),
+		log:               conf.Logger,
 	}, nil
 }
 
@@ -225,19 +221,6 @@ func (n *Node) Start() error {
 		return err
 	}
 
-	// TODO: @ac remove or refactor GRPC stuff
-	// start the configured grpc interfaces
-	// if err := n.startGRPC(services); err != nil {
-	// 	n.stopRPC()
-	// 	for _, service := range services {
-	// 		if err := service.Stop(); err != nil {
-	// 			n.log.Error("rpc error", "error", err)
-	// 		}
-	// 	}
-	// 	p2pServer.Stop()
-	// 	return err
-	// }
-
 	// finish initializing the startup
 	n.server = p2pServer
 	n.services = services
@@ -247,27 +230,6 @@ func (n *Node) Start() error {
 
 	return nil
 }
-
-// TODO: @ac remove or refactor GRPC code
-// func (n *Node) startGRPC(services map[reflect.Type]Service) error {
-// 	// Gather all the possible APIs to surface
-// 	apis := n.gapis()
-// 	for _, service := range services {
-// 		apis = append(apis, service.GAPIs()...)
-// 	}
-//
-// 	ctx := context.Background()
-//
-// 	n.grpcServer.Register(ctx, apis)
-// 	if err := n.grpcServer.Start(); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-//
-// func (n *Node) stopGRPC() {
-// 	n.grpcServer.Stop()
-// }
 
 // startRPC is a helper method to start all the various RPC endpoint during node
 // startup. It's not meant to be called at any time afterwards as it makes certain
@@ -441,8 +403,6 @@ func (n *Node) Stop() error {
 
 	// terminate the api, services and the p2p server.
 
-	// TODO: @ac remove or refactor GRPC stuff
-	// n.stopGRPC()
 	n.stopRPC()
 	n.rpcAPIs = nil
 	failure := &StopError{
@@ -624,11 +584,6 @@ func (n *Node) OpenDatabase(name string, cache, handles int) (database.Database,
 // ResolvePath returns the absolute path of a resource in the instance directory.
 func (n *Node) ResolvePath(x string) string {
 	return n.config.resolvePath(x)
-}
-
-func (n *Node) gapis() []grpc.GApi {
-	// nothing enabled for node itself.
-	return []grpc.GApi{}
 }
 
 // apis returns the collection of RPC descriptors this node offers.

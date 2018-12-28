@@ -22,7 +22,6 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
@@ -82,19 +81,6 @@ type Backend interface {
 	CalcRptInfo(address common.Address, blockNum uint64) int64
 	ViewLen() uint64
 	TermLen() uint64
-}
-
-func GetGAPIs(b Backend) []grpc.GApi {
-	nonceLock := new(AddrLocker)
-	return []grpc.GApi{
-		NewTransactionPoolReader(b, nonceLock),
-		NewAccountManager(b, nonceLock),
-		NewAccountReader(b.AccountManager()),
-		NewChainStateReader(b),
-		NewChainReader(b),
-		NewTxPoolReader(b),
-		NewTransactionPoolReader(b, nonceLock),
-	}
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

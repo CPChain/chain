@@ -6,7 +6,6 @@ package node_test
 import (
 	"fmt"
 
-	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/node"
@@ -19,14 +18,12 @@ import (
 // The following methods are needed to implement a node.Service:
 //  - Protocols() []p2p.Protocol - devp2p protocols the service can communicate on
 //  - APIs() []rpc.API           - api methods the service wants to expose on rpc channels
-//  - GAPIs() []rpc.API           - GAPIs methods the service wants to expose on grpc channels
 //  - Start() error              - method invoked when the node is ready to start the service
 //  - Stop() error               - method invoked when the node terminates the service
 type SampleService struct{}
 
 func (s *SampleService) Protocols() []p2p.Protocol { return nil }
 func (s *SampleService) APIs() []rpc.API           { return nil }
-func (s *SampleService) GAPIs() []grpc.GApi        { return nil }
 func (s *SampleService) Start(*p2p.Server) error   { fmt.Println("Service starting..."); return nil }
 func (s *SampleService) Stop() error               { fmt.Println("Service stopping..."); return nil }
 
