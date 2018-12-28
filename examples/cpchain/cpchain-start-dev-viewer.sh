@@ -24,10 +24,10 @@ cpchain=$proj_dir/build/bin/cpchain
 ipc_path_base=data/cpc-
 
 echo "start civilians unlock"
-nohup $cpchain $args --ipcaddr ${ipc_path_base}11 --datadir data/data11  --rpcaddr 127.0.0.1:8511 --jsonrpchttpaddr 127.0.0.1:8711 --port 30321 \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}11 --datadir data/data11  --rpcaddr 127.0.0.1:8511 --port 30321 \
          --unlock "0xbc131722d837b7d867212568baceb3a981181443"  --password conf-dev/passwords/password --logfile data/logs/11.log 2>/dev/null &
 
 echo "start civilians no unlock"
-nohup $cpchain $args --ipcaddr ${ipc_path_base}12 --datadir data/data12  --rpcaddr 127.0.0.1:8512 --jsonrpchttpaddr 127.0.0.1:8712 --port 30322 \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}12 --datadir data/data12  --rpcaddr 127.0.0.1:8512 --port 30322 \
     --logfile data/logs/12.log 2>/dev/null &
 
