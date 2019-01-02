@@ -31,7 +31,7 @@ var (
 
 // SyncPeer represents a remote peer that i can sync with
 type SyncPeer interface {
-	ID() string
+	String() string
 
 	// Head returns head block of remote sync peer
 	Head() (hash common.Hash, ht *big.Int)
@@ -58,7 +58,7 @@ type Syncer interface {
 	Terminate()
 
 	// DeliverBlocks delivers blocks from remote peer with id to syncer
-	DeliverBlocks(id string, blocks []*types.Block) error
+	DeliverBlocks(id string, blocks types.Blocks) error
 }
 
 // BlockChain encapsulates functions required to sync a (full or fast) blockchain.
@@ -119,7 +119,7 @@ func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int
 
 		// drop peer
 		if s.dropPeer != nil {
-			s.dropPeer(p.ID())
+			s.dropPeer(p.String())
 		}
 
 		return err
@@ -127,6 +127,7 @@ func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int
 
 	return nil
 }
+
 func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) error {
 	// if already syncing, return
 	if !atomic.CompareAndSwapInt32(&s.synchronizing, 0, 1) {
@@ -134,7 +135,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 	}
 	defer atomic.StoreInt32(&s.synchronizing, 0)
 
-	log.Debug("Synchronization Started", "peer", p.ID(), "peer.Head", head.Hex(), "peer.height", height)
+	log.Debug("Synchronization Started", "peer", p.String(), "peer.Head", head.Hex(), "peer.height", height)
 
 	var (
 		currentHeader = s.blockchain.CurrentBlock().Header()
@@ -154,7 +155,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 
 	go s.sendRequestLoop()
 
-	defer s.Cancel(p.ID())
+	defer s.Cancel(p.String())
 
 	// fetch blocks with batch size
 	for i := currentNumber + 1; i < height; i += MaxBlockFetch {
@@ -168,7 +169,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 		select {
 		case blocks := <-s.syncBlocksCh:
 
-			log.Debug("received blocks from peer", "id", p.ID())
+			log.Debug("received blocks from peer", "id", p.String())
 
 			// handle received blocks
 			_, err := s.blockchain.InsertChain(blocks)
@@ -224,7 +225,7 @@ func (s *Synchronizer) Cancel(id string) {
 
 func (s *Synchronizer) DeliverBlocks(id string, blocks types.Blocks) error {
 	// if peer id mismatch, return
-	if s.currentPeer.ID() != id {
+	if s.currentPeer.String() != id {
 		return errUnknownPeer
 	}
 

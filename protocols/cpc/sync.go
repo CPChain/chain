@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -129,13 +128,14 @@ func (pm *ProtocolManager) txsyncLoop() {
 	}
 }
 
-// syncer is responsible for periodically synchronising with the network, both
+// syncerLoop is responsible for periodically synchronising with the network, both
 // downloading hashes and blocks as well as handling the announcement handler.
-func (pm *ProtocolManager) syncer() {
+func (pm *ProtocolManager) syncerLoop() {
 	// Start and ensure cleanup of sync mechanisms
 	pm.fetcher.Start()
 	defer pm.fetcher.Stop()
-	defer pm.downloader.Terminate()
+	// defer pm.downloader.Terminate()
+	defer pm.syncer.Terminate()
 
 	// Wait for different events to fire synchronisation operations
 	forceSync := time.NewTicker(forceSyncCycle)
@@ -178,9 +178,14 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	}
 
 	// full sync with the downloader
-	if err := pm.downloader.Synchronise(peer.id, pHead, pHt, downloader.FullSync); err != nil {
+	if err := pm.syncer.Synchronise(peer, pHead, pHt); err != nil {
 		return
 	}
+
+	// // full sync with the downloader
+	// if err := pm.downloader.Synchronise(peer.id, pHead, pHt, downloader.FullSync); err != nil {
+	// 	return
+	// }
 
 	if atomic.LoadUint32(&pm.fastSync) == 1 {
 		log.Info("Fast sync complete, auto disabling")

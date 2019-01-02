@@ -319,6 +319,14 @@ func (p *peer) RequestReceipts(hashes []common.Hash) error {
 	return p2p.Send(p.rw, GetReceiptsMsg, hashes)
 }
 
+func (p *peer) SendGetBlocks(start uint64) error {
+	return p2p.Send(p.rw, GetBlocksMsg, start)
+}
+
+func (p *peer) SendBlocks(blocks types.Blocks) error {
+	return p2p.Send(p.rw, BlocksMsg, blocks)
+}
+
 // Handshake executes the cpchain protocol handshake, negotiating version number,
 // network IDs, head and genesis blocks.
 func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis common.Hash, isMiner bool) (bool, error) {
