@@ -25,8 +25,8 @@ var (
 	errCanceled     = errors.New("downloader terminated")
 	errUnknownPeer  = errors.New("unknown peer")
 	errSlowPeer     = errors.New("too slow peer")
-	errTimeout      = errors.New("timeout")
-	errInvalidChain = errors.New("retrieved invalid chain")
+	ErrTimeout      = errors.New("timeout")
+	ErrInvalidChain = errors.New("retrieved invalid chain")
 )
 
 // SyncPeer represents a remote peer that i can sync with
@@ -118,7 +118,7 @@ func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
 func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int) error {
 	switch err := s.synchronise(p, head, height.Uint64()); err {
 	case nil, errBusy, errCanceled, errQuitSync:
-	case errTimeout, errInvalidChain:
+	case ErrTimeout, ErrInvalidChain:
 
 		// drop peer
 		if s.dropPeer != nil {
@@ -180,7 +180,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 			}
 
 		case <-timer.C:
-			return errTimeout
+			return ErrTimeout
 
 		case <-s.cancelCh:
 			return errCanceled
