@@ -17,8 +17,8 @@ period called `forceSyncCycle`, which is defined in `protocols/cpc/sync.go`.
 
 The third one is unknown ancestor sync or too slow sync. When received an
 unknown ancestor block or a new generated block with much larger block number
-than current latest, it is necessary to sync local chain to latest to continue
-the block verification process.
+than current latest block, it is necessary to sync local chain to latest to
+continue the block verification process.
 
 All of those synchronization processes can be handled with `Synchronise` funcs
 in downloader.
@@ -29,7 +29,7 @@ fetchBodies, fetchReceipts, processHeaders with goroutines.
 
 When received a downloader synchronization related msg, ProtocolManager in
 cpc/handler.go would call corresponding msg handling functions in downloader.go
-with common prefix "Deliver", i.e.DeliverHeaders, DeliverBodies...
+with common prefix "Deliver", i.e.DeliverHeaders, DeliverBodies... to handle it.
 
 There are some remaining problems in downloader module and ProtocolManager.handleSyncMsg func.
 
