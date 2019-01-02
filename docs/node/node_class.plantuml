@@ -10,7 +10,6 @@ class Node {
 	server       *p2p.Server
 	serviceFuncs []ServiceConstructor
 	services     map[reflect.Type]Service
-	grpcServer *api.Server
 	rpcAPIs       []rpc.API
 	inprocHandler *rpc.Server
 	ipcEndpoint string
@@ -35,7 +34,6 @@ class Config {
 	Version string
 	DataDir string
 	P2P p2p.Config
-	GRpc api.Config
 	KeyStoreDir string
 	UseLightweightKDF bool
 	NoUSB bool

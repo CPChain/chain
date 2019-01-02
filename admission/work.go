@@ -15,6 +15,11 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
+var (
+	ErrPowAbort   = errors.New("proof work aborts")
+	ErrPowTimeout = errors.New("proof work timeout")
+)
+
 type hashFn func([]byte) ([]byte, error)
 
 func sha256Func(data []byte) ([]byte, error) {
@@ -100,11 +105,11 @@ search:
 	for {
 		select {
 		case <-abort:
-			w.err = errors.New("proof work aborts")
+			w.err = ErrPowAbort
 			break search
 		case <-ticker.C:
 			close(abort)
-			w.err = errors.New("proof work timeout")
+			w.err = ErrPowTimeout
 			break search
 		default:
 			if w.nonce < maxNonce && validate(w.difficulty, w.header.Hash().Bytes(), w.coinbase, w.nonce, w.hashfn) {

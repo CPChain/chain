@@ -1,4 +1,4 @@
-# The Cyber Physical Blockchain
+# The Cyber Physical Chain
 
 ***Towards a trusted future with blockchain.***
 
@@ -34,7 +34,6 @@ computing, with you and with everyone! Please come and join us.
 - [Tools and Libraries](#tools-and-libraries)
 - [Contributing](#contributing)
 - [FAQ](#faq)
-- [Partners](#partners-and-consumers)
 - [Contact](#contact)
 - [License](#license)
 
@@ -160,16 +159,10 @@ tail -f data/logs/*.log | grep number=
 ./cpchain run --datadir ./datadir --unlock <You Address>
 ```
 
-
-
-
     
 ---
 ## Documentation
 The above should be enough to get you up to speed. For details, please visit our [documentation portal](https://docs.cpchain.io).
-
-
-
 
 
 ---
@@ -179,17 +172,12 @@ Check our [website repository](https://github.com/CPChain/cpchain-website).
 It shows the ongoing transactions and blocks.
 
 
-
 ---
 ## Contributing
 Your hacks are always welcome!🔨🔨🔨
 
 Please fork on bitbucket and make pull request [there](https://bitbucket.org/cpchain/chain/pull-requests/).
 
----
-## Partners and Customers
-Here is a short-list of our partners and customers.
-![customers](https://i.imgur.com/u2t59HQ.png)
 
 ---
 ## FAQ

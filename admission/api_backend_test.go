@@ -131,6 +131,7 @@ func TestCampaign(t *testing.T) {
 
 	ac.Abort()
 	status, err = ac.GetStatus()
+	wantErr = admission.ErrPowAbort
 	if status != admission.AcIdle || !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("Aborted campaign: GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", admission.AcIdle, wantErr, status, err)
 	}

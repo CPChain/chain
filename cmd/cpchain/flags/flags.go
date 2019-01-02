@@ -172,48 +172,16 @@ var MinerFlags = []cli.Flag{
 	},
 }
 
-// const (
-// 	RpcFlagName       = "rpc"
-// 	RpcAddrFlagName   = "rpcaddr"
-// 	RpcPortFlagName   = "rpcport"
-// 	RpcTlsFlagName    = "rpctls"
-// 	RpcVerifyFlagName = "rpcverify"
-// )
-
 const (
 	IpcAddrFlagName = "ipcaddr"
 	RpcAddrFlagName = "rpcaddr"
 	// these two flags should be removed in the future
-	GrpcAddrFlagName        = "grpcaddr"
-	JsonRpcHttpAddrFlagName = "jsonrpchttpaddr"
-	GrpcIpcAddrFlagName     = "grpcipcaddr"
-	RpcCorsDomainFlagName   = "rpccorsdomain"
-	RpcApiFlagName          = "rpcapi"
+	RpcCorsDomainFlagName = "rpccorsdomain"
+	RpcApiFlagName        = "rpcapi"
 )
 
 // TODO @sangh adjust these
 var RpcFlags = []cli.Flag{
-	// cli.BoolFlag{
-	// 	Name:  RpcFlagName,
-	// 	Usage: "Enable the HTTP-RPC server",
-	// },
-	//
-	// cli.StringFlag{
-	// 	Name:  RpcAddrFlagName,
-	// 	Usage: "HTTP-RPC server listening interface",
-	// },
-	// cli.IntFlag{
-	// 	Name:  RpcPortFlagName,
-	// 	Usage: "HTTP-RPC server listening port",
-	// },
-	// cli.BoolFlag{
-	// 	Name:  RpcTlsFlagName,
-	// 	Usage: "HTTP-RPC server is need tls transport",
-	// },
-	// cli.BoolFlag{
-	// 	Name:  RpcVerifyFlagName,
-	// 	Usage: "HTTP-RPC server if need verify client",
-	// },
 
 	cli.StringFlag{
 		Name:  RpcApiFlagName,
@@ -227,18 +195,6 @@ var RpcFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  RpcAddrFlagName,
 		Usage: "RPC address whose format is <host:port>",
-	},
-	cli.StringFlag{
-		Name:  GrpcAddrFlagName,
-		Usage: "GRPC address whose format is <host:port>",
-	},
-	cli.StringFlag{
-		Name:  JsonRpcHttpAddrFlagName,
-		Usage: "GRPC gateway address whose format is <host:port>",
-	},
-	cli.StringFlag{
-		Name:  GrpcIpcAddrFlagName,
-		Usage: "Filename for IPC socket/pipe within the datadir (explicit paths escape it)",
 	},
 	cli.StringFlag{
 		Name:  RpcCorsDomainFlagName,

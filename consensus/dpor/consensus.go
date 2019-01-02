@@ -22,7 +22,6 @@ import (
 	"math/big"
 	"time"
 
-	"bitbucket.org/cpchain/chain/api/grpc"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -316,11 +315,6 @@ func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
 		Service:   &API{chain: chain, dpor: d},
 		Public:    false,
 	}}
-}
-
-// GAPIs is APIs for dpor.
-func (d *Dpor) GAPIs(chain consensus.ChainReader) []grpc.GApi {
-	return []grpc.GApi{}
 }
 
 // State returns current pbft phrase, one of (PrePrepare, Prepare, Commit).

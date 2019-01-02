@@ -99,7 +99,8 @@ func (ac *AdmissionControl) Abort() {
 
 	// close channel to abort all work
 	close(ac.abort)
-	ac.wg.Wait() // wait for all goroutines exit
+	<-ac.done
+
 	ac.abort = make(chan interface{})
 	ac.status = AcIdle
 }
@@ -137,10 +138,8 @@ func (ac *AdmissionControl) waitSendCampaignMsg() {
 	defer close(ac.done)
 	ac.wg.Wait()
 
-	ac.mutex.Lock()
 	defer func(ac *AdmissionControl) {
 		ac.status = AcIdle
-		ac.mutex.Unlock()
 	}(ac)
 
 	for _, work := range ac.getWorks() {

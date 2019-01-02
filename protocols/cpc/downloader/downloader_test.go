@@ -1142,17 +1142,17 @@ func testBlockHeaderAttackerDropping(t *testing.T, protocol int) {
 		result error
 		drop   bool
 	}{
-		{nil, false},            // Sync succeeded, all is well
-		{errBusy, false},        // Sync is already in progress, no problem
-		{errUnknownPeer, false}, // Peer is unknown, was already dropped, don't double drop
-		// {errBadPeer, true},                  // Peer was deemed bad for some reason, drop it
-		{errStallingPeer, true}, // Peer was detected to be stalling, drop it
-		{errNoPeers, false},     // No peers to download from, soft race, no issue
-		// {errTimeout, true},                  // No hashes received in due time, drop the peer
-		{errEmptyHeaderSet, true},   // No headers were returned as a response, drop as it's a dead end
-		{errPeersUnavailable, true}, // Nobody had the advertised blocks, drop the advertiser
-		{errInvalidAncestor, true},  // Agreed upon ancestor is not acceptable, drop the chain rewriter
-		// {errInvalidChain, true},             // Hash chain was detected as invalid, definitely drop
+		{nil, false},                        // Sync succeeded, all is well
+		{errBusy, false},                    // Sync is already in progress, no problem
+		{errUnknownPeer, false},             // Peer is unknown, was already dropped, don't double drop
+		{errBadPeer, true},                  // Peer was deemed bad for some reason, drop it
+		{errStallingPeer, true},             // Peer was detected to be stalling, drop it
+		{errNoPeers, false},                 // No peers to download from, soft race, no issue
+		{errTimeout, true},                  // No hashes received in due time, drop the peer
+		{errEmptyHeaderSet, true},           // No headers were returned as a response, drop as it's a dead end
+		{errPeersUnavailable, true},         // Nobody had the advertised blocks, drop the advertiser
+		{errInvalidAncestor, true},          // Agreed upon ancestor is not acceptable, drop the chain rewriter
+		{errInvalidChain, true},             // Hash chain was detected as invalid, definitely drop
 		{errInvalidBlock, false},            // A bad peer was detected, but not the sync origin
 		{errInvalidBody, false},             // A bad peer was detected, but not the sync origin
 		{errInvalidReceipt, false},          // A bad peer was detected, but not the sync origin
