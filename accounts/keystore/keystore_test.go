@@ -526,3 +526,34 @@ func TestConvertKey(t *testing.T) {
 		}
 	}
 }
+
+func TestConvertTestnetKey(t *testing.T) {
+	dir, err := ioutil.TempDir("", "convert-key-testnet")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	keyDir := "../../examples/cpchain/conf-testnet/keys"
+	passDir := "../../examples/cpchain/conf-testnet/passwords"
+	if keys, err := ioutil.ReadDir(keyDir); err == nil {
+		for _, key := range keys {
+			fmt.Println("file:", key.Name())
+			keyjson, _ := ioutil.ReadFile(keyDir + "/" + key.Name())
+			passPath := passDir + "/password" + key.Name()[3:]
+
+			fmt.Println("passPath:", passPath)
+			password, _ := ioutil.ReadFile(passPath)
+			passString := string(password)
+			fmt.Println("password:", passString)
+			mac, newMac := ExtraDiffMac(keyjson, passString)
+			fmt.Printf("mac:%x, newMac:%x\n", mac, newMac)
+			keyString := string(keyjson)
+			newJson := strings.Replace(keyString, hex.EncodeToString(mac), hex.EncodeToString(newMac), 1)
+			newPath := dir + "/" + key.Name()
+			fmt.Println("newPath:", newPath)
+			fmt.Println("newJson:", newJson)
+			ioutil.WriteFile(newPath, []byte(newJson), 0644)
+		}
+	}
+}
