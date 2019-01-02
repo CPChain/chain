@@ -68,6 +68,45 @@ func TestSyncerNormal(t *testing.T) {
 	}
 }
 
+func TestSyncerTimeout(t *testing.T) {
+
+	var (
+		n            = 1000
+		p            = NewFakePeer(n)
+		head, height = p.Head()
+	)
+
+	_ = p
+
+	// new a local chain, only genesis block in it
+	localchain := newBlockchain(0)
+
+	// create a syncer to sync blocks
+	localSyncer := syncer.New(localchain, nil)
+
+	// go sync
+	err := localSyncer.Synchronise(p, head, height)
+
+	fmt.Println("err", err)
+
+	if err != syncer.ErrTimeout {
+		t.Fail()
+	}
+
+}
+
+func TestSyncerInvalidChain(t *testing.T) {
+	// TODO: complete this
+}
+
+func TestSyncerUnknownPeer(t *testing.T) {
+	// TODO: complete this
+}
+
+func TestSyncerSlowPeer(t *testing.T) {
+
+}
+
 func newBlockchain(n int) syncer.BlockChain {
 	db := database.NewMemDatabase()
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
