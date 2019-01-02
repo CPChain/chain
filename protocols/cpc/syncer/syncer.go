@@ -36,9 +36,6 @@ type SyncPeer interface {
 	// Head returns head block of remote sync peer
 	Head() (hash common.Hash, ht *big.Int)
 
-	// SetHead sets head block for remote sync peer
-	SetHead(hash common.Hash, ht *big.Int)
-
 	SendGetBlocks(start uint64) error
 }
 

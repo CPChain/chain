@@ -161,11 +161,11 @@ func (fp *FakePeer) returnBlocksLoop() {
 		select {
 		case start := <-fp.requestCh:
 			_, number := fp.Head()
-			end := uint64(math.Min(float64(start+syncer.MaxBlockFetch), float64(number.Uint64())))
-			blocks := make(types.Blocks, int(end-start+1))
+			end := uint64(math.Min(float64(start+syncer.MaxBlockFetch), float64(number.Uint64()+1)))
+			blocks := make(types.Blocks, int(end-start))
 
 			fmt.Println("received start request", "start", start, "batch", syncer.MaxBlockFetch, "end", end)
-			for i := start; i <= end; i++ {
+			for i := start; i < end; i++ {
 				fmt.Println("retrieved block", "i", i)
 				block := fp.blockchain.GetBlockByNumber(i)
 				blocks[i-start] = block
