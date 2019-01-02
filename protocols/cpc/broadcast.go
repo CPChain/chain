@@ -17,7 +17,6 @@
 package cpc
 
 import (
-	"math"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -66,7 +65,8 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		}
 
 		// Send the block to a subset of our peers
-		transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		// transfer := peers[:int(math.Sqrt(float64(len(peers))))]
+		transfer := peers[:]
 
 		for _, peer := range transfer {
 			peer.AsyncSendNewBlock(block)
@@ -76,13 +76,13 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		return
 	}
 
-	// Otherwise if the block is indeed in out own chain, announce it
-	if pm.blockchain.HasBlock(hash, block.NumberU64()) {
-		for _, peer := range peers {
-			peer.AsyncSendNewBlockHash(block)
-		}
-		log.Debug("Announced block", "number", block.NumberU64(), "hash", hash.Hex(), "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
-	}
+	// // Otherwise if the block is indeed in out own chain, announce it
+	// if pm.blockchain.HasBlock(hash, block.NumberU64()) {
+	// 	for _, peer := range peers {
+	// 		peer.AsyncSendNewBlockHash(block)
+	// 	}
+	// 	log.Debug("Announced block", "number", block.NumberU64(), "hash", hash.Hex(), "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+	// }
 }
 
 // BroadcastTxs will propagate a batch of transactions to all peers which are not known to
