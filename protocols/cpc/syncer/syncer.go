@@ -1,18 +1,47 @@
 package syncer
 
 import (
+	"errors"
+	"math/big"
 	"sync/atomic"
+	"time"
 
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
+const (
+	SyncTimeout = 5
+)
+
+const (
+	MaxBlockFetch = 128 // Amount of blocks to be fetched per retrieval request
+)
+
+var (
+	errBusy         = errors.New("busy")
+	errQuitSync     = errors.New("downloader terminated")
+	errCanceled     = errors.New("downloader terminated")
+	errUnknownPeer  = errors.New("unknown peer")
+	errSlowPeer     = errors.New("too slow peer")
+	errTimeout      = errors.New("timeout")
+	errInvalidChain = errors.New("retrieved invalid chain")
+)
+
 // SyncPeer represents a remote peer that i can sync with
 type SyncPeer interface {
-	SendGetBlockHeaders(start uint64, stop uint64) error
-	SendGetBlockBodies(start uint64, stop uint64) error
-	SendGetBlocks(start uint64, stop uint64) error
+	ID() string
+
+	// Head returns head block of remote sync peer
+	Head() (hash common.Hash, ht *big.Int)
+
+	// SetHead sets head block for remote sync peer
+	SetHead(hash common.Hash, ht *big.Int)
+
+	SendGetBlocks(start uint64) error
 }
+
+type DropPeer func(id string)
 
 // Syncer will do all sync related works
 type Syncer interface {
@@ -22,19 +51,13 @@ type Syncer interface {
 	Synchronise(p SyncPeer, head common.Hash, height uint64) error
 
 	// Cancel cancels sync process from remote peer
-	Cancel()
+	Cancel(id string)
 
 	// Synchronising returns if synchronising now
 	Synchronising() bool
 
 	// Terminate terminates all sync process and benchmark calculations
 	Terminate()
-
-	// DeliverBlockHeaders delivers block headers from remote peer with id to syncer
-	DeliverBlockHeaders(id string, headers []*types.Header) error
-
-	// DeliverBlockBodies delivers block bodies from remote peer with id to syncer
-	DeliverBlockBodies(id string, bodies []*types.Body) error
 
 	// DeliverBlocks delivers blocks from remote peer with id to syncer
 	DeliverBlocks(id string, blocks []*types.Block) error
@@ -67,42 +90,103 @@ type BlockChain interface {
 
 // Synchronizer is responsible for syncing local chain to latest block
 type Synchronizer struct {
-	currentPeer   SyncPeer
-	blockchain    BlockChain
-	synchronizing int32 // 0 for false, 1 for true
+	currentPeer    SyncPeer
+	dropPeer       DropPeer
+	blockchain     BlockChain
+	synchronizing  int32 // 0 for false, 1 for true
+	syncBlocksCh   chan types.Blocks
+	syncRequestsCh chan uint64
+	cancelCh       chan struct{}
+	quitCh         chan struct{}
 }
 
-func New(chain BlockChain) *Synchronizer {
+func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
 
 	return &Synchronizer{
-		blockchain: chain,
+		blockchain:     chain,
+		dropPeer:       dropPeer,
+		syncBlocksCh:   make(chan types.Blocks, 1), // there is only one peer to synchronise with.
+		syncRequestsCh: make(chan uint64, 1),
+		cancelCh:       make(chan struct{}),
+		quitCh:         make(chan struct{}),
 	}
 }
 
 func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height uint64) error {
+	switch err := s.synchronise(p, head, height); err {
+	case nil, errBusy, errCanceled, errQuitSync:
+	case errTimeout, errInvalidChain:
+
+		// TODO: drop peer here
+		// drop peer
+
+		return err
+	}
+
+	return nil
+}
+func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) error {
 	// if already syncing, return
 	if !atomic.CompareAndSwapInt32(&s.synchronizing, 0, 1) {
-		return nil
+		return errBusy
 	}
 	defer atomic.StoreInt32(&s.synchronizing, 0)
 
 	var (
-	// currentHeader = s.blockchain.CurrentBlock().Header()
-	// currentNumber = currentHeader.Number.Uint64()
-	// currentHash   = currentHeader.Hash()
+		currentHeader = s.blockchain.CurrentBlock().Header()
+		currentNumber = currentHeader.Number.Uint64()
+		// currentHash   = currentHeader.Hash()
 	)
 
-	// fetch height
+	// if remote peer is behind us, skip
+	if height < currentNumber {
+		return errSlowPeer
+	}
 
-	// find common ancestor
+	s.currentPeer = p
+	if s.cancelCh == nil {
+		s.cancelCh = make(chan struct{})
+	}
 
-	// fetch blocks
+	defer s.Cancel(p.ID())
+
+	// fetch blocks with batch size
+	for i := currentNumber; i < height; i += MaxBlockFetch {
+		timer := time.NewTimer(SyncTimeout * time.Second)
+
+		// this sends sync request
+		s.syncRequestsCh <- i
+
+		select {
+		case blocks := <-s.syncBlocksCh:
+			// handle received blocks
+			_, err := s.blockchain.InsertChain(blocks)
+			return err
+
+		case <-timer.C:
+			return errTimeout
+
+		case <-s.cancelCh:
+			return errCanceled
+
+		case <-s.quitCh:
+			return errQuitSync
+		}
+	}
 
 	return nil
 }
 
-func (s *Synchronizer) Cancel() {
-	panic("not implemented")
+func (s *Synchronizer) sendRequestLoop() {
+	for {
+		select {
+		case start := <-s.syncRequestsCh:
+			s.currentPeer.SendGetBlocks(start)
+
+		case <-s.quitCh:
+			return
+		}
+	}
 }
 
 func (s *Synchronizer) Synchronising() bool {
@@ -110,17 +194,25 @@ func (s *Synchronizer) Synchronising() bool {
 }
 
 func (s *Synchronizer) Terminate() {
-	panic("not implemented")
+	if s.quitCh != nil {
+		close(s.quitCh)
+	}
 }
 
-func (s *Synchronizer) DeliverBlockHeaders(id string, headers []*types.Header) error {
-	panic("not implemented")
+// Cancel cancels sync process from remote peer
+func (s *Synchronizer) Cancel(id string) {
+	if s.cancelCh != nil {
+		close(s.cancelCh)
+	}
 }
 
-func (s *Synchronizer) DeliverBlockBodies(id string, bodies []*types.Body) error {
-	panic("not implemented")
-}
+func (s *Synchronizer) DeliverBlocks(id string, blocks types.Blocks) error {
+	// if peer id mismatch, return
+	if s.currentPeer.ID() != id {
+		return errUnknownPeer
+	}
 
-func (s *Synchronizer) DeliverBlocks(id string, blocks []*types.Block) error {
-	panic("not implemented")
+	// deliver block
+	s.syncBlocksCh <- blocks
+	return nil
 }
