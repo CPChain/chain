@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -48,7 +49,7 @@ type Syncer interface {
 	// Synchronise syncs blocks from remote peer with given id
 	// from current block to latest block with hash as `head`
 	// and number as `height`.
-	Synchronise(p SyncPeer, head common.Hash, height uint64) error
+	Synchronise(p SyncPeer, head common.Hash, height *big.Int) error
 
 	// Cancel cancels sync process from remote peer
 	Cancel(id string)
@@ -77,6 +78,8 @@ type BlockChain interface {
 
 	// GetBlockByHash retrieves a block from the local chain.
 	GetBlockByHash(common.Hash) *types.Block
+
+	GetBlockByNumber(uint64) *types.Block
 
 	// CurrentBlock retrieves the head block from the local chain.
 	CurrentBlock() *types.Block
@@ -112,13 +115,15 @@ func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
 	}
 }
 
-func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height uint64) error {
-	switch err := s.synchronise(p, head, height); err {
+func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int) error {
+	switch err := s.synchronise(p, head, height.Uint64()); err {
 	case nil, errBusy, errCanceled, errQuitSync:
 	case errTimeout, errInvalidChain:
 
-		// TODO: drop peer here
 		// drop peer
+		if s.dropPeer != nil {
+			s.dropPeer(p.ID())
+		}
 
 		return err
 	}
@@ -132,11 +137,15 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 	}
 	defer atomic.StoreInt32(&s.synchronizing, 0)
 
+	log.Debug("Synchronization Started", "peer", p.ID(), "peer.Head", head.Hex(), "peer.height", height)
+
 	var (
 		currentHeader = s.blockchain.CurrentBlock().Header()
 		currentNumber = currentHeader.Number.Uint64()
 		// currentHash   = currentHeader.Hash()
 	)
+
+	log.Debug("local status", "current number", currentNumber)
 
 	// if remote peer is behind us, skip
 	if height < currentNumber {
@@ -144,24 +153,31 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 	}
 
 	s.currentPeer = p
-	if s.cancelCh == nil {
-		s.cancelCh = make(chan struct{})
-	}
+	s.cancelCh = make(chan struct{})
+
+	go s.sendRequestLoop()
 
 	defer s.Cancel(p.ID())
 
 	// fetch blocks with batch size
-	for i := currentNumber; i < height; i += MaxBlockFetch {
+	for i := currentNumber + 1; i < height; i += MaxBlockFetch {
 		timer := time.NewTimer(SyncTimeout * time.Second)
+
+		log.Debug("sending sync request", "start", i)
 
 		// this sends sync request
 		s.syncRequestsCh <- i
 
 		select {
 		case blocks := <-s.syncBlocksCh:
+
+			log.Debug("received blocks from peer", "id", p.ID())
+
 			// handle received blocks
 			_, err := s.blockchain.InsertChain(blocks)
-			return err
+			if err != nil {
+				return err
+			}
 
 		case <-timer.C:
 			return errTimeout
@@ -182,6 +198,9 @@ func (s *Synchronizer) sendRequestLoop() {
 		select {
 		case start := <-s.syncRequestsCh:
 			s.currentPeer.SendGetBlocks(start)
+
+		case <-s.cancelCh:
+			return
 
 		case <-s.quitCh:
 			return
