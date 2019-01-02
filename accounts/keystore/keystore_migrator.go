@@ -5,7 +5,6 @@ package keystore
 import (
 	"bytes"
 	"encoding/hex"
-
 	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/crypto"
