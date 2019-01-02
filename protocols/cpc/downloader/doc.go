@@ -1,4 +1,4 @@
-// Copyright 2016 The cpchain authors
+// Copyright 2019 The cpchain authors
 // Copyright 2016 The go-ethereum Authors
 
 /*
