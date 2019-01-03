@@ -51,7 +51,7 @@ func TestSyncerNormal(t *testing.T) {
 
 			fmt.Println("received blocks from peer", len(blocks))
 
-			localSyncer.DeliverBlocks(p.String(), blocks)
+			localSyncer.DeliverBlocks(p.IDString(), blocks)
 		}
 
 		// sleep 100 millisecond to wait for syncer processing
@@ -139,7 +139,7 @@ func NewFakePeer(n int) *FakePeer {
 	}
 }
 
-func (fp *FakePeer) String() string {
+func (fp *FakePeer) IDString() string {
 	return "test peer"
 }
 
