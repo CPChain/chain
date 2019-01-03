@@ -104,7 +104,7 @@ func TestSyncerUnknownPeer(t *testing.T) {
 }
 
 func TestSyncerSlowPeer(t *testing.T) {
-
+	// TODO: complete this
 }
 
 func newBlockchain(n int) syncer.BlockChain {
