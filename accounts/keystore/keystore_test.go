@@ -470,7 +470,7 @@ func TestErrorMacKeystoreUpgrade(t *testing.T) {
 	if err != nil {
 		fmt.Println("ReadFile error", "err", err)
 	}
-	mac, calcMac := ExtraDiffMac(keyjson, "password")
+	mac, calcMac := ExtractDiffMac(keyjson, "password")
 	if hex.EncodeToString(mac) != "1ec1a006564dec6e24d5954e064ed77af5d6037670c58869ce276f67da4104aa" {
 		t.Errorf("mac error: have %x, want 1ec1a006564dec6e24d5954e064ed77af5d6037670c58869ce276f67da4104aa", mac)
 	}
@@ -484,7 +484,7 @@ func TestErrorMacKeystoreUpgrade(t *testing.T) {
 	if err != nil {
 		fmt.Println("ReadFile error", "err", err)
 	}
-	mac, calcMac = ExtraDiffMac(keyjson, "password")
+	mac, calcMac = ExtractDiffMac(keyjson, "password")
 	if hex.EncodeToString(mac) != "65277709cdf5e752ec3138e024c0e9d6d2fb089cbdc2b6cbdef09cf93e48ee01" {
 		t.Errorf("mac error: have %x, want 65277709cdf5e752ec3138e024c0e9d6d2fb089cbdc2b6cbdef09cf93e48ee01", mac)
 	}
@@ -515,7 +515,7 @@ func TestConvertKey(t *testing.T) {
 			default:
 				password = "password"
 			}
-			mac, newMac := ExtraDiffMac(keyjson, password)
+			mac, newMac := ExtractDiffMac(keyjson, password)
 			fmt.Printf("mac:%x, newMac:%x\n", mac, newMac)
 			keyString := string(keyjson)
 			newJson := strings.Replace(keyString, hex.EncodeToString(mac), hex.EncodeToString(newMac), 1)
@@ -546,7 +546,7 @@ func TestConvertTestnetKey(t *testing.T) {
 			password, _ := ioutil.ReadFile(passPath)
 			passString := string(password)
 			fmt.Println("password:", passString)
-			mac, newMac := ExtraDiffMac(keyjson, passString)
+			mac, newMac := ExtractDiffMac(keyjson, passString)
 			fmt.Printf("mac:%x, newMac:%x\n", mac, newMac)
 			keyString := string(keyjson)
 			newJson := strings.Replace(keyString, hex.EncodeToString(mac), hex.EncodeToString(newMac), 1)

@@ -10,12 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-// extra mac value
-func ExtraDiffMac(keyjson []byte, auth string) (origMac, calcMac []byte) {
-	m := make(map[string]interface{})
-	if err := json.Unmarshal(keyjson, &m); err != nil {
-		return nil, nil
-	}
+// extract mac value.  only used in keystore_converter tool.
+func ExtractDiffMac(keyjson []byte, auth string) (origMac, calcMac []byte) {
 	k := new(encryptedKeyJSONV3)
 	if err := json.Unmarshal(keyjson, k); err != nil {
 		return nil, nil

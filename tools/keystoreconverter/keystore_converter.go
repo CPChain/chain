@@ -46,7 +46,7 @@ func main() {
 			default:
 				password = "password"
 			}
-			mac, newMac := keystore.ExtraDiffMac(keyjson, password)
+			mac, newMac := keystore.ExtractDiffMac(keyjson, password)
 			fmt.Printf("mac:%x, newMac:%x\n", mac, newMac)
 			keyString := string(keyjson)
 			newJson := strings.Replace(keyString, hex.EncodeToString(mac), hex.EncodeToString(newMac), 1)
