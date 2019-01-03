@@ -23,8 +23,8 @@ var (
 	errBusy         = errors.New("busy")
 	errQuitSync     = errors.New("downloader terminated")
 	errCanceled     = errors.New("downloader terminated")
-	errUnknownPeer  = errors.New("unknown peer")
-	errSlowPeer     = errors.New("too slow peer")
+	ErrUnknownPeer  = errors.New("unknown peer")
+	ErrSlowPeer     = errors.New("too slow peer")
 	ErrTimeout      = errors.New("timeout")
 	ErrInvalidChain = errors.New("retrieved invalid chain")
 )
@@ -115,7 +115,7 @@ func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
 func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int) error {
 	switch err := s.synchronise(p, head, height.Uint64()); err {
 	case nil, errBusy, errCanceled, errQuitSync:
-	case ErrTimeout:
+	case ErrTimeout, ErrSlowPeer:
 		// drop peer
 		if s.dropPeer != nil {
 			s.dropPeer(p.IDString())
@@ -152,7 +152,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 
 	// if remote peer is behind us, skip
 	if height < currentNumber {
-		return errSlowPeer
+		return ErrSlowPeer
 	}
 
 	s.currentPeer = p
@@ -231,7 +231,7 @@ func (s *Synchronizer) Cancel(id string) {
 func (s *Synchronizer) DeliverBlocks(id string, blocks types.Blocks) error {
 	// if peer id mismatch, return
 	if s.currentPeer.IDString() != id {
-		return errUnknownPeer
+		return ErrUnknownPeer
 	}
 
 	if s.Synchronising() {

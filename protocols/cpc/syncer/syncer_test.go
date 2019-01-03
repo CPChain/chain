@@ -23,7 +23,8 @@ func init() {
 func TestSyncerNormal(t *testing.T) {
 	var (
 		n            = 1000
-		p            = NewFakePeer(n, 0)
+		badIdx       = 0
+		p            = NewFakePeer(n, badIdx)
 		head, height = p.Head()
 	)
 
@@ -73,7 +74,8 @@ func TestSyncerTimeout(t *testing.T) {
 
 	var (
 		n            = 1000
-		p            = NewFakePeer(n, 0)
+		badIdx       = 0
+		p            = NewFakePeer(n, badIdx)
 		head, height = p.Head()
 	)
 
@@ -97,10 +99,10 @@ func TestSyncerTimeout(t *testing.T) {
 }
 
 func TestSyncerInvalidChain(t *testing.T) {
-	// TODO: complete this
 	var (
 		n            = 1000
-		p            = NewFakePeer(n, 10)
+		badIdx       = 10
+		p            = NewFakePeer(n, badIdx)
 		head, height = p.Head()
 	)
 
@@ -154,11 +156,96 @@ func TestSyncerInvalidChain(t *testing.T) {
 }
 
 func TestSyncerUnknownPeer(t *testing.T) {
-	// TODO: complete this
+	var (
+		n            = 1000
+		badIdx       = 0
+		p            = NewFakePeer(n, badIdx)
+		head, height = p.Head()
+	)
+
+	_ = p
+
+	// new a local chain, only genesis block in it
+	localchain := newBlockchain(0)
+
+	// create a syncer to sync blocks
+	localSyncer := syncer.New(localchain, nil)
+
+	// go fake peer request handle loop
+	go p.returnBlocksLoop()
+	defer p.quit()
+
+	// act as handleSyncMsg in protocol manager
+	go func() {
+		for {
+			select {
+
+			// received blocks from remote peer, deliever to syncer
+			case blocks := <-p.returnCh:
+
+				fmt.Println("received blocks from peer", len(blocks))
+
+				// invalid peer id when delivering blocks
+				err := localSyncer.DeliverBlocks(p.IDString()+"x", blocks)
+				if err != syncer.ErrUnknownPeer {
+					t.Fail()
+				}
+
+				// continue
+				err = localSyncer.DeliverBlocks(p.IDString(), blocks)
+				if err != nil {
+					t.Fail()
+				}
+			}
+
+			// sleep 100 millisecond to wait for syncer processing
+			time.Sleep(1000 * time.Millisecond)
+
+			// check localchain status
+			num := localchain.CurrentBlock().NumberU64()
+			fmt.Println("updated block chain, latest block number", num)
+
+			// if all blocks synced, return
+			if num == uint64(n) {
+				return
+			}
+		}
+	}()
+
+	// go sync
+	err := localSyncer.Synchronise(p, head, height)
+	defer localSyncer.Terminate()
+
+	fmt.Println(err)
+	if err != nil {
+		t.Fail()
+	}
 }
 
 func TestSyncerSlowPeer(t *testing.T) {
-	// TODO: complete this
+	var (
+		n            = 100
+		badIdx       = 0
+		p            = NewFakePeer(n, badIdx)
+		head, height = p.Head()
+	)
+
+	_ = p
+
+	// new a local chain, only genesis block in it
+	localchain := newBlockchain(200)
+
+	// create a syncer to sync blocks
+	localSyncer := syncer.New(localchain, nil)
+
+	// go sync
+	err := localSyncer.Synchronise(p, head, height)
+	defer localSyncer.Terminate()
+
+	fmt.Println(err)
+	if err != syncer.ErrSlowPeer {
+		t.Fail()
+	}
 }
 
 func newBlockchain(n int) syncer.BlockChain {
