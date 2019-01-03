@@ -129,7 +129,6 @@ contract Campaign {
             "please waite until your last round ended and try again."
         );
 
-        updateTermIdx();
         updateCandidateStatus();
 
         address candidate = msg.sender;
@@ -166,7 +165,8 @@ contract Campaign {
      * The function will be called when a node claims to campaign for proposer election to update candidates status.
      *
      */
-    function updateCandidateStatus() internal {
+    function updateCandidateStatus() public payable {
+        updateTermIdx();
         if (withdrawTermIdx >= termIdx) {
             return;
         }
