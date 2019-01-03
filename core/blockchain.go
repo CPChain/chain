@@ -1080,9 +1080,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			// Chain broke ancestry, log a messge (programming error) and skip insertion
 			log.Error("Non contiguous block insert", "number", chain[i].Number(), "hash", chain[i].Hash().Hex(),
 				"parent", chain[i].ParentHash().Hex(), "prevnumber", chain[i-1].Number(), "prevhash", chain[i-1].Hash().Hex())
-
-			// return 0, nil, nil, fmt.Errorf("non contiguous insert: item %d is #%d [%x…], item %d is #%d [%x…] (parent [%x…])", i-1, chain[i-1].NumberU64(),
-			// 	chain[i-1].Hash().Bytes()[:4], i, chain[i].NumberU64(), chain[i].Hash().Bytes()[:4], chain[i].ParentHash().Bytes()[:4])
 			return 0, nil, nil, ErrInvalidChain
 		}
 	}
