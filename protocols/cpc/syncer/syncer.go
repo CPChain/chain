@@ -115,14 +115,19 @@ func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
 func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int) error {
 	switch err := s.synchronise(p, head, height.Uint64()); err {
 	case nil, errBusy, errCanceled, errQuitSync:
-	case ErrTimeout, ErrInvalidChain:
-
+	case ErrTimeout:
 		// drop peer
 		if s.dropPeer != nil {
 			s.dropPeer(p.IDString())
 		}
-
 		return err
+
+	default:
+		// drop peer
+		if s.dropPeer != nil {
+			s.dropPeer(p.IDString())
+		}
+		return ErrInvalidChain
 	}
 
 	return nil
@@ -229,7 +234,10 @@ func (s *Synchronizer) DeliverBlocks(id string, blocks types.Blocks) error {
 		return errUnknownPeer
 	}
 
-	// deliver block
-	s.syncBlocksCh <- blocks
-	return nil
+	if s.Synchronising() {
+		// deliver block
+		s.syncBlocksCh <- blocks
+		return nil
+	}
+	return errCanceled
 }
