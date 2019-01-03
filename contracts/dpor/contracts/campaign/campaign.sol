@@ -123,21 +123,24 @@ contract Campaign {
         require(msg.value == SafeMath.mul(baseDeposit, _numOfCampaign), "wrong deposit value.");
         // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
-        updateTermIdx();
+        require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
         require(
             candidates[candidate].numOfCampaign == 0,
             "please waite until your last round ended and try again."
         );
-        require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
+
+        updateTermIdx();
 
         address candidate = msg.sender;
 
-        candidates[candidate].numOfCampaign = candidates[candidate].numOfCampaign.add(_numOfCampaign);
-        candidates[candidate].deposit = candidates[candidate].deposit.add(msg.value);
+        candidates[candidate].numOfCampaign = _numOfCampaign;
+        candidates[candidate].deposit = SafeMath.mul(baseDeposit, _numOfCampaign);
         candidates[candidate].startTermIdx = termIdx.add(1);
+
         //[start, stop)
         candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_numOfCampaign);
         candidates[candidate].baseDeposit = baseDeposit;
+
         // add candidate to campaignSnapshots.
         for(uint i = candidates[candidate].startTermIdx; i < candidates[candidate].stopTermIdx; i++) {
             campaignSnapshots[i].insert(candidate);
