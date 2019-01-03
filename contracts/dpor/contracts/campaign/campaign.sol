@@ -176,12 +176,23 @@ contract Campaign {
             size = campaignSnapshots[withdrawTermIdx].values.length;
             for(uint i = 0; i < size; i++) {
                 address candidate = campaignSnapshots[termIdx].values[i];
-                uint depositValue = candidates[candidate].baseDeposit;
-                if(candidates[candidate].deposit >= depositValue) {
-                    candidates[candidate].deposit -= depositValue;
-                    candidate.transfer(depositValue);
-                    candidates[candidate].numOfCampaign--;
+
+                if (candidates[candidate].numOfCampaign == 0) {
+                    continue;
                 }
+
+                uint depositValue = 0;
+                if(candidates[candidate].deposit >= candidates[candidate].baseDeposit) {
+                    depositValue = candidates[candidate].baseDeposit;
+                }
+                else {
+                    depositValue = candidates[candidate].deposit;
+                }
+
+                candidates[candidate].deposit = SafeMath.sub(candidates[candidate].deposit, depositValue);
+                candidates[candidate].numOfCampaign--;
+                candidate.transfer(depositValue);
+
                 // if candidate's tenure is all over, all status return to zero.
                 if (candidates[candidate].numOfCampaign == 0) {
                     candidates[candidate].startTermIdx = 0;
