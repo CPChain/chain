@@ -142,7 +142,7 @@ func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, n
 	// manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, nil)
 	// manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
-	manager.syncer = syncer.New(blockchain, nil)
+	manager.syncer = syncer.New(blockchain, manager.removePeer)
 
 	// fetcher specific
 	// verifies the header when insert into the chain
@@ -772,7 +772,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 			return nil
 		}
 
-		return pm.syncer.DeliverBlocks(p.String(), blocks)
+		return pm.syncer.DeliverBlocks(p.IDString(), blocks)
 
 	default:
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)

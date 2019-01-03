@@ -31,7 +31,7 @@ var (
 
 // SyncPeer represents a remote peer that i can sync with
 type SyncPeer interface {
-	String() string
+	IDString() string
 
 	// Head returns head block of remote sync peer
 	Head() (hash common.Hash, ht *big.Int)
@@ -119,7 +119,7 @@ func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int
 
 		// drop peer
 		if s.dropPeer != nil {
-			s.dropPeer(p.String())
+			s.dropPeer(p.IDString())
 		}
 
 		return err
@@ -135,7 +135,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 	}
 	defer atomic.StoreInt32(&s.synchronizing, 0)
 
-	log.Debug("Synchronization Started", "peer", p.String(), "peer.Head", head.Hex(), "peer.height", height)
+	log.Debug("Synchronization Started", "peer", p.IDString(), "peer.Head", head.Hex(), "peer.height", height)
 
 	var (
 		currentHeader = s.blockchain.CurrentBlock().Header()
@@ -155,7 +155,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 
 	go s.sendRequestLoop()
 
-	defer s.Cancel(p.String())
+	defer s.Cancel(p.IDString())
 
 	// fetch blocks with batch size
 	for i := currentNumber + 1; i < height; i += MaxBlockFetch {
@@ -169,7 +169,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 		select {
 		case blocks := <-s.syncBlocksCh:
 
-			log.Debug("received blocks from peer", "id", p.String())
+			log.Debug("received blocks from peer", "id", p.IDString())
 
 			// handle received blocks
 			_, err := s.blockchain.InsertChain(blocks)
@@ -225,7 +225,7 @@ func (s *Synchronizer) Cancel(id string) {
 
 func (s *Synchronizer) DeliverBlocks(id string, blocks types.Blocks) error {
 	// if peer id mismatch, return
-	if s.currentPeer.String() != id {
+	if s.currentPeer.IDString() != id {
 		return errUnknownPeer
 	}
 

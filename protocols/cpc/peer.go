@@ -410,6 +410,10 @@ func (p *peer) String() string {
 	)
 }
 
+func (p *peer) IDString() string {
+	return fmt.Sprintf("%x", p.ID().Bytes()[:8])
+}
+
 // peerSet represents the collection of active peers currently participating in
 // the cpchain sub-protocol.
 type peerSet struct {
