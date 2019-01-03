@@ -260,7 +260,7 @@ var NodeFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  ProfileAddressFlagName,
-		Usage: "Profile http service Address",
+		Usage: "Profile http service address",
 	},
 }
 
