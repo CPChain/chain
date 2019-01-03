@@ -73,6 +73,8 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		// do nothing
 	case FakeMode:
 		return nil
+	case PbftFakeMode:
+		return nil
 	}
 
 	if header.Number.Uint64() > 0 {
@@ -107,15 +109,24 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		}
 	}
 
+	isImpeach := header.Coinbase == common.Address{}
+
 	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
 	if number > 0 {
 		if header.Difficulty == nil || (header.Difficulty.Cmp(DporDifficulty) != 0 && header.Difficulty.Uint64() != 0) {
 			return errInvalidDifficulty
 		}
 
+		// verify dpor seal, genesis block not need this check
+		if !isImpeach { // ignore impeach block(whose coinbase is empty)
+			if err := dh.verifySeal(dpor, chain, header, parents, refHeader); err != nil {
+				log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
+				return err
+			}
+		}
 	}
 
-	if verifyProposers {
+	if verifyProposers || !isImpeach {
 		// verify proposers
 		if err := dpor.dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
 			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
@@ -497,7 +508,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		var hashToSign []byte
 		// Sign it
 		if state == consensus.Preprepared {
-			//hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
+			// hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
 			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
 		} else {
 			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()

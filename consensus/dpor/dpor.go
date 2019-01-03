@@ -35,6 +35,7 @@ const (
 	NormalMode Mode = iota
 	FakeMode
 	DoNothingFakeMode
+	PbftFakeMode
 )
 
 // Dpor is the proof-of-reputation consensus engine proposed to support the
@@ -201,6 +202,12 @@ func NewFakeDelayer(config *configs.DporConfig, db database.Database, delay time
 	return d
 }
 
+func NewPbftFaker(config *configs.DporConfig, db database.Database) *Dpor {
+	d := New(config, db)
+	d.mode = PbftFakeMode
+	return d
+}
+
 // SetHandler sets dpor.handler
 func (d *Dpor) SetHandler(handler *backend.Handler) error {
 	d.handler = handler
@@ -216,6 +223,29 @@ func (d *Dpor) IfSigned(number uint64) (common.Hash, bool) {
 func (d *Dpor) MarkAsSigned(number uint64, hash common.Hash) error {
 	return d.signedBlocks.MarkAsSigned(number, hash)
 }
+
+// SetChain is called by test file to assign the value of Dpor.chain, as well as DPor.currentSnapshot
+func (d *Dpor) SetChain(blockchain consensus.ChainReadWriter) {
+	d.chain = blockchain
+
+	header := d.chain.CurrentHeader()
+	number := header.Number.Uint64()
+	hash := header.Hash()
+
+	snap, _ := d.dh.snapshot(d, d.chain, number, hash, nil)
+	d.SetCurrentSnap(snap)
+}
+
+// func (d *Dpor) SetSnapshotProposer(ca map[uint64][]common.Address) {
+// 	d.currentSnapshot.RecentProposers = make(map[uint64][]common.Address)
+// 	for term, proposers := range ca {
+// 		d.currentSnapshot.RecentProposers[term] = make([]common.Address, len(proposers))
+// 		for i, p := range proposers {
+// 			copy(d.currentSnapshot.RecentProposers[term][i][:], p[:])
+// 		}
+// 	}
+// 	d.currentSnapshot.RecentProposers = ca
+// }
 
 // StartMining starts to create a handler and start it.
 func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
