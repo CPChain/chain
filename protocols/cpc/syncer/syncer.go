@@ -115,7 +115,10 @@ func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
 func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int) error {
 	switch err := s.synchronise(p, head, height.Uint64()); err {
 	case nil, errBusy, errCanceled, errQuitSync:
-	case ErrTimeout, ErrSlowPeer:
+	case ErrSlowPeer:
+		return err
+
+	case ErrTimeout:
 		// drop peer
 		if s.dropPeer != nil {
 			s.dropPeer(p.IDString())

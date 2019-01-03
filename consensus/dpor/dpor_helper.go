@@ -118,7 +118,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		}
 
 		// verify dpor seal, genesis block not need this check
-		if !isImpeach { // ignore impeach block(whose coinbase is empty)
+		if verifyProposers && !isImpeach { // ignore impeach block(whose coinbase is empty)
 			if err := dh.verifySeal(dpor, chain, header, parents, refHeader); err != nil {
 				log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
 				return err
@@ -126,7 +126,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		}
 	}
 
-	if verifyProposers || !isImpeach {
+	if verifyProposers && !isImpeach {
 		// verify proposers
 		if err := dpor.dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
 			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
