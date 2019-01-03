@@ -39,6 +39,10 @@ func getProfileConfig(ctx *cli.Context) profileConfig {
 	if ctx.IsSet(flags.ProfileFlagName) {
 		dirPath = ctx.String(flags.ProfileFlagName)
 	}
+	profileAddress := "localhost:8931"
+	if ctx.IsSet(flags.ProfileAddressFlagName) {
+		profileAddress = ctx.String(flags.ProfileAddressFlagName)
+	}
 	return profileConfig{
 		memProfileRate:          runtime.MemProfileRate,
 		blockProfileRate:        1,
@@ -46,7 +50,7 @@ func getProfileConfig(ctx *cli.Context) profileConfig {
 		cpuFileName:             path.Join(dirPath, "cpchain-cpu.profile"),
 		blockingProfileFileName: path.Join(dirPath, "cpchain-block.profile"),
 		memProfileFileName:      path.Join(dirPath, "cpchain-heap.profile"),
-		pprofAddr:               "localhost:8931",
+		pprofAddr:               profileAddress,
 	}
 }
 
