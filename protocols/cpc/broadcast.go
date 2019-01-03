@@ -26,30 +26,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// // BroadcastGeneratedBlock broadcasts generated block to committee
-// func (pm *ProtocolManager) BroadcastGeneratedBlock(block *types.Block) {
-// 	committee := pm.peers.committee
-// 	for _, peer := range committee {
-// 		peer.AsyncSendNewPendingBlock(block)
-// 	}
-// }
-
-// // BroadcastPrepareSignedHeader broadcasts signed prepare header to remote committee
-// func (pm *ProtocolManager) BroadcastPrepareSignedHeader(header *types.Header) {
-// 	committee := pm.peers.committee
-// 	for _, peer := range committee {
-// 		peer.AsyncSendPrepareSignedHeader(header)
-// 	}
-// }
-
-// // BroadcastCommitSignedHeader broadcasts signed commit header to remote committee
-// func (pm *ProtocolManager) BroadcastCommitSignedHeader(header *types.Header) {
-// 	committee := pm.peers.committee
-// 	for _, peer := range committee {
-// 		peer.AsyncSendCommitSignedHeader(header)
-// 	}
-// }
-
 // BroadcastBlock will either propagate a block to a subset of it's peers, or
 // will only announce it's availability (depending what's requested).
 func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
@@ -75,6 +51,8 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		log.Debug("Propagated block", "number", block.NumberU64(), "hash", hash.Hex(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 		return
 	}
+
+	// TODO: @liuq fix this
 
 	// // Otherwise if the block is indeed in out own chain, announce it
 	// if pm.blockchain.HasBlock(hash, block.NumberU64()) {
