@@ -130,6 +130,7 @@ contract Campaign {
         );
 
         updateTermIdx();
+        updateCandidateStatus();
 
         address candidate = msg.sender;
 
@@ -161,15 +162,15 @@ contract Campaign {
         paybackDeposit(candidate);
     }
 
-    // TODO. add restriction that only last commissioner can call this with require statement.
     /**
-     * CPC master will call this function at regular intervals.
-     * Also anyone others can call this function to withdraw money for everyone if he is willing to pay the gas.
+     * The function will be called when a node claims to campaign for proposer election to update candidates status.
+     *
      */
-    // TODO test fail.
-    function viewChange() public payable {
-        updateTermIdx();
-        require(withdrawTermIdx < termIdx, "Nothing can withdraw. Please wait until this view is finished.");
+    function updateCandidateStatus() internal {
+        if (withdrawTermIdx >= termIdx) {
+            return;
+        }
+
         uint size;
         for(; withdrawTermIdx < termIdx; withdrawTermIdx++) {
             // avoid recalculate the size for circulation times.
@@ -206,6 +207,10 @@ contract Campaign {
     /** update termIdx called by function ClaimCampaign. */
     function updateTermIdx() internal{
         uint blockNumber = block.number;
+        if (blockNumber == 0) {
+            termIdx = 0;
+            return;
+        }
         termIdx = (blockNumber - 1) / numPerRound;
     }
 
