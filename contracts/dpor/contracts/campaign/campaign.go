@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strings"
 
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/types"
@@ -202,10 +203,10 @@ func (_AdmissionInterface *AdmissionInterfaceCallerSession) Verify(_cpuNonce uin
 }
 
 // CampaignABI is the input ABI used to generate the binding from.
-const CampaignABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_numOfCampaign\",\"type\":\"uint256\"},{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"}],\"name\":\"claimCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_viewIdx\",\"type\":\"uint256\"}],\"name\":\"candidatesOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"minNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"numPerRound\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"candidate\",\"type\":\"address\"},{\"name\":\"_viewIdx\",\"type\":\"uint256\"}],\"name\":\"punishCandidate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"baseDeposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_deposit\",\"type\":\"uint256\"}],\"name\":\"updateBaseDeposit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_maxNoc\",\"type\":\"uint256\"}],\"name\":\"updateMaxNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_minNoc\",\"type\":\"uint256\"}],\"name\":\"updateMinNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"viewIdx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"setAdmissionAddr\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"quitCampaign\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_candidate\",\"type\":\"address\"}],\"name\":\"candidateInfoOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"viewChange\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maxNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"startViewIdx\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"stopViewIdx\",\"type\":\"uint256\"}],\"name\":\"ClaimCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"payback\",\"type\":\"uint256\"}],\"name\":\"QuitCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"ViewChange\",\"type\":\"event\"}]"
+const CampaignABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_numOfCampaign\",\"type\":\"uint256\"},{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"}],\"name\":\"claimCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_termIdx\",\"type\":\"uint256\"}],\"name\":\"candidatesOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"termIdx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"minNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"numPerRound\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"candidate\",\"type\":\"address\"},{\"name\":\"_termIdx\",\"type\":\"uint256\"}],\"name\":\"punishCandidate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"baseDeposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_deposit\",\"type\":\"uint256\"}],\"name\":\"updateBaseDeposit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_maxNoc\",\"type\":\"uint256\"}],\"name\":\"updateMaxNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_minNoc\",\"type\":\"uint256\"}],\"name\":\"updateMinNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"setAdmissionAddr\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"quitCampaign\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_candidate\",\"type\":\"address\"}],\"name\":\"candidateInfoOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"viewChange\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maxNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"startTermIdx\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"stopTermIdx\",\"type\":\"uint256\"}],\"name\":\"ClaimCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"payback\",\"type\":\"uint256\"}],\"name\":\"QuitCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"ViewChange\",\"type\":\"event\"}]"
 
 // CampaignBin is the compiled bytecode used for deploying new contracts.
-const CampaignBin = `0x60806040526000600155600c60025560326003556001600455600a600555600060065534801561002e57600080fd5b50604051602080610f9c833981016040525160008054600160a060020a0319908116331790915560098054600160a060020a0390931692909116919091179055610f1f8061007d6000396000f3006080604052600436106100da5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166314b90a0281146100dc5780631984ab00146101015780633a713e37146101695780634b6b164b14610190578063604268ad146101a557806369474625146101c9578063855e5466146101de5780638cb59532146101f6578063a7e1f08b1461020e578063b07eaaf014610226578063c0e9e35e1461023b578063d0bdc65b1461025c578063db43826914610271578063db8e5580146102b8578063e2b28158146102c0575b005b6100da60043567ffffffffffffffff60243581169060443590606435166084356102d5565b34801561010d57600080fd5b506101196004356106e1565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561015557818101518382015260200161013d565b505050509050019250505060405180910390f35b34801561017557600080fd5b5061017e610750565b60408051918252519081900360200190f35b34801561019c57600080fd5b5061017e610756565b3480156101b157600080fd5b506100da600160a060020a036004351660243561075c565b3480156101d557600080fd5b5061017e610834565b3480156101ea57600080fd5b506100da60043561083a565b34801561020257600080fd5b506100da600435610856565b34801561021a57600080fd5b506100da600435610872565b34801561023257600080fd5b5061017e61088e565b34801561024757600080fd5b506100da600160a060020a0360043516610894565b34801561026857600080fd5b506100da6108da565b34801561027d57600080fd5b50610292600160a060020a03600435166109db565b604080519485526020850193909352838301919091526060830152519081900360800190f35b6100da610a0c565b3480156102cc57600080fd5b5061017e610bf3565b6000806102e460035488610bf9565b341461033a576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600954604080517f3395492e00000000000000000000000000000000000000000000000000000000815267ffffffffffffffff808a1660048301526024820189905287166044820152606481018690523360848201529051600160a060020a0390921691633395492e9160a4808201926020929091908290030181600087803b1580156103c657600080fd5b505af11580156103da573d6000803e3d6000fd5b505050506040513d60208110156103f057600080fd5b50511515610448576040805160e560020a62461bcd02815260206004820152601960248201527f637075206f72206d656d6f7279206e6f74207061737365642e00000000000000604482015290519081900360640190fd5b610450610c2f565b600160a060020a038216600090815260076020526040902054156104e4576040805160e560020a62461bcd02815260206004820152603760248201527f706c6561736520776169746520756e74696c20796f7572206c61737420726f7560448201527f6e6420656e64656420616e642074727920616761696e2e000000000000000000606482015290519081900360840190fd5b60045487101580156104f857506005548711155b151561054e576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b33600081815260076020526040902054909250610571908863ffffffff610c4516565b600160a060020a0383166000908152600760205260409020908155600101546105a0903463ffffffff610c4516565b600160a060020a038316600090815260076020526040902060019081019190915580546105d29163ffffffff610c4516565b600160a060020a0383166000908152600760205260409020600201819055610600908863ffffffff610c4516565b600160a060020a0383166000908152600760205260409020600380820192909255905460048201556002015490505b600160a060020a038216600090815260076020526040902060030154811015610679576000818152600860205260409020610670908363ffffffff610c5416565b5060010161062f565b600160a060020a038216600081815260076020908152604091829020600281015460039091015483519485529184015282820152517f8d468194bdd18296bee5d126aa15cc492d26bdf22a0585c4a47ec4490d3a0fcf9181900360600190a150505050505050565b60008181526008602090815260409182902060010180548351818402810184019094528084526060939283018282801561074457602002820191906000526020600020905b8154600160a060020a03168152600190910190602001808311610726575b50505050509050919050565b60045481565b60025481565b60008054600160a060020a0316331461077457600080fd5b50600160a060020a038216600090815260076020526040902060048101546001909101548111156107ef576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600160a060020a0383166000908152600760209081526040808320600101805485900390558483526008909152902061082e908463ffffffff610cdc16565b50505050565b60035481565b600054600160a060020a0316331461085157600080fd5b600355565b600054600160a060020a0316331461086d57600080fd5b600555565b600054600160a060020a0316331461088957600080fd5b600455565b60015481565b600054600160a060020a031633146108ab57600080fd5b6009805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b336000818152600760205260408120548110610966576040805160e560020a62461bcd02815260206004820152602960248201527f616c726561647920717569742063616d706169676e206f72206e6f206e65656460448201527f20746f20717569742e0000000000000000000000000000000000000000000000606482015290519081900360840190fd5b61096e610c2f565b600180546109819163ffffffff610c4516565b90505b600160a060020a0382166000908152600760205260409020600301548110156109ce5760008181526008602052604090206109c5908363ffffffff610cdc16565b50600101610984565b6109d782610e4e565b5050565b600160a060020a03166000908152600760205260409020805460018201546002830154600390930154919390929190565b600080600080610a1a610c2f565b60015460065410610a9b576040805160e560020a62461bcd02815260206004820152603e60248201527f4e6f7468696e672063616e2077697468647261772e20506c656173652077616960448201527f7420756e74696c207468697320766965772069732066696e69736865642e0000606482015290519081900360840190fd5b600154600654101561082e57600654600090815260086020526040812060010154945092505b83831015610be55760018054600090815260086020526040902001805484908110610ae857fe5b6000918252602080832090910154600160a060020a03168083526007909152604090912060048101546001919091015491935091508111610b9057600160a060020a038216600081815260076020526040808220600101805485900390555183156108fc0291849190818181858888f19350505050158015610b6e573d6000803e3d6000fd5b50600160a060020a038216600090815260076020526040902080546000190190555b600160a060020a0382166000908152600760205260409020541515610bda57600160a060020a03821660009081526007602052604081206002810182905560038101829055600401555b600190920191610ac1565b600680546001019055610a9b565b60055481565b600080831515610c0c5760009150610c28565b50828202828482811515610c1c57fe5b0414610c2457fe5b8091505b5092915050565b600254439081811515610c3e57fe5b0460015550565b600082820183811015610c2457fe5b600160a060020a03811660009081526020839052604081205460ff1615610c7d57506000610cd6565b50600160a060020a0381166000818152602084815260408220805460ff19166001908117909155858101805480830182559084529190922001805473ffffffffffffffffffffffffffffffffffffffff19169092179091555b92915050565b600160a060020a0381166000908152602083905260408120548190819060ff161515610d0b5760009250610e46565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b81811015610e415783600160a060020a03168560010182815481101515610d5757fe5b600091825260209091200154600160a060020a03161415610e39576001850180546000198401908110610d8657fe5b600091825260209091200154600186018054600160a060020a039092169183908110610dae57fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790556001850180546000198401908110610df857fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916905560018501805490610e33906000198301610eb3565b50610e41565b600101610d34565b600192505b505092915050565b600160a060020a03811660008181526007602052604080822060018101805484835590849055600282018490556003909101839055905190929183156108fc02918491818181858888f19350505050158015610eae573d6000803e3d6000fd5b505050565b815481835581811115610eae57600083815260209020610eae918101908301610ef091905b80821115610eec5760008155600101610ed8565b5090565b905600a165627a7a72305820dae5e6c6a1105868aec079f6a87e29551644e0f71da99c15fb771cd700eb38fe0029`
+const CampaignBin = `0x60806040526000600155600c60025560326003556001600455600a600555600060065534801561002e57600080fd5b5060405160208061100f833981016040525160008054600160a060020a0319908116331790915560098054600160a060020a0390931692909116919091179055610f928061007d6000396000f3006080604052600436106100da5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166314b90a0281146100dc5780631984ab001461010157806335805726146101695780633a713e37146101905780634b6b164b146101a5578063604268ad146101ba57806369474625146101de578063855e5466146101f35780638cb595321461020b578063a7e1f08b14610223578063c0e9e35e1461023b578063d0bdc65b1461025c578063db43826914610271578063db8e5580146102b8578063e2b28158146102c0575b005b6100da60043567ffffffffffffffff60243581169060443590606435166084356102d5565b34801561010d57600080fd5b506101196004356106b1565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561015557818101518382015260200161013d565b505050509050019250505060405180910390f35b34801561017557600080fd5b5061017e610720565b60408051918252519081900360200190f35b34801561019c57600080fd5b5061017e610726565b3480156101b157600080fd5b5061017e61072c565b3480156101c657600080fd5b506100da600160a060020a0360043516602435610732565b3480156101ea57600080fd5b5061017e61080a565b3480156101ff57600080fd5b506100da600435610810565b34801561021757600080fd5b506100da60043561082c565b34801561022f57600080fd5b506100da600435610848565b34801561024757600080fd5b506100da600160a060020a0360043516610864565b34801561026857600080fd5b506100da6108aa565b34801561027d57600080fd5b50610292600160a060020a03600435166109ab565b604080519485526020850193909352838301919091526060830152519081900360800190f35b6100da6109dc565b3480156102cc57600080fd5b5061017e610c50565b6000806102e460035488610c56565b341461033a576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600954604080517f3395492e00000000000000000000000000000000000000000000000000000000815267ffffffffffffffff808a1660048301526024820189905287166044820152606481018690523360848201529051600160a060020a0390921691633395492e9160a4808201926020929091908290030181600087803b1580156103c657600080fd5b505af11580156103da573d6000803e3d6000fd5b505050506040513d60208110156103f057600080fd5b50511515610448576040805160e560020a62461bcd02815260206004820152601960248201527f637075206f72206d656d6f7279206e6f74207061737365642e00000000000000604482015290519081900360640190fd5b600454871015801561045c57506005548711155b15156104b2576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b600160a060020a03821660009081526007602052604090205415610546576040805160e560020a62461bcd02815260206004820152603760248201527f706c6561736520776169746520756e74696c20796f7572206c61737420726f7560448201527f6e6420656e64656420616e642074727920616761696e2e000000000000000000606482015290519081900360840190fd5b61054e610c8c565b3360008181526007602052604090208890556003549092506105709088610c56565b600160a060020a038316600090815260076020526040902060019081019190915580546105a29163ffffffff610ca616565b600160a060020a03831660009081526007602052604090206002018190556105d0908863ffffffff610ca616565b600160a060020a0383166000908152600760205260409020600380820192909255905460048201556002015490505b600160a060020a038216600090815260076020526040902060030154811015610649576000818152600860205260409020610640908363ffffffff610cb516565b506001016105ff565b600160a060020a038216600081815260076020908152604091829020600281015460039091015483519485529184015282820152517f8d468194bdd18296bee5d126aa15cc492d26bdf22a0585c4a47ec4490d3a0fcf9181900360600190a150505050505050565b60008181526008602090815260409182902060010180548351818402810184019094528084526060939283018282801561071457602002820191906000526020600020905b8154600160a060020a031681526001909101906020018083116106f6575b50505050509050919050565b60015481565b60045481565b60025481565b60008054600160a060020a0316331461074a57600080fd5b50600160a060020a038216600090815260076020526040902060048101546001909101548111156107c5576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600160a060020a03831660009081526007602090815260408083206001018054859003905584835260089091529020610804908463ffffffff610d3d16565b50505050565b60035481565b600054600160a060020a0316331461082757600080fd5b600355565b600054600160a060020a0316331461084357600080fd5b600555565b600054600160a060020a0316331461085f57600080fd5b600455565b600054600160a060020a0316331461087b57600080fd5b6009805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b336000818152600760205260408120548110610936576040805160e560020a62461bcd02815260206004820152602960248201527f616c726561647920717569742063616d706169676e206f72206e6f206e65656460448201527f20746f20717569742e0000000000000000000000000000000000000000000000606482015290519081900360840190fd5b61093e610c8c565b600180546109519163ffffffff610ca616565b90505b600160a060020a03821660009081526007602052604090206003015481101561099e576000818152600860205260409020610995908363ffffffff610d3d16565b50600101610954565b6109a782610eaf565b5050565b600160a060020a03166000908152600760205260409020805460018201546002830154600390930154919390929190565b6000806000806109ea610c8c565b60015460065410610a6b576040805160e560020a62461bcd02815260206004820152603e60248201527f4e6f7468696e672063616e2077697468647261772e20506c656173652077616960448201527f7420756e74696c207468697320766965772069732066696e69736865642e0000606482015290519081900360840190fd5b600154600654101561080457600654600090815260086020526040812060010154945092505b83831015610c425760018054600090815260086020526040902001805484908110610ab857fe5b6000918252602080832090910154600160a060020a031680835260079091526040909120549092501515610aeb57610c37565b50600160a060020a0381166000908152600760205260408120600481015460019091015410610b365750600160a060020a038116600090815260076020526040902060040154610b54565b50600160a060020a0381166000908152600760205260409020600101545b600160a060020a038216600090815260076020526040902060010154610b7a9082610f14565b600160a060020a038316600090815260076020526040902060018082019290925554610ba591610f14565b600160a060020a038316600081815260076020526040808220939093559151909183156108fc02918491818181858888f19350505050158015610bec573d6000803e3d6000fd5b50600160a060020a0382166000908152600760205260409020541515610c3757600160a060020a03821660009081526007602052604081206002810182905560038101829055600401555b600190920191610a91565b600680546001019055610a6b565b60055481565b600080831515610c695760009150610c85565b50828202828482811515610c7957fe5b0414610c8157fe5b8091505b5092915050565b60025443906000198201811515610c9f57fe5b0460015550565b600082820183811015610c8157fe5b600160a060020a03811660009081526020839052604081205460ff1615610cde57506000610d37565b50600160a060020a0381166000818152602084815260408220805460ff19166001908117909155858101805480830182559084529190922001805473ffffffffffffffffffffffffffffffffffffffff19169092179091555b92915050565b600160a060020a0381166000908152602083905260408120548190819060ff161515610d6c5760009250610ea7565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b81811015610ea25783600160a060020a03168560010182815481101515610db857fe5b600091825260209091200154600160a060020a03161415610e9a576001850180546000198401908110610de757fe5b600091825260209091200154600186018054600160a060020a039092169183908110610e0f57fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790556001850180546000198401908110610e5957fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916905560018501805490610e94906000198301610f26565b50610ea2565b600101610d95565b600192505b505092915050565b600160a060020a03811660008181526007602052604080822060018101805484835590849055600282018490556003909101839055905190929183156108fc02918491818181858888f19350505050158015610f0f573d6000803e3d6000fd5b505050565b600082821115610f2057fe5b50900390565b815481835581811115610f0f57600083815260209020610f0f918101908301610f6391905b80821115610f5f5760008155600101610f4b565b5090565b905600a165627a7a72305820398f27e2f0f5d906a7f7a9fe1bf0633b653fc557198e0ab1989c617376cf5e9e0029`
 
 // DeployCampaign deploys a new cpchain contract, binding an instance of Campaign to it.
 func DeployCampaign(auth *bind.TransactOpts, backend bind.ContractBackend, _addr common.Address) (common.Address, *types.Transaction, *Campaign, error) {
@@ -424,28 +425,28 @@ func (_Campaign *CampaignCallerSession) CandidateInfoOf(_candidate common.Addres
 
 // CandidatesOf is a free data retrieval call binding the contract method 0x1984ab00.
 //
-// Solidity: function candidatesOf(_viewIdx uint256) constant returns(address[])
-func (_Campaign *CampaignCaller) CandidatesOf(opts *bind.CallOpts, _viewIdx *big.Int) ([]common.Address, error) {
+// Solidity: function candidatesOf(_termIdx uint256) constant returns(address[])
+func (_Campaign *CampaignCaller) CandidatesOf(opts *bind.CallOpts, _termIdx *big.Int) ([]common.Address, error) {
 	var (
 		ret0 = new([]common.Address)
 	)
 	out := ret0
-	err := _Campaign.contract.Call(opts, out, "candidatesOf", _viewIdx)
+	err := _Campaign.contract.Call(opts, out, "candidatesOf", _termIdx)
 	return *ret0, err
 }
 
 // CandidatesOf is a free data retrieval call binding the contract method 0x1984ab00.
 //
-// Solidity: function candidatesOf(_viewIdx uint256) constant returns(address[])
-func (_Campaign *CampaignSession) CandidatesOf(_viewIdx *big.Int) ([]common.Address, error) {
-	return _Campaign.Contract.CandidatesOf(&_Campaign.CallOpts, _viewIdx)
+// Solidity: function candidatesOf(_termIdx uint256) constant returns(address[])
+func (_Campaign *CampaignSession) CandidatesOf(_termIdx *big.Int) ([]common.Address, error) {
+	return _Campaign.Contract.CandidatesOf(&_Campaign.CallOpts, _termIdx)
 }
 
 // CandidatesOf is a free data retrieval call binding the contract method 0x1984ab00.
 //
-// Solidity: function candidatesOf(_viewIdx uint256) constant returns(address[])
-func (_Campaign *CampaignCallerSession) CandidatesOf(_viewIdx *big.Int) ([]common.Address, error) {
-	return _Campaign.Contract.CandidatesOf(&_Campaign.CallOpts, _viewIdx)
+// Solidity: function candidatesOf(_termIdx uint256) constant returns(address[])
+func (_Campaign *CampaignCallerSession) CandidatesOf(_termIdx *big.Int) ([]common.Address, error) {
+	return _Campaign.Contract.CandidatesOf(&_Campaign.CallOpts, _termIdx)
 }
 
 // MaxNoc is a free data retrieval call binding the contract method 0xe2b28158.
@@ -526,30 +527,30 @@ func (_Campaign *CampaignCallerSession) NumPerRound() (*big.Int, error) {
 	return _Campaign.Contract.NumPerRound(&_Campaign.CallOpts)
 }
 
-// ViewIdx is a free data retrieval call binding the contract method 0xb07eaaf0.
+// TermIdx is a free data retrieval call binding the contract method 0x35805726.
 //
-// Solidity: function viewIdx() constant returns(uint256)
-func (_Campaign *CampaignCaller) ViewIdx(opts *bind.CallOpts) (*big.Int, error) {
+// Solidity: function termIdx() constant returns(uint256)
+func (_Campaign *CampaignCaller) TermIdx(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 	)
 	out := ret0
-	err := _Campaign.contract.Call(opts, out, "viewIdx")
+	err := _Campaign.contract.Call(opts, out, "termIdx")
 	return *ret0, err
 }
 
-// ViewIdx is a free data retrieval call binding the contract method 0xb07eaaf0.
+// TermIdx is a free data retrieval call binding the contract method 0x35805726.
 //
-// Solidity: function viewIdx() constant returns(uint256)
-func (_Campaign *CampaignSession) ViewIdx() (*big.Int, error) {
-	return _Campaign.Contract.ViewIdx(&_Campaign.CallOpts)
+// Solidity: function termIdx() constant returns(uint256)
+func (_Campaign *CampaignSession) TermIdx() (*big.Int, error) {
+	return _Campaign.Contract.TermIdx(&_Campaign.CallOpts)
 }
 
-// ViewIdx is a free data retrieval call binding the contract method 0xb07eaaf0.
+// TermIdx is a free data retrieval call binding the contract method 0x35805726.
 //
-// Solidity: function viewIdx() constant returns(uint256)
-func (_Campaign *CampaignCallerSession) ViewIdx() (*big.Int, error) {
-	return _Campaign.Contract.ViewIdx(&_Campaign.CallOpts)
+// Solidity: function termIdx() constant returns(uint256)
+func (_Campaign *CampaignCallerSession) TermIdx() (*big.Int, error) {
+	return _Campaign.Contract.TermIdx(&_Campaign.CallOpts)
 }
 
 // ClaimCampaign is a paid mutator transaction binding the contract method 0x14b90a02.
@@ -575,23 +576,23 @@ func (_Campaign *CampaignTransactorSession) ClaimCampaign(_numOfCampaign *big.In
 
 // PunishCandidate is a paid mutator transaction binding the contract method 0x604268ad.
 //
-// Solidity: function punishCandidate(candidate address, _viewIdx uint256) returns()
-func (_Campaign *CampaignTransactor) PunishCandidate(opts *bind.TransactOpts, candidate common.Address, _viewIdx *big.Int) (*types.Transaction, error) {
-	return _Campaign.contract.Transact(opts, "punishCandidate", candidate, _viewIdx)
+// Solidity: function punishCandidate(candidate address, _termIdx uint256) returns()
+func (_Campaign *CampaignTransactor) PunishCandidate(opts *bind.TransactOpts, candidate common.Address, _termIdx *big.Int) (*types.Transaction, error) {
+	return _Campaign.contract.Transact(opts, "punishCandidate", candidate, _termIdx)
 }
 
 // PunishCandidate is a paid mutator transaction binding the contract method 0x604268ad.
 //
-// Solidity: function punishCandidate(candidate address, _viewIdx uint256) returns()
-func (_Campaign *CampaignSession) PunishCandidate(candidate common.Address, _viewIdx *big.Int) (*types.Transaction, error) {
-	return _Campaign.Contract.PunishCandidate(&_Campaign.TransactOpts, candidate, _viewIdx)
+// Solidity: function punishCandidate(candidate address, _termIdx uint256) returns()
+func (_Campaign *CampaignSession) PunishCandidate(candidate common.Address, _termIdx *big.Int) (*types.Transaction, error) {
+	return _Campaign.Contract.PunishCandidate(&_Campaign.TransactOpts, candidate, _termIdx)
 }
 
 // PunishCandidate is a paid mutator transaction binding the contract method 0x604268ad.
 //
-// Solidity: function punishCandidate(candidate address, _viewIdx uint256) returns()
-func (_Campaign *CampaignTransactorSession) PunishCandidate(candidate common.Address, _viewIdx *big.Int) (*types.Transaction, error) {
-	return _Campaign.Contract.PunishCandidate(&_Campaign.TransactOpts, candidate, _viewIdx)
+// Solidity: function punishCandidate(candidate address, _termIdx uint256) returns()
+func (_Campaign *CampaignTransactorSession) PunishCandidate(candidate common.Address, _termIdx *big.Int) (*types.Transaction, error) {
+	return _Campaign.Contract.PunishCandidate(&_Campaign.TransactOpts, candidate, _termIdx)
 }
 
 // QuitCampaign is a paid mutator transaction binding the contract method 0xd0bdc65b.
@@ -727,10 +728,10 @@ type CampaignClaimCampaignIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there
@@ -790,14 +791,14 @@ func (it *CampaignClaimCampaignIterator) Close() error {
 // CampaignClaimCampaign represents a ClaimCampaign event raised by the Campaign contract.
 type CampaignClaimCampaign struct {
 	Candidate    common.Address
-	StartViewIdx *big.Int
-	StopViewIdx  *big.Int
+	StartTermIdx *big.Int
+	StopTermIdx  *big.Int
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
 // FilterClaimCampaign is a free log retrieval operation binding the contract event 0x8d468194bdd18296bee5d126aa15cc492d26bdf22a0585c4a47ec4490d3a0fcf.
 //
-// Solidity: e ClaimCampaign(candidate address, startViewIdx uint256, stopViewIdx uint256)
+// Solidity: e ClaimCampaign(candidate address, startTermIdx uint256, stopTermIdx uint256)
 func (_Campaign *CampaignFilterer) FilterClaimCampaign(opts *bind.FilterOpts) (*CampaignClaimCampaignIterator, error) {
 
 	logs, sub, err := _Campaign.contract.FilterLogs(opts, "ClaimCampaign")
@@ -809,7 +810,7 @@ func (_Campaign *CampaignFilterer) FilterClaimCampaign(opts *bind.FilterOpts) (*
 
 // WatchClaimCampaign is a free log subscription operation binding the contract event 0x8d468194bdd18296bee5d126aa15cc492d26bdf22a0585c4a47ec4490d3a0fcf.
 //
-// Solidity: e ClaimCampaign(candidate address, startViewIdx uint256, stopViewIdx uint256)
+// Solidity: e ClaimCampaign(candidate address, startTermIdx uint256, stopTermIdx uint256)
 func (_Campaign *CampaignFilterer) WatchClaimCampaign(opts *bind.WatchOpts, sink chan<- *CampaignClaimCampaign) (event.Subscription, error) {
 
 	logs, sub, err := _Campaign.contract.WatchLogs(opts, "ClaimCampaign")
@@ -851,10 +852,10 @@ type CampaignQuitCampaignIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there
@@ -974,10 +975,10 @@ type CampaignViewChangeIterator struct {
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
 
-	logs chan types.Log     // Log channel receiving the found contract events
-	sub  event.Subscription // Subscription for errors, completion and termination
-	done bool               // Whether the subscription completed delivering logs
-	fail error              // Occurred error to stop iteration
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
 }
 
 // Next advances the iterator to the subsequent event, returning whether there
@@ -1092,7 +1093,7 @@ func (_Campaign *CampaignFilterer) WatchViewChange(opts *bind.WatchOpts, sink ch
 const SafeMathABI = "[]"
 
 // SafeMathBin is the compiled bytecode used for deploying new contracts.
-const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a723058200840acadb4d0ba10a3137f87bff88be938c4bd9f6ebd792f03cef3717c41b69f0029`
+const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a723058207683b708d62ab7a8d2442225924b2c93e878e41ce81ffe1d6885deb93bed056a0029`
 
 // DeploySafeMath deploys a new cpchain contract, binding an instance of SafeMath to it.
 func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *SafeMath, error) {
@@ -1253,7 +1254,7 @@ func (_SafeMath *SafeMathTransactorRaw) Transact(opts *bind.TransactOpts, method
 const SetABI = "[]"
 
 // SetBin is the compiled bytecode used for deploying new contracts.
-const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820ac01afc2f57fa0d4120df200f044214cc20942b2fe70adba3f6e4c34601993e90029`
+const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820e995d8ed3c22b4e4cafeb4795e74dec8757e46e1fae149403d09e1d9af1c41a70029`
 
 // DeploySet deploys a new cpchain contract, binding an instance of Set to it.
 func DeploySet(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Set, error) {

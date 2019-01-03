@@ -190,7 +190,7 @@ contract Campaign {
                 }
 
                 candidates[candidate].deposit = SafeMath.sub(candidates[candidate].deposit, depositValue);
-                candidates[candidate].numOfCampaign--;
+                candidates[candidate].numOfCampaign = SafeMath.sub(candidates[candidate].numOfCampaign, 1);
                 candidate.transfer(depositValue);
 
                 // if candidate's tenure is all over, all status return to zero.
