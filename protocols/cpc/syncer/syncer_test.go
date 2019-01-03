@@ -16,10 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func init() {
-	// log.SetLevel(log.DebugLevel)
-}
-
 func TestSyncerNormal(t *testing.T) {
 	var (
 		n            = 1000
@@ -51,7 +47,7 @@ func TestSyncerNormal(t *testing.T) {
 		// received blocks from remote peer, deliever to syncer
 		case blocks := <-p.returnCh:
 
-			fmt.Println("received blocks from peer", len(blocks))
+			t.Log("received blocks from peer", len(blocks))
 
 			localSyncer.DeliverBlocks(p.IDString(), blocks)
 		}
@@ -61,7 +57,7 @@ func TestSyncerNormal(t *testing.T) {
 
 		// check localchain status
 		num := localchain.CurrentBlock().NumberU64()
-		fmt.Println("updated block chain, latest block number", num)
+		t.Log("updated block chain, latest block number", num)
 
 		// if all blocks synced, return
 		if num == uint64(n) {
@@ -90,7 +86,7 @@ func TestSyncerTimeout(t *testing.T) {
 	// go sync
 	err := localSyncer.Synchronise(p, head, height)
 
-	fmt.Println("err", err)
+	t.Log("err", err)
 
 	if err != syncer.ErrTimeout {
 		t.Fail()
@@ -126,7 +122,7 @@ func TestSyncerInvalidChain(t *testing.T) {
 			// received blocks from remote peer, deliever to syncer
 			case blocks := <-p.returnCh:
 
-				fmt.Println("received blocks from peer", len(blocks))
+				t.Log("received blocks from peer", len(blocks))
 
 				localSyncer.DeliverBlocks(p.IDString(), blocks)
 			}
@@ -136,7 +132,7 @@ func TestSyncerInvalidChain(t *testing.T) {
 
 			// check localchain status
 			num := localchain.CurrentBlock().NumberU64()
-			fmt.Println("updated block chain, latest block number", num)
+			t.Log("updated block chain, latest block number", num)
 
 			// if all blocks synced, return
 			if num == uint64(n) {
@@ -149,7 +145,7 @@ func TestSyncerInvalidChain(t *testing.T) {
 	err := localSyncer.Synchronise(p, head, height)
 	defer localSyncer.Terminate()
 
-	fmt.Println(err)
+	t.Log(err)
 	if err != syncer.ErrInvalidChain {
 		t.Fail()
 	}
@@ -183,7 +179,7 @@ func TestSyncerUnknownPeer(t *testing.T) {
 			// received blocks from remote peer, deliever to syncer
 			case blocks := <-p.returnCh:
 
-				fmt.Println("received blocks from peer", len(blocks))
+				t.Log("received blocks from peer", len(blocks))
 
 				// invalid peer id when delivering blocks
 				err := localSyncer.DeliverBlocks(p.IDString()+"x", blocks)
@@ -203,7 +199,7 @@ func TestSyncerUnknownPeer(t *testing.T) {
 
 			// check localchain status
 			num := localchain.CurrentBlock().NumberU64()
-			fmt.Println("updated block chain, latest block number", num)
+			t.Log("updated block chain, latest block number", num)
 
 			// if all blocks synced, return
 			if num == uint64(n) {
@@ -216,7 +212,7 @@ func TestSyncerUnknownPeer(t *testing.T) {
 	err := localSyncer.Synchronise(p, head, height)
 	defer localSyncer.Terminate()
 
-	fmt.Println(err)
+	t.Log(err)
 	if err != nil {
 		t.Fail()
 	}
@@ -242,7 +238,7 @@ func TestSyncerSlowPeer(t *testing.T) {
 	err := localSyncer.Synchronise(p, head, height)
 	defer localSyncer.Terminate()
 
-	fmt.Println(err)
+	t.Log(err)
 	if err != syncer.ErrSlowPeer {
 		t.Fail()
 	}
