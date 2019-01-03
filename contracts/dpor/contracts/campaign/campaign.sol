@@ -27,8 +27,12 @@ contract Campaign {
     address owner;
     // The current round number.
     uint public viewIdx = 0;
-    // 21 candidates and 21 blocks per round.
-    uint public numPerRound = 12; // @AC use termLen * viewLen instead of hardcoded 21
+    // The number of blocks it can propose is viewLen.
+    uint public viewLen = 3;
+    // The number of proposers in a certain term is termLen
+    uint public termLen =4;
+    // The sum of block in a term.
+    uint public numPerRound = termLen * viewLen; // @AC use termLen * viewLen instead of hardcoded 21
     // 50 wei per round.
     uint public baseDeposit = 50;
     // The minimun and maximun round to claim.
@@ -98,6 +102,14 @@ contract Campaign {
 
     function updateMaxNoc(uint _maxNoc) public onlyOwner(){
         maxNoc = _maxNoc;
+    }
+
+    function updateTermLen(uint _termLen) public onlyOwner(){
+        termLen = _termLen;
+    }
+
+    function updateViewLen(uint _viewLen) public onlyOwner(){
+        viewLen = _viewLen;
     }
 
     /**
