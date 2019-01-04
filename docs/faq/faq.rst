@@ -1,5 +1,5 @@
 FAQ
-~~~~~~~~~
+~~~~~~~~~~~
 
 - How to interact with CPChain
 
