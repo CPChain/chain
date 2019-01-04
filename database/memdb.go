@@ -10,9 +10,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+var ErrKeyNotFound = errors.New("not found")
+
 type MemDatabase struct {
-	db   map[string][]byte
-	lock sync.RWMutex
+	db map[string][]byte
+	rw sync.RWMutex
 }
 
 func NewMemDatabase() *MemDatabase {
@@ -21,43 +23,37 @@ func NewMemDatabase() *MemDatabase {
 	}
 }
 
-func NewMemDatabaseWithCap(size int) *MemDatabase {
-	return &MemDatabase{
-		db: make(map[string][]byte, size),
-	}
-}
-
 func (db *MemDatabase) Put(key []byte, value []byte) error {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.rw.Lock()
+	defer db.rw.Unlock()
 
 	db.db[string(key)] = common.CopyBytes(value)
 	return nil
 }
 
 func (db *MemDatabase) Has(key []byte) (bool, error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.rw.RLock()
+	defer db.rw.RUnlock()
 
 	_, ok := db.db[string(key)]
 	return ok, nil
 }
 
 func (db *MemDatabase) Get(key []byte) ([]byte, error) {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.rw.RLock()
+	defer db.rw.RUnlock()
 
 	if entry, ok := db.db[string(key)]; ok {
 		return common.CopyBytes(entry), nil
 	}
-	return nil, errors.New("not found")
+	return nil, ErrKeyNotFound
 }
 
 func (db *MemDatabase) Keys() [][]byte {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	db.rw.RLock()
+	defer db.rw.RUnlock()
 
-	keys := [][]byte{}
+	var keys [][]byte
 	for key := range db.db {
 		keys = append(keys, []byte(key))
 	}
@@ -65,8 +61,8 @@ func (db *MemDatabase) Keys() [][]byte {
 }
 
 func (db *MemDatabase) Delete(key []byte) error {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	db.rw.Lock()
+	defer db.rw.Unlock()
 
 	delete(db.db, string(key))
 	return nil
@@ -85,7 +81,7 @@ type kv struct{ k, v []byte }
 type memBatch struct {
 	db     *MemDatabase
 	writes []kv
-	size   int
+	size   int // for ValueSize
 }
 
 func (b *memBatch) Put(key, value []byte) error {
@@ -96,12 +92,13 @@ func (b *memBatch) Put(key, value []byte) error {
 
 func (b *memBatch) Delete(key []byte) error {
 	b.writes = append(b.writes, kv{common.CopyBytes(key), nil})
+	b.size++
 	return nil
 }
 
 func (b *memBatch) Write() error {
-	b.db.lock.Lock()
-	defer b.db.lock.Unlock()
+	b.db.rw.Lock()
+	defer b.db.rw.Unlock()
 
 	for _, kv := range b.writes {
 		if kv.v == nil {
