@@ -52,9 +52,11 @@ type DporSnapshot struct {
 	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
 	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
 	Client           backend.ClientBackend       `json:"-"`
+	dpor             *Dpor                       `json:"-"`
 
 	config     *configs.DporConfig // Consensus engine parameters to fine tune behavior
 	rptBackend rpt.RptService
+
 
 	lock sync.RWMutex
 }
@@ -252,30 +254,32 @@ func (s *DporSnapshot) setClient(client backend.ClientBackend) {
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
 // method does not initialize the set of recent proposers, so only ever use if for
 // the genesis block.
-func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, proposers []common.Address,
+func newSnapshot(dpor *Dpor, number uint64, hash common.Hash, proposers []common.Address,
 	validators []common.Address, mode Mode) *DporSnapshot {
-	snap := &DporSnapshot{
-		Mode:             mode,
-		config:           config,
-		Number:           number,
-		Hash:             hash,
-		RecentSigners:    make(map[uint64][]common.Address),
-		RecentProposers:  make(map[uint64][]common.Address),
-		RecentValidators: make(map[uint64][]common.Address),
-	}
+		config := dpor.config
+		snap := &DporSnapshot{
+			Mode:             mode,
+			config:           config,
+			Number:           number,
+			Hash:             hash,
+			RecentSigners:    make(map[uint64][]common.Address),
+			RecentProposers:  make(map[uint64][]common.Address),
+			RecentValidators: make(map[uint64][]common.Address),
+			dpor: dpor,
+		}
 
-	// TODO: @shiyc need to remove setRecentSigners(), and consider whether we need setRecentValidators()
-	snap.setRecentSigners(snap.Term(), proposers)
-	snap.setRecentProposers(snap.Term(), proposers)
-	snap.setRecentValidators(snap.Term(), validators)
-	return snap
+		// TODO: @shiyc need to remove setRecentSigners(), and consider whether we need setRecentValidators()
+		snap.setRecentSigners(snap.Term(), proposers)
+		snap.setRecentProposers(snap.Term(), proposers)
+		snap.setRecentValidators(snap.Term(), validators)
+		return snap
 }
 
 // loadSnapshot loads an existing Snapshot from the database.
-func loadSnapshot(config *configs.DporConfig, db database.Database, hash common.Hash) (*DporSnapshot, error) {
+func loadSnapshot(dpor *Dpor, hash common.Hash) (*DporSnapshot, error) {
 
 	// Retrieve from db
-	blob, err := db.Get(append([]byte("dpor-"), hash[:]...))
+	blob, err := dpor.db.Get(append([]byte("dpor-"), hash[:]...))
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +289,7 @@ func loadSnapshot(config *configs.DporConfig, db database.Database, hash common.
 	if err := json.Unmarshal(blob, snap); err != nil {
 		return nil, err
 	}
-	snap.config = config
+	snap.config = dpor.config
 
 	return snap, nil
 }
@@ -371,9 +375,13 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 	s.setNumber(header.Number.Uint64())
 	s.setHash(header.Hash())
 
+	if s.dpor.IsMiner() {
+		// try to claim proposer election campaign
+
+	}
+
 	// When ifUpdateCommittee is true, update candidates, rpts, and run election if necessary
 	if ifUpdateCommittee {
-
 		// Update candidates
 		log.Debug("start updating candidates")
 		err := s.updateCandidates()
@@ -508,8 +516,17 @@ func (s *DporSnapshot) isStartElection() bool {
 	return s.number() >= s.config.MaxInitBlockNumber-(TermDistBetweenElectionAndMining*s.config.TermLen*s.config.ViewLen)
 }
 
+func (s *DporSnapshot) isStartCampaign() bool {
+	return s.number() >= s.config.MaxInitBlockNumber-((TermDistBetweenElectionAndMining+1)*s.config.TermLen*s.config.ViewLen)
+}
+
 // updateProposer uses rpt and election result to get new proposers committee
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
+	// Start to campaign
+	if s.isStartCampaign() {
+
+	}
+
 	// Elect proposers
 	if s.isStartElection() {
 		log.Debug("start election")

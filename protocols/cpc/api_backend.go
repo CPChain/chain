@@ -292,6 +292,6 @@ func (b *APIBackend) CommitteMember() []common.Address {
 }
 
 func (b *APIBackend) CalcRptInfo(address common.Address, blockNum uint64) int64 {
-	//	rp,err:=rpt.NewRptService(b.cpc.(*dpor.Dpor).,b.cpc.chainConfig.Dpor.Contracts["rpt"])
+	//	rp,err:=rpt.NewRptService(b.cpc.(*dpor.dpor).,b.cpc.chainConfig.dpor.Contracts["rpt"])
 	return b.cpc.engine.(*dpor.Dpor).GetCalcRptInfo(address, blockNum)
 }

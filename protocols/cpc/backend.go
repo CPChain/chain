@@ -222,7 +222,7 @@ func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainCo
 	if err != nil {
 		log.Debug("coinbase is not set, but is allowed for non-miner node", "error", err)
 	}
-	// If Dpor is requested, set it up
+	// If dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. @liuq
 		dpor := dpor.New(chainConfig.Dpor, db)

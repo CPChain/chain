@@ -37,7 +37,7 @@ const (
 	DoNothingFakeMode
 )
 
-// Dpor is the proof-of-reputation consensus engine proposed to support the
+// dpor is the proof-of-reputation consensus engine proposed to support the
 // cpchain testnet.
 type Dpor struct {
 	dh     dporHelper
@@ -145,7 +145,7 @@ func (d *Dpor) SetClient(client backend.ClientBackend) {
 	d.client = client
 }
 
-// New creates a Dpor proof-of-reputation consensus engine with the initial
+// New creates a dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
 func New(config *configs.DporConfig, db database.Database) *Dpor {
 
@@ -276,7 +276,7 @@ func (d *Dpor) Coinbase() common.Address {
 	return d.coinbase
 }
 
-// Protocol returns Dpor p2p protocol
+// Protocol returns dpor p2p protocol
 func (d *Dpor) Protocol() consensus.Protocol {
 	return d.handler.GetProtocol()
 }

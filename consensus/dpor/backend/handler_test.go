@@ -21,7 +21,7 @@ import (
 
 // 	//define the parameter "config" of NewHandler()
 // 	var testConfig *configs.DporConfig
-// 	testConfig = configs.GetChainConfig().Dpor
+// 	testConfig = configs.GetChainConfig().dpor
 // 	//define the parameter "etherbase" for NewHandler()
 // 	testEtherbase := common.HexToAddress("0x4CE687F9dDd42F26ad580f435acD0dE39e8f0000")
 

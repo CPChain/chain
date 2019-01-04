@@ -206,7 +206,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		// If an on-disk checkpoint Snapshot can be found, use that
 		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
 			log.Debug("loading snapshot", "number", numberIter, "hash", hash)
-			s, err := loadSnapshot(dpor.config, dpor.db, hash)
+			s, err := loadSnapshot(dpor, hash)
 			if err == nil {
 				log.Debug("Loaded checkpoint Snapshot from disk", "number", numberIter, "hash", hash)
 				snap = s
@@ -233,7 +233,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				proposers = genesis.Dpor.CopyProposers()
 				validators = genesis.Dpor.CopyValidators()
 			}
-			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators, FakeMode)
+			snap = newSnapshot(dpor, 0, genesis.Hash(), proposers, validators, FakeMode)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}
@@ -322,7 +322,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return errUnknownBlock
 	}
 
-	// Fake Dpor doesn't do seal check
+	// Fake dpor doesn't do seal check
 	if dpor.Mode() == FakeMode || dpor.Mode() == DoNothingFakeMode {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
@@ -373,7 +373,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 		return errUnknownBlock
 	}
 
-	// Fake Dpor doesn't do seal check
+	// Fake dpor doesn't do seal check
 	if dpor.Mode() == FakeMode || dpor.Mode() == DoNothingFakeMode {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
