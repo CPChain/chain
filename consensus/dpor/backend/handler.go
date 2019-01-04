@@ -178,7 +178,9 @@ func (h *Handler) RemovePeer(addr string) {
 func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 
 	remoteValidator, isV := h.dialer.getValidator(addr)
-	remoteProposer, isP := h.dialer.getValidator(addr)
+	remoteProposer, isP := h.dialer.getProposer(addr)
+
+	log.Debug("received msg from peer", "addr", addr, "isV", isV, "isP", isP)
 
 	if isV {
 		return h.handleMsg(remoteValidator.RemoteSigner, msg)

@@ -63,16 +63,23 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 
 	address, err := Handshake(p, rw, mac, sig, term, futureTerm)
 
-	isProposer, isValidator := true, true
+	log.Debug("received handshake from", "addr", address.Hex())
 
-	// TODO: @liuq check the qualification of the peer, only propsers or validators are allowed
-	// for t := term; t <= futureTerm; t++ {
-	// 	isP, _ := d.dpor.VerifyProposerOf(address, t)
-	// 	isV, _ := d.dpor.VerifyValidatorOf(address, t)
-	//
-	// 	isProposer = isProposer || isP
-	// 	isValidator = isValidator || isV
-	// }
+	// TODO: fix this @liuq
+	isProposer, isValidator := true, false
+	// isProposer, isValidator := false, false
+
+	for t := term; t <= futureTerm; t++ {
+		isP, _ := d.dpor.VerifyProposerOf(address, t)
+		isV, _ := d.dpor.VerifyValidatorOf(address, t)
+
+		log.Debug("qualification", "is proposer", isP, "is validator", isV, "term", t, "addr", address.Hex())
+
+		isProposer = isProposer || isP
+		isValidator = isValidator || isV
+	}
+
+	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", address.Hex())
 
 	if (!isProposer && !isValidator) || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)
@@ -104,12 +111,6 @@ func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWrite
 	err := remoteProposer.SetPeer(version, p, rw)
 	if err != nil {
 		log.Debug("failed to set remote proposer")
-		return nil, err
-	}
-
-	err = remoteProposer.AddStatic(d.server)
-	if err != nil {
-		log.Debug("failed to add remote proposer as static peer")
 		return nil, err
 	}
 
@@ -232,6 +233,12 @@ func (d *Dialer) getProposer(addr string) (*RemoteProposer, bool) {
 	d.proposersLock.RLock()
 	defer d.proposersLock.RUnlock()
 
+	log.Debug("asking key", "addr", addr)
+	for _, k := range d.recentProposers.Keys() {
+		log.Debug("key in recent proposers", "key", k)
+		log.Debug("equal", "addr", addr, "key", k, "equal", addr == k.(string))
+	}
+
 	if rp, ok := d.recentProposers.Get(addr); ok {
 		remoteProposer, ok := rp.(*RemoteProposer)
 		return remoteProposer, ok
@@ -249,6 +256,12 @@ func (d *Dialer) setProposer(addr string, proposer *RemoteProposer) {
 func (d *Dialer) getValidator(addr string) (*RemoteValidator, bool) {
 	d.validatorsLock.RLock()
 	defer d.validatorsLock.RUnlock()
+
+	log.Debug("asking key", "addr", addr)
+	for _, k := range d.recentProposers.Keys() {
+		log.Debug("key in recent validators", "key", k)
+		log.Debug("equal", "addr", addr, "key", k, "equal", addr == k.(string))
+	}
 
 	if rp, ok := d.recentValidators.Get(addr); ok {
 		remoteValidator, ok := rp.(*RemoteValidator)
