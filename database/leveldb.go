@@ -22,8 +22,6 @@ type LDBDatabase struct {
 
 // NewLDBDatabase returns a LevelDB wrapped object.
 func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
-	logger := log.New("database", file)
-
 	// Ensure we have some minimal caching and file guarantees
 	if cache < 16 {
 		cache = 16
@@ -31,7 +29,7 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	if handles < 16 {
 		handles = 16
 	}
-	logger.Info("Allocated cache and file handles", "cache", cache, "handles", handles)
+	log.Info("Allocated cache and file handles", "cache", cache, "handles", handles)
 
 	// Open the db and recover any potential corruptions
 	db, err := leveldb.OpenFile(file, &opt.Options{
@@ -50,7 +48,7 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	return &LDBDatabase{
 		fn:  file,
 		db:  db,
-		log: logger,
+		log: log.Root(),
 	}, nil
 }
 

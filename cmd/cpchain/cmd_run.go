@@ -53,11 +53,6 @@ func init() {
 		Flags:  runFlags,
 		Usage:  "Run a cpchain node",
 		Before: func(ctx *cli.Context) error {
-			if ctx.IsSet(flags.ProfileFlagName) {
-				if err := profile.Start(ctx); err != nil {
-					return err
-				}
-			}
 			return nil
 		},
 		After: func(ctx *cli.Context) error {
@@ -73,17 +68,12 @@ func init() {
 func run(ctx *cli.Context) error {
 	n := createNode(ctx)
 	bootstrap(ctx, n)
-	n.Wait()
+	go n.Wait()
 	return nil
 }
 
 // Register chain services for a *full* node.
 func registerChainService(cfg *cpc.Config, n *node.Node, cliCtx *cli.Context) {
-	// TODO adjust to the sync mode
-	// if cfg.SyncMode != downloader.FullSync {
-	// 	log.Fatalf("We only support full sync currently.")
-	// }
-
 	err := n.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 		fullNode, err := cpc.New(ctx, cfg)
 
@@ -264,6 +254,12 @@ func handleInterrupt(n *node.Node) {
 }
 
 func bootstrap(ctx *cli.Context, n *node.Node) {
+	// start profiling
+	if ctx.IsSet(flags.ProfileFlagName) {
+		if err := profile.Start(ctx); err != nil {
+			log.Fatalf("start profiling failed: %v\n", err)
+		}
+	}
 	startNode(n)
 	unlockAccounts(ctx, n)
 	handleWallet(n)

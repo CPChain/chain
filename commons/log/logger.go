@@ -130,7 +130,7 @@ func (logger *Logger) Info(msg string, args ...interface{}) {
 	}
 }
 
-// Debu logs a message at level Debug on the standard logger.
+// Debug logs a message at level Debug on the standard logger.
 func (logger *Logger) Debug(msg string, args ...interface{}) {
 	if logger.Logger.IsLevelEnabled(logrus.DebugLevel) {
 		if len(args)%2 != 0 {
