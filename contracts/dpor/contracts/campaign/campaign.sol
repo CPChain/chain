@@ -138,12 +138,13 @@ contract Campaign {
         // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
+
+        updateCandidateStatus(); // update status first then check
+
         require(
             candidates[candidate].numOfCampaign == 0,
             "please waite until your last round ended and try again."
         );
-
-        updateCandidateStatus();
 
         address candidate = msg.sender;
 
