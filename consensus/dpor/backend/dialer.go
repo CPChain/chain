@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
@@ -71,15 +72,18 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 
 	for t := term; t <= futureTerm; t++ {
 		isP, _ := d.dpor.VerifyProposerOf(address, t)
-		isV, _ := d.dpor.VerifyValidatorOf(address, t)
+		// isV, _ := d.dpor.VerifyValidatorOf(address, t)
 
-		log.Debug("qualification", "is proposer", isP, "is validator", isV, "term", t, "addr", address.Hex())
+		// log.Debug("qualification", "is proposer", isP, "is validator", isV, "term", t, "addr", address.Hex())
 
 		isProposer = isProposer || isP
-		isValidator = isValidator || isV
+		// isValidator = isValidator || isV
 	}
 
-	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", address.Hex())
+	enode := fmt.Sprintf("enode://%s@%s", p.ID().String(), p.RemoteAddr().String())
+	isValidator = isDefaultValidator(enode, d.defaultValidators)
+
+	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", address.Hex(), "enode", enode)
 
 	if (!isProposer && !isValidator) || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)
@@ -206,7 +210,7 @@ func (d *Dialer) DialAllRemoteValidators(term uint64) error {
 		if err != nil {
 			continue
 		}
-		log.Debug("dial remote validator", "enode", node.ID.String())
+		log.Debug("dial remote validator", "enode", node.ID.String(), "addr", node.IP.String(), "port", node.TCP)
 		d.server.AddPeer(node)
 	}
 
@@ -327,7 +331,7 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 			v, _ := d.recentValidators.Get(addr)
 			validator := v.(*RemoteValidator)
 
-			if isDefaultValidator(validator, d.defaultValidators) || (ok && err == nil) {
+			if isDefaultValidator(validator.EnodeID(), d.defaultValidators) || (ok && err == nil) {
 				validators[common.HexToAddress(address)] = validator
 			}
 		}
@@ -337,13 +341,17 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 }
 
 // isDefaultValidator checks if a validator is a default validator
-func isDefaultValidator(validator *RemoteValidator, defaultValidators []string) bool {
-	enode := validator.ID().String()
+func isDefaultValidator(enode string, defaultValidators []string) bool {
 	for _, dv := range defaultValidators {
-		if strings.Contains(dv, enode) {
+		if enodeIDWithoutPort(dv) == enodeIDWithoutPort(enode) {
 			log.Debug("this is a default validator", "enode", enode, "default validator", dv)
 			return true
 		}
 	}
 	return false
+}
+
+func enodeIDWithoutPort(enode string) string {
+	s := strings.Split(enode, ":")
+	return strings.Join(s[:len(s)-1], ":")
 }

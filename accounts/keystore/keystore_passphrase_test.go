@@ -113,3 +113,36 @@ func TestMergeBytes(t *testing.T) {
 		t.Errorf("merge bytes error: have %x, want %x", b3, expected)
 	}
 }
+
+func TestDecryptKeyTestnet(t *testing.T) {
+	address := common.HexToAddress("2a15146f434c0205cfae639de2ac4bb543539b24")
+	keyjson, err := ioutil.ReadFile("../../examples/cpchain/conf-testnet/keys/key1")
+	if err != nil {
+		t.Skip("file not found.skip.")
+	}
+	password := "3407868881_5037"
+	key, err := DecryptKey(keyjson, password)
+	if err != nil {
+		t.Fatalf("test %d: json key failed to decrypt: %v", 1, err)
+	}
+	if key.Address != address {
+		t.Errorf("test %d: key address mismatch: have %x, want %x", 1, key.Address, address)
+	}
+
+}
+
+func TestDecryptKeyDev(t *testing.T) {
+	address := common.HexToAddress("e94b7b6c5a0e526a4d97f9768ad6097bde25c62a")
+	keyjson, err := ioutil.ReadFile("../../examples/cpchain/conf-dev/keys/key1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	password := "password"
+	key, err := DecryptKey(keyjson, password)
+	if err != nil {
+		t.Fatalf("test %d: json key failed to decrypt: %v", 1, err)
+	}
+	if key.Address != address {
+		t.Errorf("test %d: key address mismatch: have %x, want %x", 1, key.Address, address)
+	}
+}
