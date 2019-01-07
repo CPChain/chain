@@ -31,11 +31,32 @@ following command.
    $ pip install .
 
 
+.. _fusion-api-using:
+
 Using Fusion
 ----------------
 
 To use the web3 library, you are required to initialize the
 :class:`~web3.Web3` class.
+
+Before connecting, you must set up a local chain or sync with our Mainnet
+
+    1. To start a local chain, use the following commands
+
+        .. code-block:: shell
+
+            $ cd ./examples
+            $ ./cpchain-all.sh
+
+        Note that starting a local chain may fails. You may try several times until success.
+
+    #. To sync with Alpha Mainnet, use the following command
+
+        .. code-block:: shell
+
+            $ build/bin/cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --rpcaddr 0.0.0.0:8501 --runmode=testnet
+
+        If you cannot sync, please remove the directory ~/.cpchain/cphain as well as all files in it.
 
 Use the ``auto`` module to :ref:`guess at common node connection options
 <automatic_provider_detection>`.
