@@ -531,6 +531,13 @@ func (ec *Client) SendTransaction(ctx context.Context, tx *types.Transaction) er
 	return ec.c.CallContext(ctx, nil, "eth_sendRawTransaction", common.ToHex(data))
 }
 
+func (ec *Client) Campaign(ctx context.Context) error {
+	if err := ec.c.CallContext(ctx, nil, "admission_campaign"); err != nil {
+		return err
+	}
+	return nil
+}
+
 func toCallArg(msg cpchain.CallMsg) interface{} {
 	arg := map[string]interface{}{
 		"from": msg.From,

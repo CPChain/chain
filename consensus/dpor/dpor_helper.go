@@ -217,7 +217,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		// If an on-disk checkpoint Snapshot can be found, use that
 		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
 			log.Debug("loading snapshot", "number", numberIter, "hash", hash)
-			s, err := loadSnapshot(dpor, hash)
+			s, err := loadSnapshot(dpor.config, dpor.db, hash)
 			if err == nil {
 				log.Debug("Loaded checkpoint Snapshot from disk", "number", numberIter, "hash", hash)
 				snap = s
@@ -244,7 +244,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				proposers = genesis.Dpor.CopyProposers()
 				validators = genesis.Dpor.CopyValidators()
 			}
-			snap = newSnapshot(dpor, 0, genesis.Hash(), proposers, validators, FakeMode)
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators, FakeMode)
 			if err := snap.store(dpor.db); err != nil {
 				return nil, err
 			}
