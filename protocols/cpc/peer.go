@@ -319,6 +319,14 @@ func (p *peer) RequestReceipts(hashes []common.Hash) error {
 	return p2p.Send(p.rw, GetReceiptsMsg, hashes)
 }
 
+func (p *peer) SendGetBlocks(start uint64) error {
+	return p2p.Send(p.rw, GetBlocksMsg, start)
+}
+
+func (p *peer) SendBlocks(blocks types.Blocks) error {
+	return p2p.Send(p.rw, BlocksMsg, blocks)
+}
+
 // Handshake executes the cpchain protocol handshake, negotiating version number,
 // network IDs, head and genesis blocks.
 func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis common.Hash, isMiner bool) (bool, error) {
@@ -400,6 +408,10 @@ func (p *peer) String() string {
 	return fmt.Sprintf("Peer %s [%s]", p.id,
 		fmt.Sprintf("cpc/%2d", p.version),
 	)
+}
+
+func (p *peer) IDString() string {
+	return fmt.Sprintf("%x", p.ID().Bytes()[:8])
 }
 
 // peerSet represents the collection of active peers currently participating in

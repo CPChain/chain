@@ -202,9 +202,6 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 	if err != nil {
 		return nil, err
 	}
-	if db, ok := db.(*database.LDBDatabase); ok {
-		db.Meter("eth/db/chaindata/")
-	}
 	return db, nil
 }
 
@@ -264,12 +261,14 @@ func (s *CpchainService) APIs() []rpc.API {
 		// 	Service:   NewPublicMinerAPI(s),
 		// 	Public:    true,
 		// },
+		// // TODO: fix this @liuq
+		// {
+		// 	Namespace: "eth",
+		// 	Version:   "1.0",
+		// 	Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
+		// 	Public:    true,
+		// },
 		{
-			Namespace: "eth",
-			Version:   "1.0",
-			Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
-			Public:    true,
-		}, {
 			Namespace: "miner",
 			Version:   "1.0",
 			Service:   NewPrivateMinerAPI(s),
@@ -399,17 +398,21 @@ func (s *CpchainService) StopMining() {
 func (s *CpchainService) IsMining() bool      { return s.miner.IsMining() }
 func (s *CpchainService) Miner() *miner.Miner { return s.miner }
 
-func (s *CpchainService) AccountManager() *accounts.Manager  { return s.accountManager }
-func (s *CpchainService) BlockChain() *core.BlockChain       { return s.blockchain }
-func (s *CpchainService) TxPool() *core.TxPool               { return s.txPool }
-func (s *CpchainService) EventMux() *event.TypeMux           { return s.eventMux }
-func (s *CpchainService) Engine() consensus.Engine           { return s.engine }
-func (s *CpchainService) ChainDb() database.Database         { return s.chainDb }
-func (s *CpchainService) IsListening() bool                  { return true }                                           // Always listening
-func (s *CpchainService) CpcVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) } // the first protocol is the latest version.
-func (s *CpchainService) NetVersion() uint64                 { return s.networkID }
-func (s *CpchainService) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
-func (s *CpchainService) RemoteDB() database.RemoteDatabase  { return s.remoteDB }
+func (s *CpchainService) AccountManager() *accounts.Manager { return s.accountManager }
+func (s *CpchainService) BlockChain() *core.BlockChain      { return s.blockchain }
+func (s *CpchainService) TxPool() *core.TxPool              { return s.txPool }
+func (s *CpchainService) EventMux() *event.TypeMux          { return s.eventMux }
+func (s *CpchainService) Engine() consensus.Engine          { return s.engine }
+func (s *CpchainService) ChainDb() database.Database        { return s.chainDb }
+func (s *CpchainService) IsListening() bool                 { return true }                                           // Always listening
+func (s *CpchainService) CpcVersion() int                   { return int(s.protocolManager.SubProtocols[0].Version) } // the first protocol is the latest version.
+func (s *CpchainService) NetVersion() uint64                { return s.networkID }
+func (s *CpchainService) Downloader() *downloader.Downloader {
+	//TODO: fix this @liuq
+	// return s.protocolManager.downloader
+	return nil
+}
+func (s *CpchainService) RemoteDB() database.RemoteDatabase { return s.remoteDB }
 
 // Protocols implements node.Service, returning all the currently configured
 // network protocols to start.

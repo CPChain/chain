@@ -187,15 +187,16 @@ func (d *Dpor) HasBlockInChain(hash common.Hash, number uint64) bool {
 // CreateImpeachBlock creates an impeachment block
 func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	parentHeader := d.chain.CurrentHeader()
-	parent := d.chain.GetBlock(parentHeader.Hash(), parentHeader.Number.Uint64())
+	parentNum := parentHeader.Number.Uint64()
 
-	num := parentHeader.Number
+	parent := d.chain.GetBlock(parentHeader.Hash(), parentNum)
+
 	impeachHeader := &types.Header{
-		ParentHash: parentHeader.Hash(),
-		Number:     num.Add(num, common.Big1),
+		ParentHash: parent.Hash(),
+		Number:     big.NewInt(int64(parentNum + 1)),
 		GasLimit:   parent.GasLimit(),
 		Extra:      make([]byte, extraVanity),
-		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout())+int64(d.config.Period))),
+		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout()/time.Second)+int64(d.config.Period))),
 		Coinbase:   common.Address{},
 		Difficulty: DporDifficulty,
 		StateRoot:  parentHeader.StateRoot,
@@ -217,7 +218,8 @@ func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]com
 	for _, sig := range sigs {
 		if !sig.IsEmpty() {
 			if state == consensus.Preprepared {
-				hashBytes = d.dh.sigHash(header, []byte{'P'}).Bytes()
+				// hashBytes = d.dh.sigHash(header, []byte{'P'}).Bytes()
+				hashBytes = d.dh.sigHash(header, []byte{}).Bytes()
 			} else {
 				hashBytes = d.dh.sigHash(header, []byte{}).Bytes()
 			}

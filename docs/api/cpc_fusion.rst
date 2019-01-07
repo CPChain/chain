@@ -1,6 +1,8 @@
 Fusion API
 =============
 
+.. _fusion-api:
+
 Installation
 ---------------
 
@@ -9,8 +11,16 @@ using ``pip`` as follows:
 
 .. code-block:: shell
 
+   $ pip install cpc-fusion
+
+Note that if you ``pip`` is referring to the one in python2, please use the following command instead:
+
+.. code-block:: shell
+
    $ pip3 install cpc-fusion
 
+Note that CPC fusion is  tested on Ubuntu 18.04 and python 3.6.7.
+A lower version of Ubuntu and python may incur an error or unsuccessful installation.
 
 
 Installation from source can be done from the root of the project with the
@@ -18,7 +28,7 @@ following command.
 
 .. code-block:: shell
 
-   $ pip3 install .
+   $ pip install .
 
 
 Using Fusion
@@ -41,6 +51,7 @@ Use the ``auto`` module to :ref:`guess at common node connection options
 .. NOTE:: If you get the result ``UnhandledRequest: No providers responded to the RPC request``,
     then you are not connected to a node.
 .. _first_w3_use:
+
 
 API reference
 -----------------

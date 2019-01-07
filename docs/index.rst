@@ -15,7 +15,8 @@ Welcome to CPChain documentation!
    installation/installation
    configuration/configuration
    api/cpc_fusion
-   FAQ/FAQ
+   cpc_faucet/faucet
+   faq/faq
    glossary/glossary
 
 

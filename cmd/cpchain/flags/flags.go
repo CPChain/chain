@@ -244,8 +244,9 @@ var P2pFlags = []cli.Flag{
 }
 
 const (
-	IdentityFlagName = "identity"
-	ProfileFlagName  = "profile"
+	IdentityFlagName       = "identity"
+	ProfileFlagName        = "profile"
+	ProfileAddressFlagName = "profileaddr"
 )
 
 var NodeFlags = []cli.Flag{
@@ -256,6 +257,10 @@ var NodeFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  ProfileFlagName,
 		Usage: "Profile the running cpchain instance, output to the specified dir path",
+	},
+	cli.StringFlag{
+		Name:  ProfileAddressFlagName,
+		Usage: "Profile http service address",
 	},
 }
 

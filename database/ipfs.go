@@ -5,6 +5,7 @@ package database
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"io"
 	"io/ioutil"
 	"sync"
@@ -12,10 +13,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ipfs/go-ipfs-api"
-	"github.com/pkg/errors"
 )
 
 const ipfsTimeout = 3
+
+var ErrPathNotFound = errors.New("path not found")
 
 // IpfsAdapter represents an adapter for IPFS access.
 // It also makes a room for weaving fake IPFS in unit test.
@@ -114,7 +116,7 @@ func NewFakeIpfsAdapter() *FakeIpfsAdapter {
 func (adapter *FakeIpfsAdapter) Cat(path string) (io.ReadCloser, error) {
 	buf := adapter.store[path]
 	if buf == nil {
-		return nil, errors.New("Path not found.")
+		return nil, ErrPathNotFound
 	}
 	return ioutil.NopCloser(bytes.NewReader(buf)), nil
 }

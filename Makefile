@@ -193,3 +193,6 @@ docs:
 
 docs-serve:
 	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --name cpchain_docs -d --service-ports --rm serve python3 docker/app.py
+
+docs-clean:
+	rm -fr docs/_build
