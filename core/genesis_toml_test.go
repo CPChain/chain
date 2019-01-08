@@ -22,6 +22,7 @@ import (
 	"os"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"github.com/naoina/toml"
 )
 
@@ -67,4 +68,23 @@ func TestGenesisAccount_MarshalJson(t *testing.T) {
 		t.Error(err)
 	}
 	fmt.Println("ss", string(ss))
+}
+
+func TestTestnetGenesisBlock_MarshalTOML(t *testing.T) {
+	origMode := configs.GetRunMode()
+	configs.SetRunMode(configs.Testnet)
+	genesisblock := DefaultGenesisBlock()
+	fmt.Println("==============toml=====================")
+	err := toml.NewEncoder(os.Stdout).Encode(genesisblock)
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println("==============json=====================")
+	ss, err := json.Marshal(genesisblock)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println("genesisblock", string(ss))
+	configs.SetRunMode(origMode)
 }

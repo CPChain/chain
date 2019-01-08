@@ -46,6 +46,10 @@ func NewRemoteSigner(address common.Address) *RemoteSigner {
 
 }
 
+func (s *RemoteSigner) EnodeID() string {
+	return fmt.Sprintf("enode://%s@%s", s.Peer.ID().String(), s.Peer.RemoteAddr().String())
+}
+
 // Coinbase returns remote peer's addr
 func (s *RemoteSigner) Coinbase() common.Address {
 	s.lock.RLock()

@@ -16,11 +16,11 @@ Apply for a Wallet Address
 To apply for test coins, a wallet address is required.
 CPC fusion provides APIs for interested users to create a wallet address.
 
-1. Refer to :ref:`fusion-api`., if you have yet installed CPC fusion.
+1. Refer to :ref:`fusion-api`, if you have yet installed CPC fusion.
 
 #. You can choose either start a local chain, or sync with Alpha Mainnet (Rhea).
 
-    1. To start a local chain, use the following commands
+    1. To start a local chain, use the following commands:
 
         .. code-block:: shell
 
@@ -29,7 +29,7 @@ CPC fusion provides APIs for interested users to create a wallet address.
 
         Note that starting a local chain may fails. You may try several times until success.
 
-    #. To sync with Alpha Mainnet, use the following command
+    #. To sync with Alpha Mainnet, use the following command:
 
         .. code-block:: shell
 
@@ -45,7 +45,7 @@ CPC fusion provides APIs for interested users to create a wallet address.
 
             >>> from cpc_fusion import Web3
             >>> cf = Web3(Web3.HTTPProvider('http://127.0.0.1:8501'))
-            >>> cf.personal.NewAccount(pwd)
+            >>> cf.personal.newAccount(pwd)
 
         The port here can be varying from 8501 to 8512.
         And ``pwd`` refers to the a string of password you prefer.

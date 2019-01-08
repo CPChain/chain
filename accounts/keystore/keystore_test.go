@@ -557,3 +557,27 @@ func TestConvertTestnetKey(t *testing.T) {
 		}
 	}
 }
+
+func TestTestnetKeyFileOk(t *testing.T) {
+
+	keyDir := "../../examples/cpchain/conf-testnet/keys"
+	passDir := "../../examples/cpchain/conf-testnet/passwords"
+	if keys, err := ioutil.ReadDir(keyDir); err == nil {
+		for _, key := range keys {
+			fmt.Println("file:", key.Name())
+			keyjson, _ := ioutil.ReadFile(keyDir + "/" + key.Name())
+			passPath := passDir + "/password" + key.Name()[3:]
+
+			fmt.Println("passPath:", passPath)
+			password, _ := ioutil.ReadFile(passPath)
+			passString := string(password)
+			fmt.Println("password:", passString)
+			key, err := DecryptKey(keyjson, passString)
+			if err != nil {
+				t.Fatalf("json:%v,failed to decrypt: %v", keyjson, err)
+			}
+			fmt.Println("addr", key.Address.Hex())
+
+		}
+	}
+}

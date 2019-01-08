@@ -68,7 +68,7 @@ func init() {
 func run(ctx *cli.Context) error {
 	n := createNode(ctx)
 	bootstrap(ctx, n)
-	go n.Wait()
+	n.Wait()
 	return nil
 }
 
