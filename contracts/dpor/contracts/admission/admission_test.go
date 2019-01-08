@@ -148,7 +148,7 @@ func computeCorrectPow(contractBackend *backends.SimulatedBackend, addr common.A
 	config.CpuDifficulty = cpuDifficulty
 	config.MemoryDifficulty = memDifficulty
 	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign()
+	ac.Campaign(1)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum = results[admission.Cpu].BlockNumber

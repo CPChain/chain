@@ -29,7 +29,7 @@ type ApiBackend interface {
 	Apis() []rpc.API
 
 	// Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
-	Campaign()
+	Campaign(times uint64)
 
 	// Abort cancels all the proof work associated to the workType.
 	Abort()

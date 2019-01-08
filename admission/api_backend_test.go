@@ -123,7 +123,7 @@ func TestCampaign(t *testing.T) {
 		t.Fatalf("Before starting campaign: GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", admission.AcIdle, wantErr, status, err)
 	}
 
-	ac.Campaign()
+	ac.Campaign(1)
 	status, err = ac.GetStatus()
 	if status != admission.AcRunning || !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("Started compaign: GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", admission.AcRunning, wantErr, status, err)

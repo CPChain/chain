@@ -105,6 +105,19 @@ func Validators() []common.Address {
 	return validatorsMap[GetRunMode()]
 }
 
+// Deposit per time when campaign
+var (
+	depositMap = map[RunMode]*big.Int{
+		Dev:     devDeposit,
+		Testnet: testnetDeposit,
+		Mainnet: mainnetDeposit,
+	}
+)
+
+func Deposit() *big.Int {
+	return depositMap[GetRunMode()]
+}
+
 // ChainConfig is the core config which determines the blockchain settings.
 //
 // ChainConfig is stored in the database on a per block basis. This means

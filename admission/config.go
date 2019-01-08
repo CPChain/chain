@@ -40,10 +40,6 @@ type Config struct {
 	CpuLifeTime       time.Duration
 	MemoryDifficulty  uint64
 	MemoryCpuLifeTime time.Duration
-	// Deposit to mortgage
-	Deposit int64
-	// NumberOfCampaign wants to campaign times
-	NumberOfCampaignTimes int64
 }
 
 // DefaultConfig default admission config.
@@ -52,7 +48,4 @@ var DefaultConfig = Config{
 	CpuLifeTime:       time.Duration(CpuWorkTimeout * time.Second),
 	MemoryDifficulty:  MemoryDifficulty,
 	MemoryCpuLifeTime: time.Duration(MemoryWorkTimeout * time.Second),
-	// TODO @chengx no hardcoded numbers.
-	Deposit:               int64(50),
-	NumberOfCampaignTimes: int64(1),
 }

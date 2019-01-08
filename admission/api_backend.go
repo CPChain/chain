@@ -46,8 +46,8 @@ func (b *AdmissionApiBackend) Apis() []rpc.API {
 	}
 }
 
-func (b *AdmissionApiBackend) Campaign() {
-	b.admissionControl.Campaign()
+func (b *AdmissionApiBackend) Campaign(times uint64) {
+	b.admissionControl.Campaign(times)
 }
 
 func (b *AdmissionApiBackend) Abort() {

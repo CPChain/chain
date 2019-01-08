@@ -62,7 +62,7 @@ func NewAdmissionControl(chain consensus.ChainReader, address common.Address, co
 }
 
 // Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
-func (ac *AdmissionControl) Campaign() {
+func (ac *AdmissionControl) Campaign(times uint64) {
 	log.Info("Start campaign for dpor proposers committee")
 	ac.mutex.Lock()
 	defer ac.mutex.Unlock()
@@ -81,7 +81,7 @@ func (ac *AdmissionControl) Campaign() {
 		go work.prove(ac.abort, ac.wg)
 	}
 
-	go ac.waitSendCampaignMsg()
+	go ac.waitSendCampaignMsg(times)
 }
 
 func (ac *AdmissionControl) DoneCh() <-chan interface{} {
@@ -134,7 +134,7 @@ func (ac *AdmissionControl) GetStatus() (workStatus, error) {
 }
 
 // waitSendCampaignMsg waits all proof work done, then sends campaign proofInfo to campaign contract
-func (ac *AdmissionControl) waitSendCampaignMsg() {
+func (ac *AdmissionControl) waitSendCampaignMsg(times uint64) {
 	defer close(ac.done)
 	ac.wg.Wait()
 
@@ -149,18 +149,18 @@ func (ac *AdmissionControl) waitSendCampaignMsg() {
 			return
 		}
 	}
-	ac.sendCampaignResult()
+	ac.sendCampaignResult(times)
 }
 
 // sendCampaignResult sends proof info to campaign contract
-func (ac *AdmissionControl) sendCampaignResult() {
+func (ac *AdmissionControl) sendCampaignResult(times uint64) {
 	if ac.contractBackend == nil {
 		ac.err = errors.New("contractBackend is nil")
 		return
 	}
-
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
-	transactOpts.Value = big.NewInt(ac.config.Deposit)
+	transactOpts.Value = new(big.Int).Mul(configs.Deposit(), new(big.Int).SetUint64(times))
+	log.Info("transactOpts.Value", "value", transactOpts.Value)
 
 	campaignContractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
@@ -172,14 +172,14 @@ func (ac *AdmissionControl) sendCampaignResult() {
 
 	cpuResult := ac.cpuWork.result()
 	memResult := ac.memoryWork.result()
-	_, err = instance.ClaimCampaign(big.NewInt(ac.config.NumberOfCampaignTimes), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
+	_, err = instance.ClaimCampaign(new(big.Int).SetUint64(times), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
 		memResult.Nonce, new(big.Int).SetInt64(memResult.BlockNumber))
 	if err != nil {
 		ac.err = err
 		log.Warn("Error in claiming campaign", "error", err)
 		return
 	}
-	log.Info("Claimed for campaign", "NumberOfCampaignTimes", ac.config.NumberOfCampaignTimes, "CpuPowResult", cpuResult.Nonce,
+	log.Info("Claimed for campaign", "NumberOfCampaignTimes", times, "CpuPowResult", cpuResult.Nonce,
 		"MemPowResult", memResult.Nonce, "CpuBlockNumber", cpuResult.BlockNumber, "MemBlockNumber", memResult.BlockNumber)
 }
 
