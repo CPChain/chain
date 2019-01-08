@@ -156,11 +156,16 @@ func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, ref
 func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
 	number := header.Number.Uint64()
 
-	if d.IsMiner() && d.CurrentSnap() != nil && d.CurrentSnap().isStartCampaign() {
-		newTerm := d.CurrentSnap().TermOf(number)
-		if newTerm > d.lastCampaignTerm {
-			d.lastCampaignTerm = newTerm
-			d.client.Campaign(context.Background())
+	snap := d.CurrentSnap()
+	if snap != nil {
+		log.Info("check if participate campaign", "isMiner", d.IsMiner(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number())
+		if d.IsMiner() && snap.isStartCampaign() {
+			newTerm := d.CurrentSnap().TermOf(number)
+			if newTerm > d.lastCampaignTerm {
+				d.lastCampaignTerm = newTerm
+				log.Info("campaign for proposer committee", "eleTerm", newTerm)
+				d.client.Campaign(context.Background())
+			}
 		}
 	}
 
