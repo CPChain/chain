@@ -34,7 +34,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// dpor proof-of-reputation protocol constants.
+// Dpor proof-of-reputation protocol constants.
 const (
 	termLen = uint(4) // Default number of proposers.
 	viewLen = uint(4) // Default number of blocks one signer can generate in one committee.

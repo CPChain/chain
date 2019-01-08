@@ -333,7 +333,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 		return errUnknownBlock
 	}
 
-	// Fake dpor doesn't do seal check
+	// Fake Dpor doesn't do seal check
 	if dpor.Mode() == FakeMode || dpor.Mode() == DoNothingFakeMode {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {
@@ -384,7 +384,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 		return errUnknownBlock
 	}
 
-	// Fake dpor doesn't do seal check
+	// Fake Dpor doesn't do seal check
 	if dpor.Mode() == FakeMode || dpor.Mode() == DoNothingFakeMode {
 		time.Sleep(dpor.fakeDelay)
 		if dpor.fakeFail == number {

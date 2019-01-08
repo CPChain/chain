@@ -45,7 +45,7 @@ func TestDpor_VerifyHeader(t *testing.T) {
 			err := c.VerifyHeader(&FakeReader{}, newHeader(), true, newHeader())
 			fmt.Println("err:", err)
 			if err := c.VerifyHeader(&FakeReader{}, newHeader(), true, newHeader()); (err != nil) != tt.wantErr {
-				t.Errorf("dpor.VerifyHeaders() got = %v, want %v", err, tt.wantErr)
+				t.Errorf("Dpor.VerifyHeaders() got = %v, want %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -74,7 +74,7 @@ func TestDpor_VerifyHeaders(t *testing.T) {
 			got := <-results
 			fmt.Println("got:", got)
 			if tt.wantErr != (got == nil) {
-				t.Errorf("dpor.VerifyHeaders() got = %v, want %v", got, tt.wantErr)
+				t.Errorf("Dpor.VerifyHeaders() got = %v, want %v", got, tt.wantErr)
 			}
 		})
 	}
@@ -111,7 +111,7 @@ func TestDpor_CalcDifficulty(t *testing.T) {
 			got := c.CalcDifficulty(&FakeReader{}, 0, newHeader())
 			fmt.Println("got:", got)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("dpor.CalcDifficulty() got = %v, want %v", got, tt.want)
+				t.Errorf("Dpor.CalcDifficulty() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -243,9 +243,9 @@ func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProx
 }
 
 // func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
-//	committee := make([]common.Address, len(header.dpor.Proposers))
+//	committee := make([]common.Address, len(header.Dpor.Proposers))
 //	for i := 0; i < len(committee); i++ {
-//		copy(committee[i][:], header.dpor.Proposers[i][:])
+//		copy(committee[i][:], header.Dpor.Proposers[i][:])
 //	}
 //	return committee
 // }
