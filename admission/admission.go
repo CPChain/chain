@@ -24,13 +24,20 @@ type Result struct {
 
 type workStatus = uint32
 
-const maxNonce = math.MaxUint64
-
 const (
+	maxNonce = math.MaxUint64
+
 	// AcIdle status done.
 	AcIdle workStatus = iota + 1
 	// AcRunning status running.
 	AcRunning
+
+	maxNumOfCampaignTerms = 10
+	minNumOfCampaignTerms = 1
+)
+
+var (
+	errTermOutOfRange = errors.New("the number of terms to campaign is out of range")
 )
 
 // AdmissionControl implements admission control functionality.
@@ -62,13 +69,17 @@ func NewAdmissionControl(chain consensus.ChainReader, address common.Address, co
 }
 
 // Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
-func (ac *AdmissionControl) Campaign(times uint64) {
+func (ac *AdmissionControl) Campaign(terms uint64) error {
 	log.Info("Start campaign for dpor proposers committee")
 	ac.mutex.Lock()
 	defer ac.mutex.Unlock()
 
+	if terms > maxNumOfCampaignTerms || terms < minNumOfCampaignTerms {
+		return errTermOutOfRange
+	}
+
 	if ac.status == AcRunning {
-		return
+		return nil
 	}
 	ac.status = AcRunning
 	ac.err = nil
@@ -81,7 +92,9 @@ func (ac *AdmissionControl) Campaign(times uint64) {
 		go work.prove(ac.abort, ac.wg)
 	}
 
-	go ac.waitSendCampaignMsg(times)
+	go ac.waitSendCampaignMsg(terms)
+
+	return nil
 }
 
 func (ac *AdmissionControl) DoneCh() <-chan interface{} {
@@ -134,7 +147,7 @@ func (ac *AdmissionControl) GetStatus() (workStatus, error) {
 }
 
 // waitSendCampaignMsg waits all proof work done, then sends campaign proofInfo to campaign contract
-func (ac *AdmissionControl) waitSendCampaignMsg(times uint64) {
+func (ac *AdmissionControl) waitSendCampaignMsg(terms uint64) {
 	defer close(ac.done)
 	ac.wg.Wait()
 
@@ -149,17 +162,17 @@ func (ac *AdmissionControl) waitSendCampaignMsg(times uint64) {
 			return
 		}
 	}
-	ac.sendCampaignResult(times)
+	ac.sendCampaignResult(terms)
 }
 
 // sendCampaignResult sends proof info to campaign contract
-func (ac *AdmissionControl) sendCampaignResult(times uint64) {
+func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	if ac.contractBackend == nil {
 		ac.err = errors.New("contractBackend is nil")
 		return
 	}
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
-	transactOpts.Value = new(big.Int).Mul(configs.Deposit(), new(big.Int).SetUint64(times))
+	transactOpts.Value = new(big.Int).Mul(configs.Deposit(), new(big.Int).SetUint64(terms))
 	log.Info("transactOpts.Value", "value", transactOpts.Value)
 
 	campaignContractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
@@ -172,14 +185,14 @@ func (ac *AdmissionControl) sendCampaignResult(times uint64) {
 
 	cpuResult := ac.cpuWork.result()
 	memResult := ac.memoryWork.result()
-	_, err = instance.ClaimCampaign(new(big.Int).SetUint64(times), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
+	_, err = instance.ClaimCampaign(new(big.Int).SetUint64(terms), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
 		memResult.Nonce, new(big.Int).SetInt64(memResult.BlockNumber))
 	if err != nil {
 		ac.err = err
 		log.Warn("Error in claiming campaign", "error", err)
 		return
 	}
-	log.Info("Claimed for campaign", "NumberOfCampaignTimes", times, "CpuPowResult", cpuResult.Nonce,
+	log.Info("Claimed for campaign", "NumberOfCampaignTerms", terms, "CpuPowResult", cpuResult.Nonce,
 		"MemPowResult", memResult.Nonce, "CpuBlockNumber", cpuResult.BlockNumber, "MemBlockNumber", memResult.BlockNumber)
 }
 

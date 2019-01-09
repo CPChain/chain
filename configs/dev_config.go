@@ -72,5 +72,5 @@ var (
 		"enode://fd0f365cec4e052040151f2a4a9ba23e8592acd3cacfdc4af2e8b6dbc6fb6b25ca088151889b19729d02c48e390de9682b316db2351636fdd1ee5ea1cd32bf46@127.0.0.1:30320",
 	}
 
-	devDeposit = big.NewInt(100)
+	devDeposit = big.NewInt(50)
 )
