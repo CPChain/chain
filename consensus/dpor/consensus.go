@@ -36,9 +36,9 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	termLen = uint(4) // Default number of proposers.
-	viewLen = uint(4) // Default number of blocks one signer can generate in one committee.
-	period  = uint(1) // Default minimum difference between two consecutive block's timestamps
+	termLen       = uint(4)    // Default number of proposers.
+	viewLen       = uint(4)    // Default number of blocks one signer can generate in one committee.
+	campaignTerms = uint64(10) // Default number of terms to campaign for proposer committee.
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -164,7 +164,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 			if newTerm > d.lastCampaignTerm {
 				d.lastCampaignTerm = newTerm
 				log.Info("campaign for proposer committee", "eleTerm", newTerm)
-				d.client.Campaign(context.Background())
+				d.client.Campaign(context.Background(), campaignTerms)
 			}
 		}
 	}
