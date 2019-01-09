@@ -189,57 +189,33 @@ func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int6
 }
 
 // ProxyInfo func return the node is proxy or not
-func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (isProxy int64, proxyCount int64, err error) {
-	proxyCount = int64(0)
-	isProxy = int64(0)
-	var proxyAddresses []common.Address
+func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (int64, int64, error) {
+	isProxy := int64(0)
 	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractPdash]
-	pdashInstance, err := pdash.NewPdash(contractAddress, re.ContractClient)
+	proxyInstance, err := pdash.NewPdashProxy(contractAddress, re.ContractClient)
 
 	if err != nil {
-		log.Error("NewPdash error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
-		return proxyCount, 0, err
+		log.Error("NewPdashProxy error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
+		return 0, 0, err
 	}
 
-	len, err := pdashInstance.BlockOrdersLength(nil, big.NewInt(int64(number)))
+	proxy, err := proxyInstance.GetProxyFileNumber(nil, address)
 	if err != nil {
-		log.Error("BlockOrdersLength err", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
-		return proxyCount, 0, err
+		log.Error("GetProxyFileNumber error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
+		return 0, 0, err
 	}
 
-	for i := 0; i < int(len.Int64()); i++ {
-		id, err := pdashInstance.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
-		if err != nil {
-			log.Error("BlockOrders error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
-			break
-		}
-		OrderRecord, err := pdashInstance.OrderRecords(nil, id)
-		proxyAddresses = append(proxyAddresses, OrderRecord.ProxyAddress)
+	if proxy.Uint64() == 0 {
+		return isProxy, 0, nil
 	}
 
-	for _, proxyAddress := range proxyAddresses {
-		if proxyAddress == address {
-			isProxy = 1
-			break
-		}
+	proxyCount, err := proxyInstance.GetProxyFileNumberInBlock(nil, address, big.NewInt(int64(number)))
+	if err != nil {
+		log.Error("GetProxyFileNumber error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
+		return 0, 0, err
 	}
 
-	for i := 0; i < int(len.Int64()); i++ {
-		id, err := pdashInstance.BlockOrders(nil, big.NewInt(int64(number)), big.NewInt(int64(i)))
-		if err != nil {
-			log.Error("BlockOrders error", "error", err, "address", address.Hex(), "contractAddress", contractAddress.Hex())
-			break
-		}
-		OrderRecord, err := pdashInstance.OrderRecords(nil, id)
-		if OrderRecord.ProxyAddress == address && OrderRecord.State == Finished {
-			proxyCount += 1
-			if proxyCount == 100 {
-				break
-			}
-		}
-	}
-
-	return isProxy, proxyCount, err
+	return isProxy, proxyCount.Int64(), err
 }
 
 // func (re *RptEvaluator) CommitteeMember(header *types.Header) []common.Address {
