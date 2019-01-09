@@ -24,7 +24,6 @@ type ClientBackend interface {
 	ContractBackend
 
 	Campaign(ctx context.Context) error
-
 }
 
 // ChainBackend is the chain client operation interface
