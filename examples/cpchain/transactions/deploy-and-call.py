@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import json
-import os.path as osp
+# import json
+# import os.path as osp
 
 # cf. http://tinyurl.com/yd7mbzp3
 from solc import compile_standard
-from web3 import Web3, HTTPProvider
-from web3.contract import ImplicitContract
+from cpc_fusion import Web3, HTTPProvider
+from cpc_fusion.contract import ImplicitContract
 
 # solidity source code
 contract_source_code = '''

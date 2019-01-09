@@ -11,7 +11,7 @@ Built-in smart contract
 
 CPChain comes with 6 built-in smart contracts to ensure normal operations of DPoR.
 
-ProxyContractRegister contract
+Proxy Register contract
 *********************************
 
    Proxy contract addresses and real contract addresses can be bound through function ``registerProxyContract()``. Thus, there is no need to modify the address in Go or Solidity when a contract is update.
@@ -22,7 +22,7 @@ RPT contract
 ***************
 
    RPT (abbreviated from reputation) contract calculates RNode's reputation value. It is a core component of RNode ecosystem.
-   `Here <https://cpchain.io/RNode/>`_ is the detail of the RNode ecosystem.
+   `Here <https://cpchain.io/rnode/>`_ is the detail of the RNode ecosystem.
    Reputation value consists of 5 dimensions,
    **Account Balance（AB)**,
    **Transaction (TX)**,

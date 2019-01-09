@@ -3,5 +3,5 @@ make docs-clean
 make docs
 
 
-make serv
+make doc-serve
 9528 localhost, 
