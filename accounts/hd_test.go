@@ -77,3 +77,10 @@ func TestHDPathParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestDerivationPath_String(t *testing.T) {
+	dp := DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 0x80000000 + 0}
+	if "m/44'/60'/0'/0/0'" != dp.String() {
+		t.Errorf("test String mismatch: have %v , want %v", dp.String(), "m/44'/60'/0'/0/0'")
+	}
+}

@@ -17,19 +17,13 @@
 package rsakey
 
 import (
-	"testing"
-
-	"flag"
-
-	"os"
-
-	"fmt"
-
-	"crypto/rsa"
-
-	"math/big"
-
 	"bytes"
+	"crypto/rsa"
+	"flag"
+	"fmt"
+	"math/big"
+	"os"
+	"testing"
 
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"
@@ -177,4 +171,10 @@ func TestLoadFile(t *testing.T) {
 	bytes, err := LoadFile("/_30mbkeaetmp/notexist")
 	assert.Nil(t, bytes)
 	assert.NotNil(t, err)
+}
+
+func TestBytes2PublicKey(t *testing.T) {
+	key, err := bytes2PublicKey([]byte("errorbytes"))
+	assert.NotNil(t, err)
+	assert.Nil(t, key)
 }

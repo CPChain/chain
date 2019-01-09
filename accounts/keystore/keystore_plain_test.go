@@ -29,6 +29,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/assert"
 )
 
 func tmpKeyStoreIface(t *testing.T, encrypted bool) (dir string, ks keyStore) {
@@ -62,6 +63,14 @@ func TestKeyStorePlain(t *testing.T) {
 	}
 	if !reflect.DeepEqual(k1.PrivateKey, k2.PrivateKey) {
 		t.Fatal(err)
+	}
+	_, err = ks.GetKey(common.BytesToAddress([]byte("001")), account.URL.Path, pass)
+	if err == nil {
+		t.Fatal("expected error not found")
+	}
+	_, err = ks.GetKey(common.BytesToAddress([]byte("001")), "/tmp/-_-notExistPath-_-!@##%#@$#@", pass)
+	if err == nil {
+		t.Fatal("expected error not found")
 	}
 }
 
@@ -244,4 +253,11 @@ func TestV3_30_Byte_Key(t *testing.T) {
 	t.Parallel()
 	tests := loadKeyStoreTestV3("testdata/v3_test_vector.json", t)
 	testDecryptV3(tests["30_byte_key"], t)
+}
+
+func TestJoinPath(t *testing.T) {
+	dir, ks := tmpKeyStoreIface(t, false)
+	defer os.RemoveAll(dir)
+	newPath := ks.JoinPath("/abc/aaa")
+	assert.Equal(t, "/abc/aaa", newPath)
 }

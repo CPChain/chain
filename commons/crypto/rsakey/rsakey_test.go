@@ -17,9 +17,10 @@
 package rsakey
 
 import (
-	"testing"
-
 	"encoding/hex"
+	"io/ioutil"
+	"os"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -54,4 +55,16 @@ func TestNewRsaPublicKey(t *testing.T) {
 	rsaPublicKey, err := NewRsaPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
 	assert.Nil(t, err)
 	assert.NotNil(t, rsaPublicKey)
+}
+
+func TestNewRsaKey(t *testing.T) {
+	tmpdir, err := ioutil.TempDir("", "testnewRsaKey")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpdir)
+
+	rsaKey, err := NewRsaKey(tmpdir)
+	assert.Nil(t, err)
+	assert.NotNil(t, rsaKey)
 }

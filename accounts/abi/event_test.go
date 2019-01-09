@@ -393,3 +393,36 @@ func TestEventIndexedWithArrayUnpack(t *testing.T) {
 	require.Equal(t, [2]uint8{0, 0}, rst.Value1)
 	require.Equal(t, stringOut, rst.Value2)
 }
+
+func TestEventString(t *testing.T) {
+	var table = []struct {
+		definition   string
+		expectations map[string]string
+	}{
+		{
+			definition: `[
+			{ "type" : "event", "name" : "balance", "inputs": [{ "name" : "in", "type": "uint256","indexed": false }] },			
+			{ "type" : "event", "name" : "check", "inputs": [{ "name" : "t", "type": "address" }, { "name": "b", "type": "uint256" }] },
+			{ "type" : "event", "name" : "balance1", "inputs": [{ "name" : "in", "type": "uint256","indexed": true }] }
+			]`,
+			expectations: map[string]string{
+				"balance":  "e balance(in uint256)",
+				"check":    "e check(t address, b uint256)",
+				"balance1": "e balance1(in indexed uint256)",
+			},
+		},
+	}
+
+	for _, test := range table {
+		abi, err := JSON(strings.NewReader(test.definition))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for name, event := range abi.Events {
+			if event.String() != test.expectations[name] {
+				t.Errorf("expected id to be %v, got %v", test.expectations[name], event.String())
+			}
+		}
+	}
+}

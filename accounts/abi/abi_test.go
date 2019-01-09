@@ -713,3 +713,12 @@ func TestABI_MethodById(t *testing.T) {
 	}
 
 }
+
+func TestMethodStringWithOutput(t *testing.T) {
+	String, _ := NewType("string")
+	m := Method{"foo", false, []Argument{{"bar", String, false}, {"baz", String, false}}, []Argument{{"bar", String, false}, {"baz", String, false}}}
+	exp := "function foo(bar string, baz string) returns(bar string, baz string)"
+	if m.String() != exp {
+		t.Error("String mismatch", exp, "!=", m.String())
+	}
+}
