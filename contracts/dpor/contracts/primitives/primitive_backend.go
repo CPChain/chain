@@ -101,7 +101,8 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 		return 100, err // 100 represent give the address a default rank
 	}
 	// get the rnode in that block
-	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(number)))
+	term := (number - 1) / (configs.ChainConfigInfo().Dpor.TermLen * configs.ChainConfigInfo().Dpor.ViewLen)
+	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(term)))
 	if err != nil || rNodeAddress == nil {
 		log.Error("CandidatesOf error", "error", err, "contractAddress", contractAddress.Hex())
 		return 100, err // 100 represent give the address a default rank
