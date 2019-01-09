@@ -149,7 +149,17 @@ const (
 	LBFTMode
 )
 
-// ValidMacSig recovers an address from a signature
+// ECRecover recovers an address from a signature
+func ECRecover(plainText []byte, signature []byte) (signer common.Address, err error) {
+	pubkey, err := crypto.Ecrecover(plainText, signature)
+	if err != nil {
+		return common.Address{}, err
+	}
+	copy(signer[:], crypto.Keccak256(pubkey[1:])[12:])
+	return
+}
+
+// ValidMacSig recovers an address from a signed mac
 func ValidMacSig(mac string, sig []byte) (valid bool, signer common.Address, err error) {
 
 	log.Debug("received mac", "mac", mac)

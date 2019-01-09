@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"reflect"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -85,16 +86,18 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 		return nil
 	}
 
-	output, act, dtype, msgCode, err := vh.fsm.Fsm(input, inputType, msgCode)
+	output, act, dtype, msgCode, err := vh.fsm.FSM(input, inputType, msgCode)
 
 	// fsm results
 	_, _, _, _, _ = output, act, dtype, msgCode, err
+
+	log.Debug("fsm result", "act", act, "data type", dtype, "msg code", msgCode, "err", err)
 
 	switch act {
 	case BroadcastMsgAction:
 		switch dtype {
 		case HeaderType:
-			header := output.(*types.Header)
+			header := output[0].(*types.Header)
 
 			switch msgCode {
 			case PrepareMsgCode:
@@ -122,7 +125,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 			}
 
 		case BlockType:
-			block := output.(*types.Block)
+			block := output[0].(*types.Block)
 
 			switch msgCode {
 			case ValidateMsgCode:
@@ -148,7 +151,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 	case InsertBlockAction:
 		switch dtype {
 		case BlockType:
-			block := output.(*types.Block)
+			block := output[0].(*types.Block)
 			err := vh.dpor.InsertChain(block)
 			if err != nil {
 				return err
@@ -163,7 +166,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 	case BroadcastAndInsertBlockAction:
 		switch dtype {
 		case BlockType:
-			block := output.(*types.Block)
+			block := output[0].(*types.Block)
 			err := vh.dpor.InsertChain(block)
 			if err != nil {
 				return err
@@ -174,6 +177,26 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 
 		default:
 			log.Warn("unknown data type when inserting and broadcasting block", "data type", dtype)
+		}
+
+	case BroadcastMultipleMsgAction:
+		switch dtype {
+		case HeaderType:
+			log.Debug("type of output", "type", reflect.TypeOf(output))
+			headers := output
+			if len(headers) != 2 {
+				log.Error("wrong size of BroadcastMultipleMsgAction", "len", len(headers))
+			}
+			prepareHeader, commitHeader := headers[0].(*types.Header), headers[1].(*types.Header)
+
+			go vh.BroadcastPrepareHeader(prepareHeader)
+			go vh.BroadcastCommitHeader(commitHeader)
+
+			log.Debug("broadcasted prepare msg with BroadcastMultipleMsgAction", "number", prepareHeader.Number.Uint64())
+			log.Debug("broadcasted commit msg with BroadcastMultipleMsgAction", "number", commitHeader.Number.Uint64())
+
+		default:
+			log.Warn("unknown data type when broadcast multiple msg", "data type", dtype)
 		}
 
 	case NoAction:

@@ -7,17 +7,15 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/consensus"
-
-	"bitbucket.org/cpchain/chain/types"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -116,10 +114,10 @@ func TestDporStateMachine_Fsm(t *testing.T) {
 	validatorDporFakeEngine3 := dpor.NewFaker(dporConfig, validatorDb3)
 	validatorDporFakeEngine4 := dpor.NewFaker(dporConfig, validatorDb4)
 
-	fsm1 := backend.NewDporStateMachine(validatorDporEngine1, 1)
-	fsm2 := backend.NewDporStateMachine(validatorDporEngine2, 1)
-	fsm3 := backend.NewDporStateMachine(validatorDporEngine3, 1)
-	fsm4 := backend.NewDporStateMachine(validatorDporEngine4, 1)
+	fsm1 := backend.New(1, 0, validatorDporEngine1)
+	fsm2 := backend.New(1, 0, validatorDporEngine2)
+	fsm3 := backend.New(1, 0, validatorDporEngine3)
+	fsm4 := backend.New(1, 0, validatorDporEngine4)
 
 	_, _, _ = fsm2, fsm3, fsm4
 
@@ -684,10 +682,10 @@ func TestDporStateMachine_FsmImpeach(t *testing.T) {
 	validatorDporFakeEngine3 := dpor.NewFaker(dporConfig, validatorDb3)
 	validatorDporFakeEngine4 := dpor.NewFaker(dporConfig, validatorDb4)
 
-	fsm1 := backend.NewDporStateMachine(validatorDporEngine1, 1)
-	fsm2 := backend.NewDporStateMachine(validatorDporEngine2, 1)
-	fsm3 := backend.NewDporStateMachine(validatorDporEngine3, 1)
-	fsm4 := backend.NewDporStateMachine(validatorDporEngine4, 1)
+	fsm1 := backend.New(1, 0, validatorDporEngine1)
+	fsm2 := backend.New(1, 0, validatorDporEngine2)
+	fsm3 := backend.New(1, 0, validatorDporEngine3)
+	fsm4 := backend.New(1, 0, validatorDporEngine4)
 
 	_, _, _ = fsm2, fsm3, fsm4
 
@@ -902,7 +900,7 @@ func TestDporStateMachine_FsmImpeach(t *testing.T) {
 	i = 4
 	// the timer of fsm expires, it receives an impeach pre-prepare message
 	var output4 []interface{}
-	output4, act[i], dtype[i], msg[i], err = fsm3.RealFsm(input, inputType, inputMsg)
+	output4, act[i], dtype[i], msg[i], err = fsm3.FSM(input, inputType, inputMsg)
 	output[4] = output4[0]
 
 	// fsm1 is now in impeach pre-prepared state, its prepare counter is 1 (fsm1), commit counter is 0

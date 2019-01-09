@@ -24,7 +24,7 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 				log.Debug("validator", "addr", addr.Hex())
 			}
 
-			if len(validators) >= int(h.config.TermLen-h.fsm.f) {
+			if len(validators) >= int(h.config.TermLen-h.fsm.faulty) {
 				return
 			}
 
@@ -135,21 +135,21 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 
 		case <-futureTimer.C:
 
-			// check if still not received new block, if true, continue
-			if h.ReadyToImpeach() && h.mode == PBFTMode {
-				// get empty block
+			// // check if still not received new block, if true, continue
+			// if h.ReadyToImpeach() && h.mode == PBFTMode {
+			// 	// get empty block
 
-				log.Debug("composing preprepare impeach block msg")
+			// 	log.Debug("composing preprepare impeach block msg")
 
-				impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, ImpeachPreprepareMsgCode)
-				_, _, _, _, _ = impeachHeader, act, dtype, msg, err
+			// 	impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, ImpeachPreprepareMsgCode)
+			// 	_, _, _, _, _ = impeachHeader, act, dtype, msg, err
 
-				if impeachHeader != nil && act == BroadcastMsgAction && dtype == HeaderType && msg == PrepareMsgCode && err == nil {
-					header := impeachHeader.(*types.Header)
-					go h.BroadcastPrepareImpeachHeader(header)
-				}
+			// 	if impeachHeader != nil && act == BroadcastMsgAction && dtype == HeaderType && msg == PrepareMsgCode && err == nil {
+			// 		header := impeachHeader.(*types.Header)
+			// 		go h.BroadcastPrepareImpeachHeader(header)
+			// 	}
 
-			}
+			// }
 
 		case <-h.quitCh:
 			return

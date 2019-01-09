@@ -237,12 +237,6 @@ func (d *Dialer) getProposer(addr string) (*RemoteProposer, bool) {
 	d.proposersLock.RLock()
 	defer d.proposersLock.RUnlock()
 
-	log.Debug("asking key", "addr", addr)
-	for _, k := range d.recentProposers.Keys() {
-		log.Debug("key in recent proposers", "key", k)
-		log.Debug("equal", "addr", addr, "key", k, "equal", addr == k.(string))
-	}
-
 	if rp, ok := d.recentProposers.Get(addr); ok {
 		remoteProposer, ok := rp.(*RemoteProposer)
 		return remoteProposer, ok
@@ -260,12 +254,6 @@ func (d *Dialer) setProposer(addr string, proposer *RemoteProposer) {
 func (d *Dialer) getValidator(addr string) (*RemoteValidator, bool) {
 	d.validatorsLock.RLock()
 	defer d.validatorsLock.RUnlock()
-
-	log.Debug("asking key", "addr", addr)
-	for _, k := range d.recentProposers.Keys() {
-		log.Debug("key in recent validators", "key", k)
-		log.Debug("equal", "addr", addr, "key", k, "equal", addr == k.(string))
-	}
 
 	if rp, ok := d.recentValidators.Get(addr); ok {
 		remoteValidator, ok := rp.(*RemoteValidator)

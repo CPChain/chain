@@ -257,7 +257,12 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
 
 	// TODO: @liq read f from config
-	fsm := backend.NewDporStateMachine(d, 1)
+	var (
+		faulty = uint64(1)
+		latest = blockchain.CurrentHeader().Number.Uint64()
+	)
+
+	fsm := backend.New(faulty, latest, d)
 
 	handler := d.handler
 

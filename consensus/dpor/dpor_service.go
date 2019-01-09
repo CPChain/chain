@@ -209,6 +209,7 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 
 // EcrecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
 // addresses if one of the sigs are illegal
+// TODO: refactor this, return a map[common.Address]dpor.Signature
 func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error) {
 	var hashBytes []byte
 
