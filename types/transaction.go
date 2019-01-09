@@ -46,7 +46,6 @@ type txdata struct {
 	Recipient    *common.Address `json:"to"       rlp:"nil"` // nil means contract creation
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
-	Extra        []byte          `json:"extra"    gencodec:"required"`
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -64,7 +63,6 @@ type txdataMarshaling struct {
 	GasLimit     hexutil.Uint64
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
-	Extra        hexutil.Bytes
 	V            *hexutil.Big
 	R            *hexutil.Big
 	S            *hexutil.Big
@@ -170,7 +168,6 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-func (tx *Transaction) ExtraData() []byte  { return common.CopyBytes(tx.data.Extra) }
 func (tx *Transaction) Data() []byte       { return common.CopyBytes(tx.data.Payload) }
 func (tx *Transaction) Gas() uint64        { return tx.data.GasLimit }
 func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.data.Price) }

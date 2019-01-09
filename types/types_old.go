@@ -88,8 +88,6 @@ type HeaderOld struct {
 	GasUsed      uint64         `json:"gasUsed"          gencodec:"required"`
 	Time         *big.Int       `json:"timestamp"        gencodec:"required"`
 	Extra        []byte         `json:"extraData"        gencodec:"required"`
-	MixHash      common.Hash    `json:"mixHash"          gencodec:"required"`
-	Nonce        BlockNonce     `json:"nonce"            gencodec:"required"`
 	Dpor         DporSnap       `json:"dpor"             gencodec:"required"`
 }
 
@@ -148,13 +146,13 @@ type headerOldMarshaling struct {
 // "external" block encoding. used for eth protocol, etc.
 type extblockold struct {
 	Header *HeaderOld
-	Txs    []*Transaction
+	Txs    []*TransactionOld
 }
 
 // Block represents an entire block in the Ethereum blockchain.
 type BlockOld struct {
 	header       *HeaderOld
-	transactions Transactions
+	transactions TransactionsOld
 
 	// caches
 	hash atomic.Value
@@ -170,9 +168,14 @@ type BlockOld struct {
 }
 
 func (b *BlockOld) ToNewBlock() *Block {
+	txs := make([]*Transaction, b.transactions.Len())
+	for i := 0; i < b.transactions.Len(); i++ {
+		txs[i] = b.transactions[i].ToNewTx()
+	}
+
 	return &Block{
 		header:       b.header.ToNewType(),
-		transactions: b.transactions,
+		transactions: txs,
 		hash:         b.hash,
 		size:         b.size,
 		td:           b.td,
@@ -212,12 +215,15 @@ type TransactionOld struct {
 }
 
 type txdataold struct {
+	// Type indicates the features assigned to the tx, e.g. private tx.
+	Type         uint64          `json:"type" gencodec:"required"`
 	AccountNonce uint64          `json:"nonce"    gencodec:"required"`
 	Price        *big.Int        `json:"gasPrice" gencodec:"required"`
 	GasLimit     uint64          `json:"gas"      gencodec:"required"`
 	Recipient    *common.Address `json:"to"       rlp:"nil"` // nil means contract creation
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
+	Extra        []byte
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -226,45 +232,6 @@ type txdataold struct {
 
 	// This is only used when marshaling to JSON.
 	Hash *common.Hash `json:"hash" rlp:"-"`
-
-	// IsPrivate indicates if the transaction is private.
-	IsPrivate bool `json:"private" gencodec:"required"`
-}
-
-// TODO: add new parameter 'isPrivate'.
-func NewTransactionOld(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *TransactionOld {
-	return newTransactionOld(nonce, &to, amount, gasLimit, gasPrice, data, false)
-}
-
-// TODO: add new parameter 'isPrivate'.
-func NewContractCreationOld(nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *TransactionOld {
-	return newTransactionOld(nonce, nil, amount, gasLimit, gasPrice, data, false)
-}
-
-func newTransactionOld(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, isPrivate bool) *TransactionOld {
-	if len(data) > 0 {
-		data = common.CopyBytes(data)
-	}
-	d := txdataold{
-		AccountNonce: nonce,
-		Recipient:    to,
-		Payload:      data,
-		Amount:       new(big.Int),
-		GasLimit:     gasLimit,
-		Price:        new(big.Int),
-		V:            new(big.Int),
-		R:            new(big.Int),
-		S:            new(big.Int),
-		IsPrivate:    isPrivate,
-	}
-	if amount != nil {
-		d.Amount.Set(amount)
-	}
-	if gasPrice != nil {
-		d.Price.Set(gasPrice)
-	}
-
-	return &TransactionOld{data: d}
 }
 
 type txdataMarshalingOld struct {
@@ -273,6 +240,7 @@ type txdataMarshalingOld struct {
 	GasLimit     hexutil.Uint64
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
+	Extra        hexutil.Bytes
 	V            *hexutil.Big
 	R            *hexutil.Big
 	S            *hexutil.Big
@@ -373,13 +341,8 @@ func (tx *TransactionOld) Size() common.StorageSize {
 }
 
 func (tx *TransactionOld) ToNewTx() *Transaction {
-	txtype := uint64(0)
-	if tx.IsPrivate() {
-		txtype |= TxTypePrivate
-	}
-
 	d := txdata{
-		Type:         txtype,
+		Type:         tx.data.Type,
 		AccountNonce: tx.data.AccountNonce,
 		Recipient:    tx.data.Recipient,
 		Payload:      tx.data.Payload,
@@ -403,16 +366,6 @@ func (tx *TransactionOld) Cost() *big.Int {
 
 func (tx *TransactionOld) RawSignatureValues() (*big.Int, *big.Int, *big.Int) {
 	return tx.data.V, tx.data.R, tx.data.S
-}
-
-// IsPrivate checks if the tx is private.
-func (tx *TransactionOld) IsPrivate() bool {
-	return tx.data.IsPrivate
-}
-
-// SetPrivate sets the tx as private.
-func (tx *TransactionOld) SetPrivate(isPrivate bool) {
-	tx.data.IsPrivate = isPrivate
 }
 
 // Transactions is a Transaction slice type for basic sorting.
