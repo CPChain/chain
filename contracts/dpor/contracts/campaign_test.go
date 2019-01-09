@@ -68,7 +68,7 @@ func TestDeployCampaign(t *testing.T) {
 	fmt.Println("maximumNoc:", maximumNoc)
 
 	//viewIdx
-	viewIdx, err := campaign.ViewIdx()
+	viewIdx, err := campaign.TermIdx()
 	checkError(t, "viewIdx error: %v", err)
 	fmt.Println("viewIdx:", viewIdx)
 
@@ -149,7 +149,8 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	numOfCampaign, deposit, startViewIdx, endViewIdx, err = campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
-	assertCampaign(2, 100, numOfCampaign, deposit, t)
+	// the second claim of campaign does not take effect as the previous campaign is not finished
+	assertCampaign(1, 50, numOfCampaign, deposit, t)
 
 	// get candidates by view index
 	candidates, err := campaign.CandidatesOf(startViewIdx)
@@ -230,8 +231,8 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	waitForViewChange(contractBackend, 2)
 
 	// view change 1st time
-	fmt.Println("ViewChange")
-	tx, err = campaign.ViewChange()
+	fmt.Println("UpdateCandidateStatus")
+	tx, err = campaign.UpdateCandidateStatus()
 	checkError(t, "ViewChange error:%v", err)
 	contractBackend.Commit()
 
@@ -300,9 +301,9 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	waitForViewChange(contractBackend, 2)
 
 	// view change 1st time
-	fmt.Println("ViewChange")
-	tx, err = campaign.ViewChange()
-	checkError(t, "ViewChange error:%v", err)
+	fmt.Println("UpdateCandidateStatus")
+	tx, err = campaign.UpdateCandidateStatus()
+	checkError(t, "UpdateCandidateStatus error:%v", err)
 	contractBackend.Commit()
 
 	// get candidates by start view index
@@ -312,9 +313,9 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 
 	// view change 2nd time
 	waitForViewChange(contractBackend, 1)
-	fmt.Println("ViewChange")
-	tx, err = campaign.ViewChange()
-	checkError(t, "ViewChange error:%v", err)
+	fmt.Println("UpdateCandidateStatus")
+	tx, err = campaign.UpdateCandidateStatus()
+	checkError(t, "UpdateCandidateStatus error:%v", err)
 	contractBackend.Commit()
 
 	// get candidates by end view index

@@ -18,6 +18,7 @@ package dpor
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"math/big"
 	"time"
@@ -154,6 +155,19 @@ func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, ref
 // header for running the transactions on top.
 func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
 	number := header.Number.Uint64()
+
+	snap := d.CurrentSnap()
+	if snap != nil {
+		log.Debug("check if participate campaign", "isMiner", d.IsMiner(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number())
+		if d.IsMiner() && snap.isStartCampaign() {
+			newTerm := d.CurrentSnap().TermOf(number)
+			if newTerm > d.lastCampaignTerm {
+				d.lastCampaignTerm = newTerm
+				log.Info("campaign for proposer committee", "eleTerm", newTerm)
+				d.client.Campaign(context.Background())
+			}
+		}
+	}
 
 	// Create a snapshot
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)

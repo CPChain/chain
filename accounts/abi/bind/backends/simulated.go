@@ -428,6 +428,10 @@ func (b *SimulatedBackend) BlockByNumber(ctx context.Context, number *big.Int) (
 	return b.blockchain.GetBlockByNumber(number.Uint64()), nil
 }
 
+func (b *SimulatedBackend) Campaign(ctx context.Context) error {
+	return nil  // for simulated backend, admission and campaign do not take effect
+}
+
 // callmsg implements core.Message to allow passing it as a transaction simulator.
 type callmsg struct {
 	cpchain.CallMsg

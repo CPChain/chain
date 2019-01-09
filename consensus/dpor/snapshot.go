@@ -508,6 +508,10 @@ func (s *DporSnapshot) isStartElection() bool {
 	return s.number() >= s.config.MaxInitBlockNumber-(TermDistBetweenElectionAndMining*s.config.TermLen*s.config.ViewLen)
 }
 
+func (s *DporSnapshot) isStartCampaign() bool {
+	return s.number() >= s.config.MaxInitBlockNumber-((TermDistBetweenElectionAndMining+1)*s.config.TermLen*s.config.ViewLen)
+}
+
 // updateProposer uses rpt and election result to get new proposers committee
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Elect proposers

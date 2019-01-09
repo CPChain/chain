@@ -25,6 +25,7 @@ import (
 	"math/big"
 	"os"
 	"strings"
+	"sync"
 
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -65,6 +66,7 @@ func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
 type PrivateMinerAPI struct {
 	c *CpchainService
+	lock sync.Mutex  // Protected mining starting and stopping
 }
 
 // NewPrivateMinerAPI create a new RPC service which controls the miner of this node.
@@ -77,6 +79,10 @@ func NewPrivateMinerAPI(e *CpchainService) *PrivateMinerAPI {
 // this process. If mining is already running, this method adjust the number of
 // threads allowed to use.
 func (api *PrivateMinerAPI) Start(threads *int) error {
+	// make sure the api executes in sequence(no parallel)
+	api.lock.Lock()
+	defer api.lock.Unlock()
+
 	// Set the number of threads if the seal engine supports it
 	if threads == nil {
 		threads = new(int)
@@ -92,13 +98,7 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 	}
 	// Start the miner and return
 	if !api.c.IsMining() {
-		// Propagate the initial price point to the transaction pool
-		api.c.lock.RLock()
-		price := api.c.gasPrice
-		api.c.lock.RUnlock()
-
-		api.c.txPool.SetGasPrice(price)
-		// TODO: @liuq fix this.
+		// TODO: @ac pass the concrete client argument in the function call
 		return api.c.StartMining(true, nil)
 	}
 	return nil
@@ -106,6 +106,10 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 
 // Stop the miner
 func (api *PrivateMinerAPI) Stop() bool {
+	// make sure the api executes in sequence(no parallel)
+	api.lock.Lock()
+	defer api.lock.Unlock()
+
 	type threaded interface {
 		SetThreads(threads int)
 	}
@@ -118,6 +122,10 @@ func (api *PrivateMinerAPI) Stop() bool {
 
 // SetExtra sets the extra data string that is included when this miner mines a block.
 func (api *PrivateMinerAPI) SetExtra(extra string) (bool, error) {
+	// make sure the api executes in sequence(no parallel)
+	api.lock.Lock()
+	defer api.lock.Unlock()
+
 	if err := api.c.Miner().SetExtra([]byte(extra)); err != nil {
 		return false, err
 	}
@@ -126,6 +134,10 @@ func (api *PrivateMinerAPI) SetExtra(extra string) (bool, error) {
 
 // SetGasPrice sets the minimum accepted gas price for the miner.
 func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
+	// make sure the api executes in sequence(no parallel)
+	api.lock.Lock()
+	defer api.lock.Unlock()
+
 	api.c.lock.Lock()
 	api.c.gasPrice = (*big.Int)(&gasPrice)
 	api.c.lock.Unlock()
@@ -135,6 +147,10 @@ func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 }
 
 func (api *PrivateMinerAPI) SetCoinbase(coinbase common.Address) bool {
+	// make sure the api executes in sequence(no parallel)
+	api.lock.Lock()
+	defer api.lock.Unlock()
+
 	api.c.SetCoinbase(coinbase)
 	return true
 }

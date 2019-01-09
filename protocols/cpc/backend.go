@@ -350,8 +350,15 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		log.Error("Cannot start mining without coinbase", "err", err)
 		return fmt.Errorf("coinbase missing: %v", err)
 	}
-	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 
+	// Propagate the initial price point to the transaction pool
+	s.lock.RLock()
+	price := s.gasPrice
+	s.lock.RUnlock()
+
+	s.txPool.SetGasPrice(price)
+
+	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		if dpor.Coinbase() != coinbase {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: coinbase})
 			if wallet == nil || err != nil {
@@ -380,7 +387,6 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 }
 
 func (s *CpchainService) StopMining() {
-
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		dpor.StopMining()
 		dpor.SetAsMiner(false)

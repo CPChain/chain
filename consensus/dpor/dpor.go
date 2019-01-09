@@ -79,6 +79,8 @@ type Dpor struct {
 	pmBroadcastBlockFn BroadcastBlockFn
 
 	quitSync chan struct{}
+
+	lastCampaignTerm uint64 // the last term which the node has participated in campaign
 }
 
 // SignHash signs a hash msg with dpor coinbase account
