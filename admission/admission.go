@@ -147,7 +147,7 @@ func (ac *AdmissionControl) GetStatus() (workStatus, error) {
 }
 
 // waitSendCampaignMsg waits all proof work done, then sends campaign proofInfo to campaign contract
-func (ac *AdmissionControl) waitSendCampaignMsg(times uint64) {
+func (ac *AdmissionControl) waitSendCampaignMsg(terms uint64) {
 	defer close(ac.done)
 	ac.wg.Wait()
 
@@ -162,17 +162,17 @@ func (ac *AdmissionControl) waitSendCampaignMsg(times uint64) {
 			return
 		}
 	}
-	ac.sendCampaignResult(times)
+	ac.sendCampaignResult(terms)
 }
 
 // sendCampaignResult sends proof info to campaign contract
-func (ac *AdmissionControl) sendCampaignResult(times uint64) {
+func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	if ac.contractBackend == nil {
 		ac.err = errors.New("contractBackend is nil")
 		return
 	}
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
-	transactOpts.Value = new(big.Int).Mul(configs.Deposit(), new(big.Int).SetUint64(times))
+	transactOpts.Value = new(big.Int).Mul(configs.Deposit(), new(big.Int).SetUint64(terms))
 	log.Info("transactOpts.Value", "value", transactOpts.Value)
 
 	campaignContractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
@@ -185,14 +185,14 @@ func (ac *AdmissionControl) sendCampaignResult(times uint64) {
 
 	cpuResult := ac.cpuWork.result()
 	memResult := ac.memoryWork.result()
-	_, err = instance.ClaimCampaign(new(big.Int).SetUint64(times), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
+	_, err = instance.ClaimCampaign(new(big.Int).SetUint64(terms), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
 		memResult.Nonce, new(big.Int).SetInt64(memResult.BlockNumber))
 	if err != nil {
 		ac.err = err
 		log.Warn("Error in claiming campaign", "error", err)
 		return
 	}
-	log.Info("Claimed for campaign", "NumberOfCampaignTimes", times, "CpuPowResult", cpuResult.Nonce,
+	log.Info("Claimed for campaign", "NumberOfCampaignTerms", terms, "CpuPowResult", cpuResult.Nonce,
 		"MemPowResult", memResult.Nonce, "CpuBlockNumber", cpuResult.BlockNumber, "MemBlockNumber", memResult.BlockNumber)
 }
 
