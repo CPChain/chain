@@ -10,3 +10,8 @@ protocols/cpc/downloader
 api/rpc
 api/cpclient
 contracts/dpor/contracts
+
+#skip slow race test
+core/bloombits
+core/rawdb
+core/state
