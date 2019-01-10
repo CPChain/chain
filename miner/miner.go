@@ -114,6 +114,7 @@ func (m *Miner) Stop() {
 	m.eng.stop()
 	atomic.StoreInt32(&m.isMining, 0)
 	atomic.StoreInt32(&m.shouldStart, 0)
+	log.Info("Stopped mining operation")
 }
 
 func (m *Miner) Register(agent Worker) {
