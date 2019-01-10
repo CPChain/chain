@@ -41,6 +41,10 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 )
 
+var (
+	errStartedMining = errors.New("already started mining")
+)
+
 // PublicCpchainAPI provides an API to access cpchain full node-related
 // information.
 type PublicCpchainAPI struct {
@@ -65,8 +69,8 @@ func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
 // PrivateMinerAPI provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
 type PrivateMinerAPI struct {
-	c *CpchainService
-	lock sync.Mutex  // Protected mining starting and stopping
+	c    *CpchainService
+	lock sync.Mutex // Protected mining starting and stopping
 }
 
 // NewPrivateMinerAPI create a new RPC service which controls the miner of this node.
@@ -83,6 +87,10 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 	api.lock.Lock()
 	defer api.lock.Unlock()
 
+	if api.c.IsMining() {
+		return errStartedMining
+	}
+
 	// Set the number of threads if the seal engine supports it
 	if threads == nil {
 		threads = new(int)
@@ -97,11 +105,8 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 		th.SetThreads(*threads)
 	}
 	// Start the miner and return
-	if !api.c.IsMining() {
-		// TODO: @ac pass the concrete client argument in the function call
-		return api.c.StartMining(true, nil)
-	}
-	return nil
+	// TODO: @ac pass the concrete client argument in the function call
+	return api.c.StartMining(true, nil)
 }
 
 // Stop the miner
@@ -109,6 +114,10 @@ func (api *PrivateMinerAPI) Stop() bool {
 	// make sure the api executes in sequence(no parallel)
 	api.lock.Lock()
 	defer api.lock.Unlock()
+
+	if !api.c.IsMining() {
+		return true
+	}
 
 	type threaded interface {
 		SetThreads(threads int)

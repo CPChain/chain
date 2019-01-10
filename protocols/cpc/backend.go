@@ -351,6 +351,10 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		return fmt.Errorf("coinbase missing: %v", err)
 	}
 
+	if s.IsMining() {
+		return nil
+	}
+
 	// Propagate the initial price point to the transaction pool
 	s.lock.RLock()
 	price := s.gasPrice
@@ -387,6 +391,10 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 }
 
 func (s *CpchainService) StopMining() {
+	if !s.IsMining() {
+		return
+	}
+
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		dpor.StopMining()
 		dpor.SetAsMiner(false)
