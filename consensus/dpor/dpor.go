@@ -3,6 +3,7 @@ package dpor
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -81,6 +82,10 @@ type Dpor struct {
 	quitSync chan struct{}
 
 	lastCampaignTerm uint64 // the last term which the node has participated in campaign
+	isToCampaign     int32  // indicate whether or not participate campaign, only elected proposer node can do mining
+	// indicate whether the miner is running, there is a case that the dpor is running mining while campaign is stop,
+	// it is by design and actually it does not generate any block in this case.
+	runningMiner int32
 }
 
 // SignHash signs a hash msg with dpor coinbase account
@@ -108,6 +113,18 @@ func (d *Dpor) SetAsMiner(isMiner bool) {
 	defer d.isMinerLock.Unlock()
 
 	d.isMiner = isMiner
+}
+
+func (d *Dpor) IsToCampaign() bool {
+	return atomic.LoadInt32(&d.isToCampaign) > 0
+}
+
+func (d *Dpor) SetToCampaign(isToCampaign bool) {
+	if isToCampaign {
+		atomic.StoreInt32(&d.isToCampaign, 1)
+	} else {
+		atomic.StoreInt32(&d.isToCampaign, 0)
+	}
 }
 
 // Mode returns dpor mode
@@ -251,6 +268,12 @@ func (d *Dpor) SetChain(blockchain consensus.ChainReadWriter) {
 
 // StartMining starts to create a handler and start it.
 func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
+	running := atomic.LoadInt32(&d.runningMiner) > 0
+	// avoid launch handler twice
+	if running {
+		return
+	}
+	atomic.StoreInt32(&d.runningMiner, 1)
 
 	d.chain = blockchain
 
@@ -262,7 +285,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 		latest = blockchain.CurrentHeader().Number.Uint64()
 	)
 
-	fsm := backend.New(faulty, latest, d)
+	fsm := backend.NewDSM(faulty, latest, d)
 
 	handler := d.handler
 
@@ -300,6 +323,12 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 
 // StopMining stops dpor engine
 func (d *Dpor) StopMining() {
+	running := atomic.LoadInt32(&d.runningMiner) > 0
+	// avoid close twice
+	if !running {
+		return
+	}
+	atomic.StoreInt32(&d.runningMiner, 0)
 
 	d.handler.Stop()
 	return

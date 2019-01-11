@@ -345,6 +345,10 @@ func (s *CpchainService) SetClientForDpor(client backend.ClientBackend) {
 }
 
 func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) error {
+	if s.IsMining() {
+		return nil
+	}
+
 	coinbase, err := s.Coinbase()
 	if err != nil {
 		log.Error("Cannot start mining without coinbase", "err", err)
@@ -358,6 +362,7 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 
 	s.txPool.SetGasPrice(price)
 
+	// post-requisite: miner.isMining == true && dpor.IsMiner() == true && dpor.isToCampaign == true
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		if dpor.Coinbase() != coinbase {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: coinbase})
@@ -370,9 +375,13 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 
 		log.Debug("server.nodeid", "enode", s.server.NodeInfo().Enode)
 
+		dpor.SetToCampaign(true)
+
+		// make sure dpor.StartMining start once
 		dpor.SetAsMiner(true)
 		dpor.SetClient(client)
 		go dpor.StartMining(s.blockchain, s.server, s.protocolManager.BroadcastBlock)
+		log.Info("start participating campaign", "campaign", dpor.IsToCampaign())
 	}
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection
@@ -381,21 +390,37 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		// will ensure that private networks work in single miner mode too.
 		atomic.StoreUint32(&s.protocolManager.acceptTxs, 1)
 	}
-	go s.miner.Start(coinbase)
 
+	// make sure miner.Start() start once
+	if !s.miner.IsMining() {
+		go s.miner.Start(coinbase)
+	}
 	return nil
 }
 
 func (s *CpchainService) StopMining() {
-	if dpor, ok := s.engine.(*dpor.Dpor); ok {
-		dpor.StopMining()
-		dpor.SetAsMiner(false)
+	if !s.IsMining() {
+		return
 	}
 
-	s.miner.Stop()
+	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		// for dpor, keep miner mining, just stop participating campaign
+		dpor.SetToCampaign(false)
+		log.Info("stopped participating campaign", "campaign", dpor.IsToCampaign())
+	} else {
+		s.miner.Stop()
+	}
 }
 
-func (s *CpchainService) IsMining() bool      { return s.miner.IsMining() }
+func (s *CpchainService) IsMining() bool {
+	// post-requisite: miner.isMining == true && dpor.IsMiner() == true && dpor.isToCampaign == true
+	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		return s.miner.IsMining() && dpor.IsMiner() && dpor.IsToCampaign()
+	} else {
+		return s.miner.IsMining() && dpor.IsMiner()
+	}
+}
+
 func (s *CpchainService) Miner() *miner.Miner { return s.miner }
 
 func (s *CpchainService) AccountManager() *accounts.Manager { return s.accountManager }

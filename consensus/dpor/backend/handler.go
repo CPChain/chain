@@ -115,6 +115,7 @@ func (h *Handler) Start() {
 func (h *Handler) Stop() {
 
 	close(h.quitCh)
+	h.quitCh = make(chan struct{})
 
 	return
 }
