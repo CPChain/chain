@@ -159,9 +159,9 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	snap := d.CurrentSnap()
 	if snap != nil {
 		log.Debug("check if participate campaign", "isMiner", d.IsMiner(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number())
-		if d.IsMiner() && snap.isStartCampaign() {
+		if d.IsToCampaign() && snap.isStartCampaign() {
 			newTerm := d.CurrentSnap().TermOf(number)
-			if newTerm > d.lastCampaignTerm {
+			if newTerm > d.lastCampaignTerm+campaignTerms-1 {
 				d.lastCampaignTerm = newTerm
 				log.Info("campaign for proposer committee", "eleTerm", newTerm)
 				d.client.Campaign(context.Background(), campaignTerms)

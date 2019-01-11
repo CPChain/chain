@@ -3,6 +3,7 @@ package dpor
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -81,6 +82,7 @@ type Dpor struct {
 	quitSync chan struct{}
 
 	lastCampaignTerm uint64 // the last term which the node has participated in campaign
+	isToCampaign     int32  // indicate whether or not participate campaign, only elected proposer node can do mining
 }
 
 // SignHash signs a hash msg with dpor coinbase account
@@ -108,6 +110,18 @@ func (d *Dpor) SetAsMiner(isMiner bool) {
 	defer d.isMinerLock.Unlock()
 
 	d.isMiner = isMiner
+}
+
+func (d *Dpor) IsToCampaign() bool {
+	return atomic.LoadInt32(&d.isToCampaign) > 0
+}
+
+func (d *Dpor) SetToCampaign(isToCampaign bool) {
+	if isToCampaign {
+		atomic.StoreInt32(&d.isToCampaign, 1)
+	} else {
+		atomic.StoreInt32(&d.isToCampaign, 0)
+	}
 }
 
 // Mode returns dpor mode
