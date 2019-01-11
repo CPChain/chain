@@ -198,3 +198,36 @@ Impeachment
         b. This scenario does not affects the security of the system, since validators can only collect 2f+1 COMMIT messages for one block
 
 
+Reward and Supply
+######################
+
+**Reward** is defined as the benefit a user obtains when it proposes a block and successfully gets it inserted into the chain.
+And **supply** refers to the all CPC provided within a certain time interval.
+
+As defined in `the RNode ecosystem <https://cpchain.io/rnode/>`_, the annual supply is 40 million CPC in the first year,
+and being decreased by 25% annually for the next four years.
+Thus, the annual supply for five years is 40 million, 30 million, 22.5 million, 17 million and 12.75 million respectively.
+After five years, the supply runs out. In other words, no CPC is rewarded after that time.
+
+Meanwhile, CPC Mainnet inserts a block every 10 seconds, which yields around 3 million blocks each year.
+Therefore, we conclude the reward and supply in the table below.
+
++--------+--------+---------------+------------+
+| Year   | Reward | Num of Blocks | Supply     |
++========+========+===============+============+
+| 1      | 12.65  |  3,162,240*   | 40,002,336 |
++--------+--------+---------------+------------+
+| 2      | 9.51   |  3,153,600    | 29,990,736 |
++--------+--------+---------------+------------+
+| 3      | 7.13   |  3,153,600    | 22,485,168 |
++--------+--------+---------------+------------+
+| 4      | 5.39   |  3,153,600    | 16,997,904 |
++--------+--------+---------------+------------+
+| 5      | 4.03   |  3,162,240*   | 12,709,008 |
++--------+--------+---------------+------------+
+\* Both the first and the fifth year contain a leap day (29 Feb 2020 and 2024, respectively),
+which results in a larger number of generated blocks compared to the other three years.
+
+Note that in our LBFT 2.0 protocol, an impeach block in inserted into the chain if the proposer is faulty or non-responding.
+Intuitively, a faulty proposer cannot receive the reward. Hence, the amount of annual supply could be smaller than the
+one listed in the table above.
