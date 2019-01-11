@@ -6,7 +6,7 @@ contract ProxyContractRegister {
 
     // register proxy contract address -> real contract address
     mapping(address => address) public contractAddresses;
-    mapping(address => address) public proxyContractAddress
+    mapping(address => address) public proxyContractAddress;
 
     modifier restricted() {
         if (msg.sender == owner) _;
@@ -18,9 +18,9 @@ contract ProxyContractRegister {
     }
 
     function registerProxyContract(address _proxyAddress, address _realAddress) public payable restricted {
-        if (proxyAddress != address(this)) {
-            contractAddresses[_proxyAddress] = realAddress;
-            proxyContractAddress[_realAddress] = proxyAddress;
+        if (_proxyAddress != address(this)) {
+            contractAddresses[_proxyAddress] = _realAddress;
+            proxyContractAddress[_realAddress] = _proxyAddress;
         }
     }
 

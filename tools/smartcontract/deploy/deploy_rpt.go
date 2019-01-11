@@ -18,7 +18,7 @@ package deploy
 
 import (
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -28,7 +28,7 @@ func DeployRpt(password string) common.Address {
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
 	auth := newAuth(client, privateKey, fromAddress)
-	contractAddress, tx, _, err := contracts.DeployRpt(auth, client)
+	contractAddress, tx, _, err := rpt.DeployRpt(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

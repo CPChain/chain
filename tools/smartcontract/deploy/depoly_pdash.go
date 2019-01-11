@@ -18,7 +18,7 @@ package deploy
 
 import (
 	"bitbucket.org/cpchain/chain/commons/log"
-	pdash "bitbucket.org/cpchain/chain/contracts/pdash/sol"
+	pdash "bitbucket.org/cpchain/chain/contracts/pdash/pdash_contract"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )

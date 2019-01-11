@@ -26,8 +26,8 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -128,7 +128,7 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 
 // calcRptInfo return the Rpt of the rnode address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
-	instance, err := contracts.NewRpt(rs.rptContract, rs.client)
+	instance, err := rpt.NewRpt(rs.rptContract, rs.client)
 	log.Debug("calling to RPT contract", "contractAddr", rs.rptContract.Hex())
 	if err != nil {
 		log.Error("New primitivesContract error")

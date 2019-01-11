@@ -28,9 +28,9 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
+	rtp_contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/types"
@@ -142,7 +142,7 @@ func registerPrimitives(backend primitives.RptPrimitiveBackend) {
 
 func deploy(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, _, _, err := contracts.DeployRpt(deployTransactor, backend)
+	addr, _, _, err := rtp_contract.DeployRpt(deployTransactor, backend)
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
 		return common.Address{}, err

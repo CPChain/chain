@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -144,7 +144,7 @@ func claimProposer(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, add
 
 	ctx := context.Background()
 
-	instance, err := contracts.NewProposerRegister(contractAddress, client)
+	instance, err := proposer_register.NewProposerRegister(contractAddress, client)
 
 	gasLimit := 3000000
 

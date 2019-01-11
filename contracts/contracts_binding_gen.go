@@ -35,3 +35,5 @@ package contracts
 //go:generate abigen --sol ./pdash/sol/register.sol --pkg sol --out ./pdash/sol/register.go
 
 //go:generate abigen --sol ./proxy/proxy_contract/proxy.sol --pkg contract --out ./proxy/proxy_contract/proxy.go
+
+//go:generate abigen --sol ./proxy/proxy_contract/proxy_contract_register.sol --pkg contract --out ./proxy/proxy_contract/proxy_contract_register.go

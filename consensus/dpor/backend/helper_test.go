@@ -15,7 +15,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -50,10 +50,10 @@ func createSimulatedBackend(alloc core.GenesisAlloc) *backends.SimulatedBackend 
 	return contractBackend
 }
 
-func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *contracts.ProposerRegister, error) {
+func deployRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *types.Transaction, *proposer_register.ProposerRegister, error) {
 
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, tx, instance, err := contracts.DeployProposerRegister(deployTransactor, backend)
+	addr, tx, instance, err := proposer_register.DeployProposerRegister(deployTransactor, backend)
 
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
@@ -205,7 +205,7 @@ func TestRemoteSigner(T *testing.T) {
 	contractCaller, err := backend.NewContractCaller(p1Key, simulatedBackend, gasLimit)
 
 	// creates an contract instance
-	contractInstance, err := contracts.NewProposerRegister(contractAddr, contractCaller.Client)
+	contractInstance, err := proposer_register.NewProposerRegister(contractAddr, contractCaller.Client)
 
 	// creates a keyed transactor
 	auth := bind.NewKeyedTransactor(contractCaller.Key.PrivateKey)

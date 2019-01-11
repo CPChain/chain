@@ -25,6 +25,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/contracts/proxy"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -49,22 +50,22 @@ func sigHash(testfile file) (hash common.Hash) {
 	return hash
 }
 
-func deployTestRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *RegisterWrapper, error) {
+func deployTestRegister(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *RegisterWrapper, *proxy.ProxyContractRegister, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, instance, err := DeployRegisterAndReturnWrapper(deployTransactor, backend)
+	addr, instance, proxyIntance, err := DeployRegisterAndReturnWrapper(deployTransactor, backend)
 	fmt.Println("contract address :", addr.Hex())
 
 	if err != nil {
 		log.Fatalf("failed to deploy contact when mining :%v", err)
-		return common.Address{}, nil, err
+		return common.Address{}, nil, nil, err
 	}
 	backend.Commit()
-	return addr, instance, nil
+	return addr, instance, proxyIntance, nil
 }
 
 func TestRegister(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-	_, register, err := deployTestRegister(key, big.NewInt(0), contractBackend)
+	_, register, proxyRegister, err := deployTestRegister(key, big.NewInt(0), contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	contractBackend.Commit()
 
@@ -75,6 +76,19 @@ func TestRegister(t *testing.T) {
 	copy(fakefile.fileHash[:], sigHash(fakefile).Bytes())
 
 	transactOpts := bind.NewKeyedTransactor(key)
+	// testaddr,err:= proxyRegister.
+	_, err = proxyRegister.RegisterProxyContract(addr1, addr)
+	if err != nil {
+		fmt.Println("RegisterProxyContract error :", err)
+		log.Warn("RegisterProxyContract error", err)
+	}
+	contractBackend.Commit()
+	_, err = register.UpdatePdashAddress(addr1)
+	if err != nil {
+		fmt.Println("UpdatePdashAddress error :", err)
+		log.Warn("UpdatePdashAddress error", err)
+	}
+	contractBackend.Commit()
 	_, err = register.ClaimRegister(transactOpts, fakefile.fileName, fakefile.fileHash, fakefile.fileSize)
 	if err != nil {
 		fmt.Println("ClainRegister error :", err)

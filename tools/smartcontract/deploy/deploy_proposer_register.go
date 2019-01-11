@@ -18,7 +18,7 @@ package deploy
 
 import (
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -28,7 +28,7 @@ func DeployProposerRegister(password string) common.Address {
 	printBalance(client, fromAddress)
 	// launch contract deploy transaction.
 	auth := newAuth(client, privateKey, fromAddress)
-	contractAddress, tx, _, err := contracts.DeployProposerRegister(auth, client)
+	contractAddress, tx, _, err := proposer_register.DeployProposerRegister(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

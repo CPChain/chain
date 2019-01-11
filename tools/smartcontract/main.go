@@ -71,7 +71,7 @@ func main() {
 
 	// 5
 	deploy.FormatPrint("5.DeployRegister")
-	registerAddress := deploy.DeployRegister(password)
+	registerAddress := deploy.DeployRegister(proxyContractRegisterAddress, password)
 	deploy.PrintContract(registerAddress)
 
 	deploy.RegisterProxyAddress(proxyContractRegisterAddress, registerAddress, password)

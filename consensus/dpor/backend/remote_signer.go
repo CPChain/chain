@@ -9,7 +9,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -178,7 +178,7 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *Si
 }
 
 // fetchNodeID fetches node id of proposer encrypted with validator's public key
-func fetchNodeID(term uint64, proposer common.Address, validator common.Address, contractInstance *contracts.ProposerRegister) ([]byte, error) {
+func fetchNodeID(term uint64, proposer common.Address, validator common.Address, contractInstance *proposer_register.ProposerRegister) ([]byte, error) {
 	callOpts := &bind.CallOpts{
 		From: validator,
 	}

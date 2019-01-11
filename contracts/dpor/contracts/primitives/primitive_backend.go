@@ -30,7 +30,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/apibackend_holder"
 	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	pdash "bitbucket.org/cpchain/chain/contracts/pdash/sol"
+	pdash "bitbucket.org/cpchain/chain/contracts/pdash/pdash_contract"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )

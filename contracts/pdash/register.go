@@ -22,7 +22,8 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	pdash "bitbucket.org/cpchain/chain/contracts/pdash/sol"
+	pdash "bitbucket.org/cpchain/chain/contracts/pdash/pdash_contract"
+	"bitbucket.org/cpchain/chain/contracts/proxy"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -53,17 +54,18 @@ func NewRegisterWrapper(transactOpts *bind.TransactOpts, contractAddr common.Add
 	}, nil
 }
 
-func DeployRegisterAndReturnWrapper(transactOpts *bind.TransactOpts, contractBackend RegisterBackend) (common.Address, *RegisterWrapper, error) {
-	contractAddr, _, _, err := pdash.DeployRegister(transactOpts, contractBackend)
+func DeployRegisterAndReturnWrapper(transactOpts *bind.TransactOpts, contractBackend RegisterBackend) (common.Address, *RegisterWrapper, *proxy.ProxyContractRegister, error) {
+	proxyaddress, _, proxyContractRegister, err := proxy.DeployProxyContractRegister(transactOpts, contractBackend)
+	contractAddr, _, _, err := pdash.DeployRegister(transactOpts, contractBackend, proxyaddress)
 	if err != nil {
-		return contractAddr, nil, err
+		return contractAddr, nil, nil, err
 	}
 	register, err := NewRegisterWrapper(transactOpts, contractAddr, contractBackend)
 	if err != nil {
-		return contractAddr, nil, err
+		return contractAddr, nil, nil, err
 	}
 
-	return contractAddr, register, err
+	return contractAddr, register, proxyContractRegister, err
 
 }
 

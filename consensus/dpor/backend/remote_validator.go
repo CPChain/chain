@@ -9,7 +9,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -60,7 +60,7 @@ func (s *RemoteValidator) getPublicKey() []byte {
 }
 
 // fetchPubkey fetches the public key of the remote validator from the contract.
-func (s *RemoteValidator) fetchPubkey(contractInstance *contracts.ProposerRegister) error {
+func (s *RemoteValidator) fetchPubkey(contractInstance *proposer_register.ProposerRegister) error {
 
 	address := s.Coinbase()
 
@@ -82,7 +82,7 @@ func (s *RemoteValidator) fetchPubkey(contractInstance *contracts.ProposerRegist
 }
 
 // uploadNodeID encrypts proposer's node id with this remote validator's public key and update to the contract.
-func (s *RemoteValidator) uploadNodeID(term uint64, nodeID string, auth *bind.TransactOpts, contractInstance *contracts.ProposerRegister, client ClientBackend) error {
+func (s *RemoteValidator) uploadNodeID(term uint64, nodeID string, auth *bind.TransactOpts, contractInstance *proposer_register.ProposerRegister, client ClientBackend) error {
 	validator := s.Coinbase()
 
 	log.Debug("fetched rsa pubkey")
@@ -131,7 +131,7 @@ func (s *RemoteValidator) UploadNodeInfo(
 	term uint64,
 	nodeID string,
 	auth *bind.TransactOpts,
-	contractInstance *contracts.ProposerRegister,
+	contractInstance *proposer_register.ProposerRegister,
 	client ClientBackend,
 ) (bool, error) {
 

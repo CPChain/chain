@@ -6,7 +6,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -60,7 +60,7 @@ func (s *RemoteProposer) setNodeID(nodeID string) {
 }
 
 // fetchNodeID fetches the node id of the remote signer encrypted with my public key, and decrypts it with my private key.
-func (s *RemoteProposer) fetchNodeID(term uint64, contractInstance *contracts.ProposerRegister, rsaKey *rsakey.RsaKey, validator common.Address) error {
+func (s *RemoteProposer) fetchNodeID(term uint64, contractInstance *proposer_register.ProposerRegister, rsaKey *rsakey.RsaKey, validator common.Address) error {
 	proposer := s.Coinbase()
 
 	log.Debug("fetching nodeID of remote proposer")
@@ -92,7 +92,7 @@ func (s *RemoteProposer) FetchNodeInfoAndDial(
 	validator common.Address,
 	server *p2p.Server,
 	rsaKey *rsakey.RsaKey,
-	contractInstance *contracts.ProposerRegister,
+	contractInstance *proposer_register.ProposerRegister,
 ) (bool, error) {
 
 	// fetch the nodeID of the remote signer if not fetched yet.

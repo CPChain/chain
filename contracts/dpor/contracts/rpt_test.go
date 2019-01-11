@@ -9,7 +9,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -22,9 +22,9 @@ var (
 	}
 )
 
-func deployRpt(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *contracts.Rpt, *bind.TransactOpts, error) {
+func deployRpt(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *rpt.Rpt, *bind.TransactOpts, error) {
 	Transactor := bind.NewKeyedTransactor(prvKey)
-	rtpaddr, _, rpt, err := contracts.DeployRpt(Transactor, backend)
+	rtpaddr, _, rpt, err := rpt.DeployRpt(Transactor, backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
