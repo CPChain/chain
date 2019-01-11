@@ -276,7 +276,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 		latest = blockchain.CurrentHeader().Number.Uint64()
 	)
 
-	fsm := backend.New(faulty, latest, d)
+	fsm := backend.NewFsm(faulty, latest, d)
 
 	handler := d.handler
 
