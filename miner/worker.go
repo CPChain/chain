@@ -76,7 +76,7 @@ out:
 			}
 			nw.quitCurrentOpCh = make(chan struct{})
 			// spawn a new go routine to mine the blocks
-			nw.mine(work, nw.quitCurrentOpCh)
+			go nw.mine(work, nw.quitCurrentOpCh)
 
 			nw.mu.Unlock()
 

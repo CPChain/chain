@@ -134,6 +134,7 @@ func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase comm
 
 	// initially commit new work to make pending block and snapshot availableklk
 	e.commitNewWork()
+
 	return e
 }
 
@@ -175,18 +176,19 @@ func (e *engine) pendingBlock() *types.Block {
 	return e.currentWork.Block
 }
 
-func (e *engine) init() {
-	// spin up workers
-	for worker := range e.workers {
-		worker.Start()
+func (e *engine) start() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if atomic.LoadInt32(&e.mining) == 0 {
+		// spin up workers
+		for worker := range e.workers {
+			worker.Start()
+		}
+
+		go e.wait()
 	}
 
-	go e.wait()
-	log.Info("mine workers and wait() goroutine are running")
-}
-
-func (e *engine) start() {
-	// when mining is true, it will campaign for proposers
 	atomic.StoreInt32(&e.mining, 1)
 }
 
@@ -194,9 +196,15 @@ func (e *engine) stop() {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	// keep worker and e.wait() goroutine running as the node may be in charge of proposer committee
-	e.mining = 0
-	e.atWork = 0
+	if atomic.LoadInt32(&e.mining) == 1 {
+		for worker := range e.workers {
+			worker.Stop()
+		}
+		close(e.quitCh)
+		e.quitCh = make(chan struct{})
+	}
+	atomic.StoreInt32(&e.mining, 0)
+	atomic.StoreInt32(&e.atWork, 0)
 }
 
 func (e *engine) register(worker Worker) {

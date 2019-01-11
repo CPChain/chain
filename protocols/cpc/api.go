@@ -41,6 +41,10 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 )
 
+var (
+	errStartedMining = errors.New("already started mining")
+)
+
 // PublicCpchainAPI provides an API to access cpchain full node-related
 // information.
 type PublicCpchainAPI struct {
@@ -84,7 +88,7 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 	defer api.lock.Unlock()
 
 	if api.c.IsMining() {
-		return nil
+		return errStartedMining
 	}
 
 	// Set the number of threads if the seal engine supports it
