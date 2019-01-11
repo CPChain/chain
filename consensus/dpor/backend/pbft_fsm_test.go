@@ -114,10 +114,10 @@ func TestDporStateMachine_Fsm(t *testing.T) {
 	validatorDporFakeEngine3 := dpor.NewFaker(dporConfig, validatorDb3)
 	validatorDporFakeEngine4 := dpor.NewFaker(dporConfig, validatorDb4)
 
-	fsm1 := backend.NewFsm(1, 0, validatorDporEngine1)
-	fsm2 := backend.NewFsm(1, 0, validatorDporEngine2)
-	fsm3 := backend.NewFsm(1, 0, validatorDporEngine3)
-	fsm4 := backend.NewFsm(1, 0, validatorDporEngine4)
+	fsm1 := backend.NewDSM(1, 0, validatorDporEngine1)
+	fsm2 := backend.NewDSM(1, 0, validatorDporEngine2)
+	fsm3 := backend.NewDSM(1, 0, validatorDporEngine3)
+	fsm4 := backend.NewDSM(1, 0, validatorDporEngine4)
 
 	_, _, _ = fsm2, fsm3, fsm4
 
@@ -682,10 +682,10 @@ func TestDporStateMachine_FsmImpeach(t *testing.T) {
 	validatorDporFakeEngine3 := dpor.NewFaker(dporConfig, validatorDb3)
 	validatorDporFakeEngine4 := dpor.NewFaker(dporConfig, validatorDb4)
 
-	fsm1 := backend.NewFsm(1, 0, validatorDporEngine1)
-	fsm2 := backend.NewFsm(1, 0, validatorDporEngine2)
-	fsm3 := backend.NewFsm(1, 0, validatorDporEngine3)
-	fsm4 := backend.NewFsm(1, 0, validatorDporEngine4)
+	fsm1 := backend.NewDSM(1, 0, validatorDporEngine1)
+	fsm2 := backend.NewDSM(1, 0, validatorDporEngine2)
+	fsm3 := backend.NewDSM(1, 0, validatorDporEngine3)
+	fsm4 := backend.NewDSM(1, 0, validatorDporEngine4)
 
 	_, _, _ = fsm2, fsm3, fsm4
 

@@ -122,8 +122,8 @@ type DporStateMachine struct {
 	lock sync.RWMutex
 }
 
-// NewFsm creates a new dpor fsm
-func NewFsm(faulty uint64, latest uint64, dpor DporService) *DporStateMachine {
+// NewDSM creates a new dpor fsm
+func NewDSM(faulty uint64, latest uint64, dpor DporService) *DporStateMachine {
 	blockCache, _ := lru.NewARC(MaxBlockCacheSize)
 
 	return &DporStateMachine{
