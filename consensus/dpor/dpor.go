@@ -83,6 +83,9 @@ type Dpor struct {
 
 	lastCampaignTerm uint64 // the last term which the node has participated in campaign
 	isToCampaign     int32  // indicate whether or not participate campaign, only elected proposer node can do mining
+	// indicate whether the miner is running, there is a case that the dpor is running mining while campaign is stop,
+	// it is by design and actually it does not generate any block in this case.
+	runningMiner int32
 }
 
 // SignHash signs a hash msg with dpor coinbase account
@@ -265,6 +268,12 @@ func (d *Dpor) SetChain(blockchain consensus.ChainReadWriter) {
 
 // StartMining starts to create a handler and start it.
 func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
+	running := atomic.LoadInt32(&d.runningMiner) > 0
+	// avoid launch handler twice
+	if running {
+		return
+	}
+	atomic.StoreInt32(&d.runningMiner, 1)
 
 	d.chain = blockchain
 
@@ -314,6 +323,12 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 
 // StopMining stops dpor engine
 func (d *Dpor) StopMining() {
+	running := atomic.LoadInt32(&d.runningMiner) > 0
+	// avoid close twice
+	if !running {
+		return
+	}
+	atomic.StoreInt32(&d.runningMiner, 0)
 
 	d.handler.Stop()
 	return
