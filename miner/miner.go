@@ -55,6 +55,8 @@ func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, cons 
 	// we sync up to the latest chain head
 	go miner.downloaderSync()
 
+	miner.eng.init() // initialize, start workers and wait goroutine
+
 	return miner
 }
 

@@ -130,7 +130,6 @@ func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase comm
 		workers:     make(map[Worker]struct{}),
 	}
 
-	e.init()
 	go e.update()
 
 	// initially commit new work to make pending block and snapshot availableklk
@@ -183,6 +182,7 @@ func (e *engine) init() {
 	}
 
 	go e.wait()
+	log.Info("mine workers and wait() goroutine are running")
 }
 
 func (e *engine) start() {
