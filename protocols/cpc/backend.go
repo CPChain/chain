@@ -381,6 +381,7 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		dpor.SetAsMiner(true)
 		dpor.SetClient(client)
 		go dpor.StartMining(s.blockchain, s.server, s.protocolManager.BroadcastBlock)
+		log.Info("start participating campaign", "campaign", dpor.IsToCampaign())
 	}
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection
@@ -405,6 +406,7 @@ func (s *CpchainService) StopMining() {
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		// for dpor, keep miner mining, just stop participating campaign
 		dpor.SetToCampaign(false)
+		log.Info("stopped participating campaign", "campaign", dpor.IsToCampaign())
 	} else {
 		s.miner.Stop()
 	}
