@@ -16,6 +16,24 @@ var Version string
 
 const (
 	ClientIdentifier = "cpchain" // Client identifier to advertise over the network
+	DatabaseName     = "chaindata"
+)
+
+// These are the multipliers for ether denominations.
+// Example: To get the wei value of an amount in 'douglas', use
+//
+//    new(big.Int).Mul(value, big.NewInt(params.Douglas))
+//
+const (
+	Wei      = 1
+	Ada      = 1e3
+	Babbage  = 1e6
+	Shannon  = 1e9
+	Szabo    = 1e12
+	Finney   = 1e15
+	Cpc      = 1e18
+	Einstein = 1e21
+	Douglas  = 1e42
 )
 
 const (
@@ -105,6 +123,19 @@ func Validators() []common.Address {
 	return validatorsMap[GetRunMode()]
 }
 
+func Bootnodes() []string {
+	switch {
+	case IsDev():
+		return devBootnodes
+	case IsTestnet():
+		return testnetBootnodes
+	case IsMainnet():
+		return mainnetBootnodes
+	default:
+		return devBootnodes
+	}
+}
+
 // Deposit per time when campaign
 var (
 	depositMap = map[RunMode]*big.Int{
@@ -116,6 +147,32 @@ var (
 
 func Deposit() *big.Int {
 	return depositMap[GetRunMode()]
+}
+
+// validator nodes info
+var defaultValidatorNodes []string
+
+func GetDefaultValidators() []string {
+	return defaultValidatorNodes
+}
+
+func InitDefaultValidators(validators []string) {
+	defaultValidatorNodes = defaultDevValidatorNodes
+	runMode := GetRunMode()
+	switch runMode {
+	case Mainnet:
+		defaultValidatorNodes = defaultMainnetValidatorNodes
+	case Testnet:
+		defaultValidatorNodes = defaultTestnetValidatorNodes
+	case Dev:
+		defaultValidatorNodes = defaultDevValidatorNodes
+	}
+
+	if validators != nil && len(validators) > 0 {
+		defaultValidatorNodes = validators
+	}
+
+	log.Debug("init validators", "nodes", defaultValidatorNodes)
 }
 
 // ChainConfig is the core config which determines the blockchain settings.
