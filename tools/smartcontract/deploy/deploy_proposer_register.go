@@ -23,11 +23,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func DeployProposerRegister(password string) common.Address {
+func DeployProposerRegister(password string, nonce uint64) common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// launch contract deploy transaction.
-	auth := newAuth(client, privateKey, fromAddress)
+	auth := newTransactor(privateKey, nonce)
 	contractAddress, tx, _, err := proposer_register.DeployProposerRegister(auth, client)
 	if err != nil {
 		log.Fatal(err.Error())

@@ -22,6 +22,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
+	"sync"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
@@ -65,16 +66,53 @@ func FormatPrint(msg string) {
 	fmt.Println("================================================================")
 }
 
+type nonceCounter struct {
+	nonce uint64
+	lock  sync.RWMutex
+}
+
+var nonceInstance *nonceCounter
+var once sync.Once
+var needInit = true
+
+func GetNonceInstance(init uint64) *nonceCounter {
+	once.Do(func() {
+		nonceInstance = &nonceCounter{nonce: init}
+		needInit = false
+	})
+	return nonceInstance
+}
+
+func (p *nonceCounter) GetNonce() uint64 {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+	orig := p.nonce
+	p.nonce = p.nonce + 1
+	return orig
+}
+
 func newAuth(client *cpclient.Client, privateKey *ecdsa.PrivateKey, fromAddress common.Address) *bind.TransactOpts {
 	auth := bind.NewKeyedTransactor(privateKey)
+	newNonce := uint64(0)
 
-	blockNumber := client.GetBlockNumber()
-	// fmt.Println("blockNumber:", blockNumber)
-	nonce, err := client.NonceAt(context.Background(), fromAddress, blockNumber)
-	if err != nil {
-		fmt.Println("get nonce failed")
+	if needInit {
+		blockNumber := client.GetBlockNumber()
+
+		initNonce, err := client.NonceAt(context.Background(), fromAddress, blockNumber)
+		if err != nil {
+			fmt.Println("get nonce failed", err)
+		}
+		GetNonceInstance(initNonce)
 	}
-	// fmt.Println("nonce:", nonce)
+	newNonce = GetNonceInstance(0).GetNonce()
+	fmt.Println("newNonce:", newNonce)
+	auth.Nonce = new(big.Int).SetUint64(newNonce)
+	return auth
+
+}
+
+func newTransactor(privateKey *ecdsa.PrivateKey, nonce uint64) *bind.TransactOpts {
+	auth := bind.NewKeyedTransactor(privateKey)
 	auth.Nonce = new(big.Int).SetUint64(nonce)
 	return auth
 

@@ -32,7 +32,7 @@ func ProxyContractRegister(password string) common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
-	auth := newAuth(client, privateKey, fromAddress)
+	auth := newTransactor(privateKey, 0)
 	contractAddress, tx, _, err := contract.DeployProxyContractRegister(auth, client)
 	if err != nil {
 		log.Fatal(err.Error(), "fromAddress", fromAddress.Hex(), "contractAddress:", contractAddress.Hex())
@@ -41,11 +41,11 @@ func ProxyContractRegister(password string) common.Address {
 	return contractAddress
 }
 
-func DeployProxy(password string) common.Address {
+func DeployProxy(password string, nonce uint64) common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
-	auth := bind.NewKeyedTransactor(privateKey)
+	auth := newTransactor(privateKey, nonce)
 	contractAddress, tx, _, err := contract.DeployProxy(auth, client)
 	if err != nil {
 		log.Fatal(err.Error(), "fromAddress", fromAddress.Hex(), "contractAddress:", contractAddress.Hex())
@@ -54,9 +54,9 @@ func DeployProxy(password string) common.Address {
 	return contractAddress
 }
 
-func RegisterProxyAddress(proxyContractAddress, realAddress common.Address, password string) common.Address {
-	proxyAddress := DeployProxy(password)
-	success := UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress, password)
+func RegisterProxyAddress(proxyContractAddress, realAddress common.Address, password string, nonce uint64, proxyNonce uint64) common.Address {
+	proxyAddress := DeployProxy(password, nonce)
+	success := UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress, password, proxyNonce)
 	if success {
 		return proxyAddress
 	} else {
@@ -64,7 +64,7 @@ func RegisterProxyAddress(proxyContractAddress, realAddress common.Address, pass
 	}
 }
 
-func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress common.Address, password string) bool {
+func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress common.Address, password string, nonce uint64) bool {
 	FormatPrint("register proxy address")
 
 	PrintContract(proxyAddress)
@@ -78,12 +78,10 @@ func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress 
 	}
 	printBalance(client, fromAddress)
 	proxyContractRegister, _ := contract.NewProxyContractRegister(proxyContractAddress, client)
-
-	auth := bind.NewKeyedTransactor(privateKey)
+	auth := newTransactor(privateKey, nonce)
 	auth.Value = big.NewInt(500)
 	auth.GasLimit = 3000000
 	gasPrice, err := client.SuggestGasPrice(context.Background())
-	// fmt.Println("gasPrice:", gasPrice)
 	auth.GasPrice = gasPrice
 
 	transaction, err := proxyContractRegister.RegisterProxyContract(auth, proxyAddress, realAddress)

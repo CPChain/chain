@@ -23,11 +23,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func DeployCampaign(acAddr common.Address, password string) common.Address {
+func DeployCampaign(acAddr common.Address, password string, nonce uint64) common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
-	auth := newAuth(client, privateKey, fromAddress)
+	auth := newTransactor(privateKey, nonce)
 	contractAddress, tx, _, err := campaign.DeployCampaign(auth, client, acAddr)
 	if err != nil {
 		log.Fatal(err.Error())

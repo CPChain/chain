@@ -23,12 +23,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func DeployRegister(proxy common.Address, password string) common.Address {
+func DeployRegister(password string, nonce uint64, proxyContractRegisterAddress common.Address) common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
-	auth := newAuth(client, privateKey, fromAddress)
-	contractAddress, tx, _, err := register.DeployRegister(auth, client, proxy)
+	auth := newTransactor(privateKey, nonce)
+	contractAddress, tx, _, err := register.DeployRegister(auth, client, proxyContractRegisterAddress)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

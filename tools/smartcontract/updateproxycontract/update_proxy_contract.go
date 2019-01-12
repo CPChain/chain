@@ -29,8 +29,8 @@ func main() {
 	proxyAddress := common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d")
 	// realAddress := common.HexToAddress("0xca53baf44e68a2f440cafee2bbcc23631ad26811") // not exist contract
 	realAddress := common.HexToAddress("0xca53baf44e68a2f440cafee2bbcc23631ad2689e")
-
-	success := deploy.UpdateRegisterProxyAddress(proxyContractRegisterAddress, proxyAddress, realAddress, "password")
+	nonce := uint64(1)
+	success := deploy.UpdateRegisterProxyAddress(proxyContractRegisterAddress, proxyAddress, realAddress, "password", nonce)
 	fmt.Println("update contract success:", success)
 
 }

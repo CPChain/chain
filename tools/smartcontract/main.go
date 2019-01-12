@@ -19,10 +19,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/deploy"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func main() {
@@ -41,45 +43,77 @@ func main() {
 	proxyContractRegisterAddress := deploy.ProxyContractRegister(password)
 	deploy.PrintContract(proxyContractRegisterAddress)
 
+	var wg1 sync.WaitGroup
+
 	// 1
-	deploy.FormatPrint("1.DeployProposer")
-	signerAddress := deploy.DeployProposerRegister(password)
-	deploy.PrintContract(signerAddress)
+	wg1.Add(2)
+	go deployProposer(password, proxyContractRegisterAddress, &wg1 /*, 1, 2, 3*/)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, signerAddress, password)
+	// 2,3
+	go deployAdmissionAndCampaign(password, proxyContractRegisterAddress, &wg1 /*, 4, 5, 6, 7, 8, 9*/)
+	fmt.Println("======== wait wg1 =========")
+	wg1.Wait()
 
-	// 2
-	deploy.FormatPrint("2.DeployAdmission")
-	admissionAddress := deploy.DeployAdmission(password)
-	deploy.PrintContract(admissionAddress)
-
-	proxyAdmissionAddress := deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress, password)
-
-	// 3
-	deploy.FormatPrint("3.DeployCampaign")
-	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress, password)
-	deploy.PrintContract(campaignAddress)
-
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, campaignAddress, password)
-
+	var wg2 sync.WaitGroup
+	wg2.Add(2)
 	// 4
-	deploy.FormatPrint("4.DeployRpt")
-	rptAddress := deploy.DeployRpt(password)
-	deploy.PrintContract(rptAddress)
-
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, rptAddress, password)
+	go deployRpt(password, proxyContractRegisterAddress, &wg2 /*, 10, 11, 12*/)
 
 	// 5
-	deploy.FormatPrint("5.DeployRegister")
-	registerAddress := deploy.DeployRegister(proxyContractRegisterAddress, password)
-	deploy.PrintContract(registerAddress)
+	go deployRegister(password, proxyContractRegisterAddress, &wg2 /*, 13, 14, 15*/)
+	fmt.Println("======== wait wg2 =========")
+	wg2.Wait()
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, registerAddress, password)
-
+	var wg3 sync.WaitGroup
+	wg3.Add(1)
 	// 6
-	deploy.FormatPrint("6.DeployPdash")
-	pdashAddress := deploy.DeployPdash(password)
-	deploy.PrintContract(pdashAddress)
+	go deployPdash(password, proxyContractRegisterAddress, &wg3 /*, 16, 17, 18*/)
 
-	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress, password)
+	fmt.Println("======== wait wg3 =========")
+	wg3.Wait()
+	fmt.Println("======== init contract deploy completed=========")
+}
+
+func deployProposer(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
+	deploy.FormatPrint("1.DeployProposer")
+	signerAddress := deploy.DeployProposerRegister(password, 1)
+	deploy.PrintContract(signerAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, signerAddress, password, 2, 3)
+	wg.Done()
+}
+
+func deployAdmissionAndCampaign(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
+	deploy.FormatPrint("2.DeployAdmission")
+	admissionAddress := deploy.DeployAdmission(password, 4)
+	deploy.PrintContract(admissionAddress)
+	proxyAdmissionAddress := deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress, password, 5, 6)
+	// 3
+	deploy.FormatPrint("3.DeployCampaign")
+	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress, password, 7)
+	deploy.PrintContract(campaignAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, campaignAddress, password, 8, 9)
+	wg.Done()
+}
+
+func deployRpt(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
+	deploy.FormatPrint("4.DeployRpt")
+	rptAddress := deploy.DeployRpt(password, 10)
+	deploy.PrintContract(rptAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, rptAddress, password, 11, 12)
+	wg.Done()
+}
+func deployRegister(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
+	deploy.FormatPrint("5.DeployRegister")
+	registerAddress := deploy.DeployRegister(password, 13, proxyContractRegisterAddress)
+	deploy.PrintContract(registerAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, registerAddress, password, 14, 15)
+	wg.Done()
+}
+
+func deployPdash(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
+	deploy.FormatPrint("6.DeployPdash")
+	pdashAddress := deploy.DeployPdash(password, 16)
+	deploy.PrintContract(pdashAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress, password, 17, 18)
+	wg.Done()
 }
