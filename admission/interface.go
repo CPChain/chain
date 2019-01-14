@@ -50,7 +50,7 @@ type ApiBackend interface {
 // ProofWork represent a proof work
 type ProofWork interface {
 	// prove starts memory/cpu/... POW work.
-	prove(abort chan interface{}, wg *sync.WaitGroup)
+	prove(abort <-chan interface{}, wg *sync.WaitGroup)
 
 	// error returns err if proof work is abnormal
 	error() error

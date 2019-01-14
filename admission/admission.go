@@ -103,10 +103,10 @@ func (ac *AdmissionControl) DoneCh() <-chan interface{} {
 
 // Abort cancels all the proof work associated to the workType.
 func (ac *AdmissionControl) Abort() {
-	ac.mutex.Lock()
-	defer ac.mutex.Unlock()
-
-	if ac.status != AcRunning {
+	ac.mutex.RLock()
+	status := ac.status
+	ac.mutex.RUnlock()
+	if status != AcRunning {
 		return
 	}
 
@@ -114,6 +114,8 @@ func (ac *AdmissionControl) Abort() {
 	close(ac.abort)
 	<-ac.done
 
+	ac.mutex.Lock()
+	defer ac.mutex.Unlock()
 	ac.abort = make(chan interface{})
 	ac.status = AcIdle
 }
@@ -152,23 +154,33 @@ func (ac *AdmissionControl) waitSendCampaignMsg(terms uint64) {
 	ac.wg.Wait()
 
 	defer func(ac *AdmissionControl) {
+		ac.mutex.Lock()
 		ac.status = AcIdle
+		ac.mutex.Unlock()
 	}(ac)
 
-	for _, work := range ac.getWorks() {
+	ac.mutex.RLock()
+	works := ac.getWorks()
+	ac.mutex.RUnlock()
+
+	for _, work := range works {
 		// if work err then return
 		if work.error() != nil {
+			ac.mutex.Lock()
 			ac.err = work.error()
+			ac.mutex.Unlock()
 			return
 		}
 	}
-	ac.sendCampaignResult(terms)
+	go ac.sendCampaignResult(terms)
 }
 
 // sendCampaignResult sends proof info to campaign contract
 func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	if ac.contractBackend == nil {
+		ac.mutex.Lock()
 		ac.err = errors.New("contractBackend is nil")
+		ac.mutex.Unlock()
 		return
 	}
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
@@ -179,7 +191,9 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
 	instance, err := contracts.NewCampaignWrapper(transactOpts, campaignContractAddress, ac.contractBackend)
 	if err != nil {
+		ac.mutex.Lock()
 		ac.err = err
+		ac.mutex.Unlock()
 		return
 	}
 
@@ -188,7 +202,9 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	_, err = instance.ClaimCampaign(new(big.Int).SetUint64(terms), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
 		memResult.Nonce, new(big.Int).SetInt64(memResult.BlockNumber))
 	if err != nil {
+		ac.mutex.Lock()
 		ac.err = err
+		ac.mutex.Unlock()
 		log.Warn("Error in claiming campaign", "error", err)
 		return
 	}
