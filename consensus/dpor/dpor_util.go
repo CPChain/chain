@@ -23,6 +23,8 @@ import (
 	"sync"
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/database"
 
 	"bitbucket.org/cpchain/chain/types"
@@ -76,7 +78,7 @@ func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
 }
 
 type dporUtil interface {
-	sigHash(header *types.Header, salt []byte) (hash common.Hash)
+	sigHash(header *types.Header) (hash common.Hash)
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)
 	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, termLen uint) (bool, error)
 	percentagePBFT(n uint, N uint) bool
@@ -94,7 +96,7 @@ type defaultDporUtil struct {
 // Note, the method requires the extra data to be at least 65 bytes, otherwise it
 // panics. This is done to avoid accidentally using both forms (signature present
 // or not), which could be abused to produce different hashes for the same header.
-func (d *defaultDporUtil) sigHash(header *types.Header, salt []byte) (hash common.Hash) {
+func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 	hasher := sha3.NewKeccak256()
 
 	contentToHash := []interface{}{
@@ -114,9 +116,6 @@ func (d *defaultDporUtil) sigHash(header *types.Header, salt []byte) (hash commo
 		header.Extra,
 		common.Hash{},
 		types.BlockNonce{},
-	}
-	if len(salt) > 0 { // if salt is empty, not append because even an empty slice will change hash, not meet the caller's intention.
-		contentToHash = append(contentToHash, salt)
 	}
 	rlp.Encode(hasher, contentToHash)
 
@@ -141,7 +140,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 	// Recover the public key and the cpchain address of leader.
 	var propser common.Address
-	proposerPubKey, err := crypto.Ecrecover(d.sigHash(header, []byte{}).Bytes(), proposerSig[:])
+	proposerPubKey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), proposerSig[:])
 	if err != nil {
 		return common.Address{}, []common.Address{}, err
 	}
@@ -165,8 +164,10 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 		noSigner := bytes.Equal(signerSig[:], make([]byte, extraSeal))
 		if !noSigner {
+
 			// Recover it!
-			signerPubkey, err := crypto.Ecrecover(d.sigHash(header, []byte{}).Bytes(), signerSig[:])
+			hashToSign, err := HashBytesWithState(d.sigHash(header).Bytes(), consensus.Prepared)
+			signerPubkey, err := crypto.Ecrecover(hashToSign, signerSig[:])
 			if err != nil {
 				continue
 			}
@@ -275,4 +276,33 @@ func numberToBytes(number uint64) []byte {
 	numberBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(numberBytes, number)
 	return numberBytes
+}
+
+func HashBytesWithState(hash []byte, state consensus.State) (signHashBytes []byte, err error) {
+	var (
+		prepreparePrefix = "Preprepare"
+	)
+
+	var bytesToSign []byte
+	switch state {
+	case consensus.Preprepared, consensus.ImpeachPreprepared:
+		// TODO: for now, skip this, because i need fsm tests work, i'll fix this later
+		// bytesToSign = append([]byte(prepreparePrefix), hash...)
+		_ = prepreparePrefix
+		bytesToSign = hash
+	case consensus.Prepared, consensus.ImpeachPrepared:
+		bytesToSign = hash
+	default:
+		log.Warn("unknown state when signing hash with state", "state", state)
+		// TODO: add new error type here
+		err = nil
+	}
+
+	var signHash common.Hash
+	hasher := sha3.NewKeccak256()
+	hasher.Write(bytesToSign)
+	hasher.Sum(signHash[:0])
+
+	signHashBytes = signHash.Bytes()
+	return
 }

@@ -211,31 +211,32 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 // addresses if one of the sigs are illegal
 // TODO: refactor this, return a map[common.Address]dpor.Signature
 func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error) {
-	var hashBytes []byte
+
+	// get hash with state
+	hashToSign, err := HashBytesWithState(d.dh.sigHash(header).Bytes(), state)
+	if err != nil {
+		log.Warn("failed to get hash bytes with state", "number", header.Number.Uint64(), "hash", header.Hash().Hex(), "state", state)
+		return nil, nil, err
+	}
 
 	sigs := header.Dpor.Sigs
-	addrs := make([]common.Address, 0, len(sigs))
-	validSigs := make([]types.DporSignature, 0, len(sigs))
+	validators := make([]common.Address, 0, len(sigs))
+	validatorSignatures := make([]types.DporSignature, 0, len(sigs))
 	for _, sig := range sigs {
 		if !sig.IsEmpty() {
-			if state == consensus.Preprepared {
-				// hashBytes = d.dh.sigHash(header, []byte{'P'}).Bytes()
-				hashBytes = d.dh.sigHash(header, []byte{}).Bytes()
-			} else {
-				hashBytes = d.dh.sigHash(header, []byte{}).Bytes()
-			}
-			proposerPubKey, err := crypto.Ecrecover(hashBytes, sig[:])
+
+			validatorPubKey, err := crypto.Ecrecover(hashToSign, sig[:])
 			if err != nil {
 				return []common.Address{}, []types.DporSignature{}, err
 			}
 
 			addr := common.Address{}
-			copy(addr[:], crypto.Keccak256(proposerPubKey[1:])[12:])
-			addrs = append(addrs, addr)
-			validSigs = append(validSigs, sig)
+			copy(addr[:], crypto.Keccak256(validatorPubKey[1:])[12:])
+			validators = append(validators, addr)
+			validatorSignatures = append(validatorSignatures, sig)
 		}
 	}
-	return addrs, validSigs, nil
+	return validators, validatorSignatures, nil
 }
 
 // Update the signature to prepare signature cache(two kinds of sigs, one for prepared, another for final)

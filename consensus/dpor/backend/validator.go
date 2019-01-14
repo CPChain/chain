@@ -47,6 +47,16 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 
 		log.Debug("received commit header msg", "number", header.Number.Uint64())
 
+	case ValidateBlockMsg:
+		block, err := RecoverBlockFromMsg(msg, p.Peer)
+		if err != nil {
+			return err
+		}
+
+		input, inputType, msgCode = block, BlockType, ValidateMsgCode
+
+		log.Debug("received validate block msg", "number", block.NumberU64())
+
 	// case PreprepareImpeachBlockMsg:
 	// 	block, err := RecoverBlockFromMsg(msg, p.Peer)
 	// 	if err != nil {
@@ -81,6 +91,16 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 		input, inputType, msgCode = header, HeaderType, ImpeachCommitMsgCode
 
 		log.Debug("received commit impeach header msg", "number", header.Number.Uint64())
+
+	case ValidateImpeachBlockMsg:
+		block, err := RecoverBlockFromMsg(msg, p.Peer)
+		if err != nil {
+			return err
+		}
+
+		input, inputType, msgCode = block, BlockType, ImpeachValidateMsgCode
+
+		log.Debug("received impeach validate block msg", "number", block.NumberU64())
 
 	default:
 		return nil
@@ -129,18 +149,20 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 
 			switch msgCode {
 			case ValidateMsgCode:
-				go vh.dpor.BroadcastBlock(block, true)
+				go vh.BroadcastValidateBlock(block)
 
 				log.Debug("broadcast validate block", "number", block.NumberU64())
 
 			case ImpeachValidateMsgCode:
-				go vh.dpor.BroadcastBlock(block, true)
+				go vh.BroadcastValidateImpeachBlock(block)
 
 				log.Debug("broadcast validate impeach block", "number", block.NumberU64())
 
 			default:
 				log.Warn("unknown msg code when broadcasting block", "msg code", msgCode)
 			}
+
+			go vh.dpor.BroadcastBlock(block, true)
 
 		case NoType:
 
@@ -171,6 +193,21 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 			if err != nil {
 				return err
 			}
+
+			switch msgCode {
+			case ValidateMsgCode:
+				go vh.BroadcastValidateBlock(block)
+
+				log.Debug("broadcast validate block", "number", block.NumberU64())
+
+			case ImpeachValidateMsgCode:
+				go vh.BroadcastValidateImpeachBlock(block)
+
+				log.Debug("broadcast validate impeach block", "number", block.NumberU64())
+
+			default:
+				log.Warn("unknown msg code when broadcasting block", "msg code", msgCode)
+			}
 			go vh.dpor.BroadcastBlock(block, true)
 
 			log.Debug("inserted and broadcast validate block", "number", block.NumberU64())
@@ -200,6 +237,7 @@ func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 	case NoAction:
+		log.Warn("no action returned")
 
 	default:
 		log.Warn("unknown action type", "action type", act)
@@ -249,14 +287,14 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 			log.Debug("validated preprepare block", "number", number, "hash", hash.Hex())
 
 			// sign the block
-			switch e := vh.dpor.SignHeader(header, consensus.Preprepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Prepared); e {
 			case nil:
 				// succeed to sign
 
 				log.Debug("signed preprepare block, broadcasting", "number", number, "hash", hash.Hex())
 
-				// broadcast prepare msg
-				go vh.BroadcastPrepareHeader(header)
+				// broadcast commit msg
+				go vh.BroadcastCommitHeader(header)
 				return nil
 
 			default:
@@ -289,7 +327,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 			return err
 		}
 
-	case msg.Code == PrepareHeaderMsg:
+	case msg.Code == CommitHeaderMsg:
 
 		// recover header from the msg
 		header, err := RecoverHeaderFromMsg(msg, p)
@@ -302,7 +340,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 			hash   = header.Hash()
 		)
 
-		log.Debug("received signed prepare header", "number", number, "hash", hash.Hex(), "signatures", header.Dpor.SigsFormatText())
+		log.Debug("received signed commit header", "number", number, "hash", hash.Hex(), "signatures", header.Dpor.SigsFormatText())
 
 		if vh.dpor.HasBlockInChain(hash, number) {
 			return nil
@@ -313,15 +351,15 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
 
 		case nil:
-			// there are with enough prepare signatures in the header
+			// there are with enough commit signatures in the header
 
-			log.Debug("verified signed prepare header", "number", number, "hash", hash.Hex())
+			log.Debug("verified signed commit header", "number", number, "hash", hash.Hex())
 
 			// if the block body of the header is not found and it's not in local chain
 			// broadcast the header again
 			block, err := vh.knownBlocks.GetBlock(header.Number.Uint64())
 			if block == nil {
-				go vh.BroadcastPrepareHeader(header)
+				go vh.BroadcastCommitHeader(header)
 				return nil
 			}
 
@@ -373,15 +411,15 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 			// it is a normal header without enough signatures on it,
 			// sign it, broadcast it
 
-			log.Debug("without enough signatures in signed prepare header", "number", number, "hash", hash.Hex())
+			log.Debug("without enough signatures in signed commit header", "number", number, "hash", hash.Hex())
 
 			// sign the header
 			switch e := vh.dpor.SignHeader(header, consensus.Prepared); e {
 			case nil:
 				// signed the header, everything is ok!
 
-				log.Debug("signed prepare header, broadcasting...", "number", number, "hash", hash.Hex())
-				go vh.BroadcastPrepareHeader(header)
+				log.Debug("signed commit header, broadcasting...", "number", number, "hash", hash.Hex())
+				go vh.BroadcastCommitHeader(header)
 
 				// switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
 				// case nil:

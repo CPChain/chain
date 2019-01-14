@@ -281,17 +281,8 @@ func (d *Dialer) ProposersOfTerm(term uint64) map[common.Address]*RemoteProposer
 
 	for _, addr := range addrs {
 		address := addr.(string)
-
-		if d.dpor != nil {
-			ok, err := d.dpor.VerifyProposerOf(common.HexToAddress(address), term)
-
-			// TODO: @chengx
-			log.Debug("verify proposer of term", "term", term, "addr", addr, "ok", ok, "err", err)
-		}
-		// if ok && err == nil {
 		proposer, _ := d.recentProposers.Get(addr)
 		proposers[common.HexToAddress(address)] = proposer.(*RemoteProposer)
-		// }
 	}
 
 	return proposers
@@ -314,8 +305,6 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 		if d.dpor != nil {
 			ok, err := d.dpor.VerifyValidatorOf(common.HexToAddress(address), term)
 
-			log.Debug("verify validator of term", "term", term, "addr", addr, "ok", ok, "err", err)
-
 			v, _ := d.recentValidators.Get(addr)
 			validator := v.(*RemoteValidator)
 
@@ -332,7 +321,6 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 func isDefaultValidator(enode string, defaultValidators []string) bool {
 	for _, dv := range defaultValidators {
 		if enodeIDWithoutPort(dv) == enodeIDWithoutPort(enode) {
-			log.Debug("this is a default validator", "enode", enode, "default validator", dv)
 			return true
 		}
 	}

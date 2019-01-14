@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -294,9 +293,6 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		return nil
 	}
 
-	log.Debug("received new peer", "peer", p.ID().String())
-	log.Debug("is miner", "bool", isMiner)
-
 	// wrap up the peer
 	peer := pm.newPeer(int(version), p, rw)
 
@@ -306,7 +302,6 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		pm.wg.Add(1)
 		defer pm.wg.Done()
 
-		log.Debug(strings.Repeat("^", 80))
 		log.Debug("received a new peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
 
 		// Add peer to manager.peers, this is for basic msg syncing
@@ -334,7 +329,6 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			pm.removePeer(peer.id)
 		}()
 
-		log.Debug(strings.Repeat("$", 80))
 		log.Debug("done of handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
 
 		// send local pending transactions to the peer.
@@ -348,10 +342,8 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 				log.Warn("err when reading msg", "err", err)
 				return err
 			}
-
 			defer msg.Discard()
 
-			log.Debug(strings.Repeat("^", 80))
 			log.Debug("received msg from remote peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code)
 
 			if msg.Size > ProtocolMaxMsgSize {
@@ -362,14 +354,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			switch {
 			case backend.IsSyncMsg(msg):
 
-				log.Debug(strings.Repeat("^", 80))
-				log.Debug("processing sync msg", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code)
-
 				err = pm.handleSyncMsg(msg, peer)
-
-				log.Debug(strings.Repeat("$", 80))
-				log.Debug("done of sync msg processing", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code, "err", err)
-
 				if err != nil {
 					log.Warn("err when handling sync msg", "err", err)
 					return err
@@ -377,14 +362,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner && (isProposer || isValidator):
 
-				log.Debug(strings.Repeat("^", 80))
-				log.Debug("processing dpor msg", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code)
-
 				err = dporProtocol.HandleMsg(id, msg)
-
-				log.Debug(strings.Repeat("$", 80))
-				log.Debug("done of dpor msg processing", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code, "err", err)
-
 				switch err {
 				case nil:
 				case consensus.ErrUnknownAncestor:
@@ -397,10 +375,6 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			default:
 				log.Warn("unknown msg code", "msg", msg.Code)
 			}
-
-			log.Debug(strings.Repeat("$", 80))
-			log.Debug("done of msg processing", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code)
-
 		}
 
 	case <-pm.quitSync:
@@ -410,8 +384,6 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 }
 
 func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
-	log.Debug("handle sync message", "msgCode", msg.Code)
-
 	// Handle the message depending on its contents
 	switch {
 	case msg.Code == StatusMsg:

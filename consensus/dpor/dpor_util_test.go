@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"bitbucket.org/cpchain/chain/consensus"
+
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -80,7 +82,7 @@ func Test_sigHash(t *testing.T) {
 	dporUtil := &defaultDporUtil{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotHash := dporUtil.sigHash(tt.args.header, []byte{}); !reflect.DeepEqual(gotHash, tt.wantHash) {
+			if gotHash := dporUtil.sigHash(tt.args.header); !reflect.DeepEqual(gotHash, tt.wantHash) {
 				t.Errorf("sigHash(%v) = %v, want %v", tt.args.header, gotHash.Hex(), tt.wantHash.Hex())
 			}
 		})
@@ -119,9 +121,17 @@ func getAccount(keyStoreFilePath string, passphrase string) (*ecdsa.PrivateKey, 
 	return privateKey, publicKeyECDSA, fromAddress
 }
 
+func getTestAccount() (common.Address, *ecdsa.PrivateKey) {
+	privateKey, _ := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
+	publicKey := privateKey.Public()
+	publicKeyECDSA, _ := publicKey.(*ecdsa.PublicKey)
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	return fromAddress, privateKey
+}
+
 func Test_ecrecover(t *testing.T) {
-	addr := common.HexToAddress("0x175090470028dB72b52aA818698b73007b4F2F93")
-	//addr := common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")
+
+	addr, privKey := getTestAccount()
 
 	tx1 := types.NewTransaction(0, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d87"), big.NewInt(10), 50000, big.NewInt(10), nil)
 	tx1, _ = tx1.WithSignature(types.HomesteadSigner{}, common.Hex2Bytes("9bea4c4daac7c7c52e093e6a4c35dbbcf8856f1af7b059ba20253e70848d094f8a8fae537ce25ed8cb5af9adac3f141af69bd515bd2ba031522df09b97dd72b100"))
@@ -140,25 +150,31 @@ func Test_ecrecover(t *testing.T) {
 		Time:         big.NewInt(1426516743),
 		Extra:        hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
 		Dpor: types.DporSnap{
-			Seal: types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
 			Proposers: []common.Address{
-				common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+				addr,
 			},
-			Sigs: []types.DporSignature{
-				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-			},
+			Sigs:       make([]types.DporSignature, 3),
 			Validators: []common.Address{},
 		},
 	}
+
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	hashBytes := dph.sigHash(newHeader).Bytes()
+	hashBytesWithState, _ := HashBytesWithState(hashBytes, consensus.Prepared)
+	proposerSig, _ := crypto.Sign(hashBytes, privKey)
+	validatorSig, _ := crypto.Sign(hashBytesWithState, privKey)
+
+	copy(newHeader.Dpor.Seal[:], proposerSig[:])
+	copy(newHeader.Dpor.Sigs[0][:], validatorSig[:])
+	copy(newHeader.Dpor.Sigs[1][:], validatorSig[:])
+	copy(newHeader.Dpor.Sigs[2][:], validatorSig[:])
 
 	sigs := &Signatures{
 		sigs: make(map[common.Address][]byte),
 	}
 	sigs.SetSig(
 		addr,
-		hexutil.MustDecode("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
+		proposerSig,
 	)
 
 	existingCache, _ := lru.NewARC(10)
@@ -178,15 +194,15 @@ func Test_ecrecover(t *testing.T) {
 		Dpor: types.DporSnap{
 			Seal: types.DporSignature{},
 			Proposers: []common.Address{
-				common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+				addr,
 			},
-			Sigs: []types.DporSignature{
-				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-				types.HexToDporSig("0xc9efd3956760d72613081c50294ad582d0e36bea45878f3570cc9e8525b997472120d0ef25f88c3b64122b967bd5063633b744bc4e3ae3afc316bb4e5c7edc1d00"),
-			},
+			Sigs: make([]types.DporSignature, 3),
 		},
 	}
+
+	copy(noSignerSigHeader.Dpor.Sigs[0][:], validatorSig[:])
+	copy(noSignerSigHeader.Dpor.Sigs[1][:], validatorSig[:])
+	copy(noSignerSigHeader.Dpor.Sigs[2][:], validatorSig[:])
 
 	type args struct {
 		header   *types.Header

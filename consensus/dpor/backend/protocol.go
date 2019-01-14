@@ -45,6 +45,10 @@ const (
 
 	// CommitImpeachHeaderMsg is Commit phrase msg code for empty header
 	CommitImpeachHeaderMsg = 0x48
+
+	ValidateBlockMsg = 0x49
+
+	ValidateImpeachBlockMsg = 0x50
 )
 
 // ProtocolMaxMsgSize Maximum cap on the size of a protocol message

@@ -461,6 +461,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 	var s interface{}
 	var ok bool
+	// TODO: fix this, clean it!
 	// Retrieve signatures of the block in cache
 	if state == consensus.Prepared || state == consensus.ImpeachPrepared {
 		s, ok = dpor.finalSigs.Get(hash) // check if it needs a lock
@@ -505,14 +506,14 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			return errMultiBlocksInOneHeight
 		}
 
-		var hashToSign []byte
-		// Sign it
-		if state == consensus.Preprepared {
-			// hashToSign = dpor.dh.sigHash(header, []byte{'P'}).Bytes() // Preparing block signed by 'P'+hash
-			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
-		} else {
-			hashToSign = dpor.dh.sigHash(header, []byte{}).Bytes()
+		// get hash with state
+		hashToSign, err := HashBytesWithState(dpor.dh.sigHash(header).Bytes(), state)
+		if err != nil {
+			log.Warn("failed to get hash bytes with state", "number", number, "hash", hash.Hex(), "state", state)
+			return err
 		}
+
+		// Sign it
 		sighash, err := dpor.SignHash(hashToSign)
 		if err != nil {
 			log.Warn("signing block header failed", "error", err)

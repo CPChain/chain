@@ -293,7 +293,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	}
 
 	// Proposer seals the block with signature
-	sighash, err := signFn(d.dh.sigHash(header, []byte{}).Bytes())
+	sighash, err := signFn(d.dh.sigHash(header).Bytes())
 	if err != nil {
 		return nil, err
 	}
