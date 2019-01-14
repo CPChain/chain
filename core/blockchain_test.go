@@ -322,7 +322,7 @@ func TestBrokenBlockChain(t *testing.T) {
 // Tests that reorganising a long difficult chain after a short easy one
 // overwrites the canonical numbers and links in the database.
 func TestReorgLongBlocks(t *testing.T) {
-	testReorg(t, []int64{0, 0, -9}, []int64{0, 0, 0, -9}, 4)
+	testReorg(t, []int64{0, 0, -9}, []int64{0, 0, 0, -9}, 1)
 }
 
 // Tests that reorganising a short difficult chain after a long easy one

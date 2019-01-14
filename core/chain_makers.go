@@ -213,10 +213,10 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 			panic(err)
 		}
 		block, receipt := genblock(i, parent, pubStatedb, privStateDB)
-		_, err = blockchain.InsertChain(types.Blocks{block})
-		if err != nil {
-			// panic(err)
-		}
+		// _, err = blockchain.InsertChain(types.Blocks{block})
+		// if err != nil {
+		// 	// panic(err)
+		// }
 
 		blocks[i] = block
 		receipts[i] = receipt
