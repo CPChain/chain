@@ -81,5 +81,15 @@ var (
 )
 
 var (
-	Cep1BlockReward = new(big.Int).Mul(big.NewInt(500), big.NewInt(1e+18)) // 500e+18 Block reward 500 cpc for successfully mining a block
+	//Cep1BlockReward = new(big.Int).Mul(big.NewInt(500), big.NewInt(1e+18))  // 500e+18 Block reward 500 cpc for successfully mining a block
+	Cep1BlockRewardY1 = new(big.Int).Mul(big.NewInt(1265), big.NewInt(1e+16)) // reward 12.65 cpc per block
+	Cep1BlockRewardY2 = new(big.Int).Mul(big.NewInt(951), big.NewInt(1e+16))  // reward 9.51 cpc per block
+	Cep1BlockRewardY3 = new(big.Int).Mul(big.NewInt(713), big.NewInt(1e+16))  // reward 7.13 cpc per block
+	Cep1BlockRewardY4 = new(big.Int).Mul(big.NewInt(539), big.NewInt(1e+16))  // reward 5.39 cpc per block
+	Cep1BlockRewardY5 = new(big.Int).Mul(big.NewInt(403), big.NewInt(1e+16))  // reward 4.03 cpc per block
+	Cep1LastBlockY1   = big.NewInt(3162240)
+	Cep1LastBlockY2   = new(big.Int).Add(big.NewInt(3153600), Cep1LastBlockY1)
+	Cep1LastBlockY3   = new(big.Int).Add(big.NewInt(3153600), Cep1LastBlockY2)
+	Cep1LastBlockY4   = new(big.Int).Add(big.NewInt(3153600), Cep1LastBlockY3)
+	Cep1LastBlockY5   = new(big.Int).Add(big.NewInt(3162240), Cep1LastBlockY4)
 )
