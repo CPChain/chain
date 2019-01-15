@@ -31,7 +31,11 @@ func DeployAdmission(password string, nonce uint64) common.Address {
 	// Launch contract deploy transaction.
 	// auth := newAuth(client, privateKey, fromAddress)
 	auth := newTransactor(privateKey, nonce)
-	contractAddress, tx, _, err := admission.DeployAdmission(auth, client, new(big.Int).SetUint64(config.DefaultCPUDifficulty), new(big.Int).SetUint64(config.DefaultMemoryDifficulty))
+	contractAddress, tx, _, err := admission.DeployAdmission(auth, client,
+		new(big.Int).SetUint64(config.DefaultCPUDifficulty),
+		new(big.Int).SetUint64(config.DefaultMemoryDifficulty),
+		new(big.Int).SetUint64(config.DefaultCpuWorkTimeout),
+		new(big.Int).SetUint64(config.DefaultMemoryWorkTimeout))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

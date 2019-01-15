@@ -21,6 +21,8 @@ import (
 	"math/big"
 	"testing"
 
+	"fmt"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/admission"
@@ -30,14 +32,16 @@ import (
 )
 
 var (
-	key0, _              = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	key1, _              = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-	key2, _              = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
-	addr0                = crypto.PubkeyToAddress(key0.PublicKey)
-	addr1                = crypto.PubkeyToAddress(key1.PublicKey)
-	addr2                = crypto.PubkeyToAddress(key2.PublicKey)
-	cpuDifficulty uint64 = 5
-	memDifficulty uint64 = 5
+	key0, _                  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	key1, _                  = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+	key2, _                  = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
+	addr0                    = crypto.PubkeyToAddress(key0.PublicKey)
+	addr1                    = crypto.PubkeyToAddress(key1.PublicKey)
+	addr2                    = crypto.PubkeyToAddress(key2.PublicKey)
+	cpuDifficulty     uint64 = 5
+	memDifficulty     uint64 = 5
+	cpuWorkTimeout    uint64 = 5
+	memoryWorkTimeout uint64 = 5
 )
 
 func newTestBackend() *backends.SimulatedBackend {
@@ -48,9 +52,9 @@ func newTestBackend() *backends.SimulatedBackend {
 	})
 }
 
-func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty uint64, backend *backends.SimulatedBackend) (common.Address, error) {
+func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout uint64, backend *backends.SimulatedBackend) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, _, _, err := DeployAdmission(deployTransactor, backend, new(big.Int).SetUint64(cpuDifficulty), new(big.Int).SetUint64(memoryDifficulty))
+	addr, _, _, err := DeployAdmission(deployTransactor, backend, new(big.Int).SetUint64(cpuDifficulty), new(big.Int).SetUint64(memoryDifficulty), new(big.Int).SetUint64(cpuWorkTimeout), new(big.Int).SetUint64(memoryWorkTimeout))
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -60,7 +64,7 @@ func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty uint64, ba
 
 func TestVerifyCPU(t *testing.T) {
 	backend := newTestBackend()
-	acAddr, err := deploy(key0, cpuDifficulty, memDifficulty, backend)
+	acAddr, err := deploy(key0, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
@@ -85,7 +89,7 @@ func TestVerifyCPU(t *testing.T) {
 
 func TestVerifyMemory(t *testing.T) {
 	backend := newTestBackend()
-	addr0, err := deploy(key0, 15, 15, backend)
+	addr0, err := deploy(key0, 15, 15, 10, 10, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
@@ -111,8 +115,10 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 	defaultDifficulty := uint64(5)
 	newCPUDifficulty := uint64(15)
 
+	defaultTimeout := uint64(10)
+
 	backend := newTestBackend()
-	addr0, err := deploy(key0, defaultDifficulty, defaultDifficulty, backend)
+	addr0, err := deploy(key0, defaultDifficulty, defaultDifficulty, defaultTimeout, defaultTimeout, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
@@ -139,6 +145,12 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 	if v.Uint64() != newCPUDifficulty {
 		t.Fatalf("expected %d, got %v", newCPUDifficulty, v.Uint64())
 	}
+
+	cd, md, ct, mt, err := instance.GetDifficultyParameter(nil)
+	if err != nil {
+		t.Fatal("GetDifficultyParameter is error ")
+	}
+	fmt.Println("cd is :", cd, "md is :", md, "ct is ", ct, "mt is:", mt)
 }
 
 func computeCorrectPow(contractBackend *backends.SimulatedBackend, addr common.Address) (cpuBlockNum int64, cpuNonce uint64,
