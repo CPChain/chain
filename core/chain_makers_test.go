@@ -40,6 +40,12 @@ func ExampleGenerateChain() {
 		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	)
 
+	configs.Cep1LastBlockY1 = big.NewInt(1)
+	configs.Cep1LastBlockY2 = big.NewInt(2)
+	configs.Cep1LastBlockY3 = big.NewInt(3)
+	configs.Cep1LastBlockY4 = big.NewInt(4)
+	configs.Cep1LastBlockY5 = big.NewInt(5)
+
 	// Ensure that key1 has some funds in the genesis block.
 	gspec := DefaultGenesisBlock()
 	gspec.Alloc = GenesisAlloc{addr1: {Balance: big.NewInt(1000000)}}
@@ -55,10 +61,12 @@ func ExampleGenerateChain() {
 	chain, _ := GenerateChain(gspec.Config, genesis, engine, db, remoteDB, n, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
+			gen.SetCoinbase(addr1)
 			// In block 1, addr1 sends addr2 some ether.
 			tx, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(10000), configs.TxGas, nil, nil), signer, key1)
 			gen.AddTx(tx)
 		case 1:
+			gen.SetCoinbase(addr2)
 			// In block 2, addr1 sends some more ether to addr2.
 			// addr2 passes it on to addr3.
 			tx1, _ := types.SignTx(types.NewTransaction(gen.TxNonce(addr1), addr2, big.NewInt(1000), configs.TxGas, nil, nil), signer, key1)
@@ -82,10 +90,11 @@ func ExampleGenerateChain() {
 
 	state, _ := blockchain.State()
 	fmt.Printf("last block: #%d\n", blockchain.CurrentBlock().Number())
-	fmt.Println("balance of addr1:", state.GetBalance(addr1))
-	fmt.Println("balance of addr2:", state.GetBalance(addr2))
+	fmt.Println("balance of addr1:", new(big.Int).Sub(state.GetBalance(addr1), configs.Cep1BlockRewardY1))
+	fmt.Println("balance of addr2:", new(big.Int).Sub(state.GetBalance(addr2), configs.Cep1BlockRewardY2))
 
-	sub := new(big.Int).Mul(configs.Cep1BlockReward, big.NewInt(int64(n-2)))
+	sub := new(big.Int).Add(configs.Cep1BlockRewardY3, configs.Cep1BlockRewardY4)
+	sub = new(big.Int).Add(sub, configs.Cep1BlockRewardY5)
 	balanceAddr3 := new(big.Int).Sub(state.GetBalance(addr3), sub)
 	fmt.Println("balance of addr3 (adjusted):", balanceAddr3)
 	// Output:
