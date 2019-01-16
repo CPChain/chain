@@ -116,6 +116,8 @@ func TestApis(t *testing.T) {
 
 // TestCampaign tests campaign, check status, abort and check status
 func TestCampaign(t *testing.T) {
+	// todo: He to let it can be test
+	t.Skip("please start chain to test it,not use simulated backend")
 	ac := newAcApiBackend(0, 0, 0, 0)
 	status, err := ac.GetStatus()
 	var wantErr error

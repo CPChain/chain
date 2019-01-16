@@ -71,6 +71,13 @@ func main() {
 
 	fmt.Println("======== wait wg3 =========")
 	wg3.Wait()
+
+	var wg4 sync.WaitGroup
+	wg4.Add(1)
+	// 7
+	go deployPdashProxy(password, proxyContractRegisterAddress, &wg4 /*,19,20,21*/)
+	fmt.Println("======== wait wg4 =========")
+	wg4.Wait()
 	fmt.Println("======== init contract deploy completed=========")
 }
 
@@ -115,5 +122,13 @@ func deployPdash(password string, proxyContractRegisterAddress common.Address, w
 	pdashAddress := deploy.DeployPdash(password, 16)
 	deploy.PrintContract(pdashAddress)
 	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress, password, 17, 18)
+	wg.Done()
+}
+
+func deployPdashProxy(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
+	deploy.FormatPrint("7.DeployPdashProxy")
+	pdashAddress := deploy.DeployPdashProxy(password, 19, proxyContractRegisterAddress)
+	deploy.PrintContract(pdashAddress)
+	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress, password, 20, 21)
 	wg.Done()
 }

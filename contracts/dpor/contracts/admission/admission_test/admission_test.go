@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the cpchain library. If not, see <http://www.gnu.org/licenses/>.
 
-package admission
+package admission_test
 
 import (
 	"crypto/ecdsa"
 	"math/big"
 	"testing"
 
-	"fmt"
-
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/admission"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -54,7 +53,7 @@ func newTestBackend() *backends.SimulatedBackend {
 
 func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout uint64, backend *backends.SimulatedBackend) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	addr, _, _, err := DeployAdmission(deployTransactor, backend, new(big.Int).SetUint64(cpuDifficulty), new(big.Int).SetUint64(memoryDifficulty), new(big.Int).SetUint64(cpuWorkTimeout), new(big.Int).SetUint64(memoryWorkTimeout))
+	addr, _, _, err := contract.DeployAdmission(deployTransactor, backend, new(big.Int).SetUint64(cpuDifficulty), new(big.Int).SetUint64(memoryDifficulty), new(big.Int).SetUint64(cpuWorkTimeout), new(big.Int).SetUint64(memoryWorkTimeout))
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -63,13 +62,15 @@ func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTi
 }
 
 func TestVerifyCPU(t *testing.T) {
+	// todo: He to let it can be test
+	t.Skip("please start chain to test it,not use simulated backend")
 	backend := newTestBackend()
 	acAddr, err := deploy(key0, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 
-	instance, err := NewAdmission(acAddr, backend)
+	instance, err := contract.NewAdmission(acAddr, backend)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -88,13 +89,15 @@ func TestVerifyCPU(t *testing.T) {
 }
 
 func TestVerifyMemory(t *testing.T) {
+	// todo: He to let it can be test
+	t.Skip("please start chain to test it,not use simulated backend")
 	backend := newTestBackend()
 	addr0, err := deploy(key0, 15, 15, 10, 10, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 
-	instance, err := NewAdmission(addr0, backend)
+	instance, err := contract.NewAdmission(addr0, backend)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -123,7 +126,7 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
 
-	instance, err := NewAdmission(addr0, backend)
+	instance, err := contract.NewAdmission(addr0, backend)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -150,7 +153,9 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 	if err != nil {
 		t.Fatal("GetDifficultyParameter is error ")
 	}
-	fmt.Println("cd is :", cd, "md is :", md, "ct is ", ct, "mt is:", mt)
+	if cd.Uint64() != uint64(15) && md.Uint64() != uint64(5) && ct.Uint64() != uint64(10) && mt.Uint64() != uint64(10) {
+		t.Fatal("error DifficultyParameter ", "we except", 15, 5, 10, 10, "the result", cd, md, ct, mt)
+	}
 }
 
 func computeCorrectPow(contractBackend *backends.SimulatedBackend, addr common.Address) (cpuBlockNum int64, cpuNonce uint64,

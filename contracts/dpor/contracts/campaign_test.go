@@ -92,6 +92,8 @@ func checkError(t *testing.T, msg string, err error) {
 }
 
 func TestClaimAndQuitCampaign(t *testing.T) {
+	// todo: He to let it can be test
+	t.Skip("please start chain to test it not use simulated backend")
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
 	printBalance(contractBackend)
 
@@ -187,6 +189,8 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 }
 
 func TestClaimWhenDepositLessThanBase(t *testing.T) {
+	// todo: He to let it can be test
+	t.Skip("please start chain to test it not use simulated backend")
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
 	printBalance(contractBackend)
 
@@ -244,6 +248,8 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 }
 
 func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
+	// todo: He to let it can be test
+	t.Skip("please start chain to test it not use simulated backend")
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
 	printBalance(contractBackend)
 

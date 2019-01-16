@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -13,6 +14,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -226,11 +228,33 @@ func (ac *AdmissionControl) buildWorks() {
 }
 
 func (ac *AdmissionControl) buildCpuProofWork() ProofWork {
-	return newWork(ac.config.CpuDifficulty, ac.config.CpuLifeTime, ac.address, ac.chain.CurrentHeader(), sha256Func)
+	client := ac.contractBackend
+	instance, err := admission.NewAdmissionCaller(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
+	if err != nil {
+		log.Fatal("NewAdmissionCaller is error")
+	}
+	cd, _, clt, _, err := instance.GetDifficultyParameter(nil)
+	if err != nil {
+		log.Fatal("GetDifficultyParameter is error")
+	}
+	cpuDifficulty := cd.Uint64()
+	cpuLifeTime := time.Duration(time.Duration(clt.Int64()) * time.Second)
+	return newWork(cpuDifficulty, cpuLifeTime, ac.address, ac.chain.CurrentHeader(), sha256Func)
 }
 
 func (ac *AdmissionControl) buildMemoryProofWork() ProofWork {
-	return newWork(ac.config.MemoryDifficulty, ac.config.MemoryCpuLifeTime, ac.address, ac.chain.CurrentHeader(), scryptFunc)
+	client := ac.contractBackend
+	instance, err := admission.NewAdmissionCaller(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
+	if err != nil {
+		log.Fatal("NewAdmissionCaller is error")
+	}
+	_, md, _, mct, err := instance.GetDifficultyParameter(nil)
+	if err != nil {
+		log.Fatal("GetDifficultyParameter is error")
+	}
+	memoryDifficulty := md.Uint64()
+	memoryCpuLifeTime := time.Duration(time.Duration(mct.Int64()) * time.Second)
+	return newWork(memoryDifficulty, memoryCpuLifeTime, ac.address, ac.chain.CurrentHeader(), scryptFunc)
 }
 
 // registerProofWork returns all proof work
