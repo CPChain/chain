@@ -299,9 +299,13 @@ func HashBytesWithState(hash []byte, state consensus.State) (signHashBytes []byt
 	}
 
 	var signHash common.Hash
-	hasher := sha3.NewKeccak256()
-	hasher.Write(bytesToSign)
-	hasher.Sum(signHash[:0])
+	if len(bytesToSign) > len(hash) {
+		hasher := sha3.NewKeccak256()
+		hasher.Write(bytesToSign)
+		hasher.Sum(signHash[:0])
+	} else {
+		signHash = common.BytesToHash(hash)
+	}
 
 	signHashBytes = signHash.Bytes()
 	return
