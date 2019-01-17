@@ -85,7 +85,6 @@ type Header struct {
 	TxsRoot      common.Hash    `json:"transactionsRoot" gencodec:"required"`
 	ReceiptsRoot common.Hash    `json:"receiptsRoot"     gencodec:"required"`
 	LogsBloom    Bloom          `json:"logsBloom"        gencodec:"required"`
-	Difficulty   *big.Int       `json:"difficulty"       gencodec:"required"`
 	Number       *big.Int       `json:"number"           gencodec:"required"`
 	GasLimit     uint64         `json:"gasLimit"         gencodec:"required"`
 	GasUsed      uint64         `json:"gasUsed"          gencodec:"required"`
@@ -175,7 +174,6 @@ func sigHash(header *Header) (hash common.Hash) {
 		header.TxsRoot,
 		header.ReceiptsRoot,
 		header.LogsBloom,
-		header.Difficulty,
 		header.Number,
 		header.GasLimit,
 		header.GasUsed,
@@ -203,7 +201,6 @@ func (h *Header) HashNoNonce() common.Hash {
 		h.TxsRoot,
 		h.ReceiptsRoot,
 		h.LogsBloom,
-		h.Difficulty,
 		h.Number,
 		h.GasLimit,
 		h.GasUsed,
@@ -222,8 +219,7 @@ func (h *Header) Size() common.StorageSize {
 		common.StorageSize(len(h.Dpor.Validators))*common.StorageSize(unsafe.Sizeof(common.Address{})) +
 		common.StorageSize(unsafe.Sizeof(h.Dpor.Seal))
 
-	return common.StorageSize(unsafe.Sizeof(*h)) + common.StorageSize(len(h.Extra)+(h.Difficulty.BitLen()+
-		h.Number.BitLen()+h.Time.BitLen())/8) + dporSize
+	return common.StorageSize(unsafe.Sizeof(*h)) + common.StorageSize(len(h.Extra)+(h.Number.BitLen()+h.Time.BitLen())/8) + dporSize
 }
 
 func rlpHash(x interface{}) (h common.Hash) {
@@ -327,9 +323,6 @@ func CopyHeader(h *Header) *Header {
 	if cpy.Time = new(big.Int); h.Time != nil {
 		cpy.Time.Set(h.Time)
 	}
-	if cpy.Difficulty = new(big.Int); h.Difficulty != nil {
-		cpy.Difficulty.Set(h.Difficulty)
-	}
 	if cpy.Number = new(big.Int); h.Number != nil {
 		cpy.Number.Set(h.Number)
 	}
@@ -417,11 +410,10 @@ func (b *Block) Transaction(hash common.Hash) *Transaction {
 	return nil
 }
 
-func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.header.Number) }
-func (b *Block) GasLimit() uint64     { return b.header.GasLimit }
-func (b *Block) GasUsed() uint64      { return b.header.GasUsed }
-func (b *Block) Difficulty() *big.Int { return new(big.Int).Set(b.header.Difficulty) }
-func (b *Block) Time() *big.Int       { return new(big.Int).Set(b.header.Time) }
+func (b *Block) Number() *big.Int { return new(big.Int).Set(b.header.Number) }
+func (b *Block) GasLimit() uint64 { return b.header.GasLimit }
+func (b *Block) GasUsed() uint64  { return b.header.GasUsed }
+func (b *Block) Time() *big.Int   { return new(big.Int).Set(b.header.Time) }
 
 func (b *Block) NumberU64() uint64         { return b.header.Number.Uint64() }
 func (b *Block) LogsBloom() Bloom          { return b.header.LogsBloom }
