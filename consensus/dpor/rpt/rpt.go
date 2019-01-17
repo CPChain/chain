@@ -26,12 +26,11 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -105,7 +104,6 @@ type RptServiceImpl struct {
 // NewRptService creates a concrete RPT service instance.
 func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address) (RptService, error) {
 	log.Debug("rptContractAddr", "contractAddr", rptContractAddr.Hex())
-	primitive_register.GetPrimitiveContractCheckerInstance().WaitInitCompleteUntilTimeout()
 
 	cache, _ := lru.NewARC(cacheSize)
 	bc := &RptServiceImpl{

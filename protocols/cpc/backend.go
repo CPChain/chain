@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/apibackend_holder"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt_backend_holder"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -192,7 +192,8 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
 	// TODO: fix this, @Xumx
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission)
-	apibackend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend)
+	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
+	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	return cpc, nil
 }
 
