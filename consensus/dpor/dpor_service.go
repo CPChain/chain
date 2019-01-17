@@ -198,7 +198,6 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 		Extra:      make([]byte, extraVanity),
 		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout()/time.Second)+int64(d.config.Period))),
 		Coinbase:   common.Address{},
-		Difficulty: DporDifficulty,
 		StateRoot:  parentHeader.StateRoot,
 	}
 

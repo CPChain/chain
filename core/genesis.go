@@ -236,16 +236,12 @@ func (g *Genesis) ToBlock(db database.Database) *types.Block {
 		Extra:      g.ExtraData,
 		GasLimit:   g.GasLimit,
 		GasUsed:    g.GasUsed,
-		Difficulty: g.Difficulty,
 		Coinbase:   g.Coinbase,
 		StateRoot:  root,
 		Dpor:       g.Dpor,
 	}
 	if g.GasLimit == 0 {
 		head.GasLimit = configs.GenesisGasLimit
-	}
-	if g.Difficulty == nil {
-		head.Difficulty = configs.GenesisDifficulty
 	}
 	if _, err := statedb.Commit(false); err != nil {
 		log.Error("Error in genesis", "error", err)

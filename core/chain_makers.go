@@ -22,7 +22,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -151,7 +150,6 @@ func (b *BlockGen) OffsetTime(milliseconds int64) {
 	if b.header.Time.Cmp(b.parent.Header().Time) <= 0 {
 		panic("block time out of range")
 	}
-	b.header.Difficulty = b.engine.CalcDifficulty(b.chainReader, b.header.Time.Uint64(), b.parent.Header())
 }
 
 // GenerateChain creates a chain of n blocks. The first block's
@@ -243,7 +241,6 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 	header.StateRoot = state.IntermediateRoot(true)
 	header.Coinbase = parent.Coinbase()
 	header.GasLimit = CalcGasLimit(parent)
-	header.Difficulty = dpor.DporDifficulty
 
 	header.Time = time
 
