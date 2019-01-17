@@ -100,7 +100,7 @@ func Test_dporHelper_verifyHeader(t *testing.T) {
 							common.HexToAddress(rightAddr),
 						},
 					},
-					Difficulty: big.NewInt(2)},
+				},
 				c:       &Dpor{config: &configs.DporConfig{TermLen: 3}, dh: &defaultDporHelper{}},
 				chain:   &FakeReader{},
 				parents: []*types.Header{},
@@ -244,7 +244,7 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 						},
 						Seal: types.HexToDporSig(rightSeal),
 					},
-					Difficulty: big.NewInt(2)}},
+				}},
 			true},
 	}
 	for _, tt := range tests {

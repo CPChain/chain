@@ -32,13 +32,12 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 )
 
 func Test_sigHash(t *testing.T) {
@@ -50,7 +49,6 @@ func Test_sigHash(t *testing.T) {
 		StateRoot:    common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxsRoot:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
 		ReceiptsRoot: common.HexToHash("0xbc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52"),
-		Difficulty:   big.NewInt(131072),
 		Number:       big.NewInt(1),
 		GasLimit:     uint64(3141592),
 		GasUsed:      uint64(21000),
@@ -143,7 +141,6 @@ func Test_ecrecover(t *testing.T) {
 		StateRoot:    common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxsRoot:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
 		ReceiptsRoot: common.HexToHash("0xbc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52"),
-		Difficulty:   big.NewInt(131072),
 		Number:       big.NewInt(1),
 		GasLimit:     uint64(3141592),
 		GasUsed:      uint64(21000),
@@ -250,7 +247,6 @@ func Test_acceptSigs(t *testing.T) {
 	header := &types.Header{
 		Coinbase:     addr1,
 		Number:       big.NewInt(1),
-		Difficulty:   big.NewInt(int64(1)),
 		TxsRoot:      types.EmptyRootHash,
 		ReceiptsRoot: types.EmptyRootHash,
 	}
@@ -292,33 +288,6 @@ func Test_acceptSigs(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("acceptSigs(%v, %v, %v) = %v, want %v", tt.args.header, tt.args.sigcache, tt.args.signers, got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_calcDifficulty(t *testing.T) {
-	signers := getProposerAddress()
-	config := &configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	snapshot := newSnapshot(config, 1, common.Hash{}, signers, []common.Address{}, FakeMode)
-
-	type args struct {
-		snap   *DporSnapshot
-		signer common.Address
-	}
-	tests := []struct {
-		name string
-		args args
-		want *big.Int
-	}{
-		{name: "WhenSnapshotSigner1", args: args{snapshot, signers[0]}, want: big.NewInt(1)},
-		{name: "WhenSnapshotSigner2", args: args{snapshot, signers[1]}, want: big.NewInt(1)},
-	}
-	dporUtil := &defaultDporUtil{}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := dporUtil.calcDifficulty(tt.args.snap, tt.args.signer); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CalcDifficulty(%v, %v) = %v, want %v", tt.args.snap, tt.args.signer, got, tt.want)
 			}
 		})
 	}

@@ -61,7 +61,6 @@ func TestHeaderStorage(t *testing.T) {
 			headerFromRLP.TxsRoot,
 			headerFromRLP.ReceiptsRoot,
 			headerFromRLP.LogsBloom,
-			headerFromRLP.Difficulty,
 			headerFromRLP.Number,
 			headerFromRLP.GasLimit,
 			headerFromRLP.GasUsed,

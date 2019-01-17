@@ -44,7 +44,6 @@ func TestBlockEncoding(t *testing.T) {
 			t.Errorf("%s mismatch: got %v, want %v", f, got, want)
 		}
 	}
-	check("Difficulty", block.Difficulty(), big.NewInt(131072))
 	check("GasLimit", block.GasLimit(), uint64(3141592))
 	check("GasUsed", block.GasUsed(), uint64(21000))
 	check("Coinbase", strings.ToLower(block.Coinbase().Hex()), "0x8888f1f195afa192cfee860698584c030f4c9db1")
@@ -83,7 +82,6 @@ func TestBlockEncodingBuildHex(t *testing.T) {
 		StateRoot:    common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxsRoot:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
 		ReceiptsRoot: common.HexToHash("0xbc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52"),
-		Difficulty:   big.NewInt(131072),
 		Number:       big.NewInt(1),
 		GasLimit:     uint64(3141592),
 		GasUsed:      uint64(21000),
