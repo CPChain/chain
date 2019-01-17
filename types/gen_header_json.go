@@ -22,7 +22,6 @@ func (h Header) MarshalJSON() ([]byte, error) {
 		TxsRoot      common.Hash    `json:"transactionsRoot" gencodec:"required"`
 		ReceiptsRoot common.Hash    `json:"receiptsRoot"     gencodec:"required"`
 		LogsBloom    Bloom          `json:"logsBloom"        gencodec:"required"`
-		Difficulty   *hexutil.Big   `json:"difficulty"       gencodec:"required"`
 		Number       *hexutil.Big   `json:"number"           gencodec:"required"`
 		GasLimit     hexutil.Uint64 `json:"gasLimit"         gencodec:"required"`
 		GasUsed      hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
@@ -38,7 +37,6 @@ func (h Header) MarshalJSON() ([]byte, error) {
 	enc.TxsRoot = h.TxsRoot
 	enc.ReceiptsRoot = h.ReceiptsRoot
 	enc.LogsBloom = h.LogsBloom
-	enc.Difficulty = (*hexutil.Big)(h.Difficulty)
 	enc.Number = (*hexutil.Big)(h.Number)
 	enc.GasLimit = hexutil.Uint64(h.GasLimit)
 	enc.GasUsed = hexutil.Uint64(h.GasUsed)
@@ -58,7 +56,6 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		TxsRoot      *common.Hash    `json:"transactionsRoot" gencodec:"required"`
 		ReceiptsRoot *common.Hash    `json:"receiptsRoot"     gencodec:"required"`
 		LogsBloom    *Bloom          `json:"logsBloom"        gencodec:"required"`
-		Difficulty   *hexutil.Big    `json:"difficulty"       gencodec:"required"`
 		Number       *hexutil.Big    `json:"number"           gencodec:"required"`
 		GasLimit     *hexutil.Uint64 `json:"gasLimit"         gencodec:"required"`
 		GasUsed      *hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
@@ -94,10 +91,6 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'logsBloom' for Header")
 	}
 	h.LogsBloom = *dec.LogsBloom
-	if dec.Difficulty == nil {
-		return errors.New("missing required field 'difficulty' for Header")
-	}
-	h.Difficulty = (*big.Int)(dec.Difficulty)
 	if dec.Number == nil {
 		return errors.New("missing required field 'number' for Header")
 	}
@@ -134,7 +127,6 @@ func (h Header) MarshalTOML() (interface{}, error) {
 		TxsRoot      common.Hash    `json:"transactionsRoot" gencodec:"required"`
 		ReceiptsRoot common.Hash    `json:"receiptsRoot"     gencodec:"required"`
 		LogsBloom    Bloom          `json:"logsBloom"        gencodec:"required"`
-		Difficulty   *hexutil.Big   `json:"difficulty"       gencodec:"required"`
 		Number       *hexutil.Big   `json:"number"           gencodec:"required"`
 		GasLimit     hexutil.Uint64 `json:"gasLimit"         gencodec:"required"`
 		GasUsed      hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
@@ -150,7 +142,6 @@ func (h Header) MarshalTOML() (interface{}, error) {
 	enc.TxsRoot = h.TxsRoot
 	enc.ReceiptsRoot = h.ReceiptsRoot
 	enc.LogsBloom = h.LogsBloom
-	enc.Difficulty = (*hexutil.Big)(h.Difficulty)
 	enc.Number = (*hexutil.Big)(h.Number)
 	enc.GasLimit = hexutil.Uint64(h.GasLimit)
 	enc.GasUsed = hexutil.Uint64(h.GasUsed)
@@ -170,7 +161,6 @@ func (h *Header) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		TxsRoot      *common.Hash    `json:"transactionsRoot" gencodec:"required"`
 		ReceiptsRoot *common.Hash    `json:"receiptsRoot"     gencodec:"required"`
 		LogsBloom    *Bloom          `json:"logsBloom"        gencodec:"required"`
-		Difficulty   *hexutil.Big    `json:"difficulty"       gencodec:"required"`
 		Number       *hexutil.Big    `json:"number"           gencodec:"required"`
 		GasLimit     *hexutil.Uint64 `json:"gasLimit"         gencodec:"required"`
 		GasUsed      *hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
@@ -206,10 +196,6 @@ func (h *Header) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		return errors.New("missing required field 'logsBloom' for Header")
 	}
 	h.LogsBloom = *dec.LogsBloom
-	if dec.Difficulty == nil {
-		return errors.New("missing required field 'difficulty' for Header")
-	}
-	h.Difficulty = (*big.Int)(dec.Difficulty)
 	if dec.Number == nil {
 		return errors.New("missing required field 'number' for Header")
 	}

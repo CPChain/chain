@@ -99,7 +99,6 @@ func (h *HeaderOld) ToNewType() *Header {
 		TxsRoot:      h.TxsRoot,
 		ReceiptsRoot: h.ReceiptsRoot,
 		LogsBloom:    h.LogsBloom,
-		Difficulty:   h.Difficulty,
 		Number:       h.Number,
 		GasLimit:     h.GasLimit,
 		GasUsed:      h.GasUsed,

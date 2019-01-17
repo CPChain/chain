@@ -19,7 +19,6 @@ package dpor
 import (
 	"bytes"
 	"encoding/binary"
-	"math/big"
 	"sync"
 	"time"
 
@@ -32,7 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 )
 
 func nanosecondToMillisecond(t int64) int64 {
@@ -82,7 +81,6 @@ type dporUtil interface {
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)
 	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, termLen uint) (bool, error)
 	percentagePBFT(n uint, N uint) bool
-	calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int
 }
 
 type defaultDporUtil struct {
@@ -106,7 +104,6 @@ func (d *defaultDporUtil) sigHash(header *types.Header) (hash common.Hash) {
 		header.TxsRoot,
 		header.ReceiptsRoot,
 		header.LogsBloom,
-		header.Difficulty,
 		header.Number,
 		header.GasLimit,
 		header.GasUsed,
@@ -211,13 +208,6 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 // percentagePBFT returns n is large than pctPBFT * N.
 func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
 	return uint(pctB)*n > uint(pctA)*N
-}
-
-// CalcDifficulty is the difficulty adjustment algorithm. It returns the difficulty
-// that a new block should have based on the previous blocks in the chain and the
-// current signer.
-func (d *defaultDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
-	return new(big.Int).Set(DporDifficulty)
 }
 
 const (

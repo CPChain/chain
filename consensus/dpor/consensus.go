@@ -175,9 +175,6 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 		return err
 	}
 
-	// Set the correct difficulty
-	header.Difficulty = d.dh.calcDifficulty(snap, d.Coinbase())
-
 	// Ensure the extra data has all its components
 	if len(header.Extra) < extraVanity {
 		header.Extra = append(header.Extra, bytes.Repeat([]byte{0x00}, extraVanity-len(header.Extra))...)
@@ -313,11 +310,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 // that a new block should have based on the previous blocks in the chain and the
 // current signer.
 func (d *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
-	snap, err := d.dh.snapshot(d, chain, parent.Number.Uint64(), parent.Hash(), nil)
-	if err != nil {
-		return nil
-	}
-	return d.dh.calcDifficulty(snap, d.Coinbase())
+	return big.NewInt(0) // don't need difficulty anymore
 }
 
 // APIs implements consensus.Engine, returning the user facing RPC API to allow
