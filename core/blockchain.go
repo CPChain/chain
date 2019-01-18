@@ -437,6 +437,9 @@ func (bc *BlockChain) ResetWithGenesisBlock(genesis *types.Block) error {
 	defer bc.mu.Unlock()
 
 	// Prepare the genesis block and reinitialise the chain
+	if err := bc.hc.WriteTd(genesis.Hash(), genesis.NumberU64(), genesis.Difficulty()); err != nil {
+		log.Fatal("Failed to write genesis block TD", "err", err)
+	}
 	rawdb.WriteBlock(bc.db, genesis)
 
 	bc.genesisBlock = genesis
