@@ -240,8 +240,16 @@ func (e *engine) update() {
 		// a new block has been inserted.  we start to mine based on this new tip.
 		case <-e.chainHeadCh:
 			if atomic.LoadInt32(&e.mining) == 1 {
-				// call commitNewWork only when status is mining
-				e.commitNewWork()
+				if e.cons.CanMakeBlock(e.chain, e.coinbase, e.chain.CurrentHeader()) {
+					log.Info("it is proposer, make block")
+					// call commitNewWork only when status is mining
+					e.commitNewWork()
+				} else {
+					log.Info("not proposer, not make block")
+				}
+
+				// checks and tries to campaign if needed
+				e.cons.TryCampaign()
 			}
 
 		// handle chainsideevent

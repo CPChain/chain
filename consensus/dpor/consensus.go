@@ -152,19 +152,6 @@ func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, ref
 func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
 	number := header.Number.Uint64()
 
-	snap := d.CurrentSnap()
-	if snap != nil {
-		log.Debug("check if participate campaign", "isToCampaign", d.IsToCampaign(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number())
-		if d.IsToCampaign() && snap.isStartCampaign() {
-			newTerm := d.CurrentSnap().TermOf(number)
-			if newTerm > d.lastCampaignTerm+campaignTerms-1 {
-				d.lastCampaignTerm = newTerm
-				log.Info("campaign for proposer committee", "eleTerm", newTerm)
-				d.client.Campaign(context.Background(), campaignTerms)
-			}
-		}
-	}
-
 	// Create a snapshot
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
 	if err != nil {
@@ -198,6 +185,22 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 		header.Time = big.NewInt(nanosecondToMillisecond(time.Now().UnixNano()))
 	}
 	return nil
+}
+
+func (d *Dpor) TryCampaign() {
+	snap := d.CurrentSnap()
+	if snap != nil {
+		log.Debug("check if participate campaign", "isToCampaign", d.IsToCampaign(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number())
+		if d.IsToCampaign() && snap.isStartCampaign() {
+			newTerm := d.CurrentSnap().TermOf(snap.Number)
+			if newTerm > d.lastCampaignTerm+campaignTerms-1 {
+				d.lastCampaignTerm = newTerm
+				log.Info("campaign for proposer committee", "eleTerm", newTerm)
+				d.client.Campaign(context.Background(), campaignTerms)
+			}
+		}
+
+	}
 }
 
 func addCoinbaseReward(coinbase common.Address, state *state.StateDB) {
@@ -253,8 +256,6 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, errWaitTransactions
 	}
 
-	// Don't hold the signer fields for the entire sealing procedure
-
 	// Bail out if we're unauthorized to sign a block
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
 	if err != nil {
@@ -300,6 +301,27 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	d.SetCurrentSnap(snap)
 
 	return block.WithSeal(header), nil
+}
+
+func (d *Dpor) CanMakeBlock(chain consensus.ChainReader, coinbase common.Address, parent *types.Header) bool {
+	number := parent.Number.Uint64()
+	// Bail out if we're unauthorized to sign a block
+	snap, err := d.dh.snapshot(d, chain, number, parent.Hash(), nil)
+	if err != nil {
+		return false
+	}
+
+	// check if it is the in-charge proposer for next block
+	ok, err := snap.IsProposerOf(coinbase, number+1)
+	if err != nil {
+		if err == errProposerNotInCommittee {
+			return false
+		} else {
+			log.Debug("Error occurs when check if it is proposer", "error", err)
+			return false
+		}
+	}
+	return ok
 }
 
 // CalcDifficulty is the difficulty adjustment algorithm. It returns the difficulty
