@@ -9,6 +9,8 @@ import (
 
 	"fmt"
 
+	"reflect"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
@@ -181,7 +183,7 @@ func (ac *AdmissionControl) waitSendCampaignMsg(terms uint64) {
 
 // sendCampaignResult sends proof info to campaign contract
 func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
-	if ac.contractBackend == nil {
+	if ac.contractBackend == nil || reflect.TypeOf(ac.contractBackend).String() == "*backends.SimulatedBackend" {
 		ac.mutex.Lock()
 		ac.err = errors.New("contractBackend is nil")
 		ac.mutex.Unlock()
