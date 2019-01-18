@@ -111,7 +111,6 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 
 	isImpeach := header.Coinbase == common.Address{}
 
-	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
 	if number > 0 {
 		// verify dpor seal, genesis block not need this check
 		if verifyProposers && !isImpeach { // ignore impeach block(whose coinbase is empty)
