@@ -93,18 +93,6 @@ func testFork(t *testing.T, blockchain *BlockChain, i, n int, comparator func(td
 	if _, err := blockchain2.InsertChain(blockChainB); err != nil {
 		t.Fatalf("failed to insert forking chain: %v", err)
 	}
-
-	// Sanity check that the forked chain can be imported into the original
-	var tdPre, tdPost *big.Int
-
-	tdPre = blockchain.GetTdByHash(blockchain.CurrentBlock().Hash())
-	if err := testBlockChainImport(blockChainB, blockchain); err != nil {
-		t.Fatalf("failed to import forked block chain: %v", err)
-	}
-	tdPost = blockchain.GetTdByHash(blockChainB[len(blockChainB)-1].Hash())
-
-	// Compare the total difficulties of the chains
-	comparator(tdPre, tdPost)
 }
 
 // testBlockChainImport tries to process a chain of blocks, writing them into
@@ -141,7 +129,6 @@ func testBlockChainImport(chain types.Blocks, blockchain *BlockChain) error {
 			return err
 		}
 		blockchain.mu.Lock()
-		rawdb.WriteTd(blockchain.db, block.Hash(), block.NumberU64(), new(big.Int).Add(big.NewInt(0), blockchain.GetTdByHash(block.ParentHash())))
 		rawdb.WriteBlock(blockchain.db, block)
 		_, _ = statedb.Commit(true)
 		blockchain.mu.Unlock()
@@ -159,7 +146,6 @@ func testHeaderChainImport(chain []*types.Header, blockchain *BlockChain) error 
 		}
 		// Manually insert the header into the database, but don't reorganise (allows subsequent testing)
 		blockchain.mu.Lock()
-		rawdb.WriteTd(blockchain.db, header.Hash(), header.Number.Uint64(), new(big.Int).Add(big.NewInt(0), blockchain.GetTdByHash(header.ParentHash)))
 		rawdb.WriteHeader(blockchain.db, header)
 		blockchain.mu.Unlock()
 	}

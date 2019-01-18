@@ -18,8 +18,6 @@ package dpor
 
 import (
 	"fmt"
-	"math/big"
-	"reflect"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/types"
@@ -89,30 +87,3 @@ func TestDpor_APIs(t *testing.T) {
 }
 
 // ========================================================
-
-func TestDpor_CalcDifficulty(t *testing.T) {
-	tests := []struct {
-		name            string
-		verifySuccess   bool
-		snapshotSuccess bool
-		want            *big.Int
-	}{
-		{"verifyHeader success", true, true, big.NewInt(10)},
-		{"verifyHeader success", false, false, nil},
-		{"verifyHeader failed", false, true, nil},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Dpor{
-				dh:       &fakeDporHelper{verifySuccess: tt.verifySuccess, snapshotSuccess: tt.snapshotSuccess, dporUtil: &fakeDporUtil{success: tt.verifySuccess}},
-				coinbase: addr1,
-			}
-
-			got := c.CalcDifficulty(&FakeReader{}, 0, newHeader())
-			fmt.Println("got:", got)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Dpor.CalcDifficulty() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}

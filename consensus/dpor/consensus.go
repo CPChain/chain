@@ -324,13 +324,6 @@ func (d *Dpor) CanMakeBlock(chain consensus.ChainReader, coinbase common.Address
 	return ok
 }
 
-// CalcDifficulty is the difficulty adjustment algorithm. It returns the difficulty
-// that a new block should have based on the previous blocks in the chain and the
-// current signer.
-func (d *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
-	return big.NewInt(0) // don't need difficulty anymore
-}
-
 // APIs implements consensus.Engine, returning the user facing RPC API to allow
 // controlling the signer voting.
 func (d *Dpor) APIs(chain consensus.ChainReader) []rpc.API {
