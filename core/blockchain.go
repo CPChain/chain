@@ -1142,10 +1142,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			// Block competing with the canonical chain, store in the db, but don't process
 			// until the competitor TD goes above the canonical TD
 			currentBlock := bc.CurrentBlock()
-			localTd := bc.GetTd(currentBlock.Hash(), currentBlock.NumberU64())
-			externTd := new(big.Int).Add(bc.GetTd(block.ParentHash(), block.NumberU64()-1), big.NewInt(0))
-			if localTd.Cmp(externTd) > 0 {
-				if err = bc.WriteBlockWithoutState(block, externTd); err != nil {
+			localHeight := currentBlock.Number()
+			externHeight := block.Number()
+			if localHeight.Cmp(externHeight) > 0 {
+				if err = bc.WriteBlockWithoutState(block, externHeight); err != nil {
 					return i, events, coalescedLogs, err
 				}
 				continue
