@@ -21,19 +21,19 @@ contract Admission {
         owner = msg.sender;
         updateCPUDifficulty(_cpuDifficulty);
         updateMemoryDifficulty(_memoryDifficulty);
-        updateCPUWorkTimeout(_cpuWorkTimeout);
-        updateMemoryWorkTimeout(_memoryWorkTimeout);
+        updateCPUTimeout(_cpuWorkTimeout);
+        updateMemoryTimeout(_memoryWorkTimeout);
     }
 
-    function getDifficultyParameter() public view returns(uint,uint,uint,uint){
+    function getAdmissionParameters() public view returns(uint,uint,uint,uint){
         return (cpuDifficulty,memoryDifficulty,cpuWorkTimeout,memoryWorkTimeout);
     }
 
-    function updateCPUWorkTimeout(uint _cpuWorkTimeout) public onlyOwner{
+    function updateCPUTimeout(uint _cpuWorkTimeout) public onlyOwner{
         cpuWorkTimeout = _cpuWorkTimeout;
     }
 
-    function updateMemoryWorkTimeout(uint _memoryWorkTimeout) public onlyOwner{
+    function updateMemoryTimeout(uint _memoryWorkTimeout) public onlyOwner{
         memoryWorkTimeout= _memoryWorkTimeout;
     }
 

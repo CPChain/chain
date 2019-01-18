@@ -28,6 +28,7 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -532,7 +533,7 @@ func (c *Client) SendTransaction(ctx context.Context, tx *types.Transaction) err
 }
 
 func (c *Client) Campaign(ctx context.Context, terms uint64) error {
-	if err := c.c.CallContext(ctx, nil, "admission_campaign", terms); err != nil {
+	if err := c.c.CallContext(ctx, nil, "admission_campaign", terms, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], c); err != nil {
 		return err
 	}
 	return nil

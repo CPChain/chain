@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
@@ -14,6 +15,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -35,10 +37,24 @@ var (
 		addr1: {Balance: big.NewInt(1000000000)},
 	}
 	// gspec = core.Genesis{Config: params.TestChainConfig, Alloc: alloc}
-	gspec   = core.Genesis{Config: configs.ChainConfigInfo(), Alloc: alloc}
-	testdb  = database.NewMemDatabase()
-	genesis = gspec.MustCommit(testdb)
+	gspec                    = core.Genesis{Config: configs.ChainConfigInfo(), Alloc: alloc}
+	testdb                   = database.NewMemDatabase()
+	genesis                  = gspec.MustCommit(testdb)
+	cpuDifficulty     uint64 = 5
+	memDifficulty     uint64 = 5
+	cpuWorkTimeout    uint64 = 5
+	memoryWorkTimeout uint64 = 5
 )
+
+func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout uint64, backend *backends.SimulatedBackend) (common.Address, error) {
+	deployTransactor := bind.NewKeyedTransactor(prvKey)
+	addr, _, _, err := contract.DeployAdmission(deployTransactor, backend, new(big.Int).SetUint64(cpuDifficulty), new(big.Int).SetUint64(memoryDifficulty), new(big.Int).SetUint64(cpuWorkTimeout), new(big.Int).SetUint64(memoryWorkTimeout))
+	if err != nil {
+		return common.Address{}, err
+	}
+	backend.Commit()
+	return addr, nil
+}
 
 func init() {
 	ks = keystore.NewKeyStore(keyPath, 2, 1)
@@ -116,8 +132,8 @@ func TestApis(t *testing.T) {
 
 // TestCampaign tests campaign, check status, abort and check status
 func TestCampaign(t *testing.T) {
-	// todo: He to let it can be test
-	t.Skip("please start chain to test it,not use simulated backend")
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	acAddr, err := deploy(key, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, contractBackend)
 	ac := newAcApiBackend(0, 0, 0, 0)
 	status, err := ac.GetStatus()
 	var wantErr error
@@ -125,7 +141,7 @@ func TestCampaign(t *testing.T) {
 		t.Fatalf("Before starting campaign: GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", admission.AcIdle, wantErr, status, err)
 	}
 
-	ac.Campaign(1)
+	ac.Campaign(1, acAddr, contractBackend)
 	status, err = ac.GetStatus()
 	if status != admission.AcRunning || !reflect.DeepEqual(err, wantErr) {
 		t.Fatalf("Started compaign: GetStatus, want(status:%d, err:%v), but(status:%d, err:%v)\n", admission.AcRunning, wantErr, status, err)

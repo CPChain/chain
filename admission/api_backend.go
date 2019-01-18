@@ -21,6 +21,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -46,8 +47,8 @@ func (b *AdmissionApiBackend) Apis() []rpc.API {
 	}
 }
 
-func (b *AdmissionApiBackend) Campaign(terms uint64) error {
-	return b.admissionControl.Campaign(terms)
+func (b *AdmissionApiBackend) Campaign(terms uint64, address common.Address, backend contracts.Backend) error {
+	return b.admissionControl.Campaign(terms, address, backend)
 }
 
 func (b *AdmissionApiBackend) Abort() {

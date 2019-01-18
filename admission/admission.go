@@ -42,6 +42,13 @@ var (
 	errTermOutOfRange = errors.New("the number of terms to campaign is out of range")
 )
 
+type AdmissopnParameter struct {
+	cpuDifficulty     uint64
+	memoryDifficulty  uint64
+	cpuWorkTimeout    time.Duration
+	memoryWorkTimeout time.Duration
+}
+
 // AdmissionControl implements admission control functionality.
 type AdmissionControl struct {
 	config          Config
@@ -56,6 +63,7 @@ type AdmissionControl struct {
 	memoryWork ProofWork
 	status     workStatus
 	err        error
+	Parameter  AdmissopnParameter
 	abort      chan interface{}
 	done       chan interface{}
 }
@@ -71,7 +79,7 @@ func NewAdmissionControl(chain consensus.ChainReader, address common.Address, co
 }
 
 // Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
-func (ac *AdmissionControl) Campaign(terms uint64) error {
+func (ac *AdmissionControl) Campaign(terms uint64, address common.Address, backend contracts.Backend) error {
 	log.Info("Start campaign for dpor proposers committee")
 	ac.mutex.Lock()
 	defer ac.mutex.Unlock()
@@ -83,6 +91,7 @@ func (ac *AdmissionControl) Campaign(terms uint64) error {
 	if ac.status == AcRunning {
 		return nil
 	}
+	ac.SetAdmissopnParameter(backend, address)
 	ac.status = AcRunning
 	ac.err = nil
 	ac.done = make(chan interface{})
@@ -228,33 +237,26 @@ func (ac *AdmissionControl) buildWorks() {
 }
 
 func (ac *AdmissionControl) buildCpuProofWork() ProofWork {
-	client := ac.contractBackend
-	instance, err := admission.NewAdmissionCaller(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
+	return newWork(ac.Parameter.cpuDifficulty, ac.Parameter.cpuWorkTimeout, ac.address, ac.chain.CurrentHeader(), sha256Func)
+}
+
+func (ac *AdmissionControl) SetAdmissopnParameter(contractBackend contracts.Backend, address common.Address) {
+	instance, err := admission.NewAdmissionCaller(address, contractBackend)
 	if err != nil {
-		log.Fatal("NewAdmissionCaller is error")
+		log.Fatal("NewAdmissionCaller is error", "error is ", err)
 	}
-	cd, _, clt, _, err := instance.GetDifficultyParameter(nil)
+	cd, md, clt, mlt, err := instance.GetAdmissionParameters(nil)
 	if err != nil {
-		log.Fatal("GetDifficultyParameter is error")
+		log.Fatal("GetDifficultyParameter is error", "error is ", err)
 	}
-	cpuDifficulty := cd.Uint64()
-	cpuLifeTime := time.Duration(time.Duration(clt.Int64()) * time.Second)
-	return newWork(cpuDifficulty, cpuLifeTime, ac.address, ac.chain.CurrentHeader(), sha256Func)
+	ac.Parameter.cpuDifficulty = cd.Uint64()
+	ac.Parameter.cpuWorkTimeout = time.Duration(time.Duration(clt.Int64()) * time.Second)
+	ac.Parameter.memoryDifficulty = md.Uint64()
+	ac.Parameter.memoryWorkTimeout = time.Duration(time.Duration(mlt.Int64()) * time.Second)
 }
 
 func (ac *AdmissionControl) buildMemoryProofWork() ProofWork {
-	client := ac.contractBackend
-	instance, err := admission.NewAdmissionCaller(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
-	if err != nil {
-		log.Fatal("NewAdmissionCaller is error")
-	}
-	_, md, _, mct, err := instance.GetDifficultyParameter(nil)
-	if err != nil {
-		log.Fatal("GetDifficultyParameter is error")
-	}
-	memoryDifficulty := md.Uint64()
-	memoryCpuLifeTime := time.Duration(time.Duration(mct.Int64()) * time.Second)
-	return newWork(memoryDifficulty, memoryCpuLifeTime, ac.address, ac.chain.CurrentHeader(), scryptFunc)
+	return newWork(ac.Parameter.memoryDifficulty, ac.Parameter.memoryWorkTimeout, ac.address, ac.chain.CurrentHeader(), scryptFunc)
 }
 
 // registerProofWork returns all proof work

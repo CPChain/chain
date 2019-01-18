@@ -192,7 +192,7 @@ func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int6
 // ProxyInfo func return the node is proxy or not
 func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (int64, int64, error) {
 	isProxy := int64(0)
-	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractPdash_proxy]
+	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractPdashProxy]
 	proxyInstance, err := pdash.NewPdashProxy(contractAddress, re.ContractClient)
 
 	if err != nil {

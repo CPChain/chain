@@ -40,20 +40,20 @@ var (
 	numPerRound = 12
 )
 
-func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, error) {
+func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	acAddr, _, _, err := admission.DeployAdmission(deployTransactor, backend, big.NewInt(5), big.NewInt(5), big.NewInt(10), big.NewInt(10))
 	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, acAddr)
 	if err != nil {
-		return common.Address{}, err
+		return common.Address{}, common.Address{}, err
 	}
 	backend.Commit()
-	return addr, nil
+	return addr, acAddr, nil
 }
 
 func TestDeployCampaign(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	contractAddr, _, err := deploy(key, big.NewInt(0), contractBackend)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 
 	transactOpts := bind.NewKeyedTransactor(key)
@@ -62,12 +62,12 @@ func TestDeployCampaign(t *testing.T) {
 	_ = contractAddr
 	contractBackend.Commit()
 
-	//maximumNoc
+	// maximumNoc
 	maximumNoc, err := campaign.MaximumNoc()
 	checkError(t, "maximumNoc error: %v", err)
 	fmt.Println("maximumNoc:", maximumNoc)
 
-	//viewIdx
+	// viewIdx
 	viewIdx, err := campaign.TermIdx()
 	checkError(t, "viewIdx error: %v", err)
 	fmt.Println("viewIdx:", viewIdx)
@@ -92,23 +92,21 @@ func checkError(t *testing.T, msg string, err error) {
 }
 
 func TestClaimAndQuitCampaign(t *testing.T) {
-	// todo: He to let it can be test
-	t.Skip("please start chain to test it not use simulated backend")
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
-	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
-	fmt.Println("contractAddr:", contractAddr)
+	campaignAddr, acAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	fmt.Println("contractAddr:", campaignAddr)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := contracts.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
+	campaign, err := contracts.NewCampaignWrapper(transactOpts, campaignAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
-	_ = contractAddr
+	_ = campaignAddr
 	printBalance(contractBackend)
 
 	// setup TransactOpts
@@ -120,7 +118,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign(1)
+	ac.Campaign(1, acAddr, contractBackend)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum := results[admission2.Cpu].BlockNumber
@@ -189,23 +187,21 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 }
 
 func TestClaimWhenDepositLessThanBase(t *testing.T) {
-	// todo: He to let it can be test
-	t.Skip("please start chain to test it not use simulated backend")
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
-	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
-	fmt.Println("contractAddr:", contractAddr)
+	campaignAddr, acAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	fmt.Println("campaignAddr:", campaignAddr)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := contracts.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
+	campaign, err := contracts.NewCampaignWrapper(transactOpts, campaignAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
-	_ = contractAddr
+	_ = campaignAddr
 	printBalance(contractBackend)
 
 	// setup TransactOpts
@@ -218,7 +214,7 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign(1)
+	ac.Campaign(1, acAddr, contractBackend)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum := results[admission2.Cpu].BlockNumber
@@ -248,23 +244,21 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 }
 
 func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
-	// todo: He to let it can be test
-	t.Skip("please start chain to test it not use simulated backend")
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
-	contractAddr, err := deploy(key, big.NewInt(0), contractBackend)
-	fmt.Println("contractAddr:", contractAddr)
+	campaignAddr, acAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	fmt.Println("campaignAddr:", campaignAddr)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
-	campaign, err := contracts.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
+	campaign, err := contracts.NewCampaignWrapper(transactOpts, campaignAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
-	_ = contractAddr
+	_ = campaignAddr
 	printBalance(contractBackend)
 
 	// setup TransactOpts
@@ -277,7 +271,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign(1)
+	ac.Campaign(1, acAddr, contractBackend)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum := results[admission2.Cpu].BlockNumber

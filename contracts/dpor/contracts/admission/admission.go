@@ -14,10 +14,10 @@ import (
 )
 
 // AdmissionABI is the input ABI used to generate the binding from.
-const AdmissionABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"memoryDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_cpuWorkTimeout\",\"type\":\"uint256\"}],\"name\":\"updateCPUWorkTimeout\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_sender\",\"type\":\"address\"}],\"name\":\"verify\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_sender\",\"type\":\"address\"},{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"},{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"verifyMemory\",\"outputs\":[{\"name\":\"b\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"cpuWorkTimeout\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_sender\",\"type\":\"address\"},{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"},{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"verifyCPU\",\"outputs\":[{\"name\":\"b\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"memoryWorkTimeout\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_memoryWorkTimeout\",\"type\":\"uint256\"}],\"name\":\"updateMemoryWorkTimeout\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getDifficultyParameter\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"cpuDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateCPUDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateMemoryDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_cpuDifficulty\",\"type\":\"uint256\"},{\"name\":\"_memoryDifficulty\",\"type\":\"uint256\"},{\"name\":\"_cpuWorkTimeout\",\"type\":\"uint256\"},{\"name\":\"_memoryWorkTimeout\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
+const AdmissionABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"memoryDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_sender\",\"type\":\"address\"}],\"name\":\"verify\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_sender\",\"type\":\"address\"},{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"},{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"verifyMemory\",\"outputs\":[{\"name\":\"b\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"cpuWorkTimeout\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_sender\",\"type\":\"address\"},{\"name\":\"_nonce\",\"type\":\"uint64\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"},{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"verifyCPU\",\"outputs\":[{\"name\":\"b\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"memoryWorkTimeout\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"cpuDifficulty\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateCPUDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getAdmissionParameters\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_memoryWorkTimeout\",\"type\":\"uint256\"}],\"name\":\"updateMemoryTimeout\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_difficulty\",\"type\":\"uint256\"}],\"name\":\"updateMemoryDifficulty\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_cpuWorkTimeout\",\"type\":\"uint256\"}],\"name\":\"updateCPUTimeout\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_cpuDifficulty\",\"type\":\"uint256\"},{\"name\":\"_memoryDifficulty\",\"type\":\"uint256\"},{\"name\":\"_cpuWorkTimeout\",\"type\":\"uint256\"},{\"name\":\"_memoryWorkTimeout\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
 
 // AdmissionBin is the compiled bytecode used for deploying new contracts.
-const AdmissionBin = `0x608060405234801561001057600080fd5b506040516080806106fc833981016040908152815160208301519183015160609093015160068054600160a060020a0319163317905590929061005b8464010000000061009a810204565b61006d8364010000000061012d810204565b61007f826401000000006101be810204565b610091816401000000006101c3810204565b505050506101c8565b61010081118015906100ad575060008110155b151561011a57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b6101008111801590610140575060008110155b15156101ad57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60048190556101000360020a600155565b600355565b600555565b610525806101d76000396000f3006080604052600436106100c45763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166317e6b96681146100c957806331ee5d33146100f05780633395492e1461010a5780634bda895714610166578063615cc243146101a75780636ac03dcc146101bc5780636d44a935146101fd57806386395077146102125780638a9091931461022a5780638b654613146102655780638da5cb5b1461027a578063be981db8146102b8578063e1718946146102d0575b600080fd5b3480156100d557600080fd5b506100de6102e8565b60408051918252519081900360200190f35b3480156100fc57600080fd5b506101086004356102ee565b005b34801561011657600080fd5b5061015267ffffffffffffffff600435811690602435906044351660643573ffffffffffffffffffffffffffffffffffffffff608435166102f3565b604080519115158252519081900360200190f35b34801561017257600080fd5b5061015273ffffffffffffffffffffffffffffffffffffffff6004351667ffffffffffffffff60243516604435606435610322565b3480156101b357600080fd5b506100de61035e565b3480156101c857600080fd5b5061015273ffffffffffffffffffffffffffffffffffffffff6004351667ffffffffffffffff60243516604435606435610364565b34801561020957600080fd5b506100de610396565b34801561021e57600080fd5b5061010860043561039c565b34801561023657600080fd5b5061023f6103a1565b604080519485526020850193909352838301919091526060830152519081900360800190f35b34801561027157600080fd5b506100de6103b3565b34801561028657600080fd5b5061028f6103b9565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b3480156102c457600080fd5b506101086004356103d5565b3480156102dc57600080fd5b50610108600435610468565b60045481565b600355565b6000610303828787600254610364565b80156103185750610318828585600454610322565b9695505050505050565b600060405185815284602082015283406040820152826060820152602081608083606b600019fa151561035457600080fd5b5195945050505050565b60035481565b600060405185815284602082015283406040820152826060820152602081608083606a600019fa151561035457600080fd5b60055481565b600555565b60025460045460035460055490919293565b60025481565b60065473ffffffffffffffffffffffffffffffffffffffff1681565b61010081118015906103e8575060008110155b151561045557604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b610100811180159061047b575060008110155b15156104e857604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60048190556101000360020a6001555600a165627a7a72305820eeefa83b5d65f2403ba457c5e01bb1bb521de3880f352b65039170e9c45219d70029`
+const AdmissionBin = `0x608060405234801561001057600080fd5b506040516080806106fc833981016040908152815160208301519183015160609093015160068054600160a060020a0319163317905590929061005b8464010000000061009a810204565b61006d8364010000000061012d810204565b61007f826401000000006101be810204565b610091816401000000006101c3810204565b505050506101c8565b61010081118015906100ad575060008110155b151561011a57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b6101008111801590610140575060008110155b15156101ad57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60048190556101000360020a600155565b600355565b600555565b610525806101d76000396000f3006080604052600436106100c45763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166317e6b96681146100c95780633395492e146100f05780634bda89571461014c578063615cc2431461018d5780636ac03dcc146101a25780636d44a935146101e35780638b654613146101f85780638da5cb5b1461020d578063be981db81461024b578063c651cfc914610265578063d0f3f0d1146102a0578063e1718946146102b8578063e5ffb209146102d0575b600080fd5b3480156100d557600080fd5b506100de6102e8565b60408051918252519081900360200190f35b3480156100fc57600080fd5b5061013867ffffffffffffffff600435811690602435906044351660643573ffffffffffffffffffffffffffffffffffffffff608435166102ee565b604080519115158252519081900360200190f35b34801561015857600080fd5b5061013873ffffffffffffffffffffffffffffffffffffffff6004351667ffffffffffffffff6024351660443560643561031d565b34801561019957600080fd5b506100de610359565b3480156101ae57600080fd5b5061013873ffffffffffffffffffffffffffffffffffffffff6004351667ffffffffffffffff6024351660443560643561035f565b3480156101ef57600080fd5b506100de610391565b34801561020457600080fd5b506100de610397565b34801561021957600080fd5b5061022261039d565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b34801561025757600080fd5b506102636004356103b9565b005b34801561027157600080fd5b5061027a61044c565b604080519485526020850193909352838301919091526060830152519081900360800190f35b3480156102ac57600080fd5b5061026360043561045e565b3480156102c457600080fd5b50610263600435610463565b3480156102dc57600080fd5b506102636004356104f4565b60045481565b60006102fe82878760025461035f565b8015610313575061031382858560045461031d565b9695505050505050565b600060405185815284602082015283406040820152826060820152602081608083606b600019fa151561034f57600080fd5b5195945050505050565b60035481565b600060405185815284602082015283406040820152826060820152602081608083606a600019fa151561034f57600080fd5b60055481565b60025481565b60065473ffffffffffffffffffffffffffffffffffffffff1681565b61010081118015906103cc575060008110155b151561043957604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b600281815561010091909103900a600055565b60025460045460035460055490919293565b600555565b6101008111801590610476575060008110155b15156104e357604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f446966666963756c7479206d757374206c657373207468616e20323536000000604482015290519081900360640190fd5b60048190556101000360020a600155565b6003555600a165627a7a723058202104702eb6580ba208ebca31aab72a4e4fcc7eb4eedc866bfda8d0e51fb1b4730029`
 
 // DeployAdmission deploys a new cpchain contract, binding an instance of Admission to it.
 func DeployAdmission(auth *bind.TransactOpts, backend bind.ContractBackend, _cpuDifficulty *big.Int, _memoryDifficulty *big.Int, _cpuWorkTimeout *big.Int, _memoryWorkTimeout *big.Int) (common.Address, *types.Transaction, *Admission, error) {
@@ -226,10 +226,10 @@ func (_Admission *AdmissionCallerSession) CpuWorkTimeout() (*big.Int, error) {
 	return _Admission.Contract.CpuWorkTimeout(&_Admission.CallOpts)
 }
 
-// GetDifficultyParameter is a free data retrieval call binding the contract method 0x8a909193.
+// GetAdmissionParameters is a free data retrieval call binding the contract method 0xc651cfc9.
 //
-// Solidity: function getDifficultyParameter() constant returns(uint256, uint256, uint256, uint256)
-func (_Admission *AdmissionCaller) GetDifficultyParameter(opts *bind.CallOpts) (*big.Int, *big.Int, *big.Int, *big.Int, error) {
+// Solidity: function getAdmissionParameters() constant returns(uint256, uint256, uint256, uint256)
+func (_Admission *AdmissionCaller) GetAdmissionParameters(opts *bind.CallOpts) (*big.Int, *big.Int, *big.Int, *big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 		ret1 = new(*big.Int)
@@ -242,22 +242,22 @@ func (_Admission *AdmissionCaller) GetDifficultyParameter(opts *bind.CallOpts) (
 		ret2,
 		ret3,
 	}
-	err := _Admission.contract.Call(opts, out, "getDifficultyParameter")
+	err := _Admission.contract.Call(opts, out, "getAdmissionParameters")
 	return *ret0, *ret1, *ret2, *ret3, err
 }
 
-// GetDifficultyParameter is a free data retrieval call binding the contract method 0x8a909193.
+// GetAdmissionParameters is a free data retrieval call binding the contract method 0xc651cfc9.
 //
-// Solidity: function getDifficultyParameter() constant returns(uint256, uint256, uint256, uint256)
-func (_Admission *AdmissionSession) GetDifficultyParameter() (*big.Int, *big.Int, *big.Int, *big.Int, error) {
-	return _Admission.Contract.GetDifficultyParameter(&_Admission.CallOpts)
+// Solidity: function getAdmissionParameters() constant returns(uint256, uint256, uint256, uint256)
+func (_Admission *AdmissionSession) GetAdmissionParameters() (*big.Int, *big.Int, *big.Int, *big.Int, error) {
+	return _Admission.Contract.GetAdmissionParameters(&_Admission.CallOpts)
 }
 
-// GetDifficultyParameter is a free data retrieval call binding the contract method 0x8a909193.
+// GetAdmissionParameters is a free data retrieval call binding the contract method 0xc651cfc9.
 //
-// Solidity: function getDifficultyParameter() constant returns(uint256, uint256, uint256, uint256)
-func (_Admission *AdmissionCallerSession) GetDifficultyParameter() (*big.Int, *big.Int, *big.Int, *big.Int, error) {
-	return _Admission.Contract.GetDifficultyParameter(&_Admission.CallOpts)
+// Solidity: function getAdmissionParameters() constant returns(uint256, uint256, uint256, uint256)
+func (_Admission *AdmissionCallerSession) GetAdmissionParameters() (*big.Int, *big.Int, *big.Int, *big.Int, error) {
+	return _Admission.Contract.GetAdmissionParameters(&_Admission.CallOpts)
 }
 
 // MemoryDifficulty is a free data retrieval call binding the contract method 0x17e6b966.
@@ -437,25 +437,25 @@ func (_Admission *AdmissionTransactorSession) UpdateCPUDifficulty(_difficulty *b
 	return _Admission.Contract.UpdateCPUDifficulty(&_Admission.TransactOpts, _difficulty)
 }
 
-// UpdateCPUWorkTimeout is a paid mutator transaction binding the contract method 0x31ee5d33.
+// UpdateCPUTimeout is a paid mutator transaction binding the contract method 0xe5ffb209.
 //
-// Solidity: function updateCPUWorkTimeout(_cpuWorkTimeout uint256) returns()
-func (_Admission *AdmissionTransactor) UpdateCPUWorkTimeout(opts *bind.TransactOpts, _cpuWorkTimeout *big.Int) (*types.Transaction, error) {
-	return _Admission.contract.Transact(opts, "updateCPUWorkTimeout", _cpuWorkTimeout)
+// Solidity: function updateCPUTimeout(_cpuWorkTimeout uint256) returns()
+func (_Admission *AdmissionTransactor) UpdateCPUTimeout(opts *bind.TransactOpts, _cpuWorkTimeout *big.Int) (*types.Transaction, error) {
+	return _Admission.contract.Transact(opts, "updateCPUTimeout", _cpuWorkTimeout)
 }
 
-// UpdateCPUWorkTimeout is a paid mutator transaction binding the contract method 0x31ee5d33.
+// UpdateCPUTimeout is a paid mutator transaction binding the contract method 0xe5ffb209.
 //
-// Solidity: function updateCPUWorkTimeout(_cpuWorkTimeout uint256) returns()
-func (_Admission *AdmissionSession) UpdateCPUWorkTimeout(_cpuWorkTimeout *big.Int) (*types.Transaction, error) {
-	return _Admission.Contract.UpdateCPUWorkTimeout(&_Admission.TransactOpts, _cpuWorkTimeout)
+// Solidity: function updateCPUTimeout(_cpuWorkTimeout uint256) returns()
+func (_Admission *AdmissionSession) UpdateCPUTimeout(_cpuWorkTimeout *big.Int) (*types.Transaction, error) {
+	return _Admission.Contract.UpdateCPUTimeout(&_Admission.TransactOpts, _cpuWorkTimeout)
 }
 
-// UpdateCPUWorkTimeout is a paid mutator transaction binding the contract method 0x31ee5d33.
+// UpdateCPUTimeout is a paid mutator transaction binding the contract method 0xe5ffb209.
 //
-// Solidity: function updateCPUWorkTimeout(_cpuWorkTimeout uint256) returns()
-func (_Admission *AdmissionTransactorSession) UpdateCPUWorkTimeout(_cpuWorkTimeout *big.Int) (*types.Transaction, error) {
-	return _Admission.Contract.UpdateCPUWorkTimeout(&_Admission.TransactOpts, _cpuWorkTimeout)
+// Solidity: function updateCPUTimeout(_cpuWorkTimeout uint256) returns()
+func (_Admission *AdmissionTransactorSession) UpdateCPUTimeout(_cpuWorkTimeout *big.Int) (*types.Transaction, error) {
+	return _Admission.Contract.UpdateCPUTimeout(&_Admission.TransactOpts, _cpuWorkTimeout)
 }
 
 // UpdateMemoryDifficulty is a paid mutator transaction binding the contract method 0xe1718946.
@@ -479,23 +479,23 @@ func (_Admission *AdmissionTransactorSession) UpdateMemoryDifficulty(_difficulty
 	return _Admission.Contract.UpdateMemoryDifficulty(&_Admission.TransactOpts, _difficulty)
 }
 
-// UpdateMemoryWorkTimeout is a paid mutator transaction binding the contract method 0x86395077.
+// UpdateMemoryTimeout is a paid mutator transaction binding the contract method 0xd0f3f0d1.
 //
-// Solidity: function updateMemoryWorkTimeout(_memoryWorkTimeout uint256) returns()
-func (_Admission *AdmissionTransactor) UpdateMemoryWorkTimeout(opts *bind.TransactOpts, _memoryWorkTimeout *big.Int) (*types.Transaction, error) {
-	return _Admission.contract.Transact(opts, "updateMemoryWorkTimeout", _memoryWorkTimeout)
+// Solidity: function updateMemoryTimeout(_memoryWorkTimeout uint256) returns()
+func (_Admission *AdmissionTransactor) UpdateMemoryTimeout(opts *bind.TransactOpts, _memoryWorkTimeout *big.Int) (*types.Transaction, error) {
+	return _Admission.contract.Transact(opts, "updateMemoryTimeout", _memoryWorkTimeout)
 }
 
-// UpdateMemoryWorkTimeout is a paid mutator transaction binding the contract method 0x86395077.
+// UpdateMemoryTimeout is a paid mutator transaction binding the contract method 0xd0f3f0d1.
 //
-// Solidity: function updateMemoryWorkTimeout(_memoryWorkTimeout uint256) returns()
-func (_Admission *AdmissionSession) UpdateMemoryWorkTimeout(_memoryWorkTimeout *big.Int) (*types.Transaction, error) {
-	return _Admission.Contract.UpdateMemoryWorkTimeout(&_Admission.TransactOpts, _memoryWorkTimeout)
+// Solidity: function updateMemoryTimeout(_memoryWorkTimeout uint256) returns()
+func (_Admission *AdmissionSession) UpdateMemoryTimeout(_memoryWorkTimeout *big.Int) (*types.Transaction, error) {
+	return _Admission.Contract.UpdateMemoryTimeout(&_Admission.TransactOpts, _memoryWorkTimeout)
 }
 
-// UpdateMemoryWorkTimeout is a paid mutator transaction binding the contract method 0x86395077.
+// UpdateMemoryTimeout is a paid mutator transaction binding the contract method 0xd0f3f0d1.
 //
-// Solidity: function updateMemoryWorkTimeout(_memoryWorkTimeout uint256) returns()
-func (_Admission *AdmissionTransactorSession) UpdateMemoryWorkTimeout(_memoryWorkTimeout *big.Int) (*types.Transaction, error) {
-	return _Admission.Contract.UpdateMemoryWorkTimeout(&_Admission.TransactOpts, _memoryWorkTimeout)
+// Solidity: function updateMemoryTimeout(_memoryWorkTimeout uint256) returns()
+func (_Admission *AdmissionTransactorSession) UpdateMemoryTimeout(_memoryWorkTimeout *big.Int) (*types.Transaction, error) {
+	return _Admission.Contract.UpdateMemoryTimeout(&_Admission.TransactOpts, _memoryWorkTimeout)
 }

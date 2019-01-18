@@ -62,8 +62,6 @@ func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTi
 }
 
 func TestVerifyCPU(t *testing.T) {
-	// todo: He to let it can be test
-	t.Skip("please start chain to test it,not use simulated backend")
 	backend := newTestBackend()
 	acAddr, err := deploy(key0, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	if err != nil {
@@ -75,7 +73,7 @@ func TestVerifyCPU(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	cpuBlockNum, cpuNonce, _, _ := computeCorrectPow(backend, addr0)
+	cpuBlockNum, cpuNonce, _, _ := computeCorrectPow(backend, addr0, acAddr)
 
 	ok, err := instance.VerifyCPU(nil, addr0, cpuNonce, big.NewInt(cpuBlockNum), big.NewInt(int64(cpuDifficulty)))
 	if err != nil {
@@ -89,9 +87,8 @@ func TestVerifyCPU(t *testing.T) {
 }
 
 func TestVerifyMemory(t *testing.T) {
-	// todo: He to let it can be test
-	t.Skip("please start chain to test it,not use simulated backend")
 	backend := newTestBackend()
+	acAddr, err := deploy(key0, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	addr0, err := deploy(key0, 15, 15, 10, 10, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
@@ -102,7 +99,7 @@ func TestVerifyMemory(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	_, _, memBlockNum, memNonce := computeCorrectPow(backend, addr0)
+	_, _, memBlockNum, memNonce := computeCorrectPow(backend, addr0, acAddr)
 
 	ok, err := instance.VerifyMemory(nil, addr0, memNonce, big.NewInt(memBlockNum), big.NewInt(int64(memDifficulty)))
 	if err != nil {
@@ -149,7 +146,7 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 		t.Fatalf("expected %d, got %v", newCPUDifficulty, v.Uint64())
 	}
 
-	cd, md, ct, mt, err := instance.GetDifficultyParameter(nil)
+	cd, md, ct, mt, err := instance.GetAdmissionParameters(nil)
 	if err != nil {
 		t.Fatal("GetDifficultyParameter is error ")
 	}
@@ -158,14 +155,14 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 	}
 }
 
-func computeCorrectPow(contractBackend *backends.SimulatedBackend, addr common.Address) (cpuBlockNum int64, cpuNonce uint64,
+func computeCorrectPow(contractBackend *backends.SimulatedBackend, addr common.Address, contractAddress common.Address) (cpuBlockNum int64, cpuNonce uint64,
 	memBlockNum int64, memNonce uint64) {
 	// compute cpu&memory pow
 	config := admission.DefaultConfig
 	config.CpuDifficulty = cpuDifficulty
 	config.MemoryDifficulty = memDifficulty
 	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign(1)
+	ac.Campaign(1, contractAddress, contractBackend)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum = results[admission.Cpu].BlockNumber
