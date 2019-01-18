@@ -23,11 +23,10 @@ func (t txdataold) MarshalJSON() ([]byte, error) {
 		Recipient    *common.Address `json:"to"       rlp:"nil"`
 		Amount       *hexutil.Big    `json:"value"    gencodec:"required"`
 		Payload      hexutil.Bytes   `json:"input"    gencodec:"required"`
-		Extra        hexutil.Bytes
-		V            *hexutil.Big `json:"v" gencodec:"required"`
-		R            *hexutil.Big `json:"r" gencodec:"required"`
-		S            *hexutil.Big `json:"s" gencodec:"required"`
-		Hash         *common.Hash `json:"hash" rlp:"-"`
+		V            *hexutil.Big    `json:"v" gencodec:"required"`
+		R            *hexutil.Big    `json:"r" gencodec:"required"`
+		S            *hexutil.Big    `json:"s" gencodec:"required"`
+		Hash         *common.Hash    `json:"hash" rlp:"-"`
 	}
 	var enc txdataold
 	enc.Type = t.Type
@@ -37,7 +36,6 @@ func (t txdataold) MarshalJSON() ([]byte, error) {
 	enc.Recipient = t.Recipient
 	enc.Amount = (*hexutil.Big)(t.Amount)
 	enc.Payload = t.Payload
-	enc.Extra = t.Extra
 	enc.V = (*hexutil.Big)(t.V)
 	enc.R = (*hexutil.Big)(t.R)
 	enc.S = (*hexutil.Big)(t.S)
@@ -55,11 +53,10 @@ func (t *txdataold) UnmarshalJSON(input []byte) error {
 		Recipient    *common.Address `json:"to"       rlp:"nil"`
 		Amount       *hexutil.Big    `json:"value"    gencodec:"required"`
 		Payload      *hexutil.Bytes  `json:"input"    gencodec:"required"`
-		Extra        *hexutil.Bytes
-		V            *hexutil.Big `json:"v" gencodec:"required"`
-		R            *hexutil.Big `json:"r" gencodec:"required"`
-		S            *hexutil.Big `json:"s" gencodec:"required"`
-		Hash         *common.Hash `json:"hash" rlp:"-"`
+		V            *hexutil.Big    `json:"v" gencodec:"required"`
+		R            *hexutil.Big    `json:"r" gencodec:"required"`
+		S            *hexutil.Big    `json:"s" gencodec:"required"`
+		Hash         *common.Hash    `json:"hash" rlp:"-"`
 	}
 	var dec txdataold
 	if err := json.Unmarshal(input, &dec); err != nil {
@@ -92,9 +89,6 @@ func (t *txdataold) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'input' for txdataold")
 	}
 	t.Payload = *dec.Payload
-	if dec.Extra != nil {
-		t.Extra = *dec.Extra
-	}
 	if dec.V == nil {
 		return errors.New("missing required field 'v' for txdataold")
 	}

@@ -222,7 +222,6 @@ type txdataold struct {
 	Recipient    *common.Address `json:"to"       rlp:"nil"` // nil means contract creation
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
-	Extra        []byte
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -239,7 +238,6 @@ type txdataMarshalingOld struct {
 	GasLimit     hexutil.Uint64
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
-	Extra        hexutil.Bytes
 	V            *hexutil.Big
 	R            *hexutil.Big
 	S            *hexutil.Big
