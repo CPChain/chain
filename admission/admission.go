@@ -61,6 +61,7 @@ type AdmissionControl struct {
 	wg         *sync.WaitGroup
 	cpuWork    ProofWork
 	memoryWork ProofWork
+	params     *acParamsProvider
 	status     workStatus
 	err        error
 	Parameter  AdmissopnParameter
@@ -68,13 +69,58 @@ type AdmissionControl struct {
 	done       chan interface{}
 }
 
+type acParamsProvider interface {
+	cpuDifficulty() uint64
+	memDifficulty() uint64
+	cpuTimeout() time.Duration
+	memTimeout() time.Duration
+}
+
+type realAcParamsProvider struct {
+	config          Config
+	contractBackend contracts.Backend
+}
+
+func (*realAcParamsProvider) cpuDifficulty() uint64 {
+	panic("implement me")
+}
+
+func (*realAcParamsProvider) memDifficulty() uint64 {
+	panic("implement me")
+}
+
+func (*realAcParamsProvider) cpuTimeout() time.Duration {
+	panic("implement me")
+}
+
+func (*realAcParamsProvider) memTimeout() time.Duration {
+	panic("implement me")
+}
+
+func (r *realAcParamsProvider) retrieveParams() (cpuDiff uint64, cpuTimeout time.Duration, memDiff uint64, memTimeout time.Duration) {
+	address := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission]
+
+	instance, err := admission.NewAdmissionCaller(address, r.contractBackend)
+	if err != nil {
+		log.Fatal("NewAdmissionCaller is error", "error is ", err)
+	}
+	cd, md, clt, mlt, err := instance.GetAdmissionParameters(nil)
+	if err != nil {
+		log.Fatal("GetDifficultyParameter is error", "error is ", err)
+	}
+	return cd.Uint64(), time.Duration(clt.Int64() * int64(time.Second)), md.Uint64(),
+		time.Duration(mlt.Int64() * int64(time.Second))
+
+}
+
 // NewAdmissionControl returns a new Control instance.
-func NewAdmissionControl(chain consensus.ChainReader, address common.Address, config Config) *AdmissionControl {
+func NewAdmissionControl(chain consensus.ChainReader, address common.Address, config Config, provider *acParamsProvider) *AdmissionControl {
 	return &AdmissionControl{
 		config:  config,
 		chain:   chain,
 		address: address,
 		status:  AcIdle,
+		params:  provider,
 	}
 }
 

@@ -31,7 +31,7 @@ type AdmissionApiBackend struct {
 
 func NewAdmissionApiBackend(chain consensus.ChainReader, address common.Address, config Config) ApiBackend {
 	return &AdmissionApiBackend{
-		admissionControl: NewAdmissionControl(chain, address, config),
+		admissionControl: NewAdmissionControl(chain, address, config, realAcParamsProvider{}),
 	}
 }
 
