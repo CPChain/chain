@@ -31,7 +31,7 @@ type AdmissionApiBackend struct {
 
 func NewAdmissionApiBackend(chain consensus.ChainReader, address common.Address, config Config) ApiBackend {
 	return &AdmissionApiBackend{
-		admissionControl: NewAdmissionControl(chain, address, config, realAcParamsProvider{}),
+		admissionControl: NewAdmissionControl(chain, address, config),
 	}
 }
 
@@ -47,8 +47,8 @@ func (b *AdmissionApiBackend) Apis() []rpc.API {
 	}
 }
 
-func (b *AdmissionApiBackend) Campaign(terms uint64, address common.Address, backend contracts.Backend) error {
-	return b.admissionControl.Campaign(terms, address, backend)
+func (b *AdmissionApiBackend) Campaign(terms uint64) error {
+	return b.admissionControl.Campaign(terms)
 }
 
 func (b *AdmissionApiBackend) Abort() {
@@ -71,4 +71,8 @@ func (b *AdmissionApiBackend) SetAdmissionKey(key *keystore.Key) {
 func (b *AdmissionApiBackend) RegisterInProcHandler(localRPCServer *rpc.Server) {
 	client := rpc.DialInProc(localRPCServer)
 	b.admissionControl.setClientBackend(cpclient.NewClient(client))
+}
+
+func (b *AdmissionApiBackend) SetContractBackend(contractBackend contracts.Backend) {
+	b.admissionControl.SetSimulateBackend(contractBackend)
 }

@@ -26,6 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	admission2 "bitbucket.org/cpchain/chain/admission"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
@@ -118,7 +119,9 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign(1, acAddr, contractBackend)
+	ac.SetSimulateBackend(contractBackend)
+	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
+	ac.Campaign(1)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum := results[admission2.Cpu].BlockNumber
@@ -214,7 +217,9 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign(1, acAddr, contractBackend)
+	ac.SetSimulateBackend(contractBackend)
+	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
+	ac.Campaign(1)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum := results[admission2.Cpu].BlockNumber
@@ -271,7 +276,9 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign(1, acAddr, contractBackend)
+	ac.SetSimulateBackend(contractBackend)
+	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
+	ac.Campaign(1)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum := results[admission2.Cpu].BlockNumber

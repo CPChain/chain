@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"fmt"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
@@ -42,13 +44,6 @@ var (
 	errTermOutOfRange = errors.New("the number of terms to campaign is out of range")
 )
 
-type AdmissopnParameter struct {
-	cpuDifficulty     uint64
-	memoryDifficulty  uint64
-	cpuWorkTimeout    time.Duration
-	memoryWorkTimeout time.Duration
-}
-
 // AdmissionControl implements admission control functionality.
 type AdmissionControl struct {
 	config          Config
@@ -61,71 +56,24 @@ type AdmissionControl struct {
 	wg         *sync.WaitGroup
 	cpuWork    ProofWork
 	memoryWork ProofWork
-	params     *acParamsProvider
 	status     workStatus
 	err        error
-	Parameter  AdmissopnParameter
 	abort      chan interface{}
 	done       chan interface{}
 }
 
-type acParamsProvider interface {
-	cpuDifficulty() uint64
-	memDifficulty() uint64
-	cpuTimeout() time.Duration
-	memTimeout() time.Duration
-}
-
-type realAcParamsProvider struct {
-	config          Config
-	contractBackend contracts.Backend
-}
-
-func (*realAcParamsProvider) cpuDifficulty() uint64 {
-	panic("implement me")
-}
-
-func (*realAcParamsProvider) memDifficulty() uint64 {
-	panic("implement me")
-}
-
-func (*realAcParamsProvider) cpuTimeout() time.Duration {
-	panic("implement me")
-}
-
-func (*realAcParamsProvider) memTimeout() time.Duration {
-	panic("implement me")
-}
-
-func (r *realAcParamsProvider) retrieveParams() (cpuDiff uint64, cpuTimeout time.Duration, memDiff uint64, memTimeout time.Duration) {
-	address := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission]
-
-	instance, err := admission.NewAdmissionCaller(address, r.contractBackend)
-	if err != nil {
-		log.Fatal("NewAdmissionCaller is error", "error is ", err)
-	}
-	cd, md, clt, mlt, err := instance.GetAdmissionParameters(nil)
-	if err != nil {
-		log.Fatal("GetDifficultyParameter is error", "error is ", err)
-	}
-	return cd.Uint64(), time.Duration(clt.Int64() * int64(time.Second)), md.Uint64(),
-		time.Duration(mlt.Int64() * int64(time.Second))
-
-}
-
 // NewAdmissionControl returns a new Control instance.
-func NewAdmissionControl(chain consensus.ChainReader, address common.Address, config Config, provider *acParamsProvider) *AdmissionControl {
+func NewAdmissionControl(chain consensus.ChainReader, address common.Address, config Config) *AdmissionControl {
 	return &AdmissionControl{
 		config:  config,
 		chain:   chain,
 		address: address,
 		status:  AcIdle,
-		params:  provider,
 	}
 }
 
 // Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
-func (ac *AdmissionControl) Campaign(terms uint64, address common.Address, backend contracts.Backend) error {
+func (ac *AdmissionControl) Campaign(terms uint64) error {
 	log.Info("Start campaign for dpor proposers committee")
 	ac.mutex.Lock()
 	defer ac.mutex.Unlock()
@@ -137,7 +85,6 @@ func (ac *AdmissionControl) Campaign(terms uint64, address common.Address, backe
 	if ac.status == AcRunning {
 		return nil
 	}
-	ac.SetAdmissopnParameter(backend, address)
 	ac.status = AcRunning
 	ac.err = nil
 	ac.done = make(chan interface{})
@@ -240,6 +187,7 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 		ac.mutex.Unlock()
 		return
 	}
+	fmt.Println("***********************************ac.ac.key.PrivateKey :", ac.key.PrivateKey)
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 	transactOpts.Value = new(big.Int).Mul(configs.Deposit(), new(big.Int).SetUint64(terms))
 	log.Info("transactOpts.Value", "value", transactOpts.Value)
@@ -276,6 +224,13 @@ func (ac *AdmissionControl) setClientBackend(client *cpclient.Client) {
 	ac.contractBackend = client
 }
 
+func (ac *AdmissionControl) SetSimulateBackend(contractBackend contracts.Backend) {
+	ac.mutex.Lock()
+	defer ac.mutex.Unlock()
+
+	ac.contractBackend = contractBackend
+}
+
 // buildWorks creates proof works required by admission
 func (ac *AdmissionControl) buildWorks() {
 	ac.cpuWork = ac.buildCpuProofWork()
@@ -283,26 +238,33 @@ func (ac *AdmissionControl) buildWorks() {
 }
 
 func (ac *AdmissionControl) buildCpuProofWork() ProofWork {
-	return newWork(ac.Parameter.cpuDifficulty, ac.Parameter.cpuWorkTimeout, ac.address, ac.chain.CurrentHeader(), sha256Func)
-}
-
-func (ac *AdmissionControl) SetAdmissopnParameter(contractBackend contracts.Backend, address common.Address) {
-	instance, err := admission.NewAdmissionCaller(address, contractBackend)
+	client := ac.contractBackend
+	instance, err := admission.NewAdmission(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
 	if err != nil {
-		log.Fatal("NewAdmissionCaller is error", "error is ", err)
+		log.Fatal("NewAdmissionCaller is error", "error is", err)
 	}
-	cd, md, clt, mlt, err := instance.GetAdmissionParameters(nil)
+	cd, _, clt, _, err := instance.GetAdmissionParameters(nil)
 	if err != nil {
-		log.Fatal("GetDifficultyParameter is error", "error is ", err)
+		log.Fatal("GetAdmissionParameters is error", "error is ", err)
 	}
-	ac.Parameter.cpuDifficulty = cd.Uint64()
-	ac.Parameter.cpuWorkTimeout = time.Duration(time.Duration(clt.Int64()) * time.Second)
-	ac.Parameter.memoryDifficulty = md.Uint64()
-	ac.Parameter.memoryWorkTimeout = time.Duration(time.Duration(mlt.Int64()) * time.Second)
+	cpuDifficulty := cd.Uint64()
+	cpuLifeTime := time.Duration(time.Duration(clt.Int64()) * time.Second)
+	return newWork(cpuDifficulty, cpuLifeTime, ac.address, ac.chain.CurrentHeader(), sha256Func)
 }
 
 func (ac *AdmissionControl) buildMemoryProofWork() ProofWork {
-	return newWork(ac.Parameter.memoryDifficulty, ac.Parameter.memoryWorkTimeout, ac.address, ac.chain.CurrentHeader(), scryptFunc)
+	client := ac.contractBackend
+	instance, err := admission.NewAdmission(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
+	if err != nil {
+		log.Fatal("NewAdmissionCaller is error", "error is", err)
+	}
+	_, md, _, mct, err := instance.GetAdmissionParameters(nil)
+	if err != nil {
+		log.Fatal("GetDifficultyParameter is error", "error is", err)
+	}
+	memoryDifficulty := md.Uint64()
+	memoryCpuLifeTime := time.Duration(time.Duration(mct.Int64()) * time.Second)
+	return newWork(memoryDifficulty, memoryCpuLifeTime, ac.address, ac.chain.CurrentHeader(), scryptFunc)
 }
 
 // registerProofWork returns all proof work

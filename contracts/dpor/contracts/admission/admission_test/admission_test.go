@@ -24,6 +24,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/admission"
+	"bitbucket.org/cpchain/chain/configs"
 	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
@@ -162,7 +163,9 @@ func computeCorrectPow(contractBackend *backends.SimulatedBackend, addr common.A
 	config.CpuDifficulty = cpuDifficulty
 	config.MemoryDifficulty = memDifficulty
 	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
-	ac.Campaign(1, contractAddress, contractBackend)
+	ac.SetSimulateBackend(contractBackend)
+	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = contractAddress
+	ac.Campaign(1)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum = results[admission.Cpu].BlockNumber

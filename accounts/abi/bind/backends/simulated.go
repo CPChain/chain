@@ -42,13 +42,13 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 )
 
-// This nil assignment ensures compile time that SimulatedBackend implements bind.ContractBackend.
+// This nil assignment ensures compile time that SimulatedBackend implements bind.contractBackend.
 var _ bind.ContractBackend = (*SimulatedBackend)(nil)
 
 var errBlockNumberUnsupported = errors.New("SimulatedBackend cannot access blocks other than the latest block")
 var errGasEstimationFailed = errors.New("gas required exceeds allowance or always failing transaction")
 
-// SimulatedBackend implements bind.ContractBackend, simulating a blockchain in
+// SimulatedBackend implements bind.contractBackend, simulating a blockchain in
 // the background. Its main purpose is to allow easily testing contract bindings.
 type SimulatedBackend struct {
 	database   database.Database // In memory database to store our testing data

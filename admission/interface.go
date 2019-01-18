@@ -22,7 +22,6 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // ApiBackend interface provides the common JSON-RPC API.
@@ -31,7 +30,7 @@ type ApiBackend interface {
 	Apis() []rpc.API
 
 	// Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
-	Campaign(times uint64, address common.Address, backend contracts.Backend) error
+	Campaign(times uint64) error
 
 	// Abort cancels all the proof work associated to the workType.
 	Abort()
@@ -47,6 +46,8 @@ type ApiBackend interface {
 
 	// RegisterInProcHandler registers the rpc.Server, handles RPC request to process the API requests in process
 	RegisterInProcHandler(localRPCServer *rpc.Server)
+
+	SetContractBackend(contractBackend contracts.Backend)
 }
 
 // ProofWork represent a proof work
