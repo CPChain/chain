@@ -74,7 +74,7 @@ func Test_sigHash(t *testing.T) {
 		args     args
 		wantHash common.Hash
 	}{
-		{"sigHash", args{newHeader}, common.HexToHash("0x6bec641135280f927f60fe58ca9cb19dec92413bcc932eed8ac6b6e62c2d8e3d")},
+		{"sigHash", args{newHeader}, common.HexToHash("0x22c08daa37af74c536f057987c3c9400c5c528528cb784fac2c7d5dfaa337c9c")},
 	}
 
 	dporUtil := &defaultDporUtil{}
