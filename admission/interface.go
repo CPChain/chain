@@ -21,6 +21,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/rpc"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 )
 
 // ApiBackend interface provides the common JSON-RPC API.
@@ -45,6 +46,8 @@ type ApiBackend interface {
 
 	// RegisterInProcHandler registers the rpc.Server, handles RPC request to process the API requests in process
 	RegisterInProcHandler(localRPCServer *rpc.Server)
+
+	SetContractBackend(contractBackend contracts.Backend)
 }
 
 // ProofWork represent a proof work
