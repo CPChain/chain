@@ -1,88 +1,48 @@
 package primitive_register
 
 import (
-	"sync"
-	"time"
+	"context"
+	"math/big"
 
-	"bitbucket.org/cpchain/chain/api/cpclient"
-	"bitbucket.org/cpchain/chain/api/rpc"
+	"bitbucket.org/cpchain/chain"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/apibackend_holder"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt_backend_holder"
 	"bitbucket.org/cpchain/chain/core/vm"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type PrimitiveContractChecker struct {
-	available bool
-	lock      sync.RWMutex
+// this ContractAPI only use read contract can't Write or Event filtering
+type ContractAPI interface {
+	CodeAt(ctx context.Context, contract common.Address, blockNumber *big.Int) ([]byte, error)
+	CallContract(ctx context.Context, call cpchain.CallMsg, blockNumber *big.Int) ([]byte, error)
+	PendingCodeAt(ctx context.Context, contract common.Address) ([]byte, error)
+	PendingCallContract(ctx context.Context, call cpchain.CallMsg) ([]byte, error)
+	PendingNonceAt(ctx context.Context, account common.Address) (uint64, error)
+	SuggestGasPrice(ctx context.Context) (*big.Int, error)
+	EstimateGas(ctx context.Context, call cpchain.CallMsg) (gas uint64, err error)
+	SendTransaction(ctx context.Context, tx *types.Transaction) error
+	FilterLogs(ctx context.Context, query cpchain.FilterQuery) ([]types.Log, error)
+	SubscribeFilterLogs(ctx context.Context, query cpchain.FilterQuery, ch chan<- types.Log) (cpchain.Subscription, error)
 }
 
-var primitiveContractCheckerInstance *PrimitiveContractChecker
-var once sync.Once
-
-func GetPrimitiveContractCheckerInstance() *PrimitiveContractChecker {
-	once.Do(func() {
-		primitiveContractCheckerInstance = &PrimitiveContractChecker{}
-	})
-	return primitiveContractCheckerInstance
-}
-
-func (p *PrimitiveContractChecker) IsAvailable() bool {
-	p.lock.RLock()
-	defer p.lock.RUnlock()
-	return p.available
-}
-
-func (p *PrimitiveContractChecker) SetAvailable(available bool) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	p.available = available
-}
-
-// TODO time is not for synchronization! REWRITE THIS @xumx
-func (p *PrimitiveContractChecker) WaitInitCompleteUntilTimeout() {
-	for i := 0; i < 10; i++ {
-		if !p.IsAvailable() {
-			time.Sleep(time.Duration(1) * time.Second)
-		} else {
-			log.Info("detect init Primitive Contract Complete")
-			return
-		}
-
-	}
-	log.Fatal("Init Primitive Contract Timeout,Exit")
-}
-
-type node interface {
-	Service(service interface{}) error
-	Attach() (*rpc.Client, error)
-}
-
-func RegisterPrimitiveContracts(n node) {
-	rpcClient, err := n.Attach()
-	if err != nil {
-		log.Fatal("can't get rpc.client after start", "error", err)
-	}
-	client := cpclient.NewClient(rpcClient)
-	contractClient := client
-	chainClient := getChainClient(client)
-	for addr, c := range MakePrimitiveContracts(contractClient, chainClient) {
-		err = vm.RegisterPrimitiveContract(addr, c)
+func RegisterPrimitiveContracts() {
+	chainClient := getChainClient()
+	for addr, c := range MakePrimitiveContracts(chainClient, chainClient) {
+		err := vm.RegisterPrimitiveContract(addr, c)
 		if err != nil {
 			log.Fatal("register primitive contract error", "error", err, "addr", addr)
 		}
 	}
-	// change available to true
-	GetPrimitiveContractCheckerInstance().SetAvailable(true)
 }
 
-func getChainClient(c *cpclient.Client) apibackend_holder.ChainApiClient {
-	return apibackend_holder.ChainApiClient{ApiBackend: apibackend_holder.GetApiBackendHolderInstance().ApiBackend}
+func getChainClient() *rpt_backend_holder.RptApiClient {
+	return &rpt_backend_holder.RptApiClient{ChainBackend: rpt_backend_holder.GetApiBackendHolderInstance().ChainBackend, ContractBackend: rpt_backend_holder.GetApiBackendHolderInstance().ContractBackend}
 }
 
-func MakePrimitiveContracts(contractClient backend.ContractBackend, chainClient apibackend_holder.ChainApiClient) map[common.Address]vm.PrimitiveContract {
+func MakePrimitiveContracts(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.RptApiClient) map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
 
 	// we start from 100 to reserve enough space for upstream primitive contracts.
