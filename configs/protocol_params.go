@@ -81,7 +81,7 @@ var (
 )
 
 var (
-	//Cep1BlockReward = new(big.Int).Mul(big.NewInt(500), big.NewInt(1e+18))  // 500e+18 Block reward 500 cpc for successfully mining a block
+	// the calculation is based on 10 s a block	is generated.
 	Cep1BlockRewardY1 = new(big.Int).Mul(big.NewInt(1265), big.NewInt(1e+16)) // reward 12.65 cpc per block
 	Cep1BlockRewardY2 = new(big.Int).Mul(big.NewInt(951), big.NewInt(1e+16))  // reward 9.51 cpc per block
 	Cep1BlockRewardY3 = new(big.Int).Mul(big.NewInt(713), big.NewInt(1e+16))  // reward 7.13 cpc per block
