@@ -83,7 +83,7 @@ func (cc *RptApiClient) HeaderByNumber(ctx context.Context, number *big.Int) (*t
 }
 
 func (cc *RptApiClient) CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error) {
-	blockNr := rpc.EarliestBlockNumber
+	blockNr := rpc.LatestBlockNumber
 	state, _, err := cc.ChainBackend.StateAndHeaderByNumber(ctx, blockNr, false)
 	if state == nil || err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (cc *RptApiClient) CodeAt(ctx context.Context, account common.Address, bloc
 }
 
 func (cc *RptApiClient) CallContract(ctx context.Context, call cpchain.CallMsg, blockNumber *big.Int) ([]byte, error) {
-	result, err := cc.ContractBackend.Call(ctx, toCallArg(call), rpc.EarliestBlockNumber)
+	result, err := cc.ContractBackend.Call(ctx, toCallArg(call), rpc.LatestBlockNumber)
 	if err != nil {
 		log.Fatal("CallContract using PublicBlockChainAPI is error ", "error is ", err)
 	}
