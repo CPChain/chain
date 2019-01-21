@@ -3,9 +3,11 @@ package syncer
 import (
 	"errors"
 	"math/big"
+	"sync"
 	"sync/atomic"
 	"time"
 
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -50,6 +52,8 @@ type Syncer interface {
 
 	// Cancel cancels sync process from remote peer
 	Cancel(id string)
+
+	Progress() cpchain.SyncProgress
 
 	// Synchronising returns if synchronising now
 	Synchronising() bool
@@ -98,6 +102,9 @@ type Synchronizer struct {
 	syncRequestsCh chan uint64
 	cancelCh       chan struct{}
 	quitCh         chan struct{}
+
+	progress     *cpchain.SyncProgress
+	progressLock sync.RWMutex
 }
 
 func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
@@ -109,6 +116,7 @@ func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
 		syncRequestsCh: make(chan uint64, 1),
 		cancelCh:       make(chan struct{}),
 		quitCh:         make(chan struct{}),
+		progress:       &cpchain.SyncProgress{},
 	}
 }
 
@@ -161,6 +169,14 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 	s.currentPeer = p
 	s.cancelCh = make(chan struct{})
 
+	s.progressLock.Lock()
+	s.progress.CurrentBlock = currentNumber
+	s.progress.StartingBlock = currentNumber
+	s.progress.PulledStates = currentNumber
+	s.progress.HighestBlock = height
+	s.progress.KnownStates = height
+	s.progressLock.Unlock()
+
 	go s.sendRequestLoop()
 
 	defer s.Cancel(p.IDString())
@@ -178,6 +194,10 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 		case blocks := <-s.syncBlocksCh:
 
 			log.Debug("received blocks from peer", "id", p.IDString())
+
+			s.progressLock.Lock()
+			s.progress.CurrentBlock = s.blockchain.CurrentBlock().NumberU64()
+			s.progressLock.Unlock()
 
 			// handle received blocks
 			_, err := s.blockchain.InsertChain(blocks)
@@ -243,4 +263,11 @@ func (s *Synchronizer) DeliverBlocks(id string, blocks types.Blocks) error {
 		return nil
 	}
 	return errCanceled
+}
+
+func (s *Synchronizer) Progress() cpchain.SyncProgress {
+	s.progressLock.RLock()
+	defer s.progressLock.RUnlock()
+
+	return *s.progress
 }

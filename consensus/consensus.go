@@ -86,6 +86,12 @@ type Engine interface {
 	// the consensus rules of the given engine.
 	VerifySigs(chain ChainReader, header *types.Header, refHeader *types.Header) error
 
+	// CanMakeBlock returns true or false to indicate whether the consensus engine can make new block.
+	CanMakeBlock(chain ChainReader, coinbase common.Address, parent *types.Header) bool
+
+	// TryCampaign checks whether it is time to participate proposer campaign and try to participate if it is true
+	TryCampaign()
+
 	// PrepareBlock initializes the consensus fields of a block header according to the
 	// rules of a particular engine. The changes are executed inline.
 	PrepareBlock(chain ChainReader, header *types.Header) error

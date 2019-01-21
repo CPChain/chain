@@ -30,8 +30,8 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -208,7 +208,7 @@ func (b *APIBackend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subs
 	return b.cpc.TxPool().SubscribeNewTxsEvent(ch)
 }
 
-func (b *APIBackend) Downloader() *downloader.Downloader {
+func (b *APIBackend) Downloader() syncer.Syncer {
 	return b.cpc.Downloader()
 }
 

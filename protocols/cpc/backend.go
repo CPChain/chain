@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/apibackend_holder"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt_backend_holder"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -41,9 +41,9 @@ import (
 	"bitbucket.org/cpchain/chain/miner"
 	"bitbucket.org/cpchain/chain/node"
 	"bitbucket.org/cpchain/chain/private"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/filters"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -192,7 +192,8 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
 	// TODO: fix this, @Xumx
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission)
-	apibackend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend)
+	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
+	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	return cpc, nil
 }
 
@@ -262,12 +263,12 @@ func (s *CpchainService) APIs() []rpc.API {
 		// 	Public:    true,
 		// },
 		// // TODO: fix this @liuq
-		// {
-		// 	Namespace: "eth",
-		// 	Version:   "1.0",
-		// 	Service:   downloader.NewPublicDownloaderAPI(s.protocolManager.downloader, s.eventMux),
-		// 	Public:    true,
-		// },
+		{
+			Namespace: "eth",
+			Version:   "1.0",
+			Service:   syncer.NewPublicDownloaderAPI(s.protocolManager.syncer, s.eventMux),
+			Public:    true,
+		},
 		{
 			Namespace: "miner",
 			Version:   "1.0",
@@ -432,10 +433,9 @@ func (s *CpchainService) ChainDb() database.Database        { return s.chainDb }
 func (s *CpchainService) IsListening() bool                 { return true }                                           // Always listening
 func (s *CpchainService) CpcVersion() int                   { return int(s.protocolManager.SubProtocols[0].Version) } // the first protocol is the latest version.
 func (s *CpchainService) NetVersion() uint64                { return s.networkID }
-func (s *CpchainService) Downloader() *downloader.Downloader {
+func (s *CpchainService) Downloader() syncer.Syncer {
 	//TODO: fix this @liuq
-	// return s.protocolManager.downloader
-	return nil
+	return s.protocolManager.syncer
 }
 func (s *CpchainService) RemoteDB() database.RemoteDatabase { return s.remoteDB }
 
