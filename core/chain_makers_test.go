@@ -40,11 +40,36 @@ func ExampleGenerateChain() {
 		remoteDB = database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	)
 
+	type configBackup struct {
+		Cep1LastBlockY1 *big.Int
+		Cep1LastBlockY2 *big.Int
+		Cep1LastBlockY3 *big.Int
+		Cep1LastBlockY4 *big.Int
+		Cep1LastBlockY5 *big.Int
+	}
+	bak := configBackup{
+		Cep1LastBlockY1: configs.Cep1LastBlockY1,
+		Cep1LastBlockY2: configs.Cep1LastBlockY2,
+		Cep1LastBlockY3: configs.Cep1LastBlockY3,
+		Cep1LastBlockY4: configs.Cep1LastBlockY4,
+		Cep1LastBlockY5: configs.Cep1LastBlockY5,
+	}
+
 	configs.Cep1LastBlockY1 = big.NewInt(1)
 	configs.Cep1LastBlockY2 = big.NewInt(2)
 	configs.Cep1LastBlockY3 = big.NewInt(3)
 	configs.Cep1LastBlockY4 = big.NewInt(4)
 	configs.Cep1LastBlockY5 = big.NewInt(5)
+
+	// recover configs.Cep1LastBlockYx
+	defer func() {
+		configs.Cep1LastBlockY1 = bak.Cep1LastBlockY1
+		configs.Cep1LastBlockY2 = bak.Cep1LastBlockY2
+		configs.Cep1LastBlockY3 = bak.Cep1LastBlockY3
+		configs.Cep1LastBlockY4 = bak.Cep1LastBlockY4
+		configs.Cep1LastBlockY5 = bak.Cep1LastBlockY5
+
+	}()
 
 	// Ensure that key1 has some funds in the genesis block.
 	gspec := DefaultGenesisBlock()
