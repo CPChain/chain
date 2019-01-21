@@ -24,8 +24,8 @@ CPC fusion provides APIs for interested users to create a wallet address.
 
         .. code-block:: shell
 
-            $ cd ./examples
-            $ ./cpchain-all.sh
+            $ cd ./examples/cpchain
+            $ sudo ./cpchain-all.sh
 
         Note that starting a local chain may fails. You may try several times until success.
 
