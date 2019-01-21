@@ -45,8 +45,8 @@ Before connecting, you must set up a local chain or sync with our Mainnet
 
         .. code-block:: shell
 
-            $ cd ./examples
-            $ ./cpchain-all.sh
+            $ cd ./examples/cpchain
+            $ sudo ./cpchain-all.sh
 
         Note that starting a local chain may fails. You may try several times until success.
 
@@ -77,6 +77,9 @@ Use the ``auto`` module to :ref:`guess at common node connection options
 API reference
 -----------------
 
+
+CPC
+######
 
 .. py:module:: cpc_fusion.cpc
 
