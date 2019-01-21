@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -1243,6 +1244,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		log.Info("Imported new block", "number", chain[i].Number().Int64(), "hash", chain[i].Hash().Hex())
 		stats.report(chain, i, cache)
+		// send metrics msg to monitor(prometheus)
+		if chainmetrics.NeedMetrics() {
+			go chainmetrics.ReportBlockNumberGauge("blocknumber", float64(chain[i].Number().Int64()))
+		}
 	}
 	// Append a single chain head event if we've progressed the chain
 	if lastCanon != nil && bc.CurrentBlock().Hash() == lastCanon.Hash() {

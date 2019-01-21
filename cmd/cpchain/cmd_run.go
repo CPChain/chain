@@ -27,6 +27,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
+	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
@@ -259,6 +260,12 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 			log.Fatalf("start profiling failed: %v\n", err)
 		}
 	}
+
+	// init metrics
+	if ctx.IsSet(flags.MetricGatewayFlagName) {
+		chainmetrics.InitMetrics(ctx.String(flags.PortFlagName), ctx.String(flags.MetricGatewayFlagName))
+	}
+
 	startNode(n)
 	unlockAccounts(ctx, n)
 	handleWallet(n)
