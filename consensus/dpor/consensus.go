@@ -199,15 +199,28 @@ func (d *Dpor) TryCampaign() {
 	}
 }
 
-func addCoinbaseReward(coinbase common.Address, state *state.StateDB) {
-	amount := new(big.Int).Set(configs.Cep1BlockReward)
+func addCoinbaseReward(coinbase common.Address, state *state.StateDB, number *big.Int) {
+	var amount *big.Int
+	if number.Cmp(configs.Cep1LastBlockY1) <= 0 {
+		amount = configs.Cep1BlockRewardY1
+	} else if number.Cmp(configs.Cep1LastBlockY2) <= 0 {
+		amount = configs.Cep1BlockRewardY2
+	} else if number.Cmp(configs.Cep1LastBlockY3) <= 0 {
+		amount = configs.Cep1BlockRewardY3
+	} else if number.Cmp(configs.Cep1LastBlockY4) <= 0 {
+		amount = configs.Cep1BlockRewardY4
+	} else if number.Cmp(configs.Cep1LastBlockY5) <= 0 {
+		amount = configs.Cep1BlockRewardY5
+	} else {
+		amount = big.NewInt(0)
+	}
 	state.AddBalance(coinbase, amount)
 }
 
 // Finalize implements consensus.Engine, ensuring no uncles are set, nor block
 // rewards given, and returns the final block.
 func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
-	addCoinbaseReward(header.Coinbase, state)
+	addCoinbaseReward(header.Coinbase, state, header.Number)
 	// last step
 	header.StateRoot = state.IntermediateRoot(true)
 	// Assemble and return the final block for sealing
