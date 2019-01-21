@@ -45,10 +45,12 @@ func NewRemoteValidator(term uint64, address common.Address) *RemoteValidator {
 		queuedPreprepareBlocks: make(chan *types.Block, maxQueuedBlocks),
 		queuedPrepareHeaders:   make(chan *types.Header, maxQueuedHeaders),
 		queuedCommitHeaders:    make(chan *types.Header, maxQueuedHeaders),
+		queuedValidateBlocks:   make(chan *types.Block, maxQueuedBlocks),
 
 		queuedPreprepareImpeachBlocks: make(chan *types.Block, maxQueuedBlocks),
 		queuedPrepareImpeachHeaders:   make(chan *types.Header, maxQueuedHeaders),
 		queuedCommitImpeachHeaders:    make(chan *types.Header, maxQueuedHeaders),
+		queuedValidateImpeachBlocks:   make(chan *types.Block, maxQueuedBlocks),
 
 		quitCh: make(chan struct{}),
 	}
@@ -186,22 +188,10 @@ func (s *RemoteValidator) broadcastLoop() {
 			if err := s.SendPreprepareBlock(block); err != nil {
 				return
 			}
-			s.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
-
-		case block := <-s.queuedPreprepareImpeachBlocks:
-			if err := s.SendPreprepareImpeachBlock(block); err != nil {
-				return
-			}
-			s.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
+			s.Log().Trace("Propagated generated block", "number", block.NumberU64(), "hash", block.Hash())
 
 		case header := <-s.queuedPrepareHeaders:
 			if err := s.SendPrepareHeader(header); err != nil {
-				return
-			}
-			s.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
-
-		case header := <-s.queuedPrepareImpeachHeaders:
-			if err := s.SendPrepareImpeachHeader(header); err != nil {
 				return
 			}
 			s.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
@@ -212,11 +202,35 @@ func (s *RemoteValidator) broadcastLoop() {
 			}
 			s.Log().Trace("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
 
+		case block := <-s.queuedValidateBlocks:
+			if err := s.SendValidateBlock(block); err != nil {
+				return
+			}
+			s.Log().Trace("Propagated validate block", "number", block.NumberU64(), "hash", block.Hash())
+
+		case block := <-s.queuedPreprepareImpeachBlocks:
+			if err := s.SendPreprepareImpeachBlock(block); err != nil {
+				return
+			}
+			s.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
+
+		case header := <-s.queuedPrepareImpeachHeaders:
+			if err := s.SendPrepareImpeachHeader(header); err != nil {
+				return
+			}
+			s.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
+
 		case header := <-s.queuedCommitImpeachHeaders:
 			if err := s.SendCommitImpeachHeader(header); err != nil {
 				return
 			}
 			s.Log().Trace("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
+
+		case block := <-s.queuedValidateImpeachBlocks:
+			if err := s.SendImpeachValidateBlock(block); err != nil {
+				return
+			}
+			s.Log().Trace("Propagated validate block", "number", block.NumberU64(), "hash", block.Hash())
 
 		case <-s.quitCh:
 			return

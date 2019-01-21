@@ -42,7 +42,8 @@ type Handler struct {
 
 	dialer *Dialer
 	snap   *consensus.PbftStatus
-	fsm    *DporStateMachine
+	fsm    ConsensusStateMachine
+	lbft   *LBFT
 	dpor   DporService
 
 	knownBlocks    *RecentBlocks
@@ -67,7 +68,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 
 	// TODO: fix this
 	h.mode = LBFTMode
-	// h.mode = PBFTMode
+	// h.mode = LBFT2Mode
 
 	return h
 }
@@ -198,8 +199,10 @@ func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 	switch h.mode {
 	case LBFTMode:
 		return h.handleLbftMsg(msg, p)
-	case PBFTMode:
-		return h.handlePbftMsg(msg, p)
+	case LBFT2Mode:
+		return h.handleLbft2Msg(msg, p)
+	// case PBFTMode:
+	// return h.handlePbftMsg(msg, p)
 	default:
 		return ErrUnknownHandlerMode
 	}
@@ -218,7 +221,7 @@ func (h *Handler) SetDporService(dpor DporService) error {
 }
 
 // SetDporStateMachine sets dpor state machine
-func (h *Handler) SetDporStateMachine(fsm *DporStateMachine) error {
+func (h *Handler) SetDporStateMachine(fsm ConsensusStateMachine) error {
 	h.fsm = fsm
 	return nil
 }

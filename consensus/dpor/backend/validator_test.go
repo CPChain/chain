@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
-func TestHandler_handleLbftMsg(t *testing.T) {
+func TestHandler_handleLbft2Msg(t *testing.T) {
 	type fields struct {
 		mode           HandlerMode
 		config         *configs.DporConfig
@@ -20,7 +20,8 @@ func TestHandler_handleLbftMsg(t *testing.T) {
 		coinbase       common.Address
 		dialer         *Dialer
 		snap           *consensus.PbftStatus
-		fsm            *DporStateMachine
+		fsm            ConsensusStateMachine
+		lbft           *LBFT
 		dpor           DporService
 		knownBlocks    *RecentBlocks
 		pendingBlockCh chan *types.Block
@@ -50,13 +51,14 @@ func TestHandler_handleLbftMsg(t *testing.T) {
 				dialer:         tt.fields.dialer,
 				snap:           tt.fields.snap,
 				fsm:            tt.fields.fsm,
+				lbft:           tt.fields.lbft,
 				dpor:           tt.fields.dpor,
 				knownBlocks:    tt.fields.knownBlocks,
 				pendingBlockCh: tt.fields.pendingBlockCh,
 				quitCh:         tt.fields.quitCh,
 			}
-			if err := vh.handleLbftMsg(tt.args.msg, tt.args.p); (err != nil) != tt.wantErr {
-				t.Errorf("Handler.handleLbftMsg() error = %v, wantErr %v", err, tt.wantErr)
+			if err := vh.handleLbft2Msg(tt.args.msg, tt.args.p); (err != nil) != tt.wantErr {
+				t.Errorf("Handler.handleLbft2Msg() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

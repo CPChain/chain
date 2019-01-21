@@ -24,7 +24,7 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 				log.Debug("validator", "addr", addr.Hex())
 			}
 
-			if len(validators) >= int(h.config.TermLen-h.fsm.faulty) {
+			if len(validators) >= int(h.config.TermLen-h.fsm.Faulty()) {
 				return
 			}
 

@@ -98,12 +98,6 @@ type DSMStatus struct {
 	State  consensus.State
 }
 
-// ConsensusStateMachine is a state machine used for consensus protocol for validators msg processing
-type ConsensusStateMachine interface {
-	Status() DSMStatus
-	FSM(input interface{}, inputType DataType, msg MsgCode) ([]interface{}, Action, DataType, MsgCode, error)
-}
-
 //DporStateMachine is a struct containing variables used for state transition in FSM
 type DporStateMachine struct {
 	state     consensus.State
@@ -261,7 +255,7 @@ func (dsm *DporStateMachine) updatePrepareSignatures(h *types.Header) error {
 	dsm.updateNumber(h.Number.Uint64())
 
 	// retrieve signers for checking
-	signers, sigs, err := dsm.dpor.EcrecoverSigs(h, consensus.Preprepared)
+	signers, sigs, err := dsm.dpor.ECRecoverSigs(h, consensus.Preprepared)
 	if err != nil {
 		log.Warn("failed to recover signatures of preparing phase", "error", err)
 		return err
@@ -326,7 +320,7 @@ func (dsm *DporStateMachine) updateCommitSignatures(h *types.Header) error {
 	dsm.updateNumber(h.Number.Uint64())
 
 	// retrieve signers for checking
-	signers, sigs, err := dsm.dpor.EcrecoverSigs(h, consensus.Prepared)
+	signers, sigs, err := dsm.dpor.ECRecoverSigs(h, consensus.Prepared)
 	if err != nil {
 		log.Warn("failed to recover signatures of committing phase", "error", err)
 		return err

@@ -206,10 +206,10 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	return impeach, nil
 }
 
-// EcrecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
+// ECRecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
 // addresses if one of the sigs are illegal
 // TODO: refactor this, return a map[common.Address]dpor.Signature
-func (d *Dpor) EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error) {
+func (d *Dpor) ECRecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error) {
 
 	// get hash with state
 	hashToSign, err := HashBytesWithState(d.dh.sigHash(header).Bytes(), state)
