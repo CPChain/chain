@@ -4,12 +4,9 @@ import (
 	"errors"
 	"math"
 	"math/big"
+	"reflect"
 	"sync"
 	"time"
-
-	"fmt"
-
-	"reflect"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -189,7 +186,6 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 		ac.mutex.Unlock()
 		return
 	}
-	fmt.Println("***********************************ac.ac.key.PrivateKey :", ac.key.PrivateKey)
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 	transactOpts.Value = new(big.Int).Mul(configs.Deposit(), new(big.Int).SetUint64(terms))
 	log.Info("transactOpts.Value", "value", transactOpts.Value)

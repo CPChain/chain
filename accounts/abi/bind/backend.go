@@ -104,7 +104,7 @@ type DeployBackend interface {
 	CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error)
 }
 
-// contractBackend defines the methods needed to work with contracts on a read-write basis.
+// ContractBackend defines the methods needed to work with contracts on a read-write basis.
 type ContractBackend interface {
 	ContractCaller
 	ContractTransactor

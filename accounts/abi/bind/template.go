@@ -59,7 +59,7 @@ package {{.Package}}
 		const {{.Type}}Bin = ` + "`" + `{{.InputBin}}` + "`" + `
 
 		// Deploy{{.Type}} deploys a new cpchain contract, binding an instance of {{.Type}} to it.
-		func Deploy{{.Type}}(auth *bind.TransactOpts, backend bind.contractBackend {{range .Constructor.Inputs}}, {{.Name}} {{bindtype .Type}}{{end}}) (common.Address, *types.Transaction, *{{.Type}}, error) {
+		func Deploy{{.Type}}(auth *bind.TransactOpts, backend bind.ContractBackend {{range .Constructor.Inputs}}, {{.Name}} {{bindtype .Type}}{{end}}) (common.Address, *types.Transaction, *{{.Type}}, error) {
 		  parsed, err := abi.JSON(strings.NewReader({{.Type}}ABI))
 		  if err != nil {
 		    return common.Address{}, nil, nil, err
@@ -132,7 +132,7 @@ package {{.Package}}
 	}
 
 	// New{{.Type}} creates a new instance of {{.Type}}, bound to a specific deployed contract.
-	func New{{.Type}}(address common.Address, backend bind.contractBackend) (*{{.Type}}, error) {
+	func New{{.Type}}(address common.Address, backend bind.ContractBackend) (*{{.Type}}, error) {
 	  contract, err := bind{{.Type}}(address, backend, backend, backend)
 	  if err != nil {
 	    return nil, err
