@@ -27,6 +27,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
+	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
@@ -76,6 +77,7 @@ func run(ctx *cli.Context) error {
 func registerChainService(cfg *cpc.Config, n *node.Node, cliCtx *cli.Context) {
 	err := n.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 		fullNode, err := cpc.New(ctx, cfg)
+		primitive_register.RegisterPrimitiveContracts()
 
 		if cliCtx.Bool("mine") {
 			fullNode.SetAsMiner(true)
@@ -100,8 +102,6 @@ func startNode(n *node.Node) {
 	if err := n.Start(); err != nil {
 		log.Fatalf("Error starting protocol n: %v", err)
 	}
-	// TODO @xumx this is wrong!  please register vm primitive contracts before node is started.
-	primitive_register.RegisterPrimitiveContracts(n)
 }
 
 // makePasswordList reads password lines from the file specified by the global --password flag.
@@ -260,6 +260,12 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 			log.Fatalf("start profiling failed: %v\n", err)
 		}
 	}
+
+	// init metrics
+	if ctx.IsSet(flags.MetricGatewayFlagName) {
+		chainmetrics.InitMetrics(ctx.String(flags.PortFlagName), ctx.String(flags.MetricGatewayFlagName))
+	}
+
 	startNode(n)
 	unlockAccounts(ctx, n)
 	handleWallet(n)

@@ -90,7 +90,7 @@ func newTester() *downloadTester {
 		ownHeaders:        map[common.Hash]*types.Header{genesis.Hash(): genesis.Header()},
 		ownBlocks:         map[common.Hash]*types.Block{genesis.Hash(): genesis},
 		ownReceipts:       map[common.Hash]types.Receipts{genesis.Hash(): nil},
-		ownChainTd:        map[common.Hash]*big.Int{genesis.Hash(): genesis.Difficulty()},
+		ownChainTd:        map[common.Hash]*big.Int{genesis.Hash(): big.NewInt(0)},
 		peerHashes:        make(map[string][]common.Hash),
 		peerHeaders:       make(map[string]map[common.Hash]*types.Header),
 		peerBlocks:        make(map[string]map[common.Hash]*types.Block),
@@ -326,7 +326,7 @@ func (dl *downloadTester) InsertHeaderChain(headers []*types.Header, checkFreq i
 		}
 		dl.ownHashes = append(dl.ownHashes, header.Hash())
 		dl.ownHeaders[header.Hash()] = header
-		dl.ownChainTd[header.Hash()] = new(big.Int).Add(dl.ownChainTd[header.ParentHash], header.Difficulty)
+		dl.ownChainTd[header.Hash()] = new(big.Int).Add(dl.ownChainTd[header.ParentHash], big.NewInt(0))
 	}
 	return len(headers), nil
 }
@@ -348,7 +348,7 @@ func (dl *downloadTester) InsertChain(blocks types.Blocks) (int, error) {
 		}
 		dl.ownBlocks[block.Hash()] = block
 		dl.stateDb.Put(block.StateRoot().Bytes(), []byte{0x00})
-		dl.ownChainTd[block.Hash()] = new(big.Int).Add(dl.ownChainTd[block.ParentHash()], block.Difficulty())
+		dl.ownChainTd[block.Hash()] = new(big.Int).Add(dl.ownChainTd[block.ParentHash()], big.NewInt(0))
 	}
 	return len(blocks), nil
 }
@@ -419,11 +419,11 @@ func (dl *downloadTester) newSlowPeer(id string, version int, hashes []common.Ha
 		genesis := hashes[len(hashes)-1]
 		if header := headers[genesis]; header != nil {
 			dl.peerHeaders[id][genesis] = header
-			dl.peerChainTds[id][genesis] = header.Difficulty
+			dl.peerChainTds[id][genesis] = big.NewInt(0)
 		}
 		if block := blocks[genesis]; block != nil {
 			dl.peerBlocks[id][genesis] = block
-			dl.peerChainTds[id][genesis] = block.Difficulty()
+			dl.peerChainTds[id][genesis] = big.NewInt(0)
 		}
 
 		for i := len(hashes) - 2; i >= 0; i-- {
@@ -432,13 +432,13 @@ func (dl *downloadTester) newSlowPeer(id string, version int, hashes []common.Ha
 			if header, ok := headers[hash]; ok {
 				dl.peerHeaders[id][hash] = header
 				if _, ok := dl.peerHeaders[id][header.ParentHash]; ok {
-					dl.peerChainTds[id][hash] = new(big.Int).Add(header.Difficulty, dl.peerChainTds[id][header.ParentHash])
+					dl.peerChainTds[id][hash] = new(big.Int).Add(big.NewInt(0), dl.peerChainTds[id][header.ParentHash])
 				}
 			}
 			if block, ok := blocks[hash]; ok {
 				dl.peerBlocks[id][hash] = block
 				if _, ok := dl.peerBlocks[id][block.ParentHash()]; ok {
-					dl.peerChainTds[id][hash] = new(big.Int).Add(block.Difficulty(), dl.peerChainTds[id][block.ParentHash()])
+					dl.peerChainTds[id][hash] = new(big.Int).Add(big.NewInt(0), dl.peerChainTds[id][block.ParentHash()])
 				}
 			}
 			if receipt, ok := receipts[hash]; ok {

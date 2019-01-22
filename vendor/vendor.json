@@ -33,6 +33,12 @@
 			"revisionTime": "2017-02-10T01:56:32Z"
 		},
 		{
+			"checksumSHA1": "7Zq41q7RBgwR6XSfTK/yl756I2Y=",
+			"path": "github.com/beorn7",
+			"revision": "",
+			"tree": true
+		},
+		{
 			"checksumSHA1": "gZQ6HheWahvZzIc3phBnOwoWHjE=",
 			"path": "github.com/btcsuite/btcd/btcec",
 			"revision": ""
@@ -142,6 +148,13 @@
 			"path": "github.com/gogo/protobuf/proto",
 			"revision": "98f6aa8b3bcf03e45b1a8b48257c754766d5c3c8",
 			"revisionTime": "2018-08-21T10:22:07Z"
+		},
+		{
+			"checksumSHA1": "gyAdDIU4fkZ0DYCeLM0EKAw6gl8=",
+			"path": "github.com/golang/protobuf",
+			"revision": "347cf4a86c1cb8d262994d8ef5924d4576c5b331",
+			"revisionTime": "2019-01-09T07:22:47Z",
+			"tree": true
 		},
 		{
 			"checksumSHA1": "p/8vSviYF91gFflhrt5vkyksroo=",
@@ -323,6 +336,12 @@
 			"revisionTime": "2017-02-09T17:56:15Z"
 		},
 		{
+			"checksumSHA1": "fjoxssztxO0Y5yrBRrKlthE0RZw=",
+			"path": "github.com/matttproud",
+			"revision": "",
+			"tree": true
+		},
+		{
 			"checksumSHA1": "mJQtsTCZGhCmjdFtXBWryZSri/o=",
 			"path": "github.com/minio/blake2b-simd",
 			"revision": "3f5f724cb5b182a5c278d6d3d55b40e7f8c2efb4",
@@ -411,6 +430,13 @@
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "792786c7400a136282c1664665ae0a8db921c6c2",
 			"revisionTime": "2016-01-10T10:55:54Z"
+		},
+		{
+			"checksumSHA1": "W+M7zXbws3lq8QBP9c+kkHqVu7k=",
+			"path": "github.com/prometheus/client_golang/prometheus",
+			"revision": "26e258bb9c9a94c26d4a46ff302ec7e855b82e10",
+			"revisionTime": "2019-01-16T23:08:44Z",
+			"tree": true
 		},
 		{
 			"checksumSHA1": "WbbxCn2jUYIL5viqLo0BKXEdPrQ=",

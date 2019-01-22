@@ -214,7 +214,6 @@ func makeChainForBench(db database.Database, full bool, count uint64) {
 			Coinbase:     common.Address{},
 			Number:       big.NewInt(int64(n)),
 			ParentHash:   hash,
-			Difficulty:   big.NewInt(1),
 			TxsRoot:      types.EmptyRootHash,
 			ReceiptsRoot: types.EmptyRootHash,
 		}
@@ -222,7 +221,6 @@ func makeChainForBench(db database.Database, full bool, count uint64) {
 
 		rawdb.WriteHeader(db, header)
 		rawdb.WriteCanonicalHash(db, hash, n)
-		rawdb.WriteTd(db, hash, n, big.NewInt(int64(n+1)))
 
 		if full || n == 0 {
 			block := types.NewBlockWithHeader(header)

@@ -28,7 +28,6 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
 	rtp_contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"bitbucket.org/cpchain/chain/core"
@@ -62,7 +61,6 @@ func newHeader() *types.Header {
 		StateRoot:    common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
 		TxsRoot:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
 		ReceiptsRoot: common.HexToHash("0xbc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52"),
-		Difficulty:   big.NewInt(131072),
 		Number:       big.NewInt(1),
 		GasLimit:     uint64(3141592),
 		GasUsed:      uint64(21000),
@@ -197,7 +195,6 @@ func TestRptServiceImpl_CalcRptInfoList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			primitive_register.GetPrimitiveContractCheckerInstance().SetAvailable(true)
 			rs, _ := rpt.NewRptService(tt.fields.Client, tt.fields.RptContract)
 			tt.prepare()
 			log.Printf("Testcase [%s], RPT: %v", tt.name, rs.CalcRptInfoList(tt.args.addresses, tt.args.number)[0].Rpt)

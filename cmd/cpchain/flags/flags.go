@@ -247,6 +247,7 @@ const (
 	IdentityFlagName       = "identity"
 	ProfileFlagName        = "profile"
 	ProfileAddressFlagName = "profileaddr"
+	MetricGatewayFlagName  = "metricgateway"
 )
 
 var NodeFlags = []cli.Flag{
@@ -261,6 +262,11 @@ var NodeFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  ProfileAddressFlagName,
 		Usage: "Profile http service address",
+	},
+	cli.StringFlag{
+		Name:  MetricGatewayFlagName,
+		Usage: "Metric Gateway Address",
+		Value: "",
 	},
 }
 

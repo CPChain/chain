@@ -45,14 +45,6 @@ type fakeDporUtil struct {
 	success bool
 }
 
-func (f *fakeDporUtil) calcDifficulty(snap *DporSnapshot, signer common.Address) *big.Int {
-	if f.success {
-		return big.NewInt(10)
-	} else {
-		return nil
-	}
-}
-
 type fakeDporHelper struct {
 	dporUtil
 	verifySuccess   bool

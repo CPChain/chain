@@ -29,10 +29,12 @@ import (
 )
 
 var (
-	endPoint                = "http://localhost:8501"
-	keyStoreFilePath        = "./chain/examples/cpchain/data/data1/keystore/"
-	DefaultCPUDifficulty    = uint64(3)
-	DefaultMemoryDifficulty = uint64(3)
+	endPoint                 = "http://localhost:8501"
+	keyStoreFilePath         = "./chain/examples/cpchain/data/data1/keystore/"
+	DefaultCPUDifficulty     = uint64(3)
+	DefaultMemoryDifficulty  = uint64(3)
+	DefaultCpuWorkTimeout    = uint64(8)
+	DefaultMemoryWorkTimeout = uint64(8)
 )
 
 // overwrite from environment variables

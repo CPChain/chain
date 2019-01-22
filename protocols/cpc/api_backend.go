@@ -30,8 +30,8 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -140,10 +140,6 @@ func (b *APIBackend) GetLogs(ctx context.Context, hash common.Hash) ([][]*types.
 	return logs, nil
 }
 
-func (b *APIBackend) GetTd(blockHash common.Hash) *big.Int {
-	return b.cpc.blockchain.GetTdByHash(blockHash)
-}
-
 func (b *APIBackend) GetEVM(ctx context.Context, msg core.Message, state *state.StateDB, header *types.Header, vmCfg vm.Config) (*vm.EVM, func() error, error) {
 	state.SetBalance(msg.From(), math.MaxBig256)
 	vmError := func() error { return nil }
@@ -208,7 +204,7 @@ func (b *APIBackend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subs
 	return b.cpc.TxPool().SubscribeNewTxsEvent(ch)
 }
 
-func (b *APIBackend) Downloader() *downloader.Downloader {
+func (b *APIBackend) Downloader() syncer.Syncer {
 	return b.cpc.Downloader()
 }
 

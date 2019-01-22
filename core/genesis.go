@@ -236,16 +236,12 @@ func (g *Genesis) ToBlock(db database.Database) *types.Block {
 		Extra:      g.ExtraData,
 		GasLimit:   g.GasLimit,
 		GasUsed:    g.GasUsed,
-		Difficulty: g.Difficulty,
 		Coinbase:   g.Coinbase,
 		StateRoot:  root,
 		Dpor:       g.Dpor,
 	}
 	if g.GasLimit == 0 {
 		head.GasLimit = configs.GenesisGasLimit
-	}
-	if g.Difficulty == nil {
-		head.Difficulty = configs.GenesisDifficulty
 	}
 	if _, err := statedb.Commit(false); err != nil {
 		log.Error("Error in genesis", "error", err)
@@ -263,7 +259,6 @@ func (g *Genesis) Commit(db database.Database) (*types.Block, error) {
 	if block.Number().Sign() != 0 {
 		return nil, fmt.Errorf("can't commit genesis block with number > 0")
 	}
-	rawdb.WriteTd(db, block.Hash(), block.NumberU64(), g.Difficulty)
 	rawdb.WriteBlock(db, block)
 	rawdb.WriteReceipts(db, block.Hash(), block.NumberU64(), nil)
 	rawdb.WriteCanonicalHash(db, block.Hash(), block.NumberU64())
@@ -296,7 +291,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0xe63ee6efb6a59a43f5a564201d15673c1ac5ac08c3263e54400af8295c24e392")
+var MainnetGenesisHash = common.HexToHash("0x3388189f468c580bbbf60cedd562845a27d6cba7eaf99df4ce29b3347de69e71")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {

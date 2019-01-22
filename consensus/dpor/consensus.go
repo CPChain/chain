@@ -44,10 +44,6 @@ const (
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
 )
 
-var (
-	DporDifficulty = big.NewInt(1) // Block difficulty for out-of-turn signatures
-)
-
 // Various error messages to mark blocks invalid. These should be private to
 // prevent engine specific errors from being referenced in the remainder of the
 // codebase, inherently breaking if the engine is swapped out. Please put common
@@ -68,10 +64,6 @@ var (
 	// errMissingSignature is returned if a block's extra-data section doesn't seem
 	// to contain a 65 byte secp256k1 signature.
 	errMissingSignature = errors.New("extra-data 65 byte suffix signature missing")
-
-	// errInvalidDifficulty is returned if the difficulty of a block is not either
-	// of 1 or 2, or if the value does not match the turn of the signer.
-	errInvalidDifficulty = errors.New("invalid difficulty")
 
 	// ErrInvalidTimestamp is returned if the timestamp of a block is lower than
 	// the previous block's timestamp + the minimum block period.
@@ -156,27 +148,11 @@ func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, ref
 func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) error {
 	number := header.Number.Uint64()
 
-	snap := d.CurrentSnap()
-	if snap != nil {
-		log.Debug("check if participate campaign", "isToCampaign", d.IsToCampaign(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number())
-		if d.IsToCampaign() && snap.isStartCampaign() {
-			newTerm := d.CurrentSnap().TermOf(number)
-			if newTerm > d.lastCampaignTerm+campaignTerms-1 {
-				d.lastCampaignTerm = newTerm
-				log.Info("campaign for proposer committee", "eleTerm", newTerm)
-				d.client.Campaign(context.Background(), campaignTerms)
-			}
-		}
-	}
-
 	// Create a snapshot
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
 	if err != nil {
 		return err
 	}
-
-	// Set the correct difficulty
-	header.Difficulty = d.dh.calcDifficulty(snap, d.Coinbase())
 
 	// Ensure the extra data has all its components
 	if len(header.Extra) < extraVanity {
@@ -207,15 +183,44 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	return nil
 }
 
-func addCoinbaseReward(coinbase common.Address, state *state.StateDB) {
-	amount := new(big.Int).Set(configs.Cep1BlockReward)
+func (d *Dpor) TryCampaign() {
+	snap := d.CurrentSnap()
+	if snap != nil {
+		log.Debug("check if participate campaign", "isToCampaign", d.IsToCampaign(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number())
+		if d.IsToCampaign() && snap.isStartCampaign() {
+			newTerm := d.CurrentSnap().TermOf(snap.Number)
+			if newTerm > d.lastCampaignTerm+campaignTerms-1 {
+				d.lastCampaignTerm = newTerm
+				log.Info("campaign for proposer committee", "eleTerm", newTerm)
+				d.client.Campaign(context.Background(), campaignTerms)
+			}
+		}
+
+	}
+}
+
+func addCoinbaseReward(coinbase common.Address, state *state.StateDB, number *big.Int) {
+	var amount *big.Int
+	if number.Cmp(configs.Cep1LastBlockY1) <= 0 {
+		amount = configs.Cep1BlockRewardY1
+	} else if number.Cmp(configs.Cep1LastBlockY2) <= 0 {
+		amount = configs.Cep1BlockRewardY2
+	} else if number.Cmp(configs.Cep1LastBlockY3) <= 0 {
+		amount = configs.Cep1BlockRewardY3
+	} else if number.Cmp(configs.Cep1LastBlockY4) <= 0 {
+		amount = configs.Cep1BlockRewardY4
+	} else if number.Cmp(configs.Cep1LastBlockY5) <= 0 {
+		amount = configs.Cep1BlockRewardY5
+	} else {
+		amount = big.NewInt(0)
+	}
 	state.AddBalance(coinbase, amount)
 }
 
 // Finalize implements consensus.Engine, ensuring no uncles are set, nor block
 // rewards given, and returns the final block.
 func (d *Dpor) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
-	addCoinbaseReward(header.Coinbase, state)
+	addCoinbaseReward(header.Coinbase, state, header.Number)
 	// last step
 	header.StateRoot = state.IntermediateRoot(true)
 	// Assemble and return the final block for sealing
@@ -260,8 +265,6 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 		return nil, errWaitTransactions
 	}
 
-	// Don't hold the signer fields for the entire sealing procedure
-
 	// Bail out if we're unauthorized to sign a block
 	snap, err := d.dh.snapshot(d, chain, number-1, header.ParentHash, nil)
 	if err != nil {
@@ -293,7 +296,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	}
 
 	// Proposer seals the block with signature
-	sighash, err := signFn(d.dh.sigHash(header, []byte{}).Bytes())
+	sighash, err := signFn(d.dh.sigHash(header).Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -309,15 +312,25 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	return block.WithSeal(header), nil
 }
 
-// CalcDifficulty is the difficulty adjustment algorithm. It returns the difficulty
-// that a new block should have based on the previous blocks in the chain and the
-// current signer.
-func (d *Dpor) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
-	snap, err := d.dh.snapshot(d, chain, parent.Number.Uint64(), parent.Hash(), nil)
+func (d *Dpor) CanMakeBlock(chain consensus.ChainReader, coinbase common.Address, parent *types.Header) bool {
+	number := parent.Number.Uint64()
+	// Bail out if we're unauthorized to sign a block
+	snap, err := d.dh.snapshot(d, chain, number, parent.Hash(), nil)
 	if err != nil {
-		return nil
+		return false
 	}
-	return d.dh.calcDifficulty(snap, d.Coinbase())
+
+	// check if it is the in-charge proposer for next block
+	ok, err := snap.IsProposerOf(coinbase, number+1)
+	if err != nil {
+		if err == errProposerNotInCommittee {
+			return false
+		} else {
+			log.Debug("Error occurs when check if it is proposer", "error", err)
+			return false
+		}
+	}
+	return ok
 }
 
 // APIs implements consensus.Engine, returning the user facing RPC API to allow

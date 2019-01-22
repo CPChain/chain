@@ -530,6 +530,7 @@ func opNumber(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *S
 	return nil, nil
 }
 
+// TODO @chengx we may remove this instruction later.  right now we keep it for compatibility.
 func opDifficulty(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	stack.push(math.U256(evm.interpreter.intPool.get().Set(evm.Difficulty)))
 	return nil, nil

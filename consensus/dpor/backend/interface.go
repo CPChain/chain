@@ -33,7 +33,7 @@ type ChainBackend interface {
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
 }
 
-// ContractBackend  is the contract client operation interface
+// contractBackend  is the contract client operation interface
 type ContractBackend interface {
 	bind.ContractBackend
 	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)

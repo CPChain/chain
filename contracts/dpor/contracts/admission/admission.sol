@@ -7,18 +7,35 @@ contract Admission {
     uint memoryTarget;
 
     uint public cpuDifficulty;
+    uint public cpuWorkTimeout;
     uint public memoryDifficulty;
+    uint public memoryWorkTimeout;
     address public owner;
 
     modifier onlyOwner(){msg.sender == owner; _;}
 
-    constructor (uint _cpuDifficulty, uint _memoryDifficulty) public {
+    constructor (uint _cpuDifficulty, uint _memoryDifficulty,uint _cpuWorkTimeout,uint _memoryWorkTimeout) public {
         // Duplicated Code
         // require(_cpuDifficulty <= 256 && _cpuDifficulty >= 0, "Difficulty must less than 256");
         // require(_memoryDifficulty <= 256 && _memoryDifficulty >= 0, "Difficulty must less than 256");
         owner = msg.sender;
         updateCPUDifficulty(_cpuDifficulty);
         updateMemoryDifficulty(_memoryDifficulty);
+        updateCPUWorkTimeout(_cpuWorkTimeout);
+        updateMemoryWorkTimeout(_memoryWorkTimeout);
+    }
+
+    function getAdmissionParameters() public view returns(uint,uint,uint,uint){
+        // return (0,0,0,0);
+        return (cpuDifficulty,memoryDifficulty,cpuWorkTimeout,memoryWorkTimeout);
+    }
+
+    function updateCPUWorkTimeout(uint _cpuWorkTimeout) public onlyOwner{
+        cpuWorkTimeout = _cpuWorkTimeout;
+    }
+
+    function updateMemoryWorkTimeout(uint _memoryWorkTimeout) public onlyOwner{
+        memoryWorkTimeout= _memoryWorkTimeout;
     }
 
     /**

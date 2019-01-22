@@ -24,23 +24,18 @@ import (
 	"math/big"
 	"sort"
 
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/apibackend_holder"
-	contract2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt_backend_holder"
 	pdash "bitbucket.org/cpchain/chain/contracts/pdash/pdash_contract"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 //go:generate abigen --sol contracts/primitive_contracts_inst.sol --pkg contracts --out contracts/primitive_contracts_inst.go
-
-var (
-	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
-	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
-)
 
 const (
 	Created = iota
@@ -66,11 +61,11 @@ type RptPrimitiveBackend interface {
 }
 
 type RptEvaluator struct {
-	ContractClient backend.ContractBackend
-	ChainClient    apibackend_holder.ChainApiClient
+	ContractClient bind.ContractBackend
+	ChainClient    *rpt_backend_holder.RptApiClient
 }
 
-func NewRptEvaluator(contractClient backend.ContractBackend, chainClient apibackend_holder.ChainApiClient) (*RptEvaluator, error) {
+func NewRptEvaluator(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.RptApiClient) (*RptEvaluator, error) {
 	bc := &RptEvaluator{
 		ContractClient: contractClient,
 		ChainClient:    chainClient,
@@ -78,7 +73,7 @@ func NewRptEvaluator(contractClient backend.ContractBackend, chainClient apiback
 	return bc, nil
 }
 
-func getBalanceAt(ctx context.Context, apiBackend apibackend_holder.ChainAPIBackend, account common.Address, blockNumber *big.Int) (*big.Int, error) {
+func getBalanceAt(ctx context.Context, apiBackend rpt_backend_holder.ChainAPIBackend, account common.Address, blockNumber *big.Int) (*big.Int, error) {
 	state, _, err := apiBackend.StateAndHeaderByNumber(ctx, rpc.BlockNumber(blockNumber.Uint64()), false)
 	if state == nil || err != nil {
 		return nil, err
@@ -89,13 +84,13 @@ func getBalanceAt(ctx context.Context, apiBackend apibackend_holder.ChainAPIBack
 // GetCoinAge is the func to get rank to rpt
 func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, error) {
 	var balances []float64
-	myBalance, err := getBalanceAt(context.Background(), re.ChainClient.ApiBackend, address, big.NewInt(int64(number)))
+	myBalance, err := getBalanceAt(context.Background(), re.ChainClient.ChainBackend, address, big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
 		return 100, err // 100 represent give the address a default rank
 	}
 	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
-	intance, err := contract2.NewCampaign(contractAddress, re.ContractClient)
+	intance, err := campaign.NewCampaign(contractAddress, re.ContractClient)
 	if err != nil {
 		log.Error("NewCampaign error", "error", err, "contractAddress", contractAddress.Hex())
 		return 100, err // 100 represent give the address a default rank
@@ -108,7 +103,7 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 		return 100, err // 100 represent give the address a default rank
 	}
 	for _, committee := range rNodeAddress {
-		balance, err := getBalanceAt(context.Background(), re.ChainClient.ApiBackend, committee, big.NewInt(int64(number)))
+		balance, err := getBalanceAt(context.Background(), re.ChainClient.ChainBackend, committee, big.NewInt(int64(number)))
 		if err != nil {
 			log.Error("error with bc.BalanceAt", "error", err, "contractAddress", contractAddress.Hex())
 			return 100, err // 100 represent give the address a default rank
@@ -192,7 +187,7 @@ func (re *RptEvaluator) UploadCount(address common.Address, number uint64) (int6
 // ProxyInfo func return the node is proxy or not
 func (re *RptEvaluator) ProxyInfo(address common.Address, number uint64) (int64, int64, error) {
 	isProxy := int64(0)
-	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractPdash]
+	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractPdashProxy]
 	proxyInstance, err := pdash.NewPdashProxy(contractAddress, re.ContractClient)
 
 	if err != nil {

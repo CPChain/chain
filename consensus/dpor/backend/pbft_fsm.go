@@ -452,7 +452,7 @@ func (dsm *DporStateMachine) composeValidateMsg(header *types.Header) (block *ty
 	blk, ok := dsm.blockCache.Get(hash)
 	// TODO: fix this, if fail to get the block from cache, broadcast a commit msg to other validators
 	if !ok {
-		log.Warn("failed to retrieve block from cache", "hash", hash)
+		log.Warn("failed to retrieve block from cache", "hash", hash, "number", header.Number.Uint64())
 		return nil, ErrBlockNotExist
 	}
 	if block, ok = blk.(*types.Block); !ok {

@@ -121,6 +121,32 @@ func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
 	}
 }
 
+// BroadcastValidateBlock broadcasts validate block to validators
+func (h *Handler) BroadcastValidateBlock(block *types.Block) {
+
+	log.Debug("composed validate block, broadcasting")
+
+	term := h.dpor.TermOf(block.NumberU64())
+	validators := waitForEnoughValidator(h, term, h.quitCh)
+
+	for _, peer := range validators {
+		peer.AsyncSendValidateBlock(block)
+	}
+}
+
+// BroadcastValidateImpeachBlock broadcasts validate impeach block to validators
+func (h *Handler) BroadcastValidateImpeachBlock(block *types.Block) {
+
+	log.Debug("composed validate impeach block, broadcasting")
+
+	term := h.dpor.TermOf(block.NumberU64())
+	validators := waitForEnoughValidator(h, term, h.quitCh)
+
+	for _, peer := range validators {
+		peer.AsyncSendImpeachValidateBlock(block)
+	}
+}
+
 // PendingBlockBroadcastLoop loops to broadcast blocks
 func (h *Handler) PendingBlockBroadcastLoop() {
 	futureTimer := time.NewTicker(time.Duration(h.dpor.ImpeachTimeout()))

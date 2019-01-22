@@ -4,7 +4,9 @@ import (
 	"errors"
 	"math"
 	"math/big"
+	"reflect"
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -13,6 +15,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -103,10 +106,10 @@ func (ac *AdmissionControl) DoneCh() <-chan interface{} {
 
 // Abort cancels all the proof work associated to the workType.
 func (ac *AdmissionControl) Abort() {
-	ac.mutex.Lock()
-	defer ac.mutex.Unlock()
-
-	if ac.status != AcRunning {
+	ac.mutex.RLock()
+	status := ac.status
+	ac.mutex.RUnlock()
+	if status != AcRunning {
 		return
 	}
 
@@ -114,6 +117,8 @@ func (ac *AdmissionControl) Abort() {
 	close(ac.abort)
 	<-ac.done
 
+	ac.mutex.Lock()
+	defer ac.mutex.Unlock()
 	ac.abort = make(chan interface{})
 	ac.status = AcIdle
 }
@@ -152,23 +157,33 @@ func (ac *AdmissionControl) waitSendCampaignMsg(terms uint64) {
 	ac.wg.Wait()
 
 	defer func(ac *AdmissionControl) {
+		ac.mutex.Lock()
 		ac.status = AcIdle
+		ac.mutex.Unlock()
 	}(ac)
 
-	for _, work := range ac.getWorks() {
+	ac.mutex.RLock()
+	works := ac.getWorks()
+	ac.mutex.RUnlock()
+
+	for _, work := range works {
 		// if work err then return
 		if work.error() != nil {
+			ac.mutex.Lock()
 			ac.err = work.error()
+			ac.mutex.Unlock()
 			return
 		}
 	}
-	ac.sendCampaignResult(terms)
+	go ac.sendCampaignResult(terms)
 }
 
 // sendCampaignResult sends proof info to campaign contract
 func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
-	if ac.contractBackend == nil {
+	if ac.contractBackend == nil || reflect.TypeOf(ac.contractBackend).String() == "*backends.SimulatedBackend" {
+		ac.mutex.Lock()
 		ac.err = errors.New("contractBackend is nil")
+		ac.mutex.Unlock()
 		return
 	}
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
@@ -179,7 +194,9 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
 	instance, err := contracts.NewCampaignWrapper(transactOpts, campaignContractAddress, ac.contractBackend)
 	if err != nil {
+		ac.mutex.Lock()
 		ac.err = err
+		ac.mutex.Unlock()
 		return
 	}
 
@@ -188,7 +205,9 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	_, err = instance.ClaimCampaign(new(big.Int).SetUint64(terms), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
 		memResult.Nonce, new(big.Int).SetInt64(memResult.BlockNumber))
 	if err != nil {
+		ac.mutex.Lock()
 		ac.err = err
+		ac.mutex.Unlock()
 		log.Warn("Error in claiming campaign", "error", err)
 		return
 	}
@@ -203,6 +222,13 @@ func (ac *AdmissionControl) setClientBackend(client *cpclient.Client) {
 	ac.contractBackend = client
 }
 
+func (ac *AdmissionControl) SetSimulateBackend(contractBackend contracts.Backend) {
+	ac.mutex.Lock()
+	defer ac.mutex.Unlock()
+
+	ac.contractBackend = contractBackend
+}
+
 // buildWorks creates proof works required by admission
 func (ac *AdmissionControl) buildWorks() {
 	ac.cpuWork = ac.buildCpuProofWork()
@@ -210,11 +236,33 @@ func (ac *AdmissionControl) buildWorks() {
 }
 
 func (ac *AdmissionControl) buildCpuProofWork() ProofWork {
-	return newWork(ac.config.CpuDifficulty, ac.config.CpuLifeTime, ac.address, ac.chain.CurrentHeader(), sha256Func)
+	client := ac.contractBackend
+	instance, err := admission.NewAdmission(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
+	if err != nil {
+		log.Fatal("NewAdmissionCaller is error", "error is", err)
+	}
+	cd, _, clt, _, err := instance.GetAdmissionParameters(nil)
+	if err != nil {
+		log.Fatal("GetAdmissionParameters is error", "error is ", err)
+	}
+	cpuDifficulty := cd.Uint64()
+	cpuLifeTime := time.Duration(time.Duration(clt.Int64()) * time.Second)
+	return newWork(cpuDifficulty, cpuLifeTime, ac.address, ac.chain.CurrentHeader(), sha256Func)
 }
 
 func (ac *AdmissionControl) buildMemoryProofWork() ProofWork {
-	return newWork(ac.config.MemoryDifficulty, ac.config.MemoryCpuLifeTime, ac.address, ac.chain.CurrentHeader(), scryptFunc)
+	client := ac.contractBackend
+	instance, err := admission.NewAdmission(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
+	if err != nil {
+		log.Fatal("NewAdmissionCaller is error", "error is", err)
+	}
+	_, md, _, mct, err := instance.GetAdmissionParameters(nil)
+	if err != nil {
+		log.Fatal("GetDifficultyParameter is error", "error is", err)
+	}
+	memoryDifficulty := md.Uint64()
+	memoryCpuLifeTime := time.Duration(time.Duration(mct.Int64()) * time.Second)
+	return newWork(memoryDifficulty, memoryCpuLifeTime, ac.address, ac.chain.CurrentHeader(), scryptFunc)
 }
 
 // registerProofWork returns all proof work

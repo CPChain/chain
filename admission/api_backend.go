@@ -21,6 +21,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -70,4 +71,8 @@ func (b *AdmissionApiBackend) SetAdmissionKey(key *keystore.Key) {
 func (b *AdmissionApiBackend) RegisterInProcHandler(localRPCServer *rpc.Server) {
 	client := rpc.DialInProc(localRPCServer)
 	b.admissionControl.setClientBackend(cpclient.NewClient(client))
+}
+
+func (b *AdmissionApiBackend) SetContractBackend(contractBackend contracts.Backend) {
+	b.admissionControl.SetSimulateBackend(contractBackend)
 }

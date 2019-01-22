@@ -181,8 +181,6 @@ func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 	remoteValidator, isV := h.dialer.getValidator(addr)
 	remoteProposer, isP := h.dialer.getProposer(addr)
 
-	log.Debug("received msg from peer", "addr", addr, "isV", isV, "isP", isP)
-
 	if isV {
 		return h.handleMsg(remoteValidator.RemoteSigner, msg)
 	} else if isP {
@@ -192,8 +190,6 @@ func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 }
 
 func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
-	log.Debug("handling msg", "msg", msg.Code)
-
 	if msg.Code == NewSignerMsg {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}

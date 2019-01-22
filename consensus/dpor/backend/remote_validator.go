@@ -25,10 +25,12 @@ type RemoteValidator struct {
 	queuedPreprepareBlocks chan *types.Block  // Queue of blocks to broadcast to the signer
 	queuedPrepareHeaders   chan *types.Header // Queue of signatures to broadcast to the signer
 	queuedCommitHeaders    chan *types.Header // Queue of signatures to broadcast to the signer
+	queuedValidateBlocks   chan *types.Block
 
 	queuedPreprepareImpeachBlocks chan *types.Block
 	queuedPrepareImpeachHeaders   chan *types.Header
 	queuedCommitImpeachHeaders    chan *types.Header
+	queuedValidateImpeachBlocks   chan *types.Block
 
 	quitCh chan struct{} // Termination channel to stop the broadcaster
 
@@ -314,5 +316,35 @@ func (s *RemoteValidator) AsyncSendCommitImpeachHeader(header *types.Header) {
 	case s.queuedCommitImpeachHeaders <- header:
 	default:
 		s.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+	}
+}
+
+// SendValidateBlock propagates an entire block to a remote peer.
+func (s *RemoteValidator) SendValidateBlock(block *types.Block) error {
+	return p2p.Send(s.rw, ValidateBlockMsg, block)
+}
+
+// AsyncSendValidateBlock queues an entire block for propagation to a remote peer. If
+// the peer's broadcast queue is full, the event is silently dropped.
+func (s *RemoteValidator) AsyncSendValidateBlock(block *types.Block) {
+	select {
+	case s.queuedValidateBlocks <- block:
+	default:
+		s.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+	}
+}
+
+// SendImpeachValidateBlock propagates an entire block to a remote peer.
+func (s *RemoteValidator) SendImpeachValidateBlock(block *types.Block) error {
+	return p2p.Send(s.rw, ValidateImpeachBlockMsg, block)
+}
+
+// AsyncSendImpeachValidateBlock queues an entire block for propagation to a remote peer. If
+// the peer's broadcast queue is full, the event is silently dropped.
+func (s *RemoteValidator) AsyncSendImpeachValidateBlock(block *types.Block) {
+	select {
+	case s.queuedValidateImpeachBlocks <- block:
+	default:
+		s.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	}
 }
