@@ -534,7 +534,6 @@ func (s *PublicBlockChainAPI) GetCommitteeNumber() int {
 // GetBlockGenerationInfo return current committee and it's Info
 func (s *PublicBlockChainAPI) GetBlockGenerationInfo() []cpclient.BlockGenerationInfo {
 
-	v := s.b.CurrentView()
 	t := s.b.CurrentTerm()
 	b := s.b.CurrentBlock()
 	vl, tl := s.b.ViewLen(), s.b.TermLen()
@@ -542,13 +541,14 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() []cpclient.BlockGeneratio
 	var blockGenerationInfo []cpclient.BlockGenerationInfo
 
 	for i := t * vl * tl; i < b.Header().Number.Uint64(); i++ {
+		view := ((i - 1) % (vl * tl)) / vl
 		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(i))
 		if err != nil {
 			log.Error("can't get header", "error", err)
 			return blockGenerationInfo
 		}
 		gen := cpclient.BlockGenerationInfo{
-			View: v, Term: t, Proposer: header.Coinbase, BlockNumber: uint64(rpc.BlockNumber(i)), TermLen: cm,
+			View: view, Term: t, Proposer: header.Coinbase, BlockNumber: uint64(rpc.BlockNumber(i)), TermLen: cm,
 		}
 		blockGenerationInfo = append(blockGenerationInfo, gen)
 	}
