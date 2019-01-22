@@ -7,6 +7,8 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
@@ -158,6 +160,17 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 
 			// broadcast mined pending block to remote signers
 			go h.BroadcastPreprepareBlock(pendingBlock)
+
+		case pendingImpeachBlock := <-h.pendingImpeachBlockCh:
+
+			size, r, err := rlp.EncodeToReader(pendingImpeachBlock)
+			if err != nil {
+				log.Warn("failed to encode composed impeach block", "err", err)
+				continue
+			}
+			msg := p2p.Msg{Code: PreprepareImpeachBlockMsg, Size: uint32(size), Payload: r}
+
+			go h.handleLBFT2Msg(msg, nil)
 
 		case <-futureTimer.C:
 

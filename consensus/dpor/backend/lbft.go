@@ -167,7 +167,7 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 			if delay <= 1e10 {
 				go func() {
 					<-time.After(delay)
-					vh.handleLbftMsg(msg, p)
+					vh.handleLBFTMsg(msg, p)
 				}()
 			}
 

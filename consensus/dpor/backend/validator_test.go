@@ -57,7 +57,7 @@ func TestHandler_handleLbft2Msg(t *testing.T) {
 				pendingBlockCh: tt.fields.pendingBlockCh,
 				quitCh:         tt.fields.quitCh,
 			}
-			if err := vh.handleLbft2Msg(tt.args.msg, tt.args.p); (err != nil) != tt.wantErr {
+			if err := vh.handleLBFT2Msg(tt.args.msg, tt.args.p); (err != nil) != tt.wantErr {
 				t.Errorf("Handler.handleLbft2Msg() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

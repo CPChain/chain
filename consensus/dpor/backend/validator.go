@@ -3,6 +3,7 @@ package backend
 import (
 	"time"
 
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -226,8 +227,8 @@ import (
 // 	return nil
 // }
 
-// handleLbftMsg handles given msg with lbft (lightweighted bft) mode
-func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
+// handleLBFTMsg handles given msg with lbft (lightweighted bft) mode
+func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 	if vh.lbft == nil {
 		vh.lbft = NewLBFT(vh)
 	}
@@ -235,7 +236,7 @@ func (vh *Handler) handleLbftMsg(msg p2p.Msg, p *RemoteSigner) error {
 	return vh.lbft.Handle(msg, p)
 }
 
-func (vh *Handler) handleLbft2Msg(msg p2p.Msg, p *RemoteSigner) error {
+func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	switch msg.Code {
 	case PreprepareBlockMsg:
 		// recover the block from msg
@@ -378,7 +379,7 @@ func (vh *Handler) handleLbft2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 		// if there is a output, the action is broadcast, msg code is prepare msg, and err is nil,
 		// broadcast the header with prepare header msg
-		if output != nil && action == BroadcastMsgAction && msgCode == PrepareMsgCode && err == nil {
+		if output != nil && action == BroadcastMsgAction && msgCode == ImpeachPrepareMsgCode && err == nil {
 			go vh.BroadcastPrepareImpeachHeader(output[0].header)
 		}
 		return nil
@@ -412,6 +413,11 @@ func (vh *Handler) handleLbft2Msg(msg p2p.Msg, p *RemoteSigner) error {
 			// broadcast commit msg
 			case ImpeachCommitMsgCode:
 				go vh.BroadcastCommitImpeachHeader(output[0].header)
+
+			case ImpeachPrepareAndCommitMsgCode:
+				go vh.BroadcastPrepareImpeachHeader(output[0].header)
+				go vh.BroadcastCommitImpeachHeader(output[1].header)
+
 			default:
 			}
 		}
@@ -516,7 +522,7 @@ func (vh *Handler) procUnhandledBlocks() {
 				msg := p2p.Msg{Code: PreprepareBlockMsg, Size: uint32(size), Payload: r}
 
 				// handle it as received from remote unknown peer
-				err = vh.handleLbftMsg(msg, nil)
+				err = vh.handleLBFTMsg(msg, nil)
 				vh.knownBlocks.futureBlocks.Remove(bi.(blockIdentifier))
 			}
 
@@ -532,12 +538,25 @@ func (vh *Handler) procUnhandledBlocks() {
 				msg := p2p.Msg{Code: PreprepareBlockMsg, Size: uint32(size), Payload: r}
 
 				// handle it as received from remote unknown peer
-				err = vh.handleLbftMsg(msg, nil)
+				err = vh.handleLBFTMsg(msg, nil)
 				vh.knownBlocks.unknownAncestors.Remove(bi.(blockIdentifier))
 			}
 
 		case <-vh.quitCh:
 			return
 		}
+	}
+}
+
+// ReceiveImpeachPendingBlock receives a block to add to pending block channel
+func (vh *Handler) ReceiveImpeachPendingBlock(block *types.Block) error {
+	select {
+	case vh.pendingImpeachBlockCh <- block:
+		err := vh.knownBlocks.AddBlock(block)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 }

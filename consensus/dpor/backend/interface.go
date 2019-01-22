@@ -65,9 +65,15 @@ type VerifySignerFn func(address common.Address, term uint64) (bool, error)
 // VerifyBlockFn verifies basic fields of a block
 type VerifyBlockFn func(block *types.Block) error
 
+// VerifyImpeachBlockFn verifies basic fields of a block, and the coin base and whether empty txs
+type VerifyImpeachBlockFn func(block *types.Block) error
+
 // SignFn is a signer callback function to request a hash to be signed by a
 // backing account.
 type SignFn func(accounts.Account, []byte) ([]byte, error)
+
+// HandleGeneratedImpeachBlock handles generated impeach block
+type HandleGeneratedImpeachBlock func(block *types.Block) error
 
 // ConsensusStateMachine is a state machine used for consensus protocol for validators msg processing
 type ConsensusStateMachine interface {

@@ -46,9 +46,10 @@ type Handler struct {
 	lbft   *LBFT
 	dpor   DporService
 
-	knownBlocks    *RecentBlocks
-	pendingBlockCh chan *types.Block
-	quitCh         chan struct{}
+	knownBlocks           *RecentBlocks
+	pendingBlockCh        chan *types.Block
+	pendingImpeachBlockCh chan *types.Block
+	quitCh                chan struct{}
 
 	lock sync.RWMutex
 }
@@ -57,13 +58,14 @@ type Handler struct {
 func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 
 	h := &Handler{
-		config:         config,
-		coinbase:       coinbase,
-		knownBlocks:    newKnownBlocks(),
-		dialer:         NewDialer(),
-		pendingBlockCh: make(chan *types.Block),
-		quitCh:         make(chan struct{}),
-		available:      false,
+		config:                config,
+		coinbase:              coinbase,
+		knownBlocks:           newKnownBlocks(),
+		dialer:                NewDialer(),
+		pendingBlockCh:        make(chan *types.Block),
+		pendingImpeachBlockCh: make(chan *types.Block),
+		quitCh:                make(chan struct{}),
+		available:             false,
 	}
 
 	// TODO: fix this
@@ -198,11 +200,9 @@ func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 	// TODO: @liuq fix this.
 	switch h.mode {
 	case LBFTMode:
-		return h.handleLbftMsg(msg, p)
+		return h.handleLBFTMsg(msg, p)
 	case LBFT2Mode:
-		return h.handleLbft2Msg(msg, p)
-	// case PBFTMode:
-	// return h.handlePbftMsg(msg, p)
+		return h.handleLBFT2Msg(msg, p)
 	default:
 		return ErrUnknownHandlerMode
 	}
