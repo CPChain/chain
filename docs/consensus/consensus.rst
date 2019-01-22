@@ -84,3 +84,131 @@ Impeachment
 
 
 
+Pseudocode
+--------------
+
+The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 states:
+**preprepare**, **prepare**, **commit**, **impeachprepare** and **impeachCommit**.
+Interested reader can refer to the pseudocode below.
+
+    .. code-block:: go
+
+        commitHandler(input) {
+            switch input{
+            case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
+                impeachHandler(input)
+            case validateMsg:
+                insert the block
+                broadcast validateMsg
+                transit to preprepare state
+            case commitMsg:
+                if commitCertificate {
+                    broadcast validateMsg
+                    transit to preprepare state
+                }
+        }
+
+        prepareHandler(input) {
+            switch input{
+            case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
+                impeachHandler(input)
+            case validateMsg, commitMsg:
+                commitHandler(input)
+            case prepareMsg:
+                if prepareCertificate {
+                    broadcast commitMsg
+                    if commitCertificate {
+                        broadcast validateMsg
+                        transit to preprepare state
+                    }else{
+                        transit to commit state
+                    }
+                }
+            }
+        }
+
+        preprepareHandler(input) {
+            switch input{
+            case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
+                impeachHandler(input)
+            case validateMsg, commitMsg, prepareMsg:
+                prepareHandler(input)
+            case block:
+                if !verifyBlock(block) {
+                    propose an impeach block
+                    broadcast the impeach block
+                    transit to impeachPrepare state
+                }
+                else{
+                    broadcast preprepareMsg
+                    if prepareCertificate {
+                        broadcast commitMsg
+                        if commitCertificate {
+                            broadcast validateMsg
+                            transit to preprepare state
+                        }else{
+                            transit to commit state
+                        }
+                    }else{
+                        transit to prepare state
+                    }
+                }
+            }
+        }
+
+        impeachCommitHandler(input) {
+            switch input{
+            case validateMsg:
+                insert the block
+                broadcast validateMsg
+                transit to preprepare state
+            case impeachValidateMsg:
+                insert impeach block
+                broadcast impeachValidateMsg
+                transit to preprepare state
+            case impeachCommitMsg:
+                if impeachCommitCertificate(input) {
+                    broadcast impeachValidateMsg
+                    transit to preprepare state
+                }
+            }
+        }
+
+        impeachPrepareHandler(input) {
+            switch input{
+            case validateMsg, impeachValidateMsg, impeachCommitMsg:
+                impeachCommitHandler(input)
+            case impeachPrepareMsg:
+                if impeachPrepareCertificate(input) {
+                    broadcast impeachCommitMsg
+                    if impeachCommitCertificate(input) {
+                        broadcast impeachValidateMsg
+                        transit to preprepare state
+                    }
+                    transit to impeachCommit state
+                }
+        }
+
+        impeachHandler(input) {
+            case expiredTimer:
+                propose an impeach block
+                broadcast the impeach block
+                transit to impeachPrepare state
+            case impeachPrepareMsg, impeachCommitMsg:
+                impeachPrepareHandler(input)
+        }
+
+        LbftFsm20(input, state) {
+            switch state{
+            case preprepare:
+                preprepareHandler(input)
+            case prepare:
+                prepareHandler(input)
+            case commit:
+                commitHandler(input)
+            case impeachPrepare:
+                impeachPrepareHandler(input)
+            case impeachCommit:
+                impeachCommitHandler(input)
+        }
+

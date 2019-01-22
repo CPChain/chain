@@ -319,3 +319,5 @@ Use smart contracts to lock deposit, the functions are as follow:
     lock the deposit to fixed range of length of blockchain.
     Reward distribution according to proportion of node's deposits.
     Connection with Reputation list.
+
+
