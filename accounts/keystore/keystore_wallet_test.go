@@ -17,15 +17,13 @@
 package keystore
 
 import (
-	"testing"
-
 	"fmt"
+	"math/big"
 	"math/rand"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
-
-	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/types"
