@@ -61,7 +61,7 @@ Impeachment
 
 #. **Impeachment**
     a. It is an abnormal handler when the proposer is either faulty, or non responding
-    #. It is a two-phase protocol in PTBF manner, consisting of *prepare* and *commit* phases.
+    #. It is a two-phase protocol in PBFT manner, consisting of *prepare* and *commit* phases.
     #. Impeachment steps:
         a. A validator in the committee generates a block on behalf of the faulty (or non responding) proposer.
             i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
@@ -83,13 +83,21 @@ Impeachment
         b. This scenario does not affects the security of the system, since validators can only collect 2f+1 COMMIT messages for one block
 
 
-
-Pseudocode
---------------
+Finite State Machine
+----------------------
 
 The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 states:
-**preprepare**, **prepare**, **commit**, **impeachprepare** and **impeachCommit**.
-Interested reader can refer to the pseudocode below.
+**pre-prepare**, **prepare**, **commit**, **impeachprepare** and **impeachCommit**.
+
+The illustration below demonstrate these five states as well as transitions between states.
+Note that not all transitions are shown in this figure for the succinct purpose.
+The text on an arrow between two states refers to the condition of this transition.
+And the message box near the arrow represents the message broadcast to other nodes.
+
+.. image:: lbft_fsm.jpeg
+
+
+For more detailed implementation, interested reader can refer to the pseudocode below.
 
     .. code-block:: go
 
