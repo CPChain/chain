@@ -56,7 +56,16 @@ Before connecting, you must set up a local chain or sync with our Mainnet
 
             $ build/bin/cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --rpcaddr 0.0.0.0:8501 --runmode=testnet
 
-        If you cannot sync, please remove the directory ~/.cpchain/cphain as well as all files in it.
+        **WARNING:** The current master version is not compatible with Alpha Mainnet.
+        Interested users can refer to commit 3c384f6e to sync with Alpha Mainnet.
+        After cloning from github repository, you can checkout the commit 3c384f6e by following command:
+
+        .. code::
+
+            $ git checkout 3c384f6e
+            $ sudo make all
+
+        Then use the commands above to connect to Alpha Mainnet.
 
 Use the ``auto`` module to :ref:`guess at common node connection options
 <automatic_provider_detection>`.

@@ -19,13 +19,24 @@ First, make sure you have installed `go <https://golang.org/>`_, and configured 
 Running CPChain
 #################
 
-Connect to testnet
+Connect to Alpha Mainnet
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code::
 
     $ cd build/bin
     $ ./cpchain run --runmode testnet
+
+**WARNING:** The current master version is not compatible with Alpha Mainnet.
+Interested users can refer to commit 3c384f6e to sync with Alpha Mainnet.
+After cloning from github repository, you can checkout the commit 3c384f6e by following command:
+
+.. code::
+
+    $ git checkout 3c384f6e
+    $ sudo make all
+
+Then use the commands above to connect to Alpha Mainnet.
 
 Create an account
 ^^^^^^^^^^^^^^^^^^^^^^
