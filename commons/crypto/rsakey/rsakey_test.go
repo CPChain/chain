@@ -18,6 +18,7 @@ package rsakey
 
 import (
 	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -41,6 +42,22 @@ func TestNewRsaPrivateKey1(t *testing.T) {
 	assert.Equal(t, priBytes, rsaKey.PrivateKeyBytes)
 }
 
+func TestNewEmptyRsaPrivateKey(t *testing.T) {
+	var priBytes []byte
+	fmt.Println(len(priBytes))
+
+	key, err := NewRsaPrivateKey(priBytes)
+	assert.Nil(t, err)
+	assert.Nil(t, key)
+}
+
+func TestNewErrorRsaPrivateKey(t *testing.T) {
+	priBytes := []byte("asdfsfds")
+	key, err := NewRsaPrivateKey(priBytes)
+	assert.NotNil(t, err)
+	assert.Nil(t, key)
+}
+
 func TestCreateRsaKey(t *testing.T) {
 	rsaKey, err := CreateRsaKey()
 	assert.Nil(t, err)
@@ -55,6 +72,12 @@ func TestNewRsaPublicKey(t *testing.T) {
 	rsaPublicKey, err := NewRsaPublicKey(rsaKey.PublicKey.RsaPublicKeyBytes)
 	assert.Nil(t, err)
 	assert.NotNil(t, rsaPublicKey)
+}
+
+func TestNewErrorRsaPublicKey(t *testing.T) {
+	rsaPublicKey, err := NewRsaPublicKey([]byte("testme"))
+	assert.Nil(t, rsaPublicKey)
+	assert.NotNil(t, err)
 }
 
 func TestNewRsaKey(t *testing.T) {
