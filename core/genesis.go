@@ -302,6 +302,8 @@ func DefaultGenesisBlock() *Genesis {
 		return newTestnetGenesisBlock()
 	case configs.IsMainnet():
 		return newGenesisBlock()
+	case configs.IsTestcase():
+		return newGenesisBlock()
 	default:
 		return newGenesisBlock()
 	}

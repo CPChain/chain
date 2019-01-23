@@ -19,10 +19,13 @@ package tests
 import (
 	"testing"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/vm"
 )
 
 func TestVM(t *testing.T) {
+	configs.SetRunMode(configs.Testcase)
+
 	t.Parallel()
 	vmt := new(testMatcher)
 	vmt.fails("^vmSystemOperationsTest.json/createNameRegistrator$", "fails without parallel execution")

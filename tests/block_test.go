@@ -18,9 +18,12 @@ package tests
 
 import (
 	"testing"
+
+	"bitbucket.org/cpchain/chain/configs"
 )
 
 func TestBlockchain(t *testing.T) {
+	configs.SetRunMode(configs.Testcase)
 	t.Parallel()
 
 	bt := new(testMatcher)

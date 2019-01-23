@@ -25,7 +25,7 @@ type GasTable struct {
 // Variables containing gas prices for different ethereum phases.
 var (
 	// cpchain Initial Gas Table
-	GasTableCep0 = GasTable{
+	GasTableCep1 = GasTable{
 		ExtcodeSize: 700,
 		ExtcodeCopy: 700,
 		Balance:     400,
@@ -35,5 +35,17 @@ var (
 		ExpByte:     50,
 
 		CreateBySuicide: 25000,
+	}
+
+	// GasTableHomestead contain the gas prices for
+	// the homestead phase.
+	GasTableHomestead = GasTable{
+		ExtcodeSize: 20,
+		ExtcodeCopy: 20,
+		Balance:     20,
+		SLoad:       50,
+		Calls:       40,
+		Suicide:     0,
+		ExpByte:     10,
 	}
 )
