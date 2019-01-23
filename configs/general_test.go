@@ -125,7 +125,7 @@ func TestIsCpchainFalse1(t *testing.T) {
 func TestGasTable(t *testing.T) {
 	SetRunMode(Dev)
 	cc := ChainConfig{Dpor: nil, ChainID: nil}
-	assert.Equal(t, GasTableCep0, cc.GasTable(big.NewInt(0)))
+	assert.Equal(t, GasTableCep1, cc.GasTable(big.NewInt(0)))
 }
 
 func TestConfigCompatError(t *testing.T) {
