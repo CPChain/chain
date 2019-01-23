@@ -87,17 +87,44 @@ Finite State Machine
 ----------------------
 
 The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 states:
-**pre-prepare**, **prepare**, **commit**, **impeachprepare** and **impeachCommit**.
+**pre-prepare**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
 
-The illustration below demonstrate these five states as well as transitions between states.
-Note that not all transitions are shown in this figure for the succinct purpose.
+The illustration below demonstrates these five states as well as transitions between states.
+Note that not all transitions are shown in this figure due to the lack of space.
 The text on an arrow between two states refers to the condition of this transition.
 And the message box near the arrow represents the message broadcast to other nodes.
 
 .. image:: lbft_fsm.jpeg
 
 
+Pseudocode
+*************
+
 For more detailed implementation, interested reader can refer to the pseudocode below.
+
+
+**FSM for LBFT2.0**
+
+
+    .. code-block:: go
+
+        LbftFsm20(input, state) {
+            switch state{
+            case preprepare:
+                preprepareHandler(input)
+            case prepare:
+                prepareHandler(input)
+            case commit:
+                commitHandler(input)
+            case impeachPrepare:
+                impeachPrepareHandler(input)
+            case impeachCommit:
+                impeachCommitHandler(input)
+        }
+
+
+**Normal Case Handlers**
+
 
     .. code-block:: go
 
@@ -164,6 +191,10 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             }
         }
 
+**Impeachment Handlers**
+
+    .. code-block:: go
+
         impeachCommitHandler(input) {
             switch input{
             case validateMsg:
@@ -206,17 +237,5 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 impeachPrepareHandler(input)
         }
 
-        LbftFsm20(input, state) {
-            switch state{
-            case preprepare:
-                preprepareHandler(input)
-            case prepare:
-                prepareHandler(input)
-            case commit:
-                commitHandler(input)
-            case impeachPrepare:
-                impeachPrepareHandler(input)
-            case impeachCommit:
-                impeachCommitHandler(input)
-        }
+
 
