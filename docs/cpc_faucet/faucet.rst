@@ -42,8 +42,9 @@ CPC fusion provides APIs for interested users to create a wallet address.
         .. code::
 
             $ git checkout 3c384f6e
+            $ sudo make all
 
-        Then use the commands above to connect to Mainnet.
+        Then use the commands above to connect to Alpha Mainnet.
 
 #. Apply a wallet address in the chain.
 

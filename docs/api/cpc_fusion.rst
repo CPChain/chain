@@ -63,8 +63,9 @@ Before connecting, you must set up a local chain or sync with our Mainnet
         .. code::
 
             $ git checkout 3c384f6e
+            $ sudo make all
 
-        Then use the commands above to connect to Mainnet.
+        Then use the commands above to connect to Alpha Mainnet.
 
 Use the ``auto`` module to :ref:`guess at common node connection options
 <automatic_provider_detection>`.

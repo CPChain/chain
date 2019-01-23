@@ -19,7 +19,7 @@ First, make sure you have installed `go <https://golang.org/>`_, and configured 
 Running CPChain
 #################
 
-Connect to Mainnet
+Connect to Alpha Mainnet
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code::
@@ -34,8 +34,9 @@ After cloning from github repository, you can checkout the commit 3c384f6e by fo
 .. code::
 
     $ git checkout 3c384f6e
+    $ sudo make all
 
-Then use the commands above to connect to Mainnet.
+Then use the commands above to connect to Alpha Mainnet.
 
 Create an account
 ^^^^^^^^^^^^^^^^^^^^^^
