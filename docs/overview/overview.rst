@@ -177,7 +177,7 @@ Impeachment
 
 #. **Impeachment**
     a. It is an abnormal handler when the proposer is either faulty, or non responding
-    #. It is a two-phase protocol in PTBF manner, consisting of *prepare* and *commit* phases.
+    #. It is a two-phase protocol in PBFT manner, consisting of *prepare* and *commit* phases.
     #. Impeachment steps:
         a. A validator in the committee generates a block on behalf of the faulty (or non responding) proposer.
             i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.

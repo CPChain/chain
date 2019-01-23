@@ -61,7 +61,7 @@ Impeachment
 
 #. **Impeachment**
     a. It is an abnormal handler when the proposer is either faulty, or non responding
-    #. It is a two-phase protocol in PTBF manner, consisting of *prepare* and *commit* phases.
+    #. It is a two-phase protocol in PBFT manner, consisting of *prepare* and *commit* phases.
     #. Impeachment steps:
         a. A validator in the committee generates a block on behalf of the faulty (or non responding) proposer.
             i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
@@ -81,6 +81,161 @@ Impeachment
     #. It is possible for some validators obtains 2f+1 PREPARE messages of a newly proposed block while another validators obtain 2f+1 PREPARE messages of empty block
         a. This scenario occurs only when the proposer is faulty
         b. This scenario does not affects the security of the system, since validators can only collect 2f+1 COMMIT messages for one block
+
+
+Finite State Machine
+----------------------
+
+The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 states:
+**pre-prepare**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
+
+The illustration below demonstrates these five states as well as transitions between states.
+Note that not all transitions are shown in this figure due to the lack of space.
+The text on an arrow between two states refers to the condition of this transition.
+And the message box near the arrow represents the message broadcast to other nodes.
+
+.. image:: lbft_fsm.jpeg
+
+
+Pseudocode
+*************
+
+For more detailed implementation, interested reader can refer to the pseudocode below.
+
+
+**FSM for LBFT2.0**
+
+
+    .. code-block:: go
+
+        LbftFsm20(input, state) {
+            switch state{
+            case preprepare:
+                preprepareHandler(input)
+            case prepare:
+                prepareHandler(input)
+            case commit:
+                commitHandler(input)
+            case impeachPrepare:
+                impeachPrepareHandler(input)
+            case impeachCommit:
+                impeachCommitHandler(input)
+        }
+
+
+**Normal Case Handlers**
+
+
+    .. code-block:: go
+
+        commitHandler(input) {
+            switch input{
+            case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
+                impeachHandler(input)
+            case validateMsg:
+                insert the block
+                broadcast validateMsg
+                transit to preprepare state
+            case commitMsg:
+                if commitCertificate {
+                    broadcast validateMsg
+                    transit to preprepare state
+                }
+        }
+
+        prepareHandler(input) {
+            switch input{
+            case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
+                impeachHandler(input)
+            case validateMsg, commitMsg:
+                commitHandler(input)
+            case prepareMsg:
+                if prepareCertificate {
+                    broadcast commitMsg
+                    if commitCertificate {
+                        broadcast validateMsg
+                        transit to preprepare state
+                    }else{
+                        transit to commit state
+                    }
+                }
+            }
+        }
+
+        preprepareHandler(input) {
+            switch input{
+            case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
+                impeachHandler(input)
+            case validateMsg, commitMsg, prepareMsg:
+                prepareHandler(input)
+            case block:
+                if !verifyBlock(block) {
+                    propose an impeach block
+                    broadcast the impeach block
+                    transit to impeachPrepare state
+                }
+                else{
+                    broadcast preprepareMsg
+                    if prepareCertificate {
+                        broadcast commitMsg
+                        if commitCertificate {
+                            broadcast validateMsg
+                            transit to preprepare state
+                        }else{
+                            transit to commit state
+                        }
+                    }else{
+                        transit to prepare state
+                    }
+                }
+            }
+        }
+
+**Impeachment Handlers**
+
+    .. code-block:: go
+
+        impeachCommitHandler(input) {
+            switch input{
+            case validateMsg:
+                insert the block
+                broadcast validateMsg
+                transit to preprepare state
+            case impeachValidateMsg:
+                insert impeach block
+                broadcast impeachValidateMsg
+                transit to preprepare state
+            case impeachCommitMsg:
+                if impeachCommitCertificate(input) {
+                    broadcast impeachValidateMsg
+                    transit to preprepare state
+                }
+            }
+        }
+
+        impeachPrepareHandler(input) {
+            switch input{
+            case validateMsg, impeachValidateMsg, impeachCommitMsg:
+                impeachCommitHandler(input)
+            case impeachPrepareMsg:
+                if impeachPrepareCertificate(input) {
+                    broadcast impeachCommitMsg
+                    if impeachCommitCertificate(input) {
+                        broadcast impeachValidateMsg
+                        transit to preprepare state
+                    }
+                    transit to impeachCommit state
+                }
+        }
+
+        impeachHandler(input) {
+            case expiredTimer:
+                propose an impeach block
+                broadcast the impeach block
+                transit to impeachPrepare state
+            case impeachPrepareMsg, impeachCommitMsg:
+                impeachPrepareHandler(input)
+        }
 
 
 
