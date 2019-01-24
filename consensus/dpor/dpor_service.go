@@ -195,8 +195,8 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 		ParentHash: parent.Hash(),
 		Number:     big.NewInt(int64(parentNum + 1)),
 		GasLimit:   parent.GasLimit(),
-		Extra:      make([]byte, extraVanity),
-		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout()/time.Second)+int64(d.config.Period))),
+		Extra:      make([]byte, extraSeal),
+		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout()/time.Millisecond)+int64(d.config.Period))),
 		Coinbase:   common.Address{},
 		StateRoot:  parentHeader.StateRoot,
 	}

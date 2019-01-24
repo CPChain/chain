@@ -111,6 +111,9 @@ func (h *Handler) Start() {
 
 	// broadcast mined pending block, including empty block
 	go h.PendingBlockBroadcastLoop()
+
+	go h.PendingImpeachBlockBroadcastLoop()
+
 	return
 }
 

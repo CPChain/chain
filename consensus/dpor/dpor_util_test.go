@@ -37,7 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 func Test_sigHash(t *testing.T) {
@@ -186,17 +186,8 @@ func Test_ecrecover(t *testing.T) {
 	//fmt.Println("extra2Sig hex:", common.Bytes2Hex(extra2Sig))
 	//fmt.Println("loadedAddr hex:", loadedAddr.Hex())
 
-	noSignerSigHeader := &types.Header{
-		Extra: []byte("0x0000000000000000000000000000000000000000000000000000000000000000"),
-		Dpor: types.DporSnap{
-			Seal: types.DporSignature{},
-			Proposers: []common.Address{
-				addr,
-			},
-			Sigs: make([]types.DporSignature, 3),
-		},
-	}
-
+	noSignerSigHeader := types.CopyHeader(newHeader)
+	noSignerSigHeader.Dpor.Seal = types.DporSignature{}
 	copy(noSignerSigHeader.Dpor.Sigs[0][:], validatorSig[:])
 	copy(noSignerSigHeader.Dpor.Sigs[1][:], validatorSig[:])
 	copy(noSignerSigHeader.Dpor.Sigs[2][:], validatorSig[:])
@@ -213,7 +204,7 @@ func Test_ecrecover(t *testing.T) {
 		wantErr bool
 	}{
 		{"leaderSigHeader already cached,success", args{newHeader, cache}, addr, []common.Address{addr, addr, addr}, false},
-		{"no signers' signatures. fail", args{noSignerSigHeader, cache}, common.Address{}, []common.Address{}, true},
+		{"no signers' signatures. fail", args{noSignerSigHeader, cache}, common.Address{}, []common.Address{addr, addr, addr}, false},
 		{"success", args{newHeader, cache}, addr, []common.Address{addr, addr, addr}, false},
 	}
 

@@ -31,7 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 func nanosecondToMillisecond(t int64) int64 {
@@ -127,31 +127,29 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	defer d.lock.Unlock()
 
 	hash := header.Hash()
-
-	if bytes.Equal(header.Dpor.Seal[:], new(types.DporSignature)[:]) {
-		return common.Address{}, []common.Address{}, errMissingSignature
-	}
-
-	// Retrieve leader's signature
-	proposerSig := header.Dpor.Seal
-
-	// Recover the public key and the cpchain address of leader.
 	var propser common.Address
-	proposerPubKey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), proposerSig[:])
-	if err != nil {
-		return common.Address{}, []common.Address{}, err
-	}
-	copy(propser[:], crypto.Keccak256(proposerPubKey[1:])[12:])
 
-	// Cache proposer signature.
-	if sigs, known := sigcache.Get(hash); known {
-		sigs.(*Signatures).SetSig(propser, proposerSig[:])
-	} else {
-		sigs := &Signatures{
-			sigs: make(map[common.Address][]byte),
+	if !bytes.Equal(header.Dpor.Seal[:], new(types.DporSignature)[:]) {
+		// Retrieve leader's signature
+		proposerSig := header.Dpor.Seal
+
+		// Recover the public key and the cpchain address of leader.
+		proposerPubKey, err := crypto.Ecrecover(d.sigHash(header).Bytes(), proposerSig[:])
+		if err != nil {
+			return common.Address{}, []common.Address{}, err
 		}
-		sigs.SetSig(propser, proposerSig[:])
-		sigcache.Add(hash, sigs)
+		copy(propser[:], crypto.Keccak256(proposerPubKey[1:])[12:])
+
+		// Cache proposer signature.
+		if sigs, known := sigcache.Get(hash); known {
+			sigs.(*Signatures).SetSig(propser, proposerSig[:])
+		} else {
+			sigs := &Signatures{
+				sigs: make(map[common.Address][]byte),
+			}
+			sigs.SetSig(propser, proposerSig[:])
+			sigcache.Add(hash, sigs)
+		}
 	}
 
 	// Recover the public key and the cpchain address of signers one by one.
@@ -173,8 +171,17 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 			copy(validator[:], crypto.Keccak256(signerPubkey[1:])[12:])
 
 			// Cache it!
-			sigs, _ := sigcache.Get(hash)
-			sigs.(*Signatures).SetSig(validator, signerSig[:])
+			sigs, ok := sigcache.Get(hash)
+			if ok {
+				sigs.(*Signatures).SetSig(validator, signerSig[:])
+
+			} else {
+				sigs := &Signatures{
+					sigs: make(map[common.Address][]byte),
+				}
+				sigs.SetSig(validator, signerSig[:])
+				sigcache.Add(hash, sigs)
+			}
 
 			// Add signer to known signers
 			validators = append(validators, validator)

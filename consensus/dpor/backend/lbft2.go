@@ -200,12 +200,12 @@ type PBFT struct {
 	prepareSignatures *signaturesForBlockCaches
 	commitSignatures  *signaturesForBlockCaches
 
-	impeachment *Impeachment
+	// impeachment *Impeachment
 }
 
 func NewPBFT(faulty uint64, number uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock) *PBFT {
 
-	return &PBFT{
+	pbft := &PBFT{
 		state:  consensus.Idle,
 		faulty: faulty,
 		number: number,
@@ -215,8 +215,13 @@ func NewPBFT(faulty uint64, number uint64, dpor DporService, handleImpeachBlock 
 		prepareSignatures: newSignaturesForBlockCaches(),
 		commitSignatures:  newSignaturesForBlockCaches(),
 
-		impeachment: NewImpeachment(dpor, handleImpeachBlock),
+		// impeachment: NewImpeachment(dpor, handleImpeachBlock),
 	}
+
+	// go pbft.impeachment.Loop()
+	// pbft.impeachment.Trigger(number)
+
+	return pbft
 }
 
 // Faulty returns the number of faulty nodes
@@ -274,9 +279,11 @@ func (p *PBFT) FSM(input *blockOrHeader, msgCode MsgCode) ([]*blockOrHeader, Act
 
 	output, action, msgCode, state, err := p.fsm(input, msgCode, state)
 
-	p.SetState(state)
-	if len(output) != 0 {
-		p.SetNumber(output[0].number())
+	if err == nil {
+		p.SetState(state)
+		if len(output) != 0 {
+			p.SetNumber(output[0].number())
+		}
 	}
 
 	return output, action, msgCode, err
@@ -293,6 +300,13 @@ func (p *PBFT) fsm(input *blockOrHeader, msgCode MsgCode, state consensus.State)
 	// if already in chain, do nothing
 	if p.dpor.HasBlockInChain(hash, number) {
 		log.Warn("the block or header is already in local chain", "number", number, "hash", hash.Hex())
+		// TODO: add error type
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+
+	if number < p.Number() {
+		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
+		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil
 	}
 
@@ -495,7 +509,7 @@ func (p *PBFT) handleImpeachPreprepareMsg(input *blockOrHeader, state consensus.
 		log.Debug("verified the block, everything is ok! ready to sign the block", "number", number, "hash", hash.Hex())
 
 		// compose prepare msg
-		header, _ = p.composePrepareMsg(block)
+		header, _ = p.composeImpeachPrepareMsg(block)
 
 		return []*blockOrHeader{newBOHFromHeader(header)}, BroadcastMsgAction, ImpeachPrepareMsgCode, consensus.ImpeachPreprepared, nil
 
@@ -892,7 +906,8 @@ func (p *PBFT) handleValidateMsg(input *blockOrHeader, state consensus.State) ([
 	// broadcast it to civilians
 	go p.dpor.BroadcastBlock(block, true)
 
-	go p.impeachment.Restart(block.NumberU64())
+	// log.Debug("restart impeach", "number", block.NumberU64()+1)
+	// p.impeachment.Trigger(block.NumberU64() + 1)
 
 	return nil, NoAction, NoMsgCode, consensus.Idle, nil
 }
@@ -925,7 +940,8 @@ func (p *PBFT) handleImpeachValidateMsg(input *blockOrHeader, state consensus.St
 	// broadcast it to civilians
 	go p.dpor.BroadcastBlock(block, true)
 
-	go p.impeachment.Restart(block.NumberU64())
+	// log.Debug("restart impeach", "number", block.NumberU64()+1)
+	// p.impeachment.Trigger(block.NumberU64() + 1)
 
 	return nil, NoAction, NoMsgCode, consensus.Idle, nil
 }
@@ -988,6 +1004,8 @@ type Impeachment struct {
 	dpor      DporService
 	returnFn  HandleGeneratedImpeachBlock
 	restartCh chan struct{}
+	numberCh  chan uint64
+	quitCh    chan struct{}
 	running   bool
 	lock      sync.RWMutex
 }
@@ -998,6 +1016,8 @@ func NewImpeachment(dpor DporService, returnFn HandleGeneratedImpeachBlock) *Imp
 		dpor:      dpor,
 		returnFn:  returnFn,
 		restartCh: make(chan struct{}),
+		numberCh:  make(chan uint64),
+		quitCh:    make(chan struct{}),
 	}
 }
 
@@ -1026,9 +1046,12 @@ func (im *Impeachment) timeout() time.Duration {
 
 // waitAndComposeImpeachBlock waits timeout to impeach, or return
 func (im *Impeachment) waitAndComposeImpeachBlock(number uint64) {
-	if number < im.number() {
+	if number <= im.number() {
 		return
 	}
+
+	im.setRunning(true)
+	defer im.setRunning(false)
 
 	select {
 	case <-time.After(im.timeout()):
@@ -1039,12 +1062,16 @@ func (im *Impeachment) waitAndComposeImpeachBlock(number uint64) {
 		}
 
 		_ = im.returnFn(impeachBlock)
-		log.Info("composed impeach block", "number", number)
 		return
 
 	case <-im.restartCh:
 		return
 	}
+}
+
+func (im *Impeachment) Trigger(number uint64) {
+	im.numberCh <- number
+	log.Debug("triggered restart", "number", number)
 }
 
 // Restart restarts impeachment
@@ -1053,7 +1080,25 @@ func (im *Impeachment) Restart(number uint64) {
 		im.restartCh <- struct{}{}
 	}
 
+	log.Debug("now starting new wait and try to compose", "number", number)
+
 	go im.waitAndComposeImpeachBlock(number)
 
-	im.setRunning(true)
+}
+
+func (im *Impeachment) Loop() {
+
+	for {
+		select {
+		case number := <-im.numberCh:
+			log.Debug("now ready to restart", "number", number)
+			go im.Restart(number)
+		case <-im.quitCh:
+			return
+		}
+	}
+}
+
+func (im *Impeachment) Stop() {
+	im.quitCh <- struct{}{}
 }
