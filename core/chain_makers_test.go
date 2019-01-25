@@ -115,11 +115,10 @@ func ExampleGenerateChain() {
 
 	state, _ := blockchain.State()
 	fmt.Printf("last block: #%d\n", blockchain.CurrentBlock().Number())
-	fmt.Println("balance of addr1:", new(big.Int).Sub(state.GetBalance(addr1), configs.Cep1BlockRewardY1))
-	fmt.Println("balance of addr2:", new(big.Int).Sub(state.GetBalance(addr2), configs.Cep1BlockRewardY2))
+	fmt.Println("balance of addr1:", new(big.Int).Sub(state.GetBalance(addr1), new(big.Int).Mul(big.NewInt(1265), big.NewInt(1e+16))))
+	fmt.Println("balance of addr2:", new(big.Int).Sub(state.GetBalance(addr2), new(big.Int).Mul(big.NewInt(951), big.NewInt(1e+16))))
 
-	sub := new(big.Int).Add(configs.Cep1BlockRewardY3, configs.Cep1BlockRewardY4)
-	sub = new(big.Int).Add(sub, configs.Cep1BlockRewardY5)
+	sub := new(big.Int).Mul(big.NewInt(713+539+403), big.NewInt(1e+16))
 	balanceAddr3 := new(big.Int).Sub(state.GetBalance(addr3), sub)
 	fmt.Println("balance of addr3 (adjusted):", balanceAddr3)
 	// Output:

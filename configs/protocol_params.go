@@ -77,16 +77,32 @@ var (
 	DurationLimit = big.NewInt(13) // The decision boundary on the blocktime duration used to determine whether difficulty should go up or not.
 )
 
+const (
+	Cep1BlocksPerDay = 24 * 60 * 60 / 10
+	Cep1BlocksY1     = 366 * Cep1BlocksPerDay // contain a leap day
+	Cep1BlocksY2     = 365 * Cep1BlocksPerDay
+	Cep1BlocksY3     = 365 * Cep1BlocksPerDay
+	Cep1BlocksY4     = 365 * Cep1BlocksPerDay
+	Cep1BlocksY5     = 366 * Cep1BlocksPerDay // contain a leap day
+)
+
 var (
+	Cep1BlockRewardSupplyY1 = new(big.Int).Mul(big.NewInt(40002336), big.NewInt(1e+18))
+	Cep1BlockRewardSupplyY2 = new(big.Int).Mul(big.NewInt(29990736), big.NewInt(1e+18))
+	Cep1BlockRewardSupplyY3 = new(big.Int).Mul(big.NewInt(22485168), big.NewInt(1e+18))
+	Cep1BlockRewardSupplyY4 = new(big.Int).Mul(big.NewInt(16997904), big.NewInt(1e+18))
+	Cep1BlockRewardSupplyY5 = new(big.Int).Mul(big.NewInt(127438272), big.NewInt(1e+17))
+
 	// the calculation is based on 10 s a block	is generated.
-	Cep1BlockRewardY1 = new(big.Int).Mul(big.NewInt(1265), big.NewInt(1e+16)) // reward 12.65 cpc per block
-	Cep1BlockRewardY2 = new(big.Int).Mul(big.NewInt(951), big.NewInt(1e+16))  // reward 9.51 cpc per block
-	Cep1BlockRewardY3 = new(big.Int).Mul(big.NewInt(713), big.NewInt(1e+16))  // reward 7.13 cpc per block
-	Cep1BlockRewardY4 = new(big.Int).Mul(big.NewInt(539), big.NewInt(1e+16))  // reward 5.39 cpc per block
-	Cep1BlockRewardY5 = new(big.Int).Mul(big.NewInt(403), big.NewInt(1e+16))  // reward 4.03 cpc per block
-	Cep1LastBlockY1   = big.NewInt(3162240)
-	Cep1LastBlockY2   = new(big.Int).Add(big.NewInt(3153600), Cep1LastBlockY1)
-	Cep1LastBlockY3   = new(big.Int).Add(big.NewInt(3153600), Cep1LastBlockY2)
-	Cep1LastBlockY4   = new(big.Int).Add(big.NewInt(3153600), Cep1LastBlockY3)
-	Cep1LastBlockY5   = new(big.Int).Add(big.NewInt(3162240), Cep1LastBlockY4)
+	Cep1BlockRewardY1 = new(big.Int).Div(Cep1BlockRewardSupplyY1, big.NewInt(Cep1BlocksY1)) // reward 12.65 cpc per block
+	Cep1BlockRewardY2 = new(big.Int).Div(Cep1BlockRewardSupplyY2, big.NewInt(Cep1BlocksY2)) // reward 9.51 cpc per block
+	Cep1BlockRewardY3 = new(big.Int).Div(Cep1BlockRewardSupplyY3, big.NewInt(Cep1BlocksY3)) // reward 7.13 cpc per block
+	Cep1BlockRewardY4 = new(big.Int).Div(Cep1BlockRewardSupplyY4, big.NewInt(Cep1BlocksY4)) // reward 5.39 cpc per block
+	Cep1BlockRewardY5 = new(big.Int).Div(Cep1BlockRewardSupplyY5, big.NewInt(Cep1BlocksY5)) // reward 4.03 cpc per block
+
+	Cep1LastBlockY1 = big.NewInt(Cep1BlocksY1)
+	Cep1LastBlockY2 = new(big.Int).Add(big.NewInt(Cep1BlocksY2), Cep1LastBlockY1)
+	Cep1LastBlockY3 = new(big.Int).Add(big.NewInt(Cep1BlocksY3), Cep1LastBlockY2)
+	Cep1LastBlockY4 = new(big.Int).Add(big.NewInt(Cep1BlocksY4), Cep1LastBlockY3)
+	Cep1LastBlockY5 = new(big.Int).Add(big.NewInt(Cep1BlocksY5), Cep1LastBlockY4)
 )
