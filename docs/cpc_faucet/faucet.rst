@@ -36,12 +36,12 @@ CPC fusion provides APIs for interested users to create a wallet address.
             $ build/bin/cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --rpcaddr 0.0.0.0:8501 --runmode=testnet
 
         **WARNING:** The current master version is not compatible with Alpha Mainnet.
-        Interested users can refer to commit 3c384f6e to sync with Alpha Mainnet.
-        After cloning from github repository, you can checkout the commit 3c384f6e by following command:
+        Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
+        After cloning from github repository, you can checkout the commit 7d29a2b by following command:
 
         .. code::
 
-            $ git checkout 3c384f6e
+            $ git checkout 7d29a2b
             $ sudo make all
 
         Then use the commands above to connect to Alpha Mainnet.
