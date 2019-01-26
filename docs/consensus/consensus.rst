@@ -1,9 +1,13 @@
+.. _consensus:
+
 Consensus
 =====================
 
 Dpor Bipartite Committee
 --------------------------
 
+The consensus in LBFT 2.0 is determined by two two committees: **Validators Committee** and **Proposers Committee**.
+Here we list the properties of validators and proposers, as well as the rest nodes denoted as civilians.
 
 
 1. **Validator** and **Proposer** and **Civilian**
@@ -19,9 +23,25 @@ Dpor Bipartite Committee
     #. Civilians refer to the rest of users
         i. A civilian can become a proposer if it claims campaign and is elected.
 
+
 Normal and Abnormal Case Handler
 ----------------
-#. **Normal Case**
+
+
+Before we dive into explaining case handler, let us introduce an important concept **quorum**.
+A quorum is a subset of validators committee members such that a consensus can be reached among a quorum in a certain state.
+These quorum have two vital properties:
+
+1. Intersection: any two quorums have at least one loyal validator in common.
+#. Availability: there is always a quorum available with no faulty validator.
+
+When members in a quorum endorse information from a same block, they collect a *quorum certificate*.
+There are two certificates, prepare certificate (P-certificate) and commit certificate (C-certificate), which indicates
+that there exist a quorum agree on a prepare message and a commit message respectively.
+
+
+
+1. **Normal Case**
     a. Block production
         i. An ordinary user claims campaign, undergoes the admission qualification, and then enters the *candidate list*.
         #. After being elected in a periodical election, a candidate enters a block proposer committee.
@@ -32,6 +52,7 @@ Normal and Abnormal Case Handler
         #. If true, this validator broadcast a PREPARE message to other validators; otherwise, it enters Abnormal Case 2 or 3.
         #. Once receives 2f+1 PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
         #. Once received 2f+1 COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these 2f+1 validators' signatures to all users.
+        #. Once A validator receive the VALIDATE message for the first time in a view, it broadcast a same message to all nodes.
         #. Any user receives this VALIDATE message with enough signatures, insert the block into local chain
 
 
@@ -55,6 +76,9 @@ Normal and Abnormal Case Handler
         #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATE messages
         #. Any of these timers expires, the validators committee activates *impeachment*
 
+Note that we re
+
+
 Impeachment
 --------------
 
@@ -68,8 +92,9 @@ Impeachment
             #. The *seal* in the header is set to be empty
             #. A penalty on proposer is the only transaction in the block's body
         #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
-        #. Once receives 2f+1 PREPARE messages with same header and body, a validator broadcasts an IMPEACH COMMIT message to other validators.
-        #. Once receives 2f+1 COMMIT messages, a validator inserts the block into local chain, and broadcasts an IMPEACH VALIDATE message along with 2f+1 signatures to all users.
+        #. Once receives f+1 IMPEACH PREPARE messages with same header and body, a validator broadcasts an IMPEACH COMMIT message to other validators.
+        #. Once receives f+1 IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with f+1 signatures to all users.
+        #. Any validate receives the IMPEACH VALIDATE message for the first time, it insert the impeach block and broadcast the same message to all nodes.
         #. All users insert the block into local chain, if they receive a IMPEACH VALIDATE messages.
     #. The reason the leader is not required
         a. The leader in classic PBFT model takes the following roles:
@@ -83,11 +108,23 @@ Impeachment
         b. This scenario does not affects the security of the system, since validators can only collect 2f+1 COMMIT messages for one block
 
 
+Note that a quorum in normal case consists of 2f+1 members, while a quorum in impeachment consists of f+1 members.
+The necessity of 2f+1 in normal case is that in extreme cases,
+there are f faulty nodes send arbitrary messages, we need f+1 more loyal nodes to outnumber faulty counterparts.
+In comparison, that even one loyal nodes triggers impeachment indicates a improper behavior of proposer.
+Thus, f+1 impeachment validators suffice a quorum of impeachment.
+
+In addition, a validator repeats a validate message (or impeach validate message) for the first time it receive it.
+This repetition process ensures the validate message can be delivered to all nodes.
+In an edge case, a node can lose its connection while broadcasting a validate message.
+If there were no repetition mechanism, this edge case would sabotage the consistency of LBFT 2.0.
+
 Finite State Machine
 ----------------------
 
 The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 states:
 **pre-prepare**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
+The former three states are designed for normal cases, and the rest are specializing in handling abnormal cases.
 
 The illustration below demonstrates these five states as well as transitions between states.
 Note that not all transitions are shown in this figure due to the lack of space.
@@ -236,6 +273,42 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             case impeachPrepareMsg, impeachCommitMsg:
                 impeachPrepareHandler(input)
         }
+
+
+Illicit Actions
+----------------------
+
+Illicit actions refer any messages or blocks sending to a validator that cannot be processed in this validator's normal cases.
+From validators' perspective, Illicit actions falls into the following categories:
+
+1. Double spend attack from the proposer
+#. A future block whose block height is higher than the one a validator is processing
+#. A past block whose block height is higher than the one a validator is processing
+#. A block from any unrecognized node
+
+Double Spend Attack
+*********************
+
+Double Spend Attack is that two distinct blocks are proposed by a proposer, and sent to validators.
+If this attack succeeded, the proposer would be granted two sets of rewards,
+and a fork would occur in the blockchain since two blocks with same block height were both legal.
+
+The sophisticated mechanism in LBFT 2.0 protocol prohibits the occurrence of double spend attack.
+The following theorem holds in LBFT 2.0.
+
+**Theorem 1:** *There cannot exist two blocks proposed by a same node with the same block number being validated simultaneously.*
+
+**Proof:** Assume that a proposer p proposes two distinct blocks b and b', and broadcasts them to validators.
+And to achieve its wicked purpose, f faulty validators collaborate with p.
+Suppose that p fulfill its wicked aim that both b and b' are inserted into the chain.
+Thus, there exists two quorums of validators that endorse b and b' respectively.
+Since only 3f + 1 members in the committee, these two quorums have f+1 members in common. Except for f faulty validators
+can be members of both quorums, there still exits one validator signs both b and b0. It contracts the
+fact that each loyal validator only sign one block. Hence, there cannot be two proposed blocks are
+both legit.
+
+
+
 
 
 
