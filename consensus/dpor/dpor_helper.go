@@ -497,7 +497,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	// Sign the block if self is in the committee
 	if snap.IsValidatorOf(dpor.Coinbase(), number) {
 		// NOTE: sign a block only once
-		if signedHash, signed := dpor.IfSigned(number); signed && signedHash != header.Hash() {
+		if signedHash, signed := dpor.IfSigned(number); signed && signedHash != header.Hash() && state != consensus.ImpeachPreprepared && state != consensus.ImpeachPrepared {
 			return errMultiBlocksInOneHeight
 		}
 

@@ -8,10 +8,6 @@ if [ ! -f "build/env.sh" ]; then
 fi
 
 
-go get -u github.com/prometheus/client_golang/prometheus
-go get -u github.com/prometheus/client_golang/prometheus/promauto
-go get -u github.com/prometheus/client_golang/prometheus/promhttp
-
 # Create fake Go workspace if it doesn't exist yet.
 workspace="$PWD/build/_workspace"
 root="$PWD"

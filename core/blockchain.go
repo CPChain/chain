@@ -1035,14 +1035,26 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 // After insertion is done, all accumulated events will be fired.
 func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 	bc.insertChainProtectLock.Lock()
+	defer bc.insertChainProtectLock.Unlock()
 
-	n, events, logs, err := bc.insertChain(chain)
-	bc.CommitStateDB()
+	if len(chain) == 0 {
+		return 0, nil
+	}
 
-	bc.insertChainProtectLock.Unlock()
+	var (
+		last    = chain[len(chain)-1].NumberU64()
+		current = bc.CurrentBlock().NumberU64()
+	)
 
-	bc.PostChainEvents(events, logs)
-	return n, err
+	// the last block is already in local chain, return early
+	if last > current {
+		n, events, logs, err := bc.insertChain(chain)
+		bc.CommitStateDB()
+		bc.PostChainEvents(events, logs)
+		return n, err
+	}
+
+	return len(chain), nil
 }
 
 // insertChain will execute the actual chain insertion and event aggregation. The

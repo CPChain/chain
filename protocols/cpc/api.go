@@ -62,6 +62,22 @@ func (api *PublicCpchainAPI) Coinbase() (common.Address, error) {
 	return api.Cpcbase()
 }
 
+// PublicMinerAPI provides an API to control the miner.
+// It offers only methods that operate on data that pose no security risk when it is publicly accessible.
+type PublicMinerAPI struct {
+	c *CpchainService
+}
+
+// NewPublicMinerAPI create a new PublicMinerAPI instance.
+func NewPublicMinerAPI(e *CpchainService) *PublicMinerAPI {
+	return &PublicMinerAPI{e}
+}
+
+// Mining returns an indication if this node is currently mining.
+func (api *PublicMinerAPI) Mining() bool {
+	return api.c.IsMining()
+}
+
 // PrivateMinerAPI provides private RPC methods to control the miner.
 // These methods can be abused by external users and must be considered insecure for use by untrusted users.
 type PrivateMinerAPI struct {

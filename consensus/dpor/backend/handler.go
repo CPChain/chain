@@ -42,12 +42,14 @@ type Handler struct {
 
 	dialer *Dialer
 	snap   *consensus.PbftStatus
-	fsm    *DporStateMachine
+	fsm    ConsensusStateMachine
+	lbft   *LBFT
 	dpor   DporService
 
-	knownBlocks    *RecentBlocks
-	pendingBlockCh chan *types.Block
-	quitCh         chan struct{}
+	knownBlocks           *RecentBlocks
+	pendingBlockCh        chan *types.Block
+	pendingImpeachBlockCh chan *types.Block
+	quitCh                chan struct{}
 
 	lock sync.RWMutex
 }
@@ -56,18 +58,19 @@ type Handler struct {
 func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 
 	h := &Handler{
-		config:         config,
-		coinbase:       coinbase,
-		knownBlocks:    newKnownBlocks(),
-		dialer:         NewDialer(),
-		pendingBlockCh: make(chan *types.Block),
-		quitCh:         make(chan struct{}),
-		available:      false,
+		config:                config,
+		coinbase:              coinbase,
+		knownBlocks:           newKnownBlocks(),
+		dialer:                NewDialer(),
+		pendingBlockCh:        make(chan *types.Block),
+		pendingImpeachBlockCh: make(chan *types.Block),
+		quitCh:                make(chan struct{}),
+		available:             false,
 	}
 
 	// TODO: fix this
 	h.mode = LBFTMode
-	// h.mode = PBFTMode
+	// h.mode = LBFT2Mode
 
 	return h
 }
@@ -108,6 +111,9 @@ func (h *Handler) Start() {
 
 	// broadcast mined pending block, including empty block
 	go h.PendingBlockBroadcastLoop()
+
+	go h.PendingImpeachBlockBroadcastLoop()
+
 	return
 }
 
@@ -197,9 +203,9 @@ func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 	// TODO: @liuq fix this.
 	switch h.mode {
 	case LBFTMode:
-		return h.handleLbftMsg(msg, p)
-	case PBFTMode:
-		return h.handlePbftMsg(msg, p)
+		return h.handleLBFTMsg(msg, p)
+	case LBFT2Mode:
+		return h.handleLBFT2Msg(msg, p)
 	default:
 		return ErrUnknownHandlerMode
 	}
@@ -218,7 +224,7 @@ func (h *Handler) SetDporService(dpor DporService) error {
 }
 
 // SetDporStateMachine sets dpor state machine
-func (h *Handler) SetDporStateMachine(fsm *DporStateMachine) error {
+func (h *Handler) SetDporStateMachine(fsm ConsensusStateMachine) error {
 	h.fsm = fsm
 	return nil
 }

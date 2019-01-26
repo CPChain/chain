@@ -285,9 +285,10 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 		latest = blockchain.CurrentHeader().Number.Uint64()
 	)
 
-	fsm := backend.NewDSM(faulty, latest, d)
-
 	handler := d.handler
+
+	// fsm := backend.NewDSM(faulty, latest, d)
+	fsm := backend.NewPBFT(faulty, latest, d, handler.ReceiveImpeachPendingBlock)
 
 	if err := handler.SetServer(server); err != nil {
 		return

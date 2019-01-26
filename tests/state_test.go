@@ -22,10 +22,13 @@ import (
 	"reflect"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core/vm"
 )
 
 func TestState(t *testing.T) {
+	configs.SetRunMode(configs.Testcase)
+
 	t.Parallel()
 
 	st := new(testMatcher)

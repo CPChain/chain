@@ -256,12 +256,12 @@ func (s *CpchainService) APIs() []rpc.API {
 			Service:   NewPublicCpchainAPI(s),
 			Public:    true,
 		},
-		// {
-		// 	Namespace: "eth",
-		// 	Version:   "1.0",
-		// 	Service:   NewPublicMinerAPI(s),
-		// 	Public:    true,
-		// },
+		{
+			Namespace: "eth",
+			Version:   "1.0",
+			Service:   NewPublicMinerAPI(s),
+			Public:    true,
+		},
 		// // TODO: fix this @liuq
 		{
 			Namespace: "eth",
@@ -418,7 +418,7 @@ func (s *CpchainService) IsMining() bool {
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		return s.miner.IsMining() && dpor.IsMiner() && dpor.IsToCampaign()
 	} else {
-		return s.miner.IsMining() && dpor.IsMiner()
+		return s.miner.IsMining()
 	}
 }
 

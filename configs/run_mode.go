@@ -9,10 +9,12 @@ import (
 )
 
 type RunMode string
+
 const (
-	Dev RunMode = "dev"
-	Testnet RunMode = "testnet"
-	Mainnet RunMode = "mainnet"
+	Dev      RunMode = "dev"
+	Testnet  RunMode = "testnet"
+	Mainnet  RunMode = "mainnet"
+	Testcase RunMode = "testcase"
 )
 
 // Run mode for switch node configuration, eg:dev|testnet|mainnet
@@ -27,6 +29,7 @@ func SetRunMode(runMode RunMode) error {
 	case Dev:
 	case Mainnet:
 	case Testnet:
+	case Testcase:
 	default:
 		log.Error(fmt.Sprintf("unknown runModeValue, revert to default mode: %s", runModeValue), "runModeValue", runMode)
 		return fmt.Errorf("unknown runModeValue %s", runMode)
@@ -46,4 +49,8 @@ func IsMainnet() bool {
 
 func IsTestnet() bool {
 	return Testnet == runModeValue
+}
+
+func IsTestcase() bool {
+	return Testcase == runModeValue
 }

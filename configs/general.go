@@ -60,6 +60,10 @@ const (
 	DefaultMainnetMaxInitBlockNumber = 240
 )
 
+const (
+	DefaultWaitTimeBeforeImpeachment = 120 // wait 120 seconds before first impeachment
+)
+
 // TODO @hmw make the name more meaningful.  add doc.
 const (
 	ContractCampaign   = "campaign"   // address of campaign contract,select rnode
@@ -73,27 +77,31 @@ const (
 
 var (
 	chainConfigMap = map[RunMode]*ChainConfig{
-		Dev:     devChainConfig,
-		Testnet: testnetChainConfig,
-		Mainnet: mainnetChainConfig,
+		Dev:      devChainConfig,
+		Testnet:  testnetChainConfig,
+		Mainnet:  mainnetChainConfig,
+		Testcase: devChainConfig,
 	}
 
 	proposersMap = map[RunMode][]common.Address{
-		Dev:     devProposers,
-		Testnet: testnetProposers,
-		Mainnet: mainnetProposers,
+		Dev:      devProposers,
+		Testnet:  testnetProposers,
+		Mainnet:  mainnetProposers,
+		Testcase: devProposers,
 	}
 
 	candidatesMap = map[RunMode][]common.Address{
-		Dev:     devDefaultCandidates,
-		Testnet: testnetDefaultCandidates,
-		Mainnet: mainnetDefaultCandidates,
+		Dev:      devDefaultCandidates,
+		Testnet:  testnetDefaultCandidates,
+		Mainnet:  mainnetDefaultCandidates,
+		Testcase: devDefaultCandidates,
 	}
 
 	validatorsMap = map[RunMode][]common.Address{
-		Dev:     devValidators,
-		Testnet: testnetValidators,
-		Mainnet: mainnetValidators,
+		Dev:      devValidators,
+		Testnet:  testnetValidators,
+		Mainnet:  mainnetValidators,
+		Testcase: devValidators,
 	}
 )
 
@@ -133,6 +141,8 @@ func Bootnodes() []string {
 		return testnetBootnodes
 	case IsMainnet():
 		return mainnetBootnodes
+	case IsTestcase():
+		return devBootnodes
 	default:
 		return devBootnodes
 	}
@@ -141,9 +151,10 @@ func Bootnodes() []string {
 // Deposit per time when campaign
 var (
 	depositMap = map[RunMode]*big.Int{
-		Dev:     devDeposit,
-		Testnet: testnetDeposit,
-		Mainnet: mainnetDeposit,
+		Dev:      devDeposit,
+		Testnet:  testnetDeposit,
+		Mainnet:  mainnetDeposit,
+		Testcase: devDeposit,
 	}
 )
 
@@ -167,6 +178,8 @@ func InitDefaultValidators(validators []string) {
 	case Testnet:
 		defaultValidatorNodes = defaultTestnetValidatorNodes
 	case Dev:
+		defaultValidatorNodes = defaultDevValidatorNodes
+	case Testcase:
 		defaultValidatorNodes = defaultDevValidatorNodes
 	}
 
@@ -234,7 +247,11 @@ func (c *ChainConfig) IsCpchain() bool {
 //
 // The returned GasTable's fields shouldn't, under any circumstances, be changed.
 func (c *ChainConfig) GasTable(num *big.Int) GasTable {
-	return GasTableCep0
+	// add this GasTable, so that in testcase run mode,we can reuse vm tests in https://github.com/ethereum/tests
+	if IsTestcase() {
+		return GasTableHomestead
+	}
+	return GasTableCep1
 }
 
 // ConfigCompatError is raised if the locally-stored blockchain is initialised with a

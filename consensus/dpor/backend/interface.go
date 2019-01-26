@@ -62,9 +62,25 @@ type RsaReader func() (*rsakey.RsaKey, error)
 // VerifySignerFn verifies if a signer is a signer at given term
 type VerifySignerFn func(address common.Address, term uint64) (bool, error)
 
+// VerifyBlockFn verifies basic fields of a block
+type VerifyBlockFn func(block *types.Block) error
+
+// VerifyImpeachBlockFn verifies basic fields of a block, and the coin base and whether empty txs
+type VerifyImpeachBlockFn func(block *types.Block) error
+
 // SignFn is a signer callback function to request a hash to be signed by a
 // backing account.
 type SignFn func(accounts.Account, []byte) ([]byte, error)
+
+// HandleGeneratedImpeachBlock handles generated impeach block
+type HandleGeneratedImpeachBlock func(block *types.Block) error
+
+// ConsensusStateMachine is a state machine used for consensus protocol for validators msg processing
+type ConsensusStateMachine interface {
+	Status() DSMStatus
+	Faulty() uint64
+	FSM(input *blockOrHeader, msgCode MsgCode) ([]*blockOrHeader, Action, MsgCode, error)
+}
 
 // DporService provides functions used by dpor handler
 type DporService interface {
@@ -128,9 +144,9 @@ type DporService interface {
 	// ImpeachTimeout returns the timeout for impeachment
 	ImpeachTimeout() time.Duration
 
-	// EcrecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
+	// ECRecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
 	// addresses if one of the sigs are illegal
-	EcrecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error)
+	ECRecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error)
 
 	// Update the signature to prepare signature cache(two kinds of sigs, one for prepared, another for final)
 	UpdatePrepareSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature)
@@ -145,8 +161,8 @@ type DporService interface {
 type HandlerMode uint
 
 const (
-	PBFTMode HandlerMode = iota
-	LBFTMode
+	LBFTMode HandlerMode = iota
+	LBFT2Mode
 )
 
 // ECRecover recovers an address from a signature

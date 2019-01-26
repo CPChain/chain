@@ -4,9 +4,13 @@ import (
 	"math/rand"
 	"time"
 
+	"bitbucket.org/cpchain/chain/configs"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
@@ -24,11 +28,12 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 				log.Debug("validator", "addr", addr.Hex())
 			}
 
-			if len(validators) >= int(h.config.TermLen-h.fsm.faulty) {
+			if len(validators) >= int(h.config.TermLen-h.fsm.Faulty()) {
 				return
 			}
 
-			go h.dialer.DialAllRemoteValidators(term)
+			// TODO: This is not a great way to dial, I'll change it later.
+			h.dialer.DialAllRemoteValidators(term)
 
 			time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
 		}
@@ -149,36 +154,83 @@ func (h *Handler) BroadcastValidateImpeachBlock(block *types.Block) {
 
 // PendingBlockBroadcastLoop loops to broadcast blocks
 func (h *Handler) PendingBlockBroadcastLoop() {
-	futureTimer := time.NewTicker(time.Duration(h.dpor.ImpeachTimeout()))
-	defer futureTimer.Stop()
 
 	for {
 		select {
 		case pendingBlock := <-h.pendingBlockCh:
-
 			// broadcast mined pending block to remote signers
 			go h.BroadcastPreprepareBlock(pendingBlock)
-
-		case <-futureTimer.C:
-
-			// // check if still not received new block, if true, continue
-			// if h.ReadyToImpeach() && h.mode == PBFTMode {
-			// 	// get empty block
-
-			// 	log.Debug("composing preprepare impeach block msg")
-
-			// 	impeachHeader, act, dtype, msg, err := h.fsm.Fsm(nil, 0, ImpeachPreprepareMsgCode)
-			// 	_, _, _, _, _ = impeachHeader, act, dtype, msg, err
-
-			// 	if impeachHeader != nil && act == BroadcastMsgAction && dtype == HeaderType && msg == PrepareMsgCode && err == nil {
-			// 		header := impeachHeader.(*types.Header)
-			// 		go h.BroadcastPrepareImpeachHeader(header)
-			// 	}
-
-			// }
 
 		case <-h.quitCh:
 			return
 		}
 	}
+}
+
+func (h *Handler) PendingImpeachBlockBroadcastLoop() {
+
+	futureTimer := time.NewTicker(h.dpor.ImpeachTimeout())
+	defer futureTimer.Stop()
+
+	<-time.After(configs.DefaultWaitTimeBeforeImpeachment * time.Second)
+
+	for {
+		select {
+		case pendingImpeachBlock := <-h.pendingImpeachBlockCh:
+
+			_ = pendingImpeachBlock
+
+			// size, r, err := rlp.EncodeToReader(pendingImpeachBlock)
+			// if err != nil {
+			// 	log.Warn("failed to encode composed impeach block", "err", err)
+			// 	continue
+			// }
+			// msg := p2p.Msg{Code: PreprepareImpeachBlockMsg, Size: uint32(size), Payload: r}
+
+			// // notify other validators
+			// go h.BroadcastPreprepareImpeachBlock(pendingImpeachBlock)
+
+			// // handle the impeach block
+			// go h.handleLBFT2Msg(msg, nil)
+
+		case <-futureTimer.C:
+
+			// check if still not received new block, if true, continue
+			if h.ReadyToImpeach() && h.mode == LBFT2Mode {
+				// get empty block
+
+				impeachBlock, _ := h.dpor.CreateImpeachBlock()
+				size, r, err := rlp.EncodeToReader(impeachBlock)
+				if err != nil {
+					log.Warn("failed to encode composed impeach block", "err", err)
+					continue
+				}
+				msg := p2p.Msg{Code: PreprepareImpeachBlockMsg, Size: uint32(size), Payload: r}
+
+				// number := impeachBlock.NumberU64()
+				// validators, _ := h.dpor.ValidatorsOf(number)
+				// if InAddressList(h.Coinbase(), validators) {
+
+				// notify other validators
+				go h.BroadcastPreprepareImpeachBlock(impeachBlock)
+
+				// handle the impeach block
+				go h.handleLBFT2Msg(msg, nil)
+
+				// }
+			}
+
+		case <-h.quitCh:
+			return
+		}
+	}
+}
+
+func InAddressList(addr common.Address, addrs []common.Address) bool {
+	for _, a := range addrs {
+		if a == addr {
+			return true
+		}
+	}
+	return false
 }
