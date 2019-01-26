@@ -5,8 +5,10 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 // handlePbftMsg handles given msg with pbft mode
@@ -259,6 +261,16 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 		msgCode = PreprepareMsgCode
 
+		var (
+			number = input.number()
+			hash   = input.hash()
+		)
+
+		if !vh.broadcastRecord.ifBroadcasted(number, hash, msgCode) {
+			go vh.BroadcastPreprepareBlock(block)
+			vh.broadcastRecord.markAsBroadcasted(number, hash, msgCode)
+		}
+
 	case PrepareHeaderMsg:
 		// recover the header from msg
 		header, err := RecoverHeaderFromMsg(msg, p)
@@ -310,6 +322,16 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 			block: block,
 		}
 		msgCode = ImpeachPreprepareMsgCode
+
+		var (
+			number = input.number()
+			hash   = input.hash()
+		)
+
+		if !vh.broadcastRecord.ifBroadcasted(number, hash, msgCode) {
+			go vh.BroadcastPreprepareImpeachBlock(block)
+			vh.broadcastRecord.markAsBroadcasted(number, hash, msgCode)
+		}
 
 	case PrepareImpeachHeaderMsg:
 		// recover the header from msg
@@ -375,6 +397,14 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		switch action {
 		case BroadcastMsgAction:
 
+			// var (
+			// 	number = output[0].number()
+			// 	hash   = output[0].hash()
+			// )
+			// if vh.broadcastRecord.ifBroadcasted(number, hash, msgCode) {
+			// 	return nil
+			// }
+
 			switch msgCode {
 			case PrepareMsgCode:
 				go vh.BroadcastPrepareHeader(output[0].header)
@@ -406,6 +436,8 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 			default:
 
 			}
+
+			// vh.broadcastRecord.markAsBroadcasted(number, hash, msgCode)
 
 		case BroadcastAndInsertBlockAction:
 			switch msgCode {
@@ -506,4 +538,38 @@ func (vh *Handler) ReceiveImpeachPendingBlock(block *types.Block) error {
 
 		return nil
 	}
+}
+
+type msgID struct {
+	blockID blockIdentifier
+	msgCode MsgCode
+}
+
+func newMsgID(number uint64, hash common.Hash, msgCode MsgCode) msgID {
+	return msgID{
+		blockID: blockIdentifier{number: number, hash: hash},
+		msgCode: msgCode,
+	}
+}
+
+type broadcastRecord struct {
+	record *lru.ARCCache
+}
+
+func newBroadcastRecord() *broadcastRecord {
+	record, _ := lru.NewARC(1000)
+	return &broadcastRecord{
+		record: record,
+	}
+}
+
+func (br *broadcastRecord) markAsBroadcasted(number uint64, hash common.Hash, msgCode MsgCode) {
+	msgID := newMsgID(number, hash, msgCode)
+	br.record.Add(msgID, true)
+}
+
+func (br *broadcastRecord) ifBroadcasted(number uint64, hash common.Hash, msgCode MsgCode) bool {
+	msgID := newMsgID(number, hash, msgCode)
+	broadcasted, exists := br.record.Get(msgID)
+	return exists && broadcasted.(bool) == true
 }
