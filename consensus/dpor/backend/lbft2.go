@@ -892,24 +892,7 @@ func (p *PBFT) handleValidateMsg(input *blockOrHeader, state consensus.State) ([
 
 	log.Debug("received a validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-	log.Debug("inserting into local chain", "number", block.NumberU64(), "hash", block.Hash().Hex())
-
-	// insert into chain
-	err := p.dpor.InsertChain(block)
-	if err != nil {
-		log.Debug("failed to insert the block to local chain", "number", block.NumberU64(), "hash", block.Hash().Hex())
-		return nil, NoAction, NoMsgCode, state, err
-	}
-
-	log.Debug("inserted into local chain, broadcasting to civilian...", "number", block.NumberU64(), "hash", block.Hash().Hex())
-
-	// broadcast it to civilians
-	go p.dpor.BroadcastBlock(block, true)
-
-	// log.Debug("restart impeach", "number", block.NumberU64()+1)
-	// p.impeachment.Trigger(block.NumberU64() + 1)
-
-	return nil, NoAction, NoMsgCode, consensus.Idle, nil
+	return []*blockOrHeader{newBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ValidateMsgCode, consensus.Idle, nil
 }
 
 func (p *PBFT) handleImpeachValidateMsg(input *blockOrHeader, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
@@ -926,24 +909,7 @@ func (p *PBFT) handleImpeachValidateMsg(input *blockOrHeader, state consensus.St
 
 	log.Debug("received an impeach validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-	log.Debug("inserting into local chain", "number", block.NumberU64(), "hash", block.Hash().Hex())
-
-	// insert into chain
-	err := p.dpor.InsertChain(block)
-	if err != nil {
-		log.Debug("failed to insert the block to local chain", "number", block.NumberU64(), "hash", block.Hash().Hex())
-		return nil, NoAction, NoMsgCode, state, err
-	}
-
-	log.Debug("inserted into local chain, broadcasting to civilian...", "number", block.NumberU64(), "hash", block.Hash().Hex())
-
-	// broadcast it to civilians
-	go p.dpor.BroadcastBlock(block, true)
-
-	// log.Debug("restart impeach", "number", block.NumberU64()+1)
-	// p.impeachment.Trigger(block.NumberU64() + 1)
-
-	return nil, NoAction, NoMsgCode, consensus.Idle, nil
+	return []*blockOrHeader{newBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ImpeachValidateMsgCode, consensus.Idle, nil
 }
 
 // refreshSignatures refreshes signatures in header and local cache
