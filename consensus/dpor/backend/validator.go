@@ -3,6 +3,7 @@ package backend
 import (
 	"time"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -237,6 +238,13 @@ func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 }
 
 func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
+
+	var (
+		input         = &blockOrHeader{}
+		msgCode       = NoMsgCode
+		currentNumber = vh.dpor.GetCurrentBlock().NumberU64()
+	)
+
 	switch msg.Code {
 	case PreprepareBlockMsg:
 		// recover the block from msg
@@ -246,23 +254,10 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input := &blockOrHeader{
+		input = &blockOrHeader{
 			block: block,
 		}
-		msgCode := PreprepareMsgCode
-
-		// call fsm
-		output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
-		if err != nil {
-			return err
-		}
-
-		// if there is a output, the action is broadcast, msg code is prepare msg, and err is nil,
-		// broadcast the header with prepare header msg
-		if output != nil && action == BroadcastMsgAction && msgCode == PrepareMsgCode && err == nil {
-			go vh.BroadcastPrepareHeader(output[0].header)
-		}
-		return nil
+		msgCode = PreprepareMsgCode
 
 	case PrepareHeaderMsg:
 		// recover the header from msg
@@ -272,36 +267,10 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input := &blockOrHeader{
+		input = &blockOrHeader{
 			header: header,
 		}
-		msgCode := PrepareMsgCode
-
-		// call fsm
-		output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
-		if err != nil {
-			return err
-		}
-
-		// if the action is broadcast and output is not nil
-		if output != nil && action == BroadcastMsgAction && err == nil {
-			switch msgCode {
-			// broadcast prepare msg
-			case PrepareMsgCode:
-				go vh.BroadcastPrepareHeader(output[0].header)
-
-			// broadcast commit msg
-			case CommitMsgCode:
-				go vh.BroadcastCommitHeader(output[0].header)
-
-			case PrepareAndCommitMsgCode:
-				go vh.BroadcastPrepareHeader(output[0].header)
-				go vh.BroadcastCommitHeader(output[1].header)
-
-			default:
-			}
-		}
-		return nil
+		msgCode = PrepareMsgCode
 
 	case CommitHeaderMsg:
 		// recover the header from msg
@@ -311,32 +280,10 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input := &blockOrHeader{
+		input = &blockOrHeader{
 			header: header,
 		}
-		msgCode := CommitMsgCode
-
-		// call fsm
-		output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
-		if err != nil {
-			return err
-		}
-
-		// if the action is broadcast and output is not nil
-		if output != nil && action == BroadcastMsgAction && err == nil {
-			switch msgCode {
-			// broadcast commit msg
-			case CommitMsgCode:
-				go vh.BroadcastCommitHeader(output[0].header)
-
-			// broadcast validate msg
-			case ValidateMsgCode:
-				go vh.BroadcastValidateBlock(output[0].block)
-
-			default:
-			}
-		}
-		return nil
+		msgCode = CommitMsgCode
 
 	case ValidateBlockMsg:
 		// recover the block from msg
@@ -346,17 +293,10 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input := &blockOrHeader{
+		input = &blockOrHeader{
 			block: block,
 		}
-		msgCode := ValidateMsgCode
-
-		// do nothing with the result
-		_, _, _, err = vh.fsm.FSM(input, msgCode)
-		if err != nil {
-			return err
-		}
-		return nil
+		msgCode = ValidateMsgCode
 
 	case PreprepareImpeachBlockMsg:
 		// recover the block from msg
@@ -366,23 +306,10 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input := &blockOrHeader{
+		input = &blockOrHeader{
 			block: block,
 		}
-		msgCode := ImpeachPreprepareMsgCode
-
-		// call fsm
-		output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
-		if err != nil {
-			return err
-		}
-
-		// if there is a output, the action is broadcast, msg code is prepare msg, and err is nil,
-		// broadcast the header with prepare header msg
-		if output != nil && action == BroadcastMsgAction && msgCode == ImpeachPrepareMsgCode && err == nil {
-			go vh.BroadcastPrepareImpeachHeader(output[0].header)
-		}
-		return nil
+		msgCode = ImpeachPreprepareMsgCode
 
 	case PrepareImpeachHeaderMsg:
 		// recover the header from msg
@@ -392,36 +319,10 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input := &blockOrHeader{
+		input = &blockOrHeader{
 			header: header,
 		}
-		msgCode := ImpeachPrepareMsgCode
-
-		// call fsm
-		output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
-		if err != nil {
-			return err
-		}
-
-		// if the action is broadcast and output is not nil
-		if output != nil && action == BroadcastMsgAction && err == nil {
-			switch msgCode {
-			// broadcast prepare msg
-			case ImpeachPrepareMsgCode:
-				go vh.BroadcastPrepareImpeachHeader(output[0].header)
-
-			// broadcast commit msg
-			case ImpeachCommitMsgCode:
-				go vh.BroadcastCommitImpeachHeader(output[0].header)
-
-			case ImpeachPrepareAndCommitMsgCode:
-				go vh.BroadcastPrepareImpeachHeader(output[0].header)
-				go vh.BroadcastCommitImpeachHeader(output[1].header)
-
-			default:
-			}
-		}
-		return nil
+		msgCode = ImpeachPrepareMsgCode
 
 	case CommitImpeachHeaderMsg:
 		// recover the header from msg
@@ -431,31 +332,10 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input := &blockOrHeader{
+		input = &blockOrHeader{
 			header: header,
 		}
-		msgCode := ImpeachCommitMsgCode
-
-		// call fsm
-		output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
-		if err != nil {
-			return err
-		}
-
-		// if the action is broadcast and output is not nil
-		if output != nil && action == BroadcastMsgAction && err == nil {
-			switch msgCode {
-			// broadcast commit msg
-			case ImpeachCommitMsgCode:
-				go vh.BroadcastCommitImpeachHeader(output[0].header)
-
-			// broadcast validate msg
-			case ValidateImpeachBlockMsg:
-				go vh.BroadcastValidateImpeachBlock(output[0].block)
-			default:
-			}
-		}
-		return nil
+		msgCode = ImpeachCommitMsgCode
 
 	case ValidateImpeachBlockMsg:
 		// recover the block from msg
@@ -465,19 +345,86 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input := &blockOrHeader{
+		input = &blockOrHeader{
 			block: block,
 		}
-		msgCode := ImpeachValidateMsgCode
-
-		// do nothing with the result
-		_, _, _, err = vh.fsm.FSM(input, msgCode)
-		if err != nil {
-			return err
-		}
-		return nil
+		msgCode = ImpeachValidateMsgCode
 
 	default:
+
+	}
+
+	if input.number() > currentNumber+1 {
+		go vh.dpor.SyncFrom(p.Peer)
+
+		log.Debug("I am slow, syncing with peer", "peer", p.address)
+	}
+
+	// call fsm
+	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
+	if err != nil {
+		return err
+	}
+
+	// handle fsm result
+	switch output {
+	case nil:
+		// nil output, do nothing
+
+	default:
+		switch action {
+		case BroadcastMsgAction:
+
+			switch msgCode {
+			case PrepareMsgCode:
+				go vh.BroadcastPrepareHeader(output[0].header)
+
+			case CommitMsgCode:
+				go vh.BroadcastCommitHeader(output[0].header)
+
+			case PrepareAndCommitMsgCode:
+				go vh.BroadcastPrepareHeader(output[0].header)
+				go vh.BroadcastCommitHeader(output[1].header)
+
+			case ValidateMsgCode:
+				go vh.BroadcastValidateBlock(output[0].block)
+
+			case ImpeachPrepareMsgCode:
+				go vh.BroadcastPrepareImpeachHeader(output[0].header)
+
+			case ImpeachCommitMsgCode:
+				go vh.BroadcastCommitImpeachHeader(output[0].header)
+
+			case ImpeachPrepareAndCommitMsgCode:
+				go vh.BroadcastPrepareImpeachHeader(output[0].header)
+				go vh.BroadcastCommitImpeachHeader(output[1].header)
+
+			case ImpeachValidateMsgCode:
+				go vh.BroadcastValidateImpeachBlock(output[0].block)
+
+			// unknown msg code
+			default:
+
+			}
+
+		case BroadcastAndInsertBlockAction:
+			switch msgCode {
+			case ValidateMsgCode:
+				go vh.dpor.InsertChain(output[0].block)
+				go vh.dpor.BroadcastBlock(output[0].block, true)
+
+			case ImpeachValidateMsgCode:
+				go vh.dpor.InsertChain(output[0].block)
+				go vh.dpor.BroadcastBlock(output[0].block, true)
+
+			default:
+
+			}
+
+		// other actions
+		default:
+
+		}
 
 	}
 
