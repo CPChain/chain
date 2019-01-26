@@ -191,7 +191,6 @@ type PBFT struct {
 	stateLock sync.RWMutex
 
 	faulty uint64 // faulty is the parameter of 3f+1 nodes in Byzantine
-	number uint64
 	lock   sync.RWMutex
 
 	dpor       DporService
@@ -199,8 +198,6 @@ type PBFT struct {
 
 	prepareSignatures *signaturesForBlockCaches
 	commitSignatures  *signaturesForBlockCaches
-
-	// impeachment *Impeachment
 }
 
 func NewPBFT(faulty uint64, number uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock) *PBFT {
@@ -208,18 +205,12 @@ func NewPBFT(faulty uint64, number uint64, dpor DporService, handleImpeachBlock 
 	pbft := &PBFT{
 		state:  consensus.Idle,
 		faulty: faulty,
-		number: number,
 		dpor:   dpor,
 
 		blockCache:        newKnownBlocks(),
 		prepareSignatures: newSignaturesForBlockCaches(),
 		commitSignatures:  newSignaturesForBlockCaches(),
-
-		// impeachment: NewImpeachment(dpor, handleImpeachBlock),
 	}
-
-	// go pbft.impeachment.Loop()
-	// pbft.impeachment.Trigger(number)
 
 	return pbft
 }
@@ -250,18 +241,8 @@ func (p *PBFT) SetState(state consensus.State) {
 
 // Number returns current number
 func (p *PBFT) Number() uint64 {
-	p.lock.RLock()
-	defer p.lock.RUnlock()
 
-	return p.number
-}
-
-// SetNumber sets number for current view
-func (p *PBFT) SetNumber(number uint64) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-
-	p.number = number
+	return p.dpor.GetCurrentBlock().NumberU64()
 }
 
 // Status returns current states
@@ -277,16 +258,153 @@ func (p *PBFT) FSM(input *blockOrHeader, msgCode MsgCode) ([]*blockOrHeader, Act
 
 	state := p.State()
 
+	// output, action, msgCode, state, err := p.realFSM(input, msgCode, state)
 	output, action, msgCode, state, err := p.fsm(input, msgCode, state)
 
 	if err == nil {
 		p.SetState(state)
-		if len(output) != 0 {
-			p.SetNumber(output[0].number())
-		}
 	}
 
 	return output, action, msgCode, err
+}
+
+func (p *PBFT) realFSM(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+	var (
+		hash   = input.hash()
+		number = input.number()
+	)
+
+	_, _ = hash, number
+
+	// if already in chain, do nothing
+	if p.dpor.HasBlockInChain(hash, number) {
+		log.Warn("the block or header is already in local chain", "number", number, "hash", hash.Hex())
+		// TODO: add error type
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+
+	if number <= p.Number() {
+		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
+		// TODO: add error type
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+
+	switch state {
+	case consensus.Idle:
+		return p.IdleHandler(input, msgCode, state)
+
+	case consensus.Prepare:
+		return p.PrepareHandler(input, msgCode, state)
+
+	case consensus.Commit:
+		return p.CommitHandler(input, msgCode, state)
+
+	case consensus.ImpeachPrepare:
+		return p.ImpeachPrepareHandler(input, msgCode, state)
+
+	case consensus.ImpeachCommit:
+		return p.ImpeachCommitHandler(input, msgCode, state)
+
+	default:
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+
+}
+
+func (p *PBFT) IdleHandler(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+	switch msgCode {
+	case ImpeachPreprepareMsgCode, ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+		return p.ImpeachHandler(input, msgCode, state)
+
+	case PrepareMsgCode, CommitMsgCode, ValidateMsgCode:
+		return p.PrepareHandler(input, msgCode, state)
+
+	case PreprepareMsgCode:
+		return p.handlePreprepareMsg(input, state, func(block *types.Block) error {
+			return p.dpor.ValidateBlock(block, false, true)
+		})
+
+	default:
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+}
+
+func (p *PBFT) PrepareHandler(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+	switch msgCode {
+	case ImpeachPreprepareMsgCode, ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+		return p.ImpeachHandler(input, msgCode, state)
+
+	case CommitMsgCode, ValidateMsgCode:
+		return p.CommitHandler(input, msgCode, state)
+
+	case PrepareMsgCode:
+		return p.handlePrepareMsg(input, state)
+
+	default:
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+}
+
+func (p *PBFT) CommitHandler(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+	switch msgCode {
+	case ImpeachPreprepareMsgCode, ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+		return p.ImpeachHandler(input, msgCode, state)
+
+	case ValidateMsgCode:
+		return p.handleValidateMsg(input, state)
+
+	case CommitMsgCode:
+		return p.handleCommitMsg(input, state)
+
+	default:
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+}
+
+func (p *PBFT) ImpeachHandler(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+	switch msgCode {
+	case ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+		return p.ImpeachPrepareHandler(input, msgCode, state)
+
+	case ImpeachPreprepareMsgCode:
+		// TODO: fix this, use correct impeach block verify function
+		return p.handleImpeachPreprepareMsg(input, state, func(block *types.Block) error {
+			return p.dpor.ValidateBlock(block, false, true)
+		})
+
+	default:
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+
+}
+
+func (p *PBFT) ImpeachPrepareHandler(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+	switch msgCode {
+	case ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+		return p.ImpeachPrepareHandler(input, msgCode, state)
+
+	case ImpeachPrepareMsgCode:
+		return p.handleImpeachPrepareMsg(input, state)
+
+	default:
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+
+}
+
+func (p *PBFT) ImpeachCommitHandler(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+
+	switch msgCode {
+	case ImpeachValidateMsgCode:
+		return p.handleImpeachValidateMsg(input, state)
+
+	case ImpeachCommitMsgCode:
+		return p.handleImpeachCommitMsg(input, state)
+
+	default:
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+
 }
 
 func (p *PBFT) fsm(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
@@ -304,16 +422,13 @@ func (p *PBFT) fsm(input *blockOrHeader, msgCode MsgCode, state consensus.State)
 		return nil, NoAction, NoMsgCode, state, nil
 	}
 
-	if number < p.Number() {
+	if number <= p.Number() {
 		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
 		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil
 	}
 
 	// TODO: add state update function to avoid state reverse
-
-	// switch state {
-	// case consensus.Idle:
 
 	switch msgCode {
 	case PreprepareMsgCode:
@@ -349,50 +464,6 @@ func (p *PBFT) fsm(input *blockOrHeader, msgCode MsgCode, state consensus.State)
 
 	}
 
-	// case consensus.Preprepared:
-
-	// 	switch msgCode {
-	// 	case PreprepareMsgCode:
-
-	// 		log.Warn("received preprepare msg in preprepared state", "number", number, "hash", hash.Hex(), "fsm.number", p.Number(), "fsm.state", p.State())
-
-	// 	case PrepareMsgCode:
-	// 		return p.handlePrepareMsg(input, state)
-
-	// 	case CommitMsgCode:
-	// 		return p.handleCommitMsg(input, state)
-
-	// 	case ValidateMsgCode:
-	// 		return p.handleValidateMsg(input, state)
-
-	// 	default:
-
-	// 	}
-
-	// case consensus.Prepared:
-
-	// 	switch msgCode {
-	// 	case PreprepareMsgCode:
-
-	// 		log.Warn("received preprepare msg in prepared state", "number", number, "hash", hash.Hex(), "fsm.number", p.Number(), "fsm.state", p.State())
-
-	// 	case PrepareMsgCode:
-
-	// 		log.Warn("received prepare msg in prepared state", "number", number, "hash", hash.Hex(), "fsm.number", p.Number(), "fsm.state", p.State())
-
-	// 	case CommitMsgCode:
-	// 		return p.handleCommitMsg(input, state)
-
-	// 	case ValidateMsgCode:
-	// 		return p.handleValidateMsg(input, state)
-
-	// 	default:
-
-	// 	}
-
-	// default:
-	// }
-
 	return nil, NoAction, NoMsgCode, state, nil
 }
 
@@ -425,7 +496,6 @@ func (p *PBFT) handlePreprepareMsg(input *blockOrHeader, state consensus.State, 
 		number = input.number()
 		hash   = input.hash()
 		block  = input.block
-		header = input.block.RefHeader()
 	)
 
 	log.Debug("received a preprepare block", "number", number, "hash", hash.Hex())
@@ -446,10 +516,21 @@ func (p *PBFT) handlePreprepareMsg(input *blockOrHeader, state consensus.State, 
 
 		log.Debug("verified the block, everything is ok! ready to sign the block", "number", number, "hash", hash.Hex())
 
-		// compose prepare msg
-		header, _ = p.composePrepareMsg(block)
+		bi := blockIdentifier{
+			hash:   hash,
+			number: number,
+		}
 
-		return []*blockOrHeader{newBOHFromHeader(header)}, BroadcastMsgAction, PrepareMsgCode, consensus.Preprepared, nil
+		// compose prepare msg
+		prepareHeader, _ := p.composePrepareMsg(block)
+
+		// if prepare certificate is satisfied
+		if p.prepareCertificate(bi) {
+			return p.oncePrepareCertificateSatisfied(prepareHeader)
+		}
+
+		// prepare certificate is not satisfied, broadcast prepare msg
+		return []*blockOrHeader{newBOHFromHeader(prepareHeader)}, BroadcastMsgAction, PrepareMsgCode, consensus.Prepare, nil
 
 	// the block is a future block, just wait a second.
 	case consensus.ErrFutureBlock:
@@ -487,7 +568,6 @@ func (p *PBFT) handleImpeachPreprepareMsg(input *blockOrHeader, state consensus.
 		number = input.number()
 		hash   = input.hash()
 		block  = input.block
-		header = input.block.RefHeader()
 	)
 
 	log.Debug("received an impeach preprepare block", "number", number, "hash", hash.Hex())
@@ -508,10 +588,21 @@ func (p *PBFT) handleImpeachPreprepareMsg(input *blockOrHeader, state consensus.
 
 		log.Debug("verified the block, everything is ok! ready to sign the block", "number", number, "hash", hash.Hex())
 
-		// compose prepare msg
-		header, _ = p.composeImpeachPrepareMsg(block)
+		bi := blockIdentifier{
+			hash:   hash,
+			number: number,
+		}
 
-		return []*blockOrHeader{newBOHFromHeader(header)}, BroadcastMsgAction, ImpeachPrepareMsgCode, consensus.ImpeachPreprepared, nil
+		// compose prepare msg
+		impeachPrepareHeader, _ := p.composeImpeachPrepareMsg(block)
+
+		// if prepare certificate is satisfied
+		if p.impeachPrepareCertificate(bi) {
+			return p.onceImpeachPrepareCertificateSatisfied(impeachPrepareHeader)
+		}
+
+		// prepare certificate is not satisfied, broadcast prepare msg
+		return []*blockOrHeader{newBOHFromHeader(impeachPrepareHeader)}, BroadcastMsgAction, ImpeachPrepareMsgCode, consensus.ImpeachPrepare, nil
 
 	// the block is a future block, just wait a second.
 	case consensus.ErrFutureBlock:
@@ -546,10 +637,10 @@ func (p *PBFT) composePrepareMsg(block *types.Block) (*types.Header, error) {
 		hash   = header.Hash()
 	)
 
-	switch err := p.dpor.SignHeader(header, consensus.Preprepared); err {
+	switch err := p.dpor.SignHeader(header, consensus.Prepare); err {
 	case nil:
 
-		_ = p.refreshSignatures(header, consensus.Preprepared)
+		_ = p.refreshSignatures(header, consensus.Prepare)
 
 		log.Debug("succeed to sign the proposed block", "number", number, "hash", hash.Hex())
 
@@ -569,10 +660,10 @@ func (p *PBFT) composeImpeachPrepareMsg(block *types.Block) (*types.Header, erro
 		hash   = header.Hash()
 	)
 
-	switch err := p.dpor.SignHeader(header, consensus.ImpeachPreprepared); err {
+	switch err := p.dpor.SignHeader(header, consensus.ImpeachPrepare); err {
 	case nil:
 
-		_ = p.refreshSignatures(header, consensus.ImpeachPreprepared)
+		_ = p.refreshSignatures(header, consensus.ImpeachPrepare)
 
 		log.Debug("succeed to sign the proposed impeach block", "number", number, "hash", hash.Hex())
 
@@ -607,29 +698,13 @@ func (p *PBFT) handlePrepareMsg(input *blockOrHeader, state consensus.State) ([]
 	log.Debug("received a prepare header", "number", number, "hash", hash.Hex())
 
 	// refresh signatures in the header and local cache
-	_ = p.refreshSignatures(header, consensus.Preprepared)
+	_ = p.refreshSignatures(header, consensus.Prepare)
 
 	log.Debug("checking prepare certificate for the block", "number", number, "hash", hash.Hex())
 
-	// if enough prepare sigs, sign it as commit msg
+	// if prepare certificate is satisfied
 	if p.prepareCertificate(bi) {
-
-		log.Debug("prepare certificate is satisfied, signing it with commit state", "number", number, "hash", hash.Hex())
-
-		// prepare certificate is satisfied, sign the block with prepared(commit) state
-		// compose commit msg
-		prepareHeader := types.CopyHeader(header)
-		header, _ = p.composeCommitMsg(header)
-
-		switch state {
-		case consensus.Idle, consensus.Preprepared:
-			return []*blockOrHeader{newBOHFromHeader(prepareHeader), newBOHFromHeader(header)}, BroadcastMsgAction, PrepareAndCommitMsgCode, consensus.Prepared, nil
-
-		case consensus.Prepared:
-			return []*blockOrHeader{newBOHFromHeader(header)}, BroadcastMsgAction, CommitMsgCode, consensus.Prepared, nil
-
-		default:
-		}
+		return p.oncePrepareCertificateSatisfied(header)
 	}
 
 	log.Debug("prepare certificate is not satisfied now, waiting...", "number", number, "hash", hash.Hex(), "count", p.prepareSignatures.getSignaturesCountOf(bi))
@@ -660,29 +735,13 @@ func (p *PBFT) handleImpeachPrepareMsg(input *blockOrHeader, state consensus.Sta
 	log.Debug("received an impeach prepare header", "number", number, "hash", hash.Hex())
 
 	// refresh signatures in the header and local cache
-	_ = p.refreshSignatures(header, consensus.ImpeachPreprepared)
+	_ = p.refreshSignatures(header, consensus.ImpeachPrepare)
 
 	log.Debug("checking impeach prepare certificate for the block", "number", number, "hash", hash.Hex())
 
-	// if enough impeach prepare sigs, sign it as commit msg
+	// if prepare certificate is satisfied
 	if p.impeachPrepareCertificate(bi) {
-
-		log.Debug("impeach prepare certificate is satisfied, signing it with commit state", "number", number, "hash", hash.Hex())
-
-		// impeach prepare certificate is satisfied, sign the block with prepared(commit) state
-		// compose impeach commit msg
-		prepareHeader := types.CopyHeader(header)
-		header, _ = p.composeImpeachCommitMsg(header)
-
-		switch state {
-		case consensus.Idle, consensus.ImpeachPreprepared:
-			return []*blockOrHeader{newBOHFromHeader(prepareHeader), newBOHFromHeader(header)}, BroadcastMsgAction, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachPrepared, nil
-
-		case consensus.ImpeachPrepared:
-			return []*blockOrHeader{newBOHFromHeader(header)}, BroadcastMsgAction, ImpeachCommitMsgCode, consensus.ImpeachPrepared, nil
-
-		default:
-		}
+		return p.onceImpeachPrepareCertificateSatisfied(header)
 	}
 
 	log.Debug("impeach prepare certificate is not satisfied now, waiting...", "number", number, "hash", hash.Hex(), "count", p.prepareSignatures.getSignaturesCountOf(bi))
@@ -700,11 +759,11 @@ func (p *PBFT) composeCommitMsg(h *types.Header) (*types.Header, error) {
 	)
 
 	// prepare certificate is satisfied, sign the block with prepared(commit) state
-	switch err := p.dpor.SignHeader(header, consensus.Prepared); err {
+	switch err := p.dpor.SignHeader(header, consensus.Commit); err {
 	case nil:
 
 		// refresh signatures both in the header and local signatures cache
-		_ = p.refreshSignatures(header, consensus.Prepared)
+		_ = p.refreshSignatures(header, consensus.Commit)
 
 		log.Debug("succeed to sign the header with commit state, broadcasting commit msg...", "number", number, "hash", hash.Hex())
 
@@ -726,11 +785,11 @@ func (p *PBFT) composeImpeachCommitMsg(h *types.Header) (*types.Header, error) {
 	)
 
 	// impeach prepare certificate is satisfied, sign the block with impeach prepared(impeach commit) state
-	switch err := p.dpor.SignHeader(header, consensus.ImpeachPrepared); err {
+	switch err := p.dpor.SignHeader(header, consensus.ImpeachCommit); err {
 	case nil:
 
 		// refresh signatures both in the header and local signatures cache
-		_ = p.refreshSignatures(header, consensus.ImpeachPrepared)
+		_ = p.refreshSignatures(header, consensus.ImpeachCommit)
 
 		log.Debug("succeed to sign the header with impeach commit state, broadcasting impeach commit msg...", "number", number, "hash", hash.Hex())
 
@@ -765,7 +824,7 @@ func (p *PBFT) handleCommitMsg(input *blockOrHeader, state consensus.State) ([]*
 	log.Debug("received a commit header", "number", number, "hash", hash.Hex())
 
 	// refresh signatures both in cache and header
-	err := p.refreshSignatures(header, consensus.Prepared)
+	err := p.refreshSignatures(header, consensus.Commit)
 	if err != nil {
 		log.Debug("error when refreshing signatures", "number", number, "hash", hash.Hex())
 		return nil, NoAction, NoMsgCode, state, err
@@ -775,23 +834,7 @@ func (p *PBFT) handleCommitMsg(input *blockOrHeader, state consensus.State) ([]*
 
 	// if enough commit sigs, broadcast it as validate msg
 	if p.commitCertificate(bi) {
-
-		log.Debug("commit certificate is satisfied, retrieving the block from cache", "number", number, "hash", hash.Hex())
-
-		// compose validate msg
-		block, err := p.composeValidateMsg(header)
-		if err != nil {
-			log.Warn("err when get block from cache", "err", err, "number", number)
-
-			// failed to compose validate msg, broadcast commit msg
-			return []*blockOrHeader{newBOHFromHeader(header)}, BroadcastMsgAction, CommitMsgCode, consensus.Prepared, nil
-		}
-
-		log.Debug("broadcasting the composed validate block to other validators...", "number", number, "hash", hash.Hex())
-
-		// succeed to compose validate msg, broadcast it!
-		return []*blockOrHeader{newBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
-
+		return p.onceCommitCertificateSatisfied(nil, header)
 	}
 
 	log.Debug("commit certificate is not satisfied now, waiting...", "number", number, "hash", hash.Hex(), "count", p.commitSignatures.getSignaturesCountOf(bi))
@@ -821,7 +864,7 @@ func (p *PBFT) handleImpeachCommitMsg(input *blockOrHeader, state consensus.Stat
 	log.Debug("received an impeach commit header", "number", number, "hash", hash.Hex())
 
 	// refresh signatures both in cache and header
-	err := p.refreshSignatures(header, consensus.ImpeachPrepared)
+	err := p.refreshSignatures(header, consensus.ImpeachCommit)
 	if err != nil {
 		log.Debug("error when refreshing signatures", "number", number, "hash", hash.Hex())
 		return nil, NoAction, NoMsgCode, state, err
@@ -831,23 +874,7 @@ func (p *PBFT) handleImpeachCommitMsg(input *blockOrHeader, state consensus.Stat
 
 	// if enough impeach commit sigs, broadcast it as validate msg
 	if p.impeachCommitCertificate(bi) {
-
-		log.Debug("impeach commit certificate is satisfied, retrieving the block from cache", "number", number, "hash", hash.Hex())
-
-		// compose validate msg
-		block, err := p.composeValidateMsg(header)
-		if err != nil {
-			log.Warn("err when get block from cache", "err", err, "number", number)
-
-			// failed to compose validate msg, broadcast commit msg
-			return []*blockOrHeader{newBOHFromHeader(header)}, BroadcastMsgAction, ImpeachCommitMsgCode, consensus.ImpeachPrepared, nil
-		}
-
-		log.Debug("broadcasting the composed validate block to other validators...", "number", number, "hash", hash.Hex())
-
-		// succeed to compose validate msg, broadcast it!
-		return []*blockOrHeader{newBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Idle, nil
-
+		return p.onceImpeachCommitCertificateSatisfied(nil, header)
 	}
 
 	log.Debug("impeach commit certificate is not satisfied now, waiting...", "number", number, "hash", hash.Hex(), "count", p.commitSignatures.getSignaturesCountOf(bi))
@@ -929,7 +956,7 @@ func (p *PBFT) refreshSignatures(header *types.Header, state consensus.State) er
 	}
 
 	switch state {
-	case consensus.Preprepared, consensus.ImpeachPreprepared:
+	case consensus.Prepare, consensus.ImpeachPrepare:
 
 		// cache signatures from header
 		err = p.prepareSignatures.cacheSignaturesFromHeader(signers, signatures, validators, header)
@@ -945,7 +972,7 @@ func (p *PBFT) refreshSignatures(header *types.Header, state consensus.State) er
 			return err
 		}
 
-	case consensus.Prepared, consensus.ImpeachPrepared:
+	case consensus.Commit, consensus.ImpeachCommit:
 
 		// cache signatures from header
 		err = p.commitSignatures.cacheSignaturesFromHeader(signers, signatures, validators, header)
@@ -963,6 +990,82 @@ func (p *PBFT) refreshSignatures(header *types.Header, state consensus.State) er
 	}
 
 	return nil
+}
+
+func (p *PBFT) onceImpeachPrepareCertificateSatisfied(impeachPrepareHeader *types.Header) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+
+	bi := blockIdentifier{
+		hash:   impeachPrepareHeader.Hash(),
+		number: impeachPrepareHeader.Number.Uint64(),
+	}
+
+	// compose commit msg
+	impeachCommitHeader := types.CopyHeader(impeachPrepareHeader)
+	impeachCommitHeader, _ = p.composeImpeachCommitMsg(impeachCommitHeader)
+
+	// if commit certificate is satisfied
+	if p.impeachCommitCertificate(bi) {
+		return p.onceImpeachCommitCertificateSatisfied(impeachPrepareHeader, impeachCommitHeader)
+	}
+
+	// commit certificate is not satisfied, broadcast prepare and commit msg
+	return []*blockOrHeader{newBOHFromHeader(impeachPrepareHeader), newBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachCommit, nil
+}
+
+func (p *PBFT) onceImpeachCommitCertificateSatisfied(impeachPrepareHeader *types.Header, impeachCommitHeader *types.Header) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+
+	// compose validate msg
+	block, err := p.composeValidateMsg(impeachCommitHeader)
+	if err != nil {
+		// failed to compose validate msg, broadcast prepare and commit msg
+		if impeachPrepareHeader != nil {
+			return []*blockOrHeader{newBOHFromHeader(impeachPrepareHeader), newBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachCommit, nil
+		}
+
+		return []*blockOrHeader{newBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachCommitMsgCode, consensus.ImpeachCommit, nil
+	}
+
+	// succeed to compose validate msg, broadcast it
+	return []*blockOrHeader{newBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Idle, nil
+}
+
+func (p *PBFT) oncePrepareCertificateSatisfied(prepareHeader *types.Header) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+
+	bi := blockIdentifier{
+		hash:   prepareHeader.Hash(),
+		number: prepareHeader.Number.Uint64(),
+	}
+
+	// compose commit msg
+	commitHeader := types.CopyHeader(prepareHeader)
+	commitHeader, _ = p.composeCommitMsg(commitHeader)
+
+	// if commit certificate is satisfied
+	if p.commitCertificate(bi) {
+		return p.onceCommitCertificateSatisfied(prepareHeader, commitHeader)
+	}
+
+	// commit certificate is not satisfied, broadcast prepare and commit msg
+	return []*blockOrHeader{newBOHFromHeader(prepareHeader), newBOHFromHeader(commitHeader)}, BroadcastMsgAction, PrepareAndCommitMsgCode, consensus.Commit, nil
+
+}
+
+func (p *PBFT) onceCommitCertificateSatisfied(prepareHeader *types.Header, commitHeader *types.Header) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
+
+	// compose validate msg
+	block, err := p.composeValidateMsg(commitHeader)
+	if err != nil {
+
+		// failed to compose validate msg, broadcast prepare and commit msg
+		if prepareHeader != nil {
+			return []*blockOrHeader{newBOHFromHeader(prepareHeader), newBOHFromHeader(commitHeader)}, BroadcastMsgAction, PrepareAndCommitMsgCode, consensus.Commit, nil
+		}
+		return []*blockOrHeader{newBOHFromHeader(commitHeader)}, BroadcastMsgAction, CommitMsgCode, consensus.Commit, nil
+	}
+
+	// succeed to compose validate msg, broadcast it
+	return []*blockOrHeader{newBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
+
 }
 
 // Impeachment waits until it is time to impeach, then try to compose an impeach block
