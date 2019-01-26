@@ -127,10 +127,6 @@ The former three states are designed for normal cases, and the rest are speciali
 Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`
 
 
-
-
-
-
 RNode Ecosystem
 ####################
 

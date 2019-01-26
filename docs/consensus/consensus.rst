@@ -145,6 +145,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
     .. code-block:: go
 
+        // a general code for LBFT FSM
         LbftFsm20(input, state) {
             switch state{
             case idle:
@@ -159,14 +160,77 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 impeachCommitHandler(input)
         }
 
+**Utilities**
+
+    .. code-block:: go
+
+        // sign is a slice storing signs of a given block header
+        // prepareSignatures stores signs of prepare messages for a given block header
+        var prepareSignatures map[header]sign
+
+        // commitSignatures stores signs of commit messages for a given block header
+        var commitSignatures map[header]sign
+
+        // refresh signatures
+        refreshPrepareSignatures(input) {
+            header = header(input)  // Retrieve the block header of given message
+            if input contains signs that are not stored in prepareSignatures[header]{
+                append these signs into prepareSignatures[header]
+            }
+        }
+
+        refreshCommitSignatures(input) {
+            header = header(input)  // Retrieve the block header of given message
+            if input contains signs that are not stored in CommitSignatures[header]{
+                append these signs into CommitSignatures[header]
+            }
+        }
+
+        // determine whether a quorum certificate is sufficed
+        prepareCertificate(input) bool{
+            if (len(prepareSignatures[header]) >= 2f+1) {
+                return true
+            }
+            return false
+        }
+
+        commitCertificate(input) bool{
+            if (len(commitSignatures[header]) >= 2f+1) {
+                return true
+            }
+            return false
+        }
+
+        impeachPrepareCertificate(input) bool {
+            if (len(prepareSignatures[header]) >= f+1) {
+                return true
+            }
+            return false
+        }
+
+        impeachCommitCertificate(input) bool {
+            if (len(commitSignatures[header]) >= f+1) {
+                return true
+            }
+            return false
+        }
+
+        // cacheBlock is invoked to cache a block if necessary
+        cacheBlock(block) {
+            if block is not cached && verifyBlock(block){
+                add block into the cache
+            }
+        }
 
 **Normal Case Handlers**
 
 
     .. code-block:: go
 
+        // handler for commit state
         commitHandler(input) {
             switch input{
+            // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
             case validateMsg:
@@ -178,35 +242,38 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     broadcast validateMsg
                     transit to idle state
                 }
+            // add the block into the cache if necessary
             case block:
-                if block is not cached{
-                    if verifyBlock(block) {
-                        add block into the cache
-                    }
-                }
+                cacheBlock(input)
+
         }
 
+        // handler for prepare state
         prepareHandler(input) {
             switch input{
+            // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
             case validateMsg, commitMsg:
                 commitHandler(input)
             case prepareMsg:
                 if prepareCertificate {
-                    broadcast commitMsg
+                    // it is possible for suffice two certificates simultaneously
                     if commitCertificate {
                         broadcast validateMsg
                         transit to idle state
                     }else{
+                        broadcast commitMsg
                         transit to commit state
                     }
                 }
             }
         }
 
+        // handler for idle state
         idleHandler(input) {
             switch input{
+            // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
             case validateMsg, commitMsg, prepareMsg:
@@ -218,17 +285,20 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     transit to impeachPrepare state
                 }
                 else{
-                    add block into the cache
-                    broadcast prepareMsg
+                // a cascade of determination of certificates
                     if prepareCertificate {
-                        broadcast commitMsg
                         if commitCertificate {
                             broadcast validateMsg
                             transit to idle state
                         }else{
+                            add block into the cache
+                            broadcast prepareMsg
+                            broadcast commitMsg
                             transit to commit state
                         }
                     }else{
+                        add block into the cache
+                        broadcast prepareMsg
                         transit to prepare state
                     }
                 }
@@ -239,6 +309,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
     .. code-block:: go
 
+        // handler for impeach commit state
         impeachCommitHandler(input) {
             switch input{
             case validateMsg:
@@ -257,27 +328,32 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             }
         }
 
+        // handler for impeach prepare state
         impeachPrepareHandler(input) {
             switch input{
             case validateMsg, impeachValidateMsg, impeachCommitMsg:
                 impeachCommitHandler(input)
             case impeachPrepareMsg:
+                // it is possible to suffice two impeach certificates
                 if impeachPrepareCertificate(input) {
-                    broadcast impeachCommitMsg
                     if impeachCommitCertificate(input) {
                         broadcast impeachValidateMsg
                         transit to idle state
+                    }else{
+                        broadcast impeachCommitMsg
+                        transit to impeachCommit state
                     }
-                    transit to impeachCommit state
                 }
         }
 
+        // a general impeachment message handler for normal case states
         impeachHandler(input) {
             case expiredTimer:
                 propose an impeach block
+                add the impeach block into cache
                 broadcast the impeach block
                 transit to impeachPrepare state
-            case impeachPrepareMsg, impeachCommitMsg:
+            case impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachPrepareHandler(input)
         }
 
