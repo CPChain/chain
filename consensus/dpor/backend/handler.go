@@ -51,6 +51,8 @@ type Handler struct {
 	pendingImpeachBlockCh chan *types.Block
 	quitCh                chan struct{}
 
+	broadcastRecord *broadcastRecord
+
 	lock sync.RWMutex
 }
 
@@ -66,6 +68,8 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 		pendingImpeachBlockCh: make(chan *types.Block),
 		quitCh:                make(chan struct{}),
 		available:             false,
+
+		broadcastRecord: newBroadcastRecord(),
 	}
 
 	// TODO: fix this
