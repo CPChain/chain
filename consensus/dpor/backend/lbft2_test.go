@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/p2p"
+
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -135,5 +137,9 @@ func (fd *FakeDpor) UpdateFinalSigsCache(validator common.Address, hash common.H
 }
 
 func (fd *FakeDpor) GetMac() (string, []byte, error) {
+	panic("not implemented")
+}
+
+func (fd *FakeDpor) SyncFrom(p *p2p.Peer) {
 	panic("not implemented")
 }
