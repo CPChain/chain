@@ -116,87 +116,15 @@ User Scenario Steps
 Consensus
 #####################
 
-Dpor Bipartite Committee
-**************************
+The consensus in LBFT 2.0 is determined by two two committees: **Validators Committee** and **Proposers Committee**,
+which leads to a bipartite committee structure.
+Proposers and validators, just as their names imply, take the responsibility of proposing and validating blocks respectively.
 
+The consensus process works in a finite state machine which consists of five states
+**pre-prepare**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
+The former three states are designed for normal cases, and the rest are specializing in handling abnormal cases.
 
-
-1. **Validator** and **Proposer** and **Civilian**
-    a. Block validators, or validators refer to a group of users that can validate a newly proposed block.
-        i. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
-        #. Except for some abnormal cases, validators may not produce blocks.
-        #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
-        #. The size of number is always equaling to 3f+1, where f is the number of byzantine nodes.
-    #. Block proposer, or proposer refers to the user that can propose block.
-        i. It is one member of the proposers committee.
-        #. The proposers committee is elected based on reputations of candidates and a random seed.
-        #. Each number in the proposers committee takes the responsibility of producing block one by one.
-    #. Civilians refer to the rest of users
-        i. A civilian can become a proposer if it claims campaign and is elected.
-
-Normal and Abnormal Case Handler
-**********************************
-
-#. **Normal Case**
-    a. Block production
-        i. An ordinary user claims campaign, undergoes the admission qualification, and then enters the *candidate list*.
-        #. After being elected in a periodical election, a candidate enters a block proposer committee.
-        #. When it comes its view, the proposer proposes a block and broadcasts to all validators.
-    #. Block validation
-        i. Once receives a newly proposed block, a validator in validators committee tries to verify the block.
-        #. This verification process scrutinizes the seal of proper, timestamp, etc.
-        #. If true, this validator broadcast a PREPARE message to other validators; otherwise, it enters Abnormal Case 2 or 3.
-        #. Once receives 2f+1 PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
-        #. Once received 2f+1 COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these 2f+1 validators' signatures to all users.
-        #. Any user receives this VALIDATE message with enough signatures, insert the block into local chain
-
-
-#. **Abnormal Cases**
-    a. Abnormal Case 1: *A validator does not receive a block from the proposer*
-        i. It is for the case when Step 2.a.f cannot be reached
-        #. After a validator sends out its address to the proposer, it sets up a timer
-        #. If the timer expires, the validators committee activates *impeachment*, a two-phase protocol in PBFT manner to propose an impeach block on behalf of the faulty proposer.
-    #. Abnormal Case 2: *The proposer proposes one or more faulty blocks*
-        i. Faulty blocks cannot be verified in Step 2.b.a
-        #. The validators committee activates *impeachment*
-    #. Abnormal Case 3: *The proposer proposes multiple valid blocks*
-        i. Each validator can only validate one block for a same block number
-        #. Thus, it is impossible for two or more blocks to collect P-certificates simultaneously. Only one block can enter Step 2.b.d
-        #. It is possible that no block receives 2f+1 PREPARE messages
-        #. *Impeachment* is activated if a validator cannot collect a P-certificate
-    #. Abnormal Case 4: *Some members in the validators committee are faulty*
-        #. The system can reach a consensus, as long as the number of total faulty validators is no more than f.
-    #. Abnormal Case 5:
-        i. It is for the cases when P-certificate, C-certificate or VALIDATE messages cannot be collected
-        #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATE messages
-        #. Any of these timers expires, the validators committee activates *impeachment*
-
-Impeachment
-**************
-
-
-#. **Impeachment**
-    a. It is an abnormal handler when the proposer is either faulty, or non responding
-    #. It is a two-phase protocol in PBFT manner, consisting of *prepare* and *commit* phases.
-    #. Impeachment steps:
-        a. A validator in the committee generates a block on behalf of the faulty (or non responding) proposer.
-            i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
-            #. The *seal* in the header is set to be empty
-            #. A penalty on proposer is the only transaction in the block's body
-        #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
-        #. Once receives 2f+1 PREPARE messages with same header and body, a validator broadcasts an IMPEACH COMMIT message to other validators.
-        #. Once receives 2f+1 COMMIT messages, a validator inserts the block into local chain, and broadcasts an IMPEACH VALIDATE message along with 2f+1 signatures to all users.
-        #. All users insert the block into local chain, if they receive a IMPEACH VALIDATE messages.
-    #. The reason the leader is not required
-        a. The leader in classic PBFT model takes the following roles:
-            i. Receives the request from the client, and broadcasts it to all backups in distributed system.
-            #. Assign a sequence number to each request, to guarantee that all requests are processed in order.
-        #. Impeachment does not requires a leader to fulfill above duties, since
-            i. Each non faulty validator is about to propose a completely same block.
-            #. Each block is associated with a unique block number, which circumvents the usage of sequence number.
-    #. It is possible for some validators obtains 2f+1 PREPARE messages of a newly proposed block while another validators obtain 2f+1 PREPARE messages of empty block
-        a. This scenario occurs only when the proposer is faulty
-        b. This scenario does not affects the security of the system, since validators can only collect 2f+1 COMMIT messages for one block
+Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`
 
 
 
@@ -289,19 +217,19 @@ After five years, the supply runs out. In other words, no CPC is rewarded after 
 Meanwhile, CPC Mainnet inserts a block every 10 seconds, which yields around 3 million blocks each year.
 Therefore, we conclude the reward and supply in the table below.
 
-+--------+--------+---------------+------------+
-| Year   | Reward | Num of Blocks | Supply     |
-+========+========+===============+============+
-| 1      | 12.65  |  3,162,240*   | 40,002,336 |
-+--------+--------+---------------+------------+
-| 2      | 9.51   |  3,153,600    | 29,990,736 |
-+--------+--------+---------------+------------+
-| 3      | 7.13   |  3,153,600    | 22,485,168 |
-+--------+--------+---------------+------------+
-| 4      | 5.39   |  3,153,600    | 16,997,904 |
-+--------+--------+---------------+------------+
-| 5      | 4.03   |  3,162,240*   | 12,709,008 |
-+--------+--------+---------------+------------+
++--------+--------+---------------+--------------+
+| Year   | Reward | Num of Blocks |   Supply     |
++========+========+===============+==============+
+| 1      | 12.65  |  3,162,240*   | 40,002,336   |
++--------+--------+---------------+--------------+
+| 2      | 9.51   |  3,153,600    | 29,990,736   |
++--------+--------+---------------+--------------+
+| 3      | 7.13   |  3,153,600    | 22,485,168   |
++--------+--------+---------------+--------------+
+| 4      | 5.39   |  3,153,600    | 16,997,904   |
++--------+--------+---------------+--------------+
+| 5      | 4.03   |  3,162,240*   | 12,743,827.2 |
++--------+--------+---------------+--------------+
 \* Both the first and the fifth year contain a leap day (29 Feb 2020 and 2024, respectively),
 which results in a larger number of generated blocks compared to the other three years.
 

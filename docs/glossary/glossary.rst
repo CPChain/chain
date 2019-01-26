@@ -28,6 +28,10 @@ Glossary
 |                           | the proposer of corresponding      |
 |                           | for a certain block number         |
 +---------------------------+------------------------------------+
+| Quorum                    | A quorum refers to a subset of     |
+|                           | committee members that can collect |
+|                           | a certificate.                     |
++---------------------------+------------------------------------+
 | P-Certificate             | A validator has a P-certificate    |
 |                           | if it has 2f+1 PREPARE messages    |
 |                           | for a certain block number         |
