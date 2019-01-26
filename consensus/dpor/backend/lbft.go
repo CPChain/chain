@@ -58,7 +58,7 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 			log.Debug("validated preprepare block", "number", number, "hash", hash.Hex())
 
 			// sign the block
-			switch e := vh.dpor.SignHeader(header, consensus.Prepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Commit); e {
 			case nil:
 				// succeed to sign
 
@@ -119,7 +119,7 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 
 		// verify the prepare header
 		// if correct, insert the block into chain, then broadcast it
-		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Prepared); err {
+		switch err := vh.dpor.VerifyHeaderWithState(header, consensus.Commit); err {
 
 		case nil:
 			// there are with enough commit signatures in the header
@@ -185,7 +185,7 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 			log.Debug("without enough signatures in signed commit header", "number", number, "hash", hash.Hex())
 
 			// sign the header
-			switch e := vh.dpor.SignHeader(header, consensus.Prepared); e {
+			switch e := vh.dpor.SignHeader(header, consensus.Commit); e {
 			case nil:
 				// signed the header, everything is ok!
 
