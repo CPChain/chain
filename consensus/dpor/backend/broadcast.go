@@ -33,7 +33,7 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 			}
 
 			// TODO: This is not a great way to dial, I'll change it later.
-			h.dialer.DialAllRemoteValidators(term)
+			// h.dialer.DialAllRemoteValidators(term)
 
 			time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
 		}

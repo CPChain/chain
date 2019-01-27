@@ -17,9 +17,12 @@
 package cpc
 
 import (
+	"fmt"
 	"math/rand"
 	"sync/atomic"
 	"time"
+
+	"github.com/ethereum/go-ethereum/p2p"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
@@ -158,6 +161,13 @@ func (pm *ProtocolManager) syncerLoop() {
 		case <-pm.noMorePeers:
 			return
 		}
+	}
+}
+
+func (pm *ProtocolManager) SyncFromPeer(p *p2p.Peer) {
+	id := fmt.Sprintf("%x", p.ID().Bytes()[:8])
+	if peer, ok := pm.peers.peers[id]; ok {
+		go pm.synchronise(peer)
 	}
 }
 

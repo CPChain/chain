@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/p2p"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -156,6 +158,9 @@ type DporService interface {
 
 	// GetMac signs a Mac
 	GetMac() (string, []byte, error)
+
+	// SyncFrom tries to sync block with given peer
+	SyncFrom(p *p2p.Peer)
 }
 
 type HandlerMode uint

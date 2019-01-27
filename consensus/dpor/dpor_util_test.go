@@ -157,7 +157,7 @@ func Test_ecrecover(t *testing.T) {
 
 	dph := &defaultDporHelper{&defaultDporUtil{}}
 	hashBytes := dph.sigHash(newHeader).Bytes()
-	hashBytesWithState, _ := HashBytesWithState(hashBytes, consensus.Prepared)
+	hashBytesWithState, _ := HashBytesWithState(hashBytes, consensus.Commit)
 	proposerSig, _ := crypto.Sign(hashBytes, privKey)
 	validatorSig, _ := crypto.Sign(hashBytesWithState, privKey)
 

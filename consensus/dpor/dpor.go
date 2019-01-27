@@ -21,6 +21,9 @@ import (
 // BroadcastBlockFn broadcasts a block to normal peers(not pbft replicas)
 type BroadcastBlockFn func(block *types.Block, prop bool)
 
+// SyncFromPeerFn tries sync blocks from given peer
+type SyncFromPeerFn func(p *p2p.Peer)
+
 const (
 	inMemorySnapshots  = 100 // Number of recent vote snapshots to keep in memory
 	inMemorySignatures = 100 // Number of recent block signatures to keep in memory
@@ -78,6 +81,7 @@ type Dpor struct {
 	chain consensus.ChainReadWriter
 
 	pmBroadcastBlockFn BroadcastBlockFn
+	pmSyncFromPeerFn   SyncFromPeerFn
 
 	quitSync chan struct{}
 
@@ -267,7 +271,7 @@ func (d *Dpor) SetChain(blockchain consensus.ChainReadWriter) {
 // }
 
 // StartMining starts to create a handler and start it.
-func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn) {
+func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn, pmSyncFromPeerFn SyncFromPeerFn) {
 	running := atomic.LoadInt32(&d.runningMiner) > 0
 	// avoid launch handler twice
 	if running {
@@ -278,6 +282,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 	d.chain = blockchain
 
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
+	d.pmSyncFromPeerFn = pmSyncFromPeerFn
 
 	// TODO: @liq read f from config
 	var (

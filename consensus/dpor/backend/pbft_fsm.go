@@ -255,7 +255,7 @@ func (dsm *DporStateMachine) updatePrepareSignatures(h *types.Header) error {
 	dsm.updateNumber(h.Number.Uint64())
 
 	// retrieve signers for checking
-	signers, sigs, err := dsm.dpor.ECRecoverSigs(h, consensus.Preprepared)
+	signers, sigs, err := dsm.dpor.ECRecoverSigs(h, consensus.Prepare)
 	if err != nil {
 		log.Warn("failed to recover signatures of preparing phase", "error", err)
 		return err
@@ -320,7 +320,7 @@ func (dsm *DporStateMachine) updateCommitSignatures(h *types.Header) error {
 	dsm.updateNumber(h.Number.Uint64())
 
 	// retrieve signers for checking
-	signers, sigs, err := dsm.dpor.ECRecoverSigs(h, consensus.Prepared)
+	signers, sigs, err := dsm.dpor.ECRecoverSigs(h, consensus.Commit)
 	if err != nil {
 		log.Warn("failed to recover signatures of committing phase", "error", err)
 		return err
@@ -398,7 +398,7 @@ func (dsm *DporStateMachine) composePrepareMsg(b *types.Block) (*types.Header, e
 	}
 
 	// sign the header with prepare state / preprepared
-	dsm.dpor.SignHeader(b.RefHeader(), consensus.Preprepared)
+	dsm.dpor.SignHeader(b.RefHeader(), consensus.Prepare)
 
 	log.Debug("sign block by validator at prepare msg", "blocknum", dsm.number, "sigs", b.RefHeader().Dpor.SigsFormatText())
 
@@ -424,7 +424,7 @@ func (dsm *DporStateMachine) composeCommitMsg(h *types.Header) (*types.Header, e
 	}
 
 	// sign the header with commit state / prepared
-	dsm.dpor.SignHeader(h, consensus.Prepared)
+	dsm.dpor.SignHeader(h, consensus.Commit)
 
 	log.Debug("sign block by validator at commit msg", "blocknum", dsm.number, "sigs", h.Dpor.SigsFormatText())
 
@@ -496,7 +496,7 @@ func (dsm *DporStateMachine) proposeImpeachBlock() *types.Block {
 
 	// sign the header with impeach preprepared state
 	// TODO: return an error
-	dsm.dpor.SignHeader(impeachBlock.RefHeader(), consensus.ImpeachPreprepared)
+	dsm.dpor.SignHeader(impeachBlock.RefHeader(), consensus.ImpeachPrepare)
 
 	log.Debug("proposed an impeachment block", "hash", impeachBlock.Hash().Hex(), "sigs", impeachBlock.Header().Dpor.SigsFormatText())
 
@@ -552,7 +552,7 @@ func (dsm *DporStateMachine) composePrepareMsgAction(input interface{}, defaultS
 			log.Warn("error when compose commit msg when sufficing a certificate")
 			var output []interface{}
 			output = append(output, ret)
-			return output, BroadcastMsgAction, HeaderType, PrepareMsgCode, consensus.Preprepared, err
+			return output, BroadcastMsgAction, HeaderType, PrepareMsgCode, consensus.Prepare, err
 		}
 
 		// For a rare case that this newly composed commit message suffice a committed certificate in a cascade
@@ -571,7 +571,7 @@ func (dsm *DporStateMachine) composePrepareMsgAction(input interface{}, defaultS
 				var output []interface{}
 				output = append(output, ret)
 				output = append(output, ret2)
-				return output, BroadcastMultipleMsgAction, HeaderType, PrepareAndCommitMsgCode, consensus.Prepared, nil
+				return output, BroadcastMultipleMsgAction, HeaderType, PrepareAndCommitMsgCode, consensus.Commit, nil
 			}
 
 			// return the composed validate msg
@@ -586,14 +586,14 @@ func (dsm *DporStateMachine) composePrepareMsgAction(input interface{}, defaultS
 		var output []interface{}
 		output = append(output, ret)
 		output = append(output, ret2)
-		return output, BroadcastMultipleMsgAction, HeaderType, PrepareAndCommitMsgCode, consensus.Prepared, nil
+		return output, BroadcastMultipleMsgAction, HeaderType, PrepareAndCommitMsgCode, consensus.Commit, nil
 	}
 
 	// return the composed prepare msg
 	log.Debug("Receive a pre-prepare message in Idle state, transit to pre-prepared state")
 	var output []interface{}
 	output = append(output, ret)
-	return output, BroadcastMsgAction, HeaderType, PrepareMsgCode, consensus.Preprepared, nil
+	return output, BroadcastMsgAction, HeaderType, PrepareMsgCode, consensus.Prepare, nil
 }
 
 func (dsm *DporStateMachine) proposeImpeachBlockAction(input interface{}, defaultState consensus.State) ([]interface{}, Action, DataType, MsgCode, consensus.State, error) {
@@ -611,7 +611,7 @@ func (dsm *DporStateMachine) proposeImpeachBlockAction(input interface{}, defaul
 			var output []interface{}
 			output = append(output, b.Header())
 			log.Warn("error when composing an impeach commit message")
-			return output, BroadcastMsgAction, HeaderType, ImpeachPrepareMsgCode, consensus.ImpeachPreprepared, err
+			return output, BroadcastMsgAction, HeaderType, ImpeachPrepareMsgCode, consensus.ImpeachPrepare, err
 		}
 
 		// if impeach commit msg is satisfied, compose validate msg
@@ -625,7 +625,7 @@ func (dsm *DporStateMachine) proposeImpeachBlockAction(input interface{}, defaul
 				var output []interface{}
 				output = append(output, b.Header())
 				output = append(output, ret2)
-				return output, BroadcastMultipleMsgAction, HeaderType, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachPrepared, nil
+				return output, BroadcastMultipleMsgAction, HeaderType, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachCommit, nil
 
 			}
 
@@ -641,7 +641,7 @@ func (dsm *DporStateMachine) proposeImpeachBlockAction(input interface{}, defaul
 		var output []interface{}
 		output = append(output, b.Header())
 		output = append(output, ret2)
-		return output, BroadcastMultipleMsgAction, HeaderType, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachPrepared, nil
+		return output, BroadcastMultipleMsgAction, HeaderType, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachCommit, nil
 	}
 
 	// return the composed impeach prepare msg
@@ -675,7 +675,7 @@ func (dsm *DporStateMachine) composeCommitMsgAction(input interface{}, defaultSt
 				"convert to Prepared state", "error", err)
 			var output []interface{}
 			output = append(output, ret)
-			return output, BroadcastMsgAction, HeaderType, CommitMsgCode, consensus.Prepared, nil
+			return output, BroadcastMsgAction, HeaderType, CommitMsgCode, consensus.Commit, nil
 		}
 
 		// return the composed validate msg
@@ -690,7 +690,7 @@ func (dsm *DporStateMachine) composeCommitMsgAction(input interface{}, defaultSt
 	log.Debug("Collect a prepared certificate in", defaultState, "state, convert to Prepared state")
 	var output []interface{}
 	output = append(output, ret)
-	return output, BroadcastMsgAction, HeaderType, CommitMsgCode, consensus.Prepared, nil
+	return output, BroadcastMsgAction, HeaderType, CommitMsgCode, consensus.Commit, nil
 }
 
 func (dsm *DporStateMachine) composeImpeachCommitMsgAction(input interface{}, defaultState consensus.State) ([]interface{}, Action, DataType, MsgCode, consensus.State, error) {
@@ -715,7 +715,7 @@ func (dsm *DporStateMachine) composeImpeachCommitMsgAction(input interface{}, de
 			log.Warn("error when handling impeachCommitMsg on", defaultState, "state", "error", err)
 			var output []interface{}
 			output = append(output, ret)
-			return output, BroadcastMsgAction, HeaderType, ImpeachCommitMsgCode, consensus.ImpeachPrepared, err
+			return output, BroadcastMsgAction, HeaderType, ImpeachCommitMsgCode, consensus.ImpeachCommit, err
 		}
 
 		// return the validate msg
@@ -729,7 +729,7 @@ func (dsm *DporStateMachine) composeImpeachCommitMsgAction(input interface{}, de
 	log.Debug("Collect an impeach prepared certificate in", defaultState, "state, transit to impeach prepared state")
 	var output []interface{}
 	output = append(output, ret)
-	return output, BroadcastMsgAction, HeaderType, ImpeachCommitMsgCode, consensus.ImpeachPrepared, nil
+	return output, BroadcastMsgAction, HeaderType, ImpeachCommitMsgCode, consensus.ImpeachCommit, nil
 }
 
 // FSM is the finite state machine for a validator, to output the correct state given on current state and inputs
@@ -838,7 +838,7 @@ func (dsm *DporStateMachine) fsm(input interface{}, inputType DataType, msg MsgC
 		}
 
 	// The case of pre-prepared state
-	case consensus.Preprepared:
+	case consensus.Prepare:
 		switch msg {
 		// Jump to committed state if receive a validate message
 		case ValidateMsgCode:
@@ -873,7 +873,7 @@ func (dsm *DporStateMachine) fsm(input interface{}, inputType DataType, msg MsgC
 		}
 
 	// The case of consensus.Prepared stage
-	case consensus.Prepared:
+	case consensus.Commit:
 		switch msg {
 		// Jump to committed state if receive a validate message
 		case ValidateMsgCode:
@@ -911,7 +911,7 @@ func (dsm *DporStateMachine) fsm(input interface{}, inputType DataType, msg MsgC
 
 		}
 
-	case consensus.ImpeachPreprepared:
+	case consensus.ImpeachPrepare:
 		switch msg {
 		// Transit to consensus.Idle state when receiving impeach validate message
 		case ImpeachValidateMsgCode:
@@ -928,13 +928,13 @@ func (dsm *DporStateMachine) fsm(input interface{}, inputType DataType, msg MsgC
 		// Do nothing if receives multiple impeach prepared
 		case ImpeachPreprepareMsgCode:
 			log.Debug("Receives an impeach pre-prepare message in impeach pre-prepared state, do nothing")
-			return nil, NoAction, NoType, NoMsgCode, consensus.ImpeachPrepared, nil
+			return nil, NoAction, NoType, NoMsgCode, consensus.ImpeachCommit, nil
 		default:
 			log.Debug("unexpected input for impeach pre-prepared state, do nothing")
 			err = ErrFsmWrongImpeachPrepreparedInput
 		}
 
-	case consensus.ImpeachPrepared:
+	case consensus.ImpeachCommit:
 		switch msg {
 		// Transit to consensus.Idle state when receiving impeach validate message
 		case ImpeachValidateMsgCode:
@@ -1012,7 +1012,7 @@ func (dsm *DporStateMachine) handlePrepareMsg(header *types.Header, currentState
 
 	// if prepare certificate is satisfied, compose commit msg
 	if dsm.prepareCertificate(header) {
-		return dsm.composeCommitMsgAction(header, consensus.Prepared)
+		return dsm.composeCommitMsgAction(header, consensus.Commit)
 	}
 
 	// return none action and nil error
@@ -1037,7 +1037,7 @@ func (dsm *DporStateMachine) handlePreprepareMsg(block *types.Block, currentStat
 	if impeachBlock != nil {
 		// the default option is that it enters impeach pre-prepared phase
 		// checks both impeach certificates, forwards to the corresponding state if it meets the condition
-		return dsm.proposeImpeachBlockAction(impeachBlock, consensus.ImpeachPreprepared)
+		return dsm.proposeImpeachBlockAction(impeachBlock, consensus.ImpeachPrepare)
 	}
 
 	// failed to impeach
@@ -1101,7 +1101,7 @@ func (dsm *DporStateMachine) handleImpeachPreprepareMsg(currentState consensus.S
 		log.Debug("Receive an impeach pre-prepare message in Pre-prepared state, transit to impeach pre-prepared state")
 		// the default option is that it enters impeach pre-prepared phase
 		// checks both impeach certificates, forwards to the corresponding state if it meets the condition
-		return dsm.proposeImpeachBlockAction(impeachBlock, consensus.ImpeachPreprepared)
+		return dsm.proposeImpeachBlockAction(impeachBlock, consensus.ImpeachPrepare)
 	}
 
 	// failed to compose impeach block
