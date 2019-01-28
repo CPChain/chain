@@ -64,6 +64,36 @@ const (
 	ImpeachValidateMsgCode
 )
 
+func (mc MsgCode) String() string {
+	switch mc {
+	case NoMsgCode:
+		return "NoMsgCode"
+	case PreprepareMsgCode:
+		return "PreprepareMsgCode"
+	case PrepareMsgCode:
+		return "PrepareMsgCode"
+	case CommitMsgCode:
+		return "CommitMsgCode"
+	case PrepareAndCommitMsgCode:
+		return "PrepareAndCommitMsgCode"
+	case ValidateMsgCode:
+		return "ValidateMsgCode"
+	case ImpeachPreprepareMsgCode:
+		return "ImpeachPreprepareMsgCode"
+	case ImpeachPrepareMsgCode:
+		return "ImpeachPrepareMsgCode"
+	case ImpeachCommitMsgCode:
+		return "ImpeachCommitMsgCode"
+	case ImpeachPrepareAndCommitMsgCode:
+		return "ImpeachPrepareAndCommitMsgCode"
+	case ImpeachValidateMsgCode:
+		return "ImpeachValidateMsgCode"
+	default:
+		return "Unknown MsgCode"
+
+	}
+}
+
 var (
 	ErrBlockTooOld                     = errors.New("the block is too old")
 	ErrFsmWrongDataType                = errors.New("an unexpected FSM input data type")
