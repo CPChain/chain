@@ -10,18 +10,28 @@ The consensus in LBFT 2.0 is determined by two two committees: **Validators Comm
 Here we list the properties of validators and proposers, as well as the rest nodes denoted as civilians.
 
 
-1. **Validator** and **Proposer** and **Civilian**
-    a. Block validators, or validators refer to a group of users that can validate a newly proposed block.
-        i. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
-        #. Except for some abnormal cases, validators may not produce blocks.
-        #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
-        #. The size of number is always equaling to 3f+1, where f is the number of byzantine nodes.
-    #. Block proposer, or proposer refers to the user that can propose block.
-        i. It is one member of the proposers committee.
-        #. The proposers committee is elected based on reputations of candidates and a random seed.
-        #. Each number in the proposers committee takes the responsibility of producing block one by one.
-    #. Civilians refer to the rest of users
-        i. A civilian can become a proposer if it claims campaign and is elected.
+1. **Validators** or block validators refer to a group of users that can validate a newly proposed block.
+    i. All validators together constitute **validators committee**.
+    #. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
+    #. Except for some abnormal cases, validators may not produce blocks.
+    #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
+    #. The size of number is always equaling to 3f+1, where f is the number of byzantine nodes.
+
+#. **Proposers committee** is a fixed number of elected RNodes for a certain term.
+    i. The proposers committee is elected based on reputations of candidates and a random seed.
+    #. Each incumbent member alternately assumes the responsibility to propose blocks during their tenure.
+    #. The **proposer**, or block proposer refers to member assigned to propose a new block in current view.
+    #. A proposer behaves inappropriately will face an `Impeachment`_ from validators which punishes this proposer due to its failure in proposal.
+
+#. **Default proposers**, a special set of RNodes, have higher priority to be elected.
+    i. RNodes with very high RPT and excellent maintenance history are qualified to apply for default proposers.
+    #. Default proposers mainly play two following roles:
+        i. Serve as backups in case of inadequate number of candidates;
+        #. Constitutes a proportion of proposers committee assuring throughput.
+
+#. Civilians refer to the rest of users.
+    i. If a civilian is qualified as an RNode, it can claim campaign to be come a candidate.
+    i. After being elected, the candidate is about to join proposers committee next term.
 
 
 Normal and Abnormal Case Handler
