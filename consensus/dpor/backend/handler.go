@@ -51,7 +51,8 @@ type Handler struct {
 	pendingImpeachBlockCh chan *types.Block
 	quitCh                chan struct{}
 
-	broadcastRecord *broadcastRecord
+	broadcastRecord   *broadcastRecord
+	impeachmentRecord *impeachmentRecord
 
 	lock sync.RWMutex
 }
@@ -69,7 +70,8 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 		quitCh:                make(chan struct{}),
 		available:             false,
 
-		broadcastRecord: newBroadcastRecord(),
+		broadcastRecord:   newBroadcastRecord(),
+		impeachmentRecord: newImpeachmentRecord(),
 	}
 
 	// TODO: fix this
