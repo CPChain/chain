@@ -28,7 +28,7 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 				log.Debug("validator", "addr", addr.Hex())
 			}
 
-			if len(validators) >= int(h.config.TermLen-h.fsm.Faulty()) {
+			if len(validators) >= int(h.config.TermLen-h.fsm.Faulty()-1) {
 				return
 			}
 
@@ -211,11 +211,20 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 				// validators, _ := h.dpor.ValidatorsOf(number)
 				// if InAddressList(h.Coinbase(), validators) {
 
-				// notify other validators
-				go h.BroadcastPreprepareImpeachBlock(impeachBlock)
+				var (
+					number = impeachBlock.NumberU64()
+					hash   = impeachBlock.Hash()
+				)
 
-				// handle the impeach block
-				go h.handleLBFT2Msg(msg, nil)
+				if !h.impeachmentRecord.ifImpeached(number, hash) {
+					// notify other validators
+					go h.BroadcastPreprepareImpeachBlock(impeachBlock)
+
+					// handle the impeach block
+					go h.handleLBFT2Msg(msg, nil)
+
+					h.impeachmentRecord.markAsImpeached(number, hash)
+				}
 
 				// }
 			}
