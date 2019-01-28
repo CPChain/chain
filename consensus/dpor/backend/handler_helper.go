@@ -21,6 +21,13 @@ type blockIdentifier struct {
 	hash   common.Hash
 }
 
+func newBlockIdentifier(number uint64, hash common.Hash) blockIdentifier {
+	return blockIdentifier{
+		number: number,
+		hash:   hash,
+	}
+}
+
 // RecentBlocks caches recent received blocks
 type RecentBlocks struct {
 	blocks           *lru.ARCCache
