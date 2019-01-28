@@ -23,11 +23,6 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 
 			validators = h.dialer.ValidatorsOfTerm(term)
 
-			log.Debug("validators in dpor handler when broadcasting...")
-			for addr := range validators {
-				log.Debug("validator", "addr", addr.Hex())
-			}
-
 			if len(validators) >= int(h.config.TermLen-h.fsm.Faulty()-1) {
 				return
 			}

@@ -239,6 +239,10 @@ func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 	return vh.lbft.Handle(msg, p)
 }
 
+func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteSigner) {
+	log.Debug("received msg from remote peer", "number", number, "hash", hash.Hex(), "state", msgCode.String(), "remote peer", p.Coinbase().Hex())
+}
+
 func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	var (
@@ -375,6 +379,8 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	default:
 
 	}
+
+	logMsgReceived(input.number(), input.hash(), msgCode, p)
 
 	if input.number() > currentNumber+1 {
 		go vh.dpor.SyncFrom(p.Peer)

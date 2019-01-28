@@ -344,7 +344,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			}
 			defer msg.Discard()
 
-			log.Debug("received msg from remote peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code)
+			// log.Debug("received msg from remote peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code)
 
 			if msg.Size > ProtocolMaxMsgSize {
 				log.Warn("err when checking msg size", "size", msg.Size)

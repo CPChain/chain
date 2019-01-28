@@ -278,7 +278,6 @@ func (p *PBFT) realFSM(input *blockOrHeader, msgCode MsgCode, state consensus.St
 
 	// if already in chain, do nothing
 	if p.dpor.HasBlockInChain(hash, number) {
-		log.Warn("the block or header is already in local chain", "number", number, "hash", hash.Hex())
 		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil
 	}
@@ -417,7 +416,6 @@ func (p *PBFT) fsm(input *blockOrHeader, msgCode MsgCode, state consensus.State)
 
 	// if already in chain, do nothing
 	if p.dpor.HasBlockInChain(hash, number) {
-		log.Warn("the block or header is already in local chain", "number", number, "hash", hash.Hex())
 		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil
 	}
