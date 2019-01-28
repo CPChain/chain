@@ -573,3 +573,25 @@ func (br *broadcastRecord) ifBroadcasted(number uint64, hash common.Hash, msgCod
 	broadcasted, exists := br.record.Get(msgID)
 	return exists && broadcasted.(bool) == true
 }
+
+type impeachmentRecord struct {
+	record *lru.ARCCache
+}
+
+func newImpeachmentRecord() *impeachmentRecord {
+	record, _ := lru.NewARC(1000)
+	return &impeachmentRecord{
+		record: record,
+	}
+}
+
+func (ir *impeachmentRecord) markAsImpeached(number uint64, hash common.Hash) {
+	bi := newBlockIdentifier(number, hash)
+	ir.record.Add(bi, true)
+}
+
+func (ir *impeachmentRecord) ifImpeached(number uint64, hash common.Hash) bool {
+	bi := newBlockIdentifier(number, hash)
+	impeached, exists := ir.record.Get(bi)
+	return exists && impeached.(bool) == true
+}
