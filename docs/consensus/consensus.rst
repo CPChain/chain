@@ -75,8 +75,8 @@ that there exist a quorum agree on a prepare message and a commit message respec
         i. It is for the cases when P-certificate, C-certificate or VALIDATE messages cannot be collected
         #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATE messages
         #. Any of these timers expires, the validators committee activates *impeachment*
-
-Note that we re
+    #. Other complicated abnormal cases:
+        i. There are more complicated abnormal cases. We list them explicitly in `Illicit Actions`_.
 
 
 Impeachment
@@ -123,7 +123,7 @@ Finite State Machine
 ----------------------
 
 The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 states:
-**pre-prepare**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
+**idle**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
 The former three states are designed for normal cases, and the rest are specializing in handling abnormal cases.
 
 The illustration below demonstrates these five states as well as transitions between states.
@@ -131,7 +131,7 @@ Note that not all transitions are shown in this figure due to the lack of space.
 The text on an arrow between two states refers to the condition of this transition.
 And the message box near the arrow represents the message broadcast to other nodes.
 
-.. image:: lbft_fsm.jpeg
+.. image:: lbft_fsm.png
 
 
 Pseudocode
@@ -145,10 +145,11 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
     .. code-block:: go
 
+        // a general code for LBFT FSM
         LbftFsm20(input, state) {
             switch state{
-            case preprepare:
-                preprepareHandler(input)
+            case idle:
+                idleHandler(input)
             case prepare:
                 prepareHandler(input)
             case commit:
@@ -159,48 +160,120 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 impeachCommitHandler(input)
         }
 
+**Utilities**
+
+    .. code-block:: go
+
+        // sign is a slice storing signs of a given block header
+        // prepareSignatures stores signs of prepare messages for a given block header
+        var prepareSignatures map[header]sign
+
+        // commitSignatures stores signs of commit messages for a given block header
+        var commitSignatures map[header]sign
+
+        // refresh signatures
+        refreshPrepareSignatures(input) {
+            header = header(input)  // Retrieve the block header of given message
+            if input contains signs that are not stored in prepareSignatures[header]{
+                append these signs into prepareSignatures[header]
+            }
+        }
+
+        refreshCommitSignatures(input) {
+            header = header(input)  // Retrieve the block header of given message
+            if input contains signs that are not stored in CommitSignatures[header]{
+                append these signs into CommitSignatures[header]
+            }
+        }
+
+        // determine whether a quorum certificate is sufficed
+        prepareCertificate(input) bool{
+            if (len(prepareSignatures[header]) >= 2f+1) {
+                return true
+            }
+            return false
+        }
+
+        commitCertificate(input) bool{
+            if (len(commitSignatures[header]) >= 2f+1) {
+                return true
+            }
+            return false
+        }
+
+        impeachPrepareCertificate(input) bool {
+            if (len(prepareSignatures[header]) >= f+1) {
+                return true
+            }
+            return false
+        }
+
+        impeachCommitCertificate(input) bool {
+            if (len(commitSignatures[header]) >= f+1) {
+                return true
+            }
+            return false
+        }
+
+        // cacheBlock is invoked to cache a block if necessary
+        cacheBlock(block) {
+            if block is not cached && verifyBlock(block){
+                add block into the cache
+            }
+        }
 
 **Normal Case Handlers**
 
 
     .. code-block:: go
 
+        // handler for commit state
         commitHandler(input) {
             switch input{
+            // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
             case validateMsg:
                 insert the block
                 broadcast validateMsg
-                transit to preprepare state
+                transit to idle state
             case commitMsg:
                 if commitCertificate {
                     broadcast validateMsg
-                    transit to preprepare state
+                    transit to idle state
                 }
+            // add the block into the cache if necessary
+            case block:
+                cacheBlock(input)
+
         }
 
+        // handler for prepare state
         prepareHandler(input) {
             switch input{
+            // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
             case validateMsg, commitMsg:
                 commitHandler(input)
             case prepareMsg:
                 if prepareCertificate {
-                    broadcast commitMsg
+                    // it is possible for suffice two certificates simultaneously
                     if commitCertificate {
                         broadcast validateMsg
-                        transit to preprepare state
+                        transit to idle state
                     }else{
+                        broadcast commitMsg
                         transit to commit state
                     }
                 }
             }
         }
 
-        preprepareHandler(input) {
+        // handler for idle state
+        idleHandler(input) {
             switch input{
+            // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
             case validateMsg, commitMsg, prepareMsg:
@@ -212,16 +285,20 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     transit to impeachPrepare state
                 }
                 else{
-                    broadcast preprepareMsg
+                // a cascade of determination of certificates
                     if prepareCertificate {
-                        broadcast commitMsg
                         if commitCertificate {
                             broadcast validateMsg
-                            transit to preprepare state
+                            transit to idle state
                         }else{
+                            add block into the cache
+                            broadcast prepareMsg
+                            broadcast commitMsg
                             transit to commit state
                         }
                     }else{
+                        add block into the cache
+                        broadcast prepareMsg
                         transit to prepare state
                     }
                 }
@@ -232,45 +309,51 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
     .. code-block:: go
 
+        // handler for impeach commit state
         impeachCommitHandler(input) {
             switch input{
             case validateMsg:
                 insert the block
                 broadcast validateMsg
-                transit to preprepare state
+                transit to idle state
             case impeachValidateMsg:
                 insert impeach block
                 broadcast impeachValidateMsg
-                transit to preprepare state
+                transit to idle state
             case impeachCommitMsg:
                 if impeachCommitCertificate(input) {
                     broadcast impeachValidateMsg
-                    transit to preprepare state
+                    transit to idle state
                 }
             }
         }
 
+        // handler for impeach prepare state
         impeachPrepareHandler(input) {
             switch input{
             case validateMsg, impeachValidateMsg, impeachCommitMsg:
                 impeachCommitHandler(input)
             case impeachPrepareMsg:
+                // it is possible to suffice two impeach certificates
                 if impeachPrepareCertificate(input) {
-                    broadcast impeachCommitMsg
                     if impeachCommitCertificate(input) {
                         broadcast impeachValidateMsg
-                        transit to preprepare state
+                        transit to idle state
+                    }else{
+                        broadcast impeachCommitMsg
+                        transit to impeachCommit state
                     }
-                    transit to impeachCommit state
                 }
         }
 
+        // a general impeachment message handler for normal case states
         impeachHandler(input) {
             case expiredTimer:
                 propose an impeach block
+                add the impeach block into cache
                 broadcast the impeach block
                 transit to impeachPrepare state
-            case impeachPrepareMsg, impeachCommitMsg:
+            case impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachPrepareHandler(input)
         }
 
@@ -296,18 +379,47 @@ and a fork would occur in the blockchain since two blocks with same block height
 The sophisticated mechanism in LBFT 2.0 protocol prohibits the occurrence of double spend attack.
 The following theorem holds in LBFT 2.0.
 
-**Theorem 1:** *There cannot exist two blocks proposed by a same node with the same block number being validated simultaneously.*
+**Lemma 1:** *There cannot exist two blocks proposed by a same node with the same block number being validated simultaneously.*
 
 **Proof:** Assume that a proposer p proposes two distinct blocks b and b', and broadcasts them to validators.
 And to achieve its wicked purpose, f faulty validators collaborate with p.
 Suppose that p fulfill its wicked aim that both b and b' are inserted into the chain.
 Thus, there exists two quorums of validators that endorse b and b' respectively.
-Since only 3f + 1 members in the committee, these two quorums have f+1 members in common. Except for f faulty validators
-can be members of both quorums, there still exits one validator signs both b and b0. It contracts the
+Since only 3f+1 members in the committee, these two quorums have f+1 members in common. Except for f faulty validators
+can be members of both quorums, there still exits one validator signs both b and b'. It contracts the
 fact that each loyal validator only sign one block. Hence, there cannot be two proposed blocks are
-both legit.
+both legit. **Q.E.D.**
 
 
+
+In contrast to the fact that each validator only signs one proposed block, a validator can sign an
+impeach block even if it has signed a block from p given that it cannot collect a certificate on time.
+Then is that possible for a proposer takes advantages of this mechanism to makes its proposed block
+b and an impeach block b0 both legit simultaneously?
+The answer is no. Here we lists two lemmas and shows their correctness.
+
+**Observation 1:** *It is possible that both a block b proposed from a proposer p and an impeach block b' suffice
+a prepare certificate simultaneously.*
+
+**Observation 2:** *It is impossible that both a block b proposed from a proposer p and an impeach block b' suffice
+a commit certificate simultaneously.*
+
+**Proof:** Observation 1 indicates that one quorum endorses b while another one endorse b'. It is possible
+that if a loyal validator v1 signs b then broadcasts its prepare messages, but its receiver is blocked
+such that it later proposes an impeach block. Combining f faulty validators, two quorums are made up.
+
+However, Observation 2 ensures the safety of our consensus system. It is because once v1
+propose an impeach block b0, it can no longer send out b’s commit message even if it collects a
+prepare certificate for b. The state transmission of a validator is illustrated in the `Finite State Machine`_.
+Once a validator enters either impeach prepare or impeach commit phase, it no
+long signs a normal block. **Q.E.D.**
+
+Observation 2 leads to the following lemma:
+
+**Lemma 2:** *A proposed block and an impeach block cannot be validated simultaneously.*
+
+**Proof:** Given Observation 2, either a normal block or an impeach block can obtain a commit certificate.
+Thus, they cannot be validated simultaneously. **Q.E.D.**
 
 
 
