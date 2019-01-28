@@ -287,13 +287,12 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 	// TODO: @liq read f from config
 	var (
 		faulty = uint64(1)
-		latest = blockchain.CurrentHeader().Number.Uint64()
 	)
 
 	handler := d.handler
 
 	// fsm := backend.NewDSM(faulty, latest, d)
-	fsm := backend.NewPBFT(faulty, latest, d, handler.ReceiveImpeachPendingBlock)
+	fsm := backend.NewPBFT(faulty, d, handler.ReceiveImpeachPendingBlock)
 
 	if err := handler.SetServer(server); err != nil {
 		return
@@ -371,5 +370,6 @@ func (d *Dpor) HandleMinedBlock(block *types.Block) error {
 
 // ImpeachTimeout returns impeach time out
 func (d *Dpor) ImpeachTimeout() time.Duration {
-	return d.config.ImpeachTimeout
+	return 1 * time.Second
+	// return d.config.ImpeachTimeout
 }
