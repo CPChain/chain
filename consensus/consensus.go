@@ -147,20 +147,20 @@ const (
 	// Idle state is served as the first state in PBFT, ready to receive the proposed block
 	Idle State = iota
 
-	// Preprepared state is the second state. The validator can enter this state after receiving proposed block (pre-prepare) message.
+	// Prepare state is the second state. The validator can enter this state after receiving proposed block (pre-prepare) message.
 	// It is ready to send prepare messages
-	Preprepared
+	Prepare
 
-	// Prepared state is the third state. The validator can enter it after collecting prepare certificate
+	// Commit state is the third state. The validator can enter it after collecting prepare certificate
 	// It is about to broadcast commit messages
-	Prepared
+	Commit
 
-	// ImpeachPreprepared The validator transit to impeach pre-prepared state whenever the timer expires
+	// ImpeachPrepare The validator transit to impeach pre-prepared state whenever the timer expires
 	// It is about to broadcast impeach prepare messages
-	ImpeachPreprepared
+	ImpeachPrepare
 
-	// ImpeachPrepared Once a impeach prepare certificate is collected, a validator enters impeach prepared state
-	ImpeachPrepared
+	// ImpeachCommit Once a impeach prepare certificate is collected, a validator enters impeach prepared state
+	ImpeachCommit
 )
 
 // PbftStatus represents a state of a dpor replica

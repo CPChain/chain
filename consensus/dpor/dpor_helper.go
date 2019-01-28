@@ -458,7 +458,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	var ok bool
 	// TODO: fix this, clean it!
 	// Retrieve signatures of the block in cache
-	if state == consensus.Prepared || state == consensus.ImpeachPrepared {
+	if state == consensus.Commit || state == consensus.ImpeachCommit {
 		s, ok = dpor.finalSigs.Get(hash) // check if it needs a lock
 		if !ok || s == nil {
 			s = &Signatures{
@@ -466,7 +466,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			}
 			dpor.finalSigs.Add(hash, s)
 		}
-	} else if state == consensus.Preprepared || state == consensus.ImpeachPreprepared {
+	} else if state == consensus.Prepare || state == consensus.ImpeachPrepare {
 		s, ok = dpor.prepareSigs.Get(hash)
 		if !ok || s == nil {
 			s = &Signatures{
@@ -497,7 +497,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	// Sign the block if self is in the committee
 	if snap.IsValidatorOf(dpor.Coinbase(), number) {
 		// NOTE: sign a block only once
-		if signedHash, signed := dpor.IfSigned(number); signed && signedHash != header.Hash() && state != consensus.ImpeachPreprepared && state != consensus.ImpeachPrepared {
+		if signedHash, signed := dpor.IfSigned(number); signed && signedHash != header.Hash() && state != consensus.ImpeachPrepare && state != consensus.ImpeachCommit {
 			return errMultiBlocksInOneHeight
 		}
 

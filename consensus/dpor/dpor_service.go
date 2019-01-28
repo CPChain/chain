@@ -4,6 +4,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/p2p"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
@@ -278,4 +280,9 @@ func (d *Dpor) GetMac() (mac string, sig []byte, err error) {
 
 	sig, err = d.signFn(accounts.Account{Address: d.Coinbase()}, hash.Bytes())
 	return mac, sig, err
+}
+
+// SyncFrom tries to sync blocks from given peer
+func (d *Dpor) SyncFrom(p *p2p.Peer) {
+	go d.pmSyncFromPeerFn(p)
 }

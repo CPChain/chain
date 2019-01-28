@@ -303,7 +303,7 @@ func TestDporStateMachine_Fsm(t *testing.T) {
 	//expectedSigItems := fsm4.CommitSigState()[validatorAddr4].Sig()
 	//copy(expectedHeader.Dpor.Sigs[3][:], expectedSigItems[:])
 
-	_, sigs, sigErr := fsm4.Service().ECRecoverSigs(expectedHeader, consensus.Prepared)
+	_, sigs, sigErr := fsm4.Service().ECRecoverSigs(expectedHeader, consensus.Commit)
 	if sigErr != nil {
 		t.Errorf("error for get sigs, error is %v\n", sigErr)
 	}
@@ -359,7 +359,7 @@ func TestDporStateMachine_Fsm(t *testing.T) {
 	expectedErr = nil
 
 	expectedHeader = input.Header()
-	_, sigs, sigErr = fsm2.Service().ECRecoverSigs(expectedHeader, consensus.Prepared)
+	_, sigs, sigErr = fsm2.Service().ECRecoverSigs(expectedHeader, consensus.Commit)
 	if sigErr != nil {
 		t.Errorf("error for get sigs, error is %v\n", sigErr)
 	}
@@ -913,7 +913,7 @@ func TestDporStateMachine_FsmImpeach(t *testing.T) {
 
 	expectedHeader = output[i].(*types.Header)
 
-	_, sigs, sigErr := fsm3.Service().ECRecoverSigs(expectedHeader, consensus.ImpeachPreprepared)
+	_, sigs, sigErr := fsm3.Service().ECRecoverSigs(expectedHeader, consensus.ImpeachPrepare)
 	if sigErr != nil {
 		t.Errorf("error for get sigs, error is %v\n", sigErr)
 	}
@@ -970,7 +970,7 @@ func TestDporStateMachine_FsmImpeach(t *testing.T) {
 
 	expectedHeader = output[i].(*types.Header)
 
-	_, sigs, sigErr = fsm1.Service().ECRecoverSigs(expectedHeader, consensus.ImpeachPreprepared)
+	_, sigs, sigErr = fsm1.Service().ECRecoverSigs(expectedHeader, consensus.ImpeachPrepare)
 	if sigErr != nil {
 		t.Errorf("error for get sigs, error is %v\n", sigErr)
 	}

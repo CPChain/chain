@@ -161,7 +161,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		if !noSigner {
 
 			// Recover it!
-			hashToSign, err := HashBytesWithState(d.sigHash(header).Bytes(), consensus.Prepared)
+			hashToSign, err := HashBytesWithState(d.sigHash(header).Bytes(), consensus.Commit)
 			signerPubkey, err := crypto.Ecrecover(hashToSign, signerSig[:])
 			if err != nil {
 				continue
@@ -282,12 +282,12 @@ func HashBytesWithState(hash []byte, state consensus.State) (signHashBytes []byt
 
 	var bytesToSign []byte
 	switch state {
-	case consensus.Preprepared, consensus.ImpeachPreprepared:
+	case consensus.Prepare, consensus.ImpeachPrepare:
 		// TODO: for now, skip this, because i need fsm tests work, i'll fix this later
 		// bytesToSign = append([]byte(prepreparePrefix), hash...)
 		_ = prepreparePrefix
 		bytesToSign = hash
-	case consensus.Prepared, consensus.ImpeachPrepared:
+	case consensus.Commit, consensus.ImpeachCommit:
 		bytesToSign = hash
 	default:
 		log.Warn("unknown state when signing hash with state", "state", state)
