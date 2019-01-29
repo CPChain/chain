@@ -444,8 +444,8 @@ Unknown Ancestor Block
 An unknown ancestor block refers to a block whose block height is higher than the one the validator is currently processing.
 The name comes from the fact that the predecessor of this block is yet unknown in the chain.
 
-Suppose a validator v which is processing a block b in block height h,
-and receives an unknown ancestor block b' with block height h' from a node p'.
+Suppose a validator v which is processing a block b1 in block height h1,
+and receives an unknown ancestor block b2 with block height h2 from a node p2.
 There are following possible scenarios:
 
 1. The block is proposed by a legit proposer at the correct time; the validator is delaying.
@@ -460,27 +460,27 @@ well as the corresponding block heights to propose their blocks.
 Thus, a validator has a priori knowledge on all legit proposers in this term, unless the proposer is
 delaying for at least a term.
 
-In the first scenario, b' actually is not an unknown ancestor block.
-The validator v regards b' as an unknown ancestor block simply because it is delaying
-After receiving b', the validator v records the block in the cache.
+In the first scenario, b2 actually is not an unknown ancestor block.
+The validator v regards b2 as an unknown ancestor block simply because it is delaying
+After receiving b2, the validator v records the block in the cache.
 As it is delaying, it is counted as one of f non-responding block.
-Despite that it receives b, v stays in the block height h,
-and it does not participate in consensus of block height h'
-In other word, it does not broadcasts a prepare message endorsing b'.
-Other members in the validators committee suffice a quorum to complete the consensus process on b' without v's participation.
+Despite that it receives b2, v stays in the block height h,
+and it does not participate in consensus of block height h2
+In other word, it does not broadcasts a prepare message endorsing b2.
+Other members in the validators committee suffice a quorum to complete the consensus process on b2 without v's participation.
 v is going to catch up with the schedule after it receives the validate message from other committee members,
 or by `Recovery`_.
 
-In the second scenario, p' behaves faultily.
+In the second scenario, p2 behaves faultily.
 Similar to the first scenario, v records it in the cache without signing it.
 A quorum can still complete the consensus on b.
-When it comes to the correct view of p', if p' propose the block again, then it is going to be processed normally.
+When it comes to the correct view of p2, if p2 proposes the block again, then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
 
-The third and fourth scenario happens when v cannot recognize p' as a proposer.
-It can due to either b' is faulty (scenario 3) and v is delaying (scenario 4).
+The third and fourth scenario happens when v cannot recognize p2 as a proposer.
+It can due to either b2 is faulty (scenario 3) and v is delaying (scenario 4).
 In both scenarios, v is going to sync, determining if it is delaying.
-For the third scenario, v rejects b' and added v into blacklist.
+For the third scenario, v rejects b2 and added v into blacklist.
 For the fourth one, it acts same as the first scenario.
 
 Here comes another concern.
@@ -521,4 +521,18 @@ and relies on the rest loyal validators processing a proper one.
 
 Recovery
 -----------
+
+LBFT 2.0 provides both liveness and safety under the assumption
+that at most one third of validators misbehave in a certain view.
+But without providing a recovery mechanism, the percentage of faulty validators would accumulate,
+outnumber one third, and finally degrade superior safety of LBFT 2.0.
+It motivates us to develop a sophisticated recovery mechanism, such that a delaying validator can catch up others.
+
+Delaying validators are categorized into two different types according to how far behind they are:
+1. The block height of delaying validator is same as the functioning validators
+2. The validator delaying for at least a view.
+
+
+Intra-view Recovery
+***************
 
