@@ -491,28 +491,25 @@ committee, and 10 is time interval between two consecutive blocks.
 
 Thus, we can write a pseudocode to depict the processes above.
 
-
-
     .. code-block:: go
 
-
-        func unknownAncestorBlockHandler(b') {
+        func unknownAncestorBlockHandler(b2) {
             // v: a validator
             // b: the block v is processing
             // h: b’s block height
-            // b': a future block proposed by p' with block height h'
-            if h'>h {
+            // b2: a future block proposed by p2 with block height h2
+            if h2>h {
                 return
             }
-            if v knows p' is a legit proposer {
-                v stores b' in the cache
+            if v knows p2 is a legit proposer {
+                v stores b2 in the cache
                 v continue processing b
             }
             if v has not synced for 10*|P| seconds {
                 b synchronizes with the committee
-                unknownAncestorBlockHandler(b)
+                unknownAncestorBlockHandler(b2)
             } else {
-                punish p'
+                punish p2
             }
         }
 
