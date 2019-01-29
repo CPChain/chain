@@ -10,18 +10,28 @@ The consensus in LBFT 2.0 is determined by two two committees: **Validators Comm
 Here we list the properties of validators and proposers, as well as the rest nodes denoted as civilians.
 
 
-1. **Validator** and **Proposer** and **Civilian**
-    a. Block validators, or validators refer to a group of users that can validate a newly proposed block.
-        i. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
-        #. Except for some abnormal cases, validators may not produce blocks.
-        #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
-        #. The size of number is always equaling to 3f+1, where f is the number of byzantine nodes.
-    #. Block proposer, or proposer refers to the user that can propose block.
-        i. It is one member of the proposers committee.
-        #. The proposers committee is elected based on reputations of candidates and a random seed.
-        #. Each number in the proposers committee takes the responsibility of producing block one by one.
-    #. Civilians refer to the rest of users
-        i. A civilian can become a proposer if it claims campaign and is elected.
+1. **Validators** or block validators refer to a group of users that can validate a newly proposed block.
+    i. All validators together constitute **validators committee**.
+    #. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
+    #. Except for some abnormal cases, validators may not produce blocks.
+    #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
+    #. The size of number is always equaling to 3f+1, where f is the number of byzantine nodes.
+
+#. **Proposers committee** is a fixed number of elected RNodes for a certain term.
+    i. The proposers committee is elected based on reputations of candidates and a random seed.
+    #. Each incumbent member alternately assumes the responsibility to propose blocks during their tenure.
+    #. The **proposer**, or block proposer refers to member assigned to propose a new block in current view.
+    #. A proposer behaves inappropriately will face an `Impeachment`_ from validators which punishes this proposer due to its failure in proposal.
+
+#. **Default proposers**, a special set of RNodes, have higher priority to be elected.
+    i. RNodes with very high RPT and excellent maintenance history are qualified to apply for default proposers.
+    #. Default proposers mainly play two following roles:
+        i. Serve as backups in case of inadequate number of candidates;
+        #. Constitutes a proportion of proposers committee assuring throughput.
+
+#. Civilians refer to the rest of users.
+    i. If a civilian is qualified as an RNode, it can claim campaign to be come a candidate.
+    i. After being elected, the candidate is about to join proposers committee next term.
 
 
 Normal and Abnormal Case Handler
@@ -137,7 +147,7 @@ And the message box near the arrow represents the message broadcast to other nod
 Pseudocode
 *************
 
-For more detailed implementation, interested reader can refer to the pseudocode below.
+For more detailed implementation, interested reader can refer to the pseudocode below (the grammar is close to golang).
 
 
 **FSM for LBFT2.0**
@@ -146,7 +156,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
     .. code-block:: go
 
         // a general code for LBFT FSM
-        LbftFsm20(input, state) {
+        func LbftFsm20(input, state) {
             switch state{
             case idle:
                 idleHandler(input)
@@ -172,14 +182,14 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         var commitSignatures map[header]sign
 
         // refresh signatures
-        refreshPrepareSignatures(input) {
+        func refreshPrepareSignatures(input) {
             header = header(input)  // Retrieve the block header of given message
             if input contains signs that are not stored in prepareSignatures[header]{
                 append these signs into prepareSignatures[header]
             }
         }
 
-        refreshCommitSignatures(input) {
+        func refreshCommitSignatures(input) {
             header = header(input)  // Retrieve the block header of given message
             if input contains signs that are not stored in CommitSignatures[header]{
                 append these signs into CommitSignatures[header]
@@ -187,28 +197,28 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
         // determine whether a quorum certificate is sufficed
-        prepareCertificate(input) bool{
+        func prepareCertificate(input) bool{
             if (len(prepareSignatures[header]) >= 2f+1) {
                 return true
             }
             return false
         }
 
-        commitCertificate(input) bool{
+        func commitCertificate(input) bool{
             if (len(commitSignatures[header]) >= 2f+1) {
                 return true
             }
             return false
         }
 
-        impeachPrepareCertificate(input) bool {
+        func impeachPrepareCertificate(input) bool {
             if (len(prepareSignatures[header]) >= f+1) {
                 return true
             }
             return false
         }
 
-        impeachCommitCertificate(input) bool {
+        func impeachCommitCertificate(input) bool {
             if (len(commitSignatures[header]) >= f+1) {
                 return true
             }
@@ -216,7 +226,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
         // cacheBlock is invoked to cache a block if necessary
-        cacheBlock(block) {
+        func cacheBlock(block) {
             if block is not cached && verifyBlock(block){
                 add block into the cache
             }
@@ -228,7 +238,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
     .. code-block:: go
 
         // handler for commit state
-        commitHandler(input) {
+        func commitHandler(input) {
             switch input{
             // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
@@ -249,7 +259,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
         // handler for prepare state
-        prepareHandler(input) {
+        func prepareHandler(input) {
             switch input{
             // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
@@ -262,7 +272,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     if commitCertificate {
                         broadcast validateMsg
                         transit to idle state
-                    }else{
+                    } else {
                         broadcast commitMsg
                         transit to commit state
                     }
@@ -271,7 +281,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
         // handler for idle state
-        idleHandler(input) {
+        func idleHandler(input) {
             switch input{
             // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
@@ -283,20 +293,19 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     propose an impeach block
                     broadcast the impeach block
                     transit to impeachPrepare state
-                }
-                else{
+                } else {
                 // a cascade of determination of certificates
                     if prepareCertificate {
                         if commitCertificate {
                             broadcast validateMsg
                             transit to idle state
-                        }else{
+                        } else {
                             add block into the cache
                             broadcast prepareMsg
                             broadcast commitMsg
                             transit to commit state
                         }
-                    }else{
+                    } else {
                         add block into the cache
                         broadcast prepareMsg
                         transit to prepare state
@@ -310,7 +319,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
     .. code-block:: go
 
         // handler for impeach commit state
-        impeachCommitHandler(input) {
+        func impeachCommitHandler(input) {
             switch input{
             case validateMsg:
                 insert the block
@@ -329,7 +338,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
         // handler for impeach prepare state
-        impeachPrepareHandler(input) {
+        func impeachPrepareHandler(input) {
             switch input{
             case validateMsg, impeachValidateMsg, impeachCommitMsg:
                 impeachCommitHandler(input)
@@ -339,7 +348,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     if impeachCommitCertificate(input) {
                         broadcast impeachValidateMsg
                         transit to idle state
-                    }else{
+                    } else {
                         broadcast impeachCommitMsg
                         transit to impeachCommit state
                     }
@@ -347,7 +356,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
         // a general impeachment message handler for normal case states
-        impeachHandler(input) {
+        func impeachHandler(input) {
             case expiredTimer:
                 propose an impeach block
                 add the impeach block into cache
@@ -365,7 +374,8 @@ Illicit actions refer any messages or blocks sending to a validator that cannot 
 From validators' perspective, Illicit actions falls into the following categories:
 
 1. Double spend attack from the proposer
-#. A future block whose block height is higher than the one a validator is processing
+#. An unknown ancestor block whose block height is higher than the one a validator is processing
+#. A future block whose timer stamp is larger than the counterpart of a validator.
 #. A past block whose block height is higher than the one a validator is processing
 #. A block from any unrecognized node
 
@@ -377,7 +387,7 @@ If this attack succeeded, the proposer would be granted two sets of rewards,
 and a fork would occur in the blockchain since two blocks with same block height were both legal.
 
 The sophisticated mechanism in LBFT 2.0 protocol prohibits the occurrence of double spend attack.
-The following theorem holds in LBFT 2.0.
+The following lemmas holds in LBFT 2.0.
 
 **Lemma 1:** *There cannot exist two blocks proposed by a same node with the same block number being validated simultaneously.*
 
@@ -421,6 +431,94 @@ Observation 2 leads to the following lemma:
 **Proof:** Given Observation 2, either a normal block or an impeach block can obtain a commit certificate.
 Thus, they cannot be validated simultaneously. **Q.E.D.**
 
+Combining both Lemma 1 and 2, we conclude the following theorem to guarantee the safety facing double spend attack.
+
+**Theorem 1:** *LBFT2.0 is guaranteed to generate only one validated block for each block height under double spend attack.*
 
 
+
+
+Unknown Ancestor Block
+*************************
+
+An unknown ancestor block refers to a block whose block height is higher than the one the validator is currently processing.
+The name comes from the fact that the predecessor of this block is yet unknown in the chain.
+
+Suppose a validator v which is processing a block b in block height h,
+and receives an unknown ancestor block b' with block height h' from a node p'.
+There are following possible scenarios:
+
+1. The block is proposed by a legit proposer at the correct time; the validator is delaying.
+#. The block is proposed by a legit proposer at an incorrect time.
+#. The block is proposed by a faulty node.
+#. The validator is lagging behind for at least one term, and cannot verify whether the proposer is legit.
+
+Here the word *legit* indicates that p is an incumbent proposer from the committee in the current term,
+having been recognized by v.
+When a proposers committee is elected, each validator receives a list of all elected candidates as
+well as the corresponding block heights to propose their blocks.
+Thus, a validator has a priori knowledge on all legit proposers in this term, unless the proposer is
+delaying for at least a term.
+
+In the first scenario, b' actually is not an unknown ancestor block.
+The validator v regards b' as an unknown ancestor block simply because it is delaying
+After receiving b', the validator v records the block in the cache.
+As it is delaying, it is counted as one of f non-responding block.
+Despite that it receives b, v stays in the block height h,
+and it does not participate in consensus of block height h'
+In other word, it does not broadcasts a prepare message endorsing b'.
+Other members in the validators committee suffice a quorum to complete the consensus process on b' without v's participation.
+v is going to catch up with the schedule after it receives the validate message from other committee members,
+or by `Recovery`_.
+
+In the second scenario, p' behaves faultily.
+Similar to the first scenario, v records it in the cache without signing it.
+A quorum can still complete the consensus on b.
+When it comes to the correct view of p', if p' propose the block again, then it is going to be processed normally.
+Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
+
+The third and fourth scenario happens when v cannot recognize p' as a proposer.
+It can due to either b' is faulty (scenario 3) and v is delaying (scenario 4).
+In both scenarios, v is going to sync, determining if it is delaying.
+For the third scenario, v rejects b' and added v into blacklist.
+For the fourth one, it acts same as the first scenario.
+
+Here comes another concern.
+A faulty node can raise a DDoS attack on validators, forcing them continuously syncing.
+To address this issue, we can set a timer of a validator as the minimum gap between two syncs.
+A reasonable setting is 10*|P| seconds, where \|P\| is the size of proposers
+committee, and 10 is time interval between two consecutive blocks.
+
+Thus, we can write a pseudocode to depict the processes above.
+
+    .. code-block:: go
+
+        func unknownAncestorBlockHandler(b2) {
+            // v: a validator
+            // b: the block v is processing
+            // h: b’s block height
+            // b2: a future block proposed by p2 with block height h2
+            if h2>h {
+                return
+            }
+            if v knows p2 is a legit proposer {
+                v stores b2 in the cache
+                v continue processing b
+            }
+            if v has not synced for 10*|P| seconds {
+                b synchronizes with the committee
+                unknownAncestorBlockHandler(b2)
+            } else {
+                punish p2
+            }
+        }
+
+The primary principle underlying this pseudocode is that a validator does not process this unknown ancestor block
+unless it is convinced the block is proposed by current proposer.
+This principle assures the safety of LBFT 2.0 when facing mischievous blocks,
+and relies on the rest loyal validators processing a proper one.
+
+
+Recovery
+-----------
 
