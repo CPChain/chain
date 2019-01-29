@@ -23,7 +23,9 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 
 			validators = h.dialer.ValidatorsOfTerm(term)
 
-			if len(validators) >= int(h.config.TermLen-h.fsm.Faulty()-1) {
+			// if there is more than one validator in local validator peers, i'll broadcast the msg
+			// cause he'll help me to rebroadcast the msg.
+			if len(validators) >= 1 {
 				return
 			}
 
