@@ -536,3 +536,15 @@ Delaying validators are categorized into two different types according to how fa
 Intra-view Recovery
 ***************
 
+Under the original framework of LBFT 2.0, once a validator loses its connection for a state,
+it can hardly join the consensus process at the rest part of this view.
+For example, validator v\ :sub:`1`\ from a committee of four members, disconnects from the network in the prepare state.
+The other three validators suffice a quorum for a prepare certificate and proceed to commit state.
+Even v\ :sub:`1`\ somehow reconnects to the net, it cannot help collect a commit certificate
+since it has yet collected a prepare certificate.
+
+Without any recovery, v\ :sub:`1`\ would be regarded as a non-responding node,
+and return to normal consensus processing in the next view, after it receives a validate message.
+The intra-view recovery address whe problem by appending the certificate to the message.
+Like in the previous example, the other three validators send a commit message accompanied with a prepare certificate.
+Validator v\ :sub:`1`\ can forward to commit phase after it verifies the certificate.
