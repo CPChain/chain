@@ -16,6 +16,10 @@ contract AdmissionInterface {
         returns (bool);
 }
 
+contract RewardInterface{
+    function isCandidate(address _addr)public view returns (bool);
+}
+
 
 // TODO this file exposes security holes.
 
@@ -33,8 +37,6 @@ contract Campaign {
     uint public termLen =4;
     // The sum of block in a term.
     uint public numPerRound = termLen * viewLen;
-    // 50 wei per round.
-    uint public baseDeposit = 50;
     // The minimun and maximun round to claim.
     uint public minNoc = 1;
     uint public maxNoc = 10;
@@ -43,17 +45,15 @@ contract Campaign {
 
     struct CandidateInfo {
         uint numOfCampaign;
-        uint deposit;
         uint startTermIdx;
         uint stopTermIdx;
-        // recorded for ViewChange
-        uint baseDeposit;
     }
 
     mapping(address => CandidateInfo) candidates;
     mapping(uint => Set.Data) campaignSnapshots;
 
     AdmissionInterface admission;
+    RewardInterface    reward;
 
     modifier onlyOwner() {require(msg.sender == owner);_;}
 
@@ -62,9 +62,10 @@ contract Campaign {
     event QuitCampaign(address candidate, uint payback);
     event ViewChange();
 
-    constructor(address _addr) public {
+    constructor(address _admissionAddr,address _rewardAddr) public {
         owner = msg.sender;
-        admission = AdmissionInterface(_addr);
+        admission = AdmissionInterface(_admissionAddr);
+        reward = RewardInterface(_rewardAddr);
     }
 
     function() payable public { }
@@ -76,11 +77,10 @@ contract Campaign {
     function candidateInfoOf(address _candidate)
         public
         view
-        returns (uint, uint, uint, uint)
+        returns (uint, uint, uint)
     {
         return (
             candidates[_candidate].numOfCampaign,
-            candidates[_candidate].deposit,
             candidates[_candidate].startTermIdx,
             candidates[_candidate].stopTermIdx
         );
@@ -90,10 +90,9 @@ contract Campaign {
     function setAdmissionAddr(address _addr) public onlyOwner(){
         admission = AdmissionInterface(_addr);
     }
-
-    /** update the config params. */
-    function updateBaseDeposit(uint _deposit) public onlyOwner(){
-        baseDeposit = _deposit;
+    /** set the Reward interface address. */
+    function setRewardInterface(address _addr) public onlyOwner(){
+        reward = RewardInterface(_addr);
     }
 
     function updateMinNoc(uint _minNoc) public onlyOwner(){
@@ -134,10 +133,10 @@ contract Campaign {
         public
         payable
     {
-        require(msg.value == SafeMath.mul(baseDeposit, _numOfCampaign), "wrong deposit value.");
+        //require(reward.isCandidate(msg.sender)==true, "not candidate by reward");
         // verify the sender's cpu&memory ability.
-        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
-        require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
+        //require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
+        //require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
 
         updateCandidateStatus(); // update status first then check
 
@@ -149,31 +148,16 @@ contract Campaign {
         address candidate = msg.sender;
 
         candidates[candidate].numOfCampaign = _numOfCampaign;
-        candidates[candidate].deposit = SafeMath.mul(baseDeposit, _numOfCampaign);
         candidates[candidate].startTermIdx = termIdx.add(1);
 
         //[start, stop)
         candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_numOfCampaign);
-        candidates[candidate].baseDeposit = baseDeposit;
 
         // add candidate to campaignSnapshots.
         for(uint i = candidates[candidate].startTermIdx; i < candidates[candidate].stopTermIdx; i++) {
             campaignSnapshots[i].insert(candidate);
         }
         emit ClaimCampaign(candidate, candidates[candidate].startTermIdx, candidates[candidate].stopTermIdx);
-    }
-
-    // TODO QuitCampaign test ok.
-    function quitCampaign() public {
-        address candidate = msg.sender;
-        require(candidates[candidate].numOfCampaign > 0, "already quit campaign or no need to quit.");
-        updateTermIdx();
-        // require(candidates[candidate].stopTermIdx > termIdx.add(1), "too late to quit campaign");
-        // remove candidate from current view snapshot
-        for(uint i = termIdx.add(1); i < candidates[candidate].stopTermIdx; i++) {
-            campaignSnapshots[i].remove(candidate);
-        }
-        paybackDeposit(candidate);
     }
 
     /**
@@ -197,23 +181,12 @@ contract Campaign {
                     continue;
                 }
 
-                uint depositValue = 0;
-                if(candidates[candidate].deposit >= candidates[candidate].baseDeposit) {
-                    depositValue = candidates[candidate].baseDeposit;
-                }
-                else {
-                    depositValue = candidates[candidate].deposit;
-                }
-
-                candidates[candidate].deposit = SafeMath.sub(candidates[candidate].deposit, depositValue);
                 candidates[candidate].numOfCampaign = SafeMath.sub(candidates[candidate].numOfCampaign, 1);
-                candidate.transfer(depositValue);
 
                 // if candidate's tenure is all over, all status return to zero.
                 if (candidates[candidate].numOfCampaign == 0) {
                     candidates[candidate].startTermIdx = 0;
                     candidates[candidate].stopTermIdx = 0;
-                    candidates[candidate].baseDeposit = 0;
                 }
             }
         }
@@ -227,23 +200,6 @@ contract Campaign {
             return;
         }
         termIdx = (blockNumber - 1) / numPerRound;
-    }
-
-    // TODO. require sender check.
-    function punishCandidate(address candidate, uint _termIdx) public onlyOwner {
-        uint depositValue = candidates[candidate].baseDeposit;
-        require(candidates[candidate].deposit >= depositValue, "wrong deposit value.");
-        candidates[candidate].deposit -= depositValue;
-        campaignSnapshots[_termIdx].remove(candidate);
-    }
-
-    function paybackDeposit(address candidate) internal {
-        uint deposit = candidates[candidate].deposit;
-        candidates[candidate].numOfCampaign = 0;
-        candidates[candidate].deposit = 0;
-        candidates[candidate].startTermIdx = 0;
-        candidates[candidate].stopTermIdx = 0;
-        candidate.transfer(deposit);
     }
 
 }

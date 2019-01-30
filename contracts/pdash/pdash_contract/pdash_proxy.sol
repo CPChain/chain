@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.24;
 
 
 contract ProxyContractInterface {
@@ -53,7 +53,7 @@ contract PdashProxy{
         pdash = addr;
     }
     /** set the Admission interface address. */
-    function setAdmissionAddr(address _addr) public onlyOwner(){
+    function setProxyContractAddr(address _addr) public onlyOwner(){
         proxyContract = ProxyContractInterface(_addr);
     }
 }

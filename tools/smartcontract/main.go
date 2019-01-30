@@ -50,7 +50,7 @@ func main() {
 	go deployProposer(password, proxyContractRegisterAddress, &wg1 /*, 1, 2, 3*/)
 
 	// 2,3
-	go deployAdmissionAndCampaign(password, proxyContractRegisterAddress, &wg1 /*, 4, 5, 6, 7, 8, 9*/)
+	go deployRewardAdmissionAndCampaign(password, proxyContractRegisterAddress, &wg1 /*, 4, 5, 6, 7, 8, 9*/)
 	fmt.Println("======== wait wg1 =========")
 	wg1.Wait()
 
@@ -89,28 +89,36 @@ func deployProposer(password string, proxyContractRegisterAddress common.Address
 	wg.Done()
 }
 
-func deployAdmissionAndCampaign(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	deploy.FormatPrint("2.DeployAdmission")
+// TODO: @xmx WILL ADJUST NONCE AND ORDER NUMBERS
+func deployRewardAdmissionAndCampaign(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
+	// 2
+	deploy.FormatPrint("2.DeployReward")
+	rewardAddress := deploy.DeployReward(password, 3)
+	deploy.PrintContract(rewardAddress)
+	proxyRewardAddress := deploy.RegisterProxyAddress(proxyContractRegisterAddress, rewardAddress, password, 13, 14)
+
+	// 3
+	deploy.FormatPrint("3.DeployAdmission")
 	admissionAddress := deploy.DeployAdmission(password, 4)
 	deploy.PrintContract(admissionAddress)
 	proxyAdmissionAddress := deploy.RegisterProxyAddress(proxyContractRegisterAddress, admissionAddress, password, 5, 6)
-	// 3
-	deploy.FormatPrint("3.DeployCampaign")
-	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress, password, 7)
+	// 4
+	deploy.FormatPrint("4.DeployCampaign")
+	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress, proxyRewardAddress, password, 7)
 	deploy.PrintContract(campaignAddress)
 	deploy.RegisterProxyAddress(proxyContractRegisterAddress, campaignAddress, password, 8, 9)
 	wg.Done()
 }
 
 func deployRpt(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	deploy.FormatPrint("4.DeployRpt")
+	deploy.FormatPrint("5.DeployRpt")
 	rptAddress := deploy.DeployRpt(password, 10)
 	deploy.PrintContract(rptAddress)
 	deploy.RegisterProxyAddress(proxyContractRegisterAddress, rptAddress, password, 11, 12)
 	wg.Done()
 }
 func deployRegister(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	deploy.FormatPrint("5.DeployRegister")
+	deploy.FormatPrint("6.DeployRegister")
 	registerAddress := deploy.DeployRegister(password, 13, proxyContractRegisterAddress)
 	deploy.PrintContract(registerAddress)
 	deploy.RegisterProxyAddress(proxyContractRegisterAddress, registerAddress, password, 14, 15)
@@ -118,7 +126,7 @@ func deployRegister(password string, proxyContractRegisterAddress common.Address
 }
 
 func deployPdash(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	deploy.FormatPrint("6.DeployPdash")
+	deploy.FormatPrint("7.DeployPdash")
 	pdashAddress := deploy.DeployPdash(password, 16)
 	deploy.PrintContract(pdashAddress)
 	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress, password, 17, 18)
@@ -126,7 +134,7 @@ func deployPdash(password string, proxyContractRegisterAddress common.Address, w
 }
 
 func deployPdashProxy(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	deploy.FormatPrint("7.DeployPdashProxy")
+	deploy.FormatPrint("8.DeployPdashProxy")
 	pdashAddress := deploy.DeployPdashProxy(password, 19, proxyContractRegisterAddress)
 	deploy.PrintContract(pdashAddress)
 	deploy.RegisterProxyAddress(proxyContractRegisterAddress, pdashAddress, password, 20, 21)

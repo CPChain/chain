@@ -26,13 +26,15 @@ package contracts
 
 //go:generate abigen --sol ./dpor/contracts/proposer_register.sol --pkg contracts --out ./dpor/contracts/proposer_register.go
 
-//go:generate abigen --sol ./dpor/contracts/rpt.sol --pkg contracts --out ./dpor/contracts/rpt.go
+//go:generate abigen --sol ./dpor/contracts/rpt/rpt.sol --pkg contracts --out ./dpor/contracts/rpt/rpt.go
 
-//go:generate abigen --sol ./pdash/sol/pdash.sol --pkg sol --out ./pdash/sol/pdash.go
+//go:generate abigen --sol ./dpor/contracts/reward/reward.sol --pkg reward --out ./dpor/contracts/reward/reward.go
 
-//go:generate abigen --sol ./pdash/sol/pdash_proxy.sol --pkg sol --out ./pdash/sol/pdash_proxy.go
+//go:generate abigen --sol ./pdash/pdash_contract/pdash.sol --pkg pdash_contract --out ./pdash/pdash_contract/pdash.go
 
-//go:generate abigen --sol ./pdash/sol/register.sol --pkg sol --out ./pdash/sol/register.go
+//go:generate abigen --sol ./pdash/pdash_contract/pdash_proxy.sol --pkg pdash_contract --out ./pdash/pdash_contract/pdash_proxy.go
+
+//go:generate abigen --sol ./pdash/pdash_contract/register.sol --pkg pdash_contract --out ./pdash/pdash_contract/register.go
 
 //go:generate abigen --sol ./proxy/proxy_contract/proxy.sol --pkg contract --out ./proxy/proxy_contract/proxy.go
 
