@@ -370,6 +370,7 @@ func (d *Dpor) HandleMinedBlock(block *types.Block) error {
 
 // ImpeachTimeout returns impeach time out
 func (d *Dpor) ImpeachTimeout() time.Duration {
+	// TODO @liuqian no hardcode
 	return 1 * time.Second
 	// return d.config.ImpeachTimeout
 }
