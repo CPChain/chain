@@ -49,9 +49,13 @@ const (
 )
 
 const (
-	DefaultBlockPeriod   = 4e2 //  400 Millisecond, 0.4 Second
-	TestnetBlockPeriod   = 3e3 //  3000 Millisecond, 3 Second
+	DefaultBlockPeriod = 4e2 //  400 Millisecond, 0.4 Second
+	TestnetBlockPeriod = 3e3 //  3000 Millisecond, 3 Second
+	MainnetBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
+
 	DefaultValidatorsLen = 4
+	TestnetValidatorsLen = 4
+	MainnetValidatorsLen = 7
 )
 
 const (

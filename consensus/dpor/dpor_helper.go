@@ -408,6 +408,10 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	log.Debug("number", "number", number)
 	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
 	log.Debug("proposer", "address", proposer.Hex())
+
+	defaultValidators, _ := dpor.ValidatorsOf(chain.CurrentHeader().Number.Uint64())
+	log.Debug("number of validators", "count", len(defaultValidators))
+
 	log.Debug("validators recovered from header: ")
 	for idx, validator := range validators {
 		log.Debug("validator", "addr", validator.Hex(), "idx", idx)
@@ -480,10 +484,10 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Copy all signatures to allSigs
-	allSigs := make([]types.DporSignature, dpor.config.TermLen)
+	allSigs := make([]types.DporSignature, dpor.config.ValidatorsLen)
 	validators := snap.ValidatorsOf(number)
-	if dpor.config.TermLen != uint64(len(validators)) {
-		log.Warn("validator committee length not equal to term length", "termLen", dpor.config.TermLen, "validatorLen", len(validators))
+	if dpor.config.ValidatorsLen != uint64(len(validators)) {
+		log.Warn("validator committee length not equal to validators length", "config.ValidatorsLen", dpor.config.ValidatorsLen, "validatorLen", len(validators))
 	}
 
 	// fulfill all known validator signatures to dpor.sigs to accumulate
@@ -515,9 +519,9 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 			return err
 		}
 
-		// if the sigs length is wrong, reset it with correct length(termLen)
-		if len(header.Dpor.Sigs) != int(snap.config.TermLen) {
-			header.Dpor.Sigs = make([]types.DporSignature, snap.config.TermLen)
+		// if the sigs length is wrong, reset it with correct ValidatorsLen
+		if len(header.Dpor.Sigs) != int(snap.config.ValidatorsLen) {
+			header.Dpor.Sigs = make([]types.DporSignature, snap.config.ValidatorsLen)
 		}
 
 		// mark as signed

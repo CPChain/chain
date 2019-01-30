@@ -301,7 +301,7 @@ func DefaultGenesisBlock() *Genesis {
 	case configs.IsTestnet():
 		return newTestnetGenesisBlock()
 	case configs.IsMainnet():
-		return newGenesisBlock()
+		return newMainnetGenesisBlock()
 	case configs.IsTestcase():
 		return newGenesisBlock()
 	default:
@@ -334,7 +334,7 @@ func newGenesisBlock() *Genesis {
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, 4),
+			Sigs:       make([]types.DporSignature, configs.DefaultValidatorsLen),
 			Validators: configs.Validators(),
 		},
 	}
@@ -363,7 +363,40 @@ func newTestnetGenesisBlock() *Genesis {
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, 4),
+			Sigs:       make([]types.DporSignature, configs.TestnetValidatorsLen),
+			Validators: configs.Validators(),
+		},
+	}
+}
+
+func newMainnetGenesisBlock() *Genesis {
+	log.Info("newMainnetGenesisBlock runmode:", "vv", configs.GetRunMode())
+	candidates := configs.Candidates()
+	return &Genesis{
+		Config:     configs.ChainConfigInfo(),
+		Timestamp:  1492009146,
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:   4700000 * 10,
+		Difficulty: big.NewInt(1),
+		Alloc: map[common.Address]GenesisAccount{
+			candidates[0]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[1]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[2]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[3]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[4]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[5]: {Balance: big.NewInt(math.MaxInt64)},
+
+			candidates[6]:  {Balance: big.NewInt(math.MaxInt64)},
+			candidates[7]:  {Balance: big.NewInt(math.MaxInt64)},
+			candidates[8]:  {Balance: big.NewInt(math.MaxInt64)},
+			candidates[9]:  {Balance: big.NewInt(math.MaxInt64)},
+			candidates[10]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[11]: {Balance: big.NewInt(math.MaxInt64)},
+		},
+		Dpor: types.DporSnap{
+			Proposers:  configs.Proposers(),
+			Seal:       types.DporSignature{},
+			Sigs:       make([]types.DporSignature, configs.MainnetValidatorsLen),
 			Validators: configs.Validators(),
 		},
 	}

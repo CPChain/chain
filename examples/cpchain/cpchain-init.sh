@@ -16,12 +16,26 @@ runmode=$1
 
 echo "== runmode:${runmode}"
 
-for i in {1..10}
-do
-    echo "[*] Configuring node $i"
-    mkdir -p data/data$i/keystore && cp conf-${runmode}/keys/key$i data/data$i/keystore/
+nodenumber=10
 
-    $cpchain chain init --runmode ${runmode} --datadir data/data$i conf-${runmode}/genesis.toml
-
-done
- 
+if [ "mainnet" == ${runmode} ]; then
+    for i in {1..19}
+    do
+        echo "[*] Configuring node $i"
+        mkdir -p data/data$i/keystore && cp conf-${runmode}/keys/key$i data/data$i/keystore/
+        if [ -f conf-${runmode}/genesis.toml ]; then
+            echo "[*] init chain"
+            $cpchain chain init --runmode ${runmode} --datadir data/data$i conf-${runmode}/genesis.toml
+        fi
+    done
+else
+    for i in {1..10}
+    do
+        echo "[*] Configuring node $i"
+        mkdir -p data/data$i/keystore && cp conf-${runmode}/keys/key$i data/data$i/keystore/
+        if [ -f conf-${runmode}/genesis.toml ]; then
+            echo "[*] init chain"
+            $cpchain chain init --runmode ${runmode} --datadir data/data$i conf-${runmode}/genesis.toml
+        fi
+    done
+fi
