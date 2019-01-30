@@ -22,8 +22,9 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
+
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -37,7 +38,7 @@ func TestRpt(t *testing.T) {
 
 	// addr := common.HexToAddress("0xca53baf44e68a2f440cafee2bbcc23631ad2689e") // real
 	addr := common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d") // proxy
-	r, err := rpt.NewRpt(addr, client)
+	r, err := contracts.NewRpt(addr, client)
 
 	code, err := client.CodeAt(ctx, addr, nil)
 	if len(code) > 0 {

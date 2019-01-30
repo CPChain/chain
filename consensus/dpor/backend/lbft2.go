@@ -200,7 +200,7 @@ type PBFT struct {
 	commitSignatures  *signaturesForBlockCaches
 }
 
-func NewPBFT(faulty uint64, number uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock) *PBFT {
+func NewPBFT(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock) *PBFT {
 
 	pbft := &PBFT{
 		state:  consensus.Idle,
@@ -242,7 +242,7 @@ func (p *PBFT) SetState(state consensus.State) {
 // Number returns current number
 func (p *PBFT) Number() uint64 {
 
-	return p.dpor.GetCurrentBlock().NumberU64()
+	return p.dpor.GetCurrentBlock().NumberU64() + 1
 }
 
 // Status returns current states
@@ -258,8 +258,8 @@ func (p *PBFT) FSM(input *blockOrHeader, msgCode MsgCode) ([]*blockOrHeader, Act
 
 	state := p.State()
 
-	// output, action, msgCode, state, err := p.realFSM(input, msgCode, state)
-	output, action, msgCode, state, err := p.fsm(input, msgCode, state)
+	output, action, msgCode, state, err := p.realFSM(input, msgCode, state)
+	// output, action, msgCode, state, err := p.fsm(input, msgCode, state)
 
 	if err == nil {
 		p.SetState(state)
@@ -278,12 +278,11 @@ func (p *PBFT) realFSM(input *blockOrHeader, msgCode MsgCode, state consensus.St
 
 	// if already in chain, do nothing
 	if p.dpor.HasBlockInChain(hash, number) {
-		log.Warn("the block or header is already in local chain", "number", number, "hash", hash.Hex())
 		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil
 	}
 
-	if number <= p.Number() {
+	if number < p.Number() {
 		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
 		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil
@@ -381,7 +380,7 @@ func (p *PBFT) ImpeachHandler(input *blockOrHeader, msgCode MsgCode, state conse
 func (p *PBFT) ImpeachPrepareHandler(input *blockOrHeader, msgCode MsgCode, state consensus.State) ([]*blockOrHeader, Action, MsgCode, consensus.State, error) {
 	switch msgCode {
 	case ImpeachCommitMsgCode, ImpeachValidateMsgCode:
-		return p.ImpeachPrepareHandler(input, msgCode, state)
+		return p.ImpeachCommitHandler(input, msgCode, state)
 
 	case ImpeachPrepareMsgCode:
 		return p.handleImpeachPrepareMsg(input, state)
@@ -417,12 +416,11 @@ func (p *PBFT) fsm(input *blockOrHeader, msgCode MsgCode, state consensus.State)
 
 	// if already in chain, do nothing
 	if p.dpor.HasBlockInChain(hash, number) {
-		log.Warn("the block or header is already in local chain", "number", number, "hash", hash.Hex())
 		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil
 	}
 
-	if number <= p.Number() {
+	if number < p.Number() {
 		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
 		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil

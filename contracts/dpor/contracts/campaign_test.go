@@ -23,13 +23,17 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/types"
+
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	admission2 "bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -39,23 +43,56 @@ var (
 	key, _      = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	addr        = crypto.PubkeyToAddress(key.PublicKey)
 	numPerRound = 12
+	initBalance = new(big.Int).Mul(big.NewInt(1000000), big.NewInt(configs.Cpc))
 )
 
-func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, common.Address, error) {
+func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (campaignAddr common.Address, admissionAddr common.Address, rewardAddr common.Address, err error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
+	addrReward, _, _, err := reward.DeployReward(deployTransactor, backend)
 	acAddr, _, _, err := admission.DeployAdmission(deployTransactor, backend, big.NewInt(5), big.NewInt(5), big.NewInt(10), big.NewInt(10))
-	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, acAddr)
+	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, acAddr, addrReward)
 	if err != nil {
-		return common.Address{}, common.Address{}, err
+		return common.Address{}, common.Address{}, common.Address{}, err
 	}
 	backend.Commit()
-	return addr, acAddr, nil
+	return addr, acAddr, addrReward, nil
+}
+
+func fundToCampaign(prvKey *ecdsa.PrivateKey, rewardAddr common.Address, backend *backends.SimulatedBackend) error {
+	transactOpts := bind.NewKeyedTransactor(prvKey)
+	rewardContract, err := reward.NewReward(rewardAddr, backend)
+	if err != nil {
+		return err
+	}
+
+	_, err = rewardContract.NewRaise(transactOpts)
+	if err != nil {
+		return err
+	}
+
+	transactOpts.Value = new(big.Int).Mul(big.NewInt(210000), big.NewInt(configs.Cpc))
+	_, err = rewardContract.SubmitDeposit(transactOpts)
+	if err != nil {
+		return err
+	}
+
+	transactOpts.Value = big.NewInt(0)
+	_, err = rewardContract.StartNewRound(transactOpts)
+	if err != nil {
+		return err
+	}
+	backend.Commit()
+
+	return nil
 }
 
 func TestDeployCampaign(t *testing.T) {
-	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
-	contractAddr, _, err := deploy(key, big.NewInt(0), contractBackend)
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: initBalance}})
+	contractAddr, _, rewardAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	checkError(t, "deploy contract: expected no error, got %v", err)
+
+	err = fundToCampaign(key, rewardAddr, contractBackend)
+	checkError(t, "encounter error when fund to become campaign", err)
 
 	transactOpts := bind.NewKeyedTransactor(key)
 	campaign, err := contracts.NewCampaignWrapper(transactOpts, contractAddr, contractBackend)
@@ -79,9 +116,9 @@ func TestDeployCampaign(t *testing.T) {
 	fmt.Println("minimumNoc:", minimumNoc)
 
 	// test contract map variable call.
-	numOfCampaign, deposit, startViewIdx, endViewIdx, err := campaign.CandidateInfoOf(addr)
+	numOfCampaign, startViewIdx, endViewIdx, err := campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
-	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
+	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
 
 	verifyCandidates(campaign, t, big.NewInt(0), 0)
 }
@@ -93,18 +130,21 @@ func checkError(t *testing.T, msg string, err error) {
 }
 
 func TestClaimAndQuitCampaign(t *testing.T) {
-	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: initBalance}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
-	campaignAddr, acAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	campaignAddr, acAddr, rewardAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	fmt.Println("contractAddr:", campaignAddr)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
+	fundToCampaign(key, rewardAddr, contractBackend)
+
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
+
 	campaign, err := contracts.NewCampaignWrapper(transactOpts, campaignAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = campaignAddr
@@ -137,10 +177,10 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	printBalance(contractBackend)
 
 	// verify result
-	numOfCampaign, deposit, startViewIdx, endViewIdx, err := campaign.CandidateInfoOf(addr)
+	numOfCampaign, startViewIdx, endViewIdx, err := campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
-	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
-	assertCampaign(1, 50, numOfCampaign, deposit, t)
+	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
+	assertCampaign(1, numOfCampaign, t)
 
 	tx, err = campaign.ClaimCampaign(big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
 	checkError(t, "ClaimCampaign error: %v", err)
@@ -149,11 +189,11 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	printBalance(contractBackend)
 
 	// test contract map variable call.
-	numOfCampaign, deposit, startViewIdx, endViewIdx, err = campaign.CandidateInfoOf(addr)
+	numOfCampaign, startViewIdx, endViewIdx, err = campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
-	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
+	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
 	// the second claim of campaign does not take effect as the previous campaign is not finished
-	assertCampaign(1, 50, numOfCampaign, deposit, t)
+	assertCampaign(1, numOfCampaign, t)
 
 	// get candidates by view index
 	candidates, err := campaign.CandidatesOf(startViewIdx)
@@ -167,38 +207,20 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 		fmt.Println("number", i, candidates[i].Hex())
 	}
 	printBalance(contractBackend)
-
-	// quit campaign
-	// setup TransactOpts
-	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
-	campaign.TransactOpts.Value = big.NewInt(0)
-	campaign.TransactOpts.GasLimit = 100000
-	campaign.TransactOpts.GasPrice = big.NewInt(0)
-	tx, err = campaign.QuitCampaign()
-	checkError(t, "QuitCampaign error: %v", err)
-	fmt.Println("QuitCampaign tx:", tx.Hash().Hex())
-	contractBackend.Commit()
-	printBalance(contractBackend)
-
-	// verify quit campaign result
-	candidates, err = campaign.CandidatesOf(big.NewInt(0))
-	checkError(t, "CandidatesOf error: %v", err)
-	fmt.Println("len(candidates):", len(candidates))
-	if len(candidates) != 0 {
-		t.Fatal("len(candidates) != 0")
-	}
 }
 
 func TestClaimWhenDepositLessThanBase(t *testing.T) {
-	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: initBalance}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
-	campaignAddr, acAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	campaignAddr, acAddr, rewardAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	fmt.Println("campaignAddr:", campaignAddr)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
 	printBalance(contractBackend)
+
+	fundToCampaign(key, rewardAddr, contractBackend)
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
@@ -219,7 +241,7 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
-	ac.Campaign(1)
+	ac.Campaign(2)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum := results[admission2.Cpu].BlockNumber
@@ -227,13 +249,21 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	memBlockNum := results[admission2.Memory].BlockNumber
 	memNonce := results[admission2.Memory].Nonce
 
+	rewardContract, err := reward.NewReward(rewardAddr, contractBackend)
+	isCan, _ := rewardContract.IsCandidate(&bind.CallOpts{From: transactOpts.From}, transactOpts.From)
+	_ = isCan
+
 	tx, err := campaign.ClaimCampaign(big.NewInt(2), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
 	fmt.Println(tx)
 	checkError(t, "ClaimCampaign error:", err)
+	contractBackend.Commit()
+	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status == types.ReceiptStatusFailed {
+		fmt.Println("receipt")
+	}
 
 	// wait for view change
-	verifyDeposit(campaign, t, big.NewInt(0))
-	waitForViewChange(contractBackend, 2)
+	waitForViewChange(contractBackend, 3)
 
 	// view change 1st time
 	fmt.Println("UpdateCandidateStatus")
@@ -242,22 +272,24 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	contractBackend.Commit()
 
 	// get candidates by start view index
-	verifyCandidates(campaign, t, big.NewInt(1), 0)
-	verifyDeposit(campaign, t, big.NewInt(0))
+	verifyCandidates(campaign, t, big.NewInt(1), 1)
+	verifyCandidates(campaign, t, big.NewInt(4), 0)
 	printBalance(contractBackend)
 
 }
 
 func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
-	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(100000000000000)}})
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: initBalance}})
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
-	campaignAddr, acAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	campaignAddr, acAddr, rewardAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	fmt.Println("campaignAddr:", campaignAddr)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
 	printBalance(contractBackend)
+
+	fundToCampaign(key, rewardAddr, contractBackend)
 
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
@@ -293,10 +325,10 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	printBalance(contractBackend)
 
 	// test contract map variable call.
-	numOfCampaign, deposit, startViewIdx, endViewIdx, err := campaign.CandidateInfoOf(addr)
+	numOfCampaign, startViewIdx, endViewIdx, err := campaign.CandidateInfoOf(addr)
 	checkError(t, "CandidateInfoOf error: %v", err)
-	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
-	assertCampaign(2, 100, numOfCampaign, deposit, t)
+	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
+	assertCampaign(2, numOfCampaign, t)
 
 	// get candidates by view index
 	verifyCandidates(campaign, t, startViewIdx, 1)
@@ -304,7 +336,6 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	contractBackend.Commit()
 
 	// wait for view change
-	verifyDeposit(campaign, t, big.NewInt(100))
 	waitForViewChange(contractBackend, 2)
 
 	// view change 1st time
@@ -315,7 +346,6 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 
 	// get candidates by start view index
 	verifyCandidates(campaign, t, startViewIdx, 1)
-	verifyDeposit(campaign, t, big.NewInt(50))
 	printBalance(contractBackend)
 
 	// view change 2nd time
@@ -327,7 +357,6 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 
 	// get candidates by end view index
 	verifyCandidates(campaign, t, endViewIdx, 0)
-	verifyDeposit(campaign, t, big.NewInt(50))
 	printBalance(contractBackend)
 
 	// get candidates by view index
@@ -335,22 +364,6 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	verifyCandidates(campaign, t, big.NewInt(2), 1)
 	verifyCandidates(campaign, t, big.NewInt(3), 0)
 	printBalance(contractBackend)
-
-	// quit campaign
-	// setup TransactOpts
-	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
-	campaign.TransactOpts.Value = big.NewInt(0)
-	campaign.TransactOpts.GasLimit = 100000
-	campaign.TransactOpts.GasPrice = big.NewInt(0)
-	tx, err = campaign.QuitCampaign()
-	checkError(t, "QuitCampaign error: %v", err)
-	fmt.Println("QuitCampaign tx:", tx.Hash().Hex())
-	contractBackend.Commit()
-	printBalance(contractBackend)
-
-	verifyCandidates(campaign, t, big.NewInt(1), 1)
-	verifyCandidates(campaign, t, big.NewInt(2), 1)
-	verifyCandidates(campaign, t, big.NewInt(3), 0)
 }
 
 func waitForViewChange(contractBackend *backends.SimulatedBackend, viewIdx int) {
@@ -358,13 +371,6 @@ func waitForViewChange(contractBackend *backends.SimulatedBackend, viewIdx int) 
 	for i < viewIdx*numPerRound {
 		contractBackend.Commit()
 		i++
-	}
-}
-
-func verifyDeposit(campaign *contracts.CampaignWrapper, t *testing.T, amount *big.Int) {
-	_, deposit, _, _, _ := campaign.CandidateInfoOf(addr)
-	if deposit.Cmp(amount) != 0 {
-		t.Fatal("Deposit ", deposit, " != ", amount)
 	}
 }
 
@@ -382,8 +388,8 @@ func printBalance(contractBackend *backends.SimulatedBackend) {
 	fmt.Println("==== addrBalance ==== ", addrBalance)
 }
 
-func assertCampaign(expectNum int64, expectDeposit int64, numOfCampaign *big.Int, deposit *big.Int, t *testing.T) {
-	if numOfCampaign.Cmp(big.NewInt(expectNum)) != 0 || deposit.Cmp(big.NewInt(expectDeposit)) != 0 {
-		t.Fatal("unexpected numOfCampaign, deposit:", numOfCampaign, deposit)
+func assertCampaign(expectNum int64, numOfCampaign *big.Int, t *testing.T) {
+	if numOfCampaign.Cmp(big.NewInt(expectNum)) != 0 {
+		t.Fatal("unexpected numOfCampaign:", numOfCampaign)
 	}
 }

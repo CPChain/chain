@@ -68,9 +68,9 @@ func TestCampaignCandidateInfoOf(t *testing.T) {
 	}
 
 	// test contract map variable call.
-	numOfCampaign, deposit, startViewIdx, endViewIdx, err := instance.CandidateInfoOf(nil, fromAddress)
+	numOfCampaign, startViewIdx, endViewIdx, err := instance.CandidateInfoOf(nil, fromAddress)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, deposit, startViewIdx, endViewIdx)
+	fmt.Println("candidate info of", fromAddress.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
 }

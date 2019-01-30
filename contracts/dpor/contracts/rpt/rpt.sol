@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 /** @title Reputation calculate */
 
 import "./lib/safeMath.sol";
-import "./primitives/primitive_contracts.sol";
+import "./lib/primitive_contracts.sol";
 
 contract Rpt {
     using PrimitiveContractsInterface for address;

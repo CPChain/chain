@@ -58,8 +58,8 @@ func NewCampaignWrapper(transactOpts *bind.TransactOpts, contractAddr common.Add
 	}, nil
 }
 
-func DeployCampaign(transactOpts *bind.TransactOpts, contractBackend Backend, admissionContractAddr common.Address) (common.Address, *CampaignWrapper, error) {
-	contractAddr, _, _, err := campaign.DeployCampaign(transactOpts, contractBackend, admissionContractAddr)
+func DeployCampaign(transactOpts *bind.TransactOpts, contractBackend Backend, admissionContractAddr common.Address, rewardContractAddr common.Address) (common.Address, *CampaignWrapper, error) {
+	contractAddr, _, _, err := campaign.DeployCampaign(transactOpts, contractBackend, admissionContractAddr, rewardContractAddr)
 	if err != nil {
 		return contractAddr, nil, err
 	}

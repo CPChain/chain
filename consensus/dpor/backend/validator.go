@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"hash/fnv"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -239,6 +240,10 @@ func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 	return vh.lbft.Handle(msg, p)
 }
 
+func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteSigner) {
+	log.Debug("received msg from remote peer", "number", number, "hash", hash.Hex(), "state", msgCode.String(), "remote peer", p.Coinbase().Hex())
+}
+
 func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	var (
@@ -260,16 +265,6 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 			block: block,
 		}
 		msgCode = PreprepareMsgCode
-
-		var (
-			number = input.number()
-			hash   = input.hash()
-		)
-
-		if !vh.broadcastRecord.ifBroadcasted(number, hash, msgCode) {
-			go vh.BroadcastPreprepareBlock(block)
-			vh.broadcastRecord.markAsBroadcasted(number, hash, msgCode)
-		}
 
 	case PrepareHeaderMsg:
 		// recover the header from msg
@@ -323,16 +318,6 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 		msgCode = ImpeachPreprepareMsgCode
 
-		var (
-			number = input.number()
-			hash   = input.hash()
-		)
-
-		if !vh.broadcastRecord.ifBroadcasted(number, hash, msgCode) {
-			go vh.BroadcastPreprepareImpeachBlock(block)
-			vh.broadcastRecord.markAsBroadcasted(number, hash, msgCode)
-		}
-
 	case PrepareImpeachHeaderMsg:
 		// recover the header from msg
 		header, err := RecoverHeaderFromMsg(msg, p)
@@ -376,11 +361,21 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	}
 
+	logMsgReceived(input.number(), input.hash(), msgCode, p)
+
 	if input.number() > currentNumber+1 {
 		go vh.dpor.SyncFrom(p.Peer)
 
 		log.Debug("I am slow, syncing with peer", "peer", p.address)
 	}
+
+	if input.number() < currentNumber {
+		log.Debug("received outdated msg, discarding...")
+		return nil
+	}
+
+	// rebroadcast the msg
+	go vh.reBroadcast(input, msgCode, msg)
 
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
@@ -543,12 +538,18 @@ func (vh *Handler) ReceiveImpeachPendingBlock(block *types.Block) error {
 type msgID struct {
 	blockID blockIdentifier
 	msgCode MsgCode
+	msgHash common.Hash
 }
 
-func newMsgID(number uint64, hash common.Hash, msgCode MsgCode) msgID {
+func newMsgID(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) msgID {
+
+	msgHash := fnv.New32a()
+	msgHash.Write([]byte(msg.String()))
+
 	return msgID{
 		blockID: blockIdentifier{number: number, hash: hash},
 		msgCode: msgCode,
+		msgHash: common.BytesToHash(msgHash.Sum(nil)),
 	}
 }
 
@@ -563,13 +564,60 @@ func newBroadcastRecord() *broadcastRecord {
 	}
 }
 
-func (br *broadcastRecord) markAsBroadcasted(number uint64, hash common.Hash, msgCode MsgCode) {
-	msgID := newMsgID(number, hash, msgCode)
+func (br *broadcastRecord) markAsBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) {
+	msgID := newMsgID(number, hash, msgCode, msg)
 	br.record.Add(msgID, true)
 }
 
-func (br *broadcastRecord) ifBroadcasted(number uint64, hash common.Hash, msgCode MsgCode) bool {
-	msgID := newMsgID(number, hash, msgCode)
+func (br *broadcastRecord) ifBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) bool {
+	msgID := newMsgID(number, hash, msgCode, msg)
 	broadcasted, exists := br.record.Get(msgID)
 	return exists && broadcasted.(bool) == true
+}
+
+type impeachmentRecord struct {
+	record *lru.ARCCache
+}
+
+func newImpeachmentRecord() *impeachmentRecord {
+	record, _ := lru.NewARC(1000)
+	return &impeachmentRecord{
+		record: record,
+	}
+}
+
+func (ir *impeachmentRecord) markAsImpeached(number uint64, hash common.Hash) {
+	bi := newBlockIdentifier(number, hash)
+	ir.record.Add(bi, true)
+}
+
+func (ir *impeachmentRecord) ifImpeached(number uint64, hash common.Hash) bool {
+	bi := newBlockIdentifier(number, hash)
+	impeached, exists := ir.record.Get(bi)
+	return exists && impeached.(bool) == true
+}
+
+func (vh *Handler) reBroadcast(input *blockOrHeader, msgCode MsgCode, msg p2p.Msg) {
+	if !vh.broadcastRecord.ifBroadcasted(input.number(), input.hash(), msgCode, msg) {
+		switch msgCode {
+		case PreprepareMsgCode:
+			vh.BroadcastPreprepareBlock(input.block)
+		case PrepareMsgCode:
+			vh.BroadcastPrepareHeader(input.header)
+		case CommitMsgCode:
+			vh.BroadcastCommitHeader(input.header)
+		case ValidateMsgCode:
+			vh.BroadcastValidateBlock(input.block)
+		case ImpeachPreprepareMsgCode:
+			vh.BroadcastPreprepareImpeachBlock(input.block)
+		case ImpeachPrepareMsgCode:
+			vh.BroadcastPrepareImpeachHeader(input.header)
+		case ImpeachCommitMsgCode:
+			vh.BroadcastCommitImpeachHeader(input.header)
+		case ImpeachValidateMsgCode:
+			vh.BroadcastValidateImpeachBlock(input.block)
+		default:
+		}
+		vh.broadcastRecord.markAsBroadcasted(input.number(), input.hash(), msgCode, msg)
+	}
 }

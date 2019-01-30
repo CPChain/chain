@@ -54,9 +54,9 @@ func printBalance(client *cpclient.Client, fromAddress common.Address) {
 	// fmt.Println("balance:", bal)
 }
 
-func PrintContract(address common.Address) {
-	// fmt.Println("================================================================")
-	fmt.Printf("Contract Address: 0x%x\n", address)
+func PrintContract(title string, address common.Address) {
+	fmt.Println("================================================================")
+	fmt.Printf(title+" Contract Address: 0x%x\n", address)
 	fmt.Println("================================================================")
 }
 

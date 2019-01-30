@@ -203,18 +203,18 @@ func (_AdmissionInterface *AdmissionInterfaceCallerSession) Verify(_cpuNonce uin
 }
 
 // CampaignABI is the input ABI used to generate the binding from.
-const CampaignABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"termLen\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_numOfCampaign\",\"type\":\"uint256\"},{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"}],\"name\":\"claimCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_termIdx\",\"type\":\"uint256\"}],\"name\":\"candidatesOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"termIdx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"minNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"numPerRound\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"candidate\",\"type\":\"address\"},{\"name\":\"_termIdx\",\"type\":\"uint256\"}],\"name\":\"punishCandidate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"viewLen\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"baseDeposit\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_deposit\",\"type\":\"uint256\"}],\"name\":\"updateBaseDeposit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_maxNoc\",\"type\":\"uint256\"}],\"name\":\"updateMaxNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_minNoc\",\"type\":\"uint256\"}],\"name\":\"updateMinNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"setAdmissionAddr\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_termLen\",\"type\":\"uint256\"}],\"name\":\"updateTermLen\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_viewLen\",\"type\":\"uint256\"}],\"name\":\"updateViewLen\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"quitCampaign\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_candidate\",\"type\":\"address\"}],\"name\":\"candidateInfoOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maxNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"updateCandidateStatus\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"startTermIdx\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"stopTermIdx\",\"type\":\"uint256\"}],\"name\":\"ClaimCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"payback\",\"type\":\"uint256\"}],\"name\":\"QuitCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"ViewChange\",\"type\":\"event\"}]"
+const CampaignABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"termLen\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_numOfCampaign\",\"type\":\"uint256\"},{\"name\":\"_cpuNonce\",\"type\":\"uint64\"},{\"name\":\"_cpuBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_memoryNonce\",\"type\":\"uint64\"},{\"name\":\"_memoryBlockNumber\",\"type\":\"uint256\"}],\"name\":\"claimCampaign\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_termIdx\",\"type\":\"uint256\"}],\"name\":\"candidatesOf\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"termIdx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"minNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"numPerRound\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"setRewardInterface\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"viewLen\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_maxNoc\",\"type\":\"uint256\"}],\"name\":\"updateMaxNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_minNoc\",\"type\":\"uint256\"}],\"name\":\"updateMinNoc\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"setAdmissionAddr\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_termLen\",\"type\":\"uint256\"}],\"name\":\"updateTermLen\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_viewLen\",\"type\":\"uint256\"}],\"name\":\"updateViewLen\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_candidate\",\"type\":\"address\"}],\"name\":\"candidateInfoOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maxNoc\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"updateCandidateStatus\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_admissionAddr\",\"type\":\"address\"},{\"name\":\"_rewardAddr\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"startTermIdx\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"stopTermIdx\",\"type\":\"uint256\"}],\"name\":\"ClaimCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"candidate\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"payback\",\"type\":\"uint256\"}],\"name\":\"QuitCampaign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"ViewChange\",\"type\":\"event\"}]"
 
 // CampaignBin is the compiled bytecode used for deploying new contracts.
-const CampaignBin = `0x60806040526000600155600360025560046003556002546003540260045560326005556001600655600a600755600060085534801561003d57600080fd5b506040516020806110a8833981016040525160008054600160a060020a03199081163317909155600b8054600160a060020a039093169290911691909117905561101c8061008c6000396000f3006080604052600436106101065763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166314b5980e811461010857806314b90a021461012f5780631984ab001461015457806335805726146101bc5780633a713e37146101d15780634b6b164b146101e6578063604268ad146101fb57806368f237a11461021f5780636947462514610234578063855e5466146102495780638cb5953214610261578063a7e1f08b14610279578063c0e9e35e14610291578063c351d0a5146102b2578063cd60e217146102ca578063d0bdc65b146102e2578063db438269146102f7578063e2b281581461033e578063fcf503f814610353575b005b34801561011457600080fd5b5061011d61035b565b60408051918252519081900360200190f35b61010660043567ffffffffffffffff6024358116906044359060643516608435610361565b34801561016057600080fd5b5061016c60043561073d565b60408051602080825283518183015283519192839290830191858101910280838360005b838110156101a8578181015183820152602001610190565b505050509050019250505060405180910390f35b3480156101c857600080fd5b5061011d6107ac565b3480156101dd57600080fd5b5061011d6107b2565b3480156101f257600080fd5b5061011d6107b8565b34801561020757600080fd5b50610106600160a060020a03600435166024356107be565b34801561022b57600080fd5b5061011d610896565b34801561024057600080fd5b5061011d61089c565b34801561025557600080fd5b506101066004356108a2565b34801561026d57600080fd5b506101066004356108be565b34801561028557600080fd5b506101066004356108da565b34801561029d57600080fd5b50610106600160a060020a03600435166108f6565b3480156102be57600080fd5b5061010660043561093c565b3480156102d657600080fd5b5061010660043561096c565b3480156102ee57600080fd5b50610106610995565b34801561030357600080fd5b50610318600160a060020a0360043516610a96565b604080519485526020850193909352838301919091526060830152519081900360800190f35b34801561034a57600080fd5b5061011d610ac7565b610106610acd565b60035481565b60008061037060055488610cd0565b34146103c6576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600b54604080517f3395492e00000000000000000000000000000000000000000000000000000000815267ffffffffffffffff808a1660048301526024820189905287166044820152606481018690523360848201529051600160a060020a0390921691633395492e9160a4808201926020929091908290030181600087803b15801561045257600080fd5b505af1158015610466573d6000803e3d6000fd5b505050506040513d602081101561047c57600080fd5b505115156104d4576040805160e560020a62461bcd02815260206004820152601960248201527f637075206f72206d656d6f7279206e6f74207061737365642e00000000000000604482015290519081900360640190fd5b60065487101580156104e857506007548711155b151561053e576040805160e560020a62461bcd02815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b610546610acd565b600160a060020a038216600090815260096020526040902054156105da576040805160e560020a62461bcd02815260206004820152603760248201527f706c6561736520776169746520756e74696c20796f7572206c61737420726f7560448201527f6e6420656e64656420616e642074727920616761696e2e000000000000000000606482015290519081900360840190fd5b3360008181526009602052604090208890556005549092506105fc9088610cd0565b600160a060020a0383166000908152600960205260409020600190810191909155805461062e9163ffffffff610d0616565b600160a060020a038316600090815260096020526040902060020181905561065c908863ffffffff610d0616565b600160a060020a0383166000908152600960205260409020600381019190915560055460048201556002015490505b600160a060020a0382166000908152600960205260409020600301548110156106d5576000818152600a602052604090206106cc908363ffffffff610d1516565b5060010161068b565b600160a060020a038216600081815260096020908152604091829020600281015460039091015483519485529184015282820152517f8d468194bdd18296bee5d126aa15cc492d26bdf22a0585c4a47ec4490d3a0fcf9181900360600190a150505050505050565b6000818152600a60209081526040918290206001018054835181840281018401909452808452606093928301828280156107a057602002820191906000526020600020905b8154600160a060020a03168152600190910190602001808311610782575b50505050509050919050565b60015481565b60065481565b60045481565b60008054600160a060020a031633146107d657600080fd5b50600160a060020a03821660009081526009602052604090206004810154600190910154811115610851576040805160e560020a62461bcd02815260206004820152601460248201527f77726f6e67206465706f7369742076616c75652e000000000000000000000000604482015290519081900360640190fd5b600160a060020a038316600090815260096020908152604080832060010180548590039055848352600a9091529020610890908463ffffffff610d9d16565b50505050565b60025481565b60055481565b600054600160a060020a031633146108b957600080fd5b600555565b600054600160a060020a031633146108d557600080fd5b600755565b600054600160a060020a031633146108f157600080fd5b600655565b600054600160a060020a0316331461090d57600080fd5b600b805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600054600160a060020a0316331461095357600080fd5b6003819055600254610966908290610cd0565b60045550565b600054600160a060020a0316331461098357600080fd5b60028190556003546109669082610cd0565b336000818152600960205260408120548110610a21576040805160e560020a62461bcd02815260206004820152602960248201527f616c726561647920717569742063616d706169676e206f72206e6f206e65656460448201527f20746f20717569742e0000000000000000000000000000000000000000000000606482015290519081900360840190fd5b610a29610f0f565b60018054610a3c9163ffffffff610d0616565b90505b600160a060020a038216600090815260096020526040902060030154811015610a89576000818152600a60205260409020610a80908363ffffffff610d9d16565b50600101610a3f565b610a9282610f39565b5050565b600160a060020a03166000908152600960205260409020805460018201546002830154600390930154919390929190565b60075481565b600080600080610adb610f0f565b60015460085410610aeb57610890565b6001546008541015610890576008546000908152600a6020526040812060010154945092505b83831015610cc257600180546000908152600a6020526040902001805484908110610b3857fe5b6000918252602080832090910154600160a060020a031680835260099091526040909120549092501515610b6b57610cb7565b50600160a060020a0381166000908152600960205260408120600481015460019091015410610bb65750600160a060020a038116600090815260096020526040902060040154610bd4565b50600160a060020a0381166000908152600960205260409020600101545b600160a060020a038216600090815260096020526040902060010154610bfa9082610f9e565b600160a060020a038316600090815260096020526040902060018082019290925554610c2591610f9e565b600160a060020a038316600081815260096020526040808220939093559151909183156108fc02918491818181858888f19350505050158015610c6c573d6000803e3d6000fd5b50600160a060020a0382166000908152600960205260409020541515610cb757600160a060020a03821660009081526009602052604081206002810182905560038101829055600401555b600190920191610b11565b600880546001019055610aeb565b600080831515610ce35760009150610cff565b50828202828482811515610cf357fe5b0414610cfb57fe5b8091505b5092915050565b600082820183811015610cfb57fe5b600160a060020a03811660009081526020839052604081205460ff1615610d3e57506000610d97565b50600160a060020a0381166000818152602084815260408220805460ff19166001908117909155858101805480830182559084529190922001805473ffffffffffffffffffffffffffffffffffffffff19169092179091555b92915050565b600160a060020a0381166000908152602083905260408120548190819060ff161515610dcc5760009250610f07565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b81811015610f025783600160a060020a03168560010182815481101515610e1857fe5b600091825260209091200154600160a060020a03161415610efa576001850180546000198401908110610e4757fe5b600091825260209091200154600186018054600160a060020a039092169183908110610e6f57fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790556001850180546000198401908110610eb957fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916905560018501805490610ef4906000198301610fb0565b50610f02565b600101610df5565b600192505b505092915050565b43801515610f21576000600155610f36565b60045460018203811515610f3157fe5b046001555b50565b600160a060020a03811660008181526009602052604080822060018101805484835590849055600282018490556003909101839055905190929183156108fc02918491818181858888f19350505050158015610f99573d6000803e3d6000fd5b505050565b600082821115610faa57fe5b50900390565b815481835581811115610f9957600083815260209020610f99918101908301610fed91905b80821115610fe95760008155600101610fd5565b5090565b905600a165627a7a72305820b2e20e61431d4f4f638534cc1071bcea2c1520944c1a8830c67ae6c68ddec95c0029`
+const CampaignBin = `0x6080604052600060015560036002556004600355600254600354026004556001600555600a600655600060075534801561003857600080fd5b50604051604080610b4583398101604052805160209091015160008054600160a060020a03199081163317909155600a8054600160a060020a03948516908316179055600b8054939092169216919091179055610aab8061009a6000396000f3006080604052600436106100e55763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166314b5980e81146100e757806314b90a021461010e5780631984ab0014610133578063358057261461019b5780633a713e37146101b05780634b6b164b146101c55780635c6a541a146101da57806368f237a1146101fb5780638cb5953214610210578063a7e1f08b14610228578063c0e9e35e14610240578063c351d0a514610261578063cd60e21714610279578063db43826914610291578063e2b28158146102d0578063fcf503f8146102e5575b005b3480156100f357600080fd5b506100fc6102ed565b60408051918252519081900360200190f35b6100e560043567ffffffffffffffff60243581169060443590606435166084356102f3565b34801561013f57600080fd5b5061014b600435610680565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561018757818101518382015260200161016f565b505050509050019250505060405180910390f35b3480156101a757600080fd5b506100fc6106ef565b3480156101bc57600080fd5b506100fc6106f5565b3480156101d157600080fd5b506100fc6106fb565b3480156101e657600080fd5b506100e5600160a060020a0360043516610701565b34801561020757600080fd5b506100fc610747565b34801561021c57600080fd5b506100e560043561074d565b34801561023457600080fd5b506100e5600435610769565b34801561024c57600080fd5b506100e5600160a060020a0360043516610785565b34801561026d57600080fd5b506100e56004356107cb565b34801561028557600080fd5b506100e56004356107fb565b34801561029d57600080fd5b506102b2600160a060020a0360043516610824565b60408051938452602084019290925282820152519081900360600190f35b3480156102dc57600080fd5b506100fc61084c565b6100e5610852565b60035481565b600a54604080517f3395492e00000000000000000000000000000000000000000000000000000000815267ffffffffffffffff808816600483015260248201879052851660448201526064810184905233608482015290516000928392600160a060020a0390911691633395492e9160a48082019260209290919082900301818787803b15801561038357600080fd5b505af1158015610397573d6000803e3d6000fd5b505050506040513d60208110156103ad57600080fd5b5051151561041c57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601960248201527f637075206f72206d656d6f7279206e6f74207061737365642e00000000000000604482015290519081900360640190fd5b600554871015801561043057506006548711155b151561049d57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f6e756d206f662063616d706169676e206f7574206f662072616e67652e000000604482015290519081900360640190fd5b6104a5610852565b600160a060020a0382166000908152600860205260409020541561055057604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152603760248201527f706c6561736520776169746520756e74696c20796f7572206c61737420726f7560448201527f6e6420656e64656420616e642074727920616761696e2e000000000000000000606482015290519081900360840190fd5b33600081815260086020526040902088905560018054919350610579919063ffffffff61097616565b600160a060020a03831660009081526008602052604090206001018190556105a7908863ffffffff61097616565b600160a060020a038316600090815260086020526040902060028101919091556001015490505b600160a060020a03821660009081526008602052604090206002015481101561061857600081815260096020526040902061060f908363ffffffff61099016565b506001016105ce565b600160a060020a038216600081815260086020908152604091829020600181015460029091015483519485529184015282820152517f8d468194bdd18296bee5d126aa15cc492d26bdf22a0585c4a47ec4490d3a0fcf9181900360600190a150505050505050565b6000818152600960209081526040918290206001018054835181840281018401909452808452606093928301828280156106e357602002820191906000526020600020905b8154600160a060020a031681526001909101906020018083116106c5575b50505050509050919050565b60015481565b60055481565b60045481565b600054600160a060020a0316331461071857600080fd5b600b805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b60025481565b600054600160a060020a0316331461076457600080fd5b600655565b600054600160a060020a0316331461078057600080fd5b600555565b600054600160a060020a0316331461079c57600080fd5b600a805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600054600160a060020a031633146107e257600080fd5b60038190556002546107f5908290610a18565b60045550565b600054600160a060020a0316331461081257600080fd5b60028190556003546107f59082610a18565b600160a060020a03166000908152600860205260409020805460018201546002909201549092565b60065481565b600080600061085f610a43565b6001546007541061086f57610971565b600154600754101561097157600754600090815260096020526040812060010154935091505b8282101561096357600180546000908152600960205260409020018054839081106108bc57fe5b6000918252602080832090910154600160a060020a0316808352600890915260409091205490915015156108ef57610958565b600160a060020a038116600090815260086020526040902054610913906001610a6d565b600160a060020a0382166000908152600860205260409020819055151561095857600160a060020a038116600090815260086020526040812060018101829055600201555b600190910190610895565b60078054600101905561086f565b505050565b60008282018381101561098557fe5b8091505b5092915050565b600160a060020a03811660009081526020839052604081205460ff16156109b957506000610a12565b50600160a060020a0381166000818152602084815260408220805460ff19166001908117909155858101805480830182559084529190922001805473ffffffffffffffffffffffffffffffffffffffff19169092179091555b92915050565b600080831515610a2b5760009150610989565b50828202828482811515610a3b57fe5b041461098557fe5b43801515610a55576000600155610a6a565b60045460018203811515610a6557fe5b046001555b50565b600082821115610a7957fe5b509003905600a165627a7a72305820e09b84acdc5ca3f69deda30ea2c96d30d8360abf4595c0ac7140d6066190dd7b0029`
 
 // DeployCampaign deploys a new cpchain contract, binding an instance of Campaign to it.
-func DeployCampaign(auth *bind.TransactOpts, backend bind.ContractBackend, _addr common.Address) (common.Address, *types.Transaction, *Campaign, error) {
+func DeployCampaign(auth *bind.TransactOpts, backend bind.ContractBackend, _admissionAddr common.Address, _rewardAddr common.Address) (common.Address, *types.Transaction, *Campaign, error) {
 	parsed, err := abi.JSON(strings.NewReader(CampaignABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(CampaignBin), backend, _addr)
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(CampaignBin), backend, _admissionAddr, _rewardAddr)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -363,63 +363,35 @@ func (_Campaign *CampaignTransactorRaw) Transact(opts *bind.TransactOpts, method
 	return _Campaign.Contract.contract.Transact(opts, method, params...)
 }
 
-// BaseDeposit is a free data retrieval call binding the contract method 0x69474625.
-//
-// Solidity: function baseDeposit() constant returns(uint256)
-func (_Campaign *CampaignCaller) BaseDeposit(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Campaign.contract.Call(opts, out, "baseDeposit")
-	return *ret0, err
-}
-
-// BaseDeposit is a free data retrieval call binding the contract method 0x69474625.
-//
-// Solidity: function baseDeposit() constant returns(uint256)
-func (_Campaign *CampaignSession) BaseDeposit() (*big.Int, error) {
-	return _Campaign.Contract.BaseDeposit(&_Campaign.CallOpts)
-}
-
-// BaseDeposit is a free data retrieval call binding the contract method 0x69474625.
-//
-// Solidity: function baseDeposit() constant returns(uint256)
-func (_Campaign *CampaignCallerSession) BaseDeposit() (*big.Int, error) {
-	return _Campaign.Contract.BaseDeposit(&_Campaign.CallOpts)
-}
-
 // CandidateInfoOf is a free data retrieval call binding the contract method 0xdb438269.
 //
-// Solidity: function candidateInfoOf(_candidate address) constant returns(uint256, uint256, uint256, uint256)
-func (_Campaign *CampaignCaller) CandidateInfoOf(opts *bind.CallOpts, _candidate common.Address) (*big.Int, *big.Int, *big.Int, *big.Int, error) {
+// Solidity: function candidateInfoOf(_candidate address) constant returns(uint256, uint256, uint256)
+func (_Campaign *CampaignCaller) CandidateInfoOf(opts *bind.CallOpts, _candidate common.Address) (*big.Int, *big.Int, *big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 		ret1 = new(*big.Int)
 		ret2 = new(*big.Int)
-		ret3 = new(*big.Int)
 	)
 	out := &[]interface{}{
 		ret0,
 		ret1,
 		ret2,
-		ret3,
 	}
 	err := _Campaign.contract.Call(opts, out, "candidateInfoOf", _candidate)
-	return *ret0, *ret1, *ret2, *ret3, err
+	return *ret0, *ret1, *ret2, err
 }
 
 // CandidateInfoOf is a free data retrieval call binding the contract method 0xdb438269.
 //
-// Solidity: function candidateInfoOf(_candidate address) constant returns(uint256, uint256, uint256, uint256)
-func (_Campaign *CampaignSession) CandidateInfoOf(_candidate common.Address) (*big.Int, *big.Int, *big.Int, *big.Int, error) {
+// Solidity: function candidateInfoOf(_candidate address) constant returns(uint256, uint256, uint256)
+func (_Campaign *CampaignSession) CandidateInfoOf(_candidate common.Address) (*big.Int, *big.Int, *big.Int, error) {
 	return _Campaign.Contract.CandidateInfoOf(&_Campaign.CallOpts, _candidate)
 }
 
 // CandidateInfoOf is a free data retrieval call binding the contract method 0xdb438269.
 //
-// Solidity: function candidateInfoOf(_candidate address) constant returns(uint256, uint256, uint256, uint256)
-func (_Campaign *CampaignCallerSession) CandidateInfoOf(_candidate common.Address) (*big.Int, *big.Int, *big.Int, *big.Int, error) {
+// Solidity: function candidateInfoOf(_candidate address) constant returns(uint256, uint256, uint256)
+func (_Campaign *CampaignCallerSession) CandidateInfoOf(_candidate common.Address) (*big.Int, *big.Int, *big.Int, error) {
 	return _Campaign.Contract.CandidateInfoOf(&_Campaign.CallOpts, _candidate)
 }
 
@@ -626,48 +598,6 @@ func (_Campaign *CampaignTransactorSession) ClaimCampaign(_numOfCampaign *big.In
 	return _Campaign.Contract.ClaimCampaign(&_Campaign.TransactOpts, _numOfCampaign, _cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber)
 }
 
-// PunishCandidate is a paid mutator transaction binding the contract method 0x604268ad.
-//
-// Solidity: function punishCandidate(candidate address, _termIdx uint256) returns()
-func (_Campaign *CampaignTransactor) PunishCandidate(opts *bind.TransactOpts, candidate common.Address, _termIdx *big.Int) (*types.Transaction, error) {
-	return _Campaign.contract.Transact(opts, "punishCandidate", candidate, _termIdx)
-}
-
-// PunishCandidate is a paid mutator transaction binding the contract method 0x604268ad.
-//
-// Solidity: function punishCandidate(candidate address, _termIdx uint256) returns()
-func (_Campaign *CampaignSession) PunishCandidate(candidate common.Address, _termIdx *big.Int) (*types.Transaction, error) {
-	return _Campaign.Contract.PunishCandidate(&_Campaign.TransactOpts, candidate, _termIdx)
-}
-
-// PunishCandidate is a paid mutator transaction binding the contract method 0x604268ad.
-//
-// Solidity: function punishCandidate(candidate address, _termIdx uint256) returns()
-func (_Campaign *CampaignTransactorSession) PunishCandidate(candidate common.Address, _termIdx *big.Int) (*types.Transaction, error) {
-	return _Campaign.Contract.PunishCandidate(&_Campaign.TransactOpts, candidate, _termIdx)
-}
-
-// QuitCampaign is a paid mutator transaction binding the contract method 0xd0bdc65b.
-//
-// Solidity: function quitCampaign() returns()
-func (_Campaign *CampaignTransactor) QuitCampaign(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Campaign.contract.Transact(opts, "quitCampaign")
-}
-
-// QuitCampaign is a paid mutator transaction binding the contract method 0xd0bdc65b.
-//
-// Solidity: function quitCampaign() returns()
-func (_Campaign *CampaignSession) QuitCampaign() (*types.Transaction, error) {
-	return _Campaign.Contract.QuitCampaign(&_Campaign.TransactOpts)
-}
-
-// QuitCampaign is a paid mutator transaction binding the contract method 0xd0bdc65b.
-//
-// Solidity: function quitCampaign() returns()
-func (_Campaign *CampaignTransactorSession) QuitCampaign() (*types.Transaction, error) {
-	return _Campaign.Contract.QuitCampaign(&_Campaign.TransactOpts)
-}
-
 // SetAdmissionAddr is a paid mutator transaction binding the contract method 0xc0e9e35e.
 //
 // Solidity: function setAdmissionAddr(_addr address) returns()
@@ -689,25 +619,25 @@ func (_Campaign *CampaignTransactorSession) SetAdmissionAddr(_addr common.Addres
 	return _Campaign.Contract.SetAdmissionAddr(&_Campaign.TransactOpts, _addr)
 }
 
-// UpdateBaseDeposit is a paid mutator transaction binding the contract method 0x855e5466.
+// SetRewardInterface is a paid mutator transaction binding the contract method 0x5c6a541a.
 //
-// Solidity: function updateBaseDeposit(_deposit uint256) returns()
-func (_Campaign *CampaignTransactor) UpdateBaseDeposit(opts *bind.TransactOpts, _deposit *big.Int) (*types.Transaction, error) {
-	return _Campaign.contract.Transact(opts, "updateBaseDeposit", _deposit)
+// Solidity: function setRewardInterface(_addr address) returns()
+func (_Campaign *CampaignTransactor) SetRewardInterface(opts *bind.TransactOpts, _addr common.Address) (*types.Transaction, error) {
+	return _Campaign.contract.Transact(opts, "setRewardInterface", _addr)
 }
 
-// UpdateBaseDeposit is a paid mutator transaction binding the contract method 0x855e5466.
+// SetRewardInterface is a paid mutator transaction binding the contract method 0x5c6a541a.
 //
-// Solidity: function updateBaseDeposit(_deposit uint256) returns()
-func (_Campaign *CampaignSession) UpdateBaseDeposit(_deposit *big.Int) (*types.Transaction, error) {
-	return _Campaign.Contract.UpdateBaseDeposit(&_Campaign.TransactOpts, _deposit)
+// Solidity: function setRewardInterface(_addr address) returns()
+func (_Campaign *CampaignSession) SetRewardInterface(_addr common.Address) (*types.Transaction, error) {
+	return _Campaign.Contract.SetRewardInterface(&_Campaign.TransactOpts, _addr)
 }
 
-// UpdateBaseDeposit is a paid mutator transaction binding the contract method 0x855e5466.
+// SetRewardInterface is a paid mutator transaction binding the contract method 0x5c6a541a.
 //
-// Solidity: function updateBaseDeposit(_deposit uint256) returns()
-func (_Campaign *CampaignTransactorSession) UpdateBaseDeposit(_deposit *big.Int) (*types.Transaction, error) {
-	return _Campaign.Contract.UpdateBaseDeposit(&_Campaign.TransactOpts, _deposit)
+// Solidity: function setRewardInterface(_addr address) returns()
+func (_Campaign *CampaignTransactorSession) SetRewardInterface(_addr common.Address) (*types.Transaction, error) {
+	return _Campaign.Contract.SetRewardInterface(&_Campaign.TransactOpts, _addr)
 }
 
 // UpdateCandidateStatus is a paid mutator transaction binding the contract method 0xfcf503f8.
@@ -1183,11 +1113,198 @@ func (_Campaign *CampaignFilterer) WatchViewChange(opts *bind.WatchOpts, sink ch
 	}), nil
 }
 
+// RewardInterfaceABI is the input ABI used to generate the binding from.
+const RewardInterfaceABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"isCandidate\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]"
+
+// RewardInterfaceBin is the compiled bytecode used for deploying new contracts.
+const RewardInterfaceBin = `0x`
+
+// DeployRewardInterface deploys a new cpchain contract, binding an instance of RewardInterface to it.
+func DeployRewardInterface(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *RewardInterface, error) {
+	parsed, err := abi.JSON(strings.NewReader(RewardInterfaceABI))
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(RewardInterfaceBin), backend)
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	return address, tx, &RewardInterface{RewardInterfaceCaller: RewardInterfaceCaller{contract: contract}, RewardInterfaceTransactor: RewardInterfaceTransactor{contract: contract}, RewardInterfaceFilterer: RewardInterfaceFilterer{contract: contract}}, nil
+}
+
+// RewardInterface is an auto generated Go binding around an cpchain contract.
+type RewardInterface struct {
+	RewardInterfaceCaller     // Read-only binding to the contract
+	RewardInterfaceTransactor // Write-only binding to the contract
+	RewardInterfaceFilterer   // Log filterer for contract events
+}
+
+// RewardInterfaceCaller is an auto generated read-only Go binding around an cpchain contract.
+type RewardInterfaceCaller struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// RewardInterfaceTransactor is an auto generated write-only Go binding around an cpchain contract.
+type RewardInterfaceTransactor struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// RewardInterfaceFilterer is an auto generated log filtering Go binding around an cpchain contract events.
+type RewardInterfaceFilterer struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// RewardInterfaceSession is an auto generated Go binding around an cpchain contract,
+// with pre-set call and transact options.
+type RewardInterfaceSession struct {
+	Contract     *RewardInterface  // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts     // Call options to use throughout this session
+	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+}
+
+// RewardInterfaceCallerSession is an auto generated read-only Go binding around an cpchain contract,
+// with pre-set call options.
+type RewardInterfaceCallerSession struct {
+	Contract *RewardInterfaceCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts          // Call options to use throughout this session
+}
+
+// RewardInterfaceTransactorSession is an auto generated write-only Go binding around an cpchain contract,
+// with pre-set transact options.
+type RewardInterfaceTransactorSession struct {
+	Contract     *RewardInterfaceTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts          // Transaction auth options to use throughout this session
+}
+
+// RewardInterfaceRaw is an auto generated low-level Go binding around an cpchain contract.
+type RewardInterfaceRaw struct {
+	Contract *RewardInterface // Generic contract binding to access the raw methods on
+}
+
+// RewardInterfaceCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
+type RewardInterfaceCallerRaw struct {
+	Contract *RewardInterfaceCaller // Generic read-only contract binding to access the raw methods on
+}
+
+// RewardInterfaceTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
+type RewardInterfaceTransactorRaw struct {
+	Contract *RewardInterfaceTransactor // Generic write-only contract binding to access the raw methods on
+}
+
+// NewRewardInterface creates a new instance of RewardInterface, bound to a specific deployed contract.
+func NewRewardInterface(address common.Address, backend bind.ContractBackend) (*RewardInterface, error) {
+	contract, err := bindRewardInterface(address, backend, backend, backend)
+	if err != nil {
+		return nil, err
+	}
+	return &RewardInterface{RewardInterfaceCaller: RewardInterfaceCaller{contract: contract}, RewardInterfaceTransactor: RewardInterfaceTransactor{contract: contract}, RewardInterfaceFilterer: RewardInterfaceFilterer{contract: contract}}, nil
+}
+
+// NewRewardInterfaceCaller creates a new read-only instance of RewardInterface, bound to a specific deployed contract.
+func NewRewardInterfaceCaller(address common.Address, caller bind.ContractCaller) (*RewardInterfaceCaller, error) {
+	contract, err := bindRewardInterface(address, caller, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &RewardInterfaceCaller{contract: contract}, nil
+}
+
+// NewRewardInterfaceTransactor creates a new write-only instance of RewardInterface, bound to a specific deployed contract.
+func NewRewardInterfaceTransactor(address common.Address, transactor bind.ContractTransactor) (*RewardInterfaceTransactor, error) {
+	contract, err := bindRewardInterface(address, nil, transactor, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &RewardInterfaceTransactor{contract: contract}, nil
+}
+
+// NewRewardInterfaceFilterer creates a new log filterer instance of RewardInterface, bound to a specific deployed contract.
+func NewRewardInterfaceFilterer(address common.Address, filterer bind.ContractFilterer) (*RewardInterfaceFilterer, error) {
+	contract, err := bindRewardInterface(address, nil, nil, filterer)
+	if err != nil {
+		return nil, err
+	}
+	return &RewardInterfaceFilterer{contract: contract}, nil
+}
+
+// bindRewardInterface binds a generic wrapper to an already deployed contract.
+func bindRewardInterface(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := abi.JSON(strings.NewReader(RewardInterfaceABI))
+	if err != nil {
+		return nil, err
+	}
+	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_RewardInterface *RewardInterfaceRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _RewardInterface.Contract.RewardInterfaceCaller.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_RewardInterface *RewardInterfaceRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _RewardInterface.Contract.RewardInterfaceTransactor.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_RewardInterface *RewardInterfaceRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _RewardInterface.Contract.RewardInterfaceTransactor.contract.Transact(opts, method, params...)
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_RewardInterface *RewardInterfaceCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _RewardInterface.Contract.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_RewardInterface *RewardInterfaceTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _RewardInterface.Contract.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_RewardInterface *RewardInterfaceTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _RewardInterface.Contract.contract.Transact(opts, method, params...)
+}
+
+// IsCandidate is a free data retrieval call binding the contract method 0xd51b9e93.
+//
+// Solidity: function isCandidate(_addr address) constant returns(bool)
+func (_RewardInterface *RewardInterfaceCaller) IsCandidate(opts *bind.CallOpts, _addr common.Address) (bool, error) {
+	var (
+		ret0 = new(bool)
+	)
+	out := ret0
+	err := _RewardInterface.contract.Call(opts, out, "isCandidate", _addr)
+	return *ret0, err
+}
+
+// IsCandidate is a free data retrieval call binding the contract method 0xd51b9e93.
+//
+// Solidity: function isCandidate(_addr address) constant returns(bool)
+func (_RewardInterface *RewardInterfaceSession) IsCandidate(_addr common.Address) (bool, error) {
+	return _RewardInterface.Contract.IsCandidate(&_RewardInterface.CallOpts, _addr)
+}
+
+// IsCandidate is a free data retrieval call binding the contract method 0xd51b9e93.
+//
+// Solidity: function isCandidate(_addr address) constant returns(bool)
+func (_RewardInterface *RewardInterfaceCallerSession) IsCandidate(_addr common.Address) (bool, error) {
+	return _RewardInterface.Contract.IsCandidate(&_RewardInterface.CallOpts, _addr)
+}
+
 // SafeMathABI is the input ABI used to generate the binding from.
 const SafeMathABI = "[]"
 
 // SafeMathBin is the compiled bytecode used for deploying new contracts.
-const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820ea646c523b4ea8129d3cbf0d0296df061ddb1c943f58e026c80dfd655ed0f6f80029`
+const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a723058201b8caa1be5474007e468c99c8ab9b5a0478462f50dcef260063ab6a40b0f03a50029`
 
 // DeploySafeMath deploys a new cpchain contract, binding an instance of SafeMath to it.
 func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *SafeMath, error) {
@@ -1348,7 +1465,7 @@ func (_SafeMath *SafeMathTransactorRaw) Transact(opts *bind.TransactOpts, method
 const SetABI = "[]"
 
 // SetBin is the compiled bytecode used for deploying new contracts.
-const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820cd8874489cf248c1ebd799927c6f36cce2643ef46d01a2d6eda677d6ce3766d80029`
+const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a723058206fd49004c5df1f8addb31ffa0262c5c9cf2790abf6d403a39f4b16397764a54c0029`
 
 // DeploySet deploys a new cpchain contract, binding an instance of Set to it.
 func DeploySet(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Set, error) {

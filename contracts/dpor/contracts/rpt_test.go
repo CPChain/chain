@@ -2,14 +2,14 @@ package contracts_test
 
 import (
 	"crypto/ecdsa"
+	"fmt"
 	"math/big"
 	"testing"
 
-	"fmt"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -22,14 +22,14 @@ var (
 	}
 )
 
-func deployRpt(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *rpt.Rpt, *bind.TransactOpts, error) {
+func deployRpt(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *contracts.Rpt, *bind.TransactOpts, error) {
 	Transactor := bind.NewKeyedTransactor(prvKey)
-	rtpaddr, _, rpt, err := rpt.DeployRpt(Transactor, backend)
+	rptAddr, _, rpt, err := contracts.DeployRpt(Transactor, backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
 	backend.Commit()
-	return rtpaddr, rpt, Transactor, nil
+	return rptAddr, rpt, Transactor, nil
 }
 
 func TestRpt(t *testing.T) {

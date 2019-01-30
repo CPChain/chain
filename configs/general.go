@@ -68,6 +68,7 @@ const (
 const (
 	ContractCampaign   = "campaign"   // address of campaign contract,select rnode
 	ContractProposer   = "proposer"   // address of proposer_register contract, register proposer address in proposer_register contract
+	ContractReward     = "reward"     // address of reward contract
 	ContractRegister   = "register"   // address of register contract
 	ContractRpt        = "rpt"        // address of rpt contract,Calculation the rpt of rnode
 	ContractPdash      = "pdash"      // address of pdash

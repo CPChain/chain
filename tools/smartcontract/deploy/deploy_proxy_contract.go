@@ -54,9 +54,9 @@ func DeployProxy(password string, nonce uint64) common.Address {
 	return contractAddress
 }
 
-func RegisterProxyAddress(proxyContractAddress, realAddress common.Address, password string, nonce uint64, proxyNonce uint64) common.Address {
+func RegisterProxyAddress(title string, proxyContractAddress, realAddress common.Address, password string, nonce uint64, proxyNonce uint64) common.Address {
 	proxyAddress := DeployProxy(password, nonce)
-	success := UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress, password, proxyNonce)
+	success := UpdateRegisterProxyAddress(title, proxyContractAddress, proxyAddress, realAddress, password, proxyNonce)
 	if success {
 		return proxyAddress
 	} else {
@@ -64,11 +64,9 @@ func RegisterProxyAddress(proxyContractAddress, realAddress common.Address, pass
 	}
 }
 
-func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress common.Address, password string, nonce uint64) bool {
-	FormatPrint("register proxy address")
-
-	PrintContract(proxyAddress)
-	fmt.Println("Register proxy contract proxy -> real:" + realAddress.Hex())
+func UpdateRegisterProxyAddress(title string, proxyContractAddress, proxyAddress, realAddress common.Address, password string, nonce uint64) bool {
+	fmt.Println(title + " Register proxy contract proxy:" + proxyAddress.Hex() +
+		" -> real:" + realAddress.Hex())
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	if err != nil {
 		fmt.Println("failed")
@@ -92,16 +90,16 @@ func UpdateRegisterProxyAddress(proxyContractAddress, proxyAddress, realAddress 
 	}
 	receipt, err := bind.WaitMined(context.Background(), client, transaction)
 	if err != nil {
-		fmt.Println("failed")
-		log.Fatalf("failed to deploy contact when mining :%v", err)
+		fmt.Println(title, "failed")
+		log.Fatalf(title+" failed to deploy contact when mining :%v", err)
 		return false
 	}
 	// fmt.Println("receipt.Status:", receipt.Status)
 	if receipt.Status == 1 {
-		fmt.Println("success")
+		fmt.Println(title, "success")
 		return true
 	} else {
-		fmt.Println("failed")
+		fmt.Println(title, "failed")
 		return false
 	}
 }
