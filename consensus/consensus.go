@@ -163,6 +163,23 @@ const (
 	ImpeachCommit
 )
 
+func (s State) String() string {
+	switch s {
+	case Idle:
+		return "Idle"
+	case Prepare:
+		return "Prepare"
+	case Commit:
+		return "Commit"
+	case ImpeachPrepare:
+		return "ImpeachPrepare"
+	case ImpeachCommit:
+		return "ImpeachCommit"
+	default:
+		return "Unknown State"
+	}
+}
+
 // PbftStatus represents a state of a dpor replica
 type PbftStatus struct {
 	State State
