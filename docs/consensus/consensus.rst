@@ -107,7 +107,7 @@ An impeachment can be activated under the following two cases:
 1. The timer of validator expires;
 #. A validate in idle state receives an illicit block from the proposer.
 
-Timer expiration can be caused by several reasons, like a non-responding proposer, `Double Spend Attack`_ and `Future Block`_.
+Timer expiration can be caused by several reasons, like a non-responding proposer, `Double Spend Attack`_ and `Past and Future Block`_.
 An illicit block can be a block with improper transactions and seal.
 Here we list the steps for an impeachment process.
 
@@ -431,7 +431,7 @@ From validators' perspective, Illicit actions falls into the following categorie
 
 1. Double spend attack from the proposer
 #. An unknown ancestor block whose block height is higher than the one a validator is processing
-#. A future block whose timer stamp is larger than the counterpart of a validator.
+#. A past or future block whose timer stamp is unexpected
 #. A past block whose block height is higher than the one a validator is processing
 #. A block from any unrecognized node
 
@@ -575,8 +575,54 @@ This principle assures the safety of LBFT 2.0 when facing mischievous blocks,
 and relies on the rest loyal validators processing a proper one.
 
 
-Future Block
+Past and Future Block
 **************
+
+Since all timer operations are depending on local timers of each validator,
+timestamp of the block is not involved in consensus among validators.
+Despite that timestamp does not play an important role in our consensus,
+it is an important attribute of a block.
+In fact, timestamp is one of factors verifying a block.
+
+A validator v regards a block b as a future one, if the following two conditions are met:
+
+    1. The timestamp of b is larger than the one of v;
+    #. The block height of b is same as v.
+
+Similarly, a block b' is considered a past block if
+
+    1. The timestamp of b' is smaller than previousBlockTimestamp+period;
+    #. The block height of b' is same as v,
+
+where previousBlockTimestamp is the timestamp of previous block,
+and period is the time interval between two consecutive blocks.
+
+Do not confuse future block with the concept of unknown ancestor block.
+An unknown ancestor block may holds a larger timestamp,
+but are processed as an unknown ancestor one instead of a future block.
+
+For past block, a validator fails in verifying it and triggers impeachment.
+For a future block, the validator wait until the timestamp of the block.
+But if it is larger than previousBlockTimestamp+period+timeout,
+an impeachment is about to take place.
+Thus, we come up with a psuedocode for timestamp verification.
+
+    .. code-block:: go
+
+        func timestampVerification(b) bool {
+            // v: a validator
+            // t: timestamp of v
+            // b: a block with timestamp tb
+            if tb < previousBlockTimestamp+period || tb > previousBlockTimestamp+period+timeout{
+                return false
+            }
+            select{
+                case <-Time.after(tb)
+                    return true
+                case <-quit //quit is true if v triggers impeachment
+                    return false
+            }
+        }
 
 
 Recovery
