@@ -536,16 +536,31 @@ Delaying validators are categorized into two different types according to how fa
 Intra-view Recovery
 ***************
 
-Under the original framework of LBFT 2.0, once a validator loses its connection for a state,
-it can hardly join the consensus process at the rest part of this view.
-For example, validator v\ :sub:`1`\  from a committee of four members, disconnects from the network in the prepare state.
+Under the original framework of LBFT 2.0, once a validator has been losing its connection for a state,
+it can hardly join the consensus process at the rest part of this view. Here we give an example.
+
+**Example 1:** validator v\ :sub:`1`\  from a committee of four members, disconnects from the network in the prepare state.
 The other three validators suffice a quorum for a prepare certificate and proceed to commit state.
-Even v\ :sub:`1`\  somehow reconnects to the net, it cannot help collect a commit certificate
-since it has yet collected a prepare certificate.
+Even v\ :sub:`1`\  somehow reconnects to the net, it cannot contribute to collect a commit certificate in this view
+since it has yet collected a prepare certificate missed prepare messages from others.
 
 Without any recovery, v\ :sub:`1`\  would be regarded as a non-responding node,
 and return to normal consensus processing in the next view, after it receives a validate message.
-The intra-view recovery address whe problem by appending the certificate to the message.
-Like in the previous example, the other three validators send a commit message accompanied with a prepare certificate.
-Validator v\ :sub:`1`\  can forward to commit phase after it verifies the certificate.
+The intra-view recovery address the problem by appending the certificate to the message.
+Applying intro-view recovery in Example 1,
+the other three validators broadcast a commit message accompanied with a prepare certificate.
+Validator v\ :sub:`1`\  can forward to commit state after it verifies the certificate.
+
+Some readers may wonder that LBFT 2.0 works perfectly as long as the assumptions are kept,
+what the necessity of intra-view recovery is.
+The key reason is that communications between validators are finished in the blink of an eye.
+The possibility that a validator loses some packets is not that low.
+Our experimental results indicate that even in a committee of four loyal validator,
+one of them faces the problem that it lags behind one state every hundreds of blocks.
+
+By introducing intra-view recovery, our system can tolerate two or more distinct validators
+lose their connection in different states.
+Even though this scenario violates our original assumptions, LBFT 2.0 with intra-view recovery reaches a consensus.
+At the cost of larger space consumption for each message, we increase the robustness of the protocol.
+
 
