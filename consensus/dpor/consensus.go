@@ -186,8 +186,10 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 func (d *Dpor) TryCampaign() {
 	snap := d.CurrentSnap()
 	if snap != nil {
-		log.Debug("check if participate campaign", "isToCampaign", d.IsToCampaign(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number())
-		if d.IsToCampaign() && snap.isStartCampaign() {
+		isV := snap.IsValidatorOf(d.coinbase, snap.Number)
+		log.Debug("check if participate campaign", "isToCampaign", d.IsToCampaign(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number(), "isValidator", isV)
+
+		if d.IsToCampaign() && snap.isStartCampaign() && !isV {
 			newTerm := d.CurrentSnap().TermOf(snap.Number)
 			if newTerm > d.lastCampaignTerm+campaignTerms-1 {
 				d.lastCampaignTerm = newTerm
@@ -195,7 +197,6 @@ func (d *Dpor) TryCampaign() {
 				d.client.Campaign(context.Background(), campaignTerms)
 			}
 		}
-
 	}
 }
 
