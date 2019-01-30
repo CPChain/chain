@@ -34,7 +34,7 @@ Here we list the properties of validators and proposers, as well as the rest nod
     i. After being elected, the candidate is about to join proposers committee next term.
 
 
-Normal and Abnormal Case Handler
+Normal and Abnormal Cases Handler
 ----------------
 
 
@@ -86,51 +86,88 @@ that there exist a quorum agree on a prepare message and a commit message respec
         #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATE messages
         #. Any of these timers expires, the validators committee activates *impeachment*
     #. Other complicated abnormal cases:
-        i. There are more complicated abnormal cases. We list them explicitly in `Illicit Actions`_.
+        i. There are more complicated abnormal cases. We list them explicitly in `Countermeasures for Illicit Actions`_.
+
+
+
+Note that a validator repeats a validate message (or impeach validate message) for the first time it receive it.
+This repetition process ensures the validate message can be delivered to all nodes.
+Refer to `Echo of Validate Message`_ to details.
 
 
 Impeachment
 --------------
 
+Impeachment is a vital abnormal handler in LBFT 2.0, invoked when the proposer is either faulty, or non responding.
+It is a two-phase protocol in PBFT manner, consisting of *prepare* and *commit* phases.
+When a validator triggers its impeach process, it generates a block on behalf of the faulty (or non responding) proposer.
+And impeachment has higher priority compared to normal case handler.
+In other word, validator in impeachment does not process any normal case messages except for validate messages.
+An impeachment can be activated under the following two cases:
+1. The timer of validator expires;
+#. A validate in idle state receives an illicit block from the proposer.
 
-#. **Impeachment**
-    a. It is an abnormal handler when the proposer is either faulty, or non responding
-    #. It is a two-phase protocol in PBFT manner, consisting of *prepare* and *commit* phases.
-    #. Impeachment steps:
-        a. A validator in the committee generates a block on behalf of the faulty (or non responding) proposer.
-            i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
-            #. The *seal* in the header is set to be empty
-            #. A penalty on proposer is the only transaction in the block's body
-        #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
-        #. Once receives f+1 IMPEACH PREPARE messages with same header and body, a validator broadcasts an IMPEACH COMMIT message to other validators.
-        #. Once receives f+1 IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with f+1 signatures to all users.
-        #. Any validate receives the IMPEACH VALIDATE message for the first time, it insert the impeach block and broadcast the same message to all nodes.
-        #. All users insert the block into local chain, if they receive a IMPEACH VALIDATE messages.
-    #. The reason the leader is not required
-        a. The leader in classic PBFT model takes the following roles:
-            i. Receives the request from the client, and broadcasts it to all backups in distributed system.
-            #. Assign a sequence number to each request, to guarantee that all requests are processed in order.
-        #. Impeachment does not requires a leader to fulfill above duties, since
-            i. Each non faulty validator is about to propose a completely same block.
-            #. Each block is associated with a unique block number, which circumvents the usage of sequence number.
-    #. It is possible for some validators obtains 2f+1 PREPARE messages of a newly proposed block while another validators obtain 2f+1 PREPARE messages of empty block
-        a. This scenario occurs only when the proposer is faulty
-        b. This scenario does not affects the security of the system, since validators can only collect 2f+1 COMMIT messages for one block
+Timer expiration can be caused by several reasons, like a non-responding proposer, `Double Spend Attack`_ and `Future Block`_.
+An illicit block can be a block with improper transactions and seal.
+Here we list the steps for an impeachment process.
+
+Impeachment Steps
+**********************
+
+1. A validator v in the committee generates an impeachment block
+    i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
+    #. The *seal* in the header is set to be empty
+    #. A penalty on proposer is the only transaction in the block's body
+#. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
+#. Once receives f+1 IMPEACH PREPARE messages with same header and body, validator v broadcasts an IMPEACH COMMIT message to other validators.
+#. Once receives f+1 IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with f+1 signatures to all users.
+#. Any validate receives the IMPEACH VALIDATE message for the first time, it inserts the impeach block and broadcasts the same message to all nodes.
+#. All users insert the block into local chain, if they receive an IMPEACH VALIDATE messages.
 
 
-Note that a quorum in normal case consists of 2f+1 members, while a quorum in impeachment consists of f+1 members.
+Explanation
+****************
+
+
+Three things are noteworthy here.
+The first is that impeachment only requires two state instead of three in original PBFT.
+The second one is that block can endorse a newly proposed block and an impeach block in a view.
+The last one is that only a weak quorum certificate of f+1 members is required in impeachment consensus.
+
+The absence of an idle state, or pre-prepare state in PBFT, results from the unnecessity of a leader.
+Let's recall the roles of a leader in classic PBFT model.
+The leader in classic PBFT model assumes the following responsibilities:
+
+    i. Receive the request from the client, and broadcasts it to all backups in the distributed system.
+    #. Assign a sequence number to each request, to guarantee that all requests are processed in order.
+
+However, impeachment does not requires a leader to fulfill above duties, since:
+
+    i. Each non faulty validator is about to propose a completely same block.
+    #. Each block is associated with a unique block number, which circumvents the usage of sequence number.
+
+The second is that a validator can sign two distinct blocks, one is the proposed block and another one is an impeach block.
+Thus, it is possible for some validators obtains 2f+1 PREPARE messages of a newly proposed block,
+while another validators obtain a prepare certificate for the impeach block.
+This scenario occurs only when the proposer is faulty, misbehaves like `Double Spend Attack`_.
+But it does not affects the security of the system.
+Refer to `Double Spend Attack`_ to check detailed proof.
+
+
+The last notable point is that a quorum in normal case consists of 2f+1 members,
+while a quorum in impeachment consists of f+1 members.
 The necessity of 2f+1 in normal case is that in extreme cases,
 there are f faulty nodes send arbitrary messages, we need f+1 more loyal nodes to outnumber faulty counterparts.
 In comparison, that even one loyal nodes triggers impeachment indicates a improper behavior of proposer.
 Thus, f+1 impeachment validators suffice a quorum of impeachment.
 
-In addition, a validator repeats a validate message (or impeach validate message) for the first time it receive it.
-This repetition process ensures the validate message can be delivered to all nodes.
-In an edge case, a node can lose its connection while broadcasting a validate message.
-If there were no repetition mechanism, this edge case would sabotage the consistency of LBFT 2.0.
+In addition, impeachment also requires `Echo of Validate Message`_ similar to normal case handler.
+
+Implementation
+----------------------
 
 Finite State Machine
-----------------------
+*************************
 
 The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 states:
 **idle**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
@@ -142,6 +179,7 @@ The text on an arrow between two states refers to the condition of this transiti
 And the message box near the arrow represents the message broadcast to other nodes.
 
 .. image:: lbft_fsm.png
+
 
 
 Pseudocode
@@ -367,7 +405,25 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
 
-Illicit Actions
+
+Echo of Validate Message
+*****************************
+
+Echo of validates message refers to a mechanism in implementation that
+a validator echoes a validate message when it receives it for the first time.
+A validator does not insert a block, no matter a normal or impeach one,
+until it receives a validate message.
+This statement is valid even if a validator v sends out a validate message itself.
+Validator v can only insert the block after it hears the echo from other validators.
+
+The reason of introducing echo is to get rid of depending on one single validator broadcasting a validate message.
+In an edge case, a validate can lose its connection while broadcasting a validate message.
+If there were no echo mechanism, this edge case would sabotage the consistency of LBFT 2.0,
+since only a proportion of nodes could receive this validate message.
+
+
+
+Countermeasures for Illicit Actions
 ----------------------
 
 Illicit actions refer any messages or blocks sending to a validator that cannot be processed in this validator's normal cases.
@@ -405,7 +461,7 @@ both legit. **Q.E.D.**
 In contrast to the fact that each validator only signs one proposed block, a validator can sign an
 impeach block even if it has signed a block from p given that it cannot collect a certificate on time.
 Then is that possible for a proposer takes advantages of this mechanism to makes its proposed block
-b and an impeach block b0 both legit simultaneously?
+b and an impeach block b' both legit simultaneously?
 The answer is no. Here we lists two lemmas and shows their correctness.
 
 **Observation 1:** *It is possible that both a block b proposed from a proposer p and an impeach block b' suffice
@@ -419,8 +475,8 @@ that if a loyal validator v1 signs b then broadcasts its prepare messages, but i
 such that it later proposes an impeach block. Combining f faulty validators, two quorums are made up.
 
 However, Observation 2 ensures the safety of our consensus system. It is because once v1
-propose an impeach block b0, it can no longer send out b’s commit message even if it collects a
-prepare certificate for b. The state transmission of a validator is illustrated in the `Finite State Machine`_.
+proposes an impeach block b', it can no longer send out b’s commit message even if it collects a
+prepare certificate for b. The state transmission of a validator is illustrated in the `Implementation`_.
 Once a validator enters either impeach prepare or impeach commit phase, it no
 long signs a normal block. **Q.E.D.**
 
@@ -517,6 +573,10 @@ The primary principle underlying this pseudocode is that a validator does not pr
 unless it is convinced the block is proposed by current proposer.
 This principle assures the safety of LBFT 2.0 when facing mischievous blocks,
 and relies on the rest loyal validators processing a proper one.
+
+
+Future Block
+**************
 
 
 Recovery
