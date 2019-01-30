@@ -15,13 +15,14 @@ var (
 	// contract
 	devProxyContractRegister = common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290")
 	devContractAddressMap    = map[string]common.Address{
-		ContractCampaign:   common.HexToAddress("0x0ddf4057eedfb80d58029be49bab09bbc45bc500"),
 		ContractProposer:   common.HexToAddress("0x310236762f36bf0f69f792bd9fb08b5c679aa3f1"),
-		ContractRegister:   common.HexToAddress("0x019cc04ff9d88529b9e58ff26bfc53bce060e915"),
-		ContractRpt:        common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d"),
-		ContractPdash:      common.HexToAddress("0xaaae743244a7a5116470df8bd398e7d562ae8881"),
-		ContractAdmission:  common.HexToAddress("0xd6e4bdcc9b4d1744cf16ce904b9ede5e78751002"),
-		ContractPdashProxy: common.HexToAddress("0xd81ab6b1e656550f90b2d874926b949fde97096d"),
+		ContractReward:     common.HexToAddress("0xd6E4BdCc9b4D1744Cf16Ce904B9EDE5e78751002"),
+		ContractAdmission:  common.HexToAddress("0x0DDf4057eeDFb80D58029Be49bab09bbc45bC500"),
+		ContractCampaign:   common.HexToAddress("0x82104907AA699b2982Fc46f38Fd8C915d03Cdb8d"),
+		ContractRpt:        common.HexToAddress("0x019cC04ff9d88529b9e58FF26bfc53BcE060e915"),
+		ContractRegister:   common.HexToAddress("0xaAae743244a7A5116470df8BD398e7D562ae8881"),
+		ContractPdash:      common.HexToAddress("0xd81ab6B1e656550F90B2d874926B949fde97096D"),
+		ContractPdashProxy: common.HexToAddress("0xD791F193C2F374f49bCbcf20750749b7AF17204e"),
 	}
 
 	// config

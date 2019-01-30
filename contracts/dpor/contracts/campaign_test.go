@@ -23,6 +23,8 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/types"
+
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
@@ -48,7 +50,7 @@ func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.Simulat
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	addrReward, _, _, err := reward.DeployReward(deployTransactor, backend)
 	acAddr, _, _, err := admission.DeployAdmission(deployTransactor, backend, big.NewInt(5), big.NewInt(5), big.NewInt(10), big.NewInt(10))
-	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, acAddr, rewardAddr)
+	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, acAddr, addrReward)
 	if err != nil {
 		return common.Address{}, common.Address{}, common.Address{}, err
 	}
@@ -239,7 +241,7 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
-	ac.Campaign(1)
+	ac.Campaign(2)
 	<-ac.DoneCh() // wait for done
 	results := ac.GetResult()
 	cpuBlockNum := results[admission2.Cpu].BlockNumber
@@ -247,9 +249,18 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	memBlockNum := results[admission2.Memory].BlockNumber
 	memNonce := results[admission2.Memory].Nonce
 
+	rewardContract, err := reward.NewReward(rewardAddr, contractBackend)
+	isCan, _ := rewardContract.IsCandidate(&bind.CallOpts{From: transactOpts.From}, transactOpts.From)
+	_ = isCan
+
 	tx, err := campaign.ClaimCampaign(big.NewInt(2), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
 	fmt.Println(tx)
 	checkError(t, "ClaimCampaign error:", err)
+	contractBackend.Commit()
+	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status == types.ReceiptStatusFailed {
+		fmt.Println("receipt")
+	}
 
 	// wait for view change
 	waitForViewChange(contractBackend, 3)
