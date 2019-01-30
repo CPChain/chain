@@ -150,7 +150,7 @@ Pseudocode
 For more detailed implementation, interested reader can refer to the pseudocode below (the grammar is close to golang).
 
 
-**FSM for LBFT2.0**
+**FSM for LBFT 2.0**
 
 
     .. code-block:: go
@@ -433,7 +433,7 @@ Thus, they cannot be validated simultaneously. **Q.E.D.**
 
 Combining both Lemma 1 and 2, we conclude the following theorem to guarantee the safety facing double spend attack.
 
-**Theorem 1:** *LBFT2.0 is guaranteed to generate only one validated block for each block height under double spend attack.*
+**Theorem 1:** *LBFT 2.0 is guaranteed to generate only one validated block for each block height under double spend attack.*
 
 
 
@@ -444,8 +444,8 @@ Unknown Ancestor Block
 An unknown ancestor block refers to a block whose block height is higher than the one the validator is currently processing.
 The name comes from the fact that the predecessor of this block is yet unknown in the chain.
 
-Suppose a validator v which is processing a block b1 in block height h1,
-and receives an unknown ancestor block b2 with block height h2 from a node p2.
+Suppose a validator v which is processing a block b in block height h,
+and receives an unknown ancestor block b\ :sub:`2`\   with block height h\ :sub:`2`\   from a node p\ :sub:`2`\  .
 There are following possible scenarios:
 
 1. The block is proposed by a legit proposer at the correct time; the validator is delaying.
@@ -460,27 +460,27 @@ well as the corresponding block heights to propose their blocks.
 Thus, a validator has a priori knowledge on all legit proposers in this term, unless the proposer is
 delaying for at least a term.
 
-In the first scenario, b2 actually is not an unknown ancestor block.
-The validator v regards b2 as an unknown ancestor block simply because it is delaying
-After receiving b2, the validator v records the block in the cache.
+In the first scenario, b\ :sub:`2`\   actually is not an unknown ancestor block.
+The validator v regards b\ :sub:`2`\   as an unknown ancestor block simply because it is delaying
+After receiving b\ :sub:`2`\  , the validator v records the block in the cache.
 As it is delaying, it is counted as one of f non-responding block.
-Despite that it receives b2, v stays in the block height h,
-and it does not participate in consensus of block height h2
-In other word, it does not broadcasts a prepare message endorsing b2.
-Other members in the validators committee suffice a quorum to complete the consensus process on b2 without v's participation.
+Despite that it receives b\ :sub:`2`\  , v stays in the block height h,
+and it does not participate in consensus of block height h\ :sub:`2`\
+In other word, it does not broadcasts a prepare message endorsing b\ :sub:`2`\  .
+Other members in the validators committee suffice a quorum to complete the consensus process on b\ :sub:`2`\   without v's participation.
 v is going to catch up with the schedule after it receives the validate message from other committee members,
 or by `Recovery`_.
 
-In the second scenario, p2 behaves faultily.
+In the second scenario, p\ :sub:`2`\   behaves faultily.
 Similar to the first scenario, v records it in the cache without signing it.
 A quorum can still complete the consensus on b.
-When it comes to the correct view of p2, if p2 proposes the block again, then it is going to be processed normally.
+When it comes to the correct view of p\ :sub:`2`\  , if p\ :sub:`2`\   proposes the block again, then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
 
-The third and fourth scenario happens when v cannot recognize p2 as a proposer.
-It can due to either b2 is faulty (scenario 3) and v is delaying (scenario 4).
+The third and fourth scenario happens when v cannot recognize p\ :sub:`2`\   as a proposer.
+It can due to either b\ :sub:`2`\   is faulty (scenario 3) and v is delaying (scenario 4).
 In both scenarios, v is going to sync, determining if it is delaying.
-For the third scenario, v rejects b2 and added v into blacklist.
+For the third scenario, v rejects b\ :sub:`2`\   and added v into blacklist.
 For the fourth one, it acts same as the first scenario.
 
 Here comes another concern.
@@ -538,13 +538,14 @@ Intra-view Recovery
 
 Under the original framework of LBFT 2.0, once a validator loses its connection for a state,
 it can hardly join the consensus process at the rest part of this view.
-For example, validator v\ :sub:`1`\ from a committee of four members, disconnects from the network in the prepare state.
+For example, validator v\ :sub:`1`\  from a committee of four members, disconnects from the network in the prepare state.
 The other three validators suffice a quorum for a prepare certificate and proceed to commit state.
-Even v\ :sub:`1`\ somehow reconnects to the net, it cannot help collect a commit certificate
+Even v\ :sub:`1`\  somehow reconnects to the net, it cannot help collect a commit certificate
 since it has yet collected a prepare certificate.
 
-Without any recovery, v\ :sub:`1`\ would be regarded as a non-responding node,
+Without any recovery, v\ :sub:`1`\  would be regarded as a non-responding node,
 and return to normal consensus processing in the next view, after it receives a validate message.
 The intra-view recovery address whe problem by appending the certificate to the message.
 Like in the previous example, the other three validators send a commit message accompanied with a prepare certificate.
-Validator v\ :sub:`1`\ can forward to commit phase after it verifies the certificate.
+Validator v\ :sub:`1`\  can forward to commit phase after it verifies the certificate.
+
