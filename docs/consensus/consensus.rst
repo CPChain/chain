@@ -681,3 +681,34 @@ However, if v has been losing its connection for a long time, it should invoke *
 Sync function, as indicated by the name, synchronizes with Mainnet chain.
 Then it can rejoin consensus process after receiving validate message of the current view.
 The function is called a validator suspects it is delaying like receiving `Unknown Ancestor Block`_.
+
+
+Comparison with PBFT
+---------------------------
+
+This section compares LBFT 2.0 with classic PBFT.
+We name both proposer in LBFT 2.0 and primary replica in PBFT as the leader,
+since they assume similar responsibility to dispatch a query to all nodes.
+And insistence on P-certificate indicates that
+a replica does not changes its endorsement in a query once it collects a prepare certificate.
+
+In other word, LBFT 2.0 has weaker assumption, higher liveness and more complicated faulty
+leader handler. Note that the view change reduces the faulty leader problem into a normal case
+handler in the next view. We cannot adopt similar method since our high command on liveness.
+Liveness is also the reason that a validator cannot insist on a P-certificate.
+
+
++---------------------------+------------------------------------+-----------------------------+
+| Aspect                    |           LBFT 2.0                 |         PBFT                |
++===========================+====================================+=============================+
+| Assumption                | Tolerate at most f faulty          | Tolerate at most f replicas |
+|                           | validators and a faulty proposer   |                             |
++---------------------------+------------------------------------+-----------------------------+
+| Liveness                  | Insert a block every 10 seconds    | Response in finite time     |
++---------------------------+------------------------------------+-----------------------------+
+| Insistence on             | Trigger impeachment if timer       | Insist on the query with    |
+| P-certificate             | expires                            | P-certificate               |
++---------------------------+------------------------------------+-----------------------------+
+| Faulty leader handler     | Impeachment                        | View change                 |
++---------------------------+------------------------------------+-----------------------------+
+
