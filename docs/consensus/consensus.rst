@@ -34,7 +34,7 @@ Here we list the properties of validators and proposers, as well as the rest nod
     i. After being elected, the candidate is about to join proposers committee next term.
 
 
-Normal and Abnormal Case Handler
+Normal and Abnormal Cases Handler
 ----------------
 
 
@@ -86,51 +86,88 @@ that there exist a quorum agree on a prepare message and a commit message respec
         #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATE messages
         #. Any of these timers expires, the validators committee activates *impeachment*
     #. Other complicated abnormal cases:
-        i. There are more complicated abnormal cases. We list them explicitly in `Illicit Actions`_.
+        i. There are more complicated abnormal cases. We list them explicitly in `Countermeasures for Illicit Actions`_.
+
+
+
+Note that a validator repeats a validate message (or impeach validate message) for the first time it receive it.
+This repetition process ensures the validate message can be delivered to all nodes.
+Refer to `Echo of Validate Message`_ to details.
 
 
 Impeachment
 --------------
 
+Impeachment is a vital abnormal handler in LBFT 2.0, invoked when the proposer is either faulty, or non responding.
+It is a two-phase protocol in PBFT manner, consisting of *prepare* and *commit* phases.
+When a validator triggers its impeach process, it generates a block on behalf of the faulty (or non responding) proposer.
+And impeachment has higher priority compared to normal case handler.
+In other word, validator in impeachment does not process any normal case messages except for validate messages.
+An impeachment can be activated under the following two cases:
+1. The timer of validator expires;
+#. A validate in idle state receives an illicit block from the proposer.
 
-#. **Impeachment**
-    a. It is an abnormal handler when the proposer is either faulty, or non responding
-    #. It is a two-phase protocol in PBFT manner, consisting of *prepare* and *commit* phases.
-    #. Impeachment steps:
-        a. A validator in the committee generates a block on behalf of the faulty (or non responding) proposer.
-            i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
-            #. The *seal* in the header is set to be empty
-            #. A penalty on proposer is the only transaction in the block's body
-        #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
-        #. Once receives f+1 IMPEACH PREPARE messages with same header and body, a validator broadcasts an IMPEACH COMMIT message to other validators.
-        #. Once receives f+1 IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with f+1 signatures to all users.
-        #. Any validate receives the IMPEACH VALIDATE message for the first time, it insert the impeach block and broadcast the same message to all nodes.
-        #. All users insert the block into local chain, if they receive a IMPEACH VALIDATE messages.
-    #. The reason the leader is not required
-        a. The leader in classic PBFT model takes the following roles:
-            i. Receives the request from the client, and broadcasts it to all backups in distributed system.
-            #. Assign a sequence number to each request, to guarantee that all requests are processed in order.
-        #. Impeachment does not requires a leader to fulfill above duties, since
-            i. Each non faulty validator is about to propose a completely same block.
-            #. Each block is associated with a unique block number, which circumvents the usage of sequence number.
-    #. It is possible for some validators obtains 2f+1 PREPARE messages of a newly proposed block while another validators obtain 2f+1 PREPARE messages of empty block
-        a. This scenario occurs only when the proposer is faulty
-        b. This scenario does not affects the security of the system, since validators can only collect 2f+1 COMMIT messages for one block
+Timer expiration can be caused by several reasons, like a non-responding proposer, `Double Spend Attack`_ and `Past and Future Block`_.
+An illicit block can be a block with improper transactions and seal.
+Here we list the steps for an impeachment process.
+
+Impeachment Steps
+**********************
+
+1. A validator v in the committee generates an impeachment block
+    i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
+    #. The *seal* in the header is set to be empty
+    #. A penalty on proposer is the only transaction in the block's body
+#. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
+#. Once receives f+1 IMPEACH PREPARE messages with same header and body, validator v broadcasts an IMPEACH COMMIT message to other validators.
+#. Once receives f+1 IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with f+1 signatures to all users.
+#. Any validate receives the IMPEACH VALIDATE message for the first time, it inserts the impeach block and broadcasts the same message to all nodes.
+#. All users insert the block into local chain, if they receive an IMPEACH VALIDATE messages.
 
 
-Note that a quorum in normal case consists of 2f+1 members, while a quorum in impeachment consists of f+1 members.
+Explanation
+****************
+
+
+Three things are noteworthy here.
+The first is that impeachment only requires two state instead of three in original PBFT.
+The second one is that block can endorse a newly proposed block and an impeach block in a view.
+The last one is that only a weak quorum certificate of f+1 members is required in impeachment consensus.
+
+The absence of an idle state, or pre-prepare state in PBFT, results from the unnecessity of a leader.
+Let's recall the roles of a leader in classic PBFT model.
+The leader in classic PBFT model assumes the following responsibilities:
+
+    i. Receive the request from the client, and broadcasts it to all backups in the distributed system.
+    #. Assign a sequence number to each request, to guarantee that all requests are processed in order.
+
+However, impeachment does not requires a leader to fulfill above duties, since:
+
+    i. Each non faulty validator is about to propose a completely same block.
+    #. Each block is associated with a unique block number, which circumvents the usage of sequence number.
+
+The second is that a validator can sign two distinct blocks, one is the proposed block and another one is an impeach block.
+Thus, it is possible for some validators obtains 2f+1 PREPARE messages of a newly proposed block,
+while another validators obtain a prepare certificate for the impeach block.
+This scenario occurs only when the proposer is faulty, misbehaves like `Double Spend Attack`_.
+But it does not affects the security of the system.
+Refer to `Double Spend Attack`_ to check detailed proof.
+
+
+The last notable point is that a quorum in normal case consists of 2f+1 members,
+while a quorum in impeachment consists of f+1 members.
 The necessity of 2f+1 in normal case is that in extreme cases,
 there are f faulty nodes send arbitrary messages, we need f+1 more loyal nodes to outnumber faulty counterparts.
 In comparison, that even one loyal nodes triggers impeachment indicates a improper behavior of proposer.
 Thus, f+1 impeachment validators suffice a quorum of impeachment.
 
-In addition, a validator repeats a validate message (or impeach validate message) for the first time it receive it.
-This repetition process ensures the validate message can be delivered to all nodes.
-In an edge case, a node can lose its connection while broadcasting a validate message.
-If there were no repetition mechanism, this edge case would sabotage the consistency of LBFT 2.0.
+In addition, impeachment also requires `Echo of Validate Message`_ similar to normal case handler.
+
+Implementation
+----------------------
 
 Finite State Machine
-----------------------
+*************************
 
 The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 states:
 **idle**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
@@ -144,13 +181,14 @@ And the message box near the arrow represents the message broadcast to other nod
 .. image:: lbft_fsm.png
 
 
+
 Pseudocode
 *************
 
 For more detailed implementation, interested reader can refer to the pseudocode below (the grammar is close to golang).
 
 
-**FSM for LBFT2.0**
+**FSM for LBFT 2.0**
 
 
     .. code-block:: go
@@ -367,7 +405,25 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
 
-Illicit Actions
+
+Echo of Validate Message
+*****************************
+
+Echo of validates message refers to a mechanism in implementation that
+a validator echoes a validate message when it receives it for the first time.
+A validator does not insert a block, no matter a normal or impeach one,
+until it receives a validate message.
+This statement is valid even if a validator v sends out a validate message itself.
+Validator v can only insert the block after it hears the echo from other validators.
+
+The reason of introducing echo is to get rid of depending on one single validator broadcasting a validate message.
+In an edge case, a validate can lose its connection while broadcasting a validate message.
+If there were no echo mechanism, this edge case would sabotage the consistency of LBFT 2.0,
+since only a proportion of nodes could receive this validate message.
+
+
+
+Countermeasures for Illicit Actions
 ----------------------
 
 Illicit actions refer any messages or blocks sending to a validator that cannot be processed in this validator's normal cases.
@@ -375,7 +431,7 @@ From validators' perspective, Illicit actions falls into the following categorie
 
 1. Double spend attack from the proposer
 #. An unknown ancestor block whose block height is higher than the one a validator is processing
-#. A future block whose timer stamp is larger than the counterpart of a validator.
+#. A past or future block whose timer stamp is unexpected
 #. A past block whose block height is higher than the one a validator is processing
 #. A block from any unrecognized node
 
@@ -405,7 +461,7 @@ both legit. **Q.E.D.**
 In contrast to the fact that each validator only signs one proposed block, a validator can sign an
 impeach block even if it has signed a block from p given that it cannot collect a certificate on time.
 Then is that possible for a proposer takes advantages of this mechanism to makes its proposed block
-b and an impeach block b0 both legit simultaneously?
+b and an impeach block b' both legit simultaneously?
 The answer is no. Here we lists two lemmas and shows their correctness.
 
 **Observation 1:** *It is possible that both a block b proposed from a proposer p and an impeach block b' suffice
@@ -419,8 +475,8 @@ that if a loyal validator v1 signs b then broadcasts its prepare messages, but i
 such that it later proposes an impeach block. Combining f faulty validators, two quorums are made up.
 
 However, Observation 2 ensures the safety of our consensus system. It is because once v1
-propose an impeach block b0, it can no longer send out b’s commit message even if it collects a
-prepare certificate for b. The state transmission of a validator is illustrated in the `Finite State Machine`_.
+proposes an impeach block b', it can no longer send out b’s commit message even if it collects a
+prepare certificate for b. The state transmission of a validator is illustrated in the `Implementation`_.
 Once a validator enters either impeach prepare or impeach commit phase, it no
 long signs a normal block. **Q.E.D.**
 
@@ -433,7 +489,7 @@ Thus, they cannot be validated simultaneously. **Q.E.D.**
 
 Combining both Lemma 1 and 2, we conclude the following theorem to guarantee the safety facing double spend attack.
 
-**Theorem 1:** *LBFT2.0 is guaranteed to generate only one validated block for each block height under double spend attack.*
+**Theorem 1:** *LBFT 2.0 is guaranteed to generate only one validated block for each block height under double spend attack.*
 
 
 
@@ -444,8 +500,8 @@ Unknown Ancestor Block
 An unknown ancestor block refers to a block whose block height is higher than the one the validator is currently processing.
 The name comes from the fact that the predecessor of this block is yet unknown in the chain.
 
-Suppose a validator v which is processing a block b1 in block height h1,
-and receives an unknown ancestor block b2 with block height h2 from a node p2.
+Suppose a validator v which is processing a block b in block height h,
+and receives an unknown ancestor block b\ :sub:`2`\   with block height h\ :sub:`2`\   from a node p\ :sub:`2`\  .
 There are following possible scenarios:
 
 1. The block is proposed by a legit proposer at the correct time; the validator is delaying.
@@ -460,27 +516,27 @@ well as the corresponding block heights to propose their blocks.
 Thus, a validator has a priori knowledge on all legit proposers in this term, unless the proposer is
 delaying for at least a term.
 
-In the first scenario, b2 actually is not an unknown ancestor block.
-The validator v regards b2 as an unknown ancestor block simply because it is delaying
-After receiving b2, the validator v records the block in the cache.
+In the first scenario, b\ :sub:`2`\   actually is not an unknown ancestor block.
+The validator v regards b\ :sub:`2`\   as an unknown ancestor block simply because it is delaying
+After receiving b\ :sub:`2`\  , the validator v records the block in the cache.
 As it is delaying, it is counted as one of f non-responding block.
-Despite that it receives b2, v stays in the block height h,
-and it does not participate in consensus of block height h2
-In other word, it does not broadcasts a prepare message endorsing b2.
-Other members in the validators committee suffice a quorum to complete the consensus process on b2 without v's participation.
+Despite that it receives b\ :sub:`2`\  , v stays in the block height h,
+and it does not participate in consensus of block height h\ :sub:`2`\
+In other word, it does not broadcasts a prepare message endorsing b\ :sub:`2`\  .
+Other members in the validators committee suffice a quorum to complete the consensus process on b\ :sub:`2`\   without v's participation.
 v is going to catch up with the schedule after it receives the validate message from other committee members,
 or by `Recovery`_.
 
-In the second scenario, p2 behaves faultily.
+In the second scenario, p\ :sub:`2`\   behaves faultily.
 Similar to the first scenario, v records it in the cache without signing it.
 A quorum can still complete the consensus on b.
-When it comes to the correct view of p2, if p2 proposes the block again, then it is going to be processed normally.
+When it comes to the correct view of p\ :sub:`2`\  , if p\ :sub:`2`\   proposes the block again, then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
 
-The third and fourth scenario happens when v cannot recognize p2 as a proposer.
-It can due to either b2 is faulty (scenario 3) and v is delaying (scenario 4).
+The third and fourth scenario happens when v cannot recognize p\ :sub:`2`\   as a proposer.
+It can due to either b\ :sub:`2`\   is faulty (scenario 3) and v is delaying (scenario 4).
 In both scenarios, v is going to sync, determining if it is delaying.
-For the third scenario, v rejects b2 and added v into blacklist.
+For the third scenario, v rejects b\ :sub:`2`\   and added v into blacklist.
 For the fourth one, it acts same as the first scenario.
 
 Here comes another concern.
@@ -519,6 +575,56 @@ This principle assures the safety of LBFT 2.0 when facing mischievous blocks,
 and relies on the rest loyal validators processing a proper one.
 
 
+Past and Future Block
+**************
+
+Since all timer operations are depending on local timers of each validator,
+timestamp of the block is not involved in consensus among validators.
+Despite that timestamp does not play an important role in our consensus,
+it is an important attribute of a block.
+In fact, timestamp is one of factors verifying a block.
+
+A validator v regards a block b as a future one, if the following two conditions are met:
+
+    1. The timestamp of b is larger than the one of v;
+    #. The block height of b is same as v.
+
+Similarly, a block b' is considered a past block if
+
+    1. The timestamp of b' is smaller than previousBlockTimestamp+period;
+    #. The block height of b' is same as v,
+
+where previousBlockTimestamp is the timestamp of previous block,
+and period is the time interval between two consecutive blocks.
+
+Do not confuse future block with the concept of unknown ancestor block.
+An unknown ancestor block may holds a larger timestamp,
+but are processed as an unknown ancestor one instead of a future block.
+
+For past block, a validator fails in verifying it and triggers impeachment.
+For a future block, the validator wait until the timestamp of the block.
+But if it is larger than previousBlockTimestamp+period+timeout,
+an impeachment is about to take place.
+Thus, we come up with a psuedocode for timestamp verification.
+
+    .. code-block:: go
+
+        func timestampVerification(b) bool {
+            // v: a validator
+            // t: timestamp of v
+            // b: a block with timestamp tb
+            if tb < previousBlockTimestamp+period || tb > previousBlockTimestamp+period+timeout{
+                return false
+            }
+            select{
+                case <-Time.after(tb)
+                    return true
+                case <-quit //quit is true if v triggers impeachment
+                    return false
+            }
+        }
+
+
 Recovery
 -----------
 
@@ -536,15 +642,31 @@ Delaying validators are categorized into two different types according to how fa
 Intra-view Recovery
 ***************
 
-Under the original framework of LBFT 2.0, once a validator loses its connection for a state,
-it can hardly join the consensus process at the rest part of this view.
-For example, validator v\ :sub:`1`\ from a committee of four members, disconnects from the network in the prepare state.
-The other three validators suffice a quorum for a prepare certificate and proceed to commit state.
-Even v\ :sub:`1`\ somehow reconnects to the net, it cannot help collect a commit certificate
-since it has yet collected a prepare certificate.
+Under the original framework of LBFT 2.0, once a validator has been losing its connection for a state,
+it can hardly join the consensus process at the rest part of this view. Here we give an example.
 
-Without any recovery, v\ :sub:`1`\ would be regarded as a non-responding node,
+**Example 1:** validator v\ :sub:`1`\  from a committee of four members, disconnects from the network in the prepare state.
+The other three validators suffice a quorum for a prepare certificate and proceed to commit state.
+Even v\ :sub:`1`\  somehow reconnects to the net, it cannot contribute to collect a commit certificate in this view
+since it has yet collected a prepare certificate missed prepare messages from others.
+
+Without any recovery, v\ :sub:`1`\  would be regarded as a non-responding node,
 and return to normal consensus processing in the next view, after it receives a validate message.
-The intra-view recovery address whe problem by appending the certificate to the message.
-Like in the previous example, the other three validators send a commit message accompanied with a prepare certificate.
-Validator v\ :sub:`1`\ can forward to commit phase after it verifies the certificate.
+The intra-view recovery address the problem by appending the certificate to the message.
+Applying intro-view recovery in Example 1,
+the other three validators broadcast a commit message accompanied with a prepare certificate.
+Validator v\ :sub:`1`\  can forward to commit state after it verifies the certificate.
+
+Some readers may wonder that LBFT 2.0 works perfectly as long as the assumptions are kept,
+what the necessity of intra-view recovery is.
+The key reason is that communications between validators are finished in the blink of an eye.
+The possibility that a validator loses some packets is not that low.
+Our experimental results indicate that even in a committee of four loyal validator,
+one of them faces the problem that it lags behind one state every hundreds of blocks.
+
+By introducing intra-view recovery, our system can tolerate two or more distinct validators
+lose their connection in different states.
+Even though this scenario violates our original assumptions, LBFT 2.0 with intra-view recovery reaches a consensus.
+At the cost of larger space consumption for each message, we increase the robustness of the protocol.
+
+
