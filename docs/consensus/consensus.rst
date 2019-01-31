@@ -432,7 +432,6 @@ From validators' perspective, Illicit actions falls into the following categorie
 1. Double spend attack from the proposer
 #. An unknown ancestor block whose block height is higher than the one a validator is processing
 #. A past or future block whose timer stamp is unexpected
-#. A past block whose block height is higher than the one a validator is processing
 #. A block from any unrecognized node
 
 Double Spend Attack
@@ -562,7 +561,7 @@ Thus, we can write a pseudocode to depict the processes above.
                 v continue processing b
             }
             if v has not synced for 10*|P| seconds {
-                b synchronizes with the committee
+                sync()  // v synchronizes with the committee
                 unknownAncestorBlockHandler(b2)
             } else {
                 punish p2
@@ -669,4 +668,47 @@ lose their connection in different states.
 Even though this scenario violates our original assumptions, LBFT 2.0 with intra-view recovery reaches a consensus.
 At the cost of larger space consumption for each message, we increase the robustness of the protocol.
 
+
+Extra-view Recovery
+*************************
+
+If intra-view recovery does not work for a validator v and the block height of v is same as the chain,
+it is about to catch up other validators once it receives a validate message.
+As demonstrated in `Pseudocode`_, validate message (as well as impeach validate mesage) has highest priority,
+which forwards v to idle state of next view regardless of the state of v.
+
+However, if v has been losing its connection for a long time, it should invoke *sync* function.
+Sync function, as indicated by the name, synchronizes with Mainnet chain.
+Then it can rejoin consensus process after receiving validate message of the current view.
+The function is called a validator suspects it is delaying like receiving `Unknown Ancestor Block`_.
+
+
+Comparison with PBFT
+---------------------------
+
+This section compares LBFT 2.0 with classic PBFT.
+We name both proposer in LBFT 2.0 and primary replica in PBFT as the leader,
+since they assume similar responsibility to dispatch a query to all nodes.
+And insistence on P-certificate indicates that
+a replica does not changes its endorsement in a query once it collects a prepare certificate.
+
+In other word, LBFT 2.0 has weaker assumption, higher liveness and more complicated faulty
+leader handler. Note that the view change reduces the faulty leader problem into a normal case
+handler in the next view. We cannot adopt similar method since our high command on liveness.
+Liveness is also the reason that a validator cannot insist on a P-certificate.
+
+
++---------------------------+------------------------------------+-----------------------------+
+| Aspect                    |           LBFT 2.0                 |         PBFT                |
++===========================+====================================+=============================+
+| Assumption                | Tolerate at most f faulty          | Tolerate at most f replicas |
+|                           | validators and a faulty proposer   |                             |
++---------------------------+------------------------------------+-----------------------------+
+| Liveness                  | Insert a block every 10 seconds    | Response in finite time     |
++---------------------------+------------------------------------+-----------------------------+
+| Insistence on             | Trigger impeachment if timer       | Insist on the query with    |
+| P-certificate             | expires                            | P-certificate               |
++---------------------------+------------------------------------+-----------------------------+
+| Faulty leader handler     | Impeachment                        | View change                 |
++---------------------------+------------------------------------+-----------------------------+
 
