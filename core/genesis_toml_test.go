@@ -88,3 +88,22 @@ func TestTestnetGenesisBlock_MarshalTOML(t *testing.T) {
 	fmt.Println("genesisblock", string(ss))
 	configs.SetRunMode(origMode)
 }
+
+func TestMainnetGenesisBlock_MarshalTOML(t *testing.T) {
+	origMode := configs.GetRunMode()
+	configs.SetRunMode(configs.Mainnet)
+	genesisblock := DefaultGenesisBlock()
+	fmt.Println("==============toml=====================")
+	err := toml.NewEncoder(os.Stdout).Encode(genesisblock)
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println("==============json=====================")
+	ss, err := json.Marshal(genesisblock)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println("genesisblock", string(ss))
+	configs.SetRunMode(origMode)
+}
