@@ -432,7 +432,7 @@ From validators' perspective, Illicit actions falls into the following categorie
 1. Double spend attack from the proposer
 #. An unknown ancestor block whose block height is higher than the one a validator is processing
 #. A past or future block whose timer stamp is unexpected
-#. A block from any unrecognized node
+#. A block from any unrecognized node (and potential DDoS attack)
 
 Double Spend Attack
 *********************
@@ -575,7 +575,7 @@ and relies on the rest loyal validators processing a proper one.
 
 
 Past and Future Block
-**************
+************************
 
 Since all timer operations are depending on local timers of each validator,
 timestamp of the block is not involved in consensus among validators.
@@ -623,6 +623,20 @@ Thus, we come up with a psuedocode for timestamp verification.
             }
         }
 
+
+Unrecognized Node and DDoS Attack
+************************
+
+An unrecognized node refers to any node that is not from the incumbent proposers committee.
+When a validator receives a message from an unrecognized node,
+it omits it if the block height is smaller or equal than the current one.
+For messages with higher block height, the validator invokes `Unknown Ancestor Block`_ method to process it.
+
+
+Malicious multiple messages from unrecognized nodes may form a DDoS attack against validators committee.
+As described in `Unknown Ancestor Block`_,
+an interval of at least 10*|P| between two consecutive synchronizations is enforced
+to prevent I/O and computing resource exhaustion.
 
 Recovery
 -----------
