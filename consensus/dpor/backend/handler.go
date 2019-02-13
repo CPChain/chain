@@ -94,11 +94,11 @@ func (h *Handler) dialLoop() {
 			blk := h.dpor.GetCurrentBlock()
 			if blk != nil {
 				term := h.dpor.TermOf(blk.NumberU64())
-				if len(h.dialer.ValidatorsOfTerm(term)) < int(h.config.TermLen) {
-					go h.dialer.DialAllRemoteValidators(term)
+				if len(h.dialer.ValidatorsOfTerm(term)) < int(h.config.TermLen-h.fsm.Faulty()-1) {
+					h.dialer.DialAllRemoteValidators(term)
 				}
 			} else {
-				go h.dialer.DialAllRemoteValidators(0)
+				h.dialer.DialAllRemoteValidators(0)
 			}
 
 		case <-h.quitCh:
@@ -111,7 +111,8 @@ func (h *Handler) dialLoop() {
 func (h *Handler) Start() {
 
 	// always dial if there is not enough validators in peer set
-	go h.dialer.DialAllRemoteValidators(0)
+	// go h.dialer.DialAllRemoteValidators(0)
+	go h.dialLoop()
 
 	go h.procUnhandledBlocks()
 
