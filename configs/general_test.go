@@ -158,3 +158,31 @@ func TestChainConfigInfo(t *testing.T) {
 	chainConfigInfo = ChainConfigInfo()
 	assert.Equal(t, mainnetChainConfig, chainConfigInfo)
 }
+
+func TestConvertDomainNodeWithIpOK(t *testing.T) {
+	address, err := convertDomainNode("enode://2ddfb534019e6b446fb4465742f266d04fae661089e3dac6a4c841ad0fcf5569f8d049203079bb64e20d1a32fc84b584920839a2120cd5e8886744719452d936@127.0.0.1:30317")
+	assert.Nil(t, err)
+	assert.Equal(t, "enode://2ddfb534019e6b446fb4465742f266d04fae661089e3dac6a4c841ad0fcf5569f8d049203079bb64e20d1a32fc84b584920839a2120cd5e8886744719452d936@127.0.0.1:30317", address)
+}
+
+func TestConvertDomainNodeWithDomainOK(t *testing.T) {
+	address, err := convertDomainNode("enode://2ddfb534019e6b446fb4465742f266d04fae661089e3dac6a4c841ad0fcf5569f8d049203079bb64e20d1a32fc84b584920839a2120cd5e8886744719452d936@www.baidu.com:30317")
+	fmt.Println(address)
+	assert.Nil(t, err)
+	assert.NotEqual(t, "enode://2ddfb534019e6b446fb4465742f266d04fae661089e3dac6a4c841ad0fcf5569f8d049203079bb64e20d1a32fc84b584920839a2120cd5e8886744719452d936@www.baidu.com:30317", address)
+}
+
+func TestConvertDomainNodeWithDomainFail(t *testing.T) {
+	_, err := convertDomainNode("enode://2ddfb534019e6b446fb4465742f266d04fae661089e3dac6a4c841ad0fcf5569f8d049203079bb64e20d1a32fc84b584920839a2120cd5e8886744719452d936@www.notexistwebsite111.com:30317")
+	assert.NotNil(t, err)
+}
+
+func TestConvertValidators(t *testing.T) {
+	validators := []string{"enode://2ddfb534019e6b446fb4465742f266d04fae661089e3dac6a4c841ad0fcf5569f8d049203079bb64e20d1a32fc84b584920839a2120cd5e8886744719452d936@www.baidu.com:30317",
+		"enode://2ddfb534019e6b446fb4465742f266d04fae661089e3dac6a4c841ad0fcf5569f8d049203079bb64e20d1a32fc84b584920839a2120cd5e8886744719452d936@192.111.222.3:30317",
+		"enode://2ddfb534019e6b446fb4465742f266d04fae661089e3dac6a4c841ad0fcf5569f8d049203079bb64e20d1a32fc84b584920839a2120cd5e8886744719452d936@127.3.1.2:30317"}
+	newValidators, err := ConvertNodeURL(validators)
+	fmt.Println(newValidators)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(newValidators))
+}

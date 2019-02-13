@@ -124,7 +124,13 @@ func updateBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	}
 
 	cfg.BootstrapNodes = make([]*discover.Node, 0, len(urls))
-	for _, url := range urls {
+	newUrls, err := configs.ConvertNodeURL(urls)
+	log.Debug("convert bootnode urls", "original urls", urls, "new urls", newUrls)
+	if err != nil {
+		log.Fatal("convertValidators failed", "error", err)
+	}
+
+	for _, url := range newUrls {
 		node, err := discover.ParseNode(url)
 		if err != nil {
 			log.Error("Bootstrap URL invalid", "enode", url, "err", err)

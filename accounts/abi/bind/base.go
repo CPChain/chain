@@ -141,6 +141,7 @@ func (c *BoundContract) Call(opts *CallOpts, result interface{}, method string, 
 		output, err = pb.PendingCallContract(ctx, msg)
 		if err == nil && len(output) == 0 {
 			// Make sure we have a contract to operate on, and bail out otherwise.
+			// NOTE: it may cause some edge case where the pending block doesn't add to chain and the tx which depends on it will eventually fail
 			if code, err = pb.PendingCodeAt(ctx, c.address); err != nil {
 				return err
 			} else if len(code) == 0 {

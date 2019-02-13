@@ -239,15 +239,10 @@ func (e *engine) update() {
 		select {
 		// a new block has been inserted.  we start to mine based on this new tip.
 		case <-e.chainHeadCh:
-			if atomic.LoadInt32(&e.mining) == 1 {
-				if e.cons.CanMakeBlock(e.chain, e.coinbase, e.chain.CurrentHeader()) {
-					log.Info("it is proposer, make block")
-					// call commitNewWork only when status is mining
-					e.commitNewWork()
-				} else {
-					log.Info("not proposer, not make block")
-				}
+			// commitNewWork must run no matter if it is mining, because pending block needs to be updated by commitNewWork
+			e.commitNewWork()
 
+			if atomic.LoadInt32(&e.mining) == 1 {
 				// checks and tries to campaign if needed
 				e.cons.TryCampaign()
 			}
@@ -428,9 +423,12 @@ func (e *engine) commitNewWork() {
 
 	// We only care about logging if we're actually mining.
 	if atomic.LoadInt32(&e.mining) == 1 {
-		log.Info("Commit new mining work", "number", work.Block.Number(), "txs", work.tcount, "elapsed", common.PrettyDuration(time.Since(tstart)))
+		// only seal and broadcast the block when it is mining proposer
+		if e.cons.CanMakeBlock(e.chain, e.coinbase, parent.Header()) {
+			e.push(work)
+			log.Info("Commit new mining work", "number", work.Block.Number(), "txs", work.tcount, "elapsed", common.PrettyDuration(time.Since(tstart)))
+		}
 	}
-	e.push(work)
 	e.updateSnapshot()
 }
 
