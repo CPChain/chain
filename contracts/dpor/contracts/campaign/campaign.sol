@@ -133,6 +133,7 @@ contract Campaign {
         public
         payable
     {
+        // TODO: @ac once finishes pre-pay cpc for nodes to become candidates, enable the requirement checking below
         //require(reward.isCandidate(msg.sender)==true, "not candidate by reward");
         // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
@@ -199,7 +200,7 @@ contract Campaign {
             termIdx = 0;
             return;
         }
-        termIdx = (blockNumber - 1) / numPerRound;
+        termIdx = (blockNumber - 1).div(numPerRound);
     }
 
 }
