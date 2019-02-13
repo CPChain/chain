@@ -196,6 +196,77 @@ Creates new messages call transaction or a contract creation, if the data fields
         "result": "0xc38f30dab2b603840682e0f588dbda0a897a73c4409f9c998dd4fdc176784eb2"
     }
 
+eth_getBlockTransactionCountByHash
++++++++++++++++++++++++++++++++++++++
+
+Returns the number of transactions in a block from a block matching the given block hash.
+
+**Parameters**
+
+    ``DATA``, 32 Bytes - hash of a block.
+
+.. code-block:: shell
+
+    params: [
+       '0x31b36ef5ec3481f6307170c87b1f21e492a6abf08693622236cb30ce095e1abf'
+    ]
+
+**Returns**
+
+    ``QUANTITY`` - integer of the number of transactions in this block.
+
+**Example**
+
+
+.. code-block:: shell
+
+    // Request
+    curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByHash","params":["0x31b36ef5ec3481f6307170c87b1f21e492a6abf08693622236cb30ce095e1abf"],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+      "id":1,
+      "jsonrpc": "2.0",
+      "result": "0x7b" // 123
+    }
+
+
+
+eth_getBlockTransactionCountByNumber
++++++++++++++++++++++++++++++++++++++
+
+Returns the number of transactions in a block from a block matching the given block number.
+
+**Parameters**
+
+
+    ``QUANTITY|TAG`` - integer of a block number, or the string "earliest", "latest" or "pending", as in the default block parameter.
+
+
+.. code-block:: shell
+
+    params: [
+       '0x1363eb' //1270763
+    ]
+
+**Returns**
+
+    ``QUANTITY`` - integer of the number of transactions in this block.
+
+**Example**
+
+
+.. code-block:: shell
+
+    // Request
+    curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByNumber","params":["0x1363eb"],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+      "id":1,
+      "jsonrpc": "2.0",
+      "result": "0x7b" // 123
+    }
 
 Account
 ***********
@@ -209,9 +280,9 @@ It returns the balance according to the wallet address.
 
 **Parameters**
 
-1. ``DATA``, 20 Bytes - address to check for balance.
+``DATA``, 20 Bytes - address to check for balance.
 
-#. ``QUANTITY|TAG`` - integer block number, or the string "latest", "earliest" or "pending", see the default block parameter
+``QUANTITY|TAG`` - integer block number, or the string "latest", "earliest" or "pending", see the default block parameter
 
 .. code-block:: shell
 
@@ -220,11 +291,11 @@ It returns the balance according to the wallet address.
         "latest"
     ]
 
-Returns
+**Returns**
 
-QUANTITY - integer of the current balance.
+``QUANTITY`` - integer of the current balance.
 
-Example
+**Example**
 
 .. code-block:: shell
 
@@ -237,7 +308,6 @@ Example
         "id": 1,
         "result": "0x56bc6066367565ff6" // 9999962199999999999
     }
-
 
 
 
