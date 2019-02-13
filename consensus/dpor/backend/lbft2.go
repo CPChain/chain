@@ -86,11 +86,14 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 
 	state := p.State()
 
+	log.Debug("current state", "state", state)
+
 	output, action, msgCode, state, err := p.realFSM(input, msgCode, state)
 	// output, action, msgCode, state, err := p.fsm(input, msgCode, state)
 
 	if err == nil {
 		p.SetState(state)
+		log.Debug("result state", "state", state)
 	}
 
 	return output, action, msgCode, err
@@ -141,12 +144,21 @@ func (p *LBFT2) realFSM(input *BlockOrHeader, msgCode MsgCode, state consensus.S
 func (p *LBFT2) IdleHandler(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	switch msgCode {
 	case ImpeachPreprepareMsgCode, ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+
+		log.Debug("IdleHandler to call ImpeachHandler")
+
 		return p.ImpeachHandler(input, msgCode, state)
 
 	case PrepareMsgCode, CommitMsgCode, ValidateMsgCode:
+
+		log.Debug("IdleHandler to call PrepareHandler")
+
 		return p.PrepareHandler(input, msgCode, state)
 
 	case PreprepareMsgCode:
+
+		log.Debug("IdleHandler to call handlePreprepareMsg")
+
 		return p.handlePreprepareMsg(input, state, func(block *types.Block) error {
 			return p.dpor.ValidateBlock(block, false, true)
 		})
@@ -159,12 +171,21 @@ func (p *LBFT2) IdleHandler(input *BlockOrHeader, msgCode MsgCode, state consens
 func (p *LBFT2) PrepareHandler(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	switch msgCode {
 	case ImpeachPreprepareMsgCode, ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+
+		log.Debug("PrepareHandler to call ImpeachHandler")
+
 		return p.ImpeachHandler(input, msgCode, state)
 
 	case CommitMsgCode, ValidateMsgCode:
+
+		log.Debug("PrepareHandler to call CommitHandler")
+
 		return p.CommitHandler(input, msgCode, state)
 
 	case PrepareMsgCode:
+
+		log.Debug("PrepareHandler to call handlePrepareMsg")
+
 		return p.handlePrepareMsg(input, state)
 
 	default:
@@ -175,12 +196,21 @@ func (p *LBFT2) PrepareHandler(input *BlockOrHeader, msgCode MsgCode, state cons
 func (p *LBFT2) CommitHandler(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	switch msgCode {
 	case ImpeachPreprepareMsgCode, ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+
+		log.Debug("CommitHandler to call ImpeachHandler")
+
 		return p.ImpeachHandler(input, msgCode, state)
 
 	case ValidateMsgCode:
+
+		log.Debug("CommitHandler to call handleValidateMsg")
+
 		return p.handleValidateMsg(input, state)
 
 	case CommitMsgCode:
+
+		log.Debug("CommitHandler to call handleCommitMsg")
+
 		return p.handleCommitMsg(input, state)
 
 	default:
@@ -191,10 +221,16 @@ func (p *LBFT2) CommitHandler(input *BlockOrHeader, msgCode MsgCode, state conse
 func (p *LBFT2) ImpeachHandler(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	switch msgCode {
 	case ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+
+		log.Debug("ImpeachHandler to call ImpeachPrepareHandler")
+
 		return p.ImpeachPrepareHandler(input, msgCode, state)
 
 	case ImpeachPreprepareMsgCode:
 		// TODO: fix this, use correct impeach block verify function
+
+		log.Debug("ImpeachHandler to call handleImpeachPreprepareMsg")
+
 		return p.handleImpeachPreprepareMsg(input, state, func(block *types.Block) error {
 			return p.dpor.ValidateBlock(block, false, true)
 		})
@@ -208,9 +244,15 @@ func (p *LBFT2) ImpeachHandler(input *BlockOrHeader, msgCode MsgCode, state cons
 func (p *LBFT2) ImpeachPrepareHandler(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	switch msgCode {
 	case ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+
+		log.Debug("ImpeachPrepareHandler to call ImpeachCommitHandler")
+
 		return p.ImpeachCommitHandler(input, msgCode, state)
 
 	case ImpeachPrepareMsgCode:
+
+		log.Debug("ImpeachPrepareHandler to call handleImpeachPrepareMsg")
+
 		return p.handleImpeachPrepareMsg(input, state)
 
 	default:
@@ -223,9 +265,15 @@ func (p *LBFT2) ImpeachCommitHandler(input *BlockOrHeader, msgCode MsgCode, stat
 
 	switch msgCode {
 	case ImpeachValidateMsgCode:
+
+		log.Debug("ImpeachCommitHandler to call handleImpeachValidateMsg")
+
 		return p.handleImpeachValidateMsg(input, state)
 
 	case ImpeachCommitMsgCode:
+
+		log.Debug("ImpeachCommitHandler to call handleImpeachCommitMsg")
+
 		return p.handleImpeachCommitMsg(input, state)
 
 	default:

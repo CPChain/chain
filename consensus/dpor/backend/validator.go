@@ -241,7 +241,7 @@ func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 }
 
 func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteSigner) {
-	log.Debug("received msg from remote peer", "number", number, "hash", hash.Hex(), "state", msgCode.String(), "remote peer", p.Coinbase().Hex())
+	log.Debug("received msg", "number", number, "hash", hash.Hex(), "state", msgCode.String(), "remote peer", p.Coinbase().Hex())
 }
 
 func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
@@ -380,6 +380,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
 	if err != nil {
+		log.Debug("received an error when run fsm", "err", err)
 		return err
 	}
 
