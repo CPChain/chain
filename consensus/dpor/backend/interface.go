@@ -81,7 +81,7 @@ type HandleGeneratedImpeachBlock func(block *types.Block) error
 type ConsensusStateMachine interface {
 	Status() DSMStatus
 	Faulty() uint64
-	FSM(input *blockOrHeader, msgCode MsgCode) ([]*blockOrHeader, Action, MsgCode, error)
+	FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Action, MsgCode, error)
 }
 
 // DporService provides functions used by dpor handler
