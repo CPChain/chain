@@ -707,8 +707,8 @@ As temporary data are stored in volatile memory, they are not retained once a va
 Hence, before a validator shuts down, it writes all temporary data in hard disk,
 and retrieves these data after it starts up.
 
-Note that it is highly possible that a validator is lagging behind other committee members if it restarts.
-In this case, it process the block as explained in `Unknown Ancestor Block`_.
+Note that it is highly possible that a validator is lagging behind other committee members after it restarts.
+In this case, it processes the block as explained in `Unknown Ancestor Block`_.
 
 
 Comparison with PBFT
