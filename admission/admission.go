@@ -187,9 +187,6 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 		return
 	}
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
-	transactOpts.Value = new(big.Int).Mul(configs.Deposit(), new(big.Int).SetUint64(terms))
-	log.Info("transactOpts.Value", "value", transactOpts.Value)
-
 	campaignContractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
 	instance, err := contracts.NewCampaignWrapper(transactOpts, campaignContractAddress, ac.contractBackend)

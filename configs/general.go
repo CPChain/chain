@@ -6,6 +6,8 @@ package configs
 import (
 	"fmt"
 	"math/big"
+	"net"
+	"strings"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -191,8 +193,59 @@ func InitDefaultValidators(validators []string) {
 	if validators != nil && len(validators) > 0 {
 		defaultValidatorNodes = validators
 	}
+	convertedValidatorNodes, err := ConvertNodeURL(defaultValidatorNodes)
+	if err != nil {
+		log.Fatal("convertValidators failed", "error", err)
+	}
+	log.Info("init validators", "nodes", convertedValidatorNodes)
 
-	log.Debug("init validators", "nodes", defaultValidatorNodes)
+	defaultValidatorNodes = convertedValidatorNodes
+}
+
+func ConvertNodeURL(nodeURLs []string) ([]string, error) {
+	validatorNodes := []string{}
+	// if domain in nodeId, convert domain to ip and return
+	for _, nodeURL := range nodeURLs {
+		ipAddress, err := convertDomainNode(nodeURL)
+		log.Debug("convertDomainNode", "nodeURL", nodeURL, "ip", ipAddress)
+		if err != nil {
+			log.Error("error when resolve nodeURL", "error", err)
+			return nil, err
+		}
+		validatorNodes = append(validatorNodes, ipAddress)
+	}
+	return validatorNodes, nil
+}
+
+func convertDomainNode(validator string) (string, error) {
+	// get nodeid and ip|host:port
+	nodeIdAndAddress := strings.Split(validator, "@")
+	host, port, err := net.SplitHostPort(nodeIdAndAddress[1])
+	if err != nil {
+		return "", fmt.Errorf("invalid host: %v,validator:%v", err, nodeIdAndAddress)
+	}
+	ipAddress, err := resolveDomain(host)
+	if err != nil {
+		return "", err
+	}
+	return nodeIdAndAddress[0] + "@" + ipAddress + ":" + port, nil
+}
+
+func resolveDomain(hostname string) (string, error) {
+	ipAddress := net.ParseIP(hostname)
+	log.Debug("parse ip", "hostname", hostname, "ipAddress", ipAddress)
+	if ipAddress != nil {
+		return ipAddress.String(), nil
+	}
+	addr, err := net.LookupHost(hostname)
+	if err != nil {
+		log.Error("lookup host error", "hostname", hostname, "err", err)
+		return "", err
+	}
+	if len(addr) > 0 {
+		return addr[0], nil
+	}
+	return "", fmt.Errorf("invalid host: %v", err)
 }
 
 // ChainConfig is the core config which determines the blockchain settings.
