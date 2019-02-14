@@ -235,7 +235,7 @@ func resolveDomain(hostname string) (string, error) {
 	ipAddress := net.ParseIP(hostname)
 	log.Debug("parse ip", "hostname", hostname, "ipAddress", ipAddress)
 	if ipAddress != nil {
-		return string(ipAddress), nil
+		return ipAddress.String(), nil
 	}
 	addr, err := net.LookupHost(hostname)
 	if err != nil {
