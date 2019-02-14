@@ -702,10 +702,13 @@ Restore Cache
 
 Once a block is validated and inserted into the chain, it can be labelled as a permanent data.
 And all permanent data are written in hard disks.
-In comparison, information like current states, messages as well as block caches are temporary data.
+In comparison, information like current state, collected signatures as well as block caches are temporary data.
 As temporary data are stored in volatile memory, they are not retained once a validator shuts down or restarts.
 Hence, before a validator shuts down, it writes all temporary data in hard disk,
 and retrieves these data after it starts up.
+
+Note that it is highly possible that a validator is lagging behind other committee members if it restarts.
+In this case, it process the block as explained in `Unknown Ancestor Block`_.
 
 
 Comparison with PBFT
