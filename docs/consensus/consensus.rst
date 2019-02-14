@@ -553,7 +553,7 @@ Thus, we can write a pseudocode to depict the processes above.
             // b: the block v is processing
             // h: b’s block height
             // b2: a future block proposed by p2 with block height h2
-            if h2>h {
+            if h2<=h {
                 return
             }
             if v knows p2 is a legit proposer {
@@ -695,6 +695,17 @@ However, if v has been losing its connection for a long time, it should invoke *
 Sync function, as indicated by the name, synchronizes with Mainnet chain.
 Then it can rejoin consensus process after receiving validate message of the current view.
 The function is called a validator suspects it is delaying like receiving `Unknown Ancestor Block`_.
+
+
+Restore Cache
+***************
+
+Once a block is validated and inserted into the chain, it can be labelled as a permanent data.
+And all permanent data are written in hard disks.
+In comparison, information like current states, messages as well as block caches are temporary data.
+As temporary data are stored in volatile memory, they are not retained once a validator shuts down or restarts.
+Hence, before a validator shuts down, it writes all temporary data in hard disk,
+and retrieves these data after it starts up.
 
 
 Comparison with PBFT
