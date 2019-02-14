@@ -109,9 +109,9 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 	if output != nil && action != NoAction && msgCode != NoMsgCode && err == nil {
 		p.state = state
 		p.number = output[0].Number()
-
-		log.Debug("result state", "state", state, "number", number, "msg code", msgCode.String(), "input number", input.Number())
 	}
+
+	log.Debug("result state", "state", state, "number", number, "msg code", msgCode.String(), "action", action)
 
 	if p.number < p.dpor.GetCurrentBlock().NumberU64()+1 {
 		p.number = p.dpor.GetCurrentBlock().NumberU64() + 1

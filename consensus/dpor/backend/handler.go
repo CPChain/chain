@@ -112,7 +112,7 @@ func (h *Handler) Start() {
 
 	// always dial if there is not enough validators in peer set
 	go h.dialer.DialAllRemoteValidators(0)
-	// go h.dialLoop()
+	go h.dialLoop()
 
 	go h.procUnhandledBlocks()
 
