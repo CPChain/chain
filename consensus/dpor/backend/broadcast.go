@@ -25,7 +25,7 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 
 			// if there is more than one validator in local validator peers, i'll broadcast the msg
 			// cause he'll help me to rebroadcast the msg.
-			if len(validators) >= 1 {
+			if len(validators) >= 2 {
 				return
 			}
 

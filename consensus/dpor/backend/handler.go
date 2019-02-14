@@ -76,7 +76,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 
 	// TODO: fix this
 	h.mode = LBFTMode
-	// h.mode = LBFT2Mode
+	h.mode = LBFT2Mode
 
 	return h
 }
@@ -111,8 +111,8 @@ func (h *Handler) dialLoop() {
 func (h *Handler) Start() {
 
 	// always dial if there is not enough validators in peer set
-	// go h.dialer.DialAllRemoteValidators(0)
-	go h.dialLoop()
+	go h.dialer.DialAllRemoteValidators(0)
+	// go h.dialLoop()
 
 	go h.procUnhandledBlocks()
 
