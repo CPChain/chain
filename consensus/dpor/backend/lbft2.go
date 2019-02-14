@@ -15,6 +15,7 @@ import (
 
 // LBFT2 is a state machine used for consensus protocol for validators msg processing
 type LBFT2 struct {
+	number    uint64
 	state     consensus.State
 	stateLock sync.RWMutex
 
@@ -33,6 +34,7 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 	pbft := &LBFT2{
 		state:  consensus.Idle,
 		faulty: faulty,
+		number: dpor.GetCurrentBlock().NumberU64() + 1,
 		dpor:   dpor,
 
 		blockCache:        newKnownBlocks(),
@@ -69,8 +71,18 @@ func (p *LBFT2) SetState(state consensus.State) {
 
 // Number returns current number
 func (p *LBFT2) Number() uint64 {
+	p.stateLock.RLock()
+	defer p.stateLock.RUnlock()
 
-	return p.dpor.GetCurrentBlock().NumberU64() + 1
+	return p.number
+}
+
+// SetNumber sets number of the state machine
+func (p *LBFT2) SetNumber(number uint64) {
+	p.stateLock.Lock()
+	defer p.stateLock.Unlock()
+
+	p.number = number
 }
 
 // Status returns current states
@@ -83,17 +95,27 @@ func (p *LBFT2) Status() DSMStatus {
 
 // FSM implements ConsensusStateMachine.FSM
 func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Action, MsgCode, error) {
+	p.stateLock.Lock()
+	defer p.stateLock.Unlock()
 
-	state := p.State()
+	state := p.state
+	number := p.number
 
-	log.Debug("current state", "state", state)
+	log.Debug("current status", "state", state, "number", number, "msg code", msgCode.String(), "input number", input.Number())
 
 	output, action, msgCode, state, err := p.realFSM(input, msgCode, state)
 	// output, action, msgCode, state, err := p.fsm(input, msgCode, state)
 
-	if err == nil {
-		p.SetState(state)
-		log.Debug("result state", "state", state)
+	if output != nil && action != NoAction && msgCode != NoMsgCode && err == nil {
+		p.state = state
+		p.number = output[0].Number()
+
+		log.Debug("result state", "state", state, "number", number, "msg code", msgCode.String(), "input number", input.Number())
+	}
+
+	if p.number < p.dpor.GetCurrentBlock().NumberU64()+1 {
+		p.number = p.dpor.GetCurrentBlock().NumberU64() + 1
+		p.state = consensus.Idle
 	}
 
 	return output, action, msgCode, err
@@ -113,7 +135,7 @@ func (p *LBFT2) realFSM(input *BlockOrHeader, msgCode MsgCode, state consensus.S
 		return nil, NoAction, NoMsgCode, state, nil
 	}
 
-	if number < p.Number() {
+	if number < p.number {
 		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
 		// TODO: add error type
 		return nil, NoAction, NoMsgCode, state, nil
