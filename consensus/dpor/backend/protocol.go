@@ -15,7 +15,7 @@ const (
 	ProtocolVersion = 65
 
 	// ProtocolLength protocol length, max msg code
-	ProtocolLength = 70
+	ProtocolLength = 100
 )
 
 const (

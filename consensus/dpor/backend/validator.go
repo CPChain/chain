@@ -241,13 +241,13 @@ func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 }
 
 func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteSigner) {
-	log.Debug("received msg from remote peer", "number", number, "hash", hash.Hex(), "state", msgCode.String(), "remote peer", p.Coinbase().Hex())
+	log.Debug("received msg", "number", number, "hash", hash.Hex(), "msg code", msgCode.String(), "remote peer", p.Coinbase().Hex())
 }
 
 func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	var (
-		input         = &blockOrHeader{}
+		input         = &BlockOrHeader{}
 		msgCode       = NoMsgCode
 		currentNumber = vh.dpor.GetCurrentBlock().NumberU64()
 	)
@@ -261,7 +261,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input = &blockOrHeader{
+		input = &BlockOrHeader{
 			block: block,
 		}
 		msgCode = PreprepareMsgCode
@@ -274,7 +274,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input = &blockOrHeader{
+		input = &BlockOrHeader{
 			header: header,
 		}
 		msgCode = PrepareMsgCode
@@ -287,7 +287,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input = &blockOrHeader{
+		input = &BlockOrHeader{
 			header: header,
 		}
 		msgCode = CommitMsgCode
@@ -300,7 +300,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input = &blockOrHeader{
+		input = &BlockOrHeader{
 			block: block,
 		}
 		msgCode = ValidateMsgCode
@@ -313,7 +313,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input = &blockOrHeader{
+		input = &BlockOrHeader{
 			block: block,
 		}
 		msgCode = ImpeachPreprepareMsgCode
@@ -326,7 +326,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input = &blockOrHeader{
+		input = &BlockOrHeader{
 			header: header,
 		}
 		msgCode = ImpeachPrepareMsgCode
@@ -339,7 +339,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input = &blockOrHeader{
+		input = &BlockOrHeader{
 			header: header,
 		}
 		msgCode = ImpeachCommitMsgCode
@@ -352,7 +352,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// prepare input and msg code for the fsm
-		input = &blockOrHeader{
+		input = &BlockOrHeader{
 			block: block,
 		}
 		msgCode = ImpeachValidateMsgCode
@@ -361,25 +361,26 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	}
 
-	logMsgReceived(input.number(), input.hash(), msgCode, p)
+	logMsgReceived(input.Number(), input.Hash(), msgCode, p)
 
-	if input.number() > currentNumber+1 {
+	if input.Number() > currentNumber+1 {
 		go vh.dpor.SyncFrom(p.Peer)
 
 		log.Debug("I am slow, syncing with peer", "peer", p.address)
 	}
 
-	if input.number() < currentNumber {
+	if input.Number() < currentNumber {
 		log.Debug("received outdated msg, discarding...")
 		return nil
 	}
 
 	// rebroadcast the msg
-	go vh.reBroadcast(input, msgCode, msg)
+	// go vh.reBroadcast(input, msgCode, msg)
 
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
 	if err != nil {
+		log.Debug("received an error when run fsm", "err", err)
 		return err
 	}
 
@@ -597,8 +598,8 @@ func (ir *impeachmentRecord) ifImpeached(number uint64, hash common.Hash) bool {
 	return exists && impeached.(bool) == true
 }
 
-func (vh *Handler) reBroadcast(input *blockOrHeader, msgCode MsgCode, msg p2p.Msg) {
-	if !vh.broadcastRecord.ifBroadcasted(input.number(), input.hash(), msgCode, msg) {
+func (vh *Handler) reBroadcast(input *BlockOrHeader, msgCode MsgCode, msg p2p.Msg) {
+	if !vh.broadcastRecord.ifBroadcasted(input.Number(), input.Hash(), msgCode, msg) {
 		switch msgCode {
 		case PreprepareMsgCode:
 			vh.BroadcastPreprepareBlock(input.block)
@@ -618,6 +619,6 @@ func (vh *Handler) reBroadcast(input *blockOrHeader, msgCode MsgCode, msg p2p.Ms
 			vh.BroadcastValidateImpeachBlock(input.block)
 		default:
 		}
-		vh.broadcastRecord.markAsBroadcasted(input.number(), input.hash(), msgCode, msg)
+		vh.broadcastRecord.markAsBroadcasted(input.Number(), input.Hash(), msgCode, msg)
 	}
 }

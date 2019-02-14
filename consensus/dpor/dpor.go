@@ -292,7 +292,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 	handler := d.handler
 
 	// fsm := backend.NewDSM(faulty, latest, d)
-	fsm := backend.NewPBFT(faulty, d, handler.ReceiveImpeachPendingBlock)
+	fsm := backend.NewLBFT2(faulty, d, handler.ReceiveImpeachPendingBlock)
 
 	if err := handler.SetServer(server); err != nil {
 		return
@@ -371,6 +371,6 @@ func (d *Dpor) HandleMinedBlock(block *types.Block) error {
 // ImpeachTimeout returns impeach time out
 func (d *Dpor) ImpeachTimeout() time.Duration {
 	// TODO @liuqian no hardcode
-	return 1 * time.Second
+	return 5 * time.Second
 	// return d.config.ImpeachTimeout
 }

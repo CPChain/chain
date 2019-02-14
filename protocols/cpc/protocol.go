@@ -22,7 +22,7 @@ var ProtocolName = "cpc"
 var ProtocolVersions = []uint{cconfigs.Cpc1}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
-var ProtocolLengths = []uint64{80}
+var ProtocolLengths = []uint64{100}
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 
