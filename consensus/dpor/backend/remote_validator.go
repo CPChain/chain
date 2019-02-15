@@ -186,51 +186,72 @@ func (s *RemoteValidator) broadcastLoop() {
 		// blocks waiting for signatures
 		case block := <-s.queuedPreprepareBlocks:
 			if err := s.SendPreprepareBlock(block); err != nil {
+
+				log.Warn("failed to propagate generated block", "number", block.NumberU64(), "hash", block.Hash(), "err", err)
+
 				return
 			}
-			s.Log().Trace("Propagated generated block", "number", block.NumberU64(), "hash", block.Hash())
+			log.Debug("Propagated generated block", "number", block.NumberU64(), "hash", block.Hash())
 
 		case header := <-s.queuedPrepareHeaders:
 			if err := s.SendPrepareHeader(header); err != nil {
+
+				log.Warn("failed to propagate signed prepare header", "number", header.Number, "hash", header.Hash(), "err", err)
+
 				return
 			}
-			s.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
+			log.Debug("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
 
 		case header := <-s.queuedCommitHeaders:
 			if err := s.SendCommitHeader(header); err != nil {
+
+				log.Warn("failed to propagate signed commit header", "number", header.Number, "hash", header.Hash(), "err", err)
+
 				return
 			}
-			s.Log().Trace("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
+			log.Debug("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
 
 		case block := <-s.queuedValidateBlocks:
 			if err := s.SendValidateBlock(block); err != nil {
+
+				log.Warn("failed to propagate validate block", "number", block.NumberU64(), "hash", block.Hash(), "err", err)
+
 				return
 			}
-			s.Log().Trace("Propagated validate block", "number", block.NumberU64(), "hash", block.Hash())
+			log.Debug("Propagated validate block", "number", block.NumberU64(), "hash", block.Hash())
 
 		case block := <-s.queuedPreprepareImpeachBlocks:
 			if err := s.SendPreprepareImpeachBlock(block); err != nil {
 				return
 			}
-			s.Log().Trace("Propagated generated block", "number", block.Number(), "hash", block.Hash())
+			log.Debug("Propagated generated impeach block", "number", block.Number(), "hash", block.Hash())
 
 		case header := <-s.queuedPrepareImpeachHeaders:
 			if err := s.SendPrepareImpeachHeader(header); err != nil {
+
+				log.Warn("failed to propagate signed impeach prepare header", "number", header.Number, "hash", header.Hash(), "err", err)
+
 				return
 			}
-			s.Log().Trace("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
+			log.Debug("Propagated signed impeach prepare header", "number", header.Number, "hash", header.Hash())
 
 		case header := <-s.queuedCommitImpeachHeaders:
 			if err := s.SendCommitImpeachHeader(header); err != nil {
+
+				log.Warn("failed to propagate signed impeach commit header", "number", header.Number, "hash", header.Hash(), "err", err)
+
 				return
 			}
-			s.Log().Trace("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
+			log.Debug("Propagated signed impeach commit header", "number", header.Number, "hash", header.Hash())
 
 		case block := <-s.queuedValidateImpeachBlocks:
 			if err := s.SendImpeachValidateBlock(block); err != nil {
+
+				log.Warn("failed to propagate impeach validate block", "number", block.NumberU64(), "hash", block.Hash(), "err", err)
+
 				return
 			}
-			s.Log().Trace("Propagated validate block", "number", block.NumberU64(), "hash", block.Hash())
+			log.Debug("Propagated impeach validate block", "number", block.NumberU64(), "hash", block.Hash())
 
 		case <-s.quitCh:
 			return
@@ -254,7 +275,7 @@ func (s *RemoteValidator) AsyncSendPreprepareBlock(block *types.Block) {
 	select {
 	case s.queuedPreprepareBlocks <- block:
 	default:
-		s.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	}
 }
 
@@ -269,7 +290,7 @@ func (s *RemoteValidator) AsyncSendPreprepareImpeachBlock(block *types.Block) {
 	select {
 	case s.queuedPreprepareImpeachBlocks <- block:
 	default:
-		s.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	}
 }
 
@@ -284,7 +305,7 @@ func (s *RemoteValidator) AsyncSendPrepareHeader(header *types.Header) {
 	select {
 	case s.queuedPrepareHeaders <- header:
 	default:
-		s.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
 	}
 }
 
@@ -299,7 +320,7 @@ func (s *RemoteValidator) AsyncSendPrepareImpeachHeader(header *types.Header) {
 	select {
 	case s.queuedPrepareImpeachHeaders <- header:
 	default:
-		s.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
 	}
 }
 
@@ -314,13 +335,13 @@ func (s *RemoteValidator) AsyncSendCommitHeader(header *types.Header) {
 	select {
 	case s.queuedCommitHeaders <- header:
 	default:
-		s.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
 	}
 }
 
 // SendCommitImpeachHeader sends new signed block header.
 func (s *RemoteValidator) SendCommitImpeachHeader(header *types.Header) error {
-	err := p2p.Send(s.rw, CommitHeaderMsg, header)
+	err := p2p.Send(s.rw, CommitImpeachHeaderMsg, header)
 	return err
 }
 
@@ -329,7 +350,7 @@ func (s *RemoteValidator) AsyncSendCommitImpeachHeader(header *types.Header) {
 	select {
 	case s.queuedCommitImpeachHeaders <- header:
 	default:
-		s.Log().Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
 	}
 }
 
@@ -344,7 +365,7 @@ func (s *RemoteValidator) AsyncSendValidateBlock(block *types.Block) {
 	select {
 	case s.queuedValidateBlocks <- block:
 	default:
-		s.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	}
 }
 
@@ -359,6 +380,6 @@ func (s *RemoteValidator) AsyncSendImpeachValidateBlock(block *types.Block) {
 	select {
 	case s.queuedValidateImpeachBlocks <- block:
 	default:
-		s.Log().Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	}
 }
