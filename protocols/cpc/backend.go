@@ -381,7 +381,7 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		// make sure dpor.StartMining start once
 		dpor.SetAsMiner(true)
 		dpor.SetClient(client)
-		go dpor.StartMining(s.blockchain, s.server, s.protocolManager.BroadcastBlock, s.protocolManager.SyncFromPeer)
+		go dpor.StartMining(s.blockchain, s.server, s.protocolManager.BroadcastBlock, s.protocolManager.SyncFromPeer, s.protocolManager.SyncFromBestPeer)
 		log.Info("start participating campaign", "campaign", dpor.IsToCampaign())
 	}
 	if local {

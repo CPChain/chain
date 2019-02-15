@@ -15,6 +15,21 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
+// TermLength returns term length
+func (d *Dpor) TermLength() uint64 {
+	return d.config.TermLen
+}
+
+// ViewLength returns view length
+func (d *Dpor) ViewLength() uint64 {
+	return d.config.ViewLen
+}
+
+// ValidatorsNum returns number of validators
+func (d *Dpor) ValidatorsNum() uint64 {
+	return d.config.ValidatorsLen
+}
+
 // TermOf returns the term number of given block number
 func (d *Dpor) TermOf(number uint64) uint64 {
 	if d.currentSnap == nil {
@@ -240,6 +255,19 @@ func (d *Dpor) ECRecoverSigs(header *types.Header, state consensus.State) ([]com
 	return validators, validatorSignatures, nil
 }
 
+func (d *Dpor) ECRecoverProposer(header *types.Header) (common.Address, error) {
+	var proposer common.Address
+	proposerSig := header.Dpor.Seal
+
+	proposerPubKey, err := crypto.Ecrecover(d.dh.sigHash(header).Bytes(), proposerSig[:])
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	copy(proposer[:], crypto.Keccak256(proposerPubKey[1:])[12:])
+	return proposer, nil
+}
+
 // Update the signature to prepare signature cache(two kinds of sigs, one for prepared, another for final)
 func (d *Dpor) UpdatePrepareSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature) {
 	s, ok := d.prepareSigs.Get(hash)
@@ -285,4 +313,8 @@ func (d *Dpor) GetMac() (mac string, sig []byte, err error) {
 // SyncFrom tries to sync blocks from given peer
 func (d *Dpor) SyncFrom(p *p2p.Peer) {
 	go d.pmSyncFromPeerFn(p)
+}
+
+func (d *Dpor) Synchronise() {
+	go d.pmSyncFromBestPeerFn()
 }

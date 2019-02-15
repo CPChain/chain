@@ -86,6 +86,16 @@ type ConsensusStateMachine interface {
 
 // DporService provides functions used by dpor handler
 type DporService interface {
+
+	// TermLength returns term length
+	TermLength() uint64
+
+	// ViewLength returns view length
+	ViewLength() uint64
+
+	// ValidatorsNum returns number of validators
+	ValidatorsNum() uint64
+
 	// TermOf returns the term number of given block number
 	TermOf(number uint64) uint64
 
@@ -146,6 +156,8 @@ type DporService interface {
 	// ImpeachTimeout returns the timeout for impeachment
 	ImpeachTimeout() time.Duration
 
+	ECRecoverProposer(header *types.Header) (common.Address, error)
+
 	// ECRecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
 	// addresses if one of the sigs are illegal
 	ECRecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error)
@@ -159,8 +171,11 @@ type DporService interface {
 	// GetMac signs a Mac
 	GetMac() (string, []byte, error)
 
-	// SyncFrom tries to sync block with given peer
+	// SyncFrom tries to sync block from given peer
 	SyncFrom(p *p2p.Peer)
+
+	// Synchronise tries to sync block from best peer
+	Synchronise()
 }
 
 type HandlerMode uint

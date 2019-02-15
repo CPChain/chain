@@ -438,8 +438,11 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(1 * time.Second)
-		return p.handlePreprepareMsg(input, state, blockVerifyFn)
+		// time.Sleep(1 * time.Second)
+		// return p.handlePreprepareMsg(input, state, blockVerifyFn)
+
+		go p.unknownAncestorBlockHandler(block)
+		return nil, NoAction, NoMsgCode, state, nil
 
 	default:
 
@@ -507,8 +510,11 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(1 * time.Second)
-		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
+		// time.Sleep(1 * time.Second)
+		// return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
+
+		go p.unknownAncestorBlockHandler(block)
+		return nil, NoAction, NoMsgCode, state, nil
 
 	default:
 
@@ -944,6 +950,58 @@ func (p *LBFT2) onceCommitCertificateSatisfied(prepareHeader *types.Header, comm
 	// succeed to compose validate msg, broadcast it
 	return []*BlockOrHeader{newBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
 
+}
+
+// func unknownAncestorBlockHandler(b2) {
+//     // v: a validator
+//     // b: the block v is processing
+//     // h: b’s block height
+//     // b2: a future block proposed by p2 with block height h2
+//     if h2<=h {
+//         return
+//     }
+//     if v knows p2 is a legit proposer {
+//         v stores b2 in the cache
+//         v continue processing b
+//     }
+//     if v has not synced for 10*|P| seconds {
+//         sync()  // v synchronizes with the committee
+//         unknownAncestorBlockHandler(b2)
+//     } else {
+//         punish p2
+//     }
+// }
+
+func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
+	number := block.NumberU64()
+
+	if number <= p.number {
+		return
+	}
+
+	// recover proposer's address
+	proposer, err := p.dpor.ECRecoverProposer(block.Header())
+	if err != nil {
+		return
+	}
+
+	// verify if a legit proposer
+	term := p.dpor.TermOf(number)
+	isP, err := p.dpor.VerifyProposerOf(proposer, term)
+	if err != nil {
+		return
+	}
+
+	if isP {
+		if err := p.blockCache.AddBlock(block); err != nil {
+			log.Warn("failed to add block to cache", "number", number, "hash", block.Hash().Hex(), "error", err)
+		}
+		return
+	}
+
+	if p.dpor.TermOf(number) > p.dpor.TermOf(p.number) {
+		go p.dpor.Synchronise()
+	}
 }
 
 // Impeachment waits until it is time to impeach, then try to compose an impeach block
