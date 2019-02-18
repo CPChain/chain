@@ -268,6 +268,40 @@ Returns the number of transactions in a block from a block matching the given bl
       "result": "0x7b" // 123
     }
 
+
+
+
+
+eth_gasPrice
++++++++++++++++
+
+It returns the current price per gas in wei.
+
+
+**Parameters**
+
+none
+
+**Returns**
+
+``QUANTITY`` - integer of the current gas price in wei.
+
+**Example**
+
+.. code-block:: shell
+
+    // Request
+    curl -X POST --data '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":73}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+      "id":73,
+      "jsonrpc": "2.0",
+      "result": "0x430e23400" // 18000000000
+    }
+
+
+
 Account
 ***********
 

@@ -277,16 +277,13 @@ func numberToBytes(number uint64) []byte {
 
 func HashBytesWithState(hash []byte, state consensus.State) (signHashBytes []byte, err error) {
 	var (
-		prepreparePrefix = "Preprepare"
+		prepreparePrefix = "Prepare"
 	)
 
 	var bytesToSign []byte
 	switch state {
 	case consensus.Prepare, consensus.ImpeachPrepare:
-		// TODO: for now, skip this, because i need fsm tests work, i'll fix this later
-		// bytesToSign = append([]byte(prepreparePrefix), hash...)
-		_ = prepreparePrefix
-		bytesToSign = hash
+		bytesToSign = append([]byte(prepreparePrefix), hash...)
 	case consensus.Commit, consensus.ImpeachCommit:
 		bytesToSign = hash
 	default:
