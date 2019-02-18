@@ -85,14 +85,12 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 		case consensus.ErrFutureBlock:
 			// if the block is a future block,
 			// wait for its time
-			_ = vh.knownBlocks.AddFutureBlock(block)
 			go vh.BroadcastPreprepareBlock(block)
 			return nil
 
 		case consensus.ErrUnknownAncestor:
 			// if the block is a unknown ancestor block,
 			// wait for its ancestors
-			_ = vh.knownBlocks.AddUnknownAncestor(block)
 			go vh.BroadcastPreprepareBlock(block)
 			return nil
 

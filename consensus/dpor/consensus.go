@@ -242,7 +242,7 @@ func (d *Dpor) Authorize(signer common.Address, signFn backend.SignFn) {
 	d.coinbaseLock.Unlock()
 
 	if d.handler == nil {
-		d.handler = backend.NewHandler(d.config, d.Coinbase())
+		d.handler = backend.NewHandler(d.config, d.Coinbase(), d.db)
 	}
 	if d.handler.Coinbase() != signer {
 		d.handler.SetCoinbase(signer)

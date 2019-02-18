@@ -8,6 +8,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -58,12 +59,12 @@ type Handler struct {
 }
 
 // NewHandler creates a new Handler
-func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
+func NewHandler(config *configs.DporConfig, coinbase common.Address, db database.Database) *Handler {
 
 	h := &Handler{
 		config:                config,
 		coinbase:              coinbase,
-		knownBlocks:           newKnownBlocks(),
+		knownBlocks:           NewRecentBlocks(db),
 		dialer:                NewDialer(),
 		pendingBlockCh:        make(chan *types.Block),
 		pendingImpeachBlockCh: make(chan *types.Block),
@@ -75,7 +76,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 	}
 
 	// TODO: fix this
-	h.mode = LBFTMode
+	// h.mode = LBFTMode
 	h.mode = LBFT2Mode
 
 	return h
@@ -113,8 +114,6 @@ func (h *Handler) Start() {
 	// always dial if there is not enough validators in peer set
 	go h.dialer.DialAllRemoteValidators(0)
 	go h.dialLoop()
-
-	go h.procUnhandledBlocks()
 
 	// broadcast mined pending block, including empty block
 	go h.PendingBlockBroadcastLoop()

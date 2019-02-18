@@ -177,15 +177,15 @@ func (am *Manager) Subscribe(sink chan<- WalletEvent) event.Subscription {
 	return am.feed.Subscribe(sink)
 }
 
-// CanDecrypt checks whether there is a corresponding private key for the given RSA public key to decrypt data and
-// returns the account whose RSA private key is corresponding to the given RSA public key.
-func (am *Manager) CanDecrypt(rsaPubkey string) (bool, Wallet, *Account) {
+// CanDecrypt checks whether there is a corresponding private key for the given public key to decrypt data and
+// returns the account whose ecdsa private key is corresponding to the given public key.
+func (am *Manager) CanDecrypt(pubkey string) (bool, Wallet, *Account) {
 	for _, wallet := range am.Wallets() {
 		for _, account := range wallet.Accounts() {
-			rsaKey, err := wallet.RsaPublicKey(account)
+			keyBytes, err := wallet.PublicKey(account)
 			if err == nil {
-				pubKeyEncoded := hexutil.Encode(rsaKey.RsaPublicKeyBytes)
-				if pubKeyEncoded == rsaPubkey {
+				pubKeyEncoded := hexutil.Encode(keyBytes)
+				if pubKeyEncoded == pubkey {
 					return true, wallet, &account
 				}
 			}
@@ -194,9 +194,9 @@ func (am *Manager) CanDecrypt(rsaPubkey string) (bool, Wallet, *Account) {
 	return false, nil, nil
 }
 
-// Decrypt decrypts data with given account's RSA private key.
+// Decrypt decrypts data with given account's Ecies private key.
 func (am *Manager) Decrypt(data []byte, wallet Wallet, account *Account) ([]byte, error) {
-	return wallet.DecryptWithRsa(*account, data)
+	return wallet.DecryptWithEcies(*account, data)
 }
 
 // merge is a sorted analogue of append for wallets, where the ordering of the

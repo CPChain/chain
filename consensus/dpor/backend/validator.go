@@ -2,13 +2,11 @@ package backend
 
 import (
 	"hash/fnv"
-	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -476,51 +474,6 @@ func (vh *Handler) ReadyToImpeach() bool {
 
 	vh.snap = current
 	return false
-}
-
-func (vh *Handler) procUnhandledBlocks() {
-	timer := time.NewTicker(200 * time.Millisecond)
-	defer timer.Stop()
-
-	for {
-		select {
-		case <-timer.C:
-			for _, bi := range vh.knownBlocks.GetFutureBlockIdentifiers() {
-				// get the block
-				blk, _ := vh.knownBlocks.GetFutureBlock(bi.(blockIdentifier))
-
-				// make a msg
-				size, r, err := rlp.EncodeToReader(blk)
-				if err != nil {
-					continue
-				}
-				msg := p2p.Msg{Code: PreprepareBlockMsg, Size: uint32(size), Payload: r}
-
-				// handle it as received from remote unknown peer
-				err = vh.handleLBFTMsg(msg, nil)
-				vh.knownBlocks.futureBlocks.Remove(bi.(blockIdentifier))
-			}
-
-			for _, bi := range vh.knownBlocks.GetUnknownAncestorBlockIdentifiers() {
-				// get the block
-				blk, _ := vh.knownBlocks.GetUnknownAncestor(bi.(blockIdentifier))
-
-				// make a msg
-				size, r, err := rlp.EncodeToReader(blk)
-				if err != nil {
-					continue
-				}
-				msg := p2p.Msg{Code: PreprepareBlockMsg, Size: uint32(size), Payload: r}
-
-				// handle it as received from remote unknown peer
-				err = vh.handleLBFTMsg(msg, nil)
-				vh.knownBlocks.unknownAncestors.Remove(bi.(blockIdentifier))
-			}
-
-		case <-vh.quitCh:
-			return
-		}
-	}
 }
 
 // ReceiveImpeachPendingBlock receives a block to add to pending block channel

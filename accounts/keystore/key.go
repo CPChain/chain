@@ -30,9 +30,9 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/ecies"
 	"github.com/pborman/uuid"
 )
 
@@ -48,7 +48,8 @@ type Key struct {
 	// privkey in this struct is always in plaintext
 	PrivateKey *ecdsa.PrivateKey
 
-	RsaKey *rsakey.RsaKey
+	// we cache ecies.PrivateKey used to decrypt data that encrypted by ecies.PublicKey from remote node
+	EciesPrivateKey *ecies.PrivateKey
 }
 
 type keyStore interface {
@@ -82,13 +83,12 @@ type encryptedKeyJSONV1 struct {
 }
 
 type cryptoJSON struct {
-	Cipher        string                 `json:"cipher"`
-	CipherText    string                 `json:"ciphertext"`
-	CipherParams  cipherparamsJSON       `json:"cipherparams"`
-	RsaCipherText string                 `json:"rsaciphertext"`
-	KDF           string                 `json:"kdf"`
-	KDFParams     map[string]interface{} `json:"kdfparams"`
-	MAC           string                 `json:"mac"`
+	Cipher       string                 `json:"cipher"`
+	CipherText   string                 `json:"ciphertext"`
+	CipherParams cipherparamsJSON       `json:"cipherparams"`
+	KDF          string                 `json:"kdf"`
+	KDFParams    map[string]interface{} `json:"kdfparams"`
+	MAC          string                 `json:"mac"`
 }
 
 type cipherparamsJSON struct {

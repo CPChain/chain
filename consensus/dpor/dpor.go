@@ -24,6 +24,8 @@ type BroadcastBlockFn func(block *types.Block, prop bool)
 // SyncFromPeerFn tries sync blocks from given peer
 type SyncFromPeerFn func(p *p2p.Peer)
 
+type SyncFromBestPeerFn func()
+
 const (
 	inMemorySnapshots  = 100 // Number of recent vote snapshots to keep in memory
 	inMemorySignatures = 100 // Number of recent block signatures to keep in memory
@@ -80,8 +82,9 @@ type Dpor struct {
 
 	chain consensus.ChainReadWriter
 
-	pmBroadcastBlockFn BroadcastBlockFn
-	pmSyncFromPeerFn   SyncFromPeerFn
+	pmBroadcastBlockFn   BroadcastBlockFn
+	pmSyncFromPeerFn     SyncFromPeerFn
+	pmSyncFromBestPeerFn SyncFromBestPeerFn
 
 	quitSync chan struct{}
 
@@ -192,7 +195,7 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 	return &Dpor{
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
-		handler:      backend.NewHandler(&conf, common.Address{}),
+		handler:      backend.NewHandler(&conf, common.Address{}, db),
 		db:           db,
 		recentSnaps:  recentSnaps,
 		finalSigs:    finalSigs,
@@ -271,7 +274,7 @@ func (d *Dpor) SetChain(blockchain consensus.ChainReadWriter) {
 // }
 
 // StartMining starts to create a handler and start it.
-func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn, pmSyncFromPeerFn SyncFromPeerFn) {
+func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn, pmSyncFromPeerFn SyncFromPeerFn, pmSyncFromBestPeerFn SyncFromBestPeerFn) {
 	running := atomic.LoadInt32(&d.runningMiner) > 0
 	// avoid launch handler twice
 	if running {
@@ -283,6 +286,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
 	d.pmSyncFromPeerFn = pmSyncFromPeerFn
+	d.pmSyncFromBestPeerFn = pmSyncFromBestPeerFn
 
 	// TODO: @liq read f from config
 	var (
@@ -292,7 +296,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 	handler := d.handler
 
 	// fsm := backend.NewDSM(faulty, latest, d)
-	fsm := backend.NewLBFT2(faulty, d, handler.ReceiveImpeachPendingBlock)
+	fsm := backend.NewLBFT2(faulty, d, handler.ReceiveImpeachPendingBlock, d.db)
 
 	if err := handler.SetServer(server); err != nil {
 		return
