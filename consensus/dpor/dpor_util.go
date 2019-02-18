@@ -127,7 +127,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 	defer d.lock.Unlock()
 
 	hash := header.Hash()
-	var propser common.Address
+	var proposer common.Address
 
 	if !bytes.Equal(header.Dpor.Seal[:], new(types.DporSignature)[:]) {
 		// Retrieve leader's signature
@@ -138,16 +138,16 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		if err != nil {
 			return common.Address{}, []common.Address{}, err
 		}
-		copy(propser[:], crypto.Keccak256(proposerPubKey[1:])[12:])
+		copy(proposer[:], crypto.Keccak256(proposerPubKey[1:])[12:])
 
 		// Cache proposer signature.
 		if sigs, known := sigcache.Get(hash); known {
-			sigs.(*Signatures).SetSig(propser, proposerSig[:])
+			sigs.(*Signatures).SetSig(proposer, proposerSig[:])
 		} else {
 			sigs := &Signatures{
 				sigs: make(map[common.Address][]byte),
 			}
-			sigs.SetSig(propser, proposerSig[:])
+			sigs.SetSig(proposer, proposerSig[:])
 			sigcache.Add(hash, sigs)
 		}
 	}
@@ -187,7 +187,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 			validators = append(validators, validator)
 		}
 	}
-	return propser, validators, nil
+	return proposer, validators, nil
 }
 
 // acceptSigs checks that signatures have enough signatures to accept the block.
