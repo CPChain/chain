@@ -71,6 +71,8 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		return nil
 	}
 
+	isImpeach := header.Coinbase == common.Address{}
+
 	if number > 0 {
 		// Ensure the block's parent is valid
 		var parent *types.Header
@@ -107,7 +109,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 
 		// Ensure that the block's timestamp is valid
 		if timestamp < parentTimestamp+period || timestamp > parentTimestamp+period+timeout {
-			if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber {
+			if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
 
 				log.Warn("invalid timestamp")
 				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
@@ -127,8 +129,6 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		}
 
 	}
-
-	isImpeach := header.Coinbase == common.Address{}
 
 	if number > 0 {
 		// verify dpor seal, genesis block not need this check
