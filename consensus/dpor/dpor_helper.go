@@ -17,7 +17,6 @@
 package dpor
 
 import (
-	"math/big"
 	"reflect"
 	"time"
 
@@ -63,11 +62,6 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 
 	number := header.Number.Uint64()
 
-	// Don't waste time checking blocks from the future
-	if header.Time.Cmp(big.NewInt(nanosecondToMillisecond(time.Now().UnixNano()))) > 0 {
-		return consensus.ErrFutureBlock
-	}
-
 	switch dpor.Mode() {
 	case DoNothingFakeMode:
 		// do nothing
@@ -77,7 +71,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		return nil
 	}
 
-	if header.Number.Uint64() > 0 {
+	if number > 0 {
 		// Ensure the block's parent is valid
 		var parent *types.Header
 		if len(parents) > 0 {
@@ -101,12 +95,37 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 			return consensus.ErrUnknownAncestor
 		}
 
+		// If timestamp is in a valid field, wait for it, otherwise, return invalid timestamp.
+		var (
+			timestamp       = millisecondToNanosecond(header.Time.Int64())
+			parentTimestamp = millisecondToNanosecond(parent.Time.Int64())
+			period          = millisecondToNanosecond(int64(dpor.config.Period))
+			timeout         = int64(dpor.config.ImpeachTimeout)
+		)
+
+		log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
+
 		// Ensure that the block's timestamp is valid
-		if parent.Time.Uint64()+dpor.config.Period > header.Time.Uint64() {
-			if dpor.Mode() == NormalMode {
+		if timestamp < parentTimestamp+period || timestamp > parentTimestamp+period+timeout {
+			if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber {
+
+				log.Warn("invalid timestamp")
+				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
+
 				return ErrInvalidTimestamp
 			}
 		}
+
+		// Delay to verify it!
+		delay := time.Duration(millisecondToNanosecond((header.Time.Int64() - nanosecondToMillisecond(time.Now().UnixNano()))))
+
+		log.Debug("Delay to verify the block", "delay", delay)
+
+		select {
+		case <-time.After(delay):
+		default:
+		}
+
 	}
 
 	isImpeach := header.Coinbase == common.Address{}

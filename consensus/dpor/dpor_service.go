@@ -201,6 +201,11 @@ func (d *Dpor) HasBlockInChain(hash common.Hash, number uint64) bool {
 	return false
 }
 
+// GetBlockFromChain implements DporService.GetBlockFromChain
+func (d *Dpor) GetBlockFromChain(hash common.Hash, number uint64) *types.Block {
+	return d.chain.GetBlock(hash, number)
+}
+
 // CreateImpeachBlock creates an impeachment block
 func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	parentHeader := d.chain.CurrentHeader()

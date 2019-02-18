@@ -153,6 +153,9 @@ type DporService interface {
 	// HasBlockInChain returns if a block is in local chain
 	HasBlockInChain(hash common.Hash, number uint64) bool
 
+	// GetBlockFromChain returns a block from local chain with given hash and number
+	GetBlockFromChain(hash common.Hash, number uint64) *types.Block
+
 	// ImpeachTimeout returns the timeout for impeachment
 	ImpeachTimeout() time.Duration
 

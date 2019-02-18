@@ -425,21 +425,10 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 		// prepare certificate is not satisfied, broadcast prepare msg
 		return []*BlockOrHeader{newBOHFromHeader(prepareHeader)}, BroadcastMsgAction, PrepareMsgCode, consensus.Prepare, nil
 
-	// the block is a future block, just wait a second.
-	case consensus.ErrFutureBlock:
-
-		log.Debug("verified the block, there is an error", "error", err)
-
-		time.Sleep(1 * time.Second)
-		return p.handlePreprepareMsg(input, state, blockVerifyFn)
-
-	// same as future block
+	// unknown ancestor block
 	case consensus.ErrUnknownAncestor:
 
 		log.Debug("verified the block, there is an error", "error", err)
-
-		// time.Sleep(1 * time.Second)
-		// return p.handlePreprepareMsg(input, state, blockVerifyFn)
 
 		go p.unknownAncestorBlockHandler(block)
 		return nil, NoAction, NoMsgCode, state, nil
@@ -497,21 +486,10 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 		// prepare certificate is not satisfied, broadcast prepare msg
 		return []*BlockOrHeader{newBOHFromHeader(impeachPrepareHeader)}, BroadcastMsgAction, ImpeachPrepareMsgCode, consensus.ImpeachPrepare, nil
 
-	// the block is a future block, just wait a second.
-	case consensus.ErrFutureBlock:
-
-		log.Debug("verified the block, there is an error", "error", err)
-
-		time.Sleep(1 * time.Second)
-		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
-
-	// same as future block
+	// unknown ancestor block
 	case consensus.ErrUnknownAncestor:
 
 		log.Debug("verified the block, there is an error", "error", err)
-
-		// time.Sleep(1 * time.Second)
-		// return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
 
 		go p.unknownAncestorBlockHandler(block)
 		return nil, NoAction, NoMsgCode, state, nil
@@ -952,26 +930,6 @@ func (p *LBFT2) onceCommitCertificateSatisfied(prepareHeader *types.Header, comm
 
 }
 
-// func unknownAncestorBlockHandler(b2) {
-//     // v: a validator
-//     // b: the block v is processing
-//     // h: b’s block height
-//     // b2: a future block proposed by p2 with block height h2
-//     if h2<=h {
-//         return
-//     }
-//     if v knows p2 is a legit proposer {
-//         v stores b2 in the cache
-//         v continue processing b
-//     }
-//     if v has not synced for 10*|P| seconds {
-//         sync()  // v synchronizes with the committee
-//         unknownAncestorBlockHandler(b2)
-//     } else {
-//         punish p2
-//     }
-// }
-
 func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 	number := block.NumberU64()
 
@@ -992,6 +950,7 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 		return
 	}
 
+	// if legit, cache the block!
 	if isP {
 		if err := p.blockCache.AddBlock(block); err != nil {
 			log.Warn("failed to add block to cache", "number", number, "hash", block.Hash().Hex(), "error", err)
@@ -999,6 +958,7 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 		return
 	}
 
+	// if term is larger than local, sync!
 	if p.dpor.TermOf(number) > p.dpor.TermOf(p.number) {
 		go p.dpor.Synchronise()
 	}
