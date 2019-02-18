@@ -446,6 +446,10 @@ For validators that have not suffice a commit certificate yet, it works as follo
         #. new block message to all civilians
     #. It enters idle state for the next block height.
 
+Apparently, only validators that have collected a validate certificate can enter validate state.
+The total number of validators in validate state can be larger than one,
+since all validators and its message processing are running in parallel.
+Other validators directly enters idle state after receiving a validate message.
 
 Countermeasures for Illicit Actions
 ----------------------
