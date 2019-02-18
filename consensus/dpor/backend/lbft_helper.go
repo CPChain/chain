@@ -4,8 +4,10 @@ import (
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -90,13 +92,15 @@ func (sb *signaturesOfBlock) count() int {
 }
 
 type signaturesForBlockCaches struct {
+	db                  database.Database
 	signaturesForBlocks *lru.ARCCache
 	lock                sync.RWMutex
 }
 
-func newSignaturesForBlockCaches() *signaturesForBlockCaches {
+func newSignaturesForBlockCaches(db database.Database) *signaturesForBlockCaches {
 	sigCaches, _ := lru.NewARC(100)
 	return &signaturesForBlockCaches{
+		db:                  db,
 		signaturesForBlocks: sigCaches,
 	}
 }
@@ -112,6 +116,16 @@ func (sc *signaturesForBlockCaches) getSignaturesCountOf(bi blockIdentifier) int
 		log.Debug("counting signatures of block", "number", bi.number, "hash", bi.hash.Hex())
 
 		return sigs.(*signaturesOfBlock).count()
+	}
+
+	signatures := newSignaturesOfBlock()
+	bytes, err := sc.db.Get(bi.hash.Bytes())
+	if err == nil {
+		err = rlp.DecodeBytes(bytes, &signatures)
+		if err != nil {
+			log.Debug("err when decoding signatures from byte retrieved from db", "err", err, "number", bi.number, "hash", bi.hash.Hex())
+		}
+		return signatures.count()
 	}
 
 	return 0
@@ -130,6 +144,19 @@ func (sc *signaturesForBlockCaches) addSignatureFor(bi blockIdentifier, signer c
 
 	signatures.setSignature(signer, signature)
 	sc.signaturesForBlocks.Add(bi, signatures)
+
+	bytes, err := rlp.EncodeToBytes(signatures)
+	if err != nil {
+		log.Warn("err when encoding signatures to bytes", "err", err, "number", bi.number, "hash", bi.hash.Hex())
+		return
+	}
+
+	err = sc.db.Put(bi.hash.Bytes(), bytes)
+	if err != nil {
+		log.Warn("err when saving signatures to db", "err", err, "number", bi.number, "hash", bi.hash.Hex())
+	}
+
+	log.Warn("saved signatures to db", "number", bi.number, "hash", bi.hash.Hex())
 }
 
 func (sc *signaturesForBlockCaches) getSignatureFor(bi blockIdentifier, signer common.Address) (types.DporSignature, bool) {

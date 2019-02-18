@@ -10,6 +10,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 )
 
@@ -29,7 +30,7 @@ type LBFT2 struct {
 	commitSignatures  *signaturesForBlockCaches
 }
 
-func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock) *LBFT2 {
+func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock, db database.Database) *LBFT2 {
 
 	pbft := &LBFT2{
 		state:  consensus.Idle,
@@ -37,9 +38,9 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 		number: dpor.GetCurrentBlock().NumberU64() + 1,
 		dpor:   dpor,
 
-		blockCache:        newKnownBlocks(),
-		prepareSignatures: newSignaturesForBlockCaches(),
-		commitSignatures:  newSignaturesForBlockCaches(),
+		blockCache:        NewRecentBlocks(db),
+		prepareSignatures: newSignaturesForBlockCaches(db),
+		commitSignatures:  newSignaturesForBlockCaches(db),
 	}
 
 	return pbft

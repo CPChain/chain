@@ -195,7 +195,7 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 	return &Dpor{
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
-		handler:      backend.NewHandler(&conf, common.Address{}),
+		handler:      backend.NewHandler(&conf, common.Address{}, db),
 		db:           db,
 		recentSnaps:  recentSnaps,
 		finalSigs:    finalSigs,
@@ -296,7 +296,7 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 	handler := d.handler
 
 	// fsm := backend.NewDSM(faulty, latest, d)
-	fsm := backend.NewLBFT2(faulty, d, handler.ReceiveImpeachPendingBlock)
+	fsm := backend.NewLBFT2(faulty, d, handler.ReceiveImpeachPendingBlock, d.db)
 
 	if err := handler.SetServer(server); err != nil {
 		return
