@@ -171,6 +171,10 @@ func (pm *ProtocolManager) SyncFromPeer(p *p2p.Peer) {
 	}
 }
 
+func (pm *ProtocolManager) SyncFromBestPeer() {
+	go pm.synchronise(pm.peers.BestPeer())
+}
+
 // Synchronise tries to sync up our local block chain with a remote peer. It fetches blocks a peer.
 func (pm *ProtocolManager) synchronise(peer *peer) {
 	if peer == nil {

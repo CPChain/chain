@@ -10,6 +10,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 )
 
@@ -29,7 +30,7 @@ type LBFT2 struct {
 	commitSignatures  *signaturesForBlockCaches
 }
 
-func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock) *LBFT2 {
+func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock, db database.Database) *LBFT2 {
 
 	pbft := &LBFT2{
 		state:  consensus.Idle,
@@ -37,9 +38,9 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 		number: dpor.GetCurrentBlock().NumberU64() + 1,
 		dpor:   dpor,
 
-		blockCache:        newKnownBlocks(),
-		prepareSignatures: newSignaturesForBlockCaches(),
-		commitSignatures:  newSignaturesForBlockCaches(),
+		blockCache:        NewRecentBlocks(db),
+		prepareSignatures: newSignaturesForBlockCaches(db),
+		commitSignatures:  newSignaturesForBlockCaches(db),
 	}
 
 	return pbft
@@ -425,21 +426,13 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 		// prepare certificate is not satisfied, broadcast prepare msg
 		return []*BlockOrHeader{newBOHFromHeader(prepareHeader)}, BroadcastMsgAction, PrepareMsgCode, consensus.Prepare, nil
 
-	// the block is a future block, just wait a second.
-	case consensus.ErrFutureBlock:
-
-		log.Debug("verified the block, there is an error", "error", err)
-
-		time.Sleep(1 * time.Second)
-		return p.handlePreprepareMsg(input, state, blockVerifyFn)
-
-	// same as future block
+	// unknown ancestor block
 	case consensus.ErrUnknownAncestor:
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(1 * time.Second)
-		return p.handlePreprepareMsg(input, state, blockVerifyFn)
+		go p.unknownAncestorBlockHandler(block)
+		return nil, NoAction, NoMsgCode, state, nil
 
 	default:
 
@@ -494,21 +487,13 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 		// prepare certificate is not satisfied, broadcast prepare msg
 		return []*BlockOrHeader{newBOHFromHeader(impeachPrepareHeader)}, BroadcastMsgAction, ImpeachPrepareMsgCode, consensus.ImpeachPrepare, nil
 
-	// the block is a future block, just wait a second.
-	case consensus.ErrFutureBlock:
-
-		log.Debug("verified the block, there is an error", "error", err)
-
-		time.Sleep(1 * time.Second)
-		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
-
-	// same as future block
+	// unknown ancestor block
 	case consensus.ErrUnknownAncestor:
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(1 * time.Second)
-		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
+		go p.unknownAncestorBlockHandler(block)
+		return nil, NoAction, NoMsgCode, state, nil
 
 	default:
 
@@ -944,6 +929,40 @@ func (p *LBFT2) onceCommitCertificateSatisfied(prepareHeader *types.Header, comm
 	// succeed to compose validate msg, broadcast it
 	return []*BlockOrHeader{newBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
 
+}
+
+func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
+	number := block.NumberU64()
+
+	if number <= p.number {
+		return
+	}
+
+	// recover proposer's address
+	proposer, err := p.dpor.ECRecoverProposer(block.Header())
+	if err != nil {
+		return
+	}
+
+	// verify if a legit proposer
+	term := p.dpor.TermOf(number)
+	isP, err := p.dpor.VerifyProposerOf(proposer, term)
+	if err != nil {
+		return
+	}
+
+	// if legit, cache the block!
+	if isP {
+		if err := p.blockCache.AddBlock(block); err != nil {
+			log.Warn("failed to add block to cache", "number", number, "hash", block.Hash().Hex(), "error", err)
+		}
+		return
+	}
+
+	// if term is larger than local, sync!
+	if p.dpor.TermOf(number) > p.dpor.TermOf(p.number) {
+		go p.dpor.Synchronise()
+	}
 }
 
 // Impeachment waits until it is time to impeach, then try to compose an impeach block

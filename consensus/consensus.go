@@ -163,21 +163,22 @@ const (
 	ImpeachCommit
 )
 
-func (s State) String() string {
-	switch s {
-	case Idle:
-		return "Idle"
-	case Prepare:
-		return "Prepare"
-	case Commit:
-		return "Commit"
-	case ImpeachPrepare:
-		return "ImpeachPrepare"
-	case ImpeachCommit:
-		return "ImpeachCommit"
-	default:
-		return "Unknown State"
+var (
+	stateName = map[State]string{
+		Idle:           "Idle",
+		Prepare:        "Prepare",
+		Commit:         "Commit",
+		ImpeachPrepare: "ImpeachPrepare",
+		ImpeachCommit:  "ImpeachCommit",
 	}
+)
+
+func (s State) String() string {
+
+	if name, ok := stateName[s]; ok {
+		return name
+	}
+	return "Unknown State"
 }
 
 // PbftStatus represents a state of a dpor replica
