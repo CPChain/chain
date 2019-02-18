@@ -111,7 +111,9 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		if timestamp < parentTimestamp+period || timestamp > parentTimestamp+period+timeout {
 			if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
 
-				log.Warn("invalid timestamp")
+				log.Warn("invalid timestamp", "timestamp < parentTimestamp+period", timestamp < parentTimestamp+period, "parentTimestamp+period", parentTimestamp+period, "timestamp", timestamp)
+				log.Warn("invalid timestamp", "timestamp > parentTimestamp+period+timeout", timestamp > parentTimestamp+period+timeout, "parentTimestamp+period+timeout", parentTimestamp+period+timeout, "timestamp", timestamp)
+
 				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
 
 				return ErrInvalidTimestamp
