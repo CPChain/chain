@@ -75,7 +75,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address) *Handler {
 	}
 
 	// TODO: fix this
-	h.mode = LBFTMode
+	// h.mode = LBFTMode
 	h.mode = LBFT2Mode
 
 	return h
