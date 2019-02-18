@@ -421,6 +421,30 @@ In an edge case, a validate can lose its connection while broadcasting a validat
 If there were no echo mechanism, this edge case would sabotage the consistency of LBFT 2.0,
 since only a proportion of nodes could receive this validate message.
 
+Instead of trivially repeating validate message, we introduce a quasi state named as **validate** state.
+The word *Quasi* here indicates that validate state is not a real state like idle state.
+It does not contribute on consensus process, neither is compulsory.
+It serves as following roles:
+
+    1. A distinct state corresponding to validate message.
+    #. Preventing a validator handling any messages from previous block height.
+    #. A counter to make sure that each validator only broadcasts validate message only once.
+    #. Partitioning original validate messages into two sets:
+        a. Validate messages between validators committee.
+        #. Validate messages broadcasts to all civilians (renamed as **New Block** message).
+
+When a validator collects a commit certificate, the following operations are being executed:
+
+    1. It enters validate state, and broadcasts a validate message to the validators committee.
+    #. After it receives validate message from another validator, it broadcasts a new block message to all nodes including civilians.
+    #. It enters idle state for the next block height.
+
+For validators that have not suffice a commit certificate yet, it works as follows:
+
+    1. If it receives a validate message, it broadcasts out two messages:
+        a. validate message to all validators
+        #. new block message to all civilians
+    #. It enters idle state for the next block height.
 
 
 Countermeasures for Illicit Actions
