@@ -112,8 +112,9 @@ func TestBasicLogic(t *testing.T) {
 
 	fmt.Println("contract addr", contractAddr.Hex())
 
+	// TODO @liuqian will refactor this
 	// register validator's public key
-	tx, err = register.RegisterPublicKey(vTransactor, vKey.RsaKey.PublicKey.RsaPublicKeyBytes)
+	tx, err = register.RegisterPublicKey(vTransactor, []byte("remove me") /*vKey.RsaKey.PublicKey.RsaPublicKeyBytes*/)
 	_, _ = tx, err
 	backend.Commit()
 
@@ -141,9 +142,6 @@ func TestBasicLogic(t *testing.T) {
 	}
 	eNodeIDBytes, err := register.GetNodeInfo(vCallOpts, termB, pAddr)
 	fmt.Println("fetched encrypted nodeID from contract \n", hex.Dump(eNodeIDBytes), "err", err)
-
-	nodeID, err := vKey.RsaKey.RsaDecrypt(eNodeIDBytes)
-	fmt.Println("decrypted nodeID", string(nodeID), "err", err)
 
 }
 
@@ -184,14 +182,15 @@ func TestRemoteSigner(T *testing.T) {
 
 	fmt.Println("contract addr", contractAddr.Hex())
 
+	// TODO @liuqian will refactor this
 	// register validator's public key
-	tx, err = register.RegisterPublicKey(v1Transactor, v1Key.RsaKey.PublicKey.RsaPublicKeyBytes)
+	tx, err = register.RegisterPublicKey(v1Transactor, []byte("remove me") /*v1Key.RsaKey.PublicKey.RsaPublicKeyBytes*/)
 	simulatedBackend.Commit()
-	tx, err = register.RegisterPublicKey(v2Transactor, v2Key.RsaKey.PublicKey.RsaPublicKeyBytes)
+	tx, err = register.RegisterPublicKey(v2Transactor, []byte("remove me") /*v2Key.RsaKey.PublicKey.RsaPublicKeyBytes*/)
 	simulatedBackend.Commit()
-	tx, err = register.RegisterPublicKey(v3Transactor, v3Key.RsaKey.PublicKey.RsaPublicKeyBytes)
+	tx, err = register.RegisterPublicKey(v3Transactor, []byte("remove me") /*v3Key.RsaKey.PublicKey.RsaPublicKeyBytes*/)
 	simulatedBackend.Commit()
-	tx, err = register.RegisterPublicKey(v4Transactor, v4Key.RsaKey.PublicKey.RsaPublicKeyBytes)
+	tx, err = register.RegisterPublicKey(v4Transactor, []byte("remove me") /*v4Key.RsaKey.PublicKey.RsaPublicKeyBytes*/)
 	simulatedBackend.Commit()
 
 	//
@@ -235,7 +234,7 @@ func TestRemoteSigner(T *testing.T) {
 	// fetch it
 
 	remoteP := backend.NewRemoteProposer(p1Addr)
-	succeed, err := remoteP.FetchNodeInfoAndDial(term, v1Addr, nil, v1Key.RsaKey, contractInstance)
+	succeed, err := remoteP.FetchNodeInfoAndDial(term, v1Addr, nil, nil /*v1Key.RsaKey*/, contractInstance)
 	fmt.Println("succeed", succeed, "err", err)
 
 }

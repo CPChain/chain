@@ -21,8 +21,7 @@ import (
 )
 
 const (
-	validatorNum = 4  // the number of validators in the committee
-	caseSize     = 50 // a pre-defined const indicating the size of cases in a test function
+	caseSize = 50 // a pre-defined const indicating the size of cases in a test function
 )
 
 // This function is to test DporStateMachine.Fsm with regarding to the normal cases

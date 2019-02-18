@@ -34,7 +34,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
+	"bitbucket.org/cpchain/chain/commons/crypto/ecieskey"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -487,33 +487,22 @@ func zeroKey(k *ecdsa.PrivateKey) {
 	}
 }
 
-// EncryptWithRsa encrypts with a specified account's RSA key. The account is required to be unlocked.
-func (ks *KeyStore) EncryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
+// DecryptWithEcies decrypts with a specified account's RSA key. The account is required to be unlocked.
+func (ks *KeyStore) DecryptWithEcies(account accounts.Account, cipherText []byte) ([]byte, error) {
 	unlocked, exists := ks.unlocked[account.Address]
 	if !exists {
 		return nil, ErrNoMatch
 	}
 
 	key := unlocked.Key
-	return key.RsaKey.RsaEncrypt(plainText)
+	return ecieskey.Decrypt(key.EciesPrivateKey, cipherText)
 }
 
-// DecryptWithRsa decrypts with a specified account's RSA key. The account is required to be unloced.
-func (ks *KeyStore) DecryptWithRsa(account accounts.Account, cipherText []byte) ([]byte, error) {
+// EcdsaPublicKey requires Ecdsa public key for a given account.
+func (ks *KeyStore) EcdsaPublicKey(account accounts.Account) ([]byte, error) {
 	unlocked, exists := ks.unlocked[account.Address]
 	if !exists {
 		return nil, ErrNoMatch
 	}
-
-	key := unlocked.Key
-	return key.RsaKey.RsaDecrypt(cipherText)
-}
-
-// RsaPublicKey requires RSA public key for a given account.
-func (ks *KeyStore) RsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
-	unlocked, exists := ks.unlocked[account.Address]
-	if !exists {
-		return nil, ErrNoMatch
-	}
-	return unlocked.Key.RsaKey.PublicKey, nil
+	return ecieskey.EncodeEcdsaPubKey(&unlocked.Key.PrivateKey.PublicKey), nil
 }

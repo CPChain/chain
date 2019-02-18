@@ -294,37 +294,6 @@ func TestSignTxWithPassphraseInvalidAccount1(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestEncryptWithRsa(t *testing.T) {
-	dir1, ks := tmpKeyStore(t, true)
-	defer os.RemoveAll(dir1)
-	pass := ""
-	a1, _ := ks.NewAccount(pass)
-	ks.Unlock(a1, "")
-	kw := &keystoreWallet{
-		account:  a1,
-		keystore: ks}
-	bs, err := kw.EncryptWithRsa(a1, testSigData)
-	assert.Nil(t, err)
-	assert.NotNil(t, bs)
-
-	decrypted, err := kw.DecryptWithRsa(a1, bs)
-	assert.Equal(t, testSigData, decrypted)
-}
-
-func TestEncryptWithRsaError(t *testing.T) {
-	dir1, ks := tmpKeyStore(t, true)
-	defer os.RemoveAll(dir1)
-	pass := ""
-	a1, _ := ks.NewAccount(pass)
-	ks.Unlock(a1, "")
-	kw := &keystoreWallet{
-		account:  a1,
-		keystore: ks}
-	bs, err := kw.EncryptWithRsa(accountWithURL, testSigData)
-	assert.Nil(t, bs)
-	assert.NotNil(t, err)
-}
-
 func TestRsaPublicKey(t *testing.T) {
 	dir1, ks := tmpKeyStore(t, true)
 	defer os.RemoveAll(dir1)
@@ -334,7 +303,7 @@ func TestRsaPublicKey(t *testing.T) {
 	kw := &keystoreWallet{
 		account:  a1,
 		keystore: ks}
-	bs, err := kw.RsaPublicKey(a1)
+	bs, err := kw.PublicKey(a1)
 	assert.Nil(t, err)
 	assert.NotNil(t, bs)
 }

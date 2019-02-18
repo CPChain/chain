@@ -21,7 +21,6 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/types"
 )
 
@@ -139,14 +138,10 @@ func (w *keystoreWallet) SignTxWithPassphrase(account accounts.Account, passphra
 	return w.keystore.SignTxWithPassphrase(account, passphrase, tx, chainID)
 }
 
-func (w *keystoreWallet) EncryptWithRsa(account accounts.Account, plainText []byte) ([]byte, error) {
-	return w.keystore.EncryptWithRsa(account, plainText)
+func (w *keystoreWallet) DecryptWithEcies(account accounts.Account, cipherText []byte) ([]byte, error) {
+	return w.keystore.DecryptWithEcies(account, cipherText)
 }
 
-func (w *keystoreWallet) DecryptWithRsa(account accounts.Account, cipherText []byte) ([]byte, error) {
-	return w.keystore.DecryptWithRsa(account, cipherText)
-}
-
-func (w *keystoreWallet) RsaPublicKey(account accounts.Account) (*rsakey.RsaPublicKey, error) {
-	return w.keystore.RsaPublicKey(account)
+func (w *keystoreWallet) PublicKey(account accounts.Account) ([]byte, error) {
+	return w.keystore.EcdsaPublicKey(account)
 }

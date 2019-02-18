@@ -21,7 +21,6 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -128,11 +127,9 @@ type Wallet interface {
 	// or optionally with the aid of any location metadata from the embedded URL field.
 	SignTxWithPassphrase(account Account, passphrase string, tx *types.Transaction, chainID *big.Int) (*types.Transaction, error)
 
-	EncryptWithRsa(account Account, plainText []byte) ([]byte, error)
+	DecryptWithEcies(account Account, cipherText []byte) ([]byte, error)
 
-	DecryptWithRsa(account Account, cipherText []byte) ([]byte, error)
-
-	RsaPublicKey(account Account) (*rsakey.RsaPublicKey, error)
+	PublicKey(account Account) ([]byte, error)
 }
 
 // Backend is a "wallet provider" that may contain a batch of accounts they can
