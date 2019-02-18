@@ -1,8 +1,27 @@
 package backend_test
 
+// import (
+// 	"errors"
+// 	"fmt"
+// 	"math/big"
+// 	"reflect"
+// 	"testing"
+
+// 	"bitbucket.org/cpchain/chain/accounts"
+// 	"bitbucket.org/cpchain/chain/accounts/keystore"
+// 	"bitbucket.org/cpchain/chain/consensus"
+// 	"bitbucket.org/cpchain/chain/consensus/dpor"
+// 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+// 	"bitbucket.org/cpchain/chain/core"
+// 	"bitbucket.org/cpchain/chain/core/vm"
+// 	"bitbucket.org/cpchain/chain/database"
+// 	"bitbucket.org/cpchain/chain/types"
+// 	"github.com/ethereum/go-ethereum/common"
+// 	"github.com/ethereum/go-ethereum/crypto"
+// )
+
 // const (
-// 	validatorNum = 4  // the number of validators in the committee
-// 	caseSize     = 50 // a pre-defined const indicating the size of cases in a test function
+// 	caseSize = 50 // a pre-defined const indicating the size of cases in a test function
 // )
 
 // // This function is to test DporStateMachine.Fsm with regarding to the normal cases

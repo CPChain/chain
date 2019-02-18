@@ -17,7 +17,6 @@
 package keystore
 
 import (
-	"bytes"
 	"io/ioutil"
 	"reflect"
 	"testing"
@@ -57,50 +56,6 @@ func TestKeyEncryptDecrypt(t *testing.T) {
 		password += "new data appended"
 		if keyjson, err = EncryptKey(key, password, veryLightScryptN, veryLightScryptP); err != nil {
 			t.Errorf("test %d: failed to recrypt key %v", i, err)
-		}
-	}
-}
-
-// Tests that a json key file can be decrypted and encrypted in multiple rounds.
-func TestRsaKeyEncryptDecrypt(t *testing.T) {
-	keyjson, err := ioutil.ReadFile("testdata/very-light-rsa-scrypt.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	password := ""
-	address := common.HexToAddress("7880e6b6ab3d6567f6d4ea7bc3f1eb56a349da82")
-
-	// Do a few rounds of decryption and encryption
-	for i := 0; i < 3; i++ {
-		// Try a bad password first
-		if _, err := DecryptKey(keyjson, password+"bad"); err == nil {
-			t.Errorf("test %d: json key decrypted with bad password", i)
-		}
-		// Decrypt with the correct password
-		key, err := DecryptKey(keyjson, password)
-		if err != nil {
-			t.Fatalf("test %d: json key failed to decrypt: %v", i, err)
-		}
-		if key.Address != address {
-			t.Errorf("test %d: key address mismatch: have %x, want %x", i, key.Address, address)
-		}
-		// encrypt/decrypt with rsa should be correct
-		testBytes := []byte("hello")
-		encodedBytes, err := key.RsaKey.RsaEncrypt(testBytes)
-		origBytes, err := key.RsaKey.RsaDecrypt(encodedBytes)
-		if bytes.Compare(testBytes, origBytes) != 0 {
-			t.Errorf("RsaEncrypt/RsaDecrypt result mismatch: have %x, want %x", origBytes, testBytes)
-		}
-
-		// Recrypt with a new password and start over
-		password += "new data appended"
-		if keyjson, err = EncryptKey(key, password, veryLightScryptN, veryLightScryptP); err != nil {
-			t.Errorf("test %d: failed to recrypt key %v", i, err)
-		}
-
-		rsaKey := key.RsaKey
-		if rsaKey == nil {
-			t.Errorf("failed to decrypt rsaKey")
 		}
 	}
 }

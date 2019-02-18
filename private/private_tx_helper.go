@@ -20,13 +20,16 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/binary"
 	"io"
 
+	"crypto/ecdsa"
+
+	"bitbucket.org/cpchain/chain/commons/crypto/ecieskey"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/database"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto/ecies"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
@@ -42,10 +45,10 @@ type SealedPrivatePayload struct {
 }
 
 // NewSealedPrivatePayload creates new SealedPrivatePayload instance with given parameters.
-func NewSealedPrivatePayload(encryptedPayload []byte, symmetricKey [][]byte, participants []*rsa.PublicKey) SealedPrivatePayload {
+func NewSealedPrivatePayload(encryptedPayload []byte, symmetricKey [][]byte, participants []*ecdsa.PublicKey) SealedPrivatePayload {
 	keysToStore := make([][]byte, len(participants))
 	for i, key := range participants {
-		keysToStore[i] = x509.MarshalPKCS1PublicKey(key)
+		keysToStore[i] = ecieskey.EncodeEcdsaPubKey(key)
 	}
 
 	return SealedPrivatePayload{
@@ -101,25 +104,30 @@ func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, r
 	return replacement, nil
 }
 
-// stringsToPublicKeys converts string to rsa.PublicKey instance.
-func stringsToPublicKeys(keys []string) ([]*rsa.PublicKey, error) {
-	pubKeys := make([]*rsa.PublicKey, len(keys))
+// stringsToPublicKeys converts string to ecies.PublicKey instance.
+func stringsToPublicKeys(keys []string) ([]*ecdsa.PublicKey, error) {
+	pubKeys := make([]*ecdsa.PublicKey, len(keys))
 
 	for i, p := range keys {
 		if p[:2] != "0x" {
 			p = "0x" + p
 		}
 		keyBuf, _ := hexutil.Decode(p)
-		pubKeys[i], _ = x509.ParsePKCS1PublicKey(keyBuf)
+		pubKey, err := ecieskey.DecodeEcdsaPubKeyFrom(keyBuf)
+		if err != nil {
+			log.Error("Decode Ecdsa pub key failed", "err", err)
+		}
+		pubKeys[i] = pubKey
 	}
 	return pubKeys, nil
 }
 
 // sealSymmetricKey sealed symmetric key by encrypting it with participant's public keys one by one.
-func sealSymmetricKey(symKey []byte, keys []*rsa.PublicKey) [][]byte {
+func sealSymmetricKey(symKey []byte, keys []*ecdsa.PublicKey) [][]byte {
 	result := make([][]byte, len(keys))
 	for i, key := range keys {
-		encryptedKey, _ := rsa.EncryptPKCS1v15(rand.Reader, key, symKey)
+		eciesKey := ecies.ImportECDSAPublic(key)
+		encryptedKey, _ := ecieskey.Encrypt(eciesKey, symKey)
 		result[i] = encryptedKey
 	}
 
