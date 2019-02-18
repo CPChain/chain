@@ -302,6 +302,95 @@ none
 
 
 
+eth_estimateGas
+++++++++++++++++++
+
+Generates and returns an estimate of how much gas is necessary to allow the transaction to complete.
+The transaction will not be added to the blockchain.
+Note that the estimate may be significantly more than the amount of gas actually used by the transaction,
+for a variety of reasons including EVM mechanics and node performance.
+
+**Parameters**
+
+See `eth_call`_ parameters, expect that all properties are optional.
+If no gas limit is specified cpc uses the block gas limit from the pending block as an upper bound.
+As a result the returned estimate might not be enough to executed the call/transaction
+when the amount of gas is higher than the pending block gas limit.
+
+**Returns**
+
+``QUANTITY`` - the amount of gas used.
+
+**Example**
+
+
+.. code-block:: shell
+
+    // Request
+    curl -X POST --data '{"jsonrpc":"2.0","method":"eth_estimateGas","params":[{see above}],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+      "id":1,
+      "jsonrpc": "2.0",
+      "result": "0x430e23400" // 18000000000
+    }
+
+
+eth_call
++++++++++++
+
+Executes a new message call immediately without creating a transaction on the block chain.
+
+**Parameters**
+
+    ``Object`` - The transaction call object
+
+        ``from``: DATA, 20 Bytes - (optional) The address the transaction is sent from.
+
+        ``to``: DATA, 20 Bytes - The address the transaction is directed to.
+
+        ``gas``: QUANTITY - (optional) Integer of the gas provided for the transaction execution. eth_call consumes zero gas, but this parameter may be needed by some executions.
+
+        ``gasPrice``: QUANTITY - (optional) Integer of the gasPrice used for each paid gas
+
+        ``value``: QUANTITY - (optional) Integer of the value sent with this transaction
+
+        ``data``: DATA - (optional) Hash of the method signature and encoded parameters. For details see Ethereum Contract ABI
+
+    ``QUANTITY|TAG`` - integer block number, or the string "latest", "earliest" or "pending", see the default block parameter
+
+.. code-block:: shell
+
+    "params":[{
+      "from": "0xe83a71428655b9f52ff6dc556e2b37043f39f194",
+      "to": "0x177b2a835f27a8989dfca814b37d08c54e1de889",
+      "gas": "0x76c0", // 30400
+      "gasPrice": "0x9184e72a000",  // 10000000000000
+      "value": "0x9184e72a",  // 2441406250
+      "data": "0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675"
+    },"latest"]
+
+**Returns**
+
+``DATA`` - the return value of executed contract.
+
+**Example**
+
+.. code-block:: shell
+
+    // Request
+    curl -X POST --data '{"jsonrpc":"2.0","method":"eth_call","params":[{see above}],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+      "id":1,
+      "jsonrpc": "2.0",
+      "result": "0x"
+    }
+
+
+
 Account
 ***********
 
