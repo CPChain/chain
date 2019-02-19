@@ -69,7 +69,8 @@ that there exist a quorum agree on a prepare message and a commit message respec
 #. **Abnormal Cases**
     a. Abnormal Case 1: *A validator does not receive a block from the proposer*
         i. It is for the case when Step 2.a.f cannot be reached
-        #. After a validator sends out its address to the proposer, it sets up a timer
+        #. Let the previousBlockTimestamp be the timestamp of block proposed in previous view, and period is the minimum interval between two blocks.
+        #. A timer is set up when reaching the timestamp of previousBlockTimestamp+period.
         #. If the timer expires, the validators committee activates *impeachment*, a two-phase protocol in PBFT manner to propose an impeach block on behalf of the faulty proposer.
     #. Abnormal Case 2: *The proposer proposes one or more faulty blocks*
         i. Faulty blocks cannot be verified in Step 2.b.a
