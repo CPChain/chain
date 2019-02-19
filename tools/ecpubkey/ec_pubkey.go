@@ -12,33 +12,30 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
+// export ec public key from keyfile
 func main() {
+	if len(os.Args) < 3 {
+		fmt.Println("Error! Need 2 parameters:./ecpubkey <keyFile> <password>\nexample:./ecpubkey examples/cpchain/conf-dev/keys/key1 password")
+		return
+	}
+
 	var keyFile = ""
 	var password = "password"
 	args := os.Args
-	fmt.Println("0", args[0])
 	if len(args) > 1 {
-		fmt.Println("1", args[1])
+		fmt.Println("keyFile:", args[1])
 		keyFile = args[1]
 	}
 	if len(args) > 2 {
-		fmt.Println("2", args[2])
+		fmt.Println("password:", args[2])
 		password = args[2]
-	}
-
-	if keyFile == "" {
-		keyFile = "examples/cpchain/conf-dev/keys/key1"
-	}
-
-	if password == "" {
-		password = "password"
 	}
 
 	pubKey, err := ecdsaPubKey(keyFile, password)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Println("pubKey:", pubKey)
+	fmt.Println("\npubKey is:\n" + pubKey)
 }
 
 func ecdsaPubKey(keyfilePath, password string) (string, error) {
