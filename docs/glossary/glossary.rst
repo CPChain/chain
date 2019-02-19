@@ -84,3 +84,7 @@ Glossary
 |                           | fixed unless the consensus model   |
 |                           | adjusts                            |
 +---------------------------+------------------------------------+
+| Period                    | Minimum time interval between two  |
+|                           | consecutive blocks.                |
+|                           | The value is set to 10 seconds.    |
++---------------------------+------------------------------------+
