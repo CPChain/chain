@@ -202,6 +202,8 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 prepareHandler(input)
             case commit:
                 commitHandler(input)
+            case validate:
+                validateHandler(input)
             case impeachPrepare:
                 impeachPrepareHandler(input)
             case impeachCommit:
@@ -275,6 +277,23 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
     .. code-block:: go
 
+        // handler for validate state
+        // it is a quasi state for repeating validate message
+        // the only valid input is validate message
+
+        // it is worth mentioning that the operation broadcast can be executed to two groups of nodes:
+        // one is all validators;
+        // and the other one is all nodes including validators, civilians and proposers
+        // all messages regarding consensus between validators are only sent to validators
+        // newBlockMsg, in contrast, is sent to all nodes indicating a block is confirmed validated
+        // unless otherwise specified, all broadcast operations are done only for validators
+        func validateHandler(input) {
+            case validateMsg, impeachValidateMsg:
+                insert the block
+                broadcast newBlockMsg to all nodes including civilians
+                transit to idle state
+        }
+
         // handler for commit state
         func commitHandler(input) {
             switch input{
@@ -283,12 +302,15 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 impeachHandler(input)
             case validateMsg:
                 insert the block
-                broadcast validateMsg
+                // echo of validate message
+                broadcast validateMsg to validators
+                // send out new block message
+                broadcast newBlockMsg to all nodes
                 transit to idle state
             case commitMsg:
                 if commitCertificate {
                     broadcast validateMsg
-                    transit to idle state
+                    transit to validate state
                 }
             // add the block into the cache if necessary
             case block:
@@ -309,7 +331,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     // it is possible for suffice two certificates simultaneously
                     if commitCertificate {
                         broadcast validateMsg
-                        transit to idle state
+                        transit to validate state
                     } else {
                         broadcast commitMsg
                         transit to commit state
@@ -336,7 +358,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     if prepareCertificate {
                         if commitCertificate {
                             broadcast validateMsg
-                            transit to idle state
+                            transit to validate state
                         } else {
                             add block into the cache
                             broadcast prepareMsg
@@ -362,15 +384,17 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             case validateMsg:
                 insert the block
                 broadcast validateMsg
+                broadcast newBlockMsg to all nodes
                 transit to idle state
             case impeachValidateMsg:
                 insert impeach block
                 broadcast impeachValidateMsg
+                broadcast newBlockMsg to all nodes
                 transit to idle state
             case impeachCommitMsg:
                 if impeachCommitCertificate(input) {
                     broadcast impeachValidateMsg
-                    transit to idle state
+                    transit to validate state
                 }
             }
         }
@@ -385,7 +409,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 if impeachPrepareCertificate(input) {
                     if impeachCommitCertificate(input) {
                         broadcast impeachValidateMsg
-                        transit to idle state
+                        transit to validate state
                     } else {
                         broadcast impeachCommitMsg
                         transit to impeachCommit state
