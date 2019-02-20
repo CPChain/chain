@@ -391,6 +391,90 @@ Executes a new message call immediately without creating a transaction on the bl
 
 
 
+
+eth_getTransactionReceipt
+++++++++++++++++++++++++++++
+
+Returns the receipt of a transaction by transaction hash.
+
+Note That the receipt is not available for pending transactions.
+
+**Parameters**
+
+    ``DATA``, 32 Bytes - hash of a transaction
+
+.. code-block:: shell
+
+    params: [
+    '0x87afe28c7d60d4e6160ac5f00dce35c1e7b4739e3851412fcd64cc72b800f47b'
+    ]
+
+**Returns**
+
+``Object`` - A transaction receipt object, or null when no receipt was found:
+
+    ``transactionHash`` : DATA, 32 Bytes - hash of the transaction.
+
+    ``transactionIndex``: QUANTITY - integer of the transaction's index position in the block.
+
+    ``blockHash``: DATA, 32 Bytes - hash of the block where this transaction was in.
+
+    ``blockNumber``: QUANTITY - block number where this transaction was in.
+
+    ``from``: DATA, 20 Bytes - address of the sender.
+
+    ``to``: DATA, 20 Bytes - address of the receiver. null when it's a contract creation transaction.
+
+    ``cumulativeGasUsed``: QUANTITY - The total amount of gas used when this transaction was executed in the block.
+
+    ``gasUsed``: QUANTITY - The amount of gas used by this specific transaction alone.
+
+    ``contractAddress``: DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
+
+    ``logs``: Array - Array of log objects, which this transaction generated.
+
+    ``logsBloom``: DATA, 256 Bytes - Bloom filter for light clients to quickly retrieve related logs.
+
+It also returns either :
+
+    ``root``: DATA 32 bytes of post-transaction stateroot (pre Byzantium)
+
+    ``status``: QUANTITY either 1 (success) or 0 (failure)
+
+**Example**
+
+
+.. code-block:: shell
+
+
+    // Request
+    curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["0xb903239f8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238"],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+            "blockHash": "0x44b34580529e172361ff050c53fd948a12def0b002c53f1042c911246d9034d3",
+            "blockNumber": "0x152931",
+            "contractAddress": null,
+            "cumulativeGasUsed": "0x5208",
+            "from": "0xe83a71428655b9f52ff6dc556e2b37043f39f194",
+            "gasUsed": "0x5208",
+            "logs": [],
+            "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "status": "0x1",
+            "to": "0xb436e2feffa76c30beb9d89e825281baa9956d4c",
+            "transactionHash": "0x87afe28c7d60d4e6160ac5f00dce35c1e7b4739e3851412fcd64cc72b800f47b",
+            "transactionIndex": "0x0"
+        }
+    }
+
+
+
+
+
+
 Account
 ***********
 
