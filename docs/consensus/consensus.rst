@@ -105,8 +105,9 @@ When a validator triggers its impeach process, it generates a block on behalf of
 And impeachment has higher priority compared to normal case handler.
 In other word, validator in impeachment does not process any normal case messages except for validate messages.
 An impeachment can be activated under the following two cases:
+
 1. The timer of validator expires;
-#. A validate in idle state receives an illicit block from the proposer.
+#. A validator in idle state receives an illicit block from the proposer.
 
 Timer expiration can be caused by several reasons, like a non-responding proposer, `Double Spend Attack`_ and `Past and Future Block`_.
 An illicit block can be a block with improper transactions and seal.
