@@ -443,16 +443,20 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 		// prepare certificate is not satisfied, broadcast prepare msg
 		return []*BlockOrHeader{newBOHFromHeader(prepareHeader)}, BroadcastMsgAction, PrepareMsgCode, consensus.Prepare, nil
 
-	// unknown ancestor block
+	case consensus.ErrFutureBlock:
+
+		log.Debug("verified the block, there is an error", "error", err)
+
+		time.Sleep(100 * time.Millisecond)
+		return p.handlePreprepareMsg(input, state, blockVerifyFn)
+
+	// same as future block
 	case consensus.ErrUnknownAncestor:
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		go p.unknownAncestorBlockHandler(block)
-
 		time.Sleep(100 * time.Millisecond)
-
-		// return nil, NoAction, NoMsgCode, state, nil
+		go p.unknownAncestorBlockHandler(block)
 		return p.handlePreprepareMsg(input, state, blockVerifyFn)
 
 	default:
@@ -508,13 +512,21 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 		// prepare certificate is not satisfied, broadcast prepare msg
 		return []*BlockOrHeader{newBOHFromHeader(impeachPrepareHeader)}, BroadcastMsgAction, ImpeachPrepareMsgCode, consensus.ImpeachPrepare, nil
 
-	// unknown ancestor block
+	case consensus.ErrFutureBlock:
+
+		log.Debug("verified the block, there is an error", "error", err)
+
+		time.Sleep(100 * time.Millisecond)
+		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
+
+	// same as future block
 	case consensus.ErrUnknownAncestor:
 
 		log.Debug("verified the block, there is an error", "error", err)
 
+		time.Sleep(100 * time.Millisecond)
 		go p.unknownAncestorBlockHandler(block)
-		return nil, NoAction, NoMsgCode, state, nil
+		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
 
 	default:
 
