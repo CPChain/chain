@@ -111,9 +111,11 @@ func newAuth(client *cpclient.Client, privateKey *ecdsa.PrivateKey, fromAddress 
 
 }
 
-func newTransactor(privateKey *ecdsa.PrivateKey, nonce uint64) *bind.TransactOpts {
+func newTransactor(privateKey *ecdsa.PrivateKey, nonce *big.Int) *bind.TransactOpts {
 	auth := bind.NewKeyedTransactor(privateKey)
-	auth.Nonce = new(big.Int).SetUint64(nonce)
+	if nonce.Cmp(big.NewInt(-1)) > 0 {
+		auth.Nonce = nonce
+	}
 	return auth
 
 }

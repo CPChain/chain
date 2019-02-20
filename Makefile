@@ -16,7 +16,7 @@ GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
 
-all: cpchain bootnode abigen smartcontract
+all: cpchain bootnode abigen smartcontract ecpubkey updateproxycontract
 
 cpchain:
 	build/env.sh go run build/ci.go install ./cmd/cpchain
@@ -43,6 +43,15 @@ smartcontract:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/smartcontracts\" to launch smartcontract."
 
+ecpubkey:
+	build/env.sh go run build/ci.go install ./tools/ecpubkey
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/ecpubkey\" to launch ecpubkey."
+
+updateproxycontract:
+	build/env.sh go run build/ci.go install ./tools/smartcontract/updateproxycontract
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/updateproxycontract\" to launch updateproxycontract."
 
 test: all
 	build/env.sh go run build/ci.go test

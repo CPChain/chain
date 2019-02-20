@@ -32,7 +32,7 @@ func ProxyContractRegister(password string) common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
-	auth := newTransactor(privateKey, 0)
+	auth := newTransactor(privateKey, big.NewInt(0))
 	contractAddress, tx, _, err := contract.DeployProxyContractRegister(auth, client)
 	if err != nil {
 		log.Fatal(err.Error(), "fromAddress", fromAddress.Hex(), "contractAddress:", contractAddress.Hex())
@@ -45,7 +45,7 @@ func DeployProxy(password string, nonce uint64) common.Address {
 	client, err, privateKey, _, fromAddress := config.Connect(password)
 	printBalance(client, fromAddress)
 	// Launch contract deploy transaction.
-	auth := newTransactor(privateKey, nonce)
+	auth := newTransactor(privateKey, new(big.Int).SetUint64(nonce))
 	contractAddress, tx, _, err := contract.DeployProxy(auth, client)
 	if err != nil {
 		log.Fatal(err.Error(), "fromAddress", fromAddress.Hex(), "contractAddress:", contractAddress.Hex())
@@ -56,7 +56,7 @@ func DeployProxy(password string, nonce uint64) common.Address {
 
 func RegisterProxyAddress(title string, proxyContractAddress, realAddress common.Address, password string, nonce uint64, proxyNonce uint64) common.Address {
 	proxyAddress := DeployProxy(password, nonce)
-	success := UpdateRegisterProxyAddress(title, proxyContractAddress, proxyAddress, realAddress, password, proxyNonce)
+	success := UpdateRegisterProxyAddress(title, proxyContractAddress, proxyAddress, realAddress, password, new(big.Int).SetUint64(proxyNonce))
 	if success {
 		return proxyAddress
 	} else {
@@ -64,7 +64,7 @@ func RegisterProxyAddress(title string, proxyContractAddress, realAddress common
 	}
 }
 
-func UpdateRegisterProxyAddress(title string, proxyContractAddress, proxyAddress, realAddress common.Address, password string, nonce uint64) bool {
+func UpdateRegisterProxyAddress(title string, proxyContractAddress, proxyAddress, realAddress common.Address, password string, nonce *big.Int) bool {
 	fmt.Println(title + " Register proxy contract proxy:" + proxyAddress.Hex() +
 		" -> real:" + realAddress.Hex())
 	client, err, privateKey, _, fromAddress := config.Connect(password)

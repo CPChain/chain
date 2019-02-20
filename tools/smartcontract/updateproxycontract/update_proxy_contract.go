@@ -18,19 +18,30 @@ package main
 
 import (
 	"fmt"
+	"math/big"
+	"os"
 
 	"bitbucket.org/cpchain/chain/tools/smartcontract/deploy"
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// upgrade proxy contract, can only be executed locally
 func main() {
-	proxyContractRegisterAddress := common.HexToAddress("0x1a9fae75908752d0abf4dca45ebcac311c376290")
+	if len(os.Args) < 4 {
+		fmt.Println("Error! Need 3 contract address:<proxyContractRegisterAddress> <proxyAddress> <realAddress>\nexample:env CPCHAIN_KEYSTORE_FILEPATH=/cpchain/keystore/ ./updateproxycontract 0x1a9fae75908752d0abf4dca45ebcac311c376290 0x82104907aa699b2982fc46f38fd8c915d03cdb8d 0xca53baf44e68a2f440cafee2bbcc23631ad2689e")
+		return
+	}
+	fmt.Println("proxyContractRegisterAddress :", os.Args[1])
+	fmt.Println("proxyAddress                 :", os.Args[2])
+	fmt.Println("realAddress                  :", os.Args[3])
 
-	proxyAddress := common.HexToAddress("0x82104907aa699b2982fc46f38fd8c915d03cdb8d")
-	// realAddress := common.HexToAddress("0xca53baf44e68a2f440cafee2bbcc23631ad26811") // not exist contract
-	realAddress := common.HexToAddress("0xca53baf44e68a2f440cafee2bbcc23631ad2689e")
-	nonce := uint64(1)
-	success := deploy.UpdateRegisterProxyAddress("test", proxyContractRegisterAddress, proxyAddress, realAddress, "password", nonce)
+	proxyContractRegisterAddress := common.HexToAddress(os.Args[1])
+	proxyAddress := common.HexToAddress(os.Args[2])
+	realAddress := common.HexToAddress(os.Args[3])
+
+	// get latest nonce
+	nonce := big.NewInt(-1)
+	success := deploy.UpdateRegisterProxyAddress("[Proxy Contract Upgrade]", proxyContractRegisterAddress, proxyAddress, realAddress, "password", nonce)
 	fmt.Println("update contract success:", success)
 
 }
