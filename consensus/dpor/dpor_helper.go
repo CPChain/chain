@@ -108,16 +108,24 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
 
 		// Ensure that the block's timestamp is valid
-		if timestamp < parentTimestamp+period || timestamp > parentTimestamp+period+timeout {
-			if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
+		if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
+
+			if timestamp < parentTimestamp+period {
 
 				log.Warn("invalid timestamp", "timestamp < parentTimestamp+period", timestamp < parentTimestamp+period, "parentTimestamp+period", parentTimestamp+period, "timestamp", timestamp)
-				log.Warn("invalid timestamp", "timestamp > parentTimestamp+period+timeout", timestamp > parentTimestamp+period+timeout, "parentTimestamp+period+timeout", parentTimestamp+period+timeout, "timestamp", timestamp)
-
 				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
 
 				return ErrInvalidTimestamp
 			}
+
+			// TODO: fix this
+			// if timestamp > parentTimestamp+period+timeout {
+
+			// 	log.Warn("invalid timestamp", "timestamp > parentTimestamp+period+timeout", timestamp > parentTimestamp+period+timeout, "parentTimestamp+period+timeout", parentTimestamp+period+timeout, "timestamp", timestamp)
+			// 	log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
+
+			// 	return ErrInvalidTimestamp
+			// }
 		}
 
 		// Delay to verify it!

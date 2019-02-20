@@ -173,6 +173,7 @@ var (
 		Commit:         "Commit",
 		ImpeachPrepare: "ImpeachPrepare",
 		ImpeachCommit:  "ImpeachCommit",
+		Validate:       "Validate",
 	}
 )
 

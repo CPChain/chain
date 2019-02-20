@@ -449,7 +449,11 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 		log.Debug("verified the block, there is an error", "error", err)
 
 		go p.unknownAncestorBlockHandler(block)
-		return nil, NoAction, NoMsgCode, state, nil
+
+		time.Sleep(100 * time.Millisecond)
+
+		// return nil, NoAction, NoMsgCode, state, nil
+		return p.handlePreprepareMsg(input, state, blockVerifyFn)
 
 	default:
 
