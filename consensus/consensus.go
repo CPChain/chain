@@ -161,6 +161,9 @@ const (
 
 	// ImpeachCommit Once a impeach prepare certificate is collected, a validator enters impeach prepared state
 	ImpeachCommit
+
+	// Validate state
+	Validate
 )
 
 var (

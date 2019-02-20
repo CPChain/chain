@@ -373,7 +373,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	}
 
 	// rebroadcast the msg
-	// go vh.reBroadcast(input, msgCode, msg)
+	go vh.reBroadcast(input, msgCode, msg)
 
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
