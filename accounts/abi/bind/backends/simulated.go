@@ -399,7 +399,7 @@ func (b *SimulatedBackend) AdjustTime(adjustment time.Duration) error {
 	defer b.mu.Unlock()
 
 	config := configs.ChainConfigInfo().Dpor
-	d := dpor.New(config, b.database)
+	d := dpor.New(config, b.database, nil)
 
 	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), d, b.database, nil, 1, func(number int, block *core.BlockGen) {
 		for _, tx := range b.pendingBlock.Transactions() {

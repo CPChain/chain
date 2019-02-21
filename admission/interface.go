@@ -29,6 +29,12 @@ type ApiBackend interface {
 	// APIs returns the collection of RPC services the admission package offers.
 	Apis() []rpc.API
 
+	// IsRNode returns true or false indicate whether the node is RNode
+	IsRNode() (bool, error)
+
+	// FundForRNode sends money to reward contract to become RNode
+	FundForRNode() error
+
 	// Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg
 	Campaign(times uint64) error
 

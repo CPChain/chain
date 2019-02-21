@@ -120,7 +120,7 @@ func TestReward(t *testing.T) {
 	}
 
 	participantTransacOpts.Value = big.NewInt(0)
-	trans, err = instance.WantContinue(participantTransacOpts)
+	trans, err = instance.WantRenew(participantTransacOpts)
 	if err != nil {
 		t.Fatal("Participant WantContinue is error ", "error is :", err)
 	}
@@ -128,7 +128,7 @@ func TestReward(t *testing.T) {
 
 	receipt, _ = contractBackend.TransactionReceipt(context.Background(), trans.Hash())
 
-	c, _ := instance.IsContinue(nil, participantAddr)
+	c, _ := instance.IsToRenew(nil, participantAddr)
 	if c == false {
 		t.Fatal("the participant's investment should be set to continue")
 	}

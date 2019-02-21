@@ -134,7 +134,7 @@ contract Campaign {
         payable
     {
         // TODO: @ac once finishes pre-pay cpc for nodes to become candidates, enable the requirement checking below
-        //require(reward.isCandidate(msg.sender)==true, "not candidate by reward");
+        //require(reward.isRNode(msg.sender)==true, "not RNode by reward");
         // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");

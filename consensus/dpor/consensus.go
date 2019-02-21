@@ -18,7 +18,6 @@ package dpor
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"math/big"
 	"time"
@@ -184,17 +183,42 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 }
 
 func (d *Dpor) TryCampaign() {
+	if d.ac == nil {
+		// it is not able to campaign in the situation
+		return
+	}
+
 	snap := d.CurrentSnap()
 	if snap != nil {
 		isV := snap.IsValidatorOf(d.coinbase, snap.Number)
 		log.Debug("check if participate campaign", "isToCampaign", d.IsToCampaign(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number(), "isValidator", isV)
+
+		if d.IsToCampaign() && snap.isAboutToCampaign() && !isV {
+			// make sure it is a RNode, because only RNode has permission to participate campaign
+			isRNode, err := d.ac.IsRNode()
+			if err != nil {
+				log.Debug("encounter error when invoke IsRNode()", "error", err)
+				return
+			}
+
+			if !isRNode {
+				log.Info("it is not RNode, cannot participate campaign")
+				if err := d.ac.FundForRNode(); err != nil {
+					log.Debug("encounter error when invoke FundForRNode()", "error", err)
+					return
+				}
+				log.Info("send money to become RNode")
+			}
+		}
 
 		if d.IsToCampaign() && snap.isStartCampaign() && !isV {
 			newTerm := d.CurrentSnap().TermOf(snap.Number)
 			if newTerm > d.lastCampaignTerm+campaignTerms-1 {
 				d.lastCampaignTerm = newTerm
 				log.Info("campaign for proposer committee", "eleTerm", newTerm)
-				d.client.Campaign(context.Background(), campaignTerms)
+				if d.ac != nil {
+					d.ac.Campaign(campaignTerms)
+				}
 			}
 		}
 	}

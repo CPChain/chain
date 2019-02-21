@@ -29,9 +29,10 @@ type AdmissionApiBackend struct {
 	admissionControl *AdmissionControl
 }
 
-func NewAdmissionApiBackend(chain consensus.ChainReader, address common.Address, config Config) ApiBackend {
+func NewAdmissionApiBackend(chain consensus.ChainReader, address common.Address, config Config, admissionContractAddr common.Address,
+	campaignContractAddr common.Address, rewardContractAddr common.Address) ApiBackend {
 	return &AdmissionApiBackend{
-		admissionControl: NewAdmissionControl(chain, address, config),
+		admissionControl: NewAdmissionControl(chain, address, config, admissionContractAddr, campaignContractAddr, rewardContractAddr),
 	}
 }
 
@@ -45,6 +46,14 @@ func (b *AdmissionApiBackend) Apis() []rpc.API {
 			Public:    false,
 		},
 	}
+}
+
+func (b *AdmissionApiBackend) FundForRNode() error {
+	return b.admissionControl.FundForRNode()
+}
+
+func (b *AdmissionApiBackend) IsRNode() (bool, error) {
+	return b.admissionControl.IsRNode()
 }
 
 func (b *AdmissionApiBackend) Campaign(terms uint64) error {

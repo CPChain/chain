@@ -35,6 +35,7 @@ import (
 type Backend interface {
 	bind.ContractBackend
 	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
+	// BalanceAt gets balance of specified account at the block specified by parameter blockNum. If blockNum is nil, will be the latest one.
 	BalanceAt(ctx context.Context, address common.Address, blockNum *big.Int) (*big.Int, error)
 }
 

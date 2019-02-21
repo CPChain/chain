@@ -1,6 +1,7 @@
 package admission
 
 import (
+	"context"
 	"errors"
 	"math"
 	"math/big"
@@ -16,6 +17,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -41,15 +43,21 @@ const (
 
 var (
 	errTermOutOfRange = errors.New("the number of terms to campaign is out of range")
+	errNotRNode       = errors.New("it is not RNode, not able to participate campaign")
+	errLockedPeriod   = errors.New("the period is locked, cannot invest now")
+	errNoEnoughMoney  = errors.New("money is not enough to become RNode")
 )
 
 // AdmissionControl implements admission control functionality.
 type AdmissionControl struct {
-	config          Config
-	address         common.Address
-	chain           consensus.ChainReader
-	key             *keystore.Key
-	contractBackend contracts.Backend
+	config                Config
+	address               common.Address
+	chain                 consensus.ChainReader
+	key                   *keystore.Key
+	contractBackend       contracts.Backend
+	admissionContractAddr common.Address
+	campaignContractAddr  common.Address
+	rewardContractAddr    common.Address
 
 	mutex      sync.RWMutex
 	wg         *sync.WaitGroup
@@ -62,12 +70,16 @@ type AdmissionControl struct {
 }
 
 // NewAdmissionControl returns a new Control instance.
-func NewAdmissionControl(chain consensus.ChainReader, address common.Address, config Config) *AdmissionControl {
+func NewAdmissionControl(chain consensus.ChainReader, address common.Address, config Config, admissionContractAddr common.Address,
+	campaignContractAddr common.Address, rewardContractAddr common.Address) *AdmissionControl {
 	return &AdmissionControl{
-		config:  config,
-		chain:   chain,
-		address: address,
-		status:  AcIdle,
+		config:                config,
+		chain:                 chain,
+		address:               address,
+		admissionContractAddr: admissionContractAddr,
+		campaignContractAddr:  campaignContractAddr,
+		rewardContractAddr:    rewardContractAddr,
+		status:                AcIdle,
 	}
 }
 
@@ -84,6 +96,12 @@ func (ac *AdmissionControl) Campaign(terms uint64) error {
 	if ac.status == AcRunning {
 		return nil
 	}
+
+	isRNode, _ := ac.IsRNode()
+	if !isRNode {
+		return errNotRNode
+	}
+
 	ac.status = AcRunning
 	ac.err = nil
 	ac.done = make(chan interface{})
@@ -98,6 +116,75 @@ func (ac *AdmissionControl) Campaign(terms uint64) error {
 	go ac.waitSendCampaignMsg(terms)
 
 	return nil
+}
+
+// IsRNode returns true or false indicating whether the node is RNode which is able to participate campaign
+func (ac *AdmissionControl) IsRNode() (bool, error) {
+	rewardContractAddress := ac.rewardContractAddr
+	log.Debug("RewardContractAddress", "address", rewardContractAddress.Hex())
+	rewardContract, err := reward.NewReward(rewardContractAddress, ac.contractBackend)
+	if err != nil {
+		return false, err
+	}
+
+	isRNode, _ := rewardContract.IsRNode(nil, ac.address)
+	return isRNode, nil
+}
+
+func (ac *AdmissionControl) FundForRNode() error {
+	rewardContractAddress := ac.rewardContractAddr
+	log.Debug("RewardContractAddress", "address", rewardContractAddress.Hex())
+	rewardContract, err := reward.NewReward(rewardContractAddress, ac.contractBackend)
+	if err != nil {
+		return err
+	}
+
+	isRNode, err := rewardContract.IsRNode(nil, ac.address)
+	if err != nil {
+		return err
+	}
+
+	if isRNode {
+		// already RNode, no more action needed
+		return nil
+	}
+
+	isLocked, err := rewardContract.IsLocked(nil)
+	if err != nil {
+		return err
+	}
+	if isLocked {
+		// cannot fund to be RNode during locked period
+		return errLockedPeriod
+	}
+
+	deposit, err := rewardContract.GetTotalBalance(nil, ac.address)
+	if err != nil {
+		return err
+	}
+
+	minRnodeFund := new(big.Int).Mul(big.NewInt(configs.RNodeMinFundReq), big.NewInt(configs.Cpc))
+	if deposit.Cmp(minRnodeFund) >= 0 {
+		// fund is enough, next round it will be RNode
+		return nil
+	}
+
+	requiredMoney := new(big.Int).Sub(minRnodeFund, deposit)
+	balance, _ := ac.contractBackend.BalanceAt(context.Background(), ac.address, nil)
+	if balance.Cmp(requiredMoney) >= 0 {
+		transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
+		rewardContract.WantRenew(transactOpts) // renew existent investment
+
+		transactOpts.Value = requiredMoney // make up investment
+		tx, err := rewardContract.SubmitDeposit(transactOpts)
+		if err != nil {
+			log.Info("encounter error when funding deposit for node to become candidate", "error", err)
+		}
+		log.Info("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
+		return nil
+	} else {
+		return errNoEnoughMoney
+	}
 }
 
 func (ac *AdmissionControl) DoneCh() <-chan interface{} {
@@ -187,7 +274,7 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 		return
 	}
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
-	campaignContractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
+	campaignContractAddress := ac.campaignContractAddr
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
 	instance, err := contracts.NewCampaignWrapper(transactOpts, campaignContractAddress, ac.contractBackend)
 	if err != nil {
@@ -234,7 +321,7 @@ func (ac *AdmissionControl) buildWorks() {
 
 func (ac *AdmissionControl) buildCpuProofWork() ProofWork {
 	client := ac.contractBackend
-	instance, err := admission.NewAdmission(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
+	instance, err := admission.NewAdmission(ac.admissionContractAddr, client)
 	if err != nil {
 		log.Fatal("NewAdmissionCaller is error", "error is", err)
 	}
@@ -249,7 +336,7 @@ func (ac *AdmissionControl) buildCpuProofWork() ProofWork {
 
 func (ac *AdmissionControl) buildMemoryProofWork() ProofWork {
 	client := ac.contractBackend
-	instance, err := admission.NewAdmission(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission], client)
+	instance, err := admission.NewAdmission(ac.admissionContractAddr, client)
 	if err != nil {
 		log.Fatal("NewAdmissionCaller is error", "error is", err)
 	}
