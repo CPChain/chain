@@ -18,13 +18,15 @@ var (
 	errNilBlock = errors.New("nil block")
 )
 
-type blockIdentifier struct {
+// BlockIdentifier is the identifier to a block
+type BlockIdentifier struct {
 	number uint64
 	hash   common.Hash
 }
 
-func newBlockIdentifier(number uint64, hash common.Hash) blockIdentifier {
-	return blockIdentifier{
+// NewBlockIdentifier creates a block identifier with given block number and hash
+func NewBlockIdentifier(number uint64, hash common.Hash) BlockIdentifier {
+	return BlockIdentifier{
 		number: number,
 		hash:   hash,
 	}
@@ -36,6 +38,7 @@ type RecentBlocks struct {
 	db     database.Database
 }
 
+// NewRecentBlocks creates a new block cache object
 func NewRecentBlocks(db database.Database) *RecentBlocks {
 	blocks, _ := lru.NewARC(maxKnownBlocks)
 
@@ -52,7 +55,7 @@ func (rb *RecentBlocks) AddBlock(block *types.Block) error {
 		return errNilBlock
 	}
 
-	bi := blockIdentifier{
+	bi := BlockIdentifier{
 		hash:   block.Hash(),
 		number: block.NumberU64(),
 	}
@@ -67,8 +70,8 @@ func (rb *RecentBlocks) AddBlock(block *types.Block) error {
 	return rb.db.Put(block.Hash().Bytes(), bytes)
 }
 
-// GetBlock returns a block
-func (rb *RecentBlocks) GetBlock(bi blockIdentifier) (*types.Block, error) {
+// GetBlock returns a block with given block identifier
+func (rb *RecentBlocks) GetBlock(bi BlockIdentifier) (*types.Block, error) {
 
 	if blk, ok := rb.blocks.Get(bi); ok {
 		return blk.(*types.Block), nil
@@ -83,4 +86,54 @@ func (rb *RecentBlocks) GetBlock(bi blockIdentifier) (*types.Block, error) {
 	}
 
 	return nil, errNilBlock
+}
+
+// BlockOrHeader represents a block or a header
+type BlockOrHeader struct {
+	block  *types.Block
+	header *types.Header
+}
+
+// NewBOHFromHeader creates a new BlockOrHeader from a header
+func NewBOHFromHeader(header *types.Header) *BlockOrHeader {
+	return &BlockOrHeader{
+		header: header,
+	}
+}
+
+// NewBOHFromBlock creates a new BlockOrHeader from a block
+func NewBOHFromBlock(block *types.Block) *BlockOrHeader {
+	return &BlockOrHeader{
+		block: block,
+	}
+}
+
+// IsBlock checks if the boh is a block
+func (bh *BlockOrHeader) IsBlock() bool {
+	return bh != nil && bh.block != nil
+}
+
+// IsHeader checks if the boh is a header
+func (bh *BlockOrHeader) IsHeader() bool {
+	return bh != nil && bh.header != nil
+}
+
+// Number returns number of the boh
+func (bh *BlockOrHeader) Number() uint64 {
+	if bh.IsBlock() {
+		return bh.block.NumberU64()
+	} else if bh.IsHeader() {
+		return bh.header.Number.Uint64()
+	}
+	return uint64(0)
+}
+
+// Hash returns hash of the boh
+func (bh *BlockOrHeader) Hash() common.Hash {
+	if bh.IsBlock() {
+		return bh.block.Hash()
+	} else if bh.IsHeader() {
+		return bh.header.Hash()
+	}
+	return common.Hash{}
 }

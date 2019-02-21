@@ -261,7 +261,7 @@ func (vh *Handler) ReceiveImpeachPendingBlock(block *types.Block) error {
 }
 
 type msgID struct {
-	blockID blockIdentifier
+	blockID BlockIdentifier
 	msgCode MsgCode
 	msgHash common.Hash
 }
@@ -275,7 +275,7 @@ func newMsgID(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) msg
 	msgHash.Write(payload)
 
 	return msgID{
-		blockID: blockIdentifier{number: number, hash: hash},
+		blockID: BlockIdentifier{number: number, hash: hash},
 		msgCode: msgCode,
 		msgHash: common.BytesToHash(msgHash.Sum(nil)),
 	}
@@ -315,12 +315,12 @@ func newImpeachmentRecord() *impeachmentRecord {
 }
 
 func (ir *impeachmentRecord) markAsImpeached(number uint64, hash common.Hash) {
-	bi := newBlockIdentifier(number, hash)
+	bi := NewBlockIdentifier(number, hash)
 	ir.record.Add(bi, true)
 }
 
 func (ir *impeachmentRecord) ifImpeached(number uint64, hash common.Hash) bool {
-	bi := newBlockIdentifier(number, hash)
+	bi := NewBlockIdentifier(number, hash)
 	impeached, exists := ir.record.Get(bi)
 	return exists && impeached.(bool) == true
 }

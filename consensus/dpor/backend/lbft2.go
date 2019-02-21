@@ -381,19 +381,19 @@ func (p *LBFT2) fsm(input *BlockOrHeader, msgCode MsgCode, state consensus.State
 	return nil, NoAction, NoMsgCode, state, nil
 }
 
-func (p *LBFT2) prepareCertificate(bi blockIdentifier) bool {
+func (p *LBFT2) prepareCertificate(bi BlockIdentifier) bool {
 	return p.prepareSignatures.getSignaturesCountOf(bi) >= 2*int(p.Faulty())+1
 }
 
-func (p *LBFT2) impeachPrepareCertificate(bi blockIdentifier) bool {
+func (p *LBFT2) impeachPrepareCertificate(bi BlockIdentifier) bool {
 	return p.prepareCertificate(bi)
 }
 
-func (p *LBFT2) commitCertificate(bi blockIdentifier) bool {
+func (p *LBFT2) commitCertificate(bi BlockIdentifier) bool {
 	return p.commitSignatures.getSignaturesCountOf(bi) >= 2*int(p.Faulty())+1
 }
 
-func (p *LBFT2) impeachCommitCertificate(bi blockIdentifier) bool {
+func (p *LBFT2) impeachCommitCertificate(bi BlockIdentifier) bool {
 	return p.commitCertificate(bi)
 }
 
@@ -430,7 +430,7 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 
 		log.Debug("verified the block, everything is ok! ready to sign the block", "number", number, "hash", hash.Hex())
 
-		bi := newBlockIdentifier(number, hash)
+		bi := NewBlockIdentifier(number, hash)
 
 		// compose prepare msg
 		prepareHeader, _ := p.composePrepareMsg(block)
@@ -441,7 +441,7 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 		}
 
 		// prepare certificate is not satisfied, broadcast prepare msg
-		return []*BlockOrHeader{newBOHFromHeader(prepareHeader)}, BroadcastMsgAction, PrepareMsgCode, consensus.Prepare, nil
+		return []*BlockOrHeader{NewBOHFromHeader(prepareHeader)}, BroadcastMsgAction, PrepareMsgCode, consensus.Prepare, nil
 
 	case consensus.ErrFutureBlock:
 
@@ -499,7 +499,7 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 
 		log.Debug("verified the block, everything is ok! ready to sign the block", "number", number, "hash", hash.Hex())
 
-		bi := newBlockIdentifier(number, hash)
+		bi := NewBlockIdentifier(number, hash)
 
 		// compose prepare msg
 		impeachPrepareHeader, _ := p.composeImpeachPrepareMsg(block)
@@ -510,7 +510,7 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 		}
 
 		// prepare certificate is not satisfied, broadcast prepare msg
-		return []*BlockOrHeader{newBOHFromHeader(impeachPrepareHeader)}, BroadcastMsgAction, ImpeachPrepareMsgCode, consensus.ImpeachPrepare, nil
+		return []*BlockOrHeader{NewBOHFromHeader(impeachPrepareHeader)}, BroadcastMsgAction, ImpeachPrepareMsgCode, consensus.ImpeachPrepare, nil
 
 	case consensus.ErrFutureBlock:
 
@@ -598,7 +598,7 @@ func (p *LBFT2) handlePrepareMsg(input *BlockOrHeader, state consensus.State) ([
 		header = input.header
 	)
 
-	bi := newBlockIdentifier(number, hash)
+	bi := NewBlockIdentifier(number, hash)
 
 	log.Debug("received a prepare header", "number", number, "hash", hash.Hex())
 
@@ -632,7 +632,7 @@ func (p *LBFT2) handleImpeachPrepareMsg(input *BlockOrHeader, state consensus.St
 		header = input.header
 	)
 
-	bi := newBlockIdentifier(number, hash)
+	bi := NewBlockIdentifier(number, hash)
 
 	log.Debug("received an impeach prepare header", "number", number, "hash", hash.Hex())
 
@@ -718,7 +718,7 @@ func (p *LBFT2) handleCommitMsg(input *BlockOrHeader, state consensus.State) ([]
 		header = input.header
 	)
 
-	bi := newBlockIdentifier(number, hash)
+	bi := NewBlockIdentifier(number, hash)
 
 	log.Debug("received a commit header", "number", number, "hash", hash.Hex())
 
@@ -755,7 +755,7 @@ func (p *LBFT2) handleImpeachCommitMsg(input *BlockOrHeader, state consensus.Sta
 		header = input.header
 	)
 
-	bi := newBlockIdentifier(number, hash)
+	bi := NewBlockIdentifier(number, hash)
 
 	log.Debug("received an impeach commit header", "number", number, "hash", hash.Hex())
 
@@ -785,7 +785,7 @@ func (p *LBFT2) composeValidateMsg(header *types.Header) (*types.Block, error) {
 		hash   = header.Hash()
 	)
 
-	bi := blockIdentifier{
+	bi := BlockIdentifier{
 		hash:   hash,
 		number: number,
 	}
@@ -815,7 +815,7 @@ func (p *LBFT2) handleValidateMsg(input *BlockOrHeader, state consensus.State) (
 
 	log.Debug("received a validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-	return []*BlockOrHeader{newBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ValidateMsgCode, consensus.Idle, nil
+	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ValidateMsgCode, consensus.Idle, nil
 }
 
 func (p *LBFT2) handleImpeachValidateMsg(input *BlockOrHeader, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
@@ -832,7 +832,7 @@ func (p *LBFT2) handleImpeachValidateMsg(input *BlockOrHeader, state consensus.S
 
 	log.Debug("received an impeach validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-	return []*BlockOrHeader{newBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ImpeachValidateMsgCode, consensus.Idle, nil
+	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ImpeachValidateMsgCode, consensus.Idle, nil
 }
 
 // refreshSignatures refreshes signatures in header and local cache
@@ -890,7 +890,7 @@ func (p *LBFT2) refreshSignatures(header *types.Header, state consensus.State) e
 
 func (p *LBFT2) onceImpeachPrepareCertificateSatisfied(impeachPrepareHeader *types.Header) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 
-	bi := blockIdentifier{
+	bi := BlockIdentifier{
 		hash:   impeachPrepareHeader.Hash(),
 		number: impeachPrepareHeader.Number.Uint64(),
 	}
@@ -905,7 +905,7 @@ func (p *LBFT2) onceImpeachPrepareCertificateSatisfied(impeachPrepareHeader *typ
 	}
 
 	// commit certificate is not satisfied, broadcast prepare and commit msg
-	return []*BlockOrHeader{newBOHFromHeader(impeachPrepareHeader), newBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachCommit, nil
+	return []*BlockOrHeader{NewBOHFromHeader(impeachPrepareHeader), NewBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachCommit, nil
 }
 
 func (p *LBFT2) onceImpeachCommitCertificateSatisfied(impeachPrepareHeader *types.Header, impeachCommitHeader *types.Header) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
@@ -915,19 +915,19 @@ func (p *LBFT2) onceImpeachCommitCertificateSatisfied(impeachPrepareHeader *type
 	if err != nil {
 		// failed to compose validate msg, broadcast prepare and commit msg
 		if impeachPrepareHeader != nil {
-			return []*BlockOrHeader{newBOHFromHeader(impeachPrepareHeader), newBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachCommit, nil
+			return []*BlockOrHeader{NewBOHFromHeader(impeachPrepareHeader), NewBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachPrepareAndCommitMsgCode, consensus.ImpeachCommit, nil
 		}
 
-		return []*BlockOrHeader{newBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachCommitMsgCode, consensus.ImpeachCommit, nil
+		return []*BlockOrHeader{NewBOHFromHeader(impeachCommitHeader)}, BroadcastMsgAction, ImpeachCommitMsgCode, consensus.ImpeachCommit, nil
 	}
 
 	// succeed to compose validate msg, broadcast it
-	return []*BlockOrHeader{newBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Validate, nil
+	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Validate, nil
 }
 
 func (p *LBFT2) oncePrepareCertificateSatisfied(prepareHeader *types.Header) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 
-	bi := blockIdentifier{
+	bi := BlockIdentifier{
 		hash:   prepareHeader.Hash(),
 		number: prepareHeader.Number.Uint64(),
 	}
@@ -942,7 +942,7 @@ func (p *LBFT2) oncePrepareCertificateSatisfied(prepareHeader *types.Header) ([]
 	}
 
 	// commit certificate is not satisfied, broadcast prepare and commit msg
-	return []*BlockOrHeader{newBOHFromHeader(prepareHeader), newBOHFromHeader(commitHeader)}, BroadcastMsgAction, PrepareAndCommitMsgCode, consensus.Commit, nil
+	return []*BlockOrHeader{NewBOHFromHeader(prepareHeader), NewBOHFromHeader(commitHeader)}, BroadcastMsgAction, PrepareAndCommitMsgCode, consensus.Commit, nil
 
 }
 
@@ -954,13 +954,13 @@ func (p *LBFT2) onceCommitCertificateSatisfied(prepareHeader *types.Header, comm
 
 		// failed to compose validate msg, broadcast prepare and commit msg
 		if prepareHeader != nil {
-			return []*BlockOrHeader{newBOHFromHeader(prepareHeader), newBOHFromHeader(commitHeader)}, BroadcastMsgAction, PrepareAndCommitMsgCode, consensus.Commit, nil
+			return []*BlockOrHeader{NewBOHFromHeader(prepareHeader), NewBOHFromHeader(commitHeader)}, BroadcastMsgAction, PrepareAndCommitMsgCode, consensus.Commit, nil
 		}
-		return []*BlockOrHeader{newBOHFromHeader(commitHeader)}, BroadcastMsgAction, CommitMsgCode, consensus.Commit, nil
+		return []*BlockOrHeader{NewBOHFromHeader(commitHeader)}, BroadcastMsgAction, CommitMsgCode, consensus.Commit, nil
 	}
 
 	// succeed to compose validate msg, broadcast it
-	return []*BlockOrHeader{newBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Validate, nil
+	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Validate, nil
 
 }
 

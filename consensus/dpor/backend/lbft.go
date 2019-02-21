@@ -45,7 +45,7 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 		log.Debug("adding to pending blocks", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 		// reBoradcast the block
-		go vh.reBroadcast(newBOHFromBlock(block), PreprepareMsgCode, msg)
+		go vh.reBroadcast(NewBOHFromBlock(block), PreprepareMsgCode, msg)
 
 		// add block to pending block cache
 		if err := vh.knownBlocks.AddBlock(block); err != nil {
@@ -119,7 +119,7 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		// reBoradcast the header
-		go vh.reBroadcast(newBOHFromHeader(header), CommitMsgCode, msg)
+		go vh.reBroadcast(NewBOHFromHeader(header), CommitMsgCode, msg)
 
 		// verify the prepare header
 		// if correct, insert the block into chain, then broadcast it
@@ -132,7 +132,7 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 
 			// if the block body of the header is not found and it's not in local chain
 			// broadcast the header again
-			block, err := vh.knownBlocks.GetBlock(blockIdentifier{number: number, hash: hash})
+			block, err := vh.knownBlocks.GetBlock(BlockIdentifier{number: number, hash: hash})
 			if block == nil {
 				go vh.BroadcastCommitHeader(header)
 				return nil
