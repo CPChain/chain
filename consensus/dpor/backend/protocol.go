@@ -71,8 +71,8 @@ const (
 	// ErrProtocolVersionMismatch is returned if protocol version is not matched when handshaking
 	ErrProtocolVersionMismatch
 
-	// ErrNetworkIdMismatch is returned if networkid is not matched when handshaking
-	ErrNetworkIdMismatch
+	// ErrNetworkIDMismatch is returned if networkid is not matched when handshaking
+	ErrNetworkIDMismatch
 
 	// ErrGenesisBlockMismatch is returned if genesis block is different from remote signer
 	ErrGenesisBlockMismatch
@@ -97,7 +97,7 @@ var errorToString = map[int]string{
 	ErrDecode:                  "Invalid message",
 	ErrInvalidMsgCode:          "Invalid message code",
 	ErrProtocolVersionMismatch: "Protocol version mismatch",
-	ErrNetworkIdMismatch:       "NetworkId mismatch",
+	ErrNetworkIDMismatch:       "NetworkId mismatch",
 	ErrGenesisBlockMismatch:    "Genesis block mismatch",
 	ErrNoStatusMsg:             "No status message",
 	ErrExtraStatusMsg:          "Extra status message",
