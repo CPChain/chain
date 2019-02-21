@@ -13,8 +13,8 @@ contract Reward {
     uint256 public electionCriteria = 200000 ether;
     uint256 public bonusPool = 1250000 ether; // 1.25m x 4 = 5m (cpc)
     uint256 public nextRound = 0;
-    Set.Data internal candidates;
-    Set.Data internal participants;
+    Set.Data internal rnodes;
+    Set.Data internal participants;   // rnodes and enodes
     uint256 public nextRoundStartTime = 0;
     uint256 private period = 90 days;
 
@@ -22,7 +22,7 @@ contract Reward {
         uint256 freeDeposit;
         uint256 lockedDeposit;
         uint256 returned;
-        bool isContinue;
+        bool toRenew;
     }
 
     mapping (address => Investor) private investors;
@@ -124,24 +124,24 @@ contract Reward {
         emit TransferDeposit(_addr,_value);
     }
 
-    function wantContinue() public unlocked() {
-        investors[msg.sender].isContinue =true;
+    function wantRenew() public unlocked() {
+        investors[msg.sender].toRenew =true;
     }
 
-    function quitContinue() public unlocked(){
-        investors[msg.sender].isContinue =false;
+    function quitRenew() public unlocked(){
+        investors[msg.sender].toRenew =false;
     }
 
-    function isContinue(address _addr) public view returns (bool){
-        return investors[_addr].isContinue;
+    function isToRenew(address _addr) public view returns (bool){
+        return investors[_addr].toRenew;
     }
 
     function setPeriod(uint256 _period) public onlyOwner() {
         period = _period;
     }
 
-    function isCandidate(address _addr) public view returns (bool){
-        return candidates.contains(_addr);
+    function isRNode(address _addr) public view returns (bool){
+        return rnodes.contains(_addr);
     }
 
     function isParticipant(address _addr) public view returns (bool){
@@ -158,23 +158,23 @@ contract Reward {
             interest = bonusPool.mul(deposit).div(totalAmount); // interest = [total bonus] * ([the investor's investment] / [total investment])
             investors[participants.values[i]].returned = investors[participants.values[i]].returned.add(interest);
 
-            if (investors[participants.values[i]].isContinue == false){
+            if (investors[participants.values[i]].toRenew == false){
                 investors[participants.values[i]].returned = investors[participants.values[i]].returned.add(deposit);
                 investors[participants.values[i]].lockedDeposit = 0;
             }
-            emit ContinuedInvest(participants.values[i], investors[participants.values[i]].isContinue);
+            emit ContinuedInvest(participants.values[i], investors[participants.values[i]].toRenew);
         }
     }
 
     function startNewRound() public onlyOwner() {
-        require(block.timestamp >= nextRoundStartTime, "the next round not start");
+        require(block.timestamp >= (nextRoundStartTime), "the next round not start"); // allow start 3 days ahead of schedule
 
         if (nextRound > 0) {
             closePreviousRound();
         }
 
         nextRound = nextRound.add(1);
-        nextRoundStartTime = block.timestamp + period;
+        nextRoundStartTime = block.timestamp + period - 1 days; // 1days is a buffer
 
         // Transfer deposit form tempDeposit to lockedDeposit
         for (uint256 i = 0 ; i< participants.values.length; i++) {
@@ -186,17 +186,17 @@ contract Reward {
                 // the amount is not enough, return to free deposit and quit participants group
                 investor.freeDeposit = investor.freeDeposit.add(investor.returned);
                 assert(investor.lockedDeposit == 0); // locked deposit should be 0
-                candidates.remove(investorAddr);
+                rnodes.remove(investorAddr);
                 emit DepositInsufficient(investorAddr, totalAmount);
             } else {
                 investor.lockedDeposit = investor.lockedDeposit.add(investor.freeDeposit);
                 investor.freeDeposit = 0; // it is not necessary, but be helpful for understanding the logic
                 investor.freeDeposit = investor.returned;
                 if (totalAmount < electionCriteria) {
-                    candidates.remove(investorAddr);
+                    rnodes.remove(investorAddr);
                     emit JoinPartcipant(investorAddr, investor.lockedDeposit);
                 } else {
-                    candidates.insert(investorAddr);
+                    rnodes.insert(investorAddr);
                     emit JoinCandidates(investorAddr, investor.lockedDeposit);
                 }
             }

@@ -39,22 +39,22 @@ balance = "0x0"
 balance = "0x0"
 
 [alloc.0x22a672eab2b1a3ff3ed91563205a56ca5a560e08]
-balance = "0x7fffffffffffffff"
+balance = "0x7fffffffffffffffffff"
 
 [alloc.0x3a18598184ef84198db90c28fdfdfdf56544f747]
-balance = "0x7fffffffffffffff"
+balance = "0x7fffffffffffffffffff"
 
 [alloc.0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e]
-balance = "0x7fffffffffffffff"
+balance = "0x7fffffffffffffffffff"
 
 [alloc.0xc05302acebd0730e3a18a058d7d1cb1204c4a092]
-balance = "0x7fffffffffffffff"
+balance = "0x7fffffffffffffffffff"
 
 [alloc.0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a]
-balance = "0x7fffffffffffffff"
+balance = "0x7fffffffffffffffffff"
 
 [alloc.0xef3dd127de235f15ffb4fc0d71469d1339df6465]
-balance = "0x7fffffffffffffff"
+balance = "0x7fffffffffffffffffff"
 
 [dpor]
 seal = "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"

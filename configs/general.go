@@ -82,6 +82,10 @@ const (
 	ContractPdashProxy = "pdashProxy" // address of PdashProxy
 )
 
+const (
+	RNodeMinFundReq = 200000 // 200000 CPC for becoming a RNode
+)
+
 var (
 	chainConfigMap = map[RunMode]*ChainConfig{
 		Dev:      devChainConfig,

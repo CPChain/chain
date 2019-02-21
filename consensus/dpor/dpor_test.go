@@ -108,6 +108,6 @@ func newHeader() *types.Header {
 }
 
 func TestNew(t *testing.T) {
-	dpor := New(&configs.DporConfig{}, &fakeDb{})
+	dpor := New(&configs.DporConfig{}, &fakeDb{}, nil)
 	assert.NotNil(t, dpor)
 }

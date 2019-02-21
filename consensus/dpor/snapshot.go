@@ -512,6 +512,11 @@ func (s *DporSnapshot) isStartCampaign() bool {
 	return s.number() >= s.config.MaxInitBlockNumber-((TermDistBetweenElectionAndMining+1)*s.config.TermLen*s.config.ViewLen)
 }
 
+// isAboutToCampaign returns a bool value indicating when it is about (1 round in advance) to campaign
+func (s *DporSnapshot) isAboutToCampaign() bool {
+	return s.number() >= s.config.MaxInitBlockNumber-((TermDistBetweenElectionAndMining+2)*s.config.TermLen*s.config.ViewLen)
+}
+
 // updateProposer uses rpt and election result to get new proposers committee
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Elect proposers
@@ -565,7 +570,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Set default proposer if it is in initial stage
 	if s.isUseDefaultProposers() {
 		// Use default proposers
-		proposers := s.candidates()[:s.config.TermLen]
+		proposers := configs.Proposers()
 		s.setRecentProposers(s.Term()+1, proposers)
 		log.Debug("use default proposers", "term", s.Term()+1, "proposers", len(proposers))
 		for i, p := range proposers {

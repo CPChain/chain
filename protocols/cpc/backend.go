@@ -190,8 +190,10 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		gpoParams.Default = config.GasPrice
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
-	// TODO: fix this, @Xumx
-	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission)
+
+	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission,
+		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
 	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	return cpc, nil
@@ -223,7 +225,7 @@ func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainCo
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. @liuq
-		dpor := dpor.New(chainConfig.Dpor, db)
+		dpor := dpor.New(chainConfig.Dpor, db, s.AdmissionApiBackend)
 		if eb != (common.Address{}) {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 			if wallet == nil || err != nil {
@@ -356,13 +358,6 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		return fmt.Errorf("coinbase missing: %v", err)
 	}
 
-	// Propagate the initial price point to the transaction pool
-	s.lock.RLock()
-	price := s.gasPrice
-	s.lock.RUnlock()
-
-	s.txPool.SetGasPrice(price)
-
 	// post-requisite: miner.isMining == true && dpor.IsMiner() == true && dpor.isToCampaign == true
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		if dpor.Coinbase() != coinbase {
@@ -384,6 +379,14 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		go dpor.StartMining(s.blockchain, s.server, s.protocolManager.BroadcastBlock, s.protocolManager.SyncFromPeer, s.protocolManager.SyncFromBestPeer)
 		log.Info("start participating campaign", "campaign", dpor.IsToCampaign())
 	}
+
+	// Propagate the initial price point to the transaction pool
+	s.lock.RLock()
+	price := s.gasPrice
+	s.lock.RUnlock()
+
+	s.txPool.SetGasPrice(price)
+
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection
 		// mechanism introduced to speed sync times. CPU mining on mainnet is ludicrous

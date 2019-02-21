@@ -158,7 +158,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	config := admission2.DefaultConfig
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config, acAddr, campaignAddr, rewardAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(1)
@@ -238,7 +238,7 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	config := admission2.DefaultConfig
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config, acAddr, campaignAddr, rewardAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(2)
@@ -250,7 +250,7 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	memNonce := results[admission2.Memory].Nonce
 
 	rewardContract, err := reward.NewReward(rewardAddr, contractBackend)
-	isCan, _ := rewardContract.IsCandidate(&bind.CallOpts{From: transactOpts.From}, transactOpts.From)
+	isCan, _ := rewardContract.IsRNode(&bind.CallOpts{From: transactOpts.From}, transactOpts.From)
 	_ = isCan
 
 	tx, err := campaign.ClaimCampaign(big.NewInt(2), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
@@ -307,7 +307,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	config := admission2.DefaultConfig
 	config.CpuDifficulty = 5
 	config.MemoryDifficulty = 5
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config, acAddr, campaignAddr, rewardAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(1)

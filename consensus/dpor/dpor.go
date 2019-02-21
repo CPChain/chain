@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -78,6 +79,7 @@ type Dpor struct {
 	stateLock sync.RWMutex
 
 	client     backend.ClientBackend
+	ac         admission.ApiBackend
 	clientLock sync.RWMutex
 
 	chain consensus.ChainReadWriter
@@ -174,7 +176,7 @@ func (d *Dpor) SetClient(client backend.ClientBackend) {
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
-func New(config *configs.DporConfig, db database.Database) *Dpor {
+func New(config *configs.DporConfig, db database.Database, acBackend admission.ApiBackend) *Dpor {
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config
@@ -196,6 +198,7 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
 		handler:      backend.NewHandler(&conf, common.Address{}, db),
+		ac:           acBackend,
 		db:           db,
 		recentSnaps:  recentSnaps,
 		finalSigs:    finalSigs,
@@ -205,13 +208,13 @@ func New(config *configs.DporConfig, db database.Database) *Dpor {
 }
 
 func NewFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db)
+	d := New(config, db, nil)
 	d.mode = FakeMode
 	return d
 }
 
 func NewDoNothingFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db)
+	d := New(config, db, nil)
 	d.mode = DoNothingFakeMode
 	return d
 }
@@ -229,7 +232,7 @@ func NewFakeDelayer(config *configs.DporConfig, db database.Database, delay time
 }
 
 func NewPbftFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db)
+	d := New(config, db, nil)
 	d.mode = PbftFakeMode
 	return d
 }
