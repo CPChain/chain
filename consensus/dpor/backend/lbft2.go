@@ -100,12 +100,29 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 	p.stateLock.Lock()
 	defer p.stateLock.Unlock()
 
-	state := p.state
-	number := p.number
+	var (
+		hash   = input.Hash()
+		number = input.Number()
+	)
 
-	log.Debug("current status", "state", state, "number", number, "msg code", msgCode.String(), "input number", input.Number())
+	_, _ = hash, number
 
-	output, action, msgCode, state, err := p.realFSM(input, msgCode, state)
+	// if already in chain, do nothing
+	if p.dpor.HasBlockInChain(hash, number) {
+		// TODO: add error type
+		return nil, NoAction, NoMsgCode, nil
+	}
+
+	// if outdated, do nothing
+	if number < p.number {
+		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
+		// TODO: add error type
+		return nil, NoAction, NoMsgCode, nil
+	}
+
+	log.Debug("current status", "current state", p.state, "current number", p.number, "msg code", msgCode.String(), "input number", input.Number())
+
+	output, action, msgCode, state, err := p.realFSM(input, msgCode, p.state)
 	// output, action, msgCode, state, err := p.fsm(input, msgCode, state)
 
 	if output != nil && err == nil {
@@ -124,24 +141,6 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 }
 
 func (p *LBFT2) realFSM(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
-	var (
-		hash   = input.Hash()
-		number = input.Number()
-	)
-
-	_, _ = hash, number
-
-	// if already in chain, do nothing
-	if p.dpor.HasBlockInChain(hash, number) {
-		// TODO: add error type
-		return nil, NoAction, NoMsgCode, state, nil
-	}
-
-	if number < p.number {
-		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
-		// TODO: add error type
-		return nil, NoAction, NoMsgCode, state, nil
-	}
 
 	switch state {
 	case consensus.Idle:
