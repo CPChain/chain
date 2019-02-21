@@ -1,7 +1,7 @@
 Configuration
 ~~~~~~~~~~~~~~~~
 
-Configure a private network
+Configure a Private Network
 #############################
 
 Modify ``genesis.toml`` in the directory examples/cpchain/conf-dev to configure your own private network.

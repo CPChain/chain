@@ -83,7 +83,7 @@ Use the ``auto`` module to :ref:`guess at common node connection options
 .. _first_w3_use:
 
 
-API reference
+API Reference
 -----------------
 
 

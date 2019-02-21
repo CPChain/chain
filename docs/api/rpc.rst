@@ -16,7 +16,7 @@ It is transport agnostic in that the concepts can be used within the same proces
 It uses JSON `(RFC 4627) <https://www.ietf.org/rfc/rfc4627.txt>`_ as data format.
 
 
-How can we test API?
+How Can We Test APIs?
 ----------------
 
 All JSON-RPC requests are sent via POST method.

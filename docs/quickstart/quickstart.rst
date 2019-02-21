@@ -3,7 +3,7 @@ Quick Start
 
 We are going to install CPChain and run a node on the testnet. 
 
-Building the source
+Building the Source
 ####################
 
 First, make sure you have installed `go <https://golang.org/>`_, and configured the $GOPATH.
@@ -38,14 +38,14 @@ After cloning from github repository, you can checkout the commit 7d29a2b by fol
 
 Then use the commands above to connect to Alpha Mainnet.
 
-Create an account
+Create an Account
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. code::
 
     $ ./cpchain account new --datadir ./datadir
 
-Run a private network
+Run a Private Network
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code::
@@ -56,7 +56,7 @@ Run a private network
     # check logs
     $ tail -f data/logs/*.log | grep number=
 
-Run a local node
+Run a Local Node
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code::

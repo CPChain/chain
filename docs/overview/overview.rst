@@ -6,19 +6,19 @@ What is CPChain
 
 CPChain is a new blockchain infrastructure for the next generation IoT.
 
-Built-in smart contract
+Built-in Smart Contract
 #########################
 
 CPChain comes with 6 built-in smart contracts to ensure normal operations of DPoR.
 
-Proxy Register contract
+Proxy Register Contract
 *********************************
 
    Proxy contract addresses and real contract addresses can be bound through function ``registerProxyContract()``. Thus, there is no need to modify the address in Go or Solidity when a contract is update.
    The real contract address can be obtained through function ``getRealContract()``.
 
 
-RPT contract
+RPT Contract
 ***************
 
    RPT (abbreviated from reputation) contract calculates RNode's reputation value. It is a core component of RNode ecosystem.
@@ -40,7 +40,7 @@ RPT contract
    and ``updateOmega()``.
    The weight of window size can also be adjusted via the function ``updateWindow()``.
 
-Campaign contract
+Campaign Contract
 ********************
 
    A campaign contract is called once a user starts mining. If its passes the test of admission contract,
@@ -61,26 +61,26 @@ Campaign contract
 
    ``candidatesOf()`` and ``candidateInfoOf()``: functions to retrieve RNodes and their information.
 
-Admission contract
+Admission Contract
 *********************
 
    Admission contract is called by campaign contract to verify whether
    the candidates' CPU and memory resources match the requirements of mining.
    Two functions ``updateCPUDifficulty()`` and ``updateMemoryDifficulty()`` are implemented to fulfil this verification purpose.
 
-PDash contract
+PDash Contract
 ****************
 
    PDash contract is an important app on cpchain, which helps RPT contract to calculate Proxy Reputation.
    You can click `here <https://github.com/CPChain/pdash>`_ to get more details.
 
-Register contract
+Register Contract
 *******************
 
    Register contract is used for recoding the upload history of nodes.
    It collaborates with RPT contract to calculate nodes' Data Contribution.
 
-Private contract
+Private Contract
 ###################
 
    Our data privacy mechanism allows users to deploy and call private contract on cpchain for completing their
