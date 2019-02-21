@@ -10,225 +10,6 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
-// handlePbftMsg handles given msg with pbft mode
-// func (vh *Handler) handlePbftMsg(msg p2p.Msg, p *RemoteSigner) error {
-
-// 	input, msgCode := (*blockOrHeader)(nil), NoMsgCode
-
-// 	switch msg.Code {
-// 	case PreprepareBlockMsg:
-// 		block, err := RecoverBlockFromMsg(msg, p.Peer)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		input, msgCode = &blockOrHeader{block: block}, PreprepareMsgCode
-
-// 		log.Debug("received preprepare block msg", "number", block.NumberU64())
-
-// 	case PrepareHeaderMsg:
-// 		header, err := RecoverHeaderFromMsg(msg, p.Peer)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		input, msgCode = &blockOrHeader{header: header}, PrepareMsgCode
-
-// 		log.Debug("received prepare header msg", "number", header.Number.Uint64())
-
-// 	case CommitHeaderMsg:
-// 		header, err := RecoverHeaderFromMsg(msg, p.Peer)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		input, msgCode = &blockOrHeader{header: header}, CommitMsgCode
-
-// 		log.Debug("received commit header msg", "number", header.Number.Uint64())
-
-// 	case ValidateBlockMsg:
-// 		block, err := RecoverBlockFromMsg(msg, p.Peer)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		input, msgCode = &blockOrHeader{block: block}, ValidateMsgCode
-
-// 		log.Debug("received validate block msg", "number", block.NumberU64())
-
-// 	case PrepareImpeachHeaderMsg:
-// 		header, err := RecoverHeaderFromMsg(msg, p.Peer)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		input, msgCode = &blockOrHeader{header: header}, ImpeachPrepareMsgCode
-
-// 		log.Debug("received prepare impeach header msg", "number", header.Number.Uint64())
-
-// 	case CommitImpeachHeaderMsg:
-// 		header, err := RecoverHeaderFromMsg(msg, p.Peer)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		input, msgCode = &blockOrHeader{header: header}, ImpeachCommitMsgCode
-
-// 		log.Debug("received commit impeach header msg", "number", header.Number.Uint64())
-
-// 	case ValidateImpeachBlockMsg:
-// 		block, err := RecoverBlockFromMsg(msg, p.Peer)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		input, msgCode = &blockOrHeader{block: block}, ImpeachValidateMsgCode
-
-// 		log.Debug("received impeach validate block msg", "number", block.NumberU64())
-
-// 	default:
-// 		return nil
-// 	}
-
-// 	output, act, msgCode, err := vh.fsm.FSM(input, msgCode)
-
-// 	// fsm results
-// 	_, _, _, _ = output, act, msgCode, err
-
-// 	log.Debug("fsm result", "act", act, "data type", "msg code", msgCode, "err", err)
-
-// 	switch act {
-// 	case BroadcastMsgAction:
-// 		if output.isHeader() {
-// 			header := output.header
-
-// 			switch msgCode {
-// 			case PrepareMsgCode:
-// 				go vh.BroadcastPrepareHeader(header)
-
-// 				log.Debug("broadcast prepare header", "number", header.Number.Uint64())
-
-// 			case CommitMsgCode:
-// 				go vh.BroadcastCommitHeader(header)
-
-// 				log.Debug("broadcast commit header", "number", header.Number.Uint64())
-
-// 			case ImpeachPrepareMsgCode:
-// 				go vh.BroadcastPrepareImpeachHeader(header)
-
-// 				log.Debug("broadcast prepare impeach header", "number", header.Number.Uint64())
-
-// 			case ImpeachCommitMsgCode:
-// 				go vh.BroadcastCommitImpeachHeader(header)
-
-// 				log.Debug("broadcast commit impeach header", "number", header.Number.Uint64())
-
-// 			default:
-// 				log.Warn("unknown msg code when broadcasting header", "msg code", msgCode)
-// 			}
-
-// 		} else if output.isBlock() {
-
-// 			block := output.block
-
-// 			switch msgCode {
-// 			case ValidateMsgCode:
-// 				go vh.BroadcastValidateBlock(block)
-
-// 				log.Debug("broadcast validate block", "number", block.NumberU64())
-
-// 			case ImpeachValidateMsgCode:
-// 				go vh.BroadcastValidateImpeachBlock(block)
-
-// 				log.Debug("broadcast validate impeach block", "number", block.NumberU64())
-
-// 			default:
-// 				log.Warn("unknown msg code when broadcasting block", "msg code", msgCode)
-// 			}
-
-// 		} else {
-
-// 			log.Warn("unknown data code when broadcasting block", "data type", output)
-// 		}
-
-// 	case InsertBlockAction:
-// 		if output.isBlock() {
-// 			block := output.block
-
-// 			err := vh.dpor.InsertChain(block)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			log.Debug("inserted block", "number", block.NumberU64())
-
-// 		} else {
-
-// 			log.Warn("unknown data type when inserting block", "output", output)
-// 		}
-
-// 	case BroadcastAndInsertBlockAction:
-// 		if output.isBlock() {
-
-// 			block := output.block
-// 			err := vh.dpor.InsertChain(block)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			switch msgCode {
-// 			case ValidateMsgCode:
-// 				go vh.BroadcastValidateBlock(block)
-
-// 				log.Debug("broadcast validate block", "number", block.NumberU64())
-
-// 			case ImpeachValidateMsgCode:
-// 				go vh.BroadcastValidateImpeachBlock(block)
-
-// 				log.Debug("broadcast validate impeach block", "number", block.NumberU64())
-
-// 			default:
-// 				log.Warn("unknown msg code when broadcasting block", "msg code", msgCode)
-// 			}
-// 			go vh.dpor.BroadcastBlock(block, true)
-
-// 			log.Debug("inserted and broadcast validate block", "number", block.NumberU64())
-
-// 		} else {
-
-// 			log.Warn("unknown data type when inserting and broadcasting block", "output", output)
-// 		}
-
-// 	// case BroadcastMultipleMsgAction:
-// 	// 	switch dtype {
-// 	// 	case HeaderType:
-// 	// 		log.Debug("type of output", "type", reflect.TypeOf(output))
-// 	// 		headers := output
-// 	// 		if len(headers) != 2 {
-// 	// 			log.Error("wrong size of BroadcastMultipleMsgAction", "len", len(headers))
-// 	// 		}
-// 	// 		prepareHeader, commitHeader := headers[0].(*types.Header), headers[1].(*types.Header)
-
-// 	// 		go vh.BroadcastPrepareHeader(prepareHeader)
-// 	// 		go vh.BroadcastCommitHeader(commitHeader)
-
-// 	// 		log.Debug("broadcasted prepare msg with BroadcastMultipleMsgAction", "number", prepareHeader.Number.Uint64())
-// 	// 		log.Debug("broadcasted commit msg with BroadcastMultipleMsgAction", "number", commitHeader.Number.Uint64())
-
-// 	// 	default:
-// 	// 		log.Warn("unknown data type when broadcast multiple msg", "data type", dtype)
-// 	// 	}
-
-// 	case NoAction:
-// 		log.Warn("no action returned")
-
-// 	default:
-// 		log.Warn("unknown action type", "action type", act)
-// 	}
-
-// 	return nil
-// }
-
 // handleLBFTMsg handles given msg with lbft (lightweighted bft) mode
 func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 	if vh.lbft == nil {
@@ -391,14 +172,6 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		switch action {
 		case BroadcastMsgAction:
 
-			// var (
-			// 	number = output[0].number()
-			// 	hash   = output[0].hash()
-			// )
-			// if vh.broadcastRecord.ifBroadcasted(number, hash, msgCode) {
-			// 	return nil
-			// }
-
 			switch msgCode {
 			case PrepareMsgCode:
 				go vh.BroadcastPrepareHeader(output[0].header)
@@ -430,8 +203,6 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 			default:
 
 			}
-
-			// vh.broadcastRecord.markAsBroadcasted(number, hash, msgCode)
 
 		case BroadcastAndInsertBlockAction:
 			switch msgCode {
@@ -497,8 +268,11 @@ type msgID struct {
 
 func newMsgID(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) msgID {
 
+	var payload []byte
 	msgHash := fnv.New32a()
-	msgHash.Write([]byte(msg.String()))
+	msg.Payload.Read(payload)
+	// msgHash.Write([]byte(msg.String()))
+	msgHash.Write(payload)
 
 	return msgID{
 		blockID: blockIdentifier{number: number, hash: hash},
