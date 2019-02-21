@@ -46,6 +46,7 @@ func NewRemoteSigner(address common.Address) *RemoteSigner {
 
 }
 
+// EnodeID returns remote signer's enode id
 func (s *RemoteSigner) EnodeID() string {
 	return fmt.Sprintf("enode://%s@%s", s.Peer.ID().String(), s.Peer.RemoteAddr().String())
 }
@@ -61,22 +62,6 @@ func (s *RemoteSigner) Coinbase() common.Address {
 
 	return s.address
 }
-
-// // SetTerm sets term of signer
-// func (s *RemoteSigner) SetTerm(term uint64) {
-// 	s.lock.Lock()
-// 	defer s.lock.Unlock()
-
-// 	s.term = term
-// }
-
-// // GetTerm sets term of signer
-// func (s *RemoteSigner) GetTerm() uint64 {
-// 	s.lock.RLock()
-// 	defer s.lock.RUnlock()
-
-// 	return s.term
-// }
 
 // AddStatic adds remote validator as a static peer
 func (s *RemoteSigner) AddStatic(srv *p2p.Server) error {

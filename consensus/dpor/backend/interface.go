@@ -20,6 +20,82 @@ import (
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
+// Action is type enumerator for FSM action
+type Action uint8
+
+// Those actions are the result after handleMsg returned
+const (
+	NoAction Action = iota
+	BroadcastMsgAction
+	BroadcastMultipleMsgAction
+	InsertBlockAction
+	BroadcastAndInsertBlockAction
+)
+
+// DataType is type enumerator for FSM output
+type DataType uint8
+
+// Those are not in use now
+const (
+	NoType DataType = iota
+	HeaderType
+	BlockType
+)
+
+// MsgCode is type enumerator for FSM message type
+type MsgCode uint8
+
+// NoMsgCode is a alias for nil
+// PreprepareMsgCode indicates a newly proposed block
+// PrepareAndCommitMsgCode is used when combing with BroadcastMultipleMsgAction
+// ImpeachPrepareAndCommitMsgCode is also paired with BroadcastMultipleMsgAction
+// If committed certificates is also collected, the validator only needs to broadcast a validate message
+// It is because validate message will cover the functions of other messages
+// There do not exist a scenario that broadcast both normal case and impeach message
+// The rationale is that any validator enters an impeachment process cannot sent out a normal case message
+const (
+	NoMsgCode MsgCode = iota
+	PreprepareMsgCode
+	PrepareMsgCode
+	CommitMsgCode
+	PrepareAndCommitMsgCode
+	ValidateMsgCode
+	ImpeachPreprepareMsgCode
+	ImpeachPrepareMsgCode
+	ImpeachCommitMsgCode
+	ImpeachPrepareAndCommitMsgCode
+	ImpeachValidateMsgCode
+)
+
+var (
+	msgCodeName = map[MsgCode]string{
+		NoMsgCode:                      "NoMsgCode",
+		PreprepareMsgCode:              "PreprepareMsgCode",
+		PrepareMsgCode:                 "PrepareMsgCode",
+		CommitMsgCode:                  "CommitMsgCode",
+		PrepareAndCommitMsgCode:        "PrepareAndCommitMsgCode",
+		ValidateMsgCode:                "ValidateMsgCode",
+		ImpeachPreprepareMsgCode:       "ImpeachPreprepareMsgCode",
+		ImpeachPrepareMsgCode:          "ImpeachPrepareMsgCode",
+		ImpeachCommitMsgCode:           "ImpeachCommitMsgCode",
+		ImpeachPrepareAndCommitMsgCode: "ImpeachPrepareAndCommitMsgCode",
+		ImpeachValidateMsgCode:         "ImpeachValidateMsgCode",
+	}
+)
+
+func (mc MsgCode) String() string {
+	if name, ok := msgCodeName[mc]; ok {
+		return name
+	}
+	return "Unknown MsgCode"
+}
+
+// DSMStatus represents a Dpor State Machine Status
+type DSMStatus struct {
+	Number uint64
+	State  consensus.State
+}
+
 // ClientBackend is the client operation interface
 type ClientBackend interface {
 	ChainBackend
@@ -35,7 +111,7 @@ type ChainBackend interface {
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
 }
 
-// contractBackend  is the contract client operation interface
+// ContractBackend is the contract client operation interface
 type ContractBackend interface {
 	bind.ContractBackend
 	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
@@ -181,8 +257,10 @@ type DporService interface {
 	Synchronise()
 }
 
+// HandlerMode indicates the run mode of handler
 type HandlerMode uint
 
+// Those are handler mode
 const (
 	LBFTMode HandlerMode = iota
 	LBFT2Mode

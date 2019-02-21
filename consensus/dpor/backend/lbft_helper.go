@@ -11,49 +11,6 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
-type BlockOrHeader struct {
-	block  *types.Block
-	header *types.Header
-}
-
-func newBOHFromHeader(header *types.Header) *BlockOrHeader {
-	return &BlockOrHeader{
-		header: header,
-	}
-}
-
-func newBOHFromBlock(block *types.Block) *BlockOrHeader {
-	return &BlockOrHeader{
-		block: block,
-	}
-}
-
-func (bh *BlockOrHeader) IsBlock() bool {
-	return bh != nil && bh.block != nil
-}
-
-func (bh *BlockOrHeader) IsHeader() bool {
-	return bh != nil && bh.header != nil
-}
-
-func (bh *BlockOrHeader) Number() uint64 {
-	if bh.IsBlock() {
-		return bh.block.NumberU64()
-	} else if bh.IsHeader() {
-		return bh.header.Number.Uint64()
-	}
-	return uint64(0)
-}
-
-func (bh *BlockOrHeader) Hash() common.Hash {
-	if bh.IsBlock() {
-		return bh.block.Hash()
-	} else if bh.IsHeader() {
-		return bh.header.Hash()
-	}
-	return common.Hash{}
-}
-
 type signaturesOfBlock struct {
 	signatures map[common.Address]types.DporSignature
 	lock       sync.RWMutex
@@ -106,7 +63,7 @@ func newSignaturesForBlockCaches(db database.Database) *signaturesForBlockCaches
 }
 
 // getSignaturesCountOf returns the number of signatures for given block identifier
-func (sc *signaturesForBlockCaches) getSignaturesCountOf(bi blockIdentifier) int {
+func (sc *signaturesForBlockCaches) getSignaturesCountOf(bi BlockIdentifier) int {
 	sc.lock.RLock()
 	defer sc.lock.RUnlock()
 
@@ -132,7 +89,7 @@ func (sc *signaturesForBlockCaches) getSignaturesCountOf(bi blockIdentifier) int
 }
 
 // addSignatureFor adds a signature to signature caches
-func (sc *signaturesForBlockCaches) addSignatureFor(bi blockIdentifier, signer common.Address, signature types.DporSignature) {
+func (sc *signaturesForBlockCaches) addSignatureFor(bi BlockIdentifier, signer common.Address, signature types.DporSignature) {
 	sc.lock.Lock()
 	defer sc.lock.Unlock()
 
@@ -159,7 +116,7 @@ func (sc *signaturesForBlockCaches) addSignatureFor(bi blockIdentifier, signer c
 	log.Warn("saved signatures to db", "number", bi.number, "hash", bi.hash.Hex())
 }
 
-func (sc *signaturesForBlockCaches) getSignatureFor(bi blockIdentifier, signer common.Address) (types.DporSignature, bool) {
+func (sc *signaturesForBlockCaches) getSignatureFor(bi BlockIdentifier, signer common.Address) (types.DporSignature, bool) {
 	sc.lock.RLock()
 	defer sc.lock.RUnlock()
 
@@ -171,7 +128,7 @@ func (sc *signaturesForBlockCaches) getSignatureFor(bi blockIdentifier, signer c
 }
 
 func (sc *signaturesForBlockCaches) cacheSignaturesFromHeader(signers []common.Address, signatures []types.DporSignature, validators []common.Address, header *types.Header) error {
-	bi := blockIdentifier{
+	bi := BlockIdentifier{
 		hash:   header.Hash(),
 		number: header.Number.Uint64(),
 	}
@@ -192,7 +149,7 @@ func (sc *signaturesForBlockCaches) cacheSignaturesFromHeader(signers []common.A
 }
 
 func (sc *signaturesForBlockCaches) writeSignaturesToHeader(validators []common.Address, header *types.Header) error {
-	bi := blockIdentifier{
+	bi := BlockIdentifier{
 		hash:   header.Hash(),
 		number: header.Number.Uint64(),
 	}

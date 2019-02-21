@@ -204,9 +204,10 @@ func (d *Dialer) UpdateRemoteValidators(term uint64, validators []common.Address
 	return nil
 }
 
+// DialAllRemoteValidators tries to dial all remote validators
 func (d *Dialer) DialAllRemoteValidators(term uint64) error {
-	for _, validatorId := range d.defaultValidators {
-		node, err := discover.ParseNode(validatorId)
+	for _, validatorID := range d.defaultValidators {
+		node, err := discover.ParseNode(validatorID)
 		if err != nil {
 			continue
 		}

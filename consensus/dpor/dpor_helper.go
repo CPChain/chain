@@ -71,6 +71,8 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		return nil
 	}
 
+	isImpeach := header.Coinbase == common.Address{}
+
 	if number > 0 {
 		// Ensure the block's parent is valid
 		var parent *types.Header
@@ -106,14 +108,24 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
 
 		// Ensure that the block's timestamp is valid
-		if timestamp < parentTimestamp+period || timestamp > parentTimestamp+period+timeout {
-			if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber {
+		if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
 
-				log.Warn("invalid timestamp")
+			if timestamp < parentTimestamp+period {
+
+				log.Warn("invalid timestamp", "timestamp < parentTimestamp+period", timestamp < parentTimestamp+period, "parentTimestamp+period", parentTimestamp+period, "timestamp", timestamp)
 				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
 
 				return ErrInvalidTimestamp
 			}
+
+			// TODO: fix this
+			// if timestamp > parentTimestamp+period+timeout {
+
+			// 	log.Warn("invalid timestamp", "timestamp > parentTimestamp+period+timeout", timestamp > parentTimestamp+period+timeout, "parentTimestamp+period+timeout", parentTimestamp+period+timeout, "timestamp", timestamp)
+			// 	log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
+
+			// 	return ErrInvalidTimestamp
+			// }
 		}
 
 		// Delay to verify it!
@@ -127,8 +139,6 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		}
 
 	}
-
-	isImpeach := header.Coinbase == common.Address{}
 
 	if number > 0 {
 		// verify dpor seal, genesis block not need this check

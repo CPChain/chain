@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	// ErrUnknownHandlerMode is returnd if in an unknown mode
+	// ErrUnknownHandlerMode is returned if in an unknown mode
 	ErrUnknownHandlerMode = errors.New("unknown dpor handler mode")
 
 	// ErrFailToAddPendingBlock is returned if failed to add block to pending
@@ -75,7 +75,6 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address, db database
 		impeachmentRecord: newImpeachmentRecord(),
 	}
 
-	// TODO: fix this
 	// h.mode = LBFTMode
 	h.mode = LBFT2Mode
 
@@ -108,16 +107,17 @@ func (h *Handler) dialLoop() {
 	}
 }
 
-// Start starts pbft handler
+// Start starts handler
 func (h *Handler) Start() {
 
 	// always dial if there is not enough validators in peer set
 	go h.dialer.DialAllRemoteValidators(0)
 	go h.dialLoop()
 
-	// broadcast mined pending block, including empty block
+	// broadcast mined pending block
 	go h.PendingBlockBroadcastLoop()
 
+	// broadcast impeachment block
 	go h.PendingImpeachBlockBroadcastLoop()
 
 	return

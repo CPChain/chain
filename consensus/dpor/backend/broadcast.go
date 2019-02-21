@@ -161,6 +161,7 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 	}
 }
 
+// PendingImpeachBlockBroadcastLoop loops to broadcasts pending impeachment block
 func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 
 	futureTimer := time.NewTicker(h.dpor.ImpeachTimeout())
@@ -227,13 +228,4 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 			return
 		}
 	}
-}
-
-func InAddressList(addr common.Address, addrs []common.Address) bool {
-	for _, a := range addrs {
-		if a == addr {
-			return true
-		}
-	}
-	return false
 }
