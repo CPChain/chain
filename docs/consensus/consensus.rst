@@ -62,7 +62,7 @@ that there exist a quorum agree on a prepare message and a commit message respec
         #. If true, this validator broadcast a PREPARE message to other validators; otherwise, it enters Abnormal Case 2 or 3.
         #. Once receives 2f+1 PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
         #. Once received 2f+1 COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these 2f+1 validators' signatures to all users.
-        #. Once A validator receive the VALIDATE message for the first time in a view, it broadcast a same message to all nodes.
+        #. Once A validator receives the VALIDATE message for the first time in a view, it broadcasts a same message to all nodes.
         #. Any user receives this VALIDATE message with enough signatures, insert the block into local chain
 
 
