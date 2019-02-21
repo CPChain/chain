@@ -147,16 +147,16 @@ Reputation Nodes
 
 A node has to meet one of the following requirements to become a Reputation Node:
 
-a. Economic node + Computing and Storing node:
-An economy node must lock-up a specific amount of tokens (200,000 minimum and 5,000,000 maximum)
-for 90 days and must satisfy the software, hardware, and network connection requirements.
-The locked up tokens have a positive correlation with the basic rewards.
-Reputation nodes will be refunded after they leave the election.
+    1. Economic node + Computing and Storing node:
+    An economy node must lock-up a specific amount of tokens (200,000 minimum and 5,000,000 maximum)
+    for 90 days and must satisfy the software, hardware, and network connection requirements.
+    The locked up tokens have a positive correlation with the basic rewards.
+    Reputation nodes will be refunded after they leave the election.
 
-#. Industry Node + Computing and Storage Node:
-An industry node will be upgraded to a reputation node once meeting all the hardware,
-software, and network requirements.
-Industry nodes must be verified by the CPChain foundation.
+    2. Industry Node + Computing and Storage Node:
+    An industry node will be upgraded to a reputation node once meeting all the hardware,
+    software, and network requirements.
+    Industry nodes must be verified by the CPChain foundation.
 
 Reputation Nodes have the right to be elected as a proposers committee member and to be granted rewards from the Blockchain.
 
