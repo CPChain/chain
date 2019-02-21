@@ -3,7 +3,7 @@
 Consensus
 =====================
 
-Dpor Bipartite Committee
+DPoR Bipartite Committee
 --------------------------
 
 The consensus in LBFT 2.0 is determined by two two committees: **Validators Committee** and **Proposers Committee**.
