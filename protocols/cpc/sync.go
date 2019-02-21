@@ -31,8 +31,8 @@ import (
 )
 
 const (
-	forceSyncCycle      = 100 * time.Millisecond // Time interval to force syncs, even if few peers are available
-	minDesiredPeerCount = 5                      // Amount of peers desired to start syncing
+	forceSyncCycle      = 1 * time.Second // Time interval to force syncs, even if few peers are available
+	minDesiredPeerCount = 5               // Amount of peers desired to start syncing
 
 	// This is the target size for the packs of transactions sent by txsyncLoop.
 	// A pack can get larger than this if a single transactions exceeds this size.
