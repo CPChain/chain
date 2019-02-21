@@ -58,7 +58,7 @@ that there exist a quorum agree on a prepare message and a commit message respec
         #. When it comes its view, the proposer proposes a block and broadcasts to all validators.
     #. Block validation
         i. Once receives a newly proposed block, a validator in validators committee tries to verify the block.
-        #. This verification process scrutinizes the seal of proper, timestamp, etc.
+        #. This verification process scrutinizes the seal of proposer, timestamp, etc.
         #. If true, this validator broadcast a PREPARE message to other validators; otherwise, it enters Abnormal Case 2 or 3.
         #. Once receives 2f+1 PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
         #. Once received 2f+1 COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these 2f+1 validators' signatures to all users.
