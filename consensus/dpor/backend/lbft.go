@@ -8,16 +8,19 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
+// LBFT is the 1.0 version for lbft protocol within validator committee
 type LBFT struct {
 	handler *Handler
 }
 
+// NewLBFT creates an LBFT instance
 func NewLBFT(handler *Handler) *LBFT {
 	return &LBFT{
 		handler: handler,
 	}
 }
 
+// Handle handles a msg from remote peer(proposer or validator)
 func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 	vh := l.handler
 	switch {

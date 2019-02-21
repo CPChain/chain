@@ -23,8 +23,7 @@ import (
 // Action is type enumerator for FSM action
 type Action uint8
 
-// BroadcastMultipleMsgAction is used for a rare case
-// when both (impeach) prepare and commit messages are about to send out
+// Those actions are the result after handleMsg returned
 const (
 	NoAction Action = iota
 	BroadcastMsgAction
@@ -36,6 +35,7 @@ const (
 // DataType is type enumerator for FSM output
 type DataType uint8
 
+// Those are not in use now
 const (
 	NoType DataType = iota
 	HeaderType
@@ -111,7 +111,7 @@ type ChainBackend interface {
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
 }
 
-// contractBackend  is the contract client operation interface
+// ContractBackend is the contract client operation interface
 type ContractBackend interface {
 	bind.ContractBackend
 	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
@@ -257,8 +257,10 @@ type DporService interface {
 	Synchronise()
 }
 
+// HandlerMode indicates the run mode of handler
 type HandlerMode uint
 
+// Those are handler mode
 const (
 	LBFTMode HandlerMode = iota
 	LBFT2Mode
