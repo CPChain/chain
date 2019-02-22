@@ -100,32 +100,14 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 	p.stateLock.Lock()
 	defer p.stateLock.Unlock()
 
-	var (
-		hash   = input.Hash()
-		number = input.Number()
-	)
+	state := p.state
+	number := p.number
 
-	_, _ = hash, number
+	log.Debug("current status", "state", state, "number", number, "msg code", msgCode.String(), "input number", input.Number())
 
-	// if already in chain, do nothing
-	if p.dpor.HasBlockInChain(hash, number) {
-		// TODO: add error type
-		return nil, NoAction, NoMsgCode, nil
-	}
+	output, action, msgCode, state, err := p.realFSM(input, msgCode, state)
 
-	// if outdated, do nothing
-	if number < p.number {
-		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
-		// TODO: add error type
-		return nil, NoAction, NoMsgCode, nil
-	}
-
-	log.Debug("current status", "current state", p.state, "current number", p.number, "msg code", msgCode.String(), "input number", input.Number())
-
-	output, action, msgCode, state, err := p.realFSM(input, msgCode, p.state)
-	// output, action, msgCode, state, err := p.fsm(input, msgCode, state)
-
-	if output != nil && err == nil {
+	if output != nil && action != NoAction && msgCode != NoMsgCode && err == nil {
 		p.state = state
 		p.number = output[0].Number()
 	}
@@ -141,6 +123,24 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 }
 
 func (p *LBFT2) realFSM(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
+	var (
+		hash   = input.Hash()
+		number = input.Number()
+	)
+
+	_, _ = hash, number
+
+	// if already in chain, do nothing
+	if p.dpor.HasBlockInChain(hash, number) {
+		// TODO: add error type
+		return nil, NoAction, NoMsgCode, state, nil
+	}
+
+	if number < p.number {
+		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
+		// TODO: add error type
+		return nil, NoAction, NoMsgCode, state, nil
+	}
 
 	switch state {
 	case consensus.Idle:
@@ -158,8 +158,8 @@ func (p *LBFT2) realFSM(input *BlockOrHeader, msgCode MsgCode, state consensus.S
 	case consensus.ImpeachCommit:
 		return p.ImpeachCommitHandler(input, msgCode, state)
 
-	case consensus.Validate:
-		return p.ValidateHandler(input, msgCode, state)
+	// case consensus.Validate:
+	// return p.ValidateHandler(input, msgCode, state)
 
 	default:
 		return nil, NoAction, NoMsgCode, state, nil
@@ -461,15 +461,14 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 		return p.handlePreprepareMsg(input, state, blockVerifyFn)
 
 	case consensus.ErrUnknownAncestor:
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(100 * time.Millisecond)
-		go p.unknownAncestorBlockHandler(block)
+		time.Sleep(1 * time.Second)
 		return p.handlePreprepareMsg(input, state, blockVerifyFn)
 
 	default:
@@ -530,15 +529,14 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
 
 	case consensus.ErrUnknownAncestor:
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(100 * time.Millisecond)
-		go p.unknownAncestorBlockHandler(block)
+		time.Sleep(1 * time.Second)
 		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
 
 	default:
@@ -951,7 +949,7 @@ func (p *LBFT2) onceCommitCertificateSatisfied(prepareHeader *types.Header, comm
 	}
 
 	// succeed to compose validate msg, broadcast it
-	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Validate, nil
+	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
 
 }
 
@@ -991,7 +989,7 @@ func (p *LBFT2) onceImpeachCommitCertificateSatisfied(impeachPrepareHeader *type
 	}
 
 	// succeed to compose validate msg, broadcast it
-	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Validate, nil
+	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Idle, nil
 }
 
 // unknownAncestorBlockHandler handles unknown ancestor block
