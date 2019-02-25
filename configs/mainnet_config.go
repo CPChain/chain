@@ -46,7 +46,7 @@ var (
 			Period:                MainnetBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
-			ValidatorsLen:         MainnetValidatorsLen,
+			FaultyNumber:          MainnetFaultyValidatorsNumber,
 			MaxInitBlockNumber:    DefaultMainnetMaxInitBlockNumber,
 			ProxyContractRegister: mainnetProxyContractRegister,
 			Contracts:             mainnetContractAddressMap,
