@@ -6,7 +6,6 @@ import (
 	"math/big"
 	"reflect"
 	"testing"
-	"time"
 
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
@@ -122,31 +121,13 @@ func newDummyChain() consensus.ChainReader {
 }
 
 // newAC return a new AdmissionControl instance
-func newAcApiBackend(chain consensus.ChainReader, cpuDifficulty uint64, cpuLifeTime int64, memoryDifficulty uint64, memoryLifeTime int64,
-	admissionContractAddr common.Address, campaignContractAddr common.Address, rewardContractAddr common.Address) admission.ApiBackend {
-	config := admission.DefaultConfig
-	if cpuDifficulty != 0 {
-		config.CpuDifficulty = cpuDifficulty
-	}
-
-	if cpuLifeTime != 0 {
-		config.CpuLifeTime = time.Duration(cpuLifeTime) * time.Second
-	}
-
-	if memoryDifficulty != 0 {
-		config.MemoryDifficulty = memoryDifficulty
-	}
-
-	if memoryLifeTime != 0 {
-		config.MemoryCpuLifeTime = time.Duration(memoryLifeTime) * time.Second
-	}
-
-	return admission.NewAdmissionApiBackend(chain, addr, config, admissionContractAddr, campaignContractAddr, rewardContractAddr)
+func newAcApiBackend(chain consensus.ChainReader, admissionContractAddr common.Address, campaignContractAddr common.Address, rewardContractAddr common.Address) admission.ApiBackend {
+	return admission.NewAdmissionApiBackend(chain, addr, admissionContractAddr, campaignContractAddr, rewardContractAddr)
 }
 
 // TestAPIs test apis
 func TestApis(t *testing.T) {
-	ac := newAcApiBackend(newDummyChain(), 0, 0, 0, 0, common.Address{}, common.Address{}, common.Address{})
+	ac := newAcApiBackend(newDummyChain(), common.Address{}, common.Address{}, common.Address{})
 	apis := ac.Apis()
 
 	wantApis := []rpc.API{
@@ -166,7 +147,7 @@ func TestApis(t *testing.T) {
 func TestAdmissionApiBackend_Campaign(t *testing.T) {
 	contractBackend, admissionAddr, rewardAddr, rewardContract, campaignAddr := deployRequiredContracts(t)
 
-	ac := newAcApiBackend(contractBackend.Blockchain(), 5, 5, 5, 5, admissionAddr, campaignAddr, rewardAddr)
+	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rewardAddr)
 	status, err := ac.GetStatus()
 	var wantErr error
 	if status != admission.AcIdle || !reflect.DeepEqual(err, wantErr) {
@@ -199,7 +180,7 @@ func TestAdmissionApiBackend_Campaign(t *testing.T) {
 // TestIsRNode returns a bool value indicating if the current node is RNode
 func TestAdmissionApiBackend_IsRNode(t *testing.T) {
 	contractBackend, admissionAddr, rewardAddr, rewardContract, campaignAddr := deployRequiredContracts(t)
-	ac := newAcApiBackend(contractBackend.Blockchain(), 5, 5, 5, 5, admissionAddr, campaignAddr, rewardAddr)
+	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rewardAddr)
 	ac.SetContractBackend(contractBackend)
 	ac.SetAdmissionKey(key)
 	isRNode, _ := ac.IsRNode()
@@ -253,7 +234,7 @@ func TestAdmissionApiBackend_IsRNode(t *testing.T) {
 
 func TestAdmissionApiBackend_FundForRNode(t *testing.T) {
 	contractBackend, admissionAddr, rewardAddr, rewardContract, campaignAddr := deployRequiredContracts(t)
-	ac := newAcApiBackend(contractBackend.Blockchain(), 5, 5, 5, 5, admissionAddr, campaignAddr, rewardAddr)
+	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rewardAddr)
 	ac.SetContractBackend(contractBackend)
 	ac.SetAdmissionKey(key)
 

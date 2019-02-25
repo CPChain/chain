@@ -29,10 +29,10 @@ type AdmissionApiBackend struct {
 	admissionControl *AdmissionControl
 }
 
-func NewAdmissionApiBackend(chain consensus.ChainReader, address common.Address, config Config, admissionContractAddr common.Address,
+func NewAdmissionApiBackend(chain consensus.ChainReader, address common.Address, admissionContractAddr common.Address,
 	campaignContractAddr common.Address, rewardContractAddr common.Address) ApiBackend {
 	return &AdmissionApiBackend{
-		admissionControl: NewAdmissionControl(chain, address, config, admissionContractAddr, campaignContractAddr, rewardContractAddr),
+		admissionControl: NewAdmissionControl(chain, address, admissionContractAddr, campaignContractAddr, rewardContractAddr),
 	}
 }
 

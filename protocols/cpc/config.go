@@ -22,7 +22,6 @@ import (
 	"os/user"
 	"time"
 
-	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/private"
@@ -47,7 +46,6 @@ var DefaultConfig = Config{
 		Blocks:     20,
 		Percentile: 60,
 	},
-	Admission: admission.DefaultConfig,
 	PrivateTx: private.DefaultConfig(),
 }
 
@@ -88,9 +86,6 @@ type Config struct {
 	MinerThreads int            `toml:",omitempty"`
 	ExtraData    []byte         `toml:",omitempty"`
 	GasPrice     *big.Int
-
-	// Admission options
-	Admission admission.Config
 
 	// Transaction pool options
 	TxPool core.TxPoolConfig

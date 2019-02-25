@@ -192,7 +192,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
 
 	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
-	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission,
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
 		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
 	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
