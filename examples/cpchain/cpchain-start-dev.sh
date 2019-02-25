@@ -36,6 +36,7 @@ echo "Please check the IPFS daemon running on localhost."
 cpchain=$proj_dir/build/bin/cpchain
 ipc_path_base=data/cpc-
 
+
 nohup $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --port 30311 --mine \
          --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf-dev/passwords/password \
          --validators "${validators}" \
@@ -90,6 +91,10 @@ nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcad
          --profileaddr "localhost:8940" \
          --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --password conf-dev/passwords/password --logfile data/logs/10.log --nodekey conf-dev/validators/node10.key 2> data/logs/10.err.log &
 
+echo "start contract admin node"
+nohup $cpchain $args --ipcaddr ${ipc_path_base}21 --datadir data/data21  --rpcaddr 127.0.0.1:8521 --port 30331 \
+         --unlock "0xb3801b8743dea10c30b0c21cae8b1923d9625f84"  --password conf-dev/passwords/password \
+         --logfile data/logs/21.log 2>/dev/null &
 
 # dlv is useful for debugging.  do not remove.
 # dlv --headless --listen=:2345 --api-version=2 debug github.com/ethereum/go-ethereum/cmd/cpchain -- $ARGS  --datadir $data_dir/data/dd3  --rpcport 8503 --port 30313 --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --mine --minerthreads 1 --password conf-dev/passwords/password

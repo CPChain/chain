@@ -18,9 +18,10 @@ echo "== runmode:${runmode}"
 
 nodenumber=10
 
-if [ "mainnet" == ${runmode} ]; then
-    for i in {1..19}
+if [ "mainnet" == ${runmode} -o  "dev" == ${runmode} ]; then
+    for i in {1..24}
     do
+#   21: contract admin node,22: faucet node
         echo "[*] Configuring node $i"
         mkdir -p data/data$i/keystore && cp conf-${runmode}/keys/key$i data/data$i/keystore/
         if [ -f conf-${runmode}/genesis.toml ]; then

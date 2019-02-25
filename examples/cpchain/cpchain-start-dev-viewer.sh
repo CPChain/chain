@@ -31,3 +31,8 @@ echo "start civilians no unlock"
 nohup $cpchain $args --ipcaddr ${ipc_path_base}12 --datadir data/data12  --rpcaddr 127.0.0.1:8512 --port 30322 \
     --logfile data/logs/12.log 2>/dev/null &
 
+echo "start bank node"
+nohup $cpchain $args --ipcaddr ${ipc_path_base}22 --datadir data/data22  --rpcaddr 127.0.0.1:8522 --port 30332 \
+         --unlock "0xabb528bffc707c2c507307e426ce810a7ad93ed6"  --password conf-dev/passwords/password --logfile data/logs/22.log 2>/dev/null &
+
+

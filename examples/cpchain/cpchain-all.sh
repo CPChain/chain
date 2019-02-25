@@ -49,12 +49,10 @@ eval $init $runmode
 echo "[*] starting"
 eval "env CPC_VERBOSITY=5 $start"
 
-if [ "dev" == ${runmode} ]; then
-    echo "[*] start civilians"
-    eval $run_dir/cpchain-init-dev-viewer.sh ${runmode}
-
-    $run_dir/cpchain-start-dev-viewer.sh
-fi
+#if [ "dev" == ${runmode} ]; then
+#    echo "[*] start civilians"
+#    $run_dir/cpchain-start-dev-viewer.sh
+#fi
 
 echo "=========================================================="
 echo "chain node number:"
@@ -63,6 +61,6 @@ echo "=========================================================="
 
 echo "[*] deploying ${deploy}"
 # smart contract deploy
-eval "env CPCHAIN_KEYSTORE_FILEPATH=data/data1/keystore/ ${deploy}"
+eval "env CPCHAIN_KEYSTORE_FILEPATH=data/data21/keystore/ ${deploy}"
 
 
