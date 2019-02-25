@@ -334,7 +334,7 @@ func newGenesisBlock() *Genesis {
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, configs.DefaultValidatorsLen),
+			Sigs:       make([]types.DporSignature, configs.DefaultValidatorsNumber),
 			Validators: configs.Validators(),
 		},
 	}
@@ -363,7 +363,7 @@ func newTestnetGenesisBlock() *Genesis {
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, configs.TestnetValidatorsLen),
+			Sigs:       make([]types.DporSignature, configs.TestnetValidatorsNumber),
 			Validators: configs.Validators(),
 		},
 	}
@@ -396,7 +396,7 @@ func newMainnetGenesisBlock() *Genesis {
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, configs.MainnetValidatorsLen),
+			Sigs:       make([]types.DporSignature, configs.MainnetValidatorsNumber),
 			Validators: configs.Validators(),
 		},
 	}
