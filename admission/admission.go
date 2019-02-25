@@ -39,6 +39,9 @@ const (
 
 	maxNumOfCampaignTerms = 10
 	minNumOfCampaignTerms = 1
+
+	Cpu    = "cpu"
+	Memory = "memory"
 )
 
 var (
@@ -50,7 +53,6 @@ var (
 
 // AdmissionControl implements admission control functionality.
 type AdmissionControl struct {
-	config                Config
 	address               common.Address
 	chain                 consensus.ChainReader
 	key                   *keystore.Key
@@ -70,10 +72,9 @@ type AdmissionControl struct {
 }
 
 // NewAdmissionControl returns a new Control instance.
-func NewAdmissionControl(chain consensus.ChainReader, address common.Address, config Config, admissionContractAddr common.Address,
+func NewAdmissionControl(chain consensus.ChainReader, address common.Address, admissionContractAddr common.Address,
 	campaignContractAddr common.Address, rewardContractAddr common.Address) *AdmissionControl {
 	return &AdmissionControl{
-		config:                config,
 		chain:                 chain,
 		address:               address,
 		admissionContractAddr: admissionContractAddr,

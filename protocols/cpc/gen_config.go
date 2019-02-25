@@ -6,7 +6,6 @@ import (
 	"math/big"
 	"time"
 
-	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
@@ -35,7 +34,6 @@ func (c Config) MarshalTOML() (interface{}, error) {
 		MinerThreads            int            `toml:",omitempty"`
 		ExtraData               hexutil.Bytes  `toml:",omitempty"`
 		GasPrice                *big.Int
-		Admission               admission.Config
 		TxPool                  core.TxPoolConfig
 		GPO                     gasprice.Config
 		EnablePreimageRecording bool
@@ -58,7 +56,6 @@ func (c Config) MarshalTOML() (interface{}, error) {
 	enc.MinerThreads = c.MinerThreads
 	enc.ExtraData = c.ExtraData
 	enc.GasPrice = c.GasPrice
-	enc.Admission = c.Admission
 	enc.TxPool = c.TxPool
 	enc.GPO = c.GPO
 	enc.EnablePreimageRecording = c.EnablePreimageRecording
@@ -85,7 +82,6 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		MinerThreads            *int            `toml:",omitempty"`
 		ExtraData               *hexutil.Bytes  `toml:",omitempty"`
 		GasPrice                *big.Int
-		Admission               *admission.Config
 		TxPool                  *core.TxPoolConfig
 		GPO                     *gasprice.Config
 		EnablePreimageRecording *bool
@@ -140,9 +136,6 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	}
 	if dec.GasPrice != nil {
 		c.GasPrice = dec.GasPrice
-	}
-	if dec.Admission != nil {
-		c.Admission = *dec.Admission
 	}
 	if dec.TxPool != nil {
 		c.TxPool = *dec.TxPool

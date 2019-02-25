@@ -89,7 +89,7 @@ func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend
 }
 
 func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout uint64, backend *backends.SimulatedBackend) (common.Address, common.Address, *reward.Reward, common.Address, error) {
-	admissionAddr, err := deployAdmission(prvKey, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
+	admissionAddr, err := deployAdmission(prvKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, common.Address{}, err
 	}
@@ -201,10 +201,7 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 func computeCorrectPow(prvKey *ecdsa.PrivateKey, contractBackend *backends.SimulatedBackend, addr common.Address, admissionAddr common.Address,
 	rewardAddr common.Address, rewardContract *reward.Reward, campaignAddr common.Address) (cpuBlockNum int64, cpuNonce uint64, memBlockNum int64, memNonce uint64) {
 	// compute cpu&memory pow
-	config := admission.DefaultConfig
-	config.CpuDifficulty = cpuDifficulty
-	config.MemoryDifficulty = memDifficulty
-	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, config, admissionAddr, campaignAddr, rewardAddr)
+	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, admissionAddr, campaignAddr, rewardAddr)
 	ac.SetSimulateBackend(contractBackend)
 	ac.SetAdmissionKey(&keystore.Key{PrivateKey: prvKey})
 	err := ac.FundForRNode()

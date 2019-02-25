@@ -27,6 +27,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+var (
+	proxyCampaignContractAddress common.Address
+)
+
 func main() {
 	log.Info("cmdline args", "args", os.Args)
 	if len(os.Args) != 4 {
@@ -73,6 +77,9 @@ func main() {
 	// 7
 	go deployPdashProxy(password, proxyContractRegisterAddress, &wg4 /*,22,23,24*/)
 	wg4.Wait()
+
+	// 8
+	deploy.UpdateCampaignParameters(password, proxyCampaignContractAddress, 25, 26)
 	fmt.Println("======== init contract deploy completed=========")
 }
 
@@ -101,7 +108,7 @@ func deployRewardAdmissionAndCampaign(password string, proxyContractRegisterAddr
 	title = "[4.DeployCampaign]"
 	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress, proxyRewardAddress, password, 10)
 	deploy.PrintContract(title, campaignAddress)
-	deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, campaignAddress, password, 11, 12)
+	proxyCampaignContractAddress = deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, campaignAddress, password, 11, 12)
 	wg.Done()
 }
 

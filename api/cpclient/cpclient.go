@@ -28,6 +28,8 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -153,11 +155,26 @@ func (c *Client) GetBlockNumber() *big.Int {
 	var lastBlock BlockNumber
 	err := c.c.CallContext(ctx, &lastBlock, "eth_getBlockByNumber", "latest", true)
 	if err != nil {
-		fmt.Println("can't get latest block:", err)
+		log.Error("can't get latest block:", err)
 		return big.NewInt(0)
 	}
 	number, err := strconv.ParseInt(lastBlock.Number, 0, 64)
 	return big.NewInt(number)
+}
+
+func (c *Client) ChainConfig() (*configs.ChainConfig, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var cfg *configs.ChainConfig
+	cfg = new(configs.ChainConfig)
+	err := c.c.CallContext(ctx, cfg, "eth_getChainConfig")
+	if err != nil {
+		log.Error("cannot get chain config", err)
+		return nil, err
+	}
+
+	return cfg, nil
 }
 
 type rpcTransaction struct {

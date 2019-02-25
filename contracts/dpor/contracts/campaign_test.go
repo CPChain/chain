@@ -155,10 +155,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	campaign.TransactOpts.Value = big.NewInt(50 * 1)
 
 	// compute cpu&memory pow
-	config := admission2.DefaultConfig
-	config.CpuDifficulty = 5
-	config.MemoryDifficulty = 5
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config, acAddr, campaignAddr, rewardAddr)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rewardAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(1)
@@ -235,10 +232,7 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	campaign.TransactOpts.GasLimit = 1000000
 
 	// compute cpu&memory pow
-	config := admission2.DefaultConfig
-	config.CpuDifficulty = 5
-	config.MemoryDifficulty = 5
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config, acAddr, campaignAddr, rewardAddr)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rewardAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(2)
@@ -304,10 +298,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	campaign.TransactOpts.GasLimit = 1000000
 
 	// compute cpu&memory pow
-	config := admission2.DefaultConfig
-	config.CpuDifficulty = 5
-	config.MemoryDifficulty = 5
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, config, acAddr, campaignAddr, rewardAddr)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rewardAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(1)
