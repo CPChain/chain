@@ -167,7 +167,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 		"validators", header.Dpor.ValidatorsFormatText())
 
 	// Set correct signatures size
-	header.Dpor.Sigs = make([]types.DporSignature, d.config.ValidatorsLen)
+	header.Dpor.Sigs = make([]types.DporSignature, d.config.ValidatorsLen())
 
 	// Ensure the timestamp has the correct delay
 	parent := chain.GetHeader(header.ParentHash, number-1)
