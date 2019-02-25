@@ -1046,15 +1046,29 @@ func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 		current = bc.CurrentBlock().NumberU64()
 	)
 
-	// the last block is already in local chain, return early
-	if last > current {
-		n, events, logs, err := bc.insertChain(chain)
-		bc.CommitStateDB()
-		bc.PostChainEvents(events, logs)
-		return n, err
+	// if the last block is already in local chain, return early
+	if last <= current {
+		return len(chain), nil
 	}
 
-	return len(chain), nil
+	// find the first block that is not in local chain
+	var outset int
+	for index, block := range chain {
+		if block.NumberU64() > current {
+			outset = index
+			break
+		}
+	}
+
+	// remove useless prefix
+	chain = chain[outset:]
+
+	// insert it!
+	n, events, logs, err := bc.insertChain(chain)
+	bc.CommitStateDB()
+	bc.PostChainEvents(events, logs)
+
+	return n + outset, err
 }
 
 // insertChain will execute the actual chain insertion and event aggregation. The
