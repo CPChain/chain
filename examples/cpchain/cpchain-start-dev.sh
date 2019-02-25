@@ -92,7 +92,7 @@ nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcad
          --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --password conf-dev/passwords/password --logfile data/logs/10.log --nodekey conf-dev/validators/node10.key 2> data/logs/10.err.log &
 
 echo "start contract admin node"
-nohup $cpchain $args --ipcaddr ${ipc_path_base}21 --datadir data/data21  --rpcaddr 127.0.0.1:8521 --port 30331 \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}21 --datadir data/data21 --rpcaddr 127.0.0.1:8521 --port 30331 --mine \
          --unlock "0xb3801b8743dea10c30b0c21cae8b1923d9625f84"  --password conf-dev/passwords/password \
          --logfile data/logs/21.log 2>/dev/null &
 
