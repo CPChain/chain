@@ -221,6 +221,11 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 					h.impeachmentRecord.markAsImpeached(number, hash)
 				}
 
+				log.Info("proposers when impeaching...")
+				proposers, err := h.dpor.ProposersOf(number)
+				for i, p := range proposers {
+					log.Info("proposer", "idx", i, "addr", p.Hex())
+				}
 				// }
 			}
 
