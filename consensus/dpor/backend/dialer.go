@@ -67,21 +67,20 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 	log.Debug("received handshake from", "addr", address.Hex())
 
 	// TODO: fix this @liuq
-	isProposer, isValidator := true, false
-	// isProposer, isValidator := false, false
+	isProposer, isValidator := false, false
 
 	for t := term; t <= futureTerm; t++ {
 		isP, _ := d.dpor.VerifyProposerOf(address, t)
-		// isV, _ := d.dpor.VerifyValidatorOf(address, t)
+		isV, _ := d.dpor.VerifyValidatorOf(address, t)
 
-		// log.Debug("qualification", "is proposer", isP, "is validator", isV, "term", t, "addr", address.Hex())
+		log.Debug("qualification", "is proposer", isP, "is validator", isV, "term", t, "addr", address.Hex())
 
 		isProposer = isProposer || isP
-		// isValidator = isValidator || isV
+		isValidator = isValidator || isV
 	}
 
 	enode := fmt.Sprintf("enode://%s@%s", p.ID().String(), p.RemoteAddr().String())
-	isValidator = isDefaultValidator(enode, d.defaultValidators)
+	isValidator = isDefaultValidator(enode, d.defaultValidators) || isValidator
 
 	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", address.Hex(), "enode", enode)
 
