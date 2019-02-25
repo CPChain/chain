@@ -148,13 +148,13 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		log.Debug("I am slow, syncing with peer", "peer", p.address)
 	}
 
-	if input.Number() <= currentNumber {
+	if input.Number() < currentNumber {
 		log.Debug("received outdated msg, discarding...")
 		return nil
 	}
 
 	// rebroadcast the msg
-	go vh.reBroadcast(input, msgCode, msg)
+	// go vh.reBroadcast(input, msgCode, msg)
 
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
