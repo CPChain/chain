@@ -29,13 +29,18 @@ import (
 )
 
 func TestDefaultGenesisBlock(t *testing.T) {
+	runmode := configs.GetRunMode()
+	configs.SetRunMode(configs.Mainnet)
 	block := DefaultGenesisBlock().ToBlock(nil)
 	if block.Hash() != MainnetGenesisHash {
 		t.Errorf("wrong mainnet genesis hash, got %v, want %v", block.Hash().Hex(), MainnetGenesisHash.Hex())
 	}
+	configs.SetRunMode(runmode)
 }
 
 func TestSetupGenesis(t *testing.T) {
+	runmode := configs.GetRunMode()
+	configs.SetRunMode(configs.Mainnet)
 	var (
 		customghash = common.HexToHash("0xe384b11138d658e0a43e3f71281fd4e6db2692e511526094d160c60ac0f0de0a")
 		customg     = Genesis{
@@ -120,4 +125,5 @@ func TestSetupGenesis(t *testing.T) {
 			}
 		}
 	}
+	configs.SetRunMode(runmode)
 }
