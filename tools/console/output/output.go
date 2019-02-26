@@ -24,7 +24,7 @@ func NewLogOutput() LogOutput {
 func (l *LogOutput) Status(status *cm.Status) {
 	outTmpl := `--------------------------
 
-Minint: {{.Mining}}
+Mining: {{.Mining}}
 
 RNode: {{.RNode}}
 

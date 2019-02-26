@@ -10,17 +10,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-var (
-	endPoint         = "http://localhost:8501"
-	keyStoreFilePath = "~/.cpchain/keystore/"
-)
-
-func init() {
-	if val := os.Getenv("CPCHAIN_KEYSTORE_FILEPATH"); val != "" {
-		keyStoreFilePath = val
-	}
-}
-
 func newApp() *cli.App {
 	app := cli.NewApp()
 	// the executable name
@@ -46,9 +35,6 @@ func newApp() *cli.App {
 		dashboardCommand,
 		rewardCommand,
 	}
-
-	// global flags
-	app.Flags = append(app.Flags)
 
 	// maintain order
 	sort.Sort(cli.CommandsByName(app.Commands))

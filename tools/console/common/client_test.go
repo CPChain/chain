@@ -19,7 +19,7 @@ import (
 func buildClient(ctx *context.Context, t *testing.T) (*cpclient.Client, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
 	// endPoint := "http://3.0.61.106:8523"
 	endPoint := "http://54.169.196.149:8503"
-	keyStoreFilePath := "/Users/liaojinlong/.cpchain/keystore1/"
+	keyStoreFilePath := "/Users/liaojinlong/.cpchain/keystore/"
 	// password := "password"
 	password := "2163607794_4042"
 	client, privateKey, publicKeyECDSA, fromAddress, err := NewCpcClient(endPoint, keyStoreFilePath, password)

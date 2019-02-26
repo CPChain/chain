@@ -29,13 +29,13 @@ func TestLogOutput(t *testing.T) {
 		true,
 		true,
 		true,
-		uint64(100),
+		big.NewInt(100),
 	})
 	output.Status(&status.Status{
 		true,
 		true,
 		true,
 		false,
-		uint64(0),
+		big.NewInt(0),
 	})
 }

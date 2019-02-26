@@ -17,8 +17,8 @@ type Manager interface {
 	GetStatus() (*Status, error)
 	StartMining() error
 	StopMining() error
-	Balance() (Balance, error)
-	BalanceOnReward() (RewardBalance, error)
+	GetBalance() (*Balance, error)
+	GetBalanceOnReward() (*RewardBalance, error)
 	Withdraw() error
 	SubmitDeposit() error
 	WantRenew() error
@@ -37,7 +37,7 @@ type Status struct {
 	RNode      bool
 	ENode      bool
 	Proposer   bool
-	NextNumber uint64
+	NextNumber *big.Int
 }
 
 // RewardBalance is balance of contract namded reward
