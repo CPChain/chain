@@ -76,7 +76,6 @@ func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error
 		}
 	}
 
-	// TODO: fix this
 	return false, nil
 }
 
@@ -98,7 +97,6 @@ func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, erro
 		}
 	}
 
-	// TODO: fix this
 	return false, nil
 }
 
