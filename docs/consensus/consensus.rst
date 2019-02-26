@@ -794,7 +794,7 @@ If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T,
 v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
 The rest of consensus part are same as LBFT 2.0.
 
-This approach guarantees that the an impeach prepare block can reach validate state
+This approach guarantees that an impeach block can get to validate state
 within a time of at most 2T.
 
 
