@@ -79,10 +79,11 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 
 	randSource := rand.NewSource(seed)
 	myRand := rand.New(randSource)
-
+	// TODO termLen=12, found error :panic: invalid argument to Intn elect.go:36    elect.go:90  snapshot. go:535
 	upper := 10
-	lower := 0
-	step := (upper - lower) / termLen
+	// lower := 0
+	// step := (upper - lower) / termLen
+	step := 2
 
 	var randoms []int64
 
@@ -110,8 +111,5 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 		scaledRpts = append(scaledRpts[:pos], scaledRpts[pos+1:]...)
 
 	}
-
-	log.Info("")
-
 	return elected
 }
