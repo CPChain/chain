@@ -37,6 +37,8 @@ type LBFT2 struct {
 
 	prepareSignatures *signaturesForBlockCaches
 	commitSignatures  *signaturesForBlockCaches
+
+	handleImpeachBlock HandleGeneratedImpeachBlock
 }
 
 // NewLBFT2 create an LBFT2 instance
@@ -51,6 +53,8 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 		blockCache:        NewRecentBlocks(db),
 		prepareSignatures: newSignaturesForBlockCaches(db),
 		commitSignatures:  newSignaturesForBlockCaches(db),
+
+		handleImpeachBlock: handleImpeachBlock,
 	}
 
 	return pbft
@@ -126,6 +130,10 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 	if p.number < p.dpor.GetCurrentBlock().NumberU64()+1 {
 		p.number = p.dpor.GetCurrentBlock().NumberU64() + 1
 		p.state = consensus.Idle
+	}
+
+	if p.state == consensus.Idle {
+		p.tryToImpeach()
 	}
 
 	switch err {
@@ -975,109 +983,121 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 	}
 }
 
-// Impeachment waits until it is time to impeach, then try to compose an impeach block
-type Impeachment struct {
-	dpor      DporService
-	returnFn  HandleGeneratedImpeachBlock
-	restartCh chan struct{}
-	numberCh  chan uint64
-	quitCh    chan struct{}
-	running   bool
-	lock      sync.RWMutex
-}
-
-// NewImpeachment creates a new Impeachment struct
-func NewImpeachment(dpor DporService, returnFn HandleGeneratedImpeachBlock) *Impeachment {
-	return &Impeachment{
-		dpor:      dpor,
-		returnFn:  returnFn,
-		restartCh: make(chan struct{}),
-		numberCh:  make(chan uint64),
-		quitCh:    make(chan struct{}),
+func (p *LBFT2) tryToImpeach() {
+	if impeachBlock, err := p.dpor.CreateImpeachBlock(); err == nil {
+		time.AfterFunc(
+			p.dpor.ImpeachTimeout(),
+			func() {
+				if impeachBlock.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+					p.handleImpeachBlock(impeachBlock)
+				}
+			})
 	}
 }
 
-func (im *Impeachment) isRunning() bool {
-	im.lock.RLock()
-	defer im.lock.RUnlock()
+// // Impeachment waits until it is time to impeach, then try to compose an impeach block
+// type Impeachment struct {
+// 	dpor      DporService
+// 	returnFn  HandleGeneratedImpeachBlock
+// 	restartCh chan struct{}
+// 	numberCh  chan uint64
+// 	quitCh    chan struct{}
+// 	running   bool
+// 	lock      sync.RWMutex
+// }
 
-	return im.running
-}
+// // NewImpeachment creates a new Impeachment struct
+// func NewImpeachment(dpor DporService, returnFn HandleGeneratedImpeachBlock) *Impeachment {
+// 	return &Impeachment{
+// 		dpor:      dpor,
+// 		returnFn:  returnFn,
+// 		restartCh: make(chan struct{}),
+// 		numberCh:  make(chan uint64),
+// 		quitCh:    make(chan struct{}),
+// 	}
+// }
 
-func (im *Impeachment) setRunning(running bool) {
-	im.lock.Lock()
-	defer im.lock.Unlock()
+// func (im *Impeachment) isRunning() bool {
+// 	im.lock.RLock()
+// 	defer im.lock.RUnlock()
 
-	im.running = running
-}
+// 	return im.running
+// }
 
-// number returns current block number in local chain + 1
-func (im *Impeachment) number() uint64 {
-	return im.dpor.Status().Head.Number.Uint64()
-}
+// func (im *Impeachment) setRunning(running bool) {
+// 	im.lock.Lock()
+// 	defer im.lock.Unlock()
 
-func (im *Impeachment) timeout() time.Duration {
-	return im.dpor.ImpeachTimeout()
-}
+// 	im.running = running
+// }
 
-// waitAndComposeImpeachBlock waits timeout to impeach, or return
-func (im *Impeachment) waitAndComposeImpeachBlock(number uint64) {
-	if number <= im.number() {
-		return
-	}
+// // number returns current block number in local chain + 1
+// func (im *Impeachment) number() uint64 {
+// 	return im.dpor.Status().Head.Number.Uint64()
+// }
 
-	im.setRunning(true)
-	defer im.setRunning(false)
+// func (im *Impeachment) timeout() time.Duration {
+// 	return im.dpor.ImpeachTimeout()
+// }
 
-	select {
-	case <-time.After(im.timeout()):
-		impeachBlock, err := im.dpor.CreateImpeachBlock()
-		if err != nil {
-			log.Warn("err when creating impeach block", "err", err)
-			return
-		}
+// // waitAndComposeImpeachBlock waits timeout to impeach, or return
+// func (im *Impeachment) waitAndComposeImpeachBlock(number uint64) {
+// 	if number <= im.number() {
+// 		return
+// 	}
 
-		_ = im.returnFn(impeachBlock)
-		return
+// 	im.setRunning(true)
+// 	defer im.setRunning(false)
 
-	case <-im.restartCh:
-		return
-	}
-}
+// 	select {
+// 	case <-time.After(im.timeout()):
+// 		impeachBlock, err := im.dpor.CreateImpeachBlock()
+// 		if err != nil {
+// 			log.Warn("err when creating impeach block", "err", err)
+// 			return
+// 		}
 
-// Trigger triggers an impeachment
-func (im *Impeachment) Trigger(number uint64) {
-	im.numberCh <- number
-	log.Debug("triggered restart", "number", number)
-}
+// 		_ = im.returnFn(impeachBlock)
+// 		return
 
-// Restart restarts impeachment
-func (im *Impeachment) Restart(number uint64) {
-	if im.isRunning() {
-		im.restartCh <- struct{}{}
-	}
+// 	case <-im.restartCh:
+// 		return
+// 	}
+// }
 
-	log.Debug("now starting new wait and try to compose", "number", number)
+// // Trigger triggers an impeachment
+// func (im *Impeachment) Trigger(number uint64) {
+// 	im.numberCh <- number
+// 	log.Debug("triggered restart", "number", number)
+// }
 
-	go im.waitAndComposeImpeachBlock(number)
+// // Restart restarts impeachment
+// func (im *Impeachment) Restart(number uint64) {
+// 	if im.isRunning() {
+// 		im.restartCh <- struct{}{}
+// 	}
 
-}
+// 	log.Debug("now starting new wait and try to compose", "number", number)
 
-// Loop loops for impeachment
-func (im *Impeachment) Loop() {
+// 	go im.waitAndComposeImpeachBlock(number)
 
-	for {
-		select {
-		case number := <-im.numberCh:
-			log.Debug("now ready to restart", "number", number)
-			go im.Restart(number)
-		case <-im.quitCh:
-			return
-		}
-	}
-}
+// }
 
-// Stop stops impeachment
-func (im *Impeachment) Stop() {
-	im.quitCh <- struct{}{}
-}
+// // Loop loops for impeachment
+// func (im *Impeachment) Loop() {
+
+// 	for {
+// 		select {
+// 		case number := <-im.numberCh:
+// 			log.Debug("now ready to restart", "number", number)
+// 			go im.Restart(number)
+// 		case <-im.quitCh:
+// 			return
+// 		}
+// 	}
+// }
+
+// // Stop stops impeachment
+// func (im *Impeachment) Stop() {
+// 	im.quitCh <- struct{}{}
+// }

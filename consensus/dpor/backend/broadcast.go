@@ -171,40 +171,15 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 
 	for {
 		select {
-		case pendingImpeachBlock := <-h.pendingImpeachBlockCh:
+		case impeachBlock := <-h.pendingImpeachBlockCh:
 
-			_ = pendingImpeachBlock
-
-			// size, r, err := rlp.EncodeToReader(pendingImpeachBlock)
-			// if err != nil {
-			// 	log.Warn("failed to encode composed impeach block", "err", err)
-			// 	continue
-			// }
-			// msg := p2p.Msg{Code: PreprepareImpeachBlockMsg, Size: uint32(size), Payload: r}
-
-			// // notify other validators
-			// go h.BroadcastPreprepareImpeachBlock(pendingImpeachBlock)
-
-			// // handle the impeach block
-			// go h.handleLBFT2Msg(msg, nil)
-
-		case <-futureTimer.C:
-
-			// check if still not received new block, if true, continue
-			if h.ReadyToImpeach() && h.mode == LBFT2Mode {
-				// get empty block
-
-				impeachBlock, _ := h.dpor.CreateImpeachBlock()
+			if h.mode == LBFT2Mode {
 				size, r, err := rlp.EncodeToReader(impeachBlock)
 				if err != nil {
 					log.Warn("failed to encode composed impeach block", "err", err)
 					continue
 				}
 				msg := p2p.Msg{Code: PreprepareImpeachBlockMsg, Size: uint32(size), Payload: r}
-
-				// number := impeachBlock.NumberU64()
-				// validators, _ := h.dpor.ValidatorsOf(number)
-				// if InAddressList(h.Coinbase(), validators) {
 
 				var (
 					number = impeachBlock.NumberU64()
@@ -221,8 +196,43 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 					h.impeachmentRecord.markAsImpeached(number, hash)
 				}
 
-				// }
 			}
+
+		case <-futureTimer.C:
+
+			// // check if still not received new block, if true, continue
+			// if h.ReadyToImpeach() && h.mode == LBFT2Mode {
+			// 	// get empty block
+
+			// 	impeachBlock, _ := h.dpor.CreateImpeachBlock()
+			// 	size, r, err := rlp.EncodeToReader(impeachBlock)
+			// 	if err != nil {
+			// 		log.Warn("failed to encode composed impeach block", "err", err)
+			// 		continue
+			// 	}
+			// 	msg := p2p.Msg{Code: PreprepareImpeachBlockMsg, Size: uint32(size), Payload: r}
+
+			// 	// number := impeachBlock.NumberU64()
+			// 	// validators, _ := h.dpor.ValidatorsOf(number)
+			// 	// if InAddressList(h.Coinbase(), validators) {
+
+			// 	var (
+			// 		number = impeachBlock.NumberU64()
+			// 		hash   = impeachBlock.Hash()
+			// 	)
+
+			// 	if !h.impeachmentRecord.ifImpeached(number, hash) {
+			// 		// notify other validators
+			// 		go h.BroadcastPreprepareImpeachBlock(impeachBlock)
+
+			// 		// handle the impeach block
+			// 		go h.handleLBFT2Msg(msg, nil)
+
+			// 		h.impeachmentRecord.markAsImpeached(number, hash)
+			// 	}
+
+			// 	// }
+			// }
 
 		case <-h.quitCh:
 			return
