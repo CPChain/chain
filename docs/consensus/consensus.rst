@@ -751,6 +751,61 @@ Then it can rejoin consensus process after receiving validate message of the cur
 The function is called a validator suspects it is delaying like receiving `Unknown Ancestor Block`_.
 
 
+Failback
+**************
+
+Failback is a process to restore the whole system after if all validators halt at the same time.
+Apparently, the chain has to halts since no validator can continue working on consensus.
+The main challenge here is to reach a consensus for the first block after all validators reboot.
+
+From the proposer's perspective, it has no idea when the validation system can restore.
+Thus, the first block after reboot, must be an impeach block to regain liveness.
+As we described in `Impeachment Steps`_, the timestamp of an impeach block is determined by previous block.
+In the scenario of failback, we cannot use the equation previousBlockTimestamp+period+timeout to calculate the timestamp,
+since this timestamp is out of date.
+It motivates us to design a mechanism to reach a consensus on the issue of timestamp
+among validators whose local clocks are not consistent.
+We are aiming to two main objectives:
+
+1. Reach a consensus on an impeach block with consistent timestamp
+#. Do not design extra states of validators.
+
+The second objective is to keep simplicity as well as robust of the system.
+By exploiting existent five states to reach a consensus on timestamp,
+we could reduce the risk of introducing new mechanism.
+
+Let t\ :sub:`i`\   be the local clock of validator v\ :sub:`i`\   .
+Except for assumptions of LBFT 2.0, one more assumption is required for failback procedure.
+Suppose the local clocks of all loyal validators (at least 2f+1) are within an interval of T.
+In other word, max(t\ :sub:`i`\ -t\ :sub:`j`\ ) < T.
+This assumption is reasonable since all loyal validators are connecting to the network
+and get their local clock calibrated before reboot.
+
+Now we construct a set of discrete timestamps TS={t|t=2k*T, k is a natural number}.
+A validator v\ :sub:`i`\   chooses timestamp ts for the failback impeach block, satisfying
+
+1. ts\ :sub:`i`\   is an element of TS
+#. ts\ :sub:`i`\   > t\ :sub:`i`\
+
+After reboot, all validators are set to idle state.
+When the local clock of v\ :sub:`i`\  is ts\ :sub:`i`\  , it proposes an impeach block with this timestamp,
+and enters impeach prepare state.
+If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T,
+v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
+The rest of consensus part are same as LBFT 2.0.
+
+This approach guarantees that the an impeach prepare block can reach validate state
+within a time of at most 2T.
+
+
+
+
+
+
+
+
+
+
 Restore Cache
 ***************
 
