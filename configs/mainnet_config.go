@@ -46,7 +46,7 @@ var (
 		ChainID: big.NewInt(MainnetChainId),
 		Dpor: &DporConfig{
 			Period:                MainnetBlockPeriod,
-			TermLen:               12,
+			TermLen:               4,
 			ViewLen:               3,
 			ValidatorsLen:         MainnetValidatorsLen,
 			MaxInitBlockNumber:    DefaultMainnetMaxInitBlockNumber,
