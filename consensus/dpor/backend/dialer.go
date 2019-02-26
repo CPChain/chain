@@ -66,7 +66,6 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 
 	log.Debug("received handshake from", "addr", address.Hex())
 
-	// TODO: fix this @liuq
 	isProposer, isValidator := false, false
 
 	for t := term; t <= futureTerm; t++ {
@@ -290,7 +289,6 @@ func (d *Dialer) ProposersOfTerm(term uint64) map[common.Address]*RemoteProposer
 
 // ValidatorsOfTerm returns all validators of given term
 func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidator {
-	// TODO: @AC @liuq the returned result include non-validator, will correct it
 	d.validatorsLock.RLock()
 	defer d.validatorsLock.RUnlock()
 
