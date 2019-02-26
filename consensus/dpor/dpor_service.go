@@ -27,7 +27,7 @@ func (d *Dpor) ViewLength() uint64 {
 
 // ValidatorsNum returns number of validators
 func (d *Dpor) ValidatorsNum() uint64 {
-	return d.config.ValidatorsLen
+	return d.config.ValidatorsLen()
 }
 
 // TermOf returns the term number of given block number
@@ -76,7 +76,6 @@ func (d *Dpor) VerifyProposerOf(signer common.Address, term uint64) (bool, error
 		}
 	}
 
-	// TODO: fix this
 	return false, nil
 }
 
@@ -98,7 +97,6 @@ func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, erro
 		}
 	}
 
-	// TODO: fix this
 	return false, nil
 }
 

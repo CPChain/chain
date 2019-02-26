@@ -487,7 +487,7 @@ func zeroKey(k *ecdsa.PrivateKey) {
 	}
 }
 
-// DecryptWithEcies decrypts with a specified account's RSA key. The account is required to be unlocked.
+// DecryptWithEcies decrypts with a specified account's ecies private key. The account is required to be unlocked.
 func (ks *KeyStore) DecryptWithEcies(account accounts.Account, cipherText []byte) ([]byte, error) {
 	unlocked, exists := ks.unlocked[account.Address]
 	if !exists {

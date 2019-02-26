@@ -107,6 +107,7 @@ func (w *work) makeData() []byte {
 // starts cpu pow work.
 func (w *work) prove(abort <-chan interface{}, wg *sync.WaitGroup) {
 	defer wg.Done()
+	start := time.Now()
 	ticker := time.NewTicker(time.Duration(w.timeout))
 	defer ticker.Stop()
 
@@ -129,7 +130,8 @@ search:
 			w.mutex.RUnlock()
 
 			if nonce < maxNonce && validate(w.difficulty, w.header.Hash().Bytes(), w.coinbase, nonce, w.hashfn) {
-				log.Info("found nonce", "block hash", w.header.Hash().Hex(), "difficulty", w.difficulty, "sender", w.coinbase.Hex(), "nonce", nonce)
+				log.Info("found nonce", "block hash", w.header.Hash().Hex(), "difficulty", w.difficulty,
+					"sender", w.coinbase.Hex(), "nonce", nonce, "timeCost(s)", time.Since(start).Seconds())
 				break search
 			}
 

@@ -21,6 +21,9 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
+	"bitbucket.org/cpchain/chain/core/vm"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -41,11 +44,16 @@ var (
 	addr0                    = crypto.PubkeyToAddress(key0.PublicKey)
 	addr1                    = crypto.PubkeyToAddress(key1.PublicKey)
 	addr2                    = crypto.PubkeyToAddress(key2.PublicKey)
-	cpuDifficulty     uint64 = 5
-	memDifficulty     uint64 = 5
-	cpuWorkTimeout    uint64 = 5
-	memoryWorkTimeout uint64 = 5
+	cpuDifficulty     uint64 = 19
+	memDifficulty     uint64 = 9
+	cpuWorkTimeout    uint64 = 15
+	memoryWorkTimeout uint64 = 15
 )
+
+func init() {
+	vm.RegisterPrimitiveContract(common.BytesToAddress([]byte{106}), &primitives.CpuPowValidate{})
+	vm.RegisterPrimitiveContract(common.BytesToAddress([]byte{107}), &primitives.MemPowValidate{})
+}
 
 func newTestBackend() *backends.SimulatedBackend {
 	return backends.NewDporSimulatedBackend(core.GenesisAlloc{
@@ -89,7 +97,7 @@ func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend
 }
 
 func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout uint64, backend *backends.SimulatedBackend) (common.Address, common.Address, *reward.Reward, common.Address, error) {
-	admissionAddr, err := deployAdmission(prvKey, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
+	admissionAddr, err := deployAdmission(prvKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, common.Address{}, err
 	}
@@ -118,7 +126,6 @@ func TestVerifyCPU(t *testing.T) {
 	}
 
 	cpuBlockNum, cpuNonce, _, _ := computeCorrectPow(key0, backend, addr0, acAddr, rewardAddr, rewardContract, campaignAddr)
-
 	ok, err := instance.VerifyCPU(nil, addr0, cpuNonce, big.NewInt(cpuBlockNum), big.NewInt(int64(cpuDifficulty)))
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -201,10 +208,7 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 func computeCorrectPow(prvKey *ecdsa.PrivateKey, contractBackend *backends.SimulatedBackend, addr common.Address, admissionAddr common.Address,
 	rewardAddr common.Address, rewardContract *reward.Reward, campaignAddr common.Address) (cpuBlockNum int64, cpuNonce uint64, memBlockNum int64, memNonce uint64) {
 	// compute cpu&memory pow
-	config := admission.DefaultConfig
-	config.CpuDifficulty = cpuDifficulty
-	config.MemoryDifficulty = memDifficulty
-	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, config, admissionAddr, campaignAddr, rewardAddr)
+	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, admissionAddr, campaignAddr, rewardAddr)
 	ac.SetSimulateBackend(contractBackend)
 	ac.SetAdmissionKey(&keystore.Key{PrivateKey: prvKey})
 	err := ac.FundForRNode()

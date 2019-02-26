@@ -11,7 +11,7 @@ const (
 	// ProtocolName protocol name
 	ProtocolName = "dpor"
 
-	// ProtocolVersion protocol verion
+	// ProtocolVersion protocol version
 	ProtocolVersion = 65
 
 	// ProtocolLength protocol length, max msg code
@@ -28,26 +28,28 @@ const (
 	// PbftMsgOutset is not a msg code, just used for msg code comparing
 	PbftMsgOutset = 0x42
 
-	// PreprepareBlockMsg is Preprepare phrase msg code
+	// PreprepareBlockMsg msg
 	PreprepareBlockMsg = 0x43
 
-	// PrepareHeaderMsg is Prepare phrase msg code
+	// PrepareHeaderMsg msg
 	PrepareHeaderMsg = 0x44
 
-	// CommitHeaderMsg is Commit phrase msg code
+	// CommitHeaderMsg msg
 	CommitHeaderMsg = 0x45
 
-	// PreprepareImpeachBlockMsg is Preprepare phrase msg code for empty block
+	// PreprepareImpeachBlockMsg msg
 	PreprepareImpeachBlockMsg = 0x46
 
-	// PrepareImpeachHeaderMsg is Prepare phrase msg code for empty header
+	// PrepareImpeachHeaderMsg msg
 	PrepareImpeachHeaderMsg = 0x47
 
-	// CommitImpeachHeaderMsg is Commit phrase msg code for empty header
+	// CommitImpeachHeaderMsg msg
 	CommitImpeachHeaderMsg = 0x48
 
+	// ValidateBlockMsg msg
 	ValidateBlockMsg = 0x49
 
+	// ValidateImpeachBlockMsg msg
 	ValidateImpeachBlockMsg = 0x50
 )
 
@@ -69,8 +71,8 @@ const (
 	// ErrProtocolVersionMismatch is returned if protocol version is not matched when handshaking
 	ErrProtocolVersionMismatch
 
-	// ErrNetworkIdMismatch is returned if networkid is not matched when handshaking
-	ErrNetworkIdMismatch
+	// ErrNetworkIDMismatch is returned if networkid is not matched when handshaking
+	ErrNetworkIDMismatch
 
 	// ErrGenesisBlockMismatch is returned if genesis block is different from remote signer
 	ErrGenesisBlockMismatch
@@ -95,13 +97,14 @@ var errorToString = map[int]string{
 	ErrDecode:                  "Invalid message",
 	ErrInvalidMsgCode:          "Invalid message code",
 	ErrProtocolVersionMismatch: "Protocol version mismatch",
-	ErrNetworkIdMismatch:       "NetworkId mismatch",
+	ErrNetworkIDMismatch:       "NetworkId mismatch",
 	ErrGenesisBlockMismatch:    "Genesis block mismatch",
 	ErrNoStatusMsg:             "No status message",
 	ErrExtraStatusMsg:          "Extra status message",
 	ErrSuspendedPeer:           "Suspended peer",
 }
 
+// SignerStatusData represents signer status when handshaking
 type SignerStatusData struct {
 	ProtocolVersion uint32
 	Mac             string
@@ -113,10 +116,12 @@ func errResp(code errCode, format string, v ...interface{}) error {
 	return fmt.Errorf("%v - %v", code, fmt.Sprintf(format, v...))
 }
 
+// IsSyncMsg checks if msg is a sync msg
 func IsSyncMsg(msg p2p.Msg) bool {
 	return msg.Code < PbftMsgOutset
 }
 
+// IsDporMsg checks if msg is a dpor related msg
 func IsDporMsg(msg p2p.Msg) bool {
 	return msg.Code >= PbftMsgOutset
 }

@@ -71,6 +71,8 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		return nil
 	}
 
+	isImpeach := header.Coinbase == common.Address{}
+
 	if number > 0 {
 		// Ensure the block's parent is valid
 		var parent *types.Header
@@ -106,14 +108,24 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
 
 		// Ensure that the block's timestamp is valid
-		if timestamp < parentTimestamp+period || timestamp > parentTimestamp+period+timeout {
-			if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber {
+		if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
 
-				log.Warn("invalid timestamp")
+			if timestamp < parentTimestamp+period {
+
+				log.Warn("invalid timestamp", "timestamp < parentTimestamp+period", timestamp < parentTimestamp+period, "parentTimestamp+period", parentTimestamp+period, "timestamp", timestamp)
 				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
 
 				return ErrInvalidTimestamp
 			}
+
+			// TODO: fix this
+			// if timestamp > parentTimestamp+period+timeout {
+
+			// 	log.Warn("invalid timestamp", "timestamp > parentTimestamp+period+timeout", timestamp > parentTimestamp+period+timeout, "parentTimestamp+period+timeout", parentTimestamp+period+timeout, "timestamp", timestamp)
+			// 	log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
+
+			// 	return ErrInvalidTimestamp
+			// }
 		}
 
 		// Delay to verify it!
@@ -127,8 +139,6 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		}
 
 	}
-
-	isImpeach := header.Coinbase == common.Address{}
 
 	if number > 0 {
 		// verify dpor seal, genesis block not need this check
@@ -503,10 +513,10 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Copy all signatures to allSigs
-	allSigs := make([]types.DporSignature, dpor.config.ValidatorsLen)
+	allSigs := make([]types.DporSignature, dpor.config.ValidatorsLen())
 	validators := snap.ValidatorsOf(number)
-	if dpor.config.ValidatorsLen != uint64(len(validators)) {
-		log.Warn("validator committee length not equal to validators length", "config.ValidatorsLen", dpor.config.ValidatorsLen, "validatorLen", len(validators))
+	if dpor.config.ValidatorsLen() != uint64(len(validators)) {
+		log.Warn("validator committee length not equal to validators length", "config.ValidatorsLen", dpor.config.ValidatorsLen(), "validatorLen", len(validators))
 	}
 
 	// fulfill all known validator signatures to dpor.sigs to accumulate
@@ -539,8 +549,8 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 
 		// if the sigs length is wrong, reset it with correct ValidatorsLen
-		if len(header.Dpor.Sigs) != int(snap.config.ValidatorsLen) {
-			header.Dpor.Sigs = make([]types.DporSignature, snap.config.ValidatorsLen)
+		if len(header.Dpor.Sigs) != int(snap.config.ValidatorsLen()) {
+			header.Dpor.Sigs = make([]types.DporSignature, snap.config.ValidatorsLen())
 		}
 
 		// mark as signed

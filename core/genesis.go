@@ -291,7 +291,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0x3388189f468c580bbbf60cedd562845a27d6cba7eaf99df4ce29b3347de69e71")
+var MainnetGenesisHash = common.HexToHash("0x5276503e71a98225e89497066eb9815d0f20061089e4a75b64d3702dbf21fae1")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
@@ -330,11 +330,12 @@ func newGenesisBlock() *Genesis {
 			common.HexToAddress("0x0000000000000000000000000000000000000001"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000002"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x00000000000000000000000000000000000000ff"): {Balance: big.NewInt(0x00000000000000000)},
+			common.HexToAddress("0xb3801b8743dea10c30b0c21cae8b1923d9625f84"): {Balance: big.NewInt(math.MaxInt64)}, // contract admin account
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, configs.DefaultValidatorsLen),
+			Sigs:       make([]types.DporSignature, configs.DefaultValidatorsNumber),
 			Validators: configs.Validators(),
 		},
 	}
@@ -363,7 +364,7 @@ func newTestnetGenesisBlock() *Genesis {
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, configs.TestnetValidatorsLen),
+			Sigs:       make([]types.DporSignature, configs.TestnetValidatorsNumber),
 			Validators: configs.Validators(),
 		},
 	}
@@ -392,11 +393,16 @@ func newMainnetGenesisBlock() *Genesis {
 			candidates[9]:  {Balance: big.NewInt(math.MaxInt64)},
 			candidates[10]: {Balance: big.NewInt(math.MaxInt64)},
 			candidates[11]: {Balance: big.NewInt(math.MaxInt64)},
+
+			// contract admin account 21
+			common.HexToAddress("0xb3801b8743dea10c30b0c21cae8b1923d9625f84"): {Balance: big.NewInt(math.MaxInt64)},
+			// bank 22
+			common.HexToAddress("0xabb528bffc707c2c507307e426ce810a7ad93ed6"): {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, configs.MainnetValidatorsLen),
+			Sigs:       make([]types.DporSignature, configs.MainnetValidatorsNumber),
 			Validators: configs.Validators(),
 		},
 	}

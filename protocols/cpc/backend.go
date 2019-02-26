@@ -143,7 +143,11 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		remoteDB:       remoteDB,
 	}
 
-	cpc.engine = cpc.CreateConsensusEngine(ctx, chainConfig, chainDb)
+	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
+		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
+
+	cpc.engine = cpc.CreateConsensusEngine(ctx, chainConfig, chainDb, cpc.AdmissionApiBackend)
 	log.Info("Initialising cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
 
 	if !config.SkipBcVersionCheck {
@@ -191,9 +195,6 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
 
-	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
-	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase, cpc.config.Admission,
-		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
 	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	return cpc, nil
@@ -216,8 +217,8 @@ func (s *CpchainService) SetAsMiner(isMiner bool) {
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
-func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig, db database.Database) consensus.Engine {
-
+func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig,
+	db database.Database, ac admission.ApiBackend) consensus.Engine {
 	eb, err := s.Coinbase()
 	if err != nil {
 		log.Debug("coinbase is not set, but is allowed for non-miner node", "error", err)
@@ -225,7 +226,7 @@ func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainCo
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. @liuq
-		dpor := dpor.New(chainConfig.Dpor, db, s.AdmissionApiBackend)
+		dpor := dpor.New(chainConfig.Dpor, db, ac)
 		if eb != (common.Address{}) {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 			if wallet == nil || err != nil {

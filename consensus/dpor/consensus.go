@@ -167,7 +167,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 		"validators", header.Dpor.ValidatorsFormatText())
 
 	// Set correct signatures size
-	header.Dpor.Sigs = make([]types.DporSignature, d.config.ValidatorsLen)
+	header.Dpor.Sigs = make([]types.DporSignature, d.config.ValidatorsLen())
 
 	// Ensure the timestamp has the correct delay
 	parent := chain.GetHeader(header.ParentHash, number-1)
@@ -185,6 +185,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 func (d *Dpor) TryCampaign() {
 	if d.ac == nil {
 		// it is not able to campaign in the situation
+		log.Debug("it is not able to campaign in the situation")
 		return
 	}
 

@@ -55,15 +55,19 @@ const (
 	TestnetBlockPeriod = 3e3 //  3000 Millisecond, 3 Second
 	MainnetBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
 
-	DefaultValidatorsLen = 4
-	TestnetValidatorsLen = 4
-	MainnetValidatorsLen = 7
+	DefaultFaultyValidatorsNumber = 1
+	TestnetFaultyValidatorsNumber = 1
+	MainnetFaultyValidatorsNumber = 2
+
+	DefaultValidatorsNumber = DefaultFaultyValidatorsNumber*3 + 1
+	TestnetValidatorsNumber = TestnetFaultyValidatorsNumber*3 + 1
+	MainnetValidatorsNumber = MainnetFaultyValidatorsNumber*3 + 1
 )
 
 const (
 	DefaultDevMaxInitBlockNumber     = 480
 	DefaultTestnetMaxInitBlockNumber = 240
-	DefaultMainnetMaxInitBlockNumber = 240
+	DefaultMainnetMaxInitBlockNumber = 180
 )
 
 const (
@@ -269,7 +273,7 @@ type DporConfig struct {
 	Period                uint64                    `json:"period"                toml:"period"`             // Number of seconds between blocks to enforce
 	TermLen               uint64                    `json:"termLen"               toml:"termLen"`            // Term length to reset votes and checkpoint
 	ViewLen               uint64                    `json:"viewLen"               toml:"viewLen"`            // View length of blocks one signer can seal in one committee
-	ValidatorsLen         uint64                    `json:"validatorsLen"         toml:"validatorsLen"`      // Number of validators
+	FaultyNumber          uint64                    `json:"faultyNumber"          toml:"faultyNumber"`       // Number of faulty validators in validator committee
 	MaxInitBlockNumber    uint64                    `json:"maxInitBlockNumber"    toml:"maxInitBlockNumber"` // The maximum block number which uses default proposers
 	Contracts             map[string]common.Address `json:"contracts"             toml:"contracts"`
 	ProxyContractRegister common.Address            `json:"proxyContractRegister" toml:"proxyContractRegister"`
@@ -279,6 +283,13 @@ type DporConfig struct {
 // String implements the stringer interface, returning the consensus engine details.
 func (c *DporConfig) String() string {
 	return "dpor"
+}
+
+func (c *DporConfig) ValidatorsLen() uint64 {
+	if c != nil {
+		return c.FaultyNumber*3 + 1
+	}
+	return 0
 }
 
 // String implements the fmt.Stringer interface.

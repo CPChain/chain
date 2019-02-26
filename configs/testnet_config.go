@@ -41,11 +41,11 @@ var (
 			Period:                TestnetBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
-			ValidatorsLen:         DefaultValidatorsLen,
+			FaultyNumber:          TestnetFaultyValidatorsNumber,
 			MaxInitBlockNumber:    DefaultTestnetMaxInitBlockNumber,
 			ProxyContractRegister: testnetProxyContractRegister,
 			Contracts:             testnetContractAddressMap,
-			ImpeachTimeout:        time.Millisecond * DefaultBlockPeriod * 2,
+			ImpeachTimeout:        time.Millisecond * TestnetBlockPeriod * 2,
 		},
 	}
 

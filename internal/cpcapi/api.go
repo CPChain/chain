@@ -514,16 +514,22 @@ func getRole(isCommittee bool) int {
 	return cpclient.Candidate
 }
 
-// GetCommittee return current view
+// GetCommittee returns current view
 func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
 	CurrentView := s.b.CurrentView()
 	return CurrentView
 }
 
-// GetCurrentTerm return current term
+// GetCurrentTerm returns current term
 func (s *PublicBlockChainAPI) GetCurrentTerm() uint64 {
 	CurrentTerm := s.b.CurrentTerm()
 	return CurrentTerm
+}
+
+// GetChainConfig returns chain config of current blockchain
+func (s *PublicBlockChainAPI) GetChainConfig() configs.ChainConfig {
+	cfg := s.b.ChainConfig()
+	return *cfg
 }
 
 func (s *PublicBlockChainAPI) GetCommitteeNumber() int {
@@ -531,7 +537,7 @@ func (s *PublicBlockChainAPI) GetCommitteeNumber() int {
 	return len(committeeNumber)
 }
 
-// GetBlockGenerationInfo return current committee and it's Info
+// GetBlockGenerationInfo returns current committee and it's Info
 func (s *PublicBlockChainAPI) GetBlockGenerationInfo() []cpclient.BlockGenerationInfo {
 
 	t := s.b.CurrentTerm()
