@@ -18,14 +18,14 @@ func init() {
 			{
 				Name:        "start",
 				Usage:       "Start mining",
-				Flags:       append([]cli.Flag(nil)),
+				Flags:       wrapperFlags(minerFlags),
 				Action:      startMining,
 				Description: fmt.Sprintf(`Start Mining`),
 			},
 			{
 				Name:        "stop",
 				Usage:       "stop mining",
-				Flags:       append([]cli.Flag(nil)),
+				Flags:       wrapperFlags(minerFlags),
 				Action:      stopMining,
 				Description: fmt.Sprintf(`Stop Mining`),
 			},
@@ -40,9 +40,21 @@ func init() {
 }
 
 func startMining(ctx *cli.Context) error {
+	console, out, cancel := build(ctx)
+	defer cancel()
+	err := console.StartMining()
+	if err != nil {
+		out.Error(err.Error())
+	}
 	return nil
 }
 
 func stopMining(ctx *cli.Context) error {
+	console, out, cancel := build(ctx)
+	defer cancel()
+	err := console.StopMining()
+	if err != nil {
+		out.Error(err.Error())
+	}
 	return nil
 }

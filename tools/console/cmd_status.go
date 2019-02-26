@@ -1,10 +1,6 @@
 package main
 
 import (
-	"context"
-
-	"bitbucket.org/cpchain/chain/tools/console/manager"
-	"bitbucket.org/cpchain/chain/tools/console/output"
 	"github.com/urfave/cli"
 )
 
@@ -27,14 +23,8 @@ func init() {
 }
 
 func showStatus(ctx *cli.Context) error {
-	rpc, kspath, pwdfile, err := validator(ctx)
-	out := output.NewLogOutput()
-	if err != nil {
-		out.Fatal(err.Error())
-	}
-	_ctx, cancel := context.WithCancel(context.Background())
+	console, out, cancel := build(ctx)
 	defer cancel()
-	console := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)
 	status, err := console.GetStatus()
 	if err != nil {
 		out.Error(err.Error())

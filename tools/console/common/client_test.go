@@ -137,6 +137,7 @@ func TestMining(t *testing.T) {
 
 	// check
 	var result bool
+	c.CallContext(ctx, &result, "eth_mining")
 	t.Log("Is Mining:", result)
 
 	// Stop Mining

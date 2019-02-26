@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"errors"
 
 	"bitbucket.org/cpchain/chain/tools/console/common"
+	"bitbucket.org/cpchain/chain/tools/console/manager"
+	"bitbucket.org/cpchain/chain/tools/console/output"
 	"github.com/urfave/cli"
 )
 
@@ -15,6 +18,17 @@ var RPCFlags = []cli.Flag{
 		Usage: "Set the APIs offered over the HTTP-RPC interface",
 		Value: "http://127.0.0.1:8501",
 	},
+}
+
+func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFunc) {
+	rpc, kspath, pwdfile, err := validator(ctx)
+	out := output.NewLogOutput()
+	if err != nil {
+		out.Fatal(err.Error())
+	}
+	_ctx, cancel := context.WithCancel(context.Background())
+	console := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)
+	return console, &out, cancel
 }
 
 var home, err = common.Home()

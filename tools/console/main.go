@@ -32,7 +32,6 @@ func newApp() *cli.App {
 		statusCommand,
 		minerCommand,
 		accountCommand,
-		dashboardCommand,
 		rewardCommand,
 	}
 

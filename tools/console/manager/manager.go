@@ -109,11 +109,34 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 
 // StartMining start mining
 func (c *Console) StartMining() error {
+	c.output.Info("Start Mining...")
+	client, err := rpc.DialContext(*c.ctx, c.rpc)
+	if err != nil {
+		return err
+	}
+	// Start Mining
+	err = client.CallContext(*c.ctx, nil, "miner_start", 1)
+	if err != nil {
+		return err
+	}
+
+	c.output.Info("Start Success.")
 	return nil
 }
 
 // StopMining stop mining
 func (c *Console) StopMining() error {
+	c.output.Info("Stop Mining...")
+	client, err := rpc.DialContext(*c.ctx, c.rpc)
+	if err != nil {
+		return err
+	}
+	// Start Mining
+	err = client.CallContext(*c.ctx, nil, "miner_stop")
+	if err != nil {
+		return err
+	}
+	c.output.Info("Stop Success.")
 	return nil
 }
 
