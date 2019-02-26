@@ -11,7 +11,7 @@ func init() {
 	accountCommand = cli.Command{
 		Action: showAccount,
 		Name:   "account",
-		Flags:  accountFlags,
+		Flags:  wrapperFlags(accountFlags),
 		Usage:  "Show account of cpchain node",
 		Before: func(ctx *cli.Context) error {
 			return nil
@@ -23,5 +23,12 @@ func init() {
 }
 
 func showAccount(ctx *cli.Context) error {
+	console, out, cancel := build(ctx)
+	defer cancel()
+	balance, err := console.GetBalance()
+	if err != nil {
+		out.Error(err.Error())
+	}
+	out.Balance(balance)
 	return nil
 }

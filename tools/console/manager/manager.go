@@ -142,12 +142,53 @@ func (c *Console) StopMining() error {
 
 // GetBalance get balance of user's account
 func (c *Console) GetBalance() (*cm.Balance, error) {
-	return nil, nil
+	// balance
+	balance, err := c.client.BalanceAt(*c.ctx, c.addr, nil)
+	if err != nil {
+		return nil, err
+	}
+	// reward balance
+	reward, err := c.GetBalanceOnReward()
+	if err != nil {
+		return nil, err
+	}
+	b := cm.Balance{
+		*balance,
+		*reward,
+	}
+	return &b, nil
 }
 
 // GetBalanceOnReward get balance on reward contract
 func (c *Console) GetBalanceOnReward() (*cm.RewardBalance, error) {
-	return nil, nil
+	addr := cm.GetContractAddress(cm.ContractReward)
+	instance, err := reward.NewReward(addr, c.client)
+	if err != nil {
+		return nil, err
+	}
+	// GetLockedBalance
+	totalBalance, err := instance.GetTotalBalance(nil, c.addr)
+	if err != nil {
+		return nil, err
+	}
+
+	// GetFreeBalance
+	freeBalance, err := instance.GetFreeBalance(nil, c.addr)
+	if err != nil {
+		return nil, err
+	}
+
+	// GetLockedBalance
+	lockedBalance, err := instance.GetLockedBalance(nil, c.addr)
+	if err != nil {
+		return nil, err
+	}
+	reward := cm.RewardBalance{
+		*totalBalance,
+		*freeBalance,
+		*lockedBalance,
+	}
+	return &reward, nil
 }
 
 // Withdraw money from reward contract
