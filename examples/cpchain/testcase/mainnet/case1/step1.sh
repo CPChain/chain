@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
 set -u
 set -e
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
 curr_dir=`pwd`
 echo "curr_dir:${curr_dir}"
 
 cd ../../../
-pwd
-
 
 validator_ip=""
 if [ $# == 0 ]; then
