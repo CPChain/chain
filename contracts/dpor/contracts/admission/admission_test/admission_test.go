@@ -21,6 +21,9 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
+	"bitbucket.org/cpchain/chain/core/vm"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -41,11 +44,16 @@ var (
 	addr0                    = crypto.PubkeyToAddress(key0.PublicKey)
 	addr1                    = crypto.PubkeyToAddress(key1.PublicKey)
 	addr2                    = crypto.PubkeyToAddress(key2.PublicKey)
-	cpuDifficulty     uint64 = 5
-	memDifficulty     uint64 = 5
-	cpuWorkTimeout    uint64 = 5
-	memoryWorkTimeout uint64 = 5
+	cpuDifficulty     uint64 = 19
+	memDifficulty     uint64 = 9
+	cpuWorkTimeout    uint64 = 15
+	memoryWorkTimeout uint64 = 15
 )
+
+func init() {
+	vm.RegisterPrimitiveContract(common.BytesToAddress([]byte{106}), &primitives.CpuPowValidate{})
+	vm.RegisterPrimitiveContract(common.BytesToAddress([]byte{107}), &primitives.MemPowValidate{})
+}
 
 func newTestBackend() *backends.SimulatedBackend {
 	return backends.NewDporSimulatedBackend(core.GenesisAlloc{
@@ -118,7 +126,6 @@ func TestVerifyCPU(t *testing.T) {
 	}
 
 	cpuBlockNum, cpuNonce, _, _ := computeCorrectPow(key0, backend, addr0, acAddr, rewardAddr, rewardContract, campaignAddr)
-
 	ok, err := instance.VerifyCPU(nil, addr0, cpuNonce, big.NewInt(cpuBlockNum), big.NewInt(int64(cpuDifficulty)))
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

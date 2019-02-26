@@ -40,13 +40,9 @@ var (
 		addr1: {Balance: big.NewInt(1000000000)},
 	}
 	// gspec = core.Genesis{Config: params.TestChainConfig, Alloc: alloc}
-	gspec                    = core.Genesis{Config: configs.ChainConfigInfo(), Alloc: alloc}
-	testdb                   = database.NewMemDatabase()
-	genesis                  = gspec.MustCommit(testdb)
-	cpuDifficulty     uint64 = 5
-	memDifficulty     uint64 = 5
-	cpuWorkTimeout    uint64 = 5
-	memoryWorkTimeout uint64 = 5
+	gspec   = core.Genesis{Config: configs.ChainConfigInfo(), Alloc: alloc}
+	testdb  = database.NewMemDatabase()
+	genesis = gspec.MustCommit(testdb)
 )
 
 func deployAdmission(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout uint64, backend *backends.SimulatedBackend) (common.Address, error) {
@@ -83,6 +79,13 @@ func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend
 }
 
 func deployRequiredContracts(t *testing.T) (*backends.SimulatedBackend, common.Address, common.Address, *reward.Reward, common.Address) {
+	var (
+		cpuDifficulty     uint64 = 5
+		memDifficulty     uint64 = 5
+		cpuWorkTimeout    uint64 = 5
+		memoryWorkTimeout uint64 = 5
+	)
+
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: new(big.Int).Mul(big.NewInt(1000000), big.NewInt(configs.Cpc))}})
 	admissionAddr, err := deployAdmission(key.PrivateKey, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, contractBackend)
 	if err != nil {

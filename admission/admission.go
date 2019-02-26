@@ -332,7 +332,13 @@ func (ac *AdmissionControl) buildCpuProofWork() ProofWork {
 	}
 	cpuDifficulty := cd.Uint64()
 	cpuLifeTime := time.Duration(time.Duration(clt.Int64()) * time.Second)
-	return newWork(cpuDifficulty, cpuLifeTime, ac.address, ac.chain.CurrentHeader(), sha256Func)
+
+	// must use current block number - 1, because solidity cannot get hash of current block
+	blockNum := ac.chain.CurrentHeader().Number.Uint64()
+	if blockNum > 0 {
+		blockNum = blockNum - 1
+	}
+	return newWork(cpuDifficulty, cpuLifeTime, ac.address, ac.chain.GetHeaderByNumber(blockNum), sha256Func)
 }
 
 func (ac *AdmissionControl) buildMemoryProofWork() ProofWork {
@@ -347,7 +353,13 @@ func (ac *AdmissionControl) buildMemoryProofWork() ProofWork {
 	}
 	memoryDifficulty := md.Uint64()
 	memoryCpuLifeTime := time.Duration(time.Duration(mct.Int64()) * time.Second)
-	return newWork(memoryDifficulty, memoryCpuLifeTime, ac.address, ac.chain.CurrentHeader(), scryptFunc)
+
+	// must use current block number - 1, because solidity cannot get hash of current block
+	blockNum := ac.chain.CurrentHeader().Number.Uint64()
+	if blockNum > 0 {
+		blockNum = blockNum - 1
+	}
+	return newWork(memoryDifficulty, memoryCpuLifeTime, ac.address, ac.chain.GetHeaderByNumber(blockNum), scryptFunc)
 }
 
 // registerProofWork returns all proof work
