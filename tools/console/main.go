@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
 
-	"bitbucket.org/cpchain/chain/tools/console/common"
-	Output "bitbucket.org/cpchain/chain/tools/console/output"
+	"bitbucket.org/cpchain/chain/configs"
+	"github.com/urfave/cli"
 )
 
 var (
@@ -19,18 +21,44 @@ func init() {
 	}
 }
 
-func main() {
-	endPoint = "http://3.0.61.106:8523"
-	keyStoreFilePath = "/Users/liaojinlong/.cpchain/keystore/"
-	password := "password"
-	output := Output.NewLogOutput()
-	client, privateKey, publicKeyECDSA, fromAddress, err := common.NewCpcClient(endPoint, keyStoreFilePath, password)
-	if err != nil {
-		output.Fatal(err.Error())
+func newApp() *cli.App {
+	app := cli.NewApp()
+	// the executable name
+	app.Name = filepath.Base(os.Args[0])
+	app.Authors = []cli.Author{
+		{
+			Name:  "The cpchain authors",
+			Email: "info@cpchain.io",
+		},
 	}
-	fmt.Println(client)
-	fmt.Println(privateKey)
-	fmt.Println(publicKeyECDSA)
-	fmt.Println(fromAddress)
-	fmt.Println("Hello world")
+	app.Version = configs.Version
+	app.Copyright = "LGPL"
+	app.Usage = "Executable for the cpchain node manage"
+	// be fair to the fish shell.
+	// app.EnableBashCompletion = true
+
+	app.Action = cli.ShowAppHelp
+
+	app.Commands = []cli.Command{
+		statusCommand,
+		minerCommand,
+		accountCommand,
+		dashboardCommand,
+		rewardCommand,
+	}
+
+	// global flags
+	app.Flags = append(app.Flags)
+
+	// maintain order
+	sort.Sort(cli.CommandsByName(app.Commands))
+
+	return app
+}
+
+func main() {
+	if err := newApp().Run(os.Args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
