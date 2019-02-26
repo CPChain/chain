@@ -14,4 +14,4 @@ runmode="${2}"
 
 echo "boot_key:${boot_key},runmode:${runmode}"
 
-$bootnode -nodekey conf-${runmode}/bootnodes/${boot_key} -verbosity 9 -addr :30310 -logfile data/logs/bootnode.log
+$bootnode -nodekey conf-${runmode}/bootnodes/${boot_key} -verbosity 9 -addr :3030${1} -logfile data/logs/bootnode${1}.log

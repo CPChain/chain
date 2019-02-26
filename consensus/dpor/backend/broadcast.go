@@ -220,7 +220,6 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 
 					h.impeachmentRecord.markAsImpeached(number, hash)
 				}
-
 				// }
 			}
 

@@ -45,7 +45,7 @@ var (
 			MaxInitBlockNumber:    DefaultTestnetMaxInitBlockNumber,
 			ProxyContractRegister: testnetProxyContractRegister,
 			Contracts:             testnetContractAddressMap,
-			ImpeachTimeout:        time.Millisecond * DefaultBlockPeriod * 2,
+			ImpeachTimeout:        time.Millisecond * TestnetBlockPeriod * 2,
 		},
 	}
 
