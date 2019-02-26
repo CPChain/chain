@@ -1,13 +1,15 @@
 package common
 
+import "math/big"
+
 // Output data
 type Output interface {
 	Status(status *Status)
-	Balance(balance Balance)
-	Info(info string)
-	Error(err string)
-	Fatal(fatal string)
-	Warn(warn string)
+	Balance(balance *Balance)
+	Info(msg string, params ...interface{})
+	Error(msg string, params ...interface{})
+	Fatal(msg string, params ...interface{})
+	Warn(msg string, params ...interface{})
 }
 
 // Manager manage the cpchain node
@@ -25,6 +27,8 @@ type Manager interface {
 
 // Balance of the cpchain node
 type Balance struct {
+	Balance big.Int
+	Reward  RewardBalance
 }
 
 // Status is the status of cpchain ndoe
@@ -33,9 +37,12 @@ type Status struct {
 	RNode      bool
 	ENode      bool
 	Proposer   bool
-	NextNumber bool
+	NextNumber uint64
 }
 
 // RewardBalance is balance of contract namded reward
 type RewardBalance struct {
+	TotalBalance  big.Int
+	FreeBalance   big.Int
+	LockedBalance big.Int
 }
