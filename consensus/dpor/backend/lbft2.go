@@ -5,6 +5,7 @@ this is LBFT 2.0
 package backend
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -12,6 +13,14 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
+)
+
+// errors returned by fsm
+var (
+	ErrBlockAlreadyInChain = errors.New("the block is already in local chain")
+	ErrMsgTooOld           = errors.New("the msg is outdated")
+	ErrInvalidBlockFormat  = errors.New("the block format is invalid")
+	ErrInvalidHeaderFormat = errors.New("the header format is invalid")
 )
 
 // LBFT2 is a state machine used for consensus protocol for validators msg processing
@@ -119,7 +128,17 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 		p.state = consensus.Idle
 	}
 
-	return output, action, msgCode, err
+	switch err {
+	case ErrBlockAlreadyInChain,
+		ErrMsgTooOld,
+		ErrInvalidBlockFormat,
+		ErrInvalidHeaderFormat:
+
+		return output, action, msgCode, nil
+
+	default:
+		return output, action, msgCode, err
+	}
 }
 
 func (p *LBFT2) realFSM(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
@@ -132,14 +151,12 @@ func (p *LBFT2) realFSM(input *BlockOrHeader, msgCode MsgCode, state consensus.S
 
 	// if already in chain, do nothing
 	if p.dpor.HasBlockInChain(hash, number) {
-		// TODO: add error type
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrBlockAlreadyInChain
 	}
 
 	if number < p.number {
 		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
-		// TODO: add error type
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrMsgTooOld
 	}
 
 	switch state {
@@ -329,66 +346,6 @@ func (p *LBFT2) ValidateHandler(input *BlockOrHeader, msgCode MsgCode, state con
 	}
 }
 
-// fsm is a toy, not work now
-func (p *LBFT2) fsm(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
-	var (
-		hash   = input.Hash()
-		number = input.Number()
-	)
-
-	_, _ = hash, number
-
-	// if already in chain, do nothing
-	if p.dpor.HasBlockInChain(hash, number) {
-		// TODO: add error type
-		return nil, NoAction, NoMsgCode, state, nil
-	}
-
-	if number < p.Number() {
-		log.Warn("outdated msg", "number", number, "hash", hash.Hex())
-		// TODO: add error type
-		return nil, NoAction, NoMsgCode, state, nil
-	}
-
-	// TODO: add state update function to avoid state reverse
-
-	switch msgCode {
-	case PreprepareMsgCode:
-		return p.handlePreprepareMsg(input, state, func(block *types.Block) error {
-			return p.dpor.ValidateBlock(block, false, true)
-		})
-
-	case PrepareMsgCode:
-		return p.handlePrepareMsg(input, state)
-
-	case CommitMsgCode:
-		return p.handleCommitMsg(input, state)
-
-	case ValidateMsgCode:
-		return p.handleValidateMsg(input, state)
-
-	case ImpeachPreprepareMsgCode:
-		// TODO: fix this, use correct impeach block verify function
-		return p.handleImpeachPreprepareMsg(input, state, func(block *types.Block) error {
-			return p.dpor.ValidateBlock(block, false, true)
-		})
-
-	case ImpeachPrepareMsgCode:
-		return p.handleImpeachPrepareMsg(input, state)
-
-	case ImpeachCommitMsgCode:
-		return p.handleImpeachCommitMsg(input, state)
-
-	case ImpeachValidateMsgCode:
-		return p.handleImpeachValidateMsg(input, state)
-
-	default:
-
-	}
-
-	return nil, NoAction, NoMsgCode, state, nil
-}
-
 // prepareCertificate checks if prepare certificate is satisfied
 func (p *LBFT2) prepareCertificate(bi BlockIdentifier) bool {
 	return p.prepareSignatures.getSignaturesCountOf(bi) >= 2*int(p.Faulty())+1
@@ -400,14 +357,13 @@ func (p *LBFT2) commitCertificate(bi BlockIdentifier) bool {
 }
 
 // impeachPrepareCertificate checks if impeach prepare certificate is satisfied
-// TODO: it should be f+1, not 2f+1
 func (p *LBFT2) impeachPrepareCertificate(bi BlockIdentifier) bool {
-	return p.prepareCertificate(bi)
+	return p.prepareSignatures.getSignaturesCountOf(bi) >= int(p.Faulty())+1
 }
 
 // impeachCommitCertificate checks if impeach commit certificate is satisfied
 func (p *LBFT2) impeachCommitCertificate(bi BlockIdentifier) bool {
-	return p.commitCertificate(bi)
+	return p.commitSignatures.getSignaturesCountOf(bi) >= int(p.Faulty())+1
 }
 
 // handlePreprepareMsg handles Preprepare msg
@@ -416,8 +372,7 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 	// if input is not a block, return error
 	if !input.IsBlock() {
 		log.Warn("received a preprepare msg, but not a block", "number", input.Number(), "hash", input.Hash().Hex())
-		// TODO: return useful error
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrInvalidBlockFormat
 	}
 
 	var (
@@ -484,8 +439,7 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus.State, blockVerifyFn VerifyImpeachBlockFn) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	if !input.IsBlock() {
 		log.Warn("received an impeach preprepare msg, but not a block", "number", input.Number(), "hash", input.Hash().Hex())
-		// TODO: return useful error
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrInvalidBlockFormat
 	}
 
 	var (
@@ -604,8 +558,7 @@ func (p *LBFT2) handlePrepareMsg(input *BlockOrHeader, state consensus.State) ([
 	// if the input is not a header, return error
 	if !input.IsHeader() {
 		log.Warn("received a prepare msg, but not a header", "number", input.Number(), "hash", input.Hash().Hex())
-		// TODO: return useful error
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrInvalidHeaderFormat
 	}
 
 	var (
@@ -639,8 +592,7 @@ func (p *LBFT2) handleImpeachPrepareMsg(input *BlockOrHeader, state consensus.St
 	// if the input is not a header, return error
 	if !input.IsHeader() {
 		log.Warn("received an impeach prepare msg, but not a header", "number", input.Number(), "hash", input.Hash().Hex())
-		// TODO: return useful error
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrInvalidHeaderFormat
 	}
 
 	var (
@@ -728,8 +680,7 @@ func (p *LBFT2) handleCommitMsg(input *BlockOrHeader, state consensus.State) ([]
 	// if the input is not a header, return error
 	if !input.IsHeader() {
 		log.Warn("received a commit msg, but not a header", "number", input.Number(), "hash", input.Hash().Hex())
-		// TODO: return useful error
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrInvalidHeaderFormat
 	}
 
 	var (
@@ -766,8 +717,7 @@ func (p *LBFT2) handleImpeachCommitMsg(input *BlockOrHeader, state consensus.Sta
 	// if the input is not a header, return error
 	if !input.IsHeader() {
 		log.Warn("received an impeach commit msg, but not a header", "number", input.Number(), "hash", input.Hash().Hex())
-		// TODO: return useful error
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrInvalidHeaderFormat
 	}
 
 	var (
@@ -828,8 +778,7 @@ func (p *LBFT2) handleValidateMsg(input *BlockOrHeader, state consensus.State) (
 	// if input is not a header, return error
 	if !input.IsBlock() {
 		log.Warn("received a validate msg, but not a block", "number", input.Number(), "hash", input.Hash().Hex())
-		// TODO: return useful error
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrInvalidBlockFormat
 	}
 
 	var (
@@ -846,8 +795,7 @@ func (p *LBFT2) handleImpeachValidateMsg(input *BlockOrHeader, state consensus.S
 	// if input is not a header, return error
 	if !input.IsBlock() {
 		log.Warn("received an impeach validate msg, but not a block", "number", input.Number(), "hash", input.Hash().Hex())
-		// TODO: return useful error
-		return nil, NoAction, NoMsgCode, state, nil
+		return nil, NoAction, NoMsgCode, state, ErrInvalidBlockFormat
 	}
 
 	var (
