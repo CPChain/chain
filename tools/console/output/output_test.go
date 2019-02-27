@@ -15,29 +15,29 @@ func TestLogOutput(t *testing.T) {
 
 	// Balance
 	output.Balance(&status.Balance{
-		*big.NewInt(200000000000000),
-		status.RewardBalance{
-			big.NewInt(0),
-			big.NewInt(0),
-			big.NewInt(0),
+		Balance: *big.NewInt(200000000000000),
+		Reward: status.RewardBalance{
+			TotalBalance:  big.NewInt(0),
+			FreeBalance:   big.NewInt(0),
+			LockedBalance: big.NewInt(0),
 		},
 	})
 
 	// Status
 	output.Status(&status.Status{
-		true,
-		true,
-		true,
-		true,
-		true,
-		big.NewInt(100),
+		Mining:     true,
+		RNode:      true,
+		ENode:      true,
+		Proposer:   true,
+		Locked:     true,
+		NextNumber: big.NewInt(100),
 	})
 	output.Status(&status.Status{
-		true,
-		true,
-		true,
-		false,
-		true,
-		big.NewInt(0),
+		Mining:     true,
+		RNode:      true,
+		ENode:      true,
+		Proposer:   false,
+		Locked:     true,
+		NextNumber: big.NewInt(100),
 	})
 }
