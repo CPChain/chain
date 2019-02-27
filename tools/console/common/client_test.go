@@ -16,6 +16,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+var skip bool
+
+func init() {
+	skip = true
+}
+
 func buildClient(ctx *context.Context, t *testing.T) (*cpclient.Client, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
 	// endPoint := "http://3.0.61.106:8523"
 	endPoint := "http://54.169.196.149:8503"
@@ -36,6 +42,9 @@ func checkError(t *testing.T, err error) {
 }
 
 func TestNewCpcClient(t *testing.T) {
+	if skip {
+		t.Skip()
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	client, _, _, fromAddress := buildClient(&ctx, t)
@@ -47,6 +56,9 @@ func TestNewCpcClient(t *testing.T) {
 }
 
 func TestContractExist(t *testing.T) {
+	if skip {
+		t.Skip()
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	client, _, _, _ := buildClient(&ctx, t)
@@ -69,6 +81,9 @@ func TestContractExist(t *testing.T) {
 }
 
 func TestReward(t *testing.T) {
+	if skip {
+		t.Skip()
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	client, _, _, fromAddress := buildClient(&ctx, t)
@@ -97,6 +112,9 @@ func TestReward(t *testing.T) {
 }
 
 func TestStatus(t *testing.T) {
+	if skip {
+		t.Skip()
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -125,6 +143,9 @@ func TestStatus(t *testing.T) {
 }
 
 func TestMining(t *testing.T) {
+	if skip {
+		t.Skip()
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	endPoint := "http://54.169.196.149:8503"
@@ -153,6 +174,9 @@ func TestMining(t *testing.T) {
 }
 
 func TestWithdrawAndDeposit(t *testing.T) {
+	if skip {
+		t.Skip()
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	client, prvKey, _, fromAddress := buildClient(&ctx, t)
@@ -191,6 +215,9 @@ func TestWithdrawAndDeposit(t *testing.T) {
 }
 
 func TestWantAndQuitRenew(t *testing.T) {
+	if skip {
+		t.Skip()
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	client, prvKey, _, fromAddress := buildClient(&ctx, t)
@@ -222,6 +249,9 @@ func TestWantAndQuitRenew(t *testing.T) {
 }
 
 func TestLocked(t *testing.T) {
+	if skip {
+		t.Skip()
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	client, _, _, _ := buildClient(&ctx, t)
