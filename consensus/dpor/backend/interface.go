@@ -253,8 +253,8 @@ type DporService interface {
 	// SyncFrom tries to sync block from given peer
 	SyncFrom(p *p2p.Peer)
 
-	// Synchronise tries to sync block from best peer
-	Synchronise()
+	// Synchronize tries to sync block from best peer
+	Synchronize()
 }
 
 // HandlerMode indicates the run mode of handler
