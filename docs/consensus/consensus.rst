@@ -815,7 +815,7 @@ The pseudocode is as
             // the rst reoam as jnftp
 
 
-            Ts1 := (float64(t/2T)+1)*2*T
+            Ts1 := (t/(2*T)+1)*2*T
             // the timestamp if no certificate collected for Ts1
             Ts2 := Ts1+2*T
 
