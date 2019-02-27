@@ -258,12 +258,12 @@ func (d *Dpor) SetHandler(handler *backend.Handler) error {
 
 // IfSigned checks if already signed a block
 func (d *Dpor) IfSigned(number uint64) (common.Hash, bool) {
-	return d.signedBlocks.IfAlreadySigned(number)
+	return d.signedBlocks.ifAlreadySigned(number)
 }
 
 // MarkAsSigned marks signed a hash as signed
 func (d *Dpor) MarkAsSigned(number uint64, hash common.Hash) error {
-	return d.signedBlocks.MarkAsSigned(number, hash)
+	return d.signedBlocks.markAsSigned(number, hash)
 }
 
 // SetChain is called by test file to assign the value of Dpor.chain, as well as DPor.currentSnapshot

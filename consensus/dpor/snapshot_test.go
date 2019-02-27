@@ -431,7 +431,6 @@ func TestSnapshot_updateSigner(t *testing.T) {
 		Number:           tt.Number,
 		Hash:             tt.Hash,
 		Candidates:       tt.Candidates,
-		RecentSigners:    tt.RecentSigners,
 		RecentProposers:  tt.RecentSigners,
 		RecentValidators: map[uint64][]common.Address{},
 	}

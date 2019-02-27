@@ -28,10 +28,9 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/consensus"
-
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -157,7 +156,7 @@ func Test_ecrecover(t *testing.T) {
 
 	dph := &defaultDporHelper{&defaultDporUtil{}}
 	hashBytes := dph.sigHash(newHeader).Bytes()
-	hashBytesWithState, _ := HashBytesWithState(hashBytes, consensus.Commit)
+	hashBytesWithState, _ := hashBytesWithState(hashBytes, consensus.Commit)
 	proposerSig, _ := crypto.Sign(hashBytes, privKey)
 	validatorSig, _ := crypto.Sign(hashBytesWithState, privKey)
 
@@ -166,10 +165,10 @@ func Test_ecrecover(t *testing.T) {
 	copy(newHeader.Dpor.Sigs[1][:], validatorSig[:])
 	copy(newHeader.Dpor.Sigs[2][:], validatorSig[:])
 
-	sigs := &Signatures{
+	sigs := &signatures{
 		sigs: make(map[common.Address][]byte),
 	}
-	sigs.SetSig(
+	sigs.setSig(
 		addr,
 		proposerSig,
 	)
@@ -241,11 +240,11 @@ func Test_acceptSigs(t *testing.T) {
 		TxsRoot:      types.EmptyRootHash,
 		ReceiptsRoot: types.EmptyRootHash,
 	}
-	sigs := &Signatures{
+	sigs := &signatures{
 		sigs: make(map[common.Address][]byte),
 	}
 	for _, signer := range getValidatorAddress() {
-		sigs.SetSig(signer, []byte("ok"))
+		sigs.setSig(signer, []byte("ok"))
 	}
 
 	emptyCache, _ := lru.NewARC(inMemorySnapshots)
@@ -332,8 +331,8 @@ func Test_newSignedBlocksRecord(t *testing.T) {
 	number, hash := generateNH()
 	fmt.Println(number, hash)
 
-	fsbr.MarkAsSigned(number, hash)
-	if h, ok := fsbr.IfAlreadySigned(number); h != hash || !ok {
+	fsbr.markAsSigned(number, hash)
+	if h, ok := fsbr.ifAlreadySigned(number); h != hash || !ok {
 		t.Error("hh", "hash", h, "want", hash, "ok", ok)
 	}
 

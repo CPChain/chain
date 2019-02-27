@@ -492,7 +492,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	if state == consensus.Commit || state == consensus.ImpeachCommit {
 		s, ok = dpor.finalSigs.Get(hash) // check if it needs a lock
 		if !ok || s == nil {
-			s = &Signatures{
+			s = &signatures{
 				sigs: make(map[common.Address][]byte),
 			}
 			dpor.finalSigs.Add(hash, s)
@@ -500,7 +500,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	} else if state == consensus.Prepare || state == consensus.ImpeachPrepare {
 		s, ok = dpor.prepareSigs.Get(hash)
 		if !ok || s == nil {
-			s = &Signatures{
+			s = &signatures{
 				sigs: make(map[common.Address][]byte),
 			}
 			dpor.prepareSigs.Add(hash, s)
@@ -519,7 +519,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 	// fulfill all known validator signatures to dpor.sigs to accumulate
 	for signPos, signer := range snap.ValidatorsOf(number) {
-		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
+		if sigHash, ok := s.(*signatures).getSig(signer); ok {
 			copy(allSigs[signPos][:], sigHash)
 		}
 	}
@@ -533,7 +533,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 
 		// get hash with state
-		hashToSign, err := HashBytesWithState(dpor.dh.sigHash(header).Bytes(), state)
+		hashToSign, err := hashBytesWithState(dpor.dh.sigHash(header).Bytes(), state)
 		if err != nil {
 			log.Warn("failed to get hash bytes with state", "number", number, "hash", hash.Hex(), "state", state)
 			return err
@@ -562,7 +562,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		copy(header.Dpor.Sigs[sigPos][:], sighash)
 
 		// Record new sig to signature cache
-		s.(*Signatures).SetSig(dpor.Coinbase(), sighash)
+		s.(*signatures).setSig(dpor.Coinbase(), sighash)
 
 		return nil
 	}

@@ -238,7 +238,7 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 func (d *Dpor) ECRecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error) {
 
 	// get hash with state
-	hashToSign, err := HashBytesWithState(d.dh.sigHash(header).Bytes(), state)
+	hashToSign, err := hashBytesWithState(d.dh.sigHash(header).Bytes(), state)
 	if err != nil {
 		log.Warn("failed to get hash bytes with state", "number", header.Number.Uint64(), "hash", header.Hash().Hex(), "state", state)
 		return nil, nil, err
@@ -282,24 +282,24 @@ func (d *Dpor) ECRecoverProposer(header *types.Header) (common.Address, error) {
 func (d *Dpor) UpdatePrepareSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature) {
 	s, ok := d.prepareSigs.Get(hash)
 	if !ok {
-		s = &Signatures{
+		s = &signatures{
 			sigs: make(map[common.Address][]byte),
 		}
 		d.prepareSigs.Add(hash, s)
 	}
-	s.(*Signatures).SetSig(validator, sig[:])
+	s.(*signatures).setSig(validator, sig[:])
 }
 
 // UpdateFinalSigsCache updates final(commit) signature of a validator for a block in cache
 func (d *Dpor) UpdateFinalSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature) {
 	s, ok := d.finalSigs.Get(hash)
 	if !ok {
-		s = &Signatures{
+		s = &signatures{
 			sigs: make(map[common.Address][]byte),
 		}
 		d.finalSigs.Add(hash, s)
 	}
-	s.(*Signatures).SetSig(validator, sig[:])
+	s.(*signatures).setSig(validator, sig[:])
 }
 
 // GetMac composes a message authentication code and signs it
