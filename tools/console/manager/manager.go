@@ -128,12 +128,12 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 	}
 	locked := c.isLocked()
 	status := cm.Status{
-		mining,
-		rnode,
-		true,
-		proposer,
-		locked,
-		blockNumber,
+		Mining:     mining,
+		RNode:      rnode,
+		ENode:      true,
+		Proposer:   proposer,
+		Locked:     locked,
+		NextNumber: blockNumber,
 	}
 	return &status, nil
 }
@@ -184,8 +184,8 @@ func (c *Console) GetBalance() (*cm.Balance, error) {
 		return nil, err
 	}
 	b := cm.Balance{
-		*balance,
-		*reward,
+		Balance: *balance,
+		Reward:  *reward,
 	}
 	return &b, nil
 }
@@ -215,9 +215,9 @@ func (c *Console) GetBalanceOnReward() (*cm.RewardBalance, error) {
 		return nil, err
 	}
 	reward := cm.RewardBalance{
-		totalBalance,
-		freeBalance,
-		lockedBalance,
+		TotalBalance:  totalBalance,
+		FreeBalance:   freeBalance,
+		LockedBalance: lockedBalance,
 	}
 	return &reward, nil
 }
