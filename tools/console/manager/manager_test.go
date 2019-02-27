@@ -8,6 +8,7 @@ import (
 )
 
 func TestManager(t *testing.T) {
+	t.Skip()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	endPoint := "http://54.169.196.149:8503"
