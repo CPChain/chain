@@ -41,12 +41,10 @@ var (
 
 // DporSnapshot is the state of the authorization voting at a given point in time.
 type DporSnapshot struct {
-	Mode       Mode             `json:"mode"`
-	Number     uint64           `json:"number"`     // Block number where the Snapshot was created
-	Hash       common.Hash      `json:"hash"`       // Block hash where the Snapshot was created
-	Candidates []common.Address `json:"candidates"` // Set of candidates read from campaign contract
-	// RecentSigners *lru.ARCCache    `json:"signers"`
-	RecentSigners    map[uint64][]common.Address `json:"signers"`    // Set of recent signers
+	Mode             Mode                        `json:"mode"`
+	Number           uint64                      `json:"number"`     // Block number where the Snapshot was created
+	Hash             common.Hash                 `json:"hash"`       // Block hash where the Snapshot was created
+	Candidates       []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
 	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
 	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
 	Client           backend.ClientBackend       `json:"-"`
@@ -135,19 +133,6 @@ func (s *DporSnapshot) recentValidators() map[uint64][]common.Address {
 	return recentValidators
 }
 
-//TODO: @shiyc need to be removed later
-func (s *DporSnapshot) getRecentSigners(term uint64) []common.Address {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
-	signers, ok := s.RecentSigners[term]
-	if !ok {
-		return nil
-	}
-
-	return signers
-}
-
 func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -229,7 +214,6 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, pr
 		config:           config,
 		Number:           number,
 		Hash:             hash,
-		RecentSigners:    make(map[uint64][]common.Address),
 		RecentProposers:  make(map[uint64][]common.Address),
 		RecentValidators: make(map[uint64][]common.Address),
 	}
@@ -277,7 +261,6 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 		Number:           s.number(),
 		Hash:             s.hash(),
 		Candidates:       make([]common.Address, len(s.Candidates)),
-		RecentSigners:    make(map[uint64][]common.Address),
 		RecentValidators: make(map[uint64][]common.Address),
 		RecentProposers:  make(map[uint64][]common.Address),
 	}
@@ -613,11 +596,6 @@ func (s *DporSnapshot) IsProposerOf(signer common.Address, number uint64) (bool,
 	}
 	b := view == int(((number-1)%(s.config.TermLen*s.config.ViewLen))/s.config.ViewLen)
 	return b, nil
-}
-
-// FutureSignersOf returns future signers of given block number
-func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
-	return s.getRecentSigners(s.FutureTermOf(number))
 }
 
 // FutureValidatorsOf returns future validators of given block number
