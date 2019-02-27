@@ -220,8 +220,11 @@ type DporService interface {
 	// StatusUpdate updates status of dpor
 	StatusUpdate() error
 
-	// CreateImpeachBlock returns an impeachment block for view change
+	// CreateImpeachBlock returns an impeachment block
 	CreateImpeachBlock() (*types.Block, error)
+
+	// CreateFailbackImpeachBlock creates an impeachment block with failback timestamp
+	CreateFailbackImpeachBlock() (*types.Block, error)
 
 	// GetCurrentBlock returns current block
 	GetCurrentBlock() *types.Block
@@ -235,6 +238,7 @@ type DporService interface {
 	// ImpeachTimeout returns the timeout for impeachment
 	ImpeachTimeout() time.Duration
 
+	// ECRecoverProposer recovers proposer's address from a seal of a header
 	ECRecoverProposer(header *types.Header) (common.Address, error)
 
 	// ECRecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty

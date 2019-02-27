@@ -226,6 +226,20 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	return impeach, nil
 }
 
+// CreateFailbackImpeachBlock creates an impeachment block with failback timestamp
+func (d *Dpor) CreateFailbackImpeachBlock() (*types.Block, error) {
+	impeachBlock, err := d.CreateImpeachBlock()
+	if err != nil {
+		return impeachBlock, err
+	}
+
+	// TODO: fix this, @liuq
+	failbackTimestamp := int64(1)
+	impeachBlock.RefHeader().Time.SetInt64(failbackTimestamp)
+
+	return impeachBlock, nil
+}
+
 // ECRecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
 // addresses if one of the sigs are illegal
 // TODO: refactor this, return a map[common.Address]dpor.Signature
