@@ -24,10 +24,10 @@ func init() {
 
 func buildClient(ctx *context.Context, t *testing.T) (*cpclient.Client, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
 	// endPoint := "http://3.0.61.106:8523"
-	endPoint := "http://54.169.196.149:8503"
+	endPoint := "http://3.0.61.106:8523"
 	keyStoreFilePath := "/Users/liaojinlong/.cpchain/keystore/"
-	// password := "password"
-	password := "2163607794_4042"
+	password := "password"
+	// password := "2163607794_4042"
 	client, privateKey, publicKeyECDSA, fromAddress, err := NewCpcClient(endPoint, keyStoreFilePath, password)
 	if err != nil {
 		t.Log(err.Error())
@@ -197,9 +197,9 @@ func TestWithdrawAndDeposit(t *testing.T) {
 	transactOpts.GasLimit = uint64(2000000)
 	tran, err := instance.SubmitDeposit(transactOpts)
 	checkError(t, err)
-	t.Log("GasPrice:", tran.GasPrice(), ", Gas:", tran.Gas(), ", Nonce:", tran.Nonce())
+	// t.Log("GasPrice:", tran.GasPrice(), ", Gas:", tran.Gas(), ", Nonce:", tran.Nonce())
 
-	t.Log(fromAddress.String(), tran.To().String())
+	// t.Log(fromAddress.String(), tran.To().String())
 
 	// GetFreeBalance
 	freeBalance, err := instance.GetFreeBalance(nil, fromAddress)
