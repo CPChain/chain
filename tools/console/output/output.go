@@ -83,9 +83,9 @@ Reward:
 	}
 	err = tmpl.Execute(os.Stdout, _balance{
 		convert(&balance.Balance),
-		convert(&balance.Reward.TotalBalance),
-		convert(&balance.Reward.FreeBalance),
-		convert(&balance.Reward.LockedBalance),
+		convert(balance.Reward.TotalBalance),
+		convert(balance.Reward.FreeBalance),
+		convert(balance.Reward.LockedBalance),
 	})
 	if err != nil {
 		l.Error(err.Error())

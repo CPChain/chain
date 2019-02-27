@@ -155,19 +155,32 @@ func TestMining(t *testing.T) {
 func TestWithdrawAndDeposit(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	client, prvKey, _, _ := buildClient(&ctx, t)
+	client, prvKey, _, fromAddress := buildClient(&ctx, t)
 	addr := common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42")
+
+	contractBalance, err := client.BalanceAt(ctx, addr, nil)
+	checkError(t, err)
+	t.Log("Contract Balance:", contractBalance)
+
 	instance, err := reward.NewReward(addr, client)
 	checkError(t, err)
 
 	// Deposit
 	transactOpts := bind.NewKeyedTransactor(prvKey)
-	transactOpts.Value = new(big.Int).Mul(big.NewInt(1), big.NewInt(configs.Cpc))
+	participantInvest := new(big.Int).Mul(big.NewInt(100), big.NewInt(1e+18))
+	transactOpts.Value = participantInvest
 	transactOpts.GasPrice = big.NewInt(10)
 	transactOpts.GasLimit = uint64(2000000)
 	tran, err := instance.SubmitDeposit(transactOpts)
 	checkError(t, err)
 	t.Log("GasPrice:", tran.GasPrice(), ", Gas:", tran.Gas(), ", Nonce:", tran.Nonce())
+
+	t.Log(fromAddress.String(), tran.To().String())
+
+	// GetFreeBalance
+	freeBalance, err := instance.GetFreeBalance(nil, fromAddress)
+	checkError(t, err)
+	t.Log("FreeBalance:", freeBalance)
 
 	// Withdraw
 	transactOpts1 := bind.NewKeyedTransactor(prvKey)
@@ -182,6 +195,7 @@ func TestWantAndQuitRenew(t *testing.T) {
 	defer cancel()
 	client, prvKey, _, fromAddress := buildClient(&ctx, t)
 	addr := common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42")
+
 	instance, err := reward.NewReward(addr, client)
 	checkError(t, err)
 

@@ -17,9 +17,9 @@ func TestLogOutput(t *testing.T) {
 	output.Balance(&status.Balance{
 		*big.NewInt(200000000000000),
 		status.RewardBalance{
-			*big.NewInt(0),
-			*big.NewInt(0),
-			*big.NewInt(0),
+			big.NewInt(0),
+			big.NewInt(0),
+			big.NewInt(0),
 		},
 	})
 

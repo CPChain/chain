@@ -6,6 +6,8 @@ import (
 
 var statusCommand cli.Command
 
+// TODO : 是否在锁定期，是，可续投压钱；否，不可续投不可压钱
+
 func init() {
 	statusFlags := append([]cli.Flag(nil))
 	statusCommand = cli.Command{

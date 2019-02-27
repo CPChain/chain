@@ -42,7 +42,7 @@ type Status struct {
 
 // RewardBalance is balance of contract namded reward
 type RewardBalance struct {
-	TotalBalance  big.Int
-	FreeBalance   big.Int
-	LockedBalance big.Int
+	TotalBalance  *big.Int
+	FreeBalance   *big.Int
+	LockedBalance *big.Int
 }

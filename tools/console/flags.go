@@ -54,6 +54,19 @@ var AccountFlags = []cli.Flag{
 	},
 }
 
+var GasFlags = []cli.Flag{
+	cli.Int64Flag{
+		Name:  "gasprice",
+		Usage: "Gas Price, default 10",
+		Value: 10,
+	},
+	cli.Int64Flag{
+		Name:  "gaslimit",
+		Usage: "Gas Limit, default 2000000",
+		Value: 2000000,
+	},
+}
+
 func wrapperFlags(flags []cli.Flag) []cli.Flag {
 	flags = append(flags, RPCFlags...)
 	flags = append(flags, AccountFlags...)

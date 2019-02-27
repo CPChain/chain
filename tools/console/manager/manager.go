@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
@@ -21,6 +22,21 @@ type Console struct {
 	prvKey *ecdsa.PrivateKey
 	pubKey *ecdsa.PublicKey
 	addr   common.Address
+}
+
+var gasPrice *big.Int
+
+var gasLimit int64
+
+func init() {
+	gasPrice = big.NewInt(0)
+	gasLimit = int64(200000)
+}
+
+// SetGasConfig set gas price and limit
+func SetGasConfig(price, limit int64) {
+	gasPrice = gasPrice.SetInt64(price)
+	gasLimit = limit
 }
 
 // NewConsole build a console
@@ -184,29 +200,99 @@ func (c *Console) GetBalanceOnReward() (*cm.RewardBalance, error) {
 		return nil, err
 	}
 	reward := cm.RewardBalance{
-		*totalBalance,
-		*freeBalance,
-		*lockedBalance,
+		totalBalance,
+		freeBalance,
+		lockedBalance,
 	}
 	return &reward, nil
 }
 
 // Withdraw money from reward contract
-func (c *Console) Withdraw() error {
+func (c *Console) Withdraw(value *big.Int) error {
+	c.output.Info("Withdraw...")
+	addr := cm.GetContractAddress(cm.ContractReward)
+	instance, err := reward.NewReward(addr, c.client)
+	if err != nil {
+		return err
+	}
+
+	// Withdraw
+	transactOpts := c.buildTransactOpts(big.NewInt(0))
+	c.output.Info("create transaction options successfully")
+	_, err = instance.Withdraw(transactOpts, value)
+	if err != nil {
+		return err
+	}
+	c.output.Info("withdraw successfully")
 	return nil
+}
+
+func (c *Console) buildTransactOpts(value *big.Int) *bind.TransactOpts {
+	transactOpts := bind.NewKeyedTransactor(c.prvKey)
+	transactOpts.Value = value
+	transactOpts.GasPrice = gasPrice
+	transactOpts.GasLimit = uint64(gasLimit)
+	return transactOpts
 }
 
 // SubmitDeposit submit deposit
 func (c *Console) SubmitDeposit() error {
+	c.output.Info("Submit Deposit...")
+	addr := cm.GetContractAddress(cm.ContractReward)
+	instance, err := reward.NewReward(addr, c.client)
+	if err != nil {
+		return err
+	}
+
+	// Deposit
+	LIMIT := int64(200000)
+	participantInvest := new(big.Int).Mul(big.NewInt(LIMIT), big.NewInt(1e+18))
+	transactOpts := c.buildTransactOpts(participantInvest)
+	c.output.Info("create transaction options successfully")
+	_, err = instance.SubmitDeposit(transactOpts)
+	if err != nil {
+		return err
+	}
+	c.output.Info("submit successfully")
 	return nil
 }
 
 // WantRenew want renew
 func (c *Console) WantRenew() error {
-	return nil
+	c.output.Info("Want Renew...")
+	addr := cm.GetContractAddress(cm.ContractReward)
+
+	instance, err := reward.NewReward(addr, c.client)
+	if err != nil {
+		return err
+	}
+
+	// Want Renew
+	transactOpts := c.buildTransactOpts(big.NewInt(0))
+	_, err = instance.WantRenew(transactOpts)
+	if err != nil {
+		return err
+	}
+	c.output.Info("Successful")
+	return err
 }
 
 // QuitRenew quit renew
 func (c *Console) QuitRenew() error {
-	return nil
+	c.output.Info("Quit Renew...")
+	addr := cm.GetContractAddress(cm.ContractReward)
+
+	instance, err := reward.NewReward(addr, c.client)
+	if err != nil {
+		return err
+	}
+
+	// Want Renew
+	transactOpts := c.buildTransactOpts(big.NewInt(0))
+	_, err = instance.QuitRenew(transactOpts)
+	if err != nil {
+		return err
+	}
+	c.output.Info("Successful")
+	return err
 }
