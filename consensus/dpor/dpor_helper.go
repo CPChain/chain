@@ -585,7 +585,7 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 	log.Debug("my address", "eb", dpor.Coinbase().Hex())
 	log.Debug("current block number", "number", number)
 	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen))
-	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.Coinbase(), number))
+	log.Debug("is future signer", "bool", snap.IsFutureProposerOf(dpor.Coinbase(), number))
 	log.Debug("term idx of block number", "block term index", snap.TermOf(number))
 
 	log.Debug("recent proposers: ")
@@ -604,9 +604,9 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 
 	// If in a checkpoint and self is in the future committee, try to build the committee network
 	isCheckpoint := IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen)
-	isFutureSigner := snap.IsFutureProposerOf(dpor.Coinbase(), number)
+	isFutureProposer := snap.IsFutureProposerOf(dpor.Coinbase(), number)
 
-	return isCheckpoint && isFutureSigner
+	return isCheckpoint && isFutureProposer
 }
 
 func (dh *defaultDporHelper) updateAndDial(dpor *Dpor, snap *DporSnapshot, number uint64) error {
