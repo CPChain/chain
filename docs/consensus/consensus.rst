@@ -779,13 +779,19 @@ By exploiting existent five states to reach a consensus on timestamp,
 we could reduce the risk of introducing new mechanism.
 
 Let t\ :sub:`i`\   be the local clock of validator v\ :sub:`i`\   .
-Except for assumptions of LBFT 2.0, one more assumption is required for failback procedure.
-Suppose the local clocks of all loyal validators (at least 2f+1) are within an interval of T.
-In other word, max(t\ :sub:`i`\ -t\ :sub:`j`\ ) < T.
+Except for assumptions of LBFT 2.0, several more assumptions are required for failback procedure.
+There exist a timestamp E larger than 0 satisfying following assumptions:
+
+    1. The error of local clocks of any loyal validator is E compared with the correct timestamp.
+    2. Maximum possible delay of broadcasting messages is less than 2E
+
+The first assumption ensures that
+the local clocks of all loyal validators (at least 2f+1) are within an interval of 2E.
+In other word, max(t\ :sub:`i`\ -t\ :sub:`j`\ ) < 2E.
 This assumption is reasonable since all loyal validators are connecting to the network
 and get their local clock calibrated before reboot.
 
-Now we construct a set of discrete timestamps TS={t|t=2k*T, k is a natural number}.
+Now we construct a set of discrete timestamps TS={t|t=4k*E, k is a natural number}.
 A validator v\ :sub:`i`\   chooses timestamp ts for the failback impeach block, satisfying
 
 1. ts\ :sub:`i`\   is an element of TS
@@ -794,12 +800,12 @@ A validator v\ :sub:`i`\   chooses timestamp ts for the failback impeach block, 
 After reboot, all validators are set to idle state.
 When the local clock of v\ :sub:`i`\  is ts\ :sub:`i`\  , it proposes an impeach block with this timestamp,
 and enters impeach prepare state.
-If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T,
-v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
+If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 4E,
+v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +4E.
 The rest of consensus part are same as LBFT 2.0.
 
-In practice, T can be set to be 30 minutes.
-Hence, the system can regain its liveness in 1 hour.
+In practice, E can be set to be 5 minutes.
+Hence, the system can regain its liveness in 20 minutes.
 The pseudocode is as
 
     .. code-block:: go
@@ -808,23 +814,19 @@ The pseudocode is as
         func failback () {
             // v: a validator
             // t: local clock of v in Unix timestamp
-            T := 1800 // 30 minutes
+            E := 600 // 5 minutes
             set the state to idle state
 
             // timestamp of failback impeach block
-            // the rst reoam as jnftp
-
-
-            Ts1 := (t/(2*T)+1)*2*T
+            Ts1 := (t/(4*E)+1)*4*E
             // the timestamp if no certificate collected for Ts1
-            Ts2 := Ts1+2*T
+            Ts2 := Ts1+4*E
 
             select{
                 case <- Time.after(Ts1)
                     LBFTFsm20(expiredTimer, idle)
                 case <- Time.after(Ts2)
                     LBFTFsm20(expiredTimer, idle)
-            The rest
             }
 
         }
@@ -832,8 +834,43 @@ The pseudocode is as
 
 
 
-This approach guarantees that an impeach block can get to validate state
-within a time of at most 2T.
+This approach guarantees that an impeach block can reach validate state
+within a time of at most 4E.
+To prove the correctness of the algorithm, we will discuss several cases.
+
+**Theorem:**
+Function ``failback`` guarantees that validators committee can reach a consensus on an impeach block within 4T time.
+
+**Proof:**
+Let v\ :sub:`i`\  represent i-th validator, and t\ :sub:`i`\  be its local clock timestamp.
+Construct a set TS={t|t=4k*E, k is a natural number}.
+Select three elements ts\ :sub:`1`\ , ts\ :sub:`2`\  and ts\ :sub:`2`\   from TS,
+satisfying ts\ :sub:`3`\  = ts\ :sub:`2`\  + 4E= ts\ :sub:`1`\  + 8E,
+ts\ :sub:`1`\  < min(t\ :sub:`i`\ ), and ts\ :sub:`3`\  > max(t\ :sub:`i`\ ).
+
+Here we introduce two subset of validators, V\ :sub:`1`\   and V\ :sub:`2`\  .
+V\ :sub:`1`\   is made of all validators whose local clocks are smaller than ts2,
+and V\ :sub:`2`\   is made of all validators whose local clocks are large than or equal to ts2.
+
+Here we discuss different cases according to the cardinalities of V\ :sub:`1`\   and V\ :sub:`2`\  .
+
+**Case 1:** |V\ :sub:`2`\  | = 0.
+It means all local clocks of loyal validators are between two timestamp ts\ :sub:`1`\   and ts\ :sub:`2`\  .
+
+**Case 2:** |V\ :sub:`1`\  | >= f + 1, and |V\ :sub:`2`\  | < f + 1.
+It means there are at least f+1 validators whose local clocks are smaller than ts1,
+but less than f+1 validators with their local clock larger than or equal to ts1.
+
+**Case 3:** |V\ :sub:`1`\  | < f + 1, and |V\ :sub:`2`\  | >= f + 1.
+It means there are no more than f+1 validators whose local clocks are smaller than ts1,
+but at least f+1 validators with their local clock larger than or equal to ts1.
+
+**Case 4:** |V\ :sub:`1`\  | < f + 1, and |V\ :sub:`2`\  | < f + 1.
+
+**Case 5:** |V\ :sub:`1`\  | >= f + 1, and |V\ :sub:`2`\  | >= f + 1.
+
+
+
 
 
 
