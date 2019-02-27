@@ -513,10 +513,10 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Copy all signatures to allSigs
-	allSigs := make([]types.DporSignature, dpor.config.ValidatorsLen)
+	allSigs := make([]types.DporSignature, dpor.config.ValidatorsLen())
 	validators := snap.ValidatorsOf(number)
-	if dpor.config.ValidatorsLen != uint64(len(validators)) {
-		log.Warn("validator committee length not equal to validators length", "config.ValidatorsLen", dpor.config.ValidatorsLen, "validatorLen", len(validators))
+	if dpor.config.ValidatorsLen() != uint64(len(validators)) {
+		log.Warn("validator committee length not equal to validators length", "config.ValidatorsLen", dpor.config.ValidatorsLen(), "validatorLen", len(validators))
 	}
 
 	// fulfill all known validator signatures to dpor.sigs to accumulate
@@ -549,8 +549,8 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 
 		// if the sigs length is wrong, reset it with correct ValidatorsLen
-		if len(header.Dpor.Sigs) != int(snap.config.ValidatorsLen) {
-			header.Dpor.Sigs = make([]types.DporSignature, snap.config.ValidatorsLen)
+		if len(header.Dpor.Sigs) != int(snap.config.ValidatorsLen()) {
+			header.Dpor.Sigs = make([]types.DporSignature, snap.config.ValidatorsLen())
 		}
 
 		// mark as signed

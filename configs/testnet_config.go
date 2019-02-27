@@ -41,7 +41,7 @@ var (
 			Period:                TestnetBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
-			ValidatorsLen:         DefaultValidatorsLen,
+			FaultyNumber:          TestnetFaultyValidatorsNumber,
 			MaxInitBlockNumber:    DefaultTestnetMaxInitBlockNumber,
 			ProxyContractRegister: testnetProxyContractRegister,
 			Contracts:             testnetContractAddressMap,

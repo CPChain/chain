@@ -40,7 +40,7 @@ var (
 			Period:                DefaultBlockPeriod,
 			TermLen:               4,
 			ViewLen:               3,
-			ValidatorsLen:         DefaultValidatorsLen,
+			FaultyNumber:          DefaultFaultyValidatorsNumber,
 			MaxInitBlockNumber:    DefaultDevMaxInitBlockNumber,
 			ProxyContractRegister: devProxyContractRegister,
 			Contracts:             devContractAddressMap,

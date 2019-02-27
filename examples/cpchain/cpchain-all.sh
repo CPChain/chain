@@ -49,11 +49,6 @@ eval $init $runmode
 echo "[*] starting"
 eval "env CPC_VERBOSITY=5 $start"
 
-#if [ "dev" == ${runmode} ]; then
-#    echo "[*] start civilians"
-#    $run_dir/cpchain-start-dev-viewer.sh
-#fi
-
 echo "=========================================================="
 echo "chain node number:"
 echo `ps -ef|grep -v grep |grep "cpchain run "|wc -l`

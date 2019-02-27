@@ -135,3 +135,18 @@ func TestClient_BlockByNumber(t *testing.T) {
 	fmt.Println("the blcok number is :", Number)
 
 }
+
+func TestClient_ChainConfig(t *testing.T) {
+	t.Skip("must start chain to test")
+	client, err := cpclient.Dial("http://localhost:8501")
+	// local
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	cfg, err := client.ChainConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("chain config", "viewLen", cfg.Dpor.ViewLen, "termLen", cfg.Dpor.TermLen)
+}

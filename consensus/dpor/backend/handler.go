@@ -206,7 +206,6 @@ func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
 	}
 
-	// TODO: @liuq fix this.
 	switch h.mode {
 	case LBFTMode:
 		return h.handleLBFTMsg(msg, p)

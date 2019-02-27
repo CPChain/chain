@@ -153,8 +153,10 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		return nil
 	}
 
-	// rebroadcast the msg
-	go vh.reBroadcast(input, msgCode, msg)
+	// if faulty number is larger than 1, rebroadcast the msg
+	if vh.fsm.Faulty() > 1 {
+		go vh.reBroadcast(input, msgCode, msg)
+	}
 
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
