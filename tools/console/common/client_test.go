@@ -220,3 +220,18 @@ func TestWantAndQuitRenew(t *testing.T) {
 	checkError(t, err)
 	t.Log("GasPrice:", tran.GasPrice(), ", Gas:", tran.Gas(), ", Nonce:", tran.Nonce())
 }
+
+func TestLocked(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	client, _, _, _ := buildClient(&ctx, t)
+	addr := common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42")
+	instance, err := reward.NewReward(addr, client)
+	if err != nil {
+		t.Error(err)
+	}
+
+	isLocked, err := instance.IsLocked(nil)
+	checkError(t, err)
+	t.Log("IsLocked", isLocked)
+}

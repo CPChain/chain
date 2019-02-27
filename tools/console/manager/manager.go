@@ -85,6 +85,19 @@ func (c *Console) isRNode() bool {
 	return isRNode
 }
 
+func (c *Console) isLocked() bool {
+	addr := cm.GetContractAddress(cm.ContractReward)
+	instance, err := reward.NewReward(addr, c.client)
+	if err != nil {
+		c.output.Error(err.Error())
+	}
+	locked, err := instance.IsLocked(nil)
+	if err != nil {
+		c.output.Error(err.Error())
+	}
+	return locked
+}
+
 // GetStatus get status of cpchain node
 func (c *Console) GetStatus() (*cm.Status, error) {
 	// Mining
@@ -113,11 +126,13 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 		}
 		blockNumber = block.Number()
 	}
+	locked := c.isLocked()
 	status := cm.Status{
 		mining,
 		rnode,
 		true,
 		proposer,
+		locked,
 		blockNumber,
 	}
 	return &status, nil
@@ -238,6 +253,10 @@ func (c *Console) buildTransactOpts(value *big.Int) *bind.TransactOpts {
 // SubmitDeposit submit deposit
 func (c *Console) SubmitDeposit() error {
 	c.output.Info("Submit Deposit...")
+	if c.isLocked() {
+		c.output.Warn("Sorry, the reward contract is locked now.")
+		return nil
+	}
 	addr := cm.GetContractAddress(cm.ContractReward)
 	instance, err := reward.NewReward(addr, c.client)
 	if err != nil {
@@ -260,6 +279,10 @@ func (c *Console) SubmitDeposit() error {
 // WantRenew want renew
 func (c *Console) WantRenew() error {
 	c.output.Info("Want Renew...")
+	if c.isLocked() {
+		c.output.Warn("Sorry, the reward contract is locked now.")
+		return nil
+	}
 	addr := cm.GetContractAddress(cm.ContractReward)
 
 	instance, err := reward.NewReward(addr, c.client)
@@ -280,6 +303,10 @@ func (c *Console) WantRenew() error {
 // QuitRenew quit renew
 func (c *Console) QuitRenew() error {
 	c.output.Info("Quit Renew...")
+	if c.isLocked() {
+		c.output.Warn("Sorry, the reward contract is locked now.")
+		return nil
+	}
 	addr := cm.GetContractAddress(cm.ContractReward)
 
 	instance, err := reward.NewReward(addr, c.client)

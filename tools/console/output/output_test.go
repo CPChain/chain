@@ -29,6 +29,7 @@ func TestLogOutput(t *testing.T) {
 		true,
 		true,
 		true,
+		true,
 		big.NewInt(100),
 	})
 	output.Status(&status.Status{
@@ -36,6 +37,7 @@ func TestLogOutput(t *testing.T) {
 		true,
 		true,
 		false,
+		true,
 		big.NewInt(0),
 	})
 }

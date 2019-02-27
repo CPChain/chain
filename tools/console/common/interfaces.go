@@ -37,6 +37,7 @@ type Status struct {
 	RNode      bool
 	ENode      bool
 	Proposer   bool
+	Locked     bool
 	NextNumber *big.Int
 }
 

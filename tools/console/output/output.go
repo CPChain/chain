@@ -31,6 +31,8 @@ Mining: {{.Mining}}
 RNode: {{.RNode}}
 
 Proposer: {{.Proposer}}
+
+Locked: {{.Locked}}
 	`
 	if status.Proposer {
 		outTmpl += `
