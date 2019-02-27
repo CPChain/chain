@@ -22,9 +22,10 @@ import (
 // BroadcastBlockFn broadcasts a block to normal peers(not pbft replicas)
 type BroadcastBlockFn func(block *types.Block, prop bool)
 
-// SyncFromPeerFn tries sync blocks from given peer
+// SyncFromPeerFn tries to sync blocks from given peer
 type SyncFromPeerFn func(p *p2p.Peer)
 
+// SyncFromBestPeerFn tries to sync blocks from best peer
 type SyncFromBestPeerFn func()
 
 const (
@@ -38,6 +39,7 @@ const (
 // Mode defines the type a dpor engine makes.
 type Mode uint
 
+// DporMode
 const (
 	NormalMode Mode = iota
 	FakeMode
@@ -110,6 +112,7 @@ func (d *Dpor) SignHash(hash []byte) ([]byte, error) {
 	return d.signFn(account, hash)
 }
 
+// IsMiner returns if local coinbase is a miner(proposer or validator)
 func (d *Dpor) IsMiner() bool {
 	d.isMinerLock.RLock()
 	defer d.isMinerLock.RUnlock()
@@ -117,6 +120,7 @@ func (d *Dpor) IsMiner() bool {
 	return d.isMiner
 }
 
+// SetAsMiner sets local coinbase as a miner
 func (d *Dpor) SetAsMiner(isMiner bool) {
 	d.isMinerLock.Lock()
 	defer d.isMinerLock.Unlock()
@@ -124,10 +128,12 @@ func (d *Dpor) SetAsMiner(isMiner bool) {
 	d.isMiner = isMiner
 }
 
+// IsToCampaign returns if it is time to campaign
 func (d *Dpor) IsToCampaign() bool {
 	return atomic.LoadInt32(&d.isToCampaign) > 0
 }
 
+// SetToCampaign sets isToCampaign as true
 func (d *Dpor) SetToCampaign(isToCampaign bool) {
 	if isToCampaign {
 		atomic.StoreInt32(&d.isToCampaign, 1)
@@ -160,6 +166,7 @@ func (d *Dpor) SetCurrentSnap(snap *DporSnapshot) {
 	d.currentSnap = snap
 }
 
+// Client returns a client backend to do contract related calls
 func (d *Dpor) Client() backend.ClientBackend {
 	d.clientLock.RLock()
 	defer d.clientLock.RUnlock()
@@ -167,6 +174,7 @@ func (d *Dpor) Client() backend.ClientBackend {
 	return d.client
 }
 
+// SetClient sets given client as local client
 func (d *Dpor) SetClient(client backend.ClientBackend) {
 	d.clientLock.Lock()
 	defer d.clientLock.Unlock()
@@ -207,30 +215,35 @@ func New(config *configs.DporConfig, db database.Database, acBackend admission.A
 	}
 }
 
+// NewFaker creates a new fake dpor
 func NewFaker(config *configs.DporConfig, db database.Database) *Dpor {
 	d := New(config, db, nil)
 	d.mode = FakeMode
 	return d
 }
 
+// NewDoNothingFaker creates a new fake dpor, do nothing when verifying blocks
 func NewDoNothingFaker(config *configs.DporConfig, db database.Database) *Dpor {
 	d := New(config, db, nil)
 	d.mode = DoNothingFakeMode
 	return d
 }
 
+// NewFakeFailer creates a new fake dpor, always fails when verifying blocks
 func NewFakeFailer(config *configs.DporConfig, db database.Database, fail uint64) *Dpor {
 	d := NewDoNothingFaker(config, db)
 	d.fakeFail = fail
 	return d
 }
 
+// NewFakeDelayer creates a new fake dpor, delays when verifying blocks
 func NewFakeDelayer(config *configs.DporConfig, db database.Database, delay time.Duration) *Dpor {
 	d := NewFaker(config, db)
 	d.fakeDelay = delay
 	return d
 }
 
+// NewPbftFaker creates a new fake dpor to work with pbft, not in use now
 func NewPbftFaker(config *configs.DporConfig, db database.Database) *Dpor {
 	d := New(config, db, nil)
 	d.mode = PbftFakeMode
@@ -264,17 +277,6 @@ func (d *Dpor) SetChain(blockchain consensus.ChainReadWriter) {
 	snap, _ := d.dh.snapshot(d, d.chain, number, hash, nil)
 	d.SetCurrentSnap(snap)
 }
-
-// func (d *Dpor) SetSnapshotProposer(ca map[uint64][]common.Address) {
-// 	d.currentSnapshot.RecentProposers = make(map[uint64][]common.Address)
-// 	for term, proposers := range ca {
-// 		d.currentSnapshot.RecentProposers[term] = make([]common.Address, len(proposers))
-// 		for i, p := range proposers {
-// 			copy(d.currentSnapshot.RecentProposers[term][i][:], p[:])
-// 		}
-// 	}
-// 	d.currentSnapshot.RecentProposers = ca
-// }
 
 // StartMining starts to create a handler and start it.
 func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn, pmSyncFromPeerFn SyncFromPeerFn, pmSyncFromBestPeerFn SyncFromBestPeerFn) {
