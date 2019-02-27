@@ -328,7 +328,6 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	// Save to cache
-	// TODO: check if it needs a lock
 	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
@@ -367,7 +366,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Resolve the authorization key and check against signers
-	proposer, _, err := dh.ecrecover(header, dpor.finalSigs) // TODO: check if it needs a lock
+	proposer, _, err := dh.ecrecover(header, dpor.finalSigs)
 	if err != nil {
 		return err
 	}
@@ -489,7 +488,6 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 	var s interface{}
 	var ok bool
-	// TODO: fix this, clean it!
 	// Retrieve signatures of the block in cache
 	if state == consensus.Commit || state == consensus.ImpeachCommit {
 		s, ok = dpor.finalSigs.Get(hash) // check if it needs a lock
@@ -614,22 +612,20 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 func (dh *defaultDporHelper) updateAndDial(dpor *Dpor, snap *DporSnapshot, number uint64) error {
 	log.Info("In future committee, building the committee network...")
 
-	term := snap.FutureTermOf(number)
-
-	// TODO: I need FutureValidatorsOf
-	validators := snap.FutureSignersOf(number)
+	var (
+		term       = snap.FutureTermOf(number)
+		validators = snap.FutureValidatorsOf(number)
+	)
 
 	go func(term uint64, remoteValidators []common.Address) {
 
 		// Updates RemoteValidators in handler
-		err := dpor.handler.UpdateRemoteValidators(term, remoteValidators)
-		if err != nil {
+		if err := dpor.handler.UpdateRemoteValidators(term, remoteValidators); err != nil {
 			log.Warn("err when updating remote validators", "err", err)
 		}
 
 		// Dial all remote validators
-		err = dpor.handler.DialAllRemoteValidators(term)
-		if err != nil {
+		if err := dpor.handler.DialAllRemoteValidators(term); err != nil {
 			log.Warn("err when dialing remote validators", "err", err)
 		}
 

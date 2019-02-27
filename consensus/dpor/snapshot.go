@@ -653,6 +653,11 @@ func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
 	return s.getRecentSigners(s.FutureTermOf(number))
 }
 
+// FutureValidatorsOf returns future validators of given block number
+func (s *DporSnapshot) FutureValidatorsOf(number uint64) []common.Address {
+	return s.getRecentValidators(s.FutureTermOf(number))
+}
+
 // FutureProposersOf returns future proposers of given block number
 func (s *DporSnapshot) FutureProposersOf(number uint64) []common.Address {
 	return s.getRecentProposers(s.FutureTermOf(number))
