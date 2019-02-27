@@ -289,11 +289,15 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         // all messages regarding consensus between validators are only sent to validators
         // newBlockMsg, in contrast, is sent to all nodes indicating a block is confirmed validated
         // unless otherwise specified, all broadcast operations are done only for validators
+
         func validateHandler(input) {
+            switch input{
+            // only accept normal case and impeachment validate message
             case validateMsg, impeachValidateMsg:
                 insert the block
                 broadcast newBlockMsg to all nodes including civilians
                 transit to idle state
+            }
         }
 
         // handler for commit state
@@ -794,8 +798,44 @@ If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T,
 v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
 The rest of consensus part are same as LBFT 2.0.
 
+In practice, T can be set to be 30 minutes.
+Hence, the system can regain its liveness in 1 hour.
+The pseudocode is as
+
+    .. code-block:: go
+
+        // this function can only be invoked when reboot
+        func failback () {
+            // v: a validator
+            // t: local clock of v in Unix timestamp
+            T := 1800 // 30 minutes
+            set the state to idle state
+
+            // timestamp of failback impeach block
+            // the rst reoam as jnftp
+
+
+            Ts1 := (float64(t/2T)+2)*T
+            // the timestamp if no certificate collected for Ts1
+            Ts2 := Ts1+2*T
+
+            select{
+                case <- Time.after(Ts1)
+                    LBFTFsm20(expiredTimer, idle)
+                case <- Time.after(Ts2)
+                    LBFTFsm20(expiredTimer, idle)
+            The rest
+            }
+
+        }
+
+
+
+
 This approach guarantees that an impeach block can get to validate state
 within a time of at most 2T.
+
+
 
 
 
