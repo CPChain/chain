@@ -53,6 +53,11 @@ updateproxycontract:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/updateproxycontract\" to launch updateproxycontract."
 
+console:
+	build/env.sh go run build/ci.go install ./tools/console
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/console\" to manage cpchain node."
+
 test: all
 	build/env.sh go run build/ci.go test
 

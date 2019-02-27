@@ -2,18 +2,13 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-#set log level by add parameter:--verbosity 4
-# or spec env like this:env CPC_VERBOSITY=4  ./cpchain-start-mainnet-test.sh
-#PanicLevel	0
-#FatalLevel	1
-#ErrorLevel	2
-#WarnLevel	3
-#InfoLevel	4
-#DebugLevel	5
-
-
 set -u
 set -e
+
+curr_dir=`pwd`
+echo "curr_dir:${curr_dir}"
+
+cd ../../../
 
 validator_ip=""
 if [ $# == 0 ]; then
@@ -36,4 +31,5 @@ source ./cpchain-start-mainnet-config.sh ${validator_ip}
 
 ./cpchain-start-mainnet-deploy-contract.sh ${validator_ip}
 
-
+echo "back to dir"
+cd  ${curr_dir}
