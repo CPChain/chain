@@ -71,7 +71,7 @@ const (
 )
 
 const (
-	DefaultWaitTimeBeforeImpeachment = 120 // wait 120 seconds before first impeachment
+	DefaultWaitTimeBeforeImpeachment = 120 * time.Second // wait 120 seconds before first impeachment
 )
 
 // TODO @hmw make the name more meaningful.  add doc.

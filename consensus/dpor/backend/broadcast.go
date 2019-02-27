@@ -167,7 +167,7 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 	futureTimer := time.NewTicker(h.dpor.ImpeachTimeout())
 	defer futureTimer.Stop()
 
-	<-time.After(configs.DefaultWaitTimeBeforeImpeachment * time.Second)
+	<-time.After(configs.DefaultWaitTimeBeforeImpeachment)
 
 	for {
 		select {
