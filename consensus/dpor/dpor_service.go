@@ -4,15 +4,15 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/p2p"
-
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 // Those are functions implement backend.DporService
@@ -230,6 +230,25 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	impeach := types.NewBlock(impeachHeader, []*types.Transaction{}, []*types.Receipt{})
 
 	return impeach, nil
+}
+
+// CreateFailbackImpeachBlocks creates impeachment blocks with failback timestamps
+func (d *Dpor) CreateFailbackImpeachBlocks() (firstImpeachment *types.Block, secondImpeachment *types.Block, err error) {
+	impeachBlock, err := d.CreateImpeachBlock()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	failbackTimestamp1 := (time.Now().UnixNano()/int64(configs.DefaultFailbackTimestampSampleSpace) + 1) * int64(configs.DefaultFailbackTimestampSampleSpace)
+	failbackTimestamp2 := failbackTimestamp1 + int64(configs.DefaultFailbackTimestampSampleSpace)
+
+	firstImpeachment = types.NewBlock(impeachBlock.Header(), []*types.Transaction{}, []*types.Receipt{})
+	firstImpeachment.RefHeader().Time.SetInt64(failbackTimestamp1)
+
+	secondImpeachment = types.NewBlock(impeachBlock.Header(), []*types.Transaction{}, []*types.Receipt{})
+	secondImpeachment.RefHeader().Time.SetInt64(failbackTimestamp2)
+
+	return
 }
 
 // ECRecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty

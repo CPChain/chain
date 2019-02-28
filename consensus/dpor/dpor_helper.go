@@ -119,13 +119,13 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 			}
 
 			// TODO: fix this
-			// if timestamp > parentTimestamp+period+timeout {
+			if timestamp > parentTimestamp+period+timeout && !isImpeach {
 
-			// 	log.Warn("invalid timestamp", "timestamp > parentTimestamp+period+timeout", timestamp > parentTimestamp+period+timeout, "parentTimestamp+period+timeout", parentTimestamp+period+timeout, "timestamp", timestamp)
-			// 	log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
+				log.Warn("invalid timestamp", "timestamp > parentTimestamp+period+timeout", timestamp > parentTimestamp+period+timeout, "parentTimestamp+period+timeout", parentTimestamp+period+timeout, "timestamp", timestamp)
+				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
 
-			// 	return ErrInvalidTimestamp
-			// }
+				return ErrInvalidTimestamp
+			}
 		}
 
 		// Delay to verify it!

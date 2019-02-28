@@ -221,6 +221,10 @@ func (h *Header) Size() common.StorageSize {
 	return common.StorageSize(unsafe.Sizeof(*h)) + common.StorageSize(len(h.Extra)+(h.Number.BitLen()+h.Time.BitLen())/8) + dporSize
 }
 
+func (h *Header) Timestamp() time.Time {
+	return time.Unix(0, h.Time.Int64()*int64(time.Millisecond)/int64(time.Nanosecond))
+}
+
 func rlpHash(x interface{}) (h common.Hash) {
 	hw := sha3.NewKeccak256()
 	rlp.Encode(hw, x)
@@ -409,10 +413,11 @@ func (b *Block) Transaction(hash common.Hash) *Transaction {
 	return nil
 }
 
-func (b *Block) Number() *big.Int { return new(big.Int).Set(b.header.Number) }
-func (b *Block) GasLimit() uint64 { return b.header.GasLimit }
-func (b *Block) GasUsed() uint64  { return b.header.GasUsed }
-func (b *Block) Time() *big.Int   { return new(big.Int).Set(b.header.Time) }
+func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.header.Number) }
+func (b *Block) GasLimit() uint64     { return b.header.GasLimit }
+func (b *Block) GasUsed() uint64      { return b.header.GasUsed }
+func (b *Block) Time() *big.Int       { return new(big.Int).Set(b.header.Time) }
+func (b *Block) Timestamp() time.Time { return b.Header().Timestamp() }
 
 func (b *Block) NumberU64() uint64         { return b.header.Number.Uint64() }
 func (b *Block) LogsBloom() Bloom          { return b.header.LogsBloom }
