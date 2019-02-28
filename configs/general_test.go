@@ -60,25 +60,25 @@ func TestDeposit(t *testing.T) {
 }
 
 func TestGetDefaultValidators(t *testing.T) {
-	url := GetDefaultValidators()
-	assert.Nil(t, url)
+	urls := GetDefaultValidators()
+	assert.Nil(t, urls)
 }
 
 func TestGetDefaultValidatorsByRunMode(t *testing.T) {
 	SetRunMode(Dev)
 	InitDefaultValidators(nil)
-	url := GetDefaultValidators()
-	assert.Equal(t, defaultDevValidatorNodes, url)
+	urls := GetDefaultValidators()
+	assert.Equal(t, defaultDevValidatorNodes, urls)
 
 	SetRunMode(Mainnet)
 	InitDefaultValidators(nil)
-	url = GetDefaultValidators()
-	assert.Equal(t, defaultMainnetValidatorNodes, url)
+	urls = GetDefaultValidators()
+	assert.Equal(t, len(defaultMainnetValidatorNodes), len(urls))
 
 	SetRunMode(Testnet)
 	InitDefaultValidators(nil)
-	url = GetDefaultValidators()
-	assert.Equal(t, defaultTestnetValidatorNodes, url)
+	urls = GetDefaultValidators()
+	assert.Equal(t, defaultTestnetValidatorNodes, urls)
 }
 
 func TestInitDefaultValidators(t *testing.T) {
@@ -185,4 +185,29 @@ func TestConvertValidators(t *testing.T) {
 	fmt.Println(newValidators)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(newValidators))
+}
+
+func TestResolveDomain(t *testing.T) {
+	_, err := resolveDomain("v01.mainnet.cpc-servers.com:8533")
+	fmt.Println("err", err)
+	assert.NotNil(t, err)
+}
+
+func TestResolveDomain1(t *testing.T) {
+	host, err := resolveDomain("v01.mainnet.cpc-servers.com")
+	fmt.Println("host", host)
+	fmt.Println("err", err)
+	if err != nil {
+		t.Skip("skip if no hosts mapping")
+	}
+}
+
+func TestResolveUrl(t *testing.T) {
+	endPoint := "http://v01.mainnet.cpc-servers.com:8533"
+	url, err := ResolveUrl(endPoint)
+	fmt.Println("host", url)
+	fmt.Println("err", err)
+	if err != nil {
+		t.Skip("skip if no hosts mapping")
+	}
 }
