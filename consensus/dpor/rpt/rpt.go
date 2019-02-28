@@ -24,7 +24,7 @@ import (
 	"math/big"
 	"strings"
 
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -32,7 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -86,7 +86,16 @@ func (r *RptList) FormatString() string {
 func (a RptList) Len() int      { return len(a) }
 func (a RptList) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a RptList) Less(i, j int) bool {
-	return a[i].Rpt < a[j].Rpt && a[i].Address.Big().Cmp(a[j].Address.Big()) < 0
+	if a[i].Rpt < a[j].Rpt {
+		return true
+	} else if a[i].Rpt > a[j].Rpt {
+		return false
+	} else {
+		if a[i].Address.Big().Cmp(a[j].Address.Big()) < 0 {
+			return true
+		}
+		return false
+	}
 }
 
 // RptService provides methods to obtain all rpt related information from block txs and contracts.
