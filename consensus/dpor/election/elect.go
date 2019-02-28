@@ -110,6 +110,5 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 		scaledRpts = append(scaledRpts[:pos], scaledRpts[pos+1:]...)
 
 	}
-
 	return elected
 }

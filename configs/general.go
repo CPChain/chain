@@ -256,6 +256,16 @@ func resolveDomain(hostname string) (string, error) {
 	return "", fmt.Errorf("invalid host: %v", err)
 }
 
+func ResolveUrl(url string) (string, error) {
+	host, port, err := net.SplitHostPort(url[7:])
+	ip, err := resolveDomain(host)
+	if err != nil {
+		log.Fatal("unknown endpoint", "endpoint", url, "err", err)
+		return "", err
+	}
+	return "http://" + ip + ":" + port, err
+}
+
 // ChainConfig is the core config which determines the blockchain settings.
 //
 // ChainConfig is stored in the database on a per block basis. This means
