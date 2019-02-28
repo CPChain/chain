@@ -223,8 +223,8 @@ type DporService interface {
 	// CreateImpeachBlock returns an impeachment block
 	CreateImpeachBlock() (*types.Block, error)
 
-	// CreateFailbackImpeachBlock creates an impeachment block with failback timestamp
-	CreateFailbackImpeachBlock() (*types.Block, error)
+	// CreateFailbackImpeachBlocks creates impeachment blocks with failback timestamps
+	CreateFailbackImpeachBlocks() (firstImpeachment *types.Block, secondImpeachment *types.Block, err error)
 
 	// GetCurrentBlock returns current block
 	GetCurrentBlock() *types.Block

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
@@ -44,7 +45,7 @@ type LBFT2 struct {
 // NewLBFT2 create an LBFT2 instance
 func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock, db database.Database) *LBFT2 {
 
-	pbft := &LBFT2{
+	lbft := &LBFT2{
 		state:  consensus.Idle,
 		faulty: faulty,
 		number: dpor.GetCurrentBlock().NumberU64() + 1,
@@ -57,7 +58,14 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 		handleImpeachBlock: handleImpeachBlock,
 	}
 
-	return pbft
+	// wait to try to failback if reboot
+	time.AfterFunc(
+		configs.DefaultWaitTimeBeforeImpeachment,
+		func() {
+			lbft.tryToImpeachFailback()
+		})
+
+	return lbft
 }
 
 // Faulty returns the number of faulty nodes
@@ -995,109 +1003,24 @@ func (p *LBFT2) tryToImpeach() {
 	}
 }
 
-// // Impeachment waits until it is time to impeach, then try to compose an impeach block
-// type Impeachment struct {
-// 	dpor      DporService
-// 	returnFn  HandleGeneratedImpeachBlock
-// 	restartCh chan struct{}
-// 	numberCh  chan uint64
-// 	quitCh    chan struct{}
-// 	running   bool
-// 	lock      sync.RWMutex
-// }
+func (p *LBFT2) tryToImpeachFailback() {
+	// creates two failback impeachment blocks and waits for their time
+	if firstImpeach, secondImpeach, err := p.dpor.CreateFailbackImpeachBlocks(); err == nil {
 
-// // NewImpeachment creates a new Impeachment struct
-// func NewImpeachment(dpor DporService, returnFn HandleGeneratedImpeachBlock) *Impeachment {
-// 	return &Impeachment{
-// 		dpor:      dpor,
-// 		returnFn:  returnFn,
-// 		restartCh: make(chan struct{}),
-// 		numberCh:  make(chan uint64),
-// 		quitCh:    make(chan struct{}),
-// 	}
-// }
+		go time.AfterFunc(
+			firstImpeach.Timestamp().Sub(time.Now()),
+			func() {
+				if firstImpeach.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+					p.handleImpeachBlock(firstImpeach)
+				}
+			})
 
-// func (im *Impeachment) isRunning() bool {
-// 	im.lock.RLock()
-// 	defer im.lock.RUnlock()
-
-// 	return im.running
-// }
-
-// func (im *Impeachment) setRunning(running bool) {
-// 	im.lock.Lock()
-// 	defer im.lock.Unlock()
-
-// 	im.running = running
-// }
-
-// // number returns current block number in local chain + 1
-// func (im *Impeachment) number() uint64 {
-// 	return im.dpor.Status().Head.Number.Uint64()
-// }
-
-// func (im *Impeachment) timeout() time.Duration {
-// 	return im.dpor.ImpeachTimeout()
-// }
-
-// // waitAndComposeImpeachBlock waits timeout to impeach, or return
-// func (im *Impeachment) waitAndComposeImpeachBlock(number uint64) {
-// 	if number <= im.number() {
-// 		return
-// 	}
-
-// 	im.setRunning(true)
-// 	defer im.setRunning(false)
-
-// 	select {
-// 	case <-time.After(im.timeout()):
-// 		impeachBlock, err := im.dpor.CreateImpeachBlock()
-// 		if err != nil {
-// 			log.Warn("err when creating impeach block", "err", err)
-// 			return
-// 		}
-
-// 		_ = im.returnFn(impeachBlock)
-// 		return
-
-// 	case <-im.restartCh:
-// 		return
-// 	}
-// }
-
-// // Trigger triggers an impeachment
-// func (im *Impeachment) Trigger(number uint64) {
-// 	im.numberCh <- number
-// 	log.Debug("triggered restart", "number", number)
-// }
-
-// // Restart restarts impeachment
-// func (im *Impeachment) Restart(number uint64) {
-// 	if im.isRunning() {
-// 		im.restartCh <- struct{}{}
-// 	}
-
-// 	log.Debug("now starting new wait and try to compose", "number", number)
-
-// 	go im.waitAndComposeImpeachBlock(number)
-
-// }
-
-// // Loop loops for impeachment
-// func (im *Impeachment) Loop() {
-
-// 	for {
-// 		select {
-// 		case number := <-im.numberCh:
-// 			log.Debug("now ready to restart", "number", number)
-// 			go im.Restart(number)
-// 		case <-im.quitCh:
-// 			return
-// 		}
-// 	}
-// }
-
-// // Stop stops impeachment
-// func (im *Impeachment) Stop() {
-// 	im.quitCh <- struct{}{}
-// }
+		go time.AfterFunc(
+			secondImpeach.Timestamp().Sub(time.Now()),
+			func() {
+				if secondImpeach.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+					p.handleImpeachBlock(secondImpeach)
+				}
+			})
+	}
+}
