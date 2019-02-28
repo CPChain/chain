@@ -42,22 +42,22 @@ func millisecondToNanosecond(t int64) int64 {
 	return t * int64(time.Millisecond) / int64(time.Nanosecond)
 }
 
-// Signatures stores sigs in a block
-type Signatures struct {
+// signatures represents signatures of a block signed by validators
+type signatures struct {
 	lock sync.RWMutex
 	sigs map[common.Address][]byte
 }
 
-// GetSig gets addr's sig
-func (s *Signatures) GetSig(addr common.Address) (sig []byte, ok bool) {
+// getSig gets addr's sig
+func (s *signatures) getSig(addr common.Address) (sig []byte, ok bool) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	sig, ok = s.sigs[addr]
 	return sig, ok
 }
 
-// SetSig sets addr's sig
-func (s *Signatures) SetSig(addr common.Address, sig []byte) {
+// setSig sets addr's sig
+func (s *signatures) setSig(addr common.Address, sig []byte) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.sigs[addr] = sig
@@ -142,12 +142,12 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 
 		// Cache proposer signature.
 		if sigs, known := sigcache.Get(hash); known {
-			sigs.(*Signatures).SetSig(proposer, proposerSig[:])
+			sigs.(*signatures).setSig(proposer, proposerSig[:])
 		} else {
-			sigs := &Signatures{
+			sigs := &signatures{
 				sigs: make(map[common.Address][]byte),
 			}
-			sigs.SetSig(proposer, proposerSig[:])
+			sigs.setSig(proposer, proposerSig[:])
 			sigcache.Add(hash, sigs)
 		}
 	}
@@ -161,7 +161,7 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		if !noSigner {
 
 			// Recover it!
-			hashToSign, err := HashBytesWithState(d.sigHash(header).Bytes(), consensus.Commit)
+			hashToSign, err := hashBytesWithState(d.sigHash(header).Bytes(), consensus.Commit)
 			signerPubkey, err := crypto.Ecrecover(hashToSign, signerSig[:])
 			if err != nil {
 				continue
@@ -173,13 +173,13 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 			// Cache it!
 			sigs, ok := sigcache.Get(hash)
 			if ok {
-				sigs.(*Signatures).SetSig(validator, signerSig[:])
+				sigs.(*signatures).setSig(validator, signerSig[:])
 
 			} else {
-				sigs := &Signatures{
+				sigs := &signatures{
 					sigs: make(map[common.Address][]byte),
 				}
-				sigs.SetSig(validator, signerSig[:])
+				sigs.setSig(validator, signerSig[:])
 				sigcache.Add(hash, sigs)
 			}
 
@@ -201,7 +201,7 @@ func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCach
 	// Retrieve signatures of this header from cache
 	if sigs, known := sigcache.Get(hash); known {
 		for _, signer := range signers {
-			if _, ok := sigs.(*Signatures).GetSig(signer); ok {
+			if _, ok := sigs.(*signatures).getSig(signer); ok {
 				numSigs++
 			}
 		}
@@ -235,7 +235,7 @@ func newSignedBlocksRecord(db database.Database) *signedBlocksRecord {
 	}
 }
 
-func (sbr *signedBlocksRecord) IfAlreadySigned(number uint64) (common.Hash, bool) {
+func (sbr *signedBlocksRecord) ifAlreadySigned(number uint64) (common.Hash, bool) {
 	sbr.lock.RLock()
 	defer sbr.lock.RUnlock()
 
@@ -256,7 +256,7 @@ func (sbr *signedBlocksRecord) IfAlreadySigned(number uint64) (common.Hash, bool
 	return common.Hash{}, false
 }
 
-func (sbr *signedBlocksRecord) MarkAsSigned(number uint64, hash common.Hash) (err error) {
+func (sbr *signedBlocksRecord) markAsSigned(number uint64, hash common.Hash) (err error) {
 	sbr.lock.Lock()
 	defer sbr.lock.Unlock()
 
@@ -275,7 +275,7 @@ func numberToBytes(number uint64) []byte {
 	return numberBytes
 }
 
-func HashBytesWithState(hash []byte, state consensus.State) (signHashBytes []byte, err error) {
+func hashBytesWithState(hash []byte, state consensus.State) (signHashBytes []byte, err error) {
 	var (
 		prepreparePrefix = "Prepare"
 	)

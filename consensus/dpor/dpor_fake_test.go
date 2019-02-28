@@ -58,9 +58,9 @@ func (f *fakeDporHelper) verifySigs(d *Dpor, chain consensus.ChainReader, header
 func (f *fakeDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header, verifySigs bool, verifyProposers bool) error {
 	if f.verifySuccess {
 		return nil
-	} else {
-		return errors.New("verify Header")
 	}
+
+	return errors.New("verify Header")
 }
 
 func (*fakeDporHelper) verifyProposers(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
@@ -74,10 +74,9 @@ func (*fakeDporHelper) validateBlock(d *Dpor, chain consensus.ChainReader, block
 func (f *fakeDporHelper) snapshot(c *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error) {
 	if f.snapshotSuccess {
 		return &DporSnapshot{}, nil
-	} else {
-		return nil, errors.New("err")
 	}
 
+	return nil, errors.New("err")
 }
 
 func (*fakeDporHelper) verifySeal(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {

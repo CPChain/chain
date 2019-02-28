@@ -328,7 +328,6 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	// Save to cache
-	// TODO: check if it needs a lock
 	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
@@ -367,7 +366,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// Resolve the authorization key and check against signers
-	proposer, _, err := dh.ecrecover(header, dpor.finalSigs) // TODO: check if it needs a lock
+	proposer, _, err := dh.ecrecover(header, dpor.finalSigs)
 	if err != nil {
 		return err
 	}
@@ -489,12 +488,11 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 	var s interface{}
 	var ok bool
-	// TODO: fix this, clean it!
 	// Retrieve signatures of the block in cache
 	if state == consensus.Commit || state == consensus.ImpeachCommit {
 		s, ok = dpor.finalSigs.Get(hash) // check if it needs a lock
 		if !ok || s == nil {
-			s = &Signatures{
+			s = &signatures{
 				sigs: make(map[common.Address][]byte),
 			}
 			dpor.finalSigs.Add(hash, s)
@@ -502,7 +500,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	} else if state == consensus.Prepare || state == consensus.ImpeachPrepare {
 		s, ok = dpor.prepareSigs.Get(hash)
 		if !ok || s == nil {
-			s = &Signatures{
+			s = &signatures{
 				sigs: make(map[common.Address][]byte),
 			}
 			dpor.prepareSigs.Add(hash, s)
@@ -521,7 +519,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 
 	// fulfill all known validator signatures to dpor.sigs to accumulate
 	for signPos, signer := range snap.ValidatorsOf(number) {
-		if sigHash, ok := s.(*Signatures).GetSig(signer); ok {
+		if sigHash, ok := s.(*signatures).getSig(signer); ok {
 			copy(allSigs[signPos][:], sigHash)
 		}
 	}
@@ -535,7 +533,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		}
 
 		// get hash with state
-		hashToSign, err := HashBytesWithState(dpor.dh.sigHash(header).Bytes(), state)
+		hashToSign, err := hashBytesWithState(dpor.dh.sigHash(header).Bytes(), state)
 		if err != nil {
 			log.Warn("failed to get hash bytes with state", "number", number, "hash", hash.Hex(), "state", state)
 			return err
@@ -564,7 +562,7 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 		copy(header.Dpor.Sigs[sigPos][:], sighash)
 
 		// Record new sig to signature cache
-		s.(*Signatures).SetSig(dpor.Coinbase(), sighash)
+		s.(*signatures).setSig(dpor.Coinbase(), sighash)
 
 		return nil
 	}
@@ -587,7 +585,7 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 	log.Debug("my address", "eb", dpor.Coinbase().Hex())
 	log.Debug("current block number", "number", number)
 	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen))
-	log.Debug("is future signer", "bool", snap.IsFutureSignerOf(dpor.Coinbase(), number))
+	log.Debug("is future signer", "bool", snap.IsFutureProposerOf(dpor.Coinbase(), number))
 	log.Debug("term idx of block number", "block term index", snap.TermOf(number))
 
 	log.Debug("recent proposers: ")
@@ -606,30 +604,28 @@ func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.
 
 	// If in a checkpoint and self is in the future committee, try to build the committee network
 	isCheckpoint := IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen)
-	isFutureSigner := snap.IsFutureProposerOf(dpor.Coinbase(), number)
+	isFutureProposer := snap.IsFutureProposerOf(dpor.Coinbase(), number)
 
-	return isCheckpoint && isFutureSigner
+	return isCheckpoint && isFutureProposer
 }
 
 func (dh *defaultDporHelper) updateAndDial(dpor *Dpor, snap *DporSnapshot, number uint64) error {
 	log.Info("In future committee, building the committee network...")
 
-	term := snap.FutureTermOf(number)
-
-	// TODO: I need FutureValidatorsOf
-	validators := snap.FutureSignersOf(number)
+	var (
+		term       = snap.FutureTermOf(number)
+		validators = snap.FutureValidatorsOf(number)
+	)
 
 	go func(term uint64, remoteValidators []common.Address) {
 
 		// Updates RemoteValidators in handler
-		err := dpor.handler.UpdateRemoteValidators(term, remoteValidators)
-		if err != nil {
+		if err := dpor.handler.UpdateRemoteValidators(term, remoteValidators); err != nil {
 			log.Warn("err when updating remote validators", "err", err)
 		}
 
 		// Dial all remote validators
-		err = dpor.handler.DialAllRemoteValidators(term)
-		if err != nil {
+		if err := dpor.handler.DialAllRemoteValidators(term); err != nil {
 			log.Warn("err when dialing remote validators", "err", err)
 		}
 

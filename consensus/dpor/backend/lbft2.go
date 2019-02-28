@@ -979,7 +979,7 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 
 	// if term is larger than local, sync!
 	if p.dpor.TermOf(number) > p.dpor.TermOf(p.number) {
-		go p.dpor.Synchronise()
+		go p.dpor.Synchronize()
 	}
 }
 

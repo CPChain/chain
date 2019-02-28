@@ -127,7 +127,7 @@ func Test_dporHelper_verifyCascadingFields(t *testing.T) {
 	time2 := big.NewInt(time.Now().Unix() + 100)
 	header := &types.Header{Number: big.NewInt(0), Time: time1}
 	parentHash := header.Hash()
-	recents.Add(parentHash, &DporSnapshot{config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}, RecentSigners: make(map[uint64][]common.Address)})
+	recents.Add(parentHash, &DporSnapshot{config: &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}, RecentProposers: make(map[uint64][]common.Address)})
 	chain := &FakeReader{}
 	type args struct {
 		d         *Dpor

@@ -15,6 +15,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
+// Those are functions implement backend.DporService
+
 // TermLength returns term length
 func (d *Dpor) TermLength() uint64 {
 	return d.config.TermLen
@@ -100,6 +102,7 @@ func (d *Dpor) VerifyValidatorOf(signer common.Address, term uint64) (bool, erro
 	return false, nil
 }
 
+// ValidatorsOf returns validators of given block number
 func (d *Dpor) ValidatorsOf(number uint64) ([]common.Address, error) {
 	snap := d.currentSnap
 	if snap == nil {
@@ -111,6 +114,7 @@ func (d *Dpor) ValidatorsOf(number uint64) ([]common.Address, error) {
 	return snap.getRecentValidators(term), nil
 }
 
+// ProposersOf returns proposers of given block number
 func (d *Dpor) ProposersOf(number uint64) ([]common.Address, error) {
 	snap := d.currentSnap
 	if snap == nil {
@@ -122,6 +126,10 @@ func (d *Dpor) ProposersOf(number uint64) ([]common.Address, error) {
 	return snap.getRecentProposers(term), nil
 }
 
+// ValidatorsOfTerm returns validators of given term
+// TODO: this only returns validators known recently from cache,
+// does not retrieve block from local chain to get needed information.
+// maybe i'll add it later.
 func (d *Dpor) ValidatorsOfTerm(term uint64) ([]common.Address, error) {
 	snap := d.currentSnap
 	if snap == nil {
@@ -132,6 +140,8 @@ func (d *Dpor) ValidatorsOfTerm(term uint64) ([]common.Address, error) {
 	return snap.getRecentValidators(term), nil
 }
 
+// ProposersOfTerm returns proposers of given term
+// TODO: same as above
 func (d *Dpor) ProposersOfTerm(term uint64) ([]common.Address, error) {
 	snap := d.currentSnap
 	if snap == nil {
@@ -143,12 +153,8 @@ func (d *Dpor) ProposersOfTerm(term uint64) ([]common.Address, error) {
 }
 
 // VerifyHeaderWithState verifies the given header
-// if in preprepared state, verify basic fields
-// if in prepared state, verify if enough prepare sigs
-// if in committed state, verify if enough commit sigs
+// TODO: review this!
 func (d *Dpor) VerifyHeaderWithState(header *types.Header, state consensus.State) error {
-
-	// TODO: fix this, !!! state
 	return d.VerifyHeader(d.chain, header, true, header)
 }
 
@@ -232,7 +238,7 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 func (d *Dpor) ECRecoverSigs(header *types.Header, state consensus.State) ([]common.Address, []types.DporSignature, error) {
 
 	// get hash with state
-	hashToSign, err := HashBytesWithState(d.dh.sigHash(header).Bytes(), state)
+	hashToSign, err := hashBytesWithState(d.dh.sigHash(header).Bytes(), state)
 	if err != nil {
 		log.Warn("failed to get hash bytes with state", "number", header.Number.Uint64(), "hash", header.Hash().Hex(), "state", state)
 		return nil, nil, err
@@ -258,6 +264,7 @@ func (d *Dpor) ECRecoverSigs(header *types.Header, state consensus.State) ([]com
 	return validators, validatorSignatures, nil
 }
 
+// ECRecoverProposer recovers a proposer address from the seal of given header
 func (d *Dpor) ECRecoverProposer(header *types.Header) (common.Address, error) {
 	var proposer common.Address
 	proposerSig := header.Dpor.Seal
@@ -271,37 +278,42 @@ func (d *Dpor) ECRecoverProposer(header *types.Header) (common.Address, error) {
 	return proposer, nil
 }
 
-// Update the signature to prepare signature cache(two kinds of sigs, one for prepared, another for final)
+// UpdatePrepareSigsCache updates prepare signature of a validator for a block in cache
 func (d *Dpor) UpdatePrepareSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature) {
 	s, ok := d.prepareSigs.Get(hash)
 	if !ok {
-		s = &Signatures{
+		s = &signatures{
 			sigs: make(map[common.Address][]byte),
 		}
 		d.prepareSigs.Add(hash, s)
 	}
-	s.(*Signatures).SetSig(validator, sig[:])
+	s.(*signatures).setSig(validator, sig[:])
 }
 
-// Update the signature to final signature cache(two kinds of sigs, one for prepared, another for final)
+// UpdateFinalSigsCache updates final(commit) signature of a validator for a block in cache
 func (d *Dpor) UpdateFinalSigsCache(validator common.Address, hash common.Hash, sig types.DporSignature) {
 	s, ok := d.finalSigs.Get(hash)
 	if !ok {
-		s = &Signatures{
+		s = &signatures{
 			sigs: make(map[common.Address][]byte),
 		}
 		d.finalSigs.Add(hash, s)
 	}
-	s.(*Signatures).SetSig(validator, sig[:])
+	s.(*signatures).setSig(validator, sig[:])
 }
 
-// GetMac signs a Mac
+// GetMac composes a message authentication code and signs it
 func (d *Dpor) GetMac() (mac string, sig []byte, err error) {
+
+	// mac is like this: "cpchain|2019-02-26T16:22:21+08:00"
+
+	// compose the msg
 	prefix := "cpchain"
 	t := time.Now().Format(time.RFC3339)
 	split := "|"
 	mac = prefix + split + t
 
+	// make a hash for it
 	var hash common.Hash
 	hasher := sha3.NewKeccak256()
 	hasher.Write([]byte(mac))
@@ -309,7 +321,9 @@ func (d *Dpor) GetMac() (mac string, sig []byte, err error) {
 
 	log.Debug("generated mac", "mac", mac)
 
+	// sign it!
 	sig, err = d.signFn(accounts.Account{Address: d.Coinbase()}, hash.Bytes())
+
 	return mac, sig, err
 }
 
@@ -318,6 +332,7 @@ func (d *Dpor) SyncFrom(p *p2p.Peer) {
 	go d.pmSyncFromPeerFn(p)
 }
 
-func (d *Dpor) Synchronise() {
+// Synchronize tries to sync blocks from best peer
+func (d *Dpor) Synchronize() {
 	go d.pmSyncFromBestPeerFn()
 }
