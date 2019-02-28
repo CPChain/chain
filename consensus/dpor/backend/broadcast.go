@@ -4,8 +4,6 @@ import (
 	"math/rand"
 	"time"
 
-	"bitbucket.org/cpchain/chain/configs"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -163,12 +161,6 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 
 // PendingImpeachBlockBroadcastLoop loops to broadcasts pending impeachment block
 func (h *Handler) PendingImpeachBlockBroadcastLoop() {
-
-	futureTimer := time.NewTicker(h.dpor.ImpeachTimeout())
-	defer futureTimer.Stop()
-
-	<-time.After(configs.DefaultWaitTimeBeforeImpeachment)
-
 	for {
 		select {
 		case impeachBlock := <-h.pendingImpeachBlockCh:
@@ -196,42 +188,6 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 					h.impeachmentRecord.markAsImpeached(number, hash)
 				}
 			}
-
-		case <-futureTimer.C:
-
-			// // check if still not received new block, if true, continue
-			// if h.ReadyToImpeach() && h.mode == LBFT2Mode {
-			// 	// get empty block
-
-			// 	impeachBlock, _ := h.dpor.CreateImpeachBlock()
-			// 	size, r, err := rlp.EncodeToReader(impeachBlock)
-			// 	if err != nil {
-			// 		log.Warn("failed to encode composed impeach block", "err", err)
-			// 		continue
-			// 	}
-			// 	msg := p2p.Msg{Code: PreprepareImpeachBlockMsg, Size: uint32(size), Payload: r}
-
-			// 	// number := impeachBlock.NumberU64()
-			// 	// validators, _ := h.dpor.ValidatorsOf(number)
-			// 	// if InAddressList(h.Coinbase(), validators) {
-
-			// 	var (
-			// 		number = impeachBlock.NumberU64()
-			// 		hash   = impeachBlock.Hash()
-			// 	)
-
-			// 	if !h.impeachmentRecord.ifImpeached(number, hash) {
-			// 		// notify other validators
-			// 		go h.BroadcastPreprepareImpeachBlock(impeachBlock)
-
-			// 		// handle the impeach block
-			// 		go h.handleLBFT2Msg(msg, nil)
-
-			// 		h.impeachmentRecord.markAsImpeached(number, hash)
-			// 	}
-
-			// 	// }
-			// }
 
 		case <-h.quitCh:
 			return
