@@ -459,7 +459,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// if not reached to 2f + 1, the validation fails
-	if count < (len(validators)-1)/3*2+1 {
+	if !dpor.config.Certificate(uint64(count)) {
 		return consensus.ErrNotEnoughSigs
 	}
 

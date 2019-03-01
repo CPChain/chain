@@ -303,6 +303,20 @@ func (c *DporConfig) ValidatorsLen() uint64 {
 	return 0
 }
 
+func (c *DporConfig) Certificate(n uint64) bool {
+	if c != nil {
+		return n >= c.FaultyNumber*2+1
+	}
+	return false
+}
+
+func (c *DporConfig) ImpeachCertificate(n uint64) bool {
+	if c != nil {
+		return n >= c.FaultyNumber+1
+	}
+	return false
+}
+
 // String implements the fmt.Stringer interface.
 func (c *ChainConfig) String() string {
 	var engine interface{}
