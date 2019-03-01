@@ -51,4 +51,5 @@ profile.cov
 /examples/cpchain/conf-testnet
 /examples/cpchain/conf-mainnet
 
+/examples/cpchain/testcase
 /docs/_build
