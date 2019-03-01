@@ -27,7 +27,7 @@ import (
 
 func TestElect(t *testing.T) {
 	a := []int64{1, 2, 5, 6, 6, 7, 8, 9}
-	target := int64(4)
+	target := float64(4)
 	nearest, pos := findNearest(a, target)
 	fmt.Println(nearest, pos)
 	if nearest != 5 || pos != 2 {
@@ -75,11 +75,11 @@ func TestElect(t *testing.T) {
 	}
 
 	expectedCommittee := []common.Address{
-		addresses[0],
+		addresses[4],
 		addresses[1],
+		addresses[0],
 		addresses[2],
 		addresses[3],
-		addresses[4],
 	}
 	for i := 0; i < viewLength; i++ {
 		if signers[uint64(i)] != expectedCommittee[i] {

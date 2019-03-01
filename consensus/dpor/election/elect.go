@@ -29,14 +29,14 @@ import (
 
 // randRange returns a random integer between [ min(i,j), max(i,j) )
 // NB, the rhs is open.
-func randRange(i, j int, myrand *rand.Rand) int {
+func randRange(i, j float64, myrand *rand.Rand) float64 {
 	if j > i {
-		return i + myrand.Intn(j-i)
+		return i + myrand.Float64()*(j-i)
 	}
-	return j + myrand.Intn(i-j)
+	return j + myrand.Float64()*(i-j)
 }
 
-func findNearest(array []int64, target int64) (int64, int) {
+func findNearest(array []int64, target float64) (int64, int) {
 	if len(array) == 0 {
 		panic("array length must be nonzero.")
 	}
@@ -46,20 +46,20 @@ func findNearest(array []int64, target int64) (int64, int) {
 	// invariant: the nearest number is always within [lo,hi]
 	for lo+1 < hi {
 		mid := lo + (hi-lo)/2
-		if array[mid] >= target {
+		if float64(array[mid]) >= target {
 			hi = mid
 		} else {
 			lo = mid
 		}
 	}
 
-	if array[lo] >= target {
+	if float64(array[lo]) >= target {
 		return array[lo], lo
-	} else if array[hi] <= target {
+	} else if float64(array[hi]) <= target {
 		return array[hi], hi
 	} else {
 		// ok.  we check the gap
-		if target-array[lo] <= array[hi]-target {
+		if target-float64(array[lo]) <= float64(array[hi])-target {
 			return array[lo], lo
 		}
 		return array[hi], hi
@@ -79,17 +79,16 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 
 	randSource := rand.NewSource(seed)
 	myRand := rand.New(randSource)
-	// TODO termLen=12, found error :panic: invalid argument to Intn elect.go:36    elect.go:90  snapshot. go:535
-	upper := 10
-	// lower := 0
-	// step := (upper - lower) / termLen
-	step := 2
 
-	var randoms []int64
+	upper := 10.0
+	lower := 0.0
+	step := (upper - lower) / float64(termLen)
+
+	var randoms []float64
 
 	for i := 0; i < termLen; i++ {
-		rnd := randRange(i*step, (i+1)*step, myRand)
-		randoms = append(randoms, int64(math.Log2(float64(1.0+rnd))))
+		rnd := randRange(float64(i)*step, float64(i+1)*step, myRand)
+		randoms = append(randoms, math.Log2(float64(1.0+rnd)))
 	}
 
 	scale := sortedRpts[len(sortedRpts)-1].Rpt / int64(math.Log2(float64(1+upper)))

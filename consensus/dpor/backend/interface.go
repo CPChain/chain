@@ -220,8 +220,11 @@ type DporService interface {
 	// StatusUpdate updates status of dpor
 	StatusUpdate() error
 
-	// CreateImpeachBlock returns an impeachment block for view change
+	// CreateImpeachBlock returns an impeachment block
 	CreateImpeachBlock() (*types.Block, error)
+
+	// CreateFailbackImpeachBlocks creates impeachment blocks with failback timestamps
+	CreateFailbackImpeachBlocks() (firstImpeachment *types.Block, secondImpeachment *types.Block, err error)
 
 	// GetCurrentBlock returns current block
 	GetCurrentBlock() *types.Block
@@ -235,6 +238,7 @@ type DporService interface {
 	// ImpeachTimeout returns the timeout for impeachment
 	ImpeachTimeout() time.Duration
 
+	// ECRecoverProposer recovers proposer's address from a seal of a header
 	ECRecoverProposer(header *types.Header) (common.Address, error)
 
 	// ECRecoverSigs recovers signer address and corresponding signature, it ignores empty signature and return empty
@@ -253,8 +257,8 @@ type DporService interface {
 	// SyncFrom tries to sync block from given peer
 	SyncFrom(p *p2p.Peer)
 
-	// Synchronise tries to sync block from best peer
-	Synchronise()
+	// Synchronize tries to sync block from best peer
+	Synchronize()
 }
 
 // HandlerMode indicates the run mode of handler

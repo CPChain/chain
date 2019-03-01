@@ -182,6 +182,7 @@ func (d *Dpor) PrepareBlock(chain consensus.ChainReader, header *types.Header) e
 	return nil
 }
 
+// TryCampaign tries to start campaign
 func (d *Dpor) TryCampaign() {
 	if d.ac == nil {
 		// it is not able to campaign in the situation
@@ -306,10 +307,11 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	if err != nil {
 		if err == errProposerNotInCommittee {
 			return nil, consensus.ErrNotInProposerCommittee
-		} else {
-			log.Debug("Error occurs when seal block", "error", err)
-			return nil, err
 		}
+
+		log.Debug("Error occurs when seal block", "error", err)
+		return nil, err
+
 	}
 	if !ok {
 		return nil, consensus.ErrUnauthorized
@@ -343,6 +345,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 	return block.WithSeal(header), nil
 }
 
+// CanMakeBlock checks if the given coinbase is ready to propose a block
 func (d *Dpor) CanMakeBlock(chain consensus.ChainReader, coinbase common.Address, parent *types.Header) bool {
 	number := parent.Number.Uint64()
 	// Bail out if we're unauthorized to sign a block
@@ -356,10 +359,10 @@ func (d *Dpor) CanMakeBlock(chain consensus.ChainReader, coinbase common.Address
 	if err != nil {
 		if err == errProposerNotInCommittee {
 			return false
-		} else {
-			log.Debug("Error occurs when check if it is proposer", "error", err)
-			return false
 		}
+		log.Debug("Error occurs when check if it is proposer", "error", err)
+		return false
+
 	}
 	return ok
 }

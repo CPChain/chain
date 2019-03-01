@@ -29,8 +29,8 @@ contract Reward {
 
     event SubmitDeposit(address who,uint256 value);
     event WithdrawDeposit(address who, uint256 value);
-    event JoinPartcipant(address who, uint256 value);
-    event JoinCandidates(address who, uint256 value);
+    event JoinENodes(address who, uint256 value);
+    event JoinRNodes(address who, uint256 value);
     event TransferDeposit(address who, uint256 value);
     event NewRaise(uint256 round, bool lock,uint256 _bonusPool);
     event DepositInsufficient(address who,uint256 value);
@@ -63,7 +63,7 @@ contract Reward {
 
     function submitDeposit() public payable unlocked() {
         require(!isContract(msg.sender),"please not use contract call this function");
-        if (!isParticipant(msg.sender)){
+        if (!isENode(msg.sender)){
             participants.insert(msg.sender);
         }
         investors[msg.sender].freeDeposit = investors[msg.sender].freeDeposit.add(msg.value);
@@ -103,7 +103,7 @@ contract Reward {
     }
 
     function totalInvestAmount() public view returns (uint256){
-        uint256 totalAmount;
+        uint256 totalAmount = 0;
         for (uint256 i = 0; i < participants.values.length; i++) {
             totalAmount = totalAmount.add(investors[participants.values[i]].lockedDeposit);
         }
@@ -144,13 +144,17 @@ contract Reward {
         return rnodes.contains(_addr);
     }
 
-    function isParticipant(address _addr) public view returns (bool){
+    function isENode(address _addr) public view returns (bool){
         return participants.contains(_addr);
     }
 
     // close previous round and dividend bonus (清算：还本付息/付息复投)
     function closePreviousRound() internal {
         uint256 totalAmount = totalInvestAmount();
+        if (totalAmount == 0) {  // 极端情况，无人投资，不分派利息
+            return;
+        }
+
         uint256 deposit;
         uint256 interest;
         for (uint i = 0; i< participants.values.length; i++){
@@ -192,12 +196,13 @@ contract Reward {
                 investor.lockedDeposit = investor.lockedDeposit.add(investor.freeDeposit);
                 investor.freeDeposit = 0; // it is not necessary, but be helpful for understanding the logic
                 investor.freeDeposit = investor.returned;
+                investor.toRenew = true;  // by default it is "to renew" in each round
                 if (totalAmount < electionCriteria) {
                     rnodes.remove(investorAddr);
-                    emit JoinPartcipant(investorAddr, investor.lockedDeposit);
+                    emit JoinENodes(investorAddr, investor.lockedDeposit);
                 } else {
                     rnodes.insert(investorAddr);
-                    emit JoinCandidates(investorAddr, investor.lockedDeposit);
+                    emit JoinRNodes(investorAddr, investor.lockedDeposit);
                 }
             }
             investor.returned = 0;

@@ -133,11 +133,11 @@ contract("Reward with investors at locked stage", accounts => {
     });
 
     it('candidates should contain account3 and account4, not contain account1 and account2', async () => {
-        var isP1 = await reward.isParticipant(accounts[1]);
-        var isP2 = await reward.isParticipant(accounts[2]);
-        var isP3 = await reward.isParticipant(accounts[3]);
-        var isP4 = await reward.isParticipant(accounts[4]);
-        var isP5 = await reward.isParticipant(accounts[5]);
+        var isP1 = await reward.isENode(accounts[1]);
+        var isP2 = await reward.isENode(accounts[2]);
+        var isP3 = await reward.isENode(accounts[3]);
+        var isP4 = await reward.isENode(accounts[4]);
+        var isP5 = await reward.isENode(accounts[5]);
 
         var isC1 = await reward.isCandidate(accounts[1]);
         var isC2 = await reward.isCandidate(accounts[2]);
