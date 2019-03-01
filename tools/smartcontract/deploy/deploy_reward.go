@@ -21,3 +21,12 @@ func DeployReward(password string, nonce uint64) common.Address {
 	printTx(tx, err, client, contractAddress)
 	return contractAddress
 }
+
+func StartNewRaise(rewardAddr common.Address, password string, nonce uint64) {
+	client, _, privateKey, _, _ := config.Connect(password)
+	reward, _ := reward.NewReward(rewardAddr, client)
+	auth := newTransactor(privateKey, new(big.Int).SetUint64(nonce))
+	tx, _ := reward.NewRaise(auth)
+	log.Info("started new raise", "txhash", tx.Hash().Hex())
+
+}

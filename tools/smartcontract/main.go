@@ -29,6 +29,7 @@ import (
 
 var (
 	proxyCampaignContractAddress common.Address
+	proxyRewardContractAddress   common.Address
 )
 
 func main() {
@@ -80,6 +81,10 @@ func main() {
 
 	// 8
 	deploy.UpdateCampaignParameters(password, proxyCampaignContractAddress, 25, 26)
+
+	// 9
+	deploy.StartNewRaise(proxyRewardContractAddress, password, 27)
+
 	fmt.Println("======== init contract deploy completed=========")
 }
 
@@ -110,6 +115,9 @@ func deployRewardAdmissionAndCampaign(password string, proxyContractRegisterAddr
 	deploy.PrintContract(title, campaignAddress)
 	proxyCampaignContractAddress = deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, campaignAddress, password, 11, 12)
 	wg.Done()
+
+	// save the proxy address to global variable
+	proxyRewardContractAddress = proxyRewardAddress
 }
 
 func deployRpt(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
