@@ -44,7 +44,7 @@ var (
 			MaxInitBlockNumber:    DefaultDevMaxInitBlockNumber,
 			ProxyContractRegister: devProxyContractRegister,
 			Contracts:             devContractAddressMap,
-			ImpeachTimeout:        time.Millisecond * DefaultBlockPeriod * 5,
+			ImpeachTimeout:        time.Millisecond * DefaultBlockPeriod * 10,
 		},
 	}
 
@@ -65,7 +65,7 @@ var (
 	// CpchainBootnodes are the enode URLs of the P2P bootstrap nodes running on
 	// the dev cpchain network.
 	devBootnodes = []string{
-		"enode://5293dc8aaa5c2fcc7905c21391ce38f4f877722ff1918f4fa86379347ad8a244c2995631f89866693d05bf5c94493c247f02716f19a90689fa406189b03a5243@127.0.0.1:30310", // localhost
+		"enode://5293dc8aaa5c2fcc7905c21391ce38f4f877722ff1918f4fa86379347ad8a244c2995631f89866693d05bf5c94493c247f02716f19a90689fa406189b03a5243@127.0.0.1:30381", // localhost
 	}
 
 	defaultDevValidatorNodes = []string{

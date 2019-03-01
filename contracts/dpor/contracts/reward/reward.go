@@ -16,10 +16,10 @@ import (
 )
 
 // RewardABI is the input ABI used to generate the binding from.
-const RewardABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_period\",\"type\":\"uint256\"}],\"name\":\"setPeriod\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isContract\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"bonusPool\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"isRNode\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"nextRound\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"nextRoundStartTime\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transferDeposit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalInvestAmount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"getFreeBalance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"wantRenew\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"newRaise\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"quitRenew\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"isParticipant\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"isLocked\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"startNewRound\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"basicCriteria\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"getLockedBalance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"getTotalBalance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"electionCriteria\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_bonus\",\"type\":\"uint256\"}],\"name\":\"setBonusPool\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"submitDeposit\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"isToRenew\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"SubmitDeposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"WithdrawDeposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"JoinPartcipant\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"JoinCandidates\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"TransferDeposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"round\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"lock\",\"type\":\"bool\"},{\"indexed\":false,\"name\":\"_bonusPool\",\"type\":\"uint256\"}],\"name\":\"NewRaise\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"DepositInsufficient\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_addr\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_iscontinue\",\"type\":\"bool\"}],\"name\":\"ContinuedInvest\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"FundBonusPool\",\"type\":\"event\"}]"
+const RewardABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_period\",\"type\":\"uint256\"}],\"name\":\"setPeriod\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isContract\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"bonusPool\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"isRNode\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"nextRound\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"nextRoundStartTime\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transferDeposit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalInvestAmount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"getFreeBalance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"wantRenew\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"newRaise\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"quitRenew\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"isLocked\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"isENode\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"startNewRound\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"basicCriteria\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"getLockedBalance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"getTotalBalance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"electionCriteria\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_bonus\",\"type\":\"uint256\"}],\"name\":\"setBonusPool\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"submitDeposit\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"}],\"name\":\"isToRenew\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"SubmitDeposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"WithdrawDeposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"JoinENodes\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"JoinRNodes\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"TransferDeposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"round\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"lock\",\"type\":\"bool\"},{\"indexed\":false,\"name\":\"_bonusPool\",\"type\":\"uint256\"}],\"name\":\"NewRaise\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"DepositInsufficient\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_addr\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_iscontinue\",\"type\":\"bool\"}],\"name\":\"ContinuedInvest\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"FundBonusPool\",\"type\":\"event\"}]"
 
 // RewardBin is the compiled bytecode used for deploying new contracts.
-const RewardBin = `0x60806040526000805460a060020a60ff0219167401000000000000000000000000000000000000000017815569043c33c1937564800000600155692a5a058fc295ed0000006002556a0108b2a2c280290940000060035560048190556009556276a700600a5534801561007157600080fd5b5060008054600160a060020a0319163317905561119d806100936000396000f3006080604052600436106101325763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630f3a9f65811461016757806316279055146101815780632693ee80146101b65780632baaabc1146101dd5780632e1a7d4d146101fe57806347e40553146102095780634aeb31eb1461021e57806350f3dbec14610233578063665db73d146102575780638870985b1461026c5780638ca2ca7f1461028d5780638f83bc7f146102a25780638ffb6376146102b7578063929066f5146102cc578063a4e2d634146102ed578063bd85948c14610302578063c0209d1f14610317578063c40868931461032c578063d3d381931461034d578063d9f7700a1461036e578063db99cb3e14610383578063e9843a3e1461039b578063f509dd4a146103a3575b6040805134815290517f71030773066b852afef8d0f98dbfdaec8e9a62f2f5533916ec7dfa15a0edc1f29181900360200190a1005b34801561017357600080fd5b5061017f6004356103c4565b005b34801561018d57600080fd5b506101a2600160a060020a03600435166103e0565b604080519115158252519081900360200190f35b3480156101c257600080fd5b506101cb6103e8565b60408051918252519081900360200190f35b3480156101e957600080fd5b506101a2600160a060020a03600435166103ee565b61017f600435610407565b34801561021557600080fd5b506101cb6104c0565b34801561022a57600080fd5b506101cb6104c6565b34801561023f57600080fd5b5061017f600160a060020a03600435166024356104cc565b34801561026357600080fd5b506101cb6105c1565b34801561027857600080fd5b506101cb600160a060020a036004351661062e565b34801561029957600080fd5b5061017f610649565b3480156102ae57600080fd5b5061017f61067f565b3480156102c357600080fd5b5061017f610707565b3480156102d857600080fd5b506101a2600160a060020a036004351661073a565b3480156102f957600080fd5b506101a261074d565b34801561030e57600080fd5b5061017f610760565b34801561032357600080fd5b506101cb610a24565b34801561033857600080fd5b506101cb600160a060020a0360043516610a2a565b34801561035957600080fd5b506101cb600160a060020a0360043516610a48565b34801561037a57600080fd5b506101cb610a80565b34801561038f57600080fd5b5061017f600435610a86565b61017f610aa2565b3480156103af57600080fd5b506101a2600160a060020a0360043516610be9565b600054600160a060020a031633146103db57600080fd5b600a55565b6000903b1190565b60035481565b600061040160058363ffffffff610c0a16565b92915050565b336000908152600b602052604090205481111561042357600080fd5b336000908152600b6020526040902054610443908263ffffffff610c2916565b336000818152600b6020526040808220939093559151909183156108fc02918491818181858888f19350505050158015610481573d6000803e3d6000fd5b50604080513381526020810183905281517f195ddc41d185a27fe901831dcad44dd85716c95be78b1d71aa42393697966d40929181900390910190a150565b60045481565b60095481565b600054600160a060020a031633146104e357600080fd5b600160a060020a0382166000908152600b602052604090205481111561050857600080fd5b600160a060020a0382166000908152600b6020526040902054610531908263ffffffff610c2916565b600160a060020a0383166000818152600b6020526040808220939093559151909183156108fc02918491818181858888f19350505050158015610578573d6000803e3d6000fd5b5060408051600160a060020a03841681526020810183905281517f65134cf3b0cc43a1e4a814449241d36665e5774b4c36f7747755a62cf02493d5929181900390910190a15050565b600080805b6008548110156106285761061e600b60006007600101848154811015156105e957fe5b6000918252602080832090910154600160a060020a03168352820192909252604001902060010154839063ffffffff610c3b16565b91506001016105c6565b50919050565b600160a060020a03166000908152600b602052604090205490565b60005460a060020a900460ff161561066057600080fd5b336000908152600b60205260409020600301805460ff19166001179055565b600054600160a060020a0316331461069657600080fd5b6000805474ff00000000000000000000000000000000000000001916908190556004546003546040805192835260a060020a90930460ff16151560208301528183015290517fc8ea7d3c44e48dda18a813373040ce0eda7c908ad2cd30b53310d9b4b30012149181900360600190a1565b60005460a060020a900460ff161561071e57600080fd5b336000908152600b60205260409020600301805460ff19169055565b600061040160078363ffffffff610c0a16565b60005460a060020a900460ff16805b5090565b60008054819081908190600160a060020a0316331461077e57600080fd5b6009544210156107ef57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601860248201527f746865206e65787420726f756e64206e6f742073746172740000000000000000604482015290519081900360640190fd5b6000600454111561080257610802610c55565b60045461081690600163ffffffff610c3b16565b600455600a5442016201517f1901600955600093505b6008548410156109fa57600880548590811061084457fe5b6000918252602080832090910154600160a060020a0316808352600b9091526040909120909350915061087683610a48565b905060015481101561090157600282015482546108989163ffffffff610c3b16565b82556001820154156108a657fe5b6108b760058463ffffffff610ef716565b5060408051600160a060020a03851681526020810183905281517f9873c485f5a9e0be9a918f4d6ad5b64912fcb8352006b316a63427b1f408e824929181900390910190a16109e8565b815460018301546109179163ffffffff610c3b16565b600183015560028083015483555481101561098c5761093d60058463ffffffff610ef716565b50600182015460408051600160a060020a0386168152602081019290925280517fc66b350f01eac1684cc904e32475687ece346df489814944ced657f2140bd4f09281900390910190a16109e8565b61099d60058463ffffffff61106916565b50600182015460408051600160a060020a0386168152602081019290925280517fbd21c84fb114f7b58a81354ac97dc9eaa8797552b7f02752aefd0ec36c3840de9281900390910190a15b6000600283015560019093019261082c565b50506000805474ff0000000000000000000000000000000000000000191660a060020a1790555050565b60015481565b600160a060020a03166000908152600b602052604090206001015490565b600160a060020a0381166000908152600b602052604081208054600190910154610a78828263ffffffff610c3b16565b949350505050565b60025481565b600054600160a060020a03163314610a9d57600080fd5b600355565b60005460a060020a900460ff1615610ab957600080fd5b610ac2336103e0565b15610b5457604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602a60248201527f706c65617365206e6f742075736520636f6e74726163742063616c6c2074686960448201527f732066756e6374696f6e00000000000000000000000000000000000000000000606482015290519081900360840190fd5b610b5d3361073a565b1515610b7657610b7460073363ffffffff61106916565b505b336000908152600b6020526040902054610b96903463ffffffff610c3b16565b336000818152600b6020908152604091829020939093558051918252349282019290925281517f78d81951b78dad84771f88d35b4c93a632e1ed2da8706bbc7d8e465110686830929181900390910190a1565b600160a060020a03166000908152600b602052604090206003015460ff1690565b600160a060020a03166000908152602091909152604090205460ff1690565b600082821115610c3557fe5b50900390565b600082820183811015610c4a57fe5b8091505b5092915050565b600080600080610c636105c1565b9350600090505b600854811015610ef15760088054600b9160009184908110610c8857fe5b6000918252602080832090910154600160a060020a03168352820192909252604001902060010154600354909350610cd8908590610ccc908663ffffffff6110e916565b9063ffffffff61111416565b9150610d2882600b6000600760010185815481101515610cf457fe5b6000918252602080832090910154600160a060020a031683528201929092526040019020600201549063ffffffff610c3b16565b60088054600b9160009185908110610d3c57fe5b6000918252602080832090910154600160a060020a0316835282019290925260400181206002019190915560088054600b92919084908110610d7a57fe5b6000918252602080832090910154600160a060020a0316835282019290925260400190206003015460ff161515610e4057610dc583600b6000600760010185815481101515610cf457fe5b60088054600b9160009185908110610dd957fe5b6000918252602080832090910154600160a060020a0316835282019290925260400181206002019190915560088054600b91839185908110610e1757fe5b6000918252602080832090910154600160a060020a031683528201929092526040019020600101555b600880547f2772659b237083773d3a2874ab3591def1a8625215ae057bde8fc4ef3dee7290919083908110610e7157fe5b600091825260208220015460088054600160a060020a0390921692600b9290919086908110610e9c57fe5b6000918252602080832090910154600160a060020a03908116845283820194909452604092830190912060030154825194909316845260ff9092161515918301919091528051918290030190a1600101610c6a565b50505050565b600160a060020a0381166000908152602083905260408120548190819060ff161515610f265760009250611061565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b8181101561105c5783600160a060020a03168560010182815481101515610f7257fe5b600091825260209091200154600160a060020a03161415611054576001850180546000198401908110610fa157fe5b600091825260209091200154600186018054600160a060020a039092169183908110610fc957fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055600185018054600019840190811061101357fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff191690556001850180549061104e90600019830161112b565b5061105c565b600101610f4f565b600192505b505092915050565b600160a060020a03811660009081526020839052604081205460ff161561109257506000610401565b50600160a060020a03166000818152602083815260408220805460ff1916600190811790915593840180548086018255908352912001805473ffffffffffffffffffffffffffffffffffffffff1916909117905590565b6000808315156110fc5760009150610c4e565b5082820282848281151561110c57fe5b0414610c4a57fe5b600080828481151561112257fe5b04949350505050565b81548183558181111561114f5760008381526020902061114f918101908301611154565b505050565b61116e91905b8082111561075c576000815560010161115a565b905600a165627a7a72305820265e4bd9e63096c141d01f548b7529b955ac1e6d65316c97b1e344bc8675e5110029`
+const RewardBin = `0x60806040526000805460a060020a60ff0219167401000000000000000000000000000000000000000017815569043c33c1937564800000600155692a5a058fc295ed0000006002556a0108b2a2c280290940000060035560048190556009556276a700600a5534801561007157600080fd5b5060008054600160a060020a031916331790556111bc806100936000396000f3006080604052600436106101325763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630f3a9f65811461016757806316279055146101815780632693ee80146101b65780632baaabc1146101dd5780632e1a7d4d146101fe57806347e40553146102095780634aeb31eb1461021e57806350f3dbec14610233578063665db73d146102575780638870985b1461026c5780638ca2ca7f1461028d5780638f83bc7f146102a25780638ffb6376146102b7578063a4e2d634146102cc578063b95ec203146102e1578063bd85948c14610302578063c0209d1f14610317578063c40868931461032c578063d3d381931461034d578063d9f7700a1461036e578063db99cb3e14610383578063e9843a3e1461039b578063f509dd4a146103a3575b6040805134815290517f71030773066b852afef8d0f98dbfdaec8e9a62f2f5533916ec7dfa15a0edc1f29181900360200190a1005b34801561017357600080fd5b5061017f6004356103c4565b005b34801561018d57600080fd5b506101a2600160a060020a03600435166103e0565b604080519115158252519081900360200190f35b3480156101c257600080fd5b506101cb6103e8565b60408051918252519081900360200190f35b3480156101e957600080fd5b506101a2600160a060020a03600435166103ee565b61017f600435610407565b34801561021557600080fd5b506101cb6104c0565b34801561022a57600080fd5b506101cb6104c6565b34801561023f57600080fd5b5061017f600160a060020a03600435166024356104cc565b34801561026357600080fd5b506101cb6105c1565b34801561027857600080fd5b506101cb600160a060020a036004351661062e565b34801561029957600080fd5b5061017f610649565b3480156102ae57600080fd5b5061017f61067f565b3480156102c357600080fd5b5061017f610707565b3480156102d857600080fd5b506101a261073a565b3480156102ed57600080fd5b506101a2600160a060020a036004351661074d565b34801561030e57600080fd5b5061017f610760565b34801561032357600080fd5b506101cb610a38565b34801561033857600080fd5b506101cb600160a060020a0360043516610a3e565b34801561035957600080fd5b506101cb600160a060020a0360043516610a5c565b34801561037a57600080fd5b506101cb610a94565b34801561038f57600080fd5b5061017f600435610a9a565b61017f610ab6565b3480156103af57600080fd5b506101a2600160a060020a0360043516610bfd565b600054600160a060020a031633146103db57600080fd5b600a55565b6000903b1190565b60035481565b600061040160058363ffffffff610c1e16565b92915050565b336000908152600b602052604090205481111561042357600080fd5b336000908152600b6020526040902054610443908263ffffffff610c3d16565b336000818152600b6020526040808220939093559151909183156108fc02918491818181858888f19350505050158015610481573d6000803e3d6000fd5b50604080513381526020810183905281517f195ddc41d185a27fe901831dcad44dd85716c95be78b1d71aa42393697966d40929181900390910190a150565b60045481565b60095481565b600054600160a060020a031633146104e357600080fd5b600160a060020a0382166000908152600b602052604090205481111561050857600080fd5b600160a060020a0382166000908152600b6020526040902054610531908263ffffffff610c3d16565b600160a060020a0383166000818152600b6020526040808220939093559151909183156108fc02918491818181858888f19350505050158015610578573d6000803e3d6000fd5b5060408051600160a060020a03841681526020810183905281517f65134cf3b0cc43a1e4a814449241d36665e5774b4c36f7747755a62cf02493d5929181900390910190a15050565b600080805b6008548110156106285761061e600b60006007600101848154811015156105e957fe5b6000918252602080832090910154600160a060020a03168352820192909252604001902060010154839063ffffffff610c4f16565b91506001016105c6565b50919050565b600160a060020a03166000908152600b602052604090205490565b60005460a060020a900460ff161561066057600080fd5b336000908152600b60205260409020600301805460ff19166001179055565b600054600160a060020a0316331461069657600080fd5b6000805474ff00000000000000000000000000000000000000001916908190556004546003546040805192835260a060020a90930460ff16151560208301528183015290517fc8ea7d3c44e48dda18a813373040ce0eda7c908ad2cd30b53310d9b4b30012149181900360600190a1565b60005460a060020a900460ff161561071e57600080fd5b336000908152600b60205260409020600301805460ff19169055565b60005460a060020a900460ff16805b5090565b600061040160078363ffffffff610c1e16565b60008054819081908190600160a060020a0316331461077e57600080fd5b6009544210156107ef57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601860248201527f746865206e65787420726f756e64206e6f742073746172740000000000000000604482015290519081900360640190fd5b6000600454111561080257610802610c69565b60045461081690600163ffffffff610c4f16565b600455600a5442016201517f1901600955600093505b600854841015610a0e57600880548590811061084457fe5b6000918252602080832090910154600160a060020a0316808352600b9091526040909120909350915061087683610a5c565b905060015481101561090157600282015482546108989163ffffffff610c4f16565b82556001820154156108a657fe5b6108b760058463ffffffff610f1616565b5060408051600160a060020a03851681526020810183905281517f9873c485f5a9e0be9a918f4d6ad5b64912fcb8352006b316a63427b1f408e824929181900390910190a16109fc565b815460018301546109179163ffffffff610c4f16565b600180840191909155600280840154845560038401805460ff1916909217909155548110156109a05761095160058463ffffffff610f1616565b50600182015460408051600160a060020a0386168152602081019290925280517fc77e37a0f773afcb213afe8a3075752e50740f11368b2098fcffb6b99dd439789281900390910190a16109fc565b6109b160058463ffffffff61108816565b50600182015460408051600160a060020a0386168152602081019290925280517fd8bcb238cc6e3b6f0e56058422877e35c9b0c97497d911cd98ec09ea45b4e6239281900390910190a15b6000600283015560019093019261082c565b50506000805474ff0000000000000000000000000000000000000000191660a060020a1790555050565b60015481565b600160a060020a03166000908152600b602052604090206001015490565b600160a060020a0381166000908152600b602052604081208054600190910154610a8c828263ffffffff610c4f16565b949350505050565b60025481565b600054600160a060020a03163314610ab157600080fd5b600355565b60005460a060020a900460ff1615610acd57600080fd5b610ad6336103e0565b15610b6857604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602a60248201527f706c65617365206e6f742075736520636f6e74726163742063616c6c2074686960448201527f732066756e6374696f6e00000000000000000000000000000000000000000000606482015290519081900360840190fd5b610b713361074d565b1515610b8a57610b8860073363ffffffff61108816565b505b336000908152600b6020526040902054610baa903463ffffffff610c4f16565b336000818152600b6020908152604091829020939093558051918252349282019290925281517f78d81951b78dad84771f88d35b4c93a632e1ed2da8706bbc7d8e465110686830929181900390910190a1565b600160a060020a03166000908152600b602052604090206003015460ff1690565b600160a060020a03166000908152602091909152604090205460ff1690565b600082821115610c4957fe5b50900390565b600082820183811015610c5e57fe5b8091505b5092915050565b600080600080610c776105c1565b9350831515610c8557610f10565b5060005b600854811015610f105760088054600b9160009184908110610ca757fe5b6000918252602080832090910154600160a060020a03168352820192909252604001902060010154600354909350610cf7908590610ceb908663ffffffff61110816565b9063ffffffff61113316565b9150610d4782600b6000600760010185815481101515610d1357fe5b6000918252602080832090910154600160a060020a031683528201929092526040019020600201549063ffffffff610c4f16565b60088054600b9160009185908110610d5b57fe5b6000918252602080832090910154600160a060020a0316835282019290925260400181206002019190915560088054600b92919084908110610d9957fe5b6000918252602080832090910154600160a060020a0316835282019290925260400190206003015460ff161515610e5f57610de483600b6000600760010185815481101515610d1357fe5b60088054600b9160009185908110610df857fe5b6000918252602080832090910154600160a060020a0316835282019290925260400181206002019190915560088054600b91839185908110610e3657fe5b6000918252602080832090910154600160a060020a031683528201929092526040019020600101555b600880547f2772659b237083773d3a2874ab3591def1a8625215ae057bde8fc4ef3dee7290919083908110610e9057fe5b600091825260208220015460088054600160a060020a0390921692600b9290919086908110610ebb57fe5b6000918252602080832090910154600160a060020a03908116845283820194909452604092830190912060030154825194909316845260ff9092161515918301919091528051918290030190a1600101610c89565b50505050565b600160a060020a0381166000908152602083905260408120548190819060ff161515610f455760009250611080565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b8181101561107b5783600160a060020a03168560010182815481101515610f9157fe5b600091825260209091200154600160a060020a03161415611073576001850180546000198401908110610fc057fe5b600091825260209091200154600186018054600160a060020a039092169183908110610fe857fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055600185018054600019840190811061103257fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff191690556001850180549061106d90600019830161114a565b5061107b565b600101610f6e565b600192505b505092915050565b600160a060020a03811660009081526020839052604081205460ff16156110b157506000610401565b50600160a060020a03166000818152602083815260408220805460ff1916600190811790915593840180548086018255908352912001805473ffffffffffffffffffffffffffffffffffffffff1916909117905590565b60008083151561111b5760009150610c62565b5082820282848281151561112b57fe5b0414610c5e57fe5b600080828481151561114157fe5b04949350505050565b81548183558181111561116e5760008381526020902061116e918101908301611173565b505050565b61118d91905b808211156107495760008155600101611179565b905600a165627a7a723058204f9b5dcee4c651fa28bc9de0404b12bc65010efd7c3a1ed87d0480d224689bf70029`
 
 // DeployReward deploys a new cpchain contract, binding an instance of Reward to it.
 func DeployReward(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Reward, error) {
@@ -358,6 +358,32 @@ func (_Reward *RewardCallerSession) IsContract(addr common.Address) (bool, error
 	return _Reward.Contract.IsContract(&_Reward.CallOpts, addr)
 }
 
+// IsENode is a free data retrieval call binding the contract method 0xb95ec203.
+//
+// Solidity: function isENode(_addr address) constant returns(bool)
+func (_Reward *RewardCaller) IsENode(opts *bind.CallOpts, _addr common.Address) (bool, error) {
+	var (
+		ret0 = new(bool)
+	)
+	out := ret0
+	err := _Reward.contract.Call(opts, out, "isENode", _addr)
+	return *ret0, err
+}
+
+// IsENode is a free data retrieval call binding the contract method 0xb95ec203.
+//
+// Solidity: function isENode(_addr address) constant returns(bool)
+func (_Reward *RewardSession) IsENode(_addr common.Address) (bool, error) {
+	return _Reward.Contract.IsENode(&_Reward.CallOpts, _addr)
+}
+
+// IsENode is a free data retrieval call binding the contract method 0xb95ec203.
+//
+// Solidity: function isENode(_addr address) constant returns(bool)
+func (_Reward *RewardCallerSession) IsENode(_addr common.Address) (bool, error) {
+	return _Reward.Contract.IsENode(&_Reward.CallOpts, _addr)
+}
+
 // IsLocked is a free data retrieval call binding the contract method 0xa4e2d634.
 //
 // Solidity: function isLocked() constant returns(bool)
@@ -382,32 +408,6 @@ func (_Reward *RewardSession) IsLocked() (bool, error) {
 // Solidity: function isLocked() constant returns(bool)
 func (_Reward *RewardCallerSession) IsLocked() (bool, error) {
 	return _Reward.Contract.IsLocked(&_Reward.CallOpts)
-}
-
-// IsParticipant is a free data retrieval call binding the contract method 0x929066f5.
-//
-// Solidity: function isParticipant(_addr address) constant returns(bool)
-func (_Reward *RewardCaller) IsParticipant(opts *bind.CallOpts, _addr common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Reward.contract.Call(opts, out, "isParticipant", _addr)
-	return *ret0, err
-}
-
-// IsParticipant is a free data retrieval call binding the contract method 0x929066f5.
-//
-// Solidity: function isParticipant(_addr address) constant returns(bool)
-func (_Reward *RewardSession) IsParticipant(_addr common.Address) (bool, error) {
-	return _Reward.Contract.IsParticipant(&_Reward.CallOpts, _addr)
-}
-
-// IsParticipant is a free data retrieval call binding the contract method 0x929066f5.
-//
-// Solidity: function isParticipant(_addr address) constant returns(bool)
-func (_Reward *RewardCallerSession) IsParticipant(_addr common.Address) (bool, error) {
-	return _Reward.Contract.IsParticipant(&_Reward.CallOpts, _addr)
 }
 
 // IsRNode is a free data retrieval call binding the contract method 0x2baaabc1.
@@ -1097,9 +1097,9 @@ func (_Reward *RewardFilterer) WatchFundBonusPool(opts *bind.WatchOpts, sink cha
 	}), nil
 }
 
-// RewardJoinCandidatesIterator is returned from FilterJoinCandidates and is used to iterate over the raw logs and unpacked data for JoinCandidates events raised by the Reward contract.
-type RewardJoinCandidatesIterator struct {
-	Event *RewardJoinCandidates // Event containing the contract specifics and raw log
+// RewardJoinENodesIterator is returned from FilterJoinENodes and is used to iterate over the raw logs and unpacked data for JoinENodes events raised by the Reward contract.
+type RewardJoinENodesIterator struct {
+	Event *RewardJoinENodes // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1113,7 +1113,7 @@ type RewardJoinCandidatesIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *RewardJoinCandidatesIterator) Next() bool {
+func (it *RewardJoinENodesIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1122,7 +1122,7 @@ func (it *RewardJoinCandidatesIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(RewardJoinCandidates)
+			it.Event = new(RewardJoinENodes)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1137,7 +1137,7 @@ func (it *RewardJoinCandidatesIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(RewardJoinCandidates)
+		it.Event = new(RewardJoinENodes)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1153,42 +1153,42 @@ func (it *RewardJoinCandidatesIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *RewardJoinCandidatesIterator) Error() error {
+func (it *RewardJoinENodesIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *RewardJoinCandidatesIterator) Close() error {
+func (it *RewardJoinENodesIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// RewardJoinCandidates represents a JoinCandidates event raised by the Reward contract.
-type RewardJoinCandidates struct {
+// RewardJoinENodes represents a JoinENodes event raised by the Reward contract.
+type RewardJoinENodes struct {
 	Who   common.Address
 	Value *big.Int
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// FilterJoinCandidates is a free log retrieval operation binding the contract event 0xbd21c84fb114f7b58a81354ac97dc9eaa8797552b7f02752aefd0ec36c3840de.
+// FilterJoinENodes is a free log retrieval operation binding the contract event 0xc77e37a0f773afcb213afe8a3075752e50740f11368b2098fcffb6b99dd43978.
 //
-// Solidity: e JoinCandidates(who address, value uint256)
-func (_Reward *RewardFilterer) FilterJoinCandidates(opts *bind.FilterOpts) (*RewardJoinCandidatesIterator, error) {
+// Solidity: e JoinENodes(who address, value uint256)
+func (_Reward *RewardFilterer) FilterJoinENodes(opts *bind.FilterOpts) (*RewardJoinENodesIterator, error) {
 
-	logs, sub, err := _Reward.contract.FilterLogs(opts, "JoinCandidates")
+	logs, sub, err := _Reward.contract.FilterLogs(opts, "JoinENodes")
 	if err != nil {
 		return nil, err
 	}
-	return &RewardJoinCandidatesIterator{contract: _Reward.contract, event: "JoinCandidates", logs: logs, sub: sub}, nil
+	return &RewardJoinENodesIterator{contract: _Reward.contract, event: "JoinENodes", logs: logs, sub: sub}, nil
 }
 
-// WatchJoinCandidates is a free log subscription operation binding the contract event 0xbd21c84fb114f7b58a81354ac97dc9eaa8797552b7f02752aefd0ec36c3840de.
+// WatchJoinENodes is a free log subscription operation binding the contract event 0xc77e37a0f773afcb213afe8a3075752e50740f11368b2098fcffb6b99dd43978.
 //
-// Solidity: e JoinCandidates(who address, value uint256)
-func (_Reward *RewardFilterer) WatchJoinCandidates(opts *bind.WatchOpts, sink chan<- *RewardJoinCandidates) (event.Subscription, error) {
+// Solidity: e JoinENodes(who address, value uint256)
+func (_Reward *RewardFilterer) WatchJoinENodes(opts *bind.WatchOpts, sink chan<- *RewardJoinENodes) (event.Subscription, error) {
 
-	logs, sub, err := _Reward.contract.WatchLogs(opts, "JoinCandidates")
+	logs, sub, err := _Reward.contract.WatchLogs(opts, "JoinENodes")
 	if err != nil {
 		return nil, err
 	}
@@ -1198,8 +1198,8 @@ func (_Reward *RewardFilterer) WatchJoinCandidates(opts *bind.WatchOpts, sink ch
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(RewardJoinCandidates)
-				if err := _Reward.contract.UnpackLog(event, "JoinCandidates", log); err != nil {
+				event := new(RewardJoinENodes)
+				if err := _Reward.contract.UnpackLog(event, "JoinENodes", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1220,9 +1220,9 @@ func (_Reward *RewardFilterer) WatchJoinCandidates(opts *bind.WatchOpts, sink ch
 	}), nil
 }
 
-// RewardJoinPartcipantIterator is returned from FilterJoinPartcipant and is used to iterate over the raw logs and unpacked data for JoinPartcipant events raised by the Reward contract.
-type RewardJoinPartcipantIterator struct {
-	Event *RewardJoinPartcipant // Event containing the contract specifics and raw log
+// RewardJoinRNodesIterator is returned from FilterJoinRNodes and is used to iterate over the raw logs and unpacked data for JoinRNodes events raised by the Reward contract.
+type RewardJoinRNodesIterator struct {
+	Event *RewardJoinRNodes // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1236,7 +1236,7 @@ type RewardJoinPartcipantIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *RewardJoinPartcipantIterator) Next() bool {
+func (it *RewardJoinRNodesIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1245,7 +1245,7 @@ func (it *RewardJoinPartcipantIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(RewardJoinPartcipant)
+			it.Event = new(RewardJoinRNodes)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1260,7 +1260,7 @@ func (it *RewardJoinPartcipantIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(RewardJoinPartcipant)
+		it.Event = new(RewardJoinRNodes)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1276,42 +1276,42 @@ func (it *RewardJoinPartcipantIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *RewardJoinPartcipantIterator) Error() error {
+func (it *RewardJoinRNodesIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *RewardJoinPartcipantIterator) Close() error {
+func (it *RewardJoinRNodesIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// RewardJoinPartcipant represents a JoinPartcipant event raised by the Reward contract.
-type RewardJoinPartcipant struct {
+// RewardJoinRNodes represents a JoinRNodes event raised by the Reward contract.
+type RewardJoinRNodes struct {
 	Who   common.Address
 	Value *big.Int
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// FilterJoinPartcipant is a free log retrieval operation binding the contract event 0xc66b350f01eac1684cc904e32475687ece346df489814944ced657f2140bd4f0.
+// FilterJoinRNodes is a free log retrieval operation binding the contract event 0xd8bcb238cc6e3b6f0e56058422877e35c9b0c97497d911cd98ec09ea45b4e623.
 //
-// Solidity: e JoinPartcipant(who address, value uint256)
-func (_Reward *RewardFilterer) FilterJoinPartcipant(opts *bind.FilterOpts) (*RewardJoinPartcipantIterator, error) {
+// Solidity: e JoinRNodes(who address, value uint256)
+func (_Reward *RewardFilterer) FilterJoinRNodes(opts *bind.FilterOpts) (*RewardJoinRNodesIterator, error) {
 
-	logs, sub, err := _Reward.contract.FilterLogs(opts, "JoinPartcipant")
+	logs, sub, err := _Reward.contract.FilterLogs(opts, "JoinRNodes")
 	if err != nil {
 		return nil, err
 	}
-	return &RewardJoinPartcipantIterator{contract: _Reward.contract, event: "JoinPartcipant", logs: logs, sub: sub}, nil
+	return &RewardJoinRNodesIterator{contract: _Reward.contract, event: "JoinRNodes", logs: logs, sub: sub}, nil
 }
 
-// WatchJoinPartcipant is a free log subscription operation binding the contract event 0xc66b350f01eac1684cc904e32475687ece346df489814944ced657f2140bd4f0.
+// WatchJoinRNodes is a free log subscription operation binding the contract event 0xd8bcb238cc6e3b6f0e56058422877e35c9b0c97497d911cd98ec09ea45b4e623.
 //
-// Solidity: e JoinPartcipant(who address, value uint256)
-func (_Reward *RewardFilterer) WatchJoinPartcipant(opts *bind.WatchOpts, sink chan<- *RewardJoinPartcipant) (event.Subscription, error) {
+// Solidity: e JoinRNodes(who address, value uint256)
+func (_Reward *RewardFilterer) WatchJoinRNodes(opts *bind.WatchOpts, sink chan<- *RewardJoinRNodes) (event.Subscription, error) {
 
-	logs, sub, err := _Reward.contract.WatchLogs(opts, "JoinPartcipant")
+	logs, sub, err := _Reward.contract.WatchLogs(opts, "JoinRNodes")
 	if err != nil {
 		return nil, err
 	}
@@ -1321,8 +1321,8 @@ func (_Reward *RewardFilterer) WatchJoinPartcipant(opts *bind.WatchOpts, sink ch
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(RewardJoinPartcipant)
-				if err := _Reward.contract.UnpackLog(event, "JoinPartcipant", log); err != nil {
+				event := new(RewardJoinRNodes)
+				if err := _Reward.contract.UnpackLog(event, "JoinRNodes", log); err != nil {
 					return err
 				}
 				event.Raw = log

@@ -24,6 +24,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -50,8 +51,12 @@ func SetConfig(ep, ksPath string) {
 }
 
 func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
+	ep, err := configs.ResolveUrl(endPoint)
+	if err != nil {
+		log.Fatal("unknown endpoint", "endpoint", endPoint, "err", err)
+	}
 	// Create client.
-	client, err := cpclient.Dial(endPoint)
+	client, err := cpclient.Dial(ep)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

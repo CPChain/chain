@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 run_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-proj_dir=$run_dir/../../
+proj_dir=$run_dir/../..
 
 
 contract_admin_ip=""

@@ -24,13 +24,11 @@ const (
 	// TermDistBetweenElectionAndMining is the the term gap between election and mining.
 	TermDistBetweenElectionAndMining = 2 // TermDistBetweenElectionAndMining = effective term - current term(last block)
 
-	// MaxSizeOfRecentSigners is the size of the RecentSigners.
-	// TODO: @shiyc MaxSizeOfRecentSigners is about to be removed later
 	//MaxSizeOfRecentValidators is the size of the RecentValidators
-	//MaxSizeOfRecentProposers is the size of the RecentProposers
-	MaxSizeOfRecentSigners    = 200
 	MaxSizeOfRecentValidators = 200
-	MaxSizeOfRecentProposers  = 200
+
+	//MaxSizeOfRecentProposers is the size of the RecentProposers
+	MaxSizeOfRecentProposers = 200
 )
 
 var (
@@ -43,12 +41,10 @@ var (
 
 // DporSnapshot is the state of the authorization voting at a given point in time.
 type DporSnapshot struct {
-	Mode       Mode             `json:"mode"`
-	Number     uint64           `json:"number"`     // Block number where the Snapshot was created
-	Hash       common.Hash      `json:"hash"`       // Block hash where the Snapshot was created
-	Candidates []common.Address `json:"candidates"` // Set of candidates read from campaign contract
-	// RecentSigners *lru.ARCCache    `json:"signers"`
-	RecentSigners    map[uint64][]common.Address `json:"signers"`    // Set of recent signers
+	Mode             Mode                        `json:"mode"`
+	Number           uint64                      `json:"number"`     // Block number where the Snapshot was created
+	Hash             common.Hash                 `json:"hash"`       // Block hash where the Snapshot was created
+	Candidates       []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
 	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
 	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
 	Client           backend.ClientBackend       `json:"-"`
@@ -107,18 +103,6 @@ func (s *DporSnapshot) setCandidates(candidates []common.Address) {
 	s.Candidates = cands
 }
 
-// TODO: @shiyc remove it later
-func (s *DporSnapshot) recentSigners() map[uint64][]common.Address {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
-	recentSigners := make(map[uint64][]common.Address)
-	for term, signers := range s.RecentSigners {
-		recentSigners[term] = signers
-	}
-	return recentSigners
-}
-
 func (s *DporSnapshot) recentProposers() map[uint64][]common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -149,19 +133,6 @@ func (s *DporSnapshot) recentValidators() map[uint64][]common.Address {
 	return recentValidators
 }
 
-//TODO: @shiyc need to be removed later
-func (s *DporSnapshot) getRecentSigners(term uint64) []common.Address {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
-	signers, ok := s.RecentSigners[term]
-	if !ok {
-		return nil
-	}
-
-	return signers
-}
-
 func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -185,22 +156,6 @@ func (s *DporSnapshot) getRecentValidators(term uint64) []common.Address {
 	}
 
 	return signers
-}
-
-func (s *DporSnapshot) setRecentSigners(term uint64, signers []common.Address) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	ss := make([]common.Address, len(signers))
-	copy(ss, signers)
-
-	s.RecentSigners[term] = ss
-
-	beforeTerm := uint64(math.Max(0, float64(term-MaxSizeOfRecentSigners)))
-	if _, ok := s.RecentSigners[beforeTerm]; ok {
-		delete(s.RecentSigners, beforeTerm)
-	}
-
 }
 
 func (s *DporSnapshot) setRecentValidators(term uint64, validators []common.Address) {
@@ -259,13 +214,10 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, pr
 		config:           config,
 		Number:           number,
 		Hash:             hash,
-		RecentSigners:    make(map[uint64][]common.Address),
 		RecentProposers:  make(map[uint64][]common.Address),
 		RecentValidators: make(map[uint64][]common.Address),
 	}
 
-	// TODO: @shiyc need to remove setRecentSigners(), and consider whether we need setRecentValidators()
-	snap.setRecentSigners(snap.Term(), proposers)
 	snap.setRecentProposers(snap.Term(), proposers)
 	snap.setRecentValidators(snap.Term(), validators)
 	return snap
@@ -309,15 +261,11 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 		Number:           s.number(),
 		Hash:             s.hash(),
 		Candidates:       make([]common.Address, len(s.Candidates)),
-		RecentSigners:    make(map[uint64][]common.Address),
 		RecentValidators: make(map[uint64][]common.Address),
 		RecentProposers:  make(map[uint64][]common.Address),
 	}
 
 	copy(cpy.Candidates, s.candidates())
-	for term, signers := range s.recentSigners() {
-		cpy.setRecentSigners(term, signers)
-	}
 	for term, proposer := range s.recentProposers() {
 		cpy.setRecentProposers(term, proposer)
 	}
@@ -407,8 +355,9 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 
 	}
 
+	// TODO: there is a vulnerability about validators in header, check it!
 	term := s.TermOf(header.Number.Uint64())
-	if len(header.Dpor.Validators) != 0 && len(header.Dpor.Validators) > 4 { // 3f + 1, TODO: @AC add a config
+	if len(header.Dpor.Validators) != 0 && len(header.Dpor.Validators) == int(s.config.ValidatorsLen()) {
 		s.setRecentValidators(term+1, header.Dpor.Validators)
 	} else if IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
 		s.setRecentValidators(term+1, s.getRecentValidators(term))
@@ -592,7 +541,6 @@ func (s *DporSnapshot) TermOf(blockNum uint64) uint64 {
 		return 0 // block number 0 is a special case, its term is set to 0
 	}
 
-	// TODO: fix RACE here. s.config.*
 	return (blockNum - 1) / ((s.config.TermLen) * (s.config.ViewLen))
 }
 
@@ -601,10 +549,12 @@ func (s *DporSnapshot) FutureTermOf(blockNum uint64) uint64 {
 	return s.TermOf(blockNum) + TermDistBetweenElectionAndMining + 1
 }
 
+// ValidatorsOf returns validators of given block number
 func (s *DporSnapshot) ValidatorsOf(number uint64) []common.Address {
 	return s.getRecentValidators(s.TermOf(number))
 }
 
+// ProposersOf returns proposers of given block number
 func (s *DporSnapshot) ProposersOf(number uint64) []common.Address {
 	return s.getRecentProposers(s.TermOf(number))
 }
@@ -648,25 +598,14 @@ func (s *DporSnapshot) IsProposerOf(signer common.Address, number uint64) (bool,
 	return b, nil
 }
 
-// FutureSignersOf returns future signers of given block number
-func (s *DporSnapshot) FutureSignersOf(number uint64) []common.Address {
-	return s.getRecentSigners(s.FutureTermOf(number))
+// FutureValidatorsOf returns future validators of given block number
+func (s *DporSnapshot) FutureValidatorsOf(number uint64) []common.Address {
+	return s.getRecentValidators(s.FutureTermOf(number))
 }
 
 // FutureProposersOf returns future proposers of given block number
 func (s *DporSnapshot) FutureProposersOf(number uint64) []common.Address {
 	return s.getRecentProposers(s.FutureTermOf(number))
-}
-
-// FutureSignerViewOf returns the future signer view with given signer address and block number
-// TODO: @shiyc need to remove it later
-func (s *DporSnapshot) FutureSignerViewOf(signer common.Address, number uint64) (int, error) {
-	for view, s := range s.FutureSignersOf(number) {
-		if s == signer {
-			return view, nil
-		}
-	}
-	return -1, errSignerNotInCommittee
 }
 
 // FutureProposerViewOf returns the future signer view with given signer address and block number
@@ -677,13 +616,6 @@ func (s *DporSnapshot) FutureProposerViewOf(signer common.Address, number uint64
 		}
 	}
 	return -1, errValidatorNotInCommittee
-}
-
-// IsFutureSignerOf returns if an address is a future signer in the given block number
-// TODO: @shiyc need to remove it later
-func (s *DporSnapshot) IsFutureSignerOf(signer common.Address, number uint64) bool {
-	_, err := s.FutureSignerViewOf(signer, number)
-	return err == nil
 }
 
 //IsFutureProposerOf returns if an address is a future proposer in the given block number
@@ -701,6 +633,7 @@ func (s *DporSnapshot) InturnOf(number uint64, signer common.Address) bool {
 	return ok
 }
 
+// StartBlockNumberOfTerm returns the first block number of a term
 func (s *DporSnapshot) StartBlockNumberOfTerm(term uint64) uint64 {
 	return s.config.ViewLen * s.config.TermLen * term
 }

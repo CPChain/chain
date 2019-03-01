@@ -71,7 +71,8 @@ const (
 )
 
 const (
-	DefaultWaitTimeBeforeImpeachment = 120 // wait 120 seconds before first impeachment
+	DefaultWaitTimeBeforeImpeachment    = 120 * time.Second // wait 120 seconds before first impeachment
+	DefaultFailbackTimestampSampleSpace = 20 * time.Minute
 )
 
 // TODO @hmw make the name more meaningful.  add doc.
@@ -254,6 +255,16 @@ func resolveDomain(hostname string) (string, error) {
 		return addr[0], nil
 	}
 	return "", fmt.Errorf("invalid host: %v", err)
+}
+
+func ResolveUrl(url string) (string, error) {
+	host, port, err := net.SplitHostPort(url[7:])
+	ip, err := resolveDomain(host)
+	if err != nil {
+		log.Fatal("unknown endpoint", "endpoint", url, "err", err)
+		return "", err
+	}
+	return "http://" + ip + ":" + port, err
 }
 
 // ChainConfig is the core config which determines the blockchain settings.
