@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"math/big"
+	"strconv"
 
 	"bitbucket.org/cpchain/chain/configs"
 
@@ -13,51 +13,40 @@ var rewardCommand cli.Command
 
 func init() {
 	rewardFlags := append([]cli.Flag(nil), GasFlags...)
-	withdrawFlags := append(rewardFlags, cli.Int64Flag{
-		Name:  "value",
-		Usage: "Value, default 0 cpc",
-	})
 	rewardCommand = cli.Command{
 		Name:  "reward",
-		Flags: rewardFlags,
-		Usage: "Manage reward contract",
+		Flags: wrapperFlags(rewardFlags),
+		Usage: "Reward contract operations",
 		Subcommands: []cli.Command{
 			{
 				Name:        "deposit",
-				Usage:       "submit deposit",
+				Usage:       "Deposit money to fundraising account",
 				Flags:       wrapperFlags(rewardFlags),
+				Description: "Deposit money to fundraising account. If argument is not present, deposit default 1000 CPC.",
+				ArgsUsage:   "[money to deposit]",
 				Action:      deposit,
-				Description: fmt.Sprintf(`Submit Deposit`),
 			},
 			{
 				Name:        "withdraw",
-				Usage:       "withdraw",
-				Flags:       wrapperFlags(withdrawFlags),
-				Action:      withdraw,
-				Description: fmt.Sprintf(`Withdraw`),
+				Usage:       "Withdraw money from fundraising account",
+				Flags:       wrapperFlags(rewardFlags),
+				Description: "Withdraw money from fundraising account. If argument is not present, withdraw all money in the fundraising account.",
+				ArgsUsage:   "[money to withdraw]",
+
+				Action: withdraw,
 			},
 			{
-				Name:        "wantrenew",
-				Usage:       "want renew",
-				Flags:       wrapperFlags(rewardFlags),
-				Action:      wantRenew,
-				Description: fmt.Sprintf(`Want Renew`),
+				Name:   "wantrenew",
+				Flags:  wrapperFlags(rewardFlags),
+				Usage:  "Confirm to renew the current investment",
+				Action: wantRenew,
 			},
 			{
-				Name:        "quitrenew",
-				Usage:       "quit renew",
-				Flags:       wrapperFlags(rewardFlags),
-				Action:      quitRenew,
-				Description: fmt.Sprintf(`Quit Renew`),
+				Name:   "quitrenew",
+				Flags:  wrapperFlags(rewardFlags),
+				Usage:  "Confirm to cancel renewing the current investment",
+				Action: quitRenew,
 			},
-		},
-		Before: func(ctx *cli.Context) error {
-			// gasprice := ctx.Int64("gasprice")
-			// gaslimit := ctx.Int64("gaslimit")
-			return nil
-		},
-		After: func(ctx *cli.Context) error {
-			return nil
 		},
 	}
 }
@@ -65,7 +54,23 @@ func init() {
 func deposit(ctx *cli.Context) error {
 	console, out, cancel := build(ctx)
 	defer cancel()
-	err := console.SubmitDeposit()
+
+	if len(ctx.Args()) > 1 {
+		out.Fatal("Too many arguments.")
+	}
+
+	var value uint64 = 1000
+	if len(ctx.Args()) == 1 {
+		v, err := strconv.Atoi(ctx.Args().First())
+		if err != nil {
+			out.Fatal("Argument is illegal", "error", err)
+		}
+		value = uint64(v)
+	} else {
+		out.Info("Argument is not present, use default value, 1000 CPC")
+	}
+
+	err := console.SubmitDeposit(new(big.Int).Mul(new(big.Int).SetUint64(value), big.NewInt(configs.Cpc)))
 	if err != nil {
 		out.Error(err.Error())
 	}
@@ -75,10 +80,30 @@ func deposit(ctx *cli.Context) error {
 func withdraw(ctx *cli.Context) error {
 	console, out, cancel := build(ctx)
 	defer cancel()
-	value := ctx.Int64("value")
-	err := console.Withdraw(new(big.Int).Mul(big.NewInt(value), big.NewInt(configs.Cpc)))
+
+	if len(ctx.Args()) > 1 {
+		out.Fatal("Too many arguments.")
+	}
+
+	var value *big.Int
+	if len(ctx.Args()) == 1 {
+		v, err := strconv.Atoi(ctx.Args().First())
+		if err != nil {
+			out.Fatal("Argument is illegal", "error", err)
+		}
+		value = new(big.Int).Mul(big.NewInt(int64(v)), big.NewInt(configs.Cpc))
+	} else {
+		b, err := console.GetBalanceOnReward()
+		if err != nil {
+			out.Fatal("Encounter error", "error", err)
+		}
+		value = b.FreeBalance
+		out.Info("Argument is not present, use default value, the balance of fundraising account", "value", value)
+	}
+
+	err := console.Withdraw(value)
 	if err != nil {
-		out.Error(err.Error())
+		out.Fatal(err.Error())
 	}
 	return nil
 }

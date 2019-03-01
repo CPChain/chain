@@ -24,17 +24,11 @@ func init() {
 			},
 			{
 				Name:        "stop",
-				Usage:       "stop mining",
+				Usage:       "Stop mining",
 				Flags:       wrapperFlags(minerFlags),
 				Action:      stopMining,
 				Description: fmt.Sprintf(`Stop Mining`),
 			},
-		},
-		Before: func(ctx *cli.Context) error {
-			return nil
-		},
-		After: func(ctx *cli.Context) error {
-			return nil
 		},
 	}
 }

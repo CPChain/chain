@@ -22,7 +22,7 @@ func newApp() *cli.App {
 	}
 	app.Version = configs.Version
 	app.Copyright = "LGPL"
-	app.Usage = "Executable for the cpchain node manage"
+	app.Usage = "Command-line tool for the cpchain node management"
 	// be fair to the fish shell.
 	// app.EnableBashCompletion = true
 

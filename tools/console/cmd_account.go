@@ -12,13 +12,7 @@ func init() {
 		Action: showAccount,
 		Name:   "account",
 		Flags:  wrapperFlags(accountFlags),
-		Usage:  "Show account of cpchain node",
-		Before: func(ctx *cli.Context) error {
-			return nil
-		},
-		After: func(ctx *cli.Context) error {
-			return nil
-		},
+		Usage:  "Show account information of specified cpchain node",
 	}
 }
 

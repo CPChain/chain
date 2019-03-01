@@ -251,7 +251,7 @@ func (c *Console) buildTransactOpts(value *big.Int) *bind.TransactOpts {
 }
 
 // SubmitDeposit submit deposit
-func (c *Console) SubmitDeposit() error {
+func (c *Console) SubmitDeposit(value *big.Int) error {
 	c.output.Info("Submit Deposit...")
 	if c.isLocked() {
 		c.output.Warn("Sorry, the reward contract is locked now.")
@@ -264,8 +264,7 @@ func (c *Console) SubmitDeposit() error {
 	}
 
 	// Deposit
-	LIMIT := int64(200000)
-	participantInvest := new(big.Int).Mul(big.NewInt(LIMIT), big.NewInt(1e+18))
+	participantInvest := value
 	transactOpts := c.buildTransactOpts(participantInvest)
 	c.output.Info("create transaction options successfully")
 	_, err = instance.SubmitDeposit(transactOpts)

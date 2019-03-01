@@ -79,11 +79,11 @@ func validator(ctx *cli.Context) (string, string, string, error) {
 	rpc := ctx.String("rpc")
 
 	if !common.Exists(pwdfile) {
-		err = errors.New(pwdfile + " is not exists.")
+		err = errors.New("Password file " + pwdfile + " does not exist.")
 		return rpc, kspath, pwdfile, err
 	}
 	if !common.Exists(kspath) {
-		err = errors.New(kspath + " is not exists.")
+		err = errors.New("Keystore file " + kspath + " does not exist.")
 		return rpc, kspath, pwdfile, err
 	}
 	return rpc, kspath, pwdfile, nil
