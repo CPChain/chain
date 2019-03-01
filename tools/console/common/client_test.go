@@ -23,11 +23,9 @@ func init() {
 }
 
 func buildClient(ctx *context.Context, t *testing.T) (*cpclient.Client, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address) {
-	// endPoint := "http://3.0.61.106:8523"
-	endPoint := "http://3.0.61.106:8523"
-	keyStoreFilePath := "/Users/liaojinlong/.cpchain/keystore/"
+	endPoint := "http://127.0.0.1:8523"
+	keyStoreFilePath := "~/.cpchain/keystore/"
 	password := "password"
-	// password := "2163607794_4042"
 	client, privateKey, publicKeyECDSA, fromAddress, err := NewCpcClient(endPoint, keyStoreFilePath, password)
 	if err != nil {
 		t.Log(err.Error())
