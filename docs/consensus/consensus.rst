@@ -558,7 +558,7 @@ An unknown ancestor block refers to a block whose block height is higher than th
 The name comes from the fact that the predecessor of this block is yet unknown in the chain.
 
 Suppose a validator v which is processing a block b in block height h,
-and receives an unknown ancestor block b\ :sub:`2`\   with block height h\ :sub:`2`\   from a node p\ :sub:`2`\  .
+and receives an unknown ancestor block b\ :sub:`2`\   with block height h\ :sub:`2`\   from a node p\ :sub:`2`\ .
 There are following possible scenarios:
 
 1. The block is proposed by a legit proposer at the correct time; the validator is delaying.
@@ -575,11 +575,11 @@ delaying for at least a term.
 
 In the first scenario, b\ :sub:`2`\   actually is not an unknown ancestor block.
 The validator v regards b\ :sub:`2`\   as an unknown ancestor block simply because it is delaying
-After receiving b\ :sub:`2`\  , the validator v records the block in the cache.
+After receiving b\ :sub:`2`\ , the validator v records the block in the cache.
 As it is delaying, it is counted as one of f non-responding block.
-Despite that it receives b\ :sub:`2`\  , v stays in the block height h,
+Despite that it receives b\ :sub:`2`\ , v stays in the block height h,
 and it does not participate in consensus of block height h\ :sub:`2`\
-In other word, it does not broadcasts a prepare message endorsing b\ :sub:`2`\  .
+In other word, it does not broadcasts a prepare message endorsing b\ :sub:`2`\ .
 Other members in the validators committee suffice a quorum to complete the consensus process on b\ :sub:`2`\   without v's participation.
 v is going to catch up with the schedule after it receives the validate message from other committee members,
 or by `Recovery`_.
@@ -587,7 +587,7 @@ or by `Recovery`_.
 In the second scenario, p\ :sub:`2`\   behaves faultily.
 Similar to the first scenario, v records it in the cache without signing it.
 A quorum can still complete the consensus on b.
-When it comes to the correct view of p\ :sub:`2`\  , if p\ :sub:`2`\   proposes the block again, then it is going to be processed normally.
+When it comes to the correct view of p\ :sub:`2`\ , if p\ :sub:`2`\   proposes the block again, then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
 
 The third and fourth scenario happens when v cannot recognize p\ :sub:`2`\   as a proposer.
@@ -798,7 +798,7 @@ A validator v\ :sub:`i`\   chooses timestamp ts for the failback impeach block, 
 #. ts\ :sub:`i`\   > t\ :sub:`i`\
 
 After reboot, all validators are set to idle state.
-When the local clock of v\ :sub:`i`\  is ts\ :sub:`i`\  , it proposes an impeach block with this timestamp,
+When the local clock of v\ :sub:`i`\  is ts\ :sub:`i`\ , it proposes an impeach block with this timestamp,
 and enters impeach prepare state.
 If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T
 v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
@@ -848,40 +848,57 @@ Select three elements ts\ :sub:`0`\ , ts\ :sub:`1`\  and ts\ :sub:`2`\   from TS
 satisfying ts\ :sub:`2`\  = ts\ :sub:`1`\  + 2T= ts\ :sub:`0`\  + 4T,
 ts\ :sub:`0`\  < min(t\ :sub:`i`\ ), and ts\ :sub:`2`\  > max(t\ :sub:`i`\ ).
 
-Here we introduce two subsets of validators, V\ :sub:`1`\   and V\ :sub:`2`\  .
+Here we introduce two subsets of validators, V\ :sub:`1`\   and V\ :sub:`2`\ .
 V\ :sub:`1`\   is made of all validators whose local clocks are smaller than ts\ :sub:`1`\   ,
-and V\ :sub:`2`\   is made of all validators whose local clocks are large than or equal to ts\ :sub:`1`\  .
+and V\ :sub:`2`\   is made of all validators whose local clocks are large than or equal to ts\ :sub:`1`\ .
 
-Here we discuss different cases according to the cardinalities of V\ :sub:`1`\   and V\ :sub:`2`\  .
+Here we discuss different cases according to the cardinalities of V\ :sub:`1`\   and V\ :sub:`2`\ .
 
-**Case 1:** |V\ :sub:`2`\  | = 0.
+**Case 1:** |V\ :sub:`2`\ | = 0.
 
-It means all local clocks of loyal validators are between two timestamp ts\ :sub:`1`\   and ts\ :sub:`2`\  .
-This is the simplest scenario. all validators agree on ts\ :sub:`1`\  .
-And the system will insert the impeach block right after f+1 validators passes ts\ :sub:`1`\  .
+It means all local clocks of loyal validators are between two timestamp ts\ :sub:`1`\   and ts\ :sub:`2`\ .
+This is the simplest scenario. all validators agree on ts\ :sub:`1`\ .
+And the system will insert the impeach block right after f+1 validators passes ts\ :sub:`1`\ .
 
-**Case 2:** |V\ :sub:`1`\  | >= f + 1, and |V\ :sub:`2`\  | < f + 1.
+**Case 2:** |V\ :sub:`1`\ | >= f + 1, and |V\ :sub:`2`\ | < f + 1.
 
-It means there are at least f+1 validators whose local clocks are smaller than ts\ :sub:`1`\  ,
-but less than f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\  .
+It means there are at least f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
+but less than f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\ .
 It is similar to case 1.
-Despite some validators agree on ts\ :sub:`2`\  , they cannot constitute a quorum.
-When f+1 validators from |V\ :sub:`1`\  | passes ts\ :sub:`1`\  ,
+Despite some validators agree on ts\ :sub:`2`\ , they cannot constitute a quorum.
+When f+1 validators from |V\ :sub:`1`\ | passes ts\ :sub:`1`\ ,
 the system will insert an impeach block.
 
-**Case 3:** |V\ :sub:`1`\  | < f + 1, and |V\ :sub:`2`\  | >= f + 1.
+**Case 3:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | >= f + 1.
 
-It means there are no more than f+1 validators whose local clocks are smaller than ts\ :sub:`1`\  ,
-but at least f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\  .
+It means there are no more than f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
+but at least f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\ .
 
-**Case 4:** |V\ :sub:`1`\  | < f + 1, and |V\ :sub:`2`\  | < f + 1.
+**Case 4:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | < f + 1.
 
-Since at least we have loyal f+1 validators online,
-the equation |V\ :sub:`1`\  |+|V\ :sub:`2`\  | >= f+1 must holds.
+In this case, validators in V\ :sub:`1`\   cannot suffice a certificate for t\ :sub:`1`\ .
+Because at least we have loyal f+1 validators online,
+the equation |V\ :sub:`1`\ |+|V\ :sub:`2`\ | >= f+1 must hold.
+When time flows, validators in V\ :sub:`1`\  gradually pass timestamp ts\ :sub:`2`\ .
+And these validators propose another impeach block agreeing on ts\ :sub:`2`\ .
+Thus, there exists a subset V\ :sub:`1`\ \' of validators in V\ :sub:`1`\
+such that V\ :sub:`1`\   reaches ts\ :sub:`2`\
+and |V\ :sub:`1`\ \'|+|V\ :sub:`2`\ | >= f+1.
+
+Let ts\ :sub:`3`\  be the next timestamp in TS after ts\ :sub:`2`\ ,
+i.e., t2\ :sub:`3`\  = ts\ :sub:`2`\  + 2T.
+As we can see, the validator with largest local timestamp has not reached ts\ :sub:`3`\   yet.
+At this moment, V\ :sub:`1`\  \'+V\ :sub:`2`\   suffices a quorum
+for an impeach block agreeing on ts\ :sub:`2`\ .
 
 
 
-**Case 5:** |V\ :sub:`1`\  | >= f + 1, and |V\ :sub:`2`\  | >= f + 1.
+**Case 5:** |V\ :sub:`1`\ | >= f + 1, and |V\ :sub:`2`\ | >= f + 1.
+
+At first glance, it seems impeach block of either ts\ :sub:`1`\   and ts\ :sub:`2`\ is legal.
+However, validators in V\ :sub:`1`\   reaches ts\ :sub:`1`\   earlier than
+counterparts in V\ :sub:`2`\   .
+
 
 
 
