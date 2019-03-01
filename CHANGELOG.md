@@ -18,21 +18,31 @@ Notable Changes
         - Past and future block.
         - Unrecognized block.
     - Recovery mechanism for lagging validators catching up with the rest.
-- Wallet 
-    - Android UI 
 - Automation Testing Framework
-    - Inspired by [Jepsen](https://jepsen.io/).
-    - A master starts a local chain and fetch a test case.
-    - The master creates following processes which work independently on the chain:
+    - Developed based on [Jepsen](https://jepsen.io/).
+    - There is a master assumes responsibilities of 
+        - starting a local chain;
+        - fetching test cases;
+        - creating and communicating with several processes
+    - The following processes created by the master work independently on the chain.
         - B1 and B2, ran as bootnodes.
         - P1 to P12, ran as proposers.
-        - CA, short for control admission.
-        - Back, ran for refunding.
+        - CA, short for contract admin, 
+        are used for deploying smart contracts.
+        - Bank, used exclusively for providing tokens.
         - IPFA, optional.
-    - Each process has its own broker to communicating with the master
-        - The master invokes RPC APIs to send commands to processes
+    - Each process has its own broker to communicate with the master.
+        - The master invokes RPC APIs to send commands to brokers.
     - Each test case runs in several phases.
-        - Each process can pause at the end of each phase
-        - After the last phase finishes, the process returns the log to master
-        
+        - Each process can pause at the end of each phase.
+        - After the last phase terminates, 
+        the process returns the test log to master.
+    - The master is about to run the next test case 
+    after it collects logs from all processes.
+- Rewards
+    - Implement [basic reward](https://docs.cpchain.io/overview/overview.html#basic-rewards)
+    and [maintenance reward](https://docs.cpchain.io/overview/overview.html#maintenance-reward)
+- APIs
+    - Adjusted and optimized RPC and Python APIs from [CPC fusion](https://github.com/CPChain/fusion)
+
         
