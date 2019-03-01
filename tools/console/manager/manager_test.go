@@ -11,7 +11,7 @@ func TestManager(t *testing.T) {
 	t.Skip()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	endPoint := "http://54.169.196.149:8503"
+	endPoint := "http://127.0.0.1:8503"
 	kspath := "/Users/liaojinlong/.cpchain/keystore/"
 	password := "/Users/liaojinlong/.cpchain/password"
 
