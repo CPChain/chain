@@ -873,6 +873,9 @@ the system will insert an impeach block.
 
 It means there are no more than f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
 but at least f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\ .
+In this case, when f+1 validators from V\ :sub:`2`\   reaches timestamp ts\ :sub:`2`\ ,
+an impeach block certificate can be collected by all online validators.
+Thus, the committee can end up in a consensus.
 
 **Case 4:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | < f + 1.
 
