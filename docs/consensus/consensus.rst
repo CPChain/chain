@@ -562,7 +562,7 @@ Here we further list all components in a header.
 ``ParentHash``, as its name indicates, stores the hash of the parent block.
 The validator rejects the block if ``ParentHash`` is inconsistent with the one of the last block in the chain.
 
-
+``Coinbase``,
 
 Countermeasures for Illicit Actions
 ------------------------------------------
