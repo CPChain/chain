@@ -992,6 +992,8 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 }
 
 func (p *LBFT2) tryToImpeach() {
+	log.Debug("try to start impeachment process")
+
 	if impeachBlock, err := p.dpor.CreateImpeachBlock(); err == nil {
 		time.AfterFunc(
 			p.dpor.ImpeachTimeout(),
@@ -1004,8 +1006,12 @@ func (p *LBFT2) tryToImpeach() {
 }
 
 func (p *LBFT2) tryToImpeachFailback() {
+	log.Debug("try to start failback impeachment process")
+
 	// creates two failback impeachment blocks and waits for their time
 	if firstImpeach, secondImpeach, err := p.dpor.CreateFailbackImpeachBlocks(); err == nil {
+
+		log.Debug("created two failback impeachment blocks with timestamps", "timestamp1", firstImpeach.Timestamp(), "timestamp2", secondImpeach.Timestamp())
 
 		go time.AfterFunc(
 			firstImpeach.Timestamp().Sub(time.Now()),

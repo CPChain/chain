@@ -222,10 +222,12 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 		Number:     big.NewInt(int64(parentNum + 1)),
 		GasLimit:   parent.GasLimit(),
 		Extra:      make([]byte, extraSeal),
-		Time:       new(big.Int).Add(parent.Time(), big.NewInt(int64(d.ImpeachTimeout()/time.Millisecond)+int64(d.config.Period))),
 		Coinbase:   common.Address{},
 		StateRoot:  parentHeader.StateRoot,
 	}
+
+	timestamp := parent.Timestamp().Add(d.config.PeriodDuration()).Add(d.config.ImpeachTimeout)
+	impeachHeader.SetTimestamp(timestamp)
 
 	impeach := types.NewBlock(impeachHeader, []*types.Transaction{}, []*types.Receipt{})
 
@@ -234,6 +236,7 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 
 // CreateFailbackImpeachBlocks creates impeachment blocks with failback timestamps
 func (d *Dpor) CreateFailbackImpeachBlocks() (firstImpeachment *types.Block, secondImpeachment *types.Block, err error) {
+
 	impeachBlock, err := d.CreateImpeachBlock()
 	if err != nil {
 		return nil, nil, err
@@ -243,10 +246,10 @@ func (d *Dpor) CreateFailbackImpeachBlocks() (firstImpeachment *types.Block, sec
 	failbackTimestamp2 := failbackTimestamp1 + int64(configs.DefaultFailbackTimestampSampleSpace)
 
 	firstImpeachment = types.NewBlock(impeachBlock.Header(), []*types.Transaction{}, []*types.Receipt{})
-	firstImpeachment.RefHeader().Time.SetInt64(failbackTimestamp1)
+	firstImpeachment.RefHeader().SetTimestamp(time.Unix(0, failbackTimestamp1))
 
 	secondImpeachment = types.NewBlock(impeachBlock.Header(), []*types.Transaction{}, []*types.Receipt{})
-	secondImpeachment.RefHeader().Time.SetInt64(failbackTimestamp2)
+	secondImpeachment.RefHeader().SetTimestamp(time.Unix(0, failbackTimestamp2))
 
 	return
 }

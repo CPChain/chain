@@ -165,8 +165,7 @@ func (l *LBFT) Handle(msg p2p.Msg, p *RemoteSigner) error {
 		case consensus.ErrFutureBlock:
 			// it is a future header, wait for its time to verify it again
 
-			delay := time.Duration((header.Time.Int64() - (time.Now().UnixNano() * int64(time.Nanosecond) / int64(time.Millisecond))) * int64(time.Millisecond) / int64(time.Nanosecond))
-
+			delay := header.Timestamp().Sub(time.Now())
 			log.Debug("received future block header", "number", number, "hash", hash.Hex())
 			log.Debug("delay of future block header", "delay", delay)
 
