@@ -557,6 +557,10 @@ Unknown Ancestor Block
 An unknown ancestor block refers to a block whose block height is higher than the one the validator is currently processing.
 The name comes from the fact that the predecessor of this block is yet unknown in the chain.
 
+
+Four Scenarios
+#################
+
 Suppose a validator v which is processing a block b in block height h,
 and receives an unknown ancestor block b\ :sub:`2`\   with block height h\ :sub:`2`\   from a node p\ :sub:`2`\ .
 There are following possible scenarios:
@@ -573,7 +577,9 @@ well as the corresponding block heights to propose their blocks.
 Thus, a validator has a priori knowledge on all legit proposers in this term, unless the proposer is
 delaying for at least a term.
 
-In the first scenario, b\ :sub:`2`\   actually is not an unknown ancestor block.
+
+**First scenario:** b\ :sub:`2`\   actually is not an unknown ancestor block.
+
 The validator v regards b\ :sub:`2`\   as an unknown ancestor block simply because it is delaying
 After receiving b\ :sub:`2`\ , the validator v records the block in the cache.
 As it is delaying, it is counted as one of f non-responding block.
@@ -584,13 +590,15 @@ Other members in the validators committee suffice a quorum to complete the conse
 v is going to catch up with the schedule after it receives the validate message from other committee members,
 or by `Recovery`_.
 
-In the second scenario, p\ :sub:`2`\   behaves faultily.
+**Second scenario:** p\ :sub:`2`\   behaves faultily.
+
 Similar to the first scenario, v records it in the cache without signing it.
 A quorum can still complete the consensus on b.
 When it comes to the correct view of p\ :sub:`2`\ , if p\ :sub:`2`\   proposes the block again, then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
 
-The third and fourth scenario happens when v cannot recognize p\ :sub:`2`\   as a proposer.
+**Third and fourth scenario:** v cannot recognize p\ :sub:`2`\   as a proposer.
+
 It can due to either b\ :sub:`2`\   is faulty (scenario 3) and v is delaying (scenario 4).
 In both scenarios, v is going to sync, determining if it is delaying.
 For the third scenario, v rejects b\ :sub:`2`\   and added v into blacklist.
@@ -603,6 +611,9 @@ A reasonable setting is 10*|P| seconds, where \|P\| is the size of proposers
 committee, and 10 is time interval between two consecutive blocks.
 
 Thus, we can write a pseudocode to depict the processes above.
+
+Pseudocode
+###############
 
     .. code-block:: go
 
@@ -776,11 +787,12 @@ Failback
 -------------------
 
 Failback is a process to restore the whole system after if all validators halt at the same time.
-Apparently, the chain has to halts since no validator can continue working on consensus.
+Apparently, the chain has to be suspended since no validator can continue working on consensus.
 The main challenge here is to reach a consensus for the first block after all validators reboot.
 
-From the proposer's perspective, it has no idea when the validation system can restore.
-Thus, the first block after reboot, must be an impeach block to regain liveness.
+From the proposer's perspective, it has no clue when the validation system can restore.
+Thus, the first block right after the reboot of validators, must be an impeach block to regain liveness.
+
 As we described in `Impeachment Steps`_, the timestamp of an impeach block is determined by previous block.
 In the scenario of failback, we cannot use the equation previousBlockTimestamp+period+timeout to calculate the timestamp,
 since this timestamp is out of date.
@@ -795,6 +807,11 @@ We are aiming to fulfil two main objectives:
 The second objective is to keep simplicity as well as robust of the system.
 By exploiting existent five states to reach a consensus on timestamp,
 we could reduce the risk of introducing new mechanism.
+
+
+Preliminaries
+**********************
+
 
 Let t\ :sub:`i`\   be the local clock of validator v\ :sub:`i`\   .
 Except for assumptions of LBFT 2.0, several more assumptions are required for failback procedure.
@@ -824,7 +841,7 @@ The rest of consensus part are same as LBFT 2.0.
 
 In practice, T can be set to be 5 minutes.
 Hence, the system can regain its liveness in 20 minutes.
-The pseudocode is as
+The pseudocode is shown below.
 
 Pseudocode
 ********************
@@ -866,8 +883,8 @@ Correctness
 *****************
 
 
-**Theorem:**
-Function ``failback`` guarantees that validators committee can reach a consensus on an impeach block within 4T time.
+**Theorem 2:**
+*Function* ``failback`` *guarantees that validators committee can reach a consensus on an impeach block within 4T time.*
 
 **Proof:**
 Let v\ :sub:`i`\  represent i-th validator, and t\ :sub:`i`\  be its local clock timestamp.
