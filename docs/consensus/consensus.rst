@@ -557,6 +557,10 @@ Unknown Ancestor Block
 An unknown ancestor block refers to a block whose block height is higher than the one the validator is currently processing.
 The name comes from the fact that the predecessor of this block is yet unknown in the chain.
 
+
+Four Scenarios
+#################
+
 Suppose a validator v which is processing a block b in block height h,
 and receives an unknown ancestor block b\ :sub:`2`\   with block height h\ :sub:`2`\   from a node p\ :sub:`2`\ .
 There are following possible scenarios:
@@ -573,7 +577,9 @@ well as the corresponding block heights to propose their blocks.
 Thus, a validator has a priori knowledge on all legit proposers in this term, unless the proposer is
 delaying for at least a term.
 
-In the first scenario, b\ :sub:`2`\   actually is not an unknown ancestor block.
+
+**First scenario:** b\ :sub:`2`\   actually is not an unknown ancestor block.
+
 The validator v regards b\ :sub:`2`\   as an unknown ancestor block simply because it is delaying
 After receiving b\ :sub:`2`\ , the validator v records the block in the cache.
 As it is delaying, it is counted as one of f non-responding block.
@@ -584,13 +590,15 @@ Other members in the validators committee suffice a quorum to complete the conse
 v is going to catch up with the schedule after it receives the validate message from other committee members,
 or by `Recovery`_.
 
-In the second scenario, p\ :sub:`2`\   behaves faultily.
+**Second scenario:** p\ :sub:`2`\   behaves faultily.
+
 Similar to the first scenario, v records it in the cache without signing it.
 A quorum can still complete the consensus on b.
 When it comes to the correct view of p\ :sub:`2`\ , if p\ :sub:`2`\   proposes the block again, then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
 
-The third and fourth scenario happens when v cannot recognize p\ :sub:`2`\   as a proposer.
+**Third and fourth scenario:** v cannot recognize p\ :sub:`2`\   as a proposer.
+
 It can due to either b\ :sub:`2`\   is faulty (scenario 3) and v is delaying (scenario 4).
 In both scenarios, v is going to sync, determining if it is delaying.
 For the third scenario, v rejects b\ :sub:`2`\   and added v into blacklist.
@@ -603,6 +611,9 @@ A reasonable setting is 10*|P| seconds, where \|P\| is the size of proposers
 committee, and 10 is time interval between two consecutive blocks.
 
 Thus, we can write a pseudocode to depict the processes above.
+
+Pseudocode
+###############
 
     .. code-block:: go
 
@@ -755,21 +766,40 @@ Then it can rejoin consensus process after receiving validate message of the cur
 The function is called a validator suspects it is delaying like receiving `Unknown Ancestor Block`_.
 
 
+
+
+
+Restore Cache
+***************
+
+Once a block is validated and inserted into the chain, it can be labelled as a permanent data.
+And all permanent data are written in hard disks.
+In comparison, information like current state, collected signatures as well as block caches are temporary data.
+As temporary data are stored in volatile memory, they are not retained once a validator shuts down or restarts.
+Hence, before a validator shuts down, it writes all temporary data in hard disk,
+and retrieves these data after it starts up.
+
+Note that it is highly possible that a validator is lagging behind other committee members after it restarts.
+In this case, it processes the block as explained in `Unknown Ancestor Block`_.
+
+
 Failback
-**************
+-------------------
 
 Failback is a process to restore the whole system after if all validators halt at the same time.
-Apparently, the chain has to halts since no validator can continue working on consensus.
+Apparently, the chain has to be suspended since no validator can continue working on consensus.
 The main challenge here is to reach a consensus for the first block after all validators reboot.
 
-From the proposer's perspective, it has no idea when the validation system can restore.
-Thus, the first block after reboot, must be an impeach block to regain liveness.
+From the proposer's perspective, it has no clue when the validation system can restore.
+Thus, the first block right after the reboot of validators, must be an impeach block to regain liveness.
+
 As we described in `Impeachment Steps`_, the timestamp of an impeach block is determined by previous block.
 In the scenario of failback, we cannot use the equation previousBlockTimestamp+period+timeout to calculate the timestamp,
 since this timestamp is out of date.
 It motivates us to design a mechanism to reach a consensus on the issue of timestamp
 among validators whose local clocks are not consistent.
-We are aiming to two main objectives:
+
+We are aiming to fulfil two main objectives:
 
 1. Reach a consensus on an impeach block with consistent timestamp
 #. Do not design extra states of validators.
@@ -777,6 +807,11 @@ We are aiming to two main objectives:
 The second objective is to keep simplicity as well as robust of the system.
 By exploiting existent five states to reach a consensus on timestamp,
 we could reduce the risk of introducing new mechanism.
+
+
+Preliminaries
+**********************
+
 
 Let t\ :sub:`i`\   be the local clock of validator v\ :sub:`i`\   .
 Except for assumptions of LBFT 2.0, several more assumptions are required for failback procedure.
@@ -804,9 +839,14 @@ If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T
 v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
 The rest of consensus part are same as LBFT 2.0.
 
-In practice, E can be set to be 5 minutes.
+In practice, T can be set to be 5 minutes.
 Hence, the system can regain its liveness in 20 minutes.
-The pseudocode is as
+The pseudocode is shown below.
+
+Pseudocode
+********************
+
+
 
     .. code-block:: go
 
@@ -814,7 +854,7 @@ The pseudocode is as
         func failback () {
             // v: a validator
             // t: local clock of v in Unix timestamp
-            E := 600 // 5 minutes
+            T := 600 // 5 minutes
             set the state to idle state
 
             // timestamp of failback impeach block
@@ -838,8 +878,13 @@ This approach guarantees that an impeach block can reach validate state
 within a time of at most 2T.
 To prove the correctness of the algorithm, we will discuss several cases.
 
-**Theorem:**
-Function ``failback`` guarantees that validators committee can reach a consensus on an impeach block within 4T time.
+
+Correctness
+*****************
+
+
+**Theorem 2:**
+*Function* ``failback`` *guarantees that validators committee can reach a consensus on an impeach block within 4T time.*
 
 **Proof:**
 Let v\ :sub:`i`\  represent i-th validator, and t\ :sub:`i`\  be its local clock timestamp.
@@ -860,6 +905,8 @@ It means all local clocks of loyal validators are between two timestamp ts\ :sub
 This is the simplest scenario. all validators agree on ts\ :sub:`1`\ .
 And the system will insert the impeach block right after f+1 validators passes ts\ :sub:`1`\ .
 
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
+
 **Case 2:** |V\ :sub:`1`\ | >= f + 1, and |V\ :sub:`2`\ | < f + 1.
 
 It means there are at least f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
@@ -869,10 +916,17 @@ Despite some validators agree on ts\ :sub:`2`\ , they cannot constitute a quorum
 When f+1 validators from |V\ :sub:`1`\ | passes ts\ :sub:`1`\ ,
 the system will insert an impeach block.
 
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
+
 **Case 3:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | >= f + 1.
 
 It means there are no more than f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
 but at least f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\ .
+In this case, when f+1 validators from V\ :sub:`2`\   reaches timestamp ts\ :sub:`2`\ ,
+an impeach block certificate can be collected by all online validators.
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`2`\ .
+
 
 **Case 4:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | < f + 1.
 
@@ -891,41 +945,23 @@ As we can see, the validator with largest local timestamp has not reached ts\ :s
 At this moment, V\ :sub:`1`\  \'+V\ :sub:`2`\   suffices a quorum
 for an impeach block agreeing on ts\ :sub:`2`\ .
 
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`2`\ .
 
 
 **Case 5:** |V\ :sub:`1`\ | >= f + 1, and |V\ :sub:`2`\ | >= f + 1.
 
-At first glance, it seems impeach block of either ts\ :sub:`1`\   and ts\ :sub:`2`\ is legal.
+At first glance, it seems impeach block of either ts\ :sub:`1`\   and ts\ :sub:`2`\   is legal.
 However, validators in V\ :sub:`1`\   reaches ts\ :sub:`1`\   earlier than
-counterparts in V\ :sub:`2`\   .
+counterparts in V\ :sub:`2`\   reaching ts\ :sub:`2`\ .
+The reason is simple, as the the following equation indicates:
+ts\ :sub:`2`\   - max(t\ :sub:`i`\ ) > ts\ :sub:`1`\   + 2T - (min(t\ :sub:`i`\ )+T)
+> ts\ :sub:`1`\    - min(t\ :sub:`i`\ ).
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
 
 
+By summing up above five cases, we can conclude that the theorem holds. **Q.E.D**
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Restore Cache
-***************
-
-Once a block is validated and inserted into the chain, it can be labelled as a permanent data.
-And all permanent data are written in hard disks.
-In comparison, information like current state, collected signatures as well as block caches are temporary data.
-As temporary data are stored in volatile memory, they are not retained once a validator shuts down or restarts.
-Hence, before a validator shuts down, it writes all temporary data in hard disk,
-and retrieves these data after it starts up.
-
-Note that it is highly possible that a validator is lagging behind other committee members after it restarts.
-In this case, it processes the block as explained in `Unknown Ancestor Block`_.
 
 
 Comparison with PBFT

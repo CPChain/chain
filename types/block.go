@@ -88,7 +88,7 @@ type Header struct {
 	Number       *big.Int       `json:"number"           gencodec:"required"`
 	GasLimit     uint64         `json:"gasLimit"         gencodec:"required"`
 	GasUsed      uint64         `json:"gasUsed"          gencodec:"required"`
-	Time         *big.Int       `json:"timestamp"        gencodec:"required"`
+	Time         *big.Int       `json:"timestamp"        gencodec:"required"` // this is a value with accuracy of Millisecond
 	Extra        []byte         `json:"extraData"        gencodec:"required"`
 	Dpor         DporSnap       `json:"dpor"             gencodec:"required"`
 }
@@ -223,6 +223,14 @@ func (h *Header) Size() common.StorageSize {
 
 func (h *Header) Timestamp() time.Time {
 	return time.Unix(0, h.Time.Int64()*int64(time.Millisecond)/int64(time.Nanosecond))
+}
+
+func (h *Header) SetTimestamp(t time.Time) {
+	timestamp := int64(t.UnixNano()) * int64(time.Nanosecond) / int64(time.Millisecond)
+	if h.Time == nil {
+		h.Time = new(big.Int)
+	}
+	h.Time.SetInt64(timestamp)
 }
 
 func rlpHash(x interface{}) (h common.Hash) {
@@ -413,11 +421,13 @@ func (b *Block) Transaction(hash common.Hash) *Transaction {
 	return nil
 }
 
-func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.header.Number) }
-func (b *Block) GasLimit() uint64     { return b.header.GasLimit }
-func (b *Block) GasUsed() uint64      { return b.header.GasUsed }
-func (b *Block) Time() *big.Int       { return new(big.Int).Set(b.header.Time) }
-func (b *Block) Timestamp() time.Time { return b.Header().Timestamp() }
+func (b *Block) Number() *big.Int { return new(big.Int).Set(b.header.Number) }
+func (b *Block) GasLimit() uint64 { return b.header.GasLimit }
+func (b *Block) GasUsed() uint64  { return b.header.GasUsed }
+
+func (b *Block) Time() *big.Int           { return new(big.Int).Set(b.header.Time) }
+func (b *Block) Timestamp() time.Time     { return b.Header().Timestamp() }
+func (b *Block) SetTimestamp(t time.Time) { b.RefHeader().SetTimestamp(t) }
 
 func (b *Block) NumberU64() uint64         { return b.header.Number.Uint64() }
 func (b *Block) LogsBloom() Bloom          { return b.header.LogsBloom }
