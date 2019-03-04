@@ -31,9 +31,6 @@ type SyncFromBestPeerFn func()
 const (
 	inMemorySnapshots  = 100 // Number of recent vote snapshots to keep in memory
 	inMemorySignatures = 100 // Number of recent block signatures to keep in memory
-
-	pctA = 2
-	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
 // Mode defines the type a dpor engine makes.
