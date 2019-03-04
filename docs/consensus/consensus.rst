@@ -755,8 +755,25 @@ Then it can rejoin consensus process after receiving validate message of the cur
 The function is called a validator suspects it is delaying like receiving `Unknown Ancestor Block`_.
 
 
+
+
+
+Restore Cache
+***************
+
+Once a block is validated and inserted into the chain, it can be labelled as a permanent data.
+And all permanent data are written in hard disks.
+In comparison, information like current state, collected signatures as well as block caches are temporary data.
+As temporary data are stored in volatile memory, they are not retained once a validator shuts down or restarts.
+Hence, before a validator shuts down, it writes all temporary data in hard disk,
+and retrieves these data after it starts up.
+
+Note that it is highly possible that a validator is lagging behind other committee members after it restarts.
+In this case, it processes the block as explained in `Unknown Ancestor Block`_.
+
+
 Failback
-**************
+-------------------
 
 Failback is a process to restore the whole system after if all validators halt at the same time.
 Apparently, the chain has to halts since no validator can continue working on consensus.
@@ -769,7 +786,8 @@ In the scenario of failback, we cannot use the equation previousBlockTimestamp+p
 since this timestamp is out of date.
 It motivates us to design a mechanism to reach a consensus on the issue of timestamp
 among validators whose local clocks are not consistent.
-We are aiming to two main objectives:
+
+We are aiming to fulfil two main objectives:
 
 1. Reach a consensus on an impeach block with consistent timestamp
 #. Do not design extra states of validators.
@@ -804,9 +822,14 @@ If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T
 v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
 The rest of consensus part are same as LBFT 2.0.
 
-In practice, E can be set to be 5 minutes.
+In practice, T can be set to be 5 minutes.
 Hence, the system can regain its liveness in 20 minutes.
 The pseudocode is as
+
+Pseudocode
+********************
+
+
 
     .. code-block:: go
 
@@ -814,7 +837,7 @@ The pseudocode is as
         func failback () {
             // v: a validator
             // t: local clock of v in Unix timestamp
-            E := 600 // 5 minutes
+            T := 600 // 5 minutes
             set the state to idle state
 
             // timestamp of failback impeach block
@@ -838,6 +861,11 @@ This approach guarantees that an impeach block can reach validate state
 within a time of at most 2T.
 To prove the correctness of the algorithm, we will discuss several cases.
 
+
+Correctness
+*****************
+
+
 **Theorem:**
 Function ``failback`` guarantees that validators committee can reach a consensus on an impeach block within 4T time.
 
@@ -860,6 +888,8 @@ It means all local clocks of loyal validators are between two timestamp ts\ :sub
 This is the simplest scenario. all validators agree on ts\ :sub:`1`\ .
 And the system will insert the impeach block right after f+1 validators passes ts\ :sub:`1`\ .
 
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
+
 **Case 2:** |V\ :sub:`1`\ | >= f + 1, and |V\ :sub:`2`\ | < f + 1.
 
 It means there are at least f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
@@ -869,13 +899,17 @@ Despite some validators agree on ts\ :sub:`2`\ , they cannot constitute a quorum
 When f+1 validators from |V\ :sub:`1`\ | passes ts\ :sub:`1`\ ,
 the system will insert an impeach block.
 
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
+
 **Case 3:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | >= f + 1.
 
 It means there are no more than f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
 but at least f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\ .
 In this case, when f+1 validators from V\ :sub:`2`\   reaches timestamp ts\ :sub:`2`\ ,
 an impeach block certificate can be collected by all online validators.
-Thus, the committee can end up in a consensus.
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`2`\ .
+
 
 **Case 4:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | < f + 1.
 
@@ -894,41 +928,23 @@ As we can see, the validator with largest local timestamp has not reached ts\ :s
 At this moment, V\ :sub:`1`\  \'+V\ :sub:`2`\   suffices a quorum
 for an impeach block agreeing on ts\ :sub:`2`\ .
 
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`2`\ .
 
 
 **Case 5:** |V\ :sub:`1`\ | >= f + 1, and |V\ :sub:`2`\ | >= f + 1.
 
-At first glance, it seems impeach block of either ts\ :sub:`1`\   and ts\ :sub:`2`\ is legal.
+At first glance, it seems impeach block of either ts\ :sub:`1`\   and ts\ :sub:`2`\   is legal.
 However, validators in V\ :sub:`1`\   reaches ts\ :sub:`1`\   earlier than
-counterparts in V\ :sub:`2`\   .
+counterparts in V\ :sub:`2`\   reaching ts\ :sub:`2`\ .
+The reason is simple, as the the following equation indicates:
+ts\ :sub:`2`\   - max(t\ :sub:`i`\ ) > ts\ :sub:`1`\   + 2T - (min(t\ :sub:`i`\ )+T)
+> ts\ :sub:`1`\    - min(t\ :sub:`i`\ ).
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
 
 
+By summing up above five cases, we can conclude that the theorem holds. **Q.E.D**
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Restore Cache
-***************
-
-Once a block is validated and inserted into the chain, it can be labelled as a permanent data.
-And all permanent data are written in hard disks.
-In comparison, information like current state, collected signatures as well as block caches are temporary data.
-As temporary data are stored in volatile memory, they are not retained once a validator shuts down or restarts.
-Hence, before a validator shuts down, it writes all temporary data in hard disk,
-and retrieves these data after it starts up.
-
-Note that it is highly possible that a validator is lagging behind other committee members after it restarts.
-In this case, it processes the block as explained in `Unknown Ancestor Block`_.
 
 
 Comparison with PBFT
