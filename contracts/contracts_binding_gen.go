@@ -24,7 +24,7 @@ package contracts
 
 //go:generate abigen --sol ./dpor/contracts/primitives/primitive_contracts_test.sol --pkg primitives_test --out ./dpor/contracts/primitives/primitive_contracts_test.go
 
-//go:generate abigen --sol ./dpor/contracts/proposer_register.sol --pkg contracts --out ./dpor/contracts/proposer_register.go
+//go:generate abigen --sol ./dpor/contracts/proposer_register/proposer_register.sol --pkg proposer_register --out ./dpor/contracts/proposer_register/proposer_register.go
 
 //go:generate abigen --sol ./dpor/contracts/rpt/rpt.sol --pkg contracts --out ./dpor/contracts/rpt/rpt.go
 
