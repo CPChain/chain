@@ -177,20 +177,20 @@ CPChain will create a reward pool with 5 million CPC annually (1.25 million CPC 
 The RNodes and the Economy Nodes receive the corresponding CPC reward based on the ratio of the locked margin to the total margin.
 (Economy Node and RNode will both need a 90-day lock-up session). The detailed process goes as follows:
 
-Each season contains 90 days, which is also named as **duration**.
-There are 7 special days served as **fundraising** ahead of each duration.
-Each fundraising is overlapped with previous duration.
+Each season contains 90 days, which is also named as **lock-up period**.
+There are 7 special days served as **fundraising** ahead of each lock-up period.
+Each fundraising is overlapped with previous lock-up period.
 In fundraising, the following operations are allowed:
 
 1. All civilians can deposit coin in the reward pool, to become economic nodes or RNodes.
 #. Nodes that have already had coins deposited in the pool can choose to whether continue deposit the next season or renew the deposit value.
 
-When a duration ends, the following rules are applied:
+When a lock-up period ends, the following rules are applied:
 
 1. No one adjusts or withdraw its deposit until next fundraising
 #. Nodes that decide to withdraw the deposit, receive the coins
 #. Any node that renews its deposit balance get recalculated its CPChain nodes role as economic node, RNode or the rest.
-#. All nodes with deposit in this duration receive their reward from the pool.
+#. All nodes with deposit in this lock-up period receive their reward from the pool.
 
 The reward for a certain node from the pool is proportional to its deposit in a season.
 In other word, the basic reward is calculated as 5000000*d/D, where d is deposit of a certain node,
