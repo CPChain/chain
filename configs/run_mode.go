@@ -18,7 +18,7 @@ const (
 )
 
 // Run mode for switch node configuration, eg:dev|testnet|mainnet
-var runModeValue = Dev
+var runModeValue = Mainnet
 
 func GetRunMode() RunMode {
 	return runModeValue

@@ -25,7 +25,7 @@ enode://fd0f365cec4e052040151f2a4a9ba23e8592acd3cacfdc4af2e8b6dbc6fb6b25ca088151
 # http://192.168.50.251:9091 is prometheus gateway address
 # --metricgateway http://192.168.50.251:9091
 #args="run --networkid 1 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner,admin --linenumber --metricgateway http://192.168.50.251:9091"
-args="run --networkid 1 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner,admin --linenumber "
+args="run --networkid 1 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner,admin --linenumber  --runmode dev "
 
 #start bootnode service
 nohup ./bootnode-start.sh 1 dev &

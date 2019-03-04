@@ -245,18 +245,15 @@ func updateChainGeneralConfig(ctx *cli.Context, cfg *cpc.Config) {
 	// default
 	cfg.NetworkId = configs.DevNetworkId
 
-	// general
-	if ctx.IsSet(flags.RunModeFlagName) {
-		runMode := configs.RunMode(ctx.String(flags.RunModeFlagName))
-		log.Debug("runMode", "runMode", runMode)
-		switch runMode {
-		case configs.Dev:
-			cfg.NetworkId = configs.DevNetworkId
-		case configs.Testnet:
-			cfg.NetworkId = configs.TestnetNetworkId
-		case configs.Mainnet:
-			cfg.NetworkId = configs.MainnetNetworkId
-		}
+	runMode := configs.GetRunMode()
+	log.Debug("runMode", "runMode", runMode)
+	switch runMode {
+	case configs.Dev:
+		cfg.NetworkId = configs.DevNetworkId
+	case configs.Testnet:
+		cfg.NetworkId = configs.TestnetNetworkId
+	case configs.Mainnet:
+		cfg.NetworkId = configs.MainnetNetworkId
 	}
 
 	// specific
