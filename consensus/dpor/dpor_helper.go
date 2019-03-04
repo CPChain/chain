@@ -98,45 +98,23 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		}
 
 		// If timestamp is in a valid field, wait for it, otherwise, return invalid timestamp.
-		var (
-			timestamp       = millisecondToNanosecond(header.Time.Int64())
-			parentTimestamp = millisecondToNanosecond(parent.Time.Int64())
-			period          = millisecondToNanosecond(int64(dpor.config.Period))
-			timeout         = int64(dpor.config.ImpeachTimeout)
-		)
-
-		log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
+		log.Debug("timestamp related values", "parent timestamp", parent.Timestamp(), "block timestamp", header.Timestamp(), "period", dpor.config.PeriodDuration(), "timeout", dpor.config.ImpeachTimeout)
 
 		// Ensure that the block's timestamp is valid
 		if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
 
-			if timestamp < parentTimestamp+period {
-
-				log.Warn("invalid timestamp", "timestamp < parentTimestamp+period", timestamp < parentTimestamp+period, "parentTimestamp+period", parentTimestamp+period, "timestamp", timestamp)
-				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
-
+			if header.Timestamp().Before(parent.Timestamp().Add(dpor.config.PeriodDuration())) {
 				return ErrInvalidTimestamp
 			}
-
-			// TODO: fix this
-			if timestamp > parentTimestamp+period+timeout && !isImpeach {
-
-				log.Warn("invalid timestamp", "timestamp > parentTimestamp+period+timeout", timestamp > parentTimestamp+period+timeout, "parentTimestamp+period+timeout", parentTimestamp+period+timeout, "timestamp", timestamp)
-				log.Debug("timestamp related values", "parent timestamp", parentTimestamp, "period", period, "timeout", timeout, "block timestamp", timestamp)
-
+			if header.Timestamp().After(parent.Timestamp().Add(dpor.config.PeriodDuration()).Add(dpor.config.ImpeachTimeout)) {
 				return ErrInvalidTimestamp
 			}
 		}
 
 		// Delay to verify it!
-		delay := time.Duration(millisecondToNanosecond((header.Time.Int64() - nanosecondToMillisecond(time.Now().UnixNano()))))
-
-		log.Debug("Delay to verify the block", "delay", delay)
-
-		select {
-		case <-time.After(delay):
-		default:
-		}
+		delay := header.Timestamp().Sub(time.Now())
+		log.Debug("delaying to verify the block", "delay", delay)
+		<-time.After(delay)
 
 	}
 
