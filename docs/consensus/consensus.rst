@@ -481,6 +481,89 @@ The total number of validators in validate state can be larger than one,
 since all validators and its message processing are running in parallel.
 Other validators directly enters idle state after receiving a validate message.
 
+
+
+
+Verification of Blocks
+----------------------------
+
+
+As stated in `Normal and Abnormal Cases Handler`_,
+a validator verifies each newly proposed block before proceeding to next state.
+
+A block, as shown below, contains a header and a list of transactions.
+
+
+.. code-block:: go
+
+    // Block represents an entire block in the CPChain blockchain.
+    type Block struct {
+        header       *Header
+        transactions Transactions
+
+        // caches
+        hash atomic.Value
+        size atomic.Value
+
+        // Td is used by package core to store the total difficulty
+        // of the chain up to and including the block.
+        td *big.Int
+
+        // These fields are used to track inter-peer block relay.
+        ReceivedAt   time.Time
+        ReceivedFrom interface{}
+    }
+
+
+Verification contains two parts, verification of transactions and header.
+
+
+Transactions
+****************
+
+The ``transactions`` in a block are all pending transactions the proposer
+holds before proposing it.
+For a validator' standpoint, it does not care what transactions in the block,
+neither it has any clue whether these transactions are correct.
+It only checks whether the format of all transactions are correct.
+
+An impeach block is different.
+All transactions in an impeach block are composed by validators in a pre-defined format.
+Any impeach block with different transactions will be regarded as faulty,
+and rejected by all loyal validators.
+
+Header
+**********
+
+
+Despite that the structure of transactions is relatively simple,
+the header is rather complicated.
+Here we further list all components in a header.
+
+.. code-block:: go
+
+
+    // Header represents a block header in the CPChain blockchain.
+    type Header struct {
+        ParentHash   common.Hash
+        Coinbase     common.Address
+        StateRoot    common.Hash
+        TxsRoot      common.Hash
+        ReceiptsRoot common.Hash
+        LogsBloom    Bloom
+        Number       *big.Int
+        GasLimit     uint64
+        GasUsed      uint64
+        Time         *big.Int
+        Extra        []byte
+        Dpor         DporSnap
+    }
+
+``ParentHash``, as its name indicates, stores the hash of the parent block.
+The validator rejects the block if ``ParentHash`` is inconsistent with the one of the last block in the chain.
+
+
+
 Countermeasures for Illicit Actions
 ------------------------------------------
 
@@ -964,6 +1047,8 @@ By summing up above five cases, we can conclude that the theorem holds. **Q.E.D*
 
 
 
+
+
 Comparison with PBFT
 ---------------------------
 
@@ -992,4 +1077,5 @@ Liveness is also the reason that a validator cannot insist on a P-certificate.
 +---------------------------+------------------------------------+-----------------------------+
 | Faulty leader handler     | Impeachment                        | View change                 |
 +---------------------------+------------------------------------+-----------------------------+
+
 
