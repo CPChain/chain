@@ -43,11 +43,21 @@ func TestProxyContractRegister_GetRealContract(t *testing.T) {
 
 	addr, err := instance.GetRealContract(proxyaddr)
 	checkError(t, "GetRealContract : expected no error, got %v ", err)
-
 	if addr != realaddr {
 		t.Fatal("get wrong address", "get addr:", addr, "real address", realaddr)
 	}
 
+	version, err := instance.GetContractVersion(proxyaddr)
+	checkError(t, "GetContractVersion : expected no error, got %v ", err)
+	if version.Uint64() != uint64(1) {
+		t.Fatal("get wrong version", "get version", version, "we want", 1)
+	}
+
+	addrByversion, err := instance.GetOldContract(proxyaddr, big.NewInt(1))
+	checkError(t, "GetOldContract : expected no error, got %v ", err)
+	if addrByversion != realaddr {
+		t.Fatal("get wrong address", "get addr:", addrByversion, "real address", realaddr)
+	}
 }
 
 func checkError(t *testing.T, msg string, err error) {
