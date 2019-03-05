@@ -71,7 +71,7 @@ const (
 )
 
 const (
-	DefaultWaitTimeBeforeImpeachment    = 120 * time.Second // wait 120 seconds before first impeachment
+	DefaultWaitTimeBeforeImpeachment    = 2 * time.Minute // wait 120 seconds before first impeachment
 	DefaultFailbackTimestampSampleSpace = 20 * time.Minute
 )
 
@@ -301,6 +301,13 @@ func (c *DporConfig) ValidatorsLen() uint64 {
 		return c.FaultyNumber*3 + 1
 	}
 	return 0
+}
+
+func (c *DporConfig) PeriodDuration() time.Duration {
+	if c != nil {
+		return time.Duration(int64(c.Period) * int64(time.Millisecond))
+	}
+	return time.Duration(0)
 }
 
 // String implements the fmt.Stringer interface.
