@@ -187,8 +187,8 @@ In fundraising, the following operations are allowed:
 
 When a fundraising ends, the following rules are applied:
 
-1. No one adjusts or withdraw its deposit until next fundraising
-#. Nodes that decide to withdraw the deposit, receive the coins
+1. No one adjusts or withdraw its deposit until next fundraising.
+#. Nodes that decide to withdraw the deposit, receive the coins.
 #. Any node that renews its deposit balance get recalculated its CPChain nodes role as economic node, RNode or the rest.
 #. All nodes with deposit in this lock-up period receive their reward from the pool.
 
