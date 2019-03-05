@@ -116,7 +116,7 @@ func (d *DporSignature) IsEmpty() bool {
 }
 
 type DporSnap struct {
-	Seal       DporSignature    `json:"seal"`       // the signature of the block's producer
+	Seal       DporSignature    `json:"seal"`       // the signature of the block's proposer
 	Sigs       []DporSignature  `json:"sigs"`       // the signatures of validators to endorse the block
 	Proposers  []common.Address `json:"proposers"`  // current proposers committee
 	Validators []common.Address `json:"validators"` // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
