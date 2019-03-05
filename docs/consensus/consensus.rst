@@ -562,7 +562,38 @@ Here we further list all components in a header.
 ``ParentHash``, as its name indicates, stores the hash of the parent block.
 The validator rejects the block if ``ParentHash`` is inconsistent with the one of the last block in the chain.
 
-``Coinbase``,
+``Coinbase``, refers to the address of reward receiver.
+In principle, it is identical with the address of the proposer.
+However, a validator accepts any ``Coinbase`` value.
+The reward is about to be sent to the coinbase address after the block is inserted into the chain.
+It is the proposer's responsibility to write a correct one.
+
+``StateRoot``, ``TxsRoot``, ``ReceiptRoot`` and ``LogsBloom``,
+are all insensitive in verification process.
+
+``Number``, is the block height.
+It must equal to the block height of parent block adding one.
+Any other value is regarded as illegal and is further rejected by any loyal validator.
+
+``GasLimit``, determines the total number of possible transaction in this block.
+A low value of ``GasLimit`` restricts the total number of transactions,
+while a high value enlarges the size of block as well as transmission cost.
+Thus, ``GasLimit`` is bounded by an upper and a lower bound.
+Only values in a certain range is accepted by validators.
+
+``GasUsed``, refers to the gas used in ``transactions``.
+This number is at most as large as ``GasLimit``.
+And it can be calculated by ``transactions`` in this block.
+In theory, validators and the proposer can obtain a same result
+given a same ``transactions``.
+Thus, a validator calculated a GasUsed value itself according to ``transactions``,
+and compares it with ``GasUsed`` in the block.
+It they are not equal, then the block is rejected.
+
+``Time``, is writen in Unix timestamp.
+We have explicated this problem in `Past and Future Block`_.
+
+
 
 Countermeasures for Illicit Actions
 ------------------------------------------
