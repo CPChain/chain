@@ -635,7 +635,7 @@ It is public information, and should be consistent with all validators.
 
 
 
-Subsequent Operations of Non-validators for Blocks
+Subsequent Operations of Non-validators After Receiving Blocks
 ---------------------------------------------------------
 
 
