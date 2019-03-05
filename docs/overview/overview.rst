@@ -185,7 +185,7 @@ In fundraising, the following operations are allowed:
 1. All civilians can deposit coin in the reward pool, to become economic nodes or RNodes.
 #. Nodes that have already had coins deposited in the pool can choose to whether continue deposit the next season or renew the deposit value.
 
-When a lock-up period ends, the following rules are applied:
+When a fundraising ends, the following rules are applied:
 
 1. No one adjusts or withdraw its deposit until next fundraising
 #. Nodes that decide to withdraw the deposit, receive the coins
