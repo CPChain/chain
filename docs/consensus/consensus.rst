@@ -521,7 +521,7 @@ Verification contains two parts, verification of transactions and header.
 Transactions
 ****************
 
-The ``transactions`` in a block are all pending transactions the proposer
+The field ``transactions`` in a block represents all pending transactions the proposer
 holds before proposing it.
 For a validator' standpoint, it does not care what transactions in the block,
 neither it has any clue whether these transactions are correct.
@@ -608,7 +608,8 @@ Currently, this field is blank.
         Sigs       []DporSignature
         // current proposers committee
         Proposers  []common.Address
-        // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
+        // updated validator committee in next epoch if it is not nil.
+        // keep the same to current if it is nil.
         Validators []common.Address
     }
 
@@ -622,15 +623,15 @@ A validator reject the block if this value is not the proper proposer of this vi
 Note that ``Coinbase`` can be decoded from ``Seal``.
 Thus in most cases, these two attributes are referring to a same node.
 
-``Sigs``, are signatures for LBFT consensus.
-It should be empty in a newly proposed block.
+``Sigs``, contains signatures for LBFT consensus.
+It should be nil in a newly proposed block.
 
 ``Proposers``, indicates all proposers in this term.
 As we stated above, it can be calculated by any node given the hash of parent block.
 Verification fails if this field is not correct.
 
 ``Validators``, indicates all validators in the committee.
-They are public information, and should be consistent with all validators.
+It is public information, and should be consistent with all validators.
 
 
 
