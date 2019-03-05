@@ -996,7 +996,7 @@ func (p *LBFT2) tryToImpeach() {
 
 	if impeachBlock, err := p.dpor.CreateImpeachBlock(); err == nil {
 		time.AfterFunc(
-			p.dpor.ImpeachTimeout(),
+			impeachBlock.Timestamp().Sub(time.Now()),
 			func() {
 				if impeachBlock.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
 					p.handleImpeachBlock(impeachBlock)
