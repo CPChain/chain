@@ -51,7 +51,7 @@ type fakeDporHelper struct {
 	snapshotSuccess bool
 }
 
-func (f *fakeDporHelper) verifySigs(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+func (f *fakeDporHelper) verifySignatures(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	panic("implement me")
 }
 
@@ -61,6 +61,10 @@ func (f *fakeDporHelper) verifyHeader(d *Dpor, chain consensus.ChainReader, head
 	}
 
 	return errors.New("verify Header")
+}
+
+func (*fakeDporHelper) verifyBasic(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+	panic("implement me")
 }
 
 func (*fakeDporHelper) verifyProposers(c *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
