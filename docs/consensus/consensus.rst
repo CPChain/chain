@@ -635,6 +635,17 @@ It is public information, and should be consistent with all validators.
 
 
 
+Subsequent Operations of Non-validators for Blocks
+---------------------------------------------------------
+
+
+Similar to validators in `Verification of Blocks`_,
+non-validators, including civilians and proposers,
+also verify blocks before insert it into the chain.
+Besides, they are also going to execute some subsequent operations after receiving a validated block.
+This section discusses operations of civilians and proposers in such scenario.
+
+
 Countermeasures for Illicit Actions
 ------------------------------------------
 
