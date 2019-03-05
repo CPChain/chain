@@ -30,14 +30,24 @@ import (
 
 type dporHelper interface {
 	dporUtil
+
 	verifyHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header,
 		verifySigs bool, verifyProposers bool) error
+
 	snapshot(d *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*DporSnapshot, error)
+
+	verifyBasic(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	verifySeal(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
-	verifySigs(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
+	verifySignatures(d *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
 	verifyProposers(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error
+
 	signHeader(d *Dpor, chain consensus.ChainReader, header *types.Header, state consensus.State) error
 	validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error
+}
+
+// logDebugWithNumberAndHash logs given msg and context with specific number and hash.
+func logDebugWithNumberAndHash(msg string, number uint64, hash common.Hash, ctx ...interface{}) {
+	log.Debug(msg, "number", number, "hash", hash, ctx)
 }
 
 type defaultDporHelper struct {
@@ -56,12 +66,58 @@ func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader,
 // a batch of new headers.
 func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header,
 	refHeader *types.Header, verifySigs bool, verifyProposers bool) error {
+
+	var (
+		number    = header.Number.Uint64()
+		isImpeach = header.Coinbase == common.Address{}
+	)
+
+	// verify basic fields of the header
+	err := dh.verifyBasic(dpor, chain, header, parents, refHeader)
+	if err != nil {
+		return err
+	}
+
+	if number == 0 {
+		return nil
+	}
+
+	// verify dpor seal, genesis block not need this check
+	if verifyProposers && !isImpeach { // ignore impeach block(whose coinbase is empty)
+
+		// verify proposers if it is not an impeachment block
+		if err := dpor.dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
+			return err
+		}
+
+		// verify proposer's seal
+		if err := dh.verifySeal(dpor, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
+			return err
+		}
+	}
+
+	// verify dpor signatures if required
+	if verifySigs {
+		if err := dh.verifySignatures(dpor, chain, header, parents, refHeader); err != nil {
+			log.Warn("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
+			return err
+		}
+	}
+
+	return nil
+}
+
+// verifyBasic verifies basic fields of the header, i.e. Number, Hash, Coinbase, Time
+func (dh *defaultDporHelper) verifyBasic(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+
+	// if nil number, return error
 	if header.Number == nil {
 		return errUnknownBlock
 	}
 
-	number := header.Number.Uint64()
-
+	// switch dpor mode, test related
 	switch dpor.Mode() {
 	case DoNothingFakeMode:
 		// do nothing
@@ -71,83 +127,66 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 		return nil
 	}
 
-	isImpeach := header.Coinbase == common.Address{}
+	var (
+		number    = header.Number.Uint64()
+		hash      = header.Hash()
+		isImpeach = header.Coinbase == common.Address{}
+	)
 
-	if number > 0 {
-		// Ensure the block's parent is valid
-		var parent *types.Header
-		if len(parents) > 0 {
-			parent = parents[len(parents)-1]
-		} else {
-			blk := chain.GetBlock(header.ParentHash, number-1)
-			if blk != nil {
-				parent = blk.Header()
-			}
-		}
-		// Ensure that the block's parent is valid
-		if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
-
-			log.Debug("consensus.ErrUnknownAncestor 3")
-			log.Debug("parent", "parent", parent)
-			if parent != nil {
-				log.Debug("parent.number", "number", parent.Number.Uint64(), "number-1", number-1)
-				log.Debug("parent.hash", "hash", parent.Hash(), "header.ParentHash", header.ParentHash)
-			}
-
-			return consensus.ErrUnknownAncestor
-		}
-
-		// If timestamp is in a valid field, wait for it, otherwise, return invalid timestamp.
-		log.Debug("timestamp related values", "parent timestamp", parent.Timestamp(), "block timestamp", header.Timestamp(), "period", dpor.config.PeriodDuration(), "timeout", dpor.config.ImpeachTimeout)
-
-		// Ensure that the block's timestamp is valid
-		if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
-
-			if header.Timestamp().Before(parent.Timestamp().Add(dpor.config.PeriodDuration())) {
-				return ErrInvalidTimestamp
-			}
-			if header.Timestamp().After(parent.Timestamp().Add(dpor.config.PeriodDuration()).Add(dpor.config.ImpeachTimeout)) {
-				return ErrInvalidTimestamp
-			}
-		}
-
-		// Delay to verify it!
-		delay := header.Timestamp().Sub(time.Now())
-		log.Debug("delaying to verify the block", "delay", delay)
-		<-time.After(delay)
-
+	if number == 0 {
+		return nil
 	}
 
-	if number > 0 {
-		// verify dpor seal, genesis block not need this check
-		if verifyProposers && !isImpeach { // ignore impeach block(whose coinbase is empty)
-			if err := dh.verifySeal(dpor, chain, header, parents, refHeader); err != nil {
-				log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
-				return err
-			}
+	// Ensure the block's parent is valid
+	var parent *types.Header
+	if len(parents) > 0 {
+		parent = parents[len(parents)-1]
+	} else {
+		blk := chain.GetBlock(header.ParentHash, number-1)
+		if blk != nil {
+			parent = blk.Header()
 		}
 	}
 
-	if verifyProposers && !isImpeach {
-		// verify proposers
-		if err := dpor.dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
-			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
-			return err
+	// Ensure that the block's parent is valid
+	if parent == nil {
+		logDebugWithNumberAndHash("parent is nil when verifying the header", number, hash)
+		return consensus.ErrUnknownAncestor
+	}
+	if parent.Number.Uint64() != number-1 {
+		logDebugWithNumberAndHash("parent's number is not equal to header.number when verifying the header", number, hash, "parent.number", parent.Number.Uint64())
+		return consensus.ErrUnknownAncestor
+	}
+	if parent.Hash() != header.ParentHash {
+		logDebugWithNumberAndHash("parent's hash is not equal to header.parentHash when verifying the header", number, hash, "parent.hash", parent.Hash().Hex(), "header.parentHash", header.ParentHash.Hex())
+		return consensus.ErrUnknownAncestor
+	}
+
+	// If timestamp is in a valid field, wait for it, otherwise, return invalid timestamp.
+	log.Debug("timestamp related values", "parent timestamp", parent.Timestamp(), "block timestamp", header.Timestamp(), "period", dpor.config.PeriodDuration(), "timeout", dpor.config.ImpeachTimeout)
+
+	// Ensure that the block's timestamp is valid
+	if dpor.Mode() == NormalMode && number > dpor.config.MaxInitBlockNumber && !isImpeach {
+
+		if header.Timestamp().Before(parent.Timestamp().Add(dpor.config.PeriodDuration())) {
+			return ErrInvalidTimestamp
+		}
+		if header.Timestamp().After(parent.Timestamp().Add(dpor.config.PeriodDuration()).Add(dpor.config.ImpeachTimeout)) {
+			return ErrInvalidTimestamp
 		}
 	}
 
-	// verify dpor sigs if required
-	if number > 0 && verifySigs {
-		if err := dh.verifySigs(dpor, chain, header, parents, refHeader); err != nil {
-			log.Warn("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
-			return err
-		}
-	}
+	// Delay to verify it!
+	delay := header.Timestamp().Sub(time.Now())
+	log.Debug("delaying to verify the block", "delay", delay)
+	<-time.After(delay)
+
 	return nil
 }
 
 // verifyProposers verifies dpor proposers
 func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+
 	// The genesis block is the always valid dead-end
 	number := header.Number.Uint64()
 	if number == 0 {
@@ -188,7 +227,6 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 			}
 
 			return consensus.ErrInvalidSigners
-			//return nil
 		}
 	}
 
@@ -196,7 +234,7 @@ func (dh *defaultDporHelper) verifyProposers(dpor *Dpor, chain consensus.ChainRe
 }
 
 // Snapshot retrieves the authorization Snapshot at a given point in time.
-// @param chainSeg  the segment of a chain, composed by ancesters and the block(sepcified by parameter [number] and [hash])
+// @param chainSeg  the segment of a chain, composed by ancestors and the block(specified by parameter [number] and [hash])
 // in the order of ascending block number.
 func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, number uint64, hash common.Hash, chainSeg []*types.Header) (*DporSnapshot, error) {
 	// Search for a Snapshot in memory or on disk for checkpoints
@@ -260,8 +298,6 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			// If we have explicit chainSeg, pick from there (enforced)
 			header = chainSeg[len(chainSeg)-1]
 			if header.Hash() != hash || header.Number.Uint64() != numberIter {
-				log.Info("unknown ancestor", "hash1", header.Hash().Hex(), "hash2", hash.Hex(), "number1", header.Number.Uint64(), "number2", numberIter)
-				log.Debug("consensus.ErrUnknownAncestor 1")
 				return nil, consensus.ErrUnknownAncestor
 			}
 			chainSeg = chainSeg[:len(chainSeg)-1]
@@ -269,7 +305,6 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			// No explicit chainSeg (or no more left), reach out to the database
 			header = chain.GetHeader(hash, numberIter)
 			if header == nil {
-				log.Debug("consensus.ErrUnknownAncestor 2", "number", numberIter)
 				return nil, consensus.ErrUnknownAncestor
 			}
 		}
@@ -291,8 +326,19 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	if client == nil {
 		client = dpor.Client()
 	}
+
 	if rptBackend == nil && client != nil {
-		rptBackend, _ = rpt.NewRptService(client, dpor.config.Contracts[configs.ContractRpt])
+		if dpor.rptBackend == nil {
+			rptBackend, err := rpt.NewRptService(client, dpor.config.Contracts[configs.ContractRpt])
+			if err != nil {
+				log.Debug("err when create new rpt service", "err", err)
+			}
+			dpor.rptBackend = rptBackend
+
+			log.Debug("created new rpt service")
+		}
+
+		rptBackend = dpor.rptBackend
 	}
 
 	// Set correct client and rptBackend
@@ -375,8 +421,8 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	return nil
 }
 
-// verifySigs verifies whether the signatures of the header is signed by correct validator committee
-func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+// verifySignatures verifies whether the signatures of the header is signed by correct validator committee
+func (dh *defaultDporHelper) verifySignatures(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
 	hash := header.Hash()
 	number := header.Number.Uint64()
 
@@ -437,7 +483,7 @@ func (dh *defaultDporHelper) verifySigs(dpor *Dpor, chain consensus.ChainReader,
 	}
 
 	// if not reached to 2f + 1, the validation fails
-	if count < (len(validators)-1)/3*2+1 {
+	if !dpor.config.Certificate(uint64(count)) {
 		return consensus.ErrNotEnoughSigs
 	}
 

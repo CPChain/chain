@@ -52,7 +52,7 @@ var (
 			MaxInitBlockNumber:    DefaultMainnetMaxInitBlockNumber,
 			ProxyContractRegister: mainnetProxyContractRegister,
 			Contracts:             mainnetContractAddressMap,
-			ImpeachTimeout:        time.Millisecond * MainnetBlockPeriod * 2,
+			ImpeachTimeout:        time.Millisecond * MainnetBlockPeriod,
 		},
 	}
 	mainnetProposers = []common.Address{

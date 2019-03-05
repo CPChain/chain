@@ -55,7 +55,7 @@ const (
 )
 
 const (
-	cacheSize = 120
+	cacheSize = 1024
 	// 16 is the min rpt score
 	minRptScore = 16
 )
