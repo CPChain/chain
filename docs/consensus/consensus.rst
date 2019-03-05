@@ -481,6 +481,159 @@ The total number of validators in validate state can be larger than one,
 since all validators and its message processing are running in parallel.
 Other validators directly enters idle state after receiving a validate message.
 
+
+
+
+Verification of Blocks
+----------------------------
+
+
+As stated in `Normal and Abnormal Cases Handler`_,
+a validator verifies each newly proposed block before proceeding to next state.
+
+A block, as shown below, contains a header and a list of transactions.
+
+
+.. code-block:: go
+
+    // Block represents an entire block in the CPChain blockchain.
+    type Block struct {
+        header       *Header
+        transactions Transactions
+
+        // caches
+        hash atomic.Value
+        size atomic.Value
+
+        // Td is used by package core to store the total difficulty
+        // of the chain up to and including the block.
+        td *big.Int
+
+        // These fields are used to track inter-peer block relay.
+        ReceivedAt   time.Time
+        ReceivedFrom interface{}
+    }
+
+
+Verification contains two parts, verification of transactions and header.
+
+
+Transactions
+****************
+
+The ``transactions`` in a block are all pending transactions the proposer
+holds before proposing it.
+For a validator' standpoint, it does not care what transactions in the block,
+neither it has any clue whether these transactions are correct.
+It only checks whether the format of all transactions are correct.
+
+An impeach block is different.
+All transactions in an impeach block are composed by validators in a pre-defined format.
+Any impeach block with different transactions will be regarded as faulty,
+and rejected by all loyal validators.
+
+Header
+**********
+
+
+Despite that the structure of transactions is relatively simple,
+the header is rather complicated.
+Here we further list all components in a header.
+
+.. code-block:: go
+
+
+    // Header represents a block header in the CPChain blockchain.
+    type Header struct {
+        ParentHash   common.Hash
+        Coinbase     common.Address
+        StateRoot    common.Hash
+        TxsRoot      common.Hash
+        ReceiptsRoot common.Hash
+        LogsBloom    Bloom
+        Number       *big.Int
+        GasLimit     uint64
+        GasUsed      uint64
+        Time         *big.Int
+        Extra        []byte
+        Dpor         DporSnap
+    }
+
+``ParentHash``, as its name indicates, stores the hash of the parent block.
+The validator rejects the block if ``ParentHash`` is inconsistent with the one of the last block in the chain.
+
+``Coinbase``, refers to the address of reward receiver.
+In principle, it is identical with the address of the proposer.
+However, a validator accepts any ``Coinbase`` value.
+The reward is about to be sent to the coinbase address after the block is inserted into the chain.
+It is the proposer's responsibility to write a correct one.
+
+``StateRoot``, ``TxsRoot``, ``ReceiptRoot`` and ``LogsBloom``,
+are all insensitive in verification process.
+
+``Number``, is the block height.
+It must equal to the block height of parent block adding one.
+Any other value is regarded as illegal and is further rejected by any loyal validator.
+
+``GasLimit``, determines the total number of possible transaction in this block.
+A low value of ``GasLimit`` restricts the total number of transactions,
+while a high value enlarges the size of block as well as transmission cost.
+Thus, ``GasLimit`` is bounded by an upper and a lower bound.
+Only values in a certain range is accepted by validators.
+
+``GasUsed``, refers to the gas used in ``transactions``.
+This number is at most as large as ``GasLimit``.
+And it can be calculated by ``transactions`` in this block.
+In theory, validators and the proposer can obtain a same result
+given a same ``transactions``.
+Thus, a validator calculated a GasUsed value itself according to ``transactions``,
+and compares it with ``GasUsed`` in the block.
+It they are not equal, then the block is rejected.
+
+``Time``, is writen in Unix timestamp.
+We have explicated this problem in `Past and Future Block`_.
+
+``Extra``, as indicated by its name, is used to any extra attribute.
+Currently, this field is blank.
+
+``Dpor`` is a ``type DporSnap struct`` variable containing its own components, which are
+
+
+.. code-block:: go
+
+    type DporSnap struct {
+        // the signature of the block's proposer
+        Seal       DporSignature
+        // the signatures of validators to endorse the block
+        Sigs       []DporSignature
+        // current proposers committee
+        Proposers  []common.Address
+        // updated validator committee in next epoch if it is not nil. Keep the same to current if it is nil.
+        Validators []common.Address
+    }
+
+Before explaining these four fields, one thing is noteworthy here.
+Despite the election is a random process, all random seeds are pre-defined, as the hash value of parent block.
+Thus, all nodes can obtain an identical list of proposers for this term.
+Now let's dive in these fields of ``Dpor``
+
+``Seal``, is the signature of the proposer.
+A validator reject the block if this value is not the proper proposer of this view.
+Note that ``Coinbase`` can be decoded from ``Seal``.
+Thus in most cases, these two attributes are referring to a same node.
+
+``Sigs``, are signatures for LBFT consensus.
+It should be empty in a newly proposed block.
+
+``Proposers``, indicates all proposers in this term.
+As we stated above, it can be calculated by any node given the hash of parent block.
+Verification fails if this field is not correct.
+
+``Validators``, indicates all validators in the committee.
+They are public information, and should be consistent with all validators.
+
+
+
 Countermeasures for Illicit Actions
 ------------------------------------------
 
@@ -964,6 +1117,8 @@ By summing up above five cases, we can conclude that the theorem holds. **Q.E.D*
 
 
 
+
+
 Comparison with PBFT
 ---------------------------
 
@@ -992,4 +1147,5 @@ Liveness is also the reason that a validator cannot insist on a P-certificate.
 +---------------------------+------------------------------------+-----------------------------+
 | Faulty leader handler     | Impeachment                        | View change                 |
 +---------------------------+------------------------------------+-----------------------------+
+
 
