@@ -57,6 +57,8 @@ type Backend interface {
 	SubscribeChainEvent(ch chan<- core.ChainEvent) event.Subscription
 	SubscribeChainHeadEvent(ch chan<- core.ChainHeadEvent) event.Subscription
 	SubscribeChainSideEvent(ch chan<- core.ChainSideEvent) event.Subscription
+	Proposers(blockNr rpc.BlockNumber) ([]common.Address, error)
+	Validators(blockNr rpc.BlockNumber) ([]common.Address, error)
 
 	// TxPool API
 	SendTx(ctx context.Context, signedTx *types.Transaction) error

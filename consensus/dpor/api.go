@@ -39,3 +39,24 @@ func (api *API) GetSnapshotAtHash(hash common.Hash) (*DporSnapshot, error) {
 	}
 	return api.dpor.dh.snapshot(api.dpor, api.chain, header.Number.Uint64(), header.Hash(), nil)
 }
+
+// GetProposers retrieves the Proposers at a given block.
+func (api *API) GetProposers(number rpc.BlockNumber) ([]common.Address, error) {
+	// Retrieve the requested block number (or current if none requested)
+	var header *types.Header
+	if number == 0 || number == rpc.LatestBlockNumber {
+		header = api.chain.CurrentHeader()
+	} else {
+		header = api.chain.GetHeaderByNumber(uint64(number.Int64()))
+	}
+	// Ensure we have an actually valid block and return its Proposers
+	if header == nil {
+		return nil, errUnknownBlock
+	}
+	return header.Dpor.Proposers, nil
+}
+
+// GetValidators retrieves the Validators at a given block.
+func (api *API) GetValidators(number rpc.BlockNumber) ([]common.Address, error) {
+	return api.dpor.ValidatorsOf(uint64(number))
+}
