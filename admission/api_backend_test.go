@@ -117,8 +117,8 @@ func init() {
 }
 
 func newDummyChain() consensus.ChainReader {
-	_, _ = core.GenerateChain(configs.TestChainConfig, genesis, dpor.New(&configs.DporConfig{}, testdb, nil), testdb, nil, 8, nil)
-	chain, _ := core.NewBlockChain(testdb, nil, configs.TestChainConfig, dpor.New(&configs.DporConfig{}, testdb, nil), vm.Config{}, nil, nil)
+	_, _ = core.GenerateChain(configs.TestChainConfig, genesis, dpor.New(configs.ChainConfigInfo().Dpor, testdb, nil), testdb, nil, 8, nil)
+	chain, _ := core.NewBlockChain(testdb, nil, configs.TestChainConfig, dpor.New(configs.ChainConfigInfo().Dpor, testdb, nil), vm.Config{}, nil, nil)
 
 	return chain
 }
