@@ -184,8 +184,8 @@ And the message box near the arrow represents the message broadcast to other nod
 
 
 
-LBFT2.0 Pseudocode
-*************
+LBFT 2.0 Pseudocode
+************************
 
 For more detailed implementation, interested reader can refer to the pseudocode below (the grammar is close to golang).
 
@@ -955,7 +955,7 @@ Extra-view Recovery
 
 If intra-view recovery does not work for a validator v and the block height of v is same as the chain,
 it is about to catch up other validators once it receives a validate message.
-As demonstrated in `LBFT2.0 Pseudocode`_, validate message (as well as impeach validate mesage) has highest priority,
+As demonstrated in `LBFT 2.0 Pseudocode`_, validate message (as well as impeach validate mesage) has highest priority,
 which forwards v to idle state of next view regardless of the state of v.
 
 However, if v has been losing its connection for a long time, it should invoke *sync* function.
@@ -1042,7 +1042,7 @@ Hence, the system can regain its liveness in 20 minutes.
 The pseudocode is shown below.
 
 Failback Pseudocode
-********************
+***********************
 
 
 
