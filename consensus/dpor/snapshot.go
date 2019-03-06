@@ -470,58 +470,48 @@ func (s *DporSnapshot) isAboutToCampaign() bool {
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Elect proposers
 	if s.isStartElection() {
-		log.Debug("start election")
-		log.Debug("electing")
+
+		// some logs about rpt infos
 		log.Debug("---------------------------")
-		log.Debug("rpts:")
-		for _, r := range rpts {
-			log.Debug("rpt:", "addr", r.Address.Hex(), "value", r.Rpt)
+		log.Debug("start election")
+		log.Debug("rpts list:")
+		for idx, r := range rpts {
+			log.Debug("rpt:", "idx", idx, "addr", r.Address.Hex(), "value", r.Rpt)
 		}
 		log.Debug("seed", "seed", seed)
 		log.Debug("term length", "term", int(s.config.TermLen))
 		log.Debug("---------------------------")
 
+		// run the election algorithm
 		proposers := election.Elect(rpts, seed, int(s.config.TermLen))
 
-		log.Debug("elected proposers:")
-
-		for _, s := range proposers {
-			log.Debug("proposer", "addr", s.Hex())
+		if len(proposers) != int(s.config.TermLen) {
+			// set default proposers
 		}
-		log.Debug("---------------------------")
 
-		log.Debug("snap.number", "n", s.number())
-
+		// save to cache
 		term := s.FutureTermOf(s.number())
-
-		log.Debug("term idx", "eidx", term)
-
 		s.setRecentProposers(term, proposers)
 
+		// some logs about elected proposers
 		log.Debug("---------------------------")
-		proposers = s.getRecentProposers(term)
-		log.Debug("stored elected proposers")
-
-		for _, s := range proposers {
-			log.Debug("proposer", "addr", s.Hex())
+		log.Debug("elected proposers:")
+		for idx, s := range proposers {
+			log.Debug("proposer", "idx", idx, "addr", s.Hex())
 		}
+		log.Debug("current number", "number", s.number())
+		log.Debug("future term(election term)", "term", term)
 		log.Debug("---------------------------")
-
-		if uint64(len(proposers)) != s.config.TermLen {
-			log.Debug("proposer length wrong", "expect", s.config.TermLen, "actual", len(proposers))
-			log.Debug("---------- proposers --------")
-			for _, s := range proposers {
-				log.Debug("proposer", "addr", s.Hex())
-			}
-		}
 	}
 
 	// Set default proposer if it is in initial stage
 	if s.isUseDefaultProposers() {
-		// Use default proposers
+		// set default proposers
 		proposers := configs.Proposers()
 		s.setRecentProposers(s.Term()+1, proposers)
-		log.Debug("use default proposers", "term", s.Term()+1, "proposers", len(proposers))
+
+		// some logs about default proposer in initialization state
+		log.Debug("use default proposers for term", "term", s.Term()+1, "proposers", len(proposers))
 		for i, p := range proposers {
 			log.Debug(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
 		}
