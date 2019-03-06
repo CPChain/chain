@@ -636,7 +636,7 @@ It is public information, and should be consistent with all validators.
 
 
 Subsequent Operations of Non-validators After Receiving Blocks
----------------------------------------------------------
+-------------------------------------------------------------------
 
 
 Similar to validators in `Verification of Blocks`_,
@@ -644,6 +644,39 @@ non-validators, including civilians and proposers,
 also verify blocks before insert it into the chain.
 Besides, they are also going to execute some subsequent operations after receiving a validated block.
 This section discusses operations of civilians and proposers in such scenario.
+
+
+Civilian
+****************
+
+Once a civilian receives a block, it checks
+
+    1. Whether the block is from validators
+    #. If there are enough distinct signatures
+        i. at least f+1 for impeach block
+        #. at least 2f+1 for normal block
+
+
+
+Proposer
+***************
+
+Besides all criteria as civilians,
+members from proposers committee have more items in their checklist.
+It checks:
+
+    1. Whether the block is from validators
+    #. If there are enough distinct signatures
+        i. at least f+1 for impeach block
+        #. at least 2f+1 for normal block
+    #. If proposers list i.e., ``Proposers`` in ``DporSnap`` is consistent with its own calculation
+
+The third point here is similar to validators' `Verification of Blocks`_.
+A validator pre-calculates proposers list of current term,
+and compares it with ``Proposers``.
+Meanwhile, a proposer utilizes ``Proposers`` to check if its own calculation is correct,
+and confirm its position to propose its block.
+
 
 
 Countermeasures for Illicit Actions
