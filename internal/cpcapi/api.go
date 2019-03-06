@@ -607,6 +607,26 @@ func (s *PublicBlockChainAPI) GetBlockByHash(ctx context.Context, blockHash comm
 	return nil, err
 }
 
+// GetProposerByBlockNumber returns the requested Proposers.
+func (s *PublicBlockChainAPI) GetProposersByBlockNumber(ctx context.Context, blockNr rpc.BlockNumber) ([]common.Address, error) {
+	proposers, err := s.b.Proposers(blockNr)
+	if err != nil {
+		log.Warn("GetProposerByBlockNumber failed", "blockNumber", blockNr, "err", err)
+		return nil, err
+	}
+	return proposers, err
+}
+
+// GetValidatorsByBlockNumber returns the requested Validators.
+func (s *PublicBlockChainAPI) GetValidatorsByBlockNumber(ctx context.Context, blockNr rpc.BlockNumber) ([]common.Address, error) {
+	validators, err := s.b.Validators(blockNr)
+	if err != nil {
+		log.Warn("GetValidatorsByBlockNumber failed", "blockNumber", blockNr, "err", err)
+		return nil, err
+	}
+	return validators, err
+}
+
 // GetUncleByBlockNumberAndIndex returns the uncle block for the given block hash and index. When fullTx is true
 // all transactions in the block are returned in full detail, otherwise only the transaction hash is returned.
 func (s *PublicBlockChainAPI) GetUncleByBlockNumberAndIndex(ctx context.Context, blockNr rpc.BlockNumber, index hexutil.Uint) (map[string]interface{}, error) {
