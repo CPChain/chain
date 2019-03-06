@@ -75,6 +75,10 @@ const (
 	DefaultFailbackTimestampSampleSpace = 2 * time.Minute
 )
 
+const (
+	DefaultGasLimitPerBlock = 1e8
+)
+
 // TODO @hmw make the name more meaningful.  add doc.
 const (
 	ContractCampaign   = "campaign"   // address of campaign contract,select rnode
