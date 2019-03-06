@@ -673,7 +673,7 @@ Proposer
 ***************
 
 Besides all criteria as civilians,
-any member from proposers committee have more items in their checklist.
+any member from proposers committee has more items in their checklist.
 It first checks if the block is validated:
 
     1. Whether the block is from validators;
@@ -694,7 +694,7 @@ And it should update its validator list.
 The second point here is similar to validators' `Verification of Blocks`_.
 A validator pre-calculates proposers list of the current term,
 and compares it with ``Proposers``.
-Meanwhile, a proposer utilizes ``Proposers`` to check if its own calculation is correct,
+Meanwhile, a proposer utilizes ``Proposers`` to reassure if its own calculation is correct,
 and confirms its position to propose its block.
 
 
