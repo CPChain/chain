@@ -673,7 +673,7 @@ Proposer
 ***************
 
 Besides all criteria as civilians,
-members from proposers committee have more items in their checklist.
+any member from proposers committee have more items in their checklist.
 It first checks if the block is validated:
 
     1. Whether the block is from validators;
