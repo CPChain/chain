@@ -58,7 +58,7 @@ that there exist a quorum agree on a prepare message and a commit message respec
         #. When it comes its view, the proposer proposes a block and broadcasts to all validators.
     #. Block validation
         i. Once receives a newly proposed block, a validator in validators committee tries to verify the block.
-        #. This verification process scrutinizes the seal of proposer, timestamp, etc.
+        #. This `Verification of Blocks`_ process scrutinizes the seal of proposer, timestamp, etc.
         #. If true, this validator broadcast a PREPARE message to other validators; otherwise, it enters Abnormal Case 2 or 3.
         #. Once receives 2f+1 PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
         #. Once received 2f+1 COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these 2f+1 validators' signatures to all users.
@@ -67,17 +67,17 @@ that there exist a quorum agree on a prepare message and a commit message respec
 
 
 #. **Abnormal Cases**
-    a. Abnormal Case 1: *A validator does not receive a block from the proposer*
-        i. It is for the case when Step 2.a.f cannot be reached
+    a. Abnormal Case 1: *A validator does not receive a block from the proposer:*
+        i. It is for the case when Step 1.b.a cannot be reached
         #. Let the previousBlockTimestamp be the timestamp of block proposed in previous view, and period is the minimum interval between two blocks.
         #. A timer is set up when reaching the timestamp of previousBlockTimestamp+period.
         #. If the timer expires, the validators committee activates *impeachment*, a two-phase protocol in PBFT manner to propose an impeach block on behalf of the faulty proposer.
     #. Abnormal Case 2: *The proposer proposes one or more faulty blocks*
-        i. Faulty blocks cannot be verified in Step 2.b.a
+        i. Faulty blocks cannot be verified in Step 1.b.b and 1.b.c
         #. The validators committee activates *impeachment*
     #. Abnormal Case 3: *The proposer proposes multiple valid blocks*
         i. Each validator can only validate one block for a same block number
-        #. Thus, it is impossible for two or more blocks to collect P-certificates simultaneously. Only one block can enter Step 2.b.d
+        #. Thus, it is impossible for two or more blocks to collect P-certificates simultaneously. Only one block can enter Step 1.b.d
         #. It is possible that no block receives 2f+1 PREPARE messages
         #. *Impeachment* is activated if a validator cannot collect a P-certificate
     #. Abnormal Case 4: *Some members in the validators committee are faulty*
@@ -184,7 +184,7 @@ And the message box near the arrow represents the message broadcast to other nod
 
 
 
-Pseudocode
+LBFT2.0 Pseudocode
 *************
 
 For more detailed implementation, interested reader can refer to the pseudocode below (the grammar is close to golang).
@@ -871,7 +871,7 @@ For past block, a validator fails in verifying it and triggers impeachment.
 For a future block, the validator wait until the timestamp of the block.
 But if it is larger than previousBlockTimestamp+period+timeout,
 an impeachment is about to take place.
-Thus, we come up with a psuedocode for timestamp verification.
+Thus, we come up with a pseudocode for timestamp verification.
 
     .. code-block:: go
 
@@ -955,7 +955,7 @@ Extra-view Recovery
 
 If intra-view recovery does not work for a validator v and the block height of v is same as the chain,
 it is about to catch up other validators once it receives a validate message.
-As demonstrated in `Pseudocode`_, validate message (as well as impeach validate mesage) has highest priority,
+As demonstrated in `LBFT2.0 Pseudocode`_, validate message (as well as impeach validate mesage) has highest priority,
 which forwards v to idle state of next view regardless of the state of v.
 
 However, if v has been losing its connection for a long time, it should invoke *sync* function.
@@ -1041,7 +1041,7 @@ In practice, T can be set to be 5 minutes.
 Hence, the system can regain its liveness in 20 minutes.
 The pseudocode is shown below.
 
-Pseudocode
+Failback Pseudocode
 ********************
 
 
