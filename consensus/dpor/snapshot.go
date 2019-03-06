@@ -355,10 +355,11 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 
 	}
 
-	// TODO: there is a vulnerability about validators in header, check it!
 	term := s.TermOf(header.Number.Uint64())
 	if len(header.Dpor.Validators) != 0 && len(header.Dpor.Validators) == int(s.config.ValidatorsLen()) {
-		s.setRecentValidators(term+1, header.Dpor.Validators)
+		// TODO: there is a vulnerability about validators in header, check it!
+		// for now, i just do not update validators from header.
+		// s.setRecentValidators(term+1, header.Dpor.Validators)
 	} else if IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
 		s.setRecentValidators(term+1, s.getRecentValidators(term))
 	}
