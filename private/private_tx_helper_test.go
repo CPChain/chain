@@ -91,7 +91,7 @@ func callSealPrivatePayload(t *testing.T, remoteDB database.RemoteDatabase) {
 		t.Fatal("It should return non-empty participants.")
 	}
 
-	content, err := remoteDB.Get(replacement.TxPayloadUri)
+	content, err := remoteDB.Get(replacement.TxPayload)
 	if err != nil {
 		t.Fatal("It should return expected content from IPFS.")
 	}

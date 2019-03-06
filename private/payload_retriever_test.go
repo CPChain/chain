@@ -210,7 +210,7 @@ func preparePrvTxDataForTesting(remoteDB database.RemoteDatabase) []byte {
 // URI linking to the lost data.
 func preparePrvTxPretendedLostDataInIpfs() []byte {
 	r := PayloadReplacement{
-		TxPayloadUri: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		TxPayload:    []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		Participants: getTestParticipants(),
 	}
 	data, _ := rlp.EncodeToBytes(r)
@@ -220,7 +220,7 @@ func preparePrvTxPretendedLostDataInIpfs() []byte {
 func preparePrvTxInvalidIpfsData(remoteDB database.RemoteDatabase) []byte {
 	hash, _ := remoteDB.Put([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0})
 	r := PayloadReplacement{
-		TxPayloadUri: hash,
+		TxPayload:    hash,
 		Participants: getTestParticipants(),
 	}
 	data, _ := rlp.EncodeToBytes(r)

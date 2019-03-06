@@ -67,8 +67,8 @@ func (sealed *SealedPrivatePayload) toBytes() ([]byte, error) {
 type PayloadReplacement struct {
 	// Participants represents a list of public keys which belongs to defined participants. They are used for encryption of symmetric key.
 	Participants []string
-	// TxPayloadUri represents an IPFS address which actually a hash of content.
-	TxPayloadUri []byte
+	// TxPayload represents the real tx payload which could be an IPFS address or ID of other kind of remote db
+	TxPayload []byte
 }
 
 // SealPrivatePayload encrypts private tx's payload and sends it to IPFS, then replaces the payload with the address in IPFS.
@@ -91,14 +91,14 @@ func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, r
 
 	// Put to IPFS
 	bytesToPut, _ := sealed.toBytes()
-	ipfsAddr, err := remoteDB.Put(bytesToPut)
+	remoteDataId, err := remoteDB.Put(bytesToPut)
 	if err != nil {
 		return PayloadReplacement{}, err
 	}
 
 	// Enclose as a PayloadReplacement struct.
 	replacement := PayloadReplacement{
-		TxPayloadUri: ipfsAddr,
+		TxPayload:    remoteDataId,
 		Participants: participants,
 	}
 	return replacement, nil
