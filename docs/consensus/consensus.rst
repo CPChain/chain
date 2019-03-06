@@ -630,16 +630,22 @@ It should be nil in a newly proposed block.
 As we stated above, it can be calculated by any node given the hash of parent block.
 Verification fails if this field is not correct.
 
-``Validators``, indicates all validators in the committee.
-It is public information, and should be consistent with all validators.
+``Validators``, is usually an empty slice.
+It is set to all validators in the committee if validators committee is initialized or changed.
+``Validators`` in the genesis block contains addresses of all validators,
+announce all nodes about this information.
+Blocks with height larger than one, contains a nil ``Validators``,
+unless members of validators committee change.
 
+However, in LBFT 2.0, the mechanism of changing validators have not been implemented yet.
+Validators simply omit this field.
 
 
 Subsequent Operations of Non-validators After Receiving Blocks
 -------------------------------------------------------------------
 
-
-Similar to validators in `Verification of Blocks`_,
+The structure and components are listed in `Verification of Blocks`_.
+And similar to validators in `Verification of Blocks`_,
 non-validators, including civilians and proposers,
 also verify blocks before insert it into the chain.
 Besides, they are also going to execute some subsequent operations after receiving a validated block.
@@ -649,12 +655,17 @@ This section discusses operations of civilians and proposers in such scenario.
 Civilian
 ****************
 
-Once a civilian receives a block, it checks
+Once a civilian receives a block, it first checks
 
-    1. Whether the block is from validators
-    #. If there are enough distinct signatures
-        i. at least f+1 for impeach block
-        #. at least 2f+1 for normal block
+    1. Whether the block is from validators;
+    #. If there are enough distinct signatures in ``Sigs``,
+        i. at least f+1 for impeach block,
+        #. at least 2f+1 for normal block,
+
+If both criteria pass, it is a validated block and can be inserted in to the chain.
+
+It further checks ``Validators``.
+If ``Validators`` are not empty, civilian should update its validator list.
 
 
 
@@ -663,19 +674,28 @@ Proposer
 
 Besides all criteria as civilians,
 members from proposers committee have more items in their checklist.
-It checks:
+It first checks if the block is validated:
 
-    1. Whether the block is from validators
-    #. If there are enough distinct signatures
-        i. at least f+1 for impeach block
-        #. at least 2f+1 for normal block
-    #. If proposers list i.e., ``Proposers`` in ``DporSnap`` is consistent with its own calculation
+    1. Whether the block is from validators;
+    #. If there are enough distinct signatures,
+        i. at least f+1 for impeach block.
+        #. at least 2f+1 for normal block.
 
-The third point here is similar to validators' `Verification of Blocks`_.
-A validator pre-calculates proposers list of current term,
+
+Then,
+
+    1. If validator list i.e., ``Validators`` is not nil.
+    #. If proposer list i.e., ``Proposers`` is consistent with its own calculation.
+
+Non-trivial ``Validators`` value indicates that a new validators committee.
+And it should update its validator list.
+
+
+The second point here is similar to validators' `Verification of Blocks`_.
+A validator pre-calculates proposers list of the current term,
 and compares it with ``Proposers``.
 Meanwhile, a proposer utilizes ``Proposers`` to check if its own calculation is correct,
-and confirm its position to propose its block.
+and confirms its position to propose its block.
 
 
 
