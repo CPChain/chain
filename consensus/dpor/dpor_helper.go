@@ -423,8 +423,11 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 
 // verifySignatures verifies whether the signatures of the header is signed by correct validator committee
 func (dh *defaultDporHelper) verifySignatures(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
-	hash := header.Hash()
-	number := header.Number.Uint64()
+	var (
+		number    = header.Number.Uint64()
+		hash      = header.Hash()
+		isImpeach = header.Coinbase == common.Address{}
+	)
 
 	// Verifying the genesis block is not supported
 	if number == 0 {
@@ -483,8 +486,14 @@ func (dh *defaultDporHelper) verifySignatures(dpor *Dpor, chain consensus.ChainR
 	}
 
 	// if not reached to 2f + 1, the validation fails
-	if !dpor.config.Certificate(uint64(count)) {
-		return consensus.ErrNotEnoughSigs
+	if !isImpeach {
+		if !dpor.config.Certificate(uint64(count)) {
+			return consensus.ErrNotEnoughSigs
+		}
+	} else {
+		if !dpor.config.ImpeachCertificate(uint64(count)) {
+			return consensus.ErrNotEnoughSigs
+		}
 	}
 
 	if dpor.IsMiner() && dh.isTimeToDialValidators(dpor, dpor.chain) {
