@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"math/rand"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -30,6 +31,8 @@ const (
 	//MaxSizeOfRecentProposers is the size of the RecentProposers
 	MaxSizeOfRecentProposers = 200
 )
+
+const defaultProposersNum = 4
 
 var (
 	errValidatorNotInCommittee = errors.New("not a member in validators committee")
@@ -483,10 +486,18 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		log.Debug("---------------------------")
 
 		// run the election algorithm
-		proposers := election.Elect(rpts, seed, int(s.config.TermLen))
+		var proposers []common.Address
+		if int(s.config.TermLen) > defaultProposersNum {
+			electedProposers := election.Elect(rpts, seed, int(s.config.TermLen)-defaultProposersNum)
+			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersNum)
+			proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
+		} else {
+			proposers = election.Elect(rpts, seed, int(s.config.TermLen))
+		}
+		// proposers := election.Elect(rpts, seed, int(s.config.TermLen))
 
 		if len(proposers) != int(s.config.TermLen) {
-			// set default proposers
+			panic("invalid length of prepared proposer list")
 		}
 
 		// save to cache
@@ -626,4 +637,65 @@ func (s *DporSnapshot) InturnOf(number uint64, signer common.Address) bool {
 // StartBlockNumberOfTerm returns the first block number of a term
 func (s *DporSnapshot) StartBlockNumberOfTerm(term uint64) uint64 {
 	return s.config.ViewLen * s.config.TermLen * term
+}
+
+// choseDefaultProposers choses a batch of proposers from a proposers slice with total count of `defaultProposersNum`
+// by the seed of current snapshot.hash.
+func choseSomeProposers(proposers []common.Address, seed int64, wantLen int) (defaultProposers []common.Address) {
+	if len(proposers) > wantLen {
+		randSource := rand.NewSource(seed)
+		myRand := rand.New(randSource)
+
+		for i := 0; i < wantLen; i++ {
+			chosen := myRand.Intn(len(proposers))
+			defaultProposers = append(defaultProposers, proposers[chosen])
+			proposers = append(proposers[:chosen], proposers[chosen+1:]...)
+		}
+		return defaultProposers
+	} else if len(proposers) == wantLen {
+		return proposers
+	}
+	panic("invalid length of given proposer list")
+}
+
+func evenlyInsertDefaultProposers(electedProposers []common.Address, chosenDefaultProposers []common.Address, seed int64, wantLen int) (proposers []common.Address) {
+
+	// panic if length of slices is invalid
+	if len(electedProposers)+len(chosenDefaultProposers) != wantLen {
+		panic("invalid length when evenly inserting default proposers to elected proposers")
+	}
+
+	// generate a random generator
+	randSource := rand.NewSource(seed)
+	myRand := rand.New(randSource)
+
+	slicesNum := len(chosenDefaultProposers)
+
+	if wantLen%slicesNum != 0 {
+		panic("invalid wanted length, not a multiple of 4")
+	}
+
+	step := wantLen / slicesNum
+
+	for i := 0; i < slicesNum; i++ {
+		var slice []common.Address
+
+		// combine two sub slices
+		slice = append(slice, electedProposers[i*(step-1):i*(step-1)+(step-1)]...)
+		slice = append(slice, chosenDefaultProposers[i])
+
+		// get random position of the chosen proposer
+		pos := myRand.Intn(step)
+
+		// swap
+		tmp := slice[len(slice)-1]
+		for j := step - 1; j > pos; j-- {
+			slice[j] = slice[j-1]
+		}
+		slice[pos] = tmp
+
+		// append to proposers
+		proposers = append(proposers, slice...)
+	}
+	return
 }
