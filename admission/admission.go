@@ -173,13 +173,25 @@ func (ac *AdmissionControl) FundForRNode() error {
 	requiredMoney := new(big.Int).Sub(minRnodeFund, deposit)
 	balance, _ := ac.contractBackend.BalanceAt(context.Background(), ac.address, nil)
 	if balance.Cmp(requiredMoney) >= 0 {
-		transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
-		rewardContract.WantRenew(transactOpts) // renew existent investment
+		isToRenew, _ := rewardContract.IsToRenew(nil, ac.address)
 
+		var nonce *big.Int = nil // by default nonce is nil and let
+		if !isToRenew {
+			tx, err := rewardContract.WantRenew(bind.NewKeyedTransactor(ac.key.PrivateKey)) // renew existent investment
+			if err != nil {
+				log.Info("encounter error when renew investiment", "error", err)
+				return err
+			}
+			nonce = new(big.Int).SetUint64(tx.Nonce() + 1) // force increase nonce because the next transaction is too near
+		}
+
+		transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 		transactOpts.Value = requiredMoney // make up investment
+		transactOpts.Nonce = nonce
 		tx, err := rewardContract.SubmitDeposit(transactOpts)
 		if err != nil {
 			log.Info("encounter error when funding deposit for node to become candidate", "error", err)
+			return err
 		}
 		log.Info("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
 		return nil

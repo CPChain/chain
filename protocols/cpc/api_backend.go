@@ -289,6 +289,17 @@ func (b *APIBackend) CommitteMember() []common.Address {
 }
 
 func (b *APIBackend) CalcRptInfo(address common.Address, blockNum uint64) int64 {
-	//	rp,err:=rpt.NewRptService(b.cpc.(*dpor.Dpor).,b.cpc.chainConfig.Dpor.Contracts["rpt"])
 	return b.cpc.engine.(*dpor.Dpor).GetCalcRptInfo(address, blockNum)
+}
+
+// Proposers returns current block Proposers information
+func (b *APIBackend) Proposers(blockNr rpc.BlockNumber) ([]common.Address, error) {
+	api := b.cpc.engine.(*dpor.Dpor).APIs(b.cpc.blockchain)
+	return api[0].Service.(*dpor.API).GetProposers(blockNr)
+}
+
+// Validators returns current block Validators information
+func (b *APIBackend) Validators(blockNr rpc.BlockNumber) ([]common.Address, error) {
+	api := b.cpc.engine.(*dpor.Dpor).APIs(b.cpc.blockchain)
+	return api[0].Service.(*dpor.API).GetValidators(blockNr)
 }

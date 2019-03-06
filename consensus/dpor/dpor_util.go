@@ -79,8 +79,6 @@ func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
 type dporUtil interface {
 	sigHash(header *types.Header) (hash common.Hash)
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)
-	acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, termLen uint) (bool, error)
-	percentagePBFT(n uint, N uint) bool
 }
 
 type defaultDporUtil struct {
@@ -188,33 +186,6 @@ func (d *defaultDporUtil) ecrecover(header *types.Header, sigcache *lru.ARCCache
 		}
 	}
 	return proposer, validators, nil
-}
-
-// acceptSigs checks that signatures have enough signatures to accept the block.
-func (d *defaultDporUtil) acceptSigs(header *types.Header, sigcache *lru.ARCCache, signers []common.Address, termLen uint) (bool, error) {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-
-	numSigs := uint(0)
-	hash := header.Hash()
-
-	// Retrieve signatures of this header from cache
-	if sigs, known := sigcache.Get(hash); known {
-		for _, signer := range signers {
-			if _, ok := sigs.(*signatures).getSig(signer); ok {
-				numSigs++
-			}
-		}
-	} else {
-		return false, errNoSigsInCache
-	}
-
-	return numSigs >= (termLen-1)/3*2+1, nil
-}
-
-// percentagePBFT returns n is large than pctPBFT * N.
-func (d *defaultDporUtil) percentagePBFT(n uint, N uint) bool {
-	return uint(pctB)*n > uint(pctA)*N
 }
 
 const (

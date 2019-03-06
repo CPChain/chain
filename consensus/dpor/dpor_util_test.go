@@ -233,56 +233,6 @@ func Test_ecrecover(t *testing.T) {
 	}
 }
 
-func Test_acceptSigs(t *testing.T) {
-	header := &types.Header{
-		Coinbase:     addr1,
-		Number:       big.NewInt(1),
-		TxsRoot:      types.EmptyRootHash,
-		ReceiptsRoot: types.EmptyRootHash,
-	}
-	sigs := &signatures{
-		sigs: make(map[common.Address][]byte),
-	}
-	for _, signer := range getValidatorAddress() {
-		sigs.setSig(signer, []byte("ok"))
-	}
-
-	emptyCache, _ := lru.NewARC(inMemorySnapshots)
-	cache, _ := lru.NewARC(inMemorySnapshots)
-	cache.Add(header.Hash(), sigs)
-
-	type args struct {
-		header   *types.Header
-		sigcache *lru.ARCCache
-		signers  []common.Address
-		termL    uint
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    bool
-		wantErr bool
-	}{
-		{"should be false when signer not in cache", args{header, cache, getValidatorAddress()[1:2], 4}, false, false},
-		{"should be false when signer not in cache", args{header, emptyCache, getValidatorAddress(), 4}, false, true},
-		{"should be true when signer in cache", args{header, cache, getValidatorAddress(), 4}, true, false},
-	}
-
-	dporUtil := &defaultDporUtil{}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := dporUtil.acceptSigs(tt.args.header, tt.args.sigcache, tt.args.signers, tt.args.termL)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("acceptSigs(%v, %v, %v) error = %v, wantErr %v", tt.args.header, tt.args.sigcache, tt.args.signers, err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("acceptSigs(%v, %v, %v) = %v, want %v", tt.args.header, tt.args.sigcache, tt.args.signers, got, tt.want)
-			}
-		})
-	}
-}
-
 type fakeDBForSignedBlocksRecord struct {
 	m map[string][]byte
 }

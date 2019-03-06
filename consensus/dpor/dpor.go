@@ -12,6 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -31,9 +32,6 @@ type SyncFromBestPeerFn func()
 const (
 	inMemorySnapshots  = 100 // Number of recent vote snapshots to keep in memory
 	inMemorySignatures = 100 // Number of recent block signatures to keep in memory
-
-	pctA = 2
-	pctB = 3 // only when n > 2/3 * N, accept the block
 )
 
 // Mode defines the type a dpor engine makes.
@@ -83,6 +81,8 @@ type Dpor struct {
 	client     backend.ClientBackend
 	ac         admission.ApiBackend
 	clientLock sync.RWMutex
+
+	rptBackend rpt.RptService
 
 	chain consensus.ChainReadWriter
 

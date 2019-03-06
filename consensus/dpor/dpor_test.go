@@ -66,32 +66,6 @@ func recents() map[uint64]common.Address {
 	return signers
 }
 
-func Test_percentagePBFT(t *testing.T) {
-	type args struct {
-		n uint
-		N uint
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{"3*0>21*2", args{0, 21}, false},
-		{"3*14>21*2", args{14, 21}, false},
-		{"3*15>21*2", args{15, 21}, true},
-		{"3*21>21*2", args{21, 21}, true},
-		{"3*1000>21*2", args{1000, 21}, true},
-	}
-	dporUtil := &defaultDporUtil{}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := dporUtil.percentagePBFT(tt.args.n, tt.args.N); got != tt.want {
-				t.Errorf("percentagePBFT() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func newHeader() *types.Header {
 	return &types.Header{
 		ParentHash:   common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),

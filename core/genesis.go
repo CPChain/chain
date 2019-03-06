@@ -319,18 +319,18 @@ func newGenesisBlock() *Genesis {
 		// GasLimit:   1000000000,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
-			candidates[0]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[1]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[2]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[3]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[4]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[5]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[0]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[1]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[2]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[3]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[4]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[5]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
 
 			common.HexToAddress("0x0000000000000000000000000000000000000000"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000001"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x0000000000000000000000000000000000000002"): {Balance: big.NewInt(0x00000000000000000)},
 			common.HexToAddress("0x00000000000000000000000000000000000000ff"): {Balance: big.NewInt(0x00000000000000000)},
-			common.HexToAddress("0xb3801b8743dea10c30b0c21cae8b1923d9625f84"): {Balance: big.NewInt(math.MaxInt64)}, // contract admin account
+			common.HexToAddress("0xb3801b8743dea10c30b0c21cae8b1923d9625f84"): {Balance: new(big.Int).Mul(big.NewInt(800000000), big.NewInt(configs.Cpc))}, // contract admin account
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),

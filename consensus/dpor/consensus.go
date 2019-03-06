@@ -139,7 +139,7 @@ func (d *Dpor) VerifySeal(chain consensus.ChainReader, header *types.Header, ref
 
 // VerifySigs checks if header has enough signatures of validators.
 func (d *Dpor) VerifySigs(chain consensus.ChainReader, header *types.Header, refHeader *types.Header) error {
-	return d.dh.verifySigs(d, chain, header, nil, refHeader)
+	return d.dh.verifySignatures(d, chain, header, nil, refHeader)
 }
 
 // PrepareBlock implements consensus.Engine, preparing all the consensus fields of the
