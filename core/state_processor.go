@@ -145,8 +145,8 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 
 	var privReceipt *types.Receipt
 	// For private tx, it should process its real private tx payload in participant's node. If account manager is nil,
-	// doesn't process private tx.
-	if tx.IsPrivate() && accm != nil {
+	// doesn't process private tx. If the node does not support private transaction, skip it.
+	if tx.IsPrivate() && accm != nil && private.SupportPrivateTx() {
 		privReceipt, err = tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, accm)
 		if err != nil {
 			if err == NoPermissionError {

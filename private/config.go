@@ -20,6 +20,9 @@ const (
 	DefaultIpfsUrl = "3.0.198.89:5001"
 	IPFS           = "ipfs"
 	Swarm          = "swarm"
+
+	// disable private transaction function by default
+	SupportPrivateTxFlag = false
 )
 
 type Config struct {

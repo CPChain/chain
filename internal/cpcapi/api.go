@@ -38,7 +38,8 @@ const (
 )
 
 var (
-	InvalidPrivateTxErr = errors.New("Private transaction should have participants defined and payload data.")
+	InvalidPrivateTxErr    = errors.New("Private transaction should have participants defined and payload data.")
+	NotSupportPrivateTxErr = errors.New("Not support private transaction")
 )
 
 // PublicCpchainAPI provides an API to access Cpchain related information.
@@ -1285,6 +1286,11 @@ func submitTransaction(ctx context.Context, b Backend, tx *types.Transaction) (c
 // SendTransaction creates a transaction for the given argument, sign it and submit it to the
 // transaction pool.
 func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args SendTxArgs) (common.Hash, error) {
+	if args.IsPrivate && !private.SupportPrivateTx() {
+		// if not support private tx, immediately returns error
+		return common.Hash{}, NotSupportPrivateTxErr
+	}
+
 	// Look up the wallet containing the requested signer
 	account := accounts.Account{Address: args.From}
 

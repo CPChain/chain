@@ -104,6 +104,11 @@ func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, r
 	return replacement, nil
 }
 
+// SupportPrivateTx returns a bool value indicating whether it supports private transaction
+func SupportPrivateTx() bool {
+	return SupportPrivateTxFlag
+}
+
 // stringsToPublicKeys converts string to ecies.PublicKey instance.
 func stringsToPublicKeys(keys []string) ([]*ecdsa.PublicKey, error) {
 	pubKeys := make([]*ecdsa.PublicKey, len(keys))
