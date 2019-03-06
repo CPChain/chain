@@ -18,12 +18,9 @@ package dpor
 
 import (
 	"math/big"
-	"testing"
 
-	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -79,9 +76,4 @@ func newHeader() *types.Header {
 		Time:         big.NewInt(1426516743),
 		Extra:        []byte("0x0000000000000000000000000000000000000000000000000000000000000000095e7baea6a6c7c4c2dfeb977efac326af552d87e94b7b6c5a0e526a4d97f9768ad6097bde25c62ac05302acebd0730e3a18a058d7d1cb1204c4a092ef3dd127de235f15ffb4fc0d71469d1339df64650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
 	}
-}
-
-func TestNew(t *testing.T) {
-	dpor := New(&configs.DporConfig{}, &fakeDb{}, nil)
-	assert.NotNil(t, dpor)
 }
