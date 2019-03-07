@@ -755,7 +755,7 @@ requires different size of quorum respectively.
 Let's name the normal quorum of 2f+1 validators as strong quorom,
 and its corresponding certificate as strong certificate.
 Similarly, the impeach quorum and certificate are denoted
-as weak quorum and week certificate respectively.
+by weak quorum and week certificate respectively.
 
 Observation 1 indicates that one quorum endorses b while another one endorse b'.
 It is possible that if a loyal validator v1 signs b then broadcasts its prepare messages,
