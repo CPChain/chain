@@ -148,6 +148,10 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
 
 	cpc.engine = cpc.CreateConsensusEngine(ctx, chainConfig, chainDb, cpc.AdmissionApiBackend)
+	if cpc.engine == nil {
+		return nil, errBadEngine
+	}
+
 	log.Info("Initialising cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
 
 	if !config.SkipBcVersionCheck {

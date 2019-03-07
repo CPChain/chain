@@ -312,11 +312,10 @@ func DefaultGenesisBlock() *Genesis {
 func newGenesisBlock() *Genesis {
 	candidates := configs.Candidates()
 	return &Genesis{
-		Config:    configs.ChainConfigInfo(),
-		Timestamp: 1492009146,
-		ExtraData: hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:  4700000 * 10,
-		// GasLimit:   1000000000,
+		Config:     configs.ChainConfigInfo(),
+		Timestamp:  1492009146,
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:   configs.DefaultGasLimitPerBlock,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
 			candidates[0]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
@@ -344,11 +343,10 @@ func newGenesisBlock() *Genesis {
 func newTestnetGenesisBlock() *Genesis {
 	candidates := configs.Candidates()
 	return &Genesis{
-		Config:    configs.ChainConfigInfo(),
-		Timestamp: 1492009146,
-		ExtraData: hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:  4700000 * 10,
-		// GasLimit:   1000000000,
+		Config:     configs.ChainConfigInfo(),
+		Timestamp:  1492009146,
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:   configs.DefaultGasLimitPerBlock,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
 			candidates[0]: {Balance: big.NewInt(math.MaxInt64)},
@@ -377,7 +375,7 @@ func newMainnetGenesisBlock() *Genesis {
 		Config:     configs.ChainConfigInfo(),
 		Timestamp:  1492009146,
 		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:   4700000 * 10,
+		GasLimit:   configs.DefaultGasLimitPerBlock,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
 			candidates[0]: {Balance: big.NewInt(math.MaxInt64)},

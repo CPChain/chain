@@ -72,7 +72,11 @@ const (
 
 const (
 	DefaultWaitTimeBeforeImpeachment    = 2 * time.Minute // wait 120 seconds before first impeachment
-	DefaultFailbackTimestampSampleSpace = 20 * time.Minute
+	DefaultFailbackTimestampSampleSpace = 2 * time.Minute
+)
+
+const (
+	DefaultGasLimitPerBlock = 47000000
 )
 
 // TODO @hmw make the name more meaningful.  add doc.
