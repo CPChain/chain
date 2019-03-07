@@ -482,6 +482,8 @@ since all validators and its message processing are running in parallel.
 Other validators directly enters idle state after receiving a validate message.
 
 
+Transitivity of Certificate
+******************************
 
 
 Verification of Blocks
@@ -728,10 +730,12 @@ Assume that a proposer p proposes two distinct blocks b and b', and broadcasts t
 And to achieve its wicked purpose, f faulty validators collaborate with p.
 Suppose that p fulfill its wicked aim that both b and b' are inserted into the chain.
 Thus, there exists two quorums of validators that endorse b and b' respectively.
-Since only 3f+1 members in the committee, these two quorums have f+1 members in common. Except for f faulty validators
-can be members of both quorums, there still exits one validator signs both b and b'. It contracts the
-fact that each loyal validator only sign one block. Hence, there cannot be two proposed blocks are
-both legit. **Q.E.D.**
+Since only 3f+1 members in the committee, these two quorums have f+1 members in common.
+Except for f faulty validators can be members of both quorums,
+there still exits one validator signs both b and b'.
+It contracts the fact that each loyal validator only sign one block.
+Hence, there cannot be two proposed blocks are both legit.
+**Q.E.D.**
 
 
 
@@ -745,14 +749,12 @@ The answer is no. Here we lists two lemmas and shows their correctness.
 *It is possible that both a block b proposed from a proposer p and an impeach block b' suffice
 a prepare certificate simultaneously.*
 
-**Observation 2:**
-*It is impossible that both a block b proposed from a proposer p and an impeach block b' suffice
-a commit certificate simultaneously.*
+
 
 **Proof:**
 As we know the certificate of impeach block and normal block
 requires different size of quorum respectively.
-Let's name the normal quorum of 2f+1 validators as strong quorom,
+Let's name the normal quorum of 2f+1 validators as strong quorum,
 and its corresponding certificate as strong certificate.
 Similarly, the impeach quorum and certificate are denoted
 by weak quorum and week certificate respectively.
@@ -761,23 +763,66 @@ Observation 1 indicates that one quorum endorses b while another one endorse b'.
 It is possible that if a loyal validator v1 signs b then broadcasts its prepare messages,
 but its receiver is blocked such that it later proposes an impeach block.
 Combining f faulty validators, two quorums are made up.
+**Q.E.D**
 
-However, Observation 2 ensures the safety of our consensus system. It is because once v1
-proposes an impeach block b', it can no longer send out b’s commit message even if it collects a
-prepare certificate for b.
-A valid
-The state transmission of a validator is illustrated in the `Implementation`_.
-Once a validator enters either impeach prepare or impeach commit phase, it no
-long signs a normal block. **Q.E.D.**
 
-Observation 2 leads to the following lemma:
+**Observation 2:**
+*It is impossible that both a block b proposed from a proposer p and an impeach block b' suffice
+a commit certificate simultaneously*
 
-**Lemma 2:**
-*A proposed block and an impeach block cannot be validated simultaneously.*
 
 **Proof:**
-Given Observation 2, either a normal block or an impeach block can obtain a commit certificate.
-Thus, they cannot be validated simultaneously. **Q.E.D.**
+Observation 2 ensures the safety of our consensus system.
+Once v1 proposes an impeach block b',
+it can no longer send out b’s commit message even if it collects a prepare certificate for b.
+The state transmission of a validator is illustrated in the `Implementation`_.
+Once a validator enters either impeach prepare or impeach commit phase, it no
+long signs a normal block.
+
+To suffice a weak quorum for impeach commit certificate,
+there must be at least a loyal validator, say v1, agreeing on impeach block instead of normal one.
+This validator assures the legality of this impeach block.
+
+As stated in `Transitivity of Certificate`_,
+v1 can transmit the its impeach prepare certificate to other loyal validators.
+Thus, these loyal validators in commit state will transit to impeach commit state
+and abandon its prepare certificate for b,
+which assures that a strong commit certificate and a weak certificate cannot be
+obtained simultaneously.
+**Q.E.D.**
+
+
+**Observation 3:**
+*Under the parameter setting of LBFT 2.0,
+It is impossible that both a block b proposed from a proposer p and an impeach block b'
+get validate message in one block height*
+
+**Proof:**
+Observation 2 has a glitch in an edge case.
+If v1 firstly delivers its impeach commit message to f faulty validators then loses connection,
+a weak quorum suffices while the strong quorum for commit certificate has
+not clue about v1's impeach prepare certificate.
+Despite of the fact that a validator sends out message to all its peers in a random order,
+the chance of this situation is not zero.
+
+However, in LBFT 2.0 timeout is set to be 10 seconds,
+same as the period of a normal case.
+Before the timer of v1 expires,
+the strong quorum has collected a prepare certificate of block b
+and get v1 transited to prepare state.
+**Q.E.D**
+
+
+Observation 2 and 3 leads to the following lemma:
+
+**Lemma 2:**
+*A proposed block and an impeach block cannot be validated in same block height.*
+
+**Proof:**
+Given Observation 2 and 3, either a normal block or an impeach block can obtain a commit certificate,
+and be further validated.
+Thus, they cannot be validated in same block height.
+**Q.E.D.**
 
 Combining both Lemma 1 and 2, we conclude the following theorem to guarantee the safety facing double spend attack.
 
@@ -1196,7 +1241,8 @@ ts\ :sub:`2`\   - max(t\ :sub:`i`\ ) > ts\ :sub:`1`\   + 2T - (min(t\ :sub:`i`\ 
 Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
 
 
-By summing up above five cases, we can conclude that the theorem holds. **Q.E.D**
+By summing up above five cases, we can conclude that the theorem holds.
+**Q.E.D**
 
 
 
