@@ -152,11 +152,11 @@ func (pm *ProtocolManager) syncerLoop() {
 				break
 			}
 			// update from peers
-			go pm.synchronise(pm.peers.BestPeer())
+			go pm.synchronize(pm.peers.BestPeer())
 
 		case <-forceSync.C:
 			// Force a sync even if not enough peers are present
-			go pm.synchronise(pm.peers.BestPeer())
+			go pm.synchronize(pm.peers.BestPeer())
 
 		case <-pm.noMorePeers:
 			return
@@ -167,16 +167,16 @@ func (pm *ProtocolManager) syncerLoop() {
 func (pm *ProtocolManager) SyncFromPeer(p *p2p.Peer) {
 	id := fmt.Sprintf("%x", p.ID().Bytes()[:8])
 	if peer, ok := pm.peers.peers[id]; ok {
-		go pm.synchronise(peer)
+		go pm.synchronize(peer)
 	}
 }
 
 func (pm *ProtocolManager) SyncFromBestPeer() {
-	go pm.synchronise(pm.peers.BestPeer())
+	go pm.synchronize(pm.peers.BestPeer())
 }
 
 // Synchronise tries to sync up our local block chain with a remote peer. It fetches blocks a peer.
-func (pm *ProtocolManager) synchronise(peer *peer) {
+func (pm *ProtocolManager) synchronize(peer *peer) {
 	if peer == nil {
 		return
 	}
