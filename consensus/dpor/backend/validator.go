@@ -158,6 +158,22 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		go vh.reBroadcast(input, msgCode, msg)
 	}
 
+	switch msgCode {
+	case ImpeachValidateMsgCode:
+		log.Debug("-----------------------------")
+		log.Debug("now received an ImpeachValidateMsg", "number", input.Number(), "hash", input.Hash().Hex())
+
+		correctProposer, _ := vh.dpor.ProposerOf(input.Number())
+		log.Debug("for this block number, the correct proposer should be", "addr", correctProposer.Hex())
+
+		correctProposerPeer, exist := vh.dialer.getProposer(correctProposer.Hex())
+		if exist {
+			log.Debug("for this block number, the correct proposer's addr should be", "ip:port", correctProposerPeer.Peer.RemoteAddr())
+		}
+
+		log.Debug("-----------------------------")
+	}
+
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
 	if err != nil {
