@@ -197,6 +197,9 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
         // a general code for LBFT FSM
         func LbftFsm20(input, state) {
+            var period, timeout int
+            period = 10 * time.Second   // set period as 10 seconds
+            timeout = 10 * time.Second  // set timeout as 10 seconds
             switch state{
             case idle:
                 idleHandler(input)
@@ -813,14 +816,14 @@ and get v1 transited to prepare state.
 **Q.E.D**
 
 
-Observation 2 and 3 leads to the following lemma:
+Observation 2 and 3 lead to the following lemma:
 
 **Lemma 2:**
 *A proposed block and an impeach block cannot be validated in same block height.*
 
 **Proof:**
-Given Observation 2 and 3, either a normal block or an impeach block can obtain a commit certificate,
-and be further validated.
+According to Observation 2 and 3,
+either a normal block or an impeach block can obtain a commit certificate, and be further validated.
 Thus, they cannot be validated in same block height.
 **Q.E.D.**
 
@@ -1135,7 +1138,7 @@ Failback Pseudocode
         func failback () {
             // v: a validator
             // t: local clock of v in Unix timestamp
-            T := 600 // 5 minutes
+            T := 5 * time.Minute // 5 minutes
             set the state to idle state
 
             // timestamp of failback impeach block
