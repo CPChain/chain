@@ -197,9 +197,6 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
         // a general code for LBFT FSM
         func LbftFsm20(input, state) {
-            var period, timeout int
-            period = 10 * time.Second   // set period as 10 seconds
-            timeout = 10 * time.Second  // set timeout as 10 seconds
             switch state{
             case idle:
                 idleHandler(input)
@@ -218,6 +215,12 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 **Utilities**
 
     .. code-block:: go
+
+        // period is the minimal time between two consecutive blocks
+        // timeout is used for whether the timer expires
+        var period, timeout int
+        period = 10 * time.Second   // set period as 10 seconds
+        timeout = 10 * time.Second  // set timeout as 10 seconds
 
         // sign is a slice storing signs of a given block header
         // prepareSignatures stores signs of prepare messages for a given block header
@@ -538,8 +541,13 @@ Cascade of Determination of Certificates
 
 A cascade of determination of certificates refers to a phenomenon that
 a message can suffice more than one certificate.
-Recall an example in ``func idleHandler()`` in `LBFT 2.0 Pseudocode`_.
 
+Recall an example in ``func idleHandler()`` in `LBFT 2.0 Pseudocode`_.
+A block adds one distinct signature in ``prepareSignatures``,
+which is possible to suffice a prepare certificate.
+Under the case that a prepare certificate is collected,
+one more distinct signature is added in ``commitSignatures``,
+it is also possible that a commit certificate can be collected.
 
 .. code-block:: go
 
@@ -547,7 +555,7 @@ Recall an example in ``func idleHandler()`` in `LBFT 2.0 Pseudocode`_.
         switch input{
         // some code here
         case block:
-            // some other code here
+            // some code here
 
             // a cascade of determination of certificates
             if prepareCertificate {
@@ -566,6 +574,41 @@ Recall an example in ``func idleHandler()`` in `LBFT 2.0 Pseudocode`_.
                 broadcast prepareMsg
                 transit to prepare state
             }
+        // some code here
+        }
+    }
+
+
+A similar cascade of determination also applies in impeach handlers.
+An example is ``func impeachHandler()`` as shown below.
+
+
+.. code-block:: go
+
+
+    func impeachHandler(input) {
+        switch input{
+        case expiredTimer:
+            propose an impeach block
+            // a cascade of determination of certificate
+            if impeachPrepareCertificate(b) {
+                if impeachCommitCertificate(b) {
+                    add the impeach block b into cache
+                    broadcast impeachValidateMsg
+                    transit to validate state
+                } else {
+                    add the impeach block b into cache
+                    broadcast the impeachPrepareMsg
+                    broadcast the impeachCommitMsg
+                    transit to impeachCommit state
+                }
+            } else {
+                add the impeach block b into cache
+                broadcast the impeachPrepareMsg
+                transit to impeachPrepare state
+            }
+
+            // some code here
         }
     }
 
