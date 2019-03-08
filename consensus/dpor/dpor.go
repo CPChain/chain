@@ -188,11 +188,9 @@ func New(config *configs.DporConfig, db database.Database, acBackend admission.A
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config
-	if conf.TermLen == 0 {
-		conf.TermLen = uint64(termLen)
-	}
-	if conf.ViewLen == 0 {
-		conf.ViewLen = uint64(viewLen)
+	if conf.TermLen == 0 || conf.ViewLen == 0 {
+		log.Fatal("wrong term length or view length configuration", "term length", conf.TermLen, "view length", conf.ViewLen)
+		return nil
 	}
 
 	// Allocate the Snapshot caches and create the engine

@@ -33,7 +33,6 @@ computing, with you and with everyone! Please come and join us.
 - [Documentation](#documentation)
 - [Tools and Libraries](#tools-and-libraries)
 - [Contributing](#contributing)
-- [FAQ](#faq)
 - [Contact](#contact)
 - [License](#license)
 
@@ -177,14 +176,6 @@ It shows the ongoing transactions and blocks.
 Your hacks are always welcome!🔨🔨🔨
 
 Please fork on bitbucket and make pull request [there](https://bitbucket.org/cpchain/chain/pull-requests/).
-
-
----
-## FAQ
-- When will the mainnet be formally launched?
-
-  The scheduled launch time is in late March, 2019.
-
 
 ---
 ## Contact

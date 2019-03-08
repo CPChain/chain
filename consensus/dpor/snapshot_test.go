@@ -685,3 +685,132 @@ func Test_loadSnapshot_marshal(t *testing.T) {
 
 	t.Log("snapshot loaded", got)
 }
+
+func Test_choseSomeProposers(t *testing.T) {
+	type args struct {
+		proposers []common.Address
+		seed      int64
+		wantLen   int
+	}
+	tests := []struct {
+		name                 string
+		args                 args
+		wantDefaultProposers []common.Address
+	}{
+		// TODO: Add test cases.
+		{
+			name: "1",
+			args: args{
+				proposers: []common.Address{
+					common.HexToAddress("0x0000000000000000000000000000000000000001"),
+					common.HexToAddress("0x0000000000000000000000000000000000000002"),
+				},
+				seed:    0,
+				wantLen: 1,
+			},
+			wantDefaultProposers: []common.Address{
+				common.HexToAddress("0x0000000000000000000000000000000000000001"),
+			},
+		},
+		{
+			name: "2",
+			args: args{
+				proposers: []common.Address{
+					common.HexToAddress("0x0000000000000000000000000000000000000001"),
+					common.HexToAddress("0x0000000000000000000000000000000000000002"),
+				},
+				seed:    0,
+				wantLen: 2,
+			},
+			wantDefaultProposers: []common.Address{
+				common.HexToAddress("0x0000000000000000000000000000000000000001"),
+				common.HexToAddress("0x0000000000000000000000000000000000000002"),
+			},
+		},
+
+		// this will panic, it's correct
+		// {
+		// 	name: "1",
+		// 	args: args{
+		// 		proposers: []common.Address{
+		// 			common.HexToAddress("0x0000000000000000000000000000000000000001"),
+		// 			common.HexToAddress("0x0000000000000000000000000000000000000002"),
+		// 		},
+		// 		seed:    0,
+		// 		wantLen: 3,
+		// 	},
+		// 	wantDefaultProposers: nil,
+		// },
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotDefaultProposers := choseSomeProposers(tt.args.proposers, tt.args.seed, tt.args.wantLen); !reflect.DeepEqual(gotDefaultProposers, tt.wantDefaultProposers) {
+				t.Errorf("choseSomeProposers() = %v, want %v", gotDefaultProposers, tt.wantDefaultProposers)
+			}
+		})
+	}
+}
+
+func Test_evenlyInsertDefaultProposers(t *testing.T) {
+	type args struct {
+		electedProposers       []common.Address
+		chosenDefaultProposers []common.Address
+		seed                   int64
+		wantLen                int
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantProposers []common.Address
+	}{
+		// TODO: Add test cases.
+
+		{
+			name: "1",
+			args: args{
+				electedProposers: []common.Address{
+					common.HexToAddress("0x0000000000000000000000000000000000000001"),
+					common.HexToAddress("0x0000000000000000000000000000000000000002"),
+					common.HexToAddress("0x0000000000000000000000000000000000000003"),
+					common.HexToAddress("0x0000000000000000000000000000000000000004"),
+					common.HexToAddress("0x0000000000000000000000000000000000000005"),
+					common.HexToAddress("0x0000000000000000000000000000000000000006"),
+					common.HexToAddress("0x0000000000000000000000000000000000000007"),
+					common.HexToAddress("0x0000000000000000000000000000000000000008"),
+				},
+				chosenDefaultProposers: []common.Address{
+					common.HexToAddress("0x0000000000000000000000000000000000000009"),
+					common.HexToAddress("0x0000000000000000000000000000000000000010"),
+					common.HexToAddress("0x0000000000000000000000000000000000000011"),
+					common.HexToAddress("0x0000000000000000000000000000000000000012"),
+				},
+				seed:    0,
+				wantLen: 12,
+			},
+			wantProposers: []common.Address{
+				common.HexToAddress("0x0000000000000000000000000000000000000009"),
+				common.HexToAddress("0x0000000000000000000000000000000000000001"),
+				common.HexToAddress("0x0000000000000000000000000000000000000002"),
+
+				common.HexToAddress("0x0000000000000000000000000000000000000010"),
+				common.HexToAddress("0x0000000000000000000000000000000000000003"),
+				common.HexToAddress("0x0000000000000000000000000000000000000004"),
+
+				common.HexToAddress("0x0000000000000000000000000000000000000005"),
+				common.HexToAddress("0x0000000000000000000000000000000000000011"),
+				common.HexToAddress("0x0000000000000000000000000000000000000006"),
+
+				common.HexToAddress("0x0000000000000000000000000000000000000007"),
+				common.HexToAddress("0x0000000000000000000000000000000000000012"),
+				common.HexToAddress("0x0000000000000000000000000000000000000008"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotProposers := evenlyInsertDefaultProposers(tt.args.electedProposers, tt.args.chosenDefaultProposers, tt.args.seed, tt.args.wantLen); !reflect.DeepEqual(gotProposers, tt.wantProposers) {
+				t.Errorf("evenlyInsertDefaultProposers() = %v, want %v", gotProposers, tt.wantProposers)
+			}
+		})
+	}
+}

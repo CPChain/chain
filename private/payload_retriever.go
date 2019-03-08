@@ -37,7 +37,7 @@ func RetrieveAndDecryptPayload(data []byte, txNonce uint64, remoteDB database.Re
 
 	// Check if the current node is in the participant group by comparing is public key and decrypt with its private
 	// key and return result.
-	sealed, err := getDataFromRemote(replacement.TxPayloadUri, remoteDB)
+	sealed, err := getDataFromRemote(replacement.TxPayload, remoteDB)
 	if err != nil {
 		return []byte{}, false, err
 	}

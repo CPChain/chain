@@ -446,17 +446,17 @@ func (e *engine) updateSnapshot() {
 }
 
 // transactions are applied in ascending nonce order of each account.
-func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByPriceAndNonce, bc *core.BlockChain, coinbase common.Address) {
-	if env.gasPool == nil {
-		env.gasPool = new(core.GasPool).AddGas(env.header.GasLimit)
+func (w *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByPriceAndNonce, bc *core.BlockChain, coinbase common.Address) {
+	if w.gasPool == nil {
+		w.gasPool = new(core.GasPool).AddGas(w.header.GasLimit)
 	}
 
 	var coalescedLogs []*types.Log
 
 	for {
 		// If we don't have enough gas for any further transactions then we're done
-		if env.gasPool.Gas() < configs.TxGas {
-			log.Debug("Not enough gas for further transactions", "have", env.gasPool, "want", configs.TxGas)
+		if w.gasPool.Gas() < configs.TxGas {
+			log.Debug("Not enough gas for further transactions", "have", w.gasPool, "want", configs.TxGas)
 			break
 		}
 		// Retrieve the next transaction and abort if all done
@@ -467,13 +467,13 @@ func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsB
 		// Error may be ignored here. The error has already been checked
 		// during transaction acceptance is the transaction pool.
 		//
-		from, _ := types.Sender(env.signer, tx)
+		from, _ := types.Sender(w.signer, tx)
 
 		// Start executing the transaction
-		env.pubState.Prepare(tx.Hash(), common.Hash{}, env.tcount)
-		env.privState.Prepare(tx.Hash(), common.Hash{}, env.tcount)
+		w.pubState.Prepare(tx.Hash(), common.Hash{}, w.tcount)
+		w.privState.Prepare(tx.Hash(), common.Hash{}, w.tcount)
 
-		err, logs := env.commitTransaction(tx, bc, coinbase, env.gasPool)
+		err, logs := w.commitTransaction(tx, bc, coinbase, w.gasPool)
 		switch err {
 		case core.ErrGasLimitReached:
 			// Pop the current out-of-gas transaction without shifting in the next from the account
@@ -494,7 +494,7 @@ func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsB
 		case nil:
 			// Everything ok, collect the logs and shift in the next transaction from the same account
 			coalescedLogs = append(coalescedLogs, logs...)
-			env.tcount++
+			w.tcount++
 			txs.Shift()
 
 		default:
@@ -505,7 +505,7 @@ func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsB
 		}
 	}
 
-	if len(coalescedLogs) > 0 || env.tcount > 0 {
+	if len(coalescedLogs) > 0 || w.tcount > 0 {
 		// make a copy, the state caches the logs and these logs get "upgraded" from pending to mined
 		// logs by filling in the block hash when the block was mined by the local miner. This can
 		// cause a race condition if a log was "upgraded" before the PendingLogsEvent is processed.
@@ -522,25 +522,25 @@ func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsB
 			if tcount > 0 {
 				mux.Post(core.PendingStateEvent{})
 			}
-		}(cpy, env.tcount)
+		}(cpy, w.tcount)
 	}
 }
 
-func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, coinbase common.Address, gp *core.GasPool) (error, []*types.Log) {
-	snap := env.pubState.Snapshot()
-	snapPriv := env.privState.Snapshot()
+func (w *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, coinbase common.Address, gp *core.GasPool) (error, []*types.Log) {
+	snap := w.pubState.Snapshot()
+	snapPriv := w.privState.Snapshot()
 
-	pubReceipt, privReceipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.pubState, env.privState, env.remoteDB,
-		env.header, tx, &env.header.GasUsed, vm.Config{}, env.accm)
+	pubReceipt, privReceipt, _, err := core.ApplyTransaction(w.config, bc, &coinbase, gp, w.pubState, w.privState, w.remoteDB,
+		w.header, tx, &w.header.GasUsed, vm.Config{}, w.accm)
 	if err != nil {
-		env.pubState.RevertToSnapshot(snap)
-		env.privState.RevertToSnapshot(snapPriv)
+		w.pubState.RevertToSnapshot(snap)
+		w.privState.RevertToSnapshot(snapPriv)
 		return err, nil
 	}
-	env.txs = append(env.txs, tx)
-	env.pubReceipts = append(env.pubReceipts, pubReceipt)
+	w.txs = append(w.txs, tx)
+	w.pubReceipts = append(w.pubReceipts, pubReceipt)
 	if privReceipt != nil {
-		env.privReceipts = append(env.privReceipts, privReceipt)
+		w.privReceipts = append(w.privReceipts, privReceipt)
 	}
 
 	// TODO: consider whether append private logs to returned logs together.

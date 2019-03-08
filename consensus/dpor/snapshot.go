@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"math/rand"
 	"sync"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -30,6 +31,8 @@ const (
 	//MaxSizeOfRecentProposers is the size of the RecentProposers
 	MaxSizeOfRecentProposers = 200
 )
+
+const defaultProposersNum = 4
 
 var (
 	errValidatorNotInCommittee = errors.New("not a member in validators committee")
@@ -355,10 +358,11 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 
 	}
 
-	// TODO: there is a vulnerability about validators in header, check it!
 	term := s.TermOf(header.Number.Uint64())
 	if len(header.Dpor.Validators) != 0 && len(header.Dpor.Validators) == int(s.config.ValidatorsLen()) {
-		s.setRecentValidators(term+1, header.Dpor.Validators)
+		// TODO: there is a vulnerability about validators in header, check it!
+		// for now, i just do not update validators from header.
+		// s.setRecentValidators(term+1, header.Dpor.Validators)
 	} else if IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
 		s.setRecentValidators(term+1, s.getRecentValidators(term))
 	}
@@ -470,58 +474,56 @@ func (s *DporSnapshot) isAboutToCampaign() bool {
 func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 	// Elect proposers
 	if s.isStartElection() {
-		log.Debug("start election")
-		log.Debug("electing")
+
+		// some logs about rpt infos
 		log.Debug("---------------------------")
-		log.Debug("rpts:")
-		for _, r := range rpts {
-			log.Debug("rpt:", "addr", r.Address.Hex(), "value", r.Rpt)
+		log.Debug("start election")
+		log.Debug("rpts list:")
+		for idx, r := range rpts {
+			log.Debug("rpt:", "idx", idx, "addr", r.Address.Hex(), "value", r.Rpt)
 		}
 		log.Debug("seed", "seed", seed)
 		log.Debug("term length", "term", int(s.config.TermLen))
 		log.Debug("---------------------------")
 
-		proposers := election.Elect(rpts, seed, int(s.config.TermLen))
-
-		log.Debug("elected proposers:")
-
-		for _, s := range proposers {
-			log.Debug("proposer", "addr", s.Hex())
+		// run the election algorithm
+		var proposers []common.Address
+		if int(s.config.TermLen) > defaultProposersNum {
+			electedProposers := election.Elect(rpts, seed, int(s.config.TermLen)-defaultProposersNum)
+			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersNum)
+			proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
+		} else {
+			proposers = election.Elect(rpts, seed, int(s.config.TermLen))
 		}
-		log.Debug("---------------------------")
+		// proposers := election.Elect(rpts, seed, int(s.config.TermLen))
 
-		log.Debug("snap.number", "n", s.number())
+		if len(proposers) != int(s.config.TermLen) {
+			panic("invalid length of prepared proposer list")
+		}
 
+		// save to cache
 		term := s.FutureTermOf(s.number())
-
-		log.Debug("term idx", "eidx", term)
-
 		s.setRecentProposers(term, proposers)
 
+		// some logs about elected proposers
 		log.Debug("---------------------------")
-		proposers = s.getRecentProposers(term)
-		log.Debug("stored elected proposers")
-
-		for _, s := range proposers {
-			log.Debug("proposer", "addr", s.Hex())
+		log.Debug("elected proposers:")
+		for idx, s := range proposers {
+			log.Debug("proposer", "idx", idx, "addr", s.Hex())
 		}
+		log.Debug("current number", "number", s.number())
+		log.Debug("future term(election term)", "term", term)
 		log.Debug("---------------------------")
-
-		if uint64(len(proposers)) != s.config.TermLen {
-			log.Debug("proposer length wrong", "expect", s.config.TermLen, "actual", len(proposers))
-			log.Debug("---------- proposers --------")
-			for _, s := range proposers {
-				log.Debug("proposer", "addr", s.Hex())
-			}
-		}
 	}
 
 	// Set default proposer if it is in initial stage
 	if s.isUseDefaultProposers() {
-		// Use default proposers
+		// set default proposers
 		proposers := configs.Proposers()
 		s.setRecentProposers(s.Term()+1, proposers)
-		log.Debug("use default proposers", "term", s.Term()+1, "proposers", len(proposers))
+
+		// some logs about default proposer in initialization state
+		log.Debug("use default proposers for term", "term", s.Term()+1, "proposers", len(proposers))
 		for i, p := range proposers {
 			log.Debug(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
 		}
@@ -636,4 +638,65 @@ func (s *DporSnapshot) InturnOf(number uint64, signer common.Address) bool {
 // StartBlockNumberOfTerm returns the first block number of a term
 func (s *DporSnapshot) StartBlockNumberOfTerm(term uint64) uint64 {
 	return s.config.ViewLen * s.config.TermLen * term
+}
+
+// choseDefaultProposers choses a batch of proposers from a proposers slice with total count of `defaultProposersNum`
+// by the seed of current snapshot.hash.
+func choseSomeProposers(proposers []common.Address, seed int64, wantLen int) (defaultProposers []common.Address) {
+	if len(proposers) > wantLen {
+		randSource := rand.NewSource(seed)
+		myRand := rand.New(randSource)
+
+		for i := 0; i < wantLen; i++ {
+			chosen := myRand.Intn(len(proposers))
+			defaultProposers = append(defaultProposers, proposers[chosen])
+			proposers = append(proposers[:chosen], proposers[chosen+1:]...)
+		}
+		return defaultProposers
+	} else if len(proposers) == wantLen {
+		return proposers
+	}
+	panic("invalid length of given proposer list")
+}
+
+func evenlyInsertDefaultProposers(electedProposers []common.Address, chosenDefaultProposers []common.Address, seed int64, wantLen int) (proposers []common.Address) {
+
+	// panic if length of slices is invalid
+	if len(electedProposers)+len(chosenDefaultProposers) != wantLen {
+		panic("invalid length when evenly inserting default proposers to elected proposers")
+	}
+
+	// generate a random generator
+	randSource := rand.NewSource(seed)
+	myRand := rand.New(randSource)
+
+	slicesNum := len(chosenDefaultProposers)
+
+	if wantLen%slicesNum != 0 {
+		panic("invalid wanted length, not a multiple of 4")
+	}
+
+	step := wantLen / slicesNum
+
+	for i := 0; i < slicesNum; i++ {
+		var slice []common.Address
+
+		// combine two sub slices
+		slice = append(slice, electedProposers[i*(step-1):i*(step-1)+(step-1)]...)
+		slice = append(slice, chosenDefaultProposers[i])
+
+		// get random position of the chosen proposer
+		pos := myRand.Intn(step)
+
+		// swap
+		tmp := slice[len(slice)-1]
+		for j := step - 1; j > pos; j-- {
+			slice[j] = slice[j-1]
+		}
+		slice[pos] = tmp
+
+		// append to proposers
+		proposers = append(proposers, slice...)
+	}
+	return
 }
