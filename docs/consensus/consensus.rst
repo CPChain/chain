@@ -342,6 +342,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                         broadcast validateMsg
                         transit to validate state
                     } else {
+                        broadcast prepareMsg    // transitivity of certificate
                         broadcast commitMsg
                         transit to commit state
                     }
@@ -366,6 +367,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 // a cascade of determination of certificates
                     if prepareCertificate {
                         if commitCertificate {
+                            add block into the cache
                             broadcast validateMsg
                             transit to validate state
                         } else {
@@ -420,6 +422,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                         broadcast impeachValidateMsg
                         transit to validate state
                     } else {
+                        broadcast impeachPrepareMsg // transitivity of certificate
                         broadcast impeachCommitMsg
                         transit to impeachCommit state
                     }
@@ -430,9 +433,23 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         func impeachHandler(input) {
             case expiredTimer:
                 propose an impeach block
-                add the impeach block into cache
-                broadcast the impeach block
-                transit to impeachPrepare state
+                // a cascade of determination of certificate
+                if impeachPrepareCertificate(b) {
+                    if impeachCommitCertificate(b) {
+                        add the impeach block b into cache
+                        broadcast impeachValidateMsg
+                        transit to validate state
+                    } else {
+                        add the impeach block b into cache
+                        broadcast the impeachPrepareMsg
+                        broadcast the impeachCommitMsg
+                        transit to impeachCommit state
+                    }
+                } else {
+                    add the impeach block b into cache
+                    broadcast the impeachPrepareMsg
+                    transit to impeachPrepare state
+                }
             case impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachPrepareHandler(input)
         }
@@ -487,6 +504,8 @@ Other validators directly enters idle state after receiving a validate message.
 
 Transitivity of Certificate
 ******************************
+
+
 
 
 Verification of Blocks
