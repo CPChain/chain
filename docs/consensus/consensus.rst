@@ -6,7 +6,7 @@ Consensus
 DPoR Bipartite Committee
 --------------------------
 
-The consensus in LBFT 2.0 is determined by two two committees: **Validators Committee** and **Proposers Committee**.
+The consensus in LBFT 2.0 is determined by two committees: **Validators Committee** and **Proposers Committee**.
 Here we list the properties of validators and proposers, as well as the rest nodes denoted as civilians.
 
 
