@@ -197,6 +197,9 @@ func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
 		return h.handleMsg(remoteValidator.RemoteSigner, msg)
 	} else if isP {
 		return h.handleMsg(remoteProposer.RemoteSigner, msg)
+	} else {
+		// TODO: the remote proposer is not in current proposer list, fix this
+		log.Debug("received msg from remote peer, neither proposer nor validator", "coinbase", addr, "msgcode", msg.Code)
 	}
 	return nil
 }
