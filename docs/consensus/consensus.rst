@@ -619,6 +619,26 @@ Transitivity of Certificate
 ******************************
 
 
+Readers may notice comments in `LBFT 2.0 Pseudocode`_
+referring to transitivity of certificate.
+An example of ``func prepareHandler()`` is demonstrated below.
+
+.. code-block::go
+
+    func prepareHandler(input) {
+        switch input{
+        // some code here
+
+        case prepareMsg:
+            if prepareCertificate {
+                // some code here
+                broadcast prepareMsg    // transitivity of certificate
+                broadcast commitMsg
+                transit to commit state
+            }
+        }
+    }
+
 
 
 Verification of Blocks
