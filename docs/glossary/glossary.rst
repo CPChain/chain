@@ -29,15 +29,37 @@ Glossary
 |                           | for a certain block number         |
 +---------------------------+------------------------------------+
 | Quorum                    | A quorum refers to a subset of     |
-|                           | committee members that can collect |
-|                           | a certificate.                     |
+|                           | committee members that can         |
+|                           | represent the whole committee      |
+|                           | to proceed to next state           |
++---------------------------+------------------------------------+
+| Strong Quorum             | A quorum of 2f+1 members. It       |
+|                           | is used in normal cases. Unless    |
+|                           | otherwise specified, *quorum* is   |
+|                           | always referring to strong quorum. |
++---------------------------+------------------------------------+
+| Weak Quorum               | A quorum of f+1 members. It is     |
+|                           | only used in impeach cases.        |
++---------------------------+------------------------------------+
+| Certificate               | a validator has a certificate if   |
+|                           | it is a member of a quorum.        |
+|                           | holding a certificate indicates it |
+|                           | can enter the next state           |
++---------------------------+------------------------------------+
+| Strong Certificate        | The certificate obtained by a      |
+|                           | strong quorum.                     |
++---------------------------+------------------------------------+
+| Weak Certificate          | The certificate obtained by a      |
+|                           | weak quorum.                       |
 +---------------------------+------------------------------------+
 | P-Certificate             | A validator has a P-certificate    |
 |                           | if it has 2f+1 PREPARE messages    |
+|                           | or f+1 impeach PREPARE messages    |
 |                           | for a certain block number         |
 +---------------------------+------------------------------------+
 | C-Certificate             | A validator has a C-certificate    |
 |                           | if it has 2f+1 COMMIT messages     |
+|                           | or f+1 impeach COMMIT messages     |
 |                           | for a certain block number         |
 +---------------------------+------------------------------------+
 | Impeachment               | If a validator suspects the propo  |
