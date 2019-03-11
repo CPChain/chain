@@ -640,6 +640,16 @@ An example of ``func prepareHandler()`` is demonstrated below.
     }
 
 
+When a validator suffices a prepare certificate,
+it does not only broadcast the commit message with its signature,
+it but also sends out the prepare certificate it just collects.
+The essence of a prepare certificate is 2f+1 (f+1) prepare signatures (impeach prepare signatures).
+Thus, by sending out the broadcast a prepare message with all signatures it collects,
+other validators can obtain the certificate.
+
+
+The motivation of introducing this mechanism is to
+implement `Intra-view Recovery`_.
 
 Verification of Blocks
 ----------------------------
@@ -1181,6 +1191,10 @@ The key reason is that communications between validators are finished in the bli
 The possibility that a validator loses some packets is not that low.
 Our experimental results indicate that even in a committee of four loyal validator,
 one of them faces the problem that it lags behind one state every hundreds of blocks.
+
+In practice, we use a prepare message with all signature the validator collects,
+as the certificate.
+Refer to `transitivity of certificate`_ for detailed implementation.
 
 By introducing intra-view recovery, our system can tolerate two or more distinct validators
 lose their connection in different states.
