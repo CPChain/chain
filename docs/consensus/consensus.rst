@@ -650,6 +650,8 @@ other validators can obtain the certificate.
 
 The motivation of introducing this mechanism is to
 implement `Intra-view Recovery`_.
+And by utilizing prepare message,
+we can implement it without adding too much code.
 
 Verification of Blocks
 ----------------------------
