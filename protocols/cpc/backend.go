@@ -18,6 +18,7 @@
 package cpc
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"sync"
@@ -48,6 +49,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/p2p"
+)
+
+var (
+	errForbidValidatorMining = errors.New("Validator is forbidden to mine.")
 )
 
 type LesServer interface {
@@ -217,6 +222,10 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 
 // SetAsMiner sets dpor engine as miner
 func (s *CpchainService) SetAsMiner(isMiner bool) {
+	if s.isValidator {
+		return // not execute miner-related operations if node is validator
+	}
+
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		dpor.SetAsMiner(isMiner)
 	}
@@ -362,6 +371,10 @@ func (s *CpchainService) SetClientForDpor(client backend.ClientBackend) {
 func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) error {
 	if s.IsMining() {
 		return nil
+	}
+
+	if s.isValidator {
+		return errForbidValidatorMining
 	}
 
 	coinbase, err := s.Coinbase()
