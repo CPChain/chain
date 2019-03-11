@@ -311,6 +311,9 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			return err
 		}
 
+		// defer to remove the peer
+		defer pm.removePeer(peer.id)
+
 		log.Debug("done of handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
 
 		// add peer to dpor.handler.dialer.peers, this is for proposers/validators communication
@@ -328,12 +331,9 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		}
 
 		// defer to remove the peer
-		defer func() {
-			if added {
-				dporProtocol.RemovePeer(id)
-			}
-			pm.removePeer(peer.id)
-		}()
+		if added {
+			defer dporProtocol.RemovePeer(id)
+		}
 
 		// send local pending transactions to the peer.
 		// new transactions appearing after this will be sent via broadcasts.
@@ -364,7 +364,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 				}
 
 			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner:
-				switch err = dporProtocol.HandleMsg(id, msg); err {
+				switch id, err = dporProtocol.HandleMsg(id, int(version), p, rw, msg); err {
 				case nil:
 
 				default:

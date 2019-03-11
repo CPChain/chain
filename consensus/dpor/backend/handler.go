@@ -188,25 +188,27 @@ func (h *Handler) RemovePeer(addr string) {
 }
 
 // HandleMsg handles a msg of peer with id "addr"
-func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
+func (h *Handler) HandleMsg(addr string, version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
 
 	remoteValidator, isV := h.dialer.getValidator(addr)
 	remoteProposer, isP := h.dialer.getProposer(addr)
 
 	if isV {
-		return h.handleMsg(remoteValidator.RemoteSigner, msg)
+		return addr, h.handleMsg(remoteValidator.RemoteSigner, msg)
 	} else if isP {
-		return h.handleMsg(remoteProposer.RemoteSigner, msg)
+		return addr, h.handleMsg(remoteProposer.RemoteSigner, msg)
 	} else {
 		// TODO: the remote proposer is not in current proposer list, fix this
-		log.Debug("received msg from remote peer, neither proposer nor validator", "coinbase", addr, "msgcode", msg.Code)
+		log.Debug("handling remote proposer connection msg", "peer.addr", p.RemoteAddr().String(), "coinbase", addr, "msgcode", msg.Code)
+		return h.handleProposerConnectionMsg(version, p, rw, msg)
 	}
-	return nil
 }
 
 func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 	if msg.Code == NewSignerMsg {
-		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
+		// return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
+		log.Debug("received NewSignerMsg", "remote addr", p.Coinbase().Hex(), "addr", p.RemoteAddr().String())
+		return nil
 	}
 
 	switch h.mode {

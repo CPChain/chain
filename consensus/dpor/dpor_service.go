@@ -128,6 +128,7 @@ func (d *Dpor) ProposersOf(number uint64) ([]common.Address, error) {
 
 // ProposerOf returns the proposer of the specified block number by rpt and election calculation
 func (d *Dpor) ProposerOf(number uint64) (common.Address, error) {
+	// TODO: fix this
 	proposers, _ := d.ProposersOf(number)
 	idx := number % (d.ViewLength() * d.TermLength())
 	idx = idx / d.ViewLength()

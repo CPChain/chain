@@ -42,7 +42,7 @@ const (
 	// above some healthy uncle limit, so use that.
 	maxQueuedAnns = 4
 
-	handshakeTimeout = 10 * time.Second
+	handshakeTimeout = 3 * time.Second
 )
 
 // PeerInfo represents a short summary of the cpchain sub-protocol metadata known

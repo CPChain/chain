@@ -22,11 +22,11 @@ const (
 
 	// Protocol messages belonging to cpc/01
 
-	// NewSignerMsg is a msg code used for network building
-	NewSignerMsg = 0x42
-
 	// PbftMsgOutset is not a msg code, just used for msg code comparing
 	PbftMsgOutset = 0x42
+
+	// NewSignerMsg is a msg code used for network building
+	NewSignerMsg = 0x42
 
 	// PreprepareBlockMsg msg
 	PreprepareBlockMsg = 0x43
@@ -109,7 +109,6 @@ type SignerStatusData struct {
 	ProtocolVersion uint32
 	Mac             string
 	Sig             []byte
-	// Address         common.Address
 }
 
 func errResp(code errCode, format string, v ...interface{}) error {

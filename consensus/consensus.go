@@ -203,7 +203,7 @@ type Protocol interface {
 
 	RemovePeer(id string)
 
-	HandleMsg(id string, msg p2p.Msg) error
+	HandleMsg(id string, version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error)
 
 	NodeInfo() interface{}
 }
