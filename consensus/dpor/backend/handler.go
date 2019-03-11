@@ -35,9 +35,7 @@ type Handler struct {
 	mode   HandlerMode
 	config *configs.DporConfig
 
-	available   bool
-	isProposer  bool
-	isValidator bool
+	available bool
 
 	coinbase common.Address
 

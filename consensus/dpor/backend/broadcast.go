@@ -21,7 +21,7 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 
 			validators = h.dialer.ValidatorsOfTerm(term)
 
-			if len(validators) >= 2 {
+			if len(validators) >= int(h.dpor.ValidatorsNum()-h.fsm.Faulty())-1 {
 				return
 			}
 
