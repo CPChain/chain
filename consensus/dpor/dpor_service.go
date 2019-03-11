@@ -137,6 +137,7 @@ func (d *Dpor) ProposerOf(number uint64) (common.Address, error) {
 		return proposers[idx], nil
 	}
 	// TODO: return useful error value
+	log.Warn("no proposer found for", "number", number, "d.ViewLength()", d.ViewLength(), "d.TermLength()", d.TermLength(), "idx", idx, "len(proposers)", len(proposers), "proposers", proposers)
 	return common.Address{}, nil
 }
 
