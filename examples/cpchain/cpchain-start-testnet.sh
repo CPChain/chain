@@ -55,16 +55,16 @@ nohup $cpchain $args --ipcaddr ${ipc_path_base}5 --datadir data/data5  --rpcaddr
 nohup $cpchain $args --ipcaddr ${ipc_path_base}6 --datadir data/data6  --rpcaddr 127.0.0.1:8506 --port 30316 --mine \
          --unlock "0x2661177788fe63888e93cf18b5e4e31306a01170" --password conf-testnet/passwords/password6 --logfile data/logs/6.log 2>/dev/null &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}7 --datadir data/data7  --rpcaddr 127.0.0.1:8507 --port 30317 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}7 --datadir data/data7  --rpcaddr 127.0.0.1:8507 --port 30317 --validator \
          --unlock "0x177b2a835f27a8989dfca814b37d08c54e1de889" --password conf-testnet/passwords/password7 --logfile data/logs/7.log  --nodekey conf-testnet/validators/node7.key 2>/dev/null &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}8 --datadir data/data8  --rpcaddr 127.0.0.1:8508 --port 30318 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}8 --datadir data/data8  --rpcaddr 127.0.0.1:8508 --port 30318 --validator \
          --unlock "0x832062f84f982050c820b5ec986c1825d000ec8e"  --password conf-testnet/passwords/password8 --logfile data/logs/8.log  --nodekey conf-testnet/validators/node8.key 2>/dev/null &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}9 --datadir data/data9  --rpcaddr 127.0.0.1:8509 --port 30319 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}9 --datadir data/data9  --rpcaddr 127.0.0.1:8509 --port 30319 --validator \
          --unlock "0x2da372d6026573aa5e1863ba3fa724a231c477d6"  --password conf-testnet/passwords/password9 --logfile data/logs/9.log  --nodekey conf-testnet/validators/node9.key 2>/dev/null &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcaddr 127.0.0.1:8510 --port 30320 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcaddr 127.0.0.1:8510 --port 30320 --validator \
          --unlock "0x08e86c815665de506a210ff4b8e8572b8c201009"  --password conf-testnet/passwords/password10 --logfile data/logs/10.log --nodekey conf-testnet/validators/node10.key 2>/dev/null &
 
 
