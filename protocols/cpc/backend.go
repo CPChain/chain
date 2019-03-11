@@ -97,6 +97,8 @@ type CpchainService struct {
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and coinbase)
 
 	remoteDB database.RemoteDatabase // remoteDB represents an remote distributed database.
+
+	isValidator bool // isValidator indicate if the node is running as a validator
 }
 
 func (s *CpchainService) AddLesServer(ls LesServer) {
@@ -218,6 +220,11 @@ func (s *CpchainService) SetAsMiner(isMiner bool) {
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		dpor.SetAsMiner(isMiner)
 	}
+}
+
+// SetAsValidator sets the node as validator and it cannot set back to false once it is set to true.
+func (s *CpchainService) SetAsValidator() {
+	s.isValidator = true
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service

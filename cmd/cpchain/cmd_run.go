@@ -67,6 +67,10 @@ func init() {
 }
 
 func run(ctx *cli.Context) error {
+	if ctx.IsSet(flags.MineFlagName) && ctx.IsSet(flags.ValidatorFlagName) {
+		log.Fatalf("A node cannot be both miner and validator.")
+	}
+
 	n := createNode(ctx)
 	bootstrap(ctx, n)
 	n.Wait()
@@ -79,8 +83,12 @@ func registerChainService(cfg *cpc.Config, n *node.Node, cliCtx *cli.Context) {
 		fullNode, err := cpc.New(ctx, cfg)
 		primitive_register.RegisterPrimitiveContracts()
 
-		if cliCtx.Bool("mine") {
+		if cliCtx.Bool(flags.MineFlagName) {
 			fullNode.SetAsMiner(true)
+		}
+
+		if cliCtx.Bool(flags.ValidatorFlagName) {
+			fullNode.SetAsValidator()
 		}
 		return fullNode, err
 	})
