@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	maxNumOfRemoteSignersInCache = 10
+	maxNumOfRemoteSignersInCache = 200
 )
 
 // Dialer dials a remote peer
@@ -59,6 +59,26 @@ func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 	return address, isProposer, isValidator, err
 }
 
+func (d *Dialer) isCurrentOrFutureProposer(address common.Address, term uint64, futureTerm uint64) bool {
+	isProposer := false
+	for t := term; t <= futureTerm; t++ {
+		isP, _ := d.dpor.VerifyProposerOf(address, t)
+		log.Debug("qualification", "is proposer", isP, "term", t, "addr", address.Hex())
+		isProposer = isProposer || isP
+	}
+	return isProposer
+}
+
+func (d *Dialer) isCurrentOrFutureValidator(address common.Address, term uint64, futureTerm uint64) bool {
+	isValidator := false
+	for t := term; t <= futureTerm; t++ {
+		isV, _ := d.dpor.VerifyValidatorOf(address, t)
+		log.Debug("qualification", "is validator", isV, "term", t, "addr", address.Hex())
+		isValidator = isValidator || isV
+	}
+	return isValidator
+}
+
 func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
 	log.Debug("do handshaking with remote peer...")
 
@@ -66,17 +86,7 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 
 	log.Debug("received handshake from", "addr", address.Hex())
 
-	isProposer, isValidator := false, false
-
-	for t := term; t <= futureTerm; t++ {
-		isP, _ := d.dpor.VerifyProposerOf(address, t)
-		isV, _ := d.dpor.VerifyValidatorOf(address, t)
-
-		log.Debug("qualification", "is proposer", isP, "is validator", isV, "term", t, "addr", address.Hex())
-
-		isProposer = isProposer || isP
-		isValidator = isValidator || isV
-	}
+	isProposer, isValidator := d.isCurrentOrFutureProposer(address, term, futureTerm), d.isCurrentOrFutureValidator(address, term, futureTerm)
 
 	enode := fmt.Sprintf("enode://%s@%s", p.ID().String(), p.RemoteAddr().String())
 	isValidator = isDefaultValidator(enode, d.defaultValidators) || isValidator
@@ -89,14 +99,17 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 	}
 
 	if isProposer {
-		remoteProposer, err := d.addRemoteProposer(version, p, rw, address, term)
-		log.Debug("after add remote proposer", "proposer", remoteProposer.ID(), "err", err)
-
+		for i := term; i <= futureTerm; i++ {
+			remoteProposer, err := d.addRemoteProposer(version, p, rw, address, i)
+			log.Debug("after add remote proposer", "proposer", remoteProposer.ID(), "err", err)
+		}
 	}
 
 	if isValidator {
-		remoteValidator, err := d.addRemoteValidator(version, p, rw, address, term)
-		log.Debug("after add remote validator", "validator", remoteValidator.ID(), "err", err)
+		for i := term; i <= futureTerm; i++ {
+			remoteValidator, err := d.addRemoteValidator(version, p, rw, address, i)
+			log.Debug("after add remote validator", "validator", remoteValidator.ID(), "err", err)
+		}
 	}
 	return address.Hex(), isProposer, isValidator, err
 }
@@ -211,6 +224,23 @@ func (d *Dialer) DialAllRemoteValidators(term uint64) error {
 		}
 		log.Debug("dial remote validator", "enode", node.ID.String(), "addr", node.IP.String(), "port", node.TCP)
 		d.server.AddPeer(node)
+	}
+
+	for _, v := range d.ValidatorsOfTerm(term) {
+		mac, sig, err := d.dpor.GetMac()
+		if err != nil {
+			continue
+		}
+		log.Debug("sending new signer msg to remote validator", "v", v.Coinbase().Hex())
+
+		go func(v *RemoteValidator) {
+			_ = p2p.Send(v.rw, NewSignerMsg, &SignerStatusData{
+				ProtocolVersion: uint32(ProtocolVersion),
+				Mac:             mac,
+				Sig:             sig,
+			})
+		}(v)
+
 	}
 
 	return nil

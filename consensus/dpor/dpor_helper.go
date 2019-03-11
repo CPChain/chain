@@ -45,11 +45,6 @@ type dporHelper interface {
 	validateBlock(d *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error
 }
 
-// logDebugWithNumberAndHash logs given msg and context with specific number and hash.
-func logDebugWithNumberAndHash(msg string, number uint64, hash common.Hash, ctx ...interface{}) {
-	log.Debug(msg, "number", number, "hash", hash, ctx)
-}
-
 type defaultDporHelper struct {
 	dporUtil
 }
@@ -150,15 +145,15 @@ func (dh *defaultDporHelper) verifyBasic(dpor *Dpor, chain consensus.ChainReader
 
 	// Ensure that the block's parent is valid
 	if parent == nil {
-		logDebugWithNumberAndHash("parent is nil when verifying the header", number, hash)
+		log.Debug("parent is nil when verifying the header", "number", number, "hash", hash)
 		return consensus.ErrUnknownAncestor
 	}
 	if parent.Number.Uint64() != number-1 {
-		logDebugWithNumberAndHash("parent's number is not equal to header.number when verifying the header", number, hash, "parent.number", parent.Number.Uint64())
+		log.Debug("parent's number is not equal to header.number when verifying the header", "number", number, "hash", hash, "parent.number", parent.Number.Uint64())
 		return consensus.ErrUnknownAncestor
 	}
 	if parent.Hash() != header.ParentHash {
-		logDebugWithNumberAndHash("parent's hash is not equal to header.parentHash when verifying the header", number, hash, "parent.hash", parent.Hash().Hex(), "header.parentHash", header.ParentHash.Hex())
+		log.Debug("parent's hash is not equal to header.parentHash when verifying the header", "number", number, "hash", hash, "parent.hash", parent.Hash().Hex(), "header.parentHash", header.ParentHash.Hex())
 		return consensus.ErrUnknownAncestor
 	}
 

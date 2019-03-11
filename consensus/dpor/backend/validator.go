@@ -23,6 +23,36 @@ func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteS
 	log.Debug("received msg", "number", number, "hash", hash.Hex(), "msg code", msgCode.String(), "remote peer", p.Coinbase().Hex())
 }
 
+func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
+	switch msg.Code {
+	case NewSignerMsg:
+
+		log.Debug("received new signer msg from", "peer.RemoteAddress", p.RemoteAddr().String())
+
+		var signerStatus SignerStatusData
+		address, err := ReadSignerStatus(msg, &signerStatus)
+		if err != nil {
+			return common.Address{}.Hex(), err
+		}
+		currectNumber := vh.dpor.GetCurrentBlock().NumberU64()
+		term := vh.dpor.TermOf(currectNumber)
+		futureTerm := vh.dpor.FutureTermOf(currectNumber)
+		if vh.dialer.isCurrentOrFutureProposer(address, term, futureTerm) {
+			for i := term; i <= futureTerm; i++ {
+				vh.dialer.addRemoteProposer(version, p, rw, address, term)
+			}
+		}
+
+		log.Debug("added the signer as a proposer", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
+
+		return address.Hex(), nil
+
+	default:
+		log.Warn("unknown msg code", "msg", msg.Code)
+	}
+	return common.Address{}.Hex(), nil
+}
+
 func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	var (
@@ -153,9 +183,22 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		return nil
 	}
 
-	// if faulty number is larger than 1, rebroadcast the msg
-	if vh.fsm.Faulty() > 1 {
-		go vh.reBroadcast(input, msgCode, msg)
+	go vh.reBroadcast(input, msgCode, msg)
+
+	switch msgCode {
+	case ImpeachValidateMsgCode:
+		log.Debug("-----------------------------")
+		log.Debug("now received an ImpeachValidateMsg", "number", input.Number(), "hash", input.Hash().Hex())
+
+		correctProposer, _ := vh.dpor.ProposerOf(input.Number())
+		log.Debug("for this block number, the correct proposer should be", "addr", correctProposer.Hex())
+
+		correctProposerPeer, exist := vh.dialer.getProposer(correctProposer.Hex())
+		if exist {
+			log.Debug("for this block number, the correct proposer's addr should be", "ip:port", correctProposerPeer.Peer.RemoteAddr())
+		}
+
+		log.Debug("-----------------------------")
 	}
 
 	// call fsm

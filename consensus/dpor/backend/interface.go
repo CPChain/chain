@@ -190,6 +190,9 @@ type DporService interface {
 	// ProposersOf returns the list of proposers in committee for the specified block number
 	ProposersOf(number uint64) ([]common.Address, error)
 
+	// ProposerOf returns the proposer of the specified block number by rpt and election calculation
+	ProposerOf(number uint64) (common.Address, error)
+
 	// ValidatorsOfTerm returns the list of validators in committee for the specified term
 	ValidatorsOfTerm(term uint64) ([]common.Address, error)
 

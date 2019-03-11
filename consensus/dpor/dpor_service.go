@@ -126,6 +126,21 @@ func (d *Dpor) ProposersOf(number uint64) ([]common.Address, error) {
 	return snap.getRecentProposers(term), nil
 }
 
+// ProposerOf returns the proposer of the specified block number by rpt and election calculation
+func (d *Dpor) ProposerOf(number uint64) (common.Address, error) {
+	// TODO: fix this
+	proposers, _ := d.ProposersOf(number)
+	idx := (number - 1) % (d.ViewLength() * d.TermLength())
+	idx = idx / d.ViewLength()
+
+	if len(proposers) >= int(idx+1) {
+		return proposers[idx], nil
+	}
+	// TODO: return useful error value
+	log.Warn("no proposer found for", "number", number, "d.ViewLength()", d.ViewLength(), "d.TermLength()", d.TermLength(), "idx", idx, "len(proposers)", len(proposers), "proposers", proposers)
+	return common.Address{}, nil
+}
+
 // ValidatorsOfTerm returns validators of given term
 // TODO: this only returns validators known recently from cache,
 // does not retrieve block from local chain to get needed information.
