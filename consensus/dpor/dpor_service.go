@@ -133,7 +133,7 @@ func (d *Dpor) ProposerOf(number uint64) (common.Address, error) {
 	idx := (number - 1) % (d.ViewLength() * d.TermLength())
 	idx = idx / d.ViewLength()
 
-	if len(proposers) > int(idx+1) {
+	if len(proposers) >= int(idx+1) {
 		return proposers[idx], nil
 	}
 	// TODO: return useful error value
