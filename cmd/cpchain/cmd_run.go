@@ -191,7 +191,7 @@ func handleWallet(n *node.Node) {
 	}()
 }
 
-func startMining(ctx *cli.Context, n *node.Node) {
+func setupMining(ctx *cli.Context, n *node.Node) {
 	var cpchainService *cpc.CpchainService
 	// cpchainService will point to the real cpchain service in n.services
 	if err := n.Service(&cpchainService); err != nil {
@@ -213,6 +213,12 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		}
 		if err := cpchainService.StartMining(true, client); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
+		}
+	}
+
+	if ctx.Bool(flags.ValidatorFlagName) {
+		if err := cpchainService.SetupValidator(client); err != nil {
+			log.Fatalf("Failed to setup validator: %v", err)
 		}
 	}
 }
@@ -277,7 +283,7 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 	startNode(n)
 	unlockAccounts(ctx, n)
 	handleWallet(n)
-	startMining(ctx, n)
+	setupMining(ctx, n)
 	// handle user interrupt
 	go handleInterrupt(n)
 }

@@ -102,8 +102,6 @@ type CpchainService struct {
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and coinbase)
 
 	remoteDB database.RemoteDatabase // remoteDB represents an remote distributed database.
-
-	isValidator bool // isValidator indicate if the node is running as a validator
 }
 
 func (s *CpchainService) AddLesServer(ls LesServer) {
@@ -222,18 +220,17 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 
 // SetAsMiner sets dpor engine as miner
 func (s *CpchainService) SetAsMiner(isMiner bool) {
-	if s.isValidator {
-		return // not execute miner-related operations if node is validator
-	}
-
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		if dpor.IsValidator() {
+			return // not execute miner-related operations if node is validator
+		}
 		dpor.SetAsMiner(isMiner)
 	}
 }
 
 // SetAsValidator sets the node as validator and it cannot set back to false once it is set to true.
 func (s *CpchainService) SetAsValidator() {
-	s.isValidator = true
+	s.engine.(*dpor.Dpor).SetAsValidator(true)
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
@@ -373,10 +370,6 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 		return nil
 	}
 
-	if s.isValidator {
-		return errForbidValidatorMining
-	}
-
 	coinbase, err := s.Coinbase()
 	if err != nil {
 		log.Error("Cannot start mining without coinbase", "err", err)
@@ -385,6 +378,10 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 
 	// post-requisite: miner.isMining == true && dpor.IsMiner() == true && dpor.isToCampaign == true
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		if dpor.IsValidator() {
+			return errForbidValidatorMining
+		}
+
 		if dpor.Coinbase() != coinbase {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: coinbase})
 			if wallet == nil || err != nil {
@@ -423,6 +420,15 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 	// make sure miner.Start() start once
 	if !s.miner.IsMining() {
 		go s.miner.Start(coinbase)
+	}
+	return nil
+}
+
+func (s *CpchainService) SetupValidator(client backend.ClientBackend) error {
+	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		dpor.SetAsValidator(true)
+		dpor.SetClient(client)
+		dpor.SetupAsValidator(s.blockchain, s.server, s.protocolManager.BroadcastBlock, s.protocolManager.SyncFromPeer, s.protocolManager.SyncFromBestPeer)
 	}
 	return nil
 }
