@@ -147,16 +147,16 @@ func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 
 	log.Debug("adding remote validator...", "validator", address.Hex())
 
-	// add remote validator as a static peer
-	err := remoteValidator.AddStatic(d.server)
-	if err != nil {
-		log.Debug("failed to add remote validator as static peer")
-		return remoteValidator, err
-	}
-
 	// add validator
 	remoteValidator.SetPeer(version, p, rw)
 	d.setValidator(address.Hex(), remoteValidator)
+
+	// add remote validator as a static peer
+	err := remoteValidator.AddStatic(d.server)
+	if err != nil {
+		log.Debug("failed to add remote validator as static peer", err, "err")
+		return remoteValidator, err
+	}
 
 	// start broadcast loop
 	go remoteValidator.broadcastLoop()
