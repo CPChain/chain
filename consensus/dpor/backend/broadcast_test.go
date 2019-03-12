@@ -14,8 +14,6 @@ func TestHandler_BroadcastMinedBlock(t *testing.T) {
 		mode           HandlerMode
 		config         *configs.DporConfig
 		available      bool
-		isProposer     bool
-		isValidator    bool
 		coinbase       common.Address
 		dialer         *Dialer
 		snap           *consensus.PbftStatus
@@ -40,8 +38,6 @@ func TestHandler_BroadcastMinedBlock(t *testing.T) {
 				mode:           tt.fields.mode,
 				config:         tt.fields.config,
 				available:      tt.fields.available,
-				isProposer:     tt.fields.isProposer,
-				isValidator:    tt.fields.isValidator,
 				coinbase:       tt.fields.coinbase,
 				dialer:         tt.fields.dialer,
 				snap:           tt.fields.snap,
