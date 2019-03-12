@@ -17,6 +17,10 @@ var (
 	MaxGapDuration = 10.0
 
 	ntpServerList = []string{
+		"0.pool.ntp.org",
+		"1.pool.ntp.org",
+		"2.pool.ntp.org",
+		"3.pool.ntp.org",
 		"ntp1.aliyun.com",
 		"ntp2.aliyun.com",
 		"ntp3.aliyun.com",
