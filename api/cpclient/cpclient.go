@@ -386,6 +386,7 @@ func (c *Client) GetBlockGenerationInfoList(ctx context.Context) ([]BlockGenerat
 	return result, err
 }
 
+// get the proposer specified by block
 func (c *Client) GetProposerByBlock(ctx context.Context, blockNumber *big.Int) (common.Address, error) {
 	var result common.Address
 	err := c.c.CallContext(ctx, &result, "eth_getProposerByBlock", toBlockNumArg(blockNumber))
