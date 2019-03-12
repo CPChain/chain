@@ -201,7 +201,7 @@ func (d *Dpor) SetClient(client backend.ClientBackend) {
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
-func New(config *configs.DporConfig, db database.Database, acBackend admission.ApiBackend) *Dpor {
+func New(config *configs.DporConfig, db database.Database) *Dpor {
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config
@@ -221,7 +221,6 @@ func New(config *configs.DporConfig, db database.Database, acBackend admission.A
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
 		handler:      backend.NewHandler(&conf, common.Address{}, db),
-		ac:           acBackend,
 		db:           db,
 		recentSnaps:  recentSnaps,
 		finalSigs:    finalSigs,
@@ -232,14 +231,14 @@ func New(config *configs.DporConfig, db database.Database, acBackend admission.A
 
 // NewFaker creates a new fake dpor
 func NewFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db, nil)
+	d := New(config, db)
 	d.mode = FakeMode
 	return d
 }
 
 // NewDoNothingFaker creates a new fake dpor, do nothing when verifying blocks
 func NewDoNothingFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db, nil)
+	d := New(config, db)
 	d.mode = DoNothingFakeMode
 	return d
 }
@@ -260,7 +259,7 @@ func NewFakeDelayer(config *configs.DporConfig, db database.Database, delay time
 
 // NewPbftFaker creates a new fake dpor to work with pbft, not in use now
 func NewPbftFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db, nil)
+	d := New(config, db)
 	d.mode = PbftFakeMode
 	return d
 }
@@ -402,11 +401,15 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
-
 	return d.handler.ReceiveMinedPendingBlock(block)
 }
 
 // ImpeachTimeout returns impeach time out
 func (d *Dpor) ImpeachTimeout() time.Duration {
 	return d.config.ImpeachTimeout
+}
+
+// SetupAdmission setups admission backend
+func (d *Dpor) SetupAdmission(ac admission.ApiBackend) {
+	d.ac = ac
 }

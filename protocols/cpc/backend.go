@@ -153,11 +153,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		remoteDB:       remoteDB,
 	}
 
-	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
-	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
-		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
-
-	cpc.engine = cpc.CreateConsensusEngine(ctx, chainConfig, chainDb, cpc.AdmissionApiBackend)
+	cpc.engine = cpc.CreateConsensusEngine(ctx, chainConfig, chainDb)
 	if cpc.engine == nil {
 		return nil, errBadEngine
 	}
@@ -179,6 +175,14 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	cpc.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, cpc.chainConfig, cpc.engine, vmConfig, remoteDB, ctx.AccountManager)
 	if err != nil {
 		return nil, err
+	}
+
+	// admission must initialize after blockchain has been initialized
+	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
+		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
+	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
+		dpor.SetupAdmission(cpc.AdmissionApiBackend)
 	}
 
 	// Rewind the chain in case of an incompatible config upgrade.
@@ -240,7 +244,7 @@ func (s *CpchainService) SetAsValidator() {
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
 func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig,
-	db database.Database, ac admission.ApiBackend) consensus.Engine {
+	db database.Database) consensus.Engine {
 	eb, err := s.Coinbase()
 	if err != nil {
 		log.Debug("coinbase is not set, but is allowed for non-miner node", "error", err)
@@ -248,7 +252,7 @@ func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainCo
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. @liuq
-		dpor := dpor.New(chainConfig.Dpor, db, ac)
+		dpor := dpor.New(chainConfig.Dpor, db)
 		if eb != (common.Address{}) {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 			if wallet == nil || err != nil {
