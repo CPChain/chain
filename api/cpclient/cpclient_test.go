@@ -25,6 +25,7 @@ import (
 
 	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/cpclient"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Verify that Client implements the ethereum interfaces.
@@ -149,4 +150,20 @@ func TestClient_ChainConfig(t *testing.T) {
 	}
 
 	t.Log("chain config", "viewLen", cfg.Dpor.ViewLen, "termLen", cfg.Dpor.TermLen)
+}
+
+func TestGetProposerByBlock(t *testing.T) {
+	// t.Skip("must start chain to test")
+	client, err := cpclient.Dial("http://localhost:8501")
+	// local
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	cfg, err := client.GetProposerByBlock(context.Background(), big.NewInt(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg != common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092") {
+		t.Fatal("wrong Proposer ", "we want ", common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"), "we get ", cfg)
+	}
 }

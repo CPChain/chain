@@ -386,6 +386,12 @@ func (c *Client) GetBlockGenerationInfoList(ctx context.Context) ([]BlockGenerat
 	return result, err
 }
 
+func (c *Client) GetProposerByBlock(ctx context.Context, blockNumber *big.Int) (common.Address, error) {
+	var result common.Address
+	err := c.c.CallContext(ctx, &result, "eth_getProposerByBlock", toBlockNumArg(blockNumber))
+	return result, err
+}
+
 // BalanceAt returns the wei balance of the given account.
 // The block number can be nil, in which case the balance is taken from the latest known block.
 func (c *Client) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error) {
