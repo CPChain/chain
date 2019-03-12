@@ -1,8 +1,42 @@
 Configuration
 ~~~~~~~~~~~~~~~~
 
+
+Sync with Mainnet
+------------------------
+
+All general configuration have been curated in configs/general.go.
+Two notable parameters are ``MainnetChainId`` and ``MainnetNetworkId``.
+
+The code below are cited from general.go.
+As we can see MainnetChainId is set to 42,
+while MainnetNetworkId is 0.
+
+.. code-block:: go
+
+    const (
+	DevChainId     = 41
+	MainnetChainId = 42
+	TestnetChainId = 43
+    )
+
+    const (
+        MainnetNetworkId = 0
+        DevNetworkId     = 1
+        TestnetNetworkId = 2
+    )
+
+These two parameters can be used as command line arguments.
+
+
+.. code-block:: shell
+
+    $ build/bin/cpchain run --networkid 1 --chainid 40
+
+
+
 Configure a Private Network
-#############################
+----------------------------------
 
 Modify ``genesis.toml`` in the directory examples/cpchain/conf-dev to configure your own private network.
 
@@ -80,3 +114,21 @@ Initialize CPChain after modifying the configuration file, then run a private ch
 
     $ ./cpchain-init.sh
     $ ./cpchain-all.sh
+
+
+const (
+	DevChainId     = 41
+	MainnetChainId = 42
+	TestnetChainId = 43
+)
+
+const (
+	MainnetNetworkId = 0
+	DevNetworkId     = 1
+	TestnetNetworkId = 2
+)
+
+
+
+
+
