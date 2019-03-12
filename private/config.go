@@ -18,6 +18,7 @@ package private
 
 const (
 	DefaultIpfsUrl = "3.0.198.89:5001"
+	Dummy          = "dummy"
 	IPFS           = "ipfs"
 	Swarm          = "swarm"
 
@@ -32,7 +33,7 @@ type Config struct {
 
 func DefaultConfig() Config {
 	return Config{
-		RemoteDBType:   IPFS,
+		RemoteDBType:   Dummy,
 		RemoteDBParams: DefaultIpfsUrl,
 	}
 }
