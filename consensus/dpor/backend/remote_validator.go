@@ -1,8 +1,6 @@
 package backend
 
 import (
-	"sync"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -12,9 +10,6 @@ import (
 // RemoteValidator represents a remote signer waiting to be connected and communicate with.
 type RemoteValidator struct {
 	*RemoteSigner
-
-	pubkey        []byte
-	nodeIDUpdated bool // bool to show if i updated my nodeid encrypted with this signer's pubkey to the contract.
 
 	queuedPreprepareBlocks chan *types.Block  // Queue of blocks to broadcast to the signer
 	queuedPrepareHeaders   chan *types.Header // Queue of signatures to broadcast to the signer
@@ -28,11 +23,10 @@ type RemoteValidator struct {
 
 	quitCh chan struct{} // Termination channel to stop the broadcaster
 
-	validatorLock sync.RWMutex
 }
 
 // NewRemoteValidator creates a new NewRemoteValidator with given view idx and address.
-func NewRemoteValidator(term uint64, address common.Address) *RemoteValidator {
+func NewRemoteValidator(address common.Address) *RemoteValidator {
 	return &RemoteValidator{
 		RemoteSigner: NewRemoteSigner(address),
 

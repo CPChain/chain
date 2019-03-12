@@ -11,13 +11,17 @@ import (
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
-	"bitbucket.org/cpchain/chain/commons/crypto/rsakey"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
+)
+
+const (
+	// defaultTimeGapAllowed is the time gap allowed to build connection with remote peer
+	defaultTimeGapAllowed = time.Second * 5
 )
 
 // Action is type enumerator for FSM action
@@ -27,39 +31,22 @@ type Action uint8
 const (
 	NoAction Action = iota
 	BroadcastMsgAction
-	BroadcastMultipleMsgAction
-	InsertBlockAction
 	BroadcastAndInsertBlockAction
-)
-
-// DataType is type enumerator for FSM output
-type DataType uint8
-
-// Those are not in use now
-const (
-	NoType DataType = iota
-	HeaderType
-	BlockType
 )
 
 // MsgCode is type enumerator for FSM message type
 type MsgCode uint8
 
-// NoMsgCode is a alias for nil
-// PreprepareMsgCode indicates a newly proposed block
-// PrepareAndCommitMsgCode is used when combing with BroadcastMultipleMsgAction
-// ImpeachPrepareAndCommitMsgCode is also paired with BroadcastMultipleMsgAction
-// If committed certificates is also collected, the validator only needs to broadcast a validate message
-// It is because validate message will cover the functions of other messages
-// There do not exist a scenario that broadcast both normal case and impeach message
-// The rationale is that any validator enters an impeachment process cannot sent out a normal case message
+// Those are msg codes used in fsm
 const (
 	NoMsgCode MsgCode = iota
+
 	PreprepareMsgCode
 	PrepareMsgCode
 	CommitMsgCode
 	PrepareAndCommitMsgCode
 	ValidateMsgCode
+
 	ImpeachPreprepareMsgCode
 	ImpeachPrepareMsgCode
 	ImpeachCommitMsgCode
@@ -93,7 +80,8 @@ func (mc MsgCode) String() string {
 // DSMStatus represents a Dpor State Machine Status
 type DSMStatus struct {
 	Number uint64
-	State  consensus.State
+	// TODO: i need hash here
+	State consensus.State
 }
 
 // ClientBackend is the client operation interface
@@ -118,6 +106,7 @@ type ContractBackend interface {
 }
 
 // ContractCaller is used to call the contract with given key and client.
+// TODO: remove this later
 type ContractCaller struct {
 	Key    *keystore.Key
 	Client ClientBackend
@@ -134,17 +123,8 @@ func NewContractCaller(key *keystore.Key, client ClientBackend, gasLimit uint64)
 	}, nil
 }
 
-// RsaReader reads a rsa key
-type RsaReader func() (*rsakey.RsaKey, error)
-
-// VerifySignerFn verifies if a signer is a signer at given term
-type VerifySignerFn func(address common.Address, term uint64) (bool, error)
-
 // VerifyBlockFn verifies basic fields of a block
 type VerifyBlockFn func(block *types.Block) error
-
-// VerifyImpeachBlockFn verifies basic fields of a block, and the coin base and whether empty txs
-type VerifyImpeachBlockFn func(block *types.Block) error
 
 // SignFn is a signer callback function to request a hash to be signed by a
 // backing account.
@@ -265,23 +245,13 @@ type DporService interface {
 }
 
 // HandlerMode indicates the run mode of handler
-type HandlerMode uint
+type HandlerMode int
 
 // Those are handler mode
 const (
 	LBFTMode HandlerMode = iota
 	LBFT2Mode
 )
-
-// ECRecover recovers an address from a signature
-func ECRecover(plainText []byte, signature []byte) (signer common.Address, err error) {
-	pubkey, err := crypto.Ecrecover(plainText, signature)
-	if err != nil {
-		return common.Address{}, err
-	}
-	copy(signer[:], crypto.Keccak256(pubkey[1:])[12:])
-	return
-}
 
 // ValidMacSig recovers an address from a signed mac
 func ValidMacSig(mac string, sig []byte) (valid bool, signer common.Address, err error) {
@@ -292,26 +262,27 @@ func ValidMacSig(mac string, sig []byte) (valid bool, signer common.Address, err
 	split := "|"
 	s := strings.Split(mac, split)
 	if len(s) != 2 {
-		log.Debug("wrong mac format", "mac", mac)
+		log.Warn("wrong mac format", "mac", mac)
 		return
 	}
 	prefix, timeString := s[0], s[1]
 	if prefix != "cpchain" {
-		log.Debug("wrong mac prefix", "prefix", prefix)
+		log.Warn("wrong mac prefix", "prefix", prefix)
 		return
 	}
 
 	// check if remote time is valid
 	remoteTime, err := time.Parse(time.RFC3339, timeString)
 	if err != nil {
-		log.Debug("err when parsing time string", "time", timeString)
+		log.Warn("err when parsing time string", "time", timeString)
 		return
 	}
 	timeGap := time.Now().Sub(remoteTime)
 	log.Debug("remote time", "time", remoteTime.Format(time.RFC3339))
+	log.Debug("local time", "time", time.Now().Format(time.RFC3339))
 	log.Debug("time gap", "seconds", timeGap.Seconds())
 
-	if timeGap.Seconds() > 3 {
+	if timeGap > defaultTimeGapAllowed {
 		return
 	}
 

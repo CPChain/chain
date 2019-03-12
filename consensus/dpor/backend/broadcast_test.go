@@ -40,7 +40,6 @@ func TestHandler_BroadcastMinedBlock(t *testing.T) {
 				available:      tt.fields.available,
 				coinbase:       tt.fields.coinbase,
 				dialer:         tt.fields.dialer,
-				snap:           tt.fields.snap,
 				dpor:           tt.fields.dpor,
 				knownBlocks:    tt.fields.knownBlocks,
 				pendingBlockCh: tt.fields.pendingBlockCh,

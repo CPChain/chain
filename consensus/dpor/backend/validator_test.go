@@ -45,7 +45,6 @@ func TestHandler_handleLbft2Msg(t *testing.T) {
 				available:      tt.fields.available,
 				coinbase:       tt.fields.coinbase,
 				dialer:         tt.fields.dialer,
-				snap:           tt.fields.snap,
 				fsm:            tt.fields.fsm,
 				lbft:           tt.fields.lbft,
 				dpor:           tt.fields.dpor,

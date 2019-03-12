@@ -647,11 +647,6 @@ func (dh *defaultDporHelper) updateAndDial(dpor *Dpor, snap *DporSnapshot, numbe
 
 	go func(term uint64, remoteValidators []common.Address) {
 
-		// Updates RemoteValidators in handler
-		if err := dpor.handler.UpdateRemoteValidators(term, remoteValidators); err != nil {
-			log.Warn("err when updating remote validators", "err", err)
-		}
-
 		// Dial all remote validators
 		if err := dpor.handler.DialAllRemoteValidators(term); err != nil {
 			log.Warn("err when dialing remote validators", "err", err)

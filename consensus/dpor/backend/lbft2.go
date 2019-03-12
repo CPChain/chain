@@ -451,7 +451,7 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 }
 
 // handleImpeachPreprepareMsg handles Impeach Preprepare msg
-func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus.State, blockVerifyFn VerifyImpeachBlockFn) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
+func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus.State, blockVerifyFn VerifyBlockFn) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	if !input.IsBlock() {
 		log.Warn("received an impeach preprepare msg, but not a block", "number", input.Number(), "hash", input.Hash().Hex())
 		return nil, NoAction, NoMsgCode, state, ErrInvalidBlockFormat

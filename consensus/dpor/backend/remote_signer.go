@@ -17,10 +17,8 @@ var (
 )
 
 const (
-	maxQueuedBlocks             = 8
-	maxQueuedPendingBlockHashes = 8
-	maxQueuedHeaders            = 8
-
+	maxQueuedBlocks  = 8
+	maxQueuedHeaders = 8
 	handshakeTimeout = 5 * time.Second
 )
 
@@ -31,8 +29,7 @@ type RemoteSigner struct {
 	version int
 
 	address common.Address
-
-	lock sync.RWMutex
+	lock    sync.RWMutex
 }
 
 // NewRemoteSigner creates a new remote signer
@@ -40,7 +37,6 @@ func NewRemoteSigner(address common.Address) *RemoteSigner {
 	return &RemoteSigner{
 		address: address,
 	}
-
 }
 
 // EnodeID returns remote signer's enode id
@@ -50,10 +46,6 @@ func (s *RemoteSigner) EnodeID() string {
 
 // Coinbase returns remote peer's addr
 func (s *RemoteSigner) Coinbase() common.Address {
-	if s == nil {
-		return common.Address{}
-	}
-
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
@@ -74,7 +66,6 @@ func (s *RemoteSigner) AddStatic(srv *p2p.Server) error {
 		srv.AddPeer(nodeID)
 		return nil
 	}
-	log.Warn("remote signer's Peer is nil")
 	return errNilPeer
 }
 
@@ -89,13 +80,11 @@ func (s *RemoteSigner) disconnect(server *p2p.Server) error {
 }
 
 // SetPeer sets a p2p peer
-func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
+func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	s.version, s.Peer, s.rw = version, p, rw
-
-	return nil
 }
 
 // Handshake tries to handshake with remote validator
