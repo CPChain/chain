@@ -491,7 +491,7 @@ func (dh *defaultDporHelper) verifySignatures(dpor *Dpor, chain consensus.ChainR
 		}
 	}
 
-	if dpor.IsMiner() && dh.isTimeToDialValidators(dpor, dpor.chain) {
+	if (dpor.IsMiner() || dpor.IsValidator()) && dh.isTimeToDialValidators(dpor, dpor.chain) {
 		err = dh.updateAndDial(dpor, snap, number)
 		if err != nil {
 			return err

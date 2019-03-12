@@ -93,12 +93,12 @@ type txPool interface {
 
 // statusData is the network packet for the status message.
 type statusData struct {
-	ProtocolVersion uint32
-	NetworkId       uint64
-	Height          *big.Int
-	CurrentBlock    common.Hash
-	GenesisBlock    common.Hash
-	IsMiner         bool
+	ProtocolVersion    uint32
+	NetworkId          uint64
+	Height             *big.Int
+	CurrentBlock       common.Hash
+	GenesisBlock       common.Hash
+	IsMinerOrValidator bool
 }
 
 func (s *statusData) FormatString() string {
@@ -109,7 +109,7 @@ func (s *statusData) FormatString() string {
 		height = 0
 	}
 	return fmt.Sprintf("{ ProtocolVersion: %d, \nNetworkId: %d, \nHeight: %d, \nCurrentBlock: %s, \nGenesisBlock: %s, \nIsMiner: %v }",
-		s.ProtocolVersion, s.NetworkId, height, s.CurrentBlock.Hex(), s.GenesisBlock.Hex(), s.IsMiner)
+		s.ProtocolVersion, s.NetworkId, height, s.CurrentBlock.Hex(), s.GenesisBlock.Hex(), s.IsMinerOrValidator)
 }
 
 type signerStatusData struct {
