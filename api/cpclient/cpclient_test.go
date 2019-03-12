@@ -153,7 +153,7 @@ func TestClient_ChainConfig(t *testing.T) {
 }
 
 func TestGetProposerByBlock(t *testing.T) {
-	// t.Skip("must start chain to test")
+	t.Skip("must start chain to test")
 	client, err := cpclient.Dial("http://localhost:8501")
 	// local
 	if err != nil {
