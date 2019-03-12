@@ -2,7 +2,7 @@ Configuration
 ~~~~~~~~~~~~~~~~
 
 
-Sync with Mainnet
+MainnetChainId and MainnetNetworkId
 ------------------------
 
 All general configuration have been curated in configs/general.go.
@@ -26,13 +26,16 @@ while MainnetNetworkId is 0.
         TestnetNetworkId = 2
     )
 
-These two parameters can be used as command line arguments.
+These two parameters can be used as command line arguments, like
 
 
 .. code-block:: shell
 
     $ build/bin/cpchain run --networkid 1 --chainid 40
 
+If either of them is not as default setting,
+the chain does not sync with Mainnet.
+Instead, a private chain with its own network ID and chain ID is initiated.
 
 
 Configure a Private Network
