@@ -25,5 +25,7 @@ func TestNetworkTime2(t *testing.T) {
 
 func TestInvalidSystemClock(t *testing.T) {
 	err := InvalidSystemClock()
-	assert.Nil(t, err)
+	if err != nil {
+		assert.Error(t, InvalidSystemClockErr, err)
+	}
 }
