@@ -9,10 +9,10 @@ import (
 
 func TestNetworkTime1(t *testing.T) {
 	networkTime, err := NetworkTime([]string{
-		"3.pool.ntp.org",
+		"noserveraaa.ntp.org",
 	})
 	fmt.Println(networkTime)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 	assert.NotNil(t, networkTime)
 }
 
