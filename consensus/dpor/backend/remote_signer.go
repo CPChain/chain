@@ -46,6 +46,10 @@ func (s *RemoteSigner) EnodeID() string {
 
 // Coinbase returns remote peer's addr
 func (s *RemoteSigner) Coinbase() common.Address {
+	if s == nil {
+		return common.Address{}
+	}
+
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
