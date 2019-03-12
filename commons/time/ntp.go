@@ -2,9 +2,8 @@ package times
 
 import (
 	"errors"
-	"time"
-
 	"math"
+	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/beevik/ntp"
