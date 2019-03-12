@@ -26,16 +26,17 @@ while MainnetNetworkId is 0.
         TestnetNetworkId = 2
     )
 
-These two parameters can be used as command line arguments, like
-
-
-.. code-block:: shell
-
-    $ build/bin/cpchain run --networkid 1 --chainid 40
-
+These two parameters are the marks of Mainnet.
 If either of them is not as default setting,
 the chain does not sync with Mainnet.
-Instead, a private chain with its own network ID and chain ID is initiated.
+Any message from a node with different setting is regarded as useless information.
+
+
+In addition, it is possible to start a private chain with its own network ID and chain ID.
+But it requires more settings like IP addresses for validators.
+
+
+
 
 
 Configure a Private Network
