@@ -341,7 +341,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	snap.rptBackend = rptBackend
 
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, client, dpor.IsMiner())
+	newSnap, err := snap.apply(headers, client, dpor.IsMiner() || dpor.IsValidator())
 	if err != nil {
 		return nil, err
 	}
