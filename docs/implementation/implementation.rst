@@ -327,6 +327,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
 
+.. _echo-of-validate-message:
 
 Echo of Validate Message
 ----------------------------
@@ -487,6 +488,6 @@ other validators can obtain the certificate.
 
 
 The motivation of introducing this mechanism is to
-implement `Intra-view Recovery`_.
+implement :ref:`Intra-view Recovery`.
 And by utilizing prepare message,
 we can implement it without adding too much code.
