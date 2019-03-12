@@ -33,6 +33,13 @@
 			"revisionTime": "2017-02-10T01:56:32Z"
 		},
 		{
+			"checksumSHA1": "xHPBEpC97HmEa5GRx/+QBgqgUuU=",
+			"path": "github.com/beevik/ntp",
+			"revision": "53ffc1864695f04a9261eaaba263b1e85e5795f3",
+			"revisionTime": "2018-11-07T06:46:40Z",
+			"tree": true
+		},
+		{
 			"checksumSHA1": "7Zq41q7RBgwR6XSfTK/yl756I2Y=",
 			"path": "github.com/beorn7",
 			"revision": "",
