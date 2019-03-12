@@ -1321,6 +1321,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		if err != nil {
 			return common.Hash{}, err
 		}
+		log.Info("Payload replacement for private transaction", "payloadReplace", payloadReplace)
 
 		// Replace original content with security one.
 		replaceData, _ := rlp.EncodeToBytes(payloadReplace)

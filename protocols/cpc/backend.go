@@ -124,8 +124,13 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	switch config.PrivateTx.RemoteDBType {
 	case private.IPFS:
 		remoteDB = database.NewIpfsDB(config.PrivateTx.RemoteDBParams)
+		log.Info("Initialize remote database", "database", "IPFS")
+	case private.Dummy:
+		remoteDB = new(database.DummyDatabase)
+		log.Info("Initialize remote database", "database", "Dummy")
 	default:
 		remoteDB = database.NewIpfsDB(private.DefaultIpfsUrl)
+		log.Info("Initialize remote database", "database", "IPFS")
 	}
 
 	cpc := &CpchainService{
