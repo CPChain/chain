@@ -33,7 +33,6 @@ type FaultIpfsAdapter struct{}
 
 func (adapter *FaultIpfsAdapter) Unpin(path string) error {
 	return errors.New("Fault IPFS")
-
 }
 
 func (adapter *FaultIpfsAdapter) Cat(path string) (io.ReadCloser, error) {

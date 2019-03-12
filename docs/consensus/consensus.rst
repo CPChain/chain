@@ -6,7 +6,7 @@ Consensus
 DPoR Bipartite Committee
 --------------------------
 
-The consensus in LBFT 2.0 is determined by two two committees: **Validators Committee** and **Proposers Committee**.
+The consensus in LBFT 2.0 is determined by two committees: **Validators Committee** and **Proposers Committee**.
 Here we list the properties of validators and proposers, as well as the rest nodes denoted as civilians.
 
 
@@ -197,9 +197,6 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
         // a general code for LBFT FSM
         func LbftFsm20(input, state) {
-            var period, timeout int
-            period = 10 * time.Second   // set period as 10 seconds
-            timeout = 10 * time.Second  // set timeout as 10 seconds
             switch state{
             case idle:
                 idleHandler(input)
@@ -218,6 +215,12 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 **Utilities**
 
     .. code-block:: go
+
+        // period is the minimal time between two consecutive blocks
+        // timeout is used for whether the timer expires
+        var period, timeout int
+        period = 10 * time.Second   // set period as 10 seconds
+        timeout = 10 * time.Second  // set timeout as 10 seconds
 
         // sign is a slice storing signs of a given block header
         // prepareSignatures stores signs of prepare messages for a given block header
@@ -309,6 +312,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
+
             case validateMsg:
                 insert the block
                 // echo of validate message
@@ -316,11 +320,13 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 // send out new block message
                 broadcast newBlockMsg to all nodes
                 transit to idle state
+
             case commitMsg:
                 if commitCertificate {
                     broadcast validateMsg
                     transit to validate state
                 }
+
             // add the block into the cache if necessary
             case block:
                 cacheBlock(input)
@@ -333,8 +339,10 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
+
             case validateMsg, commitMsg:
                 commitHandler(input)
+
             case prepareMsg:
                 if prepareCertificate {
                     // it is possible for suffice two certificates simultaneously
@@ -342,6 +350,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                         broadcast validateMsg
                         transit to validate state
                     } else {
+                        broadcast prepareMsg    // transitivity of certificate
                         broadcast commitMsg
                         transit to commit state
                     }
@@ -355,17 +364,37 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             // when receive impeachment related messages
             case expiredTimer, impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachHandler(input)
+
             case validateMsg, commitMsg, prepareMsg:
                 prepareHandler(input)
+
             case block:
                 if !verifyBlock(block) {
                     propose an impeach block
-                    broadcast the impeach block
-                    transit to impeachPrepare state
+
+                    // a cascade of determination of certificate
+                    if impeachPrepareCertificate(b) {
+                        if impeachCommitCertificate(b) {
+                            add the impeach block b into cache
+                            broadcast impeachValidateMsg
+                            transit to validate state
+                        } else {
+                            add the impeach block b into cache
+                            broadcast the impeachPrepareMsg
+                            broadcast the impeachCommitMsg
+                            transit to impeachCommit state
+                        }
+                    } else {
+                        add the impeach block b into cache
+                        broadcast the impeachPrepareMsg
+                        transit to impeachPrepare state
+                    }
                 } else {
-                // a cascade of determination of certificates
+
+                    // a cascade of determination of certificates
                     if prepareCertificate {
                         if commitCertificate {
+                            add block into the cache
                             broadcast validateMsg
                             transit to validate state
                         } else {
@@ -395,11 +424,13 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 broadcast validateMsg
                 broadcast newBlockMsg to all nodes
                 transit to idle state
+
             case impeachValidateMsg:
                 insert impeach block
                 broadcast impeachValidateMsg
                 broadcast newBlockMsg to all nodes
                 transit to idle state
+
             case impeachCommitMsg:
                 if impeachCommitCertificate(input) {
                     broadcast impeachValidateMsg
@@ -413,6 +444,7 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             switch input{
             case validateMsg, impeachValidateMsg, impeachCommitMsg:
                 impeachCommitHandler(input)
+
             case impeachPrepareMsg:
                 // it is possible to suffice two impeach certificates
                 if impeachPrepareCertificate(input) {
@@ -420,21 +452,40 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                         broadcast impeachValidateMsg
                         transit to validate state
                     } else {
+                        broadcast impeachPrepareMsg // transitivity of certificate
                         broadcast impeachCommitMsg
                         transit to impeachCommit state
                     }
                 }
+            }
         }
 
         // a general impeachment message handler for normal case states
         func impeachHandler(input) {
+            switch input{
             case expiredTimer:
                 propose an impeach block
-                add the impeach block into cache
-                broadcast the impeach block
-                transit to impeachPrepare state
+                // a cascade of determination of certificate
+                if impeachPrepareCertificate(b) {
+                    if impeachCommitCertificate(b) {
+                        add the impeach block b into cache
+                        broadcast impeachValidateMsg
+                        transit to validate state
+                    } else {
+                        add the impeach block b into cache
+                        broadcast the impeachPrepareMsg
+                        broadcast the impeachCommitMsg
+                        transit to impeachCommit state
+                    }
+                } else {
+                    add the impeach block b into cache
+                    broadcast the impeachPrepareMsg
+                    transit to impeachPrepare state
+                }
+
             case impeachPrepareMsg, impeachCommitMsg, impeachValidateMsg:
                 impeachPrepareHandler(input)
+            }
         }
 
 
@@ -485,9 +536,122 @@ since all validators and its message processing are running in parallel.
 Other validators directly enters idle state after receiving a validate message.
 
 
+Cascade of Determination of Certificates
+***************************************************
+
+A cascade of determination of certificates refers to a phenomenon that
+a message can suffice more than one certificate.
+
+Recall an example in ``func idleHandler()`` in `LBFT 2.0 Pseudocode`_.
+A block adds one distinct signature in ``prepareSignatures``,
+which is possible to suffice a prepare certificate.
+Under the case that a prepare certificate is collected,
+one more distinct signature is added in ``commitSignatures``,
+it is also possible that a commit certificate can be collected.
+
+.. code-block:: go
+
+    func idleHandler(input) {
+        switch input{
+        // some code here
+        case block:
+            // some code here
+
+            // a cascade of determination of certificates
+            if prepareCertificate {
+                if commitCertificate {
+                    add block into the cache
+                    broadcast validateMsg
+                    transit to validate state
+                } else {
+                    add block into the cache
+                    broadcast prepareMsg
+                    broadcast commitMsg
+                    transit to commit state
+                }
+            } else {
+                add block into the cache
+                broadcast prepareMsg
+                transit to prepare state
+            }
+        // some code here
+        }
+    }
+
+
+A similar cascade of determination also applies in impeach handlers.
+An example is ``func impeachHandler()`` as shown below.
+
+
+.. code-block:: go
+
+
+    func impeachHandler(input) {
+        switch input{
+        case expiredTimer:
+            propose an impeach block
+            // a cascade of determination of certificate
+            if impeachPrepareCertificate(b) {
+                if impeachCommitCertificate(b) {
+                    add the impeach block b into cache
+                    broadcast impeachValidateMsg
+                    transit to validate state
+                } else {
+                    add the impeach block b into cache
+                    broadcast the impeachPrepareMsg
+                    broadcast the impeachCommitMsg
+                    transit to impeachCommit state
+                }
+            } else {
+                add the impeach block b into cache
+                broadcast the impeachPrepareMsg
+                transit to impeachPrepare state
+            }
+
+            // some code here
+        }
+    }
+
+
+
+
 Transitivity of Certificate
 ******************************
 
+
+Readers may notice comments in `LBFT 2.0 Pseudocode`_
+referring to transitivity of certificate.
+An example of ``func prepareHandler()`` is demonstrated below.
+
+.. code-block::go
+
+    func prepareHandler(input) {
+        switch input{
+        // some code here
+
+        case prepareMsg:
+            if prepareCertificate {
+                // some code here
+                broadcast prepareMsg    // transitivity of certificate
+                broadcast commitMsg
+                transit to commit state
+            }
+        }
+    }
+
+
+When a validator suffices a prepare certificate,
+it does not only broadcast the commit message with its signature,
+it but also sends out the prepare certificate it just collects.
+The essence of a prepare certificate is 2f+1 (f+1) prepare signatures (impeach prepare signatures).
+Thus, by sending out the broadcast a prepare message with all signatures it collects,
+other validators can obtain the certificate.
+
+
+The motivation of introducing this mechanism is to
+implement `Intra-view Recovery`_.
+And by utilizing prepare message,
+we can implement it without adding too much code.
 
 Verification of Blocks
 ----------------------------
@@ -1029,6 +1193,10 @@ The key reason is that communications between validators are finished in the bli
 The possibility that a validator loses some packets is not that low.
 Our experimental results indicate that even in a committee of four loyal validator,
 one of them faces the problem that it lags behind one state every hundreds of blocks.
+
+In practice, we use a prepare message with all signature the validator collects,
+as the certificate.
+Refer to `transitivity of certificate`_ for detailed implementation.
 
 By introducing intra-view recovery, our system can tolerate two or more distinct validators
 lose their connection in different states.
