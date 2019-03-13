@@ -18,6 +18,7 @@ Note that not all transitions are shown in this figure due to the lack of space.
 The text on an arrow between two states refers to the condition of this transition.
 And the message box near the arrow represents the message broadcast to other nodes.
 
+
 .. image:: lbft_fsm.png
 
 
