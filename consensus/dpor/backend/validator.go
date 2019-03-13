@@ -22,7 +22,12 @@ func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 }
 
 func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteSigner) {
-	log.Debug("received msg", "number", number, "hash", hash.Hex(), "msg code", msgCode.String(), "remote peer", p.Coinbase().Hex())
+	log.Debug("received msg", "number", number, "hash", hash.Hex(), "msg code", msgCode.String(), "remote peer", func() string {
+		if p != nil {
+			return p.Coinbase().Hex()
+		}
+		return "nil peer"
+	}())
 }
 
 func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
@@ -178,7 +183,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	logMsgReceived(input.Number(), input.Hash(), msgCode, p)
 
 	// if number is larger than local current number, sync from remote peer
-	if input.Number() > currentNumber+1 {
+	if input.Number() > currentNumber+1 && p != nil {
 		go vh.dpor.SyncFrom(p.Peer)
 		log.Debug("I am slow, syncing with peer", "peer", p.address)
 	}
