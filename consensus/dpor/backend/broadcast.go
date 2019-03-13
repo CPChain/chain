@@ -21,9 +21,10 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 
 			validators = h.dialer.ValidatorsOfTerm(term)
 
-			// if there is more than one validator in local validator peers, i'll broadcast the msg
-			// cause he'll help me to rebroadcast the msg.
-			if len(validators) >= 2 {
+			// TODO:
+			// if i am a proposer, i need #(ValidatorsNum - Faulty) validators.
+			// if i am a validator, i need #(ValidatorsNum - Faulty - 1) validators, except myself.
+			if len(validators) >= int(h.dpor.ValidatorsNum()-h.fsm.Faulty())-1 {
 				return
 			}
 
@@ -35,7 +36,7 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 // BroadcastPreprepareBlock broadcasts generated block to validators
 func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 
-	log.Debug("proposed new pending block, broadcasting")
+	log.Debug("broadcasting preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
 	validators := waitForEnoughValidator(h, term, h.quitCh)
@@ -48,7 +49,7 @@ func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 // BroadcastPreprepareImpeachBlock broadcasts generated impeach block to validators
 func (h *Handler) BroadcastPreprepareImpeachBlock(block *types.Block) {
 
-	log.Debug("proposed new pending impeach block, broadcasting")
+	log.Debug("broadcasting preprepare impeach block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
 	validators := waitForEnoughValidator(h, term, h.quitCh)
@@ -63,7 +64,7 @@ func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	log.Debug("composed prepare header msg, broadcasting", "number", header.Number.Uint64())
+	log.Debug("broadcasting prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
 	validators := waitForEnoughValidator(h, term, h.quitCh)
@@ -78,7 +79,7 @@ func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	log.Debug("composed prepare impeach header msg, broadcasting", "number", header.Number.Uint64())
+	log.Debug("broadcasting prepare impeach header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
 	validators := waitForEnoughValidator(h, term, h.quitCh)
@@ -93,7 +94,7 @@ func (h *Handler) BroadcastCommitHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	log.Debug("composed commit header msg, broadcasting", "number", header.Number.Uint64())
+	log.Debug("broadcasting commit header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
 	validators := waitForEnoughValidator(h, term, h.quitCh)
@@ -108,7 +109,7 @@ func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
-	log.Debug("composed commit impeach header msg, broadcasting", "number", header.Number.Uint64())
+	log.Debug("broadcasting commit impeach header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
 	validators := waitForEnoughValidator(h, term, h.quitCh)
@@ -121,7 +122,7 @@ func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
 // BroadcastValidateBlock broadcasts validate block to validators
 func (h *Handler) BroadcastValidateBlock(block *types.Block) {
 
-	log.Debug("composed validate block, broadcasting")
+	log.Debug("broadcasting validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
 	validators := waitForEnoughValidator(h, term, h.quitCh)
@@ -134,7 +135,7 @@ func (h *Handler) BroadcastValidateBlock(block *types.Block) {
 // BroadcastValidateImpeachBlock broadcasts validate impeach block to validators
 func (h *Handler) BroadcastValidateImpeachBlock(block *types.Block) {
 
-	log.Debug("composed validate impeach block, broadcasting")
+	log.Debug("broadcasting validate impeach block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
 	validators := waitForEnoughValidator(h, term, h.quitCh)

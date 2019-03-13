@@ -18,39 +18,25 @@ const (
 	ProtocolLength = 100
 )
 
+// Protocol messages belonging to cpc/01
 const (
-
-	// Protocol messages belonging to cpc/01
+	// PbftMsgOutset is not a msg code, just used for msg code comparing
+	PbftMsgOutset = 0x42
 
 	// NewSignerMsg is a msg code used for network building
 	NewSignerMsg = 0x42
 
-	// PbftMsgOutset is not a msg code, just used for msg code comparing
-	PbftMsgOutset = 0x42
-
-	// PreprepareBlockMsg msg
+	// those are messages for normal block verification
 	PreprepareBlockMsg = 0x43
+	PrepareHeaderMsg   = 0x44
+	CommitHeaderMsg    = 0x45
+	ValidateBlockMsg   = 0x46
 
-	// PrepareHeaderMsg msg
-	PrepareHeaderMsg = 0x44
-
-	// CommitHeaderMsg msg
-	CommitHeaderMsg = 0x45
-
-	// PreprepareImpeachBlockMsg msg
-	PreprepareImpeachBlockMsg = 0x46
-
-	// PrepareImpeachHeaderMsg msg
-	PrepareImpeachHeaderMsg = 0x47
-
-	// CommitImpeachHeaderMsg msg
-	CommitImpeachHeaderMsg = 0x48
-
-	// ValidateBlockMsg msg
-	ValidateBlockMsg = 0x49
-
-	// ValidateImpeachBlockMsg msg
-	ValidateImpeachBlockMsg = 0x50
+	// those are messages for abnormal(impeachment) block verification
+	PreprepareImpeachBlockMsg = 0x47
+	PrepareImpeachHeaderMsg   = 0x48
+	CommitImpeachHeaderMsg    = 0x49
+	ValidateImpeachBlockMsg   = 0x50
 )
 
 // ProtocolMaxMsgSize Maximum cap on the size of a protocol message
@@ -109,7 +95,6 @@ type SignerStatusData struct {
 	ProtocolVersion uint32
 	Mac             string
 	Sig             []byte
-	// Address         common.Address
 }
 
 func errResp(code errCode, format string, v ...interface{}) error {

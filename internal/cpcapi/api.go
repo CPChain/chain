@@ -564,6 +564,16 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() []cpclient.BlockGeneratio
 
 }
 
+func (s *PublicBlockChainAPI) GetProposerByBlock(blockNr rpc.BlockNumber) (common.Address, error) {
+	addrs, err := s.b.Proposers(blockNr)
+	if err != nil && len(addrs) == 0 {
+		log.Error("get Proposer is error ", "error is ", err)
+	}
+	vl, tl := s.b.ViewLen(), s.b.TermLen()
+	view := ((uint64(blockNr) - 1) % (vl * tl)) / vl
+	return addrs[view], err
+}
+
 // BlockNumber returns the block number of the chain head.
 func (s *PublicBlockChainAPI) BlockNumber() hexutil.Uint64 {
 	header, _ := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber) // latest header should always be available
@@ -1321,6 +1331,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		if err != nil {
 			return common.Hash{}, err
 		}
+		log.Info("Payload replacement for private transaction", "payloadReplace", payloadReplace)
 
 		// Replace original content with security one.
 		replaceData, _ := rlp.EncodeToBytes(payloadReplace)

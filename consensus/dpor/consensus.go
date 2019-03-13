@@ -35,7 +35,7 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	campaignTerms = uint64(10) // Default number of terms to campaign for proposer committee.
+	defaultCampaignTerms = uint64(10) // Default number of terms to campaign for proposer committee.
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -214,11 +214,11 @@ func (d *Dpor) TryCampaign() {
 
 		if d.IsToCampaign() && snap.isStartCampaign() && !isV {
 			newTerm := d.CurrentSnap().TermOf(snap.Number)
-			if newTerm > d.lastCampaignTerm+campaignTerms-1 {
+			if newTerm > d.lastCampaignTerm+defaultCampaignTerms-1 {
 				d.lastCampaignTerm = newTerm
 				log.Info("campaign for proposer committee", "eleTerm", newTerm)
 				if d.ac != nil {
-					d.ac.Campaign(campaignTerms)
+					d.ac.Campaign(defaultCampaignTerms)
 				}
 			}
 		}

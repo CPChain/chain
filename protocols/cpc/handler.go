@@ -304,32 +304,36 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 		log.Debug("received a new peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
 
-		// Add peer to manager.peers, this is for basic msg syncing
+		// add peer to manager.peers, this is for basic msg syncing
 		remoteIsMiner, err := pm.addPeer(peer, isMiner)
 		if err != nil {
 			log.Warn("fail to add peer to cpc protocol manager's peer set", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
 			return err
 		}
 
-		id, isProposer, isValidator := common.Address{}.Hex(), false, false
+		// defer to remove the peer
+		defer pm.removePeer(peer.id)
+
+		log.Debug("done of handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
+
+		// add peer to dpor.handler.dialer.peers, this is for proposers/validators communication
+		id, added := common.Address{}.Hex(), false
 		if dporMode == dpor.NormalMode && isMiner && remoteIsMiner {
-			// add peer to dpor.handler.peers, this is for pbft/lbft msg handling
-			id, isProposer, isValidator, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw)
-			switch err {
+			switch id, _, _, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw); err {
 			case nil:
+				added = true
+				log.Debug("done of dpor subprotocol handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "coinbase", id)
+
 			default:
-				log.Warn("fail to add peer to dpor's peer set", "err", err)
+				log.Warn("failed to add peer to dpor peer set", "err", err, "coinbase", id, "addr", p.RemoteAddr().String())
+				return err
 			}
 		}
 
-		defer func() {
-			// TODO: if isMiner, call this
-			dporProtocol.RemovePeer(id)
-
-			pm.removePeer(peer.id)
-		}()
-
-		log.Debug("done of handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
+		// defer to remove the peer
+		if added {
+			defer dporProtocol.RemovePeer(id)
+		}
 
 		// send local pending transactions to the peer.
 		// new transactions appearing after this will be sent via broadcasts.
@@ -344,8 +348,6 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			}
 			defer msg.Discard()
 
-			// log.Debug("received msg from remote peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "msg", msg.Code)
-
 			if msg.Size > ProtocolMaxMsgSize {
 				log.Warn("err when checking msg size", "size", msg.Size)
 				return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
@@ -353,23 +355,21 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 			switch {
 			case backend.IsSyncMsg(msg):
+				switch err = pm.handleSyncMsg(msg, peer); err {
+				case nil:
 
-				err = pm.handleSyncMsg(msg, peer)
-				if err != nil {
+				default:
 					log.Warn("err when handling sync msg", "err", err)
 					return err
 				}
 
-			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner && (isProposer || isValidator):
-
-				err = dporProtocol.HandleMsg(id, msg)
-				switch err {
+			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner:
+				switch id, err = dporProtocol.HandleMsg(id, int(version), p, rw, msg); err {
 				case nil:
-				case consensus.ErrUnknownAncestor:
-					go pm.synchronise(peer)
 
 				default:
 					log.Warn("err when handling dpor msg", "err", err)
+					return err
 				}
 
 			default:
@@ -707,7 +707,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 			currentBlock := pm.blockchain.CurrentBlock()
 			if trueHeight.Cmp(currentBlock.Number()) > 0 {
 				// bulk sync from the peer
-				go pm.synchronise(p)
+				go pm.synchronize(p)
 			}
 		}
 

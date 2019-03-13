@@ -191,8 +191,8 @@ func (p *LBFT2) realFSM(input *BlockOrHeader, msgCode MsgCode, state consensus.S
 	case consensus.ImpeachCommit:
 		return p.ImpeachCommitHandler(input, msgCode, state)
 
-	// case consensus.Validate:
-	// return p.ValidateHandler(input, msgCode, state)
+	case consensus.Validate:
+		return p.ValidateHandler(input, msgCode, state)
 
 	default:
 		return nil, NoAction, NoMsgCode, state, nil
@@ -439,8 +439,7 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(1 * time.Second)
-		return p.handlePreprepareMsg(input, state, blockVerifyFn)
+		go p.unknownAncestorBlockHandler(block)
 
 	default:
 
@@ -452,7 +451,7 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 }
 
 // handleImpeachPreprepareMsg handles Impeach Preprepare msg
-func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus.State, blockVerifyFn VerifyImpeachBlockFn) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
+func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus.State, blockVerifyFn VerifyBlockFn) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	if !input.IsBlock() {
 		log.Warn("received an impeach preprepare msg, but not a block", "number", input.Number(), "hash", input.Hash().Hex())
 		return nil, NoAction, NoMsgCode, state, ErrInvalidBlockFormat
@@ -506,8 +505,7 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 
 		log.Debug("verified the block, there is an error", "error", err)
 
-		time.Sleep(1 * time.Second)
-		return p.handleImpeachPreprepareMsg(input, state, blockVerifyFn)
+		go p.unknownAncestorBlockHandler(block)
 
 	default:
 
@@ -913,7 +911,7 @@ func (p *LBFT2) onceCommitCertificateSatisfied(prepareHeader *types.Header, comm
 	}
 
 	// succeed to compose validate msg, broadcast it
-	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
+	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Validate, nil
 
 }
 
@@ -953,7 +951,7 @@ func (p *LBFT2) onceImpeachCommitCertificateSatisfied(impeachPrepareHeader *type
 	}
 
 	// succeed to compose validate msg, broadcast it
-	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Idle, nil
+	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Validate, nil
 }
 
 // unknownAncestorBlockHandler handles unknown ancestor block

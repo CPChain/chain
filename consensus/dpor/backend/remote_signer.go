@@ -3,13 +3,10 @@ package backend
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/proposer_register"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
@@ -20,10 +17,8 @@ var (
 )
 
 const (
-	maxQueuedBlocks             = 8
-	maxQueuedPendingBlockHashes = 8
-	maxQueuedHeaders            = 8
-
+	maxQueuedBlocks  = 8
+	maxQueuedHeaders = 8
 	handshakeTimeout = 5 * time.Second
 )
 
@@ -34,8 +29,7 @@ type RemoteSigner struct {
 	version int
 
 	address common.Address
-
-	lock sync.RWMutex
+	lock    sync.RWMutex
 }
 
 // NewRemoteSigner creates a new remote signer
@@ -43,7 +37,6 @@ func NewRemoteSigner(address common.Address) *RemoteSigner {
 	return &RemoteSigner{
 		address: address,
 	}
-
 }
 
 // EnodeID returns remote signer's enode id
@@ -77,7 +70,6 @@ func (s *RemoteSigner) AddStatic(srv *p2p.Server) error {
 		srv.AddPeer(nodeID)
 		return nil
 	}
-	log.Warn("remote signer's Peer is nil")
 	return errNilPeer
 }
 
@@ -92,13 +84,11 @@ func (s *RemoteSigner) disconnect(server *p2p.Server) error {
 }
 
 // SetPeer sets a p2p peer
-func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) error {
+func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	s.version, s.Peer, s.rw = version, p, rw
-
-	return nil
 }
 
 // Handshake tries to handshake with remote validator
@@ -116,7 +106,11 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term u
 		errc <- err
 	}()
 	go func() {
-		address, err = ReadValidatorStatus(p, rw, &signerStatus, term, futureTerm)
+		msg, err := rw.ReadMsg()
+		if err == nil {
+			address, err = ReadSignerStatus(msg, &signerStatus)
+		}
+
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)
@@ -136,12 +130,8 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term u
 	return address, nil
 }
 
-// ReadValidatorStatus reads status of remote validator
-func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *SignerStatusData, term uint64, futureTerm uint64) (address common.Address, err error) {
-	msg, err := rw.ReadMsg()
-	if err != nil {
-		return common.Address{}, err
-	}
+// ReadSignerStatus reads status of remote validator
+func ReadSignerStatus(msg p2p.Msg, signerStatusData *SignerStatusData) (address common.Address, err error) {
 	if msg.Code != NewSignerMsg {
 		return common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
 	}
@@ -164,16 +154,4 @@ func ReadValidatorStatus(p *p2p.Peer, rw p2p.MsgReadWriter, signerStatusData *Si
 
 	address = common.Address{}
 	return
-}
-
-// fetchNodeID fetches node id of proposer encrypted with validator's public key
-func fetchNodeID(term uint64, proposer common.Address, validator common.Address, contractInstance *proposer_register.ProposerRegister) ([]byte, error) {
-	callOpts := &bind.CallOpts{
-		From: validator,
-	}
-	encryptedNodeID, err := contractInstance.GetNodeInfo(callOpts, big.NewInt(int64(term)), proposer)
-	if err != nil {
-		return nil, err
-	}
-	return encryptedNodeID, nil
 }

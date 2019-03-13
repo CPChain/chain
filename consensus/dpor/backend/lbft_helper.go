@@ -11,6 +11,10 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
+const (
+	defaultSizeOfSignatureCache = 100
+)
+
 type signaturesOfBlock struct {
 	signatures map[common.Address]types.DporSignature
 	lock       sync.RWMutex
@@ -55,7 +59,7 @@ type signaturesForBlockCaches struct {
 }
 
 func newSignaturesForBlockCaches(db database.Database) *signaturesForBlockCaches {
-	sigCaches, _ := lru.NewARC(100)
+	sigCaches, _ := lru.NewARC(defaultSizeOfSignatureCache)
 	return &signaturesForBlockCaches{
 		db:                  db,
 		signaturesForBlocks: sigCaches,

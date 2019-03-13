@@ -3,7 +3,6 @@ package backend
 import (
 	"errors"
 	"sync"
-	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -35,17 +34,14 @@ type Handler struct {
 	mode   HandlerMode
 	config *configs.DporConfig
 
-	available   bool
-	isProposer  bool
-	isValidator bool
-
-	coinbase common.Address
+	available bool
+	coinbase  common.Address
+	lock      sync.RWMutex
 
 	dialer *Dialer
-	snap   *consensus.PbftStatus
-	fsm    ConsensusStateMachine
 	lbft   *LBFT
 	dpor   DporService
+	fsm    ConsensusStateMachine
 
 	knownBlocks           *RecentBlocks
 	pendingBlockCh        chan *types.Block
@@ -54,8 +50,6 @@ type Handler struct {
 
 	broadcastRecord   *broadcastRecord
 	impeachmentRecord *impeachmentRecord
-
-	lock sync.RWMutex
 }
 
 // NewHandler creates a new Handler
@@ -63,16 +57,15 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address, db database
 
 	h := &Handler{
 		config:                config,
+		available:             false,
 		coinbase:              coinbase,
-		knownBlocks:           NewRecentBlocks(db),
 		dialer:                NewDialer(),
+		knownBlocks:           NewRecentBlocks(db),
 		pendingBlockCh:        make(chan *types.Block),
 		pendingImpeachBlockCh: make(chan *types.Block),
 		quitCh:                make(chan struct{}),
-		available:             false,
-
-		broadcastRecord:   newBroadcastRecord(),
-		impeachmentRecord: newImpeachmentRecord(),
+		broadcastRecord:       newBroadcastRecord(),
+		impeachmentRecord:     newImpeachmentRecord(),
 	}
 
 	// h.mode = LBFTMode
@@ -81,46 +74,17 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address, db database
 	return h
 }
 
-// dialLoop loops to dial remote validators
-func (h *Handler) dialLoop() {
-
-	futureTimer := time.NewTicker(1 * time.Second)
-	defer futureTimer.Stop()
-
-	for {
-		select {
-		case <-futureTimer.C:
-
-			blk := h.dpor.GetCurrentBlock()
-			if blk != nil {
-				term := h.dpor.TermOf(blk.NumberU64())
-				if len(h.dialer.ValidatorsOfTerm(term)) < int(h.config.TermLen-h.fsm.Faulty()-1) {
-					h.dialer.DialAllRemoteValidators(term)
-				}
-			} else {
-				h.dialer.DialAllRemoteValidators(0)
-			}
-
-		case <-h.quitCh:
-			return
-		}
-	}
-}
-
 // Start starts handler
 func (h *Handler) Start() {
 
-	// always dial if there is not enough validators in peer set
+	// dial default validators
 	go h.dialer.DialAllRemoteValidators(0)
-	// go h.dialLoop()
 
-	// broadcast mined pending block
+	// broadcast mined pending block loop
 	go h.PendingBlockBroadcastLoop()
 
-	// broadcast impeachment block
+	// broadcast impeachment block loop
 	go h.PendingImpeachBlockBroadcastLoop()
-
-	return
 }
 
 // Stop stops all
@@ -139,8 +103,9 @@ func (h *Handler) GetProtocol() consensus.Protocol {
 
 // NodeInfo returns node status
 func (h *Handler) NodeInfo() interface{} {
-
 	return h.dpor.Status()
+	// TODO: fix this
+	// Identity, Number, Hash, State
 }
 
 // Name returns protocol name
@@ -160,18 +125,19 @@ func (h *Handler) Length() uint64 {
 
 // AddPeer adds a p2p peer to local peer set
 func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
-	var term, futureTerm uint64
 	blk := h.dpor.GetCurrentBlock()
-	if blk != nil {
-		term = h.dpor.TermOf(blk.NumberU64())
-		futureTerm = h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
-	} else {
-		term, futureTerm = 0, 0
+	if blk == nil {
+		log.Fatal("current block is nil", "block", blk)
 	}
+
+	var (
+		term       = h.dpor.TermOf(blk.NumberU64())
+		futureTerm = h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
+	)
 
 	mac, sig, err := h.dpor.GetMac()
 	if err != nil {
-		return "", false, false, err
+		log.Fatal("err when get message authentication coed", "err", err)
 	}
 
 	return h.dialer.AddPeer(version, p, rw, mac, sig, term, futureTerm)
@@ -184,26 +150,30 @@ func (h *Handler) RemovePeer(addr string) {
 
 	_ = h.dialer.removeRemoteProposers(addr)
 	_ = h.dialer.removeRemoteValidators(addr)
-
 }
 
 // HandleMsg handles a msg of peer with id "addr"
-func (h *Handler) HandleMsg(addr string, msg p2p.Msg) error {
+func (h *Handler) HandleMsg(addr string, version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
 
 	remoteValidator, isV := h.dialer.getValidator(addr)
 	remoteProposer, isP := h.dialer.getProposer(addr)
 
 	if isV {
-		return h.handleMsg(remoteValidator.RemoteSigner, msg)
+		return addr, h.handleMsg(remoteValidator.RemoteSigner, msg)
 	} else if isP {
-		return h.handleMsg(remoteProposer.RemoteSigner, msg)
+		return addr, h.handleMsg(remoteProposer.RemoteSigner, msg)
+	} else {
+		// TODO: the remote proposer is not in current proposer list, fix this
+		log.Debug("handling remote proposer connection msg", "peer.addr", p.RemoteAddr().String(), "coinbase", addr, "msgcode", msg.Code)
+		return h.handleProposerConnectionMsg(version, p, rw, msg)
 	}
-	return nil
 }
 
 func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 	if msg.Code == NewSignerMsg {
-		return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
+		// return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
+		log.Debug("received NewSignerMsg", "remote addr", p.Coinbase().Hex(), "addr", p.RemoteAddr().String())
+		return nil
 	}
 
 	switch h.mode {
@@ -217,21 +187,19 @@ func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 }
 
 // SetServer sets dialer.server
-func (h *Handler) SetServer(server *p2p.Server) error {
-	return h.dialer.SetServer(server)
+func (h *Handler) SetServer(server *p2p.Server) {
+	h.dialer.SetServer(server)
 }
 
 // SetDporService sets dpor service to handler
-func (h *Handler) SetDporService(dpor DporService) error {
+func (h *Handler) SetDporService(dpor DporService) {
 	h.dpor = dpor
 	h.dialer.SetDporService(dpor)
-	return nil
 }
 
 // SetDporStateMachine sets dpor state machine
-func (h *Handler) SetDporStateMachine(fsm ConsensusStateMachine) error {
+func (h *Handler) SetDporStateMachine(fsm ConsensusStateMachine) {
 	h.fsm = fsm
-	return nil
 }
 
 // Coinbase returns handler.signer

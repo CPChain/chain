@@ -23,6 +23,38 @@ func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteS
 	log.Debug("received msg", "number", number, "hash", hash.Hex(), "msg code", msgCode.String(), "remote peer", p.Coinbase().Hex())
 }
 
+func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
+	switch msg.Code {
+	case NewSignerMsg:
+
+		log.Debug("received new signer msg from", "peer.RemoteAddress", p.RemoteAddr().String())
+
+		var signerStatus SignerStatusData
+		address, err := ReadSignerStatus(msg, &signerStatus)
+		if err != nil {
+			return common.Address{}.Hex(), err
+		}
+
+		var (
+			currectNumber = vh.dpor.GetCurrentBlock().NumberU64()
+			term          = vh.dpor.TermOf(currectNumber)
+			futureTerm    = vh.dpor.FutureTermOf(currectNumber)
+		)
+
+		// if current or future proposer, add to local peer set
+		if vh.dialer.isCurrentOrFutureProposer(address, term, futureTerm) {
+			vh.dialer.addRemoteProposer(version, p, rw, address)
+		}
+
+		log.Debug("added the signer as a proposer", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
+		return address.Hex(), nil
+
+	default:
+		log.Warn("unknown msg code", "msg", msg.Code)
+	}
+	return common.Address{}.Hex(), nil
+}
+
 func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	var (
@@ -137,25 +169,47 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		msgCode = ImpeachValidateMsgCode
 
 	default:
-
+		log.Warn("unknown msg code", "msg", msg.Code)
 	}
 
+	// log output received msg
 	logMsgReceived(input.Number(), input.Hash(), msgCode, p)
 
+	// if number is larger than local current number, sync from remote peer
 	if input.Number() > currentNumber+1 {
 		go vh.dpor.SyncFrom(p.Peer)
-
 		log.Debug("I am slow, syncing with peer", "peer", p.address)
 	}
 
+	// if number is equal or less than current number, drop the msg
 	if input.Number() <= currentNumber {
 		log.Debug("received outdated msg, discarding...")
 		return nil
 	}
 
-	// if faulty number is larger than 1, rebroadcast the msg
-	if vh.fsm.Faulty() > 1 {
-		go vh.reBroadcast(input, msgCode, msg)
+	// rebroadcast the msg
+	go vh.reBroadcast(input, msgCode, msg)
+
+	// this is just for debug
+	switch msgCode {
+	// if received a impeach validate msg, log out some debug infos
+	case ImpeachValidateMsgCode:
+
+		log.Debug("-----------------------------")
+		log.Debug("now received an ImpeachValidateMsg", "number", input.Number(), "hash", input.Hash().Hex())
+
+		correctProposer, err := vh.dpor.ProposerOf(input.Number())
+		if err != nil {
+			log.Debug("err when get proposer of number", "err", err, "number", input.Number())
+		}
+
+		correctProposerPeer, exist := vh.dialer.getProposer(correctProposer.Hex())
+		if !exist {
+			log.Debug("proposer for the block is not in local proposer peer set")
+		}
+
+		log.Debug("for this block number, the correct proposer should be", "addr", correctProposer.Hex(), "ip:port", correctProposerPeer.Peer.RemoteAddr())
+		log.Debug("-----------------------------")
 	}
 
 	// call fsm
@@ -203,7 +257,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 			// unknown msg code
 			default:
-
+				log.Debug("unknown msg code for fsm output", "msgCode", msgCode)
 			}
 
 		case BroadcastAndInsertBlockAction:
@@ -217,36 +271,17 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 				go vh.dpor.BroadcastBlock(output[0].block, true)
 
 			default:
-
+				log.Debug("unknown msg code for fsm output", "msgCode", msgCode)
 			}
 
 		// other actions
 		default:
-
+			log.Debug("unknown action code for fsm output", "action", action)
 		}
 
 	}
 
 	return nil
-}
-
-// ReadyToImpeach returns if its time to impeach leader
-func (vh *Handler) ReadyToImpeach() bool {
-	snap := vh.snap
-	current := vh.dpor.Status()
-
-	if current == nil {
-		return false
-	}
-
-	if snap != nil {
-		if current.Head.Number.Uint64() <= snap.Head.Number.Uint64() {
-			return true
-		}
-	}
-
-	vh.snap = current
-	return false
 }
 
 // ReceiveImpeachPendingBlock receives a block to add to pending block channel

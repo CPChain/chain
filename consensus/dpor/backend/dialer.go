@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	maxNumOfRemoteSignersInCache = 10
+	maxNumOfRemoteSignersInCache = 200
 )
 
 // Dialer dials a remote peer
@@ -59,50 +59,71 @@ func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 	return address, isProposer, isValidator, err
 }
 
-func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
-	log.Debug("do handshaking with remote peer...")
-
-	address, err := Handshake(p, rw, mac, sig, term, futureTerm)
-
-	log.Debug("received handshake from", "addr", address.Hex())
-
-	isProposer, isValidator := false, false
-
+// isCurrentOrFutureProposer checks if an address is a proposer in the period between current term and future term
+func (d *Dialer) isCurrentOrFutureProposer(address common.Address, term uint64, futureTerm uint64) bool {
+	isProposer := false
 	for t := term; t <= futureTerm; t++ {
 		isP, _ := d.dpor.VerifyProposerOf(address, t)
-		isV, _ := d.dpor.VerifyValidatorOf(address, t)
-
-		log.Debug("qualification", "is proposer", isP, "is validator", isV, "term", t, "addr", address.Hex())
-
+		log.Debug("qualification", "is proposer", isP, "term", t, "addr", address.Hex())
 		isProposer = isProposer || isP
+	}
+	return isProposer
+}
+
+// isCurrentOrFutureValidator checks if an address is a validator in the period between current term and future term
+func (d *Dialer) isCurrentOrFutureValidator(address common.Address, term uint64, futureTerm uint64) bool {
+	isValidator := false
+	for t := term; t <= futureTerm; t++ {
+		isV, _ := d.dpor.VerifyValidatorOf(address, t)
+		log.Debug("qualification", "is validator", isV, "term", t, "addr", address.Hex())
 		isValidator = isValidator || isV
 	}
+	return isValidator
+}
 
+// addPeer tries to add a p2p peer as a proposer or a validator to local peer set based on its coinbase
+func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
+
+	// handshake to get remote peer's coinbase
+	log.Debug("do handshaking with remote peer...")
+	coinbase, err := Handshake(p, rw, mac, sig, term, futureTerm)
+
+	// some debug output
+	log.Debug("received handshake from", "addr", coinbase.Hex())
+
+	// check whether or not remote peer is a proposer or a validator in the period between current term and future term
+	isProposer, isValidator := d.isCurrentOrFutureProposer(coinbase, term, futureTerm), d.isCurrentOrFutureValidator(coinbase, term, futureTerm)
+
+	// also check if remote peer is a default validator
 	enode := fmt.Sprintf("enode://%s@%s", p.ID().String(), p.RemoteAddr().String())
 	isValidator = isDefaultValidator(enode, d.defaultValidators) || isValidator
 
-	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", address.Hex(), "enode", enode)
+	// debug output
+	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", coinbase.Hex(), "enode", enode)
 
+	// if remote peer is neither a proposer nor a validator, disconnect it
 	if (!isProposer && !isValidator) || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)
 		return "", isProposer, isValidator, err
 	}
 
+	// if the remote peer is a proposer, add it to local peer set
 	if isProposer {
-		remoteProposer, err := d.addRemoteProposer(version, p, rw, address, term)
+		remoteProposer, err := d.addRemoteProposer(version, p, rw, coinbase)
 		log.Debug("after add remote proposer", "proposer", remoteProposer.ID(), "err", err)
-
 	}
 
+	// if the remote peer is a validator, add it to local peer set
 	if isValidator {
-		remoteValidator, err := d.addRemoteValidator(version, p, rw, address, term)
+		remoteValidator, err := d.addRemoteValidator(version, p, rw, coinbase)
 		log.Debug("after add remote validator", "validator", remoteValidator.ID(), "err", err)
 	}
-	return address.Hex(), isProposer, isValidator, err
+
+	return coinbase.Hex(), isProposer, isValidator, err
 }
 
 // addRemoteProposer adds a p2p peer to local proposers set
-func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address, term uint64) (*RemoteProposer, error) {
+func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteProposer, error) {
 	remoteProposer, ok := d.getProposer(address.Hex())
 	if !ok {
 		remoteProposer = NewRemoteProposer(address)
@@ -110,40 +131,36 @@ func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWrite
 
 	log.Debug("adding remote proposer...", "proposer", address.Hex())
 
-	err := remoteProposer.SetPeer(version, p, rw)
-	if err != nil {
-		log.Debug("failed to set remote proposer")
-		return nil, err
-	}
-
+	// add proposer
+	remoteProposer.SetPeer(version, p, rw)
 	d.setProposer(address.Hex(), remoteProposer)
+
 	return remoteProposer, nil
 }
 
 // addRemoteValidator adds a p2p peer to local validators set
-func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address, term uint64) (*RemoteValidator, error) {
+func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteValidator, error) {
 	remoteValidator, ok := d.getValidator(address.Hex())
 	if !ok {
-		remoteValidator = NewRemoteValidator(term, address)
+		remoteValidator = NewRemoteValidator(address)
 	}
 
 	log.Debug("adding remote validator...", "validator", address.Hex())
 
-	err := remoteValidator.SetPeer(version, p, rw)
+	// add validator
+	remoteValidator.SetPeer(version, p, rw)
+	d.setValidator(address.Hex(), remoteValidator)
+
+	// add remote validator as a static peer
+	err := remoteValidator.AddStatic(d.server)
 	if err != nil {
-		log.Debug("failed to set remote validator")
-		return nil, err
+		log.Debug("failed to add remote validator as static peer", err, "err")
+		return remoteValidator, err
 	}
 
-	err = remoteValidator.AddStatic(d.server)
-	if err != nil {
-		log.Debug("failed to add remote validator as static peer")
-		return nil, err
-	}
-
+	// start broadcast loop
 	go remoteValidator.broadcastLoop()
 
-	d.setValidator(address.Hex(), remoteValidator)
 	return remoteValidator, nil
 }
 
@@ -166,12 +183,11 @@ func (d *Dialer) removeRemoteValidators(addr string) error {
 }
 
 // SetServer sets dialer.server
-func (d *Dialer) SetServer(server *p2p.Server) error {
+func (d *Dialer) SetServer(server *p2p.Server) {
 	d.lock.Lock()
-	d.server = server
-	d.lock.Unlock()
+	defer d.lock.Unlock()
 
-	return nil
+	d.server = server
 }
 
 // UpdateRemoteProposers updates dialer.remoteProposers.
@@ -188,22 +204,11 @@ func (d *Dialer) UpdateRemoteProposers(term uint64, proposers []common.Address) 
 	return nil
 }
 
-// UpdateRemoteValidators updates dialer.remoteValidators.
-func (d *Dialer) UpdateRemoteValidators(term uint64, validators []common.Address) error {
-
-	for _, signer := range validators {
-		_, ok := d.getValidator(signer.Hex())
-		if !ok {
-			p := NewRemoteValidator(term, signer)
-			d.setValidator(signer.Hex(), p)
-		}
-	}
-
-	return nil
-}
-
 // DialAllRemoteValidators tries to dial all remote validators
 func (d *Dialer) DialAllRemoteValidators(term uint64) error {
+
+	// TODO: this can be changed, and get remote validators by term
+	// dial default validators
 	for _, validatorID := range d.defaultValidators {
 		node, err := discover.ParseNode(validatorID)
 		if err != nil {
@@ -213,22 +218,43 @@ func (d *Dialer) DialAllRemoteValidators(term uint64) error {
 		d.server.AddPeer(node)
 	}
 
+	// send new signer msg to let remote validator know my coinbase
+	for _, v := range d.ValidatorsOfTerm(term) {
+
+		// compose msg
+		mac, sig, err := d.dpor.GetMac()
+		if err != nil {
+			continue
+		}
+
+		log.Debug("sending new signer msg to remote validator", "v", v.Coinbase().Hex())
+
+		// send it!
+		go func(v *RemoteValidator) {
+			_ = p2p.Send(v.rw, NewSignerMsg, &SignerStatusData{
+				ProtocolVersion: uint32(ProtocolVersion),
+				Mac:             mac,
+				Sig:             sig,
+			})
+		}(v)
+	}
+
 	return nil
 }
 
 // Disconnect disconnects all proposers.
 func (d *Dialer) Disconnect(term uint64) {
-	d.lock.RLock()
-	server := d.server
-	d.lock.RUnlock()
-
-	proposers := d.ProposersOfTerm(term)
 
 	log.Debug("disconnecting...")
 
+	server := d.server
+	proposers := d.ProposersOfTerm(term)
+
 	for _, p := range proposers {
 		err := p.disconnect(server)
-		log.Debug("err when disconnect", "e", err)
+		if err != nil {
+			log.Debug("err when disconnect", "e", err)
+		}
 	}
 }
 
@@ -254,8 +280,8 @@ func (d *Dialer) getValidator(addr string) (*RemoteValidator, bool) {
 	d.validatorsLock.RLock()
 	defer d.validatorsLock.RUnlock()
 
-	if rp, ok := d.recentValidators.Get(addr); ok {
-		remoteValidator, ok := rp.(*RemoteValidator)
+	if rv, ok := d.recentValidators.Get(addr); ok {
+		remoteValidator, ok := rv.(*RemoteValidator)
 		return remoteValidator, ok
 	}
 	return nil, false
@@ -273,15 +299,21 @@ func (d *Dialer) ProposersOfTerm(term uint64) map[common.Address]*RemoteProposer
 	d.proposersLock.RLock()
 	defer d.proposersLock.RUnlock()
 
+	// get all proposers
 	addrs := d.recentProposers.Keys()
 	proposers := make(map[common.Address]*RemoteProposer)
 
 	log.Debug("proposers in dialer", "count", len(addrs))
 
 	for _, addr := range addrs {
-		address := addr.(string)
-		proposer, _ := d.recentProposers.Get(addr)
-		proposers[common.HexToAddress(address)] = proposer.(*RemoteProposer)
+		address := common.HexToAddress(addr.(string))
+		proposer, ok := d.recentProposers.Get(addr)
+		isProposerOfTerm, err := d.dpor.VerifyProposerOf(address, term)
+
+		// if it is a proposer of given term, return it
+		if ok && isProposerOfTerm && err == nil {
+			proposers[address] = proposer.(*RemoteProposer)
+		}
 	}
 
 	return proposers
@@ -298,18 +330,20 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 	log.Debug("validators in dialer", "count", len(addrs))
 
 	for _, addr := range addrs {
-		address := addr.(string)
-
-		if d.dpor != nil {
-			ok, err := d.dpor.VerifyValidatorOf(common.HexToAddress(address), term)
-
-			v, _ := d.recentValidators.Get(addr)
-			validator := v.(*RemoteValidator)
-
-			if isDefaultValidator(validator.EnodeID(), d.defaultValidators) || (ok && err == nil) {
-				validators[common.HexToAddress(address)] = validator
-			}
+		address := common.HexToAddress(addr.(string))
+		validator, ok := d.recentValidators.Get(addr)
+		if !ok {
+			continue
 		}
+
+		isValidatorOfTerm, err := d.dpor.VerifyValidatorOf(address, term)
+		isDefaultV := isDefaultValidator(validator.(*RemoteValidator).EnodeID(), d.defaultValidators)
+
+		// if the validator in peer set is a validator for given term or a default validator, return it
+		if (isValidatorOfTerm && err == nil) || isDefaultV {
+			validators[address] = validator.(*RemoteValidator)
+		}
+
 	}
 
 	return validators

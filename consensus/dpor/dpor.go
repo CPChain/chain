@@ -298,18 +298,9 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 
 	fsm := backend.NewLBFT2(faulty, d, handler.ReceiveImpeachPendingBlock, d.db)
 
-	if err := handler.SetServer(server); err != nil {
-		return
-	}
-
-	if err := handler.SetDporService(d); err != nil {
-		return
-	}
-
-	if err := handler.SetDporStateMachine(fsm); err != nil {
-		return
-	}
-
+	handler.SetServer(server)
+	handler.SetDporService(d)
+	handler.SetDporStateMachine(fsm)
 	handler.SetAvailable()
 
 	d.handler = handler
