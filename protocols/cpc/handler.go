@@ -20,7 +20,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/fetcher"
 	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
@@ -92,7 +91,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new sub protocol manager. The cpchain sub protocol manages peers capable
 // with the cpchain network.
-func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, coinbase common.Address) (*ProtocolManager, error) {
+func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, coinbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -410,7 +409,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 			headers []*types.Header
 			unknown bool
 		)
-		for !unknown && len(headers) < int(query.Amount) && bytes < softResponseLimit && len(headers) < downloader.MaxHeaderFetch {
+		for !unknown && len(headers) < int(query.Amount) && bytes < softResponseLimit && len(headers) < syncer.MaxHeaderFetch {
 			// Retrieve the next header satisfying the query
 			var origin *types.Header
 			if hashMode {
@@ -518,7 +517,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 
 		log.Debug("received GetBlockBodiesMsg")
 
-		for bytes < softResponseLimit && len(bodies) < downloader.MaxBlockFetch {
+		for bytes < softResponseLimit && len(bodies) < syncer.MaxBlockFetch {
 			// Retrieve the hash of the next block
 			if err := msgStream.Decode(&hash); err == rlp.EOL {
 				break
@@ -575,7 +574,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 
 		log.Debug("received GetNodeDataMsg")
 
-		for bytes < softResponseLimit && len(data) < downloader.MaxStateFetch {
+		for bytes < softResponseLimit && len(data) < syncer.MaxStateFetch {
 			// Retrieve the hash of the next state entry
 			if err := msgStream.Decode(&hash); err == rlp.EOL {
 				break
@@ -619,7 +618,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 			bytes    int
 			receipts []rlp.RawValue
 		)
-		for bytes < softResponseLimit && len(receipts) < downloader.MaxReceiptFetch {
+		for bytes < softResponseLimit && len(receipts) < syncer.MaxReceiptFetch {
 			// Retrieve the hash of the next block
 			if err := msgStream.Decode(&hash); err == rlp.EOL {
 				break

@@ -25,7 +25,6 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/private"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -33,7 +32,6 @@ import (
 
 // DefaultConfig contains default settings for use on the cpchain test net.
 var DefaultConfig = Config{
-	SyncMode:      downloader.FullSync,
 	NetworkId:     configs.DevNetworkId,
 	LightPeers:    100,
 	DatabaseCache: 768,
@@ -67,8 +65,7 @@ type Config struct {
 
 	// Protocol options
 	NetworkId uint64 // Network ID to use for selecting peers to connect to
-	SyncMode  downloader.SyncMode
-	NoPruning bool // TODO: remove it {AC}
+	NoPruning bool   // TODO: remove it {AC}
 
 	// Light client options
 	LightServ  int `toml:",omitempty"` // Maximum percentage of time allowed for serving LES requests
