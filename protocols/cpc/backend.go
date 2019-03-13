@@ -107,9 +107,7 @@ func (s *CpchainService) AddLesServer(ls LesServer) {
 // New creates a new CpchainService object (including the
 // initialisation of the common CpchainService object)
 func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
-	if !config.SyncMode.IsValid() {
-		return nil, fmt.Errorf("invalid sync mode %d", config.SyncMode)
-	}
+
 	chainDb, err := CreateDB(ctx, config, "chaindata")
 	if err != nil {
 		return nil, err
@@ -189,7 +187,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.txPool = core.NewTxPool(config.TxPool, cpc.chainConfig, cpc.blockchain)
 
-	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.SyncMode, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.coinbase); err != nil {
+	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.coinbase); err != nil {
 		return nil, err
 	}
 
