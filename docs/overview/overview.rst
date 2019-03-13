@@ -257,3 +257,19 @@ Use smart contracts to lock deposit, the functions are as follow:
     lock the deposit to fixed range of length of blockchain.
     Reward distribution according to proportion of node's deposits.
     Connection with Reputation list.
+
+
+
+Gas
+########
+
+All operations in CPC is not conducted free.
+An amount of tokens are cost as operation fees, which are denoted by *Gas*.
+Gas is measured by the amount of computational overheads when executing a certain operation.
+Every single operation, no matter transaction or smart contract,
+is executed along with gas deducted.
+
+Here we list important definitions
+
+1. *Gas Limit*, the maximum gas the applicant willing to pay.
+2. *Gas price*, the amount the applicant pays for each unit of gas.
