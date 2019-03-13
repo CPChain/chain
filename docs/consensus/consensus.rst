@@ -163,7 +163,7 @@ there are f faulty nodes send arbitrary messages, we need f+1 more loyal nodes t
 In comparison, that even one loyal nodes triggers impeachment indicates a improper behavior of proposer.
 Thus, f+1 impeachment validators suffice a quorum of impeachment.
 
-In addition, impeachment also requires :ref:`echo-of-validate-message` similar to normal case handler.
+In addition, impeachment also requires :ref:`echo-validate` similar to normal case handler.
 
 
 
@@ -456,7 +456,7 @@ a commit certificate simultaneously*
 Observation 2 ensures the safety of our consensus system.
 Once v1 proposes an impeach block b',
 it can no longer send out b’s commit message even if it collects a prepare certificate for b.
-The state transmission of a validator is illustrated in the `Implementation`_.
+The state transmission of a validator is illustrated in the :ref:`Implementation`.
 Once a validator enters either impeach prepare or impeach commit phase, it no
 long signs a normal block.
 
@@ -464,7 +464,7 @@ To suffice a weak quorum for impeach commit certificate,
 there must be at least a loyal validator, say v1, agreeing on impeach block instead of normal one.
 This validator assures the legality of this impeach block.
 
-As stated in `Transitivity of Certificate`_,
+As stated in :ref:`Transitivity`,
 v1 can transmit the its impeach prepare certificate to other loyal validators.
 Thus, these loyal validators in commit state will transit to impeach commit state
 and abandon its prepare certificate for b,
@@ -710,7 +710,7 @@ one of them faces the problem that it lags behind one state every hundreds of bl
 
 In practice, we use a prepare message with all signature the validator collects,
 as the certificate.
-Refer to `transitivity of certificate`_ for detailed implementation.
+Refer to :ref:`transitivity` for detailed implementation.
 
 By introducing intra-view recovery, our system can tolerate two or more distinct validators
 lose their connection in different states.
@@ -723,7 +723,7 @@ Extra-view Recovery
 
 If intra-view recovery does not work for a validator v and the block height of v is same as the chain,
 it is about to catch up other validators once it receives a validate message.
-As demonstrated in `LBFT 2.0 Pseudocode`_, validate message (as well as impeach validate mesage) has highest priority,
+As demonstrated in :ref:`LBFT-2-Pseudocode`, validate message (as well as impeach validate mesage) has highest priority,
 which forwards v to idle state of next view regardless of the state of v.
 
 However, if v has been losing its connection for a long time, it should invoke *sync* function.

@@ -21,6 +21,8 @@ And the message box near the arrow represents the message broadcast to other nod
 .. image:: lbft_fsm.png
 
 
+.. _LBFT-2-Pseudocode:
+
 
 LBFT 2.0 Pseudocode
 -----------------------
@@ -327,7 +329,11 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         }
 
 
-.. _echo-of-validate-message:
+
+
+.. _echo-validate:
+
+
 
 Echo of Validate Message
 ----------------------------
@@ -452,7 +458,7 @@ An example is ``func impeachHandler()`` as shown below.
     }
 
 
-
+.. _transitivity:
 
 Transitivity of Certificate
 -----------------------------
