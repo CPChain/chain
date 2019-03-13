@@ -303,3 +303,7 @@ func (b *APIBackend) Validators(blockNr rpc.BlockNumber) ([]common.Address, erro
 	api := b.cpc.engine.(*dpor.Dpor).APIs(b.cpc.blockchain)
 	return api[0].Service.(*dpor.API).GetValidators(blockNr)
 }
+
+func (b *APIBackend) SupportPrivateTx(ctx context.Context) (bool, error) {
+	return core.SupportPrivateTx(b.cpc.blockchain), nil
+}

@@ -82,6 +82,9 @@ type Backend interface {
 	CalcRptInfo(address common.Address, blockNum uint64) int64
 	ViewLen() uint64
 	TermLen() uint64
+
+	// Private API
+	SupportPrivateTx(ctx context.Context) (bool, error)
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

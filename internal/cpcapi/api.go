@@ -638,6 +638,11 @@ func (s *PublicBlockChainAPI) GetValidatorsByBlockNumber(ctx context.Context, bl
 	return validators, err
 }
 
+// SupportPrivateTx returns whether or not support private transaction functionality
+func (s *PublicBlockChainAPI) SupportPrivateTx(ctx context.Context) (bool, error) {
+	return s.b.SupportPrivateTx(ctx)
+}
+
 // GetUncleByBlockNumberAndIndex returns the uncle block for the given block hash and index. When fullTx is true
 // all transactions in the block are returned in full detail, otherwise only the transaction hash is returned.
 func (s *PublicBlockChainAPI) GetUncleByBlockNumberAndIndex(ctx context.Context, blockNr rpc.BlockNumber, index hexutil.Uint) (map[string]interface{}, error) {
@@ -1296,7 +1301,8 @@ func submitTransaction(ctx context.Context, b Backend, tx *types.Transaction) (c
 // SendTransaction creates a transaction for the given argument, sign it and submit it to the
 // transaction pool.
 func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args SendTxArgs) (common.Hash, error) {
-	if args.IsPrivate && !private.SupportPrivateTx() {
+	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
+	if args.IsPrivate && !supportPrivate {
 		// if not support private tx, immediately returns error
 		return common.Hash{}, NotSupportPrivateTxErr
 	}
