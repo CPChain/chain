@@ -130,13 +130,15 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 		blockNumber = block.Number()
 	}
 	locked := c.isLocked()
+	supportPrivate, _ := c.client.SupportPrivateTx(context.Background())
 	status := cm.Status{
-		Mining:     mining,
-		RNode:      rnode,
-		ENode:      true,
-		Proposer:   proposer,
-		Locked:     locked,
-		NextNumber: blockNumber,
+		Mining:           mining,
+		RNode:            rnode,
+		ENode:            true,
+		Proposer:         proposer,
+		Locked:           locked,
+		NextNumber:       blockNumber,
+		SupportPrivateTx: supportPrivate,
 	}
 	return &status, nil
 }
