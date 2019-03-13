@@ -3,6 +3,7 @@ package backend
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -11,6 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 const (
@@ -44,6 +46,7 @@ type Handler struct {
 	fsm    ConsensusStateMachine
 
 	knownBlocks           *RecentBlocks
+	unknownAncestorBlocks *RecentBlocks
 	pendingBlockCh        chan *types.Block
 	pendingImpeachBlockCh chan *types.Block
 	quitCh                chan struct{}
@@ -61,6 +64,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address, db database
 		coinbase:              coinbase,
 		dialer:                NewDialer(),
 		knownBlocks:           NewRecentBlocks(db),
+		unknownAncestorBlocks: NewRecentBlocks(db),
 		pendingBlockCh:        make(chan *types.Block),
 		pendingImpeachBlockCh: make(chan *types.Block),
 		quitCh:                make(chan struct{}),
@@ -85,6 +89,9 @@ func (h *Handler) Start() {
 
 	// broadcast impeachment block loop
 	go h.PendingImpeachBlockBroadcastLoop()
+
+	// unknown ancestor block handler
+	go h.procUnknownAncestorsLoop()
 }
 
 // Stop stops all
@@ -234,4 +241,45 @@ func (h *Handler) Available() bool {
 	defer h.lock.RUnlock()
 
 	return h.available
+}
+
+func (h *Handler) procUnknownAncestorsLoop() {
+	for {
+		for _, bi := range h.unknownAncestorBlocks.GetBlockIdentifiers() {
+
+			// if less than current number, drop it!
+			if bi.number <= h.dpor.GetCurrentBlock().NumberU64() {
+
+				h.unknownAncestorBlocks.RemoveBlock(bi)
+				log.Debug("unknown ancestor block's number is less than current number, drop it!", "number", bi.number, "hash", bi.hash.Hex())
+
+				continue
+			}
+
+			// handle this unknown ancestor block!
+			block, err := h.unknownAncestorBlocks.GetBlock(bi)
+			if block != nil && err == nil {
+				var msg p2p.Msg
+				size, r, err := rlp.EncodeToReader(block)
+				if err != nil {
+					log.Warn("failed to encode unknown ancestor block", "err", err)
+					continue
+				}
+
+				if block.Impeachment() {
+					// impeach block
+					msg = p2p.Msg{Code: PreprepareImpeachBlockMsg, Size: uint32(size), Payload: r}
+
+				} else {
+					// not impeach block
+					msg = p2p.Msg{Code: PreprepareBlockMsg, Size: uint32(size), Payload: r}
+
+				}
+
+				go h.handleLBFT2Msg(msg, nil)
+			}
+		}
+
+		time.Sleep(100 * time.Millisecond)
+	}
 }
