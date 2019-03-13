@@ -238,7 +238,7 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 
 // addPeer is the callback invoked to manage the life cycle of cpchain peer.
 // when this function terminates, the peer is disconnected.
-func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
+func (pm *ProtocolManager) addPeer(p *peer, isMinerOrValidator bool) (bool, error) {
 	// ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
 		return false, p2p.DiscTooManyPeers
@@ -253,7 +253,7 @@ func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
 	)
 
 	// Do normal handshake
-	remoteIsMiner, err := p.Handshake(pm.networkID, height, hash, genesis.Hash(), isMiner)
+	remoteIsMiner, err := p.Handshake(pm.networkID, height, hash, genesis.Hash(), isMinerOrValidator)
 
 	if err != nil {
 		log.Debug("Cpchain handshake failed", "err", err)
@@ -282,13 +282,15 @@ func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
 
 func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version uint) error {
 	var (
-		dporEngine   = pm.engine.(*dpor.Dpor)
-		isMiner      = dporEngine.IsMiner()
-		dporMode     = dporEngine.Mode()
-		dporProtocol = dporEngine.Protocol()
+		dporEngine         = pm.engine.(*dpor.Dpor)
+		isMiner            = dporEngine.IsMiner()
+		workAsValidator    = dporEngine.IsValidator()
+		dporMode           = dporEngine.Mode()
+		dporProtocol       = dporEngine.Protocol()
+		isMinerOrValidator = isMiner || workAsValidator
 	)
 
-	if dporMode == dpor.NormalMode && isMiner && !dporProtocol.Available() {
+	if dporMode == dpor.NormalMode && isMinerOrValidator && !dporProtocol.Available() {
 		log.Warn("dpor handler is not not available now")
 		return nil
 	}
@@ -305,7 +307,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		log.Debug("received a new peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
 
 		// add peer to manager.peers, this is for basic msg syncing
-		remoteIsMiner, err := pm.addPeer(peer, isMiner)
+		remoteIsMiner, err := pm.addPeer(peer, isMinerOrValidator)
 		if err != nil {
 			log.Warn("fail to add peer to cpc protocol manager's peer set", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
 			return err
@@ -318,7 +320,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 		// add peer to dpor.handler.dialer.peers, this is for proposers/validators communication
 		id, added := common.Address{}.Hex(), false
-		if dporMode == dpor.NormalMode && isMiner && remoteIsMiner {
+		if dporMode == dpor.NormalMode && isMinerOrValidator && remoteIsMiner {
 			switch id, _, _, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw); err {
 			case nil:
 				added = true
@@ -363,7 +365,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 					return err
 				}
 
-			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner:
+			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMinerOrValidator:
 				switch id, err = dporProtocol.HandleMsg(id, int(version), p, rw, msg); err {
 				case nil:
 
