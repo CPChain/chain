@@ -20,7 +20,6 @@ You can click `here <https://github.com/CPChain/chain>`_ to access source code, 
     # open a $GOPATH
     $ cd $GOPATH/src
 
-    # TODO: if module name be changed..., or using go.mod
     $ mkdir -p bitbucket/cpchain/
     
     $ cd bitbucket/cpchain
