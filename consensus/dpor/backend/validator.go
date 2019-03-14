@@ -3,6 +3,8 @@ package backend
 import (
 	"hash/fnv"
 
+	"bitbucket.org/cpchain/chain/consensus"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -20,7 +22,12 @@ func (vh *Handler) handleLBFTMsg(msg p2p.Msg, p *RemoteSigner) error {
 }
 
 func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteSigner) {
-	log.Debug("received msg", "number", number, "hash", hash.Hex(), "msg code", msgCode.String(), "remote peer", p.Coinbase().Hex())
+	log.Debug("received msg", "number", number, "hash", hash.Hex(), "msg code", msgCode.String(), "remote peer", func() string {
+		if p != nil {
+			return p.Coinbase().Hex()
+		}
+		return "nil peer"
+	}())
 }
 
 func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
@@ -176,7 +183,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	logMsgReceived(input.Number(), input.Hash(), msgCode, p)
 
 	// if number is larger than local current number, sync from remote peer
-	if input.Number() > currentNumber+1 {
+	if input.Number() > currentNumber+1 && p != nil {
 		go vh.dpor.SyncFrom(p.Peer)
 		log.Debug("I am slow, syncing with peer", "peer", p.address)
 	}
@@ -204,7 +211,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 
 		correctProposerPeer, exist := vh.dialer.getProposer(correctProposer.Hex())
-		if !exist {
+		if !exist || correctProposerPeer == nil {
 			log.Debug("proposer for the block is not in local proposer peer set")
 		}
 
@@ -214,7 +221,14 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
-	if err != nil {
+	switch err {
+	case nil:
+	case consensus.ErrUnknownAncestor:
+		log.Debug("added block to unknown ancestor cache", "number", input.Number(), "hash", input.Hash().Hex())
+
+		vh.unknownAncestorBlocks.AddBlock(input.block)
+
+	default:
 		log.Debug("received an error when run fsm", "err", err)
 		return err
 	}

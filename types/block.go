@@ -225,6 +225,10 @@ func (h *Header) Timestamp() time.Time {
 	return time.Unix(0, h.Time.Int64()*int64(time.Millisecond)/int64(time.Nanosecond))
 }
 
+func (h *Header) Impeachment() bool {
+	return h.Coinbase == common.Address{}
+}
+
 func (h *Header) SetTimestamp(t time.Time) {
 	timestamp := int64(t.UnixNano()) * int64(time.Nanosecond) / int64(time.Millisecond)
 	if h.Time == nil {
@@ -428,6 +432,7 @@ func (b *Block) GasUsed() uint64  { return b.header.GasUsed }
 func (b *Block) Time() *big.Int           { return new(big.Int).Set(b.header.Time) }
 func (b *Block) Timestamp() time.Time     { return b.Header().Timestamp() }
 func (b *Block) SetTimestamp(t time.Time) { b.RefHeader().SetTimestamp(t) }
+func (b *Block) Impeachment() bool        { return b.Header().Impeachment() }
 
 func (b *Block) NumberU64() uint64         { return b.header.Number.Uint64() }
 func (b *Block) LogsBloom() Bloom          { return b.header.LogsBloom }

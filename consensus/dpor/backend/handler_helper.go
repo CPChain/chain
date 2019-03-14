@@ -70,6 +70,12 @@ func (rb *RecentBlocks) AddBlock(block *types.Block) error {
 	return rb.db.Put(block.Hash().Bytes(), bytes)
 }
 
+// RemoveBlock removes a block from caches
+func (rb *RecentBlocks) RemoveBlock(bi BlockIdentifier) error {
+	rb.blocks.Remove(bi)
+	return rb.db.Delete(bi.hash.Bytes())
+}
+
 // GetBlock returns a block with given block identifier
 func (rb *RecentBlocks) GetBlock(bi BlockIdentifier) (*types.Block, error) {
 
@@ -86,6 +92,17 @@ func (rb *RecentBlocks) GetBlock(bi BlockIdentifier) (*types.Block, error) {
 	}
 
 	return nil, errNilBlock
+}
+
+// GetBlockIdentifiers returns a slice of block identifiers in this cache
+func (rb *RecentBlocks) GetBlockIdentifiers() []BlockIdentifier {
+
+	var bis []BlockIdentifier
+	for _, bi := range rb.blocks.Keys() {
+		bis = append(bis, bi.(BlockIdentifier))
+	}
+
+	return bis
 }
 
 // BlockOrHeader represents a block or a header
