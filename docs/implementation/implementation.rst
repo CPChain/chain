@@ -642,7 +642,7 @@ If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T
 v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
 The rest of consensus part are same as LBFT 2.0.
 
-The coefficient 2 in 2T is derived from the second and third assumption.
+The coefficient 2 in 2T is derived from the second and third assumptions.
 Thus, each validator can receive messages from all other validators within a time window of T.
 
 In practice, T can be set to be 1 minutes.

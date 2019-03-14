@@ -706,7 +706,8 @@ Liveness is also the reason that a validator cannot insist on a P-certificate.
 | Assumption                | Tolerate at most f faulty          | Tolerate at most f replicas |
 |                           | validators and a faulty proposer   |                             |
 +---------------------------+------------------------------------+-----------------------------+
-| Liveness                  | Insert a block every 10 seconds    | Response in finite time     |
+| Liveness                  | Insert a block within at most      | Response in finite time     |
+|                           | period+timeout (20 seconds)        |                             |
 +---------------------------+------------------------------------+-----------------------------+
 | Insistence on             | Trigger impeachment if timer       | Insist on the query with    |
 | P-certificate             | expires                            | P-certificate               |
