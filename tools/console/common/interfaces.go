@@ -33,12 +33,13 @@ type Balance struct {
 
 // Status is the status of cpchain ndoe
 type Status struct {
-	Mining     bool
-	RNode      bool
-	ENode      bool
-	Proposer   bool
-	Locked     bool
-	NextNumber *big.Int
+	Mining           bool
+	RNode            bool
+	ENode            bool
+	Proposer         bool
+	Locked           bool
+	NextNumber       *big.Int
+	SupportPrivateTx bool
 }
 
 // RewardBalance is balance of contract namded reward

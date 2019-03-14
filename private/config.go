@@ -23,7 +23,7 @@ const (
 	Swarm          = "swarm"
 
 	// disable private transaction function by default
-	SupportPrivateTxFlag = false
+	SupportPrivateTxFlag = true
 )
 
 type Config struct {

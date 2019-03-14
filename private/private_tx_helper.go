@@ -19,11 +19,10 @@ package private
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/ecdsa"
 	"crypto/rand"
 	"encoding/binary"
 	"io"
-
-	"crypto/ecdsa"
 
 	"bitbucket.org/cpchain/chain/commons/crypto/ecieskey"
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -102,11 +101,6 @@ func SealPrivatePayload(payload []byte, txNonce uint64, participants []string, r
 		Participants: participants,
 	}
 	return replacement, nil
-}
-
-// SupportPrivateTx returns a bool value indicating whether it supports private transaction
-func SupportPrivateTx() bool {
-	return SupportPrivateTxFlag
 }
 
 // stringsToPublicKeys converts string to ecies.PublicKey instance.
