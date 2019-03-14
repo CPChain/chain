@@ -1034,8 +1034,6 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 //
 // After insertion is done, all accumulated events will be fired.
 func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
-	bc.insertChainProtectLock.Lock()
-	defer bc.insertChainProtectLock.Unlock()
 
 	if len(chain) == 0 {
 		return 0, nil
@@ -1063,12 +1061,26 @@ func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 	// remove useless prefix
 	chain = chain[outset:]
 
+	for i, block := range chain {
+		_, err := bc.InsertBlock(block)
+		if err != nil {
+			return outset + i, err
+		}
+	}
+
+	return outset + len(chain), nil
+}
+
+func (bc *BlockChain) InsertBlock(block *types.Block) (int, error) {
+	bc.insertChainProtectLock.Lock()
+	defer bc.insertChainProtectLock.Unlock()
+
 	// insert it!
-	n, events, logs, err := bc.insertChain(chain)
+	n, events, logs, err := bc.insertChain(types.Blocks{block})
 	bc.CommitStateDB()
 	bc.PostChainEvents(events, logs)
 
-	return n + outset, err
+	return n, err
 }
 
 // insertChain will execute the actual chain insertion and event aggregation. The
@@ -1200,6 +1212,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		case err == consensus.ErrNotEnoughSigs:
 			return i, events, coalescedLogs, err
+
+		case err == consensus.ErrUnknownAncestor:
+			return i, events, coalescedLogs, nil
 
 		case err != nil:
 			bc.reportBlock(block, nil, err)
