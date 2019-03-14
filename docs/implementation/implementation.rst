@@ -620,10 +620,11 @@ Except for assumptions of LBFT 2.0, several more assumptions are required for fa
 There exist a timestamp T larger than 0 satisfying following assumptions:
 
     1. The local clocks of all loyal validators (at least 2f+1) are within an interval of T.
-    2. Maximum possible delay of broadcasting messages is less than T
+    #. Maximum possible delay of broadcasting messages is less than T/2.
+    #. All validators restarts within a time window of T/2.
 
 The first assumption can be also interpreted as
-max(t\ :sub:`i`\ -t\ :sub:`j`\ ) < 2T.
+max(t\ :sub:`i`\ -t\ :sub:`j`\ ) < T.
 We name it as the sample space of validators.
 This assumption is reasonable since all loyal validators are connecting to the network
 and get their local clock calibrated before reboot.
@@ -632,7 +633,7 @@ Now we construct a set of discrete timestamps TS={t|t=2k*T, k is a natural numbe
 A validator v\ :sub:`i`\   chooses timestamp ts for the failback impeach block, satisfying
 
 1. ts\ :sub:`i`\   is an element of TS
-#. ts\ :sub:`i`\   > t\ :sub:`i`\
+#. ts\ :sub:`i`\   > t\ :sub:`i`\0.
 
 After reboot, all validators are set to idle state.
 When the local clock of v\ :sub:`i`\  is ts\ :sub:`i`\ , it proposes an impeach block with this timestamp,
@@ -641,8 +642,11 @@ If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T
 v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
 The rest of consensus part are same as LBFT 2.0.
 
-In practice, T can be set to be 5 minutes.
-Hence, the system can regain its liveness in 20 minutes.
+The coefficient 2 in 2T is derived from the second and third assumption.
+Thus, each validator can receive messages from all other validators within a time window of T.
+
+In practice, T can be set to be 1 minutes.
+Hence, the system can regain its liveness in 4 minutes.
 The pseudocode is shown below.
 
 Failback Pseudocode
@@ -656,7 +660,7 @@ Failback Pseudocode
         func failback () {
             // v: a validator
             // t: local clock of v in Unix timestamp
-            T := 5 * time.Minute // 5 minutes
+            T := 1 * time.Minute // 1 minutes
             set the state to idle state
 
             // timestamp of failback impeach block
