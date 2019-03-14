@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -25,7 +24,7 @@ var testAccount, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6
 func TestStatusMsgErrorsCpc1(t *testing.T) { testStatusMsgErrors(t, 1) }
 
 func testStatusMsgErrors(t *testing.T, protocol int) {
-	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 0, nil, nil)
+	pm, _ := newTestProtocolManagerMust(t, 0, nil, nil)
 	var (
 		genesis = pm.blockchain.Genesis()
 		head    = pm.blockchain.CurrentHeader()
@@ -81,7 +80,7 @@ func TestRecvTransactionsCpc1(t *testing.T) { testRecvTransactions(t, 1) }
 
 func testRecvTransactions(t *testing.T, protocol int) {
 	txAdded := make(chan []*types.Transaction)
-	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 0, nil, txAdded)
+	pm, _ := newTestProtocolManagerMust(t, 0, nil, txAdded)
 	pm.acceptTxs = 1 // mark synced to accept transactions
 	p, _ := newTestPeer("peer", protocol, pm, true)
 	defer pm.Stop()
@@ -108,7 +107,7 @@ func testRecvTransactions(t *testing.T, protocol int) {
 func TestSendTransactionsCpc1(t *testing.T) { testSendTransactions(t, 1) }
 
 func testSendTransactions(t *testing.T, protocol int) {
-	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 0, nil, nil)
+	pm, _ := newTestProtocolManagerMust(t, 0, nil, nil)
 	defer pm.Stop()
 
 	// Fill the pool with big transactions.

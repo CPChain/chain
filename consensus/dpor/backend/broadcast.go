@@ -21,9 +21,6 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 
 			validators = h.dialer.ValidatorsOfTerm(term)
 
-			// TODO:
-			// if i am a proposer, i need #(ValidatorsNum - Faulty) validators.
-			// if i am a validator, i need #(ValidatorsNum - Faulty - 1) validators, except myself.
 			if len(validators) >= int(h.dpor.ValidatorsNum()-h.fsm.Faulty())-1 {
 				return
 			}
@@ -61,8 +58,6 @@ func (h *Handler) BroadcastPreprepareImpeachBlock(block *types.Block) {
 
 // BroadcastPrepareHeader broadcasts signed prepare header to remote validators
 func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
-	h.lock.Lock()
-	defer h.lock.Unlock()
 
 	log.Debug("broadcasting prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
@@ -76,8 +71,6 @@ func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 
 // BroadcastPrepareImpeachHeader broadcasts signed impeach prepare header to remote validators
 func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
-	h.lock.Lock()
-	defer h.lock.Unlock()
 
 	log.Debug("broadcasting prepare impeach header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
@@ -91,8 +84,6 @@ func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
 
 // BroadcastCommitHeader broadcasts signed commit header to remote validators
 func (h *Handler) BroadcastCommitHeader(header *types.Header) {
-	h.lock.Lock()
-	defer h.lock.Unlock()
 
 	log.Debug("broadcasting commit header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
@@ -106,8 +97,6 @@ func (h *Handler) BroadcastCommitHeader(header *types.Header) {
 
 // BroadcastCommitImpeachHeader broadcasts signed impeach commit header to remote validators
 func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
-	h.lock.Lock()
-	defer h.lock.Unlock()
 
 	log.Debug("broadcasting commit impeach header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
@@ -179,7 +168,10 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 					hash   = impeachBlock.Hash()
 				)
 
-				if !h.impeachmentRecord.ifImpeached(number, hash) {
+				// only validators can impeach
+				isValidator, err := h.dpor.VerifyValidatorOf(h.Coinbase(), h.dpor.TermOf(number))
+
+				if !h.impeachmentRecord.ifImpeached(number, hash) && isValidator && err == nil {
 					// notify other validators
 					go h.BroadcastPreprepareImpeachBlock(impeachBlock)
 

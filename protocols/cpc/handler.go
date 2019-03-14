@@ -20,7 +20,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
 	"bitbucket.org/cpchain/chain/protocols/cpc/fetcher"
 	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
@@ -92,7 +91,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new sub protocol manager. The cpchain sub protocol manages peers capable
 // with the cpchain network.
-func NewProtocolManager(config *configs.ChainConfig, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, coinbase common.Address) (*ProtocolManager, error) {
+func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, coinbase common.Address) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -238,7 +237,7 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 
 // addPeer is the callback invoked to manage the life cycle of cpchain peer.
 // when this function terminates, the peer is disconnected.
-func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
+func (pm *ProtocolManager) addPeer(p *peer, isMinerOrValidator bool) (bool, error) {
 	// ignore maxPeers if this is a trusted peer
 	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
 		return false, p2p.DiscTooManyPeers
@@ -253,7 +252,7 @@ func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
 	)
 
 	// Do normal handshake
-	remoteIsMiner, err := p.Handshake(pm.networkID, height, hash, genesis.Hash(), isMiner)
+	remoteIsMiner, err := p.Handshake(pm.networkID, height, hash, genesis.Hash(), isMinerOrValidator)
 
 	if err != nil {
 		log.Debug("Cpchain handshake failed", "err", err)
@@ -282,13 +281,15 @@ func (pm *ProtocolManager) addPeer(p *peer, isMiner bool) (bool, error) {
 
 func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version uint) error {
 	var (
-		dporEngine   = pm.engine.(*dpor.Dpor)
-		isMiner      = dporEngine.IsMiner()
-		dporMode     = dporEngine.Mode()
-		dporProtocol = dporEngine.Protocol()
+		dporEngine         = pm.engine.(*dpor.Dpor)
+		isMiner            = dporEngine.IsMiner()
+		workAsValidator    = dporEngine.IsValidator()
+		dporMode           = dporEngine.Mode()
+		dporProtocol       = dporEngine.Protocol()
+		isMinerOrValidator = isMiner || workAsValidator
 	)
 
-	if dporMode == dpor.NormalMode && isMiner && !dporProtocol.Available() {
+	if dporMode == dpor.NormalMode && isMinerOrValidator && !dporProtocol.Available() {
 		log.Warn("dpor handler is not not available now")
 		return nil
 	}
@@ -305,7 +306,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		log.Debug("received a new peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
 
 		// add peer to manager.peers, this is for basic msg syncing
-		remoteIsMiner, err := pm.addPeer(peer, isMiner)
+		remoteIsMiner, err := pm.addPeer(peer, isMinerOrValidator)
 		if err != nil {
 			log.Warn("fail to add peer to cpc protocol manager's peer set", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
 			return err
@@ -318,7 +319,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 		// add peer to dpor.handler.dialer.peers, this is for proposers/validators communication
 		id, added := common.Address{}.Hex(), false
-		if dporMode == dpor.NormalMode && isMiner && remoteIsMiner {
+		if dporMode == dpor.NormalMode && isMinerOrValidator && remoteIsMiner {
 			switch id, _, _, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw); err {
 			case nil:
 				added = true
@@ -363,7 +364,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 					return err
 				}
 
-			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMiner:
+			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMinerOrValidator:
 				switch id, err = dporProtocol.HandleMsg(id, int(version), p, rw, msg); err {
 				case nil:
 
@@ -410,7 +411,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 			headers []*types.Header
 			unknown bool
 		)
-		for !unknown && len(headers) < int(query.Amount) && bytes < softResponseLimit && len(headers) < downloader.MaxHeaderFetch {
+		for !unknown && len(headers) < int(query.Amount) && bytes < softResponseLimit && len(headers) < syncer.MaxHeaderFetch {
 			// Retrieve the next header satisfying the query
 			var origin *types.Header
 			if hashMode {
@@ -518,7 +519,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 
 		log.Debug("received GetBlockBodiesMsg")
 
-		for bytes < softResponseLimit && len(bodies) < downloader.MaxBlockFetch {
+		for bytes < softResponseLimit && len(bodies) < syncer.MaxBlockFetch {
 			// Retrieve the hash of the next block
 			if err := msgStream.Decode(&hash); err == rlp.EOL {
 				break
@@ -575,7 +576,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 
 		log.Debug("received GetNodeDataMsg")
 
-		for bytes < softResponseLimit && len(data) < downloader.MaxStateFetch {
+		for bytes < softResponseLimit && len(data) < syncer.MaxStateFetch {
 			// Retrieve the hash of the next state entry
 			if err := msgStream.Decode(&hash); err == rlp.EOL {
 				break
@@ -619,7 +620,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 			bytes    int
 			receipts []rlp.RawValue
 		)
-		for bytes < softResponseLimit && len(receipts) < downloader.MaxReceiptFetch {
+		for bytes < softResponseLimit && len(receipts) < syncer.MaxReceiptFetch {
 			// Retrieve the hash of the next block
 			if err := msgStream.Decode(&hash); err == rlp.EOL {
 				break

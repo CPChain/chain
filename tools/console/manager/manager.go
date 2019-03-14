@@ -5,6 +5,8 @@ import (
 	"crypto/ecdsa"
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/commons/log"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
@@ -117,6 +119,7 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 		if c.addr == addr {
 			proposer = true
 		}
+		log.Info("proposer", "addr", addr.Hex(), "c.addr", c.addr.Hex())
 	}
 	blockNumber := big.NewInt(0)
 	if proposer {
@@ -127,13 +130,15 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 		blockNumber = block.Number()
 	}
 	locked := c.isLocked()
+	supportPrivate, _ := c.client.SupportPrivateTx(context.Background())
 	status := cm.Status{
-		Mining:     mining,
-		RNode:      rnode,
-		ENode:      true,
-		Proposer:   proposer,
-		Locked:     locked,
-		NextNumber: blockNumber,
+		Mining:           mining,
+		RNode:            rnode,
+		ENode:            true,
+		Proposer:         proposer,
+		Locked:           locked,
+		NextNumber:       blockNumber,
+		SupportPrivateTx: supportPrivate,
 	}
 	return &status, nil
 }

@@ -329,9 +329,9 @@ func (p *peer) SendBlocks(blocks types.Blocks) error {
 
 // Handshake executes the cpchain protocol handshake, negotiating version number,
 // network IDs, head and genesis blocks.
-func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis common.Hash, isMiner bool) (bool, error) {
+func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis common.Hash, isMinerOrValidator bool) (bool, error) {
 
-	log.Debug("handshaking with remote cpc peer...", "network", network, "blockchain hight", ht.Uint64(), "head", head.Hex(), "genesis", genesis.Hex(), "is Miner", isMiner)
+	log.Debug("handshaking with remote cpc peer...", "network", network, "blockchain hight", ht.Uint64(), "head", head.Hex(), "genesis", genesis.Hex(), "is Miner", isMinerOrValidator)
 
 	errc := make(chan error, 2)
 	var status statusData // safe to read after two values have been received from errc
@@ -339,12 +339,12 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 	// Send out own handshake in a new thread
 	go func() {
 		sd := statusData{
-			ProtocolVersion: uint32(p.version),
-			NetworkId:       network,
-			Height:          ht,
-			CurrentBlock:    head,
-			GenesisBlock:    genesis,
-			IsMiner:         isMiner,
+			ProtocolVersion:    uint32(p.version),
+			NetworkId:          network,
+			Height:             ht,
+			CurrentBlock:       head,
+			GenesisBlock:       genesis,
+			IsMinerOrValidator: isMinerOrValidator,
 		}
 		//log.Log("sendStatus(network, &status, genesis)", "status", sd.FormatString(), "peer", p.id)
 
@@ -373,7 +373,7 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 
 	p.ht, p.head = status.Height, status.CurrentBlock
 	//log.Info("handshake", "height", p.ht.Uint64(), "head", p.head.Hex())
-	return status.IsMiner, nil
+	return status.IsMinerOrValidator, nil
 }
 
 func (p *peer) readStatus(network uint64, status *statusData, genesis common.Hash) (err error) {

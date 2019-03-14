@@ -26,7 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -38,10 +38,9 @@ func TestProtocolCompatibility(t *testing.T) {
 	// Define the compatibility chart
 	tests := []struct {
 		version    uint
-		mode       downloader.SyncMode
 		compatible bool
 	}{
-		{61, downloader.FullSync, true}, {62, downloader.FullSync, true}, {63, downloader.FullSync, true},
+		{61, true}, {62, true}, {63, true},
 	}
 	// Make sure anything we screw up is restored
 	backup := ProtocolVersions
@@ -51,7 +50,7 @@ func TestProtocolCompatibility(t *testing.T) {
 	for i, tt := range tests {
 		ProtocolVersions = []uint{tt.version}
 
-		pm, _, err := newTestProtocolManager(tt.mode, 0, nil, nil)
+		pm, _, err := newTestProtocolManager(0, nil, nil)
 		if pm != nil {
 			defer pm.Stop()
 		}
@@ -63,7 +62,7 @@ func TestProtocolCompatibility(t *testing.T) {
 
 // Tests that block headers can be retrieved from a remote chain based on user queries.
 func TestGetBlockHeaders(t *testing.T) {
-	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxHashFetch+15, nil, nil)
+	pm, _ := newTestProtocolManagerMust(t, syncer.MaxHashFetch+15, nil, nil)
 	peer, _ := newTestPeer("peer", 64, pm, true)
 	defer peer.close()
 
@@ -73,7 +72,7 @@ func TestGetBlockHeaders(t *testing.T) {
 		unknown[i] = byte(i)
 	}
 	// Create a batch of tests for various scenarios
-	limit := uint64(downloader.MaxHeaderFetch)
+	limit := uint64(syncer.MaxHeaderFetch)
 	tests := []struct {
 		query  *getBlockHeadersData // The query to execute for header retrieval
 		expect []common.Hash        // The hashes of the block whose headers are expected
@@ -222,12 +221,12 @@ func TestGetBlockHeaders(t *testing.T) {
 
 // Tests that block contents can be retrieved from a remote chain based on their hashes.
 func TestGetBlockBodies(t *testing.T) {
-	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, downloader.MaxBlockFetch+15, nil, nil)
+	pm, _ := newTestProtocolManagerMust(t, syncer.MaxBlockFetch+15, nil, nil)
 	peer, _ := newTestPeer("peer", 64, pm, true)
 	defer peer.close()
 
 	// Create a batch of tests for various scenarios
-	limit := downloader.MaxBlockFetch
+	limit := syncer.MaxBlockFetch
 	tests := []struct {
 		random    int           // Number of blocks to fetch randomly from the chain
 		explicit  []common.Hash // Explicitly requested blocks
@@ -321,7 +320,7 @@ func testGetNodeData(t *testing.T, protocol int) {
 		}
 	}
 	// Assemble the test environment
-	pm, db := newTestProtocolManagerMust(t, downloader.FullSync, 4, generator, nil)
+	pm, db := newTestProtocolManagerMust(t, 4, generator, nil)
 	peer, _ := newTestPeer("peer", protocol, pm, true)
 	defer peer.close()
 
@@ -404,7 +403,7 @@ func testGetReceipt(t *testing.T, protocol int) {
 		}
 	}
 	// Assemble the test environment
-	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 4, generator, nil)
+	pm, _ := newTestProtocolManagerMust(t, 4, generator, nil)
 	peer, _ := newTestPeer("peer", protocol, pm, true)
 	defer peer.close()
 

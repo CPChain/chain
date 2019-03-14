@@ -26,23 +26,23 @@ func NewLogOutput() LogOutput {
 func (l *LogOutput) Status(status *cm.Status) {
 	outTmpl := `--------------------------
 
-Mining: {{.Mining}}
+Mining:           {{.Mining}}
 
-RNode: {{.RNode}}
+RNode:            {{.RNode}}
 
-Proposer: {{.Proposer}}
+Proposer:         {{.Proposer}}
 
-Locked: {{.Locked}}
+Locked:           {{.Locked}}
 	`
 	if status.Proposer {
 		outTmpl += `
-NextNumber: {{.NextNumber}}
+NextNumber:       {{.NextNumber}}
 	`
 	}
 	outTmpl += `
+SupportPrivateTx: {{.SupportPrivateTx}}
 --------------------------
 `
-
 	tmpl, err := template.New("status").Parse(outTmpl)
 	if err != nil {
 		l.Error(err.Error())

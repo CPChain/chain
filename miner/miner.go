@@ -14,7 +14,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/database"
-	"bitbucket.org/cpchain/chain/protocols/cpc/downloader"
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -63,11 +63,11 @@ func New(backend Backend, config *configs.ChainConfig, mux *event.TypeMux, cons 
 // the loop is exited. This to prevent a major security vuln where external parties can DOS you with blocks
 // and halt your mining operation for as long as the DOS continues.
 func (m *Miner) downloaderSync() {
-	events := m.mux.Subscribe(downloader.StartEvent{}, downloader.DoneEvent{}, downloader.FailedEvent{})
+	events := m.mux.Subscribe(syncer.StartEvent{}, syncer.DoneEvent{}, syncer.FailedEvent{})
 out:
 	for ev := range events.Chan() {
 		switch ev.Data.(type) {
-		case downloader.StartEvent:
+		case syncer.StartEvent:
 			atomic.StoreInt32(&m.canStart, 0)
 			// stop mining first, and resume mining later
 			if m.IsMining() {
@@ -75,7 +75,7 @@ out:
 				atomic.StoreInt32(&m.shouldStart, 1)
 				log.Info("Mining aborted due to sync")
 			}
-		case downloader.DoneEvent, downloader.FailedEvent:
+		case syncer.DoneEvent, syncer.FailedEvent:
 			shouldStart := atomic.LoadInt32(&m.shouldStart) == 1
 
 			atomic.StoreInt32(&m.canStart, 1)

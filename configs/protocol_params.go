@@ -63,7 +63,8 @@ const (
 	Bn256ScalarMulGas       uint64 = 40000  // Gas needed for an elliptic curve scalar multiplication
 	Bn256PairingBaseGas     uint64 = 100000 // Base price for an elliptic curve pairing check
 	Bn256PairingPerPointGas uint64 = 80000  // Per-point price for an elliptic curve pairing check
-	// TODO @chengx make the name more concrete
+
+	// CPChain primitives
 	GetRankGas         uint64 = 1600 // gas price for getting rank operation, need to call contract
 	GetMaintenanceGas  uint64 = 600  // gas price  needed for GetMaintenanceGas
 	IsProxyGas         uint64 = 2000 // Gas needed for IsProxyGas, need to call contract twice

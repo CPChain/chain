@@ -162,13 +162,18 @@ var ChainFlags = []cli.Flag{
 }
 
 const (
-	MineFlagName = "mine"
+	MineFlagName      = "mine"
+	ValidatorFlagName = "validator"
 )
 
 var MinerFlags = []cli.Flag{
 	cli.BoolFlag{
 		Name:  MineFlagName,
 		Usage: "Enable mining",
+	},
+	cli.BoolFlag{
+		Name:  ValidatorFlagName,
+		Usage: "Enable validator",
 	},
 }
 

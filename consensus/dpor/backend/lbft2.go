@@ -430,24 +430,24 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 
 	case consensus.ErrFutureBlock:
 
-		log.Debug("verified the block, there is an error", "error", err)
+		log.Debug("verified the block, there is an error", "error", err, "number", number, "hash", hash.Hex())
 
 		time.Sleep(1 * time.Second)
 		return p.handlePreprepareMsg(input, state, blockVerifyFn)
 
 	case consensus.ErrUnknownAncestor:
 
-		log.Debug("verified the block, there is an error", "error", err)
+		log.Debug("verified the block, there is an error", "error", err, "number", number, "hash", hash.Hex())
 
 		go p.unknownAncestorBlockHandler(block)
 
+		return nil, NoAction, NoMsgCode, state, err
+
 	default:
 
-		log.Debug("verified the block, there is an error", "error", err)
-
+		log.Debug("verified the block, there is an error", "error", err, "number", number, "hash", hash.Hex())
+		return nil, NoAction, NoMsgCode, state, err
 	}
-
-	return nil, NoAction, NoMsgCode, state, nil
 }
 
 // handleImpeachPreprepareMsg handles Impeach Preprepare msg
@@ -507,13 +507,13 @@ func (p *LBFT2) handleImpeachPreprepareMsg(input *BlockOrHeader, state consensus
 
 		go p.unknownAncestorBlockHandler(block)
 
+		return nil, NoAction, NoMsgCode, state, err
+
 	default:
 
 		log.Debug("verified the block, there is an error", "error", err)
-
+		return nil, NoAction, NoMsgCode, state, err
 	}
-
-	return nil, NoAction, NoMsgCode, state, nil
 }
 
 // composePrepareMsg composes a prepare msg for a given block
