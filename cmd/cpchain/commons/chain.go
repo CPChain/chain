@@ -82,7 +82,7 @@ func OpenChain(ctx *cli.Context, n *node.Node, cfg *cpc.Config) (chain *core.Blo
 
 func newBlockChain(config *configs.ChainConfig, chainDb database.Database, trieCache int, n *node.Node, chain *core.BlockChain, err error) *core.BlockChain {
 	var engine consensus.Engine
-	engine = dpor.New(config.Dpor, chainDb, nil)
+	engine = dpor.New(config.Dpor, chainDb)
 	cacheCfg := &core.CacheConfig{
 		Disabled:      false, // We always enable caching, not make users troublesome to consider how to choose enable/disable.
 		TrieNodeLimit: cpc.DefaultConfig.TrieCache,

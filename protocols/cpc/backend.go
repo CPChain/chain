@@ -18,6 +18,7 @@
 package cpc
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"sync"
@@ -48,6 +49,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/p2p"
+)
+
+var (
+	errForbidValidatorMining = errors.New("Validator is forbidden to mine.")
 )
 
 type LesServer interface {
@@ -146,11 +151,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		remoteDB:       remoteDB,
 	}
 
-	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
-	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
-		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
-
-	cpc.engine = cpc.CreateConsensusEngine(ctx, chainConfig, chainDb, cpc.AdmissionApiBackend)
+	cpc.engine = cpc.CreateConsensusEngine(ctx, chainConfig, chainDb)
 	if cpc.engine == nil {
 		return nil, errBadEngine
 	}
@@ -172,6 +173,14 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	cpc.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, cpc.chainConfig, cpc.engine, vmConfig, remoteDB, ctx.AccountManager)
 	if err != nil {
 		return nil, err
+	}
+
+	// admission must initialize after blockchain has been initialized
+	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
+	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
+		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
+	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
+		dpor.SetupAdmission(cpc.AdmissionApiBackend)
 	}
 
 	// Rewind the chain in case of an incompatible config upgrade.
@@ -219,13 +228,21 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (database.D
 // SetAsMiner sets dpor engine as miner
 func (s *CpchainService) SetAsMiner(isMiner bool) {
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		if dpor.IsValidator() {
+			return // not execute miner-related operations if node is validator
+		}
 		dpor.SetAsMiner(isMiner)
 	}
 }
 
+// SetAsValidator sets the node as validator and it cannot set back to false once it is set to true.
+func (s *CpchainService) SetAsValidator() {
+	s.engine.(*dpor.Dpor).SetAsValidator(true)
+}
+
 // CreateConsensusEngine creates the required type of consensus engine instance for an Cpchain service
 func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *configs.ChainConfig,
-	db database.Database, ac admission.ApiBackend) consensus.Engine {
+	db database.Database) consensus.Engine {
 	eb, err := s.Coinbase()
 	if err != nil {
 		log.Debug("coinbase is not set, but is allowed for non-miner node", "error", err)
@@ -233,7 +250,7 @@ func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainCo
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. @liuq
-		dpor := dpor.New(chainConfig.Dpor, db, ac)
+		dpor := dpor.New(chainConfig.Dpor, db)
 		if eb != (common.Address{}) {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 			if wallet == nil || err != nil {
@@ -368,6 +385,10 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 
 	// post-requisite: miner.isMining == true && dpor.IsMiner() == true && dpor.isToCampaign == true
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		if dpor.IsValidator() {
+			return errForbidValidatorMining
+		}
+
 		if dpor.Coinbase() != coinbase {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: coinbase})
 			if wallet == nil || err != nil {
@@ -406,6 +427,15 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 	// make sure miner.Start() start once
 	if !s.miner.IsMining() {
 		go s.miner.Start(coinbase)
+	}
+	return nil
+}
+
+func (s *CpchainService) SetupValidator(client backend.ClientBackend) error {
+	if dpor, ok := s.engine.(*dpor.Dpor); ok {
+		dpor.SetAsValidator(true)
+		dpor.SetClient(client)
+		dpor.SetupAsValidator(s.blockchain, s.server, s.protocolManager.BroadcastBlock, s.protocolManager.SyncFromPeer, s.protocolManager.SyncFromBestPeer)
 	}
 	return nil
 }
