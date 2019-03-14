@@ -31,7 +31,7 @@ var gasPrice *big.Int
 var gasLimit int64
 
 func init() {
-	gasPrice = big.NewInt(0)
+	gasPrice = nil
 	gasLimit = int64(200000)
 }
 
