@@ -28,16 +28,16 @@ type Console struct {
 
 var gasPrice *big.Int
 
-var gasLimit int64
+var gasLimit uint64
 
 func init() {
 	gasPrice = nil
-	gasLimit = int64(200000)
+	gasLimit = uint64(200000)
 }
 
 // SetGasConfig set gas price and limit
-func SetGasConfig(price, limit int64) {
-	gasPrice = gasPrice.SetInt64(price)
+func SetGasConfig(price *big.Int, limit uint64) {
+	gasPrice = price
 	gasLimit = limit
 }
 
