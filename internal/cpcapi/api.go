@@ -557,7 +557,7 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationI
 		View:        v,
 		Term:        t,
 		Proposer:    header.Coinbase,
-		BlockNumber: uint64(rpc.LatestBlockNumber),
+		BlockNumber: header.Number.Uint64(),
 		TermLen:     cm,
 		Proposers:   proposers,
 	}
