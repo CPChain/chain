@@ -490,12 +490,42 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		var proposers []common.Address
 		if int(s.config.TermLen) > defaultProposersNum {
 			electedProposers := election.Elect(rpts, seed, int(s.config.TermLen)-defaultProposersNum)
+
+			log.Debug("---------------------------")
+			log.Debug("elected 8 proposers")
+			for i, ep := range electedProposers {
+				log.Debug("proposer", "idx", i, "addr", ep.Hex())
+			}
+			log.Debug("---------------------------")
+
 			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersNum)
+
+			log.Debug("---------------------------")
+			log.Debug("chosen 4 proposers")
+			for i, ep := range chosenProposers {
+				log.Debug("proposer", "idx", i, "addr", ep.Hex())
+			}
+			log.Debug("---------------------------")
+
+			log.Debug("---------------------------")
+			log.Debug("default 12 proposers")
+			for i, ep := range configs.Proposers() {
+				log.Debug("proposer", "idx", i, "addr", ep.Hex())
+			}
+			log.Debug("---------------------------")
+
 			proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
+
+			log.Debug("---------------------------")
+			log.Debug("evenly spared 12 proposers")
+			for i, ep := range proposers {
+				log.Debug("proposer", "idx", i, "addr", ep.Hex())
+			}
+			log.Debug("---------------------------")
+
 		} else {
 			proposers = election.Elect(rpts, seed, int(s.config.TermLen))
 		}
-		// proposers := election.Elect(rpts, seed, int(s.config.TermLen))
 
 		if len(proposers) != int(s.config.TermLen) {
 			panic("invalid length of prepared proposer list")
@@ -642,7 +672,13 @@ func (s *DporSnapshot) StartBlockNumberOfTerm(term uint64) uint64 {
 
 // choseDefaultProposers choses a batch of proposers from a proposers slice with total count of `defaultProposersNum`
 // by the seed of current snapshot.hash.
-func choseSomeProposers(proposers []common.Address, seed int64, wantLen int) (defaultProposers []common.Address) {
+func choseSomeProposers(allProposers []common.Address, seed int64, wantLen int) (defaultProposers []common.Address) {
+
+	var proposers []common.Address
+	for _, p := range allProposers {
+		proposers = append(proposers, p)
+	}
+
 	if len(proposers) > wantLen {
 		randSource := rand.NewSource(seed)
 		myRand := rand.New(randSource)
