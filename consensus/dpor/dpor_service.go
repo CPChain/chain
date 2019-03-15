@@ -241,6 +241,11 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 		StateRoot:  parentHeader.StateRoot,
 	}
 
+	for _, proposer := range d.CurrentSnap().ProposersOf(parentNum + 1) {
+		impeachHeader.Dpor.Proposers = append(impeachHeader.Dpor.Proposers, proposer)
+	}
+	impeachHeader.Dpor.Sigs = make([]types.DporSignature, d.config.ValidatorsLen())
+
 	timestamp := parent.Timestamp().Add(d.config.PeriodDuration()).Add(d.config.ImpeachTimeout)
 	impeachHeader.SetTimestamp(timestamp)
 
