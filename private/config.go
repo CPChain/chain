@@ -21,9 +21,11 @@ const (
 	Dummy          = "dummy"
 	IPFS           = "ipfs"
 	Swarm          = "swarm"
+)
 
-	// disable private transaction function by default
-	SupportPrivateTxFlag = true
+var (
+	// Indicate whether support private transaction functionality
+	SupportPrivateTx bool
 )
 
 type Config struct {
