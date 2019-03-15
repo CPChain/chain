@@ -381,8 +381,8 @@ func (c *Client) GetCommitteeNumber(ctx context.Context) (int, error) {
 	return result, err
 }
 
-func (c *Client) GetBlockGenerationInfoList(ctx context.Context) ([]BlockGenerationInfo, error) {
-	var result []BlockGenerationInfo
+func (c *Client) GetBlockGenerationInfo(ctx context.Context) (BlockGenerationInfo, error) {
+	var result BlockGenerationInfo
 	err := c.c.CallContext(ctx, &result, "eth_getBlockGenerationInfo")
 	return result, err
 }
