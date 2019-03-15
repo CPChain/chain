@@ -539,29 +539,27 @@ func (s *PublicBlockChainAPI) GetCommitteeNumber() int {
 }
 
 // GetBlockGenerationInfo returns current committee and it's Info
-func (s *PublicBlockChainAPI) GetBlockGenerationInfo() []cpclient.BlockGenerationInfo {
+func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationInfo {
 
 	t := s.b.CurrentTerm()
+	v := s.b.CurrentView()
 	b := s.b.CurrentBlock()
-	vl, tl := s.b.ViewLen(), s.b.TermLen()
 	cm := len(s.b.CommitteMember())
 	proposers, err := s.b.Proposers(rpc.BlockNumber(b.Number().Uint64()))
 	if err != nil {
 		log.Fatal("get proposer error")
 	}
-	var blockGenerationInfo []cpclient.BlockGenerationInfo
+	var blockGenerationInfo cpclient.BlockGenerationInfo
 
-	for i := t * vl * tl; i < b.Header().Number.Uint64(); i++ {
-		view := ((i - 1) % (vl * tl)) / vl
-		header, err := s.b.HeaderByNumber(context.Background(), rpc.BlockNumber(i))
-		if err != nil {
-			log.Error("can't get header", "error", err)
-			return blockGenerationInfo
-		}
-		gen := cpclient.BlockGenerationInfo{
-			View: view, Term: t, Proposer: header.Coinbase, BlockNumber: uint64(rpc.BlockNumber(i)), TermLen: cm, Proposers: proposers,
-		}
-		blockGenerationInfo = append(blockGenerationInfo, gen)
+	header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
+
+	blockGenerationInfo = cpclient.BlockGenerationInfo{
+		View:        v,
+		Term:        t,
+		Proposer:    header.Coinbase,
+		BlockNumber: uint64(rpc.LatestBlockNumber),
+		TermLen:     cm,
+		Proposers:   proposers,
 	}
 
 	return blockGenerationInfo
