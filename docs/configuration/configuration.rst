@@ -5,7 +5,7 @@ Configuration
 MainnetChainId and MainnetNetworkId
 ------------------------
 
-All general configuration have been curated in configs/general.go.
+All general configuration have been curated in ``configs/general.go``.
 Two notable parameters are ``MainnetChainId`` and ``MainnetNetworkId``.
 
 The code below are cited from general.go.
