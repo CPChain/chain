@@ -205,6 +205,9 @@ func buildFlags(env build.Environment) (flags []string) {
 		version = env.Commit
 	}
 	ld = append(ld, "-X", "bitbucket.org/cpchain/chain/configs.Version="+version)
+
+	supportPrivateTx := fmt.Sprint(env.SupportPrivateTx)
+	ld = append(ld, "-X", "bitbucket.org/cpchain/chain/private.SupportPrivateTx="+supportPrivateTx)
 	if runtime.GOOS == "darwin" {
 		ld = append(ld, "-s")
 	}

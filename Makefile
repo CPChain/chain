@@ -15,6 +15,9 @@ SHELL := $(shell which bash)
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
+# NOTE: SUPPORT PRIVATE TRANSACTION
+# To support private transaction functionality, set ENV variable 'PRIVATE_TX' to be true
+# Example: env PRIVATE_TX=true make all
 
 all: cpchain bootnode abigen smartcontract ecpubkey updateproxycontract testtool console
 
