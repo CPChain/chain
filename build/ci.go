@@ -569,7 +569,6 @@ func doXgo(cmdline []string) {
 	args = append(args[:len(args)-1], []string{"--dest", GOBIN, path}...)
 
 	xgo := xgoTool(args)
-	fmt.Printf("xgo=%v", xgo)
 	build.MustRun(xgo)
 }
 
