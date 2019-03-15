@@ -768,3 +768,36 @@ Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1
 
 By summing up above five cases, we can conclude that the theorem holds.
 **Q.E.D**
+
+
+P2P Hierarchy
+-----------------------
+
+As we know all nodes in blockchain network are connecting with each other via P2P method.
+Each node holds a list of peers that it can directly connects
+To enhance connection between committee members,
+we design a hierarchy of P2P connection according to the roles of peers.
+
+Overview
+************
+
+When a node kick-starts CPC and connects to bootnode,
+it receives a list of peers, whose amount is usually 25.
+Via edges between this nodes and its peers, it now connects to the P2P network.
+
+As described in :ref:`consensus`, there are three roles in a consensus process.
+Thus, in total we have 9 possible P2P connection types according to the roles of two peers.
+And we refers to each type in the form of A-B, where A and B can be V, P or C,
+Like P-V refers to P2P connections from P to V.
+
+However, some P2P types in practice do not to be distinguished from each other.
+
++---------------------------+----------------------+--------------+-----------+
+| P2P types                 | Validator            | Proposer     | Civilian  |
++---------------------------+----------------------+--------------+-----------+
+| Validator                 | V-V                  | V-P          | C-C       |
++---------------------------+----------------------+--------------+-----------+
+| Proposer                  | P-V                  | C-C          | C-C       |
++---------------------------+----------------------+--------------+-----------+
+| Civilian                  | C-C                  | C-C          | C-C       |
++---------------------------+----------------------+--------------+-----------+
