@@ -29,7 +29,6 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/commons/time"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
@@ -41,10 +40,10 @@ import (
 var runCommand cli.Command
 
 func init() {
-	err := times.InvalidSystemClock()
-	if err != nil {
-		log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
-	}
+	// err := times.InvalidSystemClock()
+	// if err != nil {
+	// 	log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
+	// }
 
 	runFlags := append([]cli.Flag(nil), flags.RpcFlags...)
 	runFlags = append(runFlags, flags.GeneralFlags...)
@@ -73,6 +72,10 @@ func init() {
 }
 
 func run(ctx *cli.Context) error {
+	if ctx.IsSet(flags.MineFlagName) && ctx.IsSet(flags.ValidatorFlagName) {
+		log.Fatalf("A node cannot be both miner and validator.")
+	}
+
 	n := createNode(ctx)
 	bootstrap(ctx, n)
 	n.Wait()
@@ -85,8 +88,12 @@ func registerChainService(cfg *cpc.Config, n *node.Node, cliCtx *cli.Context) {
 		fullNode, err := cpc.New(ctx, cfg)
 		primitive_register.RegisterPrimitiveContracts()
 
-		if cliCtx.Bool("mine") {
+		if cliCtx.Bool(flags.MineFlagName) {
 			fullNode.SetAsMiner(true)
+		}
+
+		if cliCtx.Bool(flags.ValidatorFlagName) {
+			fullNode.SetAsValidator()
 		}
 		return fullNode, err
 	})
@@ -189,7 +196,7 @@ func handleWallet(n *node.Node) {
 	}()
 }
 
-func startMining(ctx *cli.Context, n *node.Node) {
+func setupMining(ctx *cli.Context, n *node.Node) {
 	var cpchainService *cpc.CpchainService
 	// cpchainService will point to the real cpchain service in n.services
 	if err := n.Service(&cpchainService); err != nil {
@@ -211,6 +218,12 @@ func startMining(ctx *cli.Context, n *node.Node) {
 		}
 		if err := cpchainService.StartMining(true, client); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
+		}
+	}
+
+	if ctx.Bool(flags.ValidatorFlagName) {
+		if err := cpchainService.SetupValidator(client); err != nil {
+			log.Fatalf("Failed to setup validator: %v", err)
 		}
 	}
 }
@@ -275,7 +288,7 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 	startNode(n)
 	unlockAccounts(ctx, n)
 	handleWallet(n)
-	startMining(ctx, n)
+	setupMining(ctx, n)
 	// handle user interrupt
 	go handleInterrupt(n)
 }

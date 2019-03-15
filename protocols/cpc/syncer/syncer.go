@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	cpchain "bitbucket.org/cpchain/chain"
+	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -18,7 +18,11 @@ const (
 )
 
 const (
-	MaxBlockFetch = 128 // Amount of blocks to be fetched per retrieval request
+	MaxBlockFetch   = 128 // Amount of blocks to be fetched per retrieval request
+	MaxHashFetch    = 512 // Amount of hashes to be fetched per retrieval request
+	MaxHeaderFetch  = 192 // Amount of block headers to be fetched per retrieval request
+	MaxReceiptFetch = 256 // Amount of transaction receipts to allow fetching per request
+	MaxStateFetch   = 384 // Amount of node state values to allow fetching per request
 )
 
 var (

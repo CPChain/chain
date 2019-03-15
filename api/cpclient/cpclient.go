@@ -562,6 +562,12 @@ func (c *Client) Campaign(ctx context.Context, terms uint64) error {
 	return nil
 }
 
+func (c *Client) SupportPrivateTx(ctx context.Context) (bool, error) {
+	var result bool
+	err := c.c.CallContext(ctx, &result, "eth_supportPrivateTx")
+	return result, err
+}
+
 func toCallArg(msg cpchain.CallMsg) interface{} {
 	arg := map[string]interface{}{
 		"from": msg.From,

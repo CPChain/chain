@@ -70,6 +70,8 @@ type Dpor struct {
 	isMiner     bool
 	isMinerLock sync.RWMutex
 
+	isValidator int32
+
 	mode      Mode // used for test, always accept a block.
 	fakeFail  uint64
 	fakeDelay time.Duration // Time delay to sleep for before returning from verify
@@ -96,7 +98,8 @@ type Dpor struct {
 	isToCampaign     int32  // indicate whether or not participate campaign, only elected proposer node can do mining
 	// indicate whether the miner is running, there is a case that the dpor is running mining while campaign is stop,
 	// it is by design and actually it does not generate any block in this case.
-	runningMiner int32
+	runningMiner         int32
+	validatorInitialized int32
 }
 
 // SignHash signs a hash msg with dpor coinbase account
@@ -126,6 +129,20 @@ func (d *Dpor) SetAsMiner(isMiner bool) {
 	defer d.isMinerLock.Unlock()
 
 	d.isMiner = isMiner
+}
+
+// IsValidator returns if the node is running as a validator
+func (d *Dpor) IsValidator() bool {
+	return atomic.LoadInt32(&d.isValidator) == 1
+}
+
+// SetAsValidator sets the consensus engine working as a validator
+func (d *Dpor) SetAsValidator(isValidator bool) {
+	if isValidator {
+		atomic.StoreInt32(&d.isValidator, 1)
+	} else {
+		atomic.StoreInt32(&d.isValidator, 0)
+	}
 }
 
 // IsToCampaign returns if it is time to campaign
@@ -184,7 +201,7 @@ func (d *Dpor) SetClient(client backend.ClientBackend) {
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
 // signers set to the ones provided by the user.
-func New(config *configs.DporConfig, db database.Database, acBackend admission.ApiBackend) *Dpor {
+func New(config *configs.DporConfig, db database.Database) *Dpor {
 
 	// Set any missing consensus parameters to their defaults
 	conf := *config
@@ -204,7 +221,6 @@ func New(config *configs.DporConfig, db database.Database, acBackend admission.A
 		dh:           &defaultDporHelper{&defaultDporUtil{}},
 		config:       &conf,
 		handler:      backend.NewHandler(&conf, common.Address{}, db),
-		ac:           acBackend,
 		db:           db,
 		recentSnaps:  recentSnaps,
 		finalSigs:    finalSigs,
@@ -215,14 +231,14 @@ func New(config *configs.DporConfig, db database.Database, acBackend admission.A
 
 // NewFaker creates a new fake dpor
 func NewFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db, nil)
+	d := New(config, db)
 	d.mode = FakeMode
 	return d
 }
 
 // NewDoNothingFaker creates a new fake dpor, do nothing when verifying blocks
 func NewDoNothingFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db, nil)
+	d := New(config, db)
 	d.mode = DoNothingFakeMode
 	return d
 }
@@ -243,7 +259,7 @@ func NewFakeDelayer(config *configs.DporConfig, db database.Database, delay time
 
 // NewPbftFaker creates a new fake dpor to work with pbft, not in use now
 func NewPbftFaker(config *configs.DporConfig, db database.Database) *Dpor {
-	d := New(config, db, nil)
+	d := New(config, db)
 	d.mode = PbftFakeMode
 	return d
 }
@@ -276,6 +292,18 @@ func (d *Dpor) SetChain(blockchain consensus.ChainReadWriter) {
 	d.SetCurrentSnap(snap)
 }
 
+func (d *Dpor) SetupAsValidator(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn, pmSyncFromPeerFn SyncFromPeerFn, pmSyncFromBestPeerFn SyncFromBestPeerFn) {
+	initialized := atomic.LoadInt32(&d.validatorInitialized) > 0
+	// avoid launch handler twice
+	if initialized {
+		return
+	}
+	atomic.StoreInt32(&d.validatorInitialized, 1)
+
+	d.initMinerAndValidator(blockchain, server, pmBroadcastBlockFn, pmSyncFromPeerFn, pmSyncFromBestPeerFn)
+	return
+}
+
 // StartMining starts to create a handler and start it.
 func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn, pmSyncFromPeerFn SyncFromPeerFn, pmSyncFromBestPeerFn SyncFromBestPeerFn) {
 	running := atomic.LoadInt32(&d.runningMiner) > 0
@@ -285,6 +313,11 @@ func (d *Dpor) StartMining(blockchain consensus.ChainReadWriter, server *p2p.Ser
 	}
 	atomic.StoreInt32(&d.runningMiner, 1)
 
+	d.initMinerAndValidator(blockchain, server, pmBroadcastBlockFn, pmSyncFromPeerFn, pmSyncFromBestPeerFn)
+	return
+}
+
+func (d *Dpor) initMinerAndValidator(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn, pmSyncFromPeerFn SyncFromPeerFn, pmSyncFromBestPeerFn SyncFromBestPeerFn) {
 	d.chain = blockchain
 
 	d.pmBroadcastBlockFn = pmBroadcastBlockFn
@@ -359,11 +392,15 @@ func (d *Dpor) PbftStatus() *consensus.PbftStatus {
 
 // HandleMinedBlock receives a block to add to handler's pending block channel
 func (d *Dpor) HandleMinedBlock(block *types.Block) error {
-
 	return d.handler.ReceiveMinedPendingBlock(block)
 }
 
 // ImpeachTimeout returns impeach time out
 func (d *Dpor) ImpeachTimeout() time.Duration {
 	return d.config.ImpeachTimeout
+}
+
+// SetupAdmission setups admission backend
+func (d *Dpor) SetupAdmission(ac admission.ApiBackend) {
+	d.ac = ac
 }

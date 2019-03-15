@@ -23,6 +23,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -146,7 +147,7 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 	var privReceipt *types.Receipt
 	// For private tx, it should process its real private tx payload in participant's node. If account manager is nil,
 	// doesn't process private tx. If the node does not support private transaction, skip it.
-	if tx.IsPrivate() && accm != nil && private.SupportPrivateTx() {
+	if tx.IsPrivate() && accm != nil && SupportPrivateTx(bc) {
 		privReceipt, err = tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, accm)
 		if err != nil {
 			if err == NoPermissionError {
@@ -214,4 +215,16 @@ func tryApplyPrivateTx(config *configs.ChainConfig, bc ChainContext, author *com
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
 	return receipt, nil
+}
+
+// SupportPrivateTx returns a bool value indicating whether it supports private transaction
+func SupportPrivateTx(bc ChainContext) bool {
+	eng := bc.Engine()
+	if eng != nil {
+		if d, ok := eng.(*dpor.Dpor); ok {
+			return (!d.IsValidator()) && private.SupportPrivateTxFlag // validator node cannot handle private tx
+		}
+	}
+
+	return private.SupportPrivateTxFlag
 }
