@@ -295,6 +295,7 @@ type BlockGenerationInfo struct {
 	Proposer    common.Address
 	BlockNumber uint64 // high
 	TermLen     int
+	Proposers   []common.Address
 }
 
 // node status
