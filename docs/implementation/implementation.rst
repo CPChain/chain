@@ -791,13 +791,25 @@ And we refers to each type in the form of A-B, where A and B can be V, P or C,
 Like P-V refers to P2P connections from P to V.
 
 However, some P2P types in practice do not to be distinguished from each other.
+Like for civilians, they have no need to distinguish connections from other civilians,
+or a committee member.
 
-+---------------------------+----------------------+--------------+-----------+
-| P2P types                 | Validator            | Proposer     | Civilian  |
-+---------------------------+----------------------+--------------+-----------+
-| Validator                 | V-V                  | V-P          | C-C       |
-+---------------------------+----------------------+--------------+-----------+
-| Proposer                  | P-V                  | C-C          | C-C       |
-+---------------------------+----------------------+--------------+-----------+
-| Civilian                  | C-C                  | C-C          | C-C       |
-+---------------------------+----------------------+--------------+-----------+
+The table below presents all possible connections and four distinct types.
+
++---------------+-------------+--------------+-----------+
+| P2P types     | Validator   | Proposer     | Civilian  |
++---------------+-------------+--------------+-----------+
+| Validator     | V-V         | V-P          | C-C       |
++---------------+-------------+--------------+-----------+
+| Proposer      | P-V         | C-C          | C-C       |
++---------------+-------------+--------------+-----------+
+| Civilian      | C-C         | C-C          | C-C       |
++---------------+-------------+--------------+-----------+
+
+C-C
+*******
+
+C-C is the basic P2P connection type.
+It serves as the normal P2P connection,
+providing basic functions like receiving blocks and syncing with the chain.
+
