@@ -257,3 +257,111 @@ Use smart contracts to lock deposit, the functions are as follow:
     lock the deposit to fixed range of length of blockchain.
     Reward distribution according to proportion of node's deposits.
     Connection with Reputation list.
+
+
+
+Execution Fee - Gas System
+############################
+
+All operations in CPC is not conducted free.
+An amount of tokens are cost as operation fees,
+whose unit is denoted by **Gas**.
+Gas is measured by the amount of computational overheads when executing a certain operation.
+Every single operation, no matter transaction or smart contract,
+is executed along with gas deducted.
+
+Here we list important definitions:
+
+1. **Gas**, the unit measuring execution fee.
+#. **Gas Limit**, the maximum gas the applicant willing to pay.
+#. **Gas price**, the amount the applicant pays for each unit of gas.
+
+
+Gas
+******
+
+Gas is a special unit, measuring the amount of computational overheads when executing a certain operation.
+Every operation is associated with an fixed number of gas,
+indicating the computational effort of this operation.
+
+All gas-consuming operations are curated in ``configs/protocol_params.go``.
+An instance is shown below,
+demonstrating the value of gas of a non-smart-contract transaction and creating a smart contract.
+
+
+.. code-block:: go
+
+	// Per transaction not creating a contract.
+	// NOTE: Not payable on data of calls between transactions.
+	TxGas                 uint64 = 21000
+	// Per transaction that creates a contract.
+	// NOTE: Not payable on data of calls between transactions.
+	TxGasContractCreation uint64 = 53000
+
+
+Thus, a normal transaction requires 21,000 gas,
+while a smart contract is created at a cost of 53000 gas.
+
+Gas Limit
+*************
+
+
+Gas limit, as its name indicates,
+refers to the maximum gas a node is going to pay in a transaction.
+Apparently, the equation ``gas <= gas limit`` always holds.
+It limits the upper bound of transaction fees in a contract,
+and avoid a contract involving unexpectedly high gas.
+This kind of situation occurs when an error, like too much loops,
+is embedded in the contract.
+
+Gas limit is tunable parameter when a node applies for a transaction.
+We also offer a default setting for it,
+preventing the node from being drained out.
+
+
+Gas Price
+*************
+
+Gas price is the fee for each gas a node pays.
+By analogy, gas is like gallon when fueling a car.
+Gas limit is the fuel tank of the car, limiting maximum gas.
+And gas price is the petroleum price per gallon.
+Thus, the total fee for a transaction is ``gas * gas price``.
+
+When a node applies for a transaction,
+the system calculates a gas price based on transaction history on the chain.
+However, gas price is also tunable.
+A node can define gas price at any value as long as it can afford it.
+Transactions with high gas price have higher chance being selected by committee,
+and further get inserted into the chain.
+But it expenses more for the node.
+In comparison, a low gas price demands low cost of tokens,
+by sacrificing the possibility of being verified by committee.
+
+
+Fee Calculation
+*****************
+
+The fee of a certain transaction is ``gas * gas price``.
+However, for smart contract transaction involving multiple operations,
+fee cannot be determined until the whole transaction terminates.
+Thus, when a node applies for a transaction,
+it is required to pay ``gas limit * gas price`` tokens.
+And after the transaction terminates,
+unused fee ``(gas limit-gas) * gas price`` is refunded to this node.
+
+Note that transaction fee as ``gas * gas price`` is not refundable.
+Even the transaction fails, like an abnormal contract involving gas outnumbering gas limit,
+the system does not refunds deducted fee.
+The rationale is that committee members have assumed their responsibility of
+verifying this transaction at the cost of their computing overheads,
+which should be rewarded with transaction fee.
+In addition, this mechanism avoids malicious nodes
+occupying computing capability of the chain at no cost.
+
+
+
+
+
+
+

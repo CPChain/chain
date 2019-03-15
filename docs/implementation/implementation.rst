@@ -495,6 +495,276 @@ other validators can obtain the certificate.
 
 
 The motivation of introducing this mechanism is to
-implement :ref:`Intra-view Recovery`.
+implement `Intra-view Recovery`_.
 And by utilizing prepare message,
 we can implement it without adding too much code.
+
+
+
+
+.. _recovery:
+
+
+Recovery
+-----------
+
+LBFT 2.0 provides both liveness and safety under the assumption
+that at most one third of validators misbehave in a certain view.
+But without providing a recovery mechanism, the percentage of faulty validators would accumulate,
+outnumber one third, and finally degrade superior safety of LBFT 2.0.
+It motivates us to develop a sophisticated recovery mechanism, such that a delaying validator can catch up others.
+
+Delaying validators are categorized into two different types according to how far behind they are:
+1. The block height of delaying validator is same as the functioning validators
+2. The validator delaying for at least a view.
+
+
+Intra-view Recovery
+*************************
+
+Under the original framework of LBFT 2.0, once a validator has been losing its connection for a state,
+it can hardly join the consensus process at the rest part of this view. Here we give an example.
+
+**Example 1:** validator v\ :sub:`1`\  from a committee of four members, disconnects from the network in the prepare state.
+The other three validators suffice a quorum for a prepare certificate and proceed to commit state.
+Even v\ :sub:`1`\  somehow reconnects to the net, it cannot contribute to collect a commit certificate in this view
+since it has yet collected a prepare certificate missed prepare messages from others.
+
+Without any recovery, v\ :sub:`1`\  would be regarded as a non-responding node,
+and return to normal consensus processing in the next view, after it receives a validate message.
+The intra-view recovery address the problem by appending the certificate to the message.
+Applying intro-view recovery in Example 1,
+the other three validators broadcast a commit message accompanied with a prepare certificate.
+Validator v\ :sub:`1`\  can forward to commit state after it verifies the certificate.
+
+Some readers may wonder that LBFT 2.0 works perfectly as long as the assumptions are kept,
+what the necessity of intra-view recovery is.
+The key reason is that communications between validators are finished in the blink of an eye.
+The possibility that a validator loses some packets is not that low.
+Our experimental results indicate that even in a committee of four loyal validator,
+one of them faces the problem that it lags behind one state every hundreds of blocks.
+
+In practice, we use a prepare message with all signature the validator collects,
+as the certificate.
+Refer to :ref:`transitivity` for detailed implementation.
+
+By introducing intra-view recovery, our system can tolerate two or more distinct validators
+lose their connection in different states.
+Even though this scenario violates our original assumptions, LBFT 2.0 with intra-view recovery reaches a consensus.
+At the cost of larger space consumption for each message, we increase the robustness of the protocol.
+
+
+Extra-view Recovery
+*************************
+
+If intra-view recovery does not work for a validator v and the block height of v is same as the chain,
+it is about to catch up other validators once it receives a validate message.
+As demonstrated in :ref:`LBFT-2-Pseudocode`, validate message (as well as impeach validate mesage) has highest priority,
+which forwards v to idle state of next view regardless of the state of v.
+
+However, if v has been losing its connection for a long time, it should invoke *sync* function.
+Sync function, as indicated by the name, synchronizes with Mainnet chain.
+Then it can rejoin consensus process after receiving validate message of the current view.
+The function is called a validator suspects it is delaying like receiving :ref:`unknown-ancestor-block`.
+
+
+
+
+
+Restore Cache
+***************
+
+Once a block is validated and inserted into the chain, it can be labelled as a permanent data.
+And all permanent data are written in hard disks.
+In comparison, information like current state, collected signatures as well as block caches are temporary data.
+As temporary data are stored in volatile memory, they are not retained once a validator shuts down or restarts.
+Hence, before a validator shuts down, it writes all temporary data in hard disk,
+and retrieves these data after it starts up.
+
+Note that it is highly possible that a validator is lagging behind other committee members after it restarts.
+In this case, it processes the block as explained in :ref:`unknown-ancestor-block`.
+
+
+Failback
+-------------------
+
+Failback is a process to restore the whole system after if all validators halt at the same time.
+Apparently, the chain has to be suspended since no validator can continue working on consensus.
+The main challenge here is to reach a consensus for the first block after all validators reboot.
+
+From the proposer's perspective, it has no clue when the validation system can restore.
+Thus, the first block right after the reboot of validators, must be an impeach block to regain liveness.
+
+As we described in :ref:`impeachment`, the timestamp of an impeach block is determined by previous block.
+In the scenario of failback, we cannot use the equation previousBlockTimestamp+period+timeout to calculate the timestamp,
+since this timestamp is out of date.
+It motivates us to design a mechanism to reach a consensus on the issue of timestamp
+among validators whose local clocks are not consistent.
+
+We are aiming to fulfil two main objectives:
+
+1. Reach a consensus on an impeach block with consistent timestamp
+#. Do not design extra states of validators.
+
+The second objective is to keep simplicity as well as robust of the system.
+By exploiting existent five states to reach a consensus on timestamp,
+we could reduce the risk of introducing new mechanism.
+
+
+Preliminaries
+**********************
+
+
+Let t\ :sub:`i`\   be the local clock of validator v\ :sub:`i`\   .
+Except for assumptions of LBFT 2.0, several more assumptions are required for failback procedure.
+There exist a timestamp T larger than 0 satisfying following assumptions:
+
+    1. The local clocks of all loyal validators (at least 2f+1) are within an interval of T.
+    #. Maximum possible delay of broadcasting messages is less than T/2.
+    #. All validators restarts within a time window of T/2.
+
+The first assumption can be also interpreted as
+max(t\ :sub:`i`\ -t\ :sub:`j`\ ) < T.
+We name it as the sample space of validators.
+This assumption is reasonable since all loyal validators are connecting to the network
+and get their local clock calibrated before reboot.
+
+Now we construct a set of discrete timestamps TS={t|t=2k*T, k is a natural number}.
+A validator v\ :sub:`i`\   chooses timestamp ts for the failback impeach block, satisfying
+
+1. ts\ :sub:`i`\   is an element of TS
+#. ts\ :sub:`i`\   > t\ :sub:`i`\0.
+
+After reboot, all validators are set to idle state.
+When the local clock of v\ :sub:`i`\  is ts\ :sub:`i`\ , it proposes an impeach block with this timestamp,
+and enters impeach prepare state.
+If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T
+v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
+The rest of consensus part are same as LBFT 2.0.
+
+The coefficient 2 in 2T is derived from the second and third assumptions.
+Thus, each validator can receive messages from all other validators within a time window of T.
+
+In practice, T can be set to be 1 minutes.
+Hence, the system can regain its liveness in 4 minutes.
+The pseudocode is shown below.
+
+Failback Pseudocode
+***********************
+
+
+
+    .. code-block:: go
+
+        // this function can only be invoked when reboot
+        func failback () {
+            // v: a validator
+            // t: local clock of v in Unix timestamp
+            T := 1 * time.Minute // 1 minutes
+            set the state to idle state
+
+            // timestamp of failback impeach block
+            Ts1 := (t/(2*T)+1)*2*T
+            // the timestamp if no certificate collected for Ts1
+            Ts2 := Ts1+2*T
+
+            select{
+                case <- Time.after(Ts1)
+                    LBFTFsm20(expiredTimer, idle)
+                case <- Time.after(Ts2)
+                    LBFTFsm20(expiredTimer, idle)
+            }
+
+        }
+
+
+
+
+This approach guarantees that an impeach block can reach validate state
+within a time of at most 2T.
+To prove the correctness of the algorithm, we will discuss several cases.
+
+
+Correctness
+*****************
+
+
+**Theorem 2:**
+*Function* ``failback`` *guarantees that validators committee can reach a consensus on an impeach block within 4T time.*
+
+**Proof:**
+Let v\ :sub:`i`\  represent i-th validator, and t\ :sub:`i`\  be its local clock timestamp.
+Construct a set TS={t|t=2k*T, k is a natural number}.
+Select three elements ts\ :sub:`0`\ , ts\ :sub:`1`\  and ts\ :sub:`2`\   from TS,
+satisfying ts\ :sub:`2`\  = ts\ :sub:`1`\  + 2T= ts\ :sub:`0`\  + 4T,
+ts\ :sub:`0`\  < min(t\ :sub:`i`\ ), and ts\ :sub:`2`\  > max(t\ :sub:`i`\ ).
+
+Here we introduce two subsets of validators, V\ :sub:`1`\   and V\ :sub:`2`\ .
+V\ :sub:`1`\   is made of all validators whose local clocks are smaller than ts\ :sub:`1`\   ,
+and V\ :sub:`2`\   is made of all validators whose local clocks are large than or equal to ts\ :sub:`1`\ .
+
+Here we discuss different cases according to the cardinalities of V\ :sub:`1`\   and V\ :sub:`2`\ .
+
+**Case 1:** |V\ :sub:`2`\ | = 0.
+
+It means all local clocks of loyal validators are between two timestamp ts\ :sub:`1`\   and ts\ :sub:`2`\ .
+This is the simplest scenario. all validators agree on ts\ :sub:`1`\ .
+And the system will insert the impeach block right after f+1 validators passes ts\ :sub:`1`\ .
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
+
+**Case 2:** |V\ :sub:`1`\ | >= f + 1, and |V\ :sub:`2`\ | < f + 1.
+
+It means there are at least f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
+but less than f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\ .
+It is similar to case 1.
+Despite some validators agree on ts\ :sub:`2`\ , they cannot constitute a quorum.
+When f+1 validators from |V\ :sub:`1`\ | passes ts\ :sub:`1`\ ,
+the system will insert an impeach block.
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
+
+**Case 3:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | >= f + 1.
+
+It means there are no more than f+1 validators whose local clocks are smaller than ts\ :sub:`1`\ ,
+but at least f+1 validators with their local clock larger than or equal to ts\ :sub:`1`\ .
+In this case, when f+1 validators from V\ :sub:`2`\   reaches timestamp ts\ :sub:`2`\ ,
+an impeach block certificate can be collected by all online validators.
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`2`\ .
+
+
+**Case 4:** |V\ :sub:`1`\ | < f + 1, and |V\ :sub:`2`\ | < f + 1.
+
+In this case, validators in V\ :sub:`1`\   cannot suffice a certificate for t\ :sub:`1`\ .
+Because at least we have loyal f+1 validators online,
+the equation |V\ :sub:`1`\ |+|V\ :sub:`2`\ | >= f+1 must hold.
+When time flows, validators in V\ :sub:`1`\  gradually pass timestamp ts\ :sub:`2`\ .
+And these validators propose another impeach block agreeing on ts\ :sub:`2`\ .
+Thus, there exists a subset V\ :sub:`1`\ \' of validators in V\ :sub:`1`\
+such that V\ :sub:`1`\   reaches ts\ :sub:`2`\
+and |V\ :sub:`1`\ \'|+|V\ :sub:`2`\ | >= f+1.
+
+Let ts\ :sub:`3`\  be the next timestamp in TS after ts\ :sub:`2`\ ,
+i.e., t2\ :sub:`3`\  = ts\ :sub:`2`\  + 2T.
+As we can see, the validator with largest local timestamp has not reached ts\ :sub:`3`\   yet.
+At this moment, V\ :sub:`1`\  \'+V\ :sub:`2`\   suffices a quorum
+for an impeach block agreeing on ts\ :sub:`2`\ .
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`2`\ .
+
+
+**Case 5:** |V\ :sub:`1`\ | >= f + 1, and |V\ :sub:`2`\ | >= f + 1.
+
+At first glance, it seems impeach block of either ts\ :sub:`1`\   and ts\ :sub:`2`\   is legal.
+However, validators in V\ :sub:`1`\   reaches ts\ :sub:`1`\   earlier than
+counterparts in V\ :sub:`2`\   reaching ts\ :sub:`2`\ .
+The reason is simple, as the the following equation indicates:
+ts\ :sub:`2`\   - max(t\ :sub:`i`\ ) > ts\ :sub:`1`\   + 2T - (min(t\ :sub:`i`\ )+T)
+> ts\ :sub:`1`\    - min(t\ :sub:`i`\ ).
+
+Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1`\ .
+
+
+By summing up above five cases, we can conclude that the theorem holds.
+**Q.E.D**

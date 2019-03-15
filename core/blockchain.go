@@ -113,11 +113,12 @@ type BlockChain struct {
 	currentBlock     atomic.Value // Current head of the block chain
 	currentFastBlock atomic.Value // Current head of the fast-sync chain (may be above the block chain!)
 
-	stateCache   state.Database // State database to reuse between imports (contains state cache)
-	bodyCache    *lru.Cache     // Cache for the most recent block bodies
-	bodyRLPCache *lru.Cache     // Cache for the most recent block bodies in RLP encoded format
-	blockCache   *lru.Cache     // Cache for the most recent entire blocks
-	futureBlocks *lru.Cache     // future blocks are blocks added for later processing
+	stateCache       state.Database // State database to reuse between imports (contains state cache)
+	bodyCache        *lru.Cache     // Cache for the most recent block bodies
+	bodyRLPCache     *lru.Cache     // Cache for the most recent block bodies in RLP encoded format
+	blockCache       *lru.Cache     // Cache for the most recent entire blocks
+	futureBlocks     *lru.Cache     // future blocks are blocks added for later processing
+	unknownAncestors *lru.Cache     // unknown ancestor blocks are blocks added for later processing
 
 	Quit    chan struct{} // blockchain quit channel
 	running int32         // running must be called atomically
@@ -156,6 +157,7 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 	bodyRLPCache, _ := lru.New(bodyCacheLimit)
 	blockCache, _ := lru.New(blockCacheLimit)
 	futureBlocks, _ := lru.New(maxFutureBlocks)
+	unknownAncestors, _ := lru.New(maxFutureBlocks)
 	badBlocks, _ := lru.New(badBlockLimit)
 
 	bc := &BlockChain{
@@ -169,6 +171,7 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 		bodyRLPCache:      bodyRLPCache,
 		blockCache:        blockCache,
 		futureBlocks:      futureBlocks,
+		unknownAncestors:  unknownAncestors,
 		engine:            engine,
 		vmConfig:          vmConfig,
 		badBlocks:         badBlocks,
@@ -737,6 +740,29 @@ func (bc *BlockChain) procFutureBlocks() {
 	}
 }
 
+func (bc *BlockChain) procUnknownAncestors() {
+	blocks := make([]*types.Block, 0, bc.unknownAncestors.Len())
+	for _, hash := range bc.unknownAncestors.Keys() {
+		if block, exist := bc.unknownAncestors.Peek(hash); exist {
+			blocks = append(blocks, block.(*types.Block))
+		}
+	}
+
+	if len(blocks) > 0 {
+		types.BlockBy(types.Number).Sort(blocks)
+
+		// Insert one by one as chain insertion needs contiguous ancestry between blocks
+		for i := range blocks {
+			_, err := bc.InsertChain(blocks[i : i+1])
+			bc.ErrChan <- err
+			log.Debug("err of unknown ancestor insert, go to bc.ErrChan", "err", err)
+			if err == nil || blocks[i].NumberU64() <= bc.CurrentBlock().NumberU64() {
+				bc.unknownAncestors.Remove(blocks[i].Hash())
+			}
+		}
+	}
+}
+
 // WriteStatus status of write
 type WriteStatus byte
 
@@ -1034,8 +1060,6 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 //
 // After insertion is done, all accumulated events will be fired.
 func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
-	bc.insertChainProtectLock.Lock()
-	defer bc.insertChainProtectLock.Unlock()
 
 	if len(chain) == 0 {
 		return 0, nil
@@ -1063,12 +1087,26 @@ func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 	// remove useless prefix
 	chain = chain[outset:]
 
+	for i, block := range chain {
+		_, err := bc.InsertBlock(block)
+		if err != nil {
+			return outset + i, err
+		}
+	}
+
+	return outset + len(chain), nil
+}
+
+func (bc *BlockChain) InsertBlock(block *types.Block) (int, error) {
+	bc.insertChainProtectLock.Lock()
+	defer bc.insertChainProtectLock.Unlock()
+
 	// insert it!
-	n, events, logs, err := bc.insertChain(chain)
+	n, events, logs, err := bc.insertChain(types.Blocks{block})
 	bc.CommitStateDB()
 	bc.PostChainEvents(events, logs)
 
-	return n + outset, err
+	return n, err
 }
 
 // insertChain will execute the actual chain insertion and event aggregation. The
@@ -1199,6 +1237,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			}
 
 		case err == consensus.ErrNotEnoughSigs:
+			return i, events, coalescedLogs, err
+
+		case err == consensus.ErrUnknownAncestor:
+			bc.unknownAncestors.Add(block.Hash(), block)
 			return i, events, coalescedLogs, err
 
 		case err != nil:
@@ -1476,6 +1518,7 @@ func (bc *BlockChain) update() {
 		select {
 		case <-futureTimer.C:
 			bc.procFutureBlocks()
+			bc.procUnknownAncestors()
 
 		case <-bc.Quit:
 			return

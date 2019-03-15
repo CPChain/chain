@@ -751,6 +751,33 @@ func Test_choseSomeProposers(t *testing.T) {
 	}
 }
 
+func Test_choseSomeProposers2(t *testing.T) {
+	proposers := []common.Address{
+		common.HexToAddress("0x0000000000000000000000000000000000000001"),
+		common.HexToAddress("0x0000000000000000000000000000000000000002"),
+	}
+
+	seed := int64(0)
+	wantLen := 1
+
+	chosenProposers := choseSomeProposers(proposers, seed, wantLen)
+
+	fmt.Println("---------------------------")
+	fmt.Println("all proposers")
+	for i, ep := range proposers {
+		fmt.Println("proposer", "idx", i, "addr", ep.Hex())
+	}
+	fmt.Println("---------------------------")
+
+	fmt.Println("---------------------------")
+	fmt.Println("chosen  proposers")
+	for i, ep := range chosenProposers {
+		fmt.Println("proposer", "idx", i, "addr", ep.Hex())
+	}
+	fmt.Println("---------------------------")
+
+}
+
 func Test_evenlyInsertDefaultProposers(t *testing.T) {
 	type args struct {
 		electedProposers       []common.Address

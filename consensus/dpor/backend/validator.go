@@ -3,9 +3,8 @@ package backend
 import (
 	"hash/fnv"
 
-	"bitbucket.org/cpchain/chain/consensus"
-
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -213,9 +212,11 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		correctProposerPeer, exist := vh.dialer.getProposer(correctProposer.Hex())
 		if !exist || correctProposerPeer == nil {
 			log.Debug("proposer for the block is not in local proposer peer set")
+			log.Debug("for this block number, the correct proposer should be", "addr", correctProposer.Hex())
+		} else {
+			log.Debug("for this block number, the correct proposer should be", "addr", correctProposer.Hex(), "ip:port", correctProposerPeer.Peer.RemoteAddr())
 		}
 
-		log.Debug("for this block number, the correct proposer should be", "addr", correctProposer.Hex(), "ip:port", correctProposerPeer.Peer.RemoteAddr())
 		log.Debug("-----------------------------")
 	}
 
@@ -229,8 +230,9 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		vh.unknownAncestorBlocks.AddBlock(input.block)
 
 	default:
-		log.Debug("received an error when run fsm", "err", err)
-		return err
+		log.Error("received an error when run fsm", "err", err)
+
+		return nil
 	}
 
 	// handle fsm result
