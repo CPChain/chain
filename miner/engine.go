@@ -22,6 +22,11 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 )
 
+// delayBeforeSeal returns 80% of the given delay duration
+func delayBeforeSeal(d time.Duration) time.Duration {
+	return d * 4 / 5
+}
+
 const (
 	resultQueueSize = 10
 	// txChanSize is the size of channel listening to NewTxsEvent.
@@ -393,6 +398,15 @@ func (e *engine) commitNewWork() {
 	if err := e.cons.PrepareBlock(e.chain, header); err != nil {
 		log.Error("Failed to prepare header for mining", "err", err)
 		return
+	}
+
+	delay := header.Timestamp().Sub(time.Now())
+	delay = delayBeforeSeal(delay)
+	log.Debug("Waiting for slot to seal", "delay", delay)
+
+	select {
+	case <-time.After(delay):
+		log.Debug("now to make work and try to seal", "delay", delay)
 	}
 
 	err := e.makeCurrentWork(parent, header)
