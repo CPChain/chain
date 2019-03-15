@@ -219,12 +219,13 @@ func tryApplyPrivateTx(config *configs.ChainConfig, bc ChainContext, author *com
 
 // SupportPrivateTx returns a bool value indicating whether it supports private transaction
 func SupportPrivateTx(bc ChainContext) bool {
+	supportPrivate := private.SupportPrivateTx == "true"
 	eng := bc.Engine()
 	if eng != nil {
 		if d, ok := eng.(*dpor.Dpor); ok {
-			return (!d.IsValidator()) && private.SupportPrivateTxFlag // validator node cannot handle private tx
+			return (!d.IsValidator()) && supportPrivate // validator node cannot handle private tx
 		}
 	}
 
-	return private.SupportPrivateTxFlag
+	return supportPrivate
 }

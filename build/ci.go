@@ -205,6 +205,9 @@ func buildFlags(env build.Environment) (flags []string) {
 		version = env.Commit
 	}
 	ld = append(ld, "-X", "bitbucket.org/cpchain/chain/configs.Version="+version)
+
+	supportPrivateTx := fmt.Sprint(env.SupportPrivateTx)
+	ld = append(ld, "-X", "bitbucket.org/cpchain/chain/private.SupportPrivateTx="+supportPrivateTx)
 	if runtime.GOOS == "darwin" {
 		ld = append(ld, "-s")
 	}
@@ -566,6 +569,7 @@ func doXgo(cmdline []string) {
 	args = append(args[:len(args)-1], []string{"--dest", GOBIN, path}...)
 
 	xgo := xgoTool(args)
+	fmt.Printf("xgo=%v", xgo)
 	build.MustRun(xgo)
 }
 

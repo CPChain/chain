@@ -25,7 +25,7 @@ const (
 
 var (
 	// Indicate whether support private transaction functionality
-	SupportPrivateTx bool
+	SupportPrivateTx string
 )
 
 type Config struct {
