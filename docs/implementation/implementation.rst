@@ -813,3 +813,20 @@ C-C is the basic P2P connection type.
 It serves as the normal P2P connection,
 providing basic functions like receiving blocks and syncing with the chain.
 
+
+P-V
+********
+
+P-V the third layer in P2P hierarchy.
+When an RNode is elected as a proposer for a further term,
+it will insert addresses of all validators into its list of peers,
+and updates the connection to P-V.
+The address of validators, unlike other addresses,
+will not be kicked out from the list of peers as long as it yet proposes the block.
+
+V-P
+**********
+
+
+V-V
+*********
