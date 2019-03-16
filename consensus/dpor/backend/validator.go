@@ -188,13 +188,13 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	}
 
 	// if number is equal or less than current number, drop the msg
-	if input.Number() <= currentNumber {
+	if input.Number() < currentNumber {
 		log.Debug("received outdated msg, discarding...")
 		return nil
 	}
 
 	// rebroadcast the msg
-	go vh.reBroadcast(input, msgCode, msg)
+	// go vh.reBroadcast(input, msgCode, msg)
 
 	// this is just for debug
 	switch msgCode {
