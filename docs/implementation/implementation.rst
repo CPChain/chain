@@ -817,7 +817,7 @@ providing basic functions like receiving blocks and syncing with the chain.
 P-V
 ********
 
-P-V the third layer in P2P hierarchy.
+P-V is the third layer in P2P hierarchy.
 When an RNode is elected as a proposer for a further term,
 it will insert addresses of all validators into its list of peers,
 and updates the connection to P-V.
@@ -826,6 +826,8 @@ will not be kicked out from the list of peers as long as it yet proposes the blo
 
 V-P
 **********
+
+V-P is the second layer in the hierarchy.
 
 
 V-V
