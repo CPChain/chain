@@ -1008,8 +1008,7 @@ func (p *LBFT2) tryToImpeach() {
 
 		time.AfterFunc(
 			func() time.Duration {
-				if impeachBlock.Timestamp().Before(time.Now()) {
-					log.Error("impeachment block timestamp is before now", "impeachment block timestamp", impeachBlock.Timestamp(), "now", time.Now())
+				if impeachBlock.Timestamp().Before(time.Now()) && impeachBlock.NumberU64() == 1 {
 					return p.dpor.ImpeachTimeout()
 				}
 				return impeachBlock.Timestamp().Sub(time.Now())
