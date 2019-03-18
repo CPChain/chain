@@ -3,6 +3,7 @@ package times
 import (
 	"errors"
 	"math"
+	"os"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -42,6 +43,11 @@ func NetworkTime(ntpServer []string) (time.Time, error) {
 }
 
 func InvalidSystemClock() error {
+	if os.Getenv("IGNORE_NTP_CHECK") != "" {
+		log.Debug("IGNORE NTP CHECK")
+		return nil
+	}
+
 	networkTime, err := NetworkTime(ntpServerList)
 	if err != nil {
 		// if ntp server not available,do nothing just print warning message.
