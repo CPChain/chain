@@ -12,6 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/commons/time"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -19,9 +20,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
-const (
+var (
 	// defaultTimeGapAllowed is the time gap allowed to build connection with remote peer
-	defaultTimeGapAllowed = time.Second * 5
+	defaultTimeGapAllowed = time.Second * time.Duration(times.MaxGapDuration)
 )
 
 // Action is type enumerator for FSM action
