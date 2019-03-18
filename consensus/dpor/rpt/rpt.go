@@ -38,6 +38,8 @@ import (
 var (
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
+
+	maxRetryGetRpt = 3 // Max times Get Rpt
 )
 
 const (
