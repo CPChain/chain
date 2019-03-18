@@ -13,8 +13,7 @@ import (
 var (
 	InvalidSystemClockErr    = errors.New("invalid system clock,exceed max gap")
 	NtpServerNotAvailableErr = errors.New("ntp server not available")
-
-	MaxGapDuration = 10.0
+	MaxGapDuration           = 10.0 // seconds
 
 	ntpServerList = []string{
 		"0.pool.ntp.org",
