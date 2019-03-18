@@ -151,17 +151,32 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 		log.Error("Get windowSize error", "error", err)
 		return Rpt{Address: address, Rpt: minRptScore}
 	}
-	for i := int64(blockNum); i >= 0 && i >= int64(blockNum)-windowSize.Int64(); i-- {
+	blockInWindow := int64(blockNum) - windowSize.Int64()
+	log.Debug("blockInWindow", "blockInWindow", blockInWindow, "blockNum", blockNum)
+	for i := int64(blockNum); i >= 0 && i >= blockInWindow; i-- {
 		hash := RptHash(RptItems{Nodeaddress: address, Key: uint64(i)})
 		rc, exists := rs.rptcache.Get(hash)
 		if !exists {
-			rptInfo, err := instance.GetRpt(nil, address, new(big.Int).SetInt64(i))
-			if err != nil {
-				log.Error("GetRpt error", "error", err, "address", address.Hex())
+			// try get rpt ${maxRetryGetRpt} times
+			for tryIndex := 0; tryIndex <= maxRetryGetRpt; tryIndex++ {
+				rptInfo, err := instance.GetRpt(nil, address, new(big.Int).SetInt64(i))
+				if err == nil {
+					log.Debug("GetRpt ok", "tryIndex", tryIndex, "hash", hash.Hex(), "blockNum", blockNum, "i", i)
+					rs.rptcache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})
+					rpt += rptInfo.Int64()
+					break
+				}
+
+				log.Error("GetRpt error", "tryIndex", tryIndex, "error", err, "address", address.Hex(), "rs.rptContract", rs.rptContract.Hex(), "i", i, "blockNum", blockNum, "windowSize", windowSize, "blockInWindow", blockInWindow, "hash", hash.Hex())
+				if tryIndex < maxRetryGetRpt {
+					// retry
+					continue
+				}
+				// get rpt failed
+				log.Error("GetRpt failed", "tryIndex", tryIndex, "hash", hash.Hex(), "blockNum", blockNum, "i", i)
 				return Rpt{Address: address, Rpt: minRptScore}
 			}
-			rs.rptcache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})
-			rpt += rptInfo.Int64()
+
 		} else {
 			if value, ok := rc.(Rpt); ok {
 				rpt += value.Rpt
