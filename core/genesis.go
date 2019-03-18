@@ -291,7 +291,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0x5276503e71a98225e89497066eb9815d0f20061089e4a75b64d3702dbf21fae1")
+var MainnetGenesisHash = common.HexToHash("0x8249eccfc92e328e5c047e78485e372bdd32c66aa1ba6f0f258b139f842c4c61")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
@@ -349,12 +349,12 @@ func newTestnetGenesisBlock() *Genesis {
 		GasLimit:   configs.DefaultGasLimitPerBlock,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
-			candidates[0]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[1]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[2]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[3]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[4]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[5]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[0]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[1]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[2]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[3]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[4]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[5]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
 
 			// faucet node
 			common.HexToAddress("0xe83a71428655b9f52ff6dc556e2b37043f39f194"): {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
@@ -378,24 +378,24 @@ func newMainnetGenesisBlock() *Genesis {
 		GasLimit:   configs.DefaultGasLimitPerBlock,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
-			candidates[0]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[1]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[2]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[3]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[4]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[5]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[0]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[1]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[2]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[3]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[4]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[5]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
 
-			candidates[6]:  {Balance: big.NewInt(math.MaxInt64)},
-			candidates[7]:  {Balance: big.NewInt(math.MaxInt64)},
-			candidates[8]:  {Balance: big.NewInt(math.MaxInt64)},
-			candidates[9]:  {Balance: big.NewInt(math.MaxInt64)},
-			candidates[10]: {Balance: big.NewInt(math.MaxInt64)},
-			candidates[11]: {Balance: big.NewInt(math.MaxInt64)},
+			candidates[6]:  {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[7]:  {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[8]:  {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[9]:  {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[10]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
+			candidates[11]: {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
 
 			// contract admin account 21
-			common.HexToAddress("0xb3801b8743dea10c30b0c21cae8b1923d9625f84"): {Balance: big.NewInt(math.MaxInt64)},
+			common.HexToAddress("0xb3801b8743dea10c30b0c21cae8b1923d9625f84"): {Balance: new(big.Int).Mul(big.NewInt(20000000), big.NewInt(configs.Cpc))},
 			// bank 22
-			common.HexToAddress("0xabb528bffc707c2c507307e426ce810a7ad93ed6"): {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
+			common.HexToAddress("0xabb528bffc707c2c507307e426ce810a7ad93ed6"): {Balance: new(big.Int).Mul(big.NewInt(100000000000), big.NewInt(configs.Cpc))},
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
