@@ -794,16 +794,19 @@ However, some P2P types in practice do not to be distinguished from each other.
 Like for civilians, they have no need to distinguish connections from other civilians,
 or a committee member.
 
-The table below presents all possible connections and four distinct types.
+The table below presents all possible connections and four distinct types,
+as well as the number of peers a node holds.
 
 +---------------+-------------+--------------+-----------+
 | P2P types     | Validator   | Proposer     | Civilian  |
++===============+=============+==============+===========+
+| Validator     | V-V         | P-V          | C-C       |
 +---------------+-------------+--------------+-----------+
-| Validator     | V-V         | V-P          | C-C       |
-+---------------+-------------+--------------+-----------+
-| Proposer      | P-V         | C-C          | C-C       |
+| Proposer      | V-P         | C-C          | C-C       |
 +---------------+-------------+--------------+-----------+
 | Civilian      | C-C         | C-C          | C-C       |
++---------------+-------------+--------------+-----------+
+| Num of peers  | 70          | 25           | 25        |
 +---------------+-------------+--------------+-----------+
 
 C-C
@@ -828,7 +831,7 @@ V-P
 **********
 
 V-P is the second layer in the hierarchy.
-
+e
 
 V-V
 *********
