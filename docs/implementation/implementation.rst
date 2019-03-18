@@ -809,6 +809,7 @@ as well as the number of peers a node holds.
 | Num of peers  | 70          | 25           | 25        |
 +---------------+-------------+--------------+-----------+
 
+
 C-C
 *******
 
@@ -823,7 +824,8 @@ P-V
 P-V is the third layer in P2P hierarchy.
 When an RNode is elected as a proposer for a further term,
 it will insert addresses of all validators into its list of peers,
-and updates the connection to P-V.
+and upgrade the connection to P-V.
+Refer to `Upgrade`_ for details.
 The address of validators, unlike other addresses,
 will not be kicked out from the list of peers as long as it yet proposes the block.
 
@@ -831,7 +833,45 @@ V-P
 **********
 
 V-P is the second layer in the hierarchy.
-e
+Once a C-C connection is upgrading to P-V,
+validator also upgrade it to V-P.
+Similar to P-V connection,
+as long as a connection retains as P-V,
+it will be removed from peer list.
+
 
 V-V
 *********
+
+V-V is the highest layer in the hierarchy.
+P2P connections between two validators are always V-V,
+and will never be removed from peer list.
+
+
+Upgrade and Downgrade
+**************************
+
+To prevent unnecessary communication overheads,
+a C-C connection gets updated to P-V or V-P only when necessary.
+
+.. image:: p2p_upgrade.png
+
+*\*: only proposers do not in (i+1), (i+2) and (i+3)-th term are getting downgraded.*
+
+The illustration above shows how a connection gets upgraded and downgraded.
+At the moment that the i-th term finishes, all proposers of (i+3)-th term have been elected.
+And following operations are under execution:
+
+1. Proposers of (i+3)-th term adds non-redundant validators addresses into its peer list.
+#. Then, upgrade these connections with validators to P-V.
+#. Validators adding these proposers of (i+3)-th into its peer list as V-P connections.
+#. Proposers of i-th term downgrade all P-V connections to C-C, if they are not in any future term.
+
+This upgrade process finishes within a term.
+Thus, all proposers of (i+3)-th hold P-V connections with validators in (i+2)-term.
+
+And if the peer list has no vacancy for new addresses,
+a proposer or validator randomly picks some C-C connection addresses,
+and remove them.
+
+
