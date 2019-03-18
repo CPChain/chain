@@ -155,7 +155,7 @@ func (c *Client) GetBlockNumber() *big.Int {
 	var lastBlock BlockNumber
 	err := c.c.CallContext(ctx, &lastBlock, "eth_getBlockByNumber", "latest", true)
 	if err != nil {
-		log.Error("can't get latest block:", err)
+		log.Error("can't get latest block:", "err", err)
 		return big.NewInt(0)
 	}
 	number, err := strconv.ParseInt(lastBlock.Number, 0, 64)
