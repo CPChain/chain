@@ -220,6 +220,15 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		log.Debug("-----------------------------")
 	}
 
+	// if the msg is PreprepareImpeachBlockMsg, or msg code is ImpeachPreprepareMsgCode, the sender must be nil(self)
+	switch msgCode {
+	case ImpeachPreprepareMsgCode:
+		if p != nil {
+			// invalid impeach preprepare msg sender!
+			return nil
+		}
+	}
+
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
 	switch err {

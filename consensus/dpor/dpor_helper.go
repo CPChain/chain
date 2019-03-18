@@ -51,7 +51,6 @@ type defaultDporHelper struct {
 
 // validateBlock checks basic fields in a block
 func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error {
-	// TODO: @AC consider if we need to verify body, as well as process txs and validate state
 	return dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), verifySigs, verifyProposers)
 }
 
