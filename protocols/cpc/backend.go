@@ -53,6 +53,7 @@ import (
 
 var (
 	errForbidValidatorMining = errors.New("Validator is forbidden to mine.")
+	errNotAdmissionKey       = errors.New("Admission key is missing, need to run with --mine flag.")
 )
 
 type LesServer interface {
@@ -387,6 +388,9 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		if dpor.IsValidator() {
 			return errForbidValidatorMining
+		}
+		if s.AdmissionApiBackend.AdmissionKey() == nil {
+			return errNotAdmissionKey
 		}
 
 		if dpor.Coinbase() != coinbase {

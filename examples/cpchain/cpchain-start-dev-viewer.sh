@@ -25,14 +25,14 @@ ipc_path_base=data/cpc-
 
 echo "start civilians unlock"
 nohup $cpchain $args --ipcaddr ${ipc_path_base}11 --datadir data/data11  --rpcaddr 127.0.0.1:8511 --port 30321 \
-         --unlock "0xbc131722d837b7d867212568baceb3a981181443"  --password conf-dev/passwords/password --logfile data/logs/11.log 2>/dev/null &
+         --unlock "0xbc131722d837b7d867212568baceb3a981181443"  --password conf-dev/passwords/password --logfile data/logs/11.log 2>data/logs/11.err.log &
 
 echo "start civilians no unlock"
 nohup $cpchain $args --ipcaddr ${ipc_path_base}12 --datadir data/data12  --rpcaddr 127.0.0.1:8512 --port 30322 \
-    --logfile data/logs/12.log 2>/dev/null &
+    --logfile data/logs/12.log 2>data/logs/12.err.log &
 
 echo "start bank node"
 nohup $cpchain $args --ipcaddr ${ipc_path_base}22 --datadir data/data22  --rpcaddr 127.0.0.1:8522 --port 30332 \
-         --unlock "0xabb528bffc707c2c507307e426ce810a7ad93ed6"  --password conf-dev/passwords/password --logfile data/logs/22.log 2>/dev/null &
+         --unlock "0xabb528bffc707c2c507307e426ce810a7ad93ed6"  --password conf-dev/passwords/password --logfile data/logs/22.log 2>data/logs/22.err.log &
 
 

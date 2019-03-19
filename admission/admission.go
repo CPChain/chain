@@ -196,6 +196,7 @@ func (ac *AdmissionControl) FundForRNode() error {
 		log.Info("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
 		return nil
 	} else {
+		log.Info("not enough money to become RNode")
 		return errNoEnoughMoney
 	}
 }

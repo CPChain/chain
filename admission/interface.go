@@ -50,6 +50,9 @@ type ApiBackend interface {
 	// SetAdmissionKey sets the key for admission control to participate campaign
 	SetAdmissionKey(key *keystore.Key)
 
+	// AdmissionKey returns keystore key
+	AdmissionKey() *keystore.Key
+
 	// RegisterInProcHandler registers the rpc.Server, handles RPC request to process the API requests in process
 	RegisterInProcHandler(localRPCServer *rpc.Server)
 

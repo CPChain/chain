@@ -211,12 +211,13 @@ func setupMining(ctx *cli.Context, n *node.Node) {
 	client := cpclient.NewClient(rpcClient)
 	cpchainService.SetClientForDpor(client)
 
+	// TODO: fix this, do not use *keystore.Key, use wallet instead
+	contractCaller := createContractCaller(ctx, n)
+	if contractCaller != nil {
+		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
+	}
+
 	if ctx.Bool(flags.MineFlagName) {
-		// TODO: fix this, do not use *keystore.Key, use wallet instead
-		contractCaller := createContractCaller(ctx, n)
-		if contractCaller != nil {
-			cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
-		}
 		if err := cpchainService.StartMining(true, client); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
 		}
