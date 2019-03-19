@@ -72,17 +72,55 @@ For more detailed implementation, interested reader can refer to the pseudocode 
 
         // refresh signatures
         func refreshPrepareSignatures(input) {
-            header = header(input)  // Retrieve the block header of given message
+            // Retrieve the block header of given message
+            header := header(input)
             if input contains signs that are not stored in prepareSignatures[header]{
                 append these signs into prepareSignatures[header]
             }
         }
 
         func refreshCommitSignatures(input) {
-            header = header(input)  // Retrieve the block header of given message
+            // Retrieve the block header of given message
+            header := header(input)
             if input contains signs that are not stored in CommitSignatures[header]{
                 append these signs into CommitSignatures[header]
             }
+        }
+
+        // compose a prepare message
+        func composePrepareMsg(input) *Header{
+            // Retrieve the block header of given message
+            ret := header(input)
+            compose a message based on ret
+            // added its own sign into the message
+            append the sign of this validator into PrepareSignatures[ret]
+            return ret
+        }
+
+        // compose a commit message
+        func composeCommitMsg(input) *Header{
+            // Retrieve the block header of given message
+            ret := header(input)
+            compose a message based on ret
+            // added its own sign into the message
+            append the sign of this validator into CommitSignatures[ret]
+            return ret
+        }
+
+        // implementation of composing impeach messages are identical to normal cases' counterparts
+        func composeImpeachPrepareMsg(input) *Header{
+            return composePrepareMsg(input)
+        }
+
+        func composeImpeachCommitMsg(input) *Header{
+            return composeCommitMsg(input)
+        }
+
+        // compose a validate message
+        // note that it returns block
+        func composeValidateMsg(input) *Block{
+            // retrieve the block from the cache with its seal
+            return block.WithSeal(input)
         }
 
         // determine whether a quorum certificate is sufficed
@@ -163,7 +201,9 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 transit to idle state
 
             case commitMsg:
-                if commitCertificate {
+                refreshCommitSignatures(input)
+                if commitCertificate(input) {
+                    validateMsg := composeValidateMsg(input)
                     broadcast validateMsg
                     transit to validate state
                 }
@@ -185,14 +225,17 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 commitHandler(input)
 
             case prepareMsg:
-                if prepareCertificate {
+                refreshPrepareSignatures(input)
+                if prepareCertificate(input) {
                     // it is possible for suffice two certificates simultaneously
-                    if commitCertificate {
+                    if commitCertificate(input) {
+                        validateMsg := composeValidateMsg(input)
                         broadcast validateMsg
                         transit to validate state
                     } else {
                         broadcast prepareMsg    // transitivity of certificate
-                        broadcast commitMsg
+                        commitMsg := composeCommitMsg(input)
+                        broadcast commitMsg     // with its signature
                         transit to commit state
                     }
                 }
@@ -212,20 +255,25 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             case block:
                 if !verifyBlock(block) {
                     propose an impeach block
+                    append its own signature into prepareSignatures[header(b)]
 
                     // a cascade of determination of certificate
                     if impeachPrepareCertificate(b) {
                         if impeachCommitCertificate(b) {
+                            impeachValidateMsg := composeValidateMsg(input)
                             add the impeach block b into cache
                             broadcast impeachValidateMsg
                             transit to validate state
                         } else {
+                            impeachPrepareMsg := composeImpeachPrepareMsg(input)
+                            impeachCommitMsg := composeImpeachCommitMsg(input)
                             add the impeach block b into cache
                             broadcast the impeachPrepareMsg
                             broadcast the impeachCommitMsg
                             transit to impeachCommit state
                         }
                     } else {
+                        impeachPrepareMsg := composeImpeachPrepareMsg(input)
                         add the impeach block b into cache
                         broadcast the impeachPrepareMsg
                         transit to impeachPrepare state
@@ -235,16 +283,20 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                     // a cascade of determination of certificates
                     if prepareCertificate {
                         if commitCertificate {
+                            validateMsg := composeValidateMsg(input)
                             add block into the cache
                             broadcast validateMsg
                             transit to validate state
                         } else {
+                            prepareMsg := composePrepareMsg(input)
+                            commitMsg := composeCommitMsg(input)
                             add block into the cache
                             broadcast prepareMsg
                             broadcast commitMsg
                             transit to commit state
                         }
                     } else {
+                        prepareMsg := composePrepareMsg(input)
                         add block into the cache
                         broadcast prepareMsg
                         transit to prepare state
@@ -273,7 +325,9 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 transit to idle state
 
             case impeachCommitMsg:
+                refreshCommitSignatures(input)
                 if impeachCommitCertificate(input) {
+                    impeachValidateMsg := composeValidateMsg(input)
                     broadcast impeachValidateMsg
                     transit to validate state
                 }
@@ -287,12 +341,15 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 impeachCommitHandler(input)
 
             case impeachPrepareMsg:
+                refreshPrepareSignatures(input)
                 // it is possible to suffice two impeach certificates
                 if impeachPrepareCertificate(input) {
                     if impeachCommitCertificate(input) {
+                        impeachValidateMsg := composeValidateMsg(input)
                         broadcast impeachValidateMsg
                         transit to validate state
                     } else {
+                        impeachCommitMsg := composeImpeachCommitMsg(input)
                         broadcast impeachPrepareMsg // transitivity of certificate
                         broadcast impeachCommitMsg
                         transit to impeachCommit state
@@ -305,20 +362,26 @@ For more detailed implementation, interested reader can refer to the pseudocode 
         func impeachHandler(input) {
             switch input{
             case expiredTimer:
-                propose an impeach block
+                propose an impeach block b
+                append its own signature into prepareSignatures[header(b)]
+
                 // a cascade of determination of certificate
                 if impeachPrepareCertificate(b) {
                     if impeachCommitCertificate(b) {
                         add the impeach block b into cache
+                        impeachValidateMsg := composeValidateMsg(input)
                         broadcast impeachValidateMsg
                         transit to validate state
                     } else {
                         add the impeach block b into cache
+                        impeachPrepareMsg := composeImpeachPrepareMsg(input)
+                        impeachCommitMsg := composeImpeachCommitMsg(input)
                         broadcast the impeachPrepareMsg
                         broadcast the impeachCommitMsg
                         transit to impeachCommit state
                     }
                 } else {
+                    impeachPrepareMsg := composeImpeachPrepareMsg(input)
                     add the impeach block b into cache
                     broadcast the impeachPrepareMsg
                     transit to impeachPrepare state
@@ -825,7 +888,7 @@ P-V is the third layer in P2P hierarchy.
 When an RNode is elected as a proposer for a further term,
 it will insert addresses of all validators into its list of peers,
 and upgrade the connection to P-V.
-Refer to `Upgrade`_ for details.
+Refer to `Upgrade and Downgrade`_ for details.
 The address of validators, unlike other addresses,
 will not be kicked out from the list of peers as long as it yet proposes the block.
 
