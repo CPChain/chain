@@ -54,6 +54,9 @@ echo "chain node number:"
 echo `ps -ef|grep -v grep |grep "cpchain run "|wc -l`
 echo "=========================================================="
 
+echo "wait ntp check"
+sleep 12
+
 echo "[*] deploying ${deploy}"
 # smart contract deploy
 eval "env CPCHAIN_KEYSTORE_FILEPATH=data/data21/keystore/ ${deploy}"

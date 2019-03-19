@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	maxPendingBlocks = 256
+	maxPendingBlocks = 16
 )
 
 var (

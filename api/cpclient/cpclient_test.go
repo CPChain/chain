@@ -95,12 +95,10 @@ func TestGetBlockGenerationInfoList(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	blockGenInfoList, err := client.GetBlockGenerationInfoList(context.Background())
-	fmt.Println("committee is:", blockGenInfoList, len(blockGenInfoList))
-	for _, blockGenInfo := range blockGenInfoList {
-		fmt.Println("blockGenInfo ", "View:", blockGenInfo.View, "Term :", blockGenInfo.Term, "BlockNumber :", blockGenInfo.BlockNumber, "Proposer", blockGenInfo.Proposer)
-	}
-	if len(blockGenInfoList) == 0 || len(blockGenInfoList) > 12 {
+	blockGenInfo, err := client.GetBlockGenerationInfo(context.Background())
+	fmt.Println("committee is:", blockGenInfo, len(blockGenInfo.Proposers))
+	fmt.Println("blockGenInfo ", "View:", blockGenInfo.View, "Term :", blockGenInfo.Term, "BlockNumber :", blockGenInfo.BlockNumber, "Proposer", blockGenInfo.Proposer, "Porposers", blockGenInfo.Proposers)
+	if len(blockGenInfo.Proposers) != 4 {
 		t.Errorf("GetBlockGenerationInfoList failed")
 	}
 }

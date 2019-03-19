@@ -29,6 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/commons/time"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
@@ -40,10 +41,10 @@ import (
 var runCommand cli.Command
 
 func init() {
-	// err := times.InvalidSystemClock()
-	// if err != nil {
-	// 	log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
-	// }
+	err := times.InvalidSystemClock()
+	if err != nil {
+		log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
+	}
 
 	runFlags := append([]cli.Flag(nil), flags.RpcFlags...)
 	runFlags = append(runFlags, flags.GeneralFlags...)

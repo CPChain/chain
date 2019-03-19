@@ -289,12 +289,24 @@ func (p *LBFT2) ImpeachHandler(input *BlockOrHeader, msgCode MsgCode, state cons
 
 		return p.ImpeachPrepareHandler(input, msgCode, state)
 
+	// ImpeachPreprepareMsgCode is only received from local peer, (peer is nil)
 	case ImpeachPreprepareMsgCode:
-		// TODO: fix this, use correct impeach block verify function
 
 		log.Debug("ImpeachHandler to call handleImpeachPreprepareMsg")
 
 		return p.handleImpeachPreprepareMsg(input, state, func(block *types.Block) error {
+
+			// check if impeach coinbase is 0x00
+			if !block.Impeachment() {
+				return consensus.ErrInvalidImpeachCoinbase
+			}
+
+			// check if impeach txs number is 0
+			if len(block.Transactions()) != 0 {
+				return consensus.ErrInvalidImpeachTxs
+			}
+
+			// then verify the block as normal
 			return p.dpor.ValidateBlock(block, false, true)
 		})
 
@@ -996,7 +1008,7 @@ func (p *LBFT2) tryToImpeach() {
 
 		time.AfterFunc(
 			func() time.Duration {
-				if impeachBlock.Timestamp().Before(time.Now()) {
+				if impeachBlock.Timestamp().Before(time.Now()) && impeachBlock.NumberU64() == 1 {
 					return p.dpor.ImpeachTimeout()
 				}
 				return impeachBlock.Timestamp().Sub(time.Now())

@@ -155,7 +155,7 @@ func (c *Client) GetBlockNumber() *big.Int {
 	var lastBlock BlockNumber
 	err := c.c.CallContext(ctx, &lastBlock, "eth_getBlockByNumber", "latest", true)
 	if err != nil {
-		log.Error("can't get latest block:", err)
+		log.Error("can't get latest block:", "err", err)
 		return big.NewInt(0)
 	}
 	number, err := strconv.ParseInt(lastBlock.Number, 0, 64)
@@ -295,6 +295,7 @@ type BlockGenerationInfo struct {
 	Proposer    common.Address
 	BlockNumber uint64 // high
 	TermLen     int
+	Proposers   []common.Address
 }
 
 // node status
@@ -380,8 +381,8 @@ func (c *Client) GetCommitteeNumber(ctx context.Context) (int, error) {
 	return result, err
 }
 
-func (c *Client) GetBlockGenerationInfoList(ctx context.Context) ([]BlockGenerationInfo, error) {
-	var result []BlockGenerationInfo
+func (c *Client) GetBlockGenerationInfo(ctx context.Context) (BlockGenerationInfo, error) {
+	var result BlockGenerationInfo
 	err := c.c.CallContext(ctx, &result, "eth_getBlockGenerationInfo")
 	return result, err
 }
@@ -390,6 +391,13 @@ func (c *Client) GetBlockGenerationInfoList(ctx context.Context) ([]BlockGenerat
 func (c *Client) GetProposerByBlock(ctx context.Context, blockNumber *big.Int) (common.Address, error) {
 	var result common.Address
 	err := c.c.CallContext(ctx, &result, "eth_getProposerByBlock", toBlockNumArg(blockNumber))
+	return result, err
+}
+
+// get the validators specified by block
+func (c *Client) GetValidatorsByBlockNumber(ctx context.Context, blockNumber *big.Int) ([]common.Address, error) {
+	var result []common.Address
+	err := c.c.CallContext(ctx, &result, "eth_getValidatorsByBlockNumber", toBlockNumArg(blockNumber))
 	return result, err
 }
 

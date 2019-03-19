@@ -172,8 +172,6 @@ func (h *Handler) PendingImpeachBlockBroadcastLoop() {
 				isValidator, err := h.dpor.VerifyValidatorOf(h.Coinbase(), h.dpor.TermOf(number))
 
 				if !h.impeachmentRecord.ifImpeached(number, hash) && isValidator && err == nil {
-					// notify other validators
-					go h.BroadcastPreprepareImpeachBlock(impeachBlock)
 
 					// handle the impeach block
 					go h.handleLBFT2Msg(msg, nil)

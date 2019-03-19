@@ -41,6 +41,7 @@ type Environment struct {
 	Buildnum            string
 	IsPullRequest       bool
 	IsCronJob           bool
+	SupportPrivateTx    bool // Indicate whether or not support private transaction
 }
 
 func (env Environment) String() string {
@@ -54,25 +55,27 @@ func Env() Environment {
 	switch {
 	case os.Getenv("CI") == "true" && os.Getenv("TRAVIS") == "true":
 		return Environment{
-			Name:          "travis",
-			Repo:          os.Getenv("TRAVIS_REPO_SLUG"),
-			Commit:        os.Getenv("TRAVIS_COMMIT"),
-			Branch:        os.Getenv("TRAVIS_BRANCH"),
-			Tag:           os.Getenv("TRAVIS_TAG"),
-			Buildnum:      os.Getenv("TRAVIS_BUILD_NUMBER"),
-			IsPullRequest: os.Getenv("TRAVIS_PULL_REQUEST") != "false",
-			IsCronJob:     os.Getenv("TRAVIS_EVENT_TYPE") == "cron",
+			Name:             "travis",
+			Repo:             os.Getenv("TRAVIS_REPO_SLUG"),
+			Commit:           os.Getenv("TRAVIS_COMMIT"),
+			Branch:           os.Getenv("TRAVIS_BRANCH"),
+			Tag:              os.Getenv("TRAVIS_TAG"),
+			Buildnum:         os.Getenv("TRAVIS_BUILD_NUMBER"),
+			IsPullRequest:    os.Getenv("TRAVIS_PULL_REQUEST") != "false",
+			IsCronJob:        os.Getenv("TRAVIS_EVENT_TYPE") == "cron",
+			SupportPrivateTx: os.Getenv("PRIVATE_TX") != "",
 		}
 	case os.Getenv("CI") == "True" && os.Getenv("APPVEYOR") == "True":
 		return Environment{
-			Name:          "appveyor",
-			Repo:          os.Getenv("APPVEYOR_REPO_NAME"),
-			Commit:        os.Getenv("APPVEYOR_REPO_COMMIT"),
-			Branch:        os.Getenv("APPVEYOR_REPO_BRANCH"),
-			Tag:           os.Getenv("APPVEYOR_REPO_TAG_NAME"),
-			Buildnum:      os.Getenv("APPVEYOR_BUILD_NUMBER"),
-			IsPullRequest: os.Getenv("APPVEYOR_PULL_REQUEST_NUMBER") != "",
-			IsCronJob:     os.Getenv("APPVEYOR_SCHEDULED_BUILD") == "True",
+			Name:             "appveyor",
+			Repo:             os.Getenv("APPVEYOR_REPO_NAME"),
+			Commit:           os.Getenv("APPVEYOR_REPO_COMMIT"),
+			Branch:           os.Getenv("APPVEYOR_REPO_BRANCH"),
+			Tag:              os.Getenv("APPVEYOR_REPO_TAG_NAME"),
+			Buildnum:         os.Getenv("APPVEYOR_BUILD_NUMBER"),
+			IsPullRequest:    os.Getenv("APPVEYOR_PULL_REQUEST_NUMBER") != "",
+			IsCronJob:        os.Getenv("APPVEYOR_SCHEDULED_BUILD") == "True",
+			SupportPrivateTx: os.Getenv("PRIVATE_TX") != "",
 		}
 	default:
 		return LocalEnv()
@@ -100,6 +103,7 @@ func LocalEnv() Environment {
 	if info, err := os.Stat(".git/objects"); err == nil && info.IsDir() && env.Tag == "" {
 		env.Tag = firstLine(RunGit("tag", "-l", "--points-at", "HEAD"))
 	}
+	env.SupportPrivateTx = os.Getenv("PRIVATE_TX") != ""
 	return env
 }
 

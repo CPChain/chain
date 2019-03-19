@@ -15,6 +15,9 @@ SHELL := $(shell which bash)
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
+# NOTE: SUPPORT PRIVATE TRANSACTION
+# To support private transaction functionality, set ENV variable 'PRIVATE_TX' to be true
+# Example: env PRIVATE_TX=true make all
 
 all: cpchain bootnode abigen smartcontract ecpubkey updateproxycontract testtool console
 
@@ -64,23 +67,23 @@ testtool:
 	@echo "Run \"$(GOBIN)/testtool\" to launch testtool."
 
 test: all
-	build/env.sh go run build/ci.go test
+	env IGNORE_NTP_CHECK=true build/env.sh go run build/ci.go test
 
 test-nocache: all
-	build/env.sh go run build/ci.go noCacheTest
+	env IGNORE_NTP_CHECK=true build/env.sh go run build/ci.go noCacheTest
 
 test-coverage: all
-	build/env.sh go run build/ci.go test -coverage
+	env IGNORE_NTP_CHECK=true build/env.sh go run build/ci.go test -coverage
 	#go tool cover -html=build/_workspace/coverage.out -o build/_workspace/coverage.html
 	#go tool cover -func=build/_workspace/coverage.out -o build/_workspace/coverage.txt
 	#go get github.com/t-yuki/gocover-cobertura
 	#gocover-cobertura < build/_workspace/coverage.out >  build/_workspace/cobertura.xml
 
 test-race: all
-	build/env.sh go run build/ci.go raceTest
+	env IGNORE_NTP_CHECK=true build/env.sh go run build/ci.go raceTest
 
 test-race-nocache: all
-	build/env.sh go run build/ci.go noCacheRaceTest
+	env IGNORE_NTP_CHECK=true build/env.sh go run build/ci.go noCacheRaceTest
 
 lint: ## Run linters.
 	build/env.sh go run build/ci.go lint
