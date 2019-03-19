@@ -272,6 +272,7 @@ func (ac *AdmissionControl) waitSendCampaignMsg(terms uint64) {
 			ac.mutex.Lock()
 			ac.err = work.error()
 			ac.mutex.Unlock()
+			log.Info("work is not pass ac", "error is", work.error())
 			return
 		}
 	}
