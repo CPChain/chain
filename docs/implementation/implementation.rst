@@ -22,6 +22,11 @@ And the message box near the arrow represents the message broadcast to other nod
 .. image:: lbft_fsm.png
 
 
+
+
+
+
+
 .. _LBFT-2-Pseudocode:
 
 
@@ -31,7 +36,8 @@ LBFT 2.0 Pseudocode
 For more detailed implementation, interested reader can refer to the pseudocode below (the grammar is close to golang).
 
 
-**FSM for LBFT 2.0**
+FSM for LBFT 2.0
+**********************
 
 
     .. code-block:: go
@@ -53,7 +59,8 @@ For more detailed implementation, interested reader can refer to the pseudocode 
                 impeachCommitHandler(input)
         }
 
-**Utilities**
+Utilities
+*******************
 
     .. code-block:: go
 
@@ -159,8 +166,8 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             }
         }
 
-**Normal Case Handlers**
-
+Normal Case Handlers
+**************************
 
     .. code-block:: go
 
@@ -305,7 +312,9 @@ For more detailed implementation, interested reader can refer to the pseudocode 
             }
         }
 
-**Impeachment Handlers**
+Impeachment Handlers
+****************************************
+
 
     .. code-block:: go
 
@@ -564,6 +573,12 @@ we can implement it without adding too much code.
 
 
 
+Minimum P2P Connections
+---------------------------
+
+One notable thing is that a validator does not proceed until it connects to 2f validators.
+In other word, the committee contains a strongly connected component of at least 2f+1 validators,
+which eliminates a situation where two separated components of more than f+1 validators
 
 .. _recovery:
 
