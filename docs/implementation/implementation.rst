@@ -577,8 +577,10 @@ Minimum P2P Connections
 ---------------------------
 
 One notable thing is that a validator does not proceed until it connects to 2f validators.
-In other word, the committee contains a strongly connected component of at least 2f+1 validators,
-which eliminates a situation where two separated components of more than f+1 validators
+In other word, the committee contains a strongly connected component of at least 2f+1 validators.
+It is aiming to eliminates a situation
+where two separated components of more than f+1 validators form two weak quorum simultaneously.
+
 
 .. _recovery:
 
