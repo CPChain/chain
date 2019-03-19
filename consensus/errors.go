@@ -55,4 +55,10 @@ var (
 
 	// ErrInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	ErrInvalidSigners = errors.New("invalid signer list on checkpoint block")
+
+	// ErrInvalidImpeachCoinbase is returned if an impeach block's coinbase is not 0x00.
+	ErrInvalidImpeachCoinbase = errors.New("invalid impeach coinbase")
+
+	// ErrInvalidImpeachTxs is returned if an impeach block contrains txs
+	ErrInvalidImpeachTxs = errors.New("invalid impeach txs")
 )

@@ -58,7 +58,7 @@ func (s *RemoteValidator) broadcastLoop() {
 
 				return
 			}
-			log.Debug("Propagated generated block", "number", block.NumberU64(), "hash", block.Hash())
+			log.Debug("Propagated generated block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 		case header := <-s.queuedPrepareHeaders:
 			if err := s.SendPrepareHeader(header); err != nil {
@@ -67,7 +67,7 @@ func (s *RemoteValidator) broadcastLoop() {
 
 				return
 			}
-			log.Debug("Propagated signed prepare header", "number", header.Number, "hash", header.Hash())
+			log.Debug("Propagated signed prepare header", "number", header.Number, "hash", header.Hash().Hex())
 
 		case header := <-s.queuedCommitHeaders:
 			if err := s.SendCommitHeader(header); err != nil {
@@ -76,7 +76,7 @@ func (s *RemoteValidator) broadcastLoop() {
 
 				return
 			}
-			log.Debug("Propagated signed commit header", "number", header.Number, "hash", header.Hash())
+			log.Debug("Propagated signed commit header", "number", header.Number, "hash", header.Hash().Hex())
 
 		case block := <-s.queuedValidateBlocks:
 			if err := s.SendValidateBlock(block); err != nil {
@@ -85,13 +85,13 @@ func (s *RemoteValidator) broadcastLoop() {
 
 				return
 			}
-			log.Debug("Propagated validate block", "number", block.NumberU64(), "hash", block.Hash())
+			log.Debug("Propagated validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 		case block := <-s.queuedPreprepareImpeachBlocks:
 			if err := s.SendPreprepareImpeachBlock(block); err != nil {
 				return
 			}
-			log.Debug("Propagated generated impeach block", "number", block.Number(), "hash", block.Hash())
+			log.Debug("Propagated generated impeach block", "number", block.Number(), "hash", block.Hash().Hex())
 
 		case header := <-s.queuedPrepareImpeachHeaders:
 			if err := s.SendPrepareImpeachHeader(header); err != nil {
@@ -100,7 +100,7 @@ func (s *RemoteValidator) broadcastLoop() {
 
 				return
 			}
-			log.Debug("Propagated signed impeach prepare header", "number", header.Number, "hash", header.Hash())
+			log.Debug("Propagated signed impeach prepare header", "number", header.Number, "hash", header.Hash().Hex())
 
 		case header := <-s.queuedCommitImpeachHeaders:
 			if err := s.SendCommitImpeachHeader(header); err != nil {
@@ -109,16 +109,16 @@ func (s *RemoteValidator) broadcastLoop() {
 
 				return
 			}
-			log.Debug("Propagated signed impeach commit header", "number", header.Number, "hash", header.Hash())
+			log.Debug("Propagated signed impeach commit header", "number", header.Number, "hash", header.Hash().Hex())
 
 		case block := <-s.queuedValidateImpeachBlocks:
 			if err := s.SendImpeachValidateBlock(block); err != nil {
 
-				log.Warn("failed to propagate impeach validate block", "number", block.NumberU64(), "hash", block.Hash(), "err", err)
+				log.Warn("failed to propagate impeach validate block", "number", block.NumberU64(), "hash", block.Hash().Hex(), "err", err)
 
 				return
 			}
-			log.Debug("Propagated impeach validate block", "number", block.NumberU64(), "hash", block.Hash())
+			log.Debug("Propagated impeach validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 		case <-s.quitCh:
 			return
@@ -142,7 +142,7 @@ func (s *RemoteValidator) AsyncSendPreprepareBlock(block *types.Block) {
 	select {
 	case s.queuedPreprepareBlocks <- block:
 	default:
-		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash().Hex())
 	}
 }
 
@@ -157,7 +157,7 @@ func (s *RemoteValidator) AsyncSendPreprepareImpeachBlock(block *types.Block) {
 	select {
 	case s.queuedPreprepareImpeachBlocks <- block:
 	default:
-		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash().Hex())
 	}
 }
 
@@ -172,7 +172,7 @@ func (s *RemoteValidator) AsyncSendPrepareHeader(header *types.Header) {
 	select {
 	case s.queuedPrepareHeaders <- header:
 	default:
-		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash().Hex())
 	}
 }
 
@@ -187,7 +187,7 @@ func (s *RemoteValidator) AsyncSendPrepareImpeachHeader(header *types.Header) {
 	select {
 	case s.queuedPrepareImpeachHeaders <- header:
 	default:
-		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash().Hex())
 	}
 }
 
@@ -202,7 +202,7 @@ func (s *RemoteValidator) AsyncSendCommitHeader(header *types.Header) {
 	select {
 	case s.queuedCommitHeaders <- header:
 	default:
-		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash().Hex())
 	}
 }
 
@@ -217,7 +217,7 @@ func (s *RemoteValidator) AsyncSendCommitImpeachHeader(header *types.Header) {
 	select {
 	case s.queuedCommitImpeachHeaders <- header:
 	default:
-		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash())
+		log.Debug("Dropping signature propagation", "number", header.Number, "hash", header.Hash().Hex())
 	}
 }
 
@@ -232,7 +232,7 @@ func (s *RemoteValidator) AsyncSendValidateBlock(block *types.Block) {
 	select {
 	case s.queuedValidateBlocks <- block:
 	default:
-		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash().Hex())
 	}
 }
 
@@ -247,6 +247,6 @@ func (s *RemoteValidator) AsyncSendImpeachValidateBlock(block *types.Block) {
 	select {
 	case s.queuedValidateImpeachBlocks <- block:
 	default:
-		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash())
+		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash().Hex())
 	}
 }
