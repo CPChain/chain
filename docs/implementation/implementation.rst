@@ -768,3 +768,110 @@ Thus, the validators committee can collect an impeach certificate at ts\ :sub:`1
 
 By summing up above five cases, we can conclude that the theorem holds.
 **Q.E.D**
+
+
+P2P Hierarchy
+-----------------------
+
+As we know all nodes in blockchain network are connecting with each other via P2P method.
+Each node holds a list of peers that it can directly connects
+To enhance connection between committee members,
+we design a hierarchy of P2P connection according to the roles of peers.
+
+Overview
+************
+
+When a node kick-starts CPC and connects to bootnode,
+it receives a list of peers, whose amount is usually 25.
+Via edges between this nodes and its peers, it now connects to the P2P network.
+
+As described in :ref:`consensus`, there are three roles in a consensus process.
+Thus, in total we have 9 possible P2P connection types according to the roles of two peers.
+And we refers to each type in the form of A-B, where A and B can be V, P or C,
+Like P-V refers to P2P connections from P to V.
+
+However, some P2P types in practice do not to be distinguished from each other.
+Like for civilians, they have no need to distinguish connections from other civilians,
+or a committee member.
+
+The table below presents all possible connections and four distinct types,
+as well as the number of peers a node holds.
+
++---------------+-------------+--------------+-----------+
+| P2P types     | Validator   | Proposer     | Civilian  |
++===============+=============+==============+===========+
+| Validator     | V-V         | P-V          | C-C       |
++---------------+-------------+--------------+-----------+
+| Proposer      | V-P         | C-C          | C-C       |
++---------------+-------------+--------------+-----------+
+| Civilian      | C-C         | C-C          | C-C       |
++---------------+-------------+--------------+-----------+
+| Num of peers  | 70          | 25           | 25        |
++---------------+-------------+--------------+-----------+
+
+
+C-C
+*******
+
+C-C is the basic P2P connection type.
+It serves as the normal P2P connection,
+providing basic functions like receiving blocks and syncing with the chain.
+
+
+P-V
+********
+
+P-V is the third layer in P2P hierarchy.
+When an RNode is elected as a proposer for a further term,
+it will insert addresses of all validators into its list of peers,
+and upgrade the connection to P-V.
+Refer to `Upgrade`_ for details.
+The address of validators, unlike other addresses,
+will not be kicked out from the list of peers as long as it yet proposes the block.
+
+V-P
+**********
+
+V-P is the second layer in the hierarchy.
+Once a C-C connection is upgrading to P-V,
+validator also upgrade it to V-P.
+Similar to P-V connection,
+as long as a connection retains as P-V,
+it will be removed from peer list.
+
+
+V-V
+*********
+
+V-V is the highest layer in the hierarchy.
+P2P connections between two validators are always V-V,
+and will never be removed from peer list.
+
+
+Upgrade and Downgrade
+**************************
+
+To prevent unnecessary communication overheads,
+a C-C connection gets updated to P-V or V-P only when necessary.
+
+.. image:: p2p_upgrade.png
+
+*\*: only proposers do not in (i+1), (i+2) and (i+3)-th term are getting downgraded.*
+
+The illustration above shows how a connection gets upgraded and downgraded.
+At the moment that the i-th term finishes, all proposers of (i+3)-th term have been elected.
+And following operations are under execution:
+
+1. Proposers of (i+3)-th term adds non-redundant validators addresses into its peer list.
+#. Then, upgrade these connections with validators to P-V.
+#. Validators adding these proposers of (i+3)-th into its peer list as V-P connections.
+#. Proposers of i-th term downgrade all P-V connections to C-C, if they are not in any future term.
+
+This upgrade process finishes within a term.
+Thus, all proposers of (i+3)-th hold P-V connections with validators in (i+2)-term.
+
+And if the peer list has no vacancy for new addresses,
+a proposer or validator randomly picks some C-C connection addresses,
+and remove them.
+
+
