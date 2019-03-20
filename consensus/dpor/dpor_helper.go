@@ -239,6 +239,11 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 	log.Debug("defaultDporHelper snapshot", "number", number, "hash", hash.Hex(), "len(parent and itself)", len(chainSeg))
 
+	// return early if already know it!
+	if dpor.CurrentSnap() != nil && dpor.CurrentSnap().hash() == hash {
+		return dpor.CurrentSnap(), nil
+	}
+
 	numberIter := number
 	for snap == nil {
 

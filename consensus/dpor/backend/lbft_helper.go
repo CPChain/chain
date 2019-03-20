@@ -117,7 +117,7 @@ func (sc *signaturesForBlockCaches) addSignatureFor(bi BlockIdentifier, signer c
 		log.Warn("err when saving signatures to db", "err", err, "number", bi.number, "hash", bi.hash.Hex())
 	}
 
-	log.Warn("saved signatures to db", "number", bi.number, "hash", bi.hash.Hex())
+	log.Debug("saved signatures to db", "number", bi.number, "hash", bi.hash.Hex())
 }
 
 func (sc *signaturesForBlockCaches) getSignatureFor(bi BlockIdentifier, signer common.Address) (types.DporSignature, bool) {

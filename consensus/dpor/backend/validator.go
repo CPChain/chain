@@ -66,8 +66,15 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	var (
 		input         = &BlockOrHeader{}
 		msgCode       = NoMsgCode
-		currentNumber = vh.dpor.GetCurrentBlock().NumberU64()
+		currentNumber = uint64(0)
 	)
+
+	currentBlock := vh.dpor.GetCurrentBlock()
+	if currentBlock == nil {
+		log.Warn("current block is nil")
+		return nil
+	}
+	currentNumber = currentBlock.NumberU64()
 
 	switch msg.Code {
 	case PreprepareBlockMsg:
