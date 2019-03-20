@@ -165,6 +165,35 @@ A node has to meet one of the following requirements to become a Reputation Node
 Reputation Nodes have the right to be elected as
 a proposers committee member and to be granted rewards from the Blockchain.
 
+Hardware Specification
+***************************
+
+
+Minimum Requirement
+--------------------------
+
+* Memory: 4GB
+
+* Storage: 256GB
+
+* CPU: Intel Xeon E5-1650 v3 (alike)
+
+* Network: 300Mbps
+
+
+
+Recommended Requirement
+--------------------------------
+
+- Memory: 16GB
+
+- Storage: 1TB
+
+- CPU: Intel Xeon E5-2686 v4 (alike)
+
+- Network: 1Gbps
+
+
 Node Entitlements & Rewards
 *******************************
 
