@@ -25,6 +25,7 @@ import (
 type Result struct {
 	BlockNumber int64  `json:"block_number"`
 	Nonce       uint64 `json:"nonce"`
+	Success     bool   `json:"success"`
 }
 
 type workStatus = uint32

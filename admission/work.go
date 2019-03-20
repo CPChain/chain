@@ -57,10 +57,14 @@ func newWork(difficulty uint64, timeout time.Duration, address common.Address, h
 func (w *work) result() Result {
 	w.mutex.RLock()
 	defer w.mutex.RUnlock()
-
+	var nonce uint64 = 0
+	if w.err == nil {
+		nonce = w.nonce
+	}
 	return Result{
 		BlockNumber: w.header.Number.Int64(),
-		Nonce:       w.nonce,
+		Nonce:       nonce,
+		Success:     w.err == nil,
 	}
 }
 
