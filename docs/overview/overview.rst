@@ -30,6 +30,7 @@ RPT Contract
    **Data Contribution (DC)**,
    **Blockchain Maintenance (BM)**,
    and **Proxy Reputation (PR)**.
+   Refer to `RNode RPT Evaluation`_ for detailed implementation.
 
    By invoking function ``getRpt()``, developer can obtain the reputation value of corresponding node.
    RPT contract can be updated by contract deployer to avoid some faulty nodes maliciously increasing their RPT values.
@@ -164,6 +165,14 @@ A node has to meet one of the following requirements to become a Reputation Node
 
 Reputation Nodes have the right to be elected as
 a proposers committee member and to be granted rewards from the Blockchain.
+
+
+RNode RPT Evaluation
+*******************************
+
+As stated in `RPT Contract`_,
+
+
 
 Hardware Specification
 ***************************
