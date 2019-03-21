@@ -1,5 +1,7 @@
+.. _overview:
+
 Overview
-~~~~~~~~~~~
+===============
 
 What is CPChain
 ################
@@ -30,7 +32,7 @@ RPT Contract
    **Data Contribution (DC)**,
    **Blockchain Maintenance (BM)**,
    and **Proxy Reputation (PR)**.
-   Refer to `RNode RPT Evaluation`_ for detailed implementation.
+   Refer to `RPT Evaluation`_ for detailed implementation.
 
    By invoking function ``getRpt()``, developer can obtain the reputation value of corresponding node.
    RPT contract can be updated by contract deployer to avoid some faulty nodes maliciously increasing their RPT values.
@@ -138,7 +140,7 @@ CPChain Nodes Roles
 
 **Economy Node**: Requires a minimum of 20,000 CPC tokens for participation.
 Investors who meet this requirement may participate as
- an economy node and have the right to vote in the community.
+an economy node and have the right to vote in the community.
 
 **Reputation Node**: Requires a minimum of 200,000 CPC tokens for participation.
 Investors with the basic configuration of computing and
@@ -167,11 +169,26 @@ Reputation Nodes have the right to be elected as
 a proposers committee member and to be granted rewards from the Blockchain.
 
 
-RNode RPT Evaluation
+RPT Evaluation
 *******************************
 
-As stated in `RPT Contract`_,
+RPT (abbreviated from reputation) value of a node is evaluated by extracting data from blockchain.
+By employing `RPT Contract`_, a node can evaluates its RPT value by following five dimensions:
 
+- **Account Balance（AB)**,
+- **Transaction (TX)**,
+- **Data Contribution (DC)**,
+- **Blockchain Maintenance (BM)**,
+- **Proxy Reputation (PR)**.
+
+
+The total score is calculated as
+
+RPT=0.5\*AB(Account Balance)+
+0.15\*Tx(Transaction)+
+0.1\*PR(Proxy Reputation)+
+0.15\*DC(Data Contribution)
++0.1\*BM(Blockchain Maintenance)
 
 
 Hardware Specification
@@ -179,7 +196,7 @@ Hardware Specification
 
 
 Minimum Requirement
---------------------------
+++++++++++++++++++++++++
 
 * Memory: 4GB
 
@@ -192,7 +209,7 @@ Minimum Requirement
 
 
 Recommended Requirement
---------------------------------
+++++++++++++++++++++++++++
 
 - Memory: 16GB
 
@@ -277,6 +294,7 @@ Therefore, we conclude the reward and supply in the table below.
 +--------+--------+---------------+--------------+
 | 5      | 4.03   |  3,162,240*   | 12,743,827.2 |
 +--------+--------+---------------+--------------+
+
 \* Both the first and the fifth year contain a leap day (29 Feb 2020 and 2024, respectively),
 which results in a larger number of generated blocks compared to the other three years.
 
