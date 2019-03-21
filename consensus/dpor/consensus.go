@@ -35,7 +35,7 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	defaultCampaignTerms = uint64(10) // Default number of terms to campaign for proposer committee.
+	defaultCampaignTerms = uint64(3) // Default number of terms to campaign for proposer committee.
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
