@@ -12,7 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/commons/time"
+	times "bitbucket.org/cpchain/chain/commons/time"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -144,6 +144,9 @@ type ConsensusStateMachine interface {
 // DporService provides functions used by dpor handler
 type DporService interface {
 
+	// Coinbase returns current coinbase
+	Coinbase() common.Address
+
 	// TermLength returns term length
 	TermLength() uint64
 
@@ -152,6 +155,9 @@ type DporService interface {
 
 	// ValidatorsNum returns number of validators
 	ValidatorsNum() uint64
+
+	// Period returns period of block generation
+	Period() time.Duration
 
 	// TermOf returns the term number of given block number
 	TermOf(number uint64) uint64

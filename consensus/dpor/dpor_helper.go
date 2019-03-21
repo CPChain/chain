@@ -495,13 +495,6 @@ func (dh *defaultDporHelper) verifySignatures(dpor *Dpor, chain consensus.ChainR
 		}
 	}
 
-	if (dpor.IsMiner() || dpor.IsValidator()) && dh.isTimeToDialValidators(dpor, dpor.chain) {
-		err = dh.updateAndDial(dpor, snap, number)
-		if err != nil {
-			return err
-		}
-	}
-
 	// pass
 	return nil
 }
@@ -600,63 +593,4 @@ func (dh *defaultDporHelper) signHeader(dpor *Dpor, chain consensus.ChainReader,
 	}
 	log.Warn("signing block failed", "error", errValidatorNotInCommittee)
 	return errValidatorNotInCommittee
-}
-
-// isTimeToDialValidators checks if it is time to dial remote signers, and dials them if time is up
-func (dh *defaultDporHelper) isTimeToDialValidators(dpor *Dpor, chain consensus.ChainReader) bool {
-	header := chain.CurrentHeader()
-	number := header.Number.Uint64()
-	snap := dpor.CurrentSnap()
-
-	isStartElec := snap.isStartElection()
-	if !isStartElec {
-		return false
-	}
-
-	// Some debug info
-	log.Debug("my address", "eb", dpor.Coinbase().Hex())
-	log.Debug("current block number", "number", number)
-	log.Debug("ISCheckPoint", "bool", IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen))
-	log.Debug("is future signer", "bool", snap.IsFutureProposerOf(dpor.Coinbase(), number))
-	log.Debug("term idx of block number", "block term index", snap.TermOf(number))
-
-	log.Debug("recent proposers: ")
-	for i := snap.TermOf(number); i < snap.TermOf(number)+5; i++ {
-		log.Debug("----------------------")
-		log.Debug("proposers in snapshot of:", "term idx", i)
-		for _, p := range snap.getRecentProposers(i) {
-			log.Debug("proposer", "s", p.Hex())
-		}
-		log.Debug("validators in snapshot of:", "term idx", i)
-		for _, v := range snap.getRecentValidators(i) {
-			log.Debug("validator", "s", v.Hex())
-		}
-		log.Debug("----------------------")
-	}
-
-	// If in a checkpoint and self is in the future committee, try to build the committee network
-	isCheckpoint := IsCheckPoint(number, dpor.config.TermLen, dpor.config.ViewLen)
-	isFutureProposer := snap.IsFutureProposerOf(dpor.Coinbase(), number)
-
-	return isCheckpoint && isFutureProposer
-}
-
-func (dh *defaultDporHelper) updateAndDial(dpor *Dpor, snap *DporSnapshot, number uint64) error {
-	log.Info("In future committee, building the committee network...")
-
-	var (
-		term       = snap.FutureTermOf(number)
-		validators = snap.FutureValidatorsOf(number)
-	)
-
-	go func(term uint64, remoteValidators []common.Address) {
-
-		// Dial all remote validators
-		if err := dpor.handler.DialAllRemoteValidators(term); err != nil {
-			log.Warn("err when dialing remote validators", "err", err)
-		}
-
-	}(term, validators)
-
-	return nil
 }
