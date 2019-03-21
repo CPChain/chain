@@ -36,13 +36,21 @@ define
 
 end define;
 
-macro fsm(v) begin
-    either v.state = 0
-        v.state 1 := 0
-    or v.state = 1
+macro fsm(v, input) begin
+    either \* idle state
+        await v.state = 0;
+        await input = "block";
+        v.state := 1
+    or  \* prepare state
+        await v.state = 1;
+        await input = "prepareMsg";
+        await prepareCertificate(v);
         v.state := 2
-    or v.state = 2
-        v.stat := 1
+    or  \* commit state
+        await v.state = 2;
+        await input = "commitMsg";
+        await commitCertificate(v);
+        v.state := 0
     end either
 end macro;
 
@@ -90,5 +98,5 @@ Spec == Init /\ [][Next]_vars
 \* END TRANSLATION
 =============================================================================
 \* Modification History
-\* Last modified Wed Mar 20 20:33:03 CST 2019 by Dell
+\* Last modified Thu Mar 21 20:34:20 CST 2019 by Dell
 \* Created Thu Feb 21 18:37:39 CST 2019 by Dell
