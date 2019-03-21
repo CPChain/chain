@@ -222,6 +222,7 @@ var P2pFlags = []cli.Flag{
 	cli.IntFlag{
 		Name:  MaxPeersFlagName,
 		Usage: "Maximum number of network peers (network disabled if set to 0)",
+		Value: 100,
 	},
 	cli.IntFlag{
 		Name:  MaxPendingPeersFlagName,
