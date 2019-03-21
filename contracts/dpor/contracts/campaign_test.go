@@ -179,6 +179,12 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
 	assertCampaign(1, numOfCampaign, t)
 
+	// go forward to next term
+	numPerRnd, _ := campaign.NumPerRound()
+	for i := int64(1); i < numPerRnd.Int64(); i++ {
+		contractBackend.Commit()
+	}
+
 	tx, err = campaign.ClaimCampaign(big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
 	checkError(t, "ClaimCampaign error: %v", err)
 	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
