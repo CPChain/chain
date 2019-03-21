@@ -29,7 +29,7 @@ func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteS
 	}())
 }
 
-func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
+func (vh *Handler) handleSignerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
 	switch msg.Code {
 	case NewSignerMsg:
 
@@ -50,13 +50,19 @@ func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.
 		// if current or future proposer, add to local peer set
 		if vh.dialer.isCurrentOrFutureProposer(address, term, futureTerm) {
 			vh.dialer.addRemoteProposer(version, p, rw, address)
+			log.Debug("added the signer as a proposer", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
 		}
 
-		log.Debug("added the signer as a proposer", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
+		// if current or future validator, add to local peer set
+		if vh.dialer.isCurrentOrFutureValidator(address, term, futureTerm) {
+			vh.dialer.addRemoteValidator(version, p, rw, address)
+			log.Debug("added the signer as a validator", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
+		}
+
 		return address.Hex(), nil
 
 	default:
-		log.Warn("unknown msg code", "msg", msg.Code)
+		log.Warn("unknown msg code when handling signer connection msg", "msg", msg.Code)
 	}
 	return common.Address{}.Hex(), nil
 }
@@ -66,8 +72,15 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	var (
 		input         = &BlockOrHeader{}
 		msgCode       = NoMsgCode
-		currentNumber = vh.dpor.GetCurrentBlock().NumberU64()
+		currentNumber = uint64(0)
 	)
+
+	currentBlock := vh.dpor.GetCurrentBlock()
+	if currentBlock == nil {
+		log.Warn("current block is nil")
+		return nil
+	}
+	currentNumber = currentBlock.NumberU64()
 
 	switch msg.Code {
 	case PreprepareBlockMsg:

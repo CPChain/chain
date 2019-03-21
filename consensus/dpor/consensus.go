@@ -35,7 +35,7 @@ import (
 
 // Dpor proof-of-reputation protocol constants.
 const (
-	defaultCampaignTerms = uint64(10) // Default number of terms to campaign for proposer committee.
+	defaultCampaignTerms = uint64(3) // Default number of terms to campaign for proposer committee.
 
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -350,19 +350,23 @@ func (d *Dpor) CanMakeBlock(chain consensus.ChainReader, coinbase common.Address
 	// Bail out if we're unauthorized to sign a block
 	snap, err := d.dh.snapshot(d, chain, number, parent.Hash(), nil)
 	if err != nil {
+		log.Debug("Error occurs when create a snapshot", "error", err)
 		return false
 	}
+
+	log.Debug("created an snapshot")
 
 	// check if it is the in-charge proposer for next block
 	ok, err := snap.IsProposerOf(coinbase, number+1)
 	if err != nil {
+		log.Debug("Error occurs when check if it is proposer", "error", err)
 		if err == errProposerNotInCommittee {
 			return false
 		}
-		log.Debug("Error occurs when check if it is proposer", "error", err)
 		return false
-
 	}
+	log.Debug("now can finished CanMakeBlock call", "ok", ok)
+
 	return ok
 }
 

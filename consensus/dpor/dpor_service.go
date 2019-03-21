@@ -17,6 +17,11 @@ import (
 
 // Those are functions implement backend.DporService
 
+// Period returns period of block generation
+func (d *Dpor) Period() time.Duration {
+	return d.config.PeriodDuration()
+}
+
 // TermLength returns term length
 func (d *Dpor) TermLength() uint64 {
 	return d.config.TermLen

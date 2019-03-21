@@ -473,49 +473,6 @@ func TestSnapshot_signers(t *testing.T) {
 	}
 }
 
-func TestSnapshot_signerRound(t *testing.T) {
-	type fields struct {
-		config        *configs.DporConfig
-		sigcache      *lru.ARCCache
-		Number        uint64
-		Hash          common.Hash
-		Candidates    []common.Address
-		RecentSigners map[uint64][]common.Address
-	}
-	type args struct {
-		signer common.Address
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    int
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &DporSnapshot{
-				config: tt.fields.config,
-				// sigcache:      tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Candidates: tt.fields.Candidates,
-				// RecentSigners: tt.fields.RecentSigners,
-			}
-			got, err := s.ProposerViewOf(tt.args.signer, tt.fields.Number)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("DporSnapshot.signerRound(%v) error = %v, wantErr %v", tt.args.signer, err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("DporSnapshot.signerRound(%v) = %v, want %v", tt.args.signer, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestSnapshot_isSigner(t *testing.T) {
 	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress()[1:2], getValidatorAddress(), FakeMode)
 	isSinger, _ := snap.IsProposerOf(addr1, 1)
@@ -561,32 +518,6 @@ func TestSnapshot_isNotLeader(t *testing.T) {
 	isLeader, _ = snap.IsProposerOf(addr3, 1)
 	if isLeader {
 		t.Errorf("expect isLeader false get %v", isLeader)
-	}
-}
-
-func TestSnapshot_signerRoundFail(t *testing.T) {
-	snap := createSnapshot()
-	round, err := snap.ProposerViewOf(addr4, snap.Number)
-	if err == nil || round != -1 {
-		t.Errorf("expect round %v, get %v", -1, round)
-	}
-}
-
-func TestSnapshot_signerRoundOk(t *testing.T) {
-	snap := createSnapshot()
-	round, err := snap.ProposerViewOf(addr1, snap.Number)
-	if err != nil || round != 0 {
-		t.Errorf("expect round %v, get %v", 0, round)
-	}
-
-	round, err = snap.ProposerViewOf(addr2, snap.Number)
-	if err != nil || round != 1 {
-		t.Errorf("expect round %v, get %v", 1, round)
-	}
-
-	round, err = snap.ProposerViewOf(addr3, snap.Number)
-	if err != nil || round != 2 {
-		t.Errorf("expect round %v, get %v", 2, round)
 	}
 }
 

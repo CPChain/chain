@@ -601,16 +601,6 @@ func (s *DporSnapshot) ValidatorViewOf(validator common.Address, number uint64) 
 	return -1, errValidatorNotInCommittee
 }
 
-// ProposerViewOf returns the proposer's view(turn) with given proposer's address and block number
-func (s *DporSnapshot) ProposerViewOf(proposer common.Address, number uint64) (int, error) {
-	for view, s := range s.ProposersOf(number) {
-		if s == proposer {
-			return view, nil
-		}
-	}
-	return -1, errProposerNotInCommittee
-}
-
 // IsValidatorOf returns if an address is a validator in the given block number
 func (s *DporSnapshot) IsValidatorOf(validator common.Address, number uint64) bool {
 	_, err := s.ValidatorViewOf(validator, number)
@@ -622,12 +612,15 @@ func (s *DporSnapshot) IsProposerOf(signer common.Address, number uint64) (bool,
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
-	view, err := s.ProposerViewOf(signer, number)
-	if err != nil {
-		return false, err
+	proposers := s.ProposersOf(number)
+	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) / s.config.ViewLen)
+	if idx >= 0 && idx < len(proposers) {
+		if proposers[idx] == signer {
+			return true, nil
+		}
 	}
-	b := view == int(((number-1)%(s.config.TermLen*s.config.ViewLen))/s.config.ViewLen)
-	return b, nil
+
+	return false, errProposerNotInCommittee
 }
 
 // FutureValidatorsOf returns future validators of given block number
