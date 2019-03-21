@@ -141,12 +141,12 @@ contract Campaign {
 
         updateCandidateStatus(); // update status first then check
 
+        address candidate = msg.sender;
+
         require(
             candidates[candidate].numOfCampaign == 0,
             "please waite until your last round ended and try again."
         );
-
-        address candidate = msg.sender;
 
         candidates[candidate].numOfCampaign = _numOfCampaign;
         candidates[candidate].startTermIdx = termIdx.add(1);
@@ -172,11 +172,11 @@ contract Campaign {
         }
 
         uint size;
-        for(; withdrawTermIdx < termIdx; withdrawTermIdx++) {
+        for(; withdrawTermIdx <= termIdx; withdrawTermIdx++) {
             // avoid recalculate the size for circulation times.
             size = campaignSnapshots[withdrawTermIdx].values.length;
             for(uint i = 0; i < size; i++) {
-                address candidate = campaignSnapshots[termIdx].values[i];
+                address candidate = campaignSnapshots[withdrawTermIdx].values[i];
 
                 if (candidates[candidate].numOfCampaign == 0) {
                     continue;
