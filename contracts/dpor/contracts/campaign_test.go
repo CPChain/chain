@@ -184,9 +184,9 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 		t.Fatal("termIdx is not correct", "expected", 1, "actual", termIdx1)
 	}
 
-	// go forward to next 2 terms
+	// go forward to next term
 	numPerRnd, _ := campaign.NumPerRound()
-	for i := int64(0); i < numPerRnd.Int64()*2; i++ {
+	for i := int64(0); i < numPerRnd.Int64(); i++ {
 		contractBackend.Commit()
 	}
 
@@ -199,7 +199,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 
 	// termIdx should be updated to current
 	termIdx2, err := campaign.TermIdx()
-	if termIdx2.Uint64() != uint64(2) {
+	if termIdx2.Uint64() != uint64(1) {
 		t.Fatal("termIdx is not correct", "expected", 1, "actual", termIdx2)
 	}
 

@@ -172,7 +172,7 @@ contract Campaign {
         }
 
         uint size;
-        for(; withdrawTermIdx < termIdx; withdrawTermIdx++) {
+        for(; withdrawTermIdx <= termIdx; withdrawTermIdx++) {
             // avoid recalculate the size for circulation times.
             size = campaignSnapshots[withdrawTermIdx].values.length;
             for(uint i = 0; i < size; i++) {
