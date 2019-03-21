@@ -179,17 +179,29 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
 	assertCampaign(1, numOfCampaign, t)
 
-	// go forward to next term
+	termIdx1, err := campaign.TermIdx()
+	if termIdx1.Uint64() != uint64(0) {
+		t.Fatal("termIdx is not correct", "expected", 1, "actual", termIdx1)
+	}
+
+	// go forward to next 2 terms
 	numPerRnd, _ := campaign.NumPerRound()
-	for i := int64(1); i < numPerRnd.Int64(); i++ {
+	for i := int64(0); i < numPerRnd.Int64()*2; i++ {
 		contractBackend.Commit()
 	}
 
 	tx, err = campaign.ClaimCampaign(big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
+
 	checkError(t, "ClaimCampaign error: %v", err)
 	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
 	contractBackend.Commit()
 	printBalance(contractBackend)
+
+	// termIdx should be updated to current
+	termIdx2, err := campaign.TermIdx()
+	if termIdx2.Uint64() != uint64(2) {
+		t.Fatal("termIdx is not correct", "expected", 1, "actual", termIdx2)
+	}
 
 	// test contract map variable call.
 	numOfCampaign, startViewIdx, endViewIdx, err = campaign.CandidateInfoOf(addr)

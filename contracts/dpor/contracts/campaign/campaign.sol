@@ -176,7 +176,7 @@ contract Campaign {
             // avoid recalculate the size for circulation times.
             size = campaignSnapshots[withdrawTermIdx].values.length;
             for(uint i = 0; i < size; i++) {
-                address candidate = campaignSnapshots[termIdx].values[i];
+                address candidate = campaignSnapshots[withdrawTermIdx].values[i];
 
                 if (candidates[candidate].numOfCampaign == 0) {
                     continue;
