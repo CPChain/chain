@@ -55,21 +55,21 @@ that there exist a quorum agree on a prepare message and a commit message respec
     a. Block production
         i. An ordinary user claims campaign, undergoes the admission qualification, and then enters the *candidate list*.
         #. After being elected in a periodical election, a candidate enters a block proposer committee.
-        #. When it comes its view, the proposer proposes a block and broadcasts to all validators.
+        #. When it comes its block height, the proposer proposes a block and broadcasts to all validators.
     #. Block validation
         i. Once receives a newly proposed block, a validator in validators committee tries to verify the block.
         #. This `Verification of Blocks`_ process scrutinizes the seal of proposer, timestamp, etc.
         #. If true, this validator broadcast a PREPARE message to other validators; otherwise, it enters Abnormal Case 2 or 3.
         #. Once receives 2f+1 PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
         #. Once received 2f+1 COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these 2f+1 validators' signatures to all users.
-        #. Once A validator receives the VALIDATE message for the first time in a view, it broadcasts a same message to all nodes.
+        #. Once a validator receives the VALIDATE message for the first time in a block height, it broadcasts a same message to all nodes.
         #. Any user receives this VALIDATE message with enough signatures, insert the block into local chain
 
 
 #. **Abnormal Cases**
     a. Abnormal Case 1: *A validator does not receive a block from the proposer:*
         i. It is for the case when Step 1.b.a cannot be reached
-        #. Let the previousBlockTimestamp be the timestamp of block proposed in previous view, and period is the minimum interval between two blocks.
+        #. Let the previousBlockTimestamp be the timestamp of block proposed in previous block height, and period is the minimum interval between two blocks.
         #. A timer is set up when reaching the timestamp of previousBlockTimestamp+period.
         #. If the timer expires, the validators committee activates *impeachment*, a two-phase protocol in PBFT manner to propose an impeach block on behalf of the faulty proposer.
     #. Abnormal Case 2: *The proposer proposes one or more faulty blocks*
@@ -125,7 +125,8 @@ Impeachment Steps
 **********************
 
 1. A validator v in the committee generates an impeachment block
-    i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout, where previousBlockTimestamp is the timestamp of block proposed in previous view, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
+    i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout.
+    #. Here previousBlockTimestamp is the timestamp of block proposed in previous block height, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
     #. The *seal* in the header is set to be empty
     #. A penalty on proposer is the only transaction in the block's body
 #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
@@ -141,7 +142,7 @@ Explanation
 
 Three things are noteworthy here.
 The first is that impeachment only requires two state instead of three in original PBFT.
-The second one is that block can endorse a newly proposed block and an impeach block in a view.
+The second one is that a validator can endorse a newly proposed block and an impeach block in a block height.
 The last one is that only a weak quorum certificate of f+1 members is required in impeachment consensus.
 
 The absence of an idle state, or pre-prepare state in PBFT, results from the unnecessity of a leader.
@@ -310,7 +311,7 @@ Thus, all nodes can obtain an identical list of proposers for this term.
 Now let's dive in these fields of ``Dpor``
 
 ``Seal``, is the signature of the proposer.
-A validator reject the block if this value is not the proper proposer of this view.
+A validator rejects the block if this value is not the proper proposer of this block height.
 Note that ``Coinbase`` can be decoded from ``Seal``.
 Thus in most cases, these two attributes are referring to a same node.
 
@@ -566,7 +567,8 @@ or by :ref:`recovery`.
 
 Similar to the first scenario, v records it in the cache without signing it.
 A quorum can still complete the consensus on b.
-When it comes to the correct view of p\ :sub:`2`\ , if p\ :sub:`2`\   proposes the block again, then it is going to be processed normally.
+When it comes to the correct block height of p\ :sub:`2`\ , if p\ :sub:`2`\   proposes the block again,
+then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
 
 **Third and fourth scenario:** v cannot recognize p\ :sub:`2`\   as a proposer.
@@ -695,7 +697,8 @@ And insistence on P-certificate indicates that
 a replica does not changes its endorsement in a query once it collects a prepare certificate.
 
 In other word, LBFT 2.0 has weaker assumption, higher liveness and more complicated faulty
-leader handler. Note that the view change reduces the faulty leader problem into a normal case
+leader handler.
+Note that the view change reduces the faulty leader problem into a normal case
 handler in the next view. We cannot adopt similar method since our high command on liveness.
 Liveness is also the reason that a validator cannot insist on a P-certificate.
 
