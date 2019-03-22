@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
+func waitForEnoughValidators(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
 	for {
 		select {
 		case <-quitCh:
@@ -21,7 +21,26 @@ func waitForEnoughValidator(h *Handler, term uint64, quitCh chan struct{}) (vali
 
 			validators = h.dialer.ValidatorsOfTerm(term)
 
-			if len(validators) >= int(h.dpor.ValidatorsNum()-h.fsm.Faulty())-1 {
+			if len(validators) >= int(2*h.fsm.Faulty()) {
+				return
+			}
+
+			time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
+		}
+	}
+}
+
+func waitForEnoughImpeachValidators(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
+	for {
+		select {
+		case <-quitCh:
+			return
+
+		default:
+
+			validators = h.dialer.ValidatorsOfTerm(term)
+
+			if len(validators) >= int(h.fsm.Faulty()) {
 				return
 			}
 
@@ -36,7 +55,7 @@ func (h *Handler) BroadcastPreprepareBlock(block *types.Block) {
 	log.Debug("broadcasting preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForEnoughValidator(h, term, h.quitCh)
+	validators := waitForEnoughValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPreprepareBlock(block)
@@ -49,7 +68,7 @@ func (h *Handler) BroadcastPreprepareImpeachBlock(block *types.Block) {
 	log.Debug("broadcasting preprepare impeach block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForEnoughValidator(h, term, h.quitCh)
+	validators := waitForEnoughImpeachValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPreprepareImpeachBlock(block)
@@ -62,7 +81,7 @@ func (h *Handler) BroadcastPrepareHeader(header *types.Header) {
 	log.Debug("broadcasting prepare header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := waitForEnoughValidator(h, term, h.quitCh)
+	validators := waitForEnoughValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPrepareHeader(header)
@@ -75,7 +94,7 @@ func (h *Handler) BroadcastPrepareImpeachHeader(header *types.Header) {
 	log.Debug("broadcasting prepare impeach header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := waitForEnoughValidator(h, term, h.quitCh)
+	validators := waitForEnoughImpeachValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPrepareImpeachHeader(header)
@@ -88,7 +107,7 @@ func (h *Handler) BroadcastCommitHeader(header *types.Header) {
 	log.Debug("broadcasting commit header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := waitForEnoughValidator(h, term, h.quitCh)
+	validators := waitForEnoughValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendCommitHeader(header)
@@ -101,7 +120,7 @@ func (h *Handler) BroadcastCommitImpeachHeader(header *types.Header) {
 	log.Debug("broadcasting commit impeach header", "number", header.Number.Uint64(), "hash", header.Hash().Hex())
 
 	term := h.dpor.TermOf(header.Number.Uint64())
-	validators := waitForEnoughValidator(h, term, h.quitCh)
+	validators := waitForEnoughImpeachValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendCommitImpeachHeader(header)
@@ -114,7 +133,7 @@ func (h *Handler) BroadcastValidateBlock(block *types.Block) {
 	log.Debug("broadcasting validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForEnoughValidator(h, term, h.quitCh)
+	validators := waitForEnoughValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendValidateBlock(block)
@@ -127,7 +146,7 @@ func (h *Handler) BroadcastValidateImpeachBlock(block *types.Block) {
 	log.Debug("broadcasting validate impeach block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForEnoughValidator(h, term, h.quitCh)
+	validators := waitForEnoughImpeachValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendImpeachValidateBlock(block)
