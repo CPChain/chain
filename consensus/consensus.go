@@ -35,6 +35,10 @@ type ChainReader interface {
 	// CurrentHeader retrieves the current header from the local chain.
 	CurrentHeader() *types.Header
 
+	// CurrentBlock retrieves the current head block of the canonical chain. The
+	// block is retrieved from the blockchain's internal cache.
+	CurrentBlock() *types.Block
+
 	// GetHeader retrieves a block header from the database by hash and number.
 	GetHeader(hash common.Hash, number uint64) *types.Header
 

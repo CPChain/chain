@@ -358,6 +358,11 @@ func (hc *HeaderChain) CurrentHeader() *types.Header {
 	return hc.currentHeader.Load().(*types.Header)
 }
 
+// CurrentBlock returns nil!
+func (hc *HeaderChain) CurrentBlock() *types.Block {
+	return nil
+}
+
 // SetCurrentHeader sets the current head header of the canonical chain.
 func (hc *HeaderChain) SetCurrentHeader(head *types.Header) {
 	rawdb.WriteHeadHeaderHash(hc.chainDb, head.Hash())
