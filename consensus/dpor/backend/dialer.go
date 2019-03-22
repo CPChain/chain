@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	defaultDialPeriod            = 5 * time.Second
 	maxNumOfRemoteSignersInCache = 200
 )
 
@@ -388,7 +389,7 @@ func enodeIDWithoutPort(enode string) string {
 // and disconnect remote validators if it is not
 func (d *Dialer) KeepConnection() {
 
-	futureTimer := time.NewTicker(d.dpor.Period())
+	futureTimer := time.NewTicker(defaultDialPeriod)
 	defer futureTimer.Stop()
 	for {
 		select {

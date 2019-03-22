@@ -972,7 +972,14 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 	number := block.NumberU64()
 
 	if number <= p.number {
+		log.Debug("handling unknown ancestor block, number too low, return", "number", number, "hash", block.Hash().Hex(), "lbft.number", p.number)
 		return
+	}
+
+	// if term is larger than local, sync!
+	if p.dpor.TermOf(number) > p.dpor.TermOf(p.number) {
+		log.Debug("handling unknown ancestor block, term large than current, syncing", "number", number, "hash", block.Hash().Hex(), "lbft.number", p.number)
+		go p.dpor.Synchronize()
 	}
 
 	// recover proposer's address
@@ -994,11 +1001,6 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 			log.Warn("failed to add block to cache", "number", number, "hash", block.Hash().Hex(), "error", err)
 		}
 		return
-	}
-
-	// if term is larger than local, sync!
-	if p.dpor.TermOf(number) > p.dpor.TermOf(p.number) {
-		go p.dpor.Synchronize()
 	}
 }
 

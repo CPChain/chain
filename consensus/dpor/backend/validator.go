@@ -211,9 +211,6 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		return nil
 	}
 
-	// rebroadcast the msg
-	// go vh.reBroadcast(input, msgCode, msg)
-
 	// this is just for debug
 	switch msgCode {
 	// if received a impeach validate msg, log out some debug infos
@@ -247,6 +244,9 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 	}
 
+	// rebroadcast the msg
+	// go vh.reBroadcast(input, msgCode)
+
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
 	switch err {
@@ -255,6 +255,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		log.Debug("added block to unknown ancestor cache", "number", input.Number(), "hash", input.Hash().Hex())
 
 		vh.unknownAncestorBlocks.AddBlock(input.block)
+		return nil
 
 	default:
 		log.Error("received an error when run fsm", "err", err)
@@ -346,12 +347,14 @@ type msgID struct {
 	msgHash common.Hash
 }
 
-func newMsgID(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) msgID {
+func newMsgID(number uint64, hash common.Hash, msgCode MsgCode, signatures []types.DporSignature) msgID {
 
 	var payload []byte
+	for _, s := range signatures {
+		payload = append(payload, s[:]...)
+	}
+
 	msgHash := fnv.New32a()
-	msg.Payload.Read(payload)
-	// msgHash.Write([]byte(msg.String()))
 	msgHash.Write(payload)
 
 	return msgID{
@@ -372,13 +375,13 @@ func newBroadcastRecord() *broadcastRecord {
 	}
 }
 
-func (br *broadcastRecord) markAsBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) {
-	msgID := newMsgID(number, hash, msgCode, msg)
+func (br *broadcastRecord) markAsBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, signatures []types.DporSignature) {
+	msgID := newMsgID(number, hash, msgCode, signatures)
 	br.record.Add(msgID, true)
 }
 
-func (br *broadcastRecord) ifBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) bool {
-	msgID := newMsgID(number, hash, msgCode, msg)
+func (br *broadcastRecord) ifBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, signatures []types.DporSignature) bool {
+	msgID := newMsgID(number, hash, msgCode, signatures)
 	broadcasted, exists := br.record.Get(msgID)
 	return exists && broadcasted.(bool) == true
 }
@@ -405,8 +408,18 @@ func (ir *impeachmentRecord) ifImpeached(number uint64, hash common.Hash) bool {
 	return exists && impeached.(bool) == true
 }
 
-func (vh *Handler) reBroadcast(input *BlockOrHeader, msgCode MsgCode, msg p2p.Msg) {
-	if !vh.broadcastRecord.ifBroadcasted(input.Number(), input.Hash(), msgCode, msg) {
+func (vh *Handler) reBroadcast(input *BlockOrHeader, msgCode MsgCode) {
+	var signatures []types.DporSignature
+
+	if input.IsBlock() {
+		signatures = input.block.Dpor().Sigs
+	} else if input.IsHeader() {
+		signatures = input.header.Dpor.Sigs
+	} else {
+		return
+	}
+
+	if !vh.broadcastRecord.ifBroadcasted(input.Number(), input.Hash(), msgCode, signatures) {
 		switch msgCode {
 		case PreprepareMsgCode:
 			vh.BroadcastPreprepareBlock(input.block)
@@ -426,6 +439,6 @@ func (vh *Handler) reBroadcast(input *BlockOrHeader, msgCode MsgCode, msg p2p.Ms
 			vh.BroadcastValidateImpeachBlock(input.block)
 		default:
 		}
-		vh.broadcastRecord.markAsBroadcasted(input.Number(), input.Hash(), msgCode, msg)
+		vh.broadcastRecord.markAsBroadcasted(input.Number(), input.Hash(), msgCode, signatures)
 	}
 }
