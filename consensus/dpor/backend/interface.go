@@ -310,3 +310,16 @@ func ValidMacSig(mac string, sig []byte) (valid bool, signer common.Address, err
 
 	return
 }
+
+// IsCheckPoint returns if a given block number is in a checkpoint with given
+// termLen and viewLen
+func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
+	if number == 0 {
+		return false
+	}
+
+	if termLen == 0 || viewLen == 0 {
+		return true
+	}
+	return number%(termLen*viewLen) == 0
+}

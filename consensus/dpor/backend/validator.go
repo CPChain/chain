@@ -41,8 +41,13 @@ func (vh *Handler) handleSignerConnectionMsg(version int, p *p2p.Peer, rw p2p.Ms
 			return common.Address{}.Hex(), err
 		}
 
+		blk := vh.dpor.GetCurrentBlock()
+		if blk == nil {
+			return "", errNilBlock
+		}
+
 		var (
-			currectNumber = vh.dpor.GetCurrentBlock().NumberU64()
+			currectNumber = blk.NumberU64()
 			term          = vh.dpor.TermOf(currectNumber)
 			futureTerm    = vh.dpor.FutureTermOf(currectNumber)
 		)
