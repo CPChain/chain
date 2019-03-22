@@ -150,7 +150,7 @@ func (re *RptEvaluator) Maintenance(address common.Address, number uint64) (int6
 		return 0, nil
 	}
 	block, err := re.ChainClient.BlockByNumber(context.Background(), big.NewInt(int64(number)))
-	if err != nil {
+	if block == nil || err != nil {
 		log.Error("error with bc.getIfLeader", "error", err)
 		return 0, err
 	}
