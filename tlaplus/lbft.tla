@@ -7,10 +7,10 @@ variables
     proposers = <<"p1","p2">>,
     \* sequence of proposers
     validators = <<
-    [state |-> 0, preSig |-> <<>>, cmtSig |-><<>>, impPreSig |-><<>>, impCmtSig |-><<>>],
-    [state |-> 0, preSig |-> <<>>, cmtSig |-><<>>, impPreSig |-><<>>, impCmtSig |-><<>>],
-    [state |-> 0, preSig |-> <<>>, cmtSig |-><<>>, impPreSig |-><<>>, impCmtSig |-><<>>],
-    [state |-> 0, preSig |-> <<>>, cmtSig |-><<>>, impPreSig |-><<>>, impCmtSig |-><<>>]
+    [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}],
+    [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}],
+    [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}],
+    [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}]
     >>,
     \* sequence of validators
     \* 0,1,2 represent idle, prepare, commit
@@ -36,20 +36,27 @@ define
 
 end define;
 
-macro fsm(v, input) begin
+
+macro fsm(v, inputType) begin
     either \* idle state
         await v.state = 0;
-        await input = "block";
+        await inputType = "block";
         v.state := 1
+
     or  \* prepare state
         await v.state = 1;
-        await input = "prepareMsg";
+        await inputType = "prepareMsg";
+        v.prepareSig := v.prepareSig \union {input.prepareSig};
         await prepareCertificate(v);
+        v.prepareSig := {};
         v.state := 2
+
     or  \* commit state
         await v.state = 2;
-        await input = "commitMsg";
+        await inputType = "commitMsg";
+        v.commitSig := v.commitSig \union {input.commitSig};
         await commitCertificate(v);
+        v.commitSig := {};
         v.state := 0
     end either
 end macro;
@@ -87,13 +94,12 @@ vars == << proposers, validators >>
 Init == (* Global variables *)
         /\ proposers = <<"p1","p2">>
         /\ validators =              <<
-                        [state |-> 0, preSig |-> <<>>, cmtSig |-><<>>, impPreSig |-><<>>, impCmtSig |-><<>>],
-                        [state |-> 0, preSig |-> <<>>, cmtSig |-><<>>, impPreSig |-><<>>, impCmtSig |-><<>>],
-                        [state |-> 0, preSig |-> <<>>, cmtSig |-><<>>, impPreSig |-><<>>, impCmtSig |-><<>>],
-                        [state |-> 0, preSig |-> <<>>, cmtSig |-><<>>, impPreSig |-><<>>, impCmtSig |-><<>>]
+                        [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}],
+                        [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}],
+                        [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}],
+                        [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}]
                         >>
 
 Spec == Init /\ [][Next]_vars
 
 \* END TRANSLATION
-
