@@ -401,23 +401,26 @@ func (d *Dialer) KeepConnection() {
 					address     = d.dpor.Coinbase()
 				)
 
-				switch {
-				case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
+				if IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) {
+					switch {
+					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
-					log.Debug("I am current or future validator, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+						log.Debug("I am current or future validator, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
-					_ = d.DialAllRemoteValidators(currentTerm)
+						_ = d.DialAllRemoteValidators(currentTerm)
 
-				case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
+					case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
 
-					log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+						log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
-					_ = d.DialAllRemoteValidators(currentTerm)
+						_ = d.DialAllRemoteValidators(currentTerm)
 
-				default:
-					log.Debug("I am not a current or future proposer nor a validator, disconnecting remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
-					d.disconnectValidators(currentTerm)
+					default:
+						log.Debug("I am not a current or future proposer nor a validator, disconnecting remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+						d.disconnectValidators(currentTerm)
+					}
 				}
+
 			}
 
 		case <-d.quitCh:
