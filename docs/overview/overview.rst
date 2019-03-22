@@ -329,7 +329,10 @@ Each fundraising is overlapped with previous lock-up period.
 In fundraising, the following operations are allowed:
 
 1. All civilians can deposit coin in the reward pool, to become economic nodes or RNodes.
-#. Nodes that have already had coins deposited in the pool can choose to whether continue deposit the next season or renew the deposit value.
+#. Nodes that have already had coins deposited in the pool can choose to
+    1. whether continue deposit the next season
+    #. or renew the deposit value.
+#. For a node determines to withdraw deposit, it needs to call withdraw function on their own initiative after lock-up period finishes
 
 When a fundraising ends, the following rules are applied:
 
@@ -343,8 +346,10 @@ In other word, the basic reward is calculated as 5000000*d/D, where d is deposit
 and D is the total value of coins in the reward pool.
 
 
-
 .. image:: reward_pool.png
+
+
+
 
 Maintenance Reward
 +++++++++++++++++++++
