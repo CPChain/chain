@@ -202,7 +202,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	// if number is larger than local current number, sync from remote peer
 	if input.Number() > currentNumber+1 && p != nil {
 		go vh.dpor.SyncFrom(p.Peer)
-		log.Debug("I am slow, syncing with peer", "peer", p.address)
+		log.Debug("I am slow, syncing with peer", "peer", p.address.Hex())
 	}
 
 	// if number is equal or less than current number, drop the msg
