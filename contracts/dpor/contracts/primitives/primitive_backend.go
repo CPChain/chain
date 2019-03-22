@@ -42,6 +42,10 @@ const (
 	Finished
 )
 
+const (
+	defaultRank = 100 // 100 represent give the address a default rank
+)
+
 type RptPrimitiveBackend interface {
 	// Rank returns the rank for given account address at the given block number.
 	Rank(address common.Address, number uint64) (int64, error)
@@ -76,37 +80,37 @@ func NewRptEvaluator(contractClient bind.ContractBackend, chainClient *rpt_backe
 func getBalanceAt(ctx context.Context, apiBackend rpt_backend_holder.ChainAPIBackend, account common.Address, blockNumber *big.Int) (*big.Int, error) {
 	state, _, err := apiBackend.StateAndHeaderByNumber(ctx, rpc.BlockNumber(blockNumber.Uint64()), false)
 	if state == nil || err != nil {
-		return nil, err
+		return common.Big0, err
 	}
 	return state.GetBalance(account), state.Error()
 }
 
-// GetCoinAge is the func to get rank to rpt
+// Rank is the func to get rank to rpt
 func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, error) {
 	var balances []float64
 	myBalance, err := getBalanceAt(context.Background(), re.ChainClient.ChainBackend, address, big.NewInt(int64(number)))
 	if err != nil {
 		log.Warn("error with getReputationnode", "error", err)
-		return 100, err // 100 represent give the address a default rank
+		return defaultRank, err
 	}
 	contractAddress := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
 	intance, err := campaign.NewCampaign(contractAddress, re.ContractClient)
 	if err != nil {
 		log.Error("NewCampaign error", "error", err, "contractAddress", contractAddress.Hex())
-		return 100, err // 100 represent give the address a default rank
+		return defaultRank, err
 	}
 	// get the rnode in that block
 	term := (number - 1) / (configs.ChainConfigInfo().Dpor.TermLen * configs.ChainConfigInfo().Dpor.ViewLen)
 	rNodeAddress, err := intance.CandidatesOf(nil, big.NewInt(int64(term)))
 	if err != nil || rNodeAddress == nil {
 		log.Error("CandidatesOf error", "error", err, "contractAddress", contractAddress.Hex())
-		return 100, err // 100 represent give the address a default rank
+		return defaultRank, err
 	}
 	for _, committee := range rNodeAddress {
 		balance, err := getBalanceAt(context.Background(), re.ChainClient.ChainBackend, committee, big.NewInt(int64(number)))
 		if err != nil {
 			log.Error("error with bc.BalanceAt", "error", err, "contractAddress", contractAddress.Hex())
-			return 100, err // 100 represent give the address a default rank
+			return defaultRank, err
 		}
 		balances = append(balances, float64(balance.Uint64()))
 	}
@@ -117,10 +121,10 @@ func (re *RptEvaluator) Rank(address common.Address, number uint64) (int64, erro
 	return rank, err
 }
 
-// GetCoinAge is the func to get txVolume to rpt
+// TxVolume is the func to get txVolume to rpt
 func (re *RptEvaluator) TxVolume(address common.Address, number uint64) (int64, error) {
 	block, err := re.ChainClient.BlockByNumber(context.Background(), big.NewInt(int64(number)))
-	if err != nil {
+	if block == nil || err != nil {
 		log.Error("error with bc.getTxVolume", "error", err)
 		return 0, err
 	}
