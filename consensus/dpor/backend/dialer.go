@@ -388,7 +388,9 @@ func enodeIDWithoutPort(enode string) string {
 // and disconnect remote validators if it is not
 func (d *Dialer) KeepConnection() {
 
-	futureTimer := time.NewTicker(d.dpor.Period())
+	var last uint64
+
+	futureTimer := time.NewTicker(d.dpor.Period() / 2)
 	defer futureTimer.Stop()
 	for {
 		select {
@@ -401,7 +403,7 @@ func (d *Dialer) KeepConnection() {
 					address     = d.dpor.Coinbase()
 				)
 
-				if IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) {
+				if last != currentNum && IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) {
 					switch {
 					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
@@ -420,6 +422,8 @@ func (d *Dialer) KeepConnection() {
 						d.disconnectValidators(currentTerm)
 					}
 				}
+
+				last = currentNum
 
 			}
 
