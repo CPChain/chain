@@ -250,6 +250,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		log.Debug("added block to unknown ancestor cache", "number", input.Number(), "hash", input.Hash().Hex())
 
 		vh.unknownAncestorBlocks.AddBlock(input.block)
+		return nil
 
 	default:
 		log.Error("received an error when run fsm", "err", err)
