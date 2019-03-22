@@ -96,7 +96,4 @@ Init == (* Global variables *)
 Spec == Init /\ [][Next]_vars
 
 \* END TRANSLATION
-=============================================================================
-\* Modification History
-\* Last modified Thu Mar 21 20:34:20 CST 2019 by Dell
-\* Created Thu Feb 21 18:37:39 CST 2019 by Dell
+
