@@ -473,6 +473,46 @@ It also returns either :
 
 
 
+eth_getTransactionCount
++++++++++++++++++++++++++++++
+
+
+Returns the number of transactions sent from an address.
+
+**Parameters**
+
+    ``DATA``, 20 Bytes - address.
+    ``QUANTITY|TAG`` - integer block number, or the string "latest", "earliest" or "pending", see the default block parameter
+
+Example Parameters
+
+.. code-block:: shell
+
+    params: [
+       '0xE83a71428655B9F52fF6dc556E2b37043f39F194',
+       'latest' // state at the latest block
+    ]
+
+
+
+**Returns**
+
+``QUANTITY`` - integer of the number of transactions send from this address.
+
+**Example**
+
+.. code-block:: shell
+
+    // Request
+    curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["0xE83a71428655B9F52fF6dc556E2b37043f39F194","latest"],"id":1}'
+
+    // Result
+    {
+      "id":1,
+      "jsonrpc": "2.0",
+      "result": "0x1" // 1
+    }
+
 
 
 Account
