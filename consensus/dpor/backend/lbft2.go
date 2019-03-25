@@ -135,8 +135,9 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 
 	log.Debug("result state", "state", state, "number", number, "msg code", msgCode.String(), "action", action)
 
-	if p.number < p.dpor.GetCurrentBlock().NumberU64()+1 {
-		p.number = p.dpor.GetCurrentBlock().NumberU64() + 1
+	blk := p.dpor.GetCurrentBlock()
+	if blk != nil && p.number < blk.NumberU64()+1 {
+		p.number = blk.NumberU64() + 1
 		p.state = consensus.Idle
 	}
 
@@ -1006,18 +1007,18 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 func (p *LBFT2) tryToImpeach() {
 	log.Debug("try to start impeachment process")
 
-	if impeachBlock, err := p.dpor.CreateImpeachBlock(); err == nil {
+	if impeachBlock, err := p.dpor.CreateImpeachBlock(); impeachBlock != nil && err == nil {
 
 		time.AfterFunc(
 			func() time.Duration {
 				if impeachBlock.Timestamp().Before(time.Now()) {
-					// if impeachBlock.Timestamp().Before(time.Now()) && impeachBlock.NumberU64() == 1 {
 					return p.dpor.ImpeachTimeout()
 				}
 				return impeachBlock.Timestamp().Sub(time.Now())
 			}(),
 			func() {
-				if impeachBlock.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+				currentBlock := p.dpor.GetCurrentBlock()
+				if currentBlock != nil && impeachBlock.NumberU64() > currentBlock.NumberU64() {
 					p.handleImpeachBlock(impeachBlock)
 				}
 			})
@@ -1028,14 +1029,15 @@ func (p *LBFT2) tryToImpeachFailback() {
 	log.Debug("try to start failback impeachment process")
 
 	// creates two failback impeachment blocks and waits for their time
-	if firstImpeach, secondImpeach, err := p.dpor.CreateFailbackImpeachBlocks(); err == nil {
+	if firstImpeach, secondImpeach, err := p.dpor.CreateFailbackImpeachBlocks(); firstImpeach != nil && secondImpeach != nil && err == nil {
 
 		log.Debug("created two failback impeachment blocks with timestamps", "timestamp1", firstImpeach.Timestamp(), "timestamp2", secondImpeach.Timestamp())
 
 		go time.AfterFunc(
 			firstImpeach.Timestamp().Sub(time.Now()),
 			func() {
-				if firstImpeach.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+				currentBlock := p.dpor.GetCurrentBlock()
+				if currentBlock != nil && firstImpeach.NumberU64() > currentBlock.NumberU64() {
 					p.handleImpeachBlock(firstImpeach)
 				}
 			})
@@ -1043,7 +1045,8 @@ func (p *LBFT2) tryToImpeachFailback() {
 		go time.AfterFunc(
 			secondImpeach.Timestamp().Sub(time.Now()),
 			func() {
-				if secondImpeach.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+				currentBlock := p.dpor.GetCurrentBlock()
+				if currentBlock != nil && secondImpeach.NumberU64() > currentBlock.NumberU64() {
 					p.handleImpeachBlock(secondImpeach)
 				}
 			})

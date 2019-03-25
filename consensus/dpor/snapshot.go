@@ -350,7 +350,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 		}
 
 		// If in checkpoint, run election
-		if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
+		if backend.IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
 			log.Debug("update proposers committee", "number", s.number())
 			seed := header.Hash().Big().Int64()
 			s.updateProposers(rpts, seed)
@@ -363,7 +363,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 		// TODO: there is a vulnerability about validators in header, check it!
 		// for now, i just do not update validators from header.
 		// s.setRecentValidators(term+1, header.Dpor.Validators)
-	} else if IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
+	} else if backend.IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
 		s.setRecentValidators(term+1, s.getRecentValidators(term))
 	}
 

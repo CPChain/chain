@@ -63,19 +63,6 @@ func (s *signatures) setSig(addr common.Address, sig []byte) {
 	s.sigs[addr] = sig
 }
 
-// IsCheckPoint returns if a given block number is in a checkpoint with given
-// termLen and viewLen
-func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
-	if number == 0 {
-		return false
-	}
-
-	if termLen == 0 || viewLen == 0 {
-		return true
-	}
-	return number%(termLen*viewLen) == 0
-}
-
 type dporUtil interface {
 	sigHash(header *types.Header) (hash common.Hash)
 	ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, []common.Address, error)

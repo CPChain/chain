@@ -59,9 +59,7 @@ func (d *Dpor) FutureTermOf(number uint64) uint64 {
 
 // GetCurrentBlock returns current block
 func (d *Dpor) GetCurrentBlock() *types.Block {
-	hash := d.chain.CurrentHeader().Hash()
-	number := d.chain.CurrentHeader().Number.Uint64()
-	block := d.chain.GetBlock(hash, number)
+	block := d.chain.CurrentBlock()
 	return block
 }
 

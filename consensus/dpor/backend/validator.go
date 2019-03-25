@@ -41,8 +41,13 @@ func (vh *Handler) handleSignerConnectionMsg(version int, p *p2p.Peer, rw p2p.Ms
 			return common.Address{}.Hex(), err
 		}
 
+		blk := vh.dpor.GetCurrentBlock()
+		if blk == nil {
+			return "", errNilBlock
+		}
+
 		var (
-			currectNumber = vh.dpor.GetCurrentBlock().NumberU64()
+			currectNumber = blk.NumberU64()
 			term          = vh.dpor.TermOf(currectNumber)
 			futureTerm    = vh.dpor.FutureTermOf(currectNumber)
 		)
@@ -197,7 +202,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	// if number is larger than local current number, sync from remote peer
 	if input.Number() > currentNumber+1 && p != nil {
 		go vh.dpor.SyncFrom(p.Peer)
-		log.Debug("I am slow, syncing with peer", "peer", p.address)
+		log.Debug("I am slow, syncing with peer", "peer", p.address.Hex())
 	}
 
 	// if number is equal or less than current number, drop the msg
