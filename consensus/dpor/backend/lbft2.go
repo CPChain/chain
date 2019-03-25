@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
@@ -30,8 +29,9 @@ type LBFT2 struct {
 	state     consensus.State
 	stateLock sync.RWMutex
 
-	faulty uint64 // faulty is the parameter of 3f+1 nodes in Byzantine
-	lock   sync.RWMutex
+	faulty         uint64 // faulty is the parameter of 3f+1 nodes in Byzantine
+	failbackNumber uint64 // a block number denotes a failback block
+	lock           sync.RWMutex
 
 	dpor       DporService
 	blockCache *RecentBlocks // cache of blocks
@@ -58,12 +58,8 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 		handleImpeachBlock: handleImpeachBlock,
 	}
 
-	// wait to try to failback if reboot
-	time.AfterFunc(
-		configs.DefaultWaitTimeBeforeImpeachment,
-		func() {
-			lbft.tryToImpeachFailback()
-		})
+	// try to failback if reboot
+	lbft.tryToImpeachFailback()
 
 	return lbft
 }
@@ -1007,7 +1003,11 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 func (p *LBFT2) tryToImpeach() {
 	log.Debug("try to start impeachment process")
 
-	if impeachBlock, err := p.dpor.CreateImpeachBlock(); impeachBlock != nil && err == nil {
+	p.lock.RLock()
+	failbackNumber := p.failbackNumber
+	p.lock.RUnlock()
+
+	if impeachBlock, err := p.dpor.CreateImpeachBlock(); impeachBlock != nil && impeachBlock.NumberU64() != failbackNumber && err == nil {
 
 		time.AfterFunc(
 			func() time.Duration {
@@ -1033,6 +1033,10 @@ func (p *LBFT2) tryToImpeachFailback() {
 
 		log.Debug("created two failback impeachment blocks with timestamps", "timestamp1", firstImpeach.Timestamp(), "timestamp2", secondImpeach.Timestamp())
 
+		p.lock.Lock()
+		p.failbackNumber = firstImpeach.NumberU64()
+		p.lock.Unlock()
+
 		go time.AfterFunc(
 			firstImpeach.Timestamp().Sub(time.Now()),
 			func() {
@@ -1050,5 +1054,6 @@ func (p *LBFT2) tryToImpeachFailback() {
 					p.handleImpeachBlock(secondImpeach)
 				}
 			})
+
 	}
 }
