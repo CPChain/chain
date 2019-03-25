@@ -1012,7 +1012,7 @@ func (p *LBFT2) tryToImpeach() {
 		time.AfterFunc(
 			func() time.Duration {
 				if impeachBlock.Timestamp().Before(time.Now()) {
-					return p.dpor.ImpeachTimeout()
+					return p.dpor.ImpeachTimeout() + p.dpor.Period()
 				}
 				return impeachBlock.Timestamp().Sub(time.Now())
 			}(),
