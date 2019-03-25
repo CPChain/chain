@@ -22,17 +22,16 @@ variables
 define
     \* return true if suffice a certificate
     prepareCertificate(v) ==
-        Len(v.preSig) >= 3
+        Len(v.prepareSig) >= 3
 
     commitCertificate(v) ==
-        Len(v.cmtSig) >= 3
+        Len(v.commitSig) >= 3
 
     impeachPrepareCertificate(v) ==
-        Len(v.impPreSig) >= 2
+        Len(v.impeachPrepareSig) >= 2
 
     impeachCommitCertificate(v) ==
-        Len(v.impCmtSig) >= 2
-
+        Len(v.impeachCommitSig) >= 2
 
 end define;
 
@@ -77,16 +76,16 @@ VARIABLES proposers, validators
 
 (* define statement *)
 prepareCertificate(v) ==
-    Len(v.preSig) >= 3
+    Len(v.prepareSig) >= 3
 
 commitCertificate(v) ==
-    Len(v.cmtSig) >= 3
+    Len(v.commitSig) >= 3
 
 impeachPrepareCertificate(v) ==
-    Len(v.impPreSig) >= 2
+    Len(v.impeachPrepareSig) >= 2
 
 impeachCommitCertificate(v) ==
-    Len(v.impCmtSig) >= 2
+    Len(v.impeachCommitSig) >= 2
 
 
 vars == << proposers, validators >>
