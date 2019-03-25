@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"math/rand"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
@@ -11,8 +10,12 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-func waitForEnoughValidators(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
-	for {
+const (
+	defaultWaitDialTimes = 20
+)
+
+func waitForOneValidator(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
+	for i := 0; i < defaultWaitDialTimes; i++ {
 		select {
 		case <-quitCh:
 			return
@@ -21,31 +24,62 @@ func waitForEnoughValidators(h *Handler, term uint64, quitCh chan struct{}) (val
 
 			validators = h.dialer.ValidatorsOfTerm(term)
 
-			if len(validators) >= int(2*h.fsm.Faulty()) {
+			if len(validators) >= 1 {
 				return
 			}
 
-			time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
+			time.Sleep((h.dpor.Period() + h.dpor.ImpeachTimeout()) / defaultWaitDialTimes)
 		}
 	}
+	return
+}
+
+func waitForEnoughValidators(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
+	for i := 0; i < defaultWaitDialTimes; i++ {
+		select {
+		case <-quitCh:
+			return
+
+		default:
+
+			if validators, enough := h.dialer.EnoughValidatorsOfTerm(term); enough {
+				return validators
+			}
+
+			time.Sleep((h.dpor.Period() + h.dpor.ImpeachTimeout()) / defaultWaitDialTimes)
+		}
+	}
+	return
 }
 
 func waitForEnoughImpeachValidators(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
-	for {
+	for i := 0; i < defaultWaitDialTimes; i++ {
 		select {
 		case <-quitCh:
 			return
 
 		default:
 
-			validators = h.dialer.ValidatorsOfTerm(term)
-
-			if len(validators) >= int(h.fsm.Faulty()) {
-				return
+			if validators, enough := h.dialer.EnoughImpeachValidatorsOfTerm(term); enough {
+				return validators
 			}
 
-			time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
+			time.Sleep((h.dpor.Period() + h.dpor.ImpeachTimeout()) / defaultWaitDialTimes)
 		}
+	}
+	return
+}
+
+// ProposerBroadcastPreprepareBlock broadcasts generated block to validators
+func (h *Handler) ProposerBroadcastPreprepareBlock(block *types.Block) {
+
+	log.Debug("broadcasting preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
+	term := h.dpor.TermOf(block.NumberU64())
+	validators := waitForOneValidator(h, term, h.quitCh)
+
+	for _, peer := range validators {
+		peer.AsyncSendPreprepareBlock(block)
 	}
 }
 
@@ -159,8 +193,9 @@ func (h *Handler) PendingBlockBroadcastLoop() {
 	for {
 		select {
 		case pendingBlock := <-h.pendingBlockCh:
+
 			// broadcast mined pending block to remote signers
-			go h.BroadcastPreprepareBlock(pendingBlock)
+			go h.ProposerBroadcastPreprepareBlock(pendingBlock)
 
 		case <-h.quitCh:
 			return

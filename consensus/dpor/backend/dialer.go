@@ -403,7 +403,9 @@ func (d *Dialer) KeepConnection() {
 					address     = d.dpor.Coinbase()
 				)
 
-				if last != currentNum && IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) {
+				_, enough := d.EnoughValidatorsOfTerm(currentTerm)
+
+				if last != currentNum && (IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) || !enough) {
 					switch {
 					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
@@ -431,6 +433,20 @@ func (d *Dialer) KeepConnection() {
 			return
 		}
 	}
+}
+
+// EnoughValidatorsOfTerm returns validator of given term and whether it is enough
+func (d *Dialer) EnoughValidatorsOfTerm(term uint64) (validators map[common.Address]*RemoteValidator, enough bool) {
+	validators = d.ValidatorsOfTerm(term)
+	enough = len(validators) >= int(d.dpor.Faulty()*2)
+	return
+}
+
+// EnoughValidatorsOfTerm returns validator of given term and whether it is enough for impeach
+func (d *Dialer) EnoughImpeachValidatorsOfTerm(term uint64) (validators map[common.Address]*RemoteValidator, enough bool) {
+	validators = d.ValidatorsOfTerm(term)
+	enough = len(validators) >= int(d.dpor.Faulty())
+	return
 }
 
 func (d *Dialer) Stop() {

@@ -244,13 +244,16 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		}
 	}
 
-	// rebroadcast the msg
-	// go vh.reBroadcast(input, msgCode)
-
 	// call fsm
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
 	switch err {
 	case nil:
+		// rebroadcast the preprepare msg
+		switch msgCode {
+		case PreprepareMsgCode:
+			go vh.reBroadcast(input, msgCode)
+		}
+
 	case consensus.ErrUnknownAncestor:
 		log.Debug("added block to unknown ancestor cache", "number", input.Number(), "hash", input.Hash().Hex())
 
