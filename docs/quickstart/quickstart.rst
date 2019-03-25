@@ -1,6 +1,39 @@
 Quick Start
 ~~~~~~~~~~~~~
 
+
+
+Readers can choose either to use binary release or build from source code.
+Both methods require a Linux working environment,
+and have been tested on Ubuntu 18.04.
+Earlier Linux releases may incur problems or lack necessary dependencies.
+
+Binary Release
++++++++++++++++++++
+
+Download address for Binary release is coming soon.
+
+
+
+As Civilian
+##############
+
+After you download `cpchain` binary file, you can run it as a civilian.
+Go the directory you store `cpchain` and type in:
+
+.. code-block:: shell
+
+    $ ./cpchain run
+
+Now you have connected to cpchain P2P network.
+Employing either :ref:`fusion-api` or :ref:`rpc-api` to
+wield the power as a civilian as well as assume corresponding responsibility.
+
+
+Source Code Building
++++++++++++++++++++++++++
+
+
 We are going to install CPChain and run a node on the testnet. 
 
 Building the Source

@@ -1,3 +1,5 @@
+.. _rpc-api:
+
 RPC API
 =============
 
@@ -17,7 +19,7 @@ It uses JSON `(RFC 4627) <https://www.ietf.org/rfc/rfc4627.txt>`_ as data format
 
 
 How Can We Test APIs?
-----------------
+-----------------------------
 
 All JSON-RPC requests are sent via POST method.
 You may utilize any tools that supports HTTP POST protocol,
