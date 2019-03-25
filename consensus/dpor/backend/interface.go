@@ -150,6 +150,9 @@ type DporService interface {
 	// TermLength returns term length
 	TermLength() uint64
 
+	// Faulty returns the number of faulty nodes
+	Faulty() uint64
+
 	// ViewLength returns view length
 	ViewLength() uint64
 

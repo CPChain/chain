@@ -27,6 +27,11 @@ func (d *Dpor) TermLength() uint64 {
 	return d.config.TermLen
 }
 
+// Faulty returns the number of faulty nodes
+func (d *Dpor) Faulty() uint64 {
+	return d.config.FaultyNumber
+}
+
 // ViewLength returns view length
 func (d *Dpor) ViewLength() uint64 {
 	return d.config.ViewLen
