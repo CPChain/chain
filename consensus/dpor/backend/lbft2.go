@@ -9,10 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 // errors returned by fsm
@@ -40,10 +43,14 @@ type LBFT2 struct {
 	commitSignatures  *signaturesForBlockCaches
 
 	handleImpeachBlock HandleGeneratedImpeachBlock
+
+	validateMsgMap *lru.ARCCache
 }
 
 // NewLBFT2 create an LBFT2 instance
 func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock, db database.Database) *LBFT2 {
+
+	validateMap, _ := lru.NewARC(1000)
 
 	lbft := &LBFT2{
 		state:  consensus.Idle,
@@ -56,6 +63,8 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 		commitSignatures:  newSignaturesForBlockCaches(db),
 
 		handleImpeachBlock: handleImpeachBlock,
+
+		validateMsgMap: validateMap,
 	}
 
 	// try to failback if reboot
@@ -412,6 +421,13 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 	if err := p.blockCache.AddBlock(block); err != nil {
 		log.Warn("failed to add the block to block cache", "number", number, "hash", hash.Hex())
 		return nil, NoAction, NoMsgCode, state, err
+	}
+
+	parent := p.dpor.GetBlockFromChain(block.ParentHash(), block.NumberU64()-1)
+	// if received a preprepare msg, and current time is after parent.timestamp+period+blockDelay, drop it!
+	if parent != nil && time.Now().After(parent.Timestamp().Add(p.dpor.Period()).Add(p.dpor.BlockDelay())) {
+		log.Debug("current time is after parent + period + blockdelay", "number", number, "hash", hash.Hex(), "time.now", time.Now(), "parent timestamp", parent.Timestamp())
+		return nil, NoAction, NoMsgCode, state, nil
 	}
 
 	log.Debug("ready to verify the block ", "number", number, "hash", hash.Hex())
@@ -805,10 +821,24 @@ func (p *LBFT2) handleValidateMsg(input *BlockOrHeader, state consensus.State) (
 	}
 
 	var (
-		block = input.block
+		block  = input.block
+		number = input.Number()
+		hash   = input.Hash()
 	)
 
 	log.Debug("received a validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
+	// get a hash of a validated block
+	if hsh, ok := p.validateMsgMap.Get(number); ok {
+
+		// if current hash is different, do not accept it!
+		if validatedHash, ok := hsh.(common.Hash); ok && validatedHash != hash {
+			return nil, NoAction, NoMsgCode, state, nil
+		}
+	}
+
+	// add current hash to the cache
+	p.validateMsgMap.Add(number, hash)
 
 	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ValidateMsgCode, consensus.Idle, nil
 }
@@ -822,10 +852,24 @@ func (p *LBFT2) handleImpeachValidateMsg(input *BlockOrHeader, state consensus.S
 	}
 
 	var (
-		block = input.block
+		block  = input.block
+		number = input.Number()
+		hash   = input.Hash()
 	)
 
 	log.Debug("received an impeach validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
+	// get a hash of a validated block
+	if hsh, ok := p.validateMsgMap.Get(number); ok {
+
+		// if current hash is different, do not accept it!
+		if validatedHash, ok := hsh.(common.Hash); ok && validatedHash != hash {
+			return nil, NoAction, NoMsgCode, state, nil
+		}
+	}
+
+	// add current hash to the cache
+	p.validateMsgMap.Add(number, hash)
 
 	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ImpeachValidateMsgCode, consensus.Idle, nil
 }
