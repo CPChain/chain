@@ -14,26 +14,6 @@ const (
 	defaultWaitDialTimes = 20
 )
 
-func waitForOneValidator(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
-	for i := 0; i < defaultWaitDialTimes; i++ {
-		select {
-		case <-quitCh:
-			return
-
-		default:
-
-			validators = h.dialer.ValidatorsOfTerm(term)
-
-			if len(validators) >= 1 {
-				return
-			}
-
-			time.Sleep((h.dpor.Period() + h.dpor.ImpeachTimeout()) / defaultWaitDialTimes)
-		}
-	}
-	return
-}
-
 func waitForEnoughValidators(h *Handler, term uint64, quitCh chan struct{}) (validators map[common.Address]*RemoteValidator) {
 	for i := 0; i < defaultWaitDialTimes; i++ {
 		select {
@@ -76,7 +56,7 @@ func (h *Handler) ProposerBroadcastPreprepareBlock(block *types.Block) {
 	log.Debug("broadcasting preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForOneValidator(h, term, h.quitCh)
+	validators := waitForEnoughImpeachValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPreprepareBlock(block)
