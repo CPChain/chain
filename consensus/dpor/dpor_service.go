@@ -32,6 +32,11 @@ func (d *Dpor) Faulty() uint64 {
 	return d.config.FaultyNumber
 }
 
+// BlockDelay returns max delay of preprepare block propagation
+func (d *Dpor) BlockDelay() time.Duration {
+	return d.config.BlockDelay()
+}
+
 // ViewLength returns view length
 func (d *Dpor) ViewLength() uint64 {
 	return d.config.ViewLen

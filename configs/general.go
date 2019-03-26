@@ -328,6 +328,13 @@ func (c *DporConfig) PeriodDuration() time.Duration {
 	return time.Duration(0)
 }
 
+func (c *DporConfig) BlockDelay() time.Duration {
+	if c != nil {
+		return c.ImpeachTimeout * 1 / 4
+	}
+	return time.Duration(0)
+}
+
 // String implements the fmt.Stringer interface.
 func (c *ChainConfig) String() string {
 	var engine interface{}

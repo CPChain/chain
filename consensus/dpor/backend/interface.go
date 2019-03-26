@@ -162,6 +162,9 @@ type DporService interface {
 	// Period returns period of block generation
 	Period() time.Duration
 
+	// BlockDelay returns max delay of preprepare block propagation
+	BlockDelay() time.Duration
+
 	// TermOf returns the term number of given block number
 	TermOf(number uint64) uint64
 
