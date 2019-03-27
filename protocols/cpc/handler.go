@@ -136,12 +136,8 @@ func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *even
 	if len(manager.SubProtocols) == 0 {
 		return nil, errIncompatibleConfig
 	}
-	// TODO: fix this
-	// downloader
-	// manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, nil)
-	// manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
-	manager.syncer = syncer.New(blockchain, manager.removePeer)
+	manager.syncer = syncer.New(blockchain, manager.removePeer, manager.eventMux)
 
 	// fetcher specific
 	// verifies the header when insert into the chain
