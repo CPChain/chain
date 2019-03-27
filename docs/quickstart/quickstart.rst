@@ -11,9 +11,27 @@ Earlier Linux releases may incur problems or lack necessary dependencies.
 Binary Release
 +++++++++++++++++++
 
-Download address for binary release is coming soon.
+Download links for binary release are coming soon.
 
+``cpchain`` is the binary release for the chain.
+And ``console`` provides command line interface for operations on the chain,
+like checking account status and claiming campaign.
+Note that ``console`` does not support transaction operations.
+You need to utilize either :ref:`fusion-api` or :ref:`rpc-api` for all available operations.
 
+You can always refer to
+
+.. code-block:: shell
+
+    $ ./cpchain -h
+
+and
+
+.. code-block:: shell
+
+    $ ./console -h
+
+for help.
 
 As Civilian
 ##############
