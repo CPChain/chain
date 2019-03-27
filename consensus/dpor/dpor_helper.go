@@ -355,7 +355,13 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		if err == nil {
 			log.Debug("rpt windown size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
 
-			timeToUpdateCommitttee = (dpor.IsMiner() || dpor.IsValidator()) && (snap.number() > headNumber-windowSize*2-dpor.ViewLength()*dpor.TermLength())
+			timeToUpdateCommitttee = (dpor.IsMiner() || dpor.IsValidator()) && (snap.number() > func() uint64 {
+				// minimum of this and zero
+				if headNumber > windowSize*2-dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2) {
+					return headNumber - windowSize*2 - dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2)
+				}
+				return 0
+			}())
 		}
 	}
 
