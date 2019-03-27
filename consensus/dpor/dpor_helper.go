@@ -17,6 +17,7 @@
 package dpor
 
 import (
+	"math"
 	"reflect"
 	"time"
 
@@ -351,24 +352,51 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	log.Debug("known chain head", "number", headNumber)
 
 	if rptBackend != nil {
-		windowSize, err := rptBackend.WindowSize()
-		if err == nil {
-			log.Debug("rpt windown size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
-
-			timeToUpdateCommitttee = (dpor.IsMiner() || dpor.IsValidator()) && (snap.number() > func() uint64 {
-				// minimum of this and zero
-				if headNumber > windowSize*2-dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2) {
-					return headNumber - windowSize*2 - dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2)
-				}
-				return 0
-			}())
-		}
+		windowSize, _ := rptBackend.WindowSize()
+		log.Debug("rpt window size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
+		timeToUpdateCommitttee = dpor.IsMiner() || dpor.IsValidator()
+		timeToUpdateCommitttee = timeToUpdateCommitttee && float64(snap.number()) > math.Max(0., float64(int(headNumber)-int(windowSize*2+dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2))))
 	}
 
 	// Apply headers to the snapshot and updates RPTs
 	newSnap, err := snap.apply(headers, client, timeToUpdateCommitttee)
 	if err != nil {
 		return nil, err
+	}
+
+	log.Debug("now created a new snap", "number", newSnap.number(), "hash", newSnap.hash().Hex())
+
+	if len(newSnap.getRecentProposers(newSnap.TermOf(newSnap.number()))) != int(dpor.TermLength()) && timeToUpdateCommitttee {
+		var parents []*types.Header
+		parent := chain.GetHeader(newSnap.hash(), newSnap.number())
+		if parent == nil {
+			return nil, consensus.ErrUnknownAncestor
+		}
+
+		log.Debug("the proposers of the number is not updated, applying and updating", "number", newSnap.number())
+
+		for len(parents) < int(dpor.TermLength()*dpor.ViewLength()*(TermDistBetweenElectionAndMining+2)) {
+
+			log.Debug("appending a parent to parents", "number", parent.Number.Uint64(), "hash", parent.Hash().Hex())
+
+			parents = append(parents, parent)
+			parent := chain.GetHeader(parent.ParentHash, parent.Number.Uint64()-1)
+			if parent == nil {
+				return nil, consensus.ErrUnknownAncestor
+			}
+
+			if parent.Number.Uint64() == 1 {
+				break
+			}
+		}
+
+		log.Debug("now applying the parents", "len", len(parents), "start", parents[0].Number.Uint64())
+
+		newSnap, err = newSnap.apply(parents, client, timeToUpdateCommitttee)
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	// Save to cache
