@@ -12,7 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/commons/time"
+	times "bitbucket.org/cpchain/chain/commons/time"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -144,14 +144,26 @@ type ConsensusStateMachine interface {
 // DporService provides functions used by dpor handler
 type DporService interface {
 
+	// Coinbase returns current coinbase
+	Coinbase() common.Address
+
 	// TermLength returns term length
 	TermLength() uint64
+
+	// Faulty returns the number of faulty nodes
+	Faulty() uint64
 
 	// ViewLength returns view length
 	ViewLength() uint64
 
 	// ValidatorsNum returns number of validators
 	ValidatorsNum() uint64
+
+	// Period returns period of block generation
+	Period() time.Duration
+
+	// BlockDelay returns max delay of preprepare block propagation
+	BlockDelay() time.Duration
 
 	// TermOf returns the term number of given block number
 	TermOf(number uint64) uint64
@@ -303,4 +315,17 @@ func ValidMacSig(mac string, sig []byte) (valid bool, signer common.Address, err
 	valid = true
 
 	return
+}
+
+// IsCheckPoint returns if a given block number is in a checkpoint with given
+// termLen and viewLen
+func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
+	if number == 0 {
+		return false
+	}
+
+	if termLen == 0 || viewLen == 0 {
+		return true
+	}
+	return number%(termLen*viewLen) == 0
 }

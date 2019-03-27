@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -32,6 +33,8 @@ type Dialer struct {
 	validatorsLock   sync.RWMutex // to protect recent validators
 
 	defaultValidators []string
+
+	quitCh chan struct{}
 }
 
 // NewDialer creates a new dialer to dial remote peers
@@ -43,6 +46,7 @@ func NewDialer() *Dialer {
 	return &Dialer{
 		recentProposers:   proposers,
 		recentValidators:  validators,
+		quitCh:            make(chan struct{}),
 		defaultValidators: configs.GetDefaultValidators(),
 	}
 }
@@ -242,8 +246,24 @@ func (d *Dialer) DialAllRemoteValidators(term uint64) error {
 	return nil
 }
 
-// Disconnect disconnects all proposers.
-func (d *Dialer) Disconnect(term uint64) {
+// disconnectValidators disconnects all Validators.
+func (d *Dialer) disconnectValidators(term uint64) {
+
+	log.Debug("disconnecting validators of term...", "term", term)
+
+	server := d.server
+	validators := d.ValidatorsOfTerm(term)
+
+	for _, p := range validators {
+		err := p.disconnect(server)
+		if err != nil {
+			log.Debug("err when disconnect", "e", err)
+		}
+	}
+}
+
+// disconnectProposers disconnects all proposers.
+func (d *Dialer) disconnectProposers(term uint64) {
 
 	log.Debug("disconnecting...")
 
@@ -362,4 +382,77 @@ func isDefaultValidator(enode string, defaultValidators []string) bool {
 func enodeIDWithoutPort(enode string) string {
 	s := strings.Split(enode, ":")
 	return strings.Join(s[:len(s)-1], ":")
+}
+
+// KeepConnection tries to dial remote validators if local node is a current or future proposer
+// and disconnect remote validators if it is not
+func (d *Dialer) KeepConnection() {
+
+	var last uint64
+
+	futureTimer := time.NewTicker(d.dpor.Period() / 2)
+	defer futureTimer.Stop()
+	for {
+		select {
+		case <-futureTimer.C:
+			if current := d.dpor.GetCurrentBlock(); current != nil {
+				var (
+					currentNum  = current.NumberU64()
+					currentTerm = d.dpor.TermOf(currentNum)
+					futureTerm  = d.dpor.FutureTermOf(currentNum)
+					address     = d.dpor.Coinbase()
+				)
+
+				_, enough := d.EnoughValidatorsOfTerm(currentTerm)
+
+				if last != currentNum && (IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) || !enough) {
+					switch {
+					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
+
+						log.Debug("I am current or future validator, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+
+						_ = d.DialAllRemoteValidators(currentTerm)
+
+					case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
+
+						log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+
+						_ = d.DialAllRemoteValidators(currentTerm)
+
+					default:
+						log.Debug("I am not a current or future proposer nor a validator, disconnecting remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+						d.disconnectValidators(currentTerm)
+					}
+				}
+
+				last = currentNum
+
+			}
+
+		case <-d.quitCh:
+			return
+		}
+	}
+}
+
+// EnoughValidatorsOfTerm returns validator of given term and whether it is enough
+func (d *Dialer) EnoughValidatorsOfTerm(term uint64) (validators map[common.Address]*RemoteValidator, enough bool) {
+	validators = d.ValidatorsOfTerm(term)
+	enough = len(validators) >= int(d.dpor.Faulty()*2)
+	return
+}
+
+// EnoughValidatorsOfTerm returns validator of given term and whether it is enough for impeach
+func (d *Dialer) EnoughImpeachValidatorsOfTerm(term uint64) (validators map[common.Address]*RemoteValidator, enough bool) {
+	validators = d.ValidatorsOfTerm(term)
+	enough = len(validators) >= int(d.dpor.Faulty())
+	return
+}
+
+func (d *Dialer) Stop() {
+
+	close(d.quitCh)
+	d.quitCh = make(chan struct{})
+
+	return
 }

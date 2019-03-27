@@ -24,7 +24,7 @@ import (
 
 // delayBeforeSeal returns 80% of the given delay duration
 func delayBeforeSeal(d time.Duration) time.Duration {
-	return d * 4 / 5
+	return d * 1 / 10
 }
 
 const (

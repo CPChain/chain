@@ -67,7 +67,7 @@ const (
 const (
 	DefaultDevMaxInitBlockNumber     = 480
 	DefaultTestnetMaxInitBlockNumber = 240
-	DefaultMainnetMaxInitBlockNumber = 180
+	DefaultMainnetMaxInitBlockNumber = 216
 )
 
 const (
@@ -324,6 +324,13 @@ func (c *DporConfig) ImpeachCertificate(n uint64) bool {
 func (c *DporConfig) PeriodDuration() time.Duration {
 	if c != nil {
 		return time.Duration(int64(c.Period) * int64(time.Millisecond))
+	}
+	return time.Duration(0)
+}
+
+func (c *DporConfig) BlockDelay() time.Duration {
+	if c != nil {
+		return c.ImpeachTimeout * 1 / 4
 	}
 	return time.Duration(0)
 }

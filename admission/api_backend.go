@@ -76,6 +76,10 @@ func (b *AdmissionApiBackend) SetAdmissionKey(key *keystore.Key) {
 	b.admissionControl.SetAdmissionKey(key)
 }
 
+func (b *AdmissionApiBackend) AdmissionKey() *keystore.Key {
+	return b.admissionControl.key
+}
+
 // RegisterInProcHandler registers the rpc.Server, handles RPC request to process the API requests in process
 func (b *AdmissionApiBackend) RegisterInProcHandler(localRPCServer *rpc.Server) {
 	client := rpc.DialInProc(localRPCServer)

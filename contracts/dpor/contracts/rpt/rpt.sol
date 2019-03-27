@@ -113,7 +113,7 @@ contract Rpt {
         if (rank < 35) return 70;
         if (rank < 60) return 60;
         if (rank < 80) return 40;
-        return rank;
+        return 20;
     }
     
     function getTx(address _addr, uint _blockNumber) public view returns(uint) {

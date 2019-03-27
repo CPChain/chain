@@ -29,7 +29,7 @@ func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteS
 	}())
 }
 
-func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
+func (vh *Handler) handleSignerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
 	switch msg.Code {
 	case NewSignerMsg:
 
@@ -41,8 +41,13 @@ func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.
 			return common.Address{}.Hex(), err
 		}
 
+		blk := vh.dpor.GetCurrentBlock()
+		if blk == nil {
+			return "", errNilBlock
+		}
+
 		var (
-			currectNumber = vh.dpor.GetCurrentBlock().NumberU64()
+			currectNumber = blk.NumberU64()
 			term          = vh.dpor.TermOf(currectNumber)
 			futureTerm    = vh.dpor.FutureTermOf(currectNumber)
 		)
@@ -50,13 +55,19 @@ func (vh *Handler) handleProposerConnectionMsg(version int, p *p2p.Peer, rw p2p.
 		// if current or future proposer, add to local peer set
 		if vh.dialer.isCurrentOrFutureProposer(address, term, futureTerm) {
 			vh.dialer.addRemoteProposer(version, p, rw, address)
+			log.Debug("added the signer as a proposer", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
 		}
 
-		log.Debug("added the signer as a proposer", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
+		// if current or future validator, add to local peer set
+		if vh.dialer.isCurrentOrFutureValidator(address, term, futureTerm) {
+			vh.dialer.addRemoteValidator(version, p, rw, address)
+			log.Debug("added the signer as a validator", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
+		}
+
 		return address.Hex(), nil
 
 	default:
-		log.Warn("unknown msg code", "msg", msg.Code)
+		log.Warn("unknown msg code when handling signer connection msg", "msg", msg.Code)
 	}
 	return common.Address{}.Hex(), nil
 }
@@ -66,8 +77,15 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	var (
 		input         = &BlockOrHeader{}
 		msgCode       = NoMsgCode
-		currentNumber = vh.dpor.GetCurrentBlock().NumberU64()
+		currentNumber = uint64(0)
 	)
+
+	currentBlock := vh.dpor.GetCurrentBlock()
+	if currentBlock == nil {
+		log.Warn("current block is nil")
+		return nil
+	}
+	currentNumber = currentBlock.NumberU64()
 
 	switch msg.Code {
 	case PreprepareBlockMsg:
@@ -184,7 +202,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	// if number is larger than local current number, sync from remote peer
 	if input.Number() > currentNumber+1 && p != nil {
 		go vh.dpor.SyncFrom(p.Peer)
-		log.Debug("I am slow, syncing with peer", "peer", p.address)
+		log.Debug("I am slow, syncing with peer", "peer", p.address.Hex())
 	}
 
 	// if number is equal or less than current number, drop the msg
@@ -192,9 +210,6 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		log.Debug("received outdated msg, discarding...")
 		return nil
 	}
-
-	// rebroadcast the msg
-	// go vh.reBroadcast(input, msgCode, msg)
 
 	// this is just for debug
 	switch msgCode {
@@ -233,10 +248,17 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
 	switch err {
 	case nil:
+		// rebroadcast the preprepare msg
+		switch msgCode {
+		case PreprepareMsgCode:
+			go vh.reBroadcast(input, msgCode)
+		}
+
 	case consensus.ErrUnknownAncestor:
 		log.Debug("added block to unknown ancestor cache", "number", input.Number(), "hash", input.Hash().Hex())
 
 		vh.unknownAncestorBlocks.AddBlock(input.block)
+		return nil
 
 	default:
 		log.Error("received an error when run fsm", "err", err)
@@ -288,12 +310,24 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		case BroadcastAndInsertBlockAction:
 			switch msgCode {
 			case ValidateMsgCode:
-				go vh.dpor.InsertChain(output[0].block)
-				go vh.dpor.BroadcastBlock(output[0].block, true)
+				err = vh.dpor.InsertChain(output[0].block)
+				if err == nil {
+					log.Debug("inserted normal block to local chain, broadcasting...", "number", output[0].Number(), "hash", output[0].Hash().Hex())
+					go vh.BroadcastValidateBlock(output[0].block)
+					go vh.dpor.BroadcastBlock(output[0].block, true)
+				} else {
+					log.Debug("failed to insert normal block to local chain", "number", output[0].Number(), "hash", output[0].Hash().Hex())
+				}
 
 			case ImpeachValidateMsgCode:
-				go vh.dpor.InsertChain(output[0].block)
-				go vh.dpor.BroadcastBlock(output[0].block, true)
+				err = vh.dpor.InsertChain(output[0].block)
+				if err == nil {
+					log.Debug("inserted impeach block to local chain, broadcasting...", "number", output[0].Number(), "hash", output[0].Hash().Hex())
+					go vh.BroadcastValidateImpeachBlock(output[0].block)
+					go vh.dpor.BroadcastBlock(output[0].block, true)
+				} else {
+					log.Debug("failed to insert impeach block to local chain", "number", output[0].Number(), "hash", output[0].Hash().Hex())
+				}
 
 			default:
 				log.Debug("unknown msg code for fsm output", "msgCode", msgCode)
@@ -328,12 +362,14 @@ type msgID struct {
 	msgHash common.Hash
 }
 
-func newMsgID(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) msgID {
+func newMsgID(number uint64, hash common.Hash, msgCode MsgCode, signatures []types.DporSignature) msgID {
 
 	var payload []byte
+	for _, s := range signatures {
+		payload = append(payload, s[:]...)
+	}
+
 	msgHash := fnv.New32a()
-	msg.Payload.Read(payload)
-	// msgHash.Write([]byte(msg.String()))
 	msgHash.Write(payload)
 
 	return msgID{
@@ -354,13 +390,13 @@ func newBroadcastRecord() *broadcastRecord {
 	}
 }
 
-func (br *broadcastRecord) markAsBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) {
-	msgID := newMsgID(number, hash, msgCode, msg)
+func (br *broadcastRecord) markAsBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, signatures []types.DporSignature) {
+	msgID := newMsgID(number, hash, msgCode, signatures)
 	br.record.Add(msgID, true)
 }
 
-func (br *broadcastRecord) ifBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, msg p2p.Msg) bool {
-	msgID := newMsgID(number, hash, msgCode, msg)
+func (br *broadcastRecord) ifBroadcasted(number uint64, hash common.Hash, msgCode MsgCode, signatures []types.DporSignature) bool {
+	msgID := newMsgID(number, hash, msgCode, signatures)
 	broadcasted, exists := br.record.Get(msgID)
 	return exists && broadcasted.(bool) == true
 }
@@ -387,8 +423,18 @@ func (ir *impeachmentRecord) ifImpeached(number uint64, hash common.Hash) bool {
 	return exists && impeached.(bool) == true
 }
 
-func (vh *Handler) reBroadcast(input *BlockOrHeader, msgCode MsgCode, msg p2p.Msg) {
-	if !vh.broadcastRecord.ifBroadcasted(input.Number(), input.Hash(), msgCode, msg) {
+func (vh *Handler) reBroadcast(input *BlockOrHeader, msgCode MsgCode) {
+	var signatures []types.DporSignature
+
+	if input.IsBlock() {
+		signatures = input.block.Dpor().Sigs
+	} else if input.IsHeader() {
+		signatures = input.header.Dpor.Sigs
+	} else {
+		return
+	}
+
+	if !vh.broadcastRecord.ifBroadcasted(input.Number(), input.Hash(), msgCode, signatures) {
 		switch msgCode {
 		case PreprepareMsgCode:
 			vh.BroadcastPreprepareBlock(input.block)
@@ -408,6 +454,6 @@ func (vh *Handler) reBroadcast(input *BlockOrHeader, msgCode MsgCode, msg p2p.Ms
 			vh.BroadcastValidateImpeachBlock(input.block)
 		default:
 		}
-		vh.broadcastRecord.markAsBroadcasted(input.Number(), input.Hash(), msgCode, msg)
+		vh.broadcastRecord.markAsBroadcasted(input.Number(), input.Hash(), msgCode, signatures)
 	}
 }

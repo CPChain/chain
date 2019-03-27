@@ -350,7 +350,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 		}
 
 		// If in checkpoint, run election
-		if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
+		if backend.IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
 			log.Debug("update proposers committee", "number", s.number())
 			seed := header.Hash().Big().Int64()
 			s.updateProposers(rpts, seed)
@@ -363,7 +363,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 		// TODO: there is a vulnerability about validators in header, check it!
 		// for now, i just do not update validators from header.
 		// s.setRecentValidators(term+1, header.Dpor.Validators)
-	} else if IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
+	} else if backend.IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
 		s.setRecentValidators(term+1, s.getRecentValidators(term))
 	}
 
@@ -601,16 +601,6 @@ func (s *DporSnapshot) ValidatorViewOf(validator common.Address, number uint64) 
 	return -1, errValidatorNotInCommittee
 }
 
-// ProposerViewOf returns the proposer's view(turn) with given proposer's address and block number
-func (s *DporSnapshot) ProposerViewOf(proposer common.Address, number uint64) (int, error) {
-	for view, s := range s.ProposersOf(number) {
-		if s == proposer {
-			return view, nil
-		}
-	}
-	return -1, errProposerNotInCommittee
-}
-
 // IsValidatorOf returns if an address is a validator in the given block number
 func (s *DporSnapshot) IsValidatorOf(validator common.Address, number uint64) bool {
 	_, err := s.ValidatorViewOf(validator, number)
@@ -622,12 +612,15 @@ func (s *DporSnapshot) IsProposerOf(signer common.Address, number uint64) (bool,
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
-	view, err := s.ProposerViewOf(signer, number)
-	if err != nil {
-		return false, err
+	proposers := s.ProposersOf(number)
+	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) / s.config.ViewLen)
+	if idx >= 0 && idx < len(proposers) {
+		if proposers[idx] == signer {
+			return true, nil
+		}
 	}
-	b := view == int(((number-1)%(s.config.TermLen*s.config.ViewLen))/s.config.ViewLen)
-	return b, nil
+
+	return false, errProposerNotInCommittee
 }
 
 // FutureValidatorsOf returns future validators of given block number

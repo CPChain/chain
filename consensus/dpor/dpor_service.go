@@ -17,9 +17,24 @@ import (
 
 // Those are functions implement backend.DporService
 
+// Period returns period of block generation
+func (d *Dpor) Period() time.Duration {
+	return d.config.PeriodDuration()
+}
+
 // TermLength returns term length
 func (d *Dpor) TermLength() uint64 {
 	return d.config.TermLen
+}
+
+// Faulty returns the number of faulty nodes
+func (d *Dpor) Faulty() uint64 {
+	return d.config.FaultyNumber
+}
+
+// BlockDelay returns max delay of preprepare block propagation
+func (d *Dpor) BlockDelay() time.Duration {
+	return d.config.BlockDelay()
 }
 
 // ViewLength returns view length
@@ -54,9 +69,7 @@ func (d *Dpor) FutureTermOf(number uint64) uint64 {
 
 // GetCurrentBlock returns current block
 func (d *Dpor) GetCurrentBlock() *types.Block {
-	hash := d.chain.CurrentHeader().Hash()
-	number := d.chain.CurrentHeader().Number.Uint64()
-	block := d.chain.GetBlock(hash, number)
+	block := d.chain.CurrentBlock()
 	return block
 }
 

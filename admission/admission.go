@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"reflect"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -25,6 +26,7 @@ import (
 type Result struct {
 	BlockNumber int64  `json:"block_number"`
 	Nonce       uint64 `json:"nonce"`
+	Success     bool   `json:"success"`
 }
 
 type workStatus = uint32
@@ -69,6 +71,8 @@ type AdmissionControl struct {
 	err        error
 	abort      chan interface{}
 	done       chan interface{}
+
+	sendingFund int32
 }
 
 // NewAdmissionControl returns a new Control instance.
@@ -133,6 +137,15 @@ func (ac *AdmissionControl) IsRNode() (bool, error) {
 }
 
 func (ac *AdmissionControl) FundForRNode() error {
+	log.Info("Start funding for becoming RNode")
+	ac.mutex.Lock()
+	defer ac.mutex.Unlock()
+
+	sending := atomic.LoadInt32(&ac.sendingFund)
+	if sending != 0 {
+		return nil // there is a pending tx to fund for becoming RNode, wait for its accomplishment
+	}
+
 	rewardContractAddress := ac.rewardContractAddr
 	log.Debug("RewardContractAddress", "address", rewardContractAddress.Hex())
 	rewardContract, err := reward.NewReward(rewardContractAddress, ac.contractBackend)
@@ -193,10 +206,40 @@ func (ac *AdmissionControl) FundForRNode() error {
 			log.Info("encounter error when funding deposit for node to become candidate", "error", err)
 			return err
 		}
+
+		log.Info("submitDeposit(opts)", "txhash", tx.Hash().Hex())
+		atomic.StoreInt32(&ac.sendingFund, 1)
+		go ac.waitForTxDone(tx.Hash())
+
 		log.Info("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
 		return nil
 	} else {
+		log.Info("not enough money to become RNode")
 		return errNoEnoughMoney
+	}
+}
+
+func (ac *AdmissionControl) waitForTxDone(txhash common.Hash) {
+	defer func() {
+		atomic.StoreInt32(&ac.sendingFund, 0)
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Warn("transaction is not processed in time", "txhash", txhash.Hex())
+			return
+		default:
+			r, err := ac.contractBackend.TransactionReceipt(context.Background(), txhash)
+			if r != nil && err == nil {
+				return
+			}
+
+			time.Sleep(500 * time.Millisecond)
+		}
 	}
 }
 
@@ -272,6 +315,7 @@ func (ac *AdmissionControl) waitSendCampaignMsg(terms uint64) {
 			ac.mutex.Lock()
 			ac.err = work.error()
 			ac.mutex.Unlock()
+			log.Info("work is not pass ac", "error is", work.error())
 			return
 		}
 	}
