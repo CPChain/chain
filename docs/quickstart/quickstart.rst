@@ -73,6 +73,9 @@ You may try delete files in ``~/.cpchain`` by
     $ rm -rf ~/.cpchain
 
 Now you have connected to cpchain P2P network.
+And the progress is going to running for a while to sync with the chain.
+
+
 Employ either :ref:`fusion-api` or :ref:`rpc-api` to
 wield the power as a civilian as well as assume corresponding responsibility.
 
@@ -139,6 +142,14 @@ As Proposer
 
 
 
+Similar to operations in `As Civilian`_,
+a node willing to become proposer can also utilize the following commands to create an account.
+
+.. code-block:: shell
+
+    $ mkdir datadir
+    $ echo "YOU_PASSWORD" >> datadir/password
+    $ ./cpchain account new account --datadir ./datadir
 
 
 Source Code Building
