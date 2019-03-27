@@ -1128,6 +1128,10 @@ func (bc *BlockChain) InsertBlock(block *types.Block) (int, error) {
 	bc.insertChainProtectLock.Lock()
 	defer bc.insertChainProtectLock.Unlock()
 
+	if local := bc.GetBlockByNumber(block.NumberU64()); local != nil && local.Hash() != block.Hash() {
+		log.Fatal("inserting another different block at same height", "number", block.NumberU64(), "hash", block.Hash().Hex(), "in chain hash", local.Hash().Hex())
+	}
+
 	// insert it!
 	n, events, logs, err := bc.insertChain(types.Blocks{block})
 	bc.CommitStateDB()
