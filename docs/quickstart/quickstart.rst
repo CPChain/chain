@@ -18,16 +18,107 @@ Download address for Binary release is coming soon.
 As Civilian
 ##############
 
-After you download `cpchain` binary file, you can run it as a civilian.
-Go the directory you store `cpchain` and type in:
+After you download ``cpchain`` binary file, you can run it as a civilian.
+Go the directory you store ``cpchain`` and type in:
+
+If you do not have an account, you can **create a new account** with ``cpchain``.
+
 
 .. code-block:: shell
 
-    $ ./cpchain run
+    $ mkdir datadir
+    $ echo "YOU PASSWORD" >> datadir/password
+    $ ./cpchain account new account --datadir ./datadir
+
+Here we first create a directory named as ``datadir` and
+create a file containing the password you prefer.
+Command ```./cpchain account new account --datadir ./datadir `` requires
+you enter a password, which should be same as the one you just echo.
+
+A successful execution returns the wallet address.
+And you can also refer to the name of file in
+``datadir/password/`` to check the address.
+
+After you register a wallet address,
+you can run the following command to ``connect to the chain``:
+
+.. code-block:: shell
+
+    $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311
+
+If you cannot get successfully successfully connected.
+You may try delete files in ``~/.cpchain`` by
+
+
+.. code-block:: shell
+
+    $ rm -rf ~/.cpchain
 
 Now you have connected to cpchain P2P network.
 Employing either :ref:`fusion-api` or :ref:`rpc-api` to
 wield the power as a civilian as well as assume corresponding responsibility.
+
+You can also choose to use ``console`` to run as a civilian.
+
+To **check the status** of your account, you can use the following command:
+
+
+.. code-block:: shell
+
+    $ ./console status  --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+
+Here ``YOU_ACCOUNT`` is the file generated previously.
+And you can obtain the information about your account status like
+
+
+.. code-block:: shell
+
+    INFO[03-26|19:53:54.921] proposer                                      addr=0x52e584B4fBa8688eb7EDcaBb18e65661A99acC67 c.addr=0x5A8a1a86b086c062a87B0883F78a078f2Bf74609
+    // a bunch of proposers like the line above
+    --------------------------
+
+    Mining:           false
+
+    RNode:            false
+
+    Proposer:         false
+
+    Locked:           true
+
+    SupportPrivateTx: false
+    --------------------------
+
+
+
+And you can also **check your account information** using the command:
+
+
+.. code-block:: shell
+
+    $ ./console account  --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+
+
+It returns results like
+
+.. code-block:: shell
+
+    --------------------------
+
+    Balance: 400000 CPC // this account contains 400,000 CPC
+
+    Reward:
+    	Total:  0 CPC
+    	Free:   0 CPC
+    	Locked: 0 CPC
+
+    --------------------------
+
+
+
+
+As Proposer
+################
+
 
 
 As Proposer
