@@ -11,7 +11,7 @@ Earlier Linux releases may incur problems or lack necessary dependencies.
 Binary Release
 +++++++++++++++++++
 
-Download address for Binary release is coming soon.
+Download address for binary release is coming soon.
 
 
 
@@ -27,20 +27,20 @@ If you do not have an account, you can **create a new account** with ``cpchain``
 .. code-block:: shell
 
     $ mkdir datadir
-    $ echo "YOU PASSWORD" >> datadir/password
+    $ echo "YOU_PASSWORD" >> datadir/password
     $ ./cpchain account new account --datadir ./datadir
 
-Here we first create a directory named as ``datadir` and
+Here we first create a directory named as ``datadir`` and
 create a file containing the password you prefer.
-Command ```./cpchain account new account --datadir ./datadir `` requires
-you enter a password, which should be same as the one you just echo.
+Command ``./cpchain account new account --datadir ./datadir`` requires
+you to enter a password, which should be same as ``YOUR_PASSWORD`` in previous echo command.
 
 A successful execution returns the wallet address.
-And you can also refer to the name of file in
-``datadir/password/`` to check the address.
+And a keystore file is generated in ``datadir/password/``.
+And you can also refer to the name of this file to retrieve the wallet address.
 
 After you register a wallet address,
-you can run the following command to ``connect to the chain``:
+you can run the following command to **connect to the chain**:
 
 .. code-block:: shell
 
@@ -55,19 +55,19 @@ You may try delete files in ``~/.cpchain`` by
     $ rm -rf ~/.cpchain
 
 Now you have connected to cpchain P2P network.
-Employing either :ref:`fusion-api` or :ref:`rpc-api` to
+Employ either :ref:`fusion-api` or :ref:`rpc-api` to
 wield the power as a civilian as well as assume corresponding responsibility.
 
-You can also choose to use ``console`` to run as a civilian.
+You can also choose to use **console** to run as a civilian.
 
 To **check the status** of your account, you can use the following command:
 
 
 .. code-block:: shell
 
-    $ ./console status  --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+    $ ./console status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
 
-Here ``YOU_ACCOUNT`` is the file generated previously.
+Here ``YOU_ACCOUNT`` is the file generated previously in ``datadir/password/``.
 And you can obtain the information about your account status like
 
 
@@ -95,7 +95,7 @@ And you can also **check your account information** using the command:
 
 .. code-block:: shell
 
-    $ ./console account  --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+    $ ./console account --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
 
 
 It returns results like
@@ -104,7 +104,7 @@ It returns results like
 
     --------------------------
 
-    Balance: 400000 CPC // this account contains 400,000 CPC
+    Balance: 400000 CPC // this account contains 400000 CPC
 
     Reward:
     	Total:  0 CPC
@@ -120,9 +120,6 @@ As Proposer
 ################
 
 
-
-As Proposer
-##############
 
 
 
