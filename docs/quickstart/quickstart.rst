@@ -30,6 +30,11 @@ Employing either :ref:`fusion-api` or :ref:`rpc-api` to
 wield the power as a civilian as well as assume corresponding responsibility.
 
 
+As Proposer
+##############
+
+
+
 Source Code Building
 +++++++++++++++++++++++++
 
