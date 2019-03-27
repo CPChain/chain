@@ -81,7 +81,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 	if verifyProposers && !isImpeach { // ignore impeach block(whose coinbase is empty)
 
 		// verify proposers if it is not an impeachment block
-		if err := dpor.dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
+		if err := dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
 			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
 			return err
 		}
@@ -345,8 +345,22 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	snap.setClient(client)
 	snap.rptBackend = rptBackend
 
+	var timeToUpdateCommitttee bool
+	_, headNumber := chain.KnownHead()
+
+	log.Debug("known chain head", "number", headNumber)
+
+	if rptBackend != nil {
+		windowSize, err := rptBackend.WindowSize()
+		if err == nil {
+			log.Debug("rpt windown size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
+
+			timeToUpdateCommitttee = (dpor.IsMiner() || dpor.IsValidator()) && (snap.number() > headNumber-windowSize*2-dpor.ViewLength()*dpor.TermLength())
+		}
+	}
+
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, client, dpor.IsMiner() || dpor.IsValidator())
+	newSnap, err := snap.apply(headers, client, timeToUpdateCommitttee)
 	if err != nil {
 		return nil, err
 	}
