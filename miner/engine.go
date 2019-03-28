@@ -244,6 +244,9 @@ func (e *engine) update() {
 		select {
 		// a new block has been inserted.  we start to mine based on this new tip.
 		case <-e.chainHeadCh:
+
+			log.Debug("now to commit new work", "now", time.Now())
+
 			// commitNewWork must run no matter if it is mining, because pending block needs to be updated by commitNewWork
 			e.commitNewWork()
 
@@ -433,6 +436,7 @@ func (e *engine) commitNewWork() {
 	//           now               commitTxsBreakTime   header.timestamp
 	//
 	// timeline  ------------------------------------------
+	log.Debug("timelog header.timestamp and now", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
 	delay = header.Timestamp().Sub(time.Now())
 	delay = delayBeforeSeal(delay)
 	commitTxsBreakTime := header.Timestamp()
@@ -440,7 +444,11 @@ func (e *engine) commitNewWork() {
 		commitTxsBreakTime = header.Timestamp().Add(-delay)
 	}
 
+	log.Debug("timelog before commit txs", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()), "commitTxsBreakTime", commitTxsBreakTime)
+
 	work.commitTransactions(e.mux, txs, e.chain, e.coinbase, commitTxsBreakTime)
+
+	log.Debug("timelog after commit txs", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
 
 	// Create the new block to seal with the consensus engine. Private tx's receipts are not involved computing block's
 	// receipts hash and receipts bloom as they are private and not guaranteeing identical in different nodes.
@@ -450,10 +458,13 @@ func (e *engine) commitNewWork() {
 		return
 	}
 
+	log.Debug("timelog after finalize", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
+
 	// We only care about logging if we're actually mining.
 	if atomic.LoadInt32(&e.mining) == 1 {
 		// only seal and broadcast the block when it is mining proposer
 		if e.cons.CanMakeBlock(e.chain, e.coinbase, parent.Header()) {
+			log.Debug("timelog pushing", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
 			e.push(work)
 			log.Info("Commit new mining work", "number", work.Block.Number(), "txs", work.tcount, "elapsed", common.PrettyDuration(time.Since(tstart)))
 		}

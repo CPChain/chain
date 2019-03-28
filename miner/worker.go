@@ -6,6 +6,7 @@ package miner
 import (
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -96,6 +97,7 @@ out:
 // mine invokes the consensus engine to seal a block.
 // note, finalize is called in miner's engine, not here.
 func (nw *NativeWorker) mine(work *Work, quitCh <-chan struct{}) {
+	log.Debug("timelog before seal", "header.timestamp", work.Block.Timestamp(), "now", time.Now(), "delay", work.Block.Timestamp().Sub(time.Now()))
 	if result, err := nw.cons.Seal(nw.chain, work.Block, quitCh); result != nil {
 		log.Info("Successfully sealed new block", "number", result.Number(), "hash", result.Hash().Hex())
 		nw.returnCh <- &Result{work, result}
@@ -112,4 +114,5 @@ func (nw *NativeWorker) mine(work *Work, quitCh <-chan struct{}) {
 		// ok. failed to seal.
 		nw.returnCh <- nil
 	}
+	log.Debug("timelog after seal", "header.timestamp", work.Block.Timestamp(), "now", time.Now(), "delay", work.Block.Timestamp().Sub(time.Now()))
 }
