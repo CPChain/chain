@@ -104,6 +104,7 @@ func (a RptList) Less(i, j int) bool {
 type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
 	CalcRptInfo(address common.Address, number uint64) Rpt
+	WindowSize() (uint64, error)
 }
 
 // BasicCollector is the default rpt collector
@@ -125,6 +126,21 @@ func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address)
 		rptcache:    cache,
 	}
 	return bc, nil
+}
+
+// WindowSize reads windowsize from rpt contract
+func (rs *RptServiceImpl) WindowSize() (uint64, error) {
+	instance, err := contracts.NewRpt(rs.rptContract, rs.client)
+	if err != nil {
+		log.Error("New primitivesContract error")
+		return 0, err
+	}
+	windowSize, err := instance.Window(nil)
+	if err != nil {
+		log.Error("Get windowSize error", "error", err)
+		return 0, err
+	}
+	return windowSize.Uint64(), nil
 }
 
 // CalcRptInfoList returns reputation of

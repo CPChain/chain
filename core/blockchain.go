@@ -139,6 +139,10 @@ type BlockChain struct {
 
 	insertChainProtectLock sync.RWMutex
 
+	knownHeadNumber uint64      // number of known head of current chain
+	knownHeadHash   common.Hash // hash of known head of current chain
+	knownHeadLock   sync.RWMutex
+
 	ErrChan chan error
 }
 
@@ -209,11 +213,34 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 	}
 	// Take ownership of this particular state
 	go bc.update()
+
+	if currentHead := bc.CurrentBlock(); currentHead != nil {
+		bc.SetKnownHead(currentHead.Hash(), currentHead.NumberU64())
+	}
+
 	return bc, nil
 }
 
 func (bc *BlockChain) getProcInterrupt() bool {
 	return atomic.LoadInt32(&bc.procInterrupt) == 1
+}
+
+// KnownHead returns hash and number of current head block (maybe not in local chain)
+func (bc *BlockChain) KnownHead() (common.Hash, uint64) {
+	bc.knownHeadLock.RLock()
+	defer bc.knownHeadLock.RUnlock()
+
+	return bc.knownHeadHash, bc.knownHeadNumber
+}
+
+// SetKnownHead sets the known head block hash and number
+func (bc *BlockChain) SetKnownHead(hash common.Hash, number uint64) {
+	bc.knownHeadLock.Lock()
+	defer bc.knownHeadLock.Unlock()
+
+	if number > bc.knownHeadNumber {
+		bc.knownHeadHash, bc.knownHeadNumber = hash, number
+	}
 }
 
 // loadLastState loads the last known chain state from the database. This method

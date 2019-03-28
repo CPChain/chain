@@ -56,7 +56,7 @@ func (h *Handler) ProposerBroadcastPreprepareBlock(block *types.Block) {
 	log.Debug("broadcasting preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForEnoughImpeachValidators(h, term, h.quitCh)
+	validators := waitForEnoughValidators(h, term, h.quitCh)
 
 	for _, peer := range validators {
 		peer.AsyncSendPreprepareBlock(block)

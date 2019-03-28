@@ -50,6 +50,12 @@ type ChainReader interface {
 
 	// GetBlock retrieves a block from the database by hash and number.
 	GetBlock(hash common.Hash, number uint64) *types.Block
+
+	// KnownHead returns hash and number of current head block (maybe not in local chain)
+	KnownHead() (common.Hash, uint64)
+
+	// SetKnownHead sets the known head block hash and number
+	SetKnownHead(common.Hash, uint64)
 }
 
 // ChainWriter reads and writes pending block to blockchain

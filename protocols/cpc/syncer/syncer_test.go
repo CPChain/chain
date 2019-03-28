@@ -14,6 +14,7 @@ import (
 	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 func TestSyncerNormal(t *testing.T) {
@@ -30,7 +31,7 @@ func TestSyncerNormal(t *testing.T) {
 	localchain := newBlockchain(0)
 
 	// create a syncer to sync blocks
-	localSyncer := syncer.New(localchain, nil)
+	localSyncer := syncer.New(localchain, nil, new(event.TypeMux))
 
 	// go sync
 	go localSyncer.Synchronise(p, head, height)
@@ -81,7 +82,7 @@ func TestSyncerTimeout(t *testing.T) {
 	localchain := newBlockchain(0)
 
 	// create a syncer to sync blocks
-	localSyncer := syncer.New(localchain, nil)
+	localSyncer := syncer.New(localchain, nil, new(event.TypeMux))
 
 	// go sync
 	err := localSyncer.Synchronise(p, head, height)
@@ -108,7 +109,7 @@ func TestSyncerInvalidChain(t *testing.T) {
 	localchain := newBlockchain(0)
 
 	// create a syncer to sync blocks
-	localSyncer := syncer.New(localchain, nil)
+	localSyncer := syncer.New(localchain, nil, new(event.TypeMux))
 
 	// go fake peer request handle loop
 	go p.returnBlocksLoop()
@@ -165,7 +166,7 @@ func TestSyncerUnknownPeer(t *testing.T) {
 	localchain := newBlockchain(0)
 
 	// create a syncer to sync blocks
-	localSyncer := syncer.New(localchain, nil)
+	localSyncer := syncer.New(localchain, nil, new(event.TypeMux))
 
 	// go fake peer request handle loop
 	go p.returnBlocksLoop()
@@ -232,7 +233,7 @@ func TestSyncerSlowPeer(t *testing.T) {
 	localchain := newBlockchain(200)
 
 	// create a syncer to sync blocks
-	localSyncer := syncer.New(localchain, nil)
+	localSyncer := syncer.New(localchain, nil, new(event.TypeMux))
 
 	// go sync
 	err := localSyncer.Synchronise(p, head, height)
