@@ -120,17 +120,6 @@ Initialize CPChain after modifying the configuration file, then run a private ch
     $ ./cpchain-all.sh
 
 
-const (
-	DevChainId     = 41
-	MainnetChainId = 42
-	TestnetChainId = 43
-)
-
-const (
-	MainnetNetworkId = 0
-	DevNetworkId     = 1
-	TestnetNetworkId = 2
-)
 
 
 
