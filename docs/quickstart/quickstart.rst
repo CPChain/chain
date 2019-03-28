@@ -151,6 +151,48 @@ a node willing to become proposer can also utilize the following commands to cre
     $ echo "YOU_PASSWORD" >> datadir/password
     $ ./cpchain account new account --datadir ./datadir
 
+The command for proposers connecting P2P network is slightly different than the counterpart for civilians
+
+.. code-block:: shell
+
+    $ ./cpchain run --datadir ./datadir --unlock 5d6477ecd219bfe0ba44bf1b16272e72bd200e51 \
+        --rpcaddr 127.0.0.1:8501 --port 30311 --mine --password ./datadir/password \
+        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+
+Note that the argument ``--mine`` indicates this connection can be used for proposing blocks.
+And via this connection,
+a node with insufficient deposit automatically sets its deposit to 200,000 CPC (if its balance is enough).
+And then the node claims campaign to become a proposer.
+
+
+Using commands ``./console account`` and ``./console status`` to check
+the account info and status about this node, similar to civilians.
+
+A node can using following commands to deposit more CPC
+
+.. code-block:: shell
+
+    $ ./console reward deposit --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password VALUE
+
+, where ``VALUE`` is the number of CPC you willing to deposit.
+
+To stop mining, use the command below
+
+.. code-block:: shell
+
+    $ ./console miner stop --keystore ./datadir/keystore/YOUR_ACCOUNT  --password ./datadir/password
+
+Then you may check the status of the account, the attribute ``Mining`` of which should shifted to ``false``.
+
+After you stop mining, you are free to withdraw deposit by the following command:
+
+.. code-block:: shell
+
+    $ ./console reward withdraw --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password VALUE
+
+If you do not present the argument ``VALUE``, all deposit will be withdrew by default.
+
+
 
 Source Code Building
 +++++++++++++++++++++++++
