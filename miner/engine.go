@@ -275,7 +275,7 @@ func (e *engine) update() {
 					txs[acc] = append(txs[acc], tx)
 				}
 				txset := types.NewTransactionsByPriceAndNonce(e.currentWork.signer, txs)
-				e.currentWork.commitTransactions(e.mux, txset, e.chain, e.coinbase)
+				e.currentWork.commitTransactions(e.mux, txset, e.chain, e.coinbase, time.Now().Add(time.Second*10))
 				e.updateSnapshot()
 				e.currentMu.Unlock()
 			}
@@ -400,6 +400,7 @@ func (e *engine) commitNewWork() {
 		return
 	}
 
+	// delay to add more txs to tx pool
 	delay := header.Timestamp().Sub(time.Now())
 	delay = delayBeforeSeal(delay)
 	log.Debug("Waiting for slot to seal", "delay", delay)
@@ -425,7 +426,21 @@ func (e *engine) commitNewWork() {
 		return
 	}
 	txs := types.NewTransactionsByPriceAndNonce(e.currentWork.signer, pending)
-	work.commitTransactions(e.mux, txs, e.chain, e.coinbase)
+
+	// break early at header.timestamp - delayBeforeSeal
+	// timeline  ------------------------------------------
+	//             |        9/10              |    1/10   |
+	//           now               commitTxsBreakTime   header.timestamp
+	//
+	// timeline  ------------------------------------------
+	delay = header.Timestamp().Sub(time.Now())
+	delay = delayBeforeSeal(delay)
+	commitTxsBreakTime := header.Timestamp()
+	if delay > 0 {
+		commitTxsBreakTime = header.Timestamp().Add(-delay)
+	}
+
+	work.commitTransactions(e.mux, txs, e.chain, e.coinbase, commitTxsBreakTime)
 
 	// Create the new block to seal with the consensus engine. Private tx's receipts are not involved computing block's
 	// receipts hash and receipts bloom as they are private and not guaranteeing identical in different nodes.
@@ -460,7 +475,7 @@ func (e *engine) updateSnapshot() {
 }
 
 // transactions are applied in ascending nonce order of each account.
-func (w *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByPriceAndNonce, bc *core.BlockChain, coinbase common.Address) {
+func (w *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByPriceAndNonce, bc *core.BlockChain, coinbase common.Address, breakTimer time.Time) {
 	if w.gasPool == nil {
 		w.gasPool = new(core.GasPool).AddGas(w.header.GasLimit)
 	}
@@ -468,6 +483,12 @@ func (w *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByP
 	var coalescedLogs []*types.Log
 
 	for {
+
+		// If break timer is up, break now
+		if time.Now().After(breakTimer) {
+			break
+		}
+
 		// If we don't have enough gas for any further transactions then we're done
 		if w.gasPool.Gas() < configs.TxGas {
 			log.Debug("Not enough gas for further transactions", "have", w.gasPool, "want", configs.TxGas)
