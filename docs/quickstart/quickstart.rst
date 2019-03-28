@@ -15,7 +15,7 @@ Download links for binary release are coming soon.
 
 ``cpchain`` is the binary release for the chain.
 And ``console`` provides command line interface for operations on the chain,
-like checking account status and claiming campaign.
+like checking account status, deposit and claiming campaign.
 Note that ``console`` does not support transaction operations.
 You need to utilize either :ref:`fusion-api` or :ref:`rpc-api` for all available operations.
 
