@@ -137,7 +137,7 @@ func makePasswordList(ctx *cli.Context) []string {
 	return lines
 }
 
-func unlockAccounts(ctx *cli.Context, n *node.Node) {
+func unlockAccounts(ctx *cli.Context, n *node.Node) *keystore.Key {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	passwords := makePasswordList(ctx)
 	unlock := ctx.String("unlock")
@@ -145,11 +145,22 @@ func unlockAccounts(ctx *cli.Context, n *node.Node) {
 	for i, account := range unlocks {
 		log.Infof("%v, %v\n", i, account)
 		if i < len(passwords) {
-			unlockAccountWithPassword(ks, account, passwords[i])
+			_, key, err := unlockAccountWithPassword(ks, account, passwords[i])
+			if err != nil {
+				log.Error("unlock account error", "err", err)
+				return nil
+			}
+			return key
 		} else {
-			unlockAccountWithPrompt(ks, account)
+			_, _, key, err := unlockAccountWithPrompt(ks, account)
+			if err != nil {
+				log.Error("unlock account error", "err", err)
+				return nil
+			}
+			return key
 		}
 	}
+	return nil
 }
 
 // TODO @chengxin @xumx please be sure about the underlying logic.
@@ -198,7 +209,7 @@ func handleWallet(n *node.Node) {
 	}()
 }
 
-func setupMining(ctx *cli.Context, n *node.Node) {
+func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 	var cpchainService *cpc.CpchainService
 	// cpchainService will point to the real cpchain service in n.services
 	if err := n.Service(&cpchainService); err != nil {
@@ -213,7 +224,7 @@ func setupMining(ctx *cli.Context, n *node.Node) {
 	cpchainService.SetClientForDpor(client)
 
 	// TODO: fix this, do not use *keystore.Key, use wallet instead
-	contractCaller := createContractCaller(ctx, n)
+	contractCaller := createContractCaller(n, key)
 	if contractCaller != nil {
 		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
 	}
@@ -232,30 +243,19 @@ func setupMining(ctx *cli.Context, n *node.Node) {
 }
 
 // TODO to be removed.  do not add it here.
-func createContractCaller(ctx *cli.Context, n *node.Node) *backend.ContractCaller {
-	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	passwords := makePasswordList(ctx)
+func createContractCaller(n *node.Node, key *keystore.Key) *backend.ContractCaller {
 	var contractCaller *backend.ContractCaller
-	// TODO: @liuq fix this.
-	if len(ks.Accounts()) > 0 && len(passwords) > 0 {
-		account := ks.Accounts()[0]
-		account, key, err := ks.GetDecryptedKey(account, passwords[0])
-		if err != nil {
-			log.Warn("err when get account", "err", err)
-		}
-		log.Warn("succeed when get unlock account", "key", key)
 
-		rpcClient, err := n.Attach()
-		if err != nil {
-			log.Fatalf("Failed to attach to self: %v", err)
-		}
-		client := cpclient.NewClient(rpcClient)
+	rpcClient, err := n.Attach()
+	if err != nil {
+		log.Fatalf("Failed to attach to self: %v", err)
+	}
+	client := cpclient.NewClient(rpcClient)
 
-		// TODO: @Liuq fix this.
-		contractCaller, err = backend.NewContractCaller(key, client, 300000)
-		if err != nil {
-			log.Warn("err when make contract call", "err", err)
-		}
+	// TODO: @Liuq fix this.
+	contractCaller, err = backend.NewContractCaller(key, client, 300000)
+	if err != nil {
+		log.Warn("err when make contract call", "err", err)
 	}
 	return contractCaller
 }
@@ -289,9 +289,10 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 	}
 
 	startNode(n)
-	unlockAccounts(ctx, n)
+	key := unlockAccounts(ctx, n)
+
 	handleWallet(n)
-	setupMining(ctx, n)
+	setupMining(ctx, n, key)
 	// handle user interrupt
 	go handleInterrupt(n)
 }
