@@ -41,10 +41,6 @@ import (
 var runCommand cli.Command
 
 func init() {
-	err := times.InvalidSystemClock()
-	if err != nil {
-		log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
-	}
 
 	runFlags := append([]cli.Flag(nil), flags.RpcFlags...)
 	runFlags = append(runFlags, flags.GeneralFlags...)
@@ -73,6 +69,11 @@ func init() {
 }
 
 func run(ctx *cli.Context) error {
+	err := times.InvalidSystemClock()
+	if err != nil {
+		log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
+	}
+
 	if ctx.IsSet(flags.MineFlagName) && ctx.IsSet(flags.ValidatorFlagName) {
 		log.Fatalf("A node cannot be both miner and validator.")
 	}
