@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 	"errors"
-	"math/big"
 
+	"bitbucket.org/cpchain/chain/tools/reward-admin/common"
+	"bitbucket.org/cpchain/chain/tools/reward-admin/manager"
+	"bitbucket.org/cpchain/chain/tools/reward-admin/output"
 	"bitbucket.org/cpchain/chain/tools/utility"
-	"bitbucket.org/cpchain/chain/tools/console/common"
-	"bitbucket.org/cpchain/chain/tools/console/manager"
-	"bitbucket.org/cpchain/chain/tools/console/output"
 	"github.com/urfave/cli"
 )
 
@@ -28,19 +27,6 @@ func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFun
 	if err != nil {
 		out.Fatal(err.Error())
 	}
-
-	var price *big.Int = nil
-	if ctx.IsSet("gasprice") {
-		price = new(big.Int).SetUint64(ctx.Uint64("gasprice"))
-	}
-
-	var limit uint64 = 2000000
-	if ctx.IsSet("gaslimit") {
-		limit = ctx.Uint64("gaslimit")
-	}
-
-	manager.SetGasConfig(price, limit)
-
 	_ctx, cancel := context.WithCancel(context.Background())
 	console := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)
 	return console, &out, cancel
@@ -66,18 +52,6 @@ var AccountFlags = []cli.Flag{
 		Name:  "keystore",
 		Usage: "Keystore directory",
 		Value: home + "/.cpchain/keystore/",
-	},
-}
-
-var GasFlags = []cli.Flag{
-	cli.Int64Flag{
-		Name:  "gasprice",
-		Usage: "Gas Price, unit is Wei, default is suggested gas price from server",
-	},
-	cli.Int64Flag{
-		Name:  "gaslimit",
-		Usage: "Gas Limit, default 2000000",
-		Value: 2000000,
 	},
 }
 

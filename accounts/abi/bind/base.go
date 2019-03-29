@@ -56,6 +56,7 @@ type TransactOpts struct {
 	Context context.Context // Network context to support cancellation and timeouts (nil = no timeout)
 }
 
+
 // FilterOpts is the collection of options to fine tune filtering for events
 // within a bound contract.
 type FilterOpts struct {
