@@ -351,7 +351,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 	log.Debug("known chain head", "number", headNumber)
 
-	if rptBackend != nil {
+	if rptBackend != nil && snap.isStartElection() {
 		windowSize, _ := rptBackend.WindowSize()
 		log.Debug("rpt window size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
 		timeToUpdateCommitttee = dpor.IsMiner() || dpor.IsValidator()
