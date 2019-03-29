@@ -15,6 +15,7 @@ variables
     \* sequence of validators
     \* 0,1,2 represent idle, prepare, commit
     \* 3,4 represent impeach prepare and impeach commit state
+    \* 9 represents ilde state in next block height
     \* pre and cmt are short for prepare and commit respectively
     \* imp represents impeachment
     \* four sigs refers to signatures for different messages
@@ -38,6 +39,7 @@ end define;
 
 macro fsm(v, inputType) begin
     either \* idle state
+    \* transfer to prepare state given a block
         await v.state = 0;
         await inputType = "block";
         v.state := 1
@@ -45,18 +47,23 @@ macro fsm(v, inputType) begin
     or  \* prepare state
         await v.state = 1;
         await inputType = "prepareMsg";
+        \* accumulate prepare signatures
         v.prepareSig := v.prepareSig \union {input.prepareSig};
-        await prepareCertificate(v);
-        v.prepareSig := {};
-        v.state := 2
+        if prepareCertificate(v)
+        then
+        \* transfer to commit state if collect a certificate
+            v.prepareSig := {};
+            v.state := 2;
+        end if;
 
     or  \* commit state
         await v.state = 2;
         await inputType = "commitMsg";
         v.commitSig := v.commitSig \union {input.commitSig};
         await commitCertificate(v);
+        \* transfer to ilde state in next height given the certificate
         v.commitSig := {};
-        v.state := 0
+        v.state := 9
     end either
 end macro;
 
@@ -65,7 +72,8 @@ end macro;
 
 begin
 
-
+\* Validator1:
+\*   fsm(validators[1], "block");
 
 
 end algorithm;*)
