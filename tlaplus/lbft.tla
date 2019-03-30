@@ -74,6 +74,10 @@ begin
 
 \* Validator1:
 \*   fsm(validators[1], "block");
+\*   fsm(validators[2], "block");
+\*   fsm(validators[3], "block");
+\*   fsm(validators[4], "block");
+
 
 
 end algorithm;*)
