@@ -358,6 +358,11 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 				return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 			}
 
+			// if I am a validator, do not waste time to handle tx msg
+			if msg.Code == TxMsg && dporEngine.IsValidator() {
+				continue
+			}
+
 			switch {
 			case backend.IsSyncMsg(msg):
 				switch err = pm.handleSyncMsg(msg, peer); err {
