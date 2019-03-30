@@ -37,7 +37,7 @@ cpchain=$proj_dir/build/bin/cpchain
 ipc_path_base=data/cpc-
 
 
-nohup $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr 0.0.0.0:8501 --port 30311 --mine \
+nohup $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcaddr   0.0.0.0:8501 --port 30311 --mine \
          --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf-dev/passwords/password \
          --validators "${validators}" \
          --profile data/data1 \

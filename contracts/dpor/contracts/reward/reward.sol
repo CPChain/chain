@@ -211,4 +211,9 @@ contract Reward {
         // set locked to true
         locked = true;
     }
+
+    function getInvestors() public onlyOwner() view returns (address[]) {
+        return participants.getAll();
+    }
 }
+

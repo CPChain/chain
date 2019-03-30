@@ -30,10 +30,12 @@ import (
 )
 
 var (
-	endPoint                 = "http://localhost:8501"
-	keyStoreFilePath         = "./chain/examples/cpchain/data/data1/keystore/"
-	DefaultCPUDifficulty     = uint64(19)
-	DefaultMemoryDifficulty  = uint64(9)
+	endPoint         = "http://localhost:8501"
+	keyStoreFilePath = "./chain/examples/cpchain/data/data1/keystore/"
+	// DefaultCPUDifficulty = uint64(19) // 1 cpu
+	DefaultCPUDifficulty = uint64(12) // 1 cpu
+	// DefaultMemoryDifficulty  = uint64(9) // 16 G
+	DefaultMemoryDifficulty  = uint64(6) // 2 G
 	DefaultCpuWorkTimeout    = uint64(5)
 	DefaultMemoryWorkTimeout = uint64(5)
 )

@@ -15,7 +15,7 @@ var (
 	// contract
 	mainnetProxyContractRegister = common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93")
 
-	mainnetContractAddressMap = map[string]common.Address{
+	MainnetContractAddressMap = map[string]common.Address{
 		ContractProposer:   common.HexToAddress("0xf26B6864749cdE85a29afEa57FfeaE115B24b505"),
 		ContractReward:     common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42"),
 		ContractAdmission:  common.HexToAddress("0x8f01875F462CBBc956CB9C0392dE6053A31C9C99"),
@@ -51,7 +51,7 @@ var (
 			FaultyNumber:          MainnetFaultyValidatorsNumber,
 			MaxInitBlockNumber:    DefaultMainnetMaxInitBlockNumber,
 			ProxyContractRegister: mainnetProxyContractRegister,
-			Contracts:             mainnetContractAddressMap,
+			Contracts:             MainnetContractAddressMap,
 			ImpeachTimeout:        time.Millisecond * MainnetBlockPeriod,
 		},
 	}
