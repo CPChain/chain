@@ -59,29 +59,35 @@ macro fsm(v, inputType) begin
     or  \* commit state
         await v.state = 2;
         await inputType = "commitMsg";
+        \* accumulate commit signatures
         v.commitSig := v.commitSig \union {input.commitSig};
-        await commitCertificate(v);
+        if commitCertificate(v)
+        then
         \* transfer to ilde state in next height given the certificate
-        v.commitSig := {};
-        v.state := 9
+            v.commitSig := {};
+            v.state := 9;
+        end if;
     end either
 end macro;
+
+
 
 
 begin
 
 \* Validator1:
-\*   fsm(validators[1], "block");
-\*   fsm(validators[2], "block");
-\*   fsm(validators[3], "block");
-\*   fsm(validators[4], "block");
+    fsm(validators[1], "block");
+\*    fsm(validators[2], "block");
+\*    fsm(validators[3], "block");
+\*    fsm(validators[4], "block");
+
 
 
 end algorithm;*)
 ====
 
 \* BEGIN TRANSLATION
-VARIABLES proposers, validators
+VARIABLES proposers, validators, pc
 
 (* define statement *)
 prepareCertificate(v) ==
@@ -97,7 +103,7 @@ impeachCommitCertificate(v) ==
     Len(v.impeachCommitSig) >= 2
 
 
-vars == << proposers, validators >>
+vars == << proposers, validators, pc >>
 
 Init == (* Global variables *)
         /\ proposers = <<"p1","p2">>
@@ -107,7 +113,53 @@ Init == (* Global variables *)
                         [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}],
                         [state |-> 0, prepareSig |-> {}, commitSig |->{}, impeachPrepareSig |->{}, impeachCommitSig |->{}]
                         >>
+        /\ pc = "Lbl_1"
+
+Lbl_1 == /\ pc = "Lbl_1"
+         /\ \/ /\ (validators[1]).state = 0
+               /\ "block" = "block"
+               /\ validators' = [validators EXCEPT ![1].state = 1]
+               /\ pc' = "Done"
+            \/ /\ (validators[1]).state = 1
+               /\ "block" = "prepareMsg"
+               /\ validators' = [validators EXCEPT ![1].prepareSig = (validators[1]).prepareSig \union {input.prepareSig}]
+               /\ IF prepareCertificate((validators'[1]))
+                     THEN /\ pc' = "Lbl_2"
+                     ELSE /\ pc' = "Done"
+            \/ /\ (validators[1]).state = 2
+               /\ "block" = "commitMsg"
+               /\ validators' = [validators EXCEPT ![1].commitSig = (validators[1]).commitSig \union {input.commitSig}]
+               /\ IF commitCertificate((validators'[1]))
+                     THEN /\ pc' = "Lbl_4"
+                     ELSE /\ pc' = "Done"
+         /\ UNCHANGED proposers
+
+Lbl_2 == /\ pc = "Lbl_2"
+         /\ validators' = [validators EXCEPT ![1].prepareSig = {}]
+         /\ pc' = "Lbl_3"
+         /\ UNCHANGED proposers
+
+Lbl_3 == /\ pc = "Lbl_3"
+         /\ validators' = [validators EXCEPT ![1].state = 2]
+         /\ pc' = "Done"
+         /\ UNCHANGED proposers
+
+Lbl_4 == /\ pc = "Lbl_4"
+         /\ validators' = [validators EXCEPT ![1].commitSig = {}]
+         /\ pc' = "Lbl_5"
+         /\ UNCHANGED proposers
+
+Lbl_5 == /\ pc = "Lbl_5"
+         /\ validators' = [validators EXCEPT ![1].state = 9]
+         /\ pc' = "Done"
+         /\ UNCHANGED proposers
+
+Next == Lbl_1 \/ Lbl_2 \/ Lbl_3 \/ Lbl_4 \/ Lbl_5
+           \/ (* Disjunct to prevent deadlock on termination *)
+              (pc = "Done" /\ UNCHANGED vars)
 
 Spec == Init /\ [][Next]_vars
+
+Termination == <>(pc = "Done")
 
 \* END TRANSLATION
