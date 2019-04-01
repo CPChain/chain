@@ -66,6 +66,9 @@ var (
 	// the previous block's timestamp + the minimum block period.
 	ErrInvalidTimestamp = errors.New("invalid timestamp")
 
+	// ErrInvalidGasLimit is returned if the gasLimit of a block is invalid
+	ErrInvalidGasLimit = errors.New("invalid gas limit for the block")
+
 	// errInvalidChain is returned if an authorization list is attempted to
 	// be modified via out-of-range or non-contiguous headers.
 	errInvalidChain = errors.New("invalid voting chain")

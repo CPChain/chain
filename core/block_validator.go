@@ -128,5 +128,8 @@ func CalcGasLimit(parent *types.Block) uint64 {
 			limit = configs.TargetGasLimit
 		}
 	}
+	if limit > configs.MaxGasLimit {
+		limit = configs.MaxGasLimit
+	}
 	return limit
 }
