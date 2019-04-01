@@ -10,8 +10,8 @@ Welcome to CPChain documentation!
    :maxdepth: 5
    :caption: Contents
 
-   quickstart/quickstart
    overview/overview
+   quickstart/quickstart
    installation/installation
    configuration/configuration
    consensus/consensus
