@@ -1067,12 +1067,14 @@ func (s *PublicTransactionPoolAPI) GetTransactionByBlockNumberAndIndex(ctx conte
 // GetAllTransactionsByBlockNumberAndIndex returns the transaction for the given block number and index.
 func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx context.Context, blockNr rpc.BlockNumber, from hexutil.Uint, to hexutil.Uint) []*RPCTransaction {
 	if block, _ := s.b.BlockByNumber(ctx, blockNr); block != nil {
+		log.Info("RPC API", "from", from, "to", to)
 		// transactions cnt
 		cnt := to - from
 		result := make([]*RPCTransaction, cnt)
 		for i := from; i <= to; i++ {
 			result[i] = newRPCTransactionFromBlockIndex(block, uint64(i))
 		}
+		log.Info("RPC API Success")
 		return result
 	}
 	return nil
