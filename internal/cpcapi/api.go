@@ -1065,7 +1065,16 @@ func (s *PublicTransactionPoolAPI) GetTransactionByBlockNumberAndIndex(ctx conte
 }
 
 // GetAllTransactionsByBlockNumberAndIndex returns the transaction for the given block number and index.
-func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx context.Context, blockNr rpc.BlockNumber, from hexutil.Uint, to hexutil.Uint) []*RPCTransaction {
+func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx context.Context, blockNr rpc.BlockNumber, index hexutil.Uint) *RPCTransaction {
+	if block, _ := s.b.BlockByNumber(ctx, blockNr); block != nil {
+		log.Info("RPC API", "index", index)
+		return newRPCTransactionFromBlockIndex(block, uint64(index))
+	}
+	return nil
+}
+
+// GetAllTransactionsByBlockNumberAndIndex1 returns the transaction for the given block number and index.
+func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex1(ctx context.Context, blockNr rpc.BlockNumber, from hexutil.Uint, to hexutil.Uint) []*RPCTransaction {
 	if block, _ := s.b.BlockByNumber(ctx, blockNr); block != nil {
 		log.Info("RPC API", "from", from, "to", to)
 		// transactions cnt
