@@ -307,32 +307,6 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 				log.Debug("unknown msg code for fsm output", "msgCode", msgCode)
 			}
 
-		case BroadcastAndInsertBlockAction:
-			switch msgCode {
-			case ValidateMsgCode:
-				err = vh.dpor.InsertChain(output[0].block)
-				if err == nil {
-					log.Debug("inserted normal block to local chain, broadcasting...", "number", output[0].Number(), "hash", output[0].Hash().Hex())
-					go vh.BroadcastValidateBlock(output[0].block)
-					go vh.dpor.BroadcastBlock(output[0].block, true)
-				} else {
-					log.Debug("failed to insert normal block to local chain", "number", output[0].Number(), "hash", output[0].Hash().Hex())
-				}
-
-			case ImpeachValidateMsgCode:
-				err = vh.dpor.InsertChain(output[0].block)
-				if err == nil {
-					log.Debug("inserted impeach block to local chain, broadcasting...", "number", output[0].Number(), "hash", output[0].Hash().Hex())
-					go vh.BroadcastValidateImpeachBlock(output[0].block)
-					go vh.dpor.BroadcastBlock(output[0].block, true)
-				} else {
-					log.Debug("failed to insert impeach block to local chain", "number", output[0].Number(), "hash", output[0].Hash().Hex())
-				}
-
-			default:
-				log.Debug("unknown msg code for fsm output", "msgCode", msgCode)
-			}
-
 		// other actions
 		default:
 			log.Debug("unknown action code for fsm output", "action", action)
