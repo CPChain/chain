@@ -567,7 +567,7 @@ other validators can obtain the certificate.
 
 
 The motivation of introducing this mechanism is to
-implement `Intra-view Recovery`_.
+implement `Intra-block Recovery`_.
 And by utilizing prepare message,
 we can implement it without adding too much code.
 
@@ -589,36 +589,37 @@ Recovery
 -----------
 
 LBFT 2.0 provides both liveness and safety under the assumption
-that at most one third of validators misbehave in a certain view.
+that at most one third of validators misbehave in a certain block height.
 But without providing a recovery mechanism, the percentage of faulty validators would accumulate,
 outnumber one third, and finally degrade superior safety of LBFT 2.0.
 It motivates us to develop a sophisticated recovery mechanism, such that a delaying validator can catch up others.
 
 Delaying validators are categorized into two different types according to how far behind they are:
 1. The block height of delaying validator is same as the functioning validators
-2. The validator delaying for at least a view.
+2. The validator delaying for at least a block height.
 
 
-Intra-view Recovery
+Intra-block Recovery
 *************************
 
-Under the original framework of LBFT 2.0, once a validator has been losing its connection for a state,
-it can hardly join the consensus process at the rest part of this view. Here we give an example.
+Under the original framework of LBFT 2.0, once a validator loses its connection for a state,
+it can hardly join the consensus process at the rest part of this block.
+Here we give an example.
 
 **Example 1:** validator v\ :sub:`1`\  from a committee of four members, disconnects from the network in the prepare state.
 The other three validators suffice a quorum for a prepare certificate and proceed to commit state.
-Even v\ :sub:`1`\  somehow reconnects to the net, it cannot contribute to collect a commit certificate in this view
+Even v\ :sub:`1`\  somehow reconnects to the net, it cannot contribute to collect a commit certificate in this block height,
 since it has yet collected a prepare certificate missed prepare messages from others.
 
 Without any recovery, v\ :sub:`1`\  would be regarded as a non-responding node,
-and return to normal consensus processing in the next view, after it receives a validate message.
-The intra-view recovery address the problem by appending the certificate to the message.
-Applying intro-view recovery in Example 1,
+and return to normal consensus processing in the next height, after it receives a validate message.
+The intra-block recovery address the problem by appending the certificate to the message.
+Applying intra-block recovery in Example 1,
 the other three validators broadcast a commit message accompanied with a prepare certificate.
 Validator v\ :sub:`1`\  can forward to commit state after it verifies the certificate.
 
 Some readers may wonder that LBFT 2.0 works perfectly as long as the assumptions are kept,
-what the necessity of intra-view recovery is.
+what the necessity of intra-block recovery is.
 The key reason is that communications between validators are finished in the blink of an eye.
 The possibility that a validator loses some packets is not that low.
 Our experimental results indicate that even in a committee of four loyal validator,
@@ -628,23 +629,23 @@ In practice, we use a prepare message with all signature the validator collects,
 as the certificate.
 Refer to :ref:`transitivity` for detailed implementation.
 
-By introducing intra-view recovery, our system can tolerate two or more distinct validators
+By introducing intra-block recovery, our system can tolerate two or more distinct validators
 lose their connection in different states.
-Even though this scenario violates our original assumptions, LBFT 2.0 with intra-view recovery reaches a consensus.
+Even though this scenario violates our original assumptions, LBFT 2.0 with intra-block recovery reaches a consensus.
 At the cost of larger space consumption for each message, we increase the robustness of the protocol.
 
 
-Extra-view Recovery
+Extra-block Recovery
 *************************
 
-If intra-view recovery does not work for a validator v and the block height of v is same as the chain,
+If intra-block recovery does not work for a validator v and the block height of v is same as the chain,
 it is about to catch up other validators once it receives a validate message.
 As demonstrated in :ref:`LBFT-2-Pseudocode`, validate message (as well as impeach validate mesage) has highest priority,
-which forwards v to idle state of next view regardless of the state of v.
+which forwards v to idle state of next height regardless of the state of v.
 
 However, if v has been losing its connection for a long time, it should invoke *sync* function.
 Sync function, as indicated by the name, synchronizes with Mainnet chain.
-Then it can rejoin consensus process after receiving validate message of the current view.
+Then it can rejoin consensus process after receiving validate message of the current height.
 The function is called a validator suspects it is delaying like receiving :ref:`unknown-ancestor-block`.
 
 
@@ -885,8 +886,6 @@ as well as the number of peers a node holds.
 | Proposer      | V-P         | C-C          | C-C       |
 +---------------+-------------+--------------+-----------+
 | Civilian      | C-C         | C-C          | C-C       |
-+---------------+-------------+--------------+-----------+
-| Num of peers  | 70          | 25           | 25        |
 +---------------+-------------+--------------+-----------+
 
 

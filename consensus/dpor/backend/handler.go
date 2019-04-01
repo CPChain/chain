@@ -136,12 +136,14 @@ func (h *Handler) Length() uint64 {
 func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (string, bool, bool, error) {
 	blk := h.dpor.GetCurrentBlock()
 	if blk == nil {
-		log.Fatal("current block is nil", "block", blk)
+		log.Error("current block is nil", "block", blk)
+		return "", false, false, errNilBlock
 	}
 
 	var (
-		term       = h.dpor.TermOf(blk.NumberU64())
-		futureTerm = h.dpor.FutureTermOf(h.dpor.GetCurrentBlock().NumberU64())
+		number      = blk.NumberU64()
+		currentTerm = h.dpor.TermOf(number)
+		futureTerm  = h.dpor.FutureTermOf(number)
 	)
 
 	mac, sig, err := h.dpor.GetMac()
@@ -149,7 +151,7 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 		log.Fatal("err when get message authentication coed", "err", err)
 	}
 
-	return h.dialer.AddPeer(version, p, rw, mac, sig, term, futureTerm)
+	return h.dialer.AddPeer(version, p, rw, mac, sig, currentTerm, futureTerm)
 }
 
 // RemovePeer removes a p2p peer with its addr
@@ -250,7 +252,12 @@ func (h *Handler) procUnknownAncestorsLoop() {
 		for _, bi := range h.unknownAncestorBlocks.GetBlockIdentifiers() {
 
 			// if less than current number, drop it!
-			if bi.number <= h.dpor.GetCurrentBlock().NumberU64() {
+			blk := h.dpor.GetCurrentBlock()
+			if blk == nil {
+				continue
+			}
+
+			if bi.number <= blk.NumberU64() {
 
 				h.unknownAncestorBlocks.RemoveBlock(bi)
 				log.Debug("unknown ancestor block's number is less than current number, drop it!", "number", bi.number, "hash", bi.hash.Hex())

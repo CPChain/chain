@@ -394,6 +394,13 @@ func (c *Client) GetProposerByBlock(ctx context.Context, blockNumber *big.Int) (
 	return result, err
 }
 
+// get the proposers of the term specified by block
+func (c *Client) GetProposersByBlockNumber(ctx context.Context, blockNumber *big.Int) ([]common.Address, error) {
+	var result []common.Address
+	err := c.c.CallContext(ctx, &result, "eth_getProposersByBlockNumber", toBlockNumArg(blockNumber))
+	return result, err
+}
+
 // get the validators specified by block
 func (c *Client) GetValidatorsByBlockNumber(ctx context.Context, blockNumber *big.Int) ([]common.Address, error) {
 	var result []common.Address

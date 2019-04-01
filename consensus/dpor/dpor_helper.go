@@ -17,12 +17,14 @@
 package dpor
 
 import (
+	"math"
 	"reflect"
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -80,7 +82,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 	if verifyProposers && !isImpeach { // ignore impeach block(whose coinbase is empty)
 
 		// verify proposers if it is not an impeachment block
-		if err := dpor.dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
+		if err := dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
 			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
 			return err
 		}
@@ -170,6 +172,11 @@ func (dh *defaultDporHelper) verifyBasic(dpor *Dpor, chain consensus.ChainReader
 		}
 	}
 
+	// Ensure that the block's gasLimit is valid
+	if header.GasLimit > configs.MaxGasLimit || header.GasLimit < configs.MinGasLimit || header.GasUsed > header.GasLimit {
+		return ErrInvalidGasLimit
+	}
+
 	// Delay to verify it!
 	delay := header.Timestamp().Sub(time.Now())
 	log.Debug("delaying to verify the block", "delay", delay)
@@ -254,7 +261,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		}
 
 		// If an on-disk checkpoint Snapshot can be found, use that
-		if IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
+		if backend.IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
 			log.Debug("loading snapshot", "number", numberIter, "hash", hash)
 			s, err := loadSnapshot(dpor.config, dpor.db, hash)
 			if err == nil {
@@ -344,17 +351,37 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	snap.setClient(client)
 	snap.rptBackend = rptBackend
 
+	var timeToUpdateCommittee bool
+	_, headNumber := chain.KnownHead()
+
+	log.Debug("known chain head", "number", headNumber)
+
+	if rptBackend != nil {
+		var windowSize = uint64(0)
+		if snap.isStartElection() {
+			windowSize, _ = rptBackend.WindowSize()
+			log.Debug("rpt window size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
+		}
+		timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
+		rptCalculateRange := int(windowSize*2 + dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2))
+		startBlockNumberOfRptCalculate := float64(int(headNumber) - rptCalculateRange)
+		timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
+		timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
+	}
+
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, client, dpor.IsMiner() || dpor.IsValidator())
+	newSnap, err := snap.apply(headers, client, timeToUpdateCommittee)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("now created a new snap", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 
 	// Save to cache
 	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if IsCheckPoint(newSnap.number(), dpor.config.TermLen, dpor.config.ViewLen) && len(headers) > 0 {
+	if backend.IsCheckPoint(newSnap.number(), dpor.config.TermLen, dpor.config.ViewLen) && len(headers) > 0 {
 		if err = newSnap.store(dpor.db); err != nil {
 			log.Warn("failed to store dpor snapshot", "error", err)
 			return nil, err
@@ -362,7 +389,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		log.Debug("Stored voting Snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 	}
 
-	dpor.SetCurrentSnap(newSnap)
+	if dpor.CurrentSnap() == nil || (dpor.CurrentSnap() != nil && newSnap.number() >= dpor.CurrentSnap().number()) {
+		dpor.SetCurrentSnap(newSnap)
+	}
 
 	return newSnap, err
 }

@@ -76,7 +76,7 @@ const (
 )
 
 const (
-	DefaultGasLimitPerBlock = 47000000
+	DefaultGasLimitPerBlock = 100000000
 )
 
 // TODO @hmw make the name more meaningful.  add doc.
@@ -324,6 +324,13 @@ func (c *DporConfig) ImpeachCertificate(n uint64) bool {
 func (c *DporConfig) PeriodDuration() time.Duration {
 	if c != nil {
 		return time.Duration(int64(c.Period) * int64(time.Millisecond))
+	}
+	return time.Duration(0)
+}
+
+func (c *DporConfig) BlockDelay() time.Duration {
+	if c != nil {
+		return c.ImpeachTimeout * 1 / 4
 	}
 	return time.Duration(0)
 }

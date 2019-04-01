@@ -142,7 +142,7 @@ func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 
 	signers, ok := s.RecentProposers[term]
 	if !ok {
-		log.Warn("proposers for the term not exist", "term", term)
+		log.Debug("proposers for the term not exist", "term", term)
 		return nil
 	}
 
@@ -281,7 +281,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 
 // apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBackend, isMinerOrValidator bool) (*DporSnapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBackend, timeToUpdateCommitttee bool) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
@@ -304,7 +304,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBacke
 	for _, header := range headers {
 
 		// TODO: write a function to do this
-		ifUpdateCommittee := isMinerOrValidator
+		ifUpdateCommittee := timeToUpdateCommitttee
 
 		err := snap.applyHeader(header, ifUpdateCommittee)
 		if err != nil {
@@ -350,7 +350,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 		}
 
 		// If in checkpoint, run election
-		if IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
+		if backend.IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
 			log.Debug("update proposers committee", "number", s.number())
 			seed := header.Hash().Big().Int64()
 			s.updateProposers(rpts, seed)
@@ -363,7 +363,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 		// TODO: there is a vulnerability about validators in header, check it!
 		// for now, i just do not update validators from header.
 		// s.setRecentValidators(term+1, header.Dpor.Validators)
-	} else if IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
+	} else if backend.IsCheckPoint(header.Number.Uint64(), s.config.TermLen, s.config.ViewLen) {
 		s.setRecentValidators(term+1, s.getRecentValidators(term))
 	}
 

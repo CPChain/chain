@@ -23,6 +23,7 @@ import (
 	"math"
 	"math/big"
 	mrand "math/rand"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -64,6 +65,10 @@ type HeaderChain struct {
 
 	rand   *mrand.Rand
 	engine consensus.Engine
+
+	knownHeadNumber uint64      // number of known head of current chain
+	knownHeadHash   common.Hash // hash of known head of current chain
+	knownHeadLock   sync.RWMutex
 }
 
 // NewHeaderChain creates a new HeaderChain structure.
@@ -103,7 +108,29 @@ func NewHeaderChain(chainDb database.Database, config *configs.ChainConfig, engi
 	}
 	hc.currentHeaderHash = hc.CurrentHeader().Hash()
 
+	if currentHead := hc.CurrentHeader(); currentHead != nil {
+		hc.SetKnownHead(currentHead.Hash(), currentHead.Number.Uint64())
+	}
+
 	return hc, nil
+}
+
+// KnownHead returns hash and number of current head block (maybe not in local chain)
+func (hc *HeaderChain) KnownHead() (common.Hash, uint64) {
+	hc.knownHeadLock.RLock()
+	defer hc.knownHeadLock.RUnlock()
+
+	return hc.knownHeadHash, hc.knownHeadNumber
+}
+
+// SetKnownHead sets the known head block hash and number
+func (hc *HeaderChain) SetKnownHead(hash common.Hash, number uint64) {
+	hc.knownHeadLock.Lock()
+	defer hc.knownHeadLock.Unlock()
+
+	if number > hc.knownHeadNumber {
+		hc.knownHeadHash, hc.knownHeadNumber = hash, number
+	}
 }
 
 // GetBlockNumber retrieves the block number belonging to the given hash
@@ -356,6 +383,11 @@ func (hc *HeaderChain) GetHeaderByNumber(number uint64) *types.Header {
 // header is retrieved from the HeaderChain's internal cache.
 func (hc *HeaderChain) CurrentHeader() *types.Header {
 	return hc.currentHeader.Load().(*types.Header)
+}
+
+// CurrentBlock returns nil!
+func (hc *HeaderChain) CurrentBlock() *types.Block {
+	return nil
 }
 
 // SetCurrentHeader sets the current head header of the canonical chain.

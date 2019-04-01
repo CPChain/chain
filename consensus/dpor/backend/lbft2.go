@@ -9,11 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 // errors returned by fsm
@@ -30,8 +32,9 @@ type LBFT2 struct {
 	state     consensus.State
 	stateLock sync.RWMutex
 
-	faulty uint64 // faulty is the parameter of 3f+1 nodes in Byzantine
-	lock   sync.RWMutex
+	faulty         uint64 // faulty is the parameter of 3f+1 nodes in Byzantine
+	failbackNumber uint64 // a block number denotes a failback block
+	lock           sync.RWMutex
 
 	dpor       DporService
 	blockCache *RecentBlocks // cache of blocks
@@ -40,10 +43,14 @@ type LBFT2 struct {
 	commitSignatures  *signaturesForBlockCaches
 
 	handleImpeachBlock HandleGeneratedImpeachBlock
+
+	validateMsgMap *lru.ARCCache
 }
 
 // NewLBFT2 create an LBFT2 instance
 func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock, db database.Database) *LBFT2 {
+
+	validateMap, _ := lru.NewARC(1000)
 
 	lbft := &LBFT2{
 		state:  consensus.Idle,
@@ -56,14 +63,12 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 		commitSignatures:  newSignaturesForBlockCaches(db),
 
 		handleImpeachBlock: handleImpeachBlock,
+
+		validateMsgMap: validateMap,
 	}
 
-	// wait to try to failback if reboot
-	time.AfterFunc(
-		configs.DefaultWaitTimeBeforeImpeachment,
-		func() {
-			lbft.tryToImpeachFailback()
-		})
+	// try to failback if reboot
+	lbft.tryToImpeachFailback()
 
 	return lbft
 }
@@ -135,8 +140,9 @@ func (p *LBFT2) FSM(input *BlockOrHeader, msgCode MsgCode) ([]*BlockOrHeader, Ac
 
 	log.Debug("result state", "state", state, "number", number, "msg code", msgCode.String(), "action", action)
 
-	if p.number < p.dpor.GetCurrentBlock().NumberU64()+1 {
-		p.number = p.dpor.GetCurrentBlock().NumberU64() + 1
+	blk := p.dpor.GetCurrentBlock()
+	if blk != nil && p.number < blk.NumberU64()+1 {
+		p.number = blk.NumberU64() + 1
 		p.state = consensus.Idle
 	}
 
@@ -415,6 +421,13 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 	if err := p.blockCache.AddBlock(block); err != nil {
 		log.Warn("failed to add the block to block cache", "number", number, "hash", hash.Hex())
 		return nil, NoAction, NoMsgCode, state, err
+	}
+
+	parent := p.dpor.GetBlockFromChain(block.ParentHash(), block.NumberU64()-1)
+	// if received a preprepare msg, and current time is after parent.timestamp+period+blockDelay, drop it!
+	if parent != nil && time.Now().After(parent.Timestamp().Add(p.dpor.Period()).Add(p.dpor.BlockDelay())) {
+		log.Debug("current time is after parent + period + blockdelay", "number", number, "hash", hash.Hex(), "time.now", time.Now(), "parent timestamp", parent.Timestamp())
+		return nil, NoAction, NoMsgCode, state, nil
 	}
 
 	log.Debug("ready to verify the block ", "number", number, "hash", hash.Hex())
@@ -808,12 +821,32 @@ func (p *LBFT2) handleValidateMsg(input *BlockOrHeader, state consensus.State) (
 	}
 
 	var (
-		block = input.block
+		block  = input.block
+		number = input.Number()
+		hash   = input.Hash()
 	)
 
 	log.Debug("received a validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ValidateMsgCode, consensus.Idle, nil
+	// get a hash of a validated block
+	if hsh, ok := p.validateMsgMap.Get(number); ok {
+
+		// if current hash is different, do not accept it!
+		if validatedHash, ok := hsh.(common.Hash); ok && validatedHash != hash {
+			return nil, NoAction, NoMsgCode, state, nil
+		}
+	}
+
+	// add current hash to the cache
+	p.validateMsgMap.Add(number, hash)
+
+	err := p.dpor.InsertChain(block)
+	if err == nil {
+		go p.dpor.BroadcastBlock(block, true)
+		return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
+	}
+
+	return nil, NoAction, NoMsgCode, state, err
 }
 
 // handleImpeachValidateMsg handles Impeach Validate msg
@@ -825,12 +858,32 @@ func (p *LBFT2) handleImpeachValidateMsg(input *BlockOrHeader, state consensus.S
 	}
 
 	var (
-		block = input.block
+		block  = input.block
+		number = input.Number()
+		hash   = input.Hash()
 	)
 
 	log.Debug("received an impeach validate block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
-	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ImpeachValidateMsgCode, consensus.Idle, nil
+	// get a hash of a validated block
+	if hsh, ok := p.validateMsgMap.Get(number); ok {
+
+		// if current hash is different, do not accept it!
+		if validatedHash, ok := hsh.(common.Hash); ok && validatedHash != hash {
+			return nil, NoAction, NoMsgCode, state, nil
+		}
+	}
+
+	// add current hash to the cache
+	p.validateMsgMap.Add(number, hash)
+
+	err := p.dpor.InsertChain(block)
+	if err == nil {
+		go p.dpor.BroadcastBlock(block, true)
+		return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Idle, nil
+	}
+
+	return nil, NoAction, NoMsgCode, state, err
 }
 
 // refreshSignatures refreshes signatures in header and local cache
@@ -971,7 +1024,14 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 	number := block.NumberU64()
 
 	if number <= p.number {
+		log.Debug("handling unknown ancestor block, number too low, return", "number", number, "hash", block.Hash().Hex(), "lbft.number", p.number)
 		return
+	}
+
+	// if term is larger than local, sync!
+	if p.dpor.TermOf(number) > p.dpor.TermOf(p.number) {
+		log.Debug("handling unknown ancestor block, term large than current, syncing", "number", number, "hash", block.Hash().Hex(), "lbft.number", p.number)
+		go p.dpor.Synchronize()
 	}
 
 	// recover proposer's address
@@ -994,28 +1054,24 @@ func (p *LBFT2) unknownAncestorBlockHandler(block *types.Block) {
 		}
 		return
 	}
-
-	// if term is larger than local, sync!
-	if p.dpor.TermOf(number) > p.dpor.TermOf(p.number) {
-		go p.dpor.Synchronize()
-	}
 }
 
 func (p *LBFT2) tryToImpeach() {
 	log.Debug("try to start impeachment process")
 
-	if impeachBlock, err := p.dpor.CreateImpeachBlock(); err == nil {
+	p.lock.RLock()
+	failbackNumber := p.failbackNumber
+	p.lock.RUnlock()
+
+	if impeachBlock, err := p.dpor.CreateImpeachBlock(); impeachBlock != nil && impeachBlock.NumberU64() != failbackNumber && err == nil {
 
 		time.AfterFunc(
 			func() time.Duration {
-				if impeachBlock.Timestamp().Before(time.Now()) {
-					// if impeachBlock.Timestamp().Before(time.Now()) && impeachBlock.NumberU64() == 1 {
-					return p.dpor.ImpeachTimeout()
-				}
 				return impeachBlock.Timestamp().Sub(time.Now())
 			}(),
 			func() {
-				if impeachBlock.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+				currentBlock := p.dpor.GetCurrentBlock()
+				if currentBlock != nil && impeachBlock.NumberU64() > currentBlock.NumberU64() {
 					p.handleImpeachBlock(impeachBlock)
 				}
 			})
@@ -1026,14 +1082,19 @@ func (p *LBFT2) tryToImpeachFailback() {
 	log.Debug("try to start failback impeachment process")
 
 	// creates two failback impeachment blocks and waits for their time
-	if firstImpeach, secondImpeach, err := p.dpor.CreateFailbackImpeachBlocks(); err == nil {
+	if firstImpeach, secondImpeach, err := p.dpor.CreateFailbackImpeachBlocks(); firstImpeach != nil && secondImpeach != nil && err == nil {
 
 		log.Debug("created two failback impeachment blocks with timestamps", "timestamp1", firstImpeach.Timestamp(), "timestamp2", secondImpeach.Timestamp())
+
+		p.lock.Lock()
+		p.failbackNumber = firstImpeach.NumberU64()
+		p.lock.Unlock()
 
 		go time.AfterFunc(
 			firstImpeach.Timestamp().Sub(time.Now()),
 			func() {
-				if firstImpeach.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+				currentBlock := p.dpor.GetCurrentBlock()
+				if currentBlock != nil && firstImpeach.NumberU64() > currentBlock.NumberU64() {
 					p.handleImpeachBlock(firstImpeach)
 				}
 			})
@@ -1041,9 +1102,11 @@ func (p *LBFT2) tryToImpeachFailback() {
 		go time.AfterFunc(
 			secondImpeach.Timestamp().Sub(time.Now()),
 			func() {
-				if secondImpeach.NumberU64() > p.dpor.GetCurrentBlock().NumberU64() {
+				currentBlock := p.dpor.GetCurrentBlock()
+				if currentBlock != nil && secondImpeach.NumberU64() > currentBlock.NumberU64() {
 					p.handleImpeachBlock(secondImpeach)
 				}
 			})
+
 	}
 }

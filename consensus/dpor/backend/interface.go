@@ -150,6 +150,9 @@ type DporService interface {
 	// TermLength returns term length
 	TermLength() uint64
 
+	// Faulty returns the number of faulty nodes
+	Faulty() uint64
+
 	// ViewLength returns view length
 	ViewLength() uint64
 
@@ -158,6 +161,9 @@ type DporService interface {
 
 	// Period returns period of block generation
 	Period() time.Duration
+
+	// BlockDelay returns max delay of preprepare block propagation
+	BlockDelay() time.Duration
 
 	// TermOf returns the term number of given block number
 	TermOf(number uint64) uint64
@@ -309,4 +315,17 @@ func ValidMacSig(mac string, sig []byte) (valid bool, signer common.Address, err
 	valid = true
 
 	return
+}
+
+// IsCheckPoint returns if a given block number is in a checkpoint with given
+// termLen and viewLen
+func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
+	if number == 0 {
+		return false
+	}
+
+	if termLen == 0 || viewLen == 0 {
+		return true
+	}
+	return number%(termLen*viewLen) == 0
 }

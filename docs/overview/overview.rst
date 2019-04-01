@@ -1,5 +1,7 @@
+.. _overview:
+
 Overview
-~~~~~~~~~~~
+===============
 
 What is CPChain
 ################
@@ -30,6 +32,7 @@ RPT Contract
    **Data Contribution (DC)**,
    **Blockchain Maintenance (BM)**,
    and **Proxy Reputation (PR)**.
+   Refer to `RPT Evaluation`_ for detailed implementation.
 
    By invoking function ``getRpt()``, developer can obtain the reputation value of corresponding node.
    RPT contract can be updated by contract deployer to avoid some faulty nodes maliciously increasing their RPT values.
@@ -137,7 +140,7 @@ CPChain Nodes Roles
 
 **Economy Node**: Requires a minimum of 20,000 CPC tokens for participation.
 Investors who meet this requirement may participate as
- an economy node and have the right to vote in the community.
+an economy node and have the right to vote in the community.
 
 **Reputation Node**: Requires a minimum of 200,000 CPC tokens for participation.
 Investors with the basic configuration of computing and
@@ -165,12 +168,115 @@ A node has to meet one of the following requirements to become a Reputation Node
 Reputation Nodes have the right to be elected as
 a proposers committee member and to be granted rewards from the Blockchain.
 
+
+RPT Evaluation
+*******************************
+
+RPT (abbreviated from reputation) value of a node is evaluated by extracting data from blockchain.
+By employing `RPT Contract`_, a node can evaluates its RPT value by following five dimensions:
+
+- **Account Balance（AB)**,
+- **Transaction (TX)**,
+- **Data Contribution (DC)**,
+- **Blockchain Maintenance (BM)**,
+- **Proxy Reputation (PR)**.
+
+
+Each dimension has a full score of 100 point.
+And the total score is calculated as:
+
+*RPT = 0.5\*AB +
+0.15\*Tx +
+0.1\*PR +
+0.15\*DC +
+0.1\*BM*
+
+
+Account Balance
+++++++++++++++++++
+
+A account balance score is granted to an RNode
+according to its account balance percentile among all RNode addresses
+(excluding CPChain Foundation and Exchange addresses).
+Score percentiles are demonstrated below.
+
++--------------+--------------+
+| Percentile   |  Score (AB)  |
++==============+==============+
+|    98%       |   100        |
++--------------+--------------+
+|    95%       |    90        |
++--------------+--------------+
+|    85%       |    80        |
++--------------+--------------+
+|    65%       |    70        |
++--------------+--------------+
+|    40%       |    60        |
++--------------+--------------+
+|    20%       |    40        |
++--------------+--------------+
+|     0%       |    20        |
++--------------+--------------+
+
+
+Transaction
+++++++++++++++
+
+*Transactions* here are defined as
+transactions that exchange tokens for data product.
+The definition of *Transactions* can be expanded as the of CPChain ecosystem develops.
+
+Transaction score is evaluated by all *transactions* statistics.
+For each *transaction* record a node finishes,
+
+1. 5 points is granted to the node.
+#. The full score is 100 points.
+
+Proxy Reputation
+++++++++++++++++++
+
+An RNode can serve as a *proxy* helping other nodes complete transactions.
+Its RPT is augmented after assuming the responsibility as a proxy.
+
+Proxy reputation score is calculated according to following rules:
+
+1. Once an RNode registers as a proxy, it obtains 10 initial points.
+#. For each successful transaction with the node's help as a proxy, it gets 5 points.
+#. The full score is 100 points.
+
+
+Data Contribution
+++++++++++++++++++++
+
+Uploading data augments RPT value.
+There are two parts in data contribution,
+as basic DC score and bonus DC score.
+
+Data contribution score is calculated according to following rules:
+
+1. For each file an RNode uploads, the node is rewarded 3 points in DC score.
+#. The full score of basic DC is 30 points.
+#. Each time other node purchases a file that RNode uploads, the RNode is rewarded 5 bonus points.
+#. The full score of bonus DC is 70 points.
+
+
+Blockchain Maintenance
++++++++++++++++++++++++++
+
+Blockchain Maintenance score is calculated
+given a node's contribution in proposing a certain block.
+For a successfully inserted block,
+
+1. Its proposer is rewarded 100 points.
+#. Other committee members are rewarded 80 points each.
+#. The rest RNodes are rewarded 60 points each.
+
 Hardware Specification
 ***************************
 
 
 Minimum Requirement
---------------------------
+++++++++++++++++++++++++
 
 * Memory: 4GB
 
@@ -183,7 +289,7 @@ Minimum Requirement
 
 
 Recommended Requirement
---------------------------------
+++++++++++++++++++++++++++
 
 - Memory: 16GB
 
@@ -223,7 +329,10 @@ Each fundraising is overlapped with previous lock-up period.
 In fundraising, the following operations are allowed:
 
 1. All civilians can deposit coin in the reward pool, to become economic nodes or RNodes.
-#. Nodes that have already had coins deposited in the pool can choose to whether continue deposit the next season or renew the deposit value.
+#. Nodes that have already had coins deposited in the pool can choose to
+    1. whether continue deposit the next season
+    #. or renew the deposit value.
+#. For a node determines to withdraw deposit, it needs to call withdraw function on their own initiative after lock-up period finishes
 
 When a fundraising ends, the following rules are applied:
 
@@ -237,8 +346,10 @@ In other word, the basic reward is calculated as 5000000*d/D, where d is deposit
 and D is the total value of coins in the reward pool.
 
 
-
 .. image:: reward_pool.png
+
+
+
 
 Maintenance Reward
 +++++++++++++++++++++
@@ -268,6 +379,7 @@ Therefore, we conclude the reward and supply in the table below.
 +--------+--------+---------------+--------------+
 | 5      | 4.03   |  3,162,240*   | 12,743,827.2 |
 +--------+--------+---------------+--------------+
+
 \* Both the first and the fifth year contain a leap day (29 Feb 2020 and 2024, respectively),
 which results in a larger number of generated blocks compared to the other three years.
 

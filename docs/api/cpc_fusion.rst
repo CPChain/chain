@@ -1,7 +1,8 @@
+.. _fusion-api:
+
 Fusion API
 =============
 
-.. _fusion-api:
 
 Installation
 ---------------

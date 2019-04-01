@@ -35,6 +35,10 @@ type ChainReader interface {
 	// CurrentHeader retrieves the current header from the local chain.
 	CurrentHeader() *types.Header
 
+	// CurrentBlock retrieves the current head block of the canonical chain. The
+	// block is retrieved from the blockchain's internal cache.
+	CurrentBlock() *types.Block
+
 	// GetHeader retrieves a block header from the database by hash and number.
 	GetHeader(hash common.Hash, number uint64) *types.Header
 
@@ -46,6 +50,12 @@ type ChainReader interface {
 
 	// GetBlock retrieves a block from the database by hash and number.
 	GetBlock(hash common.Hash, number uint64) *types.Block
+
+	// KnownHead returns hash and number of current head block (maybe not in local chain)
+	KnownHead() (common.Hash, uint64)
+
+	// SetKnownHead sets the known head block hash and number
+	SetKnownHead(common.Hash, uint64)
 }
 
 // ChainWriter reads and writes pending block to blockchain

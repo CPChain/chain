@@ -146,7 +146,7 @@ func accountUpdate(ctx *cli.Context) error {
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	for _, addr := range ctx.Args() {
-		account, oldPassword := unlockAccountWithPrompt(ks, addr)
+		account, oldPassword, _, _ := unlockAccountWithPrompt(ks, addr)
 		newPassword, _ := commons.ReadPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a new password.", true)
 		if err := ks.Update(account, oldPassword, newPassword); err != nil {
 			commons.Fatalf("Could not update the account: %v", err)
@@ -191,7 +191,7 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 }
 
 // tries unlocking the specified account a few times.
-func unlockAccountWithPrompt(ks *keystore.KeyStore, address string) (accounts.Account, string) {
+func unlockAccountWithPrompt(ks *keystore.KeyStore, address string) (accounts.Account, string, *keystore.Key, error) {
 	account, err := makeAddress(ks, address)
 	if err != nil {
 		commons.Fatalf("Could not list accounts: %v", err)
@@ -203,11 +203,12 @@ func unlockAccountWithPrompt(ks *keystore.KeyStore, address string) (accounts.Ac
 		err = ks.Unlock(account, password)
 		if err == nil {
 			log.Info("Unlocked account", "address", account.Address.Hex())
-			return account, password
+			account, key, err := ks.GetDecryptedKey(account, password)
+			return account, password, key, err
 		}
 		if err, ok := err.(*keystore.AmbiguousAddrError); ok {
 			log.Info("Unlocked account", "address", account.Address.Hex())
-			return ambiguousAddrRecovery(ks, err, password), password
+			return ambiguousAddrRecovery(ks, err, password), password, nil, nil
 		}
 		if err != keystore.ErrDecrypt {
 			// No need to prompt again if the error is not decryption-related.
@@ -216,11 +217,11 @@ func unlockAccountWithPrompt(ks *keystore.KeyStore, address string) (accounts.Ac
 	}
 	// All trials expended to unlock account, bail out
 	commons.Fatalf("Failed to unlock account %s (%v)", address, err)
-	return accounts.Account{}, ""
+	return accounts.Account{}, "", nil, nil
 }
 
 // tries unlocking the specified account a few times.
-func unlockAccountWithPassword(ks *keystore.KeyStore, address string, password string) accounts.Account {
+func unlockAccountWithPassword(ks *keystore.KeyStore, address string, password string) (accounts.Account, *keystore.Key, error) {
 	account, err := makeAddress(ks, address)
 	if err != nil {
 		commons.Fatalf("Could not list accounts: %v", err)
@@ -228,14 +229,15 @@ func unlockAccountWithPassword(ks *keystore.KeyStore, address string, password s
 	err = ks.Unlock(account, password)
 	if err == nil {
 		log.Info("Unlocked account", "address", account.Address.Hex())
-		return account
+		account, key, err := ks.GetDecryptedKey(account, password)
+		return account, key, err
 	} else if err, ok := err.(*keystore.AmbiguousAddrError); ok {
 		log.Info("Unlocked account", "address", account.Address.Hex())
-		return ambiguousAddrRecovery(ks, err, password)
+		return ambiguousAddrRecovery(ks, err, password), nil, nil
 	}
 	// All trials expended to unlock account, bail out
 	log.Fatalf("Failed to unlock account %s (%v)", address, err)
-	return accounts.Account{}
+	return accounts.Account{}, nil, nil
 }
 
 func accountImport(ctx *cli.Context) error {

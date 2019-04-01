@@ -136,12 +136,8 @@ func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *even
 	if len(manager.SubProtocols) == 0 {
 		return nil, errIncompatibleConfig
 	}
-	// TODO: fix this
-	// downloader
-	// manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, nil)
-	// manager.downloader = downloader.New(mode, chaindb, manager.eventMux, blockchain, nil, manager.removePeer)
 
-	manager.syncer = syncer.New(blockchain, manager.removePeer)
+	manager.syncer = syncer.New(blockchain, manager.removePeer, manager.eventMux)
 
 	// fetcher specific
 	// verifies the header when insert into the chain
@@ -312,6 +308,14 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			return err
 		}
 
+		log.Debug("is validator and remote is miner", "is validator", dporEngine.IsValidator(), "remote miner", remoteIsMiner, "id", p.ID().String(), "addr", p.RemoteAddr().String())
+
+		// validator do not connect to civilian to avoid deny of service attack
+		if dporEngine.IsValidator() && !remoteIsMiner {
+			log.Warn("I am a validator, but the remote peer is neither a proposer, nor a validator, disconnecting", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
+			return nil
+		}
+
 		// defer to remove the peer
 		defer pm.removePeer(peer.id)
 
@@ -352,6 +356,11 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			if msg.Size > ProtocolMaxMsgSize {
 				log.Warn("err when checking msg size", "size", msg.Size)
 				return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+			}
+
+			// if I am a validator, do not waste time to handle tx msg
+			if msg.Code == TxMsg && dporEngine.IsValidator() {
+				continue
 			}
 
 			switch {

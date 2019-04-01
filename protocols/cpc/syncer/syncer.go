@@ -7,10 +7,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 const (
@@ -94,6 +95,12 @@ type BlockChain interface {
 
 	// InsertChain inserts a batch of blocks into the local chain.
 	InsertChain(types.Blocks) (int, error)
+
+	// KnownHead returns hash and number of current head block (maybe not in local chain)
+	KnownHead() (common.Hash, uint64)
+
+	// SetKnownHead sets the known head block hash and number
+	SetKnownHead(common.Hash, uint64)
 }
 
 // Synchronizer is responsible for syncing local chain to latest block
@@ -107,13 +114,16 @@ type Synchronizer struct {
 	cancelCh       chan struct{}
 	quitCh         chan struct{}
 
+	mux *event.TypeMux
+
 	progress     *cpchain.SyncProgress
 	progressLock sync.RWMutex
 }
 
-func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
+func New(chain BlockChain, dropPeer DropPeer, mux *event.TypeMux) *Synchronizer {
 
 	return &Synchronizer{
+		mux:            mux,
 		blockchain:     chain,
 		dropPeer:       dropPeer,
 		syncBlocksCh:   make(chan types.Blocks, 1), // there is only one peer to synchronise with.
@@ -124,8 +134,19 @@ func New(chain BlockChain, dropPeer DropPeer) *Synchronizer {
 	}
 }
 
-func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int) error {
-	switch err := s.synchronise(p, head, height.Uint64()); err {
+func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int) (err error) {
+	s.mux.Post(StartEvent{})
+	defer func() {
+		if err != nil {
+			s.mux.Post(FailedEvent{err})
+		} else {
+			s.mux.Post(DoneEvent{})
+		}
+	}()
+
+	s.blockchain.SetKnownHead(head, height.Uint64())
+
+	switch err = s.synchronise(p, head, height.Uint64()); err {
 	case nil, errBusy, errCanceled, errQuitSync:
 	case ErrSlowPeer:
 		return err

@@ -24,7 +24,7 @@ import (
 
 // delayBeforeSeal returns 80% of the given delay duration
 func delayBeforeSeal(d time.Duration) time.Duration {
-	return d * 4 / 5
+	return d * 1 / 10
 }
 
 const (
@@ -244,6 +244,9 @@ func (e *engine) update() {
 		select {
 		// a new block has been inserted.  we start to mine based on this new tip.
 		case <-e.chainHeadCh:
+
+			log.Debug("now to commit new work", "now", time.Now())
+
 			// commitNewWork must run no matter if it is mining, because pending block needs to be updated by commitNewWork
 			e.commitNewWork()
 
@@ -275,7 +278,7 @@ func (e *engine) update() {
 					txs[acc] = append(txs[acc], tx)
 				}
 				txset := types.NewTransactionsByPriceAndNonce(e.currentWork.signer, txs)
-				e.currentWork.commitTransactions(e.mux, txset, e.chain, e.coinbase)
+				e.currentWork.commitTransactions(e.mux, txset, e.chain, e.coinbase, time.Now().Add(time.Second*10))
 				e.updateSnapshot()
 				e.currentMu.Unlock()
 			}
@@ -400,6 +403,7 @@ func (e *engine) commitNewWork() {
 		return
 	}
 
+	// delay to add more txs to tx pool
 	delay := header.Timestamp().Sub(time.Now())
 	delay = delayBeforeSeal(delay)
 	log.Debug("Waiting for slot to seal", "delay", delay)
@@ -425,7 +429,26 @@ func (e *engine) commitNewWork() {
 		return
 	}
 	txs := types.NewTransactionsByPriceAndNonce(e.currentWork.signer, pending)
-	work.commitTransactions(e.mux, txs, e.chain, e.coinbase)
+
+	// break early at header.timestamp - delayBeforeSeal
+	// timeline  ------------------------------------------
+	//             |        9/10              |    1/10   |
+	//           now               commitTxsBreakTime   header.timestamp
+	//
+	// timeline  ------------------------------------------
+	log.Debug("timelog header.timestamp and now", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
+	delay = header.Timestamp().Sub(time.Now())
+	delay = delayBeforeSeal(delay)
+	commitTxsBreakTime := header.Timestamp()
+	if delay > 0 {
+		commitTxsBreakTime = header.Timestamp().Add(-delay)
+	}
+
+	log.Debug("timelog before commit txs", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()), "commitTxsBreakTime", commitTxsBreakTime)
+
+	work.commitTransactions(e.mux, txs, e.chain, e.coinbase, commitTxsBreakTime)
+
+	log.Debug("timelog after commit txs", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
 
 	// Create the new block to seal with the consensus engine. Private tx's receipts are not involved computing block's
 	// receipts hash and receipts bloom as they are private and not guaranteeing identical in different nodes.
@@ -435,10 +458,13 @@ func (e *engine) commitNewWork() {
 		return
 	}
 
+	log.Debug("timelog after finalize", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
+
 	// We only care about logging if we're actually mining.
 	if atomic.LoadInt32(&e.mining) == 1 {
 		// only seal and broadcast the block when it is mining proposer
 		if e.cons.CanMakeBlock(e.chain, e.coinbase, parent.Header()) {
+			log.Debug("timelog pushing", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
 			e.push(work)
 			log.Info("Commit new mining work", "number", work.Block.Number(), "txs", work.tcount, "elapsed", common.PrettyDuration(time.Since(tstart)))
 		}
@@ -460,7 +486,7 @@ func (e *engine) updateSnapshot() {
 }
 
 // transactions are applied in ascending nonce order of each account.
-func (w *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByPriceAndNonce, bc *core.BlockChain, coinbase common.Address) {
+func (w *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByPriceAndNonce, bc *core.BlockChain, coinbase common.Address, breakTimer time.Time) {
 	if w.gasPool == nil {
 		w.gasPool = new(core.GasPool).AddGas(w.header.GasLimit)
 	}
@@ -468,6 +494,12 @@ func (w *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByP
 	var coalescedLogs []*types.Log
 
 	for {
+
+		// If break timer is up, break now
+		if time.Now().After(breakTimer) {
+			break
+		}
+
 		// If we don't have enough gas for any further transactions then we're done
 		if w.gasPool.Gas() < configs.TxGas {
 			log.Debug("Not enough gas for further transactions", "have", w.gasPool, "want", configs.TxGas)

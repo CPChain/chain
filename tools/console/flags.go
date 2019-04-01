@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/big"
 
+	"bitbucket.org/cpchain/chain/tools/utility"
 	"bitbucket.org/cpchain/chain/tools/console/common"
 	"bitbucket.org/cpchain/chain/tools/console/manager"
 	"bitbucket.org/cpchain/chain/tools/console/output"
@@ -45,7 +46,7 @@ func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFun
 	return console, &out, cancel
 }
 
-var home, err = common.Home()
+var home, err = utility.Home()
 
 func init() {
 	if err != nil {
@@ -91,11 +92,11 @@ func validator(ctx *cli.Context) (string, string, string, error) {
 	kspath := ctx.String("keystore")
 	rpc := ctx.String("rpc")
 
-	if !common.Exists(pwdfile) {
+	if !utility.Exists(pwdfile) {
 		err = errors.New("Password file " + pwdfile + " does not exist.")
 		return rpc, kspath, pwdfile, err
 	}
-	if !common.Exists(kspath) {
+	if !utility.Exists(kspath) {
 		err = errors.New("Keystore file " + kspath + " does not exist.")
 		return rpc, kspath, pwdfile, err
 	}

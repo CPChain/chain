@@ -388,7 +388,9 @@ func enodeIDWithoutPort(enode string) string {
 // and disconnect remote validators if it is not
 func (d *Dialer) KeepConnection() {
 
-	futureTimer := time.NewTicker(d.dpor.Period())
+	var last uint64
+
+	futureTimer := time.NewTicker(d.dpor.Period() / 2)
 	defer futureTimer.Stop()
 	for {
 		select {
@@ -401,29 +403,50 @@ func (d *Dialer) KeepConnection() {
 					address     = d.dpor.Coinbase()
 				)
 
-				switch {
-				case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
+				_, enough := d.EnoughValidatorsOfTerm(currentTerm)
 
-					log.Debug("I am current or future validator, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+				if last != currentNum && (IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) || !enough) {
+					switch {
+					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
-					_ = d.DialAllRemoteValidators(currentTerm)
+						log.Debug("I am current or future validator, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
-				case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
+						_ = d.DialAllRemoteValidators(currentTerm)
 
-					log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+					case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
 
-					_ = d.DialAllRemoteValidators(currentTerm)
+						log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
-				default:
-					log.Debug("I am not a current or future proposer nor a validator, disconnecting remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
-					d.disconnectValidators(currentTerm)
+						_ = d.DialAllRemoteValidators(currentTerm)
+
+					default:
+						log.Debug("I am not a current or future proposer nor a validator, disconnecting remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+						d.disconnectValidators(currentTerm)
+					}
 				}
+
+				last = currentNum
+
 			}
 
 		case <-d.quitCh:
 			return
 		}
 	}
+}
+
+// EnoughValidatorsOfTerm returns validator of given term and whether it is enough
+func (d *Dialer) EnoughValidatorsOfTerm(term uint64) (validators map[common.Address]*RemoteValidator, enough bool) {
+	validators = d.ValidatorsOfTerm(term)
+	enough = len(validators) >= int(d.dpor.Faulty()*2)
+	return
+}
+
+// EnoughValidatorsOfTerm returns validator of given term and whether it is enough for impeach
+func (d *Dialer) EnoughImpeachValidatorsOfTerm(term uint64) (validators map[common.Address]*RemoteValidator, enough bool) {
+	validators = d.ValidatorsOfTerm(term)
+	enough = len(validators) >= int(d.dpor.Faulty())
+	return
 }
 
 func (d *Dialer) Stop() {
