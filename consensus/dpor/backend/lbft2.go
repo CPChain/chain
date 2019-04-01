@@ -840,7 +840,13 @@ func (p *LBFT2) handleValidateMsg(input *BlockOrHeader, state consensus.State) (
 	// add current hash to the cache
 	p.validateMsgMap.Add(number, hash)
 
-	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ValidateMsgCode, consensus.Idle, nil
+	err := p.dpor.InsertChain(block)
+	if err == nil {
+		go p.dpor.BroadcastBlock(block, true)
+		return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
+	}
+
+	return nil, NoAction, NoMsgCode, state, err
 }
 
 // handleImpeachValidateMsg handles Impeach Validate msg
@@ -871,7 +877,13 @@ func (p *LBFT2) handleImpeachValidateMsg(input *BlockOrHeader, state consensus.S
 	// add current hash to the cache
 	p.validateMsgMap.Add(number, hash)
 
-	return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastAndInsertBlockAction, ImpeachValidateMsgCode, consensus.Idle, nil
+	err := p.dpor.InsertChain(block)
+	if err == nil {
+		go p.dpor.BroadcastBlock(block, true)
+		return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Idle, nil
+	}
+
+	return nil, NoAction, NoMsgCode, state, err
 }
 
 // refreshSignatures refreshes signatures in header and local cache
