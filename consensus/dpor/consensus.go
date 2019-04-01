@@ -205,10 +205,10 @@ func (d *Dpor) TryCampaign() {
 			if !isRNode {
 				log.Info("it is not RNode, cannot participate campaign")
 				if err := d.ac.FundForRNode(); err != nil {
-					log.Debug("encounter error when invoke FundForRNode()", "error", err)
+					log.Debug("failed to FundForRNode", "detail", err)
 					return
 				}
-				log.Info("send money to become RNode")
+				log.Info("need send money to become RNode")
 			}
 		}
 
@@ -359,14 +359,10 @@ func (d *Dpor) CanMakeBlock(chain consensus.ChainReader, coinbase common.Address
 	// check if it is the in-charge proposer for next block
 	ok, err := snap.IsProposerOf(coinbase, number+1)
 	if err != nil {
-		log.Debug("Error occurs when check if it is proposer", "error", err)
-		if err == errProposerNotInCommittee {
-			return false
-		}
+		log.Debug("it is not proposer", "msg", err)
 		return false
 	}
 	log.Debug("now can finished CanMakeBlock call", "ok", ok)
-
 	return ok
 }
 

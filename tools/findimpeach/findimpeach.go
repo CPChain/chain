@@ -59,6 +59,13 @@ func main() {
 				log.Infof("timestamp=%v,number=%v,proposer=%x", block.Timestamp(), i, proposer)
 			}
 
+			proposersOfTheTerm, err := client.GetProposersByBlockNumber(context.Background(), blockNr)
+			if err != nil {
+				log.Errorf("get proposersOfTheTerm for block %v error", i)
+			} else {
+				log.Infof("proposersOfTheTerm=%x", proposersOfTheTerm)
+			}
+
 			if showValidator {
 				validators, err := client.GetValidatorsByBlockNumber(context.Background(), blockNr)
 				if err != nil {
