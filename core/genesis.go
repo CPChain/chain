@@ -241,7 +241,7 @@ func (g *Genesis) ToBlock(db database.Database) *types.Block {
 		Dpor:       g.Dpor,
 	}
 	if g.GasLimit == 0 {
-		head.GasLimit = configs.GenesisGasLimit
+		head.GasLimit = configs.DefaultGasLimitPerBlock
 	}
 	if _, err := statedb.Commit(false); err != nil {
 		log.Error("Error in genesis", "error", err)

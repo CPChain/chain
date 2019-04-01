@@ -172,6 +172,11 @@ func (dh *defaultDporHelper) verifyBasic(dpor *Dpor, chain consensus.ChainReader
 		}
 	}
 
+	// Ensure that the block's gasLimit is valid
+	if header.GasLimit > configs.MaxGasLimit || header.GasLimit < configs.MinGasLimit || header.GasUsed > header.GasLimit {
+		return ErrInvalidGasLimit
+	}
+
 	// Delay to verify it!
 	delay := header.Timestamp().Sub(time.Now())
 	log.Debug("delaying to verify the block", "delay", delay)
