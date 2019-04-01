@@ -56,6 +56,14 @@ Type in the following to remove temporary files.
 
 3. Manually kill all ``cpchain`` processes.
 
-The incomplete abort of ``cpchain`` can incur a failure in start a new process.
+An incomplete abort of ``cpchain`` can incur a failure in starting a new process.
+If you receive an error message indicating your port or datadir being occupied,
+it is highly possible that there are some ``cpchain`` processes still running in background.
 
+You can may either use ``ps`` command paired with ``kill`` to terminate ``cpchain`` processes,
+or choose to kill all cpchain processes by
+
+.. code-block:: shell
+
+    $ killall -9 cpchain
 
