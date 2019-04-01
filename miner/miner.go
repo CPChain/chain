@@ -104,8 +104,6 @@ func (m *Miner) Start(coinbase common.Address) {
 
 	log.Info("Starting mining operation")
 
-	go m.downloaderSync()
-
 	m.eng.start()
 	m.eng.commitNewWork()
 }

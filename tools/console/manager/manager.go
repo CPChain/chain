@@ -12,6 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
 	cm "bitbucket.org/cpchain/chain/tools/console/common"
+	cc "bitbucket.org/cpchain/chain/tools/utility"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -43,7 +44,7 @@ func SetGasConfig(price *big.Int, limit uint64) {
 
 // NewConsole build a console
 func NewConsole(ctx *context.Context, rpc string, keystore string, passwordFile string, output cm.Output) *Console {
-	password, err := cm.ReadPasswordByFile(passwordFile)
+	password, err := cc.ReadPasswordByFile(passwordFile)
 	if err != nil {
 		output.Fatal(err.Error())
 	}

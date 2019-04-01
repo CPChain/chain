@@ -172,6 +172,11 @@ func (dh *defaultDporHelper) verifyBasic(dpor *Dpor, chain consensus.ChainReader
 		}
 	}
 
+	// Ensure that the block's gasLimit is valid
+	if header.GasLimit > configs.MaxGasLimit || header.GasLimit < configs.MinGasLimit || header.GasUsed > header.GasLimit {
+		return ErrInvalidGasLimit
+	}
+
 	// Delay to verify it!
 	delay := header.Timestamp().Sub(time.Now())
 	log.Debug("delaying to verify the block", "delay", delay)
@@ -346,58 +351,31 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	snap.setClient(client)
 	snap.rptBackend = rptBackend
 
-	var timeToUpdateCommitttee bool
+	var timeToUpdateCommittee bool
 	_, headNumber := chain.KnownHead()
 
 	log.Debug("known chain head", "number", headNumber)
 
 	if rptBackend != nil {
-		windowSize, _ := rptBackend.WindowSize()
-		log.Debug("rpt window size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
-		timeToUpdateCommitttee = dpor.IsMiner() || dpor.IsValidator()
-		timeToUpdateCommitttee = timeToUpdateCommitttee && float64(snap.number()) > math.Max(0., float64(int(headNumber)-int(windowSize*2+dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2))))
+		var windowSize = uint64(0)
+		if snap.isStartElection() {
+			windowSize, _ = rptBackend.WindowSize()
+			log.Debug("rpt window size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
+		}
+		timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
+		rptCalculateRange := int(windowSize*2 + dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2))
+		startBlockNumberOfRptCalculate := float64(int(headNumber) - rptCalculateRange)
+		timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
+		timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
 	}
 
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, client, timeToUpdateCommitttee)
+	newSnap, err := snap.apply(headers, client, timeToUpdateCommittee)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Debug("now created a new snap", "number", newSnap.number(), "hash", newSnap.hash().Hex())
-
-	if len(newSnap.getRecentProposers(newSnap.TermOf(newSnap.number()))) != int(dpor.TermLength()) && timeToUpdateCommitttee {
-		var parents []*types.Header
-		parent := chain.GetHeader(newSnap.hash(), newSnap.number())
-		if parent == nil {
-			return nil, consensus.ErrUnknownAncestor
-		}
-
-		log.Debug("the proposers of the number is not updated, applying and updating", "number", newSnap.number())
-
-		for len(parents) < int(dpor.TermLength()*dpor.ViewLength()*(TermDistBetweenElectionAndMining+2)) {
-
-			log.Debug("appending a parent to parents", "number", parent.Number.Uint64(), "hash", parent.Hash().Hex())
-
-			parents = append(parents, parent)
-			parent := chain.GetHeader(parent.ParentHash, parent.Number.Uint64()-1)
-			if parent == nil {
-				return nil, consensus.ErrUnknownAncestor
-			}
-
-			if parent.Number.Uint64() == 1 {
-				break
-			}
-		}
-
-		log.Debug("now applying the parents", "len", len(parents), "start", parents[0].Number.Uint64())
-
-		newSnap, err = newSnap.apply(parents, client, timeToUpdateCommitttee)
-		if err != nil {
-			return nil, err
-		}
-
-	}
 
 	// Save to cache
 	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
@@ -411,7 +389,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		log.Debug("Stored voting Snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 	}
 
-	dpor.SetCurrentSnap(newSnap)
+	if dpor.CurrentSnap() == nil || (dpor.CurrentSnap() != nil && newSnap.number() >= dpor.CurrentSnap().number()) {
+		dpor.SetCurrentSnap(newSnap)
+	}
 
 	return newSnap, err
 }
