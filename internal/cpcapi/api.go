@@ -983,6 +983,8 @@ type RPCTransactionWithContract struct {
 	IsContract      bool            `json:"isContract"`
 	Code            hexutil.Bytes   `json:"code"`
 	ContractAddress *common.Address `json:"contractAddress"`
+	GasUsed         hexutil.Uint64  `json:"gasUsed"`
+	Status          hexutil.Uint    `json:"status"`
 }
 
 // newRPCTransaction returns a transaction that will serialize to the RPC
@@ -1019,7 +1021,7 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 
 // newRPCTransactionWithContract returns a transaction that will serialize to the RPC
 // representation, with the given location metadata set (if available).
-func newRPCTransactionWithContract(transaction *RPCTransaction, creator *common.Address, isContract bool, code hexutil.Bytes, contractAddress *common.Address) *RPCTransactionWithContract {
+func newRPCTransactionWithContract(transaction *RPCTransaction, creator *common.Address, isContract bool, code hexutil.Bytes, contractAddress *common.Address, gasUsed hexutil.Uint64, status hexutil.Uint) *RPCTransactionWithContract {
 	result := &RPCTransactionWithContract{
 		BlockHash:        transaction.BlockHash,
 		BlockNumber:      transaction.BlockNumber,
@@ -1040,6 +1042,8 @@ func newRPCTransactionWithContract(transaction *RPCTransaction, creator *common.
 		IsContract:       isContract,
 		Code:             code,
 		ContractAddress:  contractAddress,
+		GasUsed:          gasUsed,
+		Status:           status,
 	}
 	return result
 }
@@ -1136,13 +1140,15 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 		}
 		for i := from; i <= to; i++ {
 			transaction := newRPCTransactionFromBlockIndex(block, uint64(i))
+			receipt, err := s.GetTransactionReceipt(ctx, transaction.Hash)
+			if err != nil {
+				log.Error(err.Error())
+				return result
+			}
+			gasUsed := receipt["gasUsed"].(hexutil.Uint64)
+			status := receipt["status"].(hexutil.Uint)
 			if transaction.To == nil {
 				// creator, isContract, code, contractAddress
-				receipt, err := s.GetTransactionReceipt(ctx, transaction.Hash)
-				if err != nil {
-					log.Error(err.Error())
-					return result
-				}
 				creator := receipt["from"].(common.Address)
 				contract := receipt["contractAddress"].(common.Address)
 				state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr, false)
@@ -1154,9 +1160,9 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 					return result
 				}
 				code := state.GetCode(contract)
-				result[i] = newRPCTransactionWithContract(transaction, &creator, true, code, &contract)
+				result[i] = newRPCTransactionWithContract(transaction, &creator, true, code, &contract, gasUsed, status)
 			} else {
-				result[i] = newRPCTransactionWithContract(transaction, nil, false, nil, nil)
+				result[i] = newRPCTransactionWithContract(transaction, nil, false, nil, nil, gasUsed, status)
 			}
 		}
 		return result
