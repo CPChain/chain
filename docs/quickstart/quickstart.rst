@@ -271,13 +271,3 @@ Run a Local Node
 .. code::
 
     $ ./cpchain run --datadir ./datadir --unlock <You Address>
-
-
-
-
-
-
-
-
-
-
