@@ -1,3 +1,5 @@
+.. _FAQ:
+
 FAQ
 ~~~~~~~~~~~
 
@@ -23,6 +25,8 @@ The Errno 111 can be returned when you call ``Web3(Web3.HTTPProvider('http://127
 Before connecting http://127.0.0.1:8501, you should either set up a local chain or sync with our Mainnet.
 Refer to :ref:`fusion-api-using` to detailed explanations.
 
+
+.. _cpchain-run-fail:
 
 Why ``./cpchain run`` command cannot be executed successfully?
 *********************************************************************
