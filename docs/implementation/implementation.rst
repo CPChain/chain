@@ -408,50 +408,7 @@ Impeachment Handlers
 
 
 
-Echo of Validate Message
-----------------------------
 
-Echo of validates message refers to a mechanism in implementation that
-a validator echoes a validate message when it receives it for the first time.
-A validator does not insert a block, no matter a normal or impeach one,
-until it receives a validate message.
-This statement is valid even if a validator v sends out a validate message itself.
-Validator v can only insert the block after it hears the echo from other validators.
-
-The reason of introducing echo is to get rid of depending on one single validator broadcasting a validate message.
-In an edge case, a validate can lose its connection while broadcasting a validate message.
-If there were no echo mechanism, this edge case would sabotage the consistency of LBFT 2.0,
-since only a proportion of nodes could receive this validate message.
-
-Instead of trivially repeating validate message, we introduce a quasi state named as **validate** state.
-The word *Quasi* here indicates that validate state is not a real state like idle state.
-It does not contribute on consensus process, neither is compulsory.
-It serves as following roles:
-
-    1. A distinct state corresponding to validate message.
-    #. Preventing a validator handling any messages from previous block height.
-    #. A counter to make sure that each validator only broadcasts validate message only once.
-    #. Partitioning original validate messages into two sets:
-        a. Validate messages between validators committee.
-        #. Validate messages broadcasts to all civilians (renamed as **New Block** message).
-
-When a validator collects a commit certificate, the following operations are being executed:
-
-    1. It enters validate state, and broadcasts a validate message to the validators committee.
-    #. After it receives validate message from another validator, it broadcasts a new block message to all nodes including civilians.
-    #. It enters idle state for the next block height.
-
-For validators that have not suffice a commit certificate yet, it works as follows:
-
-    1. If it receives a validate message, it broadcasts out two messages:
-        a. validate message to all validators
-        #. new block message to all civilians
-    #. It enters idle state for the next block height.
-
-Apparently, only validators that have collected a validate certificate can enter validate state.
-The total number of validators in validate state can be larger than one,
-since all validators and its message processing are running in parallel.
-Other validators directly enters idle state after receiving a validate message.
 
 
 Cascade of Determination of Certificates
@@ -573,6 +530,83 @@ we can implement it without adding too much code.
 
 
 
+
+Optimizations
+---------------------
+
+
+Echo of Validate Message
+******************************
+
+
+Echo of validates message refers to a mechanism in implementation that
+a validator echoes a validate message when it receives it for the first time.
+A validator does not insert a block, no matter a normal or impeach one,
+until it receives a validate message.
+This statement is valid even if a validator v sends out a validate message itself.
+Validator v can only insert the block after it hears the echo from other validators.
+
+The reason of introducing echo is to get rid of depending on one single validator broadcasting a validate message.
+In an edge case, a validate can lose its connection while broadcasting a validate message.
+If there were no echo mechanism, this edge case would sabotage the consistency of LBFT 2.0,
+since only a proportion of nodes could receive this validate message.
+
+Instead of trivially repeating validate message, we introduce a quasi state named as **validate** state.
+The word *Quasi* here indicates that validate state is not a real state like idle state.
+It does not contribute on consensus process, neither is compulsory.
+It serves as following roles:
+
+    1. A distinct state corresponding to validate message.
+    #. Preventing a validator handling any messages from previous block height.
+    #. A counter to make sure that each validator only broadcasts validate message only once.
+    #. Partitioning original validate messages into two sets:
+        a. Validate messages between validators committee.
+        #. Validate messages broadcasts to all civilians (renamed as **New Block** message).
+
+When a validator collects a commit certificate, the following operations are being executed:
+
+    1. It enters validate state, and broadcasts a validate message to the validators committee.
+    #. After it receives validate message from another validator, it broadcasts a new block message to all nodes including civilians.
+    #. It enters idle state for the next block height.
+
+For validators that have not suffice a commit certificate yet, it works as follows:
+
+    1. If it receives a validate message, it broadcasts out two messages:
+        a. validate message to all validators
+        #. new block message to all civilians
+    #. It enters idle state for the next block height.
+
+Apparently, only validators that have collected a validate certificate can enter validate state.
+The total number of validators in validate state can be larger than one,
+since all validators and its message processing are running in parallel.
+Other validators directly enters idle state after receiving a validate message.
+
+
+Timing of Constructing an Impeach Block
+**********************************************
+
+As demonstrated in `LBFT 2.0 Pseudocode`_,
+a validator does not construct an impeach block unless it is necessary,
+like receiving an expiredTimer.
+
+But in practice, a validator construct an impeach block in its idle state
+even if it has yet received any message.
+This impeach block is the one broadcast to other if the validator enters impeach handler.
+And it is discarded if the validator reaches a consensus on the normal case handler.
+
+The rationale behind this design is:
+
+1. Utilize the idle time waiting for a message.
+#. The timestamp of the impeach block is written a future one.
+
+The second reason is the main motivation.
+For a certain block height, the timestamp of an impeach block is predefined.
+Let t1 be the timestamp of this impeach block.
+As we know the normal case handler terminates before t1.
+Thus, we can treat this block as an :ref:`unknown-ancestor-block`,
+and reuse the code to handle the impeach block,
+which involves less new code as well less latent risks.
+
 Minimum P2P Connections
 ---------------------------
 
@@ -583,6 +617,9 @@ where two separated components of more than f+1 validators form two weak quorum 
 
 
 .. _recovery:
+
+
+
 
 
 Recovery
