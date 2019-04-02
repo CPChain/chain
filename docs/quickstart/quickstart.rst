@@ -158,8 +158,11 @@ The command for proposers connecting P2P network is slightly different than the 
 .. code-block:: shell
 
     $ ./cpchain run --datadir ./datadir --unlock 5d6477ecd219bfe0ba44bf1b16272e72bd200e51 \
-        --rpcaddr 127.0.0.1:8501 --port 30311 --mine --password ./datadir/password \
+        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
         --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+
+, where ``5d6477ecd219bfe0ba44bf1b16272e72bd200e51`` is an wallet address.
+It requires you to enter the password to further proceed.
 
 Note that the argument ``--mine`` indicates this connection can be used for proposing blocks.
 And via this connection,
