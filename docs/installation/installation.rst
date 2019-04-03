@@ -20,7 +20,7 @@ You can click `here <https://github.com/CPChain/chain>`_ to access source code, 
     # open a $GOPATH
     $ cd $GOPATH/src
 
-    $ mkdir -p bitbucket/cpchain/
+    $ mkdir -p bitbucket.org/cpchain/
     
     $ cd bitbucket/cpchain
     
