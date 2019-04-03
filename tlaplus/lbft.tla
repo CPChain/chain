@@ -36,6 +36,8 @@ define
     impeachCommitCertificate(v) ==
         Len(v.impeachCommitSig) >= 2
 
+    correct1 == validators[1].state >= 0
+
 end define;
 
 
@@ -104,6 +106,8 @@ impeachPrepareCertificate(v) ==
 impeachCommitCertificate(v) ==
     Len(v.impeachCommitSig) >= 2
 
+correct1 == validators[1].state >= 0
+
 
 vars == << proposers, validators, pc >>
 
@@ -124,13 +128,13 @@ Lbl_1 == /\ pc = "Lbl_1"
                /\ pc' = "Done"
             \/ /\ (validators[1]).state = 1
                /\ "block" = "prepareMsg"
-               /\ validators' = [validators EXCEPT ![1].prepareSig = (validators[1]).prepareSig \union {input.prepareSig}]
+               /\ validators' = [validators EXCEPT ![1].prepareSig = (validators[1]).prepareSig \union {"".prepareSig}]
                /\ IF prepareCertificate((validators'[1]))
                      THEN /\ pc' = "Lbl_2"
                      ELSE /\ pc' = "Done"
             \/ /\ (validators[1]).state = 2
                /\ "block" = "commitMsg"
-               /\ validators' = [validators EXCEPT ![1].commitSig = (validators[1]).commitSig \union {input.commitSig}]
+               /\ validators' = [validators EXCEPT ![1].commitSig = (validators[1]).commitSig \union {"".commitSig}]
                /\ IF commitCertificate((validators'[1]))
                      THEN /\ pc' = "Lbl_4"
                      ELSE /\ pc' = "Done"
@@ -167,7 +171,3 @@ Termination == <>(pc = "Done")
 \* END TRANSLATION
 
 
-=============================================================================
-\* Modification History
-\* Last modified Wed Apr 03 09:40:06 CST 2019 by Dell
-\* Created Thu Feb 14 11:05:47 CST 2019 by Dell
