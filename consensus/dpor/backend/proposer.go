@@ -16,9 +16,3 @@ func (ph *Handler) ReceiveMinedPendingBlock(block *types.Block) error {
 		return nil
 	}
 }
-
-// DialAllRemoteValidators dials remote validators
-// this is called if local peer is a future proposer
-func (ph *Handler) DialAllRemoteValidators(term uint64) error {
-	return ph.dialer.DialAllRemoteValidators(term)
-}
