@@ -251,7 +251,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		// rebroadcast the preprepare msg
 		switch inputMsgCode {
 		case PreprepareMsgCode:
-			go vh.reBroadcast(input, outputMsgCode)
+			go vh.reBroadcast(input, inputMsgCode)
 		}
 
 	case consensus.ErrUnknownAncestor:
