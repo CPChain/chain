@@ -308,6 +308,9 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			return err
 		}
 
+		// defer to remove the peer
+		defer pm.removePeer(peer.id)
+
 		log.Debug("is validator and remote is miner", "is validator", dporEngine.IsValidator(), "remote miner", remoteIsMiner, "id", p.ID().String(), "addr", p.RemoteAddr().String())
 
 		// validator do not connect to civilian to avoid deny of service attack
@@ -315,9 +318,6 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			log.Warn("I am a validator, but the remote peer is neither a proposer, nor a validator, disconnecting", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
 			return nil
 		}
-
-		// defer to remove the peer
-		defer pm.removePeer(peer.id)
 
 		log.Debug("done of handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
 
