@@ -1,5 +1,7 @@
 -------------------------------- MODULE lbft --------------------------------
-EXTENDS Integers
+
+EXTENDS Integers, Sequences
+
 
 (*
 --algorithm lbft
@@ -37,7 +39,7 @@ define
 end define;
 
 
-macro fsm(v, inputType) begin
+macro fsm(v, inputType, input) begin
     either \* idle state
     \* transfer to prepare state given a block
         await v.state = 0;
@@ -76,7 +78,7 @@ end macro;
 begin
 
 \* Validator1:
-    fsm(validators[1], "block");
+    fsm(validators[1], "block", "");
 \*    fsm(validators[2], "block");
 \*    fsm(validators[3], "block");
 \*    fsm(validators[4], "block");
@@ -84,7 +86,7 @@ begin
 
 
 end algorithm;*)
-====
+
 
 \* BEGIN TRANSLATION
 VARIABLES proposers, validators, pc
@@ -163,3 +165,9 @@ Spec == Init /\ [][Next]_vars
 Termination == <>(pc = "Done")
 
 \* END TRANSLATION
+
+
+=============================================================================
+\* Modification History
+\* Last modified Wed Apr 03 09:40:06 CST 2019 by Dell
+\* Created Thu Feb 14 11:05:47 CST 2019 by Dell
