@@ -76,7 +76,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 	var (
 		input         = &BlockOrHeader{}
-		msgCode       = NoMsgCode
+		inputMsgCode  = NoMsgCode
 		currentNumber = uint64(0)
 	)
 
@@ -99,7 +99,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		input = &BlockOrHeader{
 			block: block,
 		}
-		msgCode = PreprepareMsgCode
+		inputMsgCode = PreprepareMsgCode
 
 	case PrepareHeaderMsg:
 		// recover the header from msg
@@ -112,7 +112,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		input = &BlockOrHeader{
 			header: header,
 		}
-		msgCode = PrepareMsgCode
+		inputMsgCode = PrepareMsgCode
 
 	case CommitHeaderMsg:
 		// recover the header from msg
@@ -125,7 +125,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		input = &BlockOrHeader{
 			header: header,
 		}
-		msgCode = CommitMsgCode
+		inputMsgCode = CommitMsgCode
 
 	case ValidateBlockMsg:
 		// recover the block from msg
@@ -138,7 +138,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		input = &BlockOrHeader{
 			block: block,
 		}
-		msgCode = ValidateMsgCode
+		inputMsgCode = ValidateMsgCode
 
 	case PreprepareImpeachBlockMsg:
 		// recover the block from msg
@@ -151,7 +151,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		input = &BlockOrHeader{
 			block: block,
 		}
-		msgCode = ImpeachPreprepareMsgCode
+		inputMsgCode = ImpeachPreprepareMsgCode
 
 	case PrepareImpeachHeaderMsg:
 		// recover the header from msg
@@ -164,7 +164,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		input = &BlockOrHeader{
 			header: header,
 		}
-		msgCode = ImpeachPrepareMsgCode
+		inputMsgCode = ImpeachPrepareMsgCode
 
 	case CommitImpeachHeaderMsg:
 		// recover the header from msg
@@ -177,7 +177,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		input = &BlockOrHeader{
 			header: header,
 		}
-		msgCode = ImpeachCommitMsgCode
+		inputMsgCode = ImpeachCommitMsgCode
 
 	case ValidateImpeachBlockMsg:
 		// recover the block from msg
@@ -190,14 +190,14 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		input = &BlockOrHeader{
 			block: block,
 		}
-		msgCode = ImpeachValidateMsgCode
+		inputMsgCode = ImpeachValidateMsgCode
 
 	default:
 		log.Warn("unknown msg code", "msg", msg.Code)
 	}
 
 	// log output received msg
-	logMsgReceived(input.Number(), input.Hash(), msgCode, p)
+	logMsgReceived(input.Number(), input.Hash(), inputMsgCode, p)
 
 	// if number is larger than local current number, sync from remote peer
 	if input.Number() > currentNumber+1 && p != nil {
@@ -212,7 +212,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	}
 
 	// this is just for debug
-	switch msgCode {
+	switch inputMsgCode {
 	// if received a impeach validate msg, log out some debug infos
 	case ImpeachValidateMsgCode:
 
@@ -236,7 +236,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	}
 
 	// if the msg is PreprepareImpeachBlockMsg, or msg code is ImpeachPreprepareMsgCode, the sender must be nil(self)
-	switch msgCode {
+	switch inputMsgCode {
 	case ImpeachPreprepareMsgCode:
 		if p != nil {
 			// invalid impeach preprepare msg sender!
@@ -245,13 +245,13 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	}
 
 	// call fsm
-	output, action, msgCode, err := vh.fsm.FSM(input, msgCode)
+	output, action, outputMsgCode, err := vh.fsm.FSM(input, inputMsgCode)
 	switch err {
 	case nil:
 		// rebroadcast the preprepare msg
-		switch msgCode {
+		switch inputMsgCode {
 		case PreprepareMsgCode:
-			go vh.reBroadcast(input, msgCode)
+			go vh.reBroadcast(input, outputMsgCode)
 		}
 
 	case consensus.ErrUnknownAncestor:
@@ -275,7 +275,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 		switch action {
 		case BroadcastMsgAction:
 
-			switch msgCode {
+			switch outputMsgCode {
 			case PrepareMsgCode:
 				go vh.BroadcastPrepareHeader(output[0].header)
 
@@ -304,7 +304,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 
 			// unknown msg code
 			default:
-				log.Debug("unknown msg code for fsm output", "msgCode", msgCode)
+				log.Debug("unknown msg code for fsm output", "msgCode", outputMsgCode)
 			}
 
 		// other actions
