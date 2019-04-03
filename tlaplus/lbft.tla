@@ -17,7 +17,7 @@ variables
     \* sequence of validators
     \* 0,1,2 represent idle, prepare, commit
     \* 3,4 represent impeach prepare and impeach commit state
-    \* 9 represents ilde state in next block height
+    \* 9 represents idle state in next block height
     \* pre and cmt are short for prepare and commit respectively
     \* imp represents impeachment
     \* four sigs refers to signatures for different messages
@@ -72,7 +72,7 @@ macro fsm(v, inputType, input) begin
         v.commitSig := v.commitSig \union input.commitSig;
         if commitCertificate(v)
         then
-        \* transfer to ilde state in next height given the certificate
+        \* transfer to idle state in next height given the certificate
             v.commitSig := {};
             v.state := 9;
         end if;
