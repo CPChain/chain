@@ -31,6 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/database"
@@ -227,6 +228,8 @@ func importChain(ctx *cli.Context) error {
 
 	log.Info("Begin import")
 	cfg, node := newConfigNode(ctx)
+
+	primitive_register.RegisterPrimitiveContracts()
 	chain, chainDb := commons.OpenChain(ctx, node, &cfg.Cpc)
 	defer chainDb.Close()
 

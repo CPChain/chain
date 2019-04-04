@@ -1,3 +1,5 @@
+.. _quick-start:
+
 Quick Start
 ~~~~~~~~~~~~~
 
@@ -15,7 +17,7 @@ Download links for binary release are coming soon.
 
 ``cpchain`` is the binary release for the chain.
 And ``console`` provides command line interface for operations on the chain,
-like checking account status and claiming campaign.
+like checking account status, deposit and claiming campaign.
 Note that ``console`` does not support transaction operations.
 You need to utilize either :ref:`fusion-api` or :ref:`rpc-api` for all available operations.
 
@@ -54,8 +56,11 @@ Command ``./cpchain account new account --datadir ./datadir`` requires
 you to enter a password, which should be same as ``YOUR_PASSWORD`` in previous echo command.
 
 A successful execution returns the wallet address.
-And a keystore file is generated in ``datadir/password/``.
+And a keystore file is generated in ``datadir/keystore/``.
+Its file name is something like
+``UTC--2019-03-27T07-32-49.561001045Z--5d6477ecd219bfe0ba44bf1b16272e72bd200e51``.
 And you can also refer to the name of this file to retrieve the wallet address.
+``5d6477ecd219bfe0ba44bf1b16272e72bd200e51`` is the wallet address for the example above.
 
 After you register a wallet address,
 you can run the following command to **connect to the chain**:
@@ -65,12 +70,14 @@ you can run the following command to **connect to the chain**:
     $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311
 
 If you cannot get successfully successfully connected.
-You may try delete files in ``~/.cpchain`` by
+You may try delete some temporary files by
 
 
 .. code-block:: shell
 
-    $ rm -rf ~/.cpchain
+    $ ./cpchain chain cleandb
+
+You can refer to :ref:`cpchain-run-fail` in :ref:`FAQ` for detailed solutions.
 
 Now you have connected to cpchain P2P network.
 And the progress is going to running for a while to sync with the chain.
@@ -88,7 +95,7 @@ To **check the status** of your account, you can use the following command:
 
     $ ./console status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
 
-Here ``YOU_ACCOUNT`` is the file generated previously in ``datadir/password/``.
+Here ``YOU_ACCOUNT`` is the file generated previously in ``datadir/keystore/``.
 And you can obtain the information about your account status like
 
 
@@ -156,8 +163,13 @@ The command for proposers connecting P2P network is slightly different than the 
 .. code-block:: shell
 
     $ ./cpchain run --datadir ./datadir --unlock 5d6477ecd219bfe0ba44bf1b16272e72bd200e51 \
-        --rpcaddr 127.0.0.1:8501 --port 30311 --mine --password ./datadir/password \
+        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
         --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+
+, where ``5d6477ecd219bfe0ba44bf1b16272e72bd200e51`` is a wallet address.
+It requires you to enter the password to further proceed.
+You may use an argument ``--password`` to indicate a file storing your plaintext password.
+But it is risky, and we do not recommend it.
 
 Note that the argument ``--mine`` indicates this connection can be used for proposing blocks.
 And via this connection,
@@ -259,13 +271,3 @@ Run a Local Node
 .. code::
 
     $ ./cpchain run --datadir ./datadir --unlock <You Address>
-
-
-
-
-
-
-
-
-
-

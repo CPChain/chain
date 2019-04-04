@@ -26,11 +26,8 @@ type Dialer struct {
 	dpor DporService
 
 	// use lru caches to cache recent proposers and validators
-	recentProposers *lru.ARCCache
-	proposersLock   sync.RWMutex // to protect recent proposers
-
+	recentProposers  *lru.ARCCache
 	recentValidators *lru.ARCCache
-	validatorsLock   sync.RWMutex // to protect recent validators
 
 	defaultValidators []string
 
@@ -170,18 +167,12 @@ func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 
 // removeRemoteProposers removes remote proposer by it's addr
 func (d *Dialer) removeRemoteProposers(addr string) error {
-	d.proposersLock.Lock()
-	defer d.proposersLock.Unlock()
-
 	d.recentProposers.Remove(addr)
 	return nil
 }
 
 // removeRemoteValidators removes remote proposer by it's addr
 func (d *Dialer) removeRemoteValidators(addr string) error {
-	d.validatorsLock.Lock()
-	defer d.validatorsLock.Unlock()
-
 	d.recentValidators.Remove(addr)
 	return nil
 }
@@ -208,8 +199,8 @@ func (d *Dialer) UpdateRemoteProposers(term uint64, proposers []common.Address) 
 	return nil
 }
 
-// DialAllRemoteValidators tries to dial all remote validators
-func (d *Dialer) DialAllRemoteValidators(term uint64) error {
+// dialAllRemoteValidators tries to dial all remote validators
+func (d *Dialer) dialAllRemoteValidators(term uint64) {
 
 	// TODO: this can be changed, and get remote validators by term
 	// dial default validators
@@ -242,8 +233,6 @@ func (d *Dialer) DialAllRemoteValidators(term uint64) error {
 			})
 		}(v)
 	}
-
-	return nil
 }
 
 // disconnectValidators disconnects all Validators.
@@ -262,10 +251,10 @@ func (d *Dialer) disconnectValidators(term uint64) {
 	}
 }
 
-// disconnectProposers disconnects all proposers.
+// disconnectProposers disconnects all proposers of the given term.
 func (d *Dialer) disconnectProposers(term uint64) {
 
-	log.Debug("disconnecting...")
+	log.Debug("disconnecting proposers of term...", "term", term)
 
 	server := d.server
 	proposers := d.ProposersOfTerm(term)
@@ -278,10 +267,23 @@ func (d *Dialer) disconnectProposers(term uint64) {
 	}
 }
 
-func (d *Dialer) getProposer(addr string) (*RemoteProposer, bool) {
-	d.proposersLock.RLock()
-	defer d.proposersLock.RUnlock()
+// disconnectUselessProposers disconnects all useless proposers.
+func (d *Dialer) disconnectUselessProposers() {
 
+	log.Debug("disconnecting all useless proposers...")
+
+	server := d.server
+	proposers := d.AllUselessProposers()
+
+	for _, p := range proposers {
+		err := p.disconnect(server)
+		if err != nil {
+			log.Debug("err when disconnect", "e", err)
+		}
+	}
+}
+
+func (d *Dialer) getProposer(addr string) (*RemoteProposer, bool) {
 	if rp, ok := d.recentProposers.Get(addr); ok {
 		remoteProposer, ok := rp.(*RemoteProposer)
 		return remoteProposer, ok
@@ -290,16 +292,10 @@ func (d *Dialer) getProposer(addr string) (*RemoteProposer, bool) {
 }
 
 func (d *Dialer) setProposer(addr string, proposer *RemoteProposer) {
-	d.proposersLock.Lock()
-	defer d.proposersLock.Unlock()
-
 	d.recentProposers.Add(addr, proposer)
 }
 
 func (d *Dialer) getValidator(addr string) (*RemoteValidator, bool) {
-	d.validatorsLock.RLock()
-	defer d.validatorsLock.RUnlock()
-
 	if rv, ok := d.recentValidators.Get(addr); ok {
 		remoteValidator, ok := rv.(*RemoteValidator)
 		return remoteValidator, ok
@@ -308,17 +304,40 @@ func (d *Dialer) getValidator(addr string) (*RemoteValidator, bool) {
 }
 
 func (d *Dialer) setValidator(addr string, validator *RemoteValidator) {
-	d.validatorsLock.Lock()
-	defer d.validatorsLock.Unlock()
-
 	d.recentValidators.Add(addr, validator)
+}
+
+// AllUselessProposers returns all useless proposers
+func (d *Dialer) AllUselessProposers() map[common.Address]*RemoteProposer {
+	// get all proposers
+	addrs := d.recentProposers.Keys()
+	proposers := make(map[common.Address]*RemoteProposer)
+
+	log.Debug("proposers in dialer", "count", len(addrs))
+
+	for _, addr := range addrs {
+		address, useful := common.HexToAddress(addr.(string)), false
+		proposer, ok := d.recentProposers.Get(addr)
+
+		if currentBlock := d.dpor.GetCurrentBlock(); currentBlock != nil {
+			var (
+				currentNumber = currentBlock.NumberU64()
+				currentTerm   = d.dpor.TermOf(currentNumber)
+				futureTerm    = d.dpor.FutureTermOf(currentNumber)
+			)
+			useful = d.isCurrentOrFutureProposer(address, currentTerm, futureTerm)
+		}
+
+		if ok && !useful {
+			proposers[address] = proposer.(*RemoteProposer)
+		}
+	}
+
+	return proposers
 }
 
 // ProposersOfTerm returns all proposers of given term
 func (d *Dialer) ProposersOfTerm(term uint64) map[common.Address]*RemoteProposer {
-	d.proposersLock.RLock()
-	defer d.proposersLock.RUnlock()
-
 	// get all proposers
 	addrs := d.recentProposers.Keys()
 	proposers := make(map[common.Address]*RemoteProposer)
@@ -341,9 +360,6 @@ func (d *Dialer) ProposersOfTerm(term uint64) map[common.Address]*RemoteProposer
 
 // ValidatorsOfTerm returns all validators of given term
 func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidator {
-	d.validatorsLock.RLock()
-	defer d.validatorsLock.RUnlock()
-
 	addrs := d.recentValidators.Keys()
 	validators := make(map[common.Address]*RemoteValidator)
 
@@ -409,15 +425,16 @@ func (d *Dialer) KeepConnection() {
 					switch {
 					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
-						log.Debug("I am current or future validator, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+						log.Debug("I am current or future validator, dialing remote validators and disconnecting useless proposers", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
-						_ = d.DialAllRemoteValidators(currentTerm)
+						d.dialAllRemoteValidators(currentTerm)
+						d.disconnectUselessProposers()
 
 					case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
 
 						log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
-						_ = d.DialAllRemoteValidators(currentTerm)
+						d.dialAllRemoteValidators(currentTerm)
 
 					default:
 						log.Debug("I am not a current or future proposer nor a validator, disconnecting remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
@@ -442,7 +459,7 @@ func (d *Dialer) EnoughValidatorsOfTerm(term uint64) (validators map[common.Addr
 	return
 }
 
-// EnoughValidatorsOfTerm returns validator of given term and whether it is enough for impeach
+// EnoughImpeachValidatorsOfTerm returns validator of given term and whether it is enough for impeach
 func (d *Dialer) EnoughImpeachValidatorsOfTerm(term uint64) (validators map[common.Address]*RemoteValidator, enough bool) {
 	validators = d.ValidatorsOfTerm(term)
 	enough = len(validators) >= int(d.dpor.Faulty())

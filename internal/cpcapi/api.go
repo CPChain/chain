@@ -961,6 +961,32 @@ type RPCTransaction struct {
 	S                *hexutil.Big    `json:"s"`
 }
 
+// RPCTransactionWithContract represents a transaction with contract information that will serialize to the RPC representation of a transaction
+type RPCTransactionWithContract struct {
+	BlockHash        common.Hash     `json:"blockHash"`
+	BlockNumber      *hexutil.Big    `json:"blockNumber"`
+	From             common.Address  `json:"from"`
+	Gas              hexutil.Uint64  `json:"gas"`
+	GasPrice         *hexutil.Big    `json:"gasPrice"`
+	Hash             common.Hash     `json:"hash"`
+	Type             hexutil.Uint64  `json:"type"`
+	Input            hexutil.Bytes   `json:"input"`
+	Nonce            hexutil.Uint64  `json:"nonce"`
+	To               *common.Address `json:"to"`
+	TransactionIndex hexutil.Uint    `json:"transactionIndex"`
+	Value            *hexutil.Big    `json:"value"`
+	V                *hexutil.Big    `json:"v"`
+	R                *hexutil.Big    `json:"r"`
+	S                *hexutil.Big    `json:"s"`
+
+	Creator         *common.Address `json:"creator"`
+	IsContract      bool            `json:"isContract"`
+	Code            hexutil.Bytes   `json:"code"`
+	ContractAddress *common.Address `json:"contractAddress"`
+	GasUsed         hexutil.Uint64  `json:"gasUsed"`
+	Status          hexutil.Uint    `json:"status"`
+}
+
 // newRPCTransaction returns a transaction that will serialize to the RPC
 // representation, with the given location metadata set (if available).
 func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64) *RPCTransaction {
@@ -989,6 +1015,35 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 		result.BlockHash = blockHash
 		result.BlockNumber = (*hexutil.Big)(new(big.Int).SetUint64(blockNumber))
 		result.TransactionIndex = hexutil.Uint(index)
+	}
+	return result
+}
+
+// newRPCTransactionWithContract returns a transaction that will serialize to the RPC
+// representation, with the given location metadata set (if available).
+func newRPCTransactionWithContract(transaction *RPCTransaction, creator *common.Address, isContract bool, code hexutil.Bytes, contractAddress *common.Address, gasUsed hexutil.Uint64, status hexutil.Uint) *RPCTransactionWithContract {
+	result := &RPCTransactionWithContract{
+		BlockHash:        transaction.BlockHash,
+		BlockNumber:      transaction.BlockNumber,
+		TransactionIndex: transaction.TransactionIndex,
+		From:             transaction.From,
+		Gas:              transaction.Gas,
+		GasPrice:         transaction.GasPrice,
+		Hash:             transaction.Hash,
+		Type:             transaction.Type,
+		Input:            transaction.Input,
+		Nonce:            transaction.Nonce,
+		To:               transaction.To,
+		Value:            transaction.Value,
+		V:                transaction.V,
+		R:                transaction.R,
+		S:                transaction.S,
+		Creator:          creator,
+		IsContract:       isContract,
+		Code:             code,
+		ContractAddress:  contractAddress,
+		GasUsed:          gasUsed,
+		Status:           status,
 	}
 	return result
 }
@@ -1060,6 +1115,57 @@ func (s *PublicTransactionPoolAPI) GetBlockTransactionCountByHash(ctx context.Co
 func (s *PublicTransactionPoolAPI) GetTransactionByBlockNumberAndIndex(ctx context.Context, blockNr rpc.BlockNumber, index hexutil.Uint) *RPCTransaction {
 	if block, _ := s.b.BlockByNumber(ctx, blockNr); block != nil {
 		return newRPCTransactionFromBlockIndex(block, uint64(index))
+	}
+	return nil
+}
+
+// GetAllTransactionsByBlockNumberAndIndex returns the transaction for the given block number and index.
+func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx context.Context, blockNr rpc.BlockNumber, from hexutil.Uint, to hexutil.Uint) []*RPCTransactionWithContract {
+	if block, _ := s.b.BlockByNumber(ctx, blockNr); block != nil {
+		// transactions cnt
+		txsCnt := s.GetBlockTransactionCountByNumber(ctx, blockNr)
+		if from < 0 {
+			from = 0
+		}
+		if to >= *txsCnt {
+			to = *txsCnt - 1
+		}
+		if from > to {
+			return nil
+		}
+		cnt := to - from
+		result := make([]*RPCTransactionWithContract, cnt+1)
+		if int(cnt) < 0 {
+			return make([]*RPCTransactionWithContract, 0)
+		}
+		for i := from; i <= to; i++ {
+			transaction := newRPCTransactionFromBlockIndex(block, uint64(i))
+			receipt, err := s.GetTransactionReceipt(ctx, transaction.Hash)
+			if err != nil {
+				log.Error(err.Error())
+				return result
+			}
+			gasUsed := receipt["gasUsed"].(hexutil.Uint64)
+			status := receipt["status"].(hexutil.Uint)
+			if transaction.To == nil {
+				// creator, isContract, code, contractAddress
+				creator := receipt["from"].(common.Address)
+				contract := receipt["contractAddress"].(common.Address)
+				state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr, false)
+				if state == nil || err != nil {
+					log.Error("state is nil or err != nil")
+					if err != nil {
+						log.Error(err.Error())
+					}
+					return result
+				}
+				code := state.GetCode(contract)
+				result[i] = newRPCTransactionWithContract(transaction, &creator, true, code, &contract, gasUsed, status)
+			} else {
+				result[i] = newRPCTransactionWithContract(transaction, nil, false, nil, nil, gasUsed, status)
+			}
+		}
+		return result
 	}
 	return nil
 }
