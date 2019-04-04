@@ -89,9 +89,9 @@ begin
     fsm(validators[2], "block", "");
     fsm(validators[3], "block", "");
     fsm(validators[4], "block", "");
-\*    fsm(validators[1], "prepareSig", validators[2]);
-\*    fsm(validators[1], "prepareSig", validators[3]);
-\*    fsm(validators[1], "prepareSig", validators[4]);
+\*    fsm(validators[1], "prepareMsg", validators[2]);
+\*    fsm(validators[1], "prepareMsg", validators[3]);
+\*    fsm(validators[1], "prepareMsg", validators[4]);
 
 
 
@@ -340,6 +340,5 @@ Spec == Init /\ [][Next]_vars
 Termination == <>(pc = "Done")
 
 \* END TRANSLATION
-
 
 
