@@ -74,6 +74,7 @@ type ProtocolManager struct {
 	txsCh         chan core.NewTxsEvent // subscribes to new transactions from txpool
 	txsSub        event.Subscription    // manages txsCh
 	minedBlockSub *event.TypeMuxSubscription
+	insertionSub  *event.TypeMuxSubscription
 
 	// channels for fetcher, syncer, txsyncLoop
 	newPeerCh   chan *peer
@@ -194,11 +195,28 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent{})
 	go pm.minedBroadcastLoop()
 
+	pm.insertionSub = pm.eventMux.Subscribe(core.InsertionStartEvent{}, core.InsertionDoneEvent{})
+	go pm.handleBlockchainInsertionEventsLoop()
+
 	// receives data
 	go pm.syncerLoop()
 	// sends out data
 	go pm.txsyncLoop()
 
+}
+
+func (pm *ProtocolManager) handleBlockchainInsertionEventsLoop() {
+	for ev := range pm.insertionSub.Chan() {
+		switch ev.Data.(type) {
+		case core.InsertionStartEvent:
+			atomic.StoreUint32(&pm.acceptTxs, 0)
+			log.Debug("received InsertionStartEvent, do not accept txs now")
+
+		case core.InsertionDoneEvent:
+			atomic.StoreUint32(&pm.acceptTxs, 1)
+			log.Debug("received InsertionDoneEvent, now ready to accept txs")
+		}
+	}
 }
 
 // Stop stops all
@@ -264,11 +282,6 @@ func (pm *ProtocolManager) addPeer(p *peer, isMinerOrValidator bool) (bool, erro
 		log.Debug("register new peer ")
 		return false, err
 	}
-
-	// // Register the peer in the downloader. If the downloader considers it banned, we disconnect
-	// if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {
-	// 	return false, err
-	// }
 
 	log.Debug("Cpchain peer connected", "name", p.Name())
 
@@ -724,6 +737,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 	case msg.Code == TxMsg:
 		// Transactions arrived, make sure we have a valid and fresh chain to handle them
 		if atomic.LoadUint32(&pm.acceptTxs) == 0 {
+			log.Debug("received TxMsg, but do not accept txs now")
 			break
 		}
 		// Transactions can be processed, parse all of them and deliver to the pool

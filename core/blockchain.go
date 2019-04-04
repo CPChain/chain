@@ -143,6 +143,8 @@ type BlockChain struct {
 	knownHeadHash   common.Hash // hash of known head of current chain
 	knownHeadLock   sync.RWMutex
 
+	mux *event.TypeMux
+
 	ErrChan chan error
 }
 
@@ -219,6 +221,10 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 	}
 
 	return bc, nil
+}
+
+func (bc *BlockChain) SetTypeMux(mux *event.TypeMux) {
+	bc.mux = mux
 }
 
 func (bc *BlockChain) getProcInterrupt() bool {
@@ -1113,6 +1119,16 @@ func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 
 	// remove useless prefix
 	chain = chain[outset:]
+
+	if bc.mux != nil {
+		bc.mux.Post(InsertionStartEvent{})
+		log.Debug("posted InsertionStartEvent when inserting blocks")
+
+		defer func() {
+			bc.mux.Post(InsertionDoneEvent{})
+			log.Debug("posted InsertionDoneEvent when inserted blocks")
+		}()
+	}
 
 	for i, block := range chain {
 		_, err := bc.InsertBlock(block)
