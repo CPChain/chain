@@ -176,20 +176,17 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 	}
 	defer atomic.StoreInt32(&s.synchronizing, 0)
 
-	log.Debug("Synchronization Started", "peer", p.IDString(), "peer.Head", head.Hex(), "peer.height", height)
-
 	var (
 		currentHeader = s.blockchain.CurrentBlock().Header()
 		currentNumber = currentHeader.Number.Uint64()
-		// currentHash   = currentHeader.Hash()
 	)
 
-	log.Debug("local status", "current number", currentNumber)
-
 	// if remote peer is behind us, skip
-	if height < currentNumber {
+	if height <= currentNumber {
 		return ErrSlowPeer
 	}
+
+	log.Debug("Synchronization Started", "peer", p.IDString(), "peer.Head", head.Hex(), "peer.height", height, "local height", currentNumber)
 
 	s.currentPeer = p
 	s.cancelCh = make(chan struct{})
