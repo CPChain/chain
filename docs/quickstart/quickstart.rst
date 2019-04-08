@@ -251,9 +251,11 @@ Connect to Alpha Mainnet
     $ cd build/bin
     $ ./cpchain run --runmode testnet
 
-**WARNING:** The current master version is not compatible with Alpha Mainnet.
-Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
-After cloning from github repository, you can checkout the commit 7d29a2b by following command:
+.. warning::
+
+    The current master version is not compatible with Alpha Mainnet.
+    Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
+    After cloning from github repository, you can checkout the commit 7d29a2b by following command:
 
 .. code::
 
