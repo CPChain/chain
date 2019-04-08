@@ -1132,6 +1132,12 @@ func (bc *BlockChain) InsertBlock(block *types.Block) (int, error) {
 		log.Fatal("inserting another different block at same height", "number", block.NumberU64(), "hash", block.Hash().Hex(), "in chain hash", local.Hash().Hex())
 	}
 
+	// update known head if it is necessary
+	_, number := bc.KnownHead()
+	if bc.CurrentBlock() != nil && bc.CurrentBlock().NumberU64() > number {
+		bc.SetKnownHead(bc.CurrentBlock().Hash(), bc.CurrentBlock().NumberU64())
+	}
+
 	// insert it!
 	n, events, logs, err := bc.insertChain(types.Blocks{block})
 	bc.CommitStateDB()
@@ -1349,8 +1355,11 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 	}
 	// Append a single chain head event if we've progressed the chain
-	if lastCanon != nil && bc.CurrentBlock().Hash() == lastCanon.Hash() {
-		events = append(events, ChainHeadEvent{lastCanon})
+	if lastCanon != nil && bc.CurrentBlock() != nil && bc.CurrentBlock().Hash() == lastCanon.Hash() {
+		if _, number := bc.KnownHead(); bc.CurrentBlock().NumberU64() >= number {
+			events = append(events, ChainHeadEvent{lastCanon})
+			bc.SetKnownHead(bc.CurrentBlock().Hash(), bc.CurrentBlock().NumberU64())
+		}
 	}
 	return 0, events, coalescedLogs, nil
 }
