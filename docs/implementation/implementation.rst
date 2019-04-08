@@ -14,13 +14,15 @@ The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 s
 The former three states are designed for normal cases, and the rest are specializing in handling abnormal cases.
 
 The illustration below demonstrates these five states as well as transitions between states.
-Note that not all transitions are shown in this figure due to the lack of space.
+
+.. Note::
+
+    Not all transitions are shown in this figure due to the lack of space.
+
 The text on an arrow between two states refers to the condition of this transition.
 And the message box near the arrow represents the message broadcast to other nodes.
 
-
 .. image:: lbft_fsm.png
-
 
 
 
