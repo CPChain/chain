@@ -4,7 +4,7 @@ Installation
 In this section, you are going to learn how to download our code, build the project and run it on you own system.
 
 .. NOTE::
-    
+
     All code starting with a ``$`` is meant to run in your terminal.
     All code starting with a ``>>>`` is meant to run in a python interpreter,
     like `ipython <https://pypi.org/project/ipython/>`_.
