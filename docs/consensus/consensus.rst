@@ -90,10 +90,11 @@ that there exist a quorum agree on a prepare message and a commit message respec
         i. There are more complicated abnormal cases. We list them explicitly in `Countermeasures for Illicit Actions`_.
 
 
+.. NOTE::
 
-Note that a validator repeats a validate message (or impeach validate message) for the first time it receive it.
-This repetition process ensures the validate message can be delivered to all nodes.
-Refer to :ref:`Implementation` for details.
+    A validator repeats a validate message (or an impeach validate message) for the first time it receive it.
+    This repetition process ensures the validate message can be delivered to all nodes.
+    Refer to :ref:`Implementation` for details.
 
 
 .. _impeachment:
@@ -141,9 +142,12 @@ Explanation
 
 
 Three things are noteworthy here.
-The first is that impeachment only requires two state instead of three in original PBFT.
-The second one is that a validator can endorse a newly proposed block and an impeach block in a block height.
-The last one is that only a weak quorum certificate of f+1 members is required in impeachment consensus.
+
+.. NOTE::
+
+    1. Impeachment only requires two state instead of three in original PBFT.
+    #. A validator can endorse a newly proposed block and an impeach block in a block height.
+    #. Only a weak quorum certificate of f+1 members is required in impeachment consensus.
 
 The absence of an idle state, or pre-prepare state in PBFT, results from the unnecessity of a leader.
 Let's recall the roles of a leader in classic PBFT model.
@@ -306,14 +310,18 @@ Currently, this field is blank.
     }
 
 Before explaining these four fields, one thing is noteworthy here.
-Despite the election is a random process, all random seeds are pre-defined, as the hash value of parent block.
-Thus, all nodes can obtain an identical list of proposers for this term.
+
+.. NOTE::
+
+    Despite the election is a random process, all random seeds are pre-defined, as the hash value of parent block.
+    Thus, all nodes can obtain an identical list of proposers for this term.
+
 Now let's dive in these fields of ``Dpor``
 
 ``Seal``, is the signature of the proposer.
 A validator rejects the block if this value is not the proper proposer of this block height.
 Note that ``Coinbase`` can be decoded from ``Seal``.
-Thus in most cases, these two attributes are referring to a same node.
+Thus, in most cases, these two attributes are referring to a same node.
 
 ``Sigs``, contains signatures for LBFT consensus.
 It should be nil in a newly proposed block.
@@ -691,7 +699,7 @@ Comparison with PBFT
 ---------------------------
 
 This section compares LBFT 2.0 with classic PBFT.
-We name both proposer in LBFT 2.0 and primary replica in PBFT as the leader,
+We name both proposer in LBFT 2.0 and primary replica in PBFT as the **leader**,
 since they assume similar responsibility to dispatch a query to all nodes.
 And insistence on P-certificate indicates that
 a replica does not changes its endorsement in a query once it collects a prepare certificate.
