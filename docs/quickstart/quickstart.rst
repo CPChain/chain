@@ -80,6 +80,11 @@ you can run the following command to **connect to the chain**:
 
     $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311
 
+.. note::
+
+    Please check the availability of both port 8501 and 30311 before connection.
+    You may nominate other ports as you wish.
+
 If you cannot get successfully successfully connected.
 You may try delete some temporary files by
 
