@@ -1363,7 +1363,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		cache, _ := bc.stateCache.TrieDB().Size()
 
-		log.Info("Imported new block", "number", chain[i].Number().Int64(), "hash", chain[i].Hash().Hex())
 		stats.report(chain, i, cache)
 		// send metrics msg to monitor(prometheus)
 		if chainmetrics.NeedMetrics() {
