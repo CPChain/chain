@@ -628,6 +628,7 @@ and relies on the rest loyal validators processing a proper one.
 Past and Future Block
 ************************
 
+
 Since all timer operations are depending on local timers of each validator,
 timestamp of the block is not involved in consensus among validators.
 Despite that timestamp does not play an important role in our consensus,
@@ -673,6 +674,43 @@ Thus, we come up with a pseudocode for timestamp verification.
                     return false
             }
         }
+
+
+Timestamp of Receiving a Block
+*************************************************
+
+Despite that the interval between two consecutive normal blocks is 10 seconds,
+a validator can hardly accept a block received in any timestamp within this 10 seconds.
+It is because consensus and broadcast processes are also consuming this period.
+
+
+Thus, we introduce a threshold as **block delay**,
+indicating the broadcast delay of a block.
+By setting it to 2.5 seconds, a validator has sufficient time for consensus process.
+
+
+Let b be a block with timestamp tb written in its header.
+The proposer should broadcast b at timestamp tb.
+As stated in previous chapter, tb is usually set to previousBlockTimestamp+period.
+A validator invokes its normal case handler if it receives b before previousBlockTimestamp+period+2.5.
+and rejects this block otherwise.
+The pseudocode below demonstrates this process.
+
+
+    .. code-block:: go
+
+        func receivingTimeVerification(b) bool {
+            // v: a validator
+            // t: timestamp of v when receiving b
+            // b: a block
+            blockDelay := 2.5 * time.Minute
+            if t > previousBlockTimestamp+period+blockDelay{
+                return false
+            } else {
+                return true
+            }
+        }
+
 
 
 Unrecognized Node and DDoS Attack
