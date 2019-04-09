@@ -610,7 +610,7 @@ and reuse the code to handle the impeach block,
 which involves less new code as well less latent risks.
 
 Minimum P2P Connections
----------------------------
+****************************
 
 One notable thing is that a validator does not proceed until it connects to 2f validators.
 In other word, the committee contains a strongly connected component of at least 2f+1 validators.
