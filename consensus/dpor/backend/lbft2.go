@@ -45,6 +45,8 @@ type LBFT2 struct {
 	handleImpeachBlock HandleGeneratedImpeachBlock
 
 	validateMsgMap *lru.ARCCache
+
+	preprepareReceiveTimestamp time.Time
 }
 
 // NewLBFT2 create an LBFT2 instance
@@ -225,6 +227,8 @@ func (p *LBFT2) IdleHandler(input *BlockOrHeader, msgCode MsgCode, state consens
 
 		log.Debug("IdleHandler to call handlePreprepareMsg")
 
+		p.preprepareReceiveTimestamp = time.Now()
+
 		return p.handlePreprepareMsg(input, state, func(block *types.Block) error {
 			return p.dpor.ValidateBlock(block, false, true)
 		})
@@ -299,6 +303,8 @@ func (p *LBFT2) ImpeachHandler(input *BlockOrHeader, msgCode MsgCode, state cons
 	case ImpeachPreprepareMsgCode:
 
 		log.Debug("ImpeachHandler to call handleImpeachPreprepareMsg")
+
+		p.preprepareReceiveTimestamp = time.Now()
 
 		return p.handleImpeachPreprepareMsg(input, state, func(block *types.Block) error {
 
@@ -843,6 +849,9 @@ func (p *LBFT2) handleValidateMsg(input *BlockOrHeader, state consensus.State) (
 	err := p.dpor.InsertChain(block)
 	if err == nil {
 		go p.dpor.BroadcastBlock(block, true)
+
+		log.Debug("finished lbft2 consensus about the block", "number", block.NumberU64(), "hash", block.Hash().Hex(), "elapsed", common.PrettyDuration(time.Since(p.preprepareReceiveTimestamp)))
+
 		return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
 	}
 
@@ -880,6 +889,9 @@ func (p *LBFT2) handleImpeachValidateMsg(input *BlockOrHeader, state consensus.S
 	err := p.dpor.InsertChain(block)
 	if err == nil {
 		go p.dpor.BroadcastBlock(block, true)
+
+		log.Debug("finished lbft2 consensus about the impeach block", "number", block.NumberU64(), "hash", block.Hash().Hex(), "elapsed", common.PrettyDuration(time.Since(p.preprepareReceiveTimestamp)))
+
 		return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ImpeachValidateMsgCode, consensus.Idle, nil
 	}
 
