@@ -532,7 +532,6 @@ we can implement it without adding too much code.
 
 
 
-
 Optimizations
 ---------------------
 
