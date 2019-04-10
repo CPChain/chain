@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"sync"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -1127,45 +1128,88 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 		if from < 0 {
 			from = 0
 		}
-		if to >= *txsCnt {
-			to = *txsCnt - 1
+		if to > *txsCnt {
+			to = *txsCnt
 		}
 		if from > to {
 			return nil
 		}
-		cnt := to - from
-		result := make([]*RPCTransactionWithContract, cnt+1)
-		if int(cnt) < 0 {
+		if *txsCnt == hexutil.Uint(0) {
 			return make([]*RPCTransactionWithContract, 0)
 		}
-		for i := from; i <= to; i++ {
-			transaction := newRPCTransactionFromBlockIndex(block, uint64(i))
-			receipt, err := s.GetTransactionReceipt(ctx, transaction.Hash)
+		transactions := block.Transactions()[from:to]
+		results := make([]*RPCTransactionWithContract, to-from)
+
+		errCh := make(chan bool)
+		successCh := make(chan bool)
+
+		d := time.Duration(time.Second * 10)
+
+		t := time.NewTicker(d)
+		defer t.Stop()
+
+		go func() {
+			receipts, err := s.b.GetReceipts(ctx, block.Hash())
 			if err != nil {
 				log.Error(err.Error())
-				return result
+				errCh <- true
 			}
-			gasUsed := receipt["gasUsed"].(hexutil.Uint64)
-			status := receipt["status"].(hexutil.Uint)
-			if transaction.To == nil {
-				// creator, isContract, code, contractAddress
-				creator := receipt["from"].(common.Address)
-				contract := receipt["contractAddress"].(common.Address)
-				state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr, false)
-				if state == nil || err != nil {
-					log.Error("state is nil or err != nil")
+
+			wg := sync.WaitGroup{}
+			wg.Add(len(transactions))
+
+			for index, tx := range transactions {
+				go func(index int, tx *types.Transaction) {
+					rpcTx := newRPCTransaction(tx, block.Hash(), block.NumberU64(), uint64(index)+uint64(from))
+
+					var receipt *types.Receipt
+					if tx.IsPrivate() {
+						receipt, _ = s.b.GetPrivateReceipt(ctx, tx.Hash())
+					} else {
+						receipt = receipts[uint64(index)+uint64(from)]
+					}
 					if err != nil {
 						log.Error(err.Error())
 					}
-					return result
-				}
-				code := state.GetCode(contract)
-				result[i] = newRPCTransactionWithContract(transaction, &creator, true, code, &contract, gasUsed, status)
-			} else {
-				result[i] = newRPCTransactionWithContract(transaction, nil, false, nil, nil, gasUsed, status)
+					gasUsed := hexutil.Uint64(receipt.GasUsed)
+					status := hexutil.Uint(receipt.Status)
+
+					if rpcTx.To == nil {
+						// creator, isContract, code, contractAddress
+						var signer types.Signer = types.FrontierSigner{}
+						if tx.Protected() {
+							signer = types.NewCep1Signer(tx.ChainId())
+						}
+						creator, _ := types.Sender(signer, tx)
+						contract := receipt.ContractAddress
+						state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr, false)
+						if state == nil || err != nil {
+							log.Error("state is nil or err != nil")
+							if err != nil {
+								log.Error(err.Error())
+							}
+							errCh <- true
+						}
+						code := state.GetCode(contract)
+						results[index] = newRPCTransactionWithContract(rpcTx, &creator, true, code, &contract, gasUsed, status)
+					} else {
+						results[index] = newRPCTransactionWithContract(rpcTx, nil, false, nil, nil, gasUsed, status)
+					}
+					wg.Done()
+				}(index, tx)
 			}
+			wg.Wait()
+			successCh <- true
+		}()
+		select {
+		case <-t.C:
+			log.Error("GetBlockTransactionCountByNumber Timeout")
+			return make([]*RPCTransactionWithContract, 0)
+		case <-errCh:
+			return make([]*RPCTransactionWithContract, 0)
+		case <-successCh:
+			return results
 		}
-		return result
 	}
 	return nil
 }

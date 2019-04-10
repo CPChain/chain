@@ -17,7 +17,7 @@ func init() {
 }
 
 func startnewraise(ctx *cli.Context) error {
-	admin, out, cancel := build(ctx)
+	admin, out, cancel := Build(ctx)
 	defer cancel()
 	err := admin.StartNewRaise()
 	if err != nil {

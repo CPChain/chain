@@ -296,6 +296,8 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		dporMode           = dporEngine.Mode()
 		dporProtocol       = dporEngine.Protocol()
 		isMinerOrValidator = isMiner || workAsValidator
+		handleTxs          = !workAsValidator
+		handleDporMsgs     = isMinerOrValidator && dporMode == dpor.NormalMode
 	)
 
 	if dporMode == dpor.NormalMode && isMinerOrValidator && !dporProtocol.Available() {
@@ -359,44 +361,9 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 		// stuck in the message loop on this peer
 		for {
-			msg, err := peer.rw.ReadMsg()
-			if err != nil {
-				log.Warn("err when reading msg", "err", err)
+			if id, err = pm.handleMsg(peer, id, handleTxs, handleDporMsgs, dporProtocol); err != nil {
+				log.Debug("Cpchain message handleing failed", "err", err)
 				return err
-			}
-			defer msg.Discard()
-
-			if msg.Size > ProtocolMaxMsgSize {
-				log.Warn("err when checking msg size", "size", msg.Size)
-				return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-			}
-
-			// if I am a validator, do not waste time to handle tx msg
-			if msg.Code == TxMsg && dporEngine.IsValidator() {
-				continue
-			}
-
-			switch {
-			case backend.IsSyncMsg(msg):
-				switch err = pm.handleSyncMsg(msg, peer); err {
-				case nil:
-
-				default:
-					log.Warn("err when handling sync msg", "err", err)
-					return err
-				}
-
-			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMinerOrValidator:
-				switch id, err = dporProtocol.HandleMsg(id, int(version), p, rw, msg); err {
-				case nil:
-
-				default:
-					log.Warn("err when handling dpor msg", "err", err)
-					return err
-				}
-
-			default:
-				log.Warn("unknown msg code", "msg", msg.Code)
 			}
 		}
 
@@ -404,6 +371,49 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		return p2p.DiscQuitting
 	}
 
+}
+
+func (pm *ProtocolManager) handleMsg(p *peer, id string, handleTxs bool, handleDporMsgs bool, dporProtocol consensus.Protocol) (string, error) {
+
+	msg, err := p.rw.ReadMsg()
+	if err != nil {
+		return id, err
+	}
+
+	if msg.Size > ProtocolMaxMsgSize {
+		log.Warn("err when checking msg size", "size", msg.Size)
+		return id, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+	}
+
+	defer msg.Discard()
+
+	// if I am a validator, do not waste time to handle tx msg
+	if msg.Code == TxMsg && !handleTxs {
+		return id, nil
+	}
+
+	switch {
+	case backend.IsSyncMsg(msg):
+		switch err = pm.handleSyncMsg(msg, p); err {
+		case nil:
+
+		default:
+			log.Warn("err when handling sync msg", "err", err)
+		}
+
+	case backend.IsDporMsg(msg) && handleDporMsgs:
+		switch id, err = dporProtocol.HandleMsg(id, p.version, p.Peer, p.rw, msg); err {
+		case nil:
+
+		default:
+			log.Warn("err when handling dpor msg", "err", err)
+		}
+
+	default:
+		log.Warn("unknown msg code", "msg", msg.Code)
+	}
+
+	return id, err
 }
 
 func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
