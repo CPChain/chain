@@ -25,7 +25,7 @@ func init() {
 }
 
 func ShowStatus(ctx *cli.Context) error {
-	admin, out, cancel := build(ctx)
+	admin, out, cancel := Build(ctx)
 	defer cancel()
 	investorList, err := admin.GetInvestorList(ctx)
 	if err != nil {

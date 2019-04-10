@@ -14,13 +14,15 @@ The LBFT 2.0 protocol can be considered as a finite state machine (FSM) with 5 s
 The former three states are designed for normal cases, and the rest are specializing in handling abnormal cases.
 
 The illustration below demonstrates these five states as well as transitions between states.
-Note that not all transitions are shown in this figure due to the lack of space.
+
+.. Note::
+
+    Not all transitions are shown in this figure due to the lack of space.
+
 The text on an arrow between two states refers to the condition of this transition.
 And the message box near the arrow represents the message broadcast to other nodes.
 
-
 .. image:: lbft_fsm.png
-
 
 
 
@@ -530,7 +532,6 @@ we can implement it without adding too much code.
 
 
 
-
 Optimizations
 ---------------------
 
@@ -608,7 +609,7 @@ and reuse the code to handle the impeach block,
 which involves less new code as well less latent risks.
 
 Minimum P2P Connections
----------------------------
+****************************
 
 One notable thing is that a validator does not proceed until it connects to 2f validators.
 In other word, the committee contains a strongly connected component of at least 2f+1 validators.

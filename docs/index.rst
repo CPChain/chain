@@ -18,7 +18,6 @@ Welcome to CPChain documentation!
    implementation/implementation
    api/cpc_fusion
    api/rpc
-   cpc_faucet/faucet
    faq/faq
    glossary/glossary
 
