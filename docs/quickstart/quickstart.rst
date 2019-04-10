@@ -10,6 +10,13 @@ Both methods require a Linux working environment,
 and have been tested on Ubuntu 18.04.
 Earlier Linux releases may incur problems or lack necessary dependencies.
 
+
+.. NOTE::
+
+    All code starting with a ``$`` is meant to run in your terminal.
+    All code starting with a ``>>>`` is meant to run in a python interpreter,
+    like `ipython <https://pypi.org/project/ipython/>`_.
+
 Binary Release
 +++++++++++++++++++
 
@@ -18,7 +25,11 @@ Download links for binary release are coming soon.
 ``cpchain`` is the binary release for the chain.
 And ``console`` provides command line interface for operations on the chain,
 like checking account status, deposit and claiming campaign.
-Note that ``console`` does not support transaction operations.
+
+.. NOTE::
+
+    ``console`` does not support transaction operations.
+
 You need to utilize either :ref:`fusion-api` or :ref:`rpc-api` for all available operations.
 
 You can always refer to
@@ -68,6 +79,11 @@ you can run the following command to **connect to the chain**:
 .. code-block:: shell
 
     $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311
+
+.. note::
+
+    Please check the availability of both ports 8501 and 30311 before connection.
+    You may nominate other ports as you wish.
 
 If you cannot get successfully successfully connected.
 You may try delete some temporary files by
@@ -171,7 +187,11 @@ It requires you to enter the password to further proceed.
 You may use an argument ``--password`` to indicate a file storing your plaintext password.
 But it is risky, and we do not recommend it.
 
-Note that the argument ``--mine`` indicates this connection can be used for proposing blocks.
+.. NOTE::
+
+    The argument ``--mine`` indicates this connection can be used for proposing blocks.
+
+
 And via this connection,
 a node with insufficient deposit automatically sets its deposit to 200,000 CPC (if its balance is enough).
 And then the node claims campaign to become a proposer.
@@ -229,16 +249,18 @@ Running CPChain
 #################
 
 Connect to Alpha Mainnet
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code::
 
     $ cd build/bin
     $ ./cpchain run --runmode testnet
 
-**WARNING:** The current master version is not compatible with Alpha Mainnet.
-Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
-After cloning from github repository, you can checkout the commit 7d29a2b by following command:
+.. warning::
+
+    The current master version is not compatible with Alpha Mainnet.
+    Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
+    After cloning from github repository, you can checkout the commit 7d29a2b by following command:
 
 .. code::
 

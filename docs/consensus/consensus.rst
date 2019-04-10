@@ -90,10 +90,11 @@ that there exist a quorum agree on a prepare message and a commit message respec
         i. There are more complicated abnormal cases. We list them explicitly in `Countermeasures for Illicit Actions`_.
 
 
+.. NOTE::
 
-Note that a validator repeats a validate message (or impeach validate message) for the first time it receive it.
-This repetition process ensures the validate message can be delivered to all nodes.
-Refer to :ref:`Implementation` for details.
+    A validator repeats a validate message (or an impeach validate message) for the first time it receive it.
+    This repetition process ensures the validate message can be delivered to all nodes.
+    Refer to :ref:`Implementation` for details.
 
 
 .. _impeachment:
@@ -141,9 +142,12 @@ Explanation
 
 
 Three things are noteworthy here.
-The first is that impeachment only requires two state instead of three in original PBFT.
-The second one is that a validator can endorse a newly proposed block and an impeach block in a block height.
-The last one is that only a weak quorum certificate of f+1 members is required in impeachment consensus.
+
+.. NOTE::
+
+    1. Impeachment only requires two state instead of three in original PBFT.
+    #. A validator can endorse a newly proposed block and an impeach block in a block height.
+    #. Only a weak quorum certificate of f+1 members is required in impeachment consensus.
 
 The absence of an idle state, or pre-prepare state in PBFT, results from the unnecessity of a leader.
 Let's recall the roles of a leader in classic PBFT model.
@@ -306,14 +310,18 @@ Currently, this field is blank.
     }
 
 Before explaining these four fields, one thing is noteworthy here.
-Despite the election is a random process, all random seeds are pre-defined, as the hash value of parent block.
-Thus, all nodes can obtain an identical list of proposers for this term.
+
+.. NOTE::
+
+    Despite the election is a random process, all random seeds are pre-defined, as the hash value of parent block.
+    Thus, all nodes can obtain an identical list of proposers for this term.
+
 Now let's dive in these fields of ``Dpor``
 
 ``Seal``, is the signature of the proposer.
 A validator rejects the block if this value is not the proper proposer of this block height.
 Note that ``Coinbase`` can be decoded from ``Seal``.
-Thus in most cases, these two attributes are referring to a same node.
+Thus, in most cases, these two attributes are referring to a same node.
 
 ``Sigs``, contains signatures for LBFT consensus.
 It should be nil in a newly proposed block.
@@ -620,6 +628,7 @@ and relies on the rest loyal validators processing a proper one.
 Past and Future Block
 ************************
 
+
 Since all timer operations are depending on local timers of each validator,
 timestamp of the block is not involved in consensus among validators.
 Despite that timestamp does not play an important role in our consensus,
@@ -667,6 +676,43 @@ Thus, we come up with a pseudocode for timestamp verification.
         }
 
 
+Timestamp of Receiving a Block
+*************************************************
+
+Despite that the interval between two consecutive normal blocks is 10 seconds,
+a validator can hardly accept a block received in any timestamp within this 10 seconds.
+It is because consensus and broadcast processes are also consuming this period.
+
+
+Thus, we introduce a threshold as **block delay**,
+indicating the broadcast delay of a block.
+By setting it to 2.5 seconds, a validator has sufficient time for consensus process.
+
+
+Let b be a block with timestamp tb written in its header.
+The proposer should broadcast b at timestamp tb.
+As stated in previous chapter, tb is usually set to previousBlockTimestamp+period.
+A validator invokes its normal case handler if it receives b before previousBlockTimestamp+period+2.5.
+and rejects this block otherwise.
+The pseudocode below demonstrates this process.
+
+
+    .. code-block:: go
+
+        func receivingTimeVerification(b) bool {
+            // v: a validator
+            // t: timestamp of v when receiving b
+            // b: a block
+            blockDelay := 2.5 * time.Minute
+            if t > previousBlockTimestamp+period+blockDelay{
+                return false
+            } else {
+                return true
+            }
+        }
+
+
+
 Unrecognized Node and DDoS Attack
 ***************************************
 
@@ -691,7 +737,7 @@ Comparison with PBFT
 ---------------------------
 
 This section compares LBFT 2.0 with classic PBFT.
-We name both proposer in LBFT 2.0 and primary replica in PBFT as the leader,
+We name both proposer in LBFT 2.0 and primary replica in PBFT as the **leader**,
 since they assume similar responsibility to dispatch a query to all nodes.
 And insistence on P-certificate indicates that
 a replica does not changes its endorsement in a query once it collects a prepare certificate.
