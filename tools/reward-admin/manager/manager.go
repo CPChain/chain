@@ -29,14 +29,7 @@ type Console struct {
 	addr   common.Address
 }
 
-var gasPrice *big.Int
 
-var gasLimit int64
-
-func init() {
-	gasPrice = big.NewInt(0)
-	gasLimit = int64(200000)
-}
 
 // NewConsole build a console
 func NewConsole(ctx *context.Context, rpc string, keystore string, passwordFile string, output rm.Output) *Console {
@@ -118,9 +111,21 @@ func (c *Console) ContractAccountBalance() *big.Int {
 func (c *Console) buildTransactOpts(value *big.Int) *bind.TransactOpts {
 	transactOpts := bind.NewKeyedTransactor(c.prvKey)
 	transactOpts.Value = value
-	transactOpts.GasPrice = gasPrice
-	transactOpts.GasLimit = uint64(gasLimit)
+	transactOpts.GasPrice = big.NewInt(3000000)
+	transactOpts.GasLimit = uint64(5000000)
 	return transactOpts
+}
+
+func (c *Console) SetPeriod() error {
+	addr := getContractAddress(configs.ContractReward)
+	instance, err := reward.NewReward(addr, c.client)
+	if err != nil {
+		return err
+	}
+	transactOpts := c.buildTransactOpts(big.NewInt(0))
+	instance.SetPeriod(transactOpts, big.NewInt(0))
+	time.Sleep(20 * time.Second)
+	return err
 }
 
 // Want StartNewRound
@@ -131,8 +136,8 @@ func (c *Console) StartNewRound() error {
 		return nil
 	}
 	addr := getContractAddress(configs.ContractReward)
-
 	instance, err := reward.NewReward(addr, c.client)
+
 	if err != nil {
 		return err
 	}
@@ -142,19 +147,17 @@ func (c *Console) StartNewRound() error {
 	if err != nil {
 		return err
 	}
-	var count = 0
-	for i := 0; i < 20; i++ {
-		time.Sleep(500 * time.Millisecond)
-		r, err := c.client.TransactionReceipt(context.Background(), tx.Hash())
-		if err == nil {
-			c.checkNewRoundLockStatus(r, instance)
-			break
-		}
-		count++
+
+	if err != nil {
+		return err
 	}
-	if count == 20 {
-		c.output.Info("The transation is not Successful.")
+
+	r, err := bind.WaitMined(context.Background(), c.client, tx)
+	if err != nil {
+		c.output.Error("wait mined failed", "err", err)
+		return err
 	}
+	c.checkNewRoundLockStatus(r, instance)
 	return err
 }
 
@@ -166,48 +169,36 @@ func (c *Console) checkNewRoundLockStatus(r *types.Receipt, instance *reward.Rew
 		}
 		if locked == true {
 			c.output.Info("Successful")
+
 		} else {
-			c.output.Info("The state of this node is incorrect.")
+			c.output.Info("The state of this node should be locked,but it is incorrect.")
 		}
 	} else {
-		c.output.Info("The transation is not Successful.")
+		c.output.Info("The StatusReceipt of this transation is not Successful.")
 	}
 }
 
 /// Want StartNewRaise
 func (c *Console) StartNewRaise() error {
 	c.output.Info("Want Startnewraise...")
-	if c.IsLocked() {
-		c.output.Warn("Sorry, the reward contract is locked now.")
-		return nil
-	}
 	addr := getContractAddress(configs.ContractReward)
-
 	instance, err := reward.NewReward(addr, c.client)
 	if err != nil {
 		return err
 	}
 	// Want Startnewraise
 	transactOpts := c.buildTransactOpts(big.NewInt(0))
-
 	tx, err := instance.NewRaise(transactOpts)
 	if err != nil {
 		return err
 	}
 
-	var count = 0
-	for i := 0; i < 20; i++ {
-		time.Sleep(500 * time.Millisecond)
-		r, err := c.client.TransactionReceipt(context.Background(), tx.Hash())
-		if err == nil {
-			c.checkNewRaiseLockStatus(r, instance)
-			break
-		}
-		count++
+	r, err := bind.WaitMined(context.Background(), c.client, tx)
+	if err != nil {
+		c.output.Error("wait mined failed", "err", err)
+		return err
 	}
-	if count == 20 {
-		c.output.Info("The transation is not Successful.")
-	}
+	c.checkNewRaiseLockStatus(r, instance)
 
 	return err
 }
@@ -221,10 +212,10 @@ func (c *Console) checkNewRaiseLockStatus(r *types.Receipt, instance *reward.Rew
 		if locked == false {
 			c.output.Info("Successful")
 		} else {
-			c.output.Info("The state of this node is incorrect.")
+			c.output.Info("The state of this node should be unlocked,but it is incorrect.")
 		}
 	} else {
-		c.output.Info("The transation is not Successful.")
+		c.output.Info("The StatusReceipt of this transation is not Successful.")
 	}
 }
 

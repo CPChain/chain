@@ -14,7 +14,6 @@ func TestManager(t *testing.T) {
 	endPoint := "http://127.0.0.1:8503"
 	kspath := "/Users/liaojinlong/.cpchain/keystore/"
 	password := "/Users/liaojinlong/.cpchain/password"
-
 	output := out.NewLogOutput()
 
 	manager := NewConsole(&ctx, endPoint, kspath, password, &output)

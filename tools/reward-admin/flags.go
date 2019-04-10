@@ -21,7 +21,7 @@ var RPCFlags = []cli.Flag{
 	},
 }
 
-func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFunc) {
+func Build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFunc) {
 	rpc, kspath, pwdfile, err := validator(ctx)
 	out := output.NewLogOutput()
 	if err != nil {
