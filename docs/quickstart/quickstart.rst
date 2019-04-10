@@ -82,7 +82,7 @@ you can run the following command to **connect to the chain**:
 
 .. note::
 
-    Please check the availability of both port 8501 and 30311 before connection.
+    Please check the availability of both ports 8501 and 30311 before connection.
     You may nominate other ports as you wish.
 
 If you cannot get successfully successfully connected.
