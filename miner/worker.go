@@ -10,6 +10,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type NativeWorker struct {
@@ -97,9 +98,10 @@ out:
 // mine invokes the consensus engine to seal a block.
 // note, finalize is called in miner's engine, not here.
 func (nw *NativeWorker) mine(work *Work, quitCh <-chan struct{}) {
+	sealStart := time.Now()
 	log.Debug("timelog before seal", "header.timestamp", work.Block.Timestamp(), "now", time.Now(), "delay", work.Block.Timestamp().Sub(time.Now()))
 	if result, err := nw.cons.Seal(nw.chain, work.Block, quitCh); result != nil {
-		log.Info("Successfully sealed new block", "number", result.Number(), "hash", result.Hash().Hex())
+		log.Info("Successfully sealed new block", "number", result.Number(), "hash", result.Hash().Hex(), "elapsed", common.PrettyDuration(time.Since(sealStart)))
 		nw.returnCh <- &Result{work, result}
 	} else {
 		if err != nil {

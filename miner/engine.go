@@ -466,7 +466,7 @@ func (e *engine) commitNewWork() {
 		if e.cons.CanMakeBlock(e.chain, e.coinbase, parent.Header()) {
 			log.Debug("timelog pushing", "header.timestamp", header.Timestamp(), "now", time.Now(), "delay", header.Timestamp().Sub(time.Now()))
 			e.push(work)
-			log.Info("Commit new mining work", "number", work.Block.Number(), "txs", work.tcount, "elapsed", common.PrettyDuration(time.Since(tstart)))
+			log.Info("Commit new mining work", "number", work.Block.Number(), "hash", work.Block.Hash().Hex(), "txs", work.tcount, "elapsed", common.PrettyDuration(time.Since(tstart)))
 		}
 	}
 	e.updateSnapshot()
