@@ -64,9 +64,9 @@ func Start(ctx *cli.Context) error {
 		return err
 	}
 
-	if err := Handler.StartCPUProfile(cfg.cpuFileName); err != nil {
-		return err
-	}
+	//if err := Handler.StartCPUProfile(cfg.cpuFileName); err != nil {
+	//	return err
+	//}
 
 	if err := Handler.StartMemProfile(cfg.memProfileRate, cfg.memProfileFileName); err != nil {
 		return err
@@ -85,6 +85,6 @@ func Start(ctx *cli.Context) error {
 func Stop() {
 	Handler.StopBlockingProfile()
 	Handler.StopMemHeapProfile()
-	Handler.StopCPUProfile()
+	//Handler.StopCPUProfile()
 	Handler.StopGoTrace()
 }

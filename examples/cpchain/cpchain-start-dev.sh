@@ -98,6 +98,8 @@ nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcad
 echo "start contract admin node"
 nohup $cpchain $args --ipcaddr ${ipc_path_base}21 --datadir data/data21 --rpcaddr 0.0.0.0:8521 --port 30331 --mine \
          --unlock "0xb3801b8743dea10c30b0c21cae8b1923d9625f84"  --password conf-dev/passwords/password \
+         --profile data/data21 \
+         --profileaddr "0.0.0.0:8951" \
          --logfile data/logs/21.log 2>/dev/null &
 
 # dlv is useful for debugging.  do not remove.
