@@ -1318,6 +1318,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			return i, events, coalescedLogs, err
 		}
 
+		log.Debug("Now ready to process txs", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
+			len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)), "now", time.Now())
+
 		// NB process block using the parent state as reference point.
 		pubReceipts, privReceipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB,
 			bc.vmConfig)
@@ -1325,6 +1328,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			bc.reportBlock(block, pubReceipts, err)
 			return i, events, coalescedLogs, err
 		}
+
+		log.Debug("Now finished process, ready to validate state", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
+			len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)), "now", time.Now())
+
 		// Validate the state using the default validator
 		err = bc.Validator().ValidateState(block, parent, pubState, pubReceipts, usedGas)
 		if err != nil {
@@ -1333,11 +1340,18 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 		proctime := time.Since(bstart)
 
+		log.Debug("Now finished validation, ready to write block with state", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
+			len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)), "now", time.Now())
+
 		// Write the block to the chain and get the status.
 		status, err := bc.WriteBlockWithState(block, pubReceipts, privReceipts, pubState, privState)
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
+
+		log.Debug("Now finished write block with state", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
+			len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)), "now", time.Now())
+
 		switch status {
 		case CanonStatTy:
 			log.Debug("Inserted new block", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
