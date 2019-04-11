@@ -41,62 +41,62 @@ nohup $cpchain $args  --ipcaddr ${ipc_path_base}1 --datadir data/data1  --rpcadd
          --unlock "0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a" --password conf-dev/passwords/password \
          --validators "${validators}" \
          --profile data/data1 \
-         --profileaddr "localhost:8931" \
+         --profileaddr "0.0.0.0:8931" \
          --rpccorsdomain "http://orange:8000" --logfile data/logs/1.log 2> data/logs/1.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}2 --datadir data/data2  --rpcaddr 127.0.0.1:8502 --port 30312 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}2 --datadir data/data2  --rpcaddr 0.0.0.0:8502 --port 30312 --mine \
          --unlock "0xc05302acebd0730e3a18a058d7d1cb1204c4a092" --password conf-dev/passwords/password \
          --runmode dev \
          --profile data/data2 \
-         --profileaddr "localhost:8932" \
+         --profileaddr "0.0.0.0:8932" \
          --logfile data/logs/2.log 2> data/logs/2.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}3 --datadir data/data3  --rpcaddr 127.0.0.1:8503 --port 30313 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}3 --datadir data/data3  --rpcaddr 0.0.0.0:8503 --port 30313 --mine \
          --profile data/data3 \
-         --profileaddr "localhost:8933" \
+         --profileaddr "0.0.0.0:8933" \
          --unlock "0xef3dd127de235f15ffb4fc0d71469d1339df6465" --password conf-dev/passwords/password1 --logfile data/logs/3.log 2> data/logs/3.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}4 --datadir data/data4  --rpcaddr 127.0.0.1:8504 --port 30314 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}4 --datadir data/data4  --rpcaddr 0.0.0.0:8504 --port 30314 --mine \
          --profile data/data4 \
-         --profileaddr "localhost:8934" \
+         --profileaddr "0.0.0.0:8934" \
          --unlock "0x3a18598184ef84198db90c28fdfdfdf56544f747" --password conf-dev/passwords/password2 --logfile data/logs/4.log 2> data/logs/4.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}5 --datadir data/data5  --rpcaddr 127.0.0.1:8505 --port 30315 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}5 --datadir data/data5  --rpcaddr 0.0.0.0:8505 --port 30315 --mine \
          --profile data/data5 \
-         --profileaddr "localhost:8935" \
+         --profileaddr "0.0.0.0:8935" \
          --unlock "0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e" --password conf-dev/passwords/password --logfile data/logs/5.log 2> data/logs/5.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}6 --datadir data/data6  --rpcaddr 127.0.0.1:8506 --port 30316 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}6 --datadir data/data6  --rpcaddr 0.0.0.0:8506 --port 30316 --mine \
          --profile data/data6 \
-         --profileaddr "localhost:8936" \
+         --profileaddr "0.0.0.0:8936" \
          --unlock "0x22a672eab2b1a3ff3ed91563205a56ca5a560e08" --password conf-dev/passwords/password --logfile data/logs/6.log 2> data/logs/6.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}7 --datadir data/data7  --rpcaddr 127.0.0.1:8507 --port 30317 \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}7 --datadir data/data7  --rpcaddr 0.0.0.0:8507 --port 30317 \
          --profile data/data7 \
-         --profileaddr "localhost:8937" \
+         --profileaddr "0.0.0.0:8937" \
          --validator \
          --unlock "0x7b2f052a372951d02798853e39ee56c895109992" --password conf-dev/passwords/password --logfile data/logs/7.log  --nodekey conf-dev/validators/node7.key 2> data/logs/7.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}8 --datadir data/data8  --rpcaddr 127.0.0.1:8508 --port 30318 \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}8 --datadir data/data8  --rpcaddr 0.0.0.0:8508 --port 30318 \
          --profile data/data8 \
-         --profileaddr "localhost:8938" \
+         --profileaddr "0.0.0.0:8938" \
          --validator \
          --unlock "0x2f0176cc3a8617b6ddea6a501028fa4c6fc25ca1"  --password conf-dev/passwords/password --logfile data/logs/8.log  --nodekey conf-dev/validators/node8.key 2> data/logs/8.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}9 --datadir data/data9  --rpcaddr 127.0.0.1:8509 --port 30319 \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}9 --datadir data/data9  --rpcaddr 0.0.0.0:8509 --port 30319 \
          --profile data/data9 \
-         --profileaddr "localhost:8939" \
+         --profileaddr "0.0.0.0:8939" \
          --validator \
          --unlock "0xe4d51117832e84f1d082e9fc12439b771a57e7b2"  --password conf-dev/passwords/password --logfile data/logs/9.log  --nodekey conf-dev/validators/node9.key 2> data/logs/9.err.log &
 
-nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcaddr 127.0.0.1:8510 --port 30320 \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}10 --datadir data/data10  --rpcaddr 0.0.0.0:8510 --port 30320 \
          --profile data/data10 \
-         --profileaddr "localhost:8940" \
+         --profileaddr "0.0.0.0:8940" \
          --validator \
          --unlock "0x32bd7c33bb5060a85f361caf20c0bda9075c5d51"  --password conf-dev/passwords/password --logfile data/logs/10.log --nodekey conf-dev/validators/node10.key 2> data/logs/10.err.log &
 
 echo "start contract admin node"
-nohup $cpchain $args --ipcaddr ${ipc_path_base}21 --datadir data/data21 --rpcaddr 127.0.0.1:8521 --port 30331 --mine \
+nohup $cpchain $args --ipcaddr ${ipc_path_base}21 --datadir data/data21 --rpcaddr 0.0.0.0:8521 --port 30331 --mine \
          --unlock "0xb3801b8743dea10c30b0c21cae8b1923d9625f84"  --password conf-dev/passwords/password \
          --logfile data/logs/21.log 2>/dev/null &
 
