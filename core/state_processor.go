@@ -75,13 +75,20 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, sta
 		header       = block.Header()
 		allLogs      []*types.Log
 		gp           = new(GasPool).AddGas(block.GasLimit())
+
+		author = (*common.Address)(nil)
 	)
+
+	beneficiary, err := p.bc.Engine().Author(header)
+	if err == nil {
+		author = &beneficiary
+	}
 
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
 		statePrivDB.Prepare(tx.Hash(), block.Hash(), i)
-		pubReceipt, privReceipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, statePrivDB, remoteDB, header, tx,
+		pubReceipt, privReceipt, _, err := ApplyTransaction(p.config, p.bc, author, gp, statedb, statePrivDB, remoteDB, header, tx,
 			usedGas, cfg, p.accm)
 		if err != nil {
 			return nil, nil, nil, 0, err
