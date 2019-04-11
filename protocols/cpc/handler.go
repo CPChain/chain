@@ -74,6 +74,7 @@ type ProtocolManager struct {
 	txsCh         chan core.NewTxsEvent // subscribes to new transactions from txpool
 	txsSub        event.Subscription    // manages txsCh
 	minedBlockSub *event.TypeMuxSubscription
+	insertionSub  *event.TypeMuxSubscription
 
 	// channels for fetcher, syncer, txsyncLoop
 	newPeerCh   chan *peer
@@ -194,11 +195,28 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent{})
 	go pm.minedBroadcastLoop()
 
+	pm.insertionSub = pm.eventMux.Subscribe(core.InsertionStartEvent{}, core.InsertionDoneEvent{})
+	go pm.handleBlockchainInsertionEventsLoop()
+
 	// receives data
 	go pm.syncerLoop()
 	// sends out data
 	go pm.txsyncLoop()
 
+}
+
+func (pm *ProtocolManager) handleBlockchainInsertionEventsLoop() {
+	for ev := range pm.insertionSub.Chan() {
+		switch ev.Data.(type) {
+		case core.InsertionStartEvent:
+			atomic.StoreUint32(&pm.acceptTxs, 0)
+			log.Debug("received InsertionStartEvent, do not accept txs now")
+
+		case core.InsertionDoneEvent:
+			atomic.StoreUint32(&pm.acceptTxs, 1)
+			log.Debug("received InsertionDoneEvent, now ready to accept txs")
+		}
+	}
 }
 
 // Stop stops all
@@ -265,11 +283,6 @@ func (pm *ProtocolManager) addPeer(p *peer, isMinerOrValidator bool) (bool, erro
 		return false, err
 	}
 
-	// // Register the peer in the downloader. If the downloader considers it banned, we disconnect
-	// if err := pm.downloader.RegisterPeer(p.id, p.version, p); err != nil {
-	// 	return false, err
-	// }
-
 	log.Debug("Cpchain peer connected", "name", p.Name())
 
 	return remoteIsMiner, nil
@@ -283,6 +296,8 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		dporMode           = dporEngine.Mode()
 		dporProtocol       = dporEngine.Protocol()
 		isMinerOrValidator = isMiner || workAsValidator
+		handleTxs          = !workAsValidator
+		handleDporMsgs     = isMinerOrValidator && dporMode == dpor.NormalMode
 	)
 
 	if dporMode == dpor.NormalMode && isMinerOrValidator && !dporProtocol.Available() {
@@ -346,44 +361,9 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 
 		// stuck in the message loop on this peer
 		for {
-			msg, err := peer.rw.ReadMsg()
-			if err != nil {
-				log.Warn("err when reading msg", "err", err)
+			if id, err = pm.handleMsg(peer, id, handleTxs, handleDporMsgs, dporProtocol); err != nil {
+				log.Debug("Cpchain message handleing failed", "err", err)
 				return err
-			}
-			defer msg.Discard()
-
-			if msg.Size > ProtocolMaxMsgSize {
-				log.Warn("err when checking msg size", "size", msg.Size)
-				return errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
-			}
-
-			// if I am a validator, do not waste time to handle tx msg
-			if msg.Code == TxMsg && dporEngine.IsValidator() {
-				continue
-			}
-
-			switch {
-			case backend.IsSyncMsg(msg):
-				switch err = pm.handleSyncMsg(msg, peer); err {
-				case nil:
-
-				default:
-					log.Warn("err when handling sync msg", "err", err)
-					return err
-				}
-
-			case backend.IsDporMsg(msg) && dporMode == dpor.NormalMode && isMinerOrValidator:
-				switch id, err = dporProtocol.HandleMsg(id, int(version), p, rw, msg); err {
-				case nil:
-
-				default:
-					log.Warn("err when handling dpor msg", "err", err)
-					return err
-				}
-
-			default:
-				log.Warn("unknown msg code", "msg", msg.Code)
 			}
 		}
 
@@ -391,6 +371,49 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		return p2p.DiscQuitting
 	}
 
+}
+
+func (pm *ProtocolManager) handleMsg(p *peer, id string, handleTxs bool, handleDporMsgs bool, dporProtocol consensus.Protocol) (string, error) {
+
+	msg, err := p.rw.ReadMsg()
+	if err != nil {
+		return id, err
+	}
+
+	if msg.Size > ProtocolMaxMsgSize {
+		log.Warn("err when checking msg size", "size", msg.Size)
+		return id, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+	}
+
+	defer msg.Discard()
+
+	// if I am a validator, do not waste time to handle tx msg
+	if msg.Code == TxMsg && !handleTxs {
+		return id, nil
+	}
+
+	switch {
+	case backend.IsSyncMsg(msg):
+		switch err = pm.handleSyncMsg(msg, p); err {
+		case nil:
+
+		default:
+			log.Warn("err when handling sync msg", "err", err)
+		}
+
+	case backend.IsDporMsg(msg) && handleDporMsgs:
+		switch id, err = dporProtocol.HandleMsg(id, p.version, p.Peer, p.rw, msg); err {
+		case nil:
+
+		default:
+			log.Warn("err when handling dpor msg", "err", err)
+		}
+
+	default:
+		log.Warn("unknown msg code", "msg", msg.Code)
+	}
+
+	return id, err
 }
 
 func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
@@ -724,6 +747,7 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 	case msg.Code == TxMsg:
 		// Transactions arrived, make sure we have a valid and fresh chain to handle them
 		if atomic.LoadUint32(&pm.acceptTxs) == 0 {
+			log.Debug("received TxMsg, but do not accept txs now")
 			break
 		}
 		// Transactions can be processed, parse all of them and deliver to the pool
