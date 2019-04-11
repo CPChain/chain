@@ -76,7 +76,7 @@ const (
 )
 
 const (
-	DefaultGasLimitPerBlock = 100000000
+	DefaultGasLimitPerBlock = 25000000
 )
 
 // TODO @hmw make the name more meaningful.  add doc.
