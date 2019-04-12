@@ -19,9 +19,9 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'docs'
-copyright = '2018, cpchain'
-author = 'cpchain'
+project = 'CPChain Docs'
+copyright = '2018, CPChain'
+author = 'CPChain'
 
 # The short X.Y version
 version = ''
