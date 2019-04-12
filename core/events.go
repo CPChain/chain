@@ -52,5 +52,9 @@ type ChainHeadEvent struct {
 	Block *types.Block
 }
 
+type ChainLatestEvent struct {
+	Block *types.Block
+}
+
 type InsertionStartEvent struct{}
 type InsertionDoneEvent struct{}

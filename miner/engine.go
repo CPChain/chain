@@ -32,8 +32,8 @@ const (
 	// txChanSize is the size of channel listening to NewTxsEvent.
 	// The number is referenced from the size of tx pool.
 	txChanSize = 4096
-	// chainHeadChanSize is the size of channel listening to ChainHeadEvent.
-	chainHeadChanSize = 10
+	// chainLatestChanSize is the size of channel listening to ChainHeadEvent.
+	chainLatestChanSize = 10
 	// chainSideChanSize is the size of channel listening to ChainSideEvent.
 	chainSideChanSize = 10
 )
@@ -84,14 +84,14 @@ type engine struct {
 	cons   consensus.Engine
 
 	// update loop
-	mux          *event.TypeMux
-	txsCh        chan core.NewTxsEvent // new transactions enter the transaction pool
-	txsSub       event.Subscription
-	chainHeadCh  chan core.ChainHeadEvent // a new block has been inserted into the chain
-	chainHeadSub event.Subscription
-	chainSideCh  chan core.ChainSideEvent // a side block has been inserted
-	chainSideSub event.Subscription
-	quitCh       chan struct{}
+	mux            *event.TypeMux
+	txsCh          chan core.NewTxsEvent // new transactions enter the transaction pool
+	txsSub         event.Subscription
+	chainLatestCh  chan core.ChainLatestEvent // a new latest block has been inserted into the chain
+	chainLatestSub event.Subscription
+	chainSideCh    chan core.ChainSideEvent // a side block has been inserted
+	chainSideSub   event.Subscription
+	quitCh         chan struct{}
 
 	workers map[Worker]struct{} // set of workers
 	recv    chan *Result        // the channel that receives the result from workers
@@ -119,20 +119,20 @@ type engine struct {
 
 func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase common.Address, backend Backend, mux *event.TypeMux) *engine {
 	e := &engine{
-		config:      config,
-		cons:        cons,
-		backend:     backend,
-		mux:         mux,
-		txsCh:       make(chan core.NewTxsEvent, txChanSize),
-		chainHeadCh: make(chan core.ChainHeadEvent, chainHeadChanSize),
-		chainSideCh: make(chan core.ChainSideEvent, chainSideChanSize),
-		quitCh:      make(chan struct{}),
-		chainDb:     backend.ChainDb(),
-		recv:        make(chan *Result, resultQueueSize),
-		chain:       backend.BlockChain(),
-		proc:        backend.BlockChain().Validator(), // processor validator lock
-		coinbase:    coinbase,
-		workers:     make(map[Worker]struct{}),
+		config:        config,
+		cons:          cons,
+		backend:       backend,
+		mux:           mux,
+		txsCh:         make(chan core.NewTxsEvent, txChanSize),
+		chainLatestCh: make(chan core.ChainLatestEvent, chainLatestChanSize),
+		chainSideCh:   make(chan core.ChainSideEvent, chainSideChanSize),
+		quitCh:        make(chan struct{}),
+		chainDb:       backend.ChainDb(),
+		recv:          make(chan *Result, resultQueueSize),
+		chain:         backend.BlockChain(),
+		proc:          backend.BlockChain().Validator(), // processor validator lock
+		coinbase:      coinbase,
+		workers:       make(map[Worker]struct{}),
 	}
 
 	go e.update()
@@ -231,11 +231,11 @@ func (e *engine) update() {
 	// Subscribe NewTxsEvent for tx pool
 	e.txsSub = e.backend.TxPool().SubscribeNewTxsEvent(e.txsCh)
 	// Subscribe events for blockchain
-	e.chainHeadSub = e.backend.BlockChain().SubscribeChainHeadEvent(e.chainHeadCh)
+	e.chainLatestSub = e.backend.BlockChain().SubscribeChainLatestEvent(e.chainLatestCh)
 	e.chainSideSub = e.backend.BlockChain().SubscribeChainSideEvent(e.chainSideCh)
 
 	defer e.chainSideSub.Unsubscribe()
-	defer e.chainHeadSub.Unsubscribe()
+	defer e.chainLatestSub.Unsubscribe()
 	defer e.txsSub.Unsubscribe()
 
 	for {
@@ -243,7 +243,7 @@ func (e *engine) update() {
 
 		select {
 		// a new block has been inserted.  we start to mine based on this new tip.
-		case <-e.chainHeadCh:
+		case <-e.chainLatestCh:
 
 			log.Debug("now to commit new work", "now", time.Now())
 
@@ -289,19 +289,19 @@ func (e *engine) update() {
 				return
 			}
 			log.Warn("txsSub got error", "error", err)
-		case err := <-e.chainHeadSub.Err():
+		case err := <-e.chainLatestSub.Err():
 			if err == nil {
 				log.Info("system is stopped")
 				return
 			}
-			log.Warn("chainHeadSub got error", "error", err)
+			log.Warn("chainLatestSub got error", "error", err)
 		case err := <-e.chainSideSub.Err():
 			if err == nil {
 				log.Info("system is stopped")
 				return
 
 			}
-			log.Warn("chainHeadSub got error", "error", err)
+			log.Warn("chainSideSub got error", "error", err)
 		}
 	}
 
