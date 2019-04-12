@@ -41,19 +41,16 @@ func NeedMetrics() bool {
 }
 
 func ReportBlockNumberGauge(exportedJob string, blockNumber float64) {
-	log.Debug("currentBlockNumber", blockNumber)
 	blockNumberCounter.Set(blockNumber)
 	reportGauge(gatewayAddress, exportedJob, chainId, blockNumberCounter)
 }
 
 func ReportTxsNumberGauge(exportedJob string, txsNumber float64) {
-	log.Debug("currentTxsNumber", txsNumber)
 	txsNumberCounter.Set(txsNumber)
 	reportGauge(gatewayAddress, exportedJob, chainId, txsNumberCounter)
 }
 
 func ReportInsertionElapsedTime(exportedJob string, elapsed float64) {
-	log.Debug("currentInsertionElapsed", elapsed)
 	insertionElapsedTime.Set(elapsed)
 	reportGauge(gatewayAddress, exportedJob, chainId, insertionElapsedTime)
 }
