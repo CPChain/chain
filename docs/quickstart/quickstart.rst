@@ -245,10 +245,13 @@ First, make sure you have installed `go <https://golang.org/>`_, and configured 
     $ make clean
     $ make all
 
+Now you can find binary files in ``build/bin``,
+and utilize them as stated in `Binary Release`_.
+
 Running CPChain
 #################
 
-Connect to Alpha Mainnet
+Connect to Beta Mainnet
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code::
@@ -256,24 +259,17 @@ Connect to Alpha Mainnet
     $ cd build/bin
     $ ./cpchain run --runmode testnet
 
-.. warning::
 
-    The current master version is not compatible with Alpha Mainnet.
-    Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
-    After cloning from github repository, you can checkout the commit 7d29a2b by following command:
 
-.. code::
-
-    $ git checkout 7d29a2b
-    $ sudo make all
-
-Then use the commands above to connect to Alpha Mainnet.
+Then use the commands above to connect to Beta Mainnet.
 
 Create an Account
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. code::
 
+    $ mkdir datadir
+    $ echo "YOU_PASSWORD" >> datadir/password
     $ ./cpchain account new --datadir ./datadir
 
 Run a Private Network
