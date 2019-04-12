@@ -208,13 +208,14 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 func (pm *ProtocolManager) handleBlockchainInsertionEventsLoop() {
 	for ev := range pm.insertionSub.Chan() {
 		switch ev.Data.(type) {
+		// for now, skip this!
 		case core.InsertionStartEvent:
-			atomic.StoreUint32(&pm.acceptTxs, 0)
-			log.Debug("received InsertionStartEvent, do not accept txs now")
+			// atomic.StoreUint32(&pm.acceptTxs, 0)
+			// log.Debug("received InsertionStartEvent, do not accept txs now")
 
 		case core.InsertionDoneEvent:
-			atomic.StoreUint32(&pm.acceptTxs, 1)
-			log.Debug("received InsertionDoneEvent, now ready to accept txs")
+			// atomic.StoreUint32(&pm.acceptTxs, 1)
+			// log.Debug("received InsertionDoneEvent, now ready to accept txs")
 		}
 	}
 }
