@@ -32,7 +32,7 @@ const (
 	// txChanSize is the size of channel listening to NewTxsEvent.
 	// The number is referenced from the size of tx pool.
 	txChanSize = 4096
-	// chainLatestChanSize is the size of channel listening to ChainHeadEvent.
+	// chainLatestChanSize is the size of channel listening to ChainLatestEvent.
 	chainLatestChanSize = 10
 	// chainSideChanSize is the size of channel listening to ChainSideEvent.
 	chainSideChanSize = 10
