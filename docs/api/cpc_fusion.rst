@@ -7,7 +7,7 @@ Fusion API
 Installation
 ---------------
 
-Web3.py can be installed (preferably in a :ref:`virtualenv <setup_environment>`)
+CPC fusion can be installed by
 using ``pip`` as follows:
 
 .. code-block:: shell
@@ -411,6 +411,8 @@ Block
          'totalDifficulty': 201,
          'transactions': [],
          'transactionsRoot': HexBytes('0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421')})
+
+
 Account
 **********
 
