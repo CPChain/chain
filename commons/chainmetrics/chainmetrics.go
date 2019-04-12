@@ -12,6 +12,12 @@ var (
 	// gauge items
 	blockNumberCounter = prometheus.NewGauge(prometheus.GaugeOpts{Name: "cpchain_block_number",
 		Help: "current blockNumber."})
+
+	txsNumberCounter = prometheus.NewGauge(prometheus.GaugeOpts{Name: "cpchain_txs_number",
+		Help: "current txsNumber."})
+
+	insertionElapsedTime = prometheus.NewGauge(prometheus.GaugeOpts{Name: "cpchain_insertion_elapsed_time",
+		Help: "current insertion elapsed time."})
 )
 
 // configuration items
@@ -33,10 +39,23 @@ func InitMetrics(port, gatewayURL string) {
 func NeedMetrics() bool {
 	return gatewayAddress != ""
 }
+
 func ReportBlockNumberGauge(exportedJob string, blockNumber float64) {
 	log.Debug("currentBlockNumber", blockNumber)
 	blockNumberCounter.Set(blockNumber)
 	reportGauge(gatewayAddress, exportedJob, chainId, blockNumberCounter)
+}
+
+func ReportTxsNumberGauge(exportedJob string, txsNumber float64) {
+	log.Debug("currentTxsNumber", txsNumber)
+	txsNumberCounter.Set(txsNumber)
+	reportGauge(gatewayAddress, exportedJob, chainId, txsNumberCounter)
+}
+
+func ReportInsertionElapsedTime(exportedJob string, elapsed float64) {
+	log.Debug("currentInsertionElapsed", elapsed)
+	insertionElapsedTime.Set(elapsed)
+	reportGauge(gatewayAddress, exportedJob, chainId, insertionElapsedTime)
 }
 
 func reportGauge(monitorURL, exportedJob, host string, gauge prometheus.Gauge) {
