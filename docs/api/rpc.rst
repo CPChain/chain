@@ -486,7 +486,7 @@ Returns the number of transactions sent from an address.
     ``DATA``, 20 Bytes - address.
     ``QUANTITY|TAG`` - integer block number, or the string "latest", "earliest" or "pending", see the default block parameter
 
-Example Parameters
+**Example Parameters**
 
 .. code-block:: shell
 
@@ -524,7 +524,12 @@ Creates new message call transaction or a contract creation for signed transacti
 
     ``DATA``, The signed transaction data.
 
-Example Parameters
+.. note::
+
+    The input parameter for eth_sendRawTransaction can only be used once,
+    computed by various variables like private key, nonce and gas.
+
+**Example Parameters**
 
 
 .. code-block:: shell
