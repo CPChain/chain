@@ -175,6 +175,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	if err != nil {
 		return nil, err
 	}
+	cpc.blockchain.SetTypeMux(cpc.eventMux)
 
 	// admission must initialize after blockchain has been initialized
 	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
