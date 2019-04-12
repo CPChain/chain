@@ -42,7 +42,7 @@ func TestSetupGenesis(t *testing.T) {
 	runmode := configs.GetRunMode()
 	configs.SetRunMode(configs.Mainnet)
 	var (
-		customghash = common.HexToHash("0x7665f953c35e95322ebc826f0293500e3bf00689f1f9565be0b7cd097897988d")
+		customghash = common.HexToHash("0xa482484b81ae595ea35d6b0a108b1ed24581c7d78848bd746a0699418aba17ad")
 		customg     = Genesis{
 			Config: &configs.ChainConfig{},
 			Alloc: GenesisAlloc{
