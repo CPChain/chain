@@ -8,8 +8,20 @@
 Welcome to CPChain documentation!
 ==================================
 
+
+This documents presents both algorithms and APIs for developers.
+
+APIs are listed in :ref:`fusion-api` and :ref:`rpc-api`.
+By utilizing :ref:`quick-start` to sync with CPChain Mainnet.
+To understand smart contract and reward mechanism of CPChain,
+refer to :ref:`overview` for information.
+:ref:`consensus` and :ref:`implementation` elaborate
+detailed consensus algorithm design and optimization techniques for interested readers.
+
+
+
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 2
    :caption: Contents
 
    overview/overview
