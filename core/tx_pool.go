@@ -328,6 +328,9 @@ func (pool *TxPool) loop() {
 	journal := time.NewTicker(pool.config.Rejournal)
 	defer journal.Stop()
 
+	rebroadcast := time.NewTicker(rebroadcastTriggerTime)
+	defer rebroadcast.Stop()
+
 	// Track the previous head headers for transaction reorgs
 	head := pool.chain.CurrentBlock()
 
@@ -384,6 +387,16 @@ func (pool *TxPool) loop() {
 					log.Warn("Failed to rotate local tx journal", "err", err)
 				}
 				pool.mu.Unlock()
+			}
+
+		// Rebroadcast all transactions before (now - rebroadcastTriggerTime) in pool.pending
+		case <-rebroadcast.C:
+			now := time.Now()
+			for _, txList := range pool.pending {
+				for _, batch := range txList.AllBefore(now.Add(-rebroadcastTriggerTime)) {
+					go pool.txFeed.Send(NewTxsEvent{batch, true})
+				}
+				time.Sleep(rebroadcastBatchGapTime)
 			}
 		}
 	}
@@ -706,7 +719,7 @@ func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
 		log.Debug("Pooled new executable transaction", "hash", hash.Hex(), "from", from, "to", tx.To())
 
 		// We've directly injected a replacement transaction, notify subsystems
-		go pool.txFeed.Send(NewTxsEvent{types.Transactions{tx}})
+		go pool.txFeed.Send(NewTxsEvent{types.Transactions{tx}, false})
 
 		return old != nil, nil
 	}
@@ -1019,7 +1032,7 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 	}
 	// Notify subsystem for new promoted transactions.
 	if len(promoted) > 0 {
-		go pool.txFeed.Send(NewTxsEvent{promoted})
+		go pool.txFeed.Send(NewTxsEvent{promoted, false})
 	}
 	// If the pending limit is overflown, start equalizing allowances
 	pending := uint64(0)

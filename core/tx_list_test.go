@@ -46,7 +46,7 @@ func TestStrictTxListAdd(t *testing.T) {
 		t.Errorf("transaction count mismatch: have %d, want %d", len(list.txs.items), len(txs))
 	}
 	for i, tx := range txs {
-		if list.txs.items[tx.Nonce()] != tx {
+		if list.txs.items[tx.Nonce()].Tx() != tx {
 			t.Errorf("item %d: transaction mismatch: have %v, want %v", i, list.txs.items[tx.Nonce()], tx)
 		}
 	}

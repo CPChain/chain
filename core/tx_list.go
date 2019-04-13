@@ -21,10 +21,17 @@ import (
 	"math"
 	"math/big"
 	"sort"
+	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+)
+
+const (
+	rebroadcastBatchSize    = 2048
+	rebroadcastTriggerTime  = 1 * time.Minute
+	rebroadcastBatchGapTime = 10 * time.Second
 )
 
 // nonceHeap is a heap.Interface implementation over 64bit unsigned integers for
@@ -47,25 +54,37 @@ func (h *nonceHeap) Pop() interface{} {
 	return x
 }
 
+type TimedTransaction struct {
+	*types.Transaction
+	updateTime time.Time
+}
+
+func (tt *TimedTransaction) Tx() *types.Transaction {
+	if tt == nil {
+		return nil
+	}
+	return tt.Transaction
+}
+
 // txSortedMap is a nonce->transaction hash map with a heap based index to allow
 // iterating over the contents in a nonce-incrementing way.
 type txSortedMap struct {
-	items map[uint64]*types.Transaction // Hash map storing the transaction data
-	index *nonceHeap                    // Heap of nonces of all the stored transactions (non-strict mode)
-	cache types.Transactions            // Cache of the transactions already sorted
+	items map[uint64]*TimedTransaction // Hash map storing the transaction data
+	index *nonceHeap                   // Heap of nonces of all the stored transactions (non-strict mode)
+	cache types.Transactions           // Cache of the transactions already sorted
 }
 
 // newTxSortedMap creates a new nonce-sorted transaction map.
 func newTxSortedMap() *txSortedMap {
 	return &txSortedMap{
-		items: make(map[uint64]*types.Transaction),
+		items: make(map[uint64]*TimedTransaction),
 		index: new(nonceHeap),
 	}
 }
 
 // Get retrieves the current transactions associated with the given nonce.
 func (m *txSortedMap) Get(nonce uint64) *types.Transaction {
-	return m.items[nonce]
+	return m.items[nonce].Tx()
 }
 
 // Put inserts a new transaction into the map, also updating the map's nonce
@@ -75,7 +94,7 @@ func (m *txSortedMap) Put(tx *types.Transaction) {
 	if m.items[nonce] == nil {
 		heap.Push(m.index, nonce)
 	}
-	m.items[nonce], m.cache = tx, nil
+	m.items[nonce], m.cache = &TimedTransaction{tx, time.Now()}, nil
 }
 
 // Forward removes all transactions from the map with a nonce lower than the
@@ -87,7 +106,7 @@ func (m *txSortedMap) Forward(threshold uint64) types.Transactions {
 	// Pop off heap items until the threshold is reached
 	for m.index.Len() > 0 && (*m.index)[0] < threshold {
 		nonce := heap.Pop(m.index).(uint64)
-		removed = append(removed, m.items[nonce])
+		removed = append(removed, m.items[nonce].Tx())
 		delete(m.items, nonce)
 	}
 	// If we had a cached order, shift the front
@@ -104,8 +123,8 @@ func (m *txSortedMap) Filter(filter func(*types.Transaction) bool) types.Transac
 
 	// Collect all the transactions to filter out
 	for nonce, tx := range m.items {
-		if filter(tx) {
-			removed = append(removed, tx)
+		if filter(tx.Transaction) {
+			removed = append(removed, tx.Tx())
 			delete(m.items, nonce)
 		}
 	}
@@ -134,7 +153,7 @@ func (m *txSortedMap) Cap(threshold int) types.Transactions {
 
 	sort.Sort(*m.index)
 	for size := len(m.items); size > threshold; size-- {
-		drops = append(drops, m.items[(*m.index)[size-1]])
+		drops = append(drops, m.items[(*m.index)[size-1]].Transaction)
 		delete(m.items, (*m.index)[size-1])
 	}
 	*m.index = (*m.index)[:threshold]
@@ -183,7 +202,7 @@ func (m *txSortedMap) Ready(start uint64) types.Transactions {
 	// Otherwise start accumulating incremental transactions
 	var ready types.Transactions
 	for next := (*m.index)[0]; m.index.Len() > 0 && (*m.index)[0] == next; next++ {
-		ready = append(ready, m.items[next])
+		ready = append(ready, m.items[next].Tx())
 		delete(m.items, next)
 		heap.Pop(m.index)
 	}
@@ -205,7 +224,7 @@ func (m *txSortedMap) Flatten() types.Transactions {
 	if m.cache == nil {
 		m.cache = make(types.Transactions, 0, len(m.items))
 		for _, tx := range m.items {
-			m.cache = append(m.cache, tx)
+			m.cache = append(m.cache, tx.Tx())
 		}
 		sort.Sort(types.TxByNonce(m.cache))
 	}
@@ -213,6 +232,25 @@ func (m *txSortedMap) Flatten() types.Transactions {
 	txs := make(types.Transactions, len(m.cache))
 	copy(txs, m.cache)
 	return txs
+}
+
+// AllBefore returns a batch of transactions added before the given time.
+func (m *txSortedMap) AllBefore(t time.Time) (results []types.Transactions) {
+	var result types.Transactions
+	for _, tx := range m.items {
+		// add to batch
+		if tx.updateTime.Before(t) {
+			result = append(result, tx.Tx())
+		}
+		// add batch to result
+		if len(result) >= rebroadcastBatchSize {
+			var batch types.Transactions
+			copy(batch, result)
+			results = append(results, batch)
+			result = types.Transactions{}
+		}
+	}
+	return
 }
 
 // txList is a "list" of transactions belonging to an account, sorted by account
@@ -361,6 +399,11 @@ func (l *txList) Empty() bool {
 // it's requested again before any modifications are made to the contents.
 func (l *txList) Flatten() types.Transactions {
 	return l.txs.Flatten()
+}
+
+// AllBefore returns a batch of transactions added before the given time.
+func (l *txList) AllBefore(t time.Time) []types.Transactions {
+	return l.txs.AllBefore(t)
 }
 
 // priceHeap is a heap.Interface implementation over transactions for retrieving
