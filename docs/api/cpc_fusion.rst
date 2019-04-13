@@ -105,6 +105,23 @@ Transaction API
 ------------------
 
 
+Cpc.gasPrice
+++++++++++++++++
+
+.. py:attribute:: Cpc.gasPrice
+
+    * Delegates to ``eth_gasPrice`` RPC Method.
+
+    Returns the current gas price in Wei.
+
+    .. code-block:: python
+
+        >>> cf.cpc.gasPrice
+        Out[3]: 18000000000
+
+
+
+
 Cpc.getBlockTransactionCount
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
