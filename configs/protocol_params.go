@@ -4,14 +4,11 @@ package configs
 
 import "math/big"
 
-var (
-	TargetGasLimit = uint64(DefaultGasLimitPerBlock) // The artificial target
-)
-
 const (
 	GasLimitBoundDivisor uint64 = 1024      // The bound divisor of the gas limit, used in update calculations.
 	MinGasLimit          uint64 = 3000000   // Minimum the gas limit may ever be.
 	MaxGasLimit          uint64 = 150000000 // Maximum gas limit of blocks.
+	TargetGasLimit       uint64 = 25000000  // The artificial target
 
 	MaximumExtraDataSize  uint64 = 32    // Maximum size extra data may be after Genesis.
 	ExpByteGas            uint64 = 10    // Times ceil(log256(exponent)) for the EXP instruction.
