@@ -235,12 +235,14 @@ func (m *txSortedMap) Flatten() types.Transactions {
 }
 
 // AllBefore returns a batch of transactions added before the given time.
+// this will update the updateTime of the transaction with time.Now
 func (m *txSortedMap) AllBefore(t time.Time) (results []types.Transactions) {
 	var result types.Transactions
 	for _, tx := range m.items {
 		// add to batch
 		if tx.updateTime.Before(t) {
 			result = append(result, tx.Tx())
+			tx.updateTime = time.Now()
 		}
 		// add batch to result
 		if len(result) >= rebroadcastBatchSize {
