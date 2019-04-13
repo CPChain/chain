@@ -42,36 +42,10 @@ Using Fusion
 To use the web3 library, you are required to initialize the
 :class:`~web3.Web3` class.
 
-Before connecting, you must set up a local chain or sync with our Mainnet
-
-    1. To start a local chain, use the following commands
-
-        .. code-block:: shell
-
-            $ cd ./examples/cpchain
-            $ sudo ./cpchain-all.sh
-
-        Note that starting a local chain may fails. You may try several times until success.
-
-    #. To sync with Alpha Mainnet, use the following command
-
-        .. code-block:: shell
-
-            $ build/bin/cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --rpcaddr 0.0.0.0:8501 --runmode=testnet
-
-        .. warning::
-
-            The current master version is not compatible with Alpha Mainnet.
-            Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
-            After cloning from github repository, you can checkout the commit 7d29a2b by following command:
+Before connecting, you must set up a local chain or sync with our Mainnet.
+Please check :ref:`quick-start` for detailed information.
 
 
-        .. code::
-
-            $ git checkout 7d29a2b
-            $ sudo make all
-
-        Then use the commands above to connect to Alpha Mainnet.
 
 Use the ``auto`` module to :ref:`guess at common node connection options
 <automatic_provider_detection>`.
