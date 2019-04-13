@@ -117,8 +117,32 @@ Cpc.gasPrice
     .. code-block:: python
 
         >>> cf.cpc.gasPrice
-        Out[3]: 18000000000
+        18000000000
 
+
+Cpc.estimateGas
+++++++++++++++++++++
+
+
+.. py:method:: Cpc.estimateGas(transaction)
+
+   * Delegates to ``eth_estimateGas`` RPC Method
+
+Executes the given transaction locally without creating a new transaction on the blockchain.
+Returns amount of gas consumed by execution which can be used as a gas estimate.
+
+The transaction parameter is handled in the same manner as the ``sendTransaction()`` method.
+
+    .. note::
+
+        The addresses in ``transaction`` should be the returned value of ``toChecksumAddress(address)``.
+        Non-checksum addresses are considered unsafe,
+        and ``cpc.estimateGas()`` will return an error.
+
+    .. code-block:: python
+
+        >>> cf.cpc.estimateGas({'to': cf.toChecksumAddress('0x9e61732d0b1c1674151a01ac0bba824c5b6258fb'), 'from': cf.cpc.coinbase, 'value': 12345})
+        21000
 
 
 
