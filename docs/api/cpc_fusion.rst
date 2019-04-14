@@ -39,8 +39,8 @@ following command.
 Using Fusion
 ----------------
 
-To use the web3 library, you are required to initialize the
-:class:`~web3.Web3` class.
+To use the cpc fusion library, you are required to initialize the
+:class:`~cpc_fusion.cpc` class.
 
 Before connecting, you must set up a local chain or sync with our Mainnet.
 
