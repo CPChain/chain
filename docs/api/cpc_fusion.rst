@@ -43,9 +43,24 @@ To use the web3 library, you are required to initialize the
 :class:`~web3.Web3` class.
 
 Before connecting, you must set up a local chain or sync with our Mainnet.
-Please check :ref:`quick-start` for detailed information.
 
 
+    1. To start a local chain, use the following commands
+
+        .. code-block:: shell
+
+            $ cd ./examples/cpchain
+            $ sudo ./cpchain-all.sh
+
+        Note that starting a local chain may fail. You may try several times until success.
+
+    #. To sync with Alpha Mainnet, use the following command
+
+        .. code-block:: shell
+
+            $ build/bin/cpchain run --rpcaddr 127.0.0.0:8501 --port 30311
+
+Please check :ref:`quick-start` for more detailed information.
 
 Use the ``auto`` module to :ref:`guess at common node connection options
 <automatic_provider_detection>`.
