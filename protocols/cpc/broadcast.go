@@ -69,12 +69,14 @@ func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions, force bool) {
 	var txset = make(map[*peer]types.Transactions)
 
 	// Broadcast transactions to a batch of peers not knowing about it
+	if force {
+		log.Warn("now reboadcast waiting txs", "len", txs.Len())
+	}
 	for _, tx := range txs {
 		peers := pm.peers.PeersWithoutTx(tx.Hash())
 
 		// if force, broadcast to all peers
 		if force {
-			log.Warn("now reboadcast waiting txs", "len", txs.Len())
 			peers = pm.peers.AllPeers()
 		}
 
