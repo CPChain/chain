@@ -74,6 +74,7 @@ func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions, force bool) {
 
 		// if force, broadcast to all peers
 		if force {
+			log.Warn("now reboadcast waiting txs")
 			peers = pm.peers.AllPeers()
 		}
 
