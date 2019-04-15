@@ -252,6 +252,8 @@ func (m *txSortedMap) AllBefore(t time.Time) (results []types.Transactions) {
 			result = types.Transactions{}
 		}
 	}
+	// add last batch
+	results = append(results, result)
 	return
 }
 
