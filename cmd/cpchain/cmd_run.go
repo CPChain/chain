@@ -88,6 +88,7 @@ func run(ctx *cli.Context) error {
 func registerChainService(cfg *cpc.Config, n *node.Node, cliCtx *cli.Context) {
 	err := n.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 		fullNode, err := cpc.New(ctx, cfg)
+		// fullNode.Engine().(*dpor.Dpor)
 		primitive_register.RegisterPrimitiveContracts()
 
 		if cliCtx.Bool(flags.MineFlagName) {

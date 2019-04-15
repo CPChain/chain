@@ -30,6 +30,7 @@ type ContractAPI interface {
 
 func RegisterPrimitiveContracts() {
 	chainClient := getChainClient()
+	// d.SetRptBackend(chainClient)
 	for addr, c := range MakePrimitiveContracts(chainClient, chainClient) {
 		err := vm.RegisterPrimitiveContract(addr, c)
 		if err != nil {
