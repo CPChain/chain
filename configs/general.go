@@ -65,7 +65,7 @@ const (
 )
 
 const (
-	DefaultDevMaxInitBlockNumber     = 480
+	DefaultDevMaxInitBlockNumber     = 216
 	DefaultTestnetMaxInitBlockNumber = 240
 	DefaultMainnetMaxInitBlockNumber = 216
 )
