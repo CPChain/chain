@@ -56,24 +56,48 @@ func TestStrictTxListAdd(t *testing.T) {
 	}
 }
 
-func generateTxSortedMap(baseTime time.Time) *txSortedMap {
-	size := 20
+func generateTxSortedMapTestcase1() (*txSortedMap, time.Time, []types.Transactions) {
+	// create a basetime
+	baseTime, _ := time.Parse(time.RFC3339, "2019-01-01T00:00:00+00:00")
+
+	var (
+		timeIter = baseTime
+		argTime  = baseTime.Add(2 * time.Minute)
+		size     = 20               // transaction map size
+		timeGap  = 10 * time.Second // time gap between txs
+		expected = argTime.Sub(baseTime) / timeGap
+	)
+
+	// generate a series of transactions with updateTime increased 10 seconds one by one.
 	items := make(map[uint64]*TimedTransaction)
 	index := make(nonceHeap, size)
-
 	for i := uint64(0); i < uint64(size); i++ {
 		items[i] = &TimedTransaction{
 			Transaction: types.NewTransaction(i, common.Address{}, big.NewInt(0), uint64(0), big.NewInt(0), []byte{}),
-			updateTime:  baseTime,
+			updateTime:  timeIter,
 		}
 		index = append(index, i)
-		baseTime = baseTime.Add(time.Second * 10)
+		timeIter = timeIter.Add(timeGap)
 	}
+
+	// expected result is the first 6 txs in one txs slice
+	result := func() []types.Transactions {
+		var results []types.Transactions
+		var result []*types.Transaction
+		for i := 0; i < int(expected); i++ {
+			result = append(
+				result,
+				types.NewTransaction(uint64(i), common.Address{}, big.NewInt(0), uint64(0), big.NewInt(0), []byte{}),
+			)
+		}
+		results = append(results, result)
+		return results
+	}()
 
 	return &txSortedMap{
 		items: items,
 		index: &index,
-	}
+	}, argTime, result
 }
 
 func Test_txSortedMap_AllBefore(t *testing.T) {
@@ -86,21 +110,7 @@ func Test_txSortedMap_AllBefore(t *testing.T) {
 		t time.Time
 	}
 
-	baseTime, _ := time.Parse(time.RFC3339, "2019-01-01T00:00:00+00:00")
-	fakeTxSortedMap := generateTxSortedMap(baseTime)
-	argTime := baseTime.Add(time.Minute * 1)
-	wantResult := func() []types.Transactions {
-		var results []types.Transactions
-		var result []*types.Transaction
-		for i := 0; i < 6; i++ {
-			result = append(
-				result,
-				types.NewTransaction(uint64(i), common.Address{}, big.NewInt(0), uint64(0), big.NewInt(0), []byte{}),
-			)
-		}
-		results = append(results, result)
-		return results
-	}()
+	fakeTxSortedMap1, argTime1, result1 := generateTxSortedMapTestcase1()
 
 	tests := []struct {
 		name        string
@@ -112,14 +122,14 @@ func Test_txSortedMap_AllBefore(t *testing.T) {
 		{
 			"test1",
 			fields{
-				fakeTxSortedMap.items,
-				fakeTxSortedMap.index,
-				fakeTxSortedMap.cache,
+				fakeTxSortedMap1.items,
+				fakeTxSortedMap1.index,
+				fakeTxSortedMap1.cache,
 			},
 			args{
-				argTime,
+				argTime1,
 			},
-			wantResult,
+			result1,
 		},
 	}
 	for _, tt := range tests {
