@@ -32,6 +32,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt_backend_holder"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
@@ -215,6 +216,9 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
 	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
+	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
+		dpor.SetRptBackend(primitive_register.GetChainClient())
+	}
 	return cpc, nil
 }
 
@@ -249,10 +253,10 @@ func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainCo
 	if err != nil {
 		log.Debug("coinbase is not set, but is allowed for non-miner node", "error", err)
 	}
+	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
 		// TODO: fix this. @liuq
 		dpor := dpor.New(chainConfig.Dpor, db)
-		// dpor.SetRptBackend(&rpt_backend_holder.RptApiClient{ChainBackend: rpt_backend_holder.GetApiBackendHolderInstance().ChainBackend, ContractBackend: rpt_backend_holder.GetApiBackendHolderInstance().ContractBackend})
 		if eb != (common.Address{}) {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 			if wallet == nil || err != nil {

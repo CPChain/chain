@@ -432,12 +432,6 @@ func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
 	case s.Mode == NormalMode && s.isStartElection():
 		if s.rptBackend == nil {
 			log.Fatal("rptBackend is nil")
-			var err error
-			// s.rptBackend, err = rpt.NewRptService(s.client(), s.config.Contracts[configs.ContractRpt])
-			// s.rptBackend =
-			if err != nil {
-				return rpt.RptList{}, err
-			}
 		}
 		rptBackend := s.rptBackend
 		rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())

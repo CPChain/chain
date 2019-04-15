@@ -325,29 +325,20 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 	var (
 		client     = snap.client()
-		rptBackend = dpor.rptBackend
+		rptBackend = snap.rptBackend
 	)
 
 	if client == nil {
 		client = dpor.Client()
 	}
-	if rptBackend == nil {
-		log.Fatal("rptBackend is nil", "dpor is ", dpor.rptBackend)
-	}
 
-	// if rptBackend == nil && client != nil {
-	// 	if dpor.rptBackend == nil {
-	// 		rptBackend, err := rpt.NewRptService(client, dpor.config.Contracts[configs.ContractRpt])
-	// 		if err != nil {
-	// 			log.Debug("err when create new rpt service", "err", err)
-	// 		}
-	// 		dpor.rptBackend = rptBackend
-	//
-	// 		log.Debug("created new rpt service")
-	// 	}
-	//
-	// 	rptBackend = dpor.rptBackend
-	// }
+	if rptBackend == nil && client != nil {
+		if dpor.rptBackend == nil {
+			log.Fatal("rptBackend is nil")
+		}
+
+		rptBackend = dpor.rptBackend
+	}
 
 	// Set correct client and rptBackend
 	snap.setClient(client)
