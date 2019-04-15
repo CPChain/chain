@@ -47,7 +47,8 @@ echo "[*] initing"
 eval $init $runmode
 
 echo "[*] starting"
-eval "env CPC_VERBOSITY=5 $start"
+#env CPC_VERBOSITY=5
+eval "$start"
 
 echo "=========================================================="
 echo "chain node number:"

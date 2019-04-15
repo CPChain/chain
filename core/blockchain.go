@@ -96,14 +96,15 @@ type BlockChain struct {
 	triegc *prque.Prque      // Priority queue mapping block numbers to tries to gc
 	gcproc time.Duration     // Accumulates canonical block processing for trie dumping
 
-	hc            *HeaderChain
-	rmLogsFeed    event.Feed
-	chainFeed     event.Feed
-	chainSideFeed event.Feed
-	chainHeadFeed event.Feed
-	logsFeed      event.Feed
-	scope         event.SubscriptionScope
-	genesisBlock  *types.Block
+	hc              *HeaderChain
+	rmLogsFeed      event.Feed
+	chainFeed       event.Feed
+	chainSideFeed   event.Feed
+	chainHeadFeed   event.Feed
+	chainLatestFeed event.Feed
+	logsFeed        event.Feed
+	scope           event.SubscriptionScope
+	genesisBlock    *types.Block
 
 	mu      sync.RWMutex // global mutex for locking chain operations
 	chainmu sync.RWMutex // blockchain insertion lock
@@ -1381,12 +1382,17 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		// send metrics msg to monitor(prometheus)
 		if chainmetrics.NeedMetrics() {
 			go chainmetrics.ReportBlockNumberGauge("blocknumber", float64(chain[i].Number().Int64()))
+			go chainmetrics.ReportTxsNumberGauge("txs", float64(len(chain[i].Transactions())))
+			go chainmetrics.ReportInsertionElapsedTime("insertion_elapsed", float64(time.Since(bstart).Nanoseconds()*int64(time.Nanosecond)/int64(time.Millisecond)))
 		}
 	}
 	// Append a single chain head event if we've progressed the chain
 	if lastCanon != nil && bc.CurrentBlock() != nil && bc.CurrentBlock().Hash() == lastCanon.Hash() {
+		events = append(events, ChainHeadEvent{lastCanon})
+
+		// Append a single chain latest event if we've progressed the chain to the latest state. now we can mine.
 		if _, number := bc.KnownHead(); bc.CurrentBlock().NumberU64() >= number {
-			events = append(events, ChainHeadEvent{lastCanon})
+			events = append(events, ChainLatestEvent{lastCanon})
 			bc.SetKnownHead(bc.CurrentBlock().Hash(), bc.CurrentBlock().NumberU64())
 		}
 	}
@@ -1576,6 +1582,9 @@ func (bc *BlockChain) PostChainEvents(events []interface{}, logs []*types.Log) {
 
 		case ChainSideEvent:
 			bc.chainSideFeed.Send(ev)
+
+		case ChainLatestEvent:
+			bc.chainLatestFeed.Send(ev)
 		}
 	}
 }
@@ -1752,6 +1761,11 @@ func (bc *BlockChain) SubscribeChainEvent(ch chan<- ChainEvent) event.Subscripti
 // SubscribeChainHeadEvent registers a subscription of ChainHeadEvent.
 func (bc *BlockChain) SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Subscription {
 	return bc.scope.Track(bc.chainHeadFeed.Subscribe(ch))
+}
+
+// SubscribeChainLatestEvent registers a subscription of ChainLatestEvent.
+func (bc *BlockChain) SubscribeChainLatestEvent(ch chan<- ChainLatestEvent) event.Subscription {
+	return bc.scope.Track(bc.chainLatestFeed.Subscribe(ch))
 }
 
 // SubscribeChainSideEvent registers a subscription of ChainSideEvent.

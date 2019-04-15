@@ -51,7 +51,7 @@ const (
 )
 
 const (
-	DefaultBlockPeriod = 4e2 //  400 Millisecond, 0.4 Second
+	DefaultBlockPeriod = 1e3 //  1000 Millisecond, 1 Second
 	TestnetBlockPeriod = 3e3 //  3000 Millisecond, 3 Second
 	MainnetBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
 
