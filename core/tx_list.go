@@ -253,12 +253,14 @@ func (m *txSortedMap) AllBefore(t time.Time) (results []types.Transactions) {
 	}
 
 	// split result with batch size
-	for i := 0; i < len(result)/rebroadcastBatchSize; i++ {
+	lengthOfResult := len(result)
+	batchNumber := lengthOfResult / rebroadcastBatchSize
+	for i := 0; i < batchNumber; i++ {
 		results = append(results, result[i*rebroadcastBatchSize:i*rebroadcastBatchSize+rebroadcastBatchSize])
 	}
 
 	// add the remained
-	results = append(results, result[(len(result)/rebroadcastBatchSize)*rebroadcastBatchSize:len(result)])
+	results = append(results, result[batchNumber*rebroadcastBatchSize:lengthOfResult])
 	return
 }
 
