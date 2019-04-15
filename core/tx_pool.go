@@ -391,12 +391,12 @@ func (pool *TxPool) loop() {
 
 		// Rebroadcast all transactions before (now - rebroadcastTriggerTime) in pool.pending
 		case <-rebroadcast.C:
-			now := time.Now()
 			for _, txList := range pool.pending {
+				now := time.Now()
 				for _, batch := range txList.AllBefore(now.Add(-rebroadcastTriggerTime)) {
 					go pool.txFeed.Send(NewTxsEvent{batch, true})
+					time.Sleep(rebroadcastBatchGapTime)
 				}
-				time.Sleep(rebroadcastBatchGapTime)
 			}
 		}
 	}
