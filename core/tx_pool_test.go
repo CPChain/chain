@@ -42,7 +42,7 @@ import (
 var testTxPoolConfig TxPoolConfig
 
 func init() {
-	testTxPoolConfig = DefaultTxPoolConfig
+	testTxPoolConfig = DeprecatedDefaultTxPoolConfig
 	testTxPoolConfig.Journal = ""
 }
 

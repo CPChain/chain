@@ -161,6 +161,21 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	Lifetime:     3 * time.Hour,
 }
 
+var DeprecatedDefaultTxPoolConfig = TxPoolConfig{
+	Journal:   "transactions.rlp",
+	Rejournal: time.Hour,
+
+	PriceLimit: 1,
+	PriceBump:  10,
+
+	AccountSlots: 16,
+	GlobalSlots:  8192,
+	AccountQueue: 64,
+	GlobalQueue:  8192,
+	MaxTxMapSize: 1024,
+	Lifetime:     3 * time.Hour,
+}
+
 // sanitize checks the provided user configurations and changes anything that's
 // unreasonable or unworkable.
 func (config *TxPoolConfig) sanitize() TxPoolConfig {
