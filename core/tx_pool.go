@@ -1045,9 +1045,9 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		// Drop all transactions over the allowed limit
 		if !pool.locals.contains(addr) {
 			capExceedingTxToRemove := list.Cap(int(pool.config.AccountQueue))
-			//if len(capExceedingTxToRemove) >0 {
-			//log.Debug("Removed cap-exceeding queued transaction", "addr", addr.Hex(),"len",capExceedingTxToRemove.Len())
-			//}
+			if len(capExceedingTxToRemove) > 0 {
+				log.Debug("Removed cap-exceeding queued transaction", "addr", addr.Hex(), "len", capExceedingTxToRemove.Len())
+			}
 
 			for _, tx := range capExceedingTxToRemove {
 				hash := tx.Hash()
