@@ -152,11 +152,12 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	PriceLimit: 1,
 	PriceBump:  10,
 
-	AccountSlots: 16,
+	AccountSlots: 1024,
+	//AccountSlots: 16,
 	GlobalSlots:  8192,
-	AccountQueue: 64,
+	AccountQueue: 2048,
 	GlobalQueue:  8192,
-	MaxTxMapSize: 1024,
+	MaxTxMapSize: 2048 * 16,
 	Lifetime:     3 * time.Hour,
 }
 
@@ -387,9 +388,18 @@ func (pool *TxPool) loop() {
 
 		// Rebroadcast all transactions before (now - rebroadcastTriggerTime) in pool.pending
 		case <-rebroadcast.C:
+			pendingRebroadcastCount := 0
+
 			for _, txList := range pool.pending {
+				if pendingRebroadcastCount > maxRebroadcastBatchTimes {
+					break
+				}
 				now := time.Now()
 				for _, batch := range txList.AllBefore(now.Add(-rebroadcastTriggerTime)) {
+					if pendingRebroadcastCount > maxRebroadcastBatchTimes {
+						break
+					}
+					pendingRebroadcastCount++
 					go pool.txFeed.Send(NewTxsEvent{batch, true})
 					time.Sleep(rebroadcastBatchGapTime)
 				}
@@ -1008,7 +1018,11 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 			continue // Just in case someone calls with a non existing account
 		}
 		// Drop all transactions that are deemed too old (low nonce)
-		for _, tx := range list.Forward(pool.currentState.GetNonce(addr)) {
+		oldQueuedTransaction := list.Forward(pool.currentState.GetNonce(addr))
+		if len(oldQueuedTransaction) > 0 {
+			log.Warn("Removed old queued transaction", "old queued tx len", oldQueuedTransaction.Len())
+		}
+		for _, tx := range oldQueuedTransaction {
 			hash := tx.Hash()
 			log.Debug("Removed old queued transaction", "hash", hash.Hex())
 			pool.all.Remove(hash)
@@ -1016,6 +1030,9 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		}
 		// Drop all transactions that are too costly (low balance or out of gas)
 		drops, _ := list.Filter(pool.currentState.GetBalance(addr), pool.currentMaxGas)
+		if len(drops) > 0 {
+			log.Warn("Removed unpayable queued transaction", "unpayable tx len", drops.Len())
+		}
 		for _, tx := range drops {
 			hash := tx.Hash()
 			log.Debug("Removed unpayable queued transaction", "hash", hash.Hex())
@@ -1025,7 +1042,9 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		}
 		// Gather all executable transactions and promote them
 		readyTxs := list.Ready(pool.pendingState.GetNonce(addr))
-		log.Debug("readyTxs", "length", readyTxs.Len())
+		if len(readyTxs) > 0 {
+			log.Warn("readyTxs", "length", readyTxs.Len())
+		}
 		for _, tx := range readyTxs {
 			hash := tx.Hash()
 			if pool.promoteTx(addr, hash, tx) {
@@ -1035,7 +1054,12 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		}
 		// Drop all transactions over the allowed limit
 		if !pool.locals.contains(addr) {
-			for _, tx := range list.Cap(int(pool.config.AccountQueue)) {
+			capExceedingTxToRemove := list.Cap(int(pool.config.AccountQueue))
+			//if len(capExceedingTxToRemove) >0 {
+			//log.Debug("Removed cap-exceeding queued transaction", "addr", addr.Hex(),"len",capExceedingTxToRemove.Len())
+			//}
+
+			for _, tx := range capExceedingTxToRemove {
 				hash := tx.Hash()
 				pool.all.Remove(hash)
 				pool.priced.Removed()

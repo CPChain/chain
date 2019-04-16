@@ -29,9 +29,10 @@ import (
 )
 
 const (
-	rebroadcastBatchSize    = 256
-	rebroadcastTriggerTime  = 1 * time.Minute
-	rebroadcastBatchGapTime = 2 * time.Second
+	rebroadcastBatchSize     = 256
+	maxRebroadcastBatchTimes = 8
+	rebroadcastTriggerTime   = 1 * time.Minute
+	rebroadcastBatchGapTime  = 2 * time.Second
 )
 
 // nonceHeap is a heap.Interface implementation over 64bit unsigned integers for
