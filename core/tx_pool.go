@@ -598,20 +598,10 @@ func (pool *TxPool) Pending() (map[common.Address]types.Transactions, error) {
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
-	// printPendingTxCounter := 0
 	pendingTxCounter := 0
 	pending := make(map[common.Address]types.Transactions)
 	for addr, list := range pool.pending {
 		pending[addr] = list.Flatten()
-
-		// print pendingTx
-		// for _, v := range pending[addr] {
-		// 	if printPendingTxCounter > 3 {
-		// 		break
-		// 	}
-		// 	printPendingTxCounter++
-		// 	log.Debug("pendingTx", "addr", addr.Hex(), "txhash", v.Hash().Hex())
-		// }
 		pendingTxCounter += len(pending[addr])
 	}
 	log.Warn("pendingTx", "counter", pendingTxCounter)

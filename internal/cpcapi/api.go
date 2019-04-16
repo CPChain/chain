@@ -1465,7 +1465,7 @@ func init() {
 func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args SendTxArgs) (common.Hash, error) {
 
 	if !lr.Allow() {
-		log.Warn("88888 ErrExceedProcessRate")
+		log.Warn("exceed rpc process rate")
 		return common.Hash{}, ErrExceedProcessRate
 	}
 	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
