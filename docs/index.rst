@@ -21,9 +21,10 @@ Quick reference:
 #. :ref:`overview`
 #. `Solidity`_
 #. :ref:`consensus` and :ref:`implementation`
+#. `Download Page`_
 
 
-
+.. _`Download Page`: https://bitbucket.org/cpchain/chain/downloads/
 .. _Solidity: ./solidity/index.html
 
 
