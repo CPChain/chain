@@ -1401,6 +1401,8 @@ type insertStats struct {
 // out progress. This avoids the user wondering what's going on.
 const statsReportLimit = 8 * time.Second
 
+var txCounterAfterStartup = 0
+
 // report prints statistics if some number of blocks have been processed
 // or more than a few seconds have passed since the last message.
 func (st *insertStats) report(chain []*types.Block, index int, cache common.StorageSize) {
@@ -1415,10 +1417,11 @@ func (st *insertStats) report(chain []*types.Block, index int, cache common.Stor
 			end = chain[index]
 			txs = countTransactions(chain[st.lastIndex : index+1])
 		)
+		txCounterAfterStartup += txs
 		context := []interface{}{
 			"blocks", st.processed, "txs", txs, "mgas", float64(st.usedGas) / 1000000,
 			"elapsed", common.PrettyDuration(elapsed), "mgasps", float64(st.usedGas) * 1000 / float64(elapsed),
-			"number", end.Number(), "hash", end.Hash().Hex(), "cache", cache,
+			"number", end.Number(), "hash", end.Hash().Hex(), "cache", cache, "txCounterAfterStartup", txCounterAfterStartup,
 		}
 		if st.queued > 0 {
 			context = append(context, []interface{}{"queued", st.queued}...)

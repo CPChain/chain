@@ -224,7 +224,7 @@ func testHeaderConcurrentAbortion(t *testing.T, threads int) {
 		}
 	}
 	// Check that abortion was honored by not processing too many POWs
-	if verified > 2*threads {
-		t.Errorf("verification count too large: have %d, want below %d", verified, 2*threads)
+	if verified > 3*threads {
+		t.Errorf("verification count too large: have %d, want below %d", verified, 3*threads)
 	}
 }

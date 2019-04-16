@@ -36,7 +36,9 @@ func GetRealContractAddress(evm *EVM, caller ContractRef, proxyContractAddress c
 			if ret, _, err := evm.StaticCall(caller, proxyRegister, paramBytes, gas); err == nil {
 				// get real contract address parse from ret
 				address := common.BytesToAddress(ret)
-				log.Debug("GetRealContractAddress ", "hex(address)", common.Bytes2Hex(ret), "address", address.Hex())
+				if address != emptyAddress {
+					log.Debug("GetRealContractAddress ", "hex(address)", common.Bytes2Hex(ret), "address", address.Hex())
+				}
 
 				if address != emptyAddress {
 					log.Debug("parseAddress ok", "realAddress", realAddress.Hex())

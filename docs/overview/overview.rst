@@ -25,7 +25,7 @@ RPT Contract
 ***************
 
    RPT (abbreviated from reputation) contract calculates RNode's reputation value. It is a core component of RNode ecosystem.
-   `Here <https://cpchain.io/rnode/>`_ is the detail of the RNode ecosystem.
+   `RNode <https://cpchain.io/rnode/>`_ is the detail of the RNode ecosystem.
    Reputation value consists of 5 dimensions,
    **Account Balance（AB)**,
    **Transaction (TX)**,
@@ -76,7 +76,7 @@ PDash Contract
 ****************
 
    PDash contract is an important app on cpchain, which helps RPT contract to calculate Proxy Reputation.
-   You can click `here <https://github.com/CPChain/pdash>`_ to get more details.
+   You can click `PDash <https://github.com/CPChain/pdash>`_ to get more details.
 
 Register Contract
 *******************
