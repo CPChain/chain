@@ -65,12 +65,22 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 
 // BroadcastTxs will propagate a batch of transactions to all peers which are not known to
 // already have the given transaction.
-func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions) {
+func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions, force bool) {
 	var txset = make(map[*peer]types.Transactions)
 
 	// Broadcast transactions to a batch of peers not knowing about it
+	txsLength := txs.Len()
+	if force && txsLength > 0 {
+		log.Warn("now reboadcast waiting txs", "len", txsLength)
+	}
 	for _, tx := range txs {
 		peers := pm.peers.PeersWithoutTx(tx.Hash())
+
+		// if force, broadcast to all peers
+		if force {
+			peers = pm.peers.AllPeers()
+		}
+
 		for _, peer := range peers {
 			txset[peer] = append(txset[peer], tx)
 		}
@@ -109,7 +119,7 @@ func (pm *ProtocolManager) txBroadcastLoop() {
 	for {
 		select {
 		case event := <-pm.txsCh:
-			pm.BroadcastTxs(event.Txs)
+			pm.BroadcastTxs(event.Txs, event.ForceBroadcast)
 
 		// Err() channel will be closed when unsubscribing.
 		case <-pm.txsSub.Err():

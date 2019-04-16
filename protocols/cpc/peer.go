@@ -188,6 +188,7 @@ func (p *peer) MarkTransaction(hash common.Hash) {
 // in its transaction hash set for future reference.
 func (p *peer) SendTransactions(txs types.Transactions) error {
 	for _, tx := range txs {
+		log.Debug("send tx", "tx", tx.Hash().Hex(), "remoteAddr", p.RemoteAddr().String())
 		p.knownTxs.Add(tx.Hash())
 	}
 	return p2p.Send(p.rw, TxMsg, txs)
