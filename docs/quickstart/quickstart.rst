@@ -20,7 +20,9 @@ Earlier Linux releases may incur problems or lack necessary dependencies.
 Binary Release
 +++++++++++++++++++
 
-Download links for binary release are coming soon.
+`Download page`_ of binary releases for CPChain and Solidity.
+
+.. _`Download Page`: https://bitbucket.org/cpchain/chain/downloads/
 
 ``cpchain`` is the binary release for the chain.
 And ``console`` provides command line interface for operations on the chain,
