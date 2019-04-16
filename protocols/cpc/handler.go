@@ -758,12 +758,12 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		}
 
 		log.Debug("received TxMsg", "len", len(txs))
-
 		for i, tx := range txs {
 			// Validate and mark the remote transaction
 			if tx == nil {
 				return errResp(ErrDecode, "transaction %d is nil", i)
 			}
+			log.Debug("received TxMsg", "txHash", tx.Hash().Hex())
 			p.MarkTransaction(tx.Hash())
 		}
 		pm.txpool.AddRemotes(txs)

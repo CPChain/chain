@@ -1450,9 +1450,24 @@ func submitTransaction(ctx context.Context, b Backend, tx *types.Transaction) (c
 	return tx.Hash(), nil
 }
 
+var ErrExceedProcessRate = errors.New("exceed transaction process rate")
+
+var (
+	lr TokenBucket
+)
+
+func init() {
+	lr.Set(40, 40*5)
+}
+
 // SendTransaction creates a transaction for the given argument, sign it and submit it to the
 // transaction pool.
 func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args SendTxArgs) (common.Hash, error) {
+
+	if !lr.Allow() {
+		log.Warn("exceed rpc process rate")
+		return common.Hash{}, ErrExceedProcessRate
+	}
 	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
 	if args.IsPrivate && !supportPrivate {
 		// if not support private tx, immediately returns error

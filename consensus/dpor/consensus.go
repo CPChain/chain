@@ -211,7 +211,7 @@ func (d *Dpor) TryCampaign() {
 					log.Debug("failed to FundForRNode", "detail", err)
 					return
 				}
-				log.Info("need send money to become RNode")
+				log.Info("already send money to become RNode")
 			}
 		}
 

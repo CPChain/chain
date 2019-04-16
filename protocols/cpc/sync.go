@@ -48,6 +48,7 @@ type txsync struct {
 func (pm *ProtocolManager) syncTransactions(p *peer) {
 	var txs types.Transactions
 	pending, _ := pm.txpool.Pending()
+	log.Debug("syncTransactions pending", "len", len(pending), "peer", p.RemoteAddr().String())
 	for _, batch := range pending {
 		txs = append(txs, batch...)
 	}
