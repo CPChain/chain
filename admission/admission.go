@@ -235,7 +235,7 @@ func (ac *AdmissionControl) waitForTxDone(txhash common.Hash) {
 		default:
 			r, err := ac.contractBackend.TransactionReceipt(context.Background(), txhash)
 			if r != nil && err == nil {
-				log.Info("TransactionReceipt Status", "txhash", txhash.Hex(), "Status", r.Status)
+				log.Debug("TransactionReceipt Status", "txhash", txhash.Hex(), "Status", r.Status)
 				return
 			}
 
