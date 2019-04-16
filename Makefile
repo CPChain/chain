@@ -231,3 +231,7 @@ docs-serve-clean:
 
 docs-clean:
 	rm -fr docs/_build
+
+docs-cp-solidity:
+	rm -rf docs/_build/solidity/*
+	cp -rf docs/solidity/docs/_build/* docs/_build/solidity/
