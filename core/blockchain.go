@@ -1094,6 +1094,8 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 //
 // After insertion is done, all accumulated events will be fired.
 func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
+	bc.insertChainProtectLock.Lock()
+	defer bc.insertChainProtectLock.Unlock()
 
 	if len(chain) == 0 {
 		return 0, nil
@@ -1131,36 +1133,12 @@ func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 		}()
 	}
 
-	for i, block := range chain {
-		_, err := bc.InsertBlock(block)
-		if err != nil {
-			return outset + i, err
-		}
-	}
+	n, events, logs, err := bc.insertChain(chain)
 
-	return outset + len(chain), nil
-}
-
-func (bc *BlockChain) InsertBlock(block *types.Block) (int, error) {
-	bc.insertChainProtectLock.Lock()
-	defer bc.insertChainProtectLock.Unlock()
-
-	if local := bc.GetBlockByNumber(block.NumberU64()); local != nil && local.Hash() != block.Hash() {
-		log.Fatal("inserting another different block at same height", "number", block.NumberU64(), "hash", block.Hash().Hex(), "in chain hash", local.Hash().Hex())
-	}
-
-	// update known head if it is necessary
-	_, number := bc.KnownHead()
-	if bc.CurrentBlock() != nil && bc.CurrentBlock().NumberU64() > number {
-		bc.SetKnownHead(bc.CurrentBlock().Hash(), bc.CurrentBlock().NumberU64())
-	}
-
-	// insert it!
-	n, events, logs, err := bc.insertChain(types.Blocks{block})
 	bc.CommitStateDB()
 	bc.PostChainEvents(events, logs)
 
-	return n, err
+	return outset + n, err
 }
 
 // insertChain will execute the actual chain insertion and event aggregation. The
@@ -1214,6 +1192,12 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 	// Iterate over the blocks and insert when the verifier permits
 	for i, block := range chain {
+		// update known head if it is necessary
+		_, headN := bc.KnownHead()
+		if bc.CurrentBlock() != nil && bc.CurrentBlock().NumberU64() > headN {
+			bc.SetKnownHead(bc.CurrentBlock().Hash(), bc.CurrentBlock().NumberU64())
+		}
+
 		// If the chain is terminating, stop processing blocks
 		if atomic.LoadInt32(&bc.procInterrupt) == 1 {
 			log.Debug("Premature abort during blocks processing")
@@ -1229,6 +1213,12 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		err := <-results
 		if err == nil {
+
+			// fatal if inserting another different block at the same height
+			if local := bc.GetBlockByNumber(block.NumberU64()); local != nil && local.Hash() != block.Hash() {
+				log.Fatal("inserting another different block at same height", "number", block.NumberU64(), "hash", block.Hash().Hex(), "in chain hash", local.Hash().Hex())
+			}
+
 			// before validate state, we first validate block body
 			err = bc.Validator().ValidateBody(block)
 		}
