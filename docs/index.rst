@@ -18,13 +18,13 @@ Quick reference:
 
 1. :ref:`fusion-api` and :ref:`rpc-api`
 #.  :ref:`quick-start`
-#. :ref:`overview` for information
+#. :ref:`overview`
 #. `Solidity`_
 #. :ref:`consensus` and :ref:`implementation`
 
 
 
-.. _Solidity: ../solidity/html/index.html
+.. _Solidity: ./solidity/index.html
 
 
 
