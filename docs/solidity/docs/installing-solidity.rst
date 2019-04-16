@@ -9,6 +9,12 @@ Installing the Solidity Compiler
 Versioning
 ==========
 
+.. warning::
+
+    Smart contracts in CPChain are based on solidity 0.4.25, commit 59dbf8f1.
+    Either older or newer version can incur unexpected failure when compiling smart contract.
+
+
 Solidity versions follow `semantic versioning <https://semver.org>`_ and in addition to
 releases, **nightly development builds** are also made available.  The nightly builds
 are not guaranteed to be working and despite best efforts they might contain undocumented
@@ -31,122 +37,14 @@ or if you require more compilation options.
 
 .. _solcjs:
 
-npm / Node.js
-=============
 
-Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
-`solcjs` program has fewer features than all options further down this page. Our 
-:ref:`commandline-compiler` documentation assumes you are using
-the full-featured compiler, `solc`. So if you install `solcjs` from `npm` then you will
-stop reading the documentation here and then continue to `solc-js <https://github.com/ethereum/solc-js>`_.
-
-Note: The solc-js project is derived from the C++
-`solc` by using Emscripten. `solc-js` can be used in JavaScript projects directly (such as Remix).
-Please refer to the solc-js repository for instructions.
-
-.. code:: bash
-
-    npm install -g solc
-
-.. note::
-
-    The commandline is named `solcjs`.
-
-    The comandline options of `solcjs` are not compatible with `solc` and tools (such as `geth`)
-    expecting the behaviour of `solc` will not work with `solcjs`.
-
-Docker
-======
-
-We provide up to date docker builds for the compiler. The ``stable``
-repository contains released versions while the ``nightly``
-repository contains potentially unstable changes in the develop branch.
-
-.. code:: bash
-
-    docker run ethereum/solc:stable solc --version
-
-Currently, the docker image only contains the compiler executable,
-so you have to do some additional work to link in the source and
-output directories.
-
-Binary Packages
+Binary Release
 ===============
 
-Binary packages of Solidity are available at
-`solidity/releases <https://github.com/ethereum/solidity/releases>`_.
+Binary release of Solidity are available at `solc`_
 
-We also have PPAs for Ubuntu.  For the latest stable version.
+.. _solc: https://bitbucket.org/cpchain/chain/downloads/solc
 
-.. code:: bash
-
-    sudo add-apt-repository ppa:ethereum/ethereum
-    sudo apt-get update
-    sudo apt-get install solc
-
-If you want to use the cutting edge developer version:
-
-.. code:: bash
-
-    sudo add-apt-repository ppa:ethereum/ethereum
-    sudo add-apt-repository ppa:ethereum/ethereum-dev
-    sudo apt-get update
-    sudo apt-get install solc
-    
-We are also releasing a `snap package <https://snapcraft.io/>`_, which is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To install the latest stable version of solc:
-
-.. code:: bash
-
-    sudo snap install solc
-
-Or if you want to help testing the unstable solc with the most recent changes from the development branch:
-
-.. code:: bash
-
-    sudo snap install solc --edge
-
-Arch Linux also has packages, albeit limited to the latest development version:
-
-.. code:: bash
-
-    pacman -S solidity
-
-Homebrew is missing pre-built bottles at the time of writing,
-following a Jenkins to TravisCI migration, but Homebrew
-should still work just fine as a means to build-from-source.
-We will re-add the pre-built bottles soon.
-
-.. code:: bash
-
-    brew update
-    brew upgrade
-    brew tap ethereum/ethereum
-    brew install solidity
-
-If you need a specific version of Solidity you can install a 
-Homebrew formula directly from Github.
-
-View 
-`solidity.rb commits on Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
-
-Follow the history links until you have a raw file link of a 
-specific commit of ``solidity.rb``.
-
-Install it using ``brew``:
-
-.. code:: bash
-
-    brew unlink solidity
-    # Install 0.4.8
-    brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/77cce03da9f289e5a3ffe579840d3c5dc0a62717/solidity.rb
-
-Gentoo Linux also provides a solidity package that can be installed using ``emerge``:
-
-.. code:: bash
-
-    emerge dev-lang/solidity
-
-.. _building-from-source:
 
 Building from Source
 ====================
@@ -159,7 +57,12 @@ To clone the source code, execute the following command:
 .. code:: bash
 
     git clone --recursive https://github.com/ethereum/solidity.git
+    git checkout 59dbf8f1
     cd solidity
+
+.. warning::
+
+    Commit 59dbf8f1 refers to the corresponding version compiling smart contracts for CPChain.
 
 If you want to help developing Solidity,
 you should fork Solidity and add your personal fork as a second remote:
