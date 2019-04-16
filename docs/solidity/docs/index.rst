@@ -2,7 +2,7 @@ Solidity
 ========
 
 
-Back to `CPChain Docs`_
+Back to `CPChain Docs`_.
 
 
 .. image:: logo.svg
