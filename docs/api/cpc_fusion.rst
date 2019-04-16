@@ -7,7 +7,7 @@ Fusion API
 Installation
 ---------------
 
-Web3.py can be installed (preferably in a :ref:`virtualenv <setup_environment>`)
+CPC fusion can be installed by
 using ``pip`` as follows:
 
 .. code-block:: shell
@@ -39,10 +39,11 @@ following command.
 Using Fusion
 ----------------
 
-To use the web3 library, you are required to initialize the
-:class:`~web3.Web3` class.
+To use the cpc fusion library, you are required to initialize the
+:class:`~cpc_fusion.cpc` class.
 
-Before connecting, you must set up a local chain or sync with our Mainnet
+Before connecting, you must set up a local chain or sync with our Mainnet.
+
 
     1. To start a local chain, use the following commands
 
@@ -51,27 +52,15 @@ Before connecting, you must set up a local chain or sync with our Mainnet
             $ cd ./examples/cpchain
             $ sudo ./cpchain-all.sh
 
-        Note that starting a local chain may fails. You may try several times until success.
+        Note that starting a local chain may fail. You may try several times until success.
 
     #. To sync with Alpha Mainnet, use the following command
 
         .. code-block:: shell
 
-            $ build/bin/cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --rpcaddr 0.0.0.0:8501 --runmode=testnet
+            $ build/bin/cpchain run --rpcaddr 127.0.0.0:8501 --port 30311
 
-        .. warning::
-
-            The current master version is not compatible with Alpha Mainnet.
-            Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
-            After cloning from github repository, you can checkout the commit 7d29a2b by following command:
-
-
-        .. code::
-
-            $ git checkout 7d29a2b
-            $ sudo make all
-
-        Then use the commands above to connect to Alpha Mainnet.
+Please check :ref:`quick-start` for more detailed information.
 
 Use the ``auto`` module to :ref:`guess at common node connection options
 <automatic_provider_detection>`.
@@ -92,12 +81,8 @@ Use the ``auto`` module to :ref:`guess at common node connection options
 .. _first_w3_use:
 
 
-API Reference
------------------
 
 
-CPC
-######
 
 .. py:module:: cpc_fusion.cpc
 
@@ -113,7 +98,7 @@ you can find the latest block number in these two ways:
 
     .. code-block:: python
 
-        >>> block = cpc_fusion.cpc.getBlock('latest')
+        >>> block = cf.cpc.getBlock('latest')
         AttributeDict({
           'hash': '0xe8ad537a261e6fff80d551d8d087ee0f2202da9b09b64d172a5f45e818eb472a',
           'number': 4022281,
@@ -131,10 +116,56 @@ you can find the latest block number in these two ways:
 
 The following methods are available on the ``cpc_fusion.cpc`` namespace.
 
-Transaction
-**************
+Transaction API
+------------------
+
+
+Cpc.gasPrice
+++++++++++++++++
+
+.. py:attribute:: Cpc.gasPrice
+
+    * Delegates to ``eth_gasPrice`` RPC Method.
+
+    Returns the current gas price in Wei.
+
+    .. code-block:: python
+
+        >>> cf.cpc.gasPrice
+        18000000000
+
+
+Cpc.estimateGas
+++++++++++++++++++++
+
+
+.. py:method:: Cpc.estimateGas(transaction)
+
+   * Delegates to ``eth_estimateGas`` RPC Method
+
+Executes the given transaction locally without creating a new transaction on the blockchain.
+Returns amount of gas consumed by execution which can be used as a gas estimate.
+
+The transaction parameter is handled in the same manner as the ``sendTransaction()`` method.
+
+    .. note::
+
+        The addresses in ``transaction`` should be the returned value of ``toChecksumAddress(address)``.
+        Non-checksum addresses are considered unsafe,
+        and ``cpc.estimateGas()`` will return an error.
+
+    .. code-block:: python
+
+        >>> cf.cpc.estimateGas({'to': cf.toChecksumAddress('0x9e61732d0b1c1674151a01ac0bba824c5b6258fb'), 'from': cf.cpc.coinbase, 'value': 12345})
+        21000
+
+
+
+Cpc.getBlockTransactionCount
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. py:method:: Cpc.getBlockTransactionCount(block_identifier)
+
 
     * Delegates to ``eth_getBlockTransactionCountByNumber`` or
       ``eth_getBlockTransactionCountByHash`` RPC Methods
@@ -147,12 +178,15 @@ Transaction
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.getBlockTransactionCount(46147)
+        >>> cf.cpc.getBlockTransactionCount(46147)
         1
-        >>> cpc_fusion.cpc.getBlockTransactionCount('0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd')  # block 46147
+        >>> cf.cpc.getBlockTransactionCount('0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd')  # block 46147
         1
 
 
+
+Cpc.getTransaction
++++++++++++++++++++++++++++++++++++++++++++
 
 
 .. py:method:: Cpc.getTransaction(transaction_hash)
@@ -163,7 +197,7 @@ Transaction
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.getTransaction('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
+        >>> cf.cpc.getTransaction('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
         AttributeDict({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
             'blockNumber': 46147,
@@ -179,10 +213,19 @@ Transaction
         })
 
 
+
+Cpc.getTransactionFromBlock
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 .. py:method:: Cpc.getTransactionFromBlock(block_identifier, transaction_index)
 
   .. note:: This method is obsolete and replaced by
     ``Cpc.getTransactionByBlock``
+
+Cpc.getTransactionByBlock
++++++++++++++++++++++++++++++
+
 
 
 .. py:method:: Cpc.getTransactionByBlock(block_identifier, transaction_index)
@@ -199,7 +242,7 @@ Transaction
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.getTransactionFromBlock(46147, 0)
+        >>> cf.cpc.getTransactionFromBlock(46147, 0)
         AttributeDict({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
             'blockNumber': 46147,
@@ -213,7 +256,7 @@ Transaction
             'transactionIndex': 0,
             'value': 31337,
         })
-        >>> cpc_fusion.cpc.getTransactionFromBlock('0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd', 0)
+        >>> cf.cpc.getTransactionFromBlock('0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd', 0)
         AttributeDict({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
             'blockNumber': 46147,
@@ -228,6 +271,8 @@ Transaction
             'value': 31337,
         })
 
+Cpc.waitForTransactionReceipt
++++++++++++++++++++++++++++++++++++
 
 .. py:method:: Cpc.waitForTransactionReceipt(transaction_hash, timeout=120)
 
@@ -240,7 +285,7 @@ Transaction
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.waitForTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
+        >>> cf.cpc.waitForTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
         # If transaction is not yet in a block, time passes, while the thread sleeps...
         # ...
         # Then when the transaction is added to a block, its receipt is returned:
@@ -259,6 +304,12 @@ Transaction
         })
 
 
+
+
+Cpc.getTransactionReceipt
+++++++++++++++++++++++++++++++
+
+
 .. py:method:: Cpc.getTransactionReceipt(transaction_hash)
 
     * Delegates to ``eth_getTransactionReceipt`` RPC Method
@@ -267,10 +318,10 @@ Transaction
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.getTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')  # not yet mined
+        >>> cf.cpc.getTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')  # not yet mined
         None
         # wait for it to be mined....
-        >>> cpc_fusion.cpc.getTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
+        >>> cf.cpc.getTransactionReceipt('0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060')
         AttributeDict({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
             'blockNumber': 46147,
@@ -285,6 +336,10 @@ Transaction
             'transactionIndex': 0,
         })
 
+Cpc.getTransactionCount
+++++++++++++++++++++++++++++++
+
+
 
 .. py:method:: Cpc.getTransactionCount(account, block_identifier=cpc_fusion.cpc.defaultBlock)
 
@@ -297,8 +352,14 @@ Transaction
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.getTransactionCount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
+        >>> cf.cpc.getTransactionCount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
         340
+
+
+
+Cpc.sendTransaction
+++++++++++++++++++++++
+
 
 
 .. py:method:: Cpc.sendTransaction(transaction)
@@ -335,8 +396,13 @@ Transaction
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.sendTransaction({'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601', 'from': cpc_fusion.cpc.coinbase, 'value': 12345})
+        >>> cf.cpc.sendTransaction({'to': '0xd3cda913deb6f67967b99d67acdfa1712c293601', 'from': cf.cpc.coinbase, 'value': 12345})
         '0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331'
+
+
+
+Cpc.sendRawTransaction
++++++++++++++++++++++++++
 
 
 .. py:method:: Cpc.sendRawTransaction(raw_transaction)
@@ -363,8 +429,11 @@ Transaction
 
 
 
-Block
-********
+Block API
+------------------------
+
+Cpc.blockNumber
++++++++++++++++++++++
 
 .. py:attribute:: Cpc.blockNumber
 
@@ -374,10 +443,13 @@ Block
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.blockNumber
+        >>> cf.cpc.blockNumber
         2206939
 
 
+
+Cpc.getBlock
+++++++++++++++++++++++
 
 .. py:method:: Cpc.getBlock(block_identifier=cpc.defaultBlock, full_transactions=False)
 
@@ -411,8 +483,14 @@ Block
          'totalDifficulty': 201,
          'transactions': [],
          'transactionsRoot': HexBytes('0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421')})
-Account
-**********
+
+
+Account API
+------------------------
+
+Cpc.getBalance
++++++++++++++++++++++
+
 
 .. py:method:: Cpc.getBalance(account, block_identifier=cpc.defaultBlock)
 
@@ -425,8 +503,12 @@ Account
 
     .. code-block:: python
 
-        >>> cpc_fusion.cpc.getBalance('0xd3cda913deb6f67967b99d67acdfa1712c293601')
+        >>> cf.cpc.getBalance('0xd3cda913deb6f67967b99d67acdfa1712c293601')
         77320681768999138915
+
+Cpc.newAccount
++++++++++++++++++
+
 
 
 .. py:method:: newAccount(self, password)
@@ -442,6 +524,10 @@ Account
         '0x062F4db4DDbE5618412ADffa33b4CbC680634Fc8'
 
 
+
+Cpc.lockAccount
+++++++++++++++++
+
 .. py:method:: lockAccount(self, account)
 
     * Delegates to ``personal_lockAccount`` RPC Method
@@ -451,6 +537,12 @@ Account
     .. code-block:: python
 
         >>> cf.personal.lockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
+
+
+
+
+Cpc.unlockAccount
++++++++++++++++++
 
 
 .. py:method:: unlockAccount(self, account, passphrase, duration=None)
@@ -468,6 +560,13 @@ Account
         >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'the-passphrase')
         True
 
+
+
+Cpc.sendTransaction
+++++++++++++++++++
+
+
+
 .. py:method:: sendTransaction(self, transaction, passphrase)
 
     * Delegates to ``personal_sendTransaction`` RPC Method
@@ -475,8 +574,13 @@ Account
     Sends the transaction.
 
 
-Contract
-**********
+Contract API
+-----------------
+
+
+Cpc.contract
++++++++++++++++++
+
 
 .. py:method:: Cpc.contract(address=None, contract_name=None, ContractFactoryClass=Contract, **contract_factory_kwargs)
 
@@ -549,8 +653,12 @@ Contract
 
 
 
-RNode
-********
+RNode API
+----------------
+
+
+Cpc.getRNodes
+++++++++++++++++++++
 
 .. py:method:: Cpc.getRNodes
 
@@ -577,6 +685,9 @@ RNode
         print(cf.cpc.getRNodes)
 
 
+Cpc.getCurrentTerm
+++++++++++++++++++++++++
+
 .. py:method:: Cpc.getCurrentTerm
 
     * Delegates to ``eth_getCurrentTerm`` RPC Method
@@ -589,6 +700,9 @@ RNode
         166
 
 
+Cpc.getCurrentView
+++++++++++++++++++++++
+
 .. py:method:: Cpc.getCurrentView
 
     * Delegates to ``eth_getCurrentRound`` RPC Method
@@ -599,6 +713,10 @@ RNode
 
         >>> cf.cpc.getCurrentView
         1
+
+
+Cpc.getBlockGenerationInfo
++++++++++++++++++++++++++++++
 
 
 .. py:method:: Cpc.getBlockGenerationInfo
