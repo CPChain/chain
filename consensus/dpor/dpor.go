@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -403,4 +404,12 @@ func (d *Dpor) ImpeachTimeout() time.Duration {
 // SetupAdmission setups admission backend
 func (d *Dpor) SetupAdmission(ac admission.ApiBackend) {
 	d.ac = ac
+}
+
+func (d *Dpor) SetRptBackend(backend bind.ContractBackend) {
+	d.rptBackend, _ = rpt.NewRptService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt])
+}
+
+func (d *Dpor) GetRptBackend() rpt.RptService {
+	return d.rptBackend
 }
