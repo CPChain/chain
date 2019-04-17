@@ -660,7 +660,7 @@ RNode API
 Cpc.getRNodes
 ++++++++++++++++++++
 
-.. py:method:: Cpc.getRNodes
+.. py:attribute:: Cpc.getRNodes
 
     * Delegates to ``eth_getRNodes`` RPC Method
 
@@ -688,7 +688,7 @@ Cpc.getRNodes
 Cpc.getCurrentTerm
 ++++++++++++++++++++++++
 
-.. py:method:: Cpc.getCurrentTerm
+.. py:attribute:: Cpc.getCurrentTerm
 
     * Delegates to ``eth_getCurrentTerm`` RPC Method
 
@@ -703,7 +703,7 @@ Cpc.getCurrentTerm
 Cpc.getCurrentView
 ++++++++++++++++++++++
 
-.. py:method:: Cpc.getCurrentView
+.. py:attribute:: Cpc.getCurrentView
 
     * Delegates to ``eth_getCurrentRound`` RPC Method
 
@@ -719,7 +719,7 @@ Cpc.getBlockGenerationInfo
 +++++++++++++++++++++++++++++
 
 
-.. py:method:: Cpc.getBlockGenerationInfo
+.. py:attribute:: Cpc.getBlockGenerationInfo
 
     * Delegates to ``eth_getBlockGenerationInfo`` RPC Method
 
