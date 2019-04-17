@@ -1025,7 +1025,7 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		// Drop all transactions that are deemed too old (low nonce)
 		oldQueuedTransaction := list.Forward(pool.currentState.GetNonce(addr))
 		if len(oldQueuedTransaction) > 0 {
-			log.Warn("Removed old queued transaction", "old queued tx len", oldQueuedTransaction.Len())
+			log.Debug("Removed old queued transaction", "old queued tx len", oldQueuedTransaction.Len())
 		}
 		for _, tx := range oldQueuedTransaction {
 			hash := tx.Hash()
@@ -1036,7 +1036,7 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		// Drop all transactions that are too costly (low balance or out of gas)
 		drops, _ := list.Filter(pool.currentState.GetBalance(addr), pool.currentMaxGas)
 		if len(drops) > 0 {
-			log.Warn("Removed unpayable queued transaction", "unpayable tx len", drops.Len())
+			log.Debug("Removed unpayable queued transaction", "unpayable tx len", drops.Len())
 		}
 		for _, tx := range drops {
 			hash := tx.Hash()
@@ -1048,7 +1048,7 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		// Gather all executable transactions and promote them
 		readyTxs := list.Ready(pool.pendingState.GetNonce(addr))
 		if len(readyTxs) > 0 {
-			log.Warn("readyTxs", "length", readyTxs.Len())
+			log.Debug("readyTxs", "length", readyTxs.Len())
 		}
 		for _, tx := range readyTxs {
 			hash := tx.Hash()
