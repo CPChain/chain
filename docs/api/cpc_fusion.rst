@@ -730,3 +730,88 @@ Cpc.getBlockGenerationInfo
         >>> cf.cpc.getBlockGenerationInfo
         [{'View': 2, 'Term': 250, 'Proposer': '0x3a18598184ef84198db90c28fdfdfdf56544f747', 'BlockNumber': 3000, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0xc05302acebd0730e3a18a058d7d1cb1204c4a092', 'BlockNumber': 3001, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0xc05302acebd0730e3a18a058d7d1cb1204c4a092', 'BlockNumber': 3002, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0xc05302acebd0730e3a18a058d7d1cb1204c4a092', 'BlockNumber': 3003, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0x3a18598184ef84198db90c28fdfdfdf56544f747', 'BlockNumber': 3004, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0x3a18598184ef84198db90c28fdfdfdf56544f747', 'BlockNumber': 3005, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0x3a18598184ef84198db90c28fdfdfdf56544f747', 'BlockNumber': 3006, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e', 'BlockNumber': 3007, 'TermLen': 4}]
 
+
+
+
+.. py:module:: web3.version
+.. py:currentmodule:: web3.version
+
+.. py:class:: Version
+
+The ``web3.version`` object exposes methods to interact with the RPC APIs under
+the ``version_`` namespace.
+
+Version API
+---------------
+
+.. py:module:: cpc.version
+.. py:currentmodule:: cpc.version
+
+.. py:class:: Version
+
+The ``cpc.version`` object exposes methods to interact with the RPC APIs under
+the ``version_`` namespace.
+
+
+
+
+The following properties are available on the ``cpc_fusion.cpc`` namespace.
+
+Version.api
++++++++++++++++++++
+
+.. py:method:: Version.api(self)
+
+    Returns the current Web3 version.
+
+    .. code-block:: python
+
+        >>> cf.version.api
+        "0.0.21"
+
+
+Version.node
++++++++++++++++++++++
+
+
+.. py:method:: Version.node(self)
+
+    * Delegates to ``web3_clientVersion`` RPC Method
+
+    Returns the current client version.
+
+    .. code-block:: python
+
+        >>> cf.version.node
+        'cpchain/v011ef5815d901e17c1b7d747cc2fae3da6b0bf49/linux-amd64/go1.11.1'
+
+
+Version.network
++++++++++++++++++
+
+
+.. py:method:: Version.network(self)
+
+    * Delegates to ``net_version`` RPC Method
+
+    Returns the current network protocol version.
+
+    .. code-block:: python
+
+        >>> cf.version.network
+        0
+
+Version.cpchain
++++++++++++++++++++
+
+
+.. py:method:: Version.cpchain(self)
+
+    * Delegates to ``eth_protocolVersion`` RPC Method
+
+    Returns the current cpchain protocol version.
+
+    .. code-block:: python
+
+        >>> web3.version.cpchain
+        1
