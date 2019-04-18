@@ -357,14 +357,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	log.Debug("known chain head", "number", headNumber)
 
 	if rptBackend != nil {
-		var windowSize = uint64(0)
-		if snap.isStartElection() {
-			windowSize, _ = rptBackend.WindowSize()
-			log.Debug("rpt window size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
-		}
 		timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
-		rptCalculateRange := int(windowSize*2 + dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2))
-		startBlockNumberOfRptCalculate := float64(int(headNumber) - rptCalculateRange)
+		startBlockNumberOfRptCalculate := float64(int(headNumber) - configs.DefaultFullSyncPivot)
 		timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
 		timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
 	}
