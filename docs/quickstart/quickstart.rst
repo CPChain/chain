@@ -291,3 +291,48 @@ Run a Local Node
 .. code::
 
     $ ./cpchain run --datadir ./datadir --unlock <You Address>
+
+
+Smart Contract
+++++++++++++++++++++++
+
+.. warning::
+    The solidity version for CPChain is 0.4.25.
+    Other version is not guaranteed compatible with CPChain.
+
+.. note::
+    Refer to `Solidity`_ for detailed information.
+
+.. _Solidity: ./solidity/index.html
+
+Solidity Binary Release
+###########################
+
+You can download corresponding solidity binary release from `Download Page`_.
+
+Source Code Build
+#####################
+
+If you are willing to build solidity 0.4.25 from source code,
+please refer to the `Solidity Installation`_
+
+.. _Solidity Installation: ./solidity/installing-solidity.html
+
+
+.. note::
+    If you encounter any problem when running ``solc``,
+    please check :ref:`FAQ` page.
+
+Smart Contract Examples
+#############################
+
+In our repository, we have several examples for smart contract.
+Please check files in ``/docs/quickstart/``.
+You may also find it in `Download Page`_.
+
+.. note::
+    Please replace the ``keystore`` path in examples to yours.
+
+
+
+

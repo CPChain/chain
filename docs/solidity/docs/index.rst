@@ -20,6 +20,10 @@ user-defined types among other features.
 As you will see, it is possible to create contracts for voting,
 crowdfunding, blind auctions, multi-signature wallets and more.
 
+.. warning::
+    The solidity version for CPChain is 0.4.25.
+    Other version is not guaranteed compatible with CPChain.
+
 .. note::
     The best way to try out Solidity right now is using
     `Remix <https://remix.ethereum.org/>`_
