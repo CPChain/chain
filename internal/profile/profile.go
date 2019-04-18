@@ -21,6 +21,7 @@ import (
 	"runtime"
 
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/urfave/cli"
 )
 
@@ -56,25 +57,26 @@ func getProfileConfig(ctx *cli.Context) profileConfig {
 
 // Start profiling
 func Start(ctx *cli.Context) error {
+	log.Info("profile start")
 	// start profiling, tracing
 	cfg := getProfileConfig(ctx)
 
 	// enable tracing by default
-	if err := Handler.StartGoTrace(cfg.traceFileName); err != nil {
-		return err
-	}
+	// if err := Handler.StartGoTrace(cfg.traceFileName); err != nil {
+	// 	return err
+	// }
 
 	// if err := Handler.StartCPUProfile(cfg.cpuFileName); err != nil {
 	// 	return err
 	// }
 
-	if err := Handler.StartMemProfile(cfg.memProfileRate, cfg.memProfileFileName); err != nil {
-		return err
-	}
-
-	if err := Handler.StartBlockingProfile(cfg.blockProfileRate, cfg.blockingProfileFileName); err != nil {
-		return err
-	}
+	// if err := Handler.StartMemProfile(cfg.memProfileRate, cfg.memProfileFileName); err != nil {
+	// 	return err
+	// }
+	//
+	// if err := Handler.StartBlockingProfile(cfg.blockProfileRate, cfg.blockingProfileFileName); err != nil {
+	// 	return err
+	// }
 
 	// pprof server
 	StartPProfWebUi(cfg.pprofAddr)
@@ -83,8 +85,9 @@ func Start(ctx *cli.Context) error {
 
 // Stops all running profiles, flushing their output to the respective file.
 func Stop() {
-	Handler.StopBlockingProfile()
-	Handler.StopMemHeapProfile()
+	// Handler.StopBlockingProfile()
+	// Handler.StopMemHeapProfile()
 	// Handler.StopCPUProfile()
-	Handler.StopGoTrace()
+	// Handler.StopGoTrace()
+	log.Info("profile stop")
 }
