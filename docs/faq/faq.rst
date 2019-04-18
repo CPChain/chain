@@ -71,3 +71,30 @@ or choose to kill all cpchain processes by
 
     $ killall -9 cpchain
 
+Message ``error  while  loading  shared  libraries:  libz3.so.4`` pops when running ``solc``
+************************************************************************************************
+
+It can be resolved by running the command below:
+
+.. code-block:: shell
+
+    $ sudo  apt-get  install  libz3-dev
+
+The default ``solc`` is not a compatible version
+**************************************************
+
+To check the version of solidity, you may utilize the following command:
+
+.. code-block:: shell
+
+    $ solc --version
+
+And by using ``$ which solc`` command, you can locate the path for default ``solc``,
+and replace it with a 0.4.25 version.
+
+.. code-block:: shell
+
+    $ which  solc
+    /usr/bin/solc
+    $ rm  -f    /usr/bin/solc
+    $ cp  solc-0.4.25  /usr/bin
