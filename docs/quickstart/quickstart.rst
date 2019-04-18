@@ -330,6 +330,9 @@ In our repository, we have several examples for smart contract.
 Please check files in ``/docs/quickstart/``.
 You may also find it in `Download Page`_.
 
+.. note::
+    Please replace the ``keystore`` path in examples to yours.
+
 
 
 
