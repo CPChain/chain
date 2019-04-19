@@ -94,7 +94,8 @@ and replace it with a 0.4.25 version.
 
 .. code-block:: shell
 
-    $ which  solc
+    $ which solc
     /usr/bin/solc
-    $ rm  -f    /usr/bin/solc
-    $ cp  solc-0.4.25  /usr/bin
+    $ rm -f /usr/bin/solc
+    // copy solc 0.4.25 to /user/bin
+    $ cp solc /usr/bin

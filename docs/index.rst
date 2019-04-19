@@ -24,7 +24,7 @@ Quick reference:
 #. `Download Page`_
 
 
-.. _`Download Page`: https://bitbucket.org/cpchain/chain/downloads/
+.. _`Download Page`: https://github.com/CPChain/chain/releases/tag/v0.2.1
 .. _Solidity: ./solidity/index.html
 
 
