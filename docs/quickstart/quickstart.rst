@@ -326,7 +326,7 @@ Smart Contract
 .. note::
     Refer to `Solidity`_ for detailed information.
 
-.. _Solidity: ./solidity/index.html
+.. _Solidity: ../solidity/index.html
 
 Solidity Binary Release
 +++++++++++++++++++++++++
