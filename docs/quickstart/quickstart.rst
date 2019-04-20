@@ -345,7 +345,7 @@ Source Code Build
 If you are willing to build solidity 0.4.25 from source code,
 please refer to the `Solidity Installation`_
 
-.. _Solidity Installation: ./solidity/installing-solidity.html
+.. _Solidity Installation: ../solidity/installing-solidity.html
 
 
 .. note::
