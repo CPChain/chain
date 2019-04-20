@@ -43,7 +43,7 @@ Binary Release
 
 Binary release of Solidity are available at `solc`_
 
-.. _solc: https://bitbucket.org/cpchain/chain/downloads/solc
+.. _solc: https://github.com/CPChain/chain/releases/tag/v0.2.1
 
 
 Building from Source
