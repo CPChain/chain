@@ -41,9 +41,9 @@ or if you require more compilation options.
 Binary Release
 ===============
 
-Binary release of Solidity is available at `Download Page`_
+Binary release of Solidity is available at `Download Page`_.
 
-.. _Download Page: https://github.com/CPChain/chain/releases/tag/v0.2.1
+.. _`Download Page`: https://github.com/CPChain/chain/releases/tag/v0.2.1
 
 
 Building from Source
