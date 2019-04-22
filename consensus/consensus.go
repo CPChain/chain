@@ -29,6 +29,10 @@ import (
 // ChainReader defines a small collection of methods needed to access the local
 // blockchain.
 type ChainReader interface {
+
+	// ValidateBlockBody validates transactions in a block based on known states
+	ValidateBlockBody(block *types.Block) error
+
 	// Config retrieves the blockchain's chain configuration.
 	Config() *configs.ChainConfig
 
