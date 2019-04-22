@@ -17,10 +17,17 @@ Earlier Linux releases may incur problems or lack necessary dependencies.
     All code starting with a ``>>>`` is meant to run in a python interpreter,
     like `ipython <https://pypi.org/project/ipython/>`_.
 
+
+Cpchain and Console
+============================
+
+
 Binary Release
 +++++++++++++++++++
 
-Download links for binary release are coming soon.
+`Download page`_ of binary releases for CPChain and Solidity.
+
+.. _`Download Page`: https://github.com/CPChain/chain/releases/tag/v0.2.1
 
 ``cpchain`` is the binary release for the chain.
 And ``console`` provides command line interface for operations on the chain,
@@ -289,3 +296,83 @@ Run a Local Node
 .. code::
 
     $ ./cpchain run --datadir ./datadir --unlock <You Address>
+
+CPC Faucet
+=================
+
+CPC faucet is an application that you can collect CPC test coins for free.
+The test coins can be used in newly-published CPChain Alpha Mainnet.
+Refer to `Faucet`_ to try it now.
+
+
+Claim Test Coins
+++++++++++++++++++++++
+
+1. Copy the wallet address and paste it in `Faucet`_. Now you can claim test coins.
+#. The password it requires is *cpchain2019*.
+#. Following a successful claim, this transaction is inserted into the test chain. In the site `Explorer`_, the transaction details can be searched.
+
+.. _`Faucet`: https://cpchain.io/faucet/
+.. _`Explorer`: https://cpchain.io/explorer/
+
+
+Smart Contract
+======================
+
+.. warning::
+    The solidity version for CPChain is 0.4.25.
+    Other version is not guaranteed compatible with CPChain.
+
+.. note::
+    Refer to `Solidity`_ for detailed information.
+
+.. _Solidity: ../solidity/index.html
+
+Solidity Binary Release
++++++++++++++++++++++++++
+
+You can download corresponding solidity binary release from `Download Page`_.
+
+And copy the solc binary file to ``/user/bin``.
+
+.. code-block:: shell
+
+    $ cp solc /usr/bin
+
+Source Code Build
+++++++++++++++++++++
+
+If you are willing to build solidity 0.4.25 from source code,
+please refer to the `Solidity Installation`_
+
+.. _Solidity Installation: ../solidity/installing-solidity.html
+
+
+.. note::
+    If you encounter any problem when running ``solc``,
+    please check :ref:`FAQ` page.
+
+Install py-solc
+++++++++++++++++++
+
+Use the command below to install ``py-solc``.
+This module connects python functions with ``solc`` in your computer.
+
+.. code-block:: shell
+
+    $ pip3 install py-solc
+
+Smart Contract Examples
+++++++++++++++++++++++++++++++++++++
+
+In our repository, we have several examples for smart contract.
+Please check files in ``/docs/quickstart/``.
+You may also find it in `Download Page`_.
+
+.. note::
+    Please replace the values of ``keystore``, ``password`` as well as ``address``
+    to yours.
+
+
+
+

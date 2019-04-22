@@ -8,7 +8,8 @@
 .PHONY: cpchain-darwin cpchain-darwin-386 cpchain-darwin-amd64
 .PHONY: cpchain-windows cpchain-windows-386 cpchain-windows-amd64
 .PHONY: dev-init dev-tools
-.PHONY: docs docs-serve
+.PHONY: docs docs-serve docs-serve-clean docs-clean
+.PHONY: docs-mv-solidity docs-cp-solidity docs-solidity
 
 SHELL := $(shell which bash)
 
@@ -231,3 +232,12 @@ docs-serve-clean:
 
 docs-clean:
 	rm -fr docs/_build
+
+docs-mv-solidity:
+	rm -rf docs/_build/solidity
+	mkdir docs/_build/solidity
+
+docs-cp-solidity:
+	cp -rf docs/solidity/docs/_build/* docs/_build/solidity/
+
+docs-solidity: docs-mv-solidity docs-cp-solidity

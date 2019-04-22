@@ -29,7 +29,7 @@ type ContractAPI interface {
 }
 
 func RegisterPrimitiveContracts() {
-	chainClient := getChainClient()
+	chainClient := GetChainClient()
 	for addr, c := range MakePrimitiveContracts(chainClient, chainClient) {
 		err := vm.RegisterPrimitiveContract(addr, c)
 		if err != nil {
@@ -38,7 +38,7 @@ func RegisterPrimitiveContracts() {
 	}
 }
 
-func getChainClient() *rpt_backend_holder.RptApiClient {
+func GetChainClient() *rpt_backend_holder.RptApiClient {
 	return &rpt_backend_holder.RptApiClient{ChainBackend: rpt_backend_holder.GetApiBackendHolderInstance().ChainBackend, ContractBackend: rpt_backend_holder.GetApiBackendHolderInstance().ContractBackend}
 }
 

@@ -11,12 +11,22 @@ Welcome to CPChain documentation!
 
 This documents presents both algorithms and APIs for developers.
 
-APIs are listed in :ref:`fusion-api` and :ref:`rpc-api`.
-By utilizing :ref:`quick-start` to sync with CPChain Mainnet.
-To understand smart contract and reward mechanism of CPChain,
-refer to :ref:`overview` for information.
-:ref:`consensus` and :ref:`implementation` elaborate
-detailed consensus algorithm design and optimization techniques for interested readers.
+
+Quick reference:
+=====================
+
+
+1. :ref:`fusion-api` and :ref:`rpc-api`
+#.  :ref:`quick-start`
+#. :ref:`overview`
+#. `Solidity`_
+#. :ref:`consensus` and :ref:`implementation`
+#. `Download Page`_
+
+
+.. _`Download Page`: https://github.com/CPChain/chain/releases/tag/v0.2.1
+.. _Solidity: ./solidity/index.html
+
 
 
 

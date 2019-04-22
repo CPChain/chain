@@ -2,6 +2,7 @@ CPC Faucet
 =============
 
 
+
 Preliminaries
 --------------
 
@@ -33,18 +34,8 @@ CPC fusion provides APIs for interested users to create a wallet address.
 
         .. code-block:: shell
 
-            $ build/bin/cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --rpcaddr 0.0.0.0:8501 --runmode=testnet
+            $ ./cpchain run --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --rpcaddr 0.0.0.0:8501 --runmode=testnet
 
-        .. warning::
-
-            The current master version is not compatible with Alpha Mainnet.
-            Interested users can refer to commit 7d29a2b to sync with Alpha Mainnet.
-            After cloning from github repository, you can checkout the commit 7d29a2b by following command:
-
-        .. code::
-
-            $ git checkout 7d29a2b
-            $ sudo make all
 
         Then use the commands above to connect to Alpha Mainnet.
 
@@ -66,8 +57,8 @@ CPC fusion provides APIs for interested users to create a wallet address.
 Claim Test Coins
 -----------------------------
 
-1. Copy the wallet address and paste it in https://cpchain.io/faucet/. Now you can claim:w test coins.
-
+1. Copy the wallet address and paste it in https://cpchain.io/faucet/. Now you can claim test coins.
+#. The password it requires is 'cpchain2019'
 #. Following a successful claim, this transaction is inserted into the test chain. In this site https://cpchain.io/explorer/, the transaction details can be searched.
 
 

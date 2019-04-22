@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	SyncTimeout = 5
+	SyncTimeout = 1 * time.Minute
 )
 
 const (
@@ -205,7 +205,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64) 
 
 	// fetch blocks with batch size
 	for i := currentNumber + 1; i < height; i += MaxBlockFetch {
-		timer := time.NewTimer(SyncTimeout * time.Second)
+		timer := time.NewTimer(SyncTimeout)
 
 		log.Debug("sending sync request", "start", i)
 
