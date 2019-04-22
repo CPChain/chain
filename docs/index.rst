@@ -11,6 +11,9 @@ Welcome to CPChain documentation!
 
 This documents presents both algorithms and APIs for developers.
 
+Please mail to info@cpchain.io if you have any question.
+
+
 
 Quick reference:
 =====================
