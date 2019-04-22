@@ -374,11 +374,12 @@ func (p *LBFT2) ImpeachCommitHandler(input *BlockOrHeader, msgCode MsgCode, stat
 // ValidateHandler is the handler for bot Validate state and ImpeachValidate state
 func (p *LBFT2) ValidateHandler(input *BlockOrHeader, msgCode MsgCode, state consensus.State) ([]*BlockOrHeader, Action, MsgCode, consensus.State, error) {
 	switch msgCode {
+	case ImpeachPreprepareMsgCode, ImpeachPrepareMsgCode, ImpeachCommitMsgCode, ImpeachValidateMsgCode:
+
+		return p.ImpeachHandler(input, msgCode, state)
+
 	case ValidateMsgCode:
 		return p.handleValidateMsg(input, state)
-
-	case ImpeachValidateMsgCode:
-		return p.handleImpeachValidateMsg(input, state)
 
 	default:
 		return nil, NoAction, NoMsgCode, state, nil
@@ -854,6 +855,9 @@ func (p *LBFT2) handleValidateMsg(input *BlockOrHeader, state consensus.State) (
 
 		return []*BlockOrHeader{NewBOHFromBlock(block)}, BroadcastMsgAction, ValidateMsgCode, consensus.Idle, nil
 	}
+
+	// insertion fails, remove the hash from the cache
+	p.validateMsgMap.Remove(number)
 
 	return nil, NoAction, NoMsgCode, state, err
 }
