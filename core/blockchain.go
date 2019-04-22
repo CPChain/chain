@@ -66,6 +66,59 @@ const (
 	BlockChainVersion = 3
 )
 
+type cacheStatesAndReceipts struct {
+	pubReceipts  types.Receipts
+	privReceipts types.Receipts
+	pubState     *state.StateDB
+	privState    *state.StateDB
+	logs         []*types.Log
+	usedGas      uint64
+}
+
+type statesAndReceiptsCache struct {
+	cache *lru.ARCCache
+}
+
+func newStatesAndReceiptsCache(cacheSize int) *statesAndReceiptsCache {
+	cache, _ := lru.NewARC(cacheSize)
+	return &statesAndReceiptsCache{
+		cache: cache,
+	}
+}
+
+func (src *statesAndReceiptsCache) add(hash common.Hash,
+	pubReceipts []*types.Receipt, privReceipts []*types.Receipt,
+	pubState *state.StateDB, privState *state.StateDB,
+	logs []*types.Log, usedGas uint64) {
+
+	value := cacheStatesAndReceipts{
+		pubReceipts:  pubReceipts,
+		privReceipts: privReceipts,
+		pubState:     pubState,
+		privState:    privState,
+		logs:         logs,
+		usedGas:      usedGas,
+	}
+
+	src.cache.Add(hash, value)
+}
+
+func (src *statesAndReceiptsCache) get(hash common.Hash) (
+	pubReceipts []*types.Receipt, privReceipts []*types.Receipt,
+	pubState *state.StateDB, privState *state.StateDB,
+	logs []*types.Log, usedGas uint64,
+	ok bool) {
+
+	if value, ok := src.cache.Get(hash); ok {
+		if v, ok := value.(cacheStatesAndReceipts); ok {
+			return v.pubReceipts, v.privReceipts, v.pubState, v.privState, v.logs, v.usedGas, true
+		}
+	}
+
+	ok = false
+	return
+}
+
 // CacheConfig contains the configuration values for the trie caching/pruning
 // that's resident in a blockchain.
 type CacheConfig struct {
@@ -144,6 +197,8 @@ type BlockChain struct {
 	knownHeadHash   common.Hash // hash of known head of current chain
 	knownHeadLock   sync.RWMutex
 
+	srCache *statesAndReceiptsCache // state and receipt cache
+
 	mux *event.TypeMux
 
 	ErrChan chan error
@@ -185,6 +240,7 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 		privateStateCache: state.NewDatabase(db),
 		remoteDB:          remoteDB,
 		ErrChan:           make(chan error),
+		srCache:           newStatesAndReceiptsCache(bodyCacheLimit),
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
 	bc.SetProcessor(NewStateProcessor(chainConfig, bc, engine, accm))
@@ -1163,6 +1219,48 @@ func (bc *BlockChain) InsertBlock(block *types.Block) (int, error) {
 	return n, err
 }
 
+// ValidateBlockBody validates transactions in a block based on known states
+func (bc *BlockChain) ValidateBlockBody(block *types.Block) error {
+
+	// before validate state, we first validate block body
+	err := bc.Validator().ValidateBody(block)
+	if err != nil {
+		return err
+	}
+
+	// create public and private state databases based on parent block
+	parent := bc.GetBlock(block.ParentHash(), block.NumberU64()-1)
+	pubState, err := state.New(parent.StateRoot(), bc.stateCache)
+	if err != nil {
+		return err
+	}
+	privState, err := state.New(GetPrivateStateRoot(bc.db, parent.StateRoot()), bc.privateStateCache)
+	if err != nil {
+		return err
+	}
+
+	// process transactions in the block and make changes to state DBs.
+	pubReceipts, privReceipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB,
+		bc.vmConfig)
+	if err != nil {
+		return err
+	}
+
+	// validate public state and public receipts
+	// TODO: validate private state?
+	err = bc.Validator().ValidateState(block, parent, pubState, pubReceipts, usedGas)
+	if err != nil {
+		return err
+	}
+
+	log.Debug("succeed to validate block body, caching receipts and states", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
+	// do caches to reduce insertion time later, this is for Validators
+	bc.srCache.add(block.Hash(), pubReceipts, privReceipts, pubState, privState, logs, usedGas)
+
+	return nil
+}
+
 // insertChain will execute the actual chain insertion and event aggregation. The
 // only reason this method exists as a separate one is to make locking cleaner
 // with deferred statements.
@@ -1322,23 +1420,40 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		log.Debug("Now ready to process txs", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
 			len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)), "now", time.Now())
 
-		// NB process block using the parent state as reference point.
-		pubReceipts, privReceipts, logs, usedGas, err := bc.processor.Process(block, pubState, privState, bc.remoteDB,
-			bc.vmConfig)
-		if err != nil {
-			bc.reportBlock(block, pubReceipts, err)
-			return i, events, coalescedLogs, err
+		// read from cache if already called bc.ValidateBlockBody
+		pubReceiptsInCache, privReceiptsInCache, pubStateInCache, privStateInCache, logsInCache, usedGasInCache, ok := bc.srCache.get(block.Hash())
+
+		var pubReceipts, privReceipts []*types.Receipt
+		var logs []*types.Log
+		var usedGas uint64
+
+		if !ok {
+			log.Debug("no state and receipts in cache", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
+			// NB process block using the parent state as reference point.
+			pubReceipts, privReceipts, logs, usedGas, err = bc.processor.Process(block, pubState, privState, bc.remoteDB,
+				bc.vmConfig)
+			if err != nil {
+				bc.reportBlock(block, pubReceipts, err)
+				return i, events, coalescedLogs, err
+			}
+
+			log.Debug("Now finished process, ready to validate state", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
+				len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)), "now", time.Now())
+
+			// Validate the state using the default validator
+			err = bc.Validator().ValidateState(block, parent, pubState, pubReceipts, usedGas)
+			if err != nil {
+				bc.reportBlock(block, pubReceipts, err)
+				return i, events, coalescedLogs, err
+			}
+		} else {
+
+			pubReceipts, privReceipts, pubState, privState, logs, usedGas = pubReceiptsInCache, privReceiptsInCache, pubStateInCache, privStateInCache, logsInCache, usedGasInCache
+
+			log.Debug("read state and receipts from cache", "number", block.NumberU64(), "hash", block.Hash().Hex())
 		}
 
-		log.Debug("Now finished process, ready to validate state", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
-			len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)), "now", time.Now())
-
-		// Validate the state using the default validator
-		err = bc.Validator().ValidateState(block, parent, pubState, pubReceipts, usedGas)
-		if err != nil {
-			bc.reportBlock(block, pubReceipts, err)
-			return i, events, coalescedLogs, err
-		}
 		proctime := time.Since(bstart)
 
 		log.Debug("Now finished validation, ready to write block with state", "number", block.Number(), "hash", block.Hash().Hex(), "txs",
