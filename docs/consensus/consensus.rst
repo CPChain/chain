@@ -424,7 +424,8 @@ The following lemmas holds in LBFT 2.0.
 *There cannot exist two blocks proposed by a same node with the same block number being validated simultaneously.*
 
 **Proof:**
-Assume that a proposer p proposes two distinct blocks b and b', and broadcasts them to validators.
+Assume that a proposer :math:`p` proposes two distinct blocks :math:`b` and :math:`b'`,
+and broadcasts them to validators.
 And to achieve its wicked purpose, f faulty validators collaborate with p.
 Suppose that p fulfill its wicked aim that both b and b' are inserted into the chain.
 Thus, there exists two quorums of validators that endorse b and b' respectively.
