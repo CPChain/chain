@@ -8,11 +8,12 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
-	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
 	cm "bitbucket.org/cpchain/chain/tools/console/common"
 	rm "bitbucket.org/cpchain/chain/tools/reward-admin/common"
 	cc "bitbucket.org/cpchain/chain/tools/utility"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli"
@@ -132,7 +133,9 @@ func (c *Console) SetPeriod() error {
 func (c *Console) StartNewRound() error {
 	c.output.Info("Want Startnewround...")
 	if c.IsLocked() {
-		c.output.Warn("Sorry, the reward contract is locked now.")
+		mark:="Sorry, the reward contract is locked now, to startnewround is failed."
+		log.Info(mark)
+		c.output.Warn(mark)
 		return nil
 	}
 	addr := getContractAddress(configs.ContractReward)
@@ -154,7 +157,9 @@ func (c *Console) StartNewRound() error {
 
 	r, err := bind.WaitMined(context.Background(), c.client, tx)
 	if err != nil {
-		c.output.Error("wait mined failed", "err", err)
+		errmark:="wait mined failed,to startnewround is failed."
+		log.Info(errmark, "err", err)
+		c.output.Error(errmark, "err", err)
 		return err
 	}
 	c.checkNewRoundLockStatus(r, instance)
@@ -171,10 +176,14 @@ func (c *Console) checkNewRoundLockStatus(r *types.Receipt, instance *reward.Rew
 			c.output.Info("Successful")
 
 		} else {
-			c.output.Info("The state of this node should be locked,but it is incorrect.")
+			mark := "The state of this node should be locked,but it is incorrect,to startnewround is failed."
+			c.output.Info(mark)
+			log.Info(mark)
 		}
 	} else {
-		c.output.Info("The StatusReceipt of this transation is not Successful.")
+		mark:="The StatusReceipt of this transation is not Successful,to startnewround is failed."
+		c.output.Info(mark)
+		log.Info(mark)
 	}
 }
 
@@ -195,7 +204,9 @@ func (c *Console) StartNewRaise() error {
 
 	r, err := bind.WaitMined(context.Background(), c.client, tx)
 	if err != nil {
-		c.output.Error("wait mined failed", "err", err)
+		mark:="wait mined failed,to startnewraise is failed."
+		log.Info(mark, "err", err)
+		c.output.Error(mark, "err", err)
 		return err
 	}
 	c.checkNewRaiseLockStatus(r, instance)
@@ -212,10 +223,14 @@ func (c *Console) checkNewRaiseLockStatus(r *types.Receipt, instance *reward.Rew
 		if locked == false {
 			c.output.Info("Successful")
 		} else {
-			c.output.Info("The state of this node should be unlocked,but it is incorrect.")
+			mark:="The state of this node should be unlocked,but it is incorrect,to startnewraise is failed."
+			c.output.Info(mark)
+			log.Info(mark)
 		}
 	} else {
-		c.output.Info("The StatusReceipt of this transation is not Successful.")
+		mark:="The StatusReceipt of this transation is not Successful,to startnewraise is failed."
+		c.output.Info(mark)
+		log.Info(mark)
 	}
 }
 
