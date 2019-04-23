@@ -62,7 +62,7 @@ Before connecting, you must set up a local chain or sync with our Mainnet.
 
 Please check :ref:`quick-start` for more detailed information.
 
-Use the ``auto`` module to :ref:`guess at common node connection options
+Use the ``auto`` module to guess at common node connection options
 <automatic_provider_detection>`.
 
 .. code-block:: python
@@ -563,7 +563,7 @@ Cpc.unlockAccount
 
 
 Cpc.sendTransaction
-++++++++++++++++++
++++++++++++++++++++++
 
 
 
@@ -599,11 +599,7 @@ Cpc.contract
         # alternatively:
         contract = cf.cpc.contract(address='mycontract.cpc', abi=...)
 
-    .. note::
 
-        If you use an ENS name to initialize a contract, the contract will be looked up by
-        name on each use. If the name could ever change maliciously, first
-        :ref:`ens_get_address`, and then create the contract with the hex address.
 
 
     If ``address`` is *not* provided, the newly created contract class will be returned. That
@@ -642,7 +638,6 @@ Cpc.contract
     - ``src_map_runtime``
     - ``user_doc``
 
-    See :doc:`./contracts` for more information about how to use contracts.
 
 .. py:method:: Cpc.setContractFactory(contractFactoryClass)
 
