@@ -15,7 +15,7 @@ Here we list the properties of validators and proposers, as well as the rest nod
     #. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
     #. Except for some abnormal cases, validators may not produce blocks.
     #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
-    #. The size of number is always equaling to 3f+1, where f is the number of byzantine nodes.
+    #. The size of number is always equaling to 3f+1, where :math:`f` is the number of byzantine nodes.
 
 #. **Proposers committee** is a fixed number of elected RNodes for a certain term.
     i. The proposers committee is elected based on reputations of candidates and a random seed.
@@ -60,8 +60,8 @@ that there exist a quorum agree on a prepare message and a commit message respec
         i. Once receives a newly proposed block, a validator in validators committee tries to verify the block.
         #. This `Verification of Blocks`_ process scrutinizes the seal of proposer, timestamp, etc.
         #. If true, this validator broadcast a PREPARE message to other validators; otherwise, it enters Abnormal Case 2 or 3.
-        #. Once receives 2f+1 PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
-        #. Once received 2f+1 COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these 2f+1 validators' signatures to all users.
+        #. Once receives :math:`2f+1` PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
+        #. Once received :math:`2f+1` COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these :math:`2f+1` validators' signatures to all users.
         #. Once a validator receives the VALIDATE message for the first time in a block height, it broadcasts a same message to all nodes.
         #. Any user receives this VALIDATE message with enough signatures, insert the block into local chain
 
@@ -78,7 +78,7 @@ that there exist a quorum agree on a prepare message and a commit message respec
     #. Abnormal Case 3: *The proposer proposes multiple valid blocks*
         i. Each validator can only validate one block for a same block number
         #. Thus, it is impossible for two or more blocks to collect P-certificates simultaneously. Only one block can enter Step 1.b.d
-        #. It is possible that no block receives 2f+1 PREPARE messages
+        #. It is possible that no block receives :math:`2f+1` PREPARE messages
         #. *Impeachment* is activated if a validator cannot collect a P-certificate
     #. Abnormal Case 4: *Some members in the validators committee are faulty*
         #. The system can reach a consensus, as long as the number of total faulty validators is no more than f.
@@ -131,8 +131,8 @@ Impeachment Steps
     #. The *seal* in the header is set to be empty
     #. A penalty on proposer is the only transaction in the block's body
 #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
-#. Once receives f+1 IMPEACH PREPARE messages with same header and body, validator :math:`v` broadcasts an IMPEACH COMMIT message to other validators.
-#. Once receives f+1 IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with f+1 signatures to all users.
+#. Once receives :math:`f+1` IMPEACH PREPARE messages with same header and body, validator :math:`v` broadcasts an IMPEACH COMMIT message to other validators.
+#. Once receives :math:`f+1` IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with :math:`f+1` signatures to all users.
 #. Any validate receives the IMPEACH VALIDATE message for the first time, it inserts the impeach block and broadcasts the same message to all nodes.
 #. All users insert the block into local chain, if they receive an IMPEACH VALIDATE messages.
 
@@ -147,7 +147,7 @@ Three things are noteworthy here.
 
     1. Impeachment only requires two state instead of three in original PBFT.
     #. A validator can endorse a newly proposed block and an impeach block in a block height.
-    #. Only a weak quorum certificate of f+1 members is required in impeachment consensus.
+    #. Only a weak quorum certificate of :math:`f+1` members is required in impeachment consensus.
 
 The absence of an idle state, or pre-prepare state in PBFT, results from the unnecessity of a leader.
 Let's recall the roles of a leader in classic PBFT model.
@@ -162,19 +162,19 @@ However, impeachment does not requires a leader to fulfill above duties, since:
     #. Each block is associated with a unique block number, which circumvents the usage of sequence number.
 
 The second is that a validator can sign two distinct blocks, one is the proposed block and another one is an impeach block.
-Thus, it is possible for some validators obtains 2f+1 PREPARE messages of a newly proposed block,
+Thus, it is possible for some validators obtains :math:`2f+1` PREPARE messages of a newly proposed block,
 while another validators obtain a prepare certificate for the impeach block.
 This scenario occurs only when the proposer is faulty, misbehaves like `Double Spend Attack`_.
 But it does not affects the security of the system.
 Refer to `Double Spend Attack`_ to check detailed proof.
 
 
-The last notable point is that a quorum in normal case consists of 2f+1 members,
-while a quorum in impeachment consists of f+1 members.
-The necessity of 2f+1 in normal case is that in extreme cases,
-there are f faulty nodes send arbitrary messages, we need f+1 more loyal nodes to outnumber faulty counterparts.
+The last notable point is that a quorum in normal case consists of :math:`2f+1` members,
+while a quorum in impeachment consists of :math:`f+1` members.
+The necessity of :math:`2f+1` in normal case is that in extreme cases,
+there are :math:`f` faulty nodes send arbitrary messages, we need :math:`f+1` more loyal nodes to outnumber faulty counterparts.
 In comparison, that even one loyal nodes triggers impeachment indicates a improper behavior of proposer.
-Thus, f+1 impeachment validators suffice a quorum of impeachment.
+Thus, :math:`f+1` impeachment validators suffice a quorum of impeachment.
 
 In addition, impeachment also requires :ref:`echo-validate` similar to normal case handler.
 
@@ -568,7 +568,7 @@ delaying for at least a term.
 
 The validator :math:`v` regards :math:`b_2 as an unknown ancestor block simply because it is delaying
 After receiving :math:`b_2`, the validator :math:`v` records the block in the cache.
-As it is delaying, it is counted as one of f non-responding block.
+As it is delaying, it is counted as one of :math:`f` non-responding block.
 Despite that it receives :math:`b_2`, :math:`v` stays in the block height h,
 and it does not participate in consensus of block height :math:`h_2`
 In other word, it does not broadcasts a prepare message endorsing :math:`b_2`.
@@ -758,7 +758,7 @@ Liveness is also the reason that a validator cannot insist on a P-certificate.
 +---------------------------+------------------------------------+-----------------------------+
 | Aspect                    |           LBFT 2.0                 |         PBFT                |
 +===========================+====================================+=============================+
-| Assumption                | Tolerate at most f faulty          | Tolerate at most f replicas |
+| Assumption                | Tolerate at most :math:`f` faulty          | Tolerate at most :math:`f` replicas |
 |                           | validators and a faulty proposer   |                             |
 +---------------------------+------------------------------------+-----------------------------+
 | Liveness                  | Insert a block within at most      | Response in finite time     |
