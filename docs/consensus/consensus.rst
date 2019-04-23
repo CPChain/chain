@@ -125,13 +125,13 @@ Here we list the steps for an impeachment process.
 Impeachment Steps
 **********************
 
-1. A validator v in the committee generates an impeachment block
+1. A validator :math:`v` in the committee generates an impeachment block
     i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout.
     #. Here previousBlockTimestamp is the timestamp of block proposed in previous block height, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
     #. The *seal* in the header is set to be empty
     #. A penalty on proposer is the only transaction in the block's body
 #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
-#. Once receives f+1 IMPEACH PREPARE messages with same header and body, validator v broadcasts an IMPEACH COMMIT message to other validators.
+#. Once receives f+1 IMPEACH PREPARE messages with same header and body, validator :math:`v` broadcasts an IMPEACH COMMIT message to other validators.
 #. Once receives f+1 IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with f+1 signatures to all users.
 #. Any validate receives the IMPEACH VALIDATE message for the first time, it inserts the impeach block and broadcasts the same message to all nodes.
 #. All users insert the block into local chain, if they receive an IMPEACH VALIDATE messages.
@@ -429,7 +429,7 @@ Assume that a proposer :math:`p` proposes two distinct blocks :math:`b` and :mat
 and broadcasts them to validators.
 And to achieve its wicked purpose, :math:`f` faulty validators collaborate with :math:`p`.
 Suppose that :math:`p` fulfill its wicked aim that both :math:`b` and :math:`b'` are inserted into the chain.
-Thus, there exists two quorums of validators that endorse b and b' respectively.
+Thus, there exists two quorums of validators that endorse :math:`b` and :math:`b'` respectively.
 Since only :math:`3f+1` members in the committee, these two quorums have :math:`f+1` members in common.
 Except for :math:`f` faulty validators can be members of both quorums,
 there still exits one validator signs both :math:`b` and :math:`b'`.
@@ -440,7 +440,7 @@ Hence, there cannot be two proposed blocks are both legit.
 
 
 In contrast to the fact that each validator only signs one proposed block, a validator can sign an
-impeach block even if it has signed a block from p given that it cannot collect a certificate on time.
+impeach block even if it has signed a block from :math:`p` given that it cannot collect a certificate on time.
 Then is that possible for a proposer takes advantages of this mechanism to makes its proposed block
 :math:`b` and an impeach block :math:`b'` both legit simultaneously?
 The answer is no. Here we lists two lemmas and shows their correctness.
@@ -546,8 +546,9 @@ The name comes from the fact that the predecessor of this block is yet unknown i
 Four Scenarios
 #################
 
-Suppose a validator v which is processing a block b in block height h,
-and receives an unknown ancestor block b\ :sub:`2`\   with block height h\ :sub:`2`\   from a node p\ :sub:`2`\ .
+Suppose a validator :math:`v` which is processing a block :math:`b` in block height :math:`h`,
+and receives an unknown ancestor block :math:`b_2`
+with block height :math:`h_2` from a node :math:`p_2`.
 There are following possible scenarios:
 
 1. The block is proposed by a legit proposer at the correct time; the validator is delaying.
@@ -555,39 +556,40 @@ There are following possible scenarios:
 #. The block is proposed by a faulty node.
 #. The validator is lagging behind for at least one term, and cannot verify whether the proposer is legit.
 
-Here the word *legit* indicates that p is an incumbent proposer from the committee in the current term,
-having been recognized by v.
+Here the word *legit* indicates that :math:`p` is an incumbent proposer from the committee in the current term,
+having been recognized by :math:`v`.
 When a proposers committee is elected, each validator receives a list of all elected candidates as
 well as the corresponding block heights to propose their blocks.
 Thus, a validator has a priori knowledge on all legit proposers in this term, unless the proposer is
 delaying for at least a term.
 
 
-**First scenario:** b\ :sub:`2`\   actually is not an unknown ancestor block.
+**First scenario:** :math:`b_2` actually is not an unknown ancestor block.
 
-The validator v regards b\ :sub:`2`\   as an unknown ancestor block simply because it is delaying
-After receiving b\ :sub:`2`\ , the validator v records the block in the cache.
+The validator :math:`v` regards :math:`b_2 as an unknown ancestor block simply because it is delaying
+After receiving :math:`b_2`, the validator :math:`v` records the block in the cache.
 As it is delaying, it is counted as one of f non-responding block.
-Despite that it receives b\ :sub:`2`\ , v stays in the block height h,
-and it does not participate in consensus of block height h\ :sub:`2`\
-In other word, it does not broadcasts a prepare message endorsing b\ :sub:`2`\ .
-Other members in the validators committee suffice a quorum to complete the consensus process on b\ :sub:`2`\   without v's participation.
+Despite that it receives :math:`b_2`, :math:`v` stays in the block height h,
+and it does not participate in consensus of block height :math:`h_2`
+In other word, it does not broadcasts a prepare message endorsing :math:`b_2`.
+Other members in the validators committee suffice a quorum to 
+complete the consensus process on :math:`b_2` without v's participation.
 v is going to catch up with the schedule after it receives the validate message from other committee members,
 or by :ref:`recovery`.
 
-**Second scenario:** p\ :sub:`2`\   behaves faultily.
+**Second scenario:** :math:`p_2`   behaves faultily.
 
-Similar to the first scenario, v records it in the cache without signing it.
+Similar to the first scenario, :math:`v` records it in the cache without signing it.
 A quorum can still complete the consensus on b.
-When it comes to the correct block height of p\ :sub:`2`\ , if p\ :sub:`2`\   proposes the block again,
+When it comes to the correct block height of :math:`p_2` , if :math:`p_2`   proposes the block again,
 then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
 
-**Third and fourth scenario:** v cannot recognize p\ :sub:`2`\   as a proposer.
+**Third and fourth scenario:** :math:`v` cannot recognize :math:`p_2`   as a proposer.
 
-It can due to either b\ :sub:`2`\   is faulty (scenario 3) and v is delaying (scenario 4).
-In both scenarios, v is going to sync, determining if it is delaying.
-For the third scenario, v rejects b\ :sub:`2`\   and added v into blacklist.
+It can due to either :math:`b_2`   is faulty (scenario 3) and :math:`v` is delaying (scenario 4).
+In both scenarios, :math:`v` is going to sync, determining if it is delaying.
+For the third scenario, :math:`v` rejects :math:`b_2`   and added :math:`v` into blacklist.
 For the fourth one, it acts same as the first scenario.
 
 Here comes another concern.
@@ -605,18 +607,18 @@ Pseudocode
 
         func unknownAncestorBlockHandler(b2) {
             // v: a validator
-            // b: the block v is processing
+            // b: the block :math:`v` is processing
             // h: b’s block height
             // b2: a future block proposed by p2 with block height h2
             if h2<=h {
                 return
             }
-            if v knows p2 is a legit proposer {
-                v stores b2 in the cache
-                v continue processing b
+            if :math:`v` knows p2 is a legit proposer {
+                :math:`v` stores b2 in the cache
+                :math:`v` continue processing b
             }
-            if v has not synced for 10*|P| seconds {
-                sync()  // v synchronizes with the committee
+            if :math:`v` has not synced for 10*|P| seconds {
+                sync()  // :math:`v` synchronizes with the committee
                 unknownAncestorBlockHandler(b2)
             } else {
                 punish p2
@@ -639,15 +641,15 @@ Despite that timestamp does not play an important role in our consensus,
 it is an important attribute of a block.
 In fact, timestamp is one of factors verifying a block.
 
-A validator v regards a block b as a future one, if the following two conditions are met:
+A validator :math:`v` regards a block :math:`b` as a future one, if the following two conditions are met:
 
-    1. The timestamp of b is larger than the one of v;
-    #. The block height of b is same as v.
+    1. The timestamp of :math:`b` is larger than the one of v;
+    #. The block height of :math:`b` is same as v.
 
-Similarly, a block b' is considered a past block if
+Similarly, a block :math:`b'` is considered a past block if
 
-    1. The timestamp of b' is smaller than previousBlockTimestamp+period;
-    #. The block height of b' is same as v,
+    1. The timestamp of :math:`b'` is smaller than previousBlockTimestamp+period;
+    #. The block height of :math:`b'` is same as v,
 
 where previousBlockTimestamp is the timestamp of previous block,
 and period is the time interval between two consecutive blocks.
@@ -674,7 +676,7 @@ Thus, we come up with a pseudocode for timestamp verification.
             select{
                 case <-Time.after(tb)
                     return true
-                case <-quit //quit is true if v triggers impeachment
+                case <-quit //quit is true if :math:`v` triggers impeachment
                     return false
             }
         }
@@ -693,10 +695,10 @@ indicating the broadcast delay of a block.
 By setting it to 2.5 seconds, a validator has sufficient time for consensus process.
 
 
-Let b be a block with timestamp tb written in its header.
-The proposer should broadcast b at timestamp tb.
+Let :math:`b` be a block with timestamp tb written in its header.
+The proposer should broadcast :math:`b` at timestamp tb.
 As stated in previous chapter, tb is usually set to previousBlockTimestamp+period.
-A validator invokes its normal case handler if it receives b before previousBlockTimestamp+period+2.5.
+A validator invokes its normal case handler if it receives :math:`b` before previousBlockTimestamp+period+2.5.
 and rejects this block otherwise.
 The pseudocode below demonstrates this process.
 
@@ -705,7 +707,7 @@ The pseudocode below demonstrates this process.
 
         func receivingTimeVerification(b) bool {
             // v: a validator
-            // t: timestamp of v when receiving b
+            // t: timestamp of :math:`v` when receiving b
             // b: a block
             blockDelay := 2.5 * time.Minute
             if t > previousBlockTimestamp+period+blockDelay{
