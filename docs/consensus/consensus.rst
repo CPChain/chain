@@ -15,7 +15,7 @@ Here we list the properties of validators and proposers, as well as the rest nod
     #. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
     #. Except for some abnormal cases, validators may not produce blocks.
     #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
-    #. The size of number is always equaling to 3f+1, where :math:`f` is the number of byzantine nodes.
+    #. The size of number is always equaling to :math:`3f+1`, where :math:`f` is the number of byzantine nodes.
 
 #. **Proposers committee** is a fixed number of elected RNodes for a certain term.
     i. The proposers committee is elected based on reputations of candidates and a random seed.
@@ -566,15 +566,16 @@ delaying for at least a term.
 
 **First scenario:** :math:`b_2` actually is not an unknown ancestor block.
 
-The validator :math:`v` regards :math:`b_2 as an unknown ancestor block simply because it is delaying
+The validator :math:`v` regards :math:`b_2` as an unknown ancestor block simply because it is delaying.
 After receiving :math:`b_2`, the validator :math:`v` records the block in the cache.
-As it is delaying, it is counted as one of :math:`f` non-responding block.
+As it is delaying, it is counted as one of :math:`f` non-responding validators.
+
 Despite that it receives :math:`b_2`, :math:`v` stays in the block height h,
 and it does not participate in consensus of block height :math:`h_2`
 In other word, it does not broadcasts a prepare message endorsing :math:`b_2`.
 Other members in the validators committee suffice a quorum to 
-complete the consensus process on :math:`b_2` without v's participation.
-v is going to catch up with the schedule after it receives the validate message from other committee members,
+complete the consensus process on :math:`b_2` without :math:`v`'s participation.
+:math:`v` is going to catch up with the schedule after it receives the validate message from other committee members,
 or by :ref:`recovery`.
 
 **Second scenario:** :math:`p_2`   behaves faultily.
@@ -583,11 +584,11 @@ Similar to the first scenario, :math:`v` records it in the cache without signing
 A quorum can still complete the consensus on b.
 When it comes to the correct block height of :math:`p_2` , if :math:`p_2`   proposes the block again,
 then it is going to be processed normally.
-Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
+Otherwise, the timer of a quorum of validators (including :math:`v`) will expire and enter impeach process.
 
 **Third and fourth scenario:** :math:`v` cannot recognize :math:`p_2`   as a proposer.
 
-It can due to either :math:`b_2`   is faulty (scenario 3) and :math:`v` is delaying (scenario 4).
+It can due to either :math:`b_2` is faulty (scenario 3) and :math:`v` is delaying (scenario 4).
 In both scenarios, :math:`v` is going to sync, determining if it is delaying.
 For the third scenario, :math:`v` rejects :math:`b_2`   and added :math:`v` into blacklist.
 For the fourth one, it acts same as the first scenario.
@@ -607,18 +608,18 @@ Pseudocode
 
         func unknownAncestorBlockHandler(b2) {
             // v: a validator
-            // b: the block :math:`v` is processing
+            // b: the block v is processing
             // h: b’s block height
             // b2: a future block proposed by p2 with block height h2
             if h2<=h {
                 return
             }
-            if :math:`v` knows p2 is a legit proposer {
-                :math:`v` stores b2 in the cache
-                :math:`v` continue processing b
+            if v knows p2 is a legit proposer {
+                v stores b2 in the cache
+                v continue processing b
             }
-            if :math:`v` has not synced for 10*|P| seconds {
-                sync()  // :math:`v` synchronizes with the committee
+            if v has not synced for 10*|P| seconds {
+                sync()  // v synchronizes with the committee
                 unknownAncestorBlockHandler(b2)
             } else {
                 punish p2
@@ -676,7 +677,7 @@ Thus, we come up with a pseudocode for timestamp verification.
             select{
                 case <-Time.after(tb)
                     return true
-                case <-quit //quit is true if :math:`v` triggers impeachment
+                case <-quit // quit is true if v triggers impeachment
                     return false
             }
         }
@@ -707,7 +708,7 @@ The pseudocode below demonstrates this process.
 
         func receivingTimeVerification(b) bool {
             // v: a validator
-            // t: timestamp of :math:`v` when receiving b
+            // t: timestamp of v when receiving b
             // b: a block
             blockDelay := 2.5 * time.Minute
             if t > previousBlockTimestamp+period+blockDelay{
@@ -758,8 +759,8 @@ Liveness is also the reason that a validator cannot insist on a P-certificate.
 +---------------------------+------------------------------------+-----------------------------+
 | Aspect                    |           LBFT 2.0                 |         PBFT                |
 +===========================+====================================+=============================+
-| Assumption                | Tolerate at most :math:`f` faulty          | Tolerate at most :math:`f` replicas |
-|                           | validators and a faulty proposer   |                             |
+| Assumption                | Tolerate at most :math:`f` faulty  | Tolerate at most            |
+|                           | validators and a faulty proposer   | :math:`f` replicas          |
 +---------------------------+------------------------------------+-----------------------------+
 | Liveness                  | Insert a block within at most      | Response in finite time     |
 |                           | period+timeout (20 seconds)        |                             |
