@@ -39,15 +39,16 @@ Normal and Abnormal Cases Handler
 
 
 Before we dive into explaining case handler, let us introduce an important concept **quorum**.
-A quorum is a subset of validators committee members such that a consensus can be reached among a quorum in a certain state.
-These quorum have two vital properties:
+A quorum is a subset of validators committee members such that
+a consensus can be reached among this quorum in a certain state.
+These quorums have two vital properties:
 
 1. Intersection: any two quorums have at least one loyal validator in common.
 #. Availability: there is always a quorum available with no faulty validator.
 
 When members in a quorum endorse information from a same block, they collect a *quorum certificate*.
 There are two certificates, prepare certificate (P-certificate) and commit certificate (C-certificate), which indicates
-that there exist a quorum agree on a prepare message and a commit message respectively.
+that there exist a quorum agreeing on a prepare message and a commit message respectively.
 
 
 
@@ -69,8 +70,8 @@ that there exist a quorum agree on a prepare message and a commit message respec
 #. **Abnormal Cases**
     a. Abnormal Case 1: *A validator does not receive a block from the proposer:*
         i. It is for the case when Step 1.b.a cannot be reached
-        #. Let the previousBlockTimestamp be the timestamp of block proposed in previous block height, and period is the minimum interval between two blocks.
-        #. A timer is set up when reaching the timestamp of previousBlockTimestamp+period.
+        #. Let the :math:`previousBlockTimestamp` be the timestamp of block proposed in previous block height, and period is the minimum interval between two blocks.
+        #. A timer is set up when reaching the timestamp of :math:`previousBlockTimestamp+period`.
         #. If the timer expires, the validators committee activates *impeachment*, a two-phase protocol in PBFT manner to propose an impeach block on behalf of the faulty proposer.
     #. Abnormal Case 2: *The proposer proposes one or more faulty blocks*
         i. Faulty blocks cannot be verified in Step 1.b.b and 1.b.c
@@ -126,8 +127,8 @@ Impeachment Steps
 **********************
 
 1. A validator :math:`v` in the committee generates an impeachment block
-    i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout.
-    #. Here previousBlockTimestamp is the timestamp of block proposed in previous block height, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
+    i. In the header of this block, the *timestamp* is set to be :math:`previousBlockTimestamp+period+timeout`.
+    #. Here :math:`previousBlockTimestamp` is the timestamp of block proposed in previous block height, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
     #. The *seal* in the header is set to be empty
     #. A penalty on proposer is the only transaction in the block's body
 #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
@@ -581,7 +582,7 @@ or by :ref:`recovery`.
 **Second scenario:** :math:`p_2`   behaves faultily.
 
 Similar to the first scenario, :math:`v` records it in the cache without signing it.
-A quorum can still complete the consensus on b.
+A quorum can still complete the consensus on :math:`b`.
 When it comes to the correct block height of :math:`p_2` , if :math:`p_2`   proposes the block again,
 then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including :math:`v`) will expire and enter impeach process.
@@ -590,7 +591,7 @@ Otherwise, the timer of a quorum of validators (including :math:`v`) will expire
 
 It can due to either :math:`b_2` is faulty (scenario 3) and :math:`v` is delaying (scenario 4).
 In both scenarios, :math:`v` is going to sync, determining if it is delaying.
-For the third scenario, :math:`v` rejects :math:`b_2`   and added :math:`v` into blacklist.
+For the third scenario, :math:`v` rejects :math:`b_2`   and adds :math:`p_2` into blacklist.
 For the fourth one, it acts same as the first scenario.
 
 Here comes another concern.
@@ -649,10 +650,10 @@ A validator :math:`v` regards a block :math:`b` as a future one, if the followin
 
 Similarly, a block :math:`b'` is considered a past block if
 
-    1. The timestamp of :math:`b'` is smaller than previousBlockTimestamp+period;
+    1. The timestamp of :math:`b'` is smaller than :math:`previousBlockTimestamp+period`;
     #. The block height of :math:`b'` is same as v,
 
-where previousBlockTimestamp is the timestamp of previous block,
+where :math:`previousBlockTimestamp` is the timestamp of previous block,
 and period is the time interval between two consecutive blocks.
 
 Do not confuse future block with the concept of unknown ancestor block.
@@ -661,7 +662,7 @@ but are processed as an unknown ancestor one instead of a future block.
 
 For past block, a validator fails in verifying it and triggers impeachment.
 For a future block, the validator wait until the timestamp of the block.
-But if it is larger than previousBlockTimestamp+period+timeout,
+But if it is larger than :math:`previousBlockTimestamp+period+timeout`,
 an impeachment is about to take place.
 Thus, we come up with a pseudocode for timestamp verification.
 
@@ -698,8 +699,8 @@ By setting it to 2.5 seconds, a validator has sufficient time for consensus proc
 
 Let :math:`b` be a block with timestamp tb written in its header.
 The proposer should broadcast :math:`b` at timestamp tb.
-As stated in previous chapter, tb is usually set to previousBlockTimestamp+period.
-A validator invokes its normal case handler if it receives :math:`b` before previousBlockTimestamp+period+2.5.
+As stated in previous chapter, tb is usually set to :math:`previousBlockTimestamp+period`.
+A validator invokes its normal case handler if it receives :math:`b` before :math:`previousBlockTimestamp+period+2.5`.
 and rejects this block otherwise.
 The pseudocode below demonstrates this process.
 
