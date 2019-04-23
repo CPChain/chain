@@ -359,8 +359,8 @@ Once a civilian receives a block, it first checks
 
     1. Whether the block is from validators;
     #. If there are enough distinct signatures in ``Sigs``,
-        i. at least f+1 for impeach block,
-        #. at least 2f+1 for normal block,
+        i. at least :math:`f+1` for impeach block,
+        #. at least :math:`2f+1` for normal block,
 
 If both criteria pass, it is a validated block and can be inserted in to the chain.
 
@@ -378,8 +378,8 @@ It first checks if the block is validated:
 
     1. Whether the block is from validators;
     #. If there are enough distinct signatures,
-        i. at least f+1 for impeach block.
-        #. at least 2f+1 for normal block.
+        i. at least :math:`f+1` for impeach block.
+        #. at least :math:`2f+1` for normal block.
 
 
 Then,
@@ -402,7 +402,8 @@ and confirms its position to propose its block.
 Countermeasures for Illicit Actions
 ------------------------------------------
 
-Illicit actions refer any messages or blocks sending to a validator that cannot be processed in this validator's normal cases.
+Illicit actions refer any messages or blocks sending to
+a validator that cannot be processed in this validator's normal cases.
 From validators' perspective, Illicit actions falls into the following categories:
 
 1. Double spend attack from the proposer
@@ -426,12 +427,12 @@ The following lemmas holds in LBFT 2.0.
 **Proof:**
 Assume that a proposer :math:`p` proposes two distinct blocks :math:`b` and :math:`b'`,
 and broadcasts them to validators.
-And to achieve its wicked purpose, f faulty validators collaborate with p.
-Suppose that p fulfill its wicked aim that both b and b' are inserted into the chain.
+And to achieve its wicked purpose, :math:`f` faulty validators collaborate with :math:`p`.
+Suppose that :math:`p` fulfill its wicked aim that both :math:`b` and :math:`b'` are inserted into the chain.
 Thus, there exists two quorums of validators that endorse b and b' respectively.
-Since only 3f+1 members in the committee, these two quorums have f+1 members in common.
-Except for f faulty validators can be members of both quorums,
-there still exits one validator signs both b and b'.
+Since only :math:`3f+1` members in the committee, these two quorums have :math:`f+1` members in common.
+Except for :math:`f` faulty validators can be members of both quorums,
+there still exits one validator signs both :math:`b` and :math:`b'`.
 It contracts the fact that each loyal validator only sign one block.
 Hence, there cannot be two proposed blocks are both legit.
 **Q.E.D.**
@@ -441,81 +442,83 @@ Hence, there cannot be two proposed blocks are both legit.
 In contrast to the fact that each validator only signs one proposed block, a validator can sign an
 impeach block even if it has signed a block from p given that it cannot collect a certificate on time.
 Then is that possible for a proposer takes advantages of this mechanism to makes its proposed block
-b and an impeach block b' both legit simultaneously?
+:math:`b` and an impeach block :math:`b'` both legit simultaneously?
 The answer is no. Here we lists two lemmas and shows their correctness.
 
 **Observation 1:**
-*It is possible that both a block b proposed from a proposer p and an impeach block b' suffice
-a prepare certificate simultaneously.*
+*It is possible that both a block* :math:`b` *proposed from a proposer* :math:`p`
+*and an impeach block* :math:`b'` *suffice a prepare certificate simultaneously.*
 
 
 
 **Proof:**
 As we know the certificate of impeach block and normal block
 requires different size of quorum respectively.
-Let's name the normal quorum of 2f+1 validators as strong quorum,
+Let's name the normal quorum of :math:`2f+1` validators as strong quorum,
 and its corresponding certificate as strong certificate.
 Similarly, the impeach quorum and certificate are denoted
 by weak quorum and week certificate respectively.
 
-Observation 1 indicates that one quorum endorses b while another one endorse b'.
-It is possible that if a loyal validator v1 signs b then broadcasts its prepare messages,
+Observation 1 indicates that one quorum endorses :math:`b` while another one endorse :math:`b'`.
+It is possible that if a loyal validator :math:`v_1` signs
+:math:`b` then broadcasts its prepare messages,
 but its receiver is blocked such that it later proposes an impeach block.
-Combining f faulty validators, two quorums are made up.
+Combining :math:`f` faulty validators, two quorums are made up.
 **Q.E.D**
 
 
 **Observation 2:**
-*It is impossible that both a block b proposed from a proposer p and an impeach block b' suffice
-a commit certificate simultaneously*
+*It is impossible that both a block* :math:`b`
+*proposed from a proposer* :math:`p` *and an impeach block* :math:`b'`
+*suffice a commit certificate simultaneously.*
 
 
 **Proof:**
 Observation 2 ensures the safety of our consensus system.
-Once v1 proposes an impeach block b',
-it can no longer send out b’s commit message even if it collects a prepare certificate for b.
+Once :math:`v_1` proposes an impeach block :math:`b'`,
+it can no longer send out :math:`b`'s commit message even if it collects a prepare certificate for :math:`b`.
 The state transmission of a validator is illustrated in the :ref:`Implementation`.
 Once a validator enters either impeach prepare or impeach commit phase, it no
 long signs a normal block.
 
 To suffice a weak quorum for impeach commit certificate,
-there must be at least a loyal validator, say v1, agreeing on impeach block instead of normal one.
+there must be at least a loyal validator, say :math:`v_1`, agreeing on impeach block instead of normal one.
 This validator assures the legality of this impeach block.
 
 As stated in :ref:`Transitivity`,
-v1 can transmit the its impeach prepare certificate to other loyal validators.
+:math:`v_1` can transmit the its impeach prepare certificate to other loyal validators.
 Thus, these loyal validators in commit state will transit to impeach commit state
-and abandon its prepare certificate for b,
+and abandon its prepare certificate for :math:`b`,
 which assures that a strong commit certificate and a weak certificate cannot be
 obtained simultaneously.
 **Q.E.D.**
 
 
 **Observation 3:**
-*Under the parameter setting of LBFT 2.0,
-It is impossible that both a block b proposed from a proposer p and an impeach block b'
-get validate message in one block height*
+*Under the parameter setting of LBFT 2.0, It is impossible that both a block*
+:math:`b` *proposed from a proposer* :math:`p` *and an impeach block* :math:`b'`
+*get validate message in one block height.*
 
 **Proof:**
 Observation 2 has a glitch in an edge case.
-If v1 firstly delivers its impeach commit message to f faulty validators then loses connection,
+If :math:`v_1` firstly delivers its impeach commit message to :math:`f` faulty validators then loses connection,
 a weak quorum suffices while the strong quorum for commit certificate has
-not clue about v1's impeach prepare certificate.
+not clue about :math:`v_1`'s impeach prepare certificate.
 Despite of the fact that a validator sends out message to all its peers in a random order,
 the chance of this situation is not zero.
 
 However, in LBFT 2.0 timeout is set to be 10 seconds,
 same as the period of a normal case.
-Before the timer of v1 expires,
-the strong quorum has collected a prepare certificate of block b
-and get v1 transited to prepare state.
+Before the timer of :math:`v_1` expires,
+the strong quorum has collected a prepare certificate of block :math:`b`
+and get :math:`v_1` transited to prepare state.
 **Q.E.D**
 
 
 Observation 2 and 3 lead to the following lemma:
 
 **Lemma 2:**
-*A proposed block and an impeach block cannot be validated in same block height.*
+*A proposed block and an impeach block cannot be validated in a same block height.*
 
 **Proof:**
 According to Observation 2 and 3,
