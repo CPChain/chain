@@ -633,6 +633,7 @@ outnumber one third, and finally degrade superior safety of LBFT 2.0.
 It motivates us to develop a sophisticated recovery mechanism, such that a delaying validator can catch up others.
 
 Delaying validators are categorized into two different types according to how far behind they are:
+
 1. The block height of delaying validator is same as the functioning validators
 2. The validator delaying for at least a block height.
 
