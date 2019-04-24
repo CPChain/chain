@@ -1,15 +1,15 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	"math/big"
-	"os"
 	"text/template"
 
+	"github.com/urfave/cli"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/reward-admin/common"
-	"github.com/urfave/cli"
 )
 
 var statusCommand cli.Command

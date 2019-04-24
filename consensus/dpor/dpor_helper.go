@@ -52,7 +52,18 @@ type defaultDporHelper struct {
 
 // validateBlock checks basic fields in a block
 func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error {
-	return dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), verifySigs, verifyProposers)
+	// verify the block header according to Dpor Protocol
+	if err := dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), verifySigs, verifyProposers); err != nil {
+		return err
+	}
+
+	// validate transactions in the block
+	if err := chain.ValidateBlockBody(block); err != nil {
+		return err
+	}
+
+	// all is well!
+	return nil
 }
 
 // verifyHeader checks whether a header conforms to the consensus rules.The
@@ -350,14 +361,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	log.Debug("known chain head", "number", headNumber)
 
 	if rptBackend != nil {
-		var windowSize = uint64(0)
-		if snap.isStartElection() {
-			windowSize, _ = rptBackend.WindowSize()
-			log.Debug("rpt window size", "window size", windowSize, "snap.number", snap.number(), "head", headNumber)
-		}
 		timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
-		rptCalculateRange := int(windowSize*2 + dpor.ViewLength()*dpor.TermLength()*(TermDistBetweenElectionAndMining+2))
-		startBlockNumberOfRptCalculate := float64(int(headNumber) - rptCalculateRange)
+		startBlockNumberOfRptCalculate := float64(int(headNumber) - configs.DefaultFullSyncPivot)
 		timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
 		timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
 	}

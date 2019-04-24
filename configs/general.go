@@ -75,6 +75,11 @@ const (
 	DefaultFailbackTimestampSampleSpace = 2 * time.Minute
 )
 
+// DefaultFullSyncPivot is a number that full sync is triggered from it. (head - DefaultFullSyncPivot)
+const (
+	DefaultFullSyncPivot = 1024
+)
+
 const (
 	DefaultGasLimitPerBlock = 100000000
 )

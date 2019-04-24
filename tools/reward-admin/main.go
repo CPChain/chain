@@ -29,6 +29,7 @@ func newApp() *cli.App {
 	app.Action = cli.ShowAppHelp
 
 	app.Commands = []cli.Command{
+		autocampaignCommand,
 		startnewroundCommand,
 		startnewraiseCommand,
 		statusCommand,

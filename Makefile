@@ -122,7 +122,7 @@ cpchain-cross: cpchain-linux cpchain-darwin cpchain-windows
 	@ls -ld $(GOBIN)/cpchain-*
 
 #cpchain-linux: cpchain-linux-386 cpchain-linux-amd64 cpchain-linux-arm cpchain-linux-mips64 cpchain-linux-mips64le
-cpchain-linux: cpchain-linux-386 cpchain-linux-amd64
+cpchain-linux: cpchain-linux-386 cpchain-linux-amd64 console-linux-386 console-linux-amd64
 	@echo "Linux cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-linux-*
 
@@ -135,6 +135,16 @@ cpchain-linux-amd64:
 	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=linux/amd64 -v ./cmd/cpchain
 	@echo "Linux amd64 cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-linux-* | grep amd64
+
+console-linux-386:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=linux/386 -v ./tools/console
+	@echo "Linux 386 cross compilation done:"
+	@ls -ld $(GOBIN)/console-linux-* | grep 386
+
+console-linux-amd64:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=linux/amd64 -v ./tools/console
+	@echo "Linux amd64 cross compilation done:"
+	@ls -ld $(GOBIN)/console-linux-* | grep amd64
 
 cpchain-linux-arm: cpchain-linux-arm-5 cpchain-linux-arm-6 cpchain-linux-arm-7 cpchain-linux-arm64
 	@echo "Linux ARM cross compilation done:"
@@ -180,7 +190,7 @@ cpchain-linux-mips64le:
 	@echo "Linux MIPS64le cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-linux-* | grep mips64le
 
-cpchain-darwin: cpchain-darwin-386 cpchain-darwin-amd64
+cpchain-darwin: cpchain-darwin-386 cpchain-darwin-amd64 console-darwin-386 console-darwin-amd64
 	@echo "Darwin cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-darwin-*
 
@@ -194,7 +204,17 @@ cpchain-darwin-amd64:
 	@echo "Darwin amd64 cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-darwin-* | grep amd64
 
-cpchain-windows: cpchain-windows-386 cpchain-windows-amd64
+console-darwin-386:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=darwin/386 -v ./tools/console
+	@echo "Darwin 386 cross compilation done:"
+	@ls -ld $(GOBIN)/console-darwin-* | grep 386
+
+console-darwin-amd64:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=darwin/amd64 -v ./tools/console
+	@echo "Darwin amd64 cross compilation done:"
+	@ls -ld $(GOBIN)/console-darwin-* | grep amd64
+
+cpchain-windows: cpchain-windows-386 cpchain-windows-amd64 console-windows-386 console-windows-amd64
 	@echo "Windows cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-windows-*
 
@@ -207,6 +227,16 @@ cpchain-windows-amd64:
 	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=windows/amd64 -v ./cmd/cpchain
 	@echo "Windows amd64 cross compilation done:"
 	@ls -ld $(GOBIN)/cpchain-windows-* | grep amd64
+
+console-windows-386:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=windows/386 -v ./tools/console
+	@echo "Windows 386 cross compilation done:"
+	@ls -ld $(GOBIN)/console-windows-* | grep 386
+
+console-windows-amd64:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=windows/amd64 -v ./tools/console
+	@echo "Windows amd64 cross compilation done:"
+	@ls -ld $(GOBIN)/console-windows-* | grep amd64
 
 # invoke make test inside docker
 dev-test:
