@@ -134,28 +134,28 @@ Utilities
 
         // determine whether a quorum certificate is sufficed
         func prepareCertificate(input) bool{
-            if (len(prepareSignatures[header]) >= :math:`2f+1`) {
+            if (len(prepareSignatures[header]) >= 2f+1) {
                 return true
             }
             return false
         }
 
         func commitCertificate(input) bool{
-            if (len(commitSignatures[header]) >= :math:`2f+1`) {
+            if (len(commitSignatures[header]) >= 2f+1) {
                 return true
             }
             return false
         }
 
         func impeachPrepareCertificate(input) bool {
-            if (len(prepareSignatures[header]) >= :math:`f+1`) {
+            if (len(prepareSignatures[header]) >= f+1) {
                 return true
             }
             return false
         }
 
         func impeachCommitCertificate(input) bool {
-            if (len(commitSignatures[header]) >= :math:`f+1`) {
+            if (len(commitSignatures[header]) >= f+1) {
                 return true
             }
             return false
@@ -520,7 +520,8 @@ An example of ``func prepareHandler()`` is demonstrated below.
 When a validator suffices a prepare certificate,
 it does not only broadcast the commit message with its signature,
 it but also sends out the prepare certificate it just collects.
-The essence of a prepare certificate is :math:`2f+1` (f+1) prepare signatures (impeach prepare signatures).
+The essence of a prepare certificate is :math:`2f+1` prepare signatures
+(or :math:`f+1` impeach prepare signatures).
 Thus, by sending out the broadcast a prepare message with all signatures it collects,
 other validators can obtain the certificate.
 
@@ -544,8 +545,8 @@ Echo of validates message refers to a mechanism in implementation that
 a validator echoes a validate message when it receives it for the first time.
 A validator does not insert a block, no matter a normal or impeach one,
 until it receives a validate message.
-This statement is valid even if a validator v sends out a validate message itself.
-Validator v can only insert the block after it hears the echo from other validators.
+This statement is valid even if a validator :math:`v` sends out a validate message itself.
+Validator :math:`v` can only insert the block after it hears the echo from other validators.
 
 The reason of introducing echo is to get rid of depending on one single validator broadcasting a validate message.
 In an edge case, a validate can lose its connection while broadcasting a validate message.
@@ -677,12 +678,14 @@ At the cost of larger space consumption for each message, we increase the robust
 Extra-block Recovery
 *************************
 
-If intra-block recovery does not work for a validator v and the block height of v is same as the chain,
+If intra-block recovery does not work for a validator :math:`v`
+and the block height of :math:`v` is same as the chain,
 it is about to catch up other validators once it receives a validate message.
-As demonstrated in :ref:`LBFT-2-Pseudocode`, validate message (as well as impeach validate mesage) has highest priority,
-which forwards v to idle state of next height regardless of the state of v.
+As demonstrated in :ref:`LBFT-2-Pseudocode`, validate message
+(as well as impeach validate message) has highest priority,
+which forwards :math:`v` to idle state of next height regardless of the state of :math:`v`.
 
-However, if v has been losing its connection for a long time, it should invoke *sync* function.
+However, if :math:`v` has been losing its connection for a long time, it should invoke *sync* function.
 Sync function, as indicated by the name, synchronizes with Mainnet chain.
 Then it can rejoin consensus process after receiving validate message of the current height.
 The function is called a validator suspects it is delaying like receiving :ref:`unknown-ancestor-block`.
@@ -716,7 +719,8 @@ From the proposer's perspective, it has no clue when the validation system can r
 Thus, the first block right after the reboot of validators, must be an impeach block to regain liveness.
 
 As we described in :ref:`impeachment`, the timestamp of an impeach block is determined by previous block.
-In the scenario of failback, we cannot use the equation previousBlockTimestamp+period+timeout to calculate the timestamp,
+In the scenario of failback, we cannot use the equation
+:math:`previousBlockTimestamp+period+timeout` to calculate the timestamp,
 since this timestamp is out of date.
 It motivates us to design a mechanism to reach a consensus on the issue of timestamp
 among validators whose local clocks are not consistent.
@@ -735,37 +739,37 @@ Preliminaries
 **********************
 
 
-Let t\ :sub:`i`\   be the local clock of validator v\ :sub:`i`\   .
+Let :math:`t_i` be the local clock of validator :math:`v_i`.
 Except for assumptions of LBFT 2.0, several more assumptions are required for failback procedure.
-There exist a timestamp T larger than 0 satisfying following assumptions:
+There exist a timestamp :math:`T` larger than 0 satisfying following assumptions:
 
-    1. The local clocks of all loyal validators (at least :math:`2f+1`) are within an interval of T.
-    #. Maximum possible delay of broadcasting messages is less than T/2.
-    #. All validators restarts within a time window of T/2.
+    1. The local clocks of all loyal validators (at least :math:`2f+1`) are within an interval of :math:`T`.
+    #. Maximum possible delay of broadcasting messages is less than :math:`T/2`.
+    #. All validators restart within a time window of :math:`T/2`.
 
 The first assumption can be also interpreted as
-max(t\ :sub:`i`\ -t\ :sub:`j`\ ) < T.
+:math:`\max(t_i - t_j) < T`.
 We name it as the sample space of validators.
 This assumption is reasonable since all loyal validators are connecting to the network
 and get their local clock calibrated before reboot.
 
-Now we construct a set of discrete timestamps TS={t|t=2k*T, k is a natural number}.
-A validator v\ :sub:`i`\   chooses timestamp ts for the failback impeach block, satisfying
+Now we construct a set of discrete timestamps :math:`TS=\{t|t=2k\times T, \text{k is a natural number}\}`.
+A validator :math:`v_i`   chooses timestamp :math:`ts` for the failback impeach block, satisfying
 
-1. ts\ :sub:`i`\   is an element of TS
-#. ts\ :sub:`i`\   > t\ :sub:`i`\0.
+1. :math:`ts_i` is an element of :math:`TS`.
+#. :math:`ts_i > t_i`.
 
 After reboot, all validators are set to idle state.
-When the local clock of v\ :sub:`i`\  is ts\ :sub:`i`\ , it proposes an impeach block with this timestamp,
+When the local clock of :math:`v_i`  is :math:`ts_i` , it proposes an impeach block with this timestamp,
 and enters impeach prepare state.
-If it cannot collect an impeach prepare certificate at ts\ :sub:`i`\   + 2T
-v\ :sub:`i`\   proposes another impeach block with timestamp ts\ :sub:`i`\   +2T.
+If it cannot collect an impeach prepare certificate at :math:`ts_i + 2T`,
+:math:`v_i` proposes another impeach block with timestamp :math:`ts_i + 2T`.
 The rest of consensus part are same as LBFT 2.0.
 
-The coefficient 2 in 2T is derived from the second and third assumptions.
-Thus, each validator can receive messages from all other validators within a time window of T.
+The coefficient 2 in :math:`2T` is derived from the second and third assumptions.
+Thus, each validator can receive messages from all other validators within a time window of :math:`T`.
 
-In practice, T can be set to be 1 minutes.
+In practice, :math:`T` can be set to be 1 minutes.
 Hence, the system can regain its liveness in 4 minutes.
 The pseudocode is shown below.
 
@@ -801,7 +805,7 @@ Failback Pseudocode
 
 
 This approach guarantees that an impeach block can reach validate state
-within a time of at most 2T.
+within a time of at most :math:`2T`.
 To prove the correctness of the algorithm, we will discuss several cases.
 
 
@@ -810,78 +814,79 @@ Correctness
 
 
 **Theorem 2:**
-*Function* ``failback`` *guarantees that validators committee can reach a consensus on an impeach block within 4T time.*
+*Function* ``failback`` *guarantees that validators committee can reach
+a consensus on an impeach block within* :math:`4T` *time.*
 
 **Proof:**
-Let v\ :sub:`i`\  represent i-th validator, and t\ :sub:`i`\  be its local clock timestamp.
-Construct a set TS={t|t=2k*T, k is a natural number}.
-Select three elements ts\ :sub:`0`\ , :math:`ts_1`  and :math:`ts_2`   from TS,
-satisfying :math:`ts_2`  = :math:`ts_1`  + 2T= ts\ :sub:`0`\  + 4T,
-ts\ :sub:`0`\  < min(t\ :sub:`i`\ ), and :math:`ts_2`  > max(t\ :sub:`i`\ ).
+Let :math:`v_i` represent :math:`i`-th validator, and :math:`t_i` be its local clock timestamp.
+Construct a set :math:`TS=\{t|t=2k\times T, \text{k is a natural number}\}`.
+Select three elements :math:`ts_0` , :math:`ts_1`  and :math:`ts_2` from :math:`TS`,
+satisfying :math:`ts_2  = ts_1  + 2T = ts_0  + 4T`,
+:math:`ts_0  < \min(t_i)`, and :math:`ts_2 > \max(t_i)`.
 
-Here we introduce two subsets of validators, :math:`V_1`   and :math:`V_2` .
-:math:`V_1`   is made of all validators whose local clocks are smaller than :math:`ts_1`   ,
-and :math:`V_2`   is made of all validators whose local clocks are large than or equal to :math:`ts_1` .
+Here we introduce two subsets of validators, :math:`V_1` and :math:`V_2`.
+:math:`V_1` is made of all validators whose local clocks are smaller than :math:`ts_1`,
+and :math:`V_2` is made of all validators whose local clocks are large than or equal to :math:`ts_1`.
 
-Here we discuss different cases according to the cardinalities of :math:`V_1`   and :math:`V_2` .
+Here we discuss different cases according to the cardinalities of :math:`V_1` and :math:`V_2`.
 
-**Case 1:** |:math:`V_2` | = 0.
+**Case 1:** :math:`|V_2| = 0`.
 
-It means all local clocks of loyal validators are between two timestamp :math:`ts_1`   and :math:`ts_2` .
+It means all local clocks of loyal validators are between two timestamp :math:`ts_1` and :math:`ts_2`.
 This is the simplest scenario. all validators agree on :math:`ts_1` .
-And the system will insert the impeach block right after :math:`f+1` validators passes :math:`ts_1` .
+And the system will insert the impeach block right after :math:`f+1` validators passes :math:`ts_1`.
 
 Thus, the validators committee can collect an impeach certificate at :math:`ts_1` .
 
-**Case 2:** |:math:`V_1` | >= f + 1, and |:math:`V_2` | < f + 1.
+**Case 2:** :math:`|V_1 | >= f + 1`, and :math:`|V_2 | < f + 1`.
 
-It means there are at least :math:`f+1` validators whose local clocks are smaller than :math:`ts_1` ,
-but less than :math:`f+1` validators with their local clock larger than or equal to :math:`ts_1` .
+It means there are at least :math:`f+1` validators whose local clocks are smaller than :math:`ts_1`,
+but less than :math:`f+1` validators with their local clock larger than or equal to :math:`ts_1`.
 It is similar to case 1.
 Despite some validators agree on :math:`ts_2` , they cannot constitute a quorum.
-When :math:`f+1` validators from |:math:`V_1` | passes :math:`ts_1` ,
+When :math:`f+1` validators from :math:`V_1` passes :math:`ts_1`,
 the system will insert an impeach block.
 
 Thus, the validators committee can collect an impeach certificate at :math:`ts_1` .
 
-**Case 3:** |:math:`V_1` | < f + 1, and |:math:`V_2` | >= f + 1.
+**Case 3:** :math:`|V_1 | < f + 1`, and :math:`|V_2| >= f + 1`.
 
-It means there are no more than :math:`f+1` validators whose local clocks are smaller than :math:`ts_1` ,
-but at least :math:`f+1` validators with their local clock larger than or equal to :math:`ts_1` .
-In this case, when :math:`f+1` validators from :math:`V_2`   reaches timestamp :math:`ts_2` ,
+It means there are no more than :math:`f+1` validators whose local clocks are smaller than :math:`ts_1`,
+but at least :math:`f+1` validators with their local clock larger than or equal to :math:`ts_1`.
+In this case, when :math:`f+1` validators from :math:`V_2`   reaches timestamp :math:`ts_2`,
 an impeach block certificate can be collected by all online validators.
 
-Thus, the validators committee can collect an impeach certificate at :math:`ts_2` .
+Thus, the validators committee can collect an impeach certificate at :math:`ts_2`.
 
 
-**Case 4:** |:math:`V_1` | < f + 1, and |:math:`V_2` | < f + 1.
+**Case 4:** :math:`|V_1 | < f + 1`, and :math:`|V_2 | < f + 1`.
 
-In this case, validators in :math:`V_1`   cannot suffice a certificate for :math:`t_1`.
+In this case, validators in :math:`V_1` cannot suffice a certificate for :math:`t_1`.
 Because at least we have loyal :math:`f+1` validators online,
-the equation |:math:`V_1` |+|:math:`V_2` | >= :math:`f+1` must hold.
-When time flows, validators in :math:`V_1`  gradually pass timestamp :math:`ts_2` .
+the equation :math:`|V_1|+|V_2| \geq f+1` must hold.
+When time flows, validators in :math:`V_1` gradually pass timestamp :math:`ts_2` .
 And these validators propose another impeach block agreeing on :math:`ts_2` .
-Thus, there exists a subset :math:`V_1` \' of validators in :math:`V_1`
-such that :math:`V_1`   reaches :math:`ts_2`
-and |:math:`V_1` \'|+|:math:`V_2` | >= :math:`f+1`.
+Thus, there exists a subset :math:`V_1'` of validators in :math:`V_1`
+such that :math:`V_1` reaches :math:`ts_2`
+and :math:`|V_1'|+|V_2| \geq f+1`.
 
-Let ts\ :sub:`3`\  be the next timestamp in TS after :math:`ts_2` ,
-i.e., t2\ :sub:`3`\  = :math:`ts_2`  + 2T.
-As we can see, the validator with largest local timestamp has not reached ts\ :sub:`3`\   yet.
-At this moment, :math:`V_1`  \'+:math:`V_2`   suffices a quorum
-for an impeach block agreeing on :math:`ts_2` .
+Let :math:`ts_3` be the next timestamp in :math:`TS` after :math:`ts_2`,
+i.e., :math:`ts_3 = ts_2 + 2T`.
+As we can see, the validator with largest local timestamp has not reached :math:`ts_3` yet.
+At this moment, :math:`V_1'\cup V_2` suffices a quorum
+for an impeach block agreeing on :math:`ts_2`.
 
 Thus, the validators committee can collect an impeach certificate at :math:`ts_2` .
 
 
-**Case 5:** |:math:`V_1` | >= f + 1, and |:math:`V_2` | >= f + 1.
+**Case 5:** :math:`|V_1| >= f + 1`, and :math:`|V_2 | >= f + 1`.
 
-At first glance, it seems impeach block of either :math:`ts_1`   and :math:`ts_2`   is legal.
-However, validators in :math:`V_1`   reaches :math:`ts_1`   earlier than
+At first glance, it seems impeach block of either :math:`ts_1`  and :math:`ts_2` is legal.
+However, validators in :math:`V_1` reaches :math:`ts_1` earlier than
 counterparts in :math:`V_2`   reaching :math:`ts_2` .
 The reason is simple, as the the following equation indicates:
-:math:`ts_2`   - max(t\ :sub:`i`\ ) > :math:`ts_1`   + 2T - (min(t\ :sub:`i`\ )+T)
-> :math:`ts_1`    - min(t\ :sub:`i`\ ).
+:math:`ts_2  - \max(t_i) \geq ts_1   + 2T - (\min(t_i )+T)
+\geq ts_1  - \min(t_i)`.
 
 Thus, the validators committee can collect an impeach certificate at :math:`ts_1` .
 
@@ -974,19 +979,19 @@ a C-C connection gets updated to P-V or V-P only when necessary.
 
 .. image:: p2p_upgrade.png
 
-*\*: only proposers do not in (i+1), (i+2) and (i+3)-th term are getting downgraded.*
+*\*: only proposers do not in* :math:`(i+1)`, :math:`(i+2)` *and* :math:`(i+3)` *-th term are getting downgraded.*
 
 The illustration above shows how a connection gets upgraded and downgraded.
-At the moment that the i-th term finishes, all proposers of (i+3)-th term have been elected.
+At the moment that the :math:`i`-th term finishes, all proposers of :math:`(i+3)`-th term have been elected.
 And following operations are under execution:
 
-1. Proposers of (i+3)-th term adds non-redundant validators addresses into its peer list.
+1. Proposers of :math:`(i+3)`-th term adds non-redundant validators addresses into its peer list.
 #. Then, upgrade these connections with validators to P-V.
-#. Validators adding these proposers of (i+3)-th into its peer list as V-P connections.
-#. Proposers of i-th term downgrade all P-V connections to C-C, if they are not in any future term.
+#. Validators adding these proposers of :math:`(i+3)`-th into its peer list as V-P connections.
+#. Proposers of :math:`i`-th term downgrade all P-V connections to C-C, if they are not in any future term.
 
 This upgrade process finishes within a term.
-Thus, all proposers of (i+3)-th hold P-V connections with validators in (i+2)-term.
+Thus, all proposers of :math:`(i+3)`-th hold P-V connections with validators in :math:`(i+2)`-th term.
 
 And if the peer list has no vacancy for new addresses,
 a proposer or validator randomly picks some C-C connection addresses,
