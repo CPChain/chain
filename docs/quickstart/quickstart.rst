@@ -65,7 +65,7 @@ If you do not have an account, you can **create a new account** with ``cpchain``
 .. code-block:: shell
 
     $ mkdir datadir
-    $ echo "YOU_PASSWORD" >> datadir/password
+    $ echo "YOU_PASSWORD" > datadir/password
     $ ./cpchain account new account --datadir ./datadir
 
 Here we first create a directory named as ``datadir`` and
@@ -178,7 +178,7 @@ a node willing to become proposer can also utilize the following commands to cre
 .. code-block:: shell
 
     $ mkdir datadir
-    $ echo "YOU_PASSWORD" >> datadir/password
+    $ echo "YOU_PASSWORD" > datadir/password
     $ ./cpchain account new account --datadir ./datadir
 
 The command for proposers connecting P2P network is slightly different than the counterpart for civilians
@@ -276,7 +276,7 @@ Create an Account
 .. code::
 
     $ mkdir datadir
-    $ echo "YOU_PASSWORD" >> datadir/password
+    $ echo "YOU_PASSWORD" > datadir/password
     $ ./cpchain account new --datadir ./datadir
 
 Run a Private Network
