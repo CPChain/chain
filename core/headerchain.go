@@ -239,6 +239,11 @@ func (hc *HeaderChain) ValidateHeaderChain(chain []*types.Header, checkFreq int)
 	return 0, nil
 }
 
+// ValidateBlockBody validates transactions in a block based on known states
+func (hc *HeaderChain) ValidateBlockBody(block *types.Block) error {
+	return nil
+}
+
 // InsertHeaderChain attempts to insert the given header chain in to the local
 // chain, possibly creating a reorg. If an error is returned, it will return the
 // index number of the failing header as well an error describing what went wrong.
