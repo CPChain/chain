@@ -182,8 +182,10 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
 		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
+
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
 		dpor.SetupAdmission(cpc.AdmissionApiBackend)
+		dpor.SetChain(cpc.blockchain)
 	}
 
 	// Rewind the chain in case of an incompatible config upgrade.
