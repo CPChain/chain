@@ -110,6 +110,14 @@ contract Reward {
         return totalAmount;
     }
 
+    function totalInvestAmountNow()public view returns (uint256){
+        uint256 totalAmountNow = 0;
+        for (uint256 i = 0; i < participants.values.length; i++){
+             totalAmountNow = totalAmountNow.add(getTotalBalance(participants.values[i]));
+        }
+        return totalAmountNow;
+    }
+
     function withdraw(uint256 _value) public payable{
         require(_value <= investors[msg.sender].freeDeposit);
         investors[msg.sender].freeDeposit = investors[msg.sender].freeDeposit.sub(_value);
