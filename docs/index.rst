@@ -20,7 +20,7 @@ Quick reference:
 
 
 1. :ref:`fusion-api` and :ref:`rpc-api`
-#. :ref:`quick-start`
+#. :ref:`quick-start-beginner` and :ref:`quick-start`
 #. :ref:`overview`
 #. `Solidity`_
 #. :ref:`consensus` and :ref:`implementation`
@@ -35,7 +35,6 @@ Quick reference:
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
    :caption: First Steps
 
    quickstart/quickstart-beginner
@@ -51,7 +50,7 @@ Quick reference:
 
 .. toctree::
    :maxdepth: 2
-   :caption: APIs
+   :caption: API
 
    api/cpc_fusion
    api/rpc
