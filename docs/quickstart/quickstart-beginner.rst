@@ -15,20 +15,44 @@ The instructions below are demonstrated on Linux.
 If you are using Windows platform, all commands below are also viable.
 Just replace ``chchain`` with ``cpchain-windows-4.0-386.exe`` or ``cpchain-windows-4.0-amd64.exe``.
 
-For 32-bit PC user, please select 386 version.
-And 64-bit PC users should download amd64 version.
+For 32-bit PC user, please select ``386`` version.
+And 64-bit PC users should download ``amd64`` version.
+
+
+.. NOTE::
+
+    All code starting with a ``$`` is meant to run in your terminal or cmd.
+    Do not copy ``$``, as it is not a part of a command.
 
 
 Apply for a Wallet
 --------------------
+
+Use the ``cd`` command to enter the directory containing ``cpchain`` binary file.
+
+For Windows users, use the commands below in cmd.
+
+.. code-block:: shell
+
+    $ mkdir datadir
+    $ cpchain-windows-4.0-amd64.exe account new account --datadir ./datadir
+
+.. note::
+
+    Change ``cpchain-windows-4.0-amd64.exe`` to ``cpchain-windows-4.0-386.exe``
+    if you are using on 32 bit operation system.
+
+For Linux and Mac users, use the commands below in terminal:
 
 .. code-block:: shell
 
     $ mkdir datadir
     $ ./cpchain account new account --datadir ./datadir
 
-A keystore file is generated in ``datadir/keystore``,
+The first command is to generate a keystore file
+located in ``datadir/keystore``,
 in which you can find the wallet address.
+The second command create a new account, and return the wallet address.
 
 
 Connect to Mainnet
@@ -44,7 +68,25 @@ Refer to :ref:`FAQ` if you encounter any problem.
 Get Block Mined
 ~~~~~~~~~~~~~~~~~~
 
-If you are willing to propose new blocks, use the command below:
+This section is for users that are willing to propose new blocks.
+
+.. note::
+
+    Before mining a block,
+    make sure that you the balance in your account is large enough (at least 200,000 cpc).
+
+Windows user the command below:
+
+.. code-block:: shell
+    :emphasize-lines: 2
+
+    $ cpchain-windows-4.0-amd64.exe run --datadir ./datadir \
+        --unlock WALLET_ADDRESS \
+        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
+        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+
+
+Linux and Mac users please use the following command:
 
 .. code-block:: shell
     :emphasize-lines: 2
@@ -56,19 +98,23 @@ If you are willing to propose new blocks, use the command below:
 
 
 
-
-
 Get Chain Synced
 ~~~~~~~~~~~~~~~~~~~~
 
-If you only want to sync with the Mainnet, review or sending transactions,
-use the command below:
+This section is for users that only want to sync with the Mainnet, review or sending transactions.
+
+Windows users can utilize the command below:
+
+.. code-block:: shell
+
+    $ cpchain-windows-4.0-amd64.exe run --rpcaddr 127.0.0.1:8501 --port 30311
+
+
+Linux and Mac users please try this command:
 
 .. code-block:: shell
 
     $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311
-
-
 
 Check Your Status
 ~~~~~~~~~~~~~~~~~~~~
