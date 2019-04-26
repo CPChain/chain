@@ -50,8 +50,14 @@ type defaultDporHelper struct {
 	dporUtil
 }
 
-// validateBlock checks basic fields in a block
+// validateBlock checks basic fields in a block, this is called only by validators
 func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error {
+
+	// verify the `validators` field in the header is empty
+	if len(block.Header().Dpor.Validators) != 0 {
+		return consensus.ErrorInvalidValidatorsList
+	}
+
 	// verify the block header according to Dpor Protocol
 	if err := dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), verifySigs, verifyProposers); err != nil {
 		return err

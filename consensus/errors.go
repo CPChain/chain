@@ -61,4 +61,7 @@ var (
 
 	// ErrInvalidImpeachTxs is returned if an impeach block contrains txs
 	ErrInvalidImpeachTxs = errors.New("invalid impeach txs")
+
+	// ErrorInvalidValidatorsList is returned if the validators list is invalid
+	ErrorInvalidValidatorsList = errors.New("invalid validators list")
 )
