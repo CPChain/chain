@@ -195,6 +195,11 @@ func GenerateChain(config *configs.ChainConfig, parent *types.Block, engine cons
 			if err := pubStatedb.Database().TrieDB().Commit(root, false); err != nil {
 				panic(fmt.Sprintf("trie write error: %v", err))
 			}
+
+			// WARN: TODO: to avoid impeach block validation failure, set same gasLimit as its parent
+			block.RefHeader().GasLimit = parent.GasLimit()
+			block.RefHeader().Extra = make([]byte, 65)
+
 			return block, b.receipts
 		}
 		return nil, nil
