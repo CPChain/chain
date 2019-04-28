@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -230,7 +229,7 @@ func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byt
 
 	calculatedMAC := crypto.Keccak256(derivedKey[16:32], macSource)
 	if !bytes.Equal(calculatedMAC, mac) {
-		log.Error("mac mismatch", "expected", keyProtected.Crypto.MAC, "actual", common.Bytes2Hex(calculatedMAC))
+		// log.Error("mac mismatch", "expected", keyProtected.Crypto.MAC, "actual", common.Bytes2Hex(calculatedMAC))
 		return nil, nil, ErrDecrypt
 	}
 
