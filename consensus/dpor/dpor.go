@@ -81,11 +81,10 @@ type Dpor struct {
 	pbftState consensus.State
 	stateLock sync.RWMutex
 
-	client     backend.ClientBackend
-	ac         admission.ApiBackend
-	clientLock sync.RWMutex
+	ac admission.ApiBackend
 
-	rptBackend rpt.RptService
+	rptBackend   rpt.RptService
+	rnodeBackend rpt.RnodeService
 
 	chain consensus.ChainReadWriter
 
@@ -182,22 +181,6 @@ func (d *Dpor) SetCurrentSnap(snap *DporSnapshot) {
 	defer d.currentSnapLock.Unlock()
 
 	d.currentSnap = snap
-}
-
-// Client returns a client backend to do contract related calls
-func (d *Dpor) Client() backend.ClientBackend {
-	d.clientLock.RLock()
-	defer d.clientLock.RUnlock()
-
-	return d.client
-}
-
-// SetClient sets given client as local client
-func (d *Dpor) SetClient(client backend.ClientBackend) {
-	d.clientLock.Lock()
-	defer d.clientLock.Unlock()
-
-	d.client = client
 }
 
 // New creates a Dpor proof-of-reputation consensus engine with the initial
@@ -412,4 +395,12 @@ func (d *Dpor) SetRptBackend(backend bind.ContractBackend) {
 
 func (d *Dpor) GetRptBackend() rpt.RptService {
 	return d.rptBackend
+}
+
+func (d *Dpor) SetRnodeBackend(backend bind.ContractBackend) {
+	d.rnodeBackend, _ = rpt.NewRnodeService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign])
+}
+
+func (d *Dpor) GetRnodeBackend() rpt.RnodeService {
+	return d.rnodeBackend
 }

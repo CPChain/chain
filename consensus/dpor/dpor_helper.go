@@ -335,45 +335,35 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	var (
-		client     = snap.client()
-		rptBackend = snap.rptBackend
+		rnodeService = dpor.GetRnodeBackend()
+		rptService   = dpor.GetRptBackend()
 	)
 
-	if client == nil {
-		client = dpor.Client()
+	if rnodeService == nil || rptService == nil {
+		log.Fatal("rnode service or rpt service is nil", "rnode service", rnodeService, "rpt service", rptService)
 	}
-
-	if rptBackend == nil && client != nil {
-		if dpor.rptBackend == nil {
-			log.Fatal("rptBackend is nil")
-		}
-
-		rptBackend = dpor.rptBackend
-	}
-
-	// Set correct client and rptBackend
-	snap.setClient(client)
-	snap.rptBackend = rptBackend
 
 	var timeToUpdateCommittee bool
 	_, headNumber := chain.KnownHead()
 
 	log.Debug("known chain head", "number", headNumber)
 
-	if rptBackend != nil {
-		timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
-		startBlockNumberOfRptCalculate := float64(int(headNumber) - configs.DefaultFullSyncPivot)
-		timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
-		timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
-	}
+	timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
+	startBlockNumberOfRptCalculate := float64(int(headNumber) - configs.DefaultFullSyncPivot)
+	timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
+	timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
+
+	log.Debug("now apply a batch of headers to get a new snap")
+
+	applyStartTime := time.Now()
 
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, client, timeToUpdateCommittee)
+	newSnap, err := snap.apply(headers, timeToUpdateCommittee, rnodeService, rptService)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debug("now created a new snap", "number", newSnap.number(), "hash", newSnap.hash().Hex())
+	log.Debug("now created a new snap", "number", newSnap.number(), "hash", newSnap.hash().Hex(), "apply elapsed", common.PrettyDuration(time.Now().Sub(applyStartTime)))
 
 	// Save to cache
 	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
