@@ -45,7 +45,7 @@ var (
 	addr1                    = crypto.PubkeyToAddress(key1.PublicKey)
 	addr2                    = crypto.PubkeyToAddress(key2.PublicKey)
 	cpuDifficulty     uint64 = 10
-	memDifficulty     uint64 = 5
+	memDifficulty     uint64 = 3
 	cpuWorkTimeout    uint64 = 15
 	memoryWorkTimeout uint64 = 15
 )
