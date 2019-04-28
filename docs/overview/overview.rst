@@ -186,7 +186,7 @@ Each dimension has a full score of 100 point.
 And the total score is calculated as:
 
 *RPT = 0.5\*AB +
-0.15\*Tx +
+0.15\*TX +
 0.1\*PR +
 0.15\*DC +
 0.1\*BM*
