@@ -1153,6 +1153,7 @@ func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 	bc.insertChainProtectLock.Lock()
 	defer bc.insertChainProtectLock.Unlock()
 
+	// do not stop blockchain if the insertion is not finished
 	bc.wg.Add(1)
 	defer bc.wg.Done()
 
