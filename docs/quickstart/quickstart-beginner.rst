@@ -75,7 +75,8 @@ This section is for users that are willing to propose new blocks.
     Before mining a block,
     make sure that you the balance in your account is large enough (at least 200,000 cpc).
 
-Windows user the command below:
+Windows user the command below.
+(Here we use ``amd64`` version as demonstration.)
 
 .. code-block:: shell
     :emphasize-lines: 2
