@@ -143,7 +143,7 @@ func unlockAccounts(ctx *cli.Context, n *node.Node) *keystore.Key {
 	unlock := ctx.String("unlock")
 	unlocks := strings.FieldsFunc(unlock, func(c rune) bool { return c == ',' })
 	for i, account := range unlocks {
-		log.Infof("%v, %v\n", i, account)
+		// log.Infof("%v, %v\n", i, account)
 		if i < len(passwords) {
 			_, key, err := unlockAccountWithPassword(ks, account, passwords[i])
 			if err != nil {
@@ -290,7 +290,6 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 
 	startNode(n)
 	key := unlockAccounts(ctx, n)
-
 	handleWallet(n)
 	setupMining(ctx, n, key)
 	// handle user interrupt
