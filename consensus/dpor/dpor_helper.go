@@ -339,9 +339,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		rptService   = dpor.GetRptBackend()
 	)
 
-	if rnodeService == nil || rptService == nil {
-		log.Fatal("rnode service or rpt service is nil", "rnode service", rnodeService, "rpt service", rptService)
-	}
+	// if rnodeService == nil || rptService == nil {
+	// 	log.Fatal("rnode service or rpt service is nil", "rnode service", rnodeService, "rpt service", rptService)
+	// }
 
 	var timeToUpdateCommittee bool
 	_, headNumber := chain.KnownHead()

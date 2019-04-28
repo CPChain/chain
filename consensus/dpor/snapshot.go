@@ -354,7 +354,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 func (s *DporSnapshot) updateCandidates(rnodeService rpt.RnodeService) error {
 	var candidates []common.Address
 
-	if s.Mode == NormalMode && s.isStartElection() {
+	if s.Mode == NormalMode && s.isStartElection() && rnodeService != nil {
 
 		// Read candidates from the contract instance
 		term := s.TermOf(s.Number)
@@ -392,7 +392,7 @@ func (s *DporSnapshot) updateCandidates(rnodeService rpt.RnodeService) error {
 func (s *DporSnapshot) updateRpts(rptService rpt.RptService) (rpt.RptList, error) {
 
 	switch {
-	case s.Mode == NormalMode && s.isStartElection():
+	case s.Mode == NormalMode && s.isStartElection() && rptService != nil:
 		rpts := rptService.CalcRptInfoList(s.candidates(), s.number())
 		log.Debug("called contract to get rpts", "rpts", rpts.FormatString())
 		return rpts, nil

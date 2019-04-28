@@ -219,7 +219,7 @@ func TestSnapshot_apply(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			got, err := s.apply(tt.args.headers, nil, true)
+			got, err := s.apply(tt.args.headers, true, nil, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.apply(%v) error = %v, wantErr %v", tt.args.headers, err, tt.wantErr)
 				return
@@ -280,7 +280,7 @@ func TestSnapshot_applyHeader(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			if err := s.applyHeader(tt.args.header, true); (err != nil) != tt.wantErr {
+			if err := s.applyHeader(tt.args.header, true, nil, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.applyHeader(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 			}
 		})
@@ -336,7 +336,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			if err := s.updateCandidates(); (err != nil) != tt.wantErr {
+			if err := s.updateCandidates(nil); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 			}
 		})
@@ -374,7 +374,7 @@ func TestSnapshot_updateRpts(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			got, err := s.updateRpts()
+			got, err := s.updateRpts(nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateRpts(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 				return
