@@ -27,7 +27,7 @@ RPT Contract
    RPT (abbreviated from reputation) contract calculates RNode's reputation value. It is a core component of RNode ecosystem.
    `RNode <https://cpchain.io/rnode/>`_ is the detail of the RNode ecosystem.
    Reputation value consists of 5 dimensions,
-   **Account Balance（AB)**,
+   **Account Balance (AB)**,
    **Transaction (TX)**,
    **Data Contribution (DC)**,
    **Blockchain Maintenance (BM)**,
