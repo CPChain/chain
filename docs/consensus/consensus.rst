@@ -15,7 +15,7 @@ Here we list the properties of validators and proposers, as well as the rest nod
     #. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
     #. Except for some abnormal cases, validators may not produce blocks.
     #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
-    #. The size of number is always equaling to 3f+1, where f is the number of byzantine nodes.
+    #. The size of number is always equaling to :math:`3f+1`, where :math:`f` is the number of byzantine nodes.
 
 #. **Proposers committee** is a fixed number of elected RNodes for a certain term.
     i. The proposers committee is elected based on reputations of candidates and a random seed.
@@ -39,15 +39,16 @@ Normal and Abnormal Cases Handler
 
 
 Before we dive into explaining case handler, let us introduce an important concept **quorum**.
-A quorum is a subset of validators committee members such that a consensus can be reached among a quorum in a certain state.
-These quorum have two vital properties:
+A quorum is a subset of validators committee members such that
+a consensus can be reached among this quorum in a certain state.
+These quorums have two vital properties:
 
 1. Intersection: any two quorums have at least one loyal validator in common.
 #. Availability: there is always a quorum available with no faulty validator.
 
 When members in a quorum endorse information from a same block, they collect a *quorum certificate*.
 There are two certificates, prepare certificate (P-certificate) and commit certificate (C-certificate), which indicates
-that there exist a quorum agree on a prepare message and a commit message respectively.
+that there exist a quorum agreeing on a prepare message and a commit message respectively.
 
 
 
@@ -60,8 +61,8 @@ that there exist a quorum agree on a prepare message and a commit message respec
         i. Once receives a newly proposed block, a validator in validators committee tries to verify the block.
         #. This `Verification of Blocks`_ process scrutinizes the seal of proposer, timestamp, etc.
         #. If true, this validator broadcast a PREPARE message to other validators; otherwise, it enters Abnormal Case 2 or 3.
-        #. Once receives 2f+1 PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
-        #. Once received 2f+1 COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these 2f+1 validators' signatures to all users.
+        #. Once receives :math:`2f+1` PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
+        #. Once received :math:`2f+1` COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these :math:`2f+1` validators' signatures to all users.
         #. Once a validator receives the VALIDATE message for the first time in a block height, it broadcasts a same message to all nodes.
         #. Any user receives this VALIDATE message with enough signatures, insert the block into local chain
 
@@ -69,8 +70,8 @@ that there exist a quorum agree on a prepare message and a commit message respec
 #. **Abnormal Cases**
     a. Abnormal Case 1: *A validator does not receive a block from the proposer:*
         i. It is for the case when Step 1.b.a cannot be reached
-        #. Let the previousBlockTimestamp be the timestamp of block proposed in previous block height, and period is the minimum interval between two blocks.
-        #. A timer is set up when reaching the timestamp of previousBlockTimestamp+period.
+        #. Let the :math:`previousBlockTimestamp` be the timestamp of block proposed in previous block height, and period is the minimum interval between two blocks.
+        #. A timer is set up when reaching the timestamp of :math:`previousBlockTimestamp+period`.
         #. If the timer expires, the validators committee activates *impeachment*, a two-phase protocol in PBFT manner to propose an impeach block on behalf of the faulty proposer.
     #. Abnormal Case 2: *The proposer proposes one or more faulty blocks*
         i. Faulty blocks cannot be verified in Step 1.b.b and 1.b.c
@@ -78,7 +79,7 @@ that there exist a quorum agree on a prepare message and a commit message respec
     #. Abnormal Case 3: *The proposer proposes multiple valid blocks*
         i. Each validator can only validate one block for a same block number
         #. Thus, it is impossible for two or more blocks to collect P-certificates simultaneously. Only one block can enter Step 1.b.d
-        #. It is possible that no block receives 2f+1 PREPARE messages
+        #. It is possible that no block receives :math:`2f+1` PREPARE messages
         #. *Impeachment* is activated if a validator cannot collect a P-certificate
     #. Abnormal Case 4: *Some members in the validators committee are faulty*
         #. The system can reach a consensus, as long as the number of total faulty validators is no more than f.
@@ -125,14 +126,14 @@ Here we list the steps for an impeachment process.
 Impeachment Steps
 **********************
 
-1. A validator v in the committee generates an impeachment block
-    i. In the header of this block, the *timestamp* is set to be previousBlockTimestamp+period+timeout.
-    #. Here previousBlockTimestamp is the timestamp of block proposed in previous block height, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
+1. A validator :math:`v` in the committee generates an impeachment block
+    i. In the header of this block, the *timestamp* is set to be :math:`previousBlockTimestamp+period+timeout`.
+    #. Here :math:`previousBlockTimestamp` is the timestamp of block proposed in previous block height, period is the interval between two blocks and timeout is the threshold validator that triggers impeachment.
     #. The *seal* in the header is set to be empty
     #. A penalty on proposer is the only transaction in the block's body
 #. This block, used as an IMPEACH PREPARE message, is broadcast to all validators in the committee.
-#. Once receives f+1 IMPEACH PREPARE messages with same header and body, validator v broadcasts an IMPEACH COMMIT message to other validators.
-#. Once receives f+1 IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with f+1 signatures to all users.
+#. Once receives :math:`f+1` IMPEACH PREPARE messages with same header and body, validator :math:`v` broadcasts an IMPEACH COMMIT message to other validators.
+#. Once receives :math:`f+1` IMPEACH COMMIT messages, a validator broadcasts an IMPEACH VALIDATE message along with :math:`f+1` signatures to all users.
 #. Any validate receives the IMPEACH VALIDATE message for the first time, it inserts the impeach block and broadcasts the same message to all nodes.
 #. All users insert the block into local chain, if they receive an IMPEACH VALIDATE messages.
 
@@ -147,7 +148,7 @@ Three things are noteworthy here.
 
     1. Impeachment only requires two state instead of three in original PBFT.
     #. A validator can endorse a newly proposed block and an impeach block in a block height.
-    #. Only a weak quorum certificate of f+1 members is required in impeachment consensus.
+    #. Only a weak quorum certificate of :math:`f+1` members is required in impeachment consensus.
 
 The absence of an idle state, or pre-prepare state in PBFT, results from the unnecessity of a leader.
 Let's recall the roles of a leader in classic PBFT model.
@@ -162,19 +163,19 @@ However, impeachment does not requires a leader to fulfill above duties, since:
     #. Each block is associated with a unique block number, which circumvents the usage of sequence number.
 
 The second is that a validator can sign two distinct blocks, one is the proposed block and another one is an impeach block.
-Thus, it is possible for some validators obtains 2f+1 PREPARE messages of a newly proposed block,
+Thus, it is possible for some validators obtains :math:`2f+1` PREPARE messages of a newly proposed block,
 while another validators obtain a prepare certificate for the impeach block.
 This scenario occurs only when the proposer is faulty, misbehaves like `Double Spend Attack`_.
 But it does not affects the security of the system.
 Refer to `Double Spend Attack`_ to check detailed proof.
 
 
-The last notable point is that a quorum in normal case consists of 2f+1 members,
-while a quorum in impeachment consists of f+1 members.
-The necessity of 2f+1 in normal case is that in extreme cases,
-there are f faulty nodes send arbitrary messages, we need f+1 more loyal nodes to outnumber faulty counterparts.
+The last notable point is that a quorum in normal case consists of :math:`2f+1` members,
+while a quorum in impeachment consists of :math:`f+1` members.
+The necessity of :math:`2f+1` in normal case is that in extreme cases,
+there are :math:`f` faulty nodes send arbitrary messages, we need :math:`f+1` more loyal nodes to outnumber faulty counterparts.
 In comparison, that even one loyal nodes triggers impeachment indicates a improper behavior of proposer.
-Thus, f+1 impeachment validators suffice a quorum of impeachment.
+Thus, :math:`f+1` impeachment validators suffice a quorum of impeachment.
 
 In addition, impeachment also requires :ref:`echo-validate` similar to normal case handler.
 
@@ -359,8 +360,8 @@ Once a civilian receives a block, it first checks
 
     1. Whether the block is from validators;
     #. If there are enough distinct signatures in ``Sigs``,
-        i. at least f+1 for impeach block,
-        #. at least 2f+1 for normal block,
+        i. at least :math:`f+1` for impeach block,
+        #. at least :math:`2f+1` for normal block,
 
 If both criteria pass, it is a validated block and can be inserted in to the chain.
 
@@ -378,8 +379,8 @@ It first checks if the block is validated:
 
     1. Whether the block is from validators;
     #. If there are enough distinct signatures,
-        i. at least f+1 for impeach block.
-        #. at least 2f+1 for normal block.
+        i. at least :math:`f+1` for impeach block.
+        #. at least :math:`2f+1` for normal block.
 
 
 Then,
@@ -402,7 +403,8 @@ and confirms its position to propose its block.
 Countermeasures for Illicit Actions
 ------------------------------------------
 
-Illicit actions refer any messages or blocks sending to a validator that cannot be processed in this validator's normal cases.
+Illicit actions refer any messages or blocks sending to
+a validator that cannot be processed in this validator's normal cases.
 From validators' perspective, Illicit actions falls into the following categories:
 
 1. Double spend attack from the proposer
@@ -424,13 +426,14 @@ The following lemmas holds in LBFT 2.0.
 *There cannot exist two blocks proposed by a same node with the same block number being validated simultaneously.*
 
 **Proof:**
-Assume that a proposer p proposes two distinct blocks b and b', and broadcasts them to validators.
-And to achieve its wicked purpose, f faulty validators collaborate with p.
-Suppose that p fulfill its wicked aim that both b and b' are inserted into the chain.
-Thus, there exists two quorums of validators that endorse b and b' respectively.
-Since only 3f+1 members in the committee, these two quorums have f+1 members in common.
-Except for f faulty validators can be members of both quorums,
-there still exits one validator signs both b and b'.
+Assume that a proposer :math:`p` proposes two distinct blocks :math:`b` and :math:`b'`,
+and broadcasts them to validators.
+And to achieve its wicked purpose, :math:`f` faulty validators collaborate with :math:`p`.
+Suppose that :math:`p` fulfill its wicked aim that both :math:`b` and :math:`b'` are inserted into the chain.
+Thus, there exists two quorums of validators that endorse :math:`b` and :math:`b'` respectively.
+Since only :math:`3f+1` members in the committee, these two quorums have :math:`f+1` members in common.
+Except for :math:`f` faulty validators can be members of both quorums,
+there still exits one validator signs both :math:`b` and :math:`b'`.
 It contracts the fact that each loyal validator only sign one block.
 Hence, there cannot be two proposed blocks are both legit.
 **Q.E.D.**
@@ -438,83 +441,85 @@ Hence, there cannot be two proposed blocks are both legit.
 
 
 In contrast to the fact that each validator only signs one proposed block, a validator can sign an
-impeach block even if it has signed a block from p given that it cannot collect a certificate on time.
+impeach block even if it has signed a block from :math:`p` given that it cannot collect a certificate on time.
 Then is that possible for a proposer takes advantages of this mechanism to makes its proposed block
-b and an impeach block b' both legit simultaneously?
+:math:`b` and an impeach block :math:`b'` both legit simultaneously?
 The answer is no. Here we lists two lemmas and shows their correctness.
 
 **Observation 1:**
-*It is possible that both a block b proposed from a proposer p and an impeach block b' suffice
-a prepare certificate simultaneously.*
+*It is possible that both a block* :math:`b` *proposed from a proposer* :math:`p`
+*and an impeach block* :math:`b'` *suffice a prepare certificate simultaneously.*
 
 
 
 **Proof:**
 As we know the certificate of impeach block and normal block
 requires different size of quorum respectively.
-Let's name the normal quorum of 2f+1 validators as strong quorum,
+Let's name the normal quorum of :math:`2f+1` validators as strong quorum,
 and its corresponding certificate as strong certificate.
 Similarly, the impeach quorum and certificate are denoted
 by weak quorum and week certificate respectively.
 
-Observation 1 indicates that one quorum endorses b while another one endorse b'.
-It is possible that if a loyal validator v1 signs b then broadcasts its prepare messages,
+Observation 1 indicates that one quorum endorses :math:`b` while another one endorse :math:`b'`.
+It is possible that if a loyal validator :math:`v_1` signs
+:math:`b` then broadcasts its prepare messages,
 but its receiver is blocked such that it later proposes an impeach block.
-Combining f faulty validators, two quorums are made up.
+Combining :math:`f` faulty validators, two quorums are made up.
 **Q.E.D**
 
 
 **Observation 2:**
-*It is impossible that both a block b proposed from a proposer p and an impeach block b' suffice
-a commit certificate simultaneously*
+*It is impossible that both a block* :math:`b`
+*proposed from a proposer* :math:`p` *and an impeach block* :math:`b'`
+*suffice a commit certificate simultaneously.*
 
 
 **Proof:**
 Observation 2 ensures the safety of our consensus system.
-Once v1 proposes an impeach block b',
-it can no longer send out b’s commit message even if it collects a prepare certificate for b.
+Once :math:`v_1` proposes an impeach block :math:`b'`,
+it can no longer send out :math:`b`'s commit message even if it collects a prepare certificate for :math:`b`.
 The state transmission of a validator is illustrated in the :ref:`Implementation`.
 Once a validator enters either impeach prepare or impeach commit phase, it no
 long signs a normal block.
 
 To suffice a weak quorum for impeach commit certificate,
-there must be at least a loyal validator, say v1, agreeing on impeach block instead of normal one.
+there must be at least a loyal validator, say :math:`v_1`, agreeing on impeach block instead of normal one.
 This validator assures the legality of this impeach block.
 
 As stated in :ref:`Transitivity`,
-v1 can transmit the its impeach prepare certificate to other loyal validators.
+:math:`v_1` can transmit the its impeach prepare certificate to other loyal validators.
 Thus, these loyal validators in commit state will transit to impeach commit state
-and abandon its prepare certificate for b,
+and abandon its prepare certificate for :math:`b`,
 which assures that a strong commit certificate and a weak certificate cannot be
 obtained simultaneously.
 **Q.E.D.**
 
 
 **Observation 3:**
-*Under the parameter setting of LBFT 2.0,
-It is impossible that both a block b proposed from a proposer p and an impeach block b'
-get validate message in one block height*
+*Under the parameter setting of LBFT 2.0, It is impossible that both a block*
+:math:`b` *proposed from a proposer* :math:`p` *and an impeach block* :math:`b'`
+*get validate message in one block height.*
 
 **Proof:**
 Observation 2 has a glitch in an edge case.
-If v1 firstly delivers its impeach commit message to f faulty validators then loses connection,
+If :math:`v_1` firstly delivers its impeach commit message to :math:`f` faulty validators then loses connection,
 a weak quorum suffices while the strong quorum for commit certificate has
-not clue about v1's impeach prepare certificate.
+not clue about :math:`v_1`'s impeach prepare certificate.
 Despite of the fact that a validator sends out message to all its peers in a random order,
 the chance of this situation is not zero.
 
 However, in LBFT 2.0 timeout is set to be 10 seconds,
 same as the period of a normal case.
-Before the timer of v1 expires,
-the strong quorum has collected a prepare certificate of block b
-and get v1 transited to prepare state.
+Before the timer of :math:`v_1` expires,
+the strong quorum has collected a prepare certificate of block :math:`b`
+and get :math:`v_1` transited to prepare state.
 **Q.E.D**
 
 
 Observation 2 and 3 lead to the following lemma:
 
 **Lemma 2:**
-*A proposed block and an impeach block cannot be validated in same block height.*
+*A proposed block and an impeach block cannot be validated in a same block height.*
 
 **Proof:**
 According to Observation 2 and 3,
@@ -542,8 +547,9 @@ The name comes from the fact that the predecessor of this block is yet unknown i
 Four Scenarios
 #################
 
-Suppose a validator v which is processing a block b in block height h,
-and receives an unknown ancestor block b\ :sub:`2`\   with block height h\ :sub:`2`\   from a node p\ :sub:`2`\ .
+Suppose a validator :math:`v` which is processing a block :math:`b` in block height :math:`h`,
+and receives an unknown ancestor block :math:`b_2`
+with block height :math:`h_2` from a node :math:`p_2`.
 There are following possible scenarios:
 
 1. The block is proposed by a legit proposer at the correct time; the validator is delaying.
@@ -551,39 +557,41 @@ There are following possible scenarios:
 #. The block is proposed by a faulty node.
 #. The validator is lagging behind for at least one term, and cannot verify whether the proposer is legit.
 
-Here the word *legit* indicates that p is an incumbent proposer from the committee in the current term,
-having been recognized by v.
+Here the word *legit* indicates that :math:`p` is an incumbent proposer from the committee in the current term,
+having been recognized by :math:`v`.
 When a proposers committee is elected, each validator receives a list of all elected candidates as
 well as the corresponding block heights to propose their blocks.
 Thus, a validator has a priori knowledge on all legit proposers in this term, unless the proposer is
 delaying for at least a term.
 
 
-**First scenario:** b\ :sub:`2`\   actually is not an unknown ancestor block.
+**First scenario:** :math:`b_2` actually is not an unknown ancestor block.
 
-The validator v regards b\ :sub:`2`\   as an unknown ancestor block simply because it is delaying
-After receiving b\ :sub:`2`\ , the validator v records the block in the cache.
-As it is delaying, it is counted as one of f non-responding block.
-Despite that it receives b\ :sub:`2`\ , v stays in the block height h,
-and it does not participate in consensus of block height h\ :sub:`2`\
-In other word, it does not broadcasts a prepare message endorsing b\ :sub:`2`\ .
-Other members in the validators committee suffice a quorum to complete the consensus process on b\ :sub:`2`\   without v's participation.
-v is going to catch up with the schedule after it receives the validate message from other committee members,
+The validator :math:`v` regards :math:`b_2` as an unknown ancestor block simply because it is delaying.
+After receiving :math:`b_2`, the validator :math:`v` records the block in the cache.
+As it is delaying, it is counted as one of :math:`f` non-responding validators.
+
+Despite that it receives :math:`b_2`, :math:`v` stays in the block height h,
+and it does not participate in consensus of block height :math:`h_2`
+In other word, it does not broadcasts a prepare message endorsing :math:`b_2`.
+Other members in the validators committee suffice a quorum to 
+complete the consensus process on :math:`b_2` without :math:`v`'s participation.
+:math:`v` is going to catch up with the schedule after it receives the validate message from other committee members,
 or by :ref:`recovery`.
 
-**Second scenario:** p\ :sub:`2`\   behaves faultily.
+**Second scenario:** :math:`p_2`   behaves faultily.
 
-Similar to the first scenario, v records it in the cache without signing it.
-A quorum can still complete the consensus on b.
-When it comes to the correct block height of p\ :sub:`2`\ , if p\ :sub:`2`\   proposes the block again,
+Similar to the first scenario, :math:`v` records it in the cache without signing it.
+A quorum can still complete the consensus on :math:`b`.
+When it comes to the correct block height of :math:`p_2` , if :math:`p_2`   proposes the block again,
 then it is going to be processed normally.
-Otherwise, the timer of a quorum of validators (including v) will expire and enter impeach process.
+Otherwise, the timer of a quorum of validators (including :math:`v`) will expire and enter impeach process.
 
-**Third and fourth scenario:** v cannot recognize p\ :sub:`2`\   as a proposer.
+**Third and fourth scenario:** :math:`v` cannot recognize :math:`p_2`   as a proposer.
 
-It can due to either b\ :sub:`2`\   is faulty (scenario 3) and v is delaying (scenario 4).
-In both scenarios, v is going to sync, determining if it is delaying.
-For the third scenario, v rejects b\ :sub:`2`\   and added v into blacklist.
+It can due to either :math:`b_2` is faulty (scenario 3) and :math:`v` is delaying (scenario 4).
+In both scenarios, :math:`v` is going to sync, determining if it is delaying.
+For the third scenario, :math:`v` rejects :math:`b_2`   and adds :math:`p_2` into blacklist.
 For the fourth one, it acts same as the first scenario.
 
 Here comes another concern.
@@ -635,17 +643,17 @@ Despite that timestamp does not play an important role in our consensus,
 it is an important attribute of a block.
 In fact, timestamp is one of factors verifying a block.
 
-A validator v regards a block b as a future one, if the following two conditions are met:
+A validator :math:`v` regards a block :math:`b` as a future one, if the following two conditions are met:
 
-    1. The timestamp of b is larger than the one of v;
-    #. The block height of b is same as v.
+    1. The timestamp of :math:`b` is larger than the one of v;
+    #. The block height of :math:`b` is same as v.
 
-Similarly, a block b' is considered a past block if
+Similarly, a block :math:`b'` is considered a past block if
 
-    1. The timestamp of b' is smaller than previousBlockTimestamp+period;
-    #. The block height of b' is same as v,
+    1. The timestamp of :math:`b'` is smaller than :math:`previousBlockTimestamp+period`;
+    #. The block height of :math:`b'` is same as v,
 
-where previousBlockTimestamp is the timestamp of previous block,
+where :math:`previousBlockTimestamp` is the timestamp of previous block,
 and period is the time interval between two consecutive blocks.
 
 Do not confuse future block with the concept of unknown ancestor block.
@@ -654,7 +662,7 @@ but are processed as an unknown ancestor one instead of a future block.
 
 For past block, a validator fails in verifying it and triggers impeachment.
 For a future block, the validator wait until the timestamp of the block.
-But if it is larger than previousBlockTimestamp+period+timeout,
+But if it is larger than :math:`previousBlockTimestamp+period+timeout`,
 an impeachment is about to take place.
 Thus, we come up with a pseudocode for timestamp verification.
 
@@ -670,7 +678,7 @@ Thus, we come up with a pseudocode for timestamp verification.
             select{
                 case <-Time.after(tb)
                     return true
-                case <-quit //quit is true if v triggers impeachment
+                case <-quit // quit is true if v triggers impeachment
                     return false
             }
         }
@@ -689,10 +697,10 @@ indicating the broadcast delay of a block.
 By setting it to 2.5 seconds, a validator has sufficient time for consensus process.
 
 
-Let b be a block with timestamp tb written in its header.
-The proposer should broadcast b at timestamp tb.
-As stated in previous chapter, tb is usually set to previousBlockTimestamp+period.
-A validator invokes its normal case handler if it receives b before previousBlockTimestamp+period+2.5.
+Let :math:`b` be a block with timestamp tb written in its header.
+The proposer should broadcast :math:`b` at timestamp tb.
+As stated in previous chapter, tb is usually set to :math:`previousBlockTimestamp+period`.
+A validator invokes its normal case handler if it receives :math:`b` before :math:`previousBlockTimestamp+period+2.5`.
 and rejects this block otherwise.
 The pseudocode below demonstrates this process.
 
@@ -752,8 +760,8 @@ Liveness is also the reason that a validator cannot insist on a P-certificate.
 +---------------------------+------------------------------------+-----------------------------+
 | Aspect                    |           LBFT 2.0                 |         PBFT                |
 +===========================+====================================+=============================+
-| Assumption                | Tolerate at most f faulty          | Tolerate at most f replicas |
-|                           | validators and a faulty proposer   |                             |
+| Assumption                | Tolerate at most :math:`f` faulty  | Tolerate at most            |
+|                           | validators and a faulty proposer   | :math:`f` replicas          |
 +---------------------------+------------------------------------+-----------------------------+
 | Liveness                  | Insert a block within at most      | Response in finite time     |
 |                           | period+timeout (20 seconds)        |                             |

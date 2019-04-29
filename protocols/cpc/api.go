@@ -118,7 +118,7 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 	}
 	// Start the miner and return
 	// TODO: @ac pass the concrete client argument in the function call
-	return api.c.StartMining(true, nil)
+	return api.c.StartMining(true)
 }
 
 // Stop the miner

@@ -31,7 +31,6 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt_backend_holder"
 	"bitbucket.org/cpchain/chain/core"
@@ -157,6 +156,21 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	if cpc.engine == nil {
 		return nil, errBadEngine
 	}
+	cpc.APIBackend = &APIBackend{cpc, nil}
+
+	// gas related
+	gpoParams := config.GPO
+	if gpoParams.Default == nil {
+		gpoParams.Default = config.GasPrice
+	}
+	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
+
+	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
+	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
+	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
+		dpor.SetRptBackend(primitive_register.GetChainClient())
+		dpor.SetRnodeBackend(primitive_register.GetChainClient())
+	}
 
 	log.Info("Initialising cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
 
@@ -182,8 +196,10 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
 		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
+
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
 		dpor.SetupAdmission(cpc.AdmissionApiBackend)
+		dpor.SetChain(cpc.blockchain)
 	}
 
 	// Rewind the chain in case of an incompatible config upgrade.
@@ -205,20 +221,6 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 
 	cpc.miner = miner.New(cpc, cpc.chainConfig, cpc.EventMux(), cpc.engine)
 
-	cpc.APIBackend = &APIBackend{cpc, nil}
-
-	// gas related
-	gpoParams := config.GPO
-	if gpoParams.Default == nil {
-		gpoParams.Default = config.GasPrice
-	}
-	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
-
-	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
-	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
-	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
-		dpor.SetRptBackend(primitive_register.GetChainClient())
-	}
 	return cpc, nil
 }
 
@@ -370,15 +372,7 @@ func (s *CpchainService) SetCoinbase(coinbase common.Address) {
 	s.miner.SetCoinbase(coinbase)
 }
 
-func (s *CpchainService) SetClientForDpor(client backend.ClientBackend) {
-	if dpor, ok := s.engine.(*dpor.Dpor); ok {
-		dpor.SetClient(client)
-		return
-	}
-	panic("must set dpor consensus engine")
-}
-
-func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) error {
+func (s *CpchainService) StartMining(local bool) error {
 	if s.IsMining() {
 		return nil
 	}
@@ -413,7 +407,6 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 
 		// make sure dpor.StartMining start once
 		dpor.SetAsMiner(true)
-		dpor.SetClient(client)
 		go dpor.StartMining(s.blockchain, s.server, s.protocolManager.BroadcastBlock, s.protocolManager.SyncFromPeer, s.protocolManager.SyncFromBestPeer)
 		log.Info("start participating campaign", "campaign", dpor.IsToCampaign())
 	}
@@ -440,10 +433,9 @@ func (s *CpchainService) StartMining(local bool, client backend.ClientBackend) e
 	return nil
 }
 
-func (s *CpchainService) SetupValidator(client backend.ClientBackend) error {
+func (s *CpchainService) SetupValidator() error {
 	if dpor, ok := s.engine.(*dpor.Dpor); ok {
 		dpor.SetAsValidator(true)
-		dpor.SetClient(client)
 		dpor.SetupAsValidator(s.blockchain, s.server, s.protocolManager.BroadcastBlock, s.protocolManager.SyncFromPeer, s.protocolManager.SyncFromBestPeer)
 	}
 	return nil
