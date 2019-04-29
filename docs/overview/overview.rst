@@ -185,11 +185,11 @@ By employing `RPT Contract`_, a node can evaluates its RPT value by following fi
 Each dimension has a full score of 100 point.
 And the total score is calculated as:
 
-*RPT = 0.5\*AB +
+:math:`RPT = 0.5\*AB +
 0.15\*TX +
 0.1\*PR +
 0.15\*DC +
-0.1\*BM*
+0.1\*BM`
 
 
 Account Balance
@@ -332,7 +332,7 @@ In fundraising, the following operations are allowed:
 #. Nodes that have already had coins deposited in the pool can choose to
     1. whether continue deposit the next season
     #. or renew the deposit value.
-#. For a node determines to withdraw deposit, it needs to call withdraw function on their own initiative after lock-up period finishes
+#. For a node determines to withdraw deposit, it needs to call withdraw function on their own initiative after lock-up period finishes.
 
 When a fundraising ends, the following rules are applied:
 
@@ -342,8 +342,8 @@ When a fundraising ends, the following rules are applied:
 #. All nodes with deposit in this lock-up period receive their reward from the pool.
 
 The reward for a certain node from the pool is proportional to its deposit in a season.
-In other word, the basic reward is calculated as 5000000*d/D, where d is deposit of a certain node,
-and D is the total value of coins in the reward pool.
+In other word, the basic reward is calculated as :math:`5000000*d/D`, where :math:`d` is deposit of a certain node,
+and :math:`D` is the total value of coins in the reward pool.
 
 
 .. image:: reward_pool.png
