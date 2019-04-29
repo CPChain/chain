@@ -24,6 +24,7 @@ import (
 	"math/big"
 	"strings"
 
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -100,6 +101,38 @@ func (a RptList) Less(i, j int) bool {
 	}
 }
 
+// RnodeService provides methods to obtain all rnodes from campaign contract
+type RnodeService interface {
+	CandidatesOf(term uint64) ([]common.Address, error)
+}
+
+// RnodeServiceImpl is the default rnode list collector
+type RnodeServiceImpl struct {
+	campaignContractAddr common.Address
+	client               bind.ContractBackend
+}
+
+// NewRnodeService creates a concrete Rnode service instance.
+func NewRnodeService(backend bind.ContractBackend, contractAddr common.Address) (RnodeService, error) {
+	log.Debug("rnode contract addr", "contractAddr", contractAddr.Hex())
+
+	rs := &RnodeServiceImpl{
+		client:               backend,
+		campaignContractAddr: contractAddr,
+	}
+	return rs, nil
+}
+
+// CandidatesOf implements RnodeService
+func (rs *RnodeServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
+	contractInstance, err := campaign.NewCampaign(rs.campaignContractAddr, rs.client)
+	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
+	if err != nil {
+		return nil, err
+	}
+	return cds, nil
+}
+
 // RptService provides methods to obtain all rpt related information from block txs and contracts.
 type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
@@ -111,6 +144,7 @@ type RptService interface {
 type RptServiceImpl struct {
 	rptContract common.Address
 	client      bind.ContractBackend
+	rptInstance *contracts.Rpt
 
 	rptcache *lru.ARCCache
 }
@@ -119,10 +153,16 @@ type RptServiceImpl struct {
 func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address) (RptService, error) {
 	log.Debug("rptContractAddr", "contractAddr", rptContractAddr.Hex())
 
+	rptInstance, err := contracts.NewRpt(rptContractAddr, backend)
+	if err != nil {
+		log.Fatal("New primitivesContract error")
+	}
+
 	cache, _ := lru.NewARC(cacheSize)
 	bc := &RptServiceImpl{
 		client:      backend,
 		rptContract: rptContractAddr,
+		rptInstance: rptInstance,
 		rptcache:    cache,
 	}
 	return bc, nil
@@ -130,11 +170,11 @@ func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address)
 
 // WindowSize reads windowsize from rpt contract
 func (rs *RptServiceImpl) WindowSize() (uint64, error) {
-	instance, err := contracts.NewRpt(rs.rptContract, rs.client)
-	if err != nil {
-		log.Error("New primitivesContract error")
-		return 0, err
+	if rs.rptInstance == nil {
+		log.Fatal("New primitivesContract error")
 	}
+
+	instance := rs.rptInstance
 	windowSize, err := instance.Window(nil)
 	if err != nil {
 		log.Error("Get windowSize error", "error", err)
@@ -153,14 +193,14 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 	return rpts
 }
 
-// calcRptInfo return the Rpt of the rnode address
+// CalcRptInfo return the Rpt of the rnode address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
-	instance, err := contracts.NewRpt(rs.rptContract, rs.client)
-	log.Debug("calling to RPT contract", "contractAddr", rs.rptContract.Hex())
-	if err != nil {
-		log.Error("New primitivesContract error")
-		return Rpt{Address: address, Rpt: minRptScore}
+	if rs.rptInstance == nil {
+		log.Fatal("New primitivesContract error")
 	}
+
+	instance := rs.rptInstance
+
 	rpt := int64(0)
 	windowSize, err := instance.Window(nil)
 	if err != nil {

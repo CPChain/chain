@@ -27,7 +27,6 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -389,10 +388,10 @@ func (d *Dpor) State() consensus.State {
 
 // GetCalcRptInfo get the rpt value of an address at specific block number
 func (d *Dpor) GetCalcRptInfo(address common.Address, blockNum uint64) int64 {
-	instance, err := rpt.NewRptService(d.Client(), d.config.Contracts[configs.ContractRpt])
-	if err != nil {
-		log.Fatal("GetCalcRptInfo", "error", err)
+	rptService := d.GetRptBackend()
+	if rptService == nil {
+		log.Fatal("dpor rpt service is nil")
 	}
-	rp := instance.CalcRptInfo(address, blockNum)
+	rp := rptService.CalcRptInfo(address, blockNum)
 	return rp.Rpt
 }

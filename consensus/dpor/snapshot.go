@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"math/big"
 	"math/rand"
 	"sync"
 
@@ -14,7 +13,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -50,10 +48,8 @@ type DporSnapshot struct {
 	Candidates       []common.Address            `json:"candidates"` // Set of candidates read from campaign contract
 	RecentProposers  map[uint64][]common.Address `json:"proposers"`  // Set of recent proposers
 	RecentValidators map[uint64][]common.Address `json:"validators"` // Set of recent validators
-	Client           backend.ClientBackend       `json:"-"`
 
-	config     *configs.DporConfig // Consensus engine parameters to fine tune behavior
-	rptBackend rpt.RptService
+	config *configs.DporConfig // Consensus engine parameters to fine tune behavior
 
 	lock sync.RWMutex
 }
@@ -193,20 +189,6 @@ func (s *DporSnapshot) setRecentProposers(term uint64, proposers []common.Addres
 
 }
 
-func (s *DporSnapshot) client() backend.ClientBackend {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
-	return s.Client
-}
-
-func (s *DporSnapshot) setClient(client backend.ClientBackend) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	s.Client = client
-}
-
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
 // method does not initialize the set of recent proposers, so only ever use if for
 // the genesis block.
@@ -275,13 +257,12 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 	for term, validator := range s.recentValidators() {
 		cpy.setRecentValidators(term, validator)
 	}
-	cpy.rptBackend = s.rptBackend
 	return cpy
 }
 
 // apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBackend, timeToUpdateCommitttee bool) (*DporSnapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee bool, rnodeService rpt.RnodeService, rptService rpt.RptService) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
@@ -299,14 +280,13 @@ func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBacke
 
 	// Iterate through the headers and create a new Snapshot
 	snap := s.copy()
-	snap.setClient(client)
 	log.Debug("apply headers", "len(headers)", len(headers))
 	for _, header := range headers {
 
 		// TODO: write a function to do this
 		ifUpdateCommittee := timeToUpdateCommitttee
 
-		err := snap.applyHeader(header, ifUpdateCommittee)
+		err := snap.applyHeader(header, ifUpdateCommittee, rnodeService, rptService)
 		if err != nil {
 			log.Warn("DporSnapshot apply header error.", "err", err)
 			return nil, err
@@ -317,7 +297,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, client backend.ClientBacke
 }
 
 // applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
-func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool) error {
+func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool, rnodeService rpt.RnodeService, rptService rpt.RptService) error {
 	// Update Snapshot attributes.
 	s.setNumber(header.Number.Uint64())
 	s.setHash(header.Hash())
@@ -327,7 +307,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 
 		// Update candidates
 		log.Debug("start updating candidates")
-		err := s.updateCandidates()
+		err := s.updateCandidates(rnodeService)
 		if err != nil {
 			log.Warn("err when update candidates", "err", err)
 			return err
@@ -339,7 +319,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 
 		// Update rpts
 		log.Debug("start updating rpts")
-		rpts, err := s.updateRpts()
+		rpts, err := s.updateRpts(rptService)
 		if err != nil {
 			log.Warn("err when update rpts", "err", err)
 			return err
@@ -371,38 +351,26 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool)
 }
 
 // updateCandidates updates proposer candidates from campaign contract
-func (s *DporSnapshot) updateCandidates() error {
+func (s *DporSnapshot) updateCandidates(rnodeService rpt.RnodeService) error {
 	var candidates []common.Address
 
-	if s.Mode == NormalMode && s.isStartElection() {
-		client := s.client()
-		// If contractCaller is not nil, use it to update candidates from contract
-		if client != nil {
-			// Creates an contract instance
-			campaignAddress := s.config.Contracts[configs.ContractCampaign]
-			// log.Info("campaignAddress", "addr", campaignAddress.Hex())
-			contractInstance, err := campaign.NewCampaign(campaignAddress, client)
-			if err != nil {
-				log.Error("new Campaign error", err)
-				return err
-			}
+	if s.Mode == NormalMode && s.isStartElection() && rnodeService != nil {
 
-			term := s.TermOf(s.Number)
-			// Read candidates from the contract instance
-			cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
-			if err != nil {
-				log.Error("read Candidates error, use default candidates instead", "err", err)
-				// use default candidates instead
-				s.setCandidates(configs.Candidates())
-				return nil // swallow the error as it has been handled properly
-			}
+		// Read candidates from the contract instance
+		term := s.TermOf(s.Number)
+		cds, err := rnodeService.CandidatesOf(term)
+		if err != nil {
+			log.Error("read Candidates error, use default candidates instead", "err", err)
+			// use default candidates instead
+			s.setCandidates(configs.Candidates())
+			return nil // swallow the error as it has been handled properly
+		}
 
-			log.Debug("got candidates from contract of term", "num", s.Number, "len(candidates)", len(cds), "term", term)
+		log.Debug("got candidates from contract of term", "num", s.Number, "len(candidates)", len(cds), "term", term)
 
-			// If useful, use it!
-			if uint64(len(cds)) >= s.config.TermLen {
-				candidates = cds
-			}
+		// If useful, use it!
+		if uint64(len(cds)) >= s.config.TermLen {
+			candidates = cds
 		}
 	}
 
@@ -421,20 +389,11 @@ func (s *DporSnapshot) updateCandidates() error {
 }
 
 // updateRpts updates rpts of candidates
-func (s *DporSnapshot) updateRpts() (rpt.RptList, error) {
-
-	if s.client() == nil && s.Mode == NormalMode {
-		log.Debug("snapshot client is nil")
-		s.Mode = FakeMode
-	}
+func (s *DporSnapshot) updateRpts(rptService rpt.RptService) (rpt.RptList, error) {
 
 	switch {
-	case s.Mode == NormalMode && s.isStartElection():
-		if s.rptBackend == nil {
-			log.Fatal("rptBackend is nil")
-		}
-		rptBackend := s.rptBackend
-		rpts := rptBackend.CalcRptInfoList(s.candidates(), s.number())
+	case s.Mode == NormalMode && s.isStartElection() && rptService != nil:
+		rpts := rptService.CalcRptInfoList(s.candidates(), s.number())
 		log.Debug("called contract to get rpts", "rpts", rpts.FormatString())
 		return rpts, nil
 	default:
