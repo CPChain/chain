@@ -302,7 +302,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 	)
 
 	if dporMode == dpor.NormalMode && isMinerOrValidator && !dporProtocol.Available() {
-		log.Warn("dpor handler is not not available now")
+		// log.Warn("dpor handler is not not available now")
 		return nil
 	}
 

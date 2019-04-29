@@ -56,11 +56,45 @@ var (
 	// ErrInvalidSigners is returned if a block contains an invalid extra sigers bytes.
 	ErrInvalidSigners = errors.New("invalid signer list on checkpoint block")
 
+	// ErrInvalidNormalCoinbase is returned if a normal block's coinbase is 0x00.
+	ErrInvalidNormalCoinbase = errors.New("invalid normal coinbase, it's 0x00")
+
+	// --- those are invalid impeach block errors ---
+
 	// ErrInvalidImpeachCoinbase is returned if an impeach block's coinbase is not 0x00.
 	ErrInvalidImpeachCoinbase = errors.New("invalid impeach coinbase")
 
+	// ErrInvalidImpeachStateRoot is returned if an impeach block's StateRoot is not equal to parents'.
+	ErrInvalidImpeachStateRoot = errors.New("invalid impeach state root")
+
+	// ErrInvalidImpeachTxsRoot is returned if an impeach block's TxsRoot is not valid.
+	ErrInvalidImpeachTxsRoot = errors.New("invalid impeach txs root")
+
+	// ErrInvalidImpeachReceiptsRoot is returned if an impeach block's ReceiptsRoot is not valid.
+	ErrInvalidImpeachReceiptsRoot = errors.New("invalid impeach receipts root")
+
+	// ErrInvalidImpeachLogsBloom is returned if an impeach block's LogsBloom is not valid.
+	ErrInvalidImpeachLogsBloom = errors.New("invalid impeach LogsBloom")
+
+	// ErrInvalidImpeachGasLimit is returned if an impeach block's GasLimit is not valid.
+	ErrInvalidImpeachGasLimit = errors.New("invalid impeach GasLimit")
+
+	// ErrInvalidImpeachGasUsed is returned if an impeach block's GasUsed is not valid.
+	ErrInvalidImpeachGasUsed = errors.New("invalid impeach GasUsed")
+
+	// ErrInvalidImpeachTimestamp is returned if an impeach block's Timestamp is not valid.
+	ErrInvalidImpeachTimestamp = errors.New("invalid impeach Timestamp")
+
+	// ErrInvalidImpeachExtra is returned if an impeach block's Extra is not valid.
+	ErrInvalidImpeachExtra = errors.New("invalid impeach Extra")
+
+	// ErrInvalidImpeachDporSnap is returned if an impeach block's DporSnap is not valid.
+	ErrInvalidImpeachDporSnap = errors.New("invalid impeach DporSnap")
+
 	// ErrInvalidImpeachTxs is returned if an impeach block contrains txs
 	ErrInvalidImpeachTxs = errors.New("invalid impeach txs")
+
+	// --- those are invalid impeach block errors ---
 
 	// ErrorInvalidValidatorsList is returned if the validators list is invalid
 	ErrorInvalidValidatorsList = errors.New("invalid validators list")

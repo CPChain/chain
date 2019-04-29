@@ -267,6 +267,33 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	return impeach, nil
 }
 
+// CreateImpeachBlockAt creates an impeachment block
+func (d *Dpor) CreateImpeachBlockAt(parentHeader *types.Header) (*types.Block, error) {
+	parentNum := parentHeader.Number.Uint64()
+	parent := d.chain.GetBlock(parentHeader.Hash(), parentNum)
+
+	impeachHeader := &types.Header{
+		ParentHash: parent.Hash(),
+		Number:     big.NewInt(int64(parentNum + 1)),
+		GasLimit:   parent.GasLimit(),
+		Extra:      make([]byte, extraSeal),
+		Coinbase:   common.Address{},
+		StateRoot:  parentHeader.StateRoot,
+	}
+
+	for _, proposer := range d.CurrentSnap().ProposersOf(parentNum + 1) {
+		impeachHeader.Dpor.Proposers = append(impeachHeader.Dpor.Proposers, proposer)
+	}
+	impeachHeader.Dpor.Sigs = make([]types.DporSignature, d.config.ValidatorsLen())
+
+	timestamp := parent.Timestamp().Add(d.config.PeriodDuration()).Add(d.config.ImpeachTimeout)
+	impeachHeader.SetTimestamp(timestamp)
+
+	impeach := types.NewBlock(impeachHeader, []*types.Transaction{}, []*types.Receipt{})
+
+	return impeach, nil
+}
+
 // CreateFailbackImpeachBlocks creates impeachment blocks with failback timestamps
 func (d *Dpor) CreateFailbackImpeachBlocks() (firstImpeachment *types.Block, secondImpeachment *types.Block, err error) {
 

@@ -230,6 +230,13 @@ func (p *LBFT2) IdleHandler(input *BlockOrHeader, msgCode MsgCode, state consens
 		p.preprepareReceiveTimestamp = time.Now()
 
 		return p.handlePreprepareMsg(input, state, func(block *types.Block) error {
+
+			// return error if the block in the normal preprepare msg is an impeach block
+			if block.Impeachment() {
+				log.Warn("received impeach block as a normal preprepare msg", "number", block.NumberU64(), "hash", block.Hash().Hex())
+				return consensus.ErrInvalidNormalCoinbase
+			}
+
 			return p.dpor.ValidateBlock(block, false, true)
 		})
 

@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/commons/time"
+	times "bitbucket.org/cpchain/chain/commons/time"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
@@ -143,7 +143,7 @@ func unlockAccounts(ctx *cli.Context, n *node.Node) *keystore.Key {
 	unlock := ctx.String("unlock")
 	unlocks := strings.FieldsFunc(unlock, func(c rune) bool { return c == ',' })
 	for i, account := range unlocks {
-		log.Infof("%v, %v\n", i, account)
+		// log.Infof("%v, %v\n", i, account)
 		if i < len(passwords) {
 			_, key, err := unlockAccountWithPassword(ks, account, passwords[i])
 			if err != nil {
@@ -216,13 +216,6 @@ func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 		log.Fatalf("Cpchain service not running: %v", err)
 	}
 
-	rpcClient, err := n.Attach()
-	if err != nil {
-		log.Fatalf("Failed to attach to self: %v", err)
-	}
-	client := cpclient.NewClient(rpcClient)
-	cpchainService.SetClientForDpor(client)
-
 	// TODO: fix this, do not use *keystore.Key, use wallet instead
 	contractCaller := createContractCaller(n, key)
 	if contractCaller != nil {
@@ -230,13 +223,13 @@ func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 	}
 
 	if ctx.Bool(flags.MineFlagName) {
-		if err := cpchainService.StartMining(true, client); err != nil {
+		if err := cpchainService.StartMining(true); err != nil {
 			log.Fatalf("Failed to start mining: %v", err)
 		}
 	}
 
 	if ctx.Bool(flags.ValidatorFlagName) {
-		if err := cpchainService.SetupValidator(client); err != nil {
+		if err := cpchainService.SetupValidator(); err != nil {
 			log.Fatalf("Failed to setup validator: %v", err)
 		}
 	}
@@ -290,7 +283,6 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 
 	startNode(n)
 	key := unlockAccounts(ctx, n)
-
 	handleWallet(n)
 	setupMining(ctx, n, key)
 	// handle user interrupt
