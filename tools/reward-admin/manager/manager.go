@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"crypto/ecdsa"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli"
 )
+
 
 // Console manage apis
 type Console struct {
@@ -139,30 +141,46 @@ func (c *Console) StartNewRound() error {
 		return nil
 	}
 	addr := getContractAddress(configs.ContractReward)
+	log.Info("Get contract address is successful!")
 	instance, err := reward.NewReward(addr, c.client)
-
+    log.Info("Call contract successful!")
 	if err != nil {
+		log.Error("call contract error","err",err.Error())
 		return err
 	}
 	// Want Startnewround
 	transactOpts := c.buildTransactOpts(big.NewInt(0))
 	tx, err := instance.StartNewRound(transactOpts)
+	log.Info("Transaction hash is","txls" +
+		"",tx)
 	if err != nil {
+		log.Error("transaction","err",err.Error())
 		return err
+	}
+	c2 := make(chan string, 1)
+	go func() {
+		r, err := bind.WaitMined(context.Background(), c.client, tx)
+		if err != nil {
+			errmark:="wait mined failed,to startnewround is failed."
+			log.Info(errmark, "err", err)
+			c.output.Error(errmark, "err", err)
+			log.Error(err.Error())
+			//return err
+		}
+		c.checkNewRoundLockStatus(r, instance)
+		c2 <- "new round result "
+	}()
+	select {
+	case res := <-c2:
+		fmt.Println(res)
+	case <-time.After(20*time.Minute):
+		timemark:="NewRound is timeout!"
+		fmt.Println(timemark)
+		log.Info(timemark)
+
 	}
 
-	if err != nil {
-		return err
-	}
 
-	r, err := bind.WaitMined(context.Background(), c.client, tx)
-	if err != nil {
-		errmark:="wait mined failed,to startnewround is failed."
-		log.Info(errmark, "err", err)
-		c.output.Error(errmark, "err", err)
-		return err
-	}
-	c.checkNewRoundLockStatus(r, instance)
 	return err
 }
 
@@ -170,6 +188,7 @@ func (c *Console) checkNewRoundLockStatus(r *types.Receipt, instance *reward.Rew
 	if r.Status == 1 {
 		locked, err := instance.IsLocked(nil)
 		if err != nil {
+			log.Error(err.Error())
 			c.output.Error(err.Error())
 		}
 		if locked == true {
@@ -191,25 +210,51 @@ func (c *Console) checkNewRoundLockStatus(r *types.Receipt, instance *reward.Rew
 func (c *Console) StartNewRaise() error {
 	c.output.Info("Want Startnewraise...")
 	addr := getContractAddress(configs.ContractReward)
+	log.Info("Get contract address is successful!")
 	instance, err := reward.NewReward(addr, c.client)
+	log.Info("Call contract successful!")
 	if err != nil {
+		log.Error(err.Error())
 		return err
 	}
 	// Want Startnewraise
 	transactOpts := c.buildTransactOpts(big.NewInt(0))
 	tx, err := instance.NewRaise(transactOpts)
+	log.Info("Transaction hash is","tx",tx)
 	if err != nil {
+		log.Error("error when NewRaise","err",err.Error())
 		return err
 	}
-
-	r, err := bind.WaitMined(context.Background(), c.client, tx)
-	if err != nil {
-		mark:="wait mined failed,to startnewraise is failed."
-		log.Info(mark, "err", err)
-		c.output.Error(mark, "err", err)
-		return err
+	//r, err := bind.WaitMined(context.Background(), c.client, tx)
+	//	if err != nil {
+	//		errmark:="wait mined failed,to startnewraise is failed."
+	//		log.Info(errmark, "err", err)
+	//		c.output.Error(errmark, "err", err)
+	//		log.Error(err.Error())
+	//		return err
+	//	}
+	//	c.checkNewRaiseLockStatus(r, instance)
+	c2 := make(chan string, 1)
+	go func() {
+		r, err := bind.WaitMined(context.Background(), c.client, tx)
+		if err != nil {
+			errmark:="wait mined failed,to startnewraise is failed."
+			log.Info(errmark, "err", err)
+			c.output.Error(errmark, "err", err)
+			log.Error(err.Error())
+			//return err
+		}
+		c.checkNewRaiseLockStatus(r, instance)
+		c2 <- "new raise result "
+	}()
+	select {
+	case res := <-c2:
+		fmt.Println(res)
+	case <-time.After(20*time.Minute):
+		timemark:="NewRaise is timeout!"
+		fmt.Println(timemark)
+		log.Info(timemark)
 	}
-	c.checkNewRaiseLockStatus(r, instance)
 
 	return err
 }
@@ -218,6 +263,7 @@ func (c *Console) checkNewRaiseLockStatus(r *types.Receipt, instance *reward.Rew
 	if r.Status == 1 {
 		locked, err := instance.IsLocked(nil)
 		if err != nil {
+			log.Error(err.Error())
 			c.output.Error(err.Error())
 		}
 		if locked == false {
