@@ -16,7 +16,7 @@ func TestManager(t *testing.T) {
 	password := "/Users/liaojinlong/.cpchain/password"
 	output := out.NewLogOutput()
 
-	manager := NewConsole(&ctx, endPoint, kspath, password, &output)
+	manager, _ := NewConsole(&ctx, endPoint, kspath, password, &output)
 
 	manager.GetStatus()
 }
