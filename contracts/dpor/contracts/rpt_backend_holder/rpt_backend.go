@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"sync"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -34,7 +34,7 @@ func GetApiBackendHolderInstance() *RptBackendHolder {
 
 func (rb *RptBackendHolder) Init(chainBackend ChainAPIBackend, contractBackend ContractAPIbcakend) {
 	onceApiBackendHoldInit.Do(func() {
-		log.Info("init RptBackendHolder", "ChainBackend", chainBackend, "ContractBackend", contractBackend)
+		log.Debug("init RptBackendHolder", "ChainBackend", chainBackend, "ContractBackend", contractBackend)
 		rb.ChainBackend = chainBackend
 		rb.ContractBackend = contractBackend
 	})
