@@ -101,15 +101,15 @@ func (l *LogOutput) Info(msg string, params ...interface{}) {
 
 // Error log
 func (l *LogOutput) Error(msg string, params ...interface{}) {
-	l.logger.Error(msg, params...)
+	l.logger.Info("error:"+msg, params...)
 }
 
 // Fatal log
 func (l *LogOutput) Fatal(msg string, params ...interface{}) {
-	l.logger.Fatal(msg, params...)
+	l.logger.Info("fatal:"+msg, params...)
 }
 
 // Warn log
 func (l *LogOutput) Warn(msg string, params ...interface{}) {
-	l.logger.Warn(msg, params...)
+	l.logger.Warn("warn:"+msg, params...)
 }

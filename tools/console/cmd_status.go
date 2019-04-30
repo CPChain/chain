@@ -13,21 +13,20 @@ func init() {
 		Name:   "status",
 		Flags:  wrapperFlags(statusFlags),
 		Usage:  "Show status of cpchain node",
-		Before: func(ctx *cli.Context) error {
-			return nil
-		},
-		After: func(ctx *cli.Context) error {
-			return nil
-		},
 	}
 }
 
 func showStatus(ctx *cli.Context) error {
-	console, out, cancel := build(ctx)
+	console, out, cancel, err := build(ctx)
+	if err != nil {
+		out.Error(err.Error())
+		return nil
+	}
 	defer cancel()
 	status, err := console.GetStatus()
 	if err != nil {
 		out.Error(err.Error())
+		return nil
 	}
 	out.Status(status)
 	return nil

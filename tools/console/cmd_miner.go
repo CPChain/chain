@@ -34,21 +34,31 @@ func init() {
 }
 
 func startMining(ctx *cli.Context) error {
-	console, out, cancel := build(ctx)
-	defer cancel()
-	err := console.StartMining()
+	console, out, cancel, err := build(ctx)
 	if err != nil {
 		out.Error(err.Error())
+		return nil
+	}
+	defer cancel()
+	err = console.StartMining()
+	if err != nil {
+		out.Error(err.Error())
+		return nil
 	}
 	return nil
 }
 
 func stopMining(ctx *cli.Context) error {
-	console, out, cancel := build(ctx)
-	defer cancel()
-	err := console.StopMining()
+	console, out, cancel, err := build(ctx)
 	if err != nil {
 		out.Error(err.Error())
+		return nil
+	}
+	defer cancel()
+	err = console.StopMining()
+	if err != nil {
+		out.Error(err.Error())
+		return nil
 	}
 	return nil
 }

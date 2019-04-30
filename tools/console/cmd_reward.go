@@ -52,7 +52,11 @@ func init() {
 }
 
 func deposit(ctx *cli.Context) error {
-	console, out, cancel := build(ctx)
+	console, out, cancel, err := build(ctx)
+	if err != nil {
+		out.Error(err.Error())
+		return nil
+	}
 	defer cancel()
 
 	if len(ctx.Args()) > 1 {
@@ -70,7 +74,7 @@ func deposit(ctx *cli.Context) error {
 		out.Info("Argument is not present, use default value, 1000 CPC")
 	}
 
-	err := console.SubmitDeposit(new(big.Int).Mul(new(big.Int).SetUint64(value), big.NewInt(configs.Cpc)))
+	err = console.SubmitDeposit(new(big.Int).Mul(new(big.Int).SetUint64(value), big.NewInt(configs.Cpc)))
 	if err != nil {
 		out.Error(err.Error())
 	}
@@ -78,7 +82,11 @@ func deposit(ctx *cli.Context) error {
 }
 
 func withdraw(ctx *cli.Context) error {
-	console, out, cancel := build(ctx)
+	console, out, cancel, err := build(ctx)
+	if err != nil {
+		out.Error(err.Error())
+		return nil
+	}
 	defer cancel()
 
 	if len(ctx.Args()) > 1 {
@@ -101,7 +109,7 @@ func withdraw(ctx *cli.Context) error {
 		out.Info("Argument is not present, use default value, the balance of fundraising account", "value", value)
 	}
 
-	err := console.Withdraw(value)
+	err = console.Withdraw(value)
 	if err != nil {
 		out.Fatal(err.Error())
 	}
@@ -109,9 +117,13 @@ func withdraw(ctx *cli.Context) error {
 }
 
 func wantRenew(ctx *cli.Context) error {
-	console, out, cancel := build(ctx)
+	console, out, cancel, err := build(ctx)
+	if err != nil {
+		out.Error(err.Error())
+		return nil
+	}
 	defer cancel()
-	err := console.WantRenew()
+	err = console.WantRenew()
 	if err != nil {
 		out.Error(err.Error())
 	}
@@ -119,9 +131,13 @@ func wantRenew(ctx *cli.Context) error {
 }
 
 func quitRenew(ctx *cli.Context) error {
-	console, out, cancel := build(ctx)
+	console, out, cancel, err := build(ctx)
+	if err != nil {
+		out.Error(err.Error())
+		return nil
+	}
 	defer cancel()
-	err := console.QuitRenew()
+	err = console.QuitRenew()
 	if err != nil {
 		out.Error(err.Error())
 	}
