@@ -64,6 +64,11 @@ const (
 	MainnetValidatorsNumber = MainnetFaultyValidatorsNumber*3 + 1
 )
 
+// MaximumRnodeNumber is the max number of rnodes read from campaign contract
+const (
+	MaximumRnodeNumber = 200
+)
+
 const (
 	DefaultDevMaxInitBlockNumber     = 216
 	DefaultTestnetMaxInitBlockNumber = 240
