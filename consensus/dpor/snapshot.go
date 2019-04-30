@@ -374,9 +374,16 @@ func (s *DporSnapshot) updateCandidates(rnodeService rpt.RnodeService) error {
 		}
 	}
 
+	// not enough candidates, use default candidates
 	if uint64(len(candidates)) < s.config.TermLen {
 		log.Debug("no enough candidates,use default candidates")
 		candidates = configs.Candidates()
+	}
+
+	// too many candidates
+	if len(candidates) > configs.MaximumRnodeNumber {
+		log.Debug("rnode is more than max allowed", "max", configs.MaximumRnodeNumber, "len", len(candidates))
+		candidates = candidates[:configs.MaximumRnodeNumber]
 	}
 
 	log.Debug("set candidates", "len(candidates)", len(candidates))

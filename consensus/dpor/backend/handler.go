@@ -82,7 +82,7 @@ func NewHandler(config *configs.DporConfig, coinbase common.Address, db database
 func (h *Handler) Start() {
 
 	// dial default validators
-	// go h.dialer.DialAllRemoteValidators(0)
+	go h.dialer.dialAllRemoteValidators(0)
 	go h.dialer.KeepConnection()
 
 	// broadcast mined pending block loop
