@@ -103,7 +103,7 @@ func NewCep1Signer(chainId *big.Int) Cep1Signer {
 // Sender recovers sender address
 func (s Cep1Signer) Sender(tx *Transaction) (common.Address, error) {
 	if !tx.Protected() {
-		log.Warn("Deprecated signer with unprotected transaction")
+		log.Debug("Deprecated signer with unprotected transaction")
 		return HomesteadSigner{}.Sender(tx)
 	}
 	// verify chain id
