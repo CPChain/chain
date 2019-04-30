@@ -66,7 +66,7 @@ const (
 
 // MaximumRnodeNumber is the max number of rnodes read from campaign contract
 const (
-	MaximumRnodeNumber = 200
+	MaximumRnodeNumber = 20
 )
 
 const (
