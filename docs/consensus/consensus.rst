@@ -47,8 +47,9 @@ These quorums have two vital properties:
 #. Availability: there is always a quorum available with no faulty validator.
 
 When members in a quorum endorse information from a same block, they collect a *quorum certificate*.
-There are two certificates, prepare certificate (P-certificate) and commit certificate (C-certificate), which indicates
-that there exist a quorum agreeing on a prepare message and a commit message respectively.
+There are two certificates, **prepare certificate (P-certificate)** and
+**commit certificate (C-certificate)**, which indicate
+that there exists a quorum agreeing on a prepare message and a commit message, respectively.
 
 
 
