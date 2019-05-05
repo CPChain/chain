@@ -50,8 +50,14 @@ type defaultDporHelper struct {
 	dporUtil
 }
 
-// validateBlock checks basic fields in a block
+// validateBlock checks basic fields in a block, this is called only by validators
 func (dh *defaultDporHelper) validateBlock(c *Dpor, chain consensus.ChainReader, block *types.Block, verifySigs bool, verifyProposers bool) error {
+
+	// verify the `validators` field in the header is empty
+	if len(block.Header().Dpor.Validators) != 0 {
+		return consensus.ErrorInvalidValidatorsList
+	}
+
 	// verify the block header according to Dpor Protocol
 	if err := dh.verifyHeader(c, chain, block.Header(), nil, block.RefHeader(), verifySigs, verifyProposers); err != nil {
 		return err
@@ -75,32 +81,38 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 
 	var (
 		number    = header.Number.Uint64()
-		isImpeach = header.Coinbase == common.Address{}
+		isImpeach = header.Impeachment()
 	)
-
-	// verify basic fields of the header
-	err := dh.verifyBasic(dpor, chain, header, parents, refHeader)
-	if err != nil {
-		return err
-	}
 
 	if number == 0 {
 		return nil
 	}
 
+	err := dh.verifyBasic(dpor, chain, header, parents, refHeader)
+	if err != nil {
+		return err
+	}
+
 	// verify dpor seal, genesis block not need this check
-	if verifyProposers && !isImpeach { // ignore impeach block(whose coinbase is empty)
+	if verifyProposers {
+		if isImpeach {
+			if err := dh.verifyDporSnapImpeach(dpor, chain, header, parents, refHeader); err != nil {
+				log.Warn("verifying dpor snap of impeach failed", "error", err, "hash", header.Hash().Hex())
+				return err
+			}
 
-		// verify proposers if it is not an impeachment block
-		if err := dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
-			log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
-			return err
-		}
+		} else {
+			// verify proposers
+			if err := dh.verifyProposers(dpor, chain, header, parents, refHeader); err != nil {
+				log.Warn("verifying proposers failed", "error", err, "hash", header.Hash().Hex())
+				return err
+			}
 
-		// verify proposer's seal
-		if err := dh.verifySeal(dpor, chain, header, parents, refHeader); err != nil {
-			log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
-			return err
+			// verify proposer's seal
+			if err := dh.verifySeal(dpor, chain, header, parents, refHeader); err != nil {
+				log.Warn("verifying seal failed", "error", err, "hash", header.Hash().Hex())
+				return err
+			}
 		}
 	}
 
@@ -136,7 +148,7 @@ func (dh *defaultDporHelper) verifyBasic(dpor *Dpor, chain consensus.ChainReader
 	var (
 		number    = header.Number.Uint64()
 		hash      = header.Hash()
-		isImpeach = header.Coinbase == common.Address{}
+		isImpeach = header.Impeachment()
 	)
 
 	if number == 0 {
@@ -187,10 +199,108 @@ func (dh *defaultDporHelper) verifyBasic(dpor *Dpor, chain consensus.ChainReader
 		return ErrInvalidGasLimit
 	}
 
+	if isImpeach {
+		return dh.verifyBasicImpeach(dpor, chain, header, parent)
+	}
+
 	// Delay to verify it!
 	delay := header.Timestamp().Sub(time.Now())
 	log.Debug("delaying to verify the block", "delay", delay)
 	<-time.After(delay)
+
+	return nil
+}
+
+// verifyBasicImpeach verifies basic fields of an impeach header, i.e. Number, Hash, Coinbase, Time
+func (dh *defaultDporHelper) verifyBasicImpeach(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parent *types.Header) error {
+
+	expectedImpeachBlock := types.NewBlock(header, []*types.Transaction{}, []*types.Receipt{})
+	expectedImpeachBlock.RefHeader().Extra = make([]byte, extraSeal)
+
+	if header.StateRoot != parent.StateRoot {
+		return consensus.ErrInvalidImpeachStateRoot
+	}
+
+	if header.TxsRoot != expectedImpeachBlock.TxsRoot() {
+		return consensus.ErrInvalidImpeachTxsRoot
+	}
+
+	if header.ReceiptsRoot != expectedImpeachBlock.ReceiptsRoot() {
+		return consensus.ErrInvalidImpeachReceiptsRoot
+	}
+
+	if header.LogsBloom != expectedImpeachBlock.LogsBloom() {
+		return consensus.ErrInvalidImpeachLogsBloom
+	}
+
+	if header.GasLimit != parent.GasLimit {
+		return consensus.ErrInvalidImpeachGasLimit
+	}
+
+	if header.GasUsed != 0 {
+		return consensus.ErrInvalidImpeachGasUsed
+	}
+
+	if len(header.Extra) != len(expectedImpeachBlock.Extra()) {
+		return consensus.ErrInvalidImpeachExtra
+	}
+
+	for i, x := range header.Extra {
+		if x != expectedImpeachBlock.Extra()[i] {
+			return consensus.ErrInvalidImpeachExtra
+		}
+	}
+
+	return nil
+}
+
+// ProposersImpeach verifies dpor snap fields of an impeach header
+func (dh *defaultDporHelper) verifyDporSnapImpeach(dpor *Dpor, chain consensus.ChainReader, header *types.Header, parents []*types.Header, refHeader *types.Header) error {
+
+	// Ensure the block's parent is valid
+	var parent *types.Header
+	if len(parents) > 0 {
+		parent = parents[len(parents)-1]
+	} else {
+		blk := chain.GetBlock(header.ParentHash, header.Number.Uint64()-1)
+		if blk != nil {
+			parent = blk.Header()
+		}
+	}
+
+	parentHeader := parent
+	if parentHeader == nil {
+		return consensus.ErrUnknownAncestor
+	}
+
+	expectedImpeachBlock, err := dpor.CreateImpeachBlockAt(parentHeader)
+	if err != nil {
+		return err
+	}
+
+	if header.Dpor.Seal != expectedImpeachBlock.Header().Dpor.Seal {
+		return consensus.ErrInvalidImpeachDporSnap
+	}
+
+	if len(header.Dpor.Proposers) != len(expectedImpeachBlock.Header().Dpor.Proposers) {
+		return consensus.ErrInvalidImpeachDporSnap
+	}
+
+	for i, x := range header.Dpor.Proposers {
+		if x != expectedImpeachBlock.Header().Dpor.Proposers[i] {
+			return consensus.ErrInvalidImpeachDporSnap
+		}
+	}
+
+	if len(header.Dpor.Validators) != len(expectedImpeachBlock.Header().Dpor.Validators) {
+		return consensus.ErrInvalidImpeachDporSnap
+	}
+
+	for i, x := range header.Dpor.Validators {
+		if x != expectedImpeachBlock.Header().Dpor.Validators[i] {
+			return consensus.ErrInvalidImpeachDporSnap
+		}
+	}
 
 	return nil
 }
@@ -335,45 +445,35 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	var (
-		client     = snap.client()
-		rptBackend = snap.rptBackend
+		rnodeService = dpor.GetRnodeBackend()
+		rptService   = dpor.GetRptBackend()
 	)
 
-	if client == nil {
-		client = dpor.Client()
-	}
-
-	if rptBackend == nil && client != nil {
-		if dpor.rptBackend == nil {
-			log.Fatal("rptBackend is nil")
-		}
-
-		rptBackend = dpor.rptBackend
-	}
-
-	// Set correct client and rptBackend
-	snap.setClient(client)
-	snap.rptBackend = rptBackend
+	// if rnodeService == nil || rptService == nil {
+	// 	log.Fatal("rnode service or rpt service is nil", "rnode service", rnodeService, "rpt service", rptService)
+	// }
 
 	var timeToUpdateCommittee bool
 	_, headNumber := chain.KnownHead()
 
 	log.Debug("known chain head", "number", headNumber)
 
-	if rptBackend != nil {
-		timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
-		startBlockNumberOfRptCalculate := float64(int(headNumber) - configs.DefaultFullSyncPivot)
-		timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
-		timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
-	}
+	timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
+	startBlockNumberOfRptCalculate := float64(int(headNumber) - configs.DefaultFullSyncPivot)
+	timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
+	timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
+
+	log.Debug("now apply a batch of headers to get a new snap")
+
+	applyStartTime := time.Now()
 
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, client, timeToUpdateCommittee)
+	newSnap, err := snap.apply(headers, timeToUpdateCommittee, rnodeService, rptService)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debug("now created a new snap", "number", newSnap.number(), "hash", newSnap.hash().Hex())
+	log.Debug("now created a new snap", "number", newSnap.number(), "hash", newSnap.hash().Hex(), "apply elapsed", common.PrettyDuration(time.Now().Sub(applyStartTime)))
 
 	// Save to cache
 	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
@@ -431,7 +531,7 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	log.Debug("--------dpor.verifySeal--------")
 	log.Debug("hash", "hash", hash.Hex())
 	log.Debug("number", "number", number)
-	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
+	log.Debug("current header", "number", chain.CurrentBlock().NumberU64())
 	log.Debug("proposer", "address", proposer.Hex())
 
 	// Check if the proposer is right proposer
@@ -452,7 +552,7 @@ func (dh *defaultDporHelper) verifySignatures(dpor *Dpor, chain consensus.ChainR
 	var (
 		number    = header.Number.Uint64()
 		hash      = header.Hash()
-		isImpeach = header.Coinbase == common.Address{}
+		isImpeach = header.Impeachment()
 	)
 
 	// Verifying the genesis block is not supported
@@ -487,7 +587,7 @@ func (dh *defaultDporHelper) verifySignatures(dpor *Dpor, chain consensus.ChainR
 	log.Debug("--------dpor.verifySigs--------")
 	log.Debug("hash", "hash", hash.Hex())
 	log.Debug("number", "number", number)
-	log.Debug("current header", "number", chain.CurrentHeader().Number.Uint64())
+	log.Debug("current header", "number", chain.CurrentBlock().NumberU64())
 	log.Debug("proposer", "address", proposer.Hex())
 
 	defaultValidators, _ := dpor.ValidatorsOf(chain.CurrentHeader().Number.Uint64())

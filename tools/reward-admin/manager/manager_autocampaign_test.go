@@ -18,7 +18,7 @@ func TestAutoCampaign(t *testing.T) {
 	for i:=0;i<6;i++{
 		executeNewRaise()
 		executeNewRound()
-		time.Sleep(time.Minute)
+		//time.Sleep(time.Minute)
 	}
 
 }
@@ -110,12 +110,12 @@ func newRound() error{
 	output := out.NewLogOutput()
 
 	manager := manager.NewConsole(&ctx, endPoint, kspath, password, &output)
-	//manager.SetPeriod()
+	manager.SetPeriod()
 	manager.StartNewRound()
 	name:="../../../tools/reward-admin/time_startnewround.txt"
 	content:= time.Now().Format("2006-01-02 15:04")
 	data:=[]byte(content)
-	if !manager.IsLocked() {
+	if manager.IsLocked() {
 		err := ioutil.WriteFile(name, data, 0644)
 		if err == nil {
 			fmt.Println("Write newroundtime is successful!", content)

@@ -17,11 +17,16 @@ func init() {
 }
 
 func showAccount(ctx *cli.Context) error {
-	console, out, cancel := build(ctx)
+	console, out, cancel, err := build(ctx)
+	if err != nil {
+		out.Error(err.Error())
+		return nil
+	}
 	defer cancel()
 	balance, err := console.GetBalance()
 	if err != nil {
 		out.Error(err.Error())
+		return nil
 	}
 	out.Balance(balance)
 	return nil

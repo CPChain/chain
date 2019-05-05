@@ -43,14 +43,16 @@ func SetGasConfig(price *big.Int, limit uint64) {
 }
 
 // NewConsole build a console
-func NewConsole(ctx *context.Context, rpc string, keystore string, passwordFile string, output cm.Output) *Console {
+func NewConsole(ctx *context.Context, rpc string, keystore string, passwordFile string, output cm.Output) (*Console, error) {
 	password, err := cc.ReadPasswordByFile(passwordFile)
 	if err != nil {
 		output.Fatal(err.Error())
+		return nil, err
 	}
 	client, prvkey, pubkey, fromAddress, err := cm.NewCpcClient(rpc, keystore, *password)
 	if err != nil {
 		output.Fatal(err.Error())
+		return nil, err
 	}
 	console := Console{
 		rpc,
@@ -61,7 +63,7 @@ func NewConsole(ctx *context.Context, rpc string, keystore string, passwordFile 
 		pubkey,
 		fromAddress,
 	}
-	return &console
+	return &console, nil
 }
 
 func (c *Console) isMining() bool {

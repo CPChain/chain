@@ -5,10 +5,10 @@ import (
 	"errors"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/tools/utility"
 	"bitbucket.org/cpchain/chain/tools/console/common"
 	"bitbucket.org/cpchain/chain/tools/console/manager"
 	"bitbucket.org/cpchain/chain/tools/console/output"
+	"bitbucket.org/cpchain/chain/tools/utility"
 	"github.com/urfave/cli"
 )
 
@@ -22,11 +22,11 @@ var RPCFlags = []cli.Flag{
 	},
 }
 
-func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFunc) {
+func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFunc, error) {
 	rpc, kspath, pwdfile, err := validator(ctx)
 	out := output.NewLogOutput()
 	if err != nil {
-		out.Fatal(err.Error())
+		return nil, &out, nil, err
 	}
 
 	var price *big.Int = nil
@@ -42,8 +42,11 @@ func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFun
 	manager.SetGasConfig(price, limit)
 
 	_ctx, cancel := context.WithCancel(context.Background())
-	console := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)
-	return console, &out, cancel
+	console, err := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)
+	if err != nil {
+		out.Fatal(err.Error())
+	}
+	return console, &out, cancel, err
 }
 
 var home, err = utility.Home()
