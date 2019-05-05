@@ -71,6 +71,19 @@ or choose to kill all cpchain processes by
 
     $ killall -9 cpchain
 
+
+
+Message ``The file "./cpchain" is not executable by this user`` pops when running ``cpchain``
+*************************************************************************************************
+
+This problem is due to a wrong access permission of the binary file.
+You can fix this problem by using the command below:
+
+.. code-block:: shell
+
+    $ chmod +x cpchain
+
+
 Message ``error  while  loading  shared  libraries:  libz3.so.4`` pops when running ``solc``
 ************************************************************************************************
 
@@ -99,3 +112,4 @@ and replace it with a 0.4.25 version.
     $ rm -f /usr/bin/solc
     // copy solc 0.4.25 to /user/bin
     $ cp solc /usr/bin
+
