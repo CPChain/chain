@@ -7,7 +7,7 @@ Quick Start for Beginner
 
 Refer to `Download page`_ for binary releases of cpchain and console.
 
-.. _`Download Page`: https://github.com/CPChain/chain/releases/tag/v0.2.1
+.. _`Download Page`: https://github.com/CPChain/chain/releases
 
 For ease of reading, we use ``cpchain`` to represent all available cpchain versions.
 The instructions below are demonstrated on Linux.

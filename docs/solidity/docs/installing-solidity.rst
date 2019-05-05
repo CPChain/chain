@@ -43,7 +43,7 @@ Binary Release
 
 Binary release of Solidity is available at `Download Page`_.
 
-.. _`Download Page`: https://github.com/CPChain/chain/releases/tag/v0.2.1
+.. _`Download Page`: https://github.com/CPChain/chain/releases
 
 
 Building from Source
