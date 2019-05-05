@@ -81,9 +81,9 @@ Windows user the command below.
 .. code-block:: shell
     :emphasize-lines: 2
 
-    $ cpchain-windows-4.0-amd64.exe run --datadir ./datadir \
-        --unlock WALLET_ADDRESS \
-        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
+    $ cpchain-windows-4.0-amd64.exe run --datadir ./datadir ^
+        --unlock WALLET_ADDRESS ^
+        --rpcaddr 127.0.0.1:8501 --port 30311 --mine ^
         --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
 
 
@@ -97,6 +97,11 @@ Linux and Mac users please use the following command:
         --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
         --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
 
+
+.. note::
+
+    ``^`` and ``\`` are splitters for long command for Windows and Linux (Mac), respectively.
+    You do not need to type them if you put the command in a single line.
 
 
 Get Chain Synced
