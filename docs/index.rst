@@ -27,7 +27,7 @@ Quick reference:
 #. `Download Page`_
 
 
-.. _`Download Page`: https://github.com/CPChain/chain/releases/tag/v0.2.1
+.. _`Download Page`: https://github.com/CPChain/chain/releases
 .. _Solidity: ./solidity/index.html
 
 

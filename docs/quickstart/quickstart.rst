@@ -27,7 +27,7 @@ Binary Release
 
 `Download page`_ of binary releases for CPChain and Solidity.
 
-.. _`Download Page`: https://github.com/CPChain/chain/releases/tag/v0.2.1
+.. _`Download Page`: https://github.com/CPChain/chain/releases
 
 ``cpchain`` is the binary release for the chain.
 And ``console`` provides command line interface for operations on the chain,
