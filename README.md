@@ -104,7 +104,7 @@ A user scenario:
 
 ### Download stable binaries
 
-All versions of cpchain are built and available for download [here](https://bitbucket.org/cpchain/chain/downloads/).
+All versions of cpchain are built and available for download [here](https://github.com/CPChain/chain/releases).
 
 The download page provides a zip file, containing the executable files that can be used without installing.
 
