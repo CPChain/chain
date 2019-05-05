@@ -619,7 +619,7 @@ func (pool *TxPool) Pending() (map[common.Address]types.Transactions, error) {
 		pending[addr] = list.Flatten()
 		pendingTxCounter += len(pending[addr])
 	}
-	log.Warn("pendingTx", "counter", pendingTxCounter)
+	log.Debug("pendingTx", "counter", pendingTxCounter)
 	return pending, nil
 }
 
