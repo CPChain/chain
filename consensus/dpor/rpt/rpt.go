@@ -210,7 +210,7 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 
 // CalcRptInfo return the Rpt of the candidate address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
-	log.Warn("now calculating rpt", "CalcRptInfo", "old", "num", blockNum, "addr", address.Hex())
+	log.Debug("now calculating rpt", "CalcRptInfo", "old", "num", blockNum, "addr", address.Hex())
 
 	if rs.rptInstance == nil {
 		log.Fatal("New primitivesContract error")
@@ -563,7 +563,7 @@ func (rc *RptCollectorImpl) RankInfoOf(addr common.Address, addrs []common.Addre
 	index := sort.SearchFloat64s(balances, float64(myBalance))
 	rank = int64(float64(index) / float64(len(addrs)) * 100)
 
-	log.Warn("now calculating rpt", "Rank", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
+	log.Debug("now calculating rpt", "Rank", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
 	return rank
 }
 
@@ -581,7 +581,7 @@ func (rc *RptCollectorImpl) TxsInfoOf(addr common.Address, num uint64, windowSiz
 		return txsCount
 	}
 
-	log.Warn("now calculating rpt", "Txs", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
+	log.Debug("now calculating rpt", "Txs", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
 	return int64(nonce - nonce0)
 }
 
@@ -610,18 +610,18 @@ func (rc *RptCollectorImpl) MaintenanceInfoOf(addr common.Address, num uint64, w
 		mtn += 60
 	}
 
-	log.Warn("now calculating rpt", "Maintenance", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
+	log.Debug("now calculating rpt", "Maintenance", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
 	return mtn
 }
 
 func (rc *RptCollectorImpl) UploadInfoOf(addr common.Address, num uint64, windowSize int) int64 {
-	log.Warn("now calculating rpt", "UploadInfo", "new", "num", num, "addr", addr.Hex())
+	log.Debug("now calculating rpt", "UploadInfo", "new", "num", num, "addr", addr.Hex())
 
 	return 0
 }
 
 func (rc *RptCollectorImpl) ProxyInfoOf(addr common.Address, num uint64, windowSize int) int64 {
-	log.Warn("now calculating rpt", "ProxyInfo", "new", "num", num, "addr", addr.Hex())
+	log.Debug("now calculating rpt", "ProxyInfo", "new", "num", num, "addr", addr.Hex())
 
 	return 0
 }
