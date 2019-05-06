@@ -105,6 +105,11 @@ const (
 	RNodeMinFundReq = 200000 // 200000 CPC for becoming a RNode
 )
 
+// a block number denotes that after this number we use new rpt calc method
+const (
+	RptCalcMethod2BlockNumber = 216
+)
+
 var (
 	chainConfigMap = map[RunMode]*ChainConfig{
 		Dev:      devChainConfig,
