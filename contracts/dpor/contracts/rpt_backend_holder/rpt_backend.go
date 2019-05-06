@@ -34,7 +34,7 @@ func GetApiBackendHolderInstance() *RptBackendHolder {
 
 func (rb *RptBackendHolder) Init(chainBackend ChainAPIBackend, contractBackend ContractAPIbcakend) {
 	onceApiBackendHoldInit.Do(func() {
-		log.Info("init RptBackendHolder", "ChainBackend", chainBackend, "ContractBackend", contractBackend)
+		log.Debug("init RptBackendHolder", "ChainBackend", chainBackend, "ContractBackend", contractBackend)
 		rb.ChainBackend = chainBackend
 		rb.ContractBackend = contractBackend
 	})
