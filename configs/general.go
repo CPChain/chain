@@ -64,9 +64,9 @@ const (
 	MainnetValidatorsNumber = MainnetFaultyValidatorsNumber*3 + 1
 )
 
-// MaximumRnodeNumber is the max number of rnodes read from campaign contract
+// MaximumCandidateNumber is the max number of candidates read from campaign contract
 const (
-	MaximumRnodeNumber = 20
+	MaximumCandidateNumber = 20
 )
 
 const (
