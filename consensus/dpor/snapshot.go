@@ -262,7 +262,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 
 // apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee bool, rnodeService rpt.RnodeService, rptService rpt.RptService) (*DporSnapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee bool, candidateService rpt.CandidateService, rptService rpt.RptService) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
@@ -286,7 +286,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee boo
 		// TODO: write a function to do this
 		ifUpdateCommittee := timeToUpdateCommitttee
 
-		err := snap.applyHeader(header, ifUpdateCommittee, rnodeService, rptService)
+		err := snap.applyHeader(header, ifUpdateCommittee, candidateService, rptService)
 		if err != nil {
 			log.Warn("DporSnapshot apply header error.", "err", err)
 			return nil, err
@@ -297,7 +297,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee boo
 }
 
 // applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
-func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool, rnodeService rpt.RnodeService, rptService rpt.RptService) error {
+func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool, candidateService rpt.CandidateService, rptService rpt.RptService) error {
 	// Update Snapshot attributes.
 	s.setNumber(header.Number.Uint64())
 	s.setHash(header.Hash())
@@ -307,7 +307,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 
 		// Update candidates
 		log.Debug("start updating candidates")
-		err := s.updateCandidates(rnodeService)
+		err := s.updateCandidates(candidateService)
 		if err != nil {
 			log.Warn("err when update candidates", "err", err)
 			return err
@@ -351,14 +351,14 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 }
 
 // updateCandidates updates proposer candidates from campaign contract
-func (s *DporSnapshot) updateCandidates(rnodeService rpt.RnodeService) error {
+func (s *DporSnapshot) updateCandidates(candidateService rpt.CandidateService) error {
 	var candidates []common.Address
 
-	if s.Mode == NormalMode && s.isStartElection() && rnodeService != nil {
+	if s.Mode == NormalMode && s.isStartElection() && candidateService != nil {
 
 		// Read candidates from the contract instance
 		term := s.TermOf(s.Number)
-		cds, err := rnodeService.CandidatesOf(term)
+		cds, err := candidateService.CandidatesOf(term)
 		if err != nil {
 			log.Error("read Candidates error, use default candidates instead", "err", err)
 			// use default candidates instead
@@ -381,9 +381,9 @@ func (s *DporSnapshot) updateCandidates(rnodeService rpt.RnodeService) error {
 	}
 
 	// too many candidates
-	if len(candidates) > configs.MaximumRnodeNumber {
-		log.Debug("rnode is more than max allowed", "max", configs.MaximumRnodeNumber, "len", len(candidates))
-		candidates = candidates[:configs.MaximumRnodeNumber]
+	if len(candidates) > configs.MaximumCandidateNumber {
+		log.Debug("candidates is more than max allowed", "max", configs.MaximumCandidateNumber, "len", len(candidates))
+		candidates = candidates[:configs.MaximumCandidateNumber]
 	}
 
 	log.Debug("set candidates", "len(candidates)", len(candidates))
