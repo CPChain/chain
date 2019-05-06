@@ -84,6 +84,33 @@ You can fix this problem by using the command below:
     $ chmod +x cpchain
 
 
+Message ``Fatal: Failed to unlock account`` pops when running ``cpchain``
+*****************************************************************************
+
+One possible reason is that the account file is not in the right directory.
+
+In the command
+
+.. code-block:: shell
+
+    $ ./cpchain run --datadir ./datadir \
+        --unlock WALLET_ADDRESS \
+        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
+        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+
+``--datadir ./datadir`` means the account file (keystore) in under ``./datadir`` directory.
+If you create an account without specify a directory,
+like using the command ``./cpchain account new account`` instead of
+``./cpchain account new account --datadir ./datadir``,
+the account file is created under a default directory,
+which is not ``./datadir``.
+
+In this case, you can either
+
+* Specify YOUR_ACCOUNT_DIRECOTRY after ``--datadir``, or
+* Move your account file to ``./datadir``.
+
+
 Message ``error  while  loading  shared  libraries:  libz3.so.4`` pops when running ``solc``
 ************************************************************************************************
 
