@@ -142,7 +142,7 @@ type RptServiceImpl struct {
 
 	rptcache *lru.ARCCache
 
-	rptCollector rptCollector
+	rptCollector RptCollector
 }
 
 // NewRptService creates a concrete RPT service instance.
@@ -156,7 +156,7 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 
 	cache, _ := lru.NewARC(cacheSize)
 
-	newRptCollector := newRptCollectorImpl(rptInstance, backend)
+	newRptCollector := NewRptCollectorImpl(rptInstance, backend)
 
 	bc := &RptServiceImpl{
 		client:      backend,
@@ -273,8 +273,8 @@ func RptHash(rpthash RptItems) (hash common.Hash) {
 	return hash
 }
 
-// rptCollector collects rpts infos of a given candidate
-type rptCollector interface {
+// RptCollector collects rpts infos of a given candidate
+type RptCollector interface {
 	RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt
 	RankValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64
 	TxsValueOf(addr common.Address, num uint64, windowSize int) int64
@@ -283,21 +283,21 @@ type rptCollector interface {
 	ProxyValueOf(addr common.Address, num uint64, windowSize int) int64
 }
 
-// rptCollectorImpl implements rptCollector
-type rptCollectorImpl struct {
+// RptCollectorImpl implements RptCollector
+type RptCollectorImpl struct {
 	rptInstance  *contracts.Rpt
 	chainBackend backend.ChainBackend
 }
 
-func newRptCollectorImpl(rptInstance *contracts.Rpt, chainBackend backend.ChainBackend) *rptCollectorImpl {
+func NewRptCollectorImpl(rptInstance *contracts.Rpt, chainBackend backend.ChainBackend) *RptCollectorImpl {
 
-	return &rptCollectorImpl{
+	return &RptCollectorImpl{
 		rptInstance:  rptInstance,
 		chainBackend: chainBackend,
 	}
 }
 
-func (rc *rptCollectorImpl) coefficients() (alpha int64, beta int64, gamma int64, psi int64, omega int64) {
+func (rc *RptCollectorImpl) coefficients() (alpha int64, beta int64, gamma int64, psi int64, omega int64) {
 	// TODO: read this from contract
 
 	alpha = 50
@@ -309,14 +309,14 @@ func (rc *rptCollectorImpl) coefficients() (alpha int64, beta int64, gamma int64
 	return
 }
 
-func (rc *rptCollectorImpl) windowSize() (windowSize int) {
+func (rc *RptCollectorImpl) windowSize() (windowSize int) {
 	// TODO: read this from contract
 	windowSize = 100
 
 	return windowSize
 }
 
-func (rc *rptCollectorImpl) RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt {
+func (rc *RptCollectorImpl) RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt {
 
 	windowSize := rc.windowSize()
 	alpha, beta, gamma, psi, omega := rc.coefficients()
@@ -340,7 +340,7 @@ func offset(number uint64, windowSize int) uint64 {
 	return uint64(math.Max(0., float64(int(number)-windowSize)))
 }
 
-func (rc *rptCollectorImpl) RankValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) RankValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 
 	rank := rc.RankInfoOf(addr, addrs, num, windowSize)
 
@@ -372,7 +372,7 @@ func (rc *rptCollectorImpl) RankValueOf(addr common.Address, addrs []common.Addr
 	return 20
 }
 
-func (rc *rptCollectorImpl) TxsValueOf(addr common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) TxsValueOf(addr common.Address, num uint64, windowSize int) int64 {
 	count := rc.TxsInfoOf(addr, num, windowSize)
 
 	if count > 100 {
@@ -382,19 +382,19 @@ func (rc *rptCollectorImpl) TxsValueOf(addr common.Address, num uint64, windowSi
 	return count
 }
 
-func (rc *rptCollectorImpl) MaintenanceValueOf(addr common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) MaintenanceValueOf(addr common.Address, num uint64, windowSize int) int64 {
 	return rc.MaintenanceInfoOf(addr, num, windowSize)
 }
 
-func (rc *rptCollectorImpl) UploadValueOf(addr common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) UploadValueOf(addr common.Address, num uint64, windowSize int) int64 {
 	return rc.UploadInfoOf(addr, num, windowSize)
 }
 
-func (rc *rptCollectorImpl) ProxyValueOf(addr common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) ProxyValueOf(addr common.Address, num uint64, windowSize int) int64 {
 	return rc.ProxyInfoOf(addr, num, windowSize)
 }
 
-func (rc *rptCollectorImpl) RankInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) RankInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	tstart := time.Now()
 
 	var balances []float64
@@ -423,7 +423,7 @@ func (rc *rptCollectorImpl) RankInfoOf(addr common.Address, addrs []common.Addre
 	return rank
 }
 
-func (rc *rptCollectorImpl) TxsInfoOf(addr common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) TxsInfoOf(addr common.Address, num uint64, windowSize int) int64 {
 	tstart := time.Now()
 	txsCount := int64(0)
 
@@ -441,7 +441,7 @@ func (rc *rptCollectorImpl) TxsInfoOf(addr common.Address, num uint64, windowSiz
 	return int64(nonce - nonce0)
 }
 
-func (rc *rptCollectorImpl) MaintenanceInfoOf(addr common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) MaintenanceInfoOf(addr common.Address, num uint64, windowSize int) int64 {
 	tstart := time.Now()
 
 	mtn := int64(0)
@@ -470,13 +470,13 @@ func (rc *rptCollectorImpl) MaintenanceInfoOf(addr common.Address, num uint64, w
 	return mtn
 }
 
-func (rc *rptCollectorImpl) UploadInfoOf(addr common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) UploadInfoOf(addr common.Address, num uint64, windowSize int) int64 {
 	log.Warn("now calculating rpt", "UploadInfo", "new", "num", num, "addr", addr.Hex())
 
 	return 0
 }
 
-func (rc *rptCollectorImpl) ProxyInfoOf(addr common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl) ProxyInfoOf(addr common.Address, num uint64, windowSize int) int64 {
 	log.Warn("now calculating rpt", "ProxyInfo", "new", "num", num, "addr", addr.Hex())
 
 	return 0
