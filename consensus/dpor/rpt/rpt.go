@@ -95,30 +95,30 @@ func (a RptList) Less(i, j int) bool {
 	}
 }
 
-// RnodeService provides methods to obtain all rnodes from campaign contract
-type RnodeService interface {
+// CandidateService provides methods to obtain all candidates from campaign contract
+type CandidateService interface {
 	CandidatesOf(term uint64) ([]common.Address, error)
 }
 
-// RnodeServiceImpl is the default rnode list collector
-type RnodeServiceImpl struct {
+// CandidateServiceImpl is the default candidate list collector
+type CandidateServiceImpl struct {
 	campaignContractAddr common.Address
 	client               bind.ContractBackend
 }
 
-// NewRnodeService creates a concrete Rnode service instance.
-func NewRnodeService(backend bind.ContractBackend, contractAddr common.Address) (RnodeService, error) {
-	log.Debug("rnode contract addr", "contractAddr", contractAddr.Hex())
+// NewCandidateService creates a concrete candidate service instance.
+func NewCandidateService(backend bind.ContractBackend, contractAddr common.Address) (CandidateService, error) {
+	log.Debug("candidate contract addr", "contractAddr", contractAddr.Hex())
 
-	rs := &RnodeServiceImpl{
+	rs := &CandidateServiceImpl{
 		client:               backend,
 		campaignContractAddr: contractAddr,
 	}
 	return rs, nil
 }
 
-// CandidatesOf implements RnodeService
-func (rs *RnodeServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
+// CandidatesOf implements CandidateService
+func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
 	contractInstance, err := campaign.NewCampaign(rs.campaignContractAddr, rs.client)
 	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 	if err != nil {
@@ -207,7 +207,7 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 	return rpts
 }
 
-// CalcRptInfo return the Rpt of the rnode address
+// CalcRptInfo return the Rpt of the candidate address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
 	log.Warn("now calculating rpt", "CalcRptInfo", "old", "num", blockNum, "addr", address.Hex())
 
@@ -273,7 +273,7 @@ func RptHash(rpthash RptItems) (hash common.Hash) {
 	return hash
 }
 
-// rptCollector collects rpts infos of a given rnode
+// rptCollector collects rpts infos of a given candidate
 type rptCollector interface {
 	RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt
 	RankValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64
@@ -340,9 +340,9 @@ func offset(number uint64, windowSize int) uint64 {
 	return uint64(math.Max(0., float64(int(number)-windowSize)))
 }
 
-func (rc *rptCollectorImpl) RankValueOf(addr common.Address, rnodes []common.Address, num uint64, windowSize int) int64 {
+func (rc *rptCollectorImpl) RankValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 
-	rank := rc.RankInfoOf(addr, rnodes, num, windowSize)
+	rank := rc.RankInfoOf(addr, addrs, num, windowSize)
 
 	// some simple scoring
 	if rank < 2 {
@@ -394,19 +394,19 @@ func (rc *rptCollectorImpl) ProxyValueOf(addr common.Address, num uint64, window
 	return rc.ProxyInfoOf(addr, num, windowSize)
 }
 
-func (rc *rptCollectorImpl) RankInfoOf(addr common.Address, rnodes []common.Address, num uint64, windowSize int) int64 {
+func (rc *rptCollectorImpl) RankInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	tstart := time.Now()
 
 	var balances []float64
 	var myBalance uint64
 
-	for _, rnode := range rnodes {
-		balance, err := rc.chainBackend.BalanceAt(context.Background(), rnode, big.NewInt(int64(num)))
+	for _, candidate := range addrs {
+		balance, err := rc.chainBackend.BalanceAt(context.Background(), candidate, big.NewInt(int64(num)))
 		if err != nil {
 			return defaultRank
 		}
 
-		if rnode == addr {
+		if candidate == addr {
 			myBalance = balance.Uint64()
 		}
 
@@ -417,7 +417,7 @@ func (rc *rptCollectorImpl) RankInfoOf(addr common.Address, rnodes []common.Addr
 	var rank int64
 	sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
 	index := sort.SearchFloat64s(balances, float64(myBalance))
-	rank = int64(float64(index) / float64(len(rnodes)) * 100) // solidity can't use float,so we magnify rank 100 times
+	rank = int64(float64(index) / float64(len(addrs)) * 100) // solidity can't use float,so we magnify rank 100 times
 
 	log.Warn("now calculating rpt", "Rank", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
 	return rank
