@@ -26,6 +26,7 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -288,6 +289,17 @@ type RptCollectorImpl struct {
 	rptInstance  *contracts.Rpt
 	chainBackend backend.ChainBackend
 	balances     *balanceCache
+
+	alpha int64
+	beta  int64
+	gamma int64
+	psi   int64
+	omega int64
+
+	windowSize int
+
+	currentNum uint64
+	lock       sync.RWMutex
 }
 
 func NewRptCollectorImpl(rptInstance *contracts.Rpt, chainBackend backend.ChainBackend) *RptCollectorImpl {
@@ -296,34 +308,133 @@ func NewRptCollectorImpl(rptInstance *contracts.Rpt, chainBackend backend.ChainB
 		rptInstance:  rptInstance,
 		chainBackend: chainBackend,
 		balances:     newBalanceCache(),
+		currentNum:   0,
+
+		alpha: 50,
+		beta:  15,
+		gamma: 10,
+		psi:   15,
+		omega: 10,
+
+		windowSize: 100,
 	}
 }
 
-func (rc *RptCollectorImpl) coefficients() (alpha int64, beta int64, gamma int64, psi int64, omega int64) {
-	// TODO: read this from contract
+func (rc *RptCollectorImpl) Alpha(num uint64) int64 {
+	rc.lock.Lock()
+	defer rc.lock.Unlock()
 
-	alpha = 50
-	beta = 15
-	gamma = 10
-	psi = 15
-	omega = 10
+	if rc.rptInstance == nil || num == rc.currentNum {
+		return rc.alpha
+	}
 
-	return
+	a, err := rc.rptInstance.Alpha(nil)
+	if err == nil {
+		log.Debug("using parameters from contract", "alpha", a.Int64(), "num", num)
+		rc.alpha = a.Int64()
+	}
+
+	return rc.alpha
 }
 
-func (rc *RptCollectorImpl) windowSize() (windowSize int) {
-	// TODO: read this from contract
-	windowSize = 100
+func (rc *RptCollectorImpl) Beta(num uint64) int64 {
+	rc.lock.Lock()
+	defer rc.lock.Unlock()
 
-	return windowSize
+	if rc.rptInstance == nil || num == rc.currentNum {
+		return rc.beta
+	}
+
+	b, err := rc.rptInstance.Beta(nil)
+	if err == nil {
+		log.Debug("using parameters from contract", "beta", b.Int64(), "num", num)
+		rc.beta = b.Int64()
+	}
+
+	return rc.beta
+}
+
+func (rc *RptCollectorImpl) Gamma(num uint64) int64 {
+	rc.lock.Lock()
+	defer rc.lock.Unlock()
+
+	if rc.rptInstance == nil || num == rc.currentNum {
+		return rc.gamma
+	}
+
+	g, err := rc.rptInstance.Gamma(nil)
+	if err == nil {
+		log.Debug("using parameters from contract", "gamma", g.Int64(), "num", num)
+		rc.gamma = g.Int64()
+	}
+
+	return rc.gamma
+}
+
+func (rc *RptCollectorImpl) Psi(num uint64) int64 {
+	rc.lock.Lock()
+	defer rc.lock.Unlock()
+
+	if rc.rptInstance == nil || num == rc.currentNum {
+		return rc.psi
+	}
+
+	p, err := rc.rptInstance.Psi(nil)
+	if err == nil {
+		log.Debug("using parameters from contract", "psi", p.Int64(), "num", num)
+		rc.psi = p.Int64()
+	}
+
+	return rc.psi
+}
+
+func (rc *RptCollectorImpl) Omega(num uint64) int64 {
+	rc.lock.Lock()
+	defer rc.lock.Unlock()
+
+	if rc.rptInstance == nil || num == rc.currentNum {
+		return rc.omega
+	}
+
+	o, err := rc.rptInstance.Omega(nil)
+	if err == nil {
+		log.Debug("using parameters from contract", "omega", o.Int64(), "num", num)
+		rc.omega = o.Int64()
+	}
+
+	return rc.omega
+}
+
+func (rc *RptCollectorImpl) WindowSize(num uint64) int {
+	rc.lock.Lock()
+	defer rc.lock.Unlock()
+
+	if rc.rptInstance == nil || num == rc.currentNum {
+		return rc.windowSize
+	}
+
+	w, err := rc.rptInstance.Window(nil)
+	if err == nil {
+		log.Debug("using parameters from contract", "window", w.Int64(), "num", num)
+		rc.windowSize = int(w.Int64())
+	}
+
+	return rc.windowSize
+}
+
+func (rc *RptCollectorImpl) coefficients(num uint64) (int64, int64, int64, int64, int64) {
+	return rc.Alpha(num), rc.Beta(num), rc.Gamma(num), rc.Psi(num), rc.Omega(num)
 }
 
 func (rc *RptCollectorImpl) RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt {
 
-	windowSize := rc.windowSize()
-	alpha, beta, gamma, psi, omega := rc.coefficients()
-	rpt := int64(0)
+	windowSize := rc.WindowSize(num)
+	alpha, beta, gamma, psi, omega := rc.coefficients(num)
+	if num != rc.currentNum {
+		rc.currentNum = num
+	}
 
+	rpt := int64(0)
 	rpt = alpha*rc.RankValueOf(addr, addrs, num, windowSize) + beta*rc.TxsValueOf(addr, num, windowSize) + gamma*rc.MaintenanceValueOf(addr, num, windowSize) + psi*rc.UploadValueOf(addr, num, windowSize) + omega*rc.ProxyValueOf(addr, num, windowSize)
 
 	if rpt <= minRptScore {
