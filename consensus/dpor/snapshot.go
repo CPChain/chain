@@ -395,6 +395,7 @@ func (s *DporSnapshot) updateCandidates(candidateService rpt.CandidateService) e
 	return nil
 }
 
+// TODO: do not update rpts on every block
 // updateRpts updates rpts of candidates
 func (s *DporSnapshot) updateRpts(rptService rpt.RptService) (rpt.RptList, error) {
 
