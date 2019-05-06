@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -389,7 +388,7 @@ func (d *Dpor) SetupAdmission(ac admission.ApiBackend) {
 	d.ac = ac
 }
 
-func (d *Dpor) SetRptBackend(backend bind.ContractBackend) {
+func (d *Dpor) SetRptBackend(backend backend.ClientBackend) {
 	d.rptBackend, _ = rpt.NewRptService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt])
 }
 
@@ -397,7 +396,7 @@ func (d *Dpor) GetRptBackend() rpt.RptService {
 	return d.rptBackend
 }
 
-func (d *Dpor) SetRnodeBackend(backend bind.ContractBackend) {
+func (d *Dpor) SetRnodeBackend(backend backend.ClientBackend) {
 	d.rnodeBackend, _ = rpt.NewRnodeService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign])
 }
 
