@@ -82,8 +82,8 @@ type Dpor struct {
 
 	ac admission.ApiBackend
 
-	rptBackend   rpt.RptService
-	rnodeBackend rpt.RnodeService
+	rptBackend       rpt.RptService
+	candidateBackend rpt.CandidateService
 
 	chain consensus.ChainReadWriter
 
@@ -396,10 +396,10 @@ func (d *Dpor) GetRptBackend() rpt.RptService {
 	return d.rptBackend
 }
 
-func (d *Dpor) SetRnodeBackend(backend backend.ClientBackend) {
-	d.rnodeBackend, _ = rpt.NewRnodeService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign])
+func (d *Dpor) SetCandidateBackend(backend backend.ClientBackend) {
+	d.candidateBackend, _ = rpt.NewCandidateService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign])
 }
 
-func (d *Dpor) GetRnodeBackend() rpt.RnodeService {
-	return d.rnodeBackend
+func (d *Dpor) GetCandidateBackend() rpt.CandidateService {
+	return d.candidateBackend
 }
