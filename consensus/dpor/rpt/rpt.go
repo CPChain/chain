@@ -287,6 +287,7 @@ type RptCollector interface {
 type RptCollectorImpl struct {
 	rptInstance  *contracts.Rpt
 	chainBackend backend.ChainBackend
+	balances     *balanceCache
 }
 
 func NewRptCollectorImpl(rptInstance *contracts.Rpt, chainBackend backend.ChainBackend) *RptCollectorImpl {
@@ -294,6 +295,7 @@ func NewRptCollectorImpl(rptInstance *contracts.Rpt, chainBackend backend.ChainB
 	return &RptCollectorImpl{
 		rptInstance:  rptInstance,
 		chainBackend: chainBackend,
+		balances:     newBalanceCache(),
 	}
 }
 
@@ -394,30 +396,61 @@ func (rc *RptCollectorImpl) ProxyValueOf(addr common.Address, num uint64, window
 	return rc.ProxyInfoOf(addr, num, windowSize)
 }
 
+type balanceCache struct {
+	cache *lru.ARCCache
+}
+
+func newBalanceCache() *balanceCache {
+	cache, _ := lru.NewARC(10)
+	return &balanceCache{
+		cache: cache,
+	}
+}
+
+func (bc *balanceCache) getBalances(num uint64) ([]float64, bool) {
+	if bal, ok := bc.cache.Get(num); ok {
+		if balances, ok := bal.([]float64); ok {
+			return balances, true
+		}
+	}
+	return []float64{}, false
+}
+
+func (bc *balanceCache) addBalance(num uint64, sortedBalances []float64) {
+	bc.cache.Add(num, sortedBalances)
+}
+
 func (rc *RptCollectorImpl) RankInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	tstart := time.Now()
 
-	var balances []float64
-	var myBalance uint64
+	var rank int64
+	myBal, err := rc.chainBackend.BalanceAt(context.Background(), addr, big.NewInt(int64(num)))
+	if err != nil {
+		return defaultRank
+	}
+	myBalance := myBal.Uint64()
 
-	for _, candidate := range addrs {
-		balance, err := rc.chainBackend.BalanceAt(context.Background(), candidate, big.NewInt(int64(num)))
-		if err != nil {
-			return defaultRank
+	balances, ok := rc.balances.getBalances(num)
+	if !ok {
+		for _, candidate := range addrs {
+			balance, err := rc.chainBackend.BalanceAt(context.Background(), candidate, big.NewInt(int64(num)))
+			if err != nil {
+				return defaultRank
+			}
+
+			if candidate == addr {
+				myBalance = balance.Uint64()
+			}
+
+			balances = append(balances, float64(balance.Uint64()))
 		}
-
-		if candidate == addr {
-			myBalance = balance.Uint64()
-		}
-
-		balances = append(balances, float64(balance.Uint64()))
+		sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
+		rc.balances.addBalance(num, balances)
 	}
 
 	// sort and get the rank
-	var rank int64
-	sort.Sort(sort.Reverse(sort.Float64Slice(balances)))
 	index := sort.SearchFloat64s(balances, float64(myBalance))
-	rank = int64(float64(index) / float64(len(addrs)) * 100) // solidity can't use float,so we magnify rank 100 times
+	rank = int64(float64(index) / float64(len(addrs)) * 100)
 
 	log.Warn("now calculating rpt", "Rank", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
 	return rank
