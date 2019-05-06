@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"sync"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -59,26 +59,31 @@ type RptApiClient struct {
 
 // BalanceAt returns the wei balance of the given account.
 // The block number can be nil, in which case the balance is taken from the latest known block.
-func (cc *RptApiClient) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*hexutil.Big, error) {
-	log.Debug("BalanceAt", "addr", account.Hex(), "number", blockNumber)
+func (cc *RptApiClient) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error) {
 	state, _, err := cc.ChainBackend.StateAndHeaderByNumber(ctx, rpc.BlockNumber(blockNumber.Uint64()), false)
 	if state == nil || err != nil {
 		return nil, err
 	}
-	return (*hexutil.Big)(state.GetBalance(account)), state.Error()
+	return state.GetBalance(account), state.Error()
+}
+
+func (cc *RptApiClient) NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error) {
+	state, _, err := cc.ChainBackend.StateAndHeaderByNumber(ctx, rpc.BlockNumber(blockNumber.Uint64()), false)
+	if state == nil || err != nil {
+		return 0, err
+	}
+	return state.GetNonce(account), state.Error()
 }
 
 // BlockByNumber returns a block from the current canonical chain. If number is nil, the
 // latest known block is returned.
 func (cc *RptApiClient) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
-	log.Debug(" BlockByNumber", "number", number)
 	return cc.ChainBackend.BlockByNumber(ctx, rpc.BlockNumber(number.Uint64()))
 }
 
 // HeaderByNumber returns a block header from the current canonical chain. If number is
 // nil, the latest known header is returned.
 func (cc *RptApiClient) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
-	log.Debug("HeaderByNumber", "number", number)
 	return cc.ChainBackend.HeaderByNumber(ctx, rpc.BlockNumber(number.Uint64()))
 }
 
