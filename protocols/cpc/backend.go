@@ -195,7 +195,9 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	// admission must initialize after blockchain has been initialized
 	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
-		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
+		contractAddrs[configs.ContractAdmission],
+		contractAddrs[configs.ContractCampaign2],
+		contractAddrs[configs.ContractRnode])
 
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
 		dpor.SetupAdmission(cpc.AdmissionApiBackend)
