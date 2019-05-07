@@ -31,7 +31,7 @@ Here we list the properties of validators and proposers, as well as the rest nod
 
 #. Civilians refer to the rest of users.
     i. If a civilian is qualified as an RNode, it can claim campaign to be come a candidate.
-    i. After being elected, the candidate is about to join proposers committee next term.
+    i. After being elected, the candidate is about to join proposers committee in future term.
 
 
 Normal and Abnormal Cases Handler
