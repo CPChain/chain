@@ -79,7 +79,7 @@ type Backend interface {
 	CurrentView() uint64
 	CurrentTerm() uint64
 	CommitteMember() []common.Address
-	CalcRptInfo(address common.Address, blockNum uint64) int64
+	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) int64
 	ViewLen() uint64
 	TermLen() uint64
 
