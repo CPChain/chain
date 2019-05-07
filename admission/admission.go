@@ -102,10 +102,10 @@ func (ac *AdmissionControl) Campaign(terms uint64) error {
 		return nil
 	}
 
-	isRNode, _ := ac.IsRNode()
-	if !isRNode {
-		return errNotRNode
-	}
+	// isRNode, _ := ac.IsRNode()
+	// if !isRNode {
+	// 	return errNotRNode
+	// }
 
 	ac.status = AcRunning
 	ac.err = nil
@@ -192,7 +192,7 @@ func (ac *AdmissionControl) FundForRNode() error {
 		if !isToRenew {
 			tx, err := rewardContract.WantRenew(bind.NewKeyedTransactor(ac.key.PrivateKey)) // renew existent investment
 			if err != nil {
-				log.Info("encounter error when renew investiment", "error", err)
+				// log.Info("encounter error when renew investiment", "error", err)
 				return err
 			}
 			nonce = new(big.Int).SetUint64(tx.Nonce() + 1) // force increase nonce because the next transaction is too near
@@ -203,11 +203,11 @@ func (ac *AdmissionControl) FundForRNode() error {
 		transactOpts.Nonce = nonce
 		tx, err := rewardContract.SubmitDeposit(transactOpts)
 		if err != nil {
-			log.Info("encounter error when funding deposit for node to become candidate", "error", err)
+			// log.Info("encounter error when funding deposit for node to become candidate", "error", err)
 			return err
 		}
 
-		log.Info("submitDeposit(opts)", "txhash", tx.Hash().Hex())
+		// log.Info("submitDeposit(opts)", "txhash", tx.Hash().Hex())
 		atomic.StoreInt32(&ac.sendingFund, 1)
 		go ac.waitForTxDone(tx.Hash())
 
