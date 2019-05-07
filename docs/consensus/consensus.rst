@@ -12,9 +12,9 @@ Here we list the properties of validators and proposers, as well as the rest nod
 
 1. **Validators** or block validators refer to a group of users that can validate a newly proposed block.
     i. All validators together constitute **validators committee**.
-    #. The validator committee consists of nodes nominated from CPC Foundation, governments and companies.
+    #. The validators committee consists of nodes nominated from CPC Foundation, governments and companies.
     #. Except for some abnormal cases, validators may not produce blocks.
-    #. The validator committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
+    #. The validators committee follows our improved *LBFT* 2.0 protocol to achieve a consensus.
     #. The size of number is always equaling to :math:`3f+1`, where :math:`f` is the number of Byzantine nodes.
 
 #. **Proposers committee** is a fixed number of elected RNodes for a certain term.
