@@ -89,21 +89,18 @@ type DSMStatus struct {
 type ClientBackend interface {
 	ChainBackend
 	ContractBackend
-
-	Campaign(ctx context.Context, terms uint64) error
 }
 
 // ChainBackend is the chain client operation interface
 type ChainBackend interface {
-	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
-	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
+	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
+	NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error)
 }
 
 // ContractBackend is the contract client operation interface
 type ContractBackend interface {
 	bind.ContractBackend
-	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
 }
 
 // ContractCaller is used to call the contract with given key and client.

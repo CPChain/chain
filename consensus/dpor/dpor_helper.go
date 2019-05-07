@@ -445,13 +445,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	var (
-		rnodeService = dpor.GetRnodeBackend()
-		rptService   = dpor.GetRptBackend()
+		candidateService = dpor.GetCandidateBackend()
+		rptService       = dpor.GetRptBackend()
 	)
-
-	// if rnodeService == nil || rptService == nil {
-	// 	log.Fatal("rnode service or rpt service is nil", "rnode service", rnodeService, "rpt service", rptService)
-	// }
 
 	var timeToUpdateCommittee bool
 	_, headNumber := chain.KnownHead()
@@ -468,7 +464,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	applyStartTime := time.Now()
 
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, timeToUpdateCommittee, rnodeService, rptService)
+	newSnap, err := snap.apply(headers, timeToUpdateCommittee, candidateService, rptService)
 	if err != nil {
 		return nil, err
 	}

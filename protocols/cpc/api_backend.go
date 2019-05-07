@@ -288,8 +288,8 @@ func (b *APIBackend) CommitteMember() []common.Address {
 	return block.Header().Dpor.Proposers
 }
 
-func (b *APIBackend) CalcRptInfo(address common.Address, blockNum uint64) int64 {
-	return b.cpc.engine.(*dpor.Dpor).GetCalcRptInfo(address, blockNum)
+func (b *APIBackend) CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) int64 {
+	return b.cpc.engine.(*dpor.Dpor).GetCalcRptInfo(address, addresses, blockNum)
 }
 
 // Proposers returns current block Proposers information

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -83,8 +82,8 @@ type Dpor struct {
 
 	ac admission.ApiBackend
 
-	rptBackend   rpt.RptService
-	rnodeBackend rpt.RnodeService
+	rptBackend       rpt.RptService
+	candidateBackend rpt.CandidateService
 
 	chain consensus.ChainReadWriter
 
@@ -389,7 +388,7 @@ func (d *Dpor) SetupAdmission(ac admission.ApiBackend) {
 	d.ac = ac
 }
 
-func (d *Dpor) SetRptBackend(backend bind.ContractBackend) {
+func (d *Dpor) SetRptBackend(backend backend.ClientBackend) {
 	d.rptBackend, _ = rpt.NewRptService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt])
 }
 
@@ -397,10 +396,10 @@ func (d *Dpor) GetRptBackend() rpt.RptService {
 	return d.rptBackend
 }
 
-func (d *Dpor) SetRnodeBackend(backend bind.ContractBackend) {
-	d.rnodeBackend, _ = rpt.NewRnodeService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign])
+func (d *Dpor) SetCandidateBackend(backend backend.ClientBackend) {
+	d.candidateBackend, _ = rpt.NewCandidateService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign])
 }
 
-func (d *Dpor) GetRnodeBackend() rpt.RnodeService {
-	return d.rnodeBackend
+func (d *Dpor) GetCandidateBackend() rpt.CandidateService {
+	return d.candidateBackend
 }
