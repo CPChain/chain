@@ -18,6 +18,9 @@ Just replace ``chchain`` with ``cpchain-windows-4.0-386.exe`` or ``cpchain-windo
 For 32-bit PC user, please select ``386`` version.
 And 64-bit PC users should download ``amd64`` version.
 
+For Mac user, please download ``darwin`` version.
+(Darwin forms the core of macOS)
+
 
 .. NOTE::
 

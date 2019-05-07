@@ -421,7 +421,7 @@ func (d *Dialer) KeepConnection() {
 
 				_, enough := d.EnoughValidatorsOfTerm(currentTerm)
 
-				if last != currentNum && (IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) || !enough) {
+				if (last != currentNum && IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength())) || !enough {
 					switch {
 					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
