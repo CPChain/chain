@@ -253,8 +253,8 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 // addPeer is the callback invoked to manage the life cycle of cpchain peer.
 // when this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) addPeer(p *peer, isMinerOrValidator bool) (bool, error) {
-	// ignore maxPeers if this is a trusted peer
-	if pm.peers.Len() >= pm.maxPeers && !p.Peer.Info().Network.Trusted {
+	// ignore maxPeers if this is a trusted or a static peer
+	if pm.peers.Len() >= pm.maxPeers && !(p.Peer.Info().Network.Trusted || p.Peer.Info().Network.Static){
 		return false, p2p.DiscTooManyPeers
 	}
 
