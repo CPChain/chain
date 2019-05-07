@@ -131,7 +131,7 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 // RptService provides methods to obtain all rpt related information from block txs and contracts.
 type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
-	CalcRptInfo(address common.Address, number uint64) Rpt
+	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) Rpt
 	WindowSize() (uint64, error)
 }
 
@@ -193,13 +193,7 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 	rpts := RptList{}
 	for _, address := range addresses {
 		tistart := time.Now()
-
-		if number < configs.RptCalcMethod2BlockNumber {
-			rpts = append(rpts, rs.CalcRptInfo(address, number))
-		} else {
-			rpts = append(rpts, rs.rptCollector.RptOf(address, addresses, number))
-		}
-
+		rpts = append(rpts, rs.CalcRptInfo(address, addresses, number))
 		log.Debug("calculate rpt for", "addr", address.Hex(), "number", number, "elapsed", common.PrettyDuration(time.Now().Sub(tistart)))
 	}
 
@@ -209,7 +203,15 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 }
 
 // CalcRptInfo return the Rpt of the candidate address
-func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
+func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common.Address, number uint64) Rpt {
+	if number < configs.RptCalcMethod2BlockNumber {
+		return rs.calcRptInfo(address, number)
+	}
+
+	return rs.rptCollector.RptOf(address, addresses, number)
+}
+
+func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) Rpt {
 	log.Debug("now calculating rpt", "CalcRptInfo", "old", "num", blockNum, "addr", address.Hex())
 
 	if rs.rptInstance == nil {
