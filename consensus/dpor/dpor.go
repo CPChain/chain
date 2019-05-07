@@ -397,7 +397,7 @@ func (d *Dpor) GetRptBackend() rpt.RptService {
 }
 
 func (d *Dpor) SetCandidateBackend(backend backend.ClientBackend) {
-	d.candidateBackend, _ = rpt.NewCandidateService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign])
+	d.candidateBackend, _ = rpt.NewCandidateService(backend)
 }
 
 func (d *Dpor) GetCandidateBackend() rpt.CandidateService {
