@@ -66,7 +66,7 @@ const (
 
 // MaximumCandidateNumber is the max number of candidates read from campaign contract
 const (
-	MaximumCandidateNumber = 20
+	MaximumCandidateNumber = 100
 )
 
 const (
@@ -107,7 +107,7 @@ const (
 
 // a block number denotes that after this number we use new rpt calc method
 const (
-	RptCalcMethod2BlockNumber = 216
+	RptCalcMethod2BlockNumber = 343000
 )
 
 var (
