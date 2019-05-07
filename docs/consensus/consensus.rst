@@ -83,7 +83,7 @@ that there exists a quorum agreeing on a prepare message and a commit message, r
         #. It is possible that no block receives :math:`2f+1` PREPARE messages
         #. *Impeachment* is activated if a validator cannot collect a P-certificate
     #. Abnormal Case 4: *Some members in the validators committee are faulty*
-        #. The system can reach a consensus, as long as the number of total faulty validators is no more than f.
+        #. The system can reach a consensus, as long as the number of total faulty validators is no more than :math:`f`.
     #. Abnormal Case 5:
         i. It is for the cases when P-certificate, C-certificate or VALIDATE messages cannot be collected
         #. Each validators have distinct timers for collecting PREPARE, COMMIT and VALIDATE messages
@@ -598,8 +598,8 @@ For the fourth one, it acts same as the first scenario.
 Here comes another concern.
 A faulty node can raise a DDoS attack on validators, forcing them continuously syncing.
 To address this issue, we can set a timer of a validator as the minimum gap between two syncs.
-A reasonable setting is 10*|P| seconds, where \|P\| is the size of proposers
-committee, and 10 is time interval between two consecutive blocks.
+A reasonable setting is :math:`10\times |P|` seconds, where :math:`|P|` is the size of proposers
+committee, and :math:`10` is time interval between two consecutive blocks.
 
 Thus, we can write a pseudocode to depict the processes above.
 
@@ -646,13 +646,13 @@ In fact, timestamp is one of factors verifying a block.
 
 A validator :math:`v` regards a block :math:`b` as a future one, if the following two conditions are met:
 
-    1. The timestamp of :math:`b` is larger than the one of v;
-    #. The block height of :math:`b` is same as v.
+    1. The timestamp of :math:`b` is larger than the one of :math:`v`;
+    #. The block height of :math:`b` is same as :math:`v`.
 
 Similarly, a block :math:`b'` is considered a past block if
 
     1. The timestamp of :math:`b'` is smaller than :math:`previousBlockTimestamp+period`;
-    #. The block height of :math:`b'` is same as v,
+    #. The block height of :math:`b'` is same as :math:`v`,
 
 where :math:`previousBlockTimestamp` is the timestamp of previous block,
 and period is the time interval between two consecutive blocks.
@@ -699,7 +699,7 @@ By setting it to 2.5 seconds, a validator has sufficient time for consensus proc
 
 
 Let :math:`b` be a block with timestamp tb written in its header.
-The proposer should broadcast :math:`b` at timestamp tb.
+The proposer should broadcast :math:`b` at timestamp :math:`tb`.
 As stated in previous chapter, tb is usually set to :math:`previousBlockTimestamp+period`.
 A validator invokes its normal case handler if it receives :math:`b` before :math:`previousBlockTimestamp+period+2.5`.
 and rejects this block otherwise.
@@ -733,7 +733,7 @@ For messages with higher block height, the validator invokes `Unknown Ancestor B
 
 Malicious multiple messages from unrecognized nodes may form a DDoS attack against validators committee.
 As described in `Unknown Ancestor Block`_,
-an interval of at least 10*|P| between two consecutive synchronizations is enforced
+an interval of at least :math:`10\times |P|` between two consecutive synchronizations is enforced
 to prevent I/O and computing resource exhaustion.
 
 
@@ -746,7 +746,7 @@ Comparison with PBFT
 ---------------------------
 
 This section compares LBFT 2.0 with classic PBFT.
-We name both proposer in LBFT 2.0 and primary replica in PBFT as the **leader**,
+We name both proposer in LBFT 2.0 and primary replica in PBFT as the **leaders** ,
 since they assume similar responsibility to dispatch a query to all nodes.
 And insistence on P-certificate indicates that
 a replica does not changes its endorsement in a query once it collects a prepare certificate.
