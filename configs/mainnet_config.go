@@ -24,8 +24,8 @@ var (
 		ContractRegister:   common.HexToAddress("0xA14842fBFfFe76d34e6D45ba5701ec9971bFd596"),
 		ContractPdash:      common.HexToAddress("0x3863551C32F18c7454482E718828A1ede00034d6"),
 		ContractPdashProxy: common.HexToAddress("0xEfc4282385932d3119FbEcF9d56f4aEed87B3805"),
-		ContractRnode:      common.HexToAddress("0xF0f87e064C76674fE7c4dDceE3603AFC67998658"),
-		ContractCampaign2:  common.HexToAddress("0xDf44b3f933F19feDc3BC833da1225de3e2095c10"),
+		ContractRnode:      common.HexToAddress("0xa4dEB8FCcc3C2fcb55b0fdf6F2f2E05411Ba1bF9"),
+		ContractCampaign2:  common.HexToAddress("0x238cFc9AD2C5685946CDd5EE67F116f6aCccF3b7"),
 	}
 
 	// config
