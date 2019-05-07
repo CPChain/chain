@@ -126,6 +126,8 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		if err != nil {
 			return nil, err
 		}
+		log.Debug("now read candidates from old campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+
 		return cds, nil
 	}
 
@@ -135,6 +137,8 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
 	return cds, nil
 }
 
@@ -215,9 +219,11 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 // CalcRptInfo return the Rpt of the candidate address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common.Address, number uint64) Rpt {
 	if number < configs.RptCalcMethod2BlockNumber {
+		log.Debug("now calc rpt for with old rpt method", "addr", address.Hex(), "number", number)
 		return rs.calcRptInfo(address, number)
 	}
 
+	log.Debug("now calc rpt for with new rpt method", "addr", address.Hex(), "number", number)
 	return rs.rptCollector.RptOf(address, addresses, number)
 }
 
