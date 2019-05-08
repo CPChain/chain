@@ -119,7 +119,7 @@ func NewCandidateService(backend bind.ContractBackend) (CandidateService, error)
 // CandidatesOf implements CandidateService
 func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
 
-	if term < backend.TermOf(configs.RptCalcMethod2BlockNumber) {
+	if term < backend.TermOf(configs.Candidates2BlockNumber) {
 		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
 		contractInstance, err := campaign.NewCampaign(campaignAddr, rs.client)
 		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
