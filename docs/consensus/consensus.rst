@@ -573,26 +573,26 @@ After receiving :math:`b_2`, the validator :math:`v` records the block in the ca
 As it is delaying, it is counted as one of :math:`f` non-responding validators.
 
 Despite that it receives :math:`b_2`, :math:`v` stays in the block height h,
-and it does not participate in consensus of block height :math:`h_2`
+and it does not participate in consensus of block height :math:`h_2`.
 In other word, it does not broadcasts a prepare message endorsing :math:`b_2`.
 Other members in the validators committee suffice a quorum to 
 complete the consensus process on :math:`b_2` without :math:`v`'s participation.
 :math:`v` is going to catch up with the schedule after it receives the validate message from other committee members,
 or by :ref:`recovery`.
 
-**Second scenario:** :math:`p_2`   behaves faultily.
+**Second scenario:** :math:`p_2` behaves faultily.
 
 Similar to the first scenario, :math:`v` records it in the cache without signing it.
 A quorum can still complete the consensus on :math:`b`.
-When it comes to the correct block height of :math:`p_2` , if :math:`p_2`   proposes the block again,
+When it comes to the correct block height of :math:`p_2`, if :math:`p_2` proposes the block again,
 then it is going to be processed normally.
 Otherwise, the timer of a quorum of validators (including :math:`v`) will expire and enter impeach process.
 
-**Third and fourth scenario:** :math:`v` cannot recognize :math:`p_2`   as a proposer.
+**Third and fourth scenario:** :math:`v` cannot recognize :math:`p_2` as a proposer.
 
 It can due to either :math:`b_2` is faulty (scenario 3) and :math:`v` is delaying (scenario 4).
 In both scenarios, :math:`v` is going to sync, determining if it is delaying.
-For the third scenario, :math:`v` rejects :math:`b_2`   and adds :math:`p_2` into blacklist.
+For the third scenario, :math:`v` rejects :math:`b_2` and adds :math:`p_2` into blacklist.
 For the fourth one, it acts same as the first scenario.
 
 Here comes another concern.
