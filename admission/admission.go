@@ -171,17 +171,17 @@ func (ac *AdmissionControl) FundForRNode() error {
 		transactOpts.Value = minRnodeFund
 		tx, err := rNodeContract.JoinRnode(transactOpts)
 		if err != nil {
-			log.Debug("encounter error when funding deposit for node to become candidate", "error", err)
+			log.Info("encounter error when funding deposit for node to become candidate", "error", err)
 			return err
 		}
 
 		atomic.StoreInt32(&ac.sendingFund, 1)
 		go ac.waitForTxDone(tx.Hash())
 
-		log.Debug("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
+		log.Info("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
 		return nil
 	} else {
-		log.Debug("not enough money to become RNode")
+		log.Info("not enough money to become RNode")
 		return errNoEnoughMoney
 	}
 }
