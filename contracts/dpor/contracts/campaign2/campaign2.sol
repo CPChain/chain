@@ -3,6 +3,7 @@ pragma solidity ^0.4.24;
 import "./lib/safeMath.sol";
 import "./lib/set.sol";
 
+// interface to interact with admission and rnode contracts
 contract AdmissionInterface {
     function verify(
         uint64 _cpuNonce,
