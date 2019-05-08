@@ -537,8 +537,9 @@ func (rc *RptCollectorImpl) RankInfoOf(addr common.Address, addrs []common.Addre
 	tstart := time.Now()
 
 	var rank int64
+	// TODO: check this, why it is possible to be nil @liuq
 	myBal, err := rc.chainBackend.BalanceAt(context.Background(), addr, big.NewInt(int64(num)))
-	if err != nil {
+	if myBal == nil || err != nil {
 		return defaultRank
 	}
 	myBalance := myBal.Uint64()
@@ -547,7 +548,7 @@ func (rc *RptCollectorImpl) RankInfoOf(addr common.Address, addrs []common.Addre
 	if !ok {
 		for _, candidate := range addrs {
 			balance, err := rc.chainBackend.BalanceAt(context.Background(), candidate, big.NewInt(int64(num)))
-			if err != nil {
+			if balance == nil || err != nil {
 				return defaultRank
 			}
 
@@ -592,8 +593,10 @@ func (rc *RptCollectorImpl) MaintenanceInfoOf(addr common.Address, num uint64, w
 
 	mtn := int64(0)
 	for i := offset(num, windowSize); i < num; i++ {
+
+		// TODO: check this, why it is possible to be nil @liuq
 		header, err := rc.chainBackend.HeaderByNumber(context.Background(), big.NewInt(int64(num)))
-		if err != nil {
+		if header == nil || err != nil {
 			continue
 		}
 
