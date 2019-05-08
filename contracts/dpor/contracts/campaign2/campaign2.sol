@@ -3,7 +3,9 @@ pragma solidity ^0.4.24;
 import "./lib/safeMath.sol";
 import "./lib/set.sol";
 
-// interface to interact with admission and rnode contracts
+// there are two interfaces to interact with admission and rnode contracts
+// rnode and admission contracts must be deployed before this campaign contract, because
+// addresses of rnode and admission contracts are needed to initiate interfaces during construction of campaign contract
 contract AdmissionInterface {
     function verify(
         uint64 _cpuNonce,
@@ -29,30 +31,29 @@ contract Campaign {
     using Set for Set.Data;
     using SafeMath for uint256;
 
-    address owner;
-    // The current round number.
-    uint public termIdx = 0;
-    // The number of blocks it can propose is viewLen.
-    uint public viewLen = 3;
-    // The number of proposers in a certain term is termLen
-    uint public termLen =4;
-    // The sum of block in a term.
-    uint public numPerRound = termLen * viewLen;
-    // The minimun and maximun round to claim.
-    uint public minNoc = 1;
-    uint public maxNoc = 10;
-    // withdraw deposit after each round.
-    uint withdrawTermIdx = 0;
+    address owner; // owner has permission to set parameters
+    uint public termIdx = 0; // current term
+    uint public viewLen = 3; // view length: the number of blocks it can propose within a term
+    uint public termLen =4; // term length: the number of proposers in a certain term
+    // 'round' is same with 'term'.
+    uint public numPerRound = termLen * viewLen; // total number of blocks produced in a term.
+    // a node must choose the number of terms when it claims campaign
+    uint public minNoc = 1; // minimal number of terms
+    uint public maxNoc = 10; //maximum number of terms
 
+    uint withdrawTermIdx = 0; // withdraw deposit after each round.
+
+    // a new type for a single candidate
     struct CandidateInfo {
-        uint numOfCampaign;
+        uint numOfCampaign; // rest terms that the candidate will claim campaign
         uint startTermIdx;
         uint stopTermIdx;
     }
 
-    mapping(address => CandidateInfo) candidates;
-    mapping(uint => Set.Data) campaignSnapshots;
+    mapping(address => CandidateInfo) candidates; // store a 'CandidateInfo' struct for each possible address
+    mapping(uint => Set.Data) campaignSnapshots; // store all candidates for each term
 
+    // declare admission and rnode interfaces
     AdmissionInterface admission;
     RnodeInterface    rnode;
 
@@ -62,6 +63,7 @@ contract Campaign {
     event QuitCampaign(address candidate, uint payback);
     event ViewChange();
 
+    // admission and rnode interfaces will be initiated during creation of campaign contract
     constructor(address _admissionAddr, address _rnodeAddr) public {
         owner = msg.sender;
         admission = AdmissionInterface(_admissionAddr);
@@ -70,10 +72,12 @@ contract Campaign {
 
     function() payable public { }
 
+    // get all candidates of given term index
     function candidatesOf(uint _termIdx) public view returns (address[]){
         return campaignSnapshots[_termIdx].values;
     }
 
+    // get info of given candidate
     function candidateInfoOf(address _candidate)
     public
     view
@@ -86,15 +90,17 @@ contract Campaign {
         );
     }
 
-    /** set the Admission interface address. */
+    // admission interface can be set afterwards by owner
     function setAdmissionAddr(address _addr) public onlyOwner(){
         admission = AdmissionInterface(_addr);
     }
-    /** set the Rnode interface address. */
+
+    // rnode interface can be set afterwards by owner
     function setRnodeInterface(address _addr) public onlyOwner(){
         rnode = RnodeInterface(_addr);
     }
 
+    // owner can set these parameters
     function updateMinNoc(uint _minNoc) public onlyOwner(){
         minNoc = _minNoc;
     }
@@ -123,8 +129,12 @@ contract Campaign {
      * 2. pass the cpu&memory capacity proof.
      * 3. rpt score reaches the threshold (be computed somewhere else).
      */
+
+    // claim campaign will verify these parameters, if pass, the node will become candidate
     function claimCampaign(
-        uint _numOfCampaign,
+        uint _numOfCampaign,  // number of terms that the node want to claim campaign
+
+        // admission parameters
         uint64 _cpuNonce,
         uint _cpuBlockNumber,
         uint64 _memoryNonce,
@@ -133,20 +143,24 @@ contract Campaign {
     public
     payable
     {
+        // only rnode can become candidate
         require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
+
         // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
 
-        updateCandidateStatus(); // update status first then check
+        updateCandidateStatus(); // update status firstly,  then check
 
         address candidate = msg.sender;
 
+        // if nodes have not ended their terms, they can not claim again
         require(
             candidates[candidate].numOfCampaign == 0,
             "please waite until your last round ended and try again."
         );
 
+        // set candidate's numOfCampaign according to arguments, and set start and end termIdx respectively
         candidates[candidate].numOfCampaign = _numOfCampaign;
         candidates[candidate].startTermIdx = termIdx.add(1);
 
@@ -164,8 +178,12 @@ contract Campaign {
      * The function will be called when a node claims to campaign for proposer election to update candidates status.
      *
      */
+
+    // update candidate status, i.e. subtract 1 from numOfCampaign when a new term begin
     function updateCandidateStatus() public payable {
+        // get current term, update termIdx
         updateTermIdx();
+
         if (withdrawTermIdx >= termIdx) {
             return;
         }
@@ -174,6 +192,7 @@ contract Campaign {
         for(; withdrawTermIdx <= termIdx; withdrawTermIdx++) {
             // avoid recalculate the size for circulation times.
             size = campaignSnapshots[withdrawTermIdx].values.length;
+            // go through all candidates in term withdrawTermIdx, and update their numOfCampaign
             for(uint i = 0; i < size; i++) {
                 address candidate = campaignSnapshots[withdrawTermIdx].values[i];
 
@@ -199,6 +218,8 @@ contract Campaign {
             termIdx = 0;
             return;
         }
+
+        // calculate current term
         termIdx = (blockNumber - 1).div(numPerRound);
     }
 
