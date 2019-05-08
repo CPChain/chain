@@ -99,6 +99,8 @@ const (
 	ContractPdash      = "pdash"      // address of pdash
 	ContractAdmission  = "admission"  // address of admission
 	ContractPdashProxy = "pdashProxy" // address of PdashProxy
+	ContractRnode      = "rnode"      // address of rnode
+	ContractCampaign2  = "campaign2"  // address of campaign2
 )
 
 const (

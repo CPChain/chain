@@ -33,7 +33,8 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign2"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -103,28 +104,41 @@ type CandidateService interface {
 
 // CandidateServiceImpl is the default candidate list collector
 type CandidateServiceImpl struct {
-	campaignContractAddr common.Address
-	client               bind.ContractBackend
+	client bind.ContractBackend
 }
 
 // NewCandidateService creates a concrete candidate service instance.
-func NewCandidateService(backend bind.ContractBackend, contractAddr common.Address) (CandidateService, error) {
-	log.Debug("candidate contract addr", "contractAddr", contractAddr.Hex())
+func NewCandidateService(backend bind.ContractBackend) (CandidateService, error) {
 
 	rs := &CandidateServiceImpl{
-		client:               backend,
-		campaignContractAddr: contractAddr,
+		client: backend,
 	}
 	return rs, nil
 }
 
 // CandidatesOf implements CandidateService
 func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
-	contractInstance, err := campaign.NewCampaign(rs.campaignContractAddr, rs.client)
+
+	if term < backend.TermOf(configs.RptCalcMethod2BlockNumber) {
+		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
+		contractInstance, err := campaign.NewCampaign(campaignAddr, rs.client)
+		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
+		if err != nil {
+			return nil, err
+		}
+		log.Debug("now read candidates from old campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+
+		return cds, nil
+	}
+
+	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign2]
+	contractInstance, err := campaign2.NewCampaign(campaignAddr, rs.client)
 	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
 	return cds, nil
 }
 
@@ -205,9 +219,11 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 // CalcRptInfo return the Rpt of the candidate address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common.Address, number uint64) Rpt {
 	if number < configs.RptCalcMethod2BlockNumber {
+		log.Debug("now calc rpt for with old rpt method", "addr", address.Hex(), "number", number)
 		return rs.calcRptInfo(address, number)
 	}
 
+	log.Debug("now calc rpt for with new rpt method", "addr", address.Hex(), "number", number)
 	return rs.rptCollector.RptOf(address, addresses, number)
 }
 
