@@ -137,7 +137,7 @@ func (ac *AdmissionControl) IsRNode() (bool, error) {
 }
 
 func (ac *AdmissionControl) FundForRNode() error {
-	log.Info("Start funding for becoming RNode")
+	log.Debug("Start funding for becoming RNode")
 	ac.mutex.Lock()
 	defer ac.mutex.Unlock()
 
@@ -192,7 +192,7 @@ func (ac *AdmissionControl) FundForRNode() error {
 		if !isToRenew {
 			tx, err := rewardContract.WantRenew(bind.NewKeyedTransactor(ac.key.PrivateKey)) // renew existent investment
 			if err != nil {
-				// log.Info("encounter error when renew investiment", "error", err)
+				log.Debug("encounter error when renew investiment", "error", err)
 				return err
 			}
 			nonce = new(big.Int).SetUint64(tx.Nonce() + 1) // force increase nonce because the next transaction is too near
@@ -203,7 +203,7 @@ func (ac *AdmissionControl) FundForRNode() error {
 		transactOpts.Nonce = nonce
 		tx, err := rewardContract.SubmitDeposit(transactOpts)
 		if err != nil {
-			// log.Info("encounter error when funding deposit for node to become candidate", "error", err)
+			log.Debug("encounter error when funding deposit for node to become candidate", "error", err)
 			return err
 		}
 
@@ -211,10 +211,10 @@ func (ac *AdmissionControl) FundForRNode() error {
 		atomic.StoreInt32(&ac.sendingFund, 1)
 		go ac.waitForTxDone(tx.Hash())
 
-		log.Info("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
+		log.Debug("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
 		return nil
 	} else {
-		log.Info("not enough money to become RNode")
+		log.Debug("not enough money to become RNode")
 		return errNoEnoughMoney
 	}
 }
