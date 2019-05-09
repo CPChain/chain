@@ -124,14 +124,16 @@ User Scenario Steps
 Consensus
 #####################
 
-The consensus in LBFT 2.0 is determined by two two committees: **Validators Committee** and **Proposers Committee**,
-which leads to a bipartite committee structure.
+The consensus in LBFT 2.0 is determined by two two committees:
+**Validators Committee** and **Proposers Committee**,
+which together lead to a bipartite committee structure.
 Proposers and validators, just as their names imply,
 take the responsibility of proposing and validating blocks respectively.
 
 The consensus process works in a finite state machine which consists of five states
 **idle**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
-The former three states are designed for normal cases, and the rest are specializing in handling abnormal cases.
+The former three states are designed for normal cases,
+and the rest are specializing in handling abnormal cases.
 
 Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`
 
