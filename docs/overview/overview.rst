@@ -24,7 +24,8 @@ Proxy Register Contract
 RPT Contract
 ***************
 
-   RPT (abbreviated from reputation) contract calculates RNode's reputation value. It is a core component of RNode ecosystem.
+   RPT (abbreviated from reputation) contract calculates RNode's reputation value.
+   It is a core component of RNode ecosystem.
    `RNode <https://cpchain.io/rnode/>`_ is the detail of the RNode ecosystem.
    Reputation value consists of 5 dimensions,
    **Account Balance (AB)**,
@@ -47,7 +48,8 @@ RPT Contract
 Campaign Contract
 ********************
 
-   A campaign contract is called once a user starts mining. If its passes the test of admission contract,
+   A campaign contract is called once a user starts mining.
+   If its passes the test of admission contract,
    it is registered as an RNode by the campaign contract.
    Furthermore, given the condition that RPT value of  the user is one of the top 21 RNodes,
    it is qualified to claim campaign aiming to become one of the committee members.
@@ -58,7 +60,8 @@ Campaign Contract
    ``claimCampaign()``: this function is called when a user claims a campaign.
    A fee paid in cpc is required by campaign contract as a deposit.
 
-   ``quitCampaign()``: this function is called after a user quits the campaign. It is about to get its deposit back via this function.
+   ``quitCampaign()``: this function is called after a user quits the campaign.
+   It is about to get its deposit back via this function.
 
    ``punishCandidate()``: this function can only be invoked by contract deployer.
    The deployer can detain the RNode's deposit if it observes any malicious behavior from an RNode.
@@ -70,7 +73,8 @@ Admission Contract
 
    Admission contract is called by campaign contract to verify whether
    the candidates' CPU and memory resources match the requirements of mining.
-   Two functions ``updateCPUDifficulty()`` and ``updateMemoryDifficulty()`` are implemented to fulfil this verification purpose.
+   Two functions ``updateCPUDifficulty()`` and ``updateMemoryDifficulty()``
+   are implemented to fulfil this verification purpose.
 
 PDash Contract
 ****************
@@ -342,7 +346,7 @@ When a fundraising ends, the following rules are applied:
 #. All nodes with deposit in this lock-up period receive their reward from the pool.
 
 The reward for a certain node from the pool is proportional to its deposit in a season.
-In other word, the basic reward is calculated as :math:`5000000\cdot d/D`, where :math:`d` is deposit of a certain node,
+In other word, the basic reward is calculated as :math:`5000000 \cdot d/D`, where :math:`d` is deposit of a certain node,
 and :math:`D` is the total value of coins in the reward pool.
 
 
