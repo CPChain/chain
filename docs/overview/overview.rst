@@ -185,11 +185,11 @@ By employing `RPT Contract`_, a node can evaluates its RPT value by following fi
 Each dimension has a full score of 100 point.
 And the total score is calculated as:
 
-:math:`RPT = 0.5\*AB +
-0.15\*TX +
-0.1\*PR +
-0.15\*DC +
-0.1\*BM`
+:math:`RPT = 0.5\times AB +
+0.15\times TX +
+0.1\times PR +
+0.15\times DC +
+0.1\times BM`
 
 
 Account Balance
@@ -342,7 +342,7 @@ When a fundraising ends, the following rules are applied:
 #. All nodes with deposit in this lock-up period receive their reward from the pool.
 
 The reward for a certain node from the pool is proportional to its deposit in a season.
-In other word, the basic reward is calculated as :math:`5000000*d/D`, where :math:`d` is deposit of a certain node,
+In other word, the basic reward is calculated as :math:`5000000\cdot d/D`, where :math:`d` is deposit of a certain node,
 and :math:`D` is the total value of coins in the reward pool.
 
 
@@ -449,7 +449,7 @@ Gas Limit
 
 Gas limit, as its name indicates,
 refers to the maximum gas a node is going to pay in a transaction.
-Apparently, the equation ``gas <= gas limit`` always holds.
+Apparently, the equation :math:`gas \leq gasLimit` always holds.
 It limits the upper bound of transaction fees in a contract,
 and avoid a contract involving unexpectedly high gas.
 This kind of situation occurs when an error, like too much loops,
@@ -467,7 +467,7 @@ Gas price is the fee for each gas a node pays.
 By analogy, gas is like gallon when fueling a car.
 Gas limit is the fuel tank of the car, limiting maximum gas.
 And gas price is the petroleum price per gallon.
-Thus, the total fee for a transaction is ``gas * gas price``.
+Thus, the total fee for a transaction is :math:`gas \times gasPrice`.
 
 When a node applies for a transaction,
 the system calculates a gas price based on transaction history on the chain.
@@ -483,15 +483,15 @@ by sacrificing the possibility of being verified by committee.
 Fee Calculation
 *****************
 
-The fee of a certain transaction is ``gas * gas price``.
+The fee of a certain transaction is :math:`gas \times gasPrice`.
 However, for smart contract transaction involving multiple operations,
 fee cannot be determined until the whole transaction terminates.
 Thus, when a node applies for a transaction,
-it is required to pay ``gas limit * gas price`` tokens.
+it is required to pay :math:`gasLimit \times gasPrice` tokens.
 And after the transaction terminates,
-unused fee ``(gas limit-gas) * gas price`` is refunded to this node.
+unused fee :math:`(gasLimit-gas) \times gasPrice` is refunded to this node.
 
-Note that transaction fee as ``gas * gas price`` is not refundable.
+Note that transaction fee as :math:`gas \times gasPrice` is not refundable.
 Even the transaction fails, like an abnormal contract involving gas outnumbering gas limit,
 the system does not refunds deducted fee.
 The rationale is that committee members have assumed their responsibility of
