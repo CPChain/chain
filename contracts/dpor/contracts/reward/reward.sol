@@ -8,7 +8,7 @@ contract Reward {
     using SafeMath for uint256;
 
     address owner;
-    bool private locked = true;
+    bool private locked = true; // indicate status of the contract, if true, nobody can deposit
     uint256 public basicCriteria = 20000 ether;
     uint256 public electionCriteria = 200000 ether;
     uint256 public bonusPool = 1250000 ether; // 1.25m x 4 = 5m (cpc)
@@ -18,15 +18,18 @@ contract Reward {
     uint256 public nextRoundStartTime = 0;
     uint256 private period = 90 days;
 
+    // This is a type for a single investor
     struct Investor {
-        uint256 freeDeposit;
-        uint256 lockedDeposit;
-        uint256 returned;
-        bool toRenew;
+        uint256 freeDeposit; // amount that can be taken out
+        uint256 lockedDeposit; // locked amount
+        uint256 returned; // amount that will be returned to investor after a round
+        bool toRenew; // if true, the person will continue to invest
     }
 
+    // store a 'Investor' struct for each possible address
     mapping (address => Investor) private investors;
 
+    // These events will be emitted on changes
     event SubmitDeposit(address who,uint256 value);
     event WithdrawDeposit(address who, uint256 value);
     event JoinENodes(address who, uint256 value);
@@ -39,6 +42,7 @@ contract Reward {
 
     modifier onlyOwner() {require(msg.sender == owner);_;}
 
+    // have to unlock the contract before starting a new raise
     modifier unlocked() {
         require(locked == false);
         _;
@@ -48,19 +52,25 @@ contract Reward {
         owner = msg.sender;
     }
 
+    // value transferred to contract without calling any legitimate function will fund the bonus pool
     function () public payable {
         emit FundBonusPool(msg.value);
     }
 
+    // owner start a new raise by unlocking the contract
     function newRaise() public onlyOwner() {
         locked = false;
         emit NewRaise(nextRound,locked,bonusPool);
     }
 
+    // owner set amount of bonus pool
     function setBonusPool(uint256 _bonus) public onlyOwner() {
         bonusPool = _bonus;
     }
 
+    // deposit money to become a participate after the contract being unlocked
+    // investors will be added into participants after submitting deposit
+    // the amount will not locked until new round start
     function submitDeposit() public payable unlocked() {
         require(!isContract(msg.sender),"please not use contract call this function");
         if (!isENode(msg.sender)){
@@ -70,6 +80,7 @@ contract Reward {
         emit SubmitDeposit(msg.sender,msg.value);
     }
 
+    // get investor's total balance: freeDeposit + lockedDeposit
     function getTotalBalance(address _addr) public view returns (uint256){
         uint256 freeBalance=0;
         uint256 lockedBalance=0;
@@ -96,12 +107,16 @@ contract Reward {
         return s;
     }
 
+    // judge whether an address is contract address by checking extcodesize
     function isContract(address addr) public view returns (bool) {
         uint size;
         assembly { size := extcodesize(addr) }
         return size > 0;
     }
 
+    // go through all participants and accumulate locked amount
+    // participants.value is a list that stores all participant addresses
+    // 'participants' is a new defined type set.Data. see lib/set.sol
     function totalInvestAmount() public view returns (uint256){
         uint256 totalAmount = 0;
         for (uint256 i = 0; i < participants.values.length; i++) {
@@ -110,6 +125,7 @@ contract Reward {
         return totalAmount;
     }
 
+    // go through all participants and accumulate total amount: locked + free
     function totalInvestAmountNow()public view returns (uint256){
         uint256 totalAmountNow = 0;
         for (uint256 i = 0; i < participants.values.length; i++){
@@ -118,6 +134,7 @@ contract Reward {
         return totalAmountNow;
     }
 
+    // investors withdraw their free deposit
     function withdraw(uint256 _value) public payable{
         require(_value <= investors[msg.sender].freeDeposit);
         investors[msg.sender].freeDeposit = investors[msg.sender].freeDeposit.sub(_value);
@@ -125,6 +142,7 @@ contract Reward {
         emit WithdrawDeposit(msg.sender, _value);
     }
 
+    // owner can transfer investors' free deposit to their address
     function transferDeposit(address _addr,uint256 _value) public onlyOwner(){
         require(_value <= investors[_addr].freeDeposit);
         investors[_addr].freeDeposit = investors[_addr].freeDeposit.sub(_value);
@@ -156,15 +174,20 @@ contract Reward {
         return participants.contains(_addr);
     }
 
-    // close previous round and dividend bonus (清算：还本付息/付息复投)
+    // close previous round and dividend bonus
     function closePreviousRound() internal {
         uint256 totalAmount = totalInvestAmount();
-        if (totalAmount == 0) {  // 极端情况，无人投资，不分派利息
+        if (totalAmount == 0) {  // no investors
             return;
         }
 
         uint256 deposit;
         uint256 interest;
+
+        // go through participants, get locked deposit and calculate interest for each
+        // interest will be added to returned amount
+        // if participant does not renew, locked deposit will also be added to returned amount
+        // participants will renew by default
         for (uint i = 0; i< participants.values.length; i++){
             deposit = investors[participants.values[i]].lockedDeposit;
             interest = bonusPool.mul(deposit).div(totalAmount); // interest = [total bonus] * ([the investor's investment] / [total investment])
@@ -178,17 +201,20 @@ contract Reward {
         }
     }
 
+    // only owner can start a new round
     function startNewRound() public onlyOwner() {
         require(block.timestamp >= (nextRoundStartTime), "the next round not start"); // allow start 3 days ahead of schedule
 
+        // close previous round firstly
         if (nextRound > 0) {
             closePreviousRound();
         }
 
+        // next round
         nextRound = nextRound.add(1);
         nextRoundStartTime = block.timestamp + period - 1 days; // 1days is a buffer
 
-        // Transfer deposit form tempDeposit to lockedDeposit
+        // Transfer deposit form freeDeposit to lockedDeposit
         for (uint256 i = 0 ; i< participants.values.length; i++) {
             address investorAddr = participants.values[i];
             Investor storage investor = investors[investorAddr];
@@ -209,6 +235,7 @@ contract Reward {
                     rnodes.remove(investorAddr);
                     emit JoinENodes(investorAddr, investor.lockedDeposit);
                 } else {
+                    // investor will if investor's deposit satisfy requirement,
                     rnodes.insert(investorAddr);
                     emit JoinRNodes(investorAddr, investor.lockedDeposit);
                 }
