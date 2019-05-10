@@ -407,7 +407,10 @@ func (d *Dpor) GetCandidateBackend() rpt.CandidateService {
 }
 
 func (d *Dpor) SetRNodeBackend(backend backend.ClientBackend) {
-	d.rNodeBackend, _ = rnode.NewRnode(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRnode], backend)
+	instance, err := rnode.NewRnode(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRnode], backend)
+	if err == nil {
+		d.rNodeBackend = instance
+	}
 }
 
 func (d *Dpor) GetRNodes() ([]common.Address, error) {
