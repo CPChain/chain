@@ -120,19 +120,36 @@ func NewCandidateService(backend bind.ContractBackend) (CandidateService, error)
 func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
 
 	if term < backend.TermOf(configs.Candidates2BlockNumber) {
+		// old campaign contract address
 		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
+
+		// old campaign contract instance
 		contractInstance, err := campaign.NewCampaign(campaignAddr, rs.client)
+		if err != nil {
+			return nil, err
+		}
+
+		// candidates from old campaign contract
 		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 		if err != nil {
 			return nil, err
 		}
+
 		log.Debug("now read candidates from old campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
 
 		return cds, nil
 	}
 
+	// new campaign contract address
 	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign2]
+
+	// new campaign contract instance
 	contractInstance, err := campaign2.NewCampaign(campaignAddr, rs.client)
+	if err != nil {
+		return nil, err
+	}
+
+	// candidates from new campaign contract
 	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 	if err != nil {
 		return nil, err
