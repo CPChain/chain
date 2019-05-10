@@ -133,7 +133,7 @@ take the responsibility of proposing and validating blocks respectively.
 The consensus process works in a finite state machine which consists of five states
 **idle**, **prepare**, **commit**, **impeach prepare** and **impeach commit**.
 The former three states are designed for normal cases,
-and the rest are specializing in handling abnormal cases.
+and the rest, named as impeachment, are specializing in handling abnormal cases.
 
 Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`
 
