@@ -225,14 +225,16 @@ def test_case_6():
 
 def main():
     config = compile_file()
-    address = deploy_contract(config)
-    print(address)
-    test_case_1()
-    test_case_2()
-    test_case_3()
-    test_case_4()
-    test_case_5()
-    test_case_6()
+    print(config['abi'])
+    print(config['bin'])
+    # address = deploy_contract(config)
+    # print(address)
+    # test_case_1()
+    # test_case_2()
+    # test_case_3()
+    # test_case_4()
+    # test_case_5()
+    # test_case_6()
 
 
 if __name__ == '__main__':
