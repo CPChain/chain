@@ -320,7 +320,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		// add peer to manager.peers, this is for basic msg syncing
 		remoteIsMiner, err := pm.addPeer(peer, isMinerOrValidator)
 		if err != nil {
-			log.Warn("fail to add peer to cpc protocol manager's peer set", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
+			log.Debug("fail to add peer to cpc protocol manager's peer set", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
 			return err
 		}
 
@@ -346,7 +346,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 				log.Debug("done of dpor subprotocol handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "coinbase", id)
 
 			default:
-				log.Warn("failed to add peer to dpor peer set", "err", err, "coinbase", id, "addr", p.RemoteAddr().String())
+				log.Debug("failed to add peer to dpor peer set", "err", err, "coinbase", id, "addr", p.RemoteAddr().String())
 				return err
 			}
 		}
