@@ -282,6 +282,8 @@ Create an Account
 Run a Private Network
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+
 .. code::
 
     $ cd examples/cpchain
@@ -289,6 +291,10 @@ Run a Private Network
 
     # check logs
     $ tail -f data/logs/*.log | grep number=
+
+.. node::
+
+    ``cpchain-all.sh`` launches the chain in dev mode
 
 Run a Local Node
 ^^^^^^^^^^^^^^^^^^^^^^^
