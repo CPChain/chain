@@ -23,7 +23,7 @@ def test_campaign():
     abi = config['abi']
     contract_address = "0x1404Bf355428523F8e51E68Df00A0521e413F98E"
 
-    cf = Web3(Web3.HTTPProvider('http://3.1.81.79:8501'))
+    cf = Web3(Web3.HTTPProvider('http://192.168.123.124:8501'))
 
     # cf.cpc.defaultAccount = cf.cpc.accounts[0]
 
@@ -33,7 +33,9 @@ def test_campaign():
     start = terms - 10
     end = terms
     print("total terms: ", terms)
-    for term in range(start, end):
+    num_per_term = campaign.functions.numPerRound().call()
+    print(num_per_term)
+    for term in range(200, 230):
         result = campaign.functions.candidatesOf(term).call()
         print("term: ", term)
         print("number of candidate: ", len(result))

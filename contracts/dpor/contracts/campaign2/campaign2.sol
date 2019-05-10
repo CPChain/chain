@@ -34,7 +34,7 @@ contract Campaign {
     address owner; // owner has permission to set parameters
     uint public termIdx = 0; // current term
     uint public viewLen = 3; // view length: the number of blocks it can propose within a term
-    uint public termLen =4; // term length: the number of proposers in a certain term
+    uint public termLen =12; // term length: the number of proposers in a certain term
     // 'round' is same with 'term'.
     uint public numPerRound = termLen * viewLen; // total number of blocks produced in a term.
     // a node must choose the number of terms when it claims campaign
