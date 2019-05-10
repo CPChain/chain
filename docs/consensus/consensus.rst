@@ -65,7 +65,7 @@ that there exists a quorum agreeing on a prepare message and a commit message, r
         #. Once receives :math:`2f+1` PREPARE messages (P-certificate), a validator broadcasts COMMIT message to other validators.
         #. Once receives :math:`2f+1` COMMIT messages (C-certificate), a validator inserts the block into local chain, and broadcasts VALIDATE message long with these :math:`2f+1` validators' signatures to all users.
         #. Once a validator receives the VALIDATE message for the first time in a block height, it broadcasts a same message to all nodes.
-        #. Any user receives this VALIDATE message with enough signatures, insert the block into local chain
+        #. Any user receives this VALIDATE message with enough signatures, inserts the block into local chain
 
 
 #. **Abnormal Cases**
