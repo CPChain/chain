@@ -249,8 +249,8 @@ func (b *APIBackend) RNode() ([]common.Address, uint64) {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	api := b.cpc.engine.(*dpor.Dpor).APIs(b.cpc.blockchain)
-	sp, _ := api[0].Service.(*dpor.API).GetSnapshot(rpc.BlockNumber(bn.Uint64()))
-	return sp.Candidates, bn.Uint64()
+	rNodes, _ := api[0].Service.(*dpor.API).GetRNodes()
+	return rNodes, bn.Uint64()
 }
 
 // CurrentView return current view

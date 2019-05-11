@@ -18,7 +18,8 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
+	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign2"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -61,7 +62,7 @@ type AdmissionControl struct {
 	contractBackend       contracts.Backend
 	admissionContractAddr common.Address
 	campaignContractAddr  common.Address
-	rewardContractAddr    common.Address
+	rNodeContractAddr     common.Address
 
 	mutex      sync.RWMutex
 	wg         *sync.WaitGroup
@@ -77,13 +78,13 @@ type AdmissionControl struct {
 
 // NewAdmissionControl returns a new Control instance.
 func NewAdmissionControl(chain consensus.ChainReader, address common.Address, admissionContractAddr common.Address,
-	campaignContractAddr common.Address, rewardContractAddr common.Address) *AdmissionControl {
+	campaignContractAddr common.Address, rNodeContractAddr common.Address) *AdmissionControl {
 	return &AdmissionControl{
 		chain:                 chain,
 		address:               address,
 		admissionContractAddr: admissionContractAddr,
 		campaignContractAddr:  campaignContractAddr,
-		rewardContractAddr:    rewardContractAddr,
+		rNodeContractAddr:     rNodeContractAddr,
 		status:                AcIdle,
 	}
 }
@@ -102,10 +103,10 @@ func (ac *AdmissionControl) Campaign(terms uint64) error {
 		return nil
 	}
 
-	// isRNode, _ := ac.IsRNode()
-	// if !isRNode {
-	// 	return errNotRNode
-	// }
+	isRNode, _ := ac.IsRNode()
+	if !isRNode {
+		return errNotRNode
+	}
 
 	ac.status = AcRunning
 	ac.err = nil
@@ -125,14 +126,14 @@ func (ac *AdmissionControl) Campaign(terms uint64) error {
 
 // IsRNode returns true or false indicating whether the node is RNode which is able to participate campaign
 func (ac *AdmissionControl) IsRNode() (bool, error) {
-	rewardContractAddress := ac.rewardContractAddr
-	log.Debug("RewardContractAddress", "address", rewardContractAddress.Hex())
-	rewardContract, err := reward.NewReward(rewardContractAddress, ac.contractBackend)
+	rNodeContractAddress := ac.rNodeContractAddr
+	log.Debug("RNodeContractAddress", "address", rNodeContractAddress.Hex())
+	rNodeContract, err := rnode.NewRnode(rNodeContractAddress, ac.contractBackend)
 	if err != nil {
 		return false, err
 	}
 
-	isRNode, _ := rewardContract.IsRNode(nil, ac.address)
+	isRNode, _ := rNodeContract.IsRnode(nil, ac.address)
 	return isRNode, nil
 }
 
@@ -146,14 +147,14 @@ func (ac *AdmissionControl) FundForRNode() error {
 		return nil // there is a pending tx to fund for becoming RNode, wait for its accomplishment
 	}
 
-	rewardContractAddress := ac.rewardContractAddr
-	log.Debug("RewardContractAddress", "address", rewardContractAddress.Hex())
-	rewardContract, err := reward.NewReward(rewardContractAddress, ac.contractBackend)
+	rNodeContractAddress := ac.rNodeContractAddr
+	log.Debug("RNodeContractAddress", "address", rNodeContractAddress.Hex())
+	rNodeContract, err := rnode.NewRnode(rNodeContractAddress, ac.contractBackend)
 	if err != nil {
 		return err
 	}
 
-	isRNode, err := rewardContract.IsRNode(nil, ac.address)
+	isRNode, err := rNodeContract.IsRnode(nil, ac.address)
 	if err != nil {
 		return err
 	}
@@ -163,58 +164,24 @@ func (ac *AdmissionControl) FundForRNode() error {
 		return nil
 	}
 
-	isLocked, err := rewardContract.IsLocked(nil)
-	if err != nil {
-		return err
-	}
-	if isLocked {
-		// cannot fund to be RNode during locked period
-		return errLockedPeriod
-	}
-
-	deposit, err := rewardContract.GetTotalBalance(nil, ac.address)
-	if err != nil {
-		return err
-	}
-
 	minRnodeFund := new(big.Int).Mul(big.NewInt(configs.RNodeMinFundReq), big.NewInt(configs.Cpc))
-	if deposit.Cmp(minRnodeFund) >= 0 {
-		// fund is enough, next round it will be RNode
-		return nil
-	}
-
-	requiredMoney := new(big.Int).Sub(minRnodeFund, deposit)
 	balance, _ := ac.contractBackend.BalanceAt(context.Background(), ac.address, nil)
-	if balance.Cmp(requiredMoney) >= 0 {
-		isToRenew, _ := rewardContract.IsToRenew(nil, ac.address)
-
-		var nonce *big.Int = nil // by default nonce is nil and let
-		if !isToRenew {
-			tx, err := rewardContract.WantRenew(bind.NewKeyedTransactor(ac.key.PrivateKey)) // renew existent investment
-			if err != nil {
-				log.Debug("encounter error when renew investiment", "error", err)
-				return err
-			}
-			nonce = new(big.Int).SetUint64(tx.Nonce() + 1) // force increase nonce because the next transaction is too near
-		}
-
+	if balance.Cmp(minRnodeFund) >= 0 {
 		transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
-		transactOpts.Value = requiredMoney // make up investment
-		transactOpts.Nonce = nonce
-		tx, err := rewardContract.SubmitDeposit(transactOpts)
+		transactOpts.Value = minRnodeFund
+		tx, err := rNodeContract.JoinRnode(transactOpts)
 		if err != nil {
-			log.Debug("encounter error when funding deposit for node to become candidate", "error", err)
+			log.Info("encounter error when funding deposit for node to become candidate", "error", err)
 			return err
 		}
 
-		// log.Info("submitDeposit(opts)", "txhash", tx.Hash().Hex())
 		atomic.StoreInt32(&ac.sendingFund, 1)
 		go ac.waitForTxDone(tx.Hash())
 
-		log.Debug("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
+		log.Info("save fund for the node to become RNode", "account", ac.address, "txhash", tx.Hash().Hex())
 		return nil
 	} else {
-		log.Debug("not enough money to become RNode")
+		log.Info("not enough money to become RNode")
 		return errNoEnoughMoney
 	}
 }
@@ -334,7 +301,7 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 	campaignContractAddress := ac.campaignContractAddr
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
-	instance, err := contracts.NewCampaignWrapper(transactOpts, campaignContractAddress, ac.contractBackend)
+	instance, err := campaign2.NewCampaign(campaignContractAddress, ac.contractBackend)
 	if err != nil {
 		ac.mutex.Lock()
 		ac.err = err
@@ -344,7 +311,7 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 
 	cpuResult := ac.cpuWork.result()
 	memResult := ac.memoryWork.result()
-	_, err = instance.ClaimCampaign(new(big.Int).SetUint64(terms), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
+	_, err = instance.ClaimCampaign(transactOpts, new(big.Int).SetUint64(terms), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
 		memResult.Nonce, new(big.Int).SetInt64(memResult.BlockNumber))
 	if err != nil {
 		ac.mutex.Lock()

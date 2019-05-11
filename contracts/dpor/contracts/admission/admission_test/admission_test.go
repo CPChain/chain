@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
 	"bitbucket.org/cpchain/chain/core/vm"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -31,7 +32,6 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -73,22 +73,19 @@ func deployAdmission(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, 
 	return acAddr, nil
 }
 
-func deployReward(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (common.Address, *reward.Reward, error) {
+func deployRnode(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (common.Address, *rnode.Rnode, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	rewardAddr, _, rewardContract, err := reward.DeployReward(deployTransactor, backend)
+	rNodeAddr, _, rNodeContract, err := rnode.DeployRnode(deployTransactor, backend)
 	if err != nil {
 		return common.Address{}, nil, err
 	}
 	backend.Commit()
-	rewardContract.NewRaise(deployTransactor)
-	rewardContract.SetPeriod(deployTransactor, big.NewInt(0))
-	backend.Commit()
-	return rewardAddr, rewardContract, nil
+	return rNodeAddr, rNodeContract, nil
 }
 
-func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend, admissionContract common.Address, rewardContract common.Address) (common.Address, error) {
+func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend, admissionContract common.Address, rNodeContract common.Address) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	campaignAddr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, admissionContract, rewardContract)
+	campaignAddr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, admissionContract, rNodeContract)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -96,26 +93,26 @@ func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend
 	return campaignAddr, nil
 }
 
-func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout uint64, backend *backends.SimulatedBackend) (common.Address, common.Address, *reward.Reward, common.Address, error) {
+func deploy(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout uint64, backend *backends.SimulatedBackend) (common.Address, common.Address, *rnode.Rnode, common.Address, error) {
 	admissionAddr, err := deployAdmission(prvKey, cpuDifficulty, memoryDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, common.Address{}, err
 	}
 
-	rewardAddr, rewardContract, err := deployReward(prvKey, backend)
+	rNodeAddr, rNodeContract, err := deployRnode(prvKey, backend)
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, common.Address{}, err
 	}
-	campaignAddr, err := deployCampaign(prvKey, backend, admissionAddr, rewardAddr)
+	campaignAddr, err := deployCampaign(prvKey, backend, admissionAddr, rNodeAddr)
 	if err != nil {
 		return common.Address{}, common.Address{}, nil, common.Address{}, err
 	}
-	return admissionAddr, rewardAddr, rewardContract, campaignAddr, nil
+	return admissionAddr, rNodeAddr, rNodeContract, campaignAddr, nil
 }
 
 func TestVerifyCPU(t *testing.T) {
 	backend := newTestBackend()
-	acAddr, rewardAddr, rewardContract, campaignAddr, err := deploy(key0, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
+	acAddr, rNodeAddr, rNodeContract, campaignAddr, err := deploy(key0, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
@@ -125,7 +122,7 @@ func TestVerifyCPU(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	cpuBlockNum, cpuNonce, _, _ := computeCorrectPow(key0, backend, addr0, acAddr, rewardAddr, rewardContract, campaignAddr)
+	cpuBlockNum, cpuNonce, _, _ := computeCorrectPow(key0, backend, addr0, acAddr, rNodeAddr, rNodeContract, campaignAddr)
 	ok, err := instance.VerifyCPU(nil, addr0, cpuNonce, big.NewInt(cpuBlockNum), big.NewInt(int64(cpuDifficulty)))
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -139,7 +136,7 @@ func TestVerifyCPU(t *testing.T) {
 
 func TestVerifyMemory(t *testing.T) {
 	backend := newTestBackend()
-	acAddr, rewardAddr, rewardContract, campaignAddr, err := deploy(key0, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
+	acAddr, rNodeAddr, rNodeContract, campaignAddr, err := deploy(key0, cpuDifficulty, memDifficulty, cpuWorkTimeout, memoryWorkTimeout, backend)
 	if err != nil {
 		t.Fatalf("deploy contract: expected no error, got %v", err)
 	}
@@ -149,7 +146,7 @@ func TestVerifyMemory(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	_, _, memBlockNum, memNonce := computeCorrectPow(key0, backend, addr0, acAddr, rewardAddr, rewardContract, campaignAddr)
+	_, _, memBlockNum, memNonce := computeCorrectPow(key0, backend, addr0, acAddr, rNodeAddr, rNodeContract, campaignAddr)
 
 	ok, err := instance.VerifyMemory(nil, addr0, memNonce, big.NewInt(memBlockNum), big.NewInt(int64(memDifficulty)))
 	if err != nil {
@@ -206,17 +203,17 @@ func TestUpdateCPUDifficulty(t *testing.T) {
 }
 
 func computeCorrectPow(prvKey *ecdsa.PrivateKey, contractBackend *backends.SimulatedBackend, addr common.Address, admissionAddr common.Address,
-	rewardAddr common.Address, rewardContract *reward.Reward, campaignAddr common.Address) (cpuBlockNum int64, cpuNonce uint64, memBlockNum int64, memNonce uint64) {
+	rNodeAddr common.Address, rNodeContract *rnode.Rnode, campaignAddr common.Address) (cpuBlockNum int64, cpuNonce uint64, memBlockNum int64, memNonce uint64) {
 	// compute cpu&memory pow
-	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, admissionAddr, campaignAddr, rewardAddr)
+	ac := admission.NewAdmissionControl(contractBackend.Blockchain(), addr, admissionAddr, campaignAddr, rNodeAddr)
 	ac.SetSimulateBackend(contractBackend)
 	ac.SetAdmissionKey(&keystore.Key{PrivateKey: prvKey})
 	err := ac.FundForRNode()
 	if err != nil {
 		return
 	}
-	opts := bind.NewKeyedTransactor(prvKey)
-	rewardContract.StartNewRound(opts)
+	// opts := bind.NewKeyedTransactor(prvKey)
+	// rNodeContract.StartNewRound(opts)
 	contractBackend.Commit()
 
 	err = ac.Campaign(1)

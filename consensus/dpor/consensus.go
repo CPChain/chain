@@ -205,12 +205,12 @@ func (d *Dpor) TryCampaign() {
 			}
 
 			if !isRNode {
-				// log.Info("it is not RNode, cannot participate campaign")
+				log.Info("it is not RNode, cannot participate campaign")
 				if err := d.ac.FundForRNode(); err != nil {
 					log.Debug("failed to FundForRNode", "detail", err)
 					return
 				}
-				// log.Info("already send money to become RNode")
+				log.Info("already send money to become RNode")
 			}
 		}
 

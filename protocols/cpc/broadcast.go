@@ -71,7 +71,7 @@ func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions, force bool) {
 	// Broadcast transactions to a batch of peers not knowing about it
 	txsLength := txs.Len()
 	if force && txsLength > 0 {
-		log.Warn("now reboadcast waiting txs", "len", txsLength)
+		log.Debug("now rebroadcast waiting txs", "len", txsLength)
 	}
 	for _, tx := range txs {
 		peers := pm.peers.PeersWithoutTx(tx.Hash())
