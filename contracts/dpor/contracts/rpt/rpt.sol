@@ -2,10 +2,14 @@ pragma solidity ^0.4.24;
 
 /** @title Reputation calculate */
 
+// only 5 config parameters work in this contract
+// other code is not used
+
 import "./lib/safeMath.sol";
 import "./lib/primitive_contracts.sol";
 
 contract Rpt {
+    // primitive contract interface is used to allow evm to call underlying go functions directly
     using PrimitiveContractsInterface for address;
     using SafeMath for uint256;
     // The 5 weight configs.
@@ -16,9 +20,8 @@ contract Rpt {
     uint public omega = 10;
     
     // other configs.
-    uint public window = 4;
-    // candidate per round
-    uint public f = 21;
+    uint public window = 4; // number of blocks used for rpt calculation
+    uint public f = 21; // candidate per round
     
     address public owner;
     
@@ -93,7 +96,14 @@ contract Rpt {
         window = _window;
         emit UpdateOneConfig(block.number, "window", window);
     }
-    
+
+    // calculate rpt of _addr in block _blockNumber
+    // rpt consists of five parts with different weights:
+    // 1. Coinage: rank of balance in all candidates
+    // 2. Tx: number of transactions
+    // 3. ProxyRep
+    // 4. DataContribution
+    // 5. BlockchainMaintenance
     function getRpt(address _addr, uint _blockNumber) public view returns (uint rpt){
         require(_blockNumber <= block.number, "blockNumber is too large.");
         rpt = 0;

@@ -5,12 +5,13 @@ import (
 	"crypto/ecdsa"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/commons/log"
-
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
 	cm "bitbucket.org/cpchain/chain/tools/console/common"
 	cc "bitbucket.org/cpchain/chain/tools/utility"
 	"github.com/ethereum/go-ethereum/common"
@@ -77,13 +78,14 @@ func (c *Console) isMining() bool {
 }
 
 func (c *Console) isRNode() bool {
-	addr := cm.GetContractAddress(cm.ContractReward)
-	instance, err := reward.NewReward(addr, c.client)
+	addr := cm.GetContractAddress(configs.ContractRnode)
+	// instance, err := reward.NewReward(addr, c.client)
+	instance, err := rnode.NewRnode(addr, c.client)
 	if err != nil {
 		c.output.Error(err.Error())
 	}
 	// ISRNode
-	isRNode, err := instance.IsRNode(nil, c.addr)
+	isRNode, err := instance.IsRnode(nil, c.addr)
 	if err != nil {
 		c.output.Error(err.Error())
 	}
@@ -91,7 +93,7 @@ func (c *Console) isRNode() bool {
 }
 
 func (c *Console) isLocked() bool {
-	addr := cm.GetContractAddress(cm.ContractReward)
+	addr := cm.GetContractAddress(configs.ContractReward)
 	instance, err := reward.NewReward(addr, c.client)
 	if err != nil {
 		c.output.Error(err.Error())
@@ -200,7 +202,7 @@ func (c *Console) GetBalance() (*cm.Balance, error) {
 
 // GetBalanceOnReward get balance on reward contract
 func (c *Console) GetBalanceOnReward() (*cm.RewardBalance, error) {
-	addr := cm.GetContractAddress(cm.ContractReward)
+	addr := cm.GetContractAddress(configs.ContractReward)
 	instance, err := reward.NewReward(addr, c.client)
 	if err != nil {
 		return nil, err
@@ -233,7 +235,7 @@ func (c *Console) GetBalanceOnReward() (*cm.RewardBalance, error) {
 // Withdraw money from reward contract
 func (c *Console) Withdraw(value *big.Int) error {
 	c.output.Info("Withdraw...")
-	addr := cm.GetContractAddress(cm.ContractReward)
+	addr := cm.GetContractAddress(configs.ContractReward)
 	instance, err := reward.NewReward(addr, c.client)
 	if err != nil {
 		return err
@@ -265,7 +267,7 @@ func (c *Console) SubmitDeposit(value *big.Int) error {
 		c.output.Warn("Sorry, the reward contract is locked now.")
 		return nil
 	}
-	addr := cm.GetContractAddress(cm.ContractReward)
+	addr := cm.GetContractAddress(configs.ContractReward)
 	instance, err := reward.NewReward(addr, c.client)
 	if err != nil {
 		return err
@@ -290,7 +292,7 @@ func (c *Console) WantRenew() error {
 		c.output.Warn("Sorry, the reward contract is locked now.")
 		return nil
 	}
-	addr := cm.GetContractAddress(cm.ContractReward)
+	addr := cm.GetContractAddress(configs.ContractReward)
 
 	instance, err := reward.NewReward(addr, c.client)
 	if err != nil {
@@ -314,7 +316,7 @@ func (c *Console) QuitRenew() error {
 		c.output.Warn("Sorry, the reward contract is locked now.")
 		return nil
 	}
-	addr := cm.GetContractAddress(cm.ContractReward)
+	addr := cm.GetContractAddress(configs.ContractReward)
 
 	instance, err := reward.NewReward(addr, c.client)
 	if err != nil {

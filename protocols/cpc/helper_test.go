@@ -50,7 +50,7 @@ func newTestProtocolManager(blocks int, generator func(int, *core.BlockGen), new
 		panic(err)
 	}
 
-	pm, err := NewProtocolManager(gspec.Config, DefaultConfig.NetworkId, evmux, &testTxPool{added: newtx}, engine, blockchain, db, common.Address{})
+	pm, err := NewProtocolManager(gspec.Config, DefaultConfig.NetworkId, evmux, &testTxPool{added: newtx}, engine, blockchain, db, common.Address{}, DefaultConfig.SyncMode)
 	if err != nil {
 		return nil, nil, err
 	}

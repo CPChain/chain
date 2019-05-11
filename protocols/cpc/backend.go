@@ -168,8 +168,9 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
 	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
+		dpor.SetCandidateBackend(primitive_register.GetChainClient())
 		dpor.SetRptBackend(primitive_register.GetChainClient())
-		dpor.SetRnodeBackend(primitive_register.GetChainClient())
+		dpor.SetRNodeBackend(primitive_register.GetChainClient())
 	}
 
 	log.Info("Initialising cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
@@ -191,11 +192,14 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		return nil, err
 	}
 	cpc.blockchain.SetTypeMux(cpc.eventMux)
+	cpc.blockchain.SetSyncMode(config.SyncMode)
 
 	// admission must initialize after blockchain has been initialized
 	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
-		contractAddrs[configs.ContractAdmission], contractAddrs[configs.ContractCampaign], contractAddrs[configs.ContractReward])
+		contractAddrs[configs.ContractAdmission],
+		contractAddrs[configs.ContractCampaign2],
+		contractAddrs[configs.ContractRnode])
 
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
 		dpor.SetupAdmission(cpc.AdmissionApiBackend)
@@ -215,7 +219,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.txPool = core.NewTxPool(config.TxPool, cpc.chainConfig, cpc.blockchain)
 
-	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.coinbase); err != nil {
+	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.coinbase, config.SyncMode); err != nil {
 		return nil, err
 	}
 

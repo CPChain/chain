@@ -60,3 +60,8 @@ func (api *API) GetProposers(number rpc.BlockNumber) ([]common.Address, error) {
 func (api *API) GetValidators(number rpc.BlockNumber) ([]common.Address, error) {
 	return api.dpor.ValidatorsOf(uint64(number))
 }
+
+// GetRNodes retrieves current RNodes.
+func (api *API) GetRNodes() ([]common.Address, error) {
+	return api.dpor.GetRNodes()
+}

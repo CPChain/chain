@@ -7,9 +7,6 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
-
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
@@ -19,6 +16,8 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	acContracts "bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	rnode "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -55,22 +54,19 @@ func deployAdmission(prvKey *ecdsa.PrivateKey, cpuDifficulty, memoryDifficulty, 
 	return acAddr, nil
 }
 
-func deployReward(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (common.Address, *reward.Reward, error) {
+func deployRnode(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (common.Address, *rnode.Rnode, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	rewardAddr, _, rewardContract, err := reward.DeployReward(deployTransactor, backend)
+	rNodeAddr, _, rNodeContract, err := rnode.DeployRnode(deployTransactor, backend)
 	if err != nil {
 		return common.Address{}, nil, err
 	}
 	backend.Commit()
-	rewardContract.NewRaise(deployTransactor)
-	rewardContract.SetPeriod(deployTransactor, big.NewInt(0))
-	backend.Commit()
-	return rewardAddr, rewardContract, nil
+	return rNodeAddr, rNodeContract, nil
 }
 
-func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend, admissionContract common.Address, rewardContract common.Address) (common.Address, error) {
+func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend, admissionContract common.Address, rNodeContract common.Address) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
-	campaignAddr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, admissionContract, rewardContract)
+	campaignAddr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, admissionContract, rNodeContract)
 	if err != nil {
 		return common.Address{}, err
 	}
@@ -78,7 +74,7 @@ func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend
 	return campaignAddr, nil
 }
 
-func deployRequiredContracts(t *testing.T) (*backends.SimulatedBackend, common.Address, common.Address, *reward.Reward, common.Address) {
+func deployRequiredContracts(t *testing.T) (*backends.SimulatedBackend, common.Address, common.Address, *rnode.Rnode, common.Address) {
 	var (
 		cpuDifficulty     uint64 = 5
 		memDifficulty     uint64 = 5
@@ -92,15 +88,15 @@ func deployRequiredContracts(t *testing.T) (*backends.SimulatedBackend, common.A
 		t.Fatal("deploy error", "error", err)
 	}
 
-	rewardAddr, rewardContract, err := deployReward(key.PrivateKey, contractBackend)
+	rNodeAddr, rNodeContract, err := deployRnode(key.PrivateKey, contractBackend)
 	if err != nil {
 		t.Fatal("deploy error", "error", err)
 	}
-	campaignAddr, err := deployCampaign(key.PrivateKey, contractBackend, admissionAddr, rewardAddr)
+	campaignAddr, err := deployCampaign(key.PrivateKey, contractBackend, admissionAddr, rNodeAddr)
 	if err != nil {
 		t.Fatal("deploy error", "error", err)
 	}
-	return contractBackend, admissionAddr, rewardAddr, rewardContract, campaignAddr
+	return contractBackend, admissionAddr, rNodeAddr, rNodeContract, campaignAddr
 }
 
 func init() {
@@ -124,8 +120,8 @@ func newDummyChain() consensus.ChainReader {
 }
 
 // newAC return a new AdmissionControl instance
-func newAcApiBackend(chain consensus.ChainReader, admissionContractAddr common.Address, campaignContractAddr common.Address, rewardContractAddr common.Address) admission.ApiBackend {
-	return admission.NewAdmissionApiBackend(chain, addr, admissionContractAddr, campaignContractAddr, rewardContractAddr)
+func newAcApiBackend(chain consensus.ChainReader, admissionContractAddr common.Address, campaignContractAddr common.Address, rNodeContractAddr common.Address) admission.ApiBackend {
+	return admission.NewAdmissionApiBackend(chain, addr, admissionContractAddr, campaignContractAddr, rNodeContractAddr)
 }
 
 // TestAPIs test apis
@@ -148,9 +144,9 @@ func TestApis(t *testing.T) {
 
 // TestCampaign tests campaign, check status, abort and check status
 func TestAdmissionApiBackend_Campaign(t *testing.T) {
-	contractBackend, admissionAddr, rewardAddr, rewardContract, campaignAddr := deployRequiredContracts(t)
+	contractBackend, admissionAddr, rNodeAddr, _, campaignAddr := deployRequiredContracts(t)
 
-	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rewardAddr)
+	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rNodeAddr)
 	status, err := ac.GetStatus()
 	var wantErr error
 	if status != admission.AcIdle || !reflect.DeepEqual(err, wantErr) {
@@ -160,12 +156,6 @@ func TestAdmissionApiBackend_Campaign(t *testing.T) {
 	ac.SetAdmissionKey(key)
 	ac.FundForRNode()
 	contractBackend.Commit()
-	_, err = rewardContract.StartNewRound(bind.NewKeyedTransactor(key.PrivateKey))
-	if err != nil {
-		t.Fatal("encounter error when start new round", "error", err)
-	}
-	contractBackend.Commit()
-
 	ac.Campaign(1)
 	status, err = ac.GetStatus()
 	if status != admission.AcRunning || !reflect.DeepEqual(err, wantErr) {
@@ -182,7 +172,7 @@ func TestAdmissionApiBackend_Campaign(t *testing.T) {
 
 // TestIsRNode returns a bool value indicating if the current node is RNode
 func TestAdmissionApiBackend_IsRNode(t *testing.T) {
-	contractBackend, admissionAddr, rewardAddr, rewardContract, campaignAddr := deployRequiredContracts(t)
+	contractBackend, admissionAddr, rewardAddr, _, campaignAddr := deployRequiredContracts(t)
 	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rewardAddr)
 	ac.SetContractBackend(contractBackend)
 	ac.SetAdmissionKey(key)
@@ -198,46 +188,14 @@ func TestAdmissionApiBackend_IsRNode(t *testing.T) {
 	contractBackend.Commit()
 
 	isRNode, _ = ac.IsRNode()
-	if isRNode {
-		t.Error("IsRNode() should return false before the new round has not started")
-	}
-
-	opts := bind.NewKeyedTransactor(key.PrivateKey)
-	_, err = rewardContract.StartNewRound(opts)
-	contractBackend.Commit()
-
-	isRNode, _ = ac.IsRNode()
 	if !isRNode {
-		t.Error("IsRNode() should return true after the new round started")
-	}
-
-	_, err = rewardContract.NewRaise(opts)
-	contractBackend.Commit()
-	if err != nil {
-		t.Error("encounter error when start a new raise")
-	}
-
-	_, err = rewardContract.QuitRenew(opts)
-	contractBackend.Commit()
-	if err != nil {
-		t.Error("encounter error when quit investment at next round")
-	}
-
-	_, err = rewardContract.StartNewRound(opts)
-	contractBackend.Commit()
-	if err != nil {
-		t.Error("encounter error when start next round")
-	}
-
-	isRNode, _ = ac.IsRNode()
-	if isRNode {
-		t.Error("IsRNode() should return false after the node quit investment and no longer be RNode")
+		t.Error("fund for rnode failed")
 	}
 }
 
 func TestAdmissionApiBackend_FundForRNode(t *testing.T) {
-	contractBackend, admissionAddr, rewardAddr, rewardContract, campaignAddr := deployRequiredContracts(t)
-	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rewardAddr)
+	contractBackend, admissionAddr, rNodeAddr, _, campaignAddr := deployRequiredContracts(t)
+	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rNodeAddr)
 	ac.SetContractBackend(contractBackend)
 	ac.SetAdmissionKey(key)
 
@@ -252,16 +210,12 @@ func TestAdmissionApiBackend_FundForRNode(t *testing.T) {
 	}
 	contractBackend.Commit()
 
-	opts := bind.NewKeyedTransactor(key.PrivateKey)
-	_, err = rewardContract.StartNewRound(opts)
-	contractBackend.Commit()
-
 	isRNode, _ = ac.IsRNode()
 	if !isRNode {
 		t.Error("IsRNode() should return true after the new round started")
 	}
 
-	b, _ := contractBackend.BalanceAt(context.Background(), rewardAddr, nil)
+	b, _ := contractBackend.BalanceAt(context.Background(), rNodeAddr, nil)
 	t.Log("the balance of reward", b.String())
 	if b.String() != "200000000000000000000000" {
 		t.Error("reward balance is not correct")

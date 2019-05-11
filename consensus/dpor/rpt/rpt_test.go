@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 	"log"
 	"math/big"
 	"reflect"
@@ -27,11 +28,13 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
 	rtp_contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
+	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -149,10 +152,18 @@ func deploy(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (commo
 	return addr, nil
 }
 
+type newFakeClientBackend interface {
+	bind.ContractBackend
+
+	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
+	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
+	NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error)
+}
+
 func TestRptServiceImpl_CalcRptInfoList(t *testing.T) {
 	type fields struct {
 		RptContract common.Address
-		Client      bind.ContractBackend
+		Client      newFakeClientBackend
 	}
 	type args struct {
 		addresses []common.Address
@@ -220,4 +231,91 @@ func setPrimitiveMockValues(rank int64, txVolumn int64, maintenance int64, uploa
 	primitiveBackend.uploadCount = uploadCount
 	primitiveBackend.proxyCount = proxyCount
 	primitiveBackend.isProxy = isProxy
+}
+
+// --- --- --- --- --- --- --- --- --- --- --- below are bench tests for new rpt calculation method --- --- --- --- --- --- --- --- --- --- ---
+
+func newBlockchain(n int) *core.BlockChain {
+	db := database.NewMemDatabase()
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
+	gspec := core.DefaultGenesisBlock()
+	genesis := gspec.MustCommit(db)
+	config := gspec.Config
+	dporConfig := config.Dpor
+	dporFakeEngine := dpor.NewFaker(dporConfig, db)
+	blocks, _ := core.GenerateChain(config, genesis, dporFakeEngine, db, remoteDB, n, nil)
+	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, dporFakeEngine, vm.Config{}, remoteDB, nil)
+	_, _ = blockchain.InsertChain(blocks)
+	return blockchain
+}
+
+type fakeChainBackendForRptCollector struct {
+	blockchain *core.BlockChain
+}
+
+func newFakeChainBackendForRptCollector(n int) *fakeChainBackendForRptCollector {
+	bc := newBlockchain(n)
+	return &fakeChainBackendForRptCollector{
+		blockchain: bc,
+	}
+}
+
+func (fc *fakeChainBackendForRptCollector) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
+	return fc.blockchain.GetBlockByNumber(number.Uint64()).Header(), nil
+}
+
+func (fc *fakeChainBackendForRptCollector) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error) {
+	header, err := fc.HeaderByNumber(ctx, blockNumber)
+	state, err := fc.blockchain.StateAt(header.StateRoot)
+	if state == nil || err != nil {
+		return nil, err
+	}
+	return state.GetBalance(account), state.Error()
+}
+
+func (fc *fakeChainBackendForRptCollector) NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error) {
+	header, err := fc.HeaderByNumber(ctx, blockNumber)
+	state, err := fc.blockchain.StateAt(header.StateRoot)
+	if state == nil || err != nil {
+		return 0, err
+	}
+	return state.GetNonce(account), state.Error()
+}
+
+func generateABatchAccounts(n int) []common.Address {
+	var addresses []common.Address
+	for i := 0; i < n; i++ {
+		addresses = append(addresses, common.HexToAddress("0x"+fmt.Sprintf("%040x", i)))
+	}
+	return addresses
+}
+
+func BenchmarkRptOf_10a(b *testing.B) {
+	benchRptOf(b, 10)
+}
+
+func BenchmarkRptOf_100a(b *testing.B) {
+	benchRptOf(b, 100)
+}
+
+func BenchmarkRptOf_200a(b *testing.B) {
+	benchRptOf(b, 200)
+}
+
+func BenchmarkRptOf_1000a(b *testing.B) {
+	benchRptOf(b, 1000)
+}
+
+func benchRptOf(b *testing.B, numAccount int) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	addrs := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollector(1000)
+
+	rptCollector := rpt.NewRptCollectorImpl2(nil, fc)
+	for i, addr := range addrs {
+		rpt := rptCollector.RptOf(addr, addrs, 500)
+		b.Log("idx", i, "rpt", rpt.Rpt, "addr", addr.Hex())
+	}
 }

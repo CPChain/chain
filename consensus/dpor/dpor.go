@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
+	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -83,8 +83,9 @@ type Dpor struct {
 
 	ac admission.ApiBackend
 
-	rptBackend   rpt.RptService
-	rnodeBackend rpt.RnodeService
+	rNodeBackend     *rnode.Rnode
+	rptBackend       rpt.RptService
+	candidateBackend rpt.CandidateService
 
 	chain consensus.ChainReadWriter
 
@@ -389,7 +390,7 @@ func (d *Dpor) SetupAdmission(ac admission.ApiBackend) {
 	d.ac = ac
 }
 
-func (d *Dpor) SetRptBackend(backend bind.ContractBackend) {
+func (d *Dpor) SetRptBackend(backend backend.ClientBackend) {
 	d.rptBackend, _ = rpt.NewRptService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt])
 }
 
@@ -397,10 +398,29 @@ func (d *Dpor) GetRptBackend() rpt.RptService {
 	return d.rptBackend
 }
 
-func (d *Dpor) SetRnodeBackend(backend bind.ContractBackend) {
-	d.rnodeBackend, _ = rpt.NewRnodeService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign])
+func (d *Dpor) SetCandidateBackend(backend backend.ClientBackend) {
+	d.candidateBackend, _ = rpt.NewCandidateService(backend)
 }
 
-func (d *Dpor) GetRnodeBackend() rpt.RnodeService {
-	return d.rnodeBackend
+func (d *Dpor) GetCandidateBackend() rpt.CandidateService {
+	return d.candidateBackend
+}
+
+func (d *Dpor) SetRNodeBackend(backend backend.ClientBackend) {
+	instance, err := rnode.NewRnode(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRnode], backend)
+	if err == nil {
+		d.rNodeBackend = instance
+	}
+}
+
+func (d *Dpor) GetRNodes() ([]common.Address, error) {
+	if d.rNodeBackend != nil {
+		rNodes, err := d.rNodeBackend.GetRnodes(nil)
+		if err != nil {
+			return []common.Address{}, err
+		}
+		return rNodes, nil
+	}
+
+	return []common.Address{}, nil
 }

@@ -387,11 +387,11 @@ func (d *Dpor) State() consensus.State {
 }
 
 // GetCalcRptInfo get the rpt value of an address at specific block number
-func (d *Dpor) GetCalcRptInfo(address common.Address, blockNum uint64) int64 {
+func (d *Dpor) GetCalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) int64 {
 	rptService := d.GetRptBackend()
 	if rptService == nil {
 		log.Fatal("dpor rpt service is nil")
 	}
-	rp := rptService.CalcRptInfo(address, blockNum)
+	rp := rptService.CalcRptInfo(address, addresses, blockNum)
 	return rp.Rpt
 }
