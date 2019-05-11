@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
@@ -289,6 +291,13 @@ func updateTrieCache(ctx *cli.Context, cfg *cpc.Config) {
 	}
 }
 
+// updateTrieCache updates trie cache.
+func updateSyncModeFlag(ctx *cli.Context, cfg *cpc.Config) {
+	if ctx.IsSet(flags.FastSyncFlagName) {
+		cfg.SyncMode = syncer.FastSync
+	}
+}
+
 // Updates config from --config file
 func updateConfigFromFile(ctx *cli.Context, cfg *config) {
 	var path string
@@ -336,6 +345,8 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 	// set runmode at first
 	updateRunModeFlag(ctx)
 	updateNodeConfig(ctx, &cfg.Node)
+
+	updateSyncModeFlag(ctx, &cfg.Cpc)
 
 	// create node
 	n, err := node.New(&cfg.Node)

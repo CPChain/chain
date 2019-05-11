@@ -36,6 +36,7 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/mclock"
@@ -197,11 +198,13 @@ type BlockChain struct {
 	knownHeadHash   common.Hash // hash of known head of current chain
 	knownHeadLock   sync.RWMutex
 
+	mux     *event.TypeMux
 	srCache *statesAndReceiptsCache // state and receipt cache
 
-	mux *event.TypeMux
-
 	ErrChan chan error
+
+	syncMode      syncer.SyncMode // FullSync or FastSync
+	syncModeMutex sync.RWMutex
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -240,6 +243,7 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 		privateStateCache: state.NewDatabase(db),
 		remoteDB:          remoteDB,
 		ErrChan:           make(chan error),
+		syncMode:          syncer.FullSync,
 		srCache:           newStatesAndReceiptsCache(bodyCacheLimit),
 	}
 	bc.SetValidator(NewBlockValidator(chainConfig, bc, engine))
@@ -278,6 +282,20 @@ func NewBlockChain(db database.Database, cacheConfig *CacheConfig, chainConfig *
 	}
 
 	return bc, nil
+}
+
+// SetSyncMode set syncMode
+func (bc *BlockChain) SetSyncMode(mode syncer.SyncMode) {
+	bc.syncModeMutex.Lock()
+	defer bc.syncModeMutex.Unlock()
+	bc.syncMode = mode
+}
+
+// SyncMode return syncMode
+func (bc *BlockChain) SyncMode() syncer.SyncMode {
+	bc.syncModeMutex.Lock()
+	defer bc.syncModeMutex.Unlock()
+	return bc.syncMode
 }
 
 func (bc *BlockChain) SetTypeMux(mux *event.TypeMux) {
@@ -454,7 +472,12 @@ func (bc *BlockChain) GasLimit() uint64 {
 // CurrentBlock retrieves the current head block of the canonical chain. The
 // block is retrieved from the blockchain's internal cache.
 func (bc *BlockChain) CurrentBlock() *types.Block {
-	return bc.currentBlock.Load().(*types.Block)
+	bc.syncModeMutex.Lock()
+	defer bc.syncModeMutex.Unlock()
+	if bc.syncMode == syncer.FullSync {
+		return bc.currentBlock.Load().(*types.Block)
+	}
+	return bc.CurrentFastBlock()
 }
 
 // CurrentFastBlock retrieves the current fast-sync head block of the canonical
@@ -790,10 +813,13 @@ func (bc *BlockChain) CommitStateDB() {
 					log.Error("Failed to commit recent state trie", "err", err)
 				}
 
-				log.Debug("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash().Hex(), "root", recent.StateRoot())
-				if err := privTrieDB.Commit(GetPrivateStateRoot(bc.db, recent.StateRoot()), true); err != nil {
-					log.Error("Failed to commit recent private state trie", "err", err)
+				if bc.syncMode == syncer.FullSync {
+					log.Debug("Writing private cached state to disk", "block", recent.Number(), "hash", recent.Hash().Hex(), "root", recent.StateRoot())
+					if err := privTrieDB.Commit(GetPrivateStateRoot(bc.db, recent.StateRoot()), true); err != nil {
+						log.Error("Failed to commit recent private state trie", "err", err)
+					}
 				}
+
 			}
 		}
 		for !bc.triegc.Empty() {
@@ -1296,6 +1322,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	for i, block := range chain {
 		// update known head if it is necessary
 		_, headN := bc.KnownHead()
+
 		if bc.CurrentBlock() != nil && bc.CurrentBlock().NumberU64() > headN {
 			bc.SetKnownHead(bc.CurrentBlock().Hash(), bc.CurrentBlock().NumberU64())
 		}
@@ -1352,8 +1379,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		case err == consensus.ErrPrunedAncestor:
 			// Block competing with the canonical chain, store in the db, but don't process
 			// until the competitor TD goes above the canonical TD
-			currentBlock := bc.CurrentBlock()
-			localHeight := currentBlock.Number()
+			localHeight := bc.CurrentBlock().Number()
 			externHeight := block.Number()
 			if localHeight.Cmp(externHeight) > 0 {
 				if err = bc.WriteBlockWithoutState(block, externHeight); err != nil {
@@ -1893,4 +1919,9 @@ func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscript
 // RemoteDB returns remote database if it has, otherwise return nil.
 func (bc *BlockChain) RemoteDB() database.RemoteDatabase {
 	return bc.remoteDB
+}
+
+// Database return db
+func (bc *BlockChain) Database() database.Database {
+	return bc.db
 }
