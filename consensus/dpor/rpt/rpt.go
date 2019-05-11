@@ -21,19 +21,26 @@ package rpt
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"strings"
-
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	contracts "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
+	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
-
+	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign2"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
+)
+
+const (
+	defaultRank = 100 // 100 represent give the address a default rank
 )
 
 var (
@@ -44,24 +51,55 @@ var (
 )
 
 const (
-	Created = iota
-	SellerConfirmed
-	ProxyFetched
-	ProxyDelivered
-	BuyerConfirmed
-	Finished
-	SellerRated
-	BuyerRated
-	AllRated
-	Disputed
-	Withdrawn
-)
-
-const (
 	cacheSize = 1024
 	// 16 is the min rpt score
 	minRptScore = 16
 )
+
+// termOf returns the term of a given block number
+func termOf(number uint64) uint64 {
+	term := (number - 1) / (configs.ChainConfigInfo().Dpor.TermLen * configs.ChainConfigInfo().Dpor.ViewLen)
+	return term
+}
+
+func offset(number uint64, windowSize int) uint64 {
+	return uint64(math.Max(0., float64(int(number)-windowSize)))
+}
+
+func RptHash(rpthash RptItems) (hash common.Hash) {
+	hasher := sha3.NewKeccak256()
+
+	rlp.Encode(hasher, []interface{}{
+		rpthash.Nodeaddress,
+		rpthash.Key,
+	})
+	hasher.Sum(hash[:0])
+	return hash
+}
+
+type balanceCache struct {
+	cache *lru.ARCCache
+}
+
+func newBalanceCache() *balanceCache {
+	cache, _ := lru.NewARC(10)
+	return &balanceCache{
+		cache: cache,
+	}
+}
+
+func (bc *balanceCache) getBalances(num uint64) ([]float64, bool) {
+	if bal, ok := bc.cache.Get(num); ok {
+		if balances, ok := bal.([]float64); ok {
+			return balances, true
+		}
+	}
+	return []float64{}, false
+}
+
+func (bc *balanceCache) addBalance(num uint64, sortedBalances []float64) {
+	bc.cache.Add(num, sortedBalances)
+}
 
 // Rpt defines the name and reputation pair.
 type Rpt struct {
@@ -101,43 +139,83 @@ func (a RptList) Less(i, j int) bool {
 	}
 }
 
-// RnodeService provides methods to obtain all rnodes from campaign contract
-type RnodeService interface {
+// CandidateService provides methods to obtain all candidates from campaign contract
+type CandidateService interface {
 	CandidatesOf(term uint64) ([]common.Address, error)
 }
 
-// RnodeServiceImpl is the default rnode list collector
-type RnodeServiceImpl struct {
-	campaignContractAddr common.Address
-	client               bind.ContractBackend
+// CandidateServiceImpl is the default candidate list collector
+type CandidateServiceImpl struct {
+	client bind.ContractBackend
 }
 
-// NewRnodeService creates a concrete Rnode service instance.
-func NewRnodeService(backend bind.ContractBackend, contractAddr common.Address) (RnodeService, error) {
-	log.Debug("rnode contract addr", "contractAddr", contractAddr.Hex())
+// NewCandidateService creates a concrete candidate service instance.
+func NewCandidateService(backend bind.ContractBackend) (CandidateService, error) {
 
-	rs := &RnodeServiceImpl{
-		client:               backend,
-		campaignContractAddr: contractAddr,
+	rs := &CandidateServiceImpl{
+		client: backend,
 	}
 	return rs, nil
 }
 
-// CandidatesOf implements RnodeService
-func (rs *RnodeServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
-	contractInstance, err := campaign.NewCampaign(rs.campaignContractAddr, rs.client)
+// CandidatesOf implements CandidateService
+func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
+
+	if term < backend.TermOf(configs.Candidates2BlockNumber) {
+		// old campaign contract address
+		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
+
+		// old campaign contract instance
+		contractInstance, err := campaign.NewCampaign(campaignAddr, rs.client)
+		if err != nil {
+			return nil, err
+		}
+
+		// candidates from old campaign contract
+		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
+		if err != nil {
+			return nil, err
+		}
+
+		log.Debug("now read candidates from old campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+
+		return cds, nil
+	}
+
+	// new campaign contract address
+	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign2]
+
+	// new campaign contract instance
+	contractInstance, err := campaign2.NewCampaign(campaignAddr, rs.client)
+	if err != nil {
+		return nil, err
+	}
+
+	// candidates from new campaign contract
 	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
 	return cds, nil
 }
 
 // RptService provides methods to obtain all rpt related information from block txs and contracts.
 type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
-	CalcRptInfo(address common.Address, number uint64) Rpt
+	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) Rpt
 	WindowSize() (uint64, error)
+}
+
+// RptCollector collects rpts infos of a given candidate
+type RptCollector interface {
+	RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt
+	RankValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64
+	TxsValueOf(addr common.Address, num uint64, windowSize int) int64
+	MaintenanceValueOf(addr common.Address, num uint64, windowSize int) int64
+	UploadValueOf(addr common.Address, num uint64, windowSize int) int64
+	ProxyValueOf(addr common.Address, num uint64, windowSize int) int64
 }
 
 // BasicCollector is the default rpt collector
@@ -147,10 +225,13 @@ type RptServiceImpl struct {
 	rptInstance *contracts.Rpt
 
 	rptcache *lru.ARCCache
+
+	rptCollector2 RptCollector
+	rptCollector3 RptCollector
 }
 
 // NewRptService creates a concrete RPT service instance.
-func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address) (RptService, error) {
+func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address) (RptService, error) {
 	log.Debug("rptContractAddr", "contractAddr", rptContractAddr.Hex())
 
 	rptInstance, err := contracts.NewRpt(rptContractAddr, backend)
@@ -159,11 +240,18 @@ func NewRptService(backend bind.ContractBackend, rptContractAddr common.Address)
 	}
 
 	cache, _ := lru.NewARC(cacheSize)
+
+	newRptCollector2 := NewRptCollectorImpl2(rptInstance, backend)
+	newRptCollector3 := NewRptCollectorImpl3(rptInstance, backend)
+
 	bc := &RptServiceImpl{
 		client:      backend,
 		rptContract: rptContractAddr,
 		rptInstance: rptInstance,
 		rptcache:    cache,
+
+		rptCollector2: newRptCollector2,
+		rptCollector3: newRptCollector3,
 	}
 	return bc, nil
 }
@@ -186,15 +274,39 @@ func (rs *RptServiceImpl) WindowSize() (uint64, error) {
 // CalcRptInfoList returns reputation of
 // the given addresses.
 func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uint64) RptList {
+	tstart := time.Now()
+
 	rpts := RptList{}
 	for _, address := range addresses {
-		rpts = append(rpts, rs.CalcRptInfo(address, number))
+		tistart := time.Now()
+		rpts = append(rpts, rs.CalcRptInfo(address, addresses, number))
+		log.Debug("calculate rpt for", "addr", address.Hex(), "number", number, "elapsed", common.PrettyDuration(time.Now().Sub(tistart)))
 	}
+
+	log.Debug("calculate rpt from chain backend", "number", number, "elapsed", common.PrettyDuration(time.Now().Sub(tstart)))
+
 	return rpts
 }
 
-// CalcRptInfo return the Rpt of the rnode address
-func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) Rpt {
+// CalcRptInfo return the Rpt of the candidate address
+func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common.Address, number uint64) Rpt {
+	if number < configs.RptCalcMethod2BlockNumber {
+		log.Debug("now calc rpt for with old rpt method", "addr", address.Hex(), "number", number)
+		return rs.calcRptInfo(address, number)
+	}
+
+	if number < configs.RptCalcMethod3BlockNumber {
+		log.Debug("now calc rpt for with rpt method 2", "addr", address.Hex(), "number", number)
+		return rs.rptCollector2.RptOf(address, addresses, number)
+	}
+
+	log.Debug("now calc rpt for with rpt method 3", "addr", address.Hex(), "number", number)
+	return rs.rptCollector3.RptOf(address, addresses, number)
+}
+
+func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) Rpt {
+	log.Debug("now calculating rpt", "CalcRptInfo", "old", "num", blockNum, "addr", address.Hex())
+
 	if rs.rptInstance == nil {
 		log.Fatal("New primitivesContract error")
 	}
@@ -244,15 +356,4 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, blockNum uint64) R
 		rpt = minRptScore
 	}
 	return Rpt{Address: address, Rpt: rpt}
-}
-
-func RptHash(rpthash RptItems) (hash common.Hash) {
-	hasher := sha3.NewKeccak256()
-
-	rlp.Encode(hasher, []interface{}{
-		rpthash.Nodeaddress,
-		rpthash.Key,
-	})
-	hasher.Sum(hash[:0])
-	return hash
 }

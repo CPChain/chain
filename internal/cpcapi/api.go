@@ -477,19 +477,19 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 
 //  GetCurrentView return current RNodes
 func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
-	var rNodeAddress []common.Address
+	var rnodes []common.Address
 	var committeAddress []common.Address
 	var bn uint64
 
 	var RNodes []cpclient.RNodes
 
-	rNodeAddress, bn = s.b.RNode()
+	rnodes, bn = s.b.RNode()
 	committeAddress = s.b.CommitteMember()
 
-	for _, rodeAddr := range rNodeAddress {
+	for _, rodeAddr := range rnodes {
 		isCommittee := IsCommittee(rodeAddr, committeAddress)
 		role := getRole(isCommittee)
-		score := s.b.CalcRptInfo(rodeAddr, bn)
+		score := s.b.CalcRptInfo(rodeAddr, rnodes ,bn)
 		r := cpclient.RNodes{
 			Address: rodeAddr,
 			Rpt:     score,

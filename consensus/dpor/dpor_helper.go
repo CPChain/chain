@@ -163,6 +163,11 @@ func (dh *defaultDporHelper) verifyBasic(dpor *Dpor, chain consensus.ChainReader
 		blk := chain.GetBlock(header.ParentHash, number-1)
 		if blk != nil {
 			parent = blk.Header()
+			log.Debug("dpor_helper get block", "blk", blk.NumberU64(), "parent_is_nil", parent == nil)
+		}
+		if parent == nil {
+			parent = chain.GetHeaderByNumber(number - 1)
+			log.Debug("dpor_helper get block(blk is nil)", "parent_is_nil", parent == nil)
 		}
 	}
 
@@ -445,13 +450,9 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	}
 
 	var (
-		rnodeService = dpor.GetRnodeBackend()
-		rptService   = dpor.GetRptBackend()
+		candidateService = dpor.GetCandidateBackend()
+		rptService       = dpor.GetRptBackend()
 	)
-
-	// if rnodeService == nil || rptService == nil {
-	// 	log.Fatal("rnode service or rpt service is nil", "rnode service", rnodeService, "rpt service", rptService)
-	// }
 
 	var timeToUpdateCommittee bool
 	_, headNumber := chain.KnownHead()
@@ -468,7 +469,7 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	applyStartTime := time.Now()
 
 	// Apply headers to the snapshot and updates RPTs
-	newSnap, err := snap.apply(headers, timeToUpdateCommittee, rnodeService, rptService)
+	newSnap, err := snap.apply(headers, timeToUpdateCommittee, candidateService, rptService)
 	if err != nil {
 		return nil, err
 	}
@@ -531,7 +532,9 @@ func (dh *defaultDporHelper) verifySeal(dpor *Dpor, chain consensus.ChainReader,
 	log.Debug("--------dpor.verifySeal--------")
 	log.Debug("hash", "hash", hash.Hex())
 	log.Debug("number", "number", number)
-	log.Debug("current header", "number", chain.CurrentBlock().NumberU64())
+	if chain.CurrentBlock() != nil {
+		log.Debug("current header", "number", chain.CurrentBlock().NumberU64())
+	}
 	log.Debug("proposer", "address", proposer.Hex())
 
 	// Check if the proposer is right proposer
@@ -587,7 +590,9 @@ func (dh *defaultDporHelper) verifySignatures(dpor *Dpor, chain consensus.ChainR
 	log.Debug("--------dpor.verifySigs--------")
 	log.Debug("hash", "hash", hash.Hex())
 	log.Debug("number", "number", number)
-	log.Debug("current header", "number", chain.CurrentBlock().NumberU64())
+	if chain.CurrentBlock() != nil {
+		log.Debug("current header", "number", chain.CurrentBlock().NumberU64())
+	}
 	log.Debug("proposer", "address", proposer.Hex())
 
 	defaultValidators, _ := dpor.ValidatorsOf(chain.CurrentHeader().Number.Uint64())

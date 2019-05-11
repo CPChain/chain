@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -135,11 +137,11 @@ func newEngine(config *configs.ChainConfig, cons consensus.Engine, coinbase comm
 		workers:       make(map[Worker]struct{}),
 	}
 
-	go e.update()
-
 	// initially commit new work to make pending block and snapshot availableklk
-	e.commitNewWork()
-
+	if backend.BlockChain().SyncMode() == syncer.FullSync {
+		go e.update()
+		e.commitNewWork()
+	}
 	return e
 }
 

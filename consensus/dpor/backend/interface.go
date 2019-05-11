@@ -6,18 +6,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/p2p"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/commons/log"
 	times "bitbucket.org/cpchain/chain/commons/time"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 var (
@@ -89,21 +89,18 @@ type DSMStatus struct {
 type ClientBackend interface {
 	ChainBackend
 	ContractBackend
-
-	Campaign(ctx context.Context, terms uint64) error
 }
 
 // ChainBackend is the chain client operation interface
 type ChainBackend interface {
-	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
-	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
+	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
+	NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error)
 }
 
 // ContractBackend is the contract client operation interface
 type ContractBackend interface {
 	bind.ContractBackend
-	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
 }
 
 // ContractCaller is used to call the contract with given key and client.
@@ -328,4 +325,16 @@ func IsCheckPoint(number uint64, termLen uint64, viewLen uint64) bool {
 		return true
 	}
 	return number%(termLen*viewLen) == 0
+}
+
+// TermOf returns the term index of given block number
+func TermOf(blockNum uint64) uint64 {
+	if blockNum == 0 {
+		return 0 // block number 0 is a special case, its term is set to 0
+	}
+
+	termLen := configs.ChainConfigInfo().Dpor.TermLen
+	viewLen := configs.ChainConfigInfo().Dpor.ViewLen
+
+	return (blockNum - 1) / (termLen * viewLen)
 }

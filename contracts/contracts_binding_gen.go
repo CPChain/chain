@@ -39,3 +39,8 @@ package contracts
 //go:generate abigen --sol ./proxy/proxy_contract/proxy.sol --pkg contract --out ./proxy/proxy_contract/proxy.go
 
 //go:generate abigen --sol ./proxy/proxy_contract/proxy_contract_register.sol --pkg contract --out ./proxy/proxy_contract/proxy_contract_register.go
+
+//go:generate abigen --sol ./dpor/contracts/campaign2/campaign2.sol --pkg campaign --out ./dpor/contracts/campaign2/campaign2.go
+
+//go:generate abigen --sol ./dpor/contracts/rnode/rnode.sol --pkg rnode --out ./dpor/contracts/rnode/rnode.go
+
