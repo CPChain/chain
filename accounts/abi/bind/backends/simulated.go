@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
@@ -81,6 +81,19 @@ func NewDporSimulatedBackend(alloc core.GenesisAlloc) *SimulatedBackend {
 		database:   db,
 		blockchain: blockchain,
 		config:     genesis.Config,
+		events:     filters.NewEventSystem(new(event.TypeMux), &filterBackend{db, blockchain}, false),
+	}
+	backend.rollback()
+	return backend
+}
+
+// NewDporSimulatedBackendWithExistsBlockchain creates a new binding backend with a exists blockchain
+// for test purposes.
+func NewDporSimulatedBackendWithExistsBlockchain(db *database.MemDatabase, blockchain *core.BlockChain, config *configs.ChainConfig) *SimulatedBackend {
+	backend := &SimulatedBackend{
+		database:   db,
+		blockchain: blockchain,
+		config:     config,
 		events:     filters.NewEventSystem(new(event.TypeMux), &filterBackend{db, blockchain}, false),
 	}
 	backend.rollback()

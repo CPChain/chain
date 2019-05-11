@@ -26,6 +26,7 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/protocols/cpc/gasprice"
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -45,6 +46,7 @@ var DefaultConfig = Config{
 		Percentile: 60,
 	},
 	PrivateTx: private.DefaultConfig(),
+	SyncMode:  syncer.FullSync,
 }
 
 func init() {
@@ -98,6 +100,8 @@ type Config struct {
 
 	// Private Tx related configuration
 	PrivateTx private.Config
+
+	SyncMode syncer.SyncMode
 }
 
 type configMarshaling struct {

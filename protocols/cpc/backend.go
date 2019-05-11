@@ -191,6 +191,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 		return nil, err
 	}
 	cpc.blockchain.SetTypeMux(cpc.eventMux)
+	cpc.blockchain.SetSyncMode(config.SyncMode)
 
 	// admission must initialize after blockchain has been initialized
 	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
@@ -215,7 +216,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.txPool = core.NewTxPool(config.TxPool, cpc.chainConfig, cpc.blockchain)
 
-	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.coinbase); err != nil {
+	if cpc.protocolManager, err = NewProtocolManager(cpc.chainConfig, config.NetworkId, cpc.eventMux, cpc.txPool, cpc.engine, cpc.blockchain, chainDb, cpc.coinbase, config.SyncMode); err != nil {
 		return nil, err
 	}
 

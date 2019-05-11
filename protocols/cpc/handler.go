@@ -88,11 +88,13 @@ type ProtocolManager struct {
 
 	// wait group is used for graceful shutdowns during downloading and processing
 	wg sync.WaitGroup
+
+	syncMode syncer.SyncMode
 }
 
 // NewProtocolManager returns a new sub protocol manager. The cpchain sub protocol manages peers capable
 // with the cpchain network.
-func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, coinbase common.Address) (*ProtocolManager, error) {
+func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb database.Database, coinbase common.Address, syncMode syncer.SyncMode) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:   networkID,
@@ -108,6 +110,7 @@ func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *even
 
 		engine:   engine,
 		coinbase: coinbase,
+		syncMode: syncMode,
 	}
 
 	// initialize a sub-protocol for every implemented version we can handle
@@ -180,6 +183,7 @@ func (pm *ProtocolManager) removePeer(id string) {
 	if peer != nil {
 		peer.Peer.Disconnect(p2p.DiscUselessPeer)
 	}
+	pm.syncer.RemovePeer(peer.IDString())
 }
 
 // Start starts all the blockchain synchronization mechanisms
@@ -516,26 +520,26 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		return p.SendBlockHeaders(headers)
 
 	case msg.Code == BlockHeadersMsg:
-		// // A batch of headers arrived to one of our previous requests
-		// var headers []*types.Header
-		// if err := msg.Decode(&headers); err != nil {
-		// 	return errResp(ErrDecode, "msg %v: %v", msg, err)
-		// }
+		// A batch of headers arrived to one of our previous requests
+		var headers []*types.Header
+		if err := msg.Decode(&headers); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
 
-		// log.Debug("received BlockHeadersMsg", "len", len(headers))
+		log.Debug("received BlockHeadersMsg", "len", len(headers))
 
-		// // Filter out any explicitly requested headers, deliver the rest to the downloader
-		// filter := len(headers) == 1
-		// if filter {
-		// 	// Irrelevant of the fork checks, send the header to the fetcher just in case
-		// 	headers = pm.fetcher.FilterHeaders(p.id, headers, time.Now())
-		// }
-		// if len(headers) > 0 || !filter {
-		// 	err := pm.downloader.DeliverHeaders(p.id, headers)
-		// 	if err != nil {
-		// 		log.Debug("Failed to deliver headers", "err", err)
-		// 	}
-		// }
+		// Filter out any explicitly requested headers, deliver the rest to the downloader
+		filter := len(headers) == 1
+		if filter {
+			// Irrelevant of the fork checks, send the header to the fetcher just in case
+			headers = pm.fetcher.FilterHeaders(p.id, headers, time.Now())
+		}
+		if len(headers) > 0 || !filter {
+			err := pm.syncer.DeliverHeaders(p.id, headers)
+			if err != nil {
+				log.Debug("Failed to deliver headers", "err", err)
+			}
+		}
 
 	case msg.Code == GetBlockBodiesMsg:
 		// Decode the retrieval message
@@ -568,31 +572,31 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		return p.SendBlockBodiesRLP(bodies)
 
 	case msg.Code == BlockBodiesMsg:
-		// // A batch of block bodies arrived to one of our previous requests
-		// var request blockBodiesData
-		// if err := msg.Decode(&request); err != nil {
-		// 	log.Warn("decode BlockBodiesMsg failed", "error", err)
-		// 	return errResp(ErrDecode, "msg %v: %v", msg, err)
-		// }
-		// // Deliver them all to the downloader for queuing
-		// transactions := make([][]*types.Transaction, len(request))
+		// A batch of block bodies arrived to one of our previous requests
+		var request blockBodiesData
+		if err := msg.Decode(&request); err != nil {
+			log.Warn("decode BlockBodiesMsg failed", "error", err)
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+		// Deliver them all to the downloader for queuing
+		transactions := make([][]*types.Transaction, len(request))
 
-		// log.Debug("received BlockBodiesMsg", "len", len(request))
+		log.Debug("received BlockBodiesMsg", "len", len(request))
 
-		// for i, body := range request {
-		// 	transactions[i] = body.Transactions
-		// }
-		// // Filter out any explicitly requested bodies, deliver the rest to the downloader
-		// filter := len(transactions) > 0
-		// if filter {
-		// 	transactions = pm.fetcher.FilterBodies(p.id, transactions, time.Now())
-		// }
-		// if len(transactions) > 0 || !filter {
-		// 	err := pm.downloader.DeliverBodies(p.id, transactions)
-		// 	if err != nil {
-		// 		log.Debug("Failed to deliver bodies", "err", err)
-		// 	}
-		// }
+		for i, body := range request {
+			transactions[i] = body.Transactions
+		}
+		// Filter out any explicitly requested bodies, deliver the rest to the downloader
+		filter := len(transactions) > 0
+		if filter {
+			transactions = pm.fetcher.FilterBodies(p.id, transactions, time.Now())
+		}
+		if len(transactions) > 0 || !filter {
+			err := pm.syncer.DeliverBodies(p.id, transactions)
+			if err != nil {
+				log.Debug("Failed to deliver bodies", "err", err)
+			}
+		}
 
 	case msg.Code == GetNodeDataMsg:
 		// Decode the retrieval message
@@ -625,18 +629,18 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		return p.SendNodeData(data)
 
 	case msg.Code == NodeDataMsg:
-		// // A batch of node state data arrived to one of our previous requests
-		// var data [][]byte
-		// if err := msg.Decode(&data); err != nil {
-		// 	return errResp(ErrDecode, "msg %v: %v", msg, err)
-		// }
+		// A batch of node state data arrived to one of our previous requests
+		var data [][]byte
+		if err := msg.Decode(&data); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
 
-		// log.Debug("received NodeDataMsg", "len", len(data))
+		log.Debug("received NodeDataMsg", "len", len(data))
 
-		// // Deliver all to the downloader
-		// if err := pm.downloader.DeliverNodeData(p.id, data); err != nil {
-		// 	log.Debug("Failed to deliver node state data", "err", err)
-		// }
+		// Deliver all to the downloader
+		if err := pm.syncer.DeliverNodeData(p.id, data); err != nil {
+			log.Debug("Failed to deliver node state data", "err", err)
+		}
 
 	case msg.Code == GetReceiptsMsg:
 		// Decode the retrieval message
@@ -678,18 +682,16 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		return p.SendReceiptsRLP(receipts)
 
 	case msg.Code == ReceiptsMsg:
-		// // A batch of receipts arrived to one of our previous requests
-		// var receipts [][]*types.Receipt
-		// if err := msg.Decode(&receipts); err != nil {
-		// 	return errResp(ErrDecode, "msg %v: %v", msg, err)
-		// }
+		// A batch of receipts arrived to one of our previous requests
+		var receipts []types.Receipts
+		if err := msg.Decode(&receipts); err != nil {
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
 
-		// log.Debug("received ReceiptsMsg", "len")
-
-		// // Deliver all to the downloader
-		// if err := pm.downloader.DeliverReceipts(p.id, receipts); err != nil {
-		// 	log.Debug("Failed to deliver receipts", "err", err)
-		// }
+		// Deliver all to the syncer
+		if err := pm.syncer.DeliverReceipts(p.id, receipts); err != nil {
+			log.Debug("Failed to deliver receipts", "err", err)
+		}
 
 	case msg.Code == NewBlockHashesMsg:
 		var announces newBlockHashesData
