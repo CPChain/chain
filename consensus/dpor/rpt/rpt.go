@@ -195,7 +195,8 @@ type RptServiceImpl struct {
 
 	rptcache *lru.ARCCache
 
-	rptCollector RptCollector
+	rptCollector2 RptCollector
+	rptCollector3 RptCollector
 }
 
 // NewRptService creates a concrete RPT service instance.
@@ -209,7 +210,8 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 
 	cache, _ := lru.NewARC(cacheSize)
 
-	newRptCollector := NewRptCollectorImpl(rptInstance, backend)
+	newRptCollector2 := NewRptCollectorImpl2(rptInstance, backend)
+	newRptCollector3 := NewRptCollectorImpl3(rptInstance, backend)
 
 	bc := &RptServiceImpl{
 		client:      backend,
@@ -217,7 +219,8 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 		rptInstance: rptInstance,
 		rptcache:    cache,
 
-		rptCollector: newRptCollector,
+		rptCollector2: newRptCollector2,
+		rptCollector3: newRptCollector3,
 	}
 	return bc, nil
 }
@@ -260,7 +263,11 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common
 		return rs.calcRptInfo(address, number)
 	}
 
-	return rs.rptCollector.RptOf(address, addresses, number)
+	if number < configs.RptCalcMethod3BlockNumber {
+		return rs.rptCollector2.RptOf(address, addresses, number)
+	}
+
+	return rs.rptCollector3.RptOf(address, addresses, number)
 }
 
 func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) Rpt {
