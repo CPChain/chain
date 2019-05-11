@@ -109,13 +109,9 @@ const (
 
 // a block number denotes that after this number we use new rpt calc method
 const (
-	// RptCalcMethod2BlockNumber = 343000
-	// RptCalcMethod3BlockNumber = 366480
-	// Candidates2BlockNumber    = 366480
-
-	RptCalcMethod2BlockNumber = 216
-	RptCalcMethod3BlockNumber = 252
-	Candidates2BlockNumber    = 252
+	RptCalcMethod2BlockNumber = 343000
+	RptCalcMethod3BlockNumber = 372400
+	Candidates2BlockNumber    = 371900
 )
 
 var (

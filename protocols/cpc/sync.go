@@ -147,11 +147,12 @@ func (pm *ProtocolManager) syncerLoop() {
 
 	for {
 		select {
-		case <-pm.newPeerCh:
+		case peer := <-pm.newPeerCh:
 			// Make sure we have peers to select from, then sync
 			if pm.peers.Len() < minDesiredPeerCount {
 				break
 			}
+			pm.syncer.AddPeer(peer)
 			// update from peers
 			go pm.synchronize(pm.peers.BestPeer())
 
@@ -193,7 +194,7 @@ func (pm *ProtocolManager) synchronize(peer *peer) {
 	}
 
 	// full sync with the downloader
-	if err := pm.syncer.Synchronise(peer, pHead, pHt); err != nil {
+	if err := pm.syncer.Synchronise(peer, pHead, pHt, pm.syncMode); err != nil {
 		return
 	}
 

@@ -178,6 +178,17 @@ var MinerFlags = []cli.Flag{
 }
 
 const (
+	FastSyncFlagName = "fast"
+)
+
+var SyncFlags = []cli.Flag{
+	cli.BoolFlag{
+		Name:  FastSyncFlagName,
+		Usage: "Enable fast sync",
+	},
+}
+
+const (
 	IpcAddrFlagName = "ipcaddr"
 	RpcAddrFlagName = "rpcaddr"
 	// these two flags should be removed in the future

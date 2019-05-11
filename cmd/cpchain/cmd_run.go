@@ -46,6 +46,7 @@ func init() {
 	runFlags = append(runFlags, flags.GeneralFlags...)
 	runFlags = append(runFlags, flags.NodeFlags...)
 	runFlags = append(runFlags, flags.MinerFlags...)
+	runFlags = append(runFlags, flags.SyncFlags...)
 	runFlags = append(runFlags, flags.P2pFlags...)
 	runFlags = append(runFlags, flags.AccountFlags...)
 	runFlags = append(runFlags, flags.ChainFlags...)
