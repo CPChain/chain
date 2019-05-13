@@ -233,10 +233,29 @@ transactions that exchange tokens for data product.
 The definition of *Transactions* can be expanded as the of CPChain ecosystem develops.
 
 Transaction score is evaluated by all *transactions* statistics.
-For each *transaction* record a node finishes,
+Since the distribution of transactions can follow
+a long tail distribution or power laws,
+we use the following percentile to normalize TX score.
 
-1. 5 points is granted to the node.
-#. The full score is 100 points.
++--------------+--------------+
+| Percentile   |  Score (TX)  |
++==============+==============+
+|    98%       |   100        |
++--------------+--------------+
+|    95%       |    90        |
++--------------+--------------+
+|    85%       |    80        |
++--------------+--------------+
+|    65%       |    70        |
++--------------+--------------+
+|    40%       |    60        |
++--------------+--------------+
+|    20%       |    40        |
++--------------+--------------+
+|     0%       |    20        |
++--------------+--------------+
+
+
 
 Proxy Reputation
 ++++++++++++++++++
