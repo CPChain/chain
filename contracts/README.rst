@@ -1,3 +1,0 @@
-CPChain Smart Contract
-======================
-
