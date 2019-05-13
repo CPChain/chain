@@ -78,28 +78,28 @@ func RptHash(rpthash RptItems) (hash common.Hash) {
 	return hash
 }
 
-type balanceCache struct {
+type rptDataCache struct {
 	cache *lru.ARCCache
 }
 
-func newBalanceCache() *balanceCache {
+func newRptDataCache() *rptDataCache {
 	cache, _ := lru.NewARC(10)
-	return &balanceCache{
+	return &rptDataCache{
 		cache: cache,
 	}
 }
 
-func (bc *balanceCache) getBalances(num uint64) ([]float64, bool) {
+func (bc *rptDataCache) getCache(num uint64) ([]float64, bool) {
 	if bal, ok := bc.cache.Get(num); ok {
-		if balances, ok := bal.([]float64); ok {
-			return balances, true
+		if data, ok := bal.([]float64); ok {
+			return data, true
 		}
 	}
 	return []float64{}, false
 }
 
-func (bc *balanceCache) addBalance(num uint64, sortedBalances []float64) {
-	bc.cache.Add(num, sortedBalances)
+func (bc *rptDataCache) addCache(num uint64, sortedCache []float64) {
+	bc.cache.Add(num, sortedCache)
 }
 
 // Rpt defines the name and reputation pair.
@@ -233,11 +233,6 @@ type RptService interface {
 // RptCollector collects rpts infos of a given candidate
 type RptCollector interface {
 	RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt
-	RankValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64
-	TxsValueOf(addr common.Address, num uint64, windowSize int) int64
-	MaintenanceValueOf(addr common.Address, num uint64, windowSize int) int64
-	UploadValueOf(addr common.Address, num uint64, windowSize int) int64
-	ProxyValueOf(addr common.Address, num uint64, windowSize int) int64
 }
 
 // BasicCollector is the default rpt collector
@@ -250,6 +245,7 @@ type RptServiceImpl struct {
 
 	rptCollector2 RptCollector
 	rptCollector3 RptCollector
+	rptCollector4 RptCollector
 }
 
 // NewRptService creates a concrete RPT service instance.
@@ -265,6 +261,7 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 
 	newRptCollector2 := NewRptCollectorImpl2(rptInstance, backend)
 	newRptCollector3 := NewRptCollectorImpl3(rptInstance, backend)
+	newRptCollector4 := NewRptCollectorImpl4(rptInstance, backend)
 
 	bc := &RptServiceImpl{
 		client:      backend,
@@ -274,6 +271,7 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 
 		rptCollector2: newRptCollector2,
 		rptCollector3: newRptCollector3,
+		rptCollector4: newRptCollector4,
 	}
 	return bc, nil
 }
@@ -322,8 +320,13 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common
 		return rs.rptCollector2.RptOf(address, addresses, number)
 	}
 
-	log.Debug("now calc rpt for with rpt method 3", "addr", address.Hex(), "number", number)
-	return rs.rptCollector3.RptOf(address, addresses, number)
+	if number < configs.RptCalcMethod4BlockNumber {
+		log.Debug("now calc rpt for with rpt method 3", "addr", address.Hex(), "number", number)
+		return rs.rptCollector3.RptOf(address, addresses, number)
+	}
+
+	log.Debug("now calc rpt for with rpt method 4", "addr", address.Hex(), "number", number)
+	return rs.rptCollector4.RptOf(address, addresses, number)
 }
 
 func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) Rpt {

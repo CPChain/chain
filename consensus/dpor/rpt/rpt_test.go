@@ -313,7 +313,7 @@ func benchRptOf(b *testing.B, numAccount int) {
 	addrs := generateABatchAccounts(numAccount)
 	fc := newFakeChainBackendForRptCollector(1000)
 
-	rptCollector := rpt.NewRptCollectorImpl2(nil, fc)
+	rptCollector := rpt.NewRptCollectorImpl4(nil, fc)
 	for i, addr := range addrs {
 		rpt := rptCollector.RptOf(addr, addrs, 500)
 		b.Log("idx", i, "rpt", rpt.Rpt, "addr", addr.Hex())
