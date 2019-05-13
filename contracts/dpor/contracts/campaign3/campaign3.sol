@@ -193,6 +193,7 @@ contract Campaign {
      */
 
     // update candidate status, i.e. subtract 1 from numOfCampaign when a new term begin
+    // withdrawTermIdx record the start term that need to update
     function updateCandidateStatus() public payable {
         // get current term, update termIdx
         updateTermIdx();
