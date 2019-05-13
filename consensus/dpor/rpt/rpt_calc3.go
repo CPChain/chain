@@ -17,7 +17,7 @@ import (
 type RptCollectorImpl3 struct {
 	rptInstance  *contracts.Rpt
 	chainBackend backend.ChainBackend
-	balances     *balanceCache
+	balances     *rptDataCache
 
 	alpha int64
 	beta  int64
@@ -36,7 +36,7 @@ func NewRptCollectorImpl3(rptInstance *contracts.Rpt, chainBackend backend.Chain
 	return &RptCollectorImpl3{
 		rptInstance:  rptInstance,
 		chainBackend: chainBackend,
-		balances:     newBalanceCache(),
+		balances:     newRptDataCache(),
 		currentNum:   0,
 
 		alpha: 50,
@@ -244,7 +244,7 @@ func (rc *RptCollectorImpl3) RankInfoOf(addr common.Address, addrs []common.Addr
 	}
 	myBalance := myBal.Uint64()
 
-	balances, ok := rc.balances.getBalances(num)
+	balances, ok := rc.balances.getCache(num)
 	if !ok {
 		for _, candidate := range addrs {
 			balance, err := rc.chainBackend.BalanceAt(context.Background(), candidate, big.NewInt(int64(num)))
@@ -259,7 +259,7 @@ func (rc *RptCollectorImpl3) RankInfoOf(addr common.Address, addrs []common.Addr
 			balances = append(balances, float64(balance.Uint64()))
 		}
 		sort.Sort(sort.Float64Slice(balances))
-		rc.balances.addBalance(num, balances)
+		rc.balances.addCache(num, balances)
 	}
 
 	// sort and get the rank
