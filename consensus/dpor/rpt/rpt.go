@@ -32,6 +32,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
 	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign2"
+	campaign3 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign3"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -161,7 +162,7 @@ func NewCandidateService(backend bind.ContractBackend) (CandidateService, error)
 // CandidatesOf implements CandidateService
 func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
 
-	if term < backend.TermOf(configs.Candidates2BlockNumber) {
+	if term < backend.TermOf(configs.Campaign2BlockNumber) {
 		// old campaign contract address
 		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
 
@@ -182,11 +183,32 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		return cds, nil
 	}
 
+	if term < backend.TermOf(configs.Campaign3BlockNumber) {
+
+		// new campaign contract address
+		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign2]
+
+		// new campaign contract instance
+		contractInstance, err := campaign2.NewCampaign(campaignAddr, rs.client)
+		if err != nil {
+			return nil, err
+		}
+
+		// candidates from new campaign contract
+		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
+		if err != nil {
+			return nil, err
+		}
+
+		log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+		return cds, nil
+	}
+
 	// new campaign contract address
-	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign2]
+	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign3]
 
 	// new campaign contract instance
-	contractInstance, err := campaign2.NewCampaign(campaignAddr, rs.client)
+	contractInstance, err := campaign3.NewCampaign(campaignAddr, rs.client)
 	if err != nil {
 		return nil, err
 	}
