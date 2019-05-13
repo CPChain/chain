@@ -201,7 +201,7 @@ And the total score is calculated as:
 Account Balance
 ++++++++++++++++++
 
-A account balance score is granted to an RNode
+A *account balance* score is granted to an RNode
 according to its account balance percentile among all RNode addresses
 (excluding CPChain Foundation and Exchange addresses).
 Score percentiles are demonstrated below.
@@ -228,7 +228,7 @@ Score percentiles are demonstrated below.
 Transaction
 ++++++++++++++
 
-*Transactions* here are defined as
+*TX* here are defined as
 transactions that exchange tokens for data product.
 The definition of *Transactions* can be expanded as the of CPChain ecosystem develops.
 
