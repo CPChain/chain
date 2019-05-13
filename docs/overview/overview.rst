@@ -230,7 +230,7 @@ Transaction
 
 *Transactions* here include
 all transactions sent by a given user.
-The definition of *Transactions* can be expanded as the of CPChain ecosystem develops.
+The definition of *transactions* can be expanded as the of CPChain ecosystem develops.
 
 TX score is evaluated by all *transactions* statistics.
 Since the distribution of transactions can follow
