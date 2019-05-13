@@ -146,7 +146,7 @@ contract Campaign {
     payable
     {
         if(withdrawFlag) {
-            withdrawTermIdx = (block.number - 1).div(numPerRound);
+            withdrawTermIdx = (block.number - 1).div(numPerRound) - 10;
             withdrawFlag = false;
         }
         // only rnode can become candidate
