@@ -21,4 +21,5 @@ Whole processes of campaign
     i. admission contract will get block hash by block number
     #. then call go function contracts/dpor/primitives/primitive_pow_verify.go/Run()
     #. then go to admission/verify.go
-#. if the node pass all requires, campaign contract will add it into candidate.
+#. if the node pass all requires, campaign contract will update candidates' status, mainly numOfCampaign. from withdraw term to current term.
+#. then, campaign contract will add it into candidates for numOfCampaign terms.
