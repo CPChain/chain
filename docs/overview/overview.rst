@@ -197,6 +197,11 @@ And the total score is calculated as:
 0.15\times DC +
 0.1\times BM`
 
+.. note::
+
+    All scores for each dimension are evaluated within to a time window,
+    which is latest 100 blocks.
+    Data outside this window are no longer taken into consideration.
 
 Account Balance
 ++++++++++++++++++
@@ -290,11 +295,30 @@ Blockchain Maintenance
 
 Blockchain Maintenance score is calculated
 given a node's contribution in proposing a certain block.
-For a successfully inserted block,
 
-1. Its proposer is rewarded 100 points.
-#. Other committee members are rewarded 80 points each.
-#. The rest RNodes are rewarded 60 points each.
+In details, it is evaluated given the following percentile
+of number of proposed blocks, similar to `Transaction`_ and `Account Balance`_.
+
++--------------+--------------+
+| Percentile   |  Score (BM)  |
++==============+==============+
+|    98%       |   100        |
++--------------+--------------+
+|    95%       |    90        |
++--------------+--------------+
+|    85%       |    80        |
++--------------+--------------+
+|    65%       |    70        |
++--------------+--------------+
+|    40%       |    60        |
++--------------+--------------+
+|    20%       |    40        |
++--------------+--------------+
+|     0%       |    20        |
++--------------+--------------+
+
+
+
 
 Hardware Specification
 ***************************
