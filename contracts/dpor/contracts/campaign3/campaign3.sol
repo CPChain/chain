@@ -54,6 +54,7 @@ contract Campaign {
     uint public maxNoc = 10; //maximum number of terms
 
     uint public withdrawTermIdx = 0; // withdraw deposit after each round.
+    bool withdrawFlag = true;
 
     // a new type for a single candidate
     struct CandidateInfo {
@@ -156,6 +157,10 @@ contract Campaign {
     public
     payable
     {
+        if(withdrawFlag) {
+            withdrawTermIdx = (block.number - 1).div(numPerRound) - 10;
+            withdrawFlag = false;
+        }
         // only rnode can become candidate
         require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
 
