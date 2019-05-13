@@ -157,6 +157,9 @@ contract Campaign {
     public
     payable
     {
+        // initiate withdrawTermIdx during first call,
+        // in case that termIdx too large while withdrawTermIdx too low,
+        // resulting in large 'for' loop and gas not enough.
         if(withdrawFlag) {
             withdrawTermIdx = (block.number - 1).div(numPerRound) - 10;
             withdrawFlag = false;
