@@ -1,3 +1,15 @@
+/**
+ * campaign contract is used for rnodes to claim campaign.
+ * the general campaign process is as follows:
+ * 1. nodes submit parameters(numOfCampaign) and proofs, including memory and cpu proofs.
+ * 2. each proof consists of an address, a nonce and a block number(hash);
+ * 3. 'address' prevents nodes from stealing others' proof, 'block hash' avoids calculation in advance;
+ * 4. campaign contract checks if all requirements are satisfied:
+ *    rnode, admission and parameters
+ * 5. if pass, nodes become candidate.
+**/
+
+
 pragma solidity ^0.4.24;
 
 import "./lib/safeMath.sol";
@@ -190,6 +202,7 @@ contract Campaign {
         }
 
         uint size;
+        // withdrawTermIdx is the last term where candidates claim campaign
         for(; withdrawTermIdx <= termIdx; withdrawTermIdx++) {
             // avoid recalculate the size for circulation times.
             size = campaignSnapshots[withdrawTermIdx].values.length;
