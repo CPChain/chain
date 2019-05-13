@@ -296,7 +296,7 @@ Blockchain Maintenance
 Blockchain Maintenance score is calculated
 given a node's contribution in proposing a certain block.
 
-In details, it is evaluated given the following percentile
+In detail, it is evaluated given the following percentile
 of number of proposed blocks, similar to `Transaction`_ and `Account Balance`_.
 
 +--------------+--------------+
