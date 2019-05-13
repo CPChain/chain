@@ -41,7 +41,7 @@ contract Campaign {
     uint public minNoc = 1; // minimal number of terms
     uint public maxNoc = 10; //maximum number of terms
 
-    uint withdrawTermIdx = 0; // withdraw deposit after each round.
+    uint public withdrawTermIdx = 0; // withdraw deposit after each round.
 
     // a new type for a single candidate
     struct CandidateInfo {

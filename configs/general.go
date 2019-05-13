@@ -101,6 +101,7 @@ const (
 	ContractPdashProxy = "pdashProxy" // address of PdashProxy
 	ContractRnode      = "rnode"      // address of rnode
 	ContractCampaign2  = "campaign2"  // address of campaign2
+	ContractCampaign3  = "campaign3"  // address of campaign3
 )
 
 const (
