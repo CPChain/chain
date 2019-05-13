@@ -228,14 +228,14 @@ Score percentiles are demonstrated below.
 Transaction
 ++++++++++++++
 
-*TX* here are defined as
-transactions that exchange tokens for data product.
+*Transactions* here include
+all transactions sent by a given user.
 The definition of *Transactions* can be expanded as the of CPChain ecosystem develops.
 
-Transaction score is evaluated by all *transactions* statistics.
+TX score is evaluated by all *transactions* statistics.
 Since the distribution of transactions can follow
 a long tail distribution or power laws,
-we use the following percentile to normalize TX score.
+we use the following percentiles to normalize TX score.
 
 +--------------+--------------+
 | Percentile   |  Score (TX)  |
