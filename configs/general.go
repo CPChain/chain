@@ -108,12 +108,14 @@ const (
 	RNodeMinFundReq = 200000 // 200000 CPC for becoming a RNode
 )
 
-// a block number denotes that after this number we use new rpt calc method
+// pivot blocks numbers
 const (
 	RptCalcMethod2BlockNumber = 343000
 	RptCalcMethod3BlockNumber = 372400
-	Campaign2BlockNumber      = 371900
-	Campaign3BlockNumber      = 388850
+	RptCalcMethod4BlockNumber = 388850
+
+	Campaign2BlockNumber = 371900
+	Campaign3BlockNumber = 388850
 )
 
 var (
