@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign2"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign3"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
@@ -49,7 +49,7 @@ func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.Simulat
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	addrRNode, _, _, err := rnode.DeployRnode(deployTransactor, backend)
 	acAddr, _, _, err := admission.DeployAdmission(deployTransactor, backend, big.NewInt(5), big.NewInt(5), big.NewInt(10), big.NewInt(10))
-	addr, _, _, err := campaign2.DeployCampaign(deployTransactor, backend, acAddr, addrRNode)
+	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, acAddr, addrRNode)
 	if err != nil {
 		return common.Address{}, common.Address{}, common.Address{}, err
 	}
@@ -134,7 +134,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	fmt.Println("load Campaign")
 	transactOpts := bind.NewKeyedTransactor(key)
 
-	campaign, err := campaign2.NewCampaign(campaignAddr, contractBackend)
+	campaign, err := campaign.NewCampaign(campaignAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = campaignAddr
 	printBalance(contractBackend)

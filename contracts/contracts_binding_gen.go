@@ -44,3 +44,6 @@ package contracts
 
 //go:generate abigen --sol ./dpor/contracts/rnode/rnode.sol --pkg rnode --out ./dpor/contracts/rnode/rnode.go
 
+//go:generate abigen --sol ./dpor/contracts/campaign3/campaign3.sol --pkg campaign --out ./dpor/contracts/campaign3/campaign3.go
+
+

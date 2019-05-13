@@ -18,7 +18,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign2"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign3"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -301,7 +301,7 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 	campaignContractAddress := ac.campaignContractAddr
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
-	instance, err := campaign2.NewCampaign(campaignContractAddress, ac.contractBackend)
+	instance, err := campaign.NewCampaign(campaignContractAddress, ac.contractBackend)
 	if err != nil {
 		ac.mutex.Lock()
 		ac.err = err
