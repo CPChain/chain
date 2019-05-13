@@ -112,7 +112,8 @@ const (
 const (
 	RptCalcMethod2BlockNumber = 343000
 	RptCalcMethod3BlockNumber = 372400
-	Candidates2BlockNumber    = 371900
+	Campaign2BlockNumber      = 371900
+	Campaign3BlockNumber      = 371900
 )
 
 var (
