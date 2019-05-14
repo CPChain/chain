@@ -21,13 +21,14 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"log"
 	"math/big"
 	"reflect"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitives"
@@ -249,12 +250,40 @@ func newBlockchain(n int) *core.BlockChain {
 	return blockchain
 }
 
+func newBlockchainWithBalances(n int, accounts []common.Address) *core.BlockChain {
+	db := database.NewMemDatabase()
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
+	gspec := core.DefaultGenesisBlock()
+
+	for i, addr := range accounts {
+		gspec.Alloc[addr] = core.GenesisAccount{Balance: new(big.Int).Mul(big.NewInt(int64(i/3)), big.NewInt(configs.Cpc))}
+
+		log.Info("alloc", "addr", addr.Hex(), "i", i, "bal", i/3)
+	}
+
+	genesis := gspec.MustCommit(db)
+	config := gspec.Config
+	dporConfig := config.Dpor
+	dporFakeEngine := dpor.NewFaker(dporConfig, db)
+	blocks, _ := core.GenerateChain(config, genesis, dporFakeEngine, db, remoteDB, n, nil)
+	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, dporFakeEngine, vm.Config{}, remoteDB, nil)
+	_, _ = blockchain.InsertChain(blocks)
+	return blockchain
+}
+
 type fakeChainBackendForRptCollector struct {
 	blockchain *core.BlockChain
 }
 
 func newFakeChainBackendForRptCollector(n int) *fakeChainBackendForRptCollector {
 	bc := newBlockchain(n)
+	return &fakeChainBackendForRptCollector{
+		blockchain: bc,
+	}
+}
+
+func newFakeChainBackendForRptCollectorWithBalances(n int, accounts []common.Address) *fakeChainBackendForRptCollector {
+	bc := newBlockchainWithBalances(n, accounts)
 	return &fakeChainBackendForRptCollector{
 		blockchain: bc,
 	}
@@ -284,7 +313,7 @@ func (fc *fakeChainBackendForRptCollector) NonceAt(ctx context.Context, account 
 
 func generateABatchAccounts(n int) []common.Address {
 	var addresses []common.Address
-	for i := 0; i < n; i++ {
+	for i := 1; i < n; i++ {
 		addresses = append(addresses, common.HexToAddress("0x"+fmt.Sprintf("%040x", i)))
 	}
 	return addresses
@@ -318,4 +347,33 @@ func benchRptOf(b *testing.B, numAccount int) {
 		rpt := rptCollector.RptOf(addr, addrs, 500)
 		b.Log("idx", i, "rpt", rpt.Rpt, "addr", addr.Hex())
 	}
+}
+
+func TestRptOf4(t *testing.T) {
+
+	numAccount := 30
+	numBlocks := 1000
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+
+	rptCollector := rpt.NewRptCollectorImpl4(nil, fc)
+	for i, addr := range accounts {
+		rpt := rptCollector.RptOf(addr, accounts, 500)
+		t.Log("idx", i, "rpt", rpt.Rpt, "addr", addr.Hex())
+	}
+
+}
+func TestRptOf5(t *testing.T) {
+
+	numAccount := 30
+	numBlocks := 1000
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+
+	rptCollector := rpt.NewRptCollectorImpl5(nil, fc)
+	for i, addr := range accounts {
+		rpt := rptCollector.RptOf(addr, accounts, 500)
+		t.Log("idx", i, "rpt", rpt.Rpt, "addr", addr.Hex())
+	}
+
 }

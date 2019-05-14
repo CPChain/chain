@@ -14,10 +14,9 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
+	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/campaign"
+	"bitbucket.org/cpchain/chain/contracts/dpor/reward"
 	"bitbucket.org/cpchain/chain/contracts/proxy"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
@@ -653,13 +652,13 @@ func newBlockchainWithDB(n int, deployContract bool) (syncer.BlockChain, *databa
 func fakeClaimCampaign(backend *backends.SimulatedBackend) {
 	transactOpts := bind.NewKeyedTransactor(testBankKey)
 
-	campaign, _ := contracts.NewCampaignWrapper(transactOpts, campaignAddr, backend)
+	campaignInstance, _ := campaign.NewCampaign(campaignAddr, backend)
 	// ClaimCampaign 1st time
 	cpuNonce := uint64(100)
 	cpuBlockNum := int64(200)
 	memNonce := uint64(100)
 	memBlockNum := int64(200)
-	_, err := campaign.ClaimCampaign(big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
+	_, err := campaignInstance.ClaimCampaign(transactOpts, big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
 
 	if err != nil {
 		log.Fatal("campaign error", "err", err)
