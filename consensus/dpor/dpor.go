@@ -13,7 +13,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
+	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"

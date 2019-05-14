@@ -21,7 +21,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/rpc"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
+	"bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 )
 
 // ApiBackend interface provides the common JSON-RPC API.

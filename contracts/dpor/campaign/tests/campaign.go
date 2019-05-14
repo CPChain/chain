@@ -22,7 +22,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
