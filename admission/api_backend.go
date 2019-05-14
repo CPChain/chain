@@ -21,8 +21,8 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"github.com/ethereum/go-ethereum/common"
+	"bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 )
 
 type AdmissionApiBackend struct {

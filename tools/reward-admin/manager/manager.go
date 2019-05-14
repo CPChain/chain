@@ -9,7 +9,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
+	"bitbucket.org/cpchain/chain/contracts/dpor/reward"
 	cm "bitbucket.org/cpchain/chain/tools/console/common"
 	rm "bitbucket.org/cpchain/chain/tools/reward-admin/common"
 	cc "bitbucket.org/cpchain/chain/tools/utility"
