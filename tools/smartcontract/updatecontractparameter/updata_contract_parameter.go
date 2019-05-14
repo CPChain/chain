@@ -1,15 +1,16 @@
 package main
 
 import (
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"fmt"
 	"math/big"
 	"os"
 	"strconv"
+
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
+	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 )
 
 func main() {
