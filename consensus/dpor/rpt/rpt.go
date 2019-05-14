@@ -78,6 +78,8 @@ func RptHash(rpthash RptItems) (hash common.Hash) {
 	return hash
 }
 
+// TODO: @liuq use hash of addrs and block number as key,
+// not just block number like not
 type rptDataCache struct {
 	cache *lru.ARCCache
 }
@@ -246,6 +248,7 @@ type RptServiceImpl struct {
 	rptCollector2 RptCollector
 	rptCollector3 RptCollector
 	rptCollector4 RptCollector
+	rptCollector5 RptCollector
 }
 
 // NewRptService creates a concrete RPT service instance.
@@ -262,6 +265,7 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 	newRptCollector2 := NewRptCollectorImpl2(rptInstance, backend)
 	newRptCollector3 := NewRptCollectorImpl3(rptInstance, backend)
 	newRptCollector4 := NewRptCollectorImpl4(rptInstance, backend)
+	newRptCollector5 := NewRptCollectorImpl5(rptInstance, backend)
 
 	bc := &RptServiceImpl{
 		client:      backend,
@@ -272,6 +276,7 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 		rptCollector2: newRptCollector2,
 		rptCollector3: newRptCollector3,
 		rptCollector4: newRptCollector4,
+		rptCollector5: newRptCollector5,
 	}
 	return bc, nil
 }
@@ -325,8 +330,13 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common
 		return rs.rptCollector3.RptOf(address, addresses, number)
 	}
 
-	log.Debug("now calc rpt for with rpt method 4", "addr", address.Hex(), "number", number)
-	return rs.rptCollector4.RptOf(address, addresses, number)
+	if number < configs.RptCalcMethod5BlockNumber {
+		log.Debug("now calc rpt for with rpt method 4", "addr", address.Hex(), "number", number)
+		return rs.rptCollector4.RptOf(address, addresses, number)
+	}
+
+	log.Debug("now calc rpt for with rpt method 5", "addr", address.Hex(), "number", number)
+	return rs.rptCollector5.RptOf(address, addresses, number)
 }
 
 func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) Rpt {
