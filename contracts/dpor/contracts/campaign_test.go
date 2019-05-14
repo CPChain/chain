@@ -31,7 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign3"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign2"
 	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
