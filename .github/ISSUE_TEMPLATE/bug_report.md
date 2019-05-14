@@ -14,7 +14,7 @@ This is CPChain team. Note that this is for bug report. If you are requesting a 
 [e.g. the chain, the wallet, the console or the explorer]
 
 **What is your wallet address and your balance?**
-If it is too private to answer, you can omit it. 
+If it is too private to answer, you can skip it. 
 
 **Describe the bug**
 A clear and concise description of what the bug is. 
