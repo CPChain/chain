@@ -16,11 +16,11 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign3"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
+	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
+	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"github.com/ethereum/go-ethereum/common"
+	"bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 )
 
 // Result is admission control examination result

@@ -6,12 +6,13 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
+	"bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -20,6 +21,8 @@ var (
 		common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d86"),
 		common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d85"),
 	}
+	key, _      = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	addr        = crypto.PubkeyToAddress(key.PublicKey)
 )
 
 func deployRpt(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *contracts.Rpt, *bind.TransactOpts, error) {
@@ -117,5 +120,11 @@ func verifyEqual(t *testing.T, v1 uint64, v2 uint64) {
 	fmt.Println("v1,v2 is :", v1, v2)
 	if v1 != v2 {
 		t.Fatal("not equal!", "v1 is :", v1, "v2 is :", v2)
+	}
+}
+
+func checkError(t *testing.T, msg string, err error) {
+	if err != nil {
+		t.Fatalf(msg, err)
 	}
 }

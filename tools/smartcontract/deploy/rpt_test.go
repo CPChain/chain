@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
+	"bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
