@@ -119,7 +119,7 @@ func (dh *defaultDporHelper) verifyHeader(dpor *Dpor, chain consensus.ChainReade
 	// verify dpor signatures if required
 	if verifySigs {
 		if err := dh.verifySignatures(dpor, chain, header, parents, refHeader); err != nil {
-			log.Warn("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
+			log.Debug("verifying validator signatures failed", "error", err, "hash", header.Hash().Hex())
 			return err
 		}
 	}
