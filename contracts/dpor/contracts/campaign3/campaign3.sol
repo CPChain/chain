@@ -1,3 +1,15 @@
+/**
+ * campaign contract is used for rnodes to claim campaign.
+ * the general campaign process is as follows:
+ * 1. nodes submit parameters(numOfCampaign) and proofs, including memory and cpu proofs.
+ * 2. each proof consists of an address, a nonce and a block number(hash);
+ * 3. 'address' prevents nodes from stealing others' proof, 'block hash' avoids calculation in advance;
+ * 4. campaign contract checks if all requirements are satisfied:
+ *    rnode, admission and parameters
+ * 5. if pass, nodes become candidate.
+**/
+
+
 pragma solidity ^0.4.24;
 
 import "./lib/safeMath.sol";
@@ -145,6 +157,9 @@ contract Campaign {
     public
     payable
     {
+        // initiate withdrawTermIdx during first call,
+        // in case that termIdx too large while withdrawTermIdx too low,
+        // resulting in large 'for' loop and gas not enough.
         if(withdrawFlag) {
             withdrawTermIdx = (block.number - 1).div(numPerRound) - 10;
             withdrawFlag = false;
@@ -186,6 +201,7 @@ contract Campaign {
      */
 
     // update candidate status, i.e. subtract 1 from numOfCampaign when a new term begin
+    // withdrawTermIdx record the start term that need to update
     function updateCandidateStatus() public payable {
         // get current term, update termIdx
         updateTermIdx();
@@ -195,6 +211,7 @@ contract Campaign {
         }
 
         uint size;
+        // withdrawTermIdx is the last term where candidates claim campaign
         for(; withdrawTermIdx <= termIdx; withdrawTermIdx++) {
             // avoid recalculate the size for circulation times.
             size = campaignSnapshots[withdrawTermIdx].values.length;

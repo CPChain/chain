@@ -1,3 +1,10 @@
+/**
+ * admission contract is to check if the performance of the nodes meets the requirements
+ * the contract receives proofs and returns results
+ * check is done in other go functions, the admission contract will call it by assembly
+**/
+
+
 pragma solidity ^0.4.24;
 
 /** @title admission control for campaign committee */

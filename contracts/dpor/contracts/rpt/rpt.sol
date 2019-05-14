@@ -1,3 +1,9 @@
+/**
+* only 5 config parameters work in this contract
+* other parts are not used
+**/
+
+
 pragma solidity ^0.4.24;
 
 /** @title Reputation calculate */
