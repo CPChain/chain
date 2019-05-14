@@ -29,11 +29,12 @@ Similar to fusion API, the prerequisite of testing API is to start a local chain
 Refer to :ref:`fusion-api-using` to see set up details.
 
 To use curl, you must type four arguments, request method, data, url and header.
-Request method is set to -X POST, url is set to --url 'http://127.0.0.1:8501', and header is -H "Content-Type: application/json".
+Request method is set to ``-X POST``, url is set to ``--url 'http://127.0.0.1:8501'``,
+and header is ``-H "Content-Type: application/json"``.
 Data for each API is listed on `API Reference`_ below.
 
-To use postman, please choose POST method, type in '127.0.0.1:8501' in to url field.
-In Header option, type in 'Content-Type' as KEY, and 'application/json' as VALUE.
+To use postman, please choose POST method, type in ``'127.0.0.1:8501'`` in to url field.
+In Header option, type in ``'Content-Type'`` as KEY, and ``'application/json'`` as VALUE.
 Data for each API, should be written in Body option (choose raw format).
 
 In the reference below, we demonstrate CPC APIs in curl.
