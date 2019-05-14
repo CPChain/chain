@@ -21,8 +21,8 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/primitives"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
+	"bitbucket.org/cpchain/chain/contracts/dpor/primitives"
+	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/core/vm"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -30,8 +30,8 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/configs"
-	contract "bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign"
+	contract "bitbucket.org/cpchain/chain/contracts/dpor/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/campaign"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"

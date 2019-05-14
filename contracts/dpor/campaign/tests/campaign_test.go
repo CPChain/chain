@@ -29,13 +29,13 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	admission2 "bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/admission"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/contracts/campaign3"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/rnode"
+	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
+	"bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
+	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 )
 
 var (
