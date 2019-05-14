@@ -8,13 +8,14 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/contracts/rpt"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// RptCollectorImpl4 implements RptCollector
-type RptCollectorImpl4 struct {
+// RptCollectorImpl5 implements RptCollector
+type RptCollectorImpl5 struct {
 	rptInstance  *contracts.Rpt
 	chainBackend backend.ChainBackend
 	balances     *rptDataCache
@@ -33,10 +34,10 @@ type RptCollectorImpl4 struct {
 	lock       sync.RWMutex
 }
 
-// NewRptCollectorImpl4 creates an RptCollectorImpl4
-func NewRptCollectorImpl4(rptInstance *contracts.Rpt, chainBackend backend.ChainBackend) *RptCollectorImpl4 {
+// NewRptCollectorImpl5 creates an RptCollectorImpl5
+func NewRptCollectorImpl5(rptInstance *contracts.Rpt, chainBackend backend.ChainBackend) *RptCollectorImpl5 {
 
-	return &RptCollectorImpl4{
+	return &RptCollectorImpl5{
 		rptInstance:  rptInstance,
 		chainBackend: chainBackend,
 		balances:     newRptDataCache(),
@@ -55,7 +56,7 @@ func NewRptCollectorImpl4(rptInstance *contracts.Rpt, chainBackend backend.Chain
 }
 
 // Alpha returns the coefficient of balance(coin age)
-func (rc *RptCollectorImpl4) Alpha(num uint64) int64 {
+func (rc *RptCollectorImpl5) Alpha(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -73,7 +74,7 @@ func (rc *RptCollectorImpl4) Alpha(num uint64) int64 {
 }
 
 // Beta returns the coefficient of transaction count
-func (rc *RptCollectorImpl4) Beta(num uint64) int64 {
+func (rc *RptCollectorImpl5) Beta(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -91,7 +92,7 @@ func (rc *RptCollectorImpl4) Beta(num uint64) int64 {
 }
 
 // Gamma returns the coefficient of Maintenance
-func (rc *RptCollectorImpl4) Gamma(num uint64) int64 {
+func (rc *RptCollectorImpl5) Gamma(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -109,7 +110,7 @@ func (rc *RptCollectorImpl4) Gamma(num uint64) int64 {
 }
 
 // Psi returns the coefficient of File Contribution
-func (rc *RptCollectorImpl4) Psi(num uint64) int64 {
+func (rc *RptCollectorImpl5) Psi(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -127,7 +128,7 @@ func (rc *RptCollectorImpl4) Psi(num uint64) int64 {
 }
 
 // Omega returns the coefficient of Proxy Information in Pdash
-func (rc *RptCollectorImpl4) Omega(num uint64) int64 {
+func (rc *RptCollectorImpl5) Omega(num uint64) int64 {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -145,7 +146,7 @@ func (rc *RptCollectorImpl4) Omega(num uint64) int64 {
 }
 
 // WindowSize returns the windown size when calculating reputation value
-func (rc *RptCollectorImpl4) WindowSize(num uint64) int {
+func (rc *RptCollectorImpl5) WindowSize(num uint64) int {
 	rc.lock.Lock()
 	defer rc.lock.Unlock()
 
@@ -162,12 +163,12 @@ func (rc *RptCollectorImpl4) WindowSize(num uint64) int {
 	return rc.windowSize
 }
 
-func (rc *RptCollectorImpl4) coefficients(num uint64) (int64, int64, int64, int64, int64) {
+func (rc *RptCollectorImpl5) coefficients(num uint64) (int64, int64, int64, int64, int64) {
 	return rc.Alpha(num), rc.Beta(num), rc.Gamma(num), rc.Psi(num), rc.Omega(num)
 }
 
 // RptOf returns the reputation value of a given address among a batch addresses
-func (rc *RptCollectorImpl4) RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt {
+func (rc *RptCollectorImpl5) RptOf(addr common.Address, addrs []common.Address, num uint64) Rpt {
 
 	windowSize := rc.WindowSize(num)
 	alpha, beta, gamma, psi, omega := rc.coefficients(num)
@@ -185,45 +186,45 @@ func (rc *RptCollectorImpl4) RptOf(addr common.Address, addrs []common.Address, 
 }
 
 // BalanceValueOf returns Balance Value of reputation
-func (rc *RptCollectorImpl4) BalanceValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) BalanceValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.BalanceInfoOf(addr, addrs, num, windowSize)
-	return percentage(rank)
+	return rank
 }
 
 // TxsValueOf returns Transaction Count of reputation
-func (rc *RptCollectorImpl4) TxsValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) TxsValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.TxsInfoOf(addr, addrs, num, windowSize)
-	return percentage(rank)
+	return rank
 }
 
 // MaintenanceValueOf returns Chain Maintenance of reputation
-func (rc *RptCollectorImpl4) MaintenanceValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) MaintenanceValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.MaintenanceInfoOf(addr, addrs, num, windowSize)
-	return percentage(rank)
+	return rank
 }
 
 // UploadValueOf returns File Contribution of reputation
-func (rc *RptCollectorImpl4) UploadValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) UploadValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.UploadInfoOf(addr, addrs, num, windowSize)
-	return percentage(rank)
+	return rank
 }
 
 // ProxyValueOf returns Proxy Information of PDash of reputation
-func (rc *RptCollectorImpl4) ProxyValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) ProxyValueOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	rank := rc.ProxyInfoOf(addr, addrs, num, windowSize)
-	return percentage(rank)
+	return rank
 }
 
 // BalanceInfoOf minor
-func (rc *RptCollectorImpl4) BalanceInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) BalanceInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	start := time.Now()
 
-	getBalance := func(address common.Address, number uint64) int64 {
+	getBalance := func(address common.Address, number uint64) uint64 {
 		balance, err := rc.chainBackend.BalanceAt(context.Background(), address, big.NewInt(int64(number)))
 		if balance == nil || err != nil {
-			return defaultRank
+			return 0
 		}
-		return balance.Int64()
+		return new(big.Int).Div(balance, big.NewInt(configs.Cpc)).Uint64()
 	}
 
 	var rank int64
@@ -234,20 +235,19 @@ func (rc *RptCollectorImpl4) BalanceInfoOf(addr common.Address, addrs []common.A
 			balance := getBalance(candidate, num)
 			balances = append(balances, float64(balance))
 		}
-		sort.Sort(sort.Float64Slice(balances))
+		balances = sortAndReverse(balances)
 		rc.balances.addCache(num, balances)
 	}
 
 	// sort and get the rank
-	index := sort.SearchFloat64s(balances, float64(myBalance))
-	rank = int64(float64(index) / float64(len(addrs)) * 100)
+	rank = getRank(float64(myBalance), balances)
 
-	log.Debug("now calculating rpt", "Rank", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(start)))
+	log.Debug("now calculating rpt", "Balance", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(start)))
 	return rank
 }
 
 // TxsInfoOf minor
-func (rc *RptCollectorImpl4) TxsInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) TxsInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	start := time.Now()
 
 	getTxCount := func(address common.Address, number uint64) int64 {
@@ -274,20 +274,19 @@ func (rc *RptCollectorImpl4) TxsInfoOf(addr common.Address, addrs []common.Addre
 			txC := getTxCount(candidate, num)
 			txs = append(txs, float64(txC))
 		}
-		sort.Sort(sort.Float64Slice(txs))
+		txs = sortAndReverse(txs)
 		rc.txs.addCache(num, txs)
 	}
 
 	// sort and get the rank
-	index := sort.SearchFloat64s(txs, float64(txsCount))
-	rank = int64(float64(index) / float64(len(addrs)) * 100)
+	rank = getRank(float64(txsCount), txs)
 
 	log.Debug("now calculating rpt", "Txs", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(start)))
 	return rank
 }
 
 // MaintenanceInfoOf minor
-func (rc *RptCollectorImpl4) MaintenanceInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) MaintenanceInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	start := time.Now()
 
 	getMtn := func(addr common.Address, num uint64) int64 {
@@ -314,50 +313,51 @@ func (rc *RptCollectorImpl4) MaintenanceInfoOf(addr common.Address, addrs []comm
 			mtnI := getMtn(candidate, num)
 			mtns = append(mtns, float64(mtnI))
 		}
-		sort.Sort(sort.Float64Slice(mtns))
+		mtns = sortAndReverse(mtns)
 		rc.mtns.addCache(num, mtns)
 	}
 
 	// sort and get the rank
-	index := sort.SearchFloat64s(mtns, float64(myMtn))
-	rank = int64(float64(index) / float64(len(addrs)) * 100)
+	rank = getRank(float64(myMtn), mtns)
 
 	log.Debug("now calculating rpt", "Maintenance", "new", "num", num, "addr", addr.Hex(), "elapsed", common.PrettyDuration(time.Now().Sub(start)))
 	return rank
 }
 
 // UploadInfoOf minor
-func (rc *RptCollectorImpl4) UploadInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) UploadInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	log.Debug("now calculating rpt", "UploadInfo", "new", "num", num, "addr", addr.Hex())
-
-	return 0
+	return 1
 }
 
 // ProxyInfoOf minor
-func (rc *RptCollectorImpl4) ProxyInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
+func (rc *RptCollectorImpl5) ProxyInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	log.Debug("now calculating rpt", "ProxyInfo", "new", "num", num, "addr", addr.Hex())
-
-	return 0
+	return 1
 }
 
-func percentage(rank int64) int64 {
-	if rank < 20 {
-		return 20
+// getRank return the rank of the given item among the array
+// the array is in decreasing order
+func getRank(item float64, array sort.Float64Slice) int64 {
+	len := len(array)
+	index := searchIndex(item, array)
+	rank := int64((1 - float64(index)/float64(len)) * 100)
+	log.Debug("array", "array", array, "rank", rank, "index", index, "len", len)
+	return rank
+}
+
+// sortAndReverse returns an decreasing order of the given array
+func sortAndReverse(array []float64) sort.Float64Slice {
+	sort.Sort(sort.Reverse(sort.Float64Slice(array)))
+	return array
+}
+
+// searchIndex return the index of an item in an array
+func searchIndex(item float64, array []float64) int64 {
+	for i, x := range array {
+		if x == item {
+			return int64(i)
+		}
 	}
-	if rank < 40 {
-		return 40
-	}
-	if rank < 65 {
-		return 60
-	}
-	if rank < 85 {
-		return 70
-	}
-	if rank < 95 {
-		return 80
-	}
-	if rank < 98 {
-		return 90
-	}
-	return 100
+	return int64(len(array))
 }
