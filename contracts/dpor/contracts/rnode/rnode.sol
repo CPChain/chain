@@ -1,3 +1,8 @@
+/**
+ * rnode contract is for nodes to join and quit rnodes, and for campaign contract to check if a node is rnode
+**/
+
+
 pragma solidity ^0.4.24;
 
 import "./lib/safeMath.sol";
