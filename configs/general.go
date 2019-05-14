@@ -113,7 +113,7 @@ const (
 	RptCalcMethod2BlockNumber = 343000
 	RptCalcMethod3BlockNumber = 372400
 	RptCalcMethod4BlockNumber = 390500
-	RptCalcMethod5BlockNumber = 397700
+	RptCalcMethod5BlockNumber = 397850
 
 	Campaign2BlockNumber = 371900
 	Campaign3BlockNumber = 390500
