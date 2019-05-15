@@ -15,6 +15,7 @@ contract Rnode {
     address owner; // owner has permissions to modify parameters
     uint256 public period = 30 minutes; // rnode can withdraw deposit after period, owner can change period
     uint256 public rnodeThreshold = 200000 ether; // standard to become rnode, minimal amount, owner can change
+    uint256 public supportedVersion = 1; // version control
     Set.Data private rnodes; // rnodes group
     // enabled indicates status of contract, only when it is true, nodes can join rnode.
     bool public enabled = true;
@@ -33,11 +34,14 @@ contract Rnode {
     // rnodes quit, RnodeQuit will be emitted
     event NewRnode(address who, uint256 lockedDeposit, uint256 lockedTime);
     event RnodeQuit(address who);
-    event refund(address who, uint256 amount);
-    event refundAll(uint256 numOfInvestor);
+    event ownerRefund(address who, uint256 amount);
+    event ownerRefundAll(uint256 numOfInvestor);
 
+    // the '_' in modifier will be replaced by code in function;
+    // if there are more than one modifiers in a function, '_' in first modifier will be replaced by code in second modifier
+    // cf. https://ethereum.stackexchange.com/questions/29608/whats-the-order-of-execution-for-multiple-function-modifiers?rq=1
     modifier onlyOwner() {require(msg.sender == owner);_;}
-    modifier enabled() {require(enabled);_;}
+    modifier onlyEnabled() {require(enabled);_;}
 
     constructor () public {
         owner = msg.sender;
@@ -47,7 +51,8 @@ contract Rnode {
     // 1. contract address can not become a rnode;
     // 2. rnodes can not deposit again;
     // 3. deposit money has to satisfy rnode threshold.
-    function joinRnode() public payable enabled() {
+    function joinRnode(uint256 version) public payable onlyEnabled {
+        require(version >= supportedVersion);
         require(!isContract(msg.sender),"please not use contract call this function");
         require(!rnodes.contains(msg.sender));
         require(msg.value >= rnodeThreshold);
@@ -81,49 +86,53 @@ contract Rnode {
     }
 
     // owner refunds one investor
-    function refund(address investor) public onlyOwner() {
+    function refund(address investor) public onlyOwner {
         require(rnodes.contains(investor));
-        amount = Participants[investor].lockedDeposit;
+        uint256 amount = Participants[investor].lockedDeposit;
         investor.transfer(amount);
         Participants[investor].lockedDeposit = 0;
         rnodes.remove(investor);
 
-        emit refund(investor, amount);
+        emit ownerRefund(investor, amount);
     }
 
     // owner refunds all investors
-    function refundAll() public onlyOwner() {
-        num = rnodes.value.length;
+    function refundAll() public onlyOwner {
+        uint256 num = rnodes.values.length;
         for(uint i=0; i<num; i++){
-            investor = rnodes.value[i];
-            deposit = Participants[investor].lockedDeposit;
+            address investor = rnodes.values[i];
+            uint256 deposit = Participants[investor].lockedDeposit;
             investor.transfer(deposit);
             Participants[investor].lockedDeposit = 0;
             rnodes.remove(investor);
 
-            emit refund(investor, deposit);
+            emit ownerRefund(investor, deposit);
         }
-        assert(rnodes.value.length == 0);
+        assert(rnodes.values.length == 0);
 
-        emit refundAll(num);
+        emit ownerRefundAll(num);
     }
 
     // owner can enable and disable rnode contract
-    function enableContract() public onlyOwner() {
+    function enableContract() public onlyOwner {
         enabled = true;
     }
 
-    function disableContract() public onlyOwner() {
+    function disableContract() public onlyOwner {
         enabled = false;
     }
 
-    // owner can set period and rnode threshold
-    function setPeriod(uint256 _period) public onlyOwner() {
+    // owner can set period, rnode threshold and supported version
+    function setPeriod(uint256 _period) public onlyOwner {
         period = _period;
     }
 
-    function setRnodeThreshold(uint256 threshold) public onlyOwner() {
+    function setRnodeThreshold(uint256 threshold) public onlyOwner {
         rnodeThreshold = threshold;
+    }
+
+    function setSupportedVersion(uint256 version) public onlyOwner {
+        supportedVersion = version;
     }
 
     // judge if an address is a contract address

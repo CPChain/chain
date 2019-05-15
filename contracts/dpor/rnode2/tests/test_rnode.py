@@ -78,8 +78,9 @@ def compile_file():
 
 
 def deploy_contract(interface):
-    init()
-    cf.cpc.defaultAccount = owner
+    # init()
+    # cf.cpc.defaultAccount = owner
+    cf = Web3(Web3.HTTPProvider("http://127.0.0.1:8521"))
     contract = cf.cpc.contract(abi=interface['abi'], bytecode=interface['bin'])
 
     estimated_gas = contract.constructor().estimateGas()
@@ -92,6 +93,7 @@ def deploy_contract(interface):
     # contract = cf.cpc.contract(address=address, abi=interface['abi'])
 
     return address
+
 
 def get_contract():
     print("address: ", contract_address)
@@ -223,10 +225,103 @@ def test_case_6():
     print("period: ", contract_ins.functions.period().call())
 
 
-def main():
+def test_case_7():
+    cf = Web3(Web3.HTTPProvider("http://127.0.0.1:8521"))
+
+    print("========config account=========")
+    rnode = "0x6c95FEb59EF0281b3f9fD8Ec5628E1Da1d3Cc6E8"
+    civilian = "0x970c18A634B23c95a61746d172C48356DB58D8EC"
+    owner = "0xb3801b8743DEA10c30b0c21CAe8b1923d9625F84"
+    password = "password"
+    cf.personal.unlockAccount(rnode, password)
+    cf.personal.unlockAccount(civilian, password)
+    cf.personal.unlockAccount(owner, password)
+    print("balance of rnode: ", cf.fromWei(cf.cpc.getBalance(rnode), "ether"))
+    print("balance of civilian: ", cf.fromWei(cf.cpc.getBalance(civilian), "ether"))
+    print("balance of owner: ", cf.fromWei(cf.cpc.getBalance(owner), "ether"))
+
+    print("========deploy rnode contract============")
     config = compile_file()
-    print(config['abi'])
-    print(config['bin'])
+    contract = cf.cpc.contract(abi=config["abi"], bytecode=config["bin"])
+    cf.cpc.defaultAccount = owner
+    estimated_gas = contract.constructor().estimateGas()
+    tx_hash = contract.constructor().transact(dict(gas=estimated_gas))
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    address = tx_receipt['contractAddress']
+
+    print("========test owner control===============")
+    rnode_ins = cf.cpc.contract(abi=config["abi"], address=address)
+    print("before set")
+    period = rnode_ins.functions.period().call()
+    print("period: ", period)
+    print("civilian tries to set period")
+    cf.cpc.defaultAccount = civilian
+    tx_hash = rnode_ins.functions.setPeriod(2).transact({"gas": 829776, "from": civilian, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    period = rnode_ins.functions.period().call()
+    print("period after civilian set: ", period)
+    print("owner tries to set period")
+    cf.cpc.defaultAccount = owner
+    tx_hash = rnode_ins.functions.setPeriod(2).transact({"gas": 829776, "from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    period = rnode_ins.functions.period().call()
+    print("period after owner set: ", period)
+
+    print("============test version control============")
+    print("rnode tries to join rnode with old version")
+    cf.cpc.defaultAccount = rnode
+    tx_hash = rnode_ins.functions.joinRnode(0).transact({"gas": 829776, "from": rnode, "value": cf.toWei(200001, "ether")})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    result = rnode_ins.functions.isRnode(rnode).call()
+    print("is rnode: ", result)
+    print("rnode tries to join rnode with new version")
+    tx_hash = rnode_ins.functions.joinRnode(3).transact({"gas": 829776, "from": rnode, "value": cf.toWei(200001, "ether")})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    result = rnode_ins.functions.isRnode(rnode).call()
+    print("is rnode: ", result)
+
+    print("==========test refund===============")
+    print("before refund")
+    rnodes = rnode_ins.functions.getRnodes().call()
+    print(rnodes)
+    cf.cpc.defaultAccount = owner
+    tx_hash = rnode_ins.functions.refundAll().transact({"gas": 829776, "from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    print("after refund")
+    rnodes = rnode_ins.functions.getRnodes().call()
+    print(rnodes)
+
+    print("===========test enable================")
+    enabled = rnode_ins.functions.enabled().call()
+    print("before disable: ", enabled)
+    print("owner disable the contract")
+    cf.cpc.defaultAccount = owner
+    tx_hash = rnode_ins.functions.disableContract().transact({"gas": 829776, "from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    enabled = rnode_ins.functions.enabled().call()
+    print("after disable: ", enabled)
+    print("rnode tries to join")
+    result = rnode_ins.functions.isRnode(rnode).call()
+    print("is rnode: ", result)
+    cf.cpc.defaultAccount = rnode
+    tx_hash = rnode_ins.functions.joinRnode(3).transact({"gas": 829776, "from": rnode, "value": cf.toWei(200001, "ether")})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    result = rnode_ins.functions.isRnode(rnode).call()
+    print("is rnode: ", result)
+
+
+def main():
+    test_case_7()
+    # config = compile_file()
+    # print(config['abi'])
+    # print(config['bin'])
     # address = deploy_contract(config)
     # print(address)
     # test_case_1()
@@ -239,3 +334,12 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # cf = Web3(Web3.HTTPProvider("http://127.0.0.1:8521"))
+    # cf.cpc.sendTransaction({"to": "0x6c95FEb59EF0281b3f9fD8Ec5628E1Da1d3Cc6E8", "from": "0xb3801b8743DEA10c30b0c21CAe8b1923d9625F84", "value": cf.toWei(20000, "ether")})
+    # cf.cpc.sendTransaction({"to": "0x970c18A634B23c95a61746d172C48356DB58D8EC", "from": "0xb3801b8743DEA10c30b0c21CAe8b1923d9625F84", "value": cf.toWei(20000, "ether")})
+
+    # print(cf.cpc.blockNumber)
+    # print(cf.cpc.accounts)
+    # print(cf.cpc.getBalance(cf.cpc.accounts[0]))
+    # cf.personal.newAccount("password")
+    # print(cf.cpc.accounts)
