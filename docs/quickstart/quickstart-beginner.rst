@@ -134,7 +134,7 @@ Use the commands below to check your status.
 .. code-block:: shell
     :emphasize-lines: 1,3,4
 
-    $ echo "YOUR_PASSWORD" > datadir/password
+    $ echo YOUR_PASSWORD > datadir/password
     $ ./console status \
     --keystore ./datadir/keystore/YOUR_ACCOUNT \
     --password ./datadir/password
