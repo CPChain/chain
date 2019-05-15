@@ -16,6 +16,8 @@ contract Rnode {
     uint256 public period = 30 minutes; // rnode can withdraw deposit after period, owner can change period
     uint256 public rnodeThreshold = 200000 ether; // standard to become rnode, minimal amount, owner can change
     Set.Data private rnodes; // rnodes group
+    // enabled indicates status of contract, only when it is true, nodes can join rnode.
+    bool public enabled = true;
 
     // participant is a type of single rnode
     // record locked amount and start time for each rnode
@@ -35,6 +37,7 @@ contract Rnode {
     event refundAll(uint256 numOfInvestor);
 
     modifier onlyOwner() {require(msg.sender == owner);_;}
+    modifier enabled() {require(enabled);_;}
 
     constructor () public {
         owner = msg.sender;
@@ -44,7 +47,7 @@ contract Rnode {
     // 1. contract address can not become a rnode;
     // 2. rnodes can not deposit again;
     // 3. deposit money has to satisfy rnode threshold.
-    function joinRnode() public payable {
+    function joinRnode() public payable enabled() {
         require(!isContract(msg.sender),"please not use contract call this function");
         require(!rnodes.contains(msg.sender));
         require(msg.value >= rnodeThreshold);
@@ -103,6 +106,15 @@ contract Rnode {
         assert(rnodes.value.length == 0);
 
         emit refundAll(num);
+    }
+
+    // owner can enable and disable rnode contract
+    function enableContract() public onlyOwner() {
+        enabled = true;
+    }
+
+    function disableContract() public onlyOwner() {
+        enabled = false;
     }
 
     // owner can set period and rnode threshold
