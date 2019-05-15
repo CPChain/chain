@@ -30,12 +30,12 @@ import (
 	admission2 "bitbucket.org/cpchain/chain/admission"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
-	"bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign2"
 	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 )
 
 var (

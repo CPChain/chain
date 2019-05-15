@@ -7,12 +7,10 @@ import (
 	"testing"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	"bitbucket.org/cpchain/chain/configs"
-
-	"bitbucket.org/cpchain/chain/api/rpc"
-	"bitbucket.org/cpchain/chain/contracts/dpor/contracts/reward"
-
 	"bitbucket.org/cpchain/chain/api/cpclient"
+	"bitbucket.org/cpchain/chain/api/rpc"
+	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/contracts/dpor/reward"
 	"github.com/ethereum/go-ethereum/common"
 )
 
