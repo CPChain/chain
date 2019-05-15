@@ -70,6 +70,12 @@ contract Reward {
 
     // if the contract is abandoned, owner can refund all and lock the contract
     function disableContract() public onlyOwner {
+        newRaise();
+        for(uint256 i=0; i<participants.values.length; i++){
+            investors[participants.values[i]].toRenew = false;
+        }
+        nextRoundStartTime = 1; // a very small number
+        startNewRound();
         refundAll();
         locked = true;
     }
