@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/reward"
+	"bitbucket.org/cpchain/chain/contracts/reward"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )
