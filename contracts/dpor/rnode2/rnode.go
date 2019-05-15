@@ -16,10 +16,10 @@ import (
 )
 
 // RnodeABI is the input ABI used to generate the binding from.
-const RnodeABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"getRnodeNum\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_period\",\"type\":\"uint256\"}],\"name\":\"setPeriod\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"quitRnode\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isContract\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"Participants\",\"outputs\":[{\"name\":\"lockedDeposit\",\"type\":\"uint256\"},{\"name\":\"lockedTime\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"threshold\",\"type\":\"uint256\"}],\"name\":\"setRnodeThreshold\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isRnode\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"rnodeThreshold\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"joinRnode\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getRnodes\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"period\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"lockedDeposit\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"lockedTime\",\"type\":\"uint256\"}],\"name\":\"NewRnode\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"}],\"name\":\"RnodeQuit\",\"type\":\"event\"}]"
+const RnodeABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"getRnodeNum\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_period\",\"type\":\"uint256\"}],\"name\":\"setPeriod\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"quitRnode\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isContract\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"enabled\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"enableContract\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"refundAll\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"Participants\",\"outputs\":[{\"name\":\"lockedDeposit\",\"type\":\"uint256\"},{\"name\":\"lockedTime\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"version\",\"type\":\"uint256\"}],\"name\":\"setSupportedVersion\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"disableContract\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"threshold\",\"type\":\"uint256\"}],\"name\":\"setRnodeThreshold\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isRnode\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"version\",\"type\":\"uint256\"}],\"name\":\"joinRnode\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"rnodeThreshold\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"supportedVersion\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getRnodes\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"period\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"investor\",\"type\":\"address\"}],\"name\":\"refund\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"lockedDeposit\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"lockedTime\",\"type\":\"uint256\"}],\"name\":\"NewRnode\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"}],\"name\":\"RnodeQuit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"who\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"ownerRefund\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"numOfInvestor\",\"type\":\"uint256\"}],\"name\":\"ownerRefundAll\",\"type\":\"event\"}]"
 
 // RnodeBin is the compiled bytecode used for deploying new contracts.
-const RnodeBin = `0x6080604052603c600155692a5a058fc295ed00000060025534801561002357600080fd5b5060008054600160a060020a03191633179055610818806100456000396000f3006080604052600436106100ae5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630b443f4281146100b35780630f3a9f65146100da578063113c8498146100f45780631627905514610109578063595aa13d1461013e578063975dd4b214610178578063a8f0769714610190578063b7b3e9da146101b1578063b892c6da146101c6578063e508bb85146101ce578063ef78d4fd14610233575b600080fd5b3480156100bf57600080fd5b506100c8610248565b60408051918252519081900360200190f35b3480156100e657600080fd5b506100f260043561024f565b005b34801561010057600080fd5b506100f261026b565b34801561011557600080fd5b5061012a600160a060020a036004351661033c565b604080519115158252519081900360200190f35b34801561014a57600080fd5b5061015f600160a060020a0360043516610344565b6040805192835260208301919091528051918290030190f35b34801561018457600080fd5b506100f260043561035d565b34801561019c57600080fd5b5061012a600160a060020a0360043516610379565b3480156101bd57600080fd5b506100c8610392565b6100f2610398565b3480156101da57600080fd5b506101e3610501565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561021f578181015183820152602001610207565b505050509050019250505060405180910390f35b34801561023f57600080fd5b506100c8610512565b6004545b90565b600054600160a060020a0316331461026657600080fd5b600155565b61027c60033363ffffffff61051816565b151561028757600080fd5b600180543360009081526005602052604090209091015442910111156102ac57600080fd5b3360008181526005602052604080822054905181156108fc0292818181858888f193505050501580156102e3573d6000803e3d6000fd5b50336000818152600560205260408120556103069060039063ffffffff61053716565b506040805133815290517f602a2a9c94f70293aa2be9077f0b2dc89d388bc293fdbcd968274f43494c380d9181900360200190a1565b6000903b1190565b6005602052600090815260409020805460019091015482565b600054600160a060020a0316331461037457600080fd5b600255565b600061038c60038363ffffffff61051816565b92915050565b60025481565b6103a13361033c565b1561043357604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602a60248201527f706c65617365206e6f742075736520636f6e74726163742063616c6c2074686960448201527f732066756e6374696f6e00000000000000000000000000000000000000000000606482015290519081900360840190fd5b61044460033363ffffffff61051816565b1561044e57600080fd5b60025434101561045d57600080fd5b3360009081526005602052604090205461047d903463ffffffff6106a916565b336000818152600560205260409020918255426001909201919091556104ab9060039063ffffffff6106bf16565b5033600081815260056020908152604091829020805460019091015483519485529184015282820152517f586bfaa7a657ad9313326c9269639546950d589bd479b3d6928be469d6dc29039181900360600190a1565b606061050d600361073f565b905090565b60015481565b600160a060020a03166000908152602091909152604090205460ff1690565b600160a060020a0381166000908152602083905260408120548190819060ff16151561056657600092506106a1565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b8181101561069c5783600160a060020a031685600101828154811015156105b257fe5b600091825260209091200154600160a060020a031614156106945760018501805460001984019081106105e157fe5b600091825260209091200154600186018054600160a060020a03909216918390811061060957fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055600185018054600019840190811061065357fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff191690556001850180549061068e9060001983016107a5565b5061069c565b60010161058f565b600192505b505092915050565b6000828201838110156106b857fe5b9392505050565b600160a060020a03811660009081526020839052604081205460ff16156106e85750600061038c565b50600160a060020a03166000818152602083815260408220805460ff1916600190811790915593840180548086018255908352912001805473ffffffffffffffffffffffffffffffffffffffff1916909117905590565b60608160010180548060200260200160405190810160405280929190818152602001828054801561079957602002820191906000526020600020905b8154600160a060020a0316815260019091019060200180831161077b575b50505050509050919050565b8154818355818111156107c9576000838152602090206107c99181019083016107ce565b505050565b61024c91905b808211156107e857600081556001016107d4565b50905600a165627a7a723058208b1e4616a3654255b144fd76d1e903d6e7b1ca059714c7c3e8f648a4327b6c750029`
+const RnodeBin = `0x60806040526107086001908155692a5a058fc295ed00000060025560038190556006805460ff1916909117905534801561003857600080fd5b5060008054600160a060020a03191633179055610bdd8061005a6000396000f3006080604052600436106100fb5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630b443f4281146101005780630f3a9f6514610127578063113c8498146101415780631627905514610156578063238dafe01461018b578063367edd32146101a057806338e771ab146101b5578063595aa13d146101ca5780635f86d4ca14610204578063894ba8331461021c578063975dd4b214610231578063a8f0769714610249578063aae80f781461026a578063b7b3e9da14610275578063d5601e9f1461028a578063e508bb851461029f578063ef78d4fd14610304578063fa89401a14610319575b600080fd5b34801561010c57600080fd5b5061011561033a565b60408051918252519081900360200190f35b34801561013357600080fd5b5061013f600435610341565b005b34801561014d57600080fd5b5061013f61035d565b34801561016257600080fd5b50610177600160a060020a036004351661042e565b604080519115158252519081900360200190f35b34801561019757600080fd5b50610177610436565b3480156101ac57600080fd5b5061013f61043f565b3480156101c157600080fd5b5061013f610465565b3480156101d657600080fd5b506101eb600160a060020a03600435166105b5565b6040805192835260208301919091528051918290030190f35b34801561021057600080fd5b5061013f6004356105ce565b34801561022857600080fd5b5061013f6105ea565b34801561023d57600080fd5b5061013f60043561060d565b34801561025557600080fd5b50610177600160a060020a0360043516610629565b61013f600435610642565b34801561028157600080fd5b506101156107cc565b34801561029657600080fd5b506101156107d2565b3480156102ab57600080fd5b506102b46107d8565b60408051602080825283518183015283519192839290830191858101910280838360005b838110156102f05781810151838201526020016102d8565b505050509050019250505060405180910390f35b34801561031057600080fd5b506101156107e9565b34801561032557600080fd5b5061013f600160a060020a03600435166107ef565b6005545b90565b600054600160a060020a0316331461035857600080fd5b600155565b61036e60043363ffffffff6108dd16565b151561037957600080fd5b6001805433600090815260076020526040902090910154429101111561039e57600080fd5b3360008181526007602052604080822054905181156108fc0292818181858888f193505050501580156103d5573d6000803e3d6000fd5b50336000818152600760205260408120556103f89060049063ffffffff6108fc16565b506040805133815290517f602a2a9c94f70293aa2be9077f0b2dc89d388bc293fdbcd968274f43494c380d9181900360200190a1565b6000903b1190565b60065460ff1681565b600054600160a060020a0316331461045657600080fd5b6006805460ff19166001179055565b60008054819081908190600160a060020a0316331461048357600080fd5b6005549350600092505b838310156105725760058054849081106104a357fe5b6000918252602080832090910154600160a060020a0316808352600790915260408083205490519194509250839183156108fc02918491818181858888f193505050501580156104f7573d6000803e3d6000fd5b50600160a060020a03821660009081526007602052604081205561052260048363ffffffff6108fc16565b5060408051600160a060020a03841681526020810183905281517f3914ba80eb00486e7a58b91fb4795283df0c5b507eea9cf7c77cce26cc70d25c929181900390910190a160019092019161048d565b6005541561057c57fe5b6040805185815290517fb65ebb6b17695b3a5612c7a0f6f60e649c02ba24b36b546b8d037e98215fdb8d9181900360200190a150505050565b6007602052600090815260409020805460019091015482565b600054600160a060020a031633146105e557600080fd5b600355565b600054600160a060020a0316331461060157600080fd5b6006805460ff19169055565b600054600160a060020a0316331461062457600080fd5b600255565b600061063c60048363ffffffff6108dd16565b92915050565b60065460ff16151561065357600080fd5b60035481101561066257600080fd5b61066b3361042e565b156106fd57604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152602a60248201527f706c65617365206e6f742075736520636f6e74726163742063616c6c2074686960448201527f732066756e6374696f6e00000000000000000000000000000000000000000000606482015290519081900360840190fd5b61070e60043363ffffffff6108dd16565b1561071857600080fd5b60025434101561072757600080fd5b33600090815260076020526040902054610747903463ffffffff610a6e16565b336000818152600760205260409020918255426001909201919091556107759060049063ffffffff610a8416565b5033600081815260076020908152604091829020805460019091015483519485529184015282820152517f586bfaa7a657ad9313326c9269639546950d589bd479b3d6928be469d6dc29039181900360600190a150565b60025481565b60035481565b60606107e46004610b04565b905090565b60015481565b60008054600160a060020a0316331461080757600080fd5b61081860048363ffffffff6108dd16565b151561082357600080fd5b50600160a060020a03811660008181526007602052604080822054905190929183156108fc02918491818181858888f19350505050158015610869573d6000803e3d6000fd5b50600160a060020a03821660009081526007602052604081205561089460048363ffffffff6108fc16565b5060408051600160a060020a03841681526020810183905281517f3914ba80eb00486e7a58b91fb4795283df0c5b507eea9cf7c77cce26cc70d25c929181900390910190a15050565b600160a060020a03166000908152602091909152604090205460ff1690565b600160a060020a0381166000908152602083905260408120548190819060ff16151561092b5760009250610a66565b5050600160a060020a0382166000908152602084905260408120805460ff191690556001840154905b81811015610a615783600160a060020a0316856001018281548110151561097757fe5b600091825260209091200154600160a060020a03161415610a595760018501805460001984019081106109a657fe5b600091825260209091200154600186018054600160a060020a0390921691839081106109ce57fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790556001850180546000198401908110610a1857fe5b6000918252602090912001805473ffffffffffffffffffffffffffffffffffffffff1916905560018501805490610a53906000198301610b6a565b50610a61565b600101610954565b600192505b505092915050565b600082820183811015610a7d57fe5b9392505050565b600160a060020a03811660009081526020839052604081205460ff1615610aad5750600061063c565b50600160a060020a03166000818152602083815260408220805460ff1916600190811790915593840180548086018255908352912001805473ffffffffffffffffffffffffffffffffffffffff1916909117905590565b606081600101805480602002602001604051908101604052809291908181526020018280548015610b5e57602002820191906000526020600020905b8154600160a060020a03168152600190910190602001808311610b40575b50505050509050919050565b815481835581811115610b8e57600083815260209020610b8e918101908301610b93565b505050565b61033e91905b80821115610bad5760008155600101610b99565b50905600a165627a7a723058209a951e93bbeec07085273c2cb7381537c084ec1a1d4c5fac680ecb2bb16a769b0029`
 
 // DeployRnode deploys a new cpchain contract, binding an instance of Rnode to it.
 func DeployRnode(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Rnode, error) {
@@ -212,6 +212,32 @@ func (_Rnode *RnodeCallerSession) Participants(arg0 common.Address) (struct {
 	return _Rnode.Contract.Participants(&_Rnode.CallOpts, arg0)
 }
 
+// Enabled is a free data retrieval call binding the contract method 0x238dafe0.
+//
+// Solidity: function enabled() constant returns(bool)
+func (_Rnode *RnodeCaller) Enabled(opts *bind.CallOpts) (bool, error) {
+	var (
+		ret0 = new(bool)
+	)
+	out := ret0
+	err := _Rnode.contract.Call(opts, out, "enabled")
+	return *ret0, err
+}
+
+// Enabled is a free data retrieval call binding the contract method 0x238dafe0.
+//
+// Solidity: function enabled() constant returns(bool)
+func (_Rnode *RnodeSession) Enabled() (bool, error) {
+	return _Rnode.Contract.Enabled(&_Rnode.CallOpts)
+}
+
+// Enabled is a free data retrieval call binding the contract method 0x238dafe0.
+//
+// Solidity: function enabled() constant returns(bool)
+func (_Rnode *RnodeCallerSession) Enabled() (bool, error) {
+	return _Rnode.Contract.Enabled(&_Rnode.CallOpts)
+}
+
 // GetRnodeNum is a free data retrieval call binding the contract method 0x0b443f42.
 //
 // Solidity: function getRnodeNum() constant returns(uint256)
@@ -368,25 +394,93 @@ func (_Rnode *RnodeCallerSession) RnodeThreshold() (*big.Int, error) {
 	return _Rnode.Contract.RnodeThreshold(&_Rnode.CallOpts)
 }
 
-// JoinRnode is a paid mutator transaction binding the contract method 0xb892c6da.
+// SupportedVersion is a free data retrieval call binding the contract method 0xd5601e9f.
 //
-// Solidity: function joinRnode() returns()
-func (_Rnode *RnodeTransactor) JoinRnode(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Rnode.contract.Transact(opts, "joinRnode")
+// Solidity: function supportedVersion() constant returns(uint256)
+func (_Rnode *RnodeCaller) SupportedVersion(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _Rnode.contract.Call(opts, out, "supportedVersion")
+	return *ret0, err
 }
 
-// JoinRnode is a paid mutator transaction binding the contract method 0xb892c6da.
+// SupportedVersion is a free data retrieval call binding the contract method 0xd5601e9f.
 //
-// Solidity: function joinRnode() returns()
-func (_Rnode *RnodeSession) JoinRnode() (*types.Transaction, error) {
-	return _Rnode.Contract.JoinRnode(&_Rnode.TransactOpts)
+// Solidity: function supportedVersion() constant returns(uint256)
+func (_Rnode *RnodeSession) SupportedVersion() (*big.Int, error) {
+	return _Rnode.Contract.SupportedVersion(&_Rnode.CallOpts)
 }
 
-// JoinRnode is a paid mutator transaction binding the contract method 0xb892c6da.
+// SupportedVersion is a free data retrieval call binding the contract method 0xd5601e9f.
 //
-// Solidity: function joinRnode() returns()
-func (_Rnode *RnodeTransactorSession) JoinRnode() (*types.Transaction, error) {
-	return _Rnode.Contract.JoinRnode(&_Rnode.TransactOpts)
+// Solidity: function supportedVersion() constant returns(uint256)
+func (_Rnode *RnodeCallerSession) SupportedVersion() (*big.Int, error) {
+	return _Rnode.Contract.SupportedVersion(&_Rnode.CallOpts)
+}
+
+// DisableContract is a paid mutator transaction binding the contract method 0x894ba833.
+//
+// Solidity: function disableContract() returns()
+func (_Rnode *RnodeTransactor) DisableContract(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Rnode.contract.Transact(opts, "disableContract")
+}
+
+// DisableContract is a paid mutator transaction binding the contract method 0x894ba833.
+//
+// Solidity: function disableContract() returns()
+func (_Rnode *RnodeSession) DisableContract() (*types.Transaction, error) {
+	return _Rnode.Contract.DisableContract(&_Rnode.TransactOpts)
+}
+
+// DisableContract is a paid mutator transaction binding the contract method 0x894ba833.
+//
+// Solidity: function disableContract() returns()
+func (_Rnode *RnodeTransactorSession) DisableContract() (*types.Transaction, error) {
+	return _Rnode.Contract.DisableContract(&_Rnode.TransactOpts)
+}
+
+// EnableContract is a paid mutator transaction binding the contract method 0x367edd32.
+//
+// Solidity: function enableContract() returns()
+func (_Rnode *RnodeTransactor) EnableContract(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Rnode.contract.Transact(opts, "enableContract")
+}
+
+// EnableContract is a paid mutator transaction binding the contract method 0x367edd32.
+//
+// Solidity: function enableContract() returns()
+func (_Rnode *RnodeSession) EnableContract() (*types.Transaction, error) {
+	return _Rnode.Contract.EnableContract(&_Rnode.TransactOpts)
+}
+
+// EnableContract is a paid mutator transaction binding the contract method 0x367edd32.
+//
+// Solidity: function enableContract() returns()
+func (_Rnode *RnodeTransactorSession) EnableContract() (*types.Transaction, error) {
+	return _Rnode.Contract.EnableContract(&_Rnode.TransactOpts)
+}
+
+// JoinRnode is a paid mutator transaction binding the contract method 0xaae80f78.
+//
+// Solidity: function joinRnode(version uint256) returns()
+func (_Rnode *RnodeTransactor) JoinRnode(opts *bind.TransactOpts, version *big.Int) (*types.Transaction, error) {
+	return _Rnode.contract.Transact(opts, "joinRnode", version)
+}
+
+// JoinRnode is a paid mutator transaction binding the contract method 0xaae80f78.
+//
+// Solidity: function joinRnode(version uint256) returns()
+func (_Rnode *RnodeSession) JoinRnode(version *big.Int) (*types.Transaction, error) {
+	return _Rnode.Contract.JoinRnode(&_Rnode.TransactOpts, version)
+}
+
+// JoinRnode is a paid mutator transaction binding the contract method 0xaae80f78.
+//
+// Solidity: function joinRnode(version uint256) returns()
+func (_Rnode *RnodeTransactorSession) JoinRnode(version *big.Int) (*types.Transaction, error) {
+	return _Rnode.Contract.JoinRnode(&_Rnode.TransactOpts, version)
 }
 
 // QuitRnode is a paid mutator transaction binding the contract method 0x113c8498.
@@ -408,6 +502,48 @@ func (_Rnode *RnodeSession) QuitRnode() (*types.Transaction, error) {
 // Solidity: function quitRnode() returns()
 func (_Rnode *RnodeTransactorSession) QuitRnode() (*types.Transaction, error) {
 	return _Rnode.Contract.QuitRnode(&_Rnode.TransactOpts)
+}
+
+// Refund is a paid mutator transaction binding the contract method 0xfa89401a.
+//
+// Solidity: function refund(investor address) returns()
+func (_Rnode *RnodeTransactor) Refund(opts *bind.TransactOpts, investor common.Address) (*types.Transaction, error) {
+	return _Rnode.contract.Transact(opts, "refund", investor)
+}
+
+// Refund is a paid mutator transaction binding the contract method 0xfa89401a.
+//
+// Solidity: function refund(investor address) returns()
+func (_Rnode *RnodeSession) Refund(investor common.Address) (*types.Transaction, error) {
+	return _Rnode.Contract.Refund(&_Rnode.TransactOpts, investor)
+}
+
+// Refund is a paid mutator transaction binding the contract method 0xfa89401a.
+//
+// Solidity: function refund(investor address) returns()
+func (_Rnode *RnodeTransactorSession) Refund(investor common.Address) (*types.Transaction, error) {
+	return _Rnode.Contract.Refund(&_Rnode.TransactOpts, investor)
+}
+
+// RefundAll is a paid mutator transaction binding the contract method 0x38e771ab.
+//
+// Solidity: function refundAll() returns()
+func (_Rnode *RnodeTransactor) RefundAll(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Rnode.contract.Transact(opts, "refundAll")
+}
+
+// RefundAll is a paid mutator transaction binding the contract method 0x38e771ab.
+//
+// Solidity: function refundAll() returns()
+func (_Rnode *RnodeSession) RefundAll() (*types.Transaction, error) {
+	return _Rnode.Contract.RefundAll(&_Rnode.TransactOpts)
+}
+
+// RefundAll is a paid mutator transaction binding the contract method 0x38e771ab.
+//
+// Solidity: function refundAll() returns()
+func (_Rnode *RnodeTransactorSession) RefundAll() (*types.Transaction, error) {
+	return _Rnode.Contract.RefundAll(&_Rnode.TransactOpts)
 }
 
 // SetPeriod is a paid mutator transaction binding the contract method 0x0f3a9f65.
@@ -450,6 +586,27 @@ func (_Rnode *RnodeSession) SetRnodeThreshold(threshold *big.Int) (*types.Transa
 // Solidity: function setRnodeThreshold(threshold uint256) returns()
 func (_Rnode *RnodeTransactorSession) SetRnodeThreshold(threshold *big.Int) (*types.Transaction, error) {
 	return _Rnode.Contract.SetRnodeThreshold(&_Rnode.TransactOpts, threshold)
+}
+
+// SetSupportedVersion is a paid mutator transaction binding the contract method 0x5f86d4ca.
+//
+// Solidity: function setSupportedVersion(version uint256) returns()
+func (_Rnode *RnodeTransactor) SetSupportedVersion(opts *bind.TransactOpts, version *big.Int) (*types.Transaction, error) {
+	return _Rnode.contract.Transact(opts, "setSupportedVersion", version)
+}
+
+// SetSupportedVersion is a paid mutator transaction binding the contract method 0x5f86d4ca.
+//
+// Solidity: function setSupportedVersion(version uint256) returns()
+func (_Rnode *RnodeSession) SetSupportedVersion(version *big.Int) (*types.Transaction, error) {
+	return _Rnode.Contract.SetSupportedVersion(&_Rnode.TransactOpts, version)
+}
+
+// SetSupportedVersion is a paid mutator transaction binding the contract method 0x5f86d4ca.
+//
+// Solidity: function setSupportedVersion(version uint256) returns()
+func (_Rnode *RnodeTransactorSession) SetSupportedVersion(version *big.Int) (*types.Transaction, error) {
+	return _Rnode.Contract.SetSupportedVersion(&_Rnode.TransactOpts, version)
 }
 
 // RnodeNewRnodeIterator is returned from FilterNewRnode and is used to iterate over the raw logs and unpacked data for NewRnode events raised by the Rnode contract.
@@ -698,11 +855,256 @@ func (_Rnode *RnodeFilterer) WatchRnodeQuit(opts *bind.WatchOpts, sink chan<- *R
 	}), nil
 }
 
+// RnodeOwnerRefundIterator is returned from FilterOwnerRefund and is used to iterate over the raw logs and unpacked data for OwnerRefund events raised by the Rnode contract.
+type RnodeOwnerRefundIterator struct {
+	Event *RnodeOwnerRefund // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *RnodeOwnerRefundIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(RnodeOwnerRefund)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(RnodeOwnerRefund)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *RnodeOwnerRefundIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *RnodeOwnerRefundIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// RnodeOwnerRefund represents a OwnerRefund event raised by the Rnode contract.
+type RnodeOwnerRefund struct {
+	Who    common.Address
+	Amount *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// FilterOwnerRefund is a free log retrieval operation binding the contract event 0x3914ba80eb00486e7a58b91fb4795283df0c5b507eea9cf7c77cce26cc70d25c.
+//
+// Solidity: e ownerRefund(who address, amount uint256)
+func (_Rnode *RnodeFilterer) FilterOwnerRefund(opts *bind.FilterOpts) (*RnodeOwnerRefundIterator, error) {
+
+	logs, sub, err := _Rnode.contract.FilterLogs(opts, "ownerRefund")
+	if err != nil {
+		return nil, err
+	}
+	return &RnodeOwnerRefundIterator{contract: _Rnode.contract, event: "ownerRefund", logs: logs, sub: sub}, nil
+}
+
+// WatchOwnerRefund is a free log subscription operation binding the contract event 0x3914ba80eb00486e7a58b91fb4795283df0c5b507eea9cf7c77cce26cc70d25c.
+//
+// Solidity: e ownerRefund(who address, amount uint256)
+func (_Rnode *RnodeFilterer) WatchOwnerRefund(opts *bind.WatchOpts, sink chan<- *RnodeOwnerRefund) (event.Subscription, error) {
+
+	logs, sub, err := _Rnode.contract.WatchLogs(opts, "ownerRefund")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(RnodeOwnerRefund)
+				if err := _Rnode.contract.UnpackLog(event, "ownerRefund", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// RnodeOwnerRefundAllIterator is returned from FilterOwnerRefundAll and is used to iterate over the raw logs and unpacked data for OwnerRefundAll events raised by the Rnode contract.
+type RnodeOwnerRefundAllIterator struct {
+	Event *RnodeOwnerRefundAll // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *RnodeOwnerRefundAllIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(RnodeOwnerRefundAll)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(RnodeOwnerRefundAll)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *RnodeOwnerRefundAllIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *RnodeOwnerRefundAllIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// RnodeOwnerRefundAll represents a OwnerRefundAll event raised by the Rnode contract.
+type RnodeOwnerRefundAll struct {
+	NumOfInvestor *big.Int
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// FilterOwnerRefundAll is a free log retrieval operation binding the contract event 0xb65ebb6b17695b3a5612c7a0f6f60e649c02ba24b36b546b8d037e98215fdb8d.
+//
+// Solidity: e ownerRefundAll(numOfInvestor uint256)
+func (_Rnode *RnodeFilterer) FilterOwnerRefundAll(opts *bind.FilterOpts) (*RnodeOwnerRefundAllIterator, error) {
+
+	logs, sub, err := _Rnode.contract.FilterLogs(opts, "ownerRefundAll")
+	if err != nil {
+		return nil, err
+	}
+	return &RnodeOwnerRefundAllIterator{contract: _Rnode.contract, event: "ownerRefundAll", logs: logs, sub: sub}, nil
+}
+
+// WatchOwnerRefundAll is a free log subscription operation binding the contract event 0xb65ebb6b17695b3a5612c7a0f6f60e649c02ba24b36b546b8d037e98215fdb8d.
+//
+// Solidity: e ownerRefundAll(numOfInvestor uint256)
+func (_Rnode *RnodeFilterer) WatchOwnerRefundAll(opts *bind.WatchOpts, sink chan<- *RnodeOwnerRefundAll) (event.Subscription, error) {
+
+	logs, sub, err := _Rnode.contract.WatchLogs(opts, "ownerRefundAll")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(RnodeOwnerRefundAll)
+				if err := _Rnode.contract.UnpackLog(event, "ownerRefundAll", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
 // SafeMathABI is the input ABI used to generate the binding from.
 const SafeMathABI = "[]"
 
 // SafeMathBin is the compiled bytecode used for deploying new contracts.
-const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820db7a563f3ad3eccdd8cec42b42b35087d6ec9ad2e2d350d7ec2821ee54608e5a0029`
+const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820d8142012c2f921ebd49454f7c0fedf8a75fb8a5f7a475f1d24ed25f0146ddc0d0029`
 
 // DeploySafeMath deploys a new cpchain contract, binding an instance of SafeMath to it.
 func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *SafeMath, error) {
@@ -863,7 +1265,7 @@ func (_SafeMath *SafeMathTransactorRaw) Transact(opts *bind.TransactOpts, method
 const SetABI = "[]"
 
 // SetBin is the compiled bytecode used for deploying new contracts.
-const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a7230582086932320d4d92fc8a47943faa45c6a59bc4b0e681b29e61de7d1b8f644b077e90029`
+const SetBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820bb3b10567801f3765a1edc4f4a34c1f1d9821f782ba15532ecc0703e952559b40029`
 
 // DeploySet deploys a new cpchain contract, binding an instance of Set to it.
 func DeploySet(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Set, error) {
