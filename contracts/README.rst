@@ -8,3 +8,8 @@ dpor
 ####
 
 dpor contracts are built-in contracts to support consensus of cpchain, including rnode, campaign, admission and rpt.
+
+rnode
+*****
+
+rnode contract is for node to join rnode.
