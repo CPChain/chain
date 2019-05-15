@@ -28,8 +28,6 @@ package contracts
 
 //go:generate abigen --sol ./dpor/rpt/rpt.sol --pkg contracts --out ./dpor/rpt/rpt.go
 
-//go:generate abigen --sol ./dpor/reward/reward.sol --pkg reward --out ./dpor/reward/reward.go
-
 //go:generate abigen --sol ./pdash/pdash_contract/pdash.sol --pkg pdash_contract --out ./pdash/pdash_contract/pdash.go
 
 //go:generate abigen --sol ./pdash/pdash_contract/pdash_proxy.sol --pkg pdash_contract --out ./pdash/pdash_contract/pdash_proxy.go
@@ -47,5 +45,10 @@ package contracts
 //go:generate abigen --sol ./dpor/rnode2/rnode.sol --pkg rnode --out ./dpor/rnode2/rnode.go
 
 //go:generate abigen --sol ./dpor/campaign3/campaign3.sol --pkg campaign --out ./dpor/campaign3/campaign3.go
+
+//go:generate abigen --sol ./reward/reward.sol --pkg reward --out ./reward/reward.go
+
+//go:generate abigen --sol ./reward2/reward.sol --pkg reward --out ./reward2/reward.go
+
 
 
