@@ -6,12 +6,13 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
+
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
 )
 
 var (
