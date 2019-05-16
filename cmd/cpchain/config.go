@@ -240,6 +240,10 @@ func updateTxPool(ctx *cli.Context, cfg *core.TxPoolConfig) {
 	if ctx.IsSet(flags.MaxTxMapSizeFlagName) {
 		cfg.MaxTxMapSize = ctx.Uint64(flags.MaxTxMapSizeFlagName)
 	}
+	if ctx.IsSet(flags.FifoTxPoolQueue) {
+		cfg.IsFifoTxQueue = ctx.Bool(flags.FifoTxPoolQueue)
+
+	}
 }
 
 func updateChainGeneralConfig(ctx *cli.Context, cfg *cpc.Config) {
