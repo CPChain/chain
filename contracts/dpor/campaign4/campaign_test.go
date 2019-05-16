@@ -19,6 +19,7 @@ package campaign_test
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"math/big"
 	"testing"
@@ -32,7 +33,7 @@ import (
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
+	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode2"
 	"bitbucket.org/cpchain/chain/core"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -48,7 +49,7 @@ var (
 func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (campaignAddr common.Address, admissionAddr common.Address, rNodeAddr common.Address, err error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	addrRNode, _, _, err := rnode.DeployRnode(deployTransactor, backend)
-	acAddr, _, _, err := admission.DeployAdmission(deployTransactor, backend, big.NewInt(5), big.NewInt(5), big.NewInt(10), big.NewInt(10))
+	acAddr, _, _, err := admission.DeployAdmission(deployTransactor, backend, big.NewInt(1), big.NewInt(1), big.NewInt(1), big.NewInt(1))
 	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, acAddr, addrRNode)
 	if err != nil {
 		return common.Address{}, common.Address{}, common.Address{}, err
@@ -65,12 +66,17 @@ func fundToCampaign(prvKey *ecdsa.PrivateKey, rNodeAddr common.Address, backend 
 	}
 
 	transactOpts.Value = new(big.Int).Mul(big.NewInt(210000), big.NewInt(configs.Cpc))
-	_, err = rNodeContract.JoinRnode(transactOpts)
+	_, err = rNodeContract.JoinRnode(transactOpts, big.NewInt(1))
 	if err != nil {
 		return err
 	}
 
 	backend.Commit()
+
+	isRNode, _ := rNodeContract.IsRnode(nil, transactOpts.From)
+	if !isRNode {
+		return errors.New("The address is not RNode")
+	}
 
 	return nil
 }
@@ -127,7 +133,9 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	contractBackend.Commit()
 	printBalance(contractBackend)
 
-	fundToCampaign(key, rNodeAddr, contractBackend)
+	if err := fundToCampaign(key, rNodeAddr, contractBackend); err != nil {
+		t.Error(err)
+	}
 
 	transactOpts := bind.NewKeyedTransactor(key)
 
@@ -152,15 +160,26 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	memBlockNum := results[admission2.Memory].BlockNumber
 	memNonce := results[admission2.Memory].Nonce
 
+	t.Log("cpuBlocksNum:", cpuBlockNum, "cpuNonce", cpuNonce, "memBlockNum", memBlockNum, "MemNonce", memNonce)
+	ac1, _ := admission.NewAdmission(acAddr, contractBackend)
+	result, _ := ac1.Verify(nil, cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(cpuBlockNum), transactOpts.From)
+	if result == false {
+		t.Error("Admission verify error")
+	}
+
 	version := new(big.Int).SetInt64(1)
 
-	transactOpts.GasLimit = uint64(5000000)
+	transactOpts.GasLimit = uint64(50000000)
 	// ClaimCampaign 1st time
 	tx, err := campaign.ClaimCampaign(transactOpts, big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum), version)
 	checkError(t, "ClaimCampaign error:", err)
 	t.Log("ClaimCampaign tx:", tx.Hash().Hex())
 	contractBackend.Commit()
-	printBalance(contractBackend)
+
+	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status == types.ReceiptStatusFailed {
+		t.Fatal("the transaction should success but it failed!")
+	}
 
 	// verify result
 	numOfCampaign, startViewIdx, endViewIdx, err := campaign.CandidateInfoOf(nil, addr)
