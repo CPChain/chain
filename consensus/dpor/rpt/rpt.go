@@ -91,8 +91,8 @@ func newRptDataCache() *rptDataCache {
 	}
 }
 
-func (bc *rptDataCache) getCache(num uint64) ([]float64, bool) {
-	if bal, ok := bc.cache.Get(num); ok {
+func (bc *rptDataCache) getCache(key interface{}) ([]float64, bool) {
+	if bal, ok := bc.cache.Get(key); ok {
 		if data, ok := bal.([]float64); ok {
 			return data, true
 		}
@@ -100,8 +100,8 @@ func (bc *rptDataCache) getCache(num uint64) ([]float64, bool) {
 	return []float64{}, false
 }
 
-func (bc *rptDataCache) addCache(num uint64, sortedCache []float64) {
-	bc.cache.Add(num, sortedCache)
+func (bc *rptDataCache) addCache(key interface{}, sortedCache []float64) {
+	bc.cache.Add(key, sortedCache)
 }
 
 // Rpt defines the name and reputation pair.
