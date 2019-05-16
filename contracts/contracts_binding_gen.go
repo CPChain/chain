@@ -26,6 +26,8 @@ package contracts
 
 //go:generate abigen --sol ./dpor/rpt/rpt.sol --pkg contracts --out ./dpor/rpt/rpt.go
 
+//go:generate abigen --sol ./dpor/rpt2/rpt.sol --pkg contracts --out ./dpor/rpt2/rpt.go
+
 //go:generate abigen --sol ./dpor/campaign2/campaign2.sol --pkg campaign --out ./dpor/campaign2/campaign2.go
 
 //go:generate abigen --sol ./dpor/rnode/rnode.sol --pkg rnode --out ./dpor/rnode/rnode.go
