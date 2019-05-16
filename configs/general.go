@@ -102,6 +102,9 @@ const (
 	ContractRnode      = "rnode"      // address of rnode
 	ContractCampaign2  = "campaign2"  // address of campaign2
 	ContractCampaign3  = "campaign3"  // address of campaign3
+	ContractCampaign4  = "campaign4"  // address of campaign4
+	ContractRnode2     = "rnode2"     // address of rnode2
+	ContractRpt2       = "rpt2"       // address of rpt2 contract,Calculation the rpt of rnode
 )
 
 const (
