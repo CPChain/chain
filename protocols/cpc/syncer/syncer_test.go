@@ -16,7 +16,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
 	"bitbucket.org/cpchain/chain/contracts/dpor/campaign"
-	"bitbucket.org/cpchain/chain/contracts/dpor/reward"
+	"bitbucket.org/cpchain/chain/contracts/reward"
 	"bitbucket.org/cpchain/chain/contracts/proxy"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"

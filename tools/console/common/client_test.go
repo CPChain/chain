@@ -10,7 +10,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/reward"
+	"bitbucket.org/cpchain/chain/contracts/reward"
 	"github.com/ethereum/go-ethereum/common"
 )
 

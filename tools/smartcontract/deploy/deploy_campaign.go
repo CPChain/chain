@@ -20,7 +20,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/campaign"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
 	"bitbucket.org/cpchain/chain/tools/smartcontract/config"
 	"github.com/ethereum/go-ethereum/common"
 )
