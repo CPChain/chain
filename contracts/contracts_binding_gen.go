@@ -24,9 +24,15 @@ package contracts
 
 //go:generate abigen --sol ./dpor/primitives/primitive_contracts_test.sol --pkg primitives_test --out ./dpor/primitives/primitive_contracts_test.go
 
-//go:generate abigen --sol ./dpor/proposer_register/proposer_register.sol --pkg proposer_register --out ./dpor/proposer_register/proposer_register.go
-
 //go:generate abigen --sol ./dpor/rpt/rpt.sol --pkg contracts --out ./dpor/rpt/rpt.go
+
+//go:generate abigen --sol ./dpor/campaign2/campaign2.sol --pkg campaign --out ./dpor/campaign2/campaign2.go
+
+//go:generate abigen --sol ./dpor/rnode/rnode.sol --pkg rnode --out ./dpor/rnode/rnode.go
+
+//go:generate abigen --sol ./dpor/rnode2/rnode.sol --pkg rnode --out ./dpor/rnode2/rnode.go
+
+//go:generate abigen --sol ./dpor/campaign3/campaign3.sol --pkg campaign --out ./dpor/campaign3/campaign3.go
 
 //go:generate abigen --sol ./pdash/pdash_contract/pdash.sol --pkg pdash_contract --out ./pdash/pdash_contract/pdash.go
 
@@ -37,14 +43,6 @@ package contracts
 //go:generate abigen --sol ./proxy/proxy_contract/proxy.sol --pkg contract --out ./proxy/proxy_contract/proxy.go
 
 //go:generate abigen --sol ./proxy/proxy_contract/proxy_contract_register.sol --pkg contract --out ./proxy/proxy_contract/proxy_contract_register.go
-
-//go:generate abigen --sol ./dpor/campaign2/campaign2.sol --pkg campaign --out ./dpor/campaign2/campaign2.go
-
-//go:generate abigen --sol ./dpor/rnode/rnode.sol --pkg rnode --out ./dpor/rnode/rnode.go
-
-//go:generate abigen --sol ./dpor/rnode2/rnode.sol --pkg rnode --out ./dpor/rnode2/rnode.go
-
-//go:generate abigen --sol ./dpor/campaign3/campaign3.sol --pkg campaign --out ./dpor/campaign3/campaign3.go
 
 //go:generate abigen --sol ./reward/reward.sol --pkg reward --out ./reward/reward.go
 
