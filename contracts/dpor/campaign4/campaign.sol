@@ -169,7 +169,7 @@ contract Campaign {
         // in case that termIdx too large while updatedTermIdx too low,
         // resulting in large 'for' loop and gas not enough.
         if(firstCall) {
-            updatedTermIdx = (block.number.sub(1)).div(numPerRound).sub(1);
+            updatedTermIdx = (block.number.sub(1)).div(numPerRound);
             firstCall = false;
         }
         require(version >= supportedVersion);
