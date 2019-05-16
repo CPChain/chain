@@ -36,6 +36,8 @@ package contracts
 
 //go:generate abigen --sol ./dpor/campaign3/campaign3.sol --pkg campaign --out ./dpor/campaign3/campaign3.go
 
+//go:generate abigen --sol ./dpor/campaign4/campaign.sol --pkg campaign --out ./dpor/campaign4/campaign.go
+
 //go:generate abigen --sol ./pdash/pdash_contract/pdash.sol --pkg pdash_contract --out ./pdash/pdash_contract/pdash.go
 
 //go:generate abigen --sol ./pdash/pdash_contract/pdash_proxy.sol --pkg pdash_contract --out ./pdash/pdash_contract/pdash_proxy.go

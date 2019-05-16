@@ -55,7 +55,7 @@ contract Campaign {
     uint public acceptableBlocks = 10; // only latest 10 blocks based proofs will be accepted
     uint public supportedVersion = 1; // only nodes with new version can claim campaign
 
-    uint public updatedTermIdx = 0; // withdraw deposit after each round.
+    uint public updatedTermIdx = 0; // indicate updated term
     bool firstCall = true;
 
     // a new type for a single candidate
