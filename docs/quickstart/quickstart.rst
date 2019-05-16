@@ -61,12 +61,22 @@ Go the directory you store ``cpchain`` and type in:
 
 If you do not have an account, you can **create a new account** with ``cpchain``.
 
+For Linux and Mac users:
 
 .. code-block:: shell
 
     $ mkdir datadir
-    $ echo "YOUR_PASSWORD" > datadir/password
+    $ echo YOUR_PASSWORD > datadir/password
     $ ./cpchain account new account --datadir ./datadir
+
+For Windows users:
+
+.. code-block:: shell
+
+    $ mkdir datadir
+    $ echo|set /p="YOUR_PASSWORD"> datadir/password
+    $ cpchain.exe account new account --datadir ./datadir
+
 
 Here we first create a directory named as ``datadir`` and
 create a file containing the password you prefer.
@@ -175,11 +185,22 @@ As Proposer
 Similar to operations in `As Civilian`_,
 a node willing to become proposer can also utilize the following commands to create an account.
 
+
+For Linux and Mac users:
+
 .. code-block:: shell
 
     $ mkdir datadir
-    $ echo "YOUR_PASSWORD" > datadir/password
+    $ echo YOUR_PASSWORD > datadir/password
     $ ./cpchain account new account --datadir ./datadir
+
+For Windows users:
+
+.. code-block:: shell
+
+    $ mkdir datadir
+    $ echo|set /p="YOUR_PASSWORD"> datadir/password
+    $ cpchain.exe account new account --datadir ./datadir
 
 The command for proposers connecting P2P network is slightly different than the counterpart for civilians
 
@@ -273,11 +294,22 @@ Then use the commands above to connect to Beta Mainnet.
 Create an Account
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. code::
+
+For Linux and Mac users:
+
+.. code-block:: shell
 
     $ mkdir datadir
-    $ echo "YOUR_PASSWORD" > datadir/password
-    $ ./cpchain account new --datadir ./datadir
+    $ echo YOUR_PASSWORD > datadir/password
+    $ ./cpchain account new account --datadir ./datadir
+
+For Windows users:
+
+.. code-block:: shell
+
+    $ mkdir datadir
+    $ echo|set /p="YOUR_PASSWORD"> datadir/password
+    $ cpchain.exe account new account --datadir ./datadir
 
 Run a Private Network
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

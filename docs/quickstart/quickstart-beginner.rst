@@ -131,12 +131,24 @@ Check Your Status
 After you use ``./cpchain run`` command, you have connected to Mainnet.
 Use the commands below to check your status.
 
+For Linux and Mac users:
+
 .. code-block:: shell
     :emphasize-lines: 1,3,4
 
-    $ echo "YOUR_PASSWORD" > datadir/password
+    $ echo YOUR_PASSWORD > datadir/password
     $ ./console status \
     --keystore ./datadir/keystore/YOUR_ACCOUNT \
+    --password ./datadir/password
+
+For Windows users:
+
+.. code-block:: shell
+    :emphasize-lines: 1,3,4
+
+    $ echo|set /p="YOUR_PASSWORD"> datadir/password
+    $ console.exe status ^
+    --keystore ./datadir/keystore/YOUR_ACCOUNT ^
     --password ./datadir/password
 
 The first command generates a file containing your password,
