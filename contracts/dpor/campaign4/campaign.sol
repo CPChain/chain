@@ -41,7 +41,7 @@ contract RnodeInterface{
 contract Campaign {
 
     using Set for Set.Data;
-    using SafeMath for uint256;
+    using SafeMath for uint;
 
     address owner; // owner has permission to set parameters
     uint public termIdx = 0; // current term
@@ -75,8 +75,6 @@ contract Campaign {
     modifier onlyOwner() {require(msg.sender == owner);_;}
 
     event ClaimCampaign(address candidate, uint startTermIdx, uint stopTermIdx);
-    event QuitCampaign(address candidate, uint payback);
-    event ViewChange();
 
     // admission and rnode interfaces will be initiated during creation of campaign contract
     constructor(address _admissionAddr, address _rnodeAddr) public {
@@ -86,7 +84,7 @@ contract Campaign {
         updatedTermIdx = (block.number.sub(1)).div(numPerRound);
     }
 
-    function() payable public { }
+    function() payable public { revert(); }
 
     // get all candidates of given term index
     function candidatesOf(uint _termIdx) public view returns (address[]){
@@ -166,7 +164,6 @@ contract Campaign {
         uint version
     )
     public
-    payable
     {
         // initiate updatedTermIdx during first call,
         // in case that termIdx too large while updatedTermIdx too low,
@@ -224,10 +221,11 @@ contract Campaign {
         if (updatedTermIdx >= termIdx) {
             return;
         }
-
+        uint termsToUpdate = termIdx - updatedTermIdx;
         uint size;
         // updatedTermIdx is the last term where candidates claim campaign
-        for(; updatedTermIdx <= termIdx; updatedTermIdx++) {
+        for(uint j=0; j<termsToUpdate; j++) {
+            updatedTermIdx = updatedTermIdx.add(1);
             // avoid recalculate the size for circulation times.
             size = campaignSnapshots[updatedTermIdx].values.length;
             // go through all candidates in term updatedTermIdx, and update their numOfCampaign
