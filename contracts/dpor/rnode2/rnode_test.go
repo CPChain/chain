@@ -315,7 +315,7 @@ func TestRNodeEnableAndDisable(t *testing.T) {
 
 	checkIsRNode(t, instance, candidate2Addr, false)
 
-	checkRNodeNum(t, instance, 1)
+	checkRNodeNum(t, instance, 0)
 }
 
 func TestRNodeWithSupportedVersion(t *testing.T) {
