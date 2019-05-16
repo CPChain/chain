@@ -52,9 +52,11 @@ contract Campaign {
     // a node must choose the number of terms when it claims campaign
     uint public minNoc = 1; // minimal number of terms
     uint public maxNoc = 10; //maximum number of terms
+    uint public acceptableBlocks = 10; // only latest 10 blocks based proofs will be accepted
+    uint public supportedVersion = 1; // only nodes with new version can claim campaign
 
-    uint public withdrawTermIdx = 0; // withdraw deposit after each round.
-    bool withdrawFlag = true;
+    uint public updatedTermIdx = 0; // withdraw deposit after each round.
+    bool firstCall = true;
 
     // a new type for a single candidate
     struct CandidateInfo {
@@ -81,7 +83,7 @@ contract Campaign {
         owner = msg.sender;
         admission = AdmissionInterface(_admissionAddr);
         rnode = RnodeInterface(_rnodeAddr);
-        withdrawTermIdx = (block.number - 1).div(numPerRound);
+        updatedTermIdx = (block.number.sub(1)).div(numPerRound);
     }
 
     function() payable public { }
@@ -105,32 +107,40 @@ contract Campaign {
     }
 
     // admission interface can be set afterwards by owner
-    function setAdmissionAddr(address _addr) public onlyOwner(){
+    function setAdmissionAddr(address _addr) public onlyOwner {
         admission = AdmissionInterface(_addr);
     }
 
     // rnode interface can be set afterwards by owner
-    function setRnodeInterface(address _addr) public onlyOwner(){
+    function setRnodeInterface(address _addr) public onlyOwner {
         rnode = RnodeInterface(_addr);
     }
 
     // owner can set these parameters
-    function updateMinNoc(uint _minNoc) public onlyOwner(){
+    function updateMinNoc(uint _minNoc) public onlyOwner {
         minNoc = _minNoc;
     }
 
-    function updateMaxNoc(uint _maxNoc) public onlyOwner(){
+    function updateMaxNoc(uint _maxNoc) public onlyOwner {
         maxNoc = _maxNoc;
     }
 
-    function updateTermLen(uint _termLen) public onlyOwner(){
+    function updateTermLen(uint _termLen) public onlyOwner {
         termLen = _termLen;
         numPerRound = SafeMath.mul(termLen, viewLen);
     }
 
-    function updateViewLen(uint _viewLen) public onlyOwner(){
+    function updateViewLen(uint _viewLen) public onlyOwner {
         viewLen = _viewLen;
         numPerRound = SafeMath.mul(termLen, viewLen);
+    }
+
+    function updateAcceptableBlocks(uint _acceptableBlocks) public onlyOwner {
+        acceptableBlocks = _acceptableBlocks;
+    }
+
+    function updateSupportedVersion(uint _supportedVersion) public onlyOwner {
+        supportedVersion = _supportedVersion;
     }
 
     /**
@@ -152,18 +162,23 @@ contract Campaign {
         uint64 _cpuNonce,
         uint _cpuBlockNumber,
         uint64 _memoryNonce,
-        uint _memoryBlockNumber
+        uint _memoryBlockNumber,
+        uint version
     )
     public
     payable
     {
-        // initiate withdrawTermIdx during first call,
-        // in case that termIdx too large while withdrawTermIdx too low,
+        // initiate updatedTermIdx during first call,
+        // in case that termIdx too large while updatedTermIdx too low,
         // resulting in large 'for' loop and gas not enough.
-        if(withdrawFlag) {
-            withdrawTermIdx = (block.number - 1).div(numPerRound) - 10;
-            withdrawFlag = false;
+        if(firstCall) {
+            updatedTermIdx = (block.number.sub(1)).div(numPerRound).sub(1);
+            firstCall = false;
         }
+        require(version >= supportedVersion);
+
+        // proofs must be calculated based on latest blocks
+        require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
         // only rnode can become candidate
         require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
 
@@ -201,23 +216,23 @@ contract Campaign {
      */
 
     // update candidate status, i.e. subtract 1 from numOfCampaign when a new term begin
-    // withdrawTermIdx record the start term that need to update
-    function updateCandidateStatus() public payable {
+    // updatedTermIdx record the start term that need to update
+    function updateCandidateStatus() internal {
         // get current term, update termIdx
         updateTermIdx();
 
-        if (withdrawTermIdx >= termIdx) {
+        if (updatedTermIdx >= termIdx) {
             return;
         }
 
         uint size;
-        // withdrawTermIdx is the last term where candidates claim campaign
-        for(; withdrawTermIdx <= termIdx; withdrawTermIdx++) {
+        // updatedTermIdx is the last term where candidates claim campaign
+        for(; updatedTermIdx <= termIdx; updatedTermIdx++) {
             // avoid recalculate the size for circulation times.
-            size = campaignSnapshots[withdrawTermIdx].values.length;
-            // go through all candidates in term withdrawTermIdx, and update their numOfCampaign
+            size = campaignSnapshots[updatedTermIdx].values.length;
+            // go through all candidates in term updatedTermIdx, and update their numOfCampaign
             for(uint i = 0; i < size; i++) {
-                address candidate = campaignSnapshots[withdrawTermIdx].values[i];
+                address candidate = campaignSnapshots[updatedTermIdx].values[i];
 
                 if (candidates[candidate].numOfCampaign == 0) {
                     continue;
@@ -243,7 +258,7 @@ contract Campaign {
         }
 
         // calculate current term
-        termIdx = (blockNumber - 1).div(numPerRound);
+        termIdx = (blockNumber.sub(1)).div(numPerRound);
     }
 
 }
