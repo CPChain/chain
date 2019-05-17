@@ -207,7 +207,7 @@ func TestRptServiceImpl_CalcRptInfoList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rs, _ := rpt.NewRptService(tt.fields.Client, tt.fields.RptContract)
+			rs, _ := rpt.NewRptService(tt.fields.Client, tt.fields.RptContract, tt.fields.RptContract)
 			tt.prepare()
 			log.Printf("Testcase [%s], RPT: %v", tt.name, rs.CalcRptInfoList(tt.args.addresses, tt.args.number)[0].Rpt)
 			if got := rs.CalcRptInfoList(tt.args.addresses, tt.args.number); !reflect.DeepEqual(got, tt.want) {
