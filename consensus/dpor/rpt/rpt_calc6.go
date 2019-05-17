@@ -55,8 +55,6 @@ type RptCollectorImpl6 struct {
 
 	windowSize int
 
-	randomLevel int
-
 	currentNum uint64
 	lock       sync.RWMutex
 }
@@ -188,24 +186,6 @@ func (rc *RptCollectorImpl6) WindowSize(num uint64) int {
 	}
 
 	return rc.windowSize
-}
-
-// RandomLevel returns the random level in rpt2 contract
-func (rc *RptCollectorImpl6) RandomLevel(num uint64) int {
-	rc.lock.Lock()
-	defer rc.lock.Unlock()
-
-	if rc.rptInstance == nil || num == rc.currentNum {
-		return rc.randomLevel
-	}
-
-	rl, err := rc.rptInstance.RandomLevel(nil)
-	if err == nil {
-		log.Debug("using parameters from contract", "randon level", rl.Int64(), "num", num)
-		rc.randomLevel = int(rl.Int64())
-	}
-
-	return rc.randomLevel
 }
 
 func (rc *RptCollectorImpl6) coefficients(num uint64) (int64, int64, int64, int64, int64) {
