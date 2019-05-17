@@ -360,17 +360,16 @@ and :math:`l` be available seats for low-RPT RNodes.
 	    lowRpts := rpts[:k-1]
         highRpts := rpts[k:]
 
-        randomSelectByRpt(lowRpts, k, l)
-        randomSelectByRpt(highRpt, n-k, m-l)
+        lowElected := randomSelectByRpt(lowRpts, k, l)
+        highElected := randomSelectByRpt(highRpt, n-k, m-l)
+        return append(lowElected, highElected)
     }
 
-    // uniform random selection from a list of nodes
-    // each node being elected is proportional to its RPT
-    func randomSelectByRpt(rptPartition, p) {
-        sum := 0.0
-        for i = 0; i < p ; i++  {
-            sum += rptPartition[i].rpt
-        }
+    // uniform random selection from rptPartition
+    // the mass probability for each node being elected is proportional to its RPT
+    // the function select l random addresses
+    // and return them as result
+    func randomSelectByRpt(rptPartition, k, l) []address{
     }
 
 
