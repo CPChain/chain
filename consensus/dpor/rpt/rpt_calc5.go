@@ -12,33 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto/sha3"
-	"github.com/ethereum/go-ethereum/rlp"
 )
-
-type rptCalcItemKey struct {
-	num   uint64
-	addrs common.Hash
-}
-
-func newRptDataCacheKey(num uint64, addrs []common.Address) rptCalcItemKey {
-	hasher := sha3.NewKeccak256()
-	var hash common.Hash
-
-	rlp.Encode(hasher, func(addrs []common.Address) (result []interface{}) {
-		for _, addr := range addrs {
-			result = append(result, addr)
-		}
-		return
-	}(addrs))
-
-	hasher.Sum(hash[:0])
-
-	return rptCalcItemKey{
-		num:   num,
-		addrs: hash,
-	}
-}
 
 // RptCollectorImpl5 implements RptCollector
 type RptCollectorImpl5 struct {
@@ -262,8 +236,7 @@ func (rc *RptCollectorImpl5) BalanceInfoOf(addr common.Address, addrs []common.A
 			balances = append(balances, float64(balance))
 		}
 		balances = sortAndReverse(balances)
-		key := newRptDataCacheKey(num, addrs)
-		rc.balances.addCache(key, balances)
+		rc.balances.addCache(num, balances)
 	}
 
 	// sort and get the rank
@@ -302,8 +275,7 @@ func (rc *RptCollectorImpl5) TxsInfoOf(addr common.Address, addrs []common.Addre
 			txs = append(txs, float64(txC))
 		}
 		txs = sortAndReverse(txs)
-		key := newRptDataCacheKey(num, addrs)
-		rc.txs.addCache(key, txs)
+		rc.txs.addCache(num, txs)
 	}
 
 	// sort and get the rank
@@ -342,8 +314,7 @@ func (rc *RptCollectorImpl5) MaintenanceInfoOf(addr common.Address, addrs []comm
 			mtns = append(mtns, float64(mtnI))
 		}
 		mtns = sortAndReverse(mtns)
-		key := newRptDataCacheKey(num, addrs)
-		rc.mtns.addCache(key, mtns)
+		rc.mtns.addCache(num, mtns)
 	}
 
 	// sort and get the rank
