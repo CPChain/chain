@@ -346,6 +346,7 @@ Let :math:`n` be the number of all RNode candidates,
 :math:`m` be the number of seats for each term,
 :math:`k` be the number of low-RPT RNdoes,
 and :math:`l` be available seats for low-RPT RNodes.
+The equation :math:`0\leq l\leq m` and :math:`0\leq k\leq \frac{l}{m}n \leq n` always hold.
 
 .. code-block:: go
 
