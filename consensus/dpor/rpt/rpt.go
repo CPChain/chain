@@ -33,6 +33,7 @@ import (
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
 	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/campaign2"
 	campaign3 "bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
+	campaign4 "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -206,11 +207,32 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		return cds, nil
 	}
 
+	if term < backend.TermOf(configs.Campaign4BlockNumber) {
+
+		// new campaign contract address
+		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign3]
+
+		// new campaign contract instance
+		contractInstance, err := campaign3.NewCampaign(campaignAddr, rs.client)
+		if err != nil {
+			return nil, err
+		}
+
+		// candidates from new campaign contract
+		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
+		if err != nil {
+			return nil, err
+		}
+
+		log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+		return cds, nil
+	}
+
 	// new campaign contract address
-	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign3]
+	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign4]
 
 	// new campaign contract instance
-	contractInstance, err := campaign3.NewCampaign(campaignAddr, rs.client)
+	contractInstance, err := campaign4.NewCampaign(campaignAddr, rs.client)
 	if err != nil {
 		return nil, err
 	}
