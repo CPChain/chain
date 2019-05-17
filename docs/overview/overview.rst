@@ -326,7 +326,7 @@ Election
 Principles and Ideas
 +++++++++++++++++++++
 
-In election, a certain number of candidates (referred as seats) are elected to be proposer
+In election, a certain number of candidates (referred as *seats*) are elected to be proposer
 according to their RPT value.
 We have two principles to design the election:
 
