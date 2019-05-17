@@ -181,7 +181,7 @@ contract Campaign {
         // only rnode can become candidate
         require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
 
-        // // verify the sender's cpu&memory ability.
+        // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
 
@@ -189,20 +189,20 @@ contract Campaign {
 
         address candidate = msg.sender;
 
-        // // if nodes have not ended their terms, they can not claim again
+        // if nodes have not ended their terms, they can not claim again
         require(
             candidates[candidate].numOfCampaign == 0,
             "please waite until your last round ended and try again."
         );
 
-        // // set candidate's numOfCampaign according to arguments, and set start and end termIdx respectively
+        // set candidate's numOfCampaign according to arguments, and set start and end termIdx respectively
         candidates[candidate].numOfCampaign = _numOfCampaign;
         candidates[candidate].startTermIdx = termIdx.add(1);
 
-        // //[start, stop)
+        //[start, stop)
         candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_numOfCampaign);
 
-        // // add candidate to campaignSnapshots.
+        // add candidate to campaignSnapshots.
         for(uint i = candidates[candidate].startTermIdx; i < candidates[candidate].stopTermIdx; i++) {
             campaignSnapshots[i].insert(candidate);
         }
