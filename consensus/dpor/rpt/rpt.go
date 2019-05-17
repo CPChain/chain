@@ -425,7 +425,7 @@ func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) R
 					break
 				}
 
-				log.Error("GetRpt error", "tryIndex", tryIndex, "error", err, "address", address.Hex(), "rs.rptContract", rs.rptContract.Hex(), "i", i, "blockNum", blockNum, "windowSize", windowSize, "blockInWindow", blockInWindow, "hash", hash.Hex())
+				log.Error("GetRpt error", "tryIndex", tryIndex, "error", err, "address", address.Hex(), "rs.rptContract", rs.rptContractAddr.Hex(), "i", i, "blockNum", blockNum, "windowSize", windowSize, "blockInWindow", blockInWindow, "hash", hash.Hex())
 				if tryIndex < maxRetryGetRpt {
 					// retry
 					continue
