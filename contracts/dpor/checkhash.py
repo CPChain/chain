@@ -28,16 +28,17 @@ def libs_hash():
         ("campaign2/lib/set.sol", set_),
         ("campaign3/lib/safeMath.sol", safe_math),
         ("campaign3/lib/set.sol", set_),
-        ("reward/lib/safeMath.sol", safe_math),
-        ("reward/lib/set.sol", set_),
+        ("campaign4/lib/safeMath.sol", safe_math),
+        ("campaign4/lib/set.sol", set_),
         ("rnode/lib/safeMath.sol", safe_math),
         ("rnode/lib/set.sol", set_),
+        ("rnode2/lib/safeMath.sol", safe_math),
+        ("rnode2/lib/set.sol", set_),
         ("rpt/lib/safeMath.sol", safe_math),
         ("rpt/lib/primitive_contracts.sol", primite_contracts),
     ]
-    assert len(libs) == 12
+    assert len(libs) == 14
     return libs
-
 
 
 def main():
