@@ -17,10 +17,10 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
-	"bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
+	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"github.com/ethereum/go-ethereum/common"
-	"bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 )
 
 // Result is admission control examination result
@@ -311,8 +311,15 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 
 	cpuResult := ac.cpuWork.result()
 	memResult := ac.memoryWork.result()
-	_, err = instance.ClaimCampaign(transactOpts, new(big.Int).SetUint64(terms), cpuResult.Nonce, new(big.Int).SetInt64(cpuResult.BlockNumber),
-		memResult.Nonce, new(big.Int).SetInt64(memResult.BlockNumber))
+	_, err = instance.ClaimCampaign(
+		transactOpts,
+		new(big.Int).SetUint64(terms),
+		cpuResult.Nonce,
+		new(big.Int).SetInt64(cpuResult.BlockNumber),
+		memResult.Nonce,
+		new(big.Int).SetInt64(memResult.BlockNumber),
+		new(big.Int).SetInt64(configs.CampaignVersion),
+	)
 	if err != nil {
 		ac.mutex.Lock()
 		ac.err = err
