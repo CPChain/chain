@@ -333,7 +333,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 		if backend.IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
 			log.Debug("update proposers committee", "number", s.number())
 			seed := header.Hash().Big().Int64()
-			s.updateProposers(rpts, seed)
+			s.updateProposers(rpts, seed, rptService)
 		}
 
 	}
@@ -434,7 +434,7 @@ func (s *DporSnapshot) isAboutToCampaign() bool {
 }
 
 // updateProposer uses rpt and election result to get new proposers committee
-func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
+func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService rpt.RptService) {
 	// Elect proposers
 	if s.isStartElection() {
 
@@ -452,24 +452,8 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		// run the election algorithm
 		var proposers []common.Address
 		if int(s.config.TermLen) > defaultProposersNum {
-			electedProposers := election.Elect(rpts, seed, int(s.config.TermLen)-defaultProposersNum)
 
-			log.Debug("---------------------------")
-			log.Debug("elected 8 proposers")
-			for i, ep := range electedProposers {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
-
-			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersNum)
-
-			log.Debug("---------------------------")
-			log.Debug("chosen 4 proposers")
-			for i, ep := range chosenProposers {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
-
+			// some logs
 			log.Debug("---------------------------")
 			log.Debug("default 12 proposers")
 			for i, ep := range configs.Proposers() {
@@ -477,8 +461,40 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 			}
 			log.Debug("---------------------------")
 
+			// elect some proposers based on rpts
+			randomSlots, _ := rptService.RandomLevel()
+			electedProposers := election.Elect(rpts, seed, randomSlots)
+
+			// some logs
+			log.Debug("---------------------------")
+			log.Debug("elected proposers", "num", randomSlots)
+			for i, ep := range electedProposers {
+				log.Debug("proposer", "idx", i, "addr", ep.Hex())
+			}
+			log.Debug("---------------------------")
+
+			// append default proposers to the end of electedProposers
+			defaultSlots := int(s.config.TermLen) - randomSlots - defaultProposersNum
+			for _, addr := range configs.Proposers()[:defaultSlots] {
+				log.Debug("append default proposer to elected proposers", "addr", addr.Hex())
+				electedProposers = append(electedProposers, addr)
+			}
+
+			// chose some default proposers
+			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersNum)
+
+			// some logs
+			log.Debug("---------------------------")
+			log.Debug("chosen 4 proposers")
+			for i, ep := range chosenProposers {
+				log.Debug("proposer", "idx", i, "addr", ep.Hex())
+			}
+			log.Debug("---------------------------")
+
+			// combine together
 			proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
 
+			// some logs
 			log.Debug("---------------------------")
 			log.Debug("evenly spared 12 proposers")
 			for i, ep := range proposers {
@@ -500,7 +516,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 
 		// some logs about elected proposers
 		log.Debug("---------------------------")
-		log.Debug("elected proposers:")
+		log.Debug("result of elected proposers:")
 		for idx, s := range proposers {
 			log.Debug("proposer", "idx", idx, "addr", s.Hex())
 		}
