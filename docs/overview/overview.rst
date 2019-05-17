@@ -347,21 +347,21 @@ Let :math:`n` be the number of all RNode candidates,
 :math:`k` be the number of low-RPT RNdoes,
 and :math:`l` be available seats for low-RPT RNodes.
 
-.. code-bloc:: go
+.. code-block:: go
 
     // rptList is the list of all candidates as well as their RPT value
     // seed is the seed for generating random numbers
     // tha value of seed is the hash value of the parent block
-    func elect(rptList, seed, n, m, k, l) {
+    func elect(rptList, seed, n, m, k, l) []address {
         // sort rptList
         sort.Sort(rptList)
 
         // partition rptList into lowRpts and highRpts
-	    lowRpts := rpts[:k-1]
-        highRpts := rpts[k:]
+        lowRpts := rptList[:k-1]
+        highRpts := rptList[k:]
 
         lowElected := randomSelectByRpt(lowRpts, k, l)
-        highElected := randomSelectByRpt(highRpt, n-k, m-l)
+        highElected := randomSelectByRpt(highRpts, n-k, m-l)
         return append(lowElected, highElected)
     }
 
@@ -369,7 +369,7 @@ and :math:`l` be available seats for low-RPT RNodes.
     // the mass probability for each node being elected is proportional to its RPT
     // the function select l random addresses
     // and return them as result
-    func randomSelectByRpt(rptPartition, k, l) []address{
+    func randomSelectByRpt(rptPartition, k, l) []address {
     }
 
 
