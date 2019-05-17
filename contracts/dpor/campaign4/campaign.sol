@@ -175,7 +175,9 @@ contract Campaign {
         require(version >= supportedVersion);
 
         // proofs must be calculated based on latest blocks
-        require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
+        if(block.number > acceptableBlocks) {
+            require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
+        }
         // only rnode can become candidate
         require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
 
