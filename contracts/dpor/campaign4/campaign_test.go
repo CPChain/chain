@@ -125,14 +125,12 @@ func checkError(t *testing.T, msg string, err error) {
 	}
 }
 
-func TestClaimAndQuitCampaign(t *testing.T) {
+func TestClaimCampaign(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: initBalance}})
-	printBalance(contractBackend)
 
 	campaignAddr, acAddr, rNodeAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
-	printBalance(contractBackend)
 
 	if err := fundToCampaign(key, rNodeAddr, contractBackend); err != nil {
 		t.Error(err)
@@ -143,11 +141,6 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	campaign, err := campaign.NewCampaign(campaignAddr, contractBackend)
 	checkError(t, "can't deploy root registry: %v", err)
 	_ = campaignAddr
-	printBalance(contractBackend)
-
-	// setup TransactOpts
-	// campaign.TransactOpts = *bind.NewKeyedTransactor(key)
-	transactOpts.Value = big.NewInt(50 * 1)
 
 	// compute cpu&memory pow
 	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rNodeAddr)
@@ -188,13 +181,29 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 
 	termIdx1, err := campaign.TermIdx(nil)
 	if termIdx1.Uint64() != uint64(0) {
-		t.Fatal("termIdx is not correct", "expected", 1, "actual", termIdx1)
+		t.Fatal("termIdx is not correct", "expected", 0, "actual", termIdx1)
 	}
 
 	// go forward to next term
 	numPerRnd, _ := campaign.NumPerRound(nil)
+	t.Log("numPerRnd", numPerRnd)
 	for i := int64(0); i < numPerRnd.Int64(); i++ {
 		contractBackend.Commit()
+	}
+
+	// ac again
+	ac.Campaign(1)
+	<-ac.DoneCh() // wait for done
+	results = ac.GetResult()
+	cpuBlockNum = results[admission2.Cpu].BlockNumber
+	cpuNonce = results[admission2.Cpu].Nonce
+	memBlockNum = results[admission2.Memory].BlockNumber
+	memNonce = results[admission2.Memory].Nonce
+
+	t.Log("cpuBlocksNum:", cpuBlockNum, "cpuNonce", cpuNonce, "memBlockNum", memBlockNum, "MemNonce", memNonce)
+	result, _ = ac1.Verify(nil, cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(cpuBlockNum), transactOpts.From)
+	if result == false {
+		t.Error("Admission verify error")
 	}
 
 	tx, err = campaign.ClaimCampaign(transactOpts, big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum), version)
@@ -202,7 +211,12 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	checkError(t, "ClaimCampaign error: %v", err)
 	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
 	contractBackend.Commit()
-	printBalance(contractBackend)
+
+	receipt, _ = contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status == types.ReceiptStatusFailed {
+		t.Log("gas", receipt.GasUsed, ", cumulative gas", receipt.CumulativeGasUsed)
+		t.Fatal("the transaction should success but it failed!")
+	}
 
 	// termIdx should be updated to current
 	termIdx2, err := campaign.TermIdx(nil)
@@ -231,7 +245,7 @@ func TestClaimAndQuitCampaign(t *testing.T) {
 	printBalance(contractBackend)
 }
 
-func TestClaimWhenDepositLessThanBase(t *testing.T) {
+func TestClaimCampaignOnSecondTerm(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: initBalance}})
 	printBalance(contractBackend)
 
@@ -272,29 +286,25 @@ func TestClaimWhenDepositLessThanBase(t *testing.T) {
 	isCan, _ := rNodeContract.IsRnode(&bind.CallOpts{From: transactOpts.From}, transactOpts.From)
 	_ = isCan
 
+	if !isCan {
+		t.Error("This node is not Rnode!")
+	}
+
+	campaign.TransactOpts.Value = big.NewInt(0)
 	tx, err := campaign.ClaimCampaign(big.NewInt(2), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum), version)
-	fmt.Println(tx)
 	checkError(t, "ClaimCampaign error:", err)
 	contractBackend.Commit()
 	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
 	if receipt.Status == types.ReceiptStatusFailed {
-		fmt.Println("receipt")
+		t.Fatal("the transaction should success but it failed!")
 	}
 
 	// wait for view change
 	waitForViewChange(contractBackend, 3)
 
-	// // view change 1st time
-	// fmt.Println("UpdateCandidateStatus")
-	// tx, err = campaign.UpdateCandidateStatus()
-	// checkError(t, "ViewChange error:%v", err)
-	// contractBackend.Commit()
-
-	// // get candidates by start view index
-	// verifyCandidates(campaign, t, big.NewInt(1), 1)
-	// verifyCandidates(campaign, t, big.NewInt(4), 0)
-	// printBalance(contractBackend)
-
+	// get candidates by start view index
+	verifyCandidates(campaign, t, big.NewInt(1), 1)
+	verifyCandidates(campaign, t, big.NewInt(4), 0)
 }
 
 func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
@@ -319,7 +329,6 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 
 	// setup TransactOpts
 	campaign.TransactOpts = *bind.NewKeyedTransactor(key)
-	campaign.TransactOpts.Value = big.NewInt(50 * 2)
 	campaign.TransactOpts.GasLimit = 1000000
 
 	// compute cpu&memory pow
@@ -334,6 +343,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	memBlockNum := results[admission2.Memory].BlockNumber
 	memNonce := results[admission2.Memory].Nonce
 
+	campaign.TransactOpts.Value = big.NewInt(0)
 	tx, err := campaign.ClaimCampaign(big.NewInt(2), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum), version)
 	checkError(t, "ClaimCampaign error:", err)
 	fmt.Println("ClaimCampaign tx:", tx.Hash().Hex())
@@ -348,38 +358,10 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 
 	// get candidates by view index
 	verifyCandidates(campaign, t, startViewIdx, 1)
-	printBalance(contractBackend)
 	contractBackend.Commit()
 
 	// wait for view change
 	waitForViewChange(contractBackend, 2)
-
-	// view change 1st time
-	// fmt.Println("UpdateCandidateStatus")
-	// tx, err = campaign.UpdateCandidateStatus()
-	// checkError(t, "UpdateCandidateStatus error:%v", err)
-	// contractBackend.Commit()
-
-	// // get candidates by start view index
-	// verifyCandidates(campaign, t, startViewIdx, 1)
-	// printBalance(contractBackend)
-
-	// // view change 2nd time
-	// waitForViewChange(contractBackend, 1)
-	// fmt.Println("UpdateCandidateStatus")
-	// tx, err = campaign.UpdateCandidateStatus()
-	// checkError(t, "UpdateCandidateStatus error:%v", err)
-	// contractBackend.Commit()
-
-	// // get candidates by end view index
-	// verifyCandidates(campaign, t, endViewIdx, 0)
-	// printBalance(contractBackend)
-
-	// // get candidates by view index
-	// verifyCandidates(campaign, t, big.NewInt(1), 1)
-	// verifyCandidates(campaign, t, big.NewInt(2), 1)
-	// verifyCandidates(campaign, t, big.NewInt(3), 0)
-	// printBalance(contractBackend)
 }
 
 func waitForViewChange(contractBackend *backends.SimulatedBackend, viewIdx int) {
