@@ -390,8 +390,13 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common
 		return rs.rptCollector4.RptOf(address, addresses, number)
 	}
 
-	log.Debug("now calc rpt for with rpt method 5", "addr", address.Hex(), "number", number)
-	return rs.rptCollector5.RptOf(address, addresses, number)
+	if number < configs.RptCalcMethod6BlockNumber {
+		log.Debug("now calc rpt for with rpt method 5", "addr", address.Hex(), "number", number)
+		return rs.rptCollector5.RptOf(address, addresses, number)
+	}
+
+	log.Debug("now calc rpt for with rpt method 6", "addr", address.Hex(), "number", number)
+	return rs.rptCollector6.RptOf(address, addresses, number)
 }
 
 func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) Rpt {
