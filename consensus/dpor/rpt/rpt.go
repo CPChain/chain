@@ -46,6 +46,11 @@ const (
 	defaultRank = 100 // 100 represent give the address a default rank
 )
 
+const (
+	defaultWindowSize  = 4
+	defaultRandomLevel = 8
+)
+
 var (
 	extraVanity = 32 // Fixed number of extra-data prefix bytes reserved for signer vanity
 	extraSeal   = 65 // Fixed number of extra-data suffix bytes reserved for signer seal
@@ -286,12 +291,12 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 
 	rptInstance, err := rptContract.NewRpt(rptContractAddr, backend)
 	if err != nil {
-		log.Fatal("New rpt contract error")
+		log.Error("New rpt contract error")
 	}
 
 	rptInstance2, err := rptContract2.NewRpt(rptContractAddr2, backend)
 	if err != nil {
-		log.Fatal("New rpt contract 2 error")
+		log.Error("New rpt contract 2 error")
 	}
 
 	cache, _ := lru.NewARC(cacheSize)
@@ -324,14 +329,15 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 // WindowSize reads windowsize from rpt contract
 func (rs *RptServiceImpl) WindowSize() (uint64, error) {
 	if rs.rptInstance == nil {
-		log.Fatal("New primitivesContract error")
+		log.Error("New primitivesContract error")
+		return defaultWindowSize, nil
 	}
 
 	instance := rs.rptInstance
 	windowSize, err := instance.Window(nil)
 	if err != nil {
 		log.Error("Get windowSize error", "error", err)
-		return 0, err
+		return defaultWindowSize, err
 	}
 	return windowSize.Uint64(), nil
 }
@@ -339,15 +345,26 @@ func (rs *RptServiceImpl) WindowSize() (uint64, error) {
 // RandomLevel returns random level
 func (rs *RptServiceImpl) RandomLevel() (int, error) {
 	if rs.rptInstance2 == nil {
-		log.Fatal("New rpt contract 2 error")
+		log.Error("New rpt contract 2 error")
+		return defaultRandomLevel, nil
 	}
 
 	instance := rs.rptInstance2
 	rl, err := instance.RandomLevel(nil)
 	if err != nil {
 		log.Error("Get random level error", "error", err)
-		return 0, err
+		return defaultRandomLevel, err
 	}
+
+	// some restrictions to avoid some unnecessary errors
+	if rl.Int64() <= 0 {
+		return 0, nil
+	}
+
+	if rl.Int64() >= defaultRandomLevel {
+		return defaultRandomLevel, nil
+	}
+
 	return int(rl.Int64()), nil
 }
 
