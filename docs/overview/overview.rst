@@ -319,6 +319,63 @@ of number of proposed blocks, similar to `Transaction`_ and `Account Balance`_.
 
 
 
+Election
+********************
+
+
+Principles and Ideas
++++++++++++++++++++++
+
+In election, a certain number of candidates (referred as seats) are elected to be proposer
+according to their RPT value.
+We have two principles to design the election:
+
+#. An RNode with higher RPT has higher chance to be elected;
+#. Each term of proposers has a certain number of representatives from RNodes with low RPT.
+
+Thus, the main ideas of election process are:
+
+#. Candidates are divided into two partitions, high-RPT RNodes and low-RPT RNodes;
+#. Either partition has a number of available seats;
+#. The probability mass for each node being elected is proportional to its RPT in its corresponding partition.
+
+Pseudocode of Election
++++++++++++++++++++++++
+
+Let :math:`n` be the number of all RNode candidates,
+:math:`m` be the number of seats for each term,
+:math:`k` be the number of low-RPT RNdoes,
+and :math:`l` be available seats for low-RPT RNodes.
+
+.. code-bloc:: go
+
+    // rptList is the list of all candidates as well as their RPT value
+    // seed is the seed for generating random numbers
+    // tha value of seed is the hash value of the parent block
+    func elect(rptList, seed, n, m, k, l) {
+        // sort rptList
+        sort.Sort(rptList)
+
+        // partition rptList into lowRpts and highRpts
+	    lowRpts := rpts[:k-1]
+        highRpts := rpts[k:]
+
+        randomSelectByRpt(lowRpts, k, l)
+        randomSelectByRpt(highRpt, n-k, m-l)
+    }
+
+    // uniform random selection from a list of nodes
+    // each node being elected is proportional to its RPT
+    func randomSelectByRpt(rptPartition, p) {
+        sum := 0.0
+        for i = 0; i < p ; i++  {
+            sum += rptPartition[i].rpt
+        }
+    }
+
+
+
+
 
 Hardware Specification
 ***************************
