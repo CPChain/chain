@@ -168,43 +168,44 @@ contract Campaign {
         // initiate updatedTermIdx during first call,
         // in case that termIdx too large while updatedTermIdx too low,
         // resulting in large 'for' loop and gas not enough.
-        if(firstCall) {
-            updatedTermIdx = (block.number.sub(1)).div(numPerRound);
-            firstCall = false;
-        }
-        require(version >= supportedVersion);
+        // if(firstCall) {
+        //     updatedTermIdx = (block.number.sub(1)).div(numPerRound);
+        //     firstCall = false;
+        // }
+        // require(version >= supportedVersion);
 
-        // proofs must be calculated based on latest blocks
-        require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
-        // only rnode can become candidate
-        require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
+        // // proofs must be calculated based on latest blocks
+        // require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
+        // // only rnode can become candidate
+        // require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
 
-        // verify the sender's cpu&memory ability.
-        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
-        require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
+        // // verify the sender's cpu&memory ability.
+        // require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
+        // require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
 
-        updateCandidateStatus(); // update status firstly,  then check
+        // updateCandidateStatus(); // update status firstly,  then check
 
-        address candidate = msg.sender;
+        // address candidate = msg.sender;
 
         // if nodes have not ended their terms, they can not claim again
-        require(
-            candidates[candidate].numOfCampaign == 0,
-            "please waite until your last round ended and try again."
-        );
+        // require(
+        //     candidates[candidate].numOfCampaign == 0,
+        //     "please waite until your last round ended and try again."
+        // );
 
         // set candidate's numOfCampaign according to arguments, and set start and end termIdx respectively
-        candidates[candidate].numOfCampaign = _numOfCampaign;
-        candidates[candidate].startTermIdx = termIdx.add(1);
+        // candidates[candidate].numOfCampaign = _numOfCampaign;
+        // candidates[candidate].startTermIdx = termIdx.add(1);
 
-        //[start, stop)
-        candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_numOfCampaign);
+        // //[start, stop)
+        // candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_numOfCampaign);
 
-        // add candidate to campaignSnapshots.
-        for(uint i = candidates[candidate].startTermIdx; i < candidates[candidate].stopTermIdx; i++) {
-            campaignSnapshots[i].insert(candidate);
-        }
-        emit ClaimCampaign(candidate, candidates[candidate].startTermIdx, candidates[candidate].stopTermIdx);
+        // // add candidate to campaignSnapshots.
+        // for(uint i = candidates[candidate].startTermIdx; i < candidates[candidate].stopTermIdx; i++) {
+        //     campaignSnapshots[i].insert(candidate);
+        // }
+        // emit ClaimCampaign(candidate, candidates[candidate].startTermIdx, candidates[candidate].stopTermIdx);
+        
     }
 
     /**
