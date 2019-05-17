@@ -111,15 +111,23 @@ const (
 	RNodeMinFundReq = 200000 // 200000 CPC for becoming a RNode
 )
 
+// some version numbers
+const (
+	RnodeVersion    = 1
+	CampaignVersion = 1
+)
+
 // pivot blocks numbers
 const (
 	RptCalcMethod2BlockNumber = 343000
 	RptCalcMethod3BlockNumber = 372400
 	RptCalcMethod4BlockNumber = 390500
 	RptCalcMethod5BlockNumber = 398000
+	RptCalcMethod6BlockNumber = 398000
 
 	Campaign2BlockNumber = 371900
 	Campaign3BlockNumber = 390500
+	Campaign4BlockNumber = 390500
 )
 
 var (
