@@ -34,7 +34,8 @@ import (
 	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/campaign2"
 	campaign3 "bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
 	campaign4 "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
-	contracts "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
+	rptContract "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
+	rptContract2 "bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -252,6 +253,7 @@ type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
 	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) Rpt
 	WindowSize() (uint64, error)
+	RandomLevel() (int, error)
 }
 
 // RptCollector collects rpts infos of a given candidate
@@ -261,9 +263,13 @@ type RptCollector interface {
 
 // BasicCollector is the default rpt collector
 type RptServiceImpl struct {
-	rptContract common.Address
-	client      bind.ContractBackend
-	rptInstance *contracts.Rpt
+	client bind.ContractBackend
+
+	rptContractAddr  common.Address
+	rptContractAddr2 common.Address
+
+	rptInstance  *rptContract.Rpt
+	rptInstance2 *rptContract2.Rpt
 
 	rptcache *lru.ARCCache
 
@@ -271,15 +277,21 @@ type RptServiceImpl struct {
 	rptCollector3 RptCollector
 	rptCollector4 RptCollector
 	rptCollector5 RptCollector
+	rptCollector6 RptCollector
 }
 
 // NewRptService creates a concrete RPT service instance.
-func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address) (RptService, error) {
+func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address, rptContractAddr2 common.Address) (RptService, error) {
 	log.Debug("rptContractAddr", "contractAddr", rptContractAddr.Hex())
 
-	rptInstance, err := contracts.NewRpt(rptContractAddr, backend)
+	rptInstance, err := rptContract.NewRpt(rptContractAddr, backend)
 	if err != nil {
-		log.Fatal("New primitivesContract error")
+		log.Fatal("New rpt contract error")
+	}
+
+	rptInstance2, err := rptContract2.NewRpt(rptContractAddr2, backend)
+	if err != nil {
+		log.Fatal("New rpt contract 2 error")
 	}
 
 	cache, _ := lru.NewARC(cacheSize)
@@ -288,17 +300,23 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 	newRptCollector3 := NewRptCollectorImpl3(rptInstance, backend)
 	newRptCollector4 := NewRptCollectorImpl4(rptInstance, backend)
 	newRptCollector5 := NewRptCollectorImpl5(rptInstance, backend)
+	newRptCollector6 := NewRptCollectorImpl6(rptInstance2, backend)
 
 	bc := &RptServiceImpl{
-		client:      backend,
-		rptContract: rptContractAddr,
-		rptInstance: rptInstance,
-		rptcache:    cache,
+		client:   backend,
+		rptcache: cache,
+
+		rptInstance:  rptInstance,
+		rptInstance2: rptInstance2,
+
+		rptContractAddr:  rptContractAddr,
+		rptContractAddr2: rptContractAddr2,
 
 		rptCollector2: newRptCollector2,
 		rptCollector3: newRptCollector3,
 		rptCollector4: newRptCollector4,
 		rptCollector5: newRptCollector5,
+		rptCollector6: newRptCollector6,
 	}
 	return bc, nil
 }
@@ -316,6 +334,21 @@ func (rs *RptServiceImpl) WindowSize() (uint64, error) {
 		return 0, err
 	}
 	return windowSize.Uint64(), nil
+}
+
+// RandomLevel returns random level
+func (rs *RptServiceImpl) RandomLevel() (int, error) {
+	if rs.rptInstance2 == nil {
+		log.Fatal("New rpt contract 2 error")
+	}
+
+	instance := rs.rptInstance2
+	rl, err := instance.RandomLevel(nil)
+	if err != nil {
+		log.Error("Get random level error", "error", err)
+		return 0, err
+	}
+	return int(rl.Int64()), nil
 }
 
 // CalcRptInfoList returns reputation of
