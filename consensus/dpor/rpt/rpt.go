@@ -187,7 +187,7 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 			return nil, err
 		}
 
-		log.Debug("now read candidates from old campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+		log.Debug("now read candidates from campaign contract 1", "len", len(cds), "contract addr", campaignAddr.Hex())
 
 		return cds, nil
 	}
@@ -209,7 +209,7 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 			return nil, err
 		}
 
-		log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+		log.Debug("now read candidates from campaign contract 2", "len", len(cds), "contract addr", campaignAddr.Hex())
 		return cds, nil
 	}
 
@@ -230,7 +230,7 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 			return nil, err
 		}
 
-		log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+		log.Debug("now read candidates from campaign contract 3", "len", len(cds), "contract addr", campaignAddr.Hex())
 		return cds, nil
 	}
 
@@ -249,7 +249,7 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		return nil, err
 	}
 
-	log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+	log.Debug("now read candidates from campaign contract 4", "len", len(cds), "contract addr", campaignAddr.Hex())
 	return cds, nil
 }
 
@@ -257,7 +257,6 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
 	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) Rpt
-	WindowSize() (uint64, error)
 	RandomLevel() (int, error)
 }
 
@@ -324,22 +323,6 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 		rptCollector6: newRptCollector6,
 	}
 	return bc, nil
-}
-
-// WindowSize reads windowsize from rpt contract
-func (rs *RptServiceImpl) WindowSize() (uint64, error) {
-	if rs.rptInstance == nil {
-		log.Error("New primitivesContract error")
-		return defaultWindowSize, nil
-	}
-
-	instance := rs.rptInstance
-	windowSize, err := instance.Window(nil)
-	if err != nil {
-		log.Error("Get windowSize error", "error", err)
-		return defaultWindowSize, err
-	}
-	return windowSize.Uint64(), nil
 }
 
 // RandomLevel returns random level
