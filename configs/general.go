@@ -128,6 +128,8 @@ const (
 	Campaign2BlockNumber = 371900
 	Campaign3BlockNumber = 390500
 	Campaign4BlockNumber = 390500
+
+	Election2BlockNumber = 390500
 )
 
 var (
