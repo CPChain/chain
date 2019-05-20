@@ -377,3 +377,56 @@ func TestRptOf5(t *testing.T) {
 	}
 
 }
+
+func Test_PctCount(t *testing.T) {
+	type args struct {
+		pct   int
+		total int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			name: "1",
+			args: args{
+				pct:   50,
+				total: 8,
+			},
+			want: 4,
+		},
+		{
+			name: "2",
+			args: args{
+				pct:   10,
+				total: 8,
+			},
+			want: 0,
+		},
+		{
+			name: "3",
+			args: args{
+				pct:   0,
+				total: 8,
+			},
+			want: 0,
+		},
+		{
+			name: "4",
+			args: args{
+				pct:   100,
+				total: 8,
+			},
+			want: 8,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := rpt.PctCount(tt.args.pct, tt.args.total); got != tt.want {
+				t.Errorf("pctCount() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
