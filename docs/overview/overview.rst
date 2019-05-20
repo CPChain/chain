@@ -337,7 +337,8 @@ Thus, the main ideas of election process are:
 
 #. Candidates are divided into two partitions, high-RPT RNodes and low-RPT RNodes;
 #. Either partition has a number of available seats;
-#. The probability mass for each node being elected is proportional to its RPT in its corresponding partition.
+#. The probability mass for each node being elected is proportional to its RPT in its corresponding partition;
+#. Random select nodes in two partitions, which together constitute proposers committee.
 
 Pseudocode of Election
 +++++++++++++++++++++++
