@@ -1,12 +1,14 @@
 package contracts_test
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
+	"bitbucket.org/cpchain/chain/types"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
@@ -21,8 +23,8 @@ var (
 		common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d86"),
 		common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d85"),
 	}
-	key, _      = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	addr        = crypto.PubkeyToAddress(key.PublicKey)
+	key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	addr   = crypto.PubkeyToAddress(key.PublicKey)
 )
 
 func deployRpt(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *contracts.Rpt, *bind.TransactOpts, error) {
@@ -114,6 +116,209 @@ func TestRpt(t *testing.T) {
 	newOmega, err := rpt.Omega(nil)
 	verifyEqual(t, newOmega.Uint64(), uint64(1))
 
+}
+
+func TestUpdateElectionConfigs(t *testing.T) {
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	contractAddr, rpt, opt, err := deployRpt(key, big.NewInt(0), contractBackend)
+	checkError(t, "deploy contract: expected no error, got %v", err)
+
+	_ = contractAddr
+	_ = opt
+
+	ownerTransactor := bind.NewKeyedTransactor(key)
+
+	// success
+	lowRptPercentage := new(big.Int).SetInt64(99)
+	totalSeats := new(big.Int).SetInt64(7)
+	lowRptSeats := new(big.Int).SetInt64(7)
+
+	_, err = rpt.UpdateElectionConfigs(ownerTransactor, lowRptPercentage, totalSeats, lowRptSeats)
+	checkError(t, "send tx: expected no error, got %v", err)
+	contractBackend.Commit()
+
+	lowRptPercentage1, err := rpt.LowRptPercentage(nil)
+	if lowRptPercentage1.Cmp(lowRptPercentage) != 0 {
+		t.Errorf("LowRptPercentage is error, expect %v but got %v", lowRptPercentage, lowRptPercentage1)
+	}
+
+	totalSeats1, err := rpt.TotalSeats(nil)
+	if totalSeats1.Cmp(totalSeats1) != 0 {
+		t.Errorf("TotalSeats is error, expect %v but got %v", totalSeats, totalSeats1)
+	}
+
+	lowRptSeats1, err := rpt.LowRptSeats(nil)
+	if lowRptSeats.Cmp(lowRptSeats1) != 0 {
+		t.Errorf("LowRptSeats is error, expect %v but got %v", lowRptSeats, lowRptSeats1)
+	}
+
+	// Fail1: lowRptPercentage > 100
+	lowRptPercentage = new(big.Int).SetInt64(101)
+	ownerTransactor.GasLimit = uint64(400000)
+	tx, err := rpt.UpdateElectionConfigs(ownerTransactor, lowRptPercentage, totalSeats, lowRptSeats)
+	checkError(t, "send tx: expected no error, got %v", err)
+	contractBackend.Commit()
+
+	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status != types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be failed but it is success!")
+	}
+
+	// Fail2: totalSeats > 8
+	lowRptPercentage = new(big.Int).SetInt64(99)
+	totalSeats = new(big.Int).SetInt64(9)
+	ownerTransactor.GasLimit = uint64(400000)
+	tx, err = rpt.UpdateElectionConfigs(ownerTransactor, lowRptPercentage, totalSeats, lowRptSeats)
+	checkError(t, "send tx: expected no error, got %v", err)
+	contractBackend.Commit()
+
+	receipt, _ = contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status != types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be failed but it is success!")
+	}
+
+	// Fail3: totalSeats < lowRptSeats
+	lowRptPercentage = new(big.Int).SetInt64(99)
+	totalSeats = new(big.Int).SetInt64(5)
+	lowRptSeats = new(big.Int).SetInt64(6)
+	ownerTransactor.GasLimit = uint64(400000)
+	tx, err = rpt.UpdateElectionConfigs(ownerTransactor, lowRptPercentage, totalSeats, lowRptSeats)
+	checkError(t, "send tx: expected no error, got %v", err)
+	contractBackend.Commit()
+
+	receipt, _ = contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status != types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be failed but it is success!")
+	}
+}
+
+func TestUpdateLowRptPercentage(t *testing.T) {
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	contractAddr, rpt, opt, err := deployRpt(key, big.NewInt(0), contractBackend)
+	checkError(t, "deploy contract: expected no error, got %v", err)
+
+	_ = contractAddr
+	_ = opt
+
+	ownerTransactor := bind.NewKeyedTransactor(key)
+
+	// success
+	lowRptPercentage := new(big.Int).SetInt64(99)
+
+	tx, err := rpt.UpdateLowRptPercentage(ownerTransactor, lowRptPercentage)
+	checkError(t, "send tx: expected no error, got %v", err)
+
+	contractBackend.Commit()
+
+	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status == types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be success but failed!")
+	}
+
+	lowRptPercentage1, err := rpt.LowRptPercentage(nil)
+	if lowRptPercentage1.Cmp(lowRptPercentage) != 0 {
+		t.Errorf("LowRptPercentage is error, expect %v but got %v", lowRptPercentage, lowRptPercentage1)
+	}
+
+	// fail
+	lowRptPercentage = new(big.Int).SetInt64(101)
+	ownerTransactor.GasLimit = uint64(400000)
+
+	tx, err = rpt.UpdateLowRptPercentage(ownerTransactor, lowRptPercentage)
+	checkError(t, "send tx: expected no error, got %v", err)
+
+	contractBackend.Commit()
+
+	receipt, _ = contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status != types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be failed but suuccess!")
+	}
+}
+
+func TestUpdateTotalSeats(t *testing.T) {
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	contractAddr, rpt, opt, err := deployRpt(key, big.NewInt(0), contractBackend)
+	checkError(t, "deploy contract: expected no error, got %v", err)
+
+	_ = contractAddr
+	_ = opt
+
+	ownerTransactor := bind.NewKeyedTransactor(key)
+
+	// success
+	totalSeats := new(big.Int).SetInt64(7)
+
+	tx, err := rpt.UpdateTotalSeats(ownerTransactor, totalSeats)
+	checkError(t, "send tx: expected no error, got %v", err)
+
+	contractBackend.Commit()
+
+	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status == types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be success but failed!")
+	}
+
+	totalSeats1, err := rpt.TotalSeats(nil)
+	if totalSeats1.Cmp(totalSeats) != 0 {
+		t.Errorf("TotalSeats is error, expect %v but got %v", totalSeats, totalSeats1)
+	}
+
+	// fail
+	totalSeats = new(big.Int).SetInt64(9)
+	ownerTransactor.GasLimit = uint64(400000)
+
+	tx, err = rpt.UpdateTotalSeats(ownerTransactor, totalSeats)
+	checkError(t, "send tx: expected no error, got %v", err)
+
+	contractBackend.Commit()
+
+	receipt, _ = contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status != types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be failed but suuccess!")
+	}
+}
+
+func TestUpdateLowRptSeats(t *testing.T) {
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	contractAddr, rpt, opt, err := deployRpt(key, big.NewInt(0), contractBackend)
+	checkError(t, "deploy contract: expected no error, got %v", err)
+
+	_ = contractAddr
+	_ = opt
+
+	ownerTransactor := bind.NewKeyedTransactor(key)
+
+	// success
+	lowRptSeats := new(big.Int).SetInt64(7)
+
+	tx, err := rpt.UpdateLowRptSeats(ownerTransactor, lowRptSeats)
+	checkError(t, "send tx: expected no error, got %v", err)
+
+	contractBackend.Commit()
+
+	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status == types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be success but failed!")
+	}
+
+	lowRptSeats1, err := rpt.LowRptSeats(nil)
+	if lowRptSeats1.Cmp(lowRptSeats) != 0 {
+		t.Errorf("LowRptSeats is error, expect %v but got %v", lowRptSeats, lowRptSeats1)
+	}
+
+	// fail
+	lowRptSeats = new(big.Int).SetInt64(9)
+	ownerTransactor.GasLimit = uint64(400000)
+
+	tx, err = rpt.UpdateLowRptSeats(ownerTransactor, lowRptSeats)
+	checkError(t, "send tx: expected no error, got %v", err)
+
+	contractBackend.Commit()
+
+	receipt, _ = contractBackend.TransactionReceipt(context.Background(), tx.Hash())
+	if receipt.Status != types.ReceiptStatusFailed {
+		t.Fatal("the transaction should be failed but suuccess!")
+	}
 }
 
 func verifyEqual(t *testing.T, v1 uint64, v2 uint64) {
