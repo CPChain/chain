@@ -333,7 +333,7 @@ We have the following principles to design the election:
 #. An RNode with higher RPT has higher chance to be elected;
 #. Each term of proposers has a certain number of representatives from RNodes with low RPT.
 
-Thus, the main ideas of election process are:
+Thus, the basic steps of election process are:
 
 #. Candidates are divided into two partitions, high-RPT RNodes and low-RPT RNodes;
 #. Either partition has a number of available seats;
