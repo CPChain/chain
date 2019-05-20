@@ -349,7 +349,7 @@ Let :math:`TotalRnode` be the number of all RNode candidates,
 :math:`LowRptPercentage` be the percentage of low-RPT RNdoes in all RNode candidates,
 and :math:`LowRptSeats` be available seats for low-RPT RNodes.
 The equation :math:`0\leq LowRptPercentage\leq 1` and
-:math:`0\leq LowRptSeats\leq LowRptPercentage \cdot TotalSeats \leq TotalSeats` always hold.
+:math:`0\leq LowRptSeats\leq LowRptPercentage \times TotalSeats \leq TotalSeats` always hold.
 
 .. code-block:: go
 
