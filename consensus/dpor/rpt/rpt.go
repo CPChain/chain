@@ -128,7 +128,7 @@ type RptList []Rpt
 func (r *RptList) FormatString() string {
 	items := make([]string, len(*r))
 	for i, v := range *r {
-		items[i] = fmt.Sprintf("[%s, %d]", v.Address.Hex(), v.Rpt)
+		items[i] = fmt.Sprintf("[addr: %s, rpt: #%d]", v.Address.Hex(), v.Rpt)
 	}
 	return strings.Join(items, ",")
 }
@@ -178,12 +178,14 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		// old campaign contract instance
 		contractInstance, err := campaign.NewCampaign(campaignAddr, rs.client)
 		if err != nil {
+			log.Debug("error when create campaign 1 instance", "err", err)
 			return nil, err
 		}
 
 		// candidates from old campaign contract
 		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 		if err != nil {
+			log.Debug("error when read candidates from campaign 1", "err", err)
 			return nil, err
 		}
 
@@ -200,12 +202,14 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		// new campaign contract instance
 		contractInstance, err := campaign2.NewCampaign(campaignAddr, rs.client)
 		if err != nil {
+			log.Debug("error when create campaign 2 instance", "err", err)
 			return nil, err
 		}
 
 		// candidates from new campaign contract
 		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 		if err != nil {
+			log.Debug("error when read candidates from campaign 2", "err", err)
 			return nil, err
 		}
 
@@ -221,12 +225,14 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		// new campaign contract instance
 		contractInstance, err := campaign3.NewCampaign(campaignAddr, rs.client)
 		if err != nil {
+			log.Debug("error when create campaign 3 instance", "err", err)
 			return nil, err
 		}
 
 		// candidates from new campaign contract
 		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 		if err != nil {
+			log.Debug("error when read candidates from campaign 3", "err", err)
 			return nil, err
 		}
 
@@ -240,12 +246,14 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 	// new campaign contract instance
 	contractInstance, err := campaign4.NewCampaign(campaignAddr, rs.client)
 	if err != nil {
+		log.Debug("error when create campaign 4 instance", "err", err)
 		return nil, err
 	}
 
 	// candidates from new campaign contract
 	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 	if err != nil {
+		log.Debug("error when read candidates from campaign 4", "err", err)
 		return nil, err
 	}
 
