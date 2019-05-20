@@ -131,7 +131,8 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 // rpts: the reputation list of RNodes
 // seed: a seed to generate a series of random numbers to select RNodes
 // totalSeats: total seats of the election result
-// highRptCounts: the number of high Rpt RNodes among the totaln
+// lowRptCounts: the number of low Rpt RNodes among the total RNodes
+// lowRptSeats: the number of seats for low Rpt RNodes in the Proposer Committee
 func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCounts int, lowRptSeats int) []common.Address {
 
 	return []common.Address{}
