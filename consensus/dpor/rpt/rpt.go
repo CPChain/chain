@@ -47,8 +47,8 @@ const (
 )
 
 const (
-	defaultWindowSize  = 4
-	defaultRandomLevel = 8
+	defaultWindowSize = 4
+	defaultTotalSeats = 8
 )
 
 var (
@@ -265,7 +265,7 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
 	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) Rpt
-	RandomLevel() (int, error)
+	TotalSeats() (int, error)
 }
 
 // RptCollector collects rpts infos of a given candidate
@@ -333,18 +333,18 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 	return bc, nil
 }
 
-// RandomLevel returns random level
-func (rs *RptServiceImpl) RandomLevel() (int, error) {
+// TotalSeats returns random level
+func (rs *RptServiceImpl) TotalSeats() (int, error) {
 	if rs.rptInstance2 == nil {
 		log.Error("New rpt contract 2 error")
-		return defaultRandomLevel, nil
+		return defaultTotalSeats, nil
 	}
 
 	instance := rs.rptInstance2
-	rl, err := instance.RandomLevel(nil)
+	rl, err := instance.TotalSeats(nil)
 	if err != nil {
 		log.Error("Get random level error", "error", err)
-		return defaultRandomLevel, err
+		return defaultTotalSeats, err
 	}
 
 	// some restrictions to avoid some unnecessary errors
@@ -352,8 +352,8 @@ func (rs *RptServiceImpl) RandomLevel() (int, error) {
 		return 0, nil
 	}
 
-	if rl.Int64() >= defaultRandomLevel {
-		return defaultRandomLevel, nil
+	if rl.Int64() >= defaultTotalSeats {
+		return defaultTotalSeats, nil
 	}
 
 	return int(rl.Int64()), nil
