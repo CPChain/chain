@@ -344,27 +344,30 @@ Thus, the main ideas of election process are:
 Pseudocode of Election
 +++++++++++++++++++++++
 
-Let :math:`n` be the number of all RNode candidates,
-:math:`m` be the number of seats for each term,
-:math:`k` be the number of low-RPT RNdoes,
-and :math:`l` be available seats for low-RPT RNodes.
-The equation :math:`0\leq l\leq m` and :math:`0\leq k\leq \frac{l}{m}n \leq n` always hold.
+Let :math:`TotalRnode` be the number of all RNode candidates,
+:math:`TotalSeats` be the number of seats for each term,
+:math:`LowRptPercentage` be the percentage of low-RPT RNdoes in all RNode candidates,
+and :math:`LowRptSeats` be available seats for low-RPT RNodes.
+The equation :math:`0\leq LowRptPercentage\leq 1` and
+:math:`0\leq LowRptSeats\leq LowRptPercentage \cdot TotalSeats \leq TotalSeats` always hold.
 
 .. code-block:: go
 
     // rptList is the list of all candidates as well as their RPT value
     // seed is the seed for generating random numbers
     // tha value of seed is the hash value of the parent block
-    func elect(rptList, seed, n, m, k, l) []address {
+    func elect(rptList, seed, TotalRnode, TotalSeats, LowRptPercentage, LowRptSeats) []address {
         // sort rptList
         sort.Sort(rptList)
 
+        var partition uint64
+        partition = LowRptPercentage * TotalRnode
         // partition rptList into lowRpts and highRpts
-        lowRpts := rptList[:k-1]
-        highRpts := rptList[k:]
+        lowRpts := rptList[:partition-1]
+        highRpts := rptList[partition:]
 
-        lowElected := randomSelectByRpt(lowRpts, k, l)
-        highElected := randomSelectByRpt(highRpts, n-k, m-l)
+        lowElected := randomSelectByRpt(lowRpts, partition, LowRptSeats)
+        highElected := randomSelectByRpt(highRpts, TotalRnode - partition, TotalSeats - LowRptSeats)
         return append(lowElected, highElected)
     }
 
