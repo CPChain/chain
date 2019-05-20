@@ -287,7 +287,7 @@ type RptServiceImpl struct {
 	rptInstance  *rptContract.Rpt
 	rptInstance2 *rptContract2.Rpt
 
-	rptcache *lru.ARCCache
+	rptCache *lru.ARCCache
 
 	rptCollector2 RptCollector
 	rptCollector3 RptCollector
@@ -320,7 +320,7 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 
 	bc := &RptServiceImpl{
 		client:   backend,
-		rptcache: cache,
+		rptCache: cache,
 
 		rptInstance:  rptInstance,
 		rptInstance2: rptInstance2,
@@ -493,14 +493,14 @@ func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) R
 	log.Debug("blockInWindow", "blockInWindow", blockInWindow, "blockNum", blockNum)
 	for i := int64(blockNum); i >= 0 && i >= blockInWindow; i-- {
 		hash := RptHash(RptItems{Nodeaddress: address, Key: uint64(i)})
-		rc, exists := rs.rptcache.Get(hash)
+		rc, exists := rs.rptCache.Get(hash)
 		if !exists {
 			// try get rpt ${maxRetryGetRpt} times
 			for tryIndex := 0; tryIndex <= maxRetryGetRpt; tryIndex++ {
 				rptInfo, err := instance.GetRpt(nil, address, new(big.Int).SetInt64(i))
 				if err == nil {
 					log.Debug("GetRpt ok", "tryIndex", tryIndex, "hash", hash.Hex(), "blockNum", blockNum, "i", i)
-					rs.rptcache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})
+					rs.rptCache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})
 					rpt += rptInfo.Int64()
 					break
 				}
