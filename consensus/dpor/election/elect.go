@@ -134,8 +134,19 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 // lowRptCounts: the number of low Rpt RNodes among the total RNodes
 // lowRptSeats: the number of seats for low Rpt RNodes in the Proposer Committee
 func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCounts int, lowRptSeats int) []common.Address {
+	if lowRptCounts > rpts.Len() || lowRptSeats > totalSeats || totalSeats > rpts.Len() || lowRptCounts < lowRptSeats {
+		return []common.Address{}
+	}
 
-	return []common.Address{}
+	sort.Sort(rpts)
+
+	lowRpts := rpts[:lowRptCounts]
+	highRpts := rpts[lowRptCounts:]
+
+	lowElected := randomSelectByRpt(lowRpts, seed, lowRptSeats)
+	highElected := randomSelectByRpt(highRpts, seed, totalSeats-lowRptSeats)
+
+	return append(lowElected, highElected...)
 }
 
 // randomSelectByRpt
@@ -154,10 +165,22 @@ func randomSelectByRpt(rpts rpt.RptList, seed int64, seats int) (result []common
 	myRand := rand.New(randSource)
 	sums, sum := sumOfFirstN(rpts)
 
-	for i := 0; i < seats; i++ {
+	selected := make(map[int]struct{})
+
+	for seats > 0 {
 		randI := myRand.Int63n(sum)
 		resultIdx := findHit(randI, sums)
+
+		// if already selected, continue
+		if _, already := selected[resultIdx]; already {
+			continue
+		}
+
+		// not selected yet, append it!
+		selected[resultIdx] = struct{}{}
 		result = append(result, rpts[resultIdx].Address)
+
+		seats--
 	}
 	return result
 }
