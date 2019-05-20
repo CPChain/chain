@@ -489,7 +489,7 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	for _, rodeAddr := range rnodes {
 		isCommittee := IsCommittee(rodeAddr, committeAddress)
 		role := getRole(isCommittee)
-		score := s.b.CalcRptInfo(rodeAddr, rnodes ,bn)
+		score := s.b.CalcRptInfo(rodeAddr, rnodes, bn)
 		r := cpclient.RNodes{
 			Address: rodeAddr,
 			Rpt:     score,
@@ -1163,11 +1163,7 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 					rpcTx := newRPCTransaction(tx, block.Hash(), block.NumberU64(), uint64(index)+uint64(from))
 
 					var receipt *types.Receipt
-					if tx.IsPrivate() {
-						receipt, _ = s.b.GetPrivateReceipt(ctx, tx.Hash())
-					} else {
-						receipt = receipts[uint64(index)+uint64(from)]
-					}
+					receipt = receipts[uint64(index)+uint64(from)]
 					if err != nil {
 						log.Error(err.Error())
 					}
@@ -1526,6 +1522,10 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 // The sender is responsible for signing the transaction and using the correct nonce.
 func (s *PublicTransactionPoolAPI) SendRawTransaction(ctx context.Context, encodedTx hexutil.Bytes) (common.Hash, error) {
 	tx := new(types.Transaction)
+	log.Warn(">>>>>>>>>>>>", "type", tx.Type(), "is_private", tx.IsPrivate())
+	if tx.Type() > 1 {
+		return common.Hash{}, errors.New("transaction type error")
+	}
 	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
 		return common.Hash{}, err
 	}
