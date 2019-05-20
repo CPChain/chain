@@ -137,3 +137,45 @@ func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCounts int, lowR
 
 	return []common.Address{}
 }
+
+// randomSelectByRpt
+// uniform random selection from rptPartition
+// the mass probability for each node being elected is proportional to its RPT
+// the function select l random addresses
+// and return them as result
+func randomSelectByRpt(rpts rpt.RptList, seed int64, seats int) (result []common.Address) {
+	// each element in rptPartition is referred as rpt
+	// then we sum all rpt values, as sumRpt
+	// random select l addresses according to its rpt/sumRpt
+	// return these l addresses
+	sort.Sort(rpts)
+
+	randSource := rand.NewSource(seed)
+	myRand := rand.New(randSource)
+	sums, sum := sumOfFirstN(rpts)
+
+	for i := 0; i < seats; i++ {
+		randI := myRand.Int63n(sum)
+		resultIdx := findHit(randI, sums)
+		result = append(result, rpts[resultIdx].Address)
+	}
+	return result
+}
+
+func findHit(hit int64, hitSums []int64) int {
+	for idx, x := range hitSums {
+		if hit <= x {
+			return idx
+		}
+	}
+	return len(hitSums) - 1
+}
+
+func sumOfFirstN(rpts rpt.RptList) (sums []int64, sum int64) {
+	sum = 0
+	for _, rpt := range rpts {
+		sum += rpt.Rpt
+		sums = append(sums, sum)
+	}
+	return
+}
