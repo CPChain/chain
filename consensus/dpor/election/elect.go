@@ -67,12 +67,12 @@ func findNearest(array []int64, target float64) (int64, int) {
 }
 
 // Elect returns election result of the given rpt list of candidates,
-// seed and viewLength.
+// seed and termLength.
 func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 	sort.Sort(rpts)
 	sortedRpts := rpts
 
-	log.Debug("lenth of rpts", "len", len(rpts))
+	log.Debug("length of rpts", "len", len(rpts))
 	for _, r := range rpts {
 		log.Debug("rptlist", "addr", r.Address.Hex(), "rpt", r.Rpt)
 	}
