@@ -16,10 +16,10 @@ import (
 )
 
 // RptABI is the input ABI used to generate the binding from.
-const RptABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"}],\"name\":\"updateAlpha\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"omega\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"window\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_gamma\",\"type\":\"uint256\"}],\"name\":\"updateGamma\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"randomLevel\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_randomLevel\",\"type\":\"uint256\"}],\"name\":\"updateRandomLevel\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"psi\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"beta\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_omega\",\"type\":\"uint256\"}],\"name\":\"updateOmega\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_beta\",\"type\":\"uint256\"}],\"name\":\"updateBeta\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"gamma\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_psi\",\"type\":\"uint256\"}],\"name\":\"updatePsi\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateWindow\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"},{\"name\":\"_beta\",\"type\":\"uint256\"},{\"name\":\"_gamma\",\"type\":\"uint256\"},{\"name\":\"_psi\",\"type\":\"uint256\"},{\"name\":\"_omega\",\"type\":\"uint256\"},{\"name\":\"_window\",\"type\":\"uint256\"},{\"name\":\"_randomLevel\",\"type\":\"uint256\"}],\"name\":\"updateConfigs\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"alpha\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"name\":\"UpdateConfigs\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"configName\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"configValue\",\"type\":\"uint256\"}],\"name\":\"UpdateOneConfig\",\"type\":\"event\"}]"
+const RptABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"}],\"name\":\"updateAlpha\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSeats\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"omega\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_lowRptPercentage\",\"type\":\"uint256\"}],\"name\":\"updateLowRptPercentage\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"window\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_lowRptSeats\",\"type\":\"uint256\"}],\"name\":\"updateLowRptSeats\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_gamma\",\"type\":\"uint256\"}],\"name\":\"updateGamma\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_lowRptPercentage\",\"type\":\"uint256\"},{\"name\":\"_totalSeats\",\"type\":\"uint256\"},{\"name\":\"_lowRptSeats\",\"type\":\"uint256\"}],\"name\":\"updateElectionConfigs\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"psi\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_totalSeats\",\"type\":\"uint256\"}],\"name\":\"updateTotalSeats\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"beta\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_omega\",\"type\":\"uint256\"}],\"name\":\"updateOmega\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_beta\",\"type\":\"uint256\"}],\"name\":\"updateBeta\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"gamma\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_psi\",\"type\":\"uint256\"}],\"name\":\"updatePsi\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateWindow\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"alpha\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"},{\"name\":\"_beta\",\"type\":\"uint256\"},{\"name\":\"_gamma\",\"type\":\"uint256\"},{\"name\":\"_psi\",\"type\":\"uint256\"},{\"name\":\"_omega\",\"type\":\"uint256\"},{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateWeightConfigs\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"lowRptPercentage\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"lowRptSeats\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"name\":\"UpdateWeightConfigs\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"configName\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"configValue\",\"type\":\"uint256\"}],\"name\":\"UpdateOneConfig\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"name\":\"UpdateElectionConfigs\",\"type\":\"event\"}]"
 
 // RptBin is the compiled bytecode used for deploying new contracts.
-const RptBin = `0x60806040526032600055600f600155600a600255600f600355600a6004556004600555600560065534801561003357600080fd5b5060078054600160a060020a031916331790556106eb806100556000396000f3006080604052600436106100e55763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306d2d3dc81146100ea5780632262a1b314610104578063461645bf1461012b5780636d8004c5146101405780638070cb8e1461015857806381cfcb4f1461016d57806386f87fdd146101855780638da5cb5b1461019a5780639faa3c91146101cb578063a23f52b8146101e0578063ac7dabbc146101f8578063b137392914610210578063b2f801c414610225578063b98f00561461023d578063bd5c5f8614610255578063db1d0fd51461027f575b600080fd5b3480156100f657600080fd5b50610102600435610294565b005b34801561011057600080fd5b5061011961030f565b60408051918252519081900360200190f35b34801561013757600080fd5b50610119610315565b34801561014c57600080fd5b5061010260043561031b565b34801561016457600080fd5b50610119610396565b34801561017957600080fd5b5061010260043561039c565b34801561019157600080fd5b50610119610417565b3480156101a657600080fd5b506101af61041d565b60408051600160a060020a039092168252519081900360200190f35b3480156101d757600080fd5b5061011961042c565b3480156101ec57600080fd5b50610102600435610432565b34801561020457600080fd5b506101026004356104ad565b34801561021c57600080fd5b50610119610528565b34801561023157600080fd5b5061010260043561052e565b34801561024957600080fd5b506101026004356105a8565b34801561026157600080fd5b5061010260043560243560443560643560843560a43560c435610623565b34801561028b57600080fd5b50610119610699565b600754600160a060020a031633146102ab57600080fd5b6000819055604080514381528082018390526060602082018190526005908201527f616c706861000000000000000000000000000000000000000000000000000000608082015290516000805160206106a08339815191529181900360a00190a150565b60045481565b60055481565b600754600160a060020a0316331461033257600080fd5b6002819055604080514381528082018390526060602082018190526005908201527f67616d6d61000000000000000000000000000000000000000000000000000000608082015290516000805160206106a08339815191529181900360a00190a150565b60065481565b600754600160a060020a031633146103b357600080fd5b600681905560408051438152808201839052606060208201819052600b908201527f72616e646f6d4c6576656c000000000000000000000000000000000000000000608082015290516000805160206106a08339815191529181900360a00190a150565b60035481565b600754600160a060020a031681565b60015481565b600754600160a060020a0316331461044957600080fd5b6004819055604080514381528082018390526060602082018190526005908201527f6f6d656761000000000000000000000000000000000000000000000000000000608082015290516000805160206106a08339815191529181900360a00190a150565b600754600160a060020a031633146104c457600080fd5b6001819055604080514381528082018390526060602082018190526004908201527f6265746100000000000000000000000000000000000000000000000000000000608082015290516000805160206106a08339815191529181900360a00190a150565b60025481565b600754600160a060020a0316331461054557600080fd5b6003818155604080514381528082018490526060602082018190528101929092527f70736900000000000000000000000000000000000000000000000000000000006080830152516000805160206106a08339815191529181900360a00190a150565b600754600160a060020a031633146105bf57600080fd5b6005819055604080514381528082018390526060602082018190526006908201527f77696e646f770000000000000000000000000000000000000000000000000000608082015290516000805160206106a08339815191529181900360a00190a150565b600754600160a060020a0316331461063a57600080fd5b60008790556001869055600285905560038490556004839055600582905560068190556040805143815290517f78a3671679b68721aaad9eb74535be0be119bd34c0efa671eb6ab3210d1fe2579181900360200190a150505050505050565b6000548156007c2d85cf45868065466ed7df2e23f26349626794d112e41a734a4e34727fcb21a165627a7a72305820c62782755e007d008f9ee6ea04ed5ad95378f94403c7e010891306c8e15ca4680029`
+const RptBin = `0x60806040526032600055600f600155600a600255600f600355600a600455600460055560326006556008600755600260085534801561003d57600080fd5b5060098054600160a060020a031916331790556108fa8061005f6000396000f3006080604052600436106101115763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306d2d3dc81146101165780631ffc615e146101305780632262a1b314610157578063255c45901461016c578063461645bf146101845780636479b8e6146101995780636d8004c5146101b1578063854c42c5146101c957806386f87fdd146101e757806390530bf0146101fc5780639faa3c9114610214578063a23f52b814610229578063ac7dabbc14610241578063b137392914610259578063b2f801c41461026e578063b98f005614610286578063db1d0fd51461029e578063f182c59c146102b3578063f75ca7ff146102da578063fb2eb7f6146102ef575b600080fd5b34801561012257600080fd5b5061012e600435610304565b005b34801561013c57600080fd5b5061014561037f565b60408051918252519081900360200190f35b34801561016357600080fd5b50610145610385565b34801561017857600080fd5b5061012e60043561038b565b34801561019057600080fd5b50610145610414565b3480156101a557600080fd5b5061012e60043561041a565b3480156101bd57600080fd5b5061012e6004356104a4565b3480156101d557600080fd5b5061012e60043560243560443561051f565b3480156101f357600080fd5b506101456105a6565b34801561020857600080fd5b5061012e6004356105ac565b34801561022057600080fd5b50610145610635565b34801561023557600080fd5b5061012e60043561063b565b34801561024d57600080fd5b5061012e6004356106b6565b34801561026557600080fd5b50610145610731565b34801561027a57600080fd5b5061012e600435610737565b34801561029257600080fd5b5061012e6004356107b1565b3480156102aa57600080fd5b5061014561082c565b3480156102bf57600080fd5b5061012e60043560243560443560643560843560a435610832565b3480156102e657600080fd5b506101456108a2565b3480156102fb57600080fd5b506101456108a8565b600954600160a060020a0316331461031b57600080fd5b6000819055604080514381528082018390526060602082018190526005908201527f616c706861000000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60075481565b60045481565b600954600160a060020a031633146103a257600080fd5b60648111156103b057600080fd5b6006819055604080514381528082018390526060602082018190526010908201527f6c6f7752707450657263656e7461676500000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60055481565b600954600160a060020a0316331461043157600080fd5b60075481111561044057600080fd5b600881905560408051438152808201839052606060208201819052600b908201527f6c6f775270745365617473000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b600954600160a060020a031633146104bb57600080fd5b6002819055604080514381528082018390526060602082018190526005908201527f67616d6d61000000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b600954600160a060020a0316331461053657600080fd5b60648311158015610548575060088211155b80156105545750818111155b151561055f57600080fd5b6006839055600782905560088190556040805143815290517f09e649367469a85db638685b74f92f1ef17cdebb4610b4c42b7da19c2f1b189c9181900360200190a1505050565b60035481565b600954600160a060020a031633146105c357600080fd5b60088111156105d157600080fd5b600781905560408051438152808201839052606060208201819052600a908201527f746f74616c536561747300000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60015481565b600954600160a060020a0316331461065257600080fd5b6004819055604080514381528082018390526060602082018190526005908201527f6f6d656761000000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b600954600160a060020a031633146106cd57600080fd5b6001819055604080514381528082018390526060602082018190526004908201527f6265746100000000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60025481565b600954600160a060020a0316331461074e57600080fd5b6003818155604080514381528082018490526060602082018190528101929092527f70736900000000000000000000000000000000000000000000000000000000006080830152516000805160206108af8339815191529181900360a00190a150565b600954600160a060020a031633146107c857600080fd5b6005819055604080514381528082018390526060602082018190526006908201527f77696e646f770000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60005481565b600954600160a060020a0316331461084957600080fd5b6000869055600185905560028490556003839055600482905560058190556040805143815290517f94cb95e42d1f9f5b3e73da8fddc18ba25b0c89408eb91f64e417c59c6833a82b9181900360200190a1505050505050565b60065481565b6008548156007c2d85cf45868065466ed7df2e23f26349626794d112e41a734a4e34727fcb21a165627a7a72305820444d76157ffc92af8191678fdee5d112d61ccd2e1719cad6ae91a0e3e955c6720029`
 
 // DeployRpt deploys a new cpchain contract, binding an instance of Rpt to it.
 func DeployRpt(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Rpt, error) {
@@ -254,6 +254,58 @@ func (_Rpt *RptCallerSession) Gamma() (*big.Int, error) {
 	return _Rpt.Contract.Gamma(&_Rpt.CallOpts)
 }
 
+// LowRptPercentage is a free data retrieval call binding the contract method 0xf75ca7ff.
+//
+// Solidity: function lowRptPercentage() constant returns(uint256)
+func (_Rpt *RptCaller) LowRptPercentage(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _Rpt.contract.Call(opts, out, "lowRptPercentage")
+	return *ret0, err
+}
+
+// LowRptPercentage is a free data retrieval call binding the contract method 0xf75ca7ff.
+//
+// Solidity: function lowRptPercentage() constant returns(uint256)
+func (_Rpt *RptSession) LowRptPercentage() (*big.Int, error) {
+	return _Rpt.Contract.LowRptPercentage(&_Rpt.CallOpts)
+}
+
+// LowRptPercentage is a free data retrieval call binding the contract method 0xf75ca7ff.
+//
+// Solidity: function lowRptPercentage() constant returns(uint256)
+func (_Rpt *RptCallerSession) LowRptPercentage() (*big.Int, error) {
+	return _Rpt.Contract.LowRptPercentage(&_Rpt.CallOpts)
+}
+
+// LowRptSeats is a free data retrieval call binding the contract method 0xfb2eb7f6.
+//
+// Solidity: function lowRptSeats() constant returns(uint256)
+func (_Rpt *RptCaller) LowRptSeats(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _Rpt.contract.Call(opts, out, "lowRptSeats")
+	return *ret0, err
+}
+
+// LowRptSeats is a free data retrieval call binding the contract method 0xfb2eb7f6.
+//
+// Solidity: function lowRptSeats() constant returns(uint256)
+func (_Rpt *RptSession) LowRptSeats() (*big.Int, error) {
+	return _Rpt.Contract.LowRptSeats(&_Rpt.CallOpts)
+}
+
+// LowRptSeats is a free data retrieval call binding the contract method 0xfb2eb7f6.
+//
+// Solidity: function lowRptSeats() constant returns(uint256)
+func (_Rpt *RptCallerSession) LowRptSeats() (*big.Int, error) {
+	return _Rpt.Contract.LowRptSeats(&_Rpt.CallOpts)
+}
+
 // Omega is a free data retrieval call binding the contract method 0x2262a1b3.
 //
 // Solidity: function omega() constant returns(uint256)
@@ -278,32 +330,6 @@ func (_Rpt *RptSession) Omega() (*big.Int, error) {
 // Solidity: function omega() constant returns(uint256)
 func (_Rpt *RptCallerSession) Omega() (*big.Int, error) {
 	return _Rpt.Contract.Omega(&_Rpt.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_Rpt *RptCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Rpt.contract.Call(opts, out, "owner")
-	return *ret0, err
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_Rpt *RptSession) Owner() (common.Address, error) {
-	return _Rpt.Contract.Owner(&_Rpt.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_Rpt *RptCallerSession) Owner() (common.Address, error) {
-	return _Rpt.Contract.Owner(&_Rpt.CallOpts)
 }
 
 // Psi is a free data retrieval call binding the contract method 0x86f87fdd.
@@ -332,30 +358,30 @@ func (_Rpt *RptCallerSession) Psi() (*big.Int, error) {
 	return _Rpt.Contract.Psi(&_Rpt.CallOpts)
 }
 
-// RandomLevel is a free data retrieval call binding the contract method 0x8070cb8e.
+// TotalSeats is a free data retrieval call binding the contract method 0x1ffc615e.
 //
-// Solidity: function randomLevel() constant returns(uint256)
-func (_Rpt *RptCaller) RandomLevel(opts *bind.CallOpts) (*big.Int, error) {
+// Solidity: function totalSeats() constant returns(uint256)
+func (_Rpt *RptCaller) TotalSeats(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 	)
 	out := ret0
-	err := _Rpt.contract.Call(opts, out, "randomLevel")
+	err := _Rpt.contract.Call(opts, out, "totalSeats")
 	return *ret0, err
 }
 
-// RandomLevel is a free data retrieval call binding the contract method 0x8070cb8e.
+// TotalSeats is a free data retrieval call binding the contract method 0x1ffc615e.
 //
-// Solidity: function randomLevel() constant returns(uint256)
-func (_Rpt *RptSession) RandomLevel() (*big.Int, error) {
-	return _Rpt.Contract.RandomLevel(&_Rpt.CallOpts)
+// Solidity: function totalSeats() constant returns(uint256)
+func (_Rpt *RptSession) TotalSeats() (*big.Int, error) {
+	return _Rpt.Contract.TotalSeats(&_Rpt.CallOpts)
 }
 
-// RandomLevel is a free data retrieval call binding the contract method 0x8070cb8e.
+// TotalSeats is a free data retrieval call binding the contract method 0x1ffc615e.
 //
-// Solidity: function randomLevel() constant returns(uint256)
-func (_Rpt *RptCallerSession) RandomLevel() (*big.Int, error) {
-	return _Rpt.Contract.RandomLevel(&_Rpt.CallOpts)
+// Solidity: function totalSeats() constant returns(uint256)
+func (_Rpt *RptCallerSession) TotalSeats() (*big.Int, error) {
+	return _Rpt.Contract.TotalSeats(&_Rpt.CallOpts)
 }
 
 // Window is a free data retrieval call binding the contract method 0x461645bf.
@@ -426,25 +452,25 @@ func (_Rpt *RptTransactorSession) UpdateBeta(_beta *big.Int) (*types.Transaction
 	return _Rpt.Contract.UpdateBeta(&_Rpt.TransactOpts, _beta)
 }
 
-// UpdateConfigs is a paid mutator transaction binding the contract method 0xbd5c5f86.
+// UpdateElectionConfigs is a paid mutator transaction binding the contract method 0x854c42c5.
 //
-// Solidity: function updateConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256, _randomLevel uint256) returns()
-func (_Rpt *RptTransactor) UpdateConfigs(opts *bind.TransactOpts, _alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int, _randomLevel *big.Int) (*types.Transaction, error) {
-	return _Rpt.contract.Transact(opts, "updateConfigs", _alpha, _beta, _gamma, _psi, _omega, _window, _randomLevel)
+// Solidity: function updateElectionConfigs(_lowRptPercentage uint256, _totalSeats uint256, _lowRptSeats uint256) returns()
+func (_Rpt *RptTransactor) UpdateElectionConfigs(opts *bind.TransactOpts, _lowRptPercentage *big.Int, _totalSeats *big.Int, _lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateElectionConfigs", _lowRptPercentage, _totalSeats, _lowRptSeats)
 }
 
-// UpdateConfigs is a paid mutator transaction binding the contract method 0xbd5c5f86.
+// UpdateElectionConfigs is a paid mutator transaction binding the contract method 0x854c42c5.
 //
-// Solidity: function updateConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256, _randomLevel uint256) returns()
-func (_Rpt *RptSession) UpdateConfigs(_alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int, _randomLevel *big.Int) (*types.Transaction, error) {
-	return _Rpt.Contract.UpdateConfigs(&_Rpt.TransactOpts, _alpha, _beta, _gamma, _psi, _omega, _window, _randomLevel)
+// Solidity: function updateElectionConfigs(_lowRptPercentage uint256, _totalSeats uint256, _lowRptSeats uint256) returns()
+func (_Rpt *RptSession) UpdateElectionConfigs(_lowRptPercentage *big.Int, _totalSeats *big.Int, _lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateElectionConfigs(&_Rpt.TransactOpts, _lowRptPercentage, _totalSeats, _lowRptSeats)
 }
 
-// UpdateConfigs is a paid mutator transaction binding the contract method 0xbd5c5f86.
+// UpdateElectionConfigs is a paid mutator transaction binding the contract method 0x854c42c5.
 //
-// Solidity: function updateConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256, _randomLevel uint256) returns()
-func (_Rpt *RptTransactorSession) UpdateConfigs(_alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int, _randomLevel *big.Int) (*types.Transaction, error) {
-	return _Rpt.Contract.UpdateConfigs(&_Rpt.TransactOpts, _alpha, _beta, _gamma, _psi, _omega, _window, _randomLevel)
+// Solidity: function updateElectionConfigs(_lowRptPercentage uint256, _totalSeats uint256, _lowRptSeats uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateElectionConfigs(_lowRptPercentage *big.Int, _totalSeats *big.Int, _lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateElectionConfigs(&_Rpt.TransactOpts, _lowRptPercentage, _totalSeats, _lowRptSeats)
 }
 
 // UpdateGamma is a paid mutator transaction binding the contract method 0x6d8004c5.
@@ -466,6 +492,48 @@ func (_Rpt *RptSession) UpdateGamma(_gamma *big.Int) (*types.Transaction, error)
 // Solidity: function updateGamma(_gamma uint256) returns()
 func (_Rpt *RptTransactorSession) UpdateGamma(_gamma *big.Int) (*types.Transaction, error) {
 	return _Rpt.Contract.UpdateGamma(&_Rpt.TransactOpts, _gamma)
+}
+
+// UpdateLowRptPercentage is a paid mutator transaction binding the contract method 0x255c4590.
+//
+// Solidity: function updateLowRptPercentage(_lowRptPercentage uint256) returns()
+func (_Rpt *RptTransactor) UpdateLowRptPercentage(opts *bind.TransactOpts, _lowRptPercentage *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateLowRptPercentage", _lowRptPercentage)
+}
+
+// UpdateLowRptPercentage is a paid mutator transaction binding the contract method 0x255c4590.
+//
+// Solidity: function updateLowRptPercentage(_lowRptPercentage uint256) returns()
+func (_Rpt *RptSession) UpdateLowRptPercentage(_lowRptPercentage *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateLowRptPercentage(&_Rpt.TransactOpts, _lowRptPercentage)
+}
+
+// UpdateLowRptPercentage is a paid mutator transaction binding the contract method 0x255c4590.
+//
+// Solidity: function updateLowRptPercentage(_lowRptPercentage uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateLowRptPercentage(_lowRptPercentage *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateLowRptPercentage(&_Rpt.TransactOpts, _lowRptPercentage)
+}
+
+// UpdateLowRptSeats is a paid mutator transaction binding the contract method 0x6479b8e6.
+//
+// Solidity: function updateLowRptSeats(_lowRptSeats uint256) returns()
+func (_Rpt *RptTransactor) UpdateLowRptSeats(opts *bind.TransactOpts, _lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateLowRptSeats", _lowRptSeats)
+}
+
+// UpdateLowRptSeats is a paid mutator transaction binding the contract method 0x6479b8e6.
+//
+// Solidity: function updateLowRptSeats(_lowRptSeats uint256) returns()
+func (_Rpt *RptSession) UpdateLowRptSeats(_lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateLowRptSeats(&_Rpt.TransactOpts, _lowRptSeats)
+}
+
+// UpdateLowRptSeats is a paid mutator transaction binding the contract method 0x6479b8e6.
+//
+// Solidity: function updateLowRptSeats(_lowRptSeats uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateLowRptSeats(_lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateLowRptSeats(&_Rpt.TransactOpts, _lowRptSeats)
 }
 
 // UpdateOmega is a paid mutator transaction binding the contract method 0xa23f52b8.
@@ -510,25 +578,46 @@ func (_Rpt *RptTransactorSession) UpdatePsi(_psi *big.Int) (*types.Transaction, 
 	return _Rpt.Contract.UpdatePsi(&_Rpt.TransactOpts, _psi)
 }
 
-// UpdateRandomLevel is a paid mutator transaction binding the contract method 0x81cfcb4f.
+// UpdateTotalSeats is a paid mutator transaction binding the contract method 0x90530bf0.
 //
-// Solidity: function updateRandomLevel(_randomLevel uint256) returns()
-func (_Rpt *RptTransactor) UpdateRandomLevel(opts *bind.TransactOpts, _randomLevel *big.Int) (*types.Transaction, error) {
-	return _Rpt.contract.Transact(opts, "updateRandomLevel", _randomLevel)
+// Solidity: function updateTotalSeats(_totalSeats uint256) returns()
+func (_Rpt *RptTransactor) UpdateTotalSeats(opts *bind.TransactOpts, _totalSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateTotalSeats", _totalSeats)
 }
 
-// UpdateRandomLevel is a paid mutator transaction binding the contract method 0x81cfcb4f.
+// UpdateTotalSeats is a paid mutator transaction binding the contract method 0x90530bf0.
 //
-// Solidity: function updateRandomLevel(_randomLevel uint256) returns()
-func (_Rpt *RptSession) UpdateRandomLevel(_randomLevel *big.Int) (*types.Transaction, error) {
-	return _Rpt.Contract.UpdateRandomLevel(&_Rpt.TransactOpts, _randomLevel)
+// Solidity: function updateTotalSeats(_totalSeats uint256) returns()
+func (_Rpt *RptSession) UpdateTotalSeats(_totalSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateTotalSeats(&_Rpt.TransactOpts, _totalSeats)
 }
 
-// UpdateRandomLevel is a paid mutator transaction binding the contract method 0x81cfcb4f.
+// UpdateTotalSeats is a paid mutator transaction binding the contract method 0x90530bf0.
 //
-// Solidity: function updateRandomLevel(_randomLevel uint256) returns()
-func (_Rpt *RptTransactorSession) UpdateRandomLevel(_randomLevel *big.Int) (*types.Transaction, error) {
-	return _Rpt.Contract.UpdateRandomLevel(&_Rpt.TransactOpts, _randomLevel)
+// Solidity: function updateTotalSeats(_totalSeats uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateTotalSeats(_totalSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateTotalSeats(&_Rpt.TransactOpts, _totalSeats)
+}
+
+// UpdateWeightConfigs is a paid mutator transaction binding the contract method 0xf182c59c.
+//
+// Solidity: function updateWeightConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256) returns()
+func (_Rpt *RptTransactor) UpdateWeightConfigs(opts *bind.TransactOpts, _alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateWeightConfigs", _alpha, _beta, _gamma, _psi, _omega, _window)
+}
+
+// UpdateWeightConfigs is a paid mutator transaction binding the contract method 0xf182c59c.
+//
+// Solidity: function updateWeightConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256) returns()
+func (_Rpt *RptSession) UpdateWeightConfigs(_alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateWeightConfigs(&_Rpt.TransactOpts, _alpha, _beta, _gamma, _psi, _omega, _window)
+}
+
+// UpdateWeightConfigs is a paid mutator transaction binding the contract method 0xf182c59c.
+//
+// Solidity: function updateWeightConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateWeightConfigs(_alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateWeightConfigs(&_Rpt.TransactOpts, _alpha, _beta, _gamma, _psi, _omega, _window)
 }
 
 // UpdateWindow is a paid mutator transaction binding the contract method 0xb98f0056.
@@ -552,9 +641,9 @@ func (_Rpt *RptTransactorSession) UpdateWindow(_window *big.Int) (*types.Transac
 	return _Rpt.Contract.UpdateWindow(&_Rpt.TransactOpts, _window)
 }
 
-// RptUpdateConfigsIterator is returned from FilterUpdateConfigs and is used to iterate over the raw logs and unpacked data for UpdateConfigs events raised by the Rpt contract.
-type RptUpdateConfigsIterator struct {
-	Event *RptUpdateConfigs // Event containing the contract specifics and raw log
+// RptUpdateElectionConfigsIterator is returned from FilterUpdateElectionConfigs and is used to iterate over the raw logs and unpacked data for UpdateElectionConfigs events raised by the Rpt contract.
+type RptUpdateElectionConfigsIterator struct {
+	Event *RptUpdateElectionConfigs // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -568,7 +657,7 @@ type RptUpdateConfigsIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *RptUpdateConfigsIterator) Next() bool {
+func (it *RptUpdateElectionConfigsIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -577,7 +666,7 @@ func (it *RptUpdateConfigsIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(RptUpdateConfigs)
+			it.Event = new(RptUpdateElectionConfigs)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -592,7 +681,7 @@ func (it *RptUpdateConfigsIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(RptUpdateConfigs)
+		it.Event = new(RptUpdateElectionConfigs)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -608,41 +697,41 @@ func (it *RptUpdateConfigsIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *RptUpdateConfigsIterator) Error() error {
+func (it *RptUpdateElectionConfigsIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *RptUpdateConfigsIterator) Close() error {
+func (it *RptUpdateElectionConfigsIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// RptUpdateConfigs represents a UpdateConfigs event raised by the Rpt contract.
-type RptUpdateConfigs struct {
+// RptUpdateElectionConfigs represents a UpdateElectionConfigs event raised by the Rpt contract.
+type RptUpdateElectionConfigs struct {
 	BlockNumber *big.Int
 	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// FilterUpdateConfigs is a free log retrieval operation binding the contract event 0x78a3671679b68721aaad9eb74535be0be119bd34c0efa671eb6ab3210d1fe257.
+// FilterUpdateElectionConfigs is a free log retrieval operation binding the contract event 0x09e649367469a85db638685b74f92f1ef17cdebb4610b4c42b7da19c2f1b189c.
 //
-// Solidity: e UpdateConfigs(blockNumber uint256)
-func (_Rpt *RptFilterer) FilterUpdateConfigs(opts *bind.FilterOpts) (*RptUpdateConfigsIterator, error) {
+// Solidity: e UpdateElectionConfigs(blockNumber uint256)
+func (_Rpt *RptFilterer) FilterUpdateElectionConfigs(opts *bind.FilterOpts) (*RptUpdateElectionConfigsIterator, error) {
 
-	logs, sub, err := _Rpt.contract.FilterLogs(opts, "UpdateConfigs")
+	logs, sub, err := _Rpt.contract.FilterLogs(opts, "UpdateElectionConfigs")
 	if err != nil {
 		return nil, err
 	}
-	return &RptUpdateConfigsIterator{contract: _Rpt.contract, event: "UpdateConfigs", logs: logs, sub: sub}, nil
+	return &RptUpdateElectionConfigsIterator{contract: _Rpt.contract, event: "UpdateElectionConfigs", logs: logs, sub: sub}, nil
 }
 
-// WatchUpdateConfigs is a free log subscription operation binding the contract event 0x78a3671679b68721aaad9eb74535be0be119bd34c0efa671eb6ab3210d1fe257.
+// WatchUpdateElectionConfigs is a free log subscription operation binding the contract event 0x09e649367469a85db638685b74f92f1ef17cdebb4610b4c42b7da19c2f1b189c.
 //
-// Solidity: e UpdateConfigs(blockNumber uint256)
-func (_Rpt *RptFilterer) WatchUpdateConfigs(opts *bind.WatchOpts, sink chan<- *RptUpdateConfigs) (event.Subscription, error) {
+// Solidity: e UpdateElectionConfigs(blockNumber uint256)
+func (_Rpt *RptFilterer) WatchUpdateElectionConfigs(opts *bind.WatchOpts, sink chan<- *RptUpdateElectionConfigs) (event.Subscription, error) {
 
-	logs, sub, err := _Rpt.contract.WatchLogs(opts, "UpdateConfigs")
+	logs, sub, err := _Rpt.contract.WatchLogs(opts, "UpdateElectionConfigs")
 	if err != nil {
 		return nil, err
 	}
@@ -652,8 +741,8 @@ func (_Rpt *RptFilterer) WatchUpdateConfigs(opts *bind.WatchOpts, sink chan<- *R
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(RptUpdateConfigs)
-				if err := _Rpt.contract.UnpackLog(event, "UpdateConfigs", log); err != nil {
+				event := new(RptUpdateElectionConfigs)
+				if err := _Rpt.contract.UnpackLog(event, "UpdateElectionConfigs", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -778,6 +867,128 @@ func (_Rpt *RptFilterer) WatchUpdateOneConfig(opts *bind.WatchOpts, sink chan<- 
 				// New log arrived, parse the event and forward to the user
 				event := new(RptUpdateOneConfig)
 				if err := _Rpt.contract.UnpackLog(event, "UpdateOneConfig", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// RptUpdateWeightConfigsIterator is returned from FilterUpdateWeightConfigs and is used to iterate over the raw logs and unpacked data for UpdateWeightConfigs events raised by the Rpt contract.
+type RptUpdateWeightConfigsIterator struct {
+	Event *RptUpdateWeightConfigs // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *RptUpdateWeightConfigsIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(RptUpdateWeightConfigs)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(RptUpdateWeightConfigs)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *RptUpdateWeightConfigsIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *RptUpdateWeightConfigsIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// RptUpdateWeightConfigs represents a UpdateWeightConfigs event raised by the Rpt contract.
+type RptUpdateWeightConfigs struct {
+	BlockNumber *big.Int
+	Raw         types.Log // Blockchain specific contextual infos
+}
+
+// FilterUpdateWeightConfigs is a free log retrieval operation binding the contract event 0x94cb95e42d1f9f5b3e73da8fddc18ba25b0c89408eb91f64e417c59c6833a82b.
+//
+// Solidity: e UpdateWeightConfigs(blockNumber uint256)
+func (_Rpt *RptFilterer) FilterUpdateWeightConfigs(opts *bind.FilterOpts) (*RptUpdateWeightConfigsIterator, error) {
+
+	logs, sub, err := _Rpt.contract.FilterLogs(opts, "UpdateWeightConfigs")
+	if err != nil {
+		return nil, err
+	}
+	return &RptUpdateWeightConfigsIterator{contract: _Rpt.contract, event: "UpdateWeightConfigs", logs: logs, sub: sub}, nil
+}
+
+// WatchUpdateWeightConfigs is a free log subscription operation binding the contract event 0x94cb95e42d1f9f5b3e73da8fddc18ba25b0c89408eb91f64e417c59c6833a82b.
+//
+// Solidity: e UpdateWeightConfigs(blockNumber uint256)
+func (_Rpt *RptFilterer) WatchUpdateWeightConfigs(opts *bind.WatchOpts, sink chan<- *RptUpdateWeightConfigs) (event.Subscription, error) {
+
+	logs, sub, err := _Rpt.contract.WatchLogs(opts, "UpdateWeightConfigs")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(RptUpdateWeightConfigs)
+				if err := _Rpt.contract.UnpackLog(event, "UpdateWeightConfigs", log); err != nil {
 					return err
 				}
 				event.Raw = log
