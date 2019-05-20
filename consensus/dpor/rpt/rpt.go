@@ -47,8 +47,10 @@ const (
 )
 
 const (
-	defaultWindowSize = 4
-	defaultTotalSeats = 8
+	defaultWindowSize  = 4
+	defaultTotalSeats  = 8
+	defaultLowRptSeats = 2
+	defaultLowRptPct   = 50
 )
 
 var (
@@ -333,7 +335,7 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 	return bc, nil
 }
 
-// TotalSeats returns random level
+// TotalSeats returns total dynaimc seats
 func (rs *RptServiceImpl) TotalSeats() (int, error) {
 	if rs.rptInstance2 == nil {
 		log.Error("New rpt contract 2 error")
@@ -341,22 +343,85 @@ func (rs *RptServiceImpl) TotalSeats() (int, error) {
 	}
 
 	instance := rs.rptInstance2
-	rl, err := instance.TotalSeats(nil)
+	ts, err := instance.TotalSeats(nil)
 	if err != nil {
-		log.Error("Get random level error", "error", err)
+		log.Error("Get total seats error", "error", err)
 		return defaultTotalSeats, err
 	}
 
 	// some restrictions to avoid some unnecessary errors
-	if rl.Int64() <= 0 {
+	if ts.Int64() <= 0 {
 		return 0, nil
 	}
 
-	if rl.Int64() >= defaultTotalSeats {
+	if ts.Int64() >= defaultTotalSeats {
 		return defaultTotalSeats, nil
 	}
 
-	return int(rl.Int64()), nil
+	return int(ts.Int64()), nil
+}
+
+// LowRptSeats returns low rpt seats
+func (rs *RptServiceImpl) LowRptSeats() (int, error) {
+	if rs.rptInstance2 == nil {
+		log.Error("New rpt contract 2 error")
+		return defaultLowRptSeats, nil
+	}
+
+	instance := rs.rptInstance2
+	lrs, err := instance.LowRptSeats(nil)
+	if err != nil {
+		log.Error("Get low rpt seats error", "error", err)
+		return defaultLowRptSeats, err
+	}
+
+	// some restrictions to avoid some unnecessary errors
+	if lrs.Int64() <= 0 {
+		return 0, nil
+	}
+
+	if lrs.Int64() >= defaultLowRptSeats {
+		return defaultLowRptSeats, nil
+	}
+
+	return int(lrs.Int64()), nil
+}
+
+// LowRptPercentage returns low rpt percentage among all rpt list
+func (rs *RptServiceImpl) LowRptPercentage() (int, error) {
+	if rs.rptInstance2 == nil {
+		log.Error("New rpt contract 2 error")
+		return defaultLowRptPct, nil
+	}
+
+	instance := rs.rptInstance2
+	lrp, err := instance.LowRptPercentage(nil)
+	if err != nil {
+		log.Error("Get low rpt percentage error", "error", err)
+		return defaultLowRptPct, err
+	}
+
+	// some restrictions to avoid some unnecessary errors
+	if lrp.Int64() <= 0 {
+		return 0, nil
+	}
+
+	if lrp.Int64() >= defaultLowRptPct {
+		return defaultLowRptPct, nil
+	}
+
+	return int(lrp.Int64()), nil
+}
+
+// LowRptCounts returns LowRptCounts
+func (rs *RptServiceImpl) LowRptCounts(total int) int {
+	pct, _ := rs.LowRptPercentage()
+	return PctCount(pct, total)
+}
+
+// PctCount calcs #pct percentage of #total
+func PctCount(pct int, total int) int {
+	return int(float64(pct) * 0.01 * float64(total))
 }
 
 // CalcRptInfoList returns reputation of
