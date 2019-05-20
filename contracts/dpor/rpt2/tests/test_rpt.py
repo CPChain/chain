@@ -99,7 +99,8 @@ def test_case_1():
 
 
 def main():
-    test_case_1()
+    # test_case_1()
+    compile_file()
 
 
 if __name__ == '__main__':
