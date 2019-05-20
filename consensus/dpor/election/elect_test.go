@@ -261,3 +261,116 @@ func Test_randomSelectByRpt(t *testing.T) {
 		})
 	}
 }
+
+func TestElect2(t *testing.T) {
+	type args struct {
+		rpts         rpt.RptList
+		seed         int64
+		totalSeats   int
+		lowRptCounts int
+		lowRptSeats  int
+	}
+	tests := []struct {
+		name string
+		args args
+		want []common.Address
+	}{
+		// TODO: Add test cases.
+		{
+			name: "1",
+			args: args{
+				rpts: rpt.RptList{
+					rpt.Rpt{
+						Rpt:     1,
+						Address: common.BigToAddress(big.NewInt(1)),
+					},
+					rpt.Rpt{
+						Rpt:     3,
+						Address: common.BigToAddress(big.NewInt(2)),
+					},
+					rpt.Rpt{
+						Rpt:     7,
+						Address: common.BigToAddress(big.NewInt(3)),
+					},
+					rpt.Rpt{
+						Rpt:     2,
+						Address: common.BigToAddress(big.NewInt(4)),
+					},
+					rpt.Rpt{
+						Rpt:     5,
+						Address: common.BigToAddress(big.NewInt(5)),
+					},
+					rpt.Rpt{
+						Rpt:     9,
+						Address: common.BigToAddress(big.NewInt(6)),
+					},
+					rpt.Rpt{
+						Rpt:     7,
+						Address: common.BigToAddress(big.NewInt(7)),
+					},
+					rpt.Rpt{
+						Rpt:     12,
+						Address: common.BigToAddress(big.NewInt(8)),
+					},
+					rpt.Rpt{
+						Rpt:     22,
+						Address: common.BigToAddress(big.NewInt(9)),
+					},
+					rpt.Rpt{
+						Rpt:     9,
+						Address: common.BigToAddress(big.NewInt(10)),
+					},
+					rpt.Rpt{
+						Rpt:     10,
+						Address: common.BigToAddress(big.NewInt(11)),
+					},
+					rpt.Rpt{
+						Rpt:     35,
+						Address: common.BigToAddress(big.NewInt(12)),
+					},
+					rpt.Rpt{
+						Rpt:     1,
+						Address: common.BigToAddress(big.NewInt(13)),
+					},
+					rpt.Rpt{
+						Rpt:     0,
+						Address: common.BigToAddress(big.NewInt(14)),
+					},
+					rpt.Rpt{
+						Rpt:     1000,
+						Address: common.BigToAddress(big.NewInt(15)),
+					},
+					rpt.Rpt{
+						Rpt:     400,
+						Address: common.BigToAddress(big.NewInt(16)),
+					},
+					rpt.Rpt{
+						Rpt:     5,
+						Address: common.BigToAddress(big.NewInt(17)),
+					},
+				},
+				seed:         1,
+				totalSeats:   8,
+				lowRptCounts: 10,
+				lowRptSeats:  2,
+			},
+			want: []common.Address{
+				common.BigToAddress(big.NewInt(5)),
+				common.BigToAddress(big.NewInt(7)),
+				common.BigToAddress(big.NewInt(15)),
+				common.BigToAddress(big.NewInt(16)),
+				common.BigToAddress(big.NewInt(10)),
+				common.BigToAddress(big.NewInt(8)),
+				common.BigToAddress(big.NewInt(11)),
+				common.BigToAddress(big.NewInt(9)),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Elect2(tt.args.rpts, tt.args.seed, tt.args.totalSeats, tt.args.lowRptCounts, tt.args.lowRptSeats); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Elect2() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
