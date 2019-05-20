@@ -269,7 +269,7 @@ type RptService interface {
 	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) Rpt
 	TotalSeats() (int, error)
 	LowRptSeats() (int, error)
-	LowRptCounts(total int) int
+	LowRptCount(total int) int
 }
 
 // RptCollector collects rpts infos of a given candidate
@@ -415,8 +415,8 @@ func (rs *RptServiceImpl) LowRptPercentage() (int, error) {
 	return int(lrp.Int64()), nil
 }
 
-// LowRptCounts returns LowRptCounts
-func (rs *RptServiceImpl) LowRptCounts(total int) int {
+// LowRptCount returns LowRptCount
+func (rs *RptServiceImpl) LowRptCount(total int) int {
 	pct, _ := rs.LowRptPercentage()
 	return PctCount(pct, total)
 }
