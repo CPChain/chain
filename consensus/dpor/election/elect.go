@@ -112,3 +112,27 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 	}
 	return elected
 }
+
+// Elect2 simplifies the election method
+//
+// In election, a certain number of candidates (referred as *seats*) are elected to be proposer
+// according to their RPT value.
+// We have two principles to design the election:
+//
+// An RNode with higher RPT has higher chance to be elected;
+// Each term of proposers has a certain number of representatives from RNodes with low RPT.
+//
+// Thus, the main ideas of election process are:
+//
+// Candidates are divided into two partitions, high-RPT RNodes and low-RPT RNodes;
+// Either partition has a number of available seats;
+// The probability mass for each node being elected is proportional to its RPT in its corresponding partition.
+//
+// rpts: the reputation list of RNodes
+// seed: a seed to generate a series of random numbers to select RNodes
+// totalSeats: total seats of the election result
+// highRptCounts: the number of high Rpt RNodes among the totaln
+func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCounts int, lowRptSeats int) []common.Address {
+
+	return []common.Address{}
+}
