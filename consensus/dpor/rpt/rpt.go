@@ -268,6 +268,8 @@ type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
 	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) Rpt
 	TotalSeats() (int, error)
+	LowRptSeats() (int, error)
+	LowRptCounts(total int) int
 }
 
 // RptCollector collects rpts infos of a given candidate
