@@ -331,15 +331,13 @@ according to their RPT value.
 We have the following principles to design the election:
 
 #. An RNode with higher RPT has higher chance to be elected;
-#. A smooth function is applied to reduce the gap between different RPT values;
 #. Each term of proposers has a certain number of representatives from RNodes with low RPT.
 
 Thus, the main ideas of election process are:
 
 #. Candidates are divided into two partitions, high-RPT RNodes and low-RPT RNodes;
 #. Either partition has a number of available seats;
-#. A smoothed score based on sigmoid function is calculated from RPT value for each node;
-#. The probability mass for each node being elected is proportional to its sigmoid score in its corresponding partition.
+#. The probability mass for each node being elected is proportional to its RPT in its corresponding partition.
 
 Pseudocode of Election
 +++++++++++++++++++++++
@@ -376,10 +374,9 @@ The equation :math:`0\leq LowRptPercentage\leq 1` and
     // the function select l random addresses
     // and return them as result
     func randomSelectByRpt(rptPartition, k, l) []address {
-        // for each rpt in rptPartition, we calculate its sigmoid value as sigmoidRpt
-        // sigmoidRpt is calculated 1/(math.Exp(rpt)+1)
-        // then we sum all sigmoidRpt values, as sumSigmoidRpt
-        // random select l addresses according to its sigmoidRpt/sumSigmoidRpt
+        // each element in rptPartition is referred as rpt
+        // then we sum all rpt values, as sumRpt
+        // random select l addresses according to its rpt/sumRpt
         // return these l addresses
     }
 
