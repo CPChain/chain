@@ -131,17 +131,17 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 // rpts: the reputation list of RNodes
 // seed: a seed to generate a series of random numbers to select RNodes
 // totalSeats: total seats of the election result
-// lowRptCounts: the number of low Rpt RNodes among the total RNodes
+// lowRptCount: the number of low Rpt RNodes among the total RNodes
 // lowRptSeats: the number of seats for low Rpt RNodes in the Proposer Committee
-func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCounts int, lowRptSeats int) []common.Address {
-	if lowRptCounts > rpts.Len() || lowRptSeats > totalSeats || totalSeats > rpts.Len() || lowRptCounts < lowRptSeats {
+func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCount int, lowRptSeats int) []common.Address {
+	if lowRptCount > rpts.Len() || lowRptSeats > totalSeats || totalSeats > rpts.Len() || lowRptCount < lowRptSeats {
 		return []common.Address{}
 	}
 
 	sort.Sort(rpts)
 
-	lowRpts := rpts[:lowRptCounts]
-	highRpts := rpts[lowRptCounts:]
+	lowRpts := rpts[:lowRptCount]
+	highRpts := rpts[lowRptCount:]
 
 	lowElected := randomSelectByRpt(lowRpts, seed, lowRptSeats)
 	highElected := randomSelectByRpt(highRpts, seed, totalSeats-lowRptSeats)
