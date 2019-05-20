@@ -374,8 +374,10 @@ The equation :math:`0\leq l\leq m` and :math:`0\leq k\leq \frac{l}{m}n \leq n` a
     // and return them as result
     func randomSelectByRpt(rptPartition, k, l) []address {
         // for each rpt in rptPartition, we calculate its sigmoid value as sigmoidRpt
-        // sigmoid function is 1/(e^x+1)
-
+        // sigmoidRpt is calculated 1/(math.Exp(rpt)+1)
+        // then we sum all sigmoidRpt values, as sumSigmoidRpt
+        // random select l addresses according to its sigmoidRpt/sumSigmoidRpt
+        // return these l addresses
     }
 
 
