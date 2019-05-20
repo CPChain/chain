@@ -19,9 +19,9 @@ var (
 		ContractReward: common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42"),
 
 		ContractRpt:  common.HexToAddress("0x878a9A4155E8D60fbe07074a9061a0Dcc031c212"),
-		ContractRpt2: common.HexToAddress("0x7e9925bEA4af2EBEA96Dd8BA9894d4503E6c0278"), // TODO: fix this
+		ContractRpt2: common.HexToAddress("0x195003F20606286b9CF88E58812F33c254ebE1cB"), // TODO: fix this
 
-		ContractRnode:  common.HexToAddress("0x7B4769C7d332105F8Ace1506c322597AEd7DeF59"),
+		ContractRnode:  common.HexToAddress("0xa4dEB8FCcc3C2fcb55b0fdf6F2f2E05411Ba1bF9"),
 		ContractRnode2: common.HexToAddress("0xD4826927aa2dba7930117782ED183576CCeBEd93"), // TODO: fix this
 
 		ContractAdmission: common.HexToAddress("0x8f01875F462CBBc956CB9C0392dE6053A31C9C99"),
@@ -29,7 +29,7 @@ var (
 		ContractCampaign:  common.HexToAddress("0x1404Bf355428523F8e51E68Df00A0521e413F98E"),
 		ContractCampaign2: common.HexToAddress("0x4D0FDbc8D38775014AbC38a3d134b9b97B6D047B"),
 		ContractCampaign3: common.HexToAddress("0xb8A07aE42E2902C41336A301C22b6e849eDd4F8B"),
-		ContractCampaign4: common.HexToAddress("0xDf44b3f933F19feDc3BC833da1225de3e2095c10"), // TODO: fix this
+		ContractCampaign4: common.HexToAddress("0x238cFc9AD2C5685946CDd5EE67F116f6aCccF3b7"), // TODO: fix this
 
 		// deprecated contract addresses
 		ContractRegister:   common.HexToAddress("0xA14842fBFfFe76d34e6D45ba5701ec9971bFd596"),
