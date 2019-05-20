@@ -30,7 +30,7 @@ const (
 	MaxSizeOfRecentProposers = 200
 )
 
-const defaultProposersNum = 4
+const defaultProposersSeats = 4
 
 var (
 	errValidatorNotInCommittee = errors.New("not a member in validators committee")
@@ -448,26 +448,26 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 
 		// run the election algorithm
 		var proposers []common.Address
-		if int(s.config.TermLen) > defaultProposersNum {
+		if int(s.config.TermLen) > defaultProposersSeats {
 
 			logOutAddrs("default 12 proposers", "proposer", configs.Proposers())
 
 			// elect some proposers based on rpts
-			randomSlots, _ := rptService.RandomLevel()
-			electedProposers := election.Elect(rpts, seed, randomSlots)
+			dynamicSeats, _ := rptService.TotalSeats()
+			electedProposers := election.Elect(rpts, seed, dynamicSeats)
 
 			logOutAddrs("elected proposers", "proposers", electedProposers)
 
 			// append default proposers to the end of electedProposers
-			defaultSlots := int(s.config.TermLen) - randomSlots - defaultProposersNum
-			for _, addr := range configs.Proposers()[:defaultSlots] {
+			paddingSeats := int(s.config.TermLen) - dynamicSeats - defaultProposersSeats
+			for _, addr := range configs.Proposers()[:paddingSeats] {
 				electedProposers = append(electedProposers, addr)
 			}
 
 			logOutAddrs("elected proposers after padding", "proposers", electedProposers)
 
 			// chose some default proposers
-			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersNum)
+			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersSeats)
 
 			logOutAddrs("chosen 4 proposers", "proposers", chosenProposers)
 
