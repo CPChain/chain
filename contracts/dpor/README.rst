@@ -1,5 +1,5 @@
-DPoR Smart Contract
-===================
+CPChain Smart Contract
+======================
 
 This module is CPChain built-in smart contracts for dpor consensus, including rnode, campaign, admission and rpt.
 
