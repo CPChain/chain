@@ -402,7 +402,7 @@ func (s *DporSnapshot) updateRpts(rptService rpt.RptService) (rpt.RptList, error
 	switch {
 	case s.Mode == NormalMode && s.isStartElection() && rptService != nil:
 		rpts := rptService.CalcRptInfoList(s.candidates(), s.number())
-		log.Debug("called contract to get rpts", "rpts", rpts.FormatString())
+		log.Debug("rpt result", "rpts", rpts.FormatString())
 		return rpts, nil
 	default:
 		var rpts rpt.RptList
@@ -441,11 +441,8 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 		// some logs about rpt infos
 		log.Debug("---------------------------")
 		log.Debug("start election")
-		log.Debug("rpts list:")
-		for idx, r := range rpts {
-			log.Debug("rpt:", "idx", idx, "addr", r.Address.Hex(), "value", r.Rpt)
-		}
 		log.Debug("seed", "seed", seed)
+		log.Debug("rpt list", "rpts", rpts.FormatString())
 		log.Debug("term length", "term", int(s.config.TermLen))
 		log.Debug("---------------------------")
 
@@ -453,54 +450,31 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 		var proposers []common.Address
 		if int(s.config.TermLen) > defaultProposersNum {
 
-			// some logs
-			log.Debug("---------------------------")
-			log.Debug("default 12 proposers")
-			for i, ep := range configs.Proposers() {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
+			logOutAddrs("default 12 proposers", "proposer", configs.Proposers())
 
 			// elect some proposers based on rpts
 			randomSlots, _ := rptService.RandomLevel()
 			electedProposers := election.Elect(rpts, seed, randomSlots)
 
-			// some logs
-			log.Debug("---------------------------")
-			log.Debug("elected proposers", "num", randomSlots)
-			for i, ep := range electedProposers {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
+			logOutAddrs("elected proposers", "proposers", electedProposers)
 
 			// append default proposers to the end of electedProposers
 			defaultSlots := int(s.config.TermLen) - randomSlots - defaultProposersNum
 			for _, addr := range configs.Proposers()[:defaultSlots] {
-				log.Debug("append default proposer to elected proposers", "addr", addr.Hex())
 				electedProposers = append(electedProposers, addr)
 			}
+
+			logOutAddrs("elected proposers after padding", "proposers", electedProposers)
 
 			// chose some default proposers
 			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersNum)
 
-			// some logs
-			log.Debug("---------------------------")
-			log.Debug("chosen 4 proposers")
-			for i, ep := range chosenProposers {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
+			logOutAddrs("chosen 4 proposers", "proposers", chosenProposers)
 
 			// combine together
 			proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
 
-			// some logs
-			log.Debug("---------------------------")
-			log.Debug("evenly spared 12 proposers")
-			for i, ep := range proposers {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
+			logOutAddrs("evenly spared 12 proposers", "proposer", proposers)
 
 		} else {
 			proposers = election.Elect(rpts, seed, int(s.config.TermLen))
@@ -514,15 +488,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 		term := s.FutureTermOf(s.number())
 		s.setRecentProposers(term, proposers)
 
-		// some logs about elected proposers
-		log.Debug("---------------------------")
-		log.Debug("result of elected proposers:")
-		for idx, s := range proposers {
-			log.Debug("proposer", "idx", idx, "addr", s.Hex())
-		}
-		log.Debug("current number", "number", s.number())
-		log.Debug("future term(election term)", "term", term)
-		log.Debug("---------------------------")
+		logOutAddrs(fmt.Sprintf("result of elected proposers, current number #%d, future term(election term) #%d", s.number(), term), "proposer", proposers)
 	}
 
 	// Set default proposer if it is in initial stage
@@ -531,11 +497,8 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 		proposers := configs.Proposers()
 		s.setRecentProposers(s.Term()+1, proposers)
 
-		// some logs about default proposer in initialization state
-		log.Debug("use default proposers for term", "term", s.Term()+1, "proposers", len(proposers))
-		for i, p := range proposers {
-			log.Debug(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
-		}
+		logOutAddrs(fmt.Sprintf("use default proposers for term #%d", s.Term()+1), "proposer", proposers)
+
 	}
 
 	return
@@ -707,4 +670,13 @@ func evenlyInsertDefaultProposers(electedProposers []common.Address, chosenDefau
 		proposers = append(proposers, slice...)
 	}
 	return
+}
+
+func logOutAddrs(title string, prefix string, addrs []common.Address) {
+	log.Debug("---------------------------")
+	log.Debug(title)
+	for i, addr := range addrs {
+		log.Debug(prefix, "idx", i, "addr", addr.Hex())
+	}
+	log.Debug("---------------------------")
 }
