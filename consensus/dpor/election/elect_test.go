@@ -18,6 +18,8 @@ package election
 
 import (
 	"fmt"
+	"math/big"
+	"reflect"
 	"sort"
 	"testing"
 
@@ -87,4 +89,175 @@ func TestElect(t *testing.T) {
 		}
 	}
 
+}
+
+func Test_findHit(t *testing.T) {
+	type args struct {
+		hit     int64
+		hitSums []int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			name: "0",
+			args: args{
+				hit:     13,
+				hitSums: []int64{1, 4, 8, 15},
+			},
+			want: 3,
+		},
+		{
+			name: "1",
+			args: args{
+				hit:     1,
+				hitSums: []int64{1, 4, 8, 15},
+			},
+			want: 0,
+		},
+		{
+			name: "2",
+			args: args{
+				hit:     2,
+				hitSums: []int64{1, 4, 8, 15},
+			},
+			want: 1,
+		},
+		{
+			name: "3",
+			args: args{
+				hit:     16,
+				hitSums: []int64{1, 4, 8, 15},
+			},
+			want: 3,
+		},
+		{
+			name: "4",
+			args: args{
+				hit:     9,
+				hitSums: []int64{1, 4, 8, 15},
+			},
+			want: 3,
+		},
+		{
+			name: "5",
+			args: args{
+				hit:     7,
+				hitSums: []int64{1, 4, 8, 15},
+			},
+			want: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := findHit(tt.args.hit, tt.args.hitSums); got != tt.want {
+				t.Errorf("findHit() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_sumOfFirstN(t *testing.T) {
+	type args struct {
+		rpts rpt.RptList
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantSums []int64
+		wantSum  int64
+	}{
+		// TODO: Add test cases.
+		{
+			name: "1",
+			args: args{
+				rpts: rpt.RptList{
+					rpt.Rpt{
+						Rpt:     1,
+						Address: common.BigToAddress(big.NewInt(1)),
+					},
+					rpt.Rpt{
+						Rpt:     3,
+						Address: common.BigToAddress(big.NewInt(3)),
+					},
+					rpt.Rpt{
+						Rpt:     4,
+						Address: common.BigToAddress(big.NewInt(4)),
+					},
+					rpt.Rpt{
+						Rpt:     7,
+						Address: common.BigToAddress(big.NewInt(7)),
+					},
+				},
+			},
+			wantSums: []int64{1, 4, 8, 15},
+			wantSum:  15,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSums, gotSum := sumOfFirstN(tt.args.rpts)
+			if !reflect.DeepEqual(gotSums, tt.wantSums) {
+				t.Errorf("sumOfFirstN() gotSums = %v, want %v", gotSums, tt.wantSums)
+			}
+			if gotSum != tt.wantSum {
+				t.Errorf("sumOfFirstN() gotSum = %v, want %v", gotSum, tt.wantSum)
+			}
+		})
+	}
+}
+
+func Test_randomSelectByRpt(t *testing.T) {
+	type args struct {
+		rpts  rpt.RptList
+		seed  int64
+		seats int
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantResult []common.Address
+	}{
+		// TODO: Add test cases.
+		{
+			name: "1",
+			args: args{
+				rpts: rpt.RptList{
+					rpt.Rpt{
+						Rpt:     1,
+						Address: common.BigToAddress(big.NewInt(1)),
+					},
+					rpt.Rpt{
+						Rpt:     3,
+						Address: common.BigToAddress(big.NewInt(3)),
+					},
+					rpt.Rpt{
+						Rpt:     7,
+						Address: common.BigToAddress(big.NewInt(7)),
+					},
+
+					rpt.Rpt{
+						Rpt:     4,
+						Address: common.BigToAddress(big.NewInt(4)),
+					},
+				},
+				seed:  1,
+				seats: 2,
+			},
+			wantResult: []common.Address{
+				common.BigToAddress(big.NewInt(4)),
+				common.BigToAddress(big.NewInt(1)),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotResult := randomSelectByRpt(tt.args.rpts, tt.args.seed, tt.args.seats); !reflect.DeepEqual(gotResult, tt.wantResult) {
+				t.Errorf("randomSelectByRpt() = %v, want %v", gotResult, tt.wantResult)
+			}
+		})
+	}
 }
