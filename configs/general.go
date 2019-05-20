@@ -119,17 +119,17 @@ const (
 
 // pivot blocks numbers
 const (
-	RptCalcMethod2BlockNumber = 343000
-	RptCalcMethod3BlockNumber = 372400
-	RptCalcMethod4BlockNumber = 390500
-	RptCalcMethod5BlockNumber = 398000
-	RptCalcMethod6BlockNumber = 398000
+	RptCalcMethod2BlockNumber = 144
+	RptCalcMethod3BlockNumber = 180
+	RptCalcMethod4BlockNumber = 216
+	RptCalcMethod5BlockNumber = 252
+	RptCalcMethod6BlockNumber = 288
 
-	Campaign2BlockNumber = 371900
-	Campaign3BlockNumber = 390500
-	Campaign4BlockNumber = 390500
+	Campaign2BlockNumber = 144
+	Campaign3BlockNumber = 180
+	Campaign4BlockNumber = 216
 
-	Election2BlockNumber = 390500
+	Election2BlockNumber = 180
 )
 
 var (
