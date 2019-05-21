@@ -323,7 +323,7 @@ Election
 ********************
 
 
-Principles and Ideas
+Principles and Steps
 +++++++++++++++++++++
 
 In election, a certain number of candidates (referred as *seats*) are elected to be proposer
@@ -365,8 +365,12 @@ The equation :math:`0\leq LowRptPercentage\leq 1` and
         lowRpts := rptList[:partition]
         highRpts := rptList[partition:]
 
-        lowElected := randomSelectByRpt(lowRpts, partition, LowRptSeats)
-        highElected := randomSelectByRpt(highRpts, TotalRnode - partition, TotalSeats - LowRptSeats)
+        // generate a series of random numbers given the seed
+        randSource := rand.NewSource(seed)
+        myRand := rand.rand.New(randSource)
+
+        lowElected := randomSelectByRpt(lowRpts, myRand, partition, LowRptSeats)
+        highElected := randomSelectByRpt(highRpts, myRand, TotalRnode - partition, TotalSeats - LowRptSeats)
         return append(lowElected, highElected)
     }
 
@@ -374,10 +378,10 @@ The equation :math:`0\leq LowRptPercentage\leq 1` and
     // the mass probability for each node being elected is proportional to its RPT
     // the function select l random addresses
     // and return them as result
-    func randomSelectByRpt(rptPartition, k, l) []address {
+    func randomSelectByRpt(rptPartition, myRand, k, l) []address {
         // each element in rptPartition is referred as rpt
         // then we sum all rpt values, as sumRpt
-        // random select l addresses according to its rpt/sumRpt
+        // using myRand to random select l addresses according to its rpt/sumRpt
         // return these l addresses
     }
 
