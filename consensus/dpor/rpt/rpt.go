@@ -33,7 +33,9 @@ import (
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
 	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/campaign2"
 	campaign3 "bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
-	contracts "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
+	campaign4 "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
+	rptContract "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
+	rptContract2 "bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -42,6 +44,13 @@ import (
 
 const (
 	defaultRank = 100 // 100 represent give the address a default rank
+)
+
+const (
+	defaultWindowSize  = 4
+	defaultTotalSeats  = 8
+	defaultLowRptSeats = 2
+	defaultLowRptPct   = 50
 )
 
 var (
@@ -91,8 +100,8 @@ func newRptDataCache() *rptDataCache {
 	}
 }
 
-func (bc *rptDataCache) getCache(num uint64) ([]float64, bool) {
-	if bal, ok := bc.cache.Get(num); ok {
+func (bc *rptDataCache) getCache(key interface{}) ([]float64, bool) {
+	if bal, ok := bc.cache.Get(key); ok {
 		if data, ok := bal.([]float64); ok {
 			return data, true
 		}
@@ -100,8 +109,8 @@ func (bc *rptDataCache) getCache(num uint64) ([]float64, bool) {
 	return []float64{}, false
 }
 
-func (bc *rptDataCache) addCache(num uint64, sortedCache []float64) {
-	bc.cache.Add(num, sortedCache)
+func (bc *rptDataCache) addCache(key interface{}, sortedCache []float64) {
+	bc.cache.Add(key, sortedCache)
 }
 
 // Rpt defines the name and reputation pair.
@@ -121,7 +130,7 @@ type RptList []Rpt
 func (r *RptList) FormatString() string {
 	items := make([]string, len(*r))
 	for i, v := range *r {
-		items[i] = fmt.Sprintf("[%s, %d]", v.Address.Hex(), v.Rpt)
+		items[i] = fmt.Sprintf("[addr: %s, rpt: #%d]", v.Address.Hex(), v.Rpt)
 	}
 	return strings.Join(items, ",")
 }
@@ -171,16 +180,18 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		// old campaign contract instance
 		contractInstance, err := campaign.NewCampaign(campaignAddr, rs.client)
 		if err != nil {
+			log.Debug("error when create campaign 1 instance", "err", err)
 			return nil, err
 		}
 
 		// candidates from old campaign contract
 		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 		if err != nil {
+			log.Debug("error when read candidates from campaign 1", "err", err)
 			return nil, err
 		}
 
-		log.Debug("now read candidates from old campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+		log.Debug("now read candidates from campaign contract 1", "len", len(cds), "contract addr", campaignAddr.Hex())
 
 		return cds, nil
 	}
@@ -193,35 +204,62 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 		// new campaign contract instance
 		contractInstance, err := campaign2.NewCampaign(campaignAddr, rs.client)
 		if err != nil {
+			log.Debug("error when create campaign 2 instance", "err", err)
 			return nil, err
 		}
 
 		// candidates from new campaign contract
 		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 		if err != nil {
+			log.Debug("error when read candidates from campaign 2", "err", err)
 			return nil, err
 		}
 
-		log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+		log.Debug("now read candidates from campaign contract 2", "len", len(cds), "contract addr", campaignAddr.Hex())
+		return cds, nil
+	}
+
+	if term < backend.TermOf(configs.Campaign4BlockNumber) {
+
+		// new campaign contract address
+		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign3]
+
+		// new campaign contract instance
+		contractInstance, err := campaign3.NewCampaign(campaignAddr, rs.client)
+		if err != nil {
+			log.Debug("error when create campaign 3 instance", "err", err)
+			return nil, err
+		}
+
+		// candidates from new campaign contract
+		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
+		if err != nil {
+			log.Debug("error when read candidates from campaign 3", "err", err)
+			return nil, err
+		}
+
+		log.Debug("now read candidates from campaign contract 3", "len", len(cds), "contract addr", campaignAddr.Hex())
 		return cds, nil
 	}
 
 	// new campaign contract address
-	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign3]
+	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign4]
 
 	// new campaign contract instance
-	contractInstance, err := campaign3.NewCampaign(campaignAddr, rs.client)
+	contractInstance, err := campaign4.NewCampaign(campaignAddr, rs.client)
 	if err != nil {
+		log.Debug("error when create campaign 4 instance", "err", err)
 		return nil, err
 	}
 
 	// candidates from new campaign contract
 	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 	if err != nil {
+		log.Debug("error when read candidates from campaign 4", "err", err)
 		return nil, err
 	}
 
-	log.Debug("now read candidates from new campaign contract", "len", len(cds), "contract addr", campaignAddr.Hex())
+	log.Debug("now read candidates from campaign contract 4", "len", len(cds), "contract addr", campaignAddr.Hex())
 	return cds, nil
 }
 
@@ -229,7 +267,9 @@ func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, err
 type RptService interface {
 	CalcRptInfoList(addresses []common.Address, number uint64) RptList
 	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) Rpt
-	WindowSize() (uint64, error)
+	TotalSeats() (int, error)
+	LowRptSeats() (int, error)
+	LowRptCount(total int) int
 }
 
 // RptCollector collects rpts infos of a given candidate
@@ -239,25 +279,35 @@ type RptCollector interface {
 
 // BasicCollector is the default rpt collector
 type RptServiceImpl struct {
-	rptContract common.Address
-	client      bind.ContractBackend
-	rptInstance *contracts.Rpt
+	client bind.ContractBackend
 
-	rptcache *lru.ARCCache
+	rptContractAddr  common.Address
+	rptContractAddr2 common.Address
+
+	rptInstance  *rptContract.Rpt
+	rptInstance2 *rptContract2.Rpt
+
+	rptCache *lru.ARCCache
 
 	rptCollector2 RptCollector
 	rptCollector3 RptCollector
 	rptCollector4 RptCollector
 	rptCollector5 RptCollector
+	rptCollector6 RptCollector
 }
 
 // NewRptService creates a concrete RPT service instance.
-func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address) (RptService, error) {
+func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address, rptContractAddr2 common.Address) (RptService, error) {
 	log.Debug("rptContractAddr", "contractAddr", rptContractAddr.Hex())
 
-	rptInstance, err := contracts.NewRpt(rptContractAddr, backend)
+	rptInstance, err := rptContract.NewRpt(rptContractAddr, backend)
 	if err != nil {
-		log.Fatal("New primitivesContract error")
+		log.Error("New rpt contract error")
+	}
+
+	rptInstance2, err := rptContract2.NewRpt(rptContractAddr2, backend)
+	if err != nil {
+		log.Error("New rpt contract 2 error")
 	}
 
 	cache, _ := lru.NewARC(cacheSize)
@@ -266,34 +316,114 @@ func NewRptService(backend backend.ClientBackend, rptContractAddr common.Address
 	newRptCollector3 := NewRptCollectorImpl3(rptInstance, backend)
 	newRptCollector4 := NewRptCollectorImpl4(rptInstance, backend)
 	newRptCollector5 := NewRptCollectorImpl5(rptInstance, backend)
+	newRptCollector6 := NewRptCollectorImpl6(rptInstance2, backend)
 
 	bc := &RptServiceImpl{
-		client:      backend,
-		rptContract: rptContractAddr,
-		rptInstance: rptInstance,
-		rptcache:    cache,
+		client:   backend,
+		rptCache: cache,
+
+		rptInstance:  rptInstance,
+		rptInstance2: rptInstance2,
+
+		rptContractAddr:  rptContractAddr,
+		rptContractAddr2: rptContractAddr2,
 
 		rptCollector2: newRptCollector2,
 		rptCollector3: newRptCollector3,
 		rptCollector4: newRptCollector4,
 		rptCollector5: newRptCollector5,
+		rptCollector6: newRptCollector6,
 	}
 	return bc, nil
 }
 
-// WindowSize reads windowsize from rpt contract
-func (rs *RptServiceImpl) WindowSize() (uint64, error) {
-	if rs.rptInstance == nil {
-		log.Fatal("New primitivesContract error")
+// TotalSeats returns total dynaimc seats
+func (rs *RptServiceImpl) TotalSeats() (int, error) {
+	if rs.rptInstance2 == nil {
+		log.Error("New rpt contract 2 error")
+		return defaultTotalSeats, nil
 	}
 
-	instance := rs.rptInstance
-	windowSize, err := instance.Window(nil)
+	instance := rs.rptInstance2
+	ts, err := instance.TotalSeats(nil)
 	if err != nil {
-		log.Error("Get windowSize error", "error", err)
-		return 0, err
+		log.Error("Get total seats error", "error", err)
+		return defaultTotalSeats, err
 	}
-	return windowSize.Uint64(), nil
+
+	// some restrictions to avoid some unnecessary errors
+	if ts.Int64() <= 0 {
+		return 0, nil
+	}
+
+	if ts.Int64() >= defaultTotalSeats {
+		return defaultTotalSeats, nil
+	}
+
+	return int(ts.Int64()), nil
+}
+
+// LowRptSeats returns low rpt seats
+func (rs *RptServiceImpl) LowRptSeats() (int, error) {
+	if rs.rptInstance2 == nil {
+		log.Error("New rpt contract 2 error")
+		return defaultLowRptSeats, nil
+	}
+
+	instance := rs.rptInstance2
+	lrs, err := instance.LowRptSeats(nil)
+	if err != nil {
+		log.Error("Get low rpt seats error", "error", err)
+		return defaultLowRptSeats, err
+	}
+
+	// some restrictions to avoid some unnecessary errors
+	if lrs.Int64() <= 0 {
+		return 0, nil
+	}
+
+	if lrs.Int64() >= defaultLowRptSeats {
+		return defaultLowRptSeats, nil
+	}
+
+	return int(lrs.Int64()), nil
+}
+
+// LowRptPercentage returns low rpt percentage among all rpt list
+func (rs *RptServiceImpl) LowRptPercentage() (int, error) {
+	if rs.rptInstance2 == nil {
+		log.Error("New rpt contract 2 error")
+		return defaultLowRptPct, nil
+	}
+
+	instance := rs.rptInstance2
+	lrp, err := instance.LowRptPercentage(nil)
+	if err != nil {
+		log.Error("Get low rpt percentage error", "error", err)
+		return defaultLowRptPct, err
+	}
+
+	// some restrictions to avoid some unnecessary errors
+	if lrp.Int64() <= 0 {
+		return 0, nil
+	}
+
+	if lrp.Int64() >= defaultLowRptPct {
+		return defaultLowRptPct, nil
+	}
+
+	return int(lrp.Int64()), nil
+}
+
+// LowRptCount returns LowRptCount
+func (rs *RptServiceImpl) LowRptCount(total int) int {
+	pct, _ := rs.LowRptPercentage()
+	return PctCount(pct, total)
+}
+
+// PctCount calcs #pct percentage of #total
+func PctCount(pct int, total int) int {
+	return int(float64(pct) * 0.01 * float64(total))
 }
 
 // CalcRptInfoList returns reputation of
@@ -335,8 +465,13 @@ func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common
 		return rs.rptCollector4.RptOf(address, addresses, number)
 	}
 
-	log.Debug("now calc rpt for with rpt method 5", "addr", address.Hex(), "number", number)
-	return rs.rptCollector5.RptOf(address, addresses, number)
+	if number < configs.RptCalcMethod6BlockNumber {
+		log.Debug("now calc rpt for with rpt method 5", "addr", address.Hex(), "number", number)
+		return rs.rptCollector5.RptOf(address, addresses, number)
+	}
+
+	log.Debug("now calc rpt for with rpt method 6", "addr", address.Hex(), "number", number)
+	return rs.rptCollector6.RptOf(address, addresses, number)
 }
 
 func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) Rpt {
@@ -358,19 +493,19 @@ func (rs *RptServiceImpl) calcRptInfo(address common.Address, blockNum uint64) R
 	log.Debug("blockInWindow", "blockInWindow", blockInWindow, "blockNum", blockNum)
 	for i := int64(blockNum); i >= 0 && i >= blockInWindow; i-- {
 		hash := RptHash(RptItems{Nodeaddress: address, Key: uint64(i)})
-		rc, exists := rs.rptcache.Get(hash)
+		rc, exists := rs.rptCache.Get(hash)
 		if !exists {
 			// try get rpt ${maxRetryGetRpt} times
 			for tryIndex := 0; tryIndex <= maxRetryGetRpt; tryIndex++ {
 				rptInfo, err := instance.GetRpt(nil, address, new(big.Int).SetInt64(i))
 				if err == nil {
 					log.Debug("GetRpt ok", "tryIndex", tryIndex, "hash", hash.Hex(), "blockNum", blockNum, "i", i)
-					rs.rptcache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})
+					rs.rptCache.Add(hash, Rpt{Address: address, Rpt: rptInfo.Int64()})
 					rpt += rptInfo.Int64()
 					break
 				}
 
-				log.Error("GetRpt error", "tryIndex", tryIndex, "error", err, "address", address.Hex(), "rs.rptContract", rs.rptContract.Hex(), "i", i, "blockNum", blockNum, "windowSize", windowSize, "blockInWindow", blockInWindow, "hash", hash.Hex())
+				log.Error("GetRpt error", "tryIndex", tryIndex, "error", err, "address", address.Hex(), "rs.rptContract", rs.rptContractAddr.Hex(), "i", i, "blockNum", blockNum, "windowSize", windowSize, "blockInWindow", blockInWindow, "hash", hash.Hex())
 				if tryIndex < maxRetryGetRpt {
 					// retry
 					continue

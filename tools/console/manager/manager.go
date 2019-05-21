@@ -10,7 +10,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/dpor/reward"
+	"bitbucket.org/cpchain/chain/contracts/reward"
 	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	cm "bitbucket.org/cpchain/chain/tools/console/common"
 	cc "bitbucket.org/cpchain/chain/tools/utility"
