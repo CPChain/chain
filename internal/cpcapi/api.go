@@ -1163,7 +1163,12 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 					rpcTx := newRPCTransaction(tx, block.Hash(), block.NumberU64(), uint64(index)+uint64(from))
 
 					var receipt *types.Receipt
-					receipt = receipts[uint64(index)+uint64(from)]
+					supportPrivate, _ := s.b.SupportPrivateTx(ctx)
+					if tx.IsPrivate() && supportPrivate {
+						receipt, _ = s.b.GetPrivateReceipt(ctx, tx.Hash())
+					} else {
+						receipt = receipts[uint64(index)+uint64(from)]
+					}
 					if err != nil {
 						log.Error(err.Error())
 					}
