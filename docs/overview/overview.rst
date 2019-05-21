@@ -362,7 +362,7 @@ The equation :math:`0\leq LowRptPercentage\leq 1` and
         var partition uint64
         partition = LowRptPercentage * TotalRnode
         // partition rptList into lowRpts and highRpts
-        lowRpts := rptList[:partition-1]
+        lowRpts := rptList[:partition]
         highRpts := rptList[partition:]
 
         lowElected := randomSelectByRpt(lowRpts, partition, LowRptSeats)
