@@ -41,6 +41,7 @@ const (
 var (
 	InvalidPrivateTxErr    = errors.New("Private transaction should have participants defined and payload data.")
 	NotSupportPrivateTxErr = errors.New("Not support private transaction")
+	NoSupportTxTypeErr     = errors.New("Transaction type not supported")
 )
 
 // PublicCpchainAPI provides an API to access Cpchain related information.
@@ -1527,12 +1528,16 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 // The sender is responsible for signing the transaction and using the correct nonce.
 func (s *PublicTransactionPoolAPI) SendRawTransaction(ctx context.Context, encodedTx hexutil.Bytes) (common.Hash, error) {
 	tx := new(types.Transaction)
-	log.Warn(">>>>>>>>>>>>", "type", tx.Type(), "is_private", tx.IsPrivate())
-	if tx.Type() > 1 {
-		return common.Hash{}, errors.New("transaction type error")
-	}
 	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
 		return common.Hash{}, err
+	}
+	if tx.Type() > 1 {
+		return common.Hash{}, NoSupportTxTypeErr
+	}
+	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
+	if tx.IsPrivate() && !supportPrivate {
+		// if not support private tx, immediately returns error
+		return common.Hash{}, NotSupportPrivateTxErr
 	}
 	return submitTransaction(ctx, s.b, tx)
 }
