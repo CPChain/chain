@@ -143,8 +143,11 @@ func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCount int, lowRp
 	lowRpts := rpts[:lowRptCount]
 	highRpts := rpts[lowRptCount:]
 
-	lowElected := randomSelectByRpt(lowRpts, seed, lowRptSeats)
-	highElected := randomSelectByRpt(highRpts, seed, totalSeats-lowRptSeats)
+	randSource := rand.NewSource(seed)
+	myRand := rand.New(randSource)
+
+	lowElected := randomSelectByRpt(lowRpts, myRand, lowRptSeats)
+	highElected := randomSelectByRpt(highRpts, myRand, totalSeats-lowRptSeats)
 
 	return append(lowElected, highElected...)
 }
@@ -154,17 +157,14 @@ func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCount int, lowRp
 // the mass probability for each node being elected is proportional to its RPT
 // the function select l random addresses
 // and return them as result
-func randomSelectByRpt(rpts rpt.RptList, seed int64, seats int) (result []common.Address) {
+func randomSelectByRpt(rpts rpt.RptList, myRand *rand.Rand, seats int) (result []common.Address) {
 	// each element in rptPartition is referred as rpt
 	// then we sum all rpt values, as sumRpt
 	// random select l addresses according to its rpt/sumRpt
 	// return these l addresses
 	sort.Sort(rpts)
 
-	randSource := rand.NewSource(seed)
-	myRand := rand.New(randSource)
 	sums, sum := sumOfFirstN(rpts)
-
 	selected := make(map[int]struct{})
 
 	for seats > 0 {

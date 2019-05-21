@@ -19,6 +19,7 @@ package election
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
 	"reflect"
 	"sort"
 	"testing"
@@ -212,9 +213,9 @@ func Test_sumOfFirstN(t *testing.T) {
 
 func Test_randomSelectByRpt(t *testing.T) {
 	type args struct {
-		rpts  rpt.RptList
-		seed  int64
-		seats int
+		rpts   rpt.RptList
+		myRand *rand.Rand
+		seats  int
 	}
 	tests := []struct {
 		name       string
@@ -238,14 +239,13 @@ func Test_randomSelectByRpt(t *testing.T) {
 						Rpt:     7,
 						Address: common.BigToAddress(big.NewInt(7)),
 					},
-
 					rpt.Rpt{
 						Rpt:     4,
 						Address: common.BigToAddress(big.NewInt(4)),
 					},
 				},
-				seed:  1,
-				seats: 2,
+				myRand: rand.New(rand.NewSource(1)),
+				seats:  2,
 			},
 			wantResult: []common.Address{
 				common.BigToAddress(big.NewInt(4)),
@@ -255,7 +255,7 @@ func Test_randomSelectByRpt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotResult := randomSelectByRpt(tt.args.rpts, tt.args.seed, tt.args.seats); !reflect.DeepEqual(gotResult, tt.wantResult) {
+			if gotResult := randomSelectByRpt(tt.args.rpts, tt.args.myRand, tt.args.seats); !reflect.DeepEqual(gotResult, tt.wantResult) {
 				t.Errorf("randomSelectByRpt() = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
@@ -357,8 +357,8 @@ func TestElect2(t *testing.T) {
 			want: []common.Address{
 				common.BigToAddress(big.NewInt(5)),
 				common.BigToAddress(big.NewInt(7)),
-				common.BigToAddress(big.NewInt(15)),
 				common.BigToAddress(big.NewInt(16)),
+				common.BigToAddress(big.NewInt(15)),
 				common.BigToAddress(big.NewInt(10)),
 				common.BigToAddress(big.NewInt(8)),
 				common.BigToAddress(big.NewInt(11)),
