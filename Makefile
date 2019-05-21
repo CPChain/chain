@@ -52,6 +52,11 @@ ecpubkey:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/ecpubkey\" to launch ecpubkey."
 
+updateproxycontract:
+	build/env.sh go run build/ci.go install ./tools/smartcontract/updateproxycontract
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/updateproxycontract\" to launch updateproxycontract."
+
 reward-admin:
 	build/env.sh go run build/ci.go install ./tools/reward-admin
 	@echo "Done building."
