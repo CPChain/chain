@@ -3,6 +3,7 @@ package dpor
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"reflect"
 	"testing"
 
@@ -696,4 +697,81 @@ func Test_evenlyInsertDefaultProposers(t *testing.T) {
 
 func TestDporSnapshot_updateProposers(t *testing.T) {
 
+}
+
+func Test_addressExcept(t *testing.T) {
+	type args struct {
+		all    []common.Address
+		except []common.Address
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantResult []common.Address
+	}{
+		// TODO: Add test cases.
+		{
+
+			name: "1",
+			args: args{
+				all: []common.Address{
+					common.BigToAddress(big.NewInt(1)),
+					common.BigToAddress(big.NewInt(2)),
+				},
+				except: []common.Address{
+					common.BigToAddress(big.NewInt(2)),
+					common.BigToAddress(big.NewInt(3)),
+					common.BigToAddress(big.NewInt(4)),
+				},
+			},
+			wantResult: []common.Address{
+				common.BigToAddress(big.NewInt(1)),
+			},
+		},
+
+		{
+
+			name: "2",
+			args: args{
+				all: []common.Address{
+					common.BigToAddress(big.NewInt(1)),
+					common.BigToAddress(big.NewInt(2)),
+					common.BigToAddress(big.NewInt(3)),
+				},
+				except: []common.Address{
+					common.BigToAddress(big.NewInt(4)),
+				},
+			},
+			wantResult: []common.Address{
+				common.BigToAddress(big.NewInt(1)),
+				common.BigToAddress(big.NewInt(2)),
+				common.BigToAddress(big.NewInt(3)),
+			},
+		},
+
+		{
+
+			name: "3",
+			args: args{
+				all: []common.Address{
+					common.BigToAddress(big.NewInt(1)),
+					common.BigToAddress(big.NewInt(2)),
+					common.BigToAddress(big.NewInt(3)),
+				},
+				except: []common.Address{},
+			},
+			wantResult: []common.Address{
+				common.BigToAddress(big.NewInt(1)),
+				common.BigToAddress(big.NewInt(2)),
+				common.BigToAddress(big.NewInt(3)),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotResult := addressExcept(tt.args.all, tt.args.except); !reflect.DeepEqual(gotResult, tt.wantResult) {
+				t.Errorf("addressExcept() = %v, want %v", gotResult, tt.wantResult)
+			}
+		})
+	}
 }

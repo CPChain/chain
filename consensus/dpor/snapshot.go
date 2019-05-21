@@ -567,8 +567,13 @@ func (s *DporSnapshot) updateProposers2(rpts rpt.RptList, seed int64, rptService
 
 			logOutAddrs("elected proposers after padding", "proposers", electedProposers)
 
+			// remove elected and padded proposers from all default proposers
+			leftDefaultProposers := addressExcept(configs.Proposers(), electedProposers)
+
+			logOutAddrs("left default proposer after election and padding", "proposers", leftDefaultProposers)
+
 			// chose some default proposers
-			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersSeats)
+			chosenProposers := choseSomeProposers(leftDefaultProposers, seed, defaultProposersSeats)
 
 			logOutAddrs("chosen 4 proposers", "proposers", chosenProposers)
 
@@ -770,6 +775,28 @@ func evenlyInsertDefaultProposers(electedProposers []common.Address, chosenDefau
 		// append to proposers
 		proposers = append(proposers, slice...)
 	}
+	return
+}
+
+// addressExcept returns a slice of addresses by remove all addresses in `except` slice from `all` slice
+func addressExcept(all []common.Address, except []common.Address) (result []common.Address) {
+
+	for _, x := range all {
+
+		ready := true
+
+		for _, y := range except {
+			if x == y {
+				ready = false
+				break
+			}
+		}
+
+		if ready {
+			result = append(result, x)
+		}
+	}
+
 	return
 }
 

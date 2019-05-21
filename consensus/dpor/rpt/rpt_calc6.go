@@ -254,14 +254,14 @@ func (rc *RptCollectorImpl6) BalanceInfoOf(addr common.Address, addrs []common.A
 
 	var rank int64
 	myBalance := getBalance(addr, num)
-	balances, ok := rc.balances.getCache(num)
+	key := newRptDataCacheKey(num, addrs)
+	balances, ok := rc.balances.getCache(key)
 	if !ok {
 		for _, candidate := range addrs {
 			balance := getBalance(candidate, num)
 			balances = append(balances, float64(balance))
 		}
 		balances = sortAndReverse(balances)
-		key := newRptDataCacheKey(num, addrs)
 		rc.balances.addCache(key, balances)
 	}
 
@@ -294,14 +294,14 @@ func (rc *RptCollectorImpl6) TxsInfoOf(addr common.Address, addrs []common.Addre
 
 	var rank int64
 	txsCount := getTxCount(addr, num)
-	txs, ok := rc.txs.getCache(num)
+	key := newRptDataCacheKey(num, addrs)
+	txs, ok := rc.txs.getCache(key)
 	if !ok {
 		for _, candidate := range addrs {
 			txC := getTxCount(candidate, num)
 			txs = append(txs, float64(txC))
 		}
 		txs = sortAndReverse(txs)
-		key := newRptDataCacheKey(num, addrs)
 		rc.txs.addCache(key, txs)
 	}
 
@@ -334,14 +334,14 @@ func (rc *RptCollectorImpl6) MaintenanceInfoOf(addr common.Address, addrs []comm
 
 	var rank int64
 	myMtn := getMtn(addr, num)
-	mtns, ok := rc.mtns.getCache(num)
+	key := newRptDataCacheKey(num, addrs)
+	mtns, ok := rc.mtns.getCache(key)
 	if !ok {
 		for _, candidate := range addrs {
 			mtnI := getMtn(candidate, num)
 			mtns = append(mtns, float64(mtnI))
 		}
 		mtns = sortAndReverse(mtns)
-		key := newRptDataCacheKey(num, addrs)
 		rc.mtns.addCache(key, mtns)
 	}
 

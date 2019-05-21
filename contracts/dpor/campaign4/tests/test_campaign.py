@@ -132,9 +132,9 @@ def prepare():
 
 
 def main():
-    check_campaign()
+    # check_campaign()
     # test_case_1()
-    # compile_file()
+    compile_file()
     # prepare()
 
 
