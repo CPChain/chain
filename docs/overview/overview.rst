@@ -124,7 +124,7 @@ User Scenario Steps
 Consensus
 #####################
 
-The consensus in LBFT 2.0 is determined by two two committees:
+The consensus in LBFT 2.0 is determined by two committees:
 **Validators Committee** and **Proposers Committee**,
 which together lead to a bipartite committee structure.
 Proposers and validators, just as their names imply,
