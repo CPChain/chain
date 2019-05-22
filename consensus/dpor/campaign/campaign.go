@@ -38,8 +38,8 @@ type CandidateServiceImpl struct {
 	contract common.Address
 }
 
-// NewCandidateService creates a concrete candidate service instance.
-func NewCandidateService(campaignContract common.Address, backend bind.ContractBackend) (CandidateService, error) {
+// NewCampaignService creates a concrete candidate service instance.
+func NewCampaignService(campaignContract common.Address, backend bind.ContractBackend) (CandidateService, error) {
 
 	rs := &CandidateServiceImpl{
 		contract: campaignContract,

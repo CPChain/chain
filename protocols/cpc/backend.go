@@ -165,10 +165,12 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
 
+	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
+
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
 	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
-		dpor.SetCandidateBackend(primitive_register.GetChainClient())
+		dpor.SetCampaignBackend(contractAddrs[configs.ContractCampaign4], primitive_register.GetChainClient())
 		dpor.SetRptBackend(primitive_register.GetChainClient())
 		dpor.SetRNodeBackend(primitive_register.GetChainClient())
 	}
@@ -195,7 +197,6 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	cpc.blockchain.SetSyncMode(config.SyncMode)
 
 	// admission must initialize after blockchain has been initialized
-	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
 		contractAddrs[configs.ContractAdmission],
 		contractAddrs[configs.ContractCampaign4],

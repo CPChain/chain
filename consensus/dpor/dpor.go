@@ -84,9 +84,9 @@ type Dpor struct {
 
 	ac admission.ApiBackend
 
-	rNodeBackend     *rnode.Rnode
-	rptBackend       rpt.RptService
-	candidateBackend rpt.CandidateService
+	rNodeBackend    *rnode.Rnode
+	rptBackend      rpt.RptService
+	campaignBackend rpt.CandidateService
 
 	chain consensus.ChainReadWriter
 
@@ -403,12 +403,12 @@ func (d *Dpor) GetRptBackend() rpt.RptService {
 	return d.rptBackend
 }
 
-func (d *Dpor) SetCandidateBackend(campaignContract common.Address, backend backend.ClientBackend) {
-	d.candidateBackend, _ = campaign.NewCandidateService(campaignContract, backend)
+func (d *Dpor) SetCampaignBackend(campaignContract common.Address, backend backend.ClientBackend) {
+	d.campaignBackend, _ = campaign.NewCampaignService(campaignContract, backend)
 }
 
 func (d *Dpor) GetCandidateBackend() rpt.CandidateService {
-	return d.candidateBackend
+	return d.campaignBackend
 }
 
 func (d *Dpor) SetRNodeBackend(backend backend.ClientBackend) {
