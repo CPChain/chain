@@ -651,20 +651,20 @@ func newBlockchainWithDB(n int, deployContract bool) (syncer.BlockChain, *databa
 }
 
 func fakeClaimCampaign(backend *backends.SimulatedBackend) {
-	transactOpts := bind.NewKeyedTransactor(testBankKey)
+	// transactOpts := bind.NewKeyedTransactor(testBankKey)
 
-	campaignInstance, _ := campaign.NewCampaign(campaignAddr, backend)
-	// ClaimCampaign 1st time
-	cpuNonce := uint64(100)
-	cpuBlockNum := int64(200)
-	memNonce := uint64(100)
-	memBlockNum := int64(200)
-	_, err := campaignInstance.ClaimCampaign(transactOpts, big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum))
+	// campaignInstance, _ := campaign.NewCampaign(campaignAddr, backend)
+	// // ClaimCampaign 1st time
+	// cpuNonce := uint64(100)
+	// cpuBlockNum := int64(200)
+	// memNonce := uint64(100)
+	// memBlockNum := int64(200)
+	// _, err := campaignInstance.ClaimCampaign(transactOpts, big.NewInt(1), cpuNonce, big.NewInt(cpuBlockNum), memNonce, big.NewInt(memBlockNum), big.NewInt(configs.CampaignVersion))
 
-	if err != nil {
-		log.Fatal("campaign error", "err", err)
-	}
-	backend.Commit()
+	// if err != nil {
+	// 	log.Fatal("campaign error", "err", err)
+	// }
+	// backend.Commit()
 }
 
 func newBlockchain(n int, deployContract bool) syncer.BlockChain {

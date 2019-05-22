@@ -4,11 +4,11 @@ import (
 	"context"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_backend"
 	"bitbucket.org/cpchain/chain/contracts/primitives_example/primitives"
-	"bitbucket.org/cpchain/chain/contracts/primitives_example/rpt_backend_holder"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -38,11 +38,11 @@ func RegisterPrimitiveContracts() {
 	}
 }
 
-func GetChainClient() *rpt_backend_holder.RptApiClient {
-	return &rpt_backend_holder.RptApiClient{ChainBackend: rpt_backend_holder.GetApiBackendHolderInstance().ChainBackend, ContractBackend: rpt_backend_holder.GetApiBackendHolderInstance().ContractBackend}
+func GetChainClient() *primitive_backend.ApiClient {
+	return &primitive_backend.ApiClient{ChainBackend: primitive_backend.GetApiBackendHolderInstance().ChainBackend, ContractBackend: primitive_backend.GetApiBackendHolderInstance().ContractBackend}
 }
 
-func MakePrimitiveContracts(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.RptApiClient) map[common.Address]vm.PrimitiveContract {
+func MakePrimitiveContracts(contractClient bind.ContractBackend, chainClient *primitive_backend.ApiClient) map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
 
 	// we start from 100 to reserve enough space for upstream primitive contracts.
