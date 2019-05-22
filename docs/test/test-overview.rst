@@ -31,7 +31,7 @@ examine its corresponding functionality given pairs of input and output.
 
 .. _`repository`: https://bitbucket.org/cpchain/chain/src/master/
 
-The functionality of :ref:`fusion-api`_ and :ref:`rpc-api` is also tested.
+The functionality of :ref:`fusion-api` and :ref:`rpc-api` is also tested.
 
 
 Integration Testing
@@ -56,13 +56,22 @@ Black Box Testing
 
 The black box testing examines the functionality of the chain
 without a priori knowledge on its internal implementation.
+In black box testing,
 
-Test Cases
+Abnormal Test Cases
 ++++++++++++++++++++
 
 We design plenty of test cases, including abnormal and normal ones,
 to test the functionality of the chain.
-For each possible abnormal scenario, as curated in :ref:
+For each possible abnormal scenario, as curated in :ref:`illicit-actions`,
+a input and its expected output is designed to simulate it.
+This simulation is implemented by adopting Jepsen framework.
+
+Stability Test Cases
++++++++++++++++++++++++
+
+It
+
 
 
 
