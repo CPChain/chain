@@ -311,6 +311,16 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 
 	cpuResult := ac.cpuWork.result()
 	memResult := ac.memoryWork.result()
+
+	log.Info("ready to claim campaign",
+		"terms", terms,
+		"cpu result", cpuResult.Nonce,
+		"cpu number", cpuResult.BlockNumber,
+		"mem result", memResult.Nonce,
+		"mem number", memResult.BlockNumber,
+		"campaign version", configs.CampaignVersion,
+	)
+
 	_, err = instance.ClaimCampaign(
 		transactOpts,
 		new(big.Int).SetUint64(terms),
