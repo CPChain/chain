@@ -29,17 +29,13 @@ type ContractAPI interface {
 }
 
 func RegisterPrimitiveContracts() {
-	chainClient := GetChainClient()
+	chainClient := primitive_backend.GetChainClient()
 	for addr, c := range MakePrimitiveContracts(chainClient, chainClient) {
 		err := vm.RegisterPrimitiveContract(addr, c)
 		if err != nil {
 			log.Fatal("register primitive contract error", "error", err, "addr", addr)
 		}
 	}
-}
-
-func GetChainClient() *primitive_backend.ApiClient {
-	return &primitive_backend.ApiClient{ChainBackend: primitive_backend.GetApiBackendHolderInstance().ChainBackend, ContractBackend: primitive_backend.GetApiBackendHolderInstance().ContractBackend}
 }
 
 func MakePrimitiveContracts(contractClient bind.ContractBackend, chainClient *primitive_backend.ApiClient) map[common.Address]vm.PrimitiveContract {

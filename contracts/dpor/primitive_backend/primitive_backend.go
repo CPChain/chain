@@ -40,6 +40,10 @@ func (rb *BackendHolder) Init(chainBackend ChainAPIBackend, contractBackend Cont
 	})
 }
 
+func GetChainClient() *ApiClient {
+	return &ApiClient{ChainBackend: GetApiBackendHolderInstance().ChainBackend, ContractBackend: GetApiBackendHolderInstance().ContractBackend}
+}
+
 type ChainClient struct {
 	ChainAPIBackend
 }
