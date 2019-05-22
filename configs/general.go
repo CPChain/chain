@@ -124,8 +124,6 @@ const (
 	RptCalcMethod4BlockNumber = 390500
 	RptCalcMethod5BlockNumber = 398000
 	RptCalcMethod6BlockNumber = 454700
-
-	Election2BlockNumber = 454700
 )
 
 var (
