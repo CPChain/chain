@@ -172,7 +172,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
 		dpor.SetCampaignBackend(contractAddrs[configs.ContractCampaign4], primitive_register.GetChainClient())
 		dpor.SetRptBackend(primitive_register.GetChainClient())
-		dpor.SetRNodeBackend(primitive_register.GetChainClient())
+		dpor.SetRNodeBackend(contractAddrs[configs.ContractRnode], primitive_register.GetChainClient())
 	}
 
 	log.Info("Initialising cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)

@@ -13,8 +13,8 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/campaign"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rnode"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -84,7 +84,7 @@ type Dpor struct {
 
 	ac admission.ApiBackend
 
-	rNodeBackend    *rnode.Rnode
+	rNodeBackend    rnode.RNodeService
 	rptBackend      rpt.RptService
 	campaignBackend campaign.CandidateService
 
@@ -411,20 +411,13 @@ func (d *Dpor) GetCandidateBackend() campaign.CandidateService {
 	return d.campaignBackend
 }
 
-func (d *Dpor) SetRNodeBackend(backend backend.ClientBackend) {
-	instance, err := rnode.NewRnode(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRnode], backend)
-	if err == nil {
-		d.rNodeBackend = instance
-	}
+func (d *Dpor) SetRNodeBackend(rNodeContract common.Address, backend backend.ClientBackend) {
+	d.rNodeBackend, _ = rnode.NewRNodeService(rNodeContract, backend)
 }
 
 func (d *Dpor) GetRNodes() ([]common.Address, error) {
 	if d.rNodeBackend != nil {
-		rNodes, err := d.rNodeBackend.GetRnodes(nil)
-		if err != nil {
-			return []common.Address{}, err
-		}
-		return rNodes, nil
+		return d.rNodeBackend.GetRNodes()
 	}
 
 	return []common.Address{}, nil
