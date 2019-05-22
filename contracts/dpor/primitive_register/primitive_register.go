@@ -4,7 +4,7 @@ import (
 	"context"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitives"
@@ -38,11 +38,11 @@ func RegisterPrimitiveContracts() {
 	}
 }
 
-func GetChainClient() *rpt_backend_holder.RptApiClient {
-	return &rpt_backend_holder.RptApiClient{ChainBackend: rpt_backend_holder.GetApiBackendHolderInstance().ChainBackend, ContractBackend: rpt_backend_holder.GetApiBackendHolderInstance().ContractBackend}
+func GetChainClient() *rpt_backend_holder.ApiClient {
+	return &rpt_backend_holder.ApiClient{ChainBackend: rpt_backend_holder.GetApiBackendHolderInstance().ChainBackend, ContractBackend: rpt_backend_holder.GetApiBackendHolderInstance().ContractBackend}
 }
 
-func MakePrimitiveContracts(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.RptApiClient) map[common.Address]vm.PrimitiveContract {
+func MakePrimitiveContracts(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.ApiClient) map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
 
 	// we start from 100 to reserve enough space for upstream primitive contracts.

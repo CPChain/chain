@@ -66,10 +66,10 @@ type RptPrimitiveBackend interface {
 
 type RptEvaluator struct {
 	ContractClient bind.ContractBackend
-	ChainClient    *rpt_backend_holder.RptApiClient
+	ChainClient    *rpt_backend_holder.ApiClient
 }
 
-func NewRptEvaluator(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.RptApiClient) (*RptEvaluator, error) {
+func NewRptEvaluator(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.ApiClient) (*RptEvaluator, error) {
 	bc := &RptEvaluator{
 		ContractClient: contractClient,
 		ChainClient:    chainClient,
