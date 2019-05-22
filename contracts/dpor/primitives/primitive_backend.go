@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/campaign"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rpt_backend_holder"
+	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_backend"
 	pdash "bitbucket.org/cpchain/chain/contracts/pdash/pdash_contract"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -66,10 +66,10 @@ type RptPrimitiveBackend interface {
 
 type RptEvaluator struct {
 	ContractClient bind.ContractBackend
-	ChainClient    *rpt_backend_holder.ApiClient
+	ChainClient    *primitive_backend.ApiClient
 }
 
-func NewRptEvaluator(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.ApiClient) (*RptEvaluator, error) {
+func NewRptEvaluator(contractClient bind.ContractBackend, chainClient *primitive_backend.ApiClient) (*RptEvaluator, error) {
 	bc := &RptEvaluator{
 		ContractClient: contractClient,
 		ChainClient:    chainClient,
@@ -77,7 +77,7 @@ func NewRptEvaluator(contractClient bind.ContractBackend, chainClient *rpt_backe
 	return bc, nil
 }
 
-func getBalanceAt(ctx context.Context, apiBackend rpt_backend_holder.ChainAPIBackend, account common.Address, blockNumber *big.Int) (*big.Int, error) {
+func getBalanceAt(ctx context.Context, apiBackend primitive_backend.ChainAPIBackend, account common.Address, blockNumber *big.Int) (*big.Int, error) {
 	state, _, err := apiBackend.StateAndHeaderByNumber(ctx, rpc.BlockNumber(blockNumber.Uint64()), false)
 	if state == nil || err != nil {
 		return common.Big0, err

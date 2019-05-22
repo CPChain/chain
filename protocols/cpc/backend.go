@@ -31,8 +31,8 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_register"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rpt_backend_holder"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -168,7 +168,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
 
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
-	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
+	primitive_backend.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
 		dpor.SetCampaignBackend(contractAddrs[configs.ContractCampaign4], primitive_register.GetChainClient())
 		dpor.SetRptBackend(contractAddrs[configs.ContractRpt2], primitive_register.GetChainClient())
