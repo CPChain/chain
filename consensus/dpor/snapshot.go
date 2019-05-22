@@ -30,7 +30,7 @@ const (
 	MaxSizeOfRecentProposers = 200
 )
 
-const defaultProposersNum = 4
+const defaultProposersSeats = 4
 
 var (
 	errValidatorNotInCommittee = errors.New("not a member in validators committee")
@@ -333,7 +333,14 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 		if backend.IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
 			log.Debug("update proposers committee", "number", s.number())
 			seed := header.Hash().Big().Int64()
-			s.updateProposers(rpts, seed)
+			if s.number() < configs.Election2BlockNumber {
+				log.Debug("update proposers with updateProposers 1", "number", s.number())
+				s.updateProposers(rpts, seed)
+			} else {
+				log.Debug("update proposers with updateProposers 2", "number", s.number())
+				s.updateProposers2(rpts, seed, rptService)
+			}
+
 		}
 
 	}
@@ -402,7 +409,7 @@ func (s *DporSnapshot) updateRpts(rptService rpt.RptService) (rpt.RptList, error
 	switch {
 	case s.Mode == NormalMode && s.isStartElection() && rptService != nil:
 		rpts := rptService.CalcRptInfoList(s.candidates(), s.number())
-		log.Debug("called contract to get rpts", "rpts", rpts.FormatString())
+		log.Debug("rpt result", "rpts", rpts.FormatString())
 		return rpts, nil
 	default:
 		var rpts rpt.RptList
@@ -451,8 +458,8 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 
 		// run the election algorithm
 		var proposers []common.Address
-		if int(s.config.TermLen) > defaultProposersNum {
-			electedProposers := election.Elect(rpts, seed, int(s.config.TermLen)-defaultProposersNum)
+		if int(s.config.TermLen) > defaultProposersSeats {
+			electedProposers := election.Elect(rpts, seed, int(s.config.TermLen)-defaultProposersSeats)
 
 			log.Debug("---------------------------")
 			log.Debug("elected 8 proposers")
@@ -461,7 +468,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 			}
 			log.Debug("---------------------------")
 
-			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersNum)
+			chosenProposers := choseSomeProposers(configs.Proposers(), seed, defaultProposersSeats)
 
 			log.Debug("---------------------------")
 			log.Debug("chosen 4 proposers")
@@ -520,6 +527,84 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
 		for i, p := range proposers {
 			log.Debug(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
 		}
+	}
+
+	return
+}
+
+// updateProposer uses rpt and election result to get new proposers committee
+func (s *DporSnapshot) updateProposers2(rpts rpt.RptList, seed int64, rptService rpt.RptService) {
+	// Elect proposers
+	if s.isStartElection() {
+
+		// some logs about rpt infos
+		log.Debug("---------------------------")
+		log.Debug("start election")
+		log.Debug("seed", "seed", seed)
+		log.Debug("rpt list", "rpts", rpts.FormatString())
+		log.Debug("term length", "term", int(s.config.TermLen))
+		log.Debug("---------------------------")
+
+		// run the election algorithm
+		var proposers []common.Address
+		if int(s.config.TermLen) > defaultProposersSeats {
+
+			logOutAddrs("default 12 proposers", "proposer", configs.Proposers())
+
+			// elect some proposers based on rpts
+			dynamicSeats, _ := rptService.TotalSeats()
+			lowRptCount := rptService.LowRptCount(rpts.Len())
+			lowRptSeats, _ := rptService.LowRptSeats()
+			electedProposers := election.Elect2(rpts, seed, dynamicSeats, lowRptCount, lowRptSeats)
+
+			logOutAddrs("elected proposers", "proposers", electedProposers)
+
+			// append default proposers to the end of electedProposers
+			paddingSeats := int(s.config.TermLen) - dynamicSeats - defaultProposersSeats
+			for _, addr := range configs.Proposers()[:paddingSeats] {
+				electedProposers = append(electedProposers, addr)
+			}
+
+			logOutAddrs("elected proposers after padding", "proposers", electedProposers)
+
+			// remove elected and padded proposers from all default proposers
+			leftDefaultProposers := addressExcept(configs.Proposers(), electedProposers)
+
+			logOutAddrs("left default proposer after election and padding", "proposers", leftDefaultProposers)
+
+			// chose some default proposers
+			chosenProposers := choseSomeProposers(leftDefaultProposers, seed, defaultProposersSeats)
+
+			logOutAddrs("chosen 4 proposers", "proposers", chosenProposers)
+
+			// combine together
+			proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
+
+			logOutAddrs("evenly spared 12 proposers", "proposer", proposers)
+
+		} else {
+			proposers = election.Elect(rpts, seed, int(s.config.TermLen))
+		}
+
+		if len(proposers) != int(s.config.TermLen) {
+			panic("invalid length of prepared proposer list")
+		}
+
+		// save to cache
+		term := s.FutureTermOf(s.number())
+		s.setRecentProposers(term, proposers)
+
+		logOutAddrs(fmt.Sprintf("result of elected proposers, current number #%d, future term(election term) #%d", s.number(), term), "proposer", proposers)
+	}
+
+	// Set default proposer if it is in initial stage
+	if s.isUseDefaultProposers() {
+		// set default proposers
+		proposers := configs.Proposers()
+		s.setRecentProposers(s.Term()+1, proposers)
+
+		logOutAddrs(fmt.Sprintf("use default proposers for term #%d", s.Term()+1), "proposer", proposers)
+
 	}
 
 	return
@@ -691,4 +776,35 @@ func evenlyInsertDefaultProposers(electedProposers []common.Address, chosenDefau
 		proposers = append(proposers, slice...)
 	}
 	return
+}
+
+// addressExcept returns a slice of addresses by remove all addresses in `except` slice from `all` slice
+func addressExcept(all []common.Address, except []common.Address) (result []common.Address) {
+
+	for _, x := range all {
+
+		ready := true
+
+		for _, y := range except {
+			if x == y {
+				ready = false
+				break
+			}
+		}
+
+		if ready {
+			result = append(result, x)
+		}
+	}
+
+	return
+}
+
+func logOutAddrs(title string, prefix string, addrs []common.Address) {
+	log.Debug("---------------------------")
+	log.Debug(title)
+	for i, addr := range addrs {
+		log.Debug(prefix, "idx", i, "addr", addr.Hex())
+	}
+	log.Debug("---------------------------")
 }

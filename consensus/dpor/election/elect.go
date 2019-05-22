@@ -112,3 +112,93 @@ func Elect(rpts rpt.RptList, seed int64, termLen int) []common.Address {
 	}
 	return elected
 }
+
+// Elect2 simplifies the election method
+//
+// In election, a certain number of candidates (referred as *seats*) are elected to be proposer
+// according to their RPT value.
+// We have two principles to design the election:
+//
+// An RNode with higher RPT has higher chance to be elected;
+// Each term of proposers has a certain number of representatives from RNodes with low RPT.
+//
+// Thus, the main ideas of election process are:
+//
+// Candidates are divided into two partitions, high-RPT RNodes and low-RPT RNodes;
+// Either partition has a number of available seats;
+// The probability mass for each node being elected is proportional to its RPT in its corresponding partition.
+//
+// rpts: the reputation list of RNodes
+// seed: a seed to generate a series of random numbers to select RNodes
+// totalSeats: total seats of the election result
+// lowRptCount: the number of low Rpt RNodes among the total RNodes
+// lowRptSeats: the number of seats for low Rpt RNodes in the Proposer Committee
+func Elect2(rpts rpt.RptList, seed int64, totalSeats int, lowRptCount int, lowRptSeats int) []common.Address {
+	if lowRptCount > rpts.Len() || lowRptSeats > totalSeats || totalSeats > rpts.Len() || lowRptCount < lowRptSeats {
+		return []common.Address{}
+	}
+
+	sort.Sort(rpts)
+
+	lowRpts := rpts[:lowRptCount]
+	highRpts := rpts[lowRptCount:]
+
+	randSource := rand.NewSource(seed)
+	myRand := rand.New(randSource)
+
+	lowElected := randomSelectByRpt(lowRpts, myRand, lowRptSeats)
+	highElected := randomSelectByRpt(highRpts, myRand, totalSeats-lowRptSeats)
+
+	return append(lowElected, highElected...)
+}
+
+// randomSelectByRpt
+// uniform random selection from rptPartition
+// the mass probability for each node being elected is proportional to its RPT
+// the function select l random addresses
+// and return them as result
+func randomSelectByRpt(rpts rpt.RptList, myRand *rand.Rand, seats int) (result []common.Address) {
+	// each element in rptPartition is referred as rpt
+	// then we sum all rpt values, as sumRpt
+	// random select l addresses according to its rpt/sumRpt
+	// return these l addresses
+	sort.Sort(rpts)
+
+	sums, sum := sumOfFirstN(rpts)
+	selected := make(map[int]struct{})
+
+	for seats > 0 {
+		randI := myRand.Int63n(sum)
+		resultIdx := findHit(randI, sums)
+
+		// if already selected, continue
+		if _, already := selected[resultIdx]; already {
+			continue
+		}
+
+		// not selected yet, append it!
+		selected[resultIdx] = struct{}{}
+		result = append(result, rpts[resultIdx].Address)
+
+		seats--
+	}
+	return result
+}
+
+func findHit(hit int64, hitSums []int64) int {
+	for idx, x := range hitSums {
+		if hit <= x {
+			return idx
+		}
+	}
+	return len(hitSums) - 1
+}
+
+func sumOfFirstN(rpts rpt.RptList) (sums []int64, sum int64) {
+	sum = 0
+	for _, rpt := range rpts {
+		sum += rpt.Rpt
+		sums = append(sums, sum)
+	}
+	return
+}

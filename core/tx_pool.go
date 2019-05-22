@@ -138,7 +138,8 @@ type TxPoolConfig struct {
 	AccountQueue uint64 // Maximum number of non-executable transaction slots permitted per account
 	GlobalQueue  uint64 // Maximum number of non-executable transaction slots for all accounts
 
-	MaxTxMapSize uint64 // Maximum number of pending transactions
+	MaxTxMapSize  uint64 // Maximum number of pending transactions
+	IsFifoTxQueue bool   // Use fifo queue for txs queue, not priced heap
 
 	Lifetime time.Duration // Maximum amount of time non-executable transaction are queued
 }
@@ -153,7 +154,6 @@ var DefaultTxPoolConfig = TxPoolConfig{
 	PriceBump:  10,
 
 	AccountSlots: 1024,
-	//AccountSlots: 16,
 	GlobalSlots:  8192,
 	AccountQueue: 2048,
 	GlobalQueue:  8192,
@@ -693,6 +693,12 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 // whitelisted, preventing any associated transaction from being dropped out of
 // the pool due to pricing constraints.
 func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
+	// If IsFifoTxQueue is true and the txpool is full, just ignore the tx.
+	if pool.config.IsFifoTxQueue && uint64(pool.all.Count()) >= pool.config.GlobalSlots+pool.config.GlobalQueue {
+		log.Debug("txpool is full")
+		return false, fmt.Errorf("txpool is full")
+	}
+
 	// If the transaction is already known, discard it
 	hash := tx.Hash()
 	if pool.all.Get(hash) != nil {

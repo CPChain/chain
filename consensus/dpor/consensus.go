@@ -324,6 +324,8 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 
 	select {
 	case <-stop:
+		log.Warn("Quit block sealing", "number", block.NumberU64(), "hash", block.Hash().Hex())
+
 		return nil, nil
 	case <-time.After(delay):
 		log.Debug("wait for seal", "delay", delay)
@@ -338,7 +340,7 @@ func (d *Dpor) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 
 	// Create a signature space for validators
 	header.Dpor.Sigs = make([]types.DporSignature, len(header.Dpor.Validators))
-	log.Info("sealed the block", "hash", header.Hash().Hex(), "number", header.Number)
+	log.Debug("sealed the block", "hash", header.Hash().Hex(), "number", header.Number)
 
 	// Update dpor current snapshot
 	d.SetCurrentSnap(snap)
