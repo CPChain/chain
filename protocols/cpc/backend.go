@@ -171,7 +171,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
 		dpor.SetCampaignBackend(contractAddrs[configs.ContractCampaign4], primitive_register.GetChainClient())
-		dpor.SetRptBackend(primitive_register.GetChainClient())
+		dpor.SetRptBackend(contractAddrs[configs.ContractRpt2], primitive_register.GetChainClient())
 		dpor.SetRNodeBackend(contractAddrs[configs.ContractRnode], primitive_register.GetChainClient())
 	}
 

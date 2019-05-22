@@ -117,15 +117,6 @@ const (
 	CampaignVersion = 1
 )
 
-// pivot blocks numbers
-const (
-	RptCalcMethod2BlockNumber = 343000
-	RptCalcMethod3BlockNumber = 372400
-	RptCalcMethod4BlockNumber = 390500
-	RptCalcMethod5BlockNumber = 398000
-	RptCalcMethod6BlockNumber = 454700
-)
-
 var (
 	chainConfigMap = map[RunMode]*ChainConfig{
 		Dev:      devChainConfig,
