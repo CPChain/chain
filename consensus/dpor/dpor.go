@@ -12,6 +12,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/consensus/dpor/campaign"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/database"
@@ -402,8 +403,8 @@ func (d *Dpor) GetRptBackend() rpt.RptService {
 	return d.rptBackend
 }
 
-func (d *Dpor) SetCandidateBackend(backend backend.ClientBackend) {
-	d.candidateBackend, _ = rpt.NewCandidateService(backend)
+func (d *Dpor) SetCandidateBackend(campaignContract common.Address, backend backend.ClientBackend) {
+	d.candidateBackend, _ = campaign.NewCandidateService(campaignContract, backend)
 }
 
 func (d *Dpor) GetCandidateBackend() rpt.CandidateService {

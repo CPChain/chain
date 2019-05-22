@@ -21,7 +21,6 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 
 	// TODO: fix this @liuq
@@ -35,14 +34,16 @@ type CandidateService interface {
 
 // CandidateServiceImpl is the default candidate list collector
 type CandidateServiceImpl struct {
-	client bind.ContractBackend
+	client   bind.ContractBackend
+	contract common.Address
 }
 
 // NewCandidateService creates a concrete candidate service instance.
-func NewCandidateService(backend bind.ContractBackend) (CandidateService, error) {
+func NewCandidateService(campaignContract common.Address, backend bind.ContractBackend) (CandidateService, error) {
 
 	rs := &CandidateServiceImpl{
-		client: backend,
+		contract: campaignContract,
+		client:   backend,
 	}
 	return rs, nil
 }
@@ -50,24 +51,20 @@ func NewCandidateService(backend bind.ContractBackend) (CandidateService, error)
 // CandidatesOf implements CandidateService
 func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
 
-	// new campaign contract address
-	// TODO: fix this @liuq
-	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign4]
-
 	// new campaign contract instance
-	contractInstance, err := campaignContract.NewCampaign(campaignAddr, rs.client)
+	contractInstance, err := campaignContract.NewCampaign(rs.contract, rs.client)
 	if err != nil {
-		log.Debug("error when create campaign 4 instance", "err", err)
+		log.Debug("error when create campaign instance", "err", err)
 		return nil, err
 	}
 
 	// candidates from new campaign contract
 	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
 	if err != nil {
-		log.Debug("error when read candidates from campaign 4", "err", err)
+		log.Debug("error when read candidates from campaign", "err", err)
 		return nil, err
 	}
 
-	log.Debug("now read candidates from campaign contract 4", "len", len(cds), "contract addr", campaignAddr.Hex())
+	log.Debug("now read candidates from campaign contract", "len", len(cds), "contract addr", rs.contract.Hex())
 	return cds, nil
 }
