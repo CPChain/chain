@@ -22,8 +22,10 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
-	campaignContract "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
 	"github.com/ethereum/go-ethereum/common"
+
+	// TODO: fix this @liuq
+	campaignContract "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
 )
 
 // CandidateService provides methods to obtain all candidates from campaign contract
@@ -49,6 +51,7 @@ func NewCandidateService(backend bind.ContractBackend) (CandidateService, error)
 func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
 
 	// new campaign contract address
+	// TODO: fix this @liuq
 	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign4]
 
 	// new campaign contract instance
