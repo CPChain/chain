@@ -19,7 +19,7 @@ import (
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
-	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode"
+	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode2"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -169,7 +169,10 @@ func (ac *AdmissionControl) FundForRNode() error {
 	if balance.Cmp(minRnodeFund) >= 0 {
 		transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 		transactOpts.Value = minRnodeFund
-		tx, err := rNodeContract.JoinRnode(transactOpts)
+		tx, err := rNodeContract.JoinRnode(
+			transactOpts,
+			new(big.Int).SetInt64(configs.RnodeVersion),
+		)
 		if err != nil {
 			log.Info("encounter error when funding deposit for node to become candidate", "error", err)
 			return err
