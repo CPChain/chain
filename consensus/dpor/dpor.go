@@ -86,7 +86,7 @@ type Dpor struct {
 
 	rNodeBackend    *rnode.Rnode
 	rptBackend      rpt.RptService
-	campaignBackend rpt.CandidateService
+	campaignBackend campaign.CandidateService
 
 	chain consensus.ChainReadWriter
 
@@ -407,7 +407,7 @@ func (d *Dpor) SetCampaignBackend(campaignContract common.Address, backend backe
 	d.campaignBackend, _ = campaign.NewCampaignService(campaignContract, backend)
 }
 
-func (d *Dpor) GetCandidateBackend() rpt.CandidateService {
+func (d *Dpor) GetCandidateBackend() campaign.CandidateService {
 	return d.campaignBackend
 }
 

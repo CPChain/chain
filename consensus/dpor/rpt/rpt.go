@@ -30,10 +30,6 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
-	campaign2 "bitbucket.org/cpchain/chain/contracts/dpor/campaign2"
-	campaign3 "bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
-	campaign4 "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
 	rptContract "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	rptContract2 "bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
 	"github.com/ethereum/go-ethereum/common"
@@ -149,118 +145,6 @@ func (a RptList) Less(i, j int) bool {
 		}
 		return false
 	}
-}
-
-// CandidateService provides methods to obtain all candidates from campaign contract
-type CandidateService interface {
-	CandidatesOf(term uint64) ([]common.Address, error)
-}
-
-// CandidateServiceImpl is the default candidate list collector
-type CandidateServiceImpl struct {
-	client bind.ContractBackend
-}
-
-// NewCandidateService creates a concrete candidate service instance.
-func NewCandidateService(backend bind.ContractBackend) (CandidateService, error) {
-
-	rs := &CandidateServiceImpl{
-		client: backend,
-	}
-	return rs, nil
-}
-
-// CandidatesOf implements CandidateService
-func (rs *CandidateServiceImpl) CandidatesOf(term uint64) ([]common.Address, error) {
-
-	if term < backend.TermOf(configs.Campaign2BlockNumber) {
-		// old campaign contract address
-		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign]
-
-		// old campaign contract instance
-		contractInstance, err := campaign.NewCampaign(campaignAddr, rs.client)
-		if err != nil {
-			log.Debug("error when create campaign 1 instance", "err", err)
-			return nil, err
-		}
-
-		// candidates from old campaign contract
-		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
-		if err != nil {
-			log.Debug("error when read candidates from campaign 1", "err", err)
-			return nil, err
-		}
-
-		log.Debug("now read candidates from campaign contract 1", "len", len(cds), "contract addr", campaignAddr.Hex())
-
-		return cds, nil
-	}
-
-	if term < backend.TermOf(configs.Campaign3BlockNumber) {
-
-		// new campaign contract address
-		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign2]
-
-		// new campaign contract instance
-		contractInstance, err := campaign2.NewCampaign(campaignAddr, rs.client)
-		if err != nil {
-			log.Debug("error when create campaign 2 instance", "err", err)
-			return nil, err
-		}
-
-		// candidates from new campaign contract
-		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
-		if err != nil {
-			log.Debug("error when read candidates from campaign 2", "err", err)
-			return nil, err
-		}
-
-		log.Debug("now read candidates from campaign contract 2", "len", len(cds), "contract addr", campaignAddr.Hex())
-		return cds, nil
-	}
-
-	if term < backend.TermOf(configs.Campaign4BlockNumber) {
-
-		// new campaign contract address
-		campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign3]
-
-		// new campaign contract instance
-		contractInstance, err := campaign3.NewCampaign(campaignAddr, rs.client)
-		if err != nil {
-			log.Debug("error when create campaign 3 instance", "err", err)
-			return nil, err
-		}
-
-		// candidates from new campaign contract
-		cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
-		if err != nil {
-			log.Debug("error when read candidates from campaign 3", "err", err)
-			return nil, err
-		}
-
-		log.Debug("now read candidates from campaign contract 3", "len", len(cds), "contract addr", campaignAddr.Hex())
-		return cds, nil
-	}
-
-	// new campaign contract address
-	campaignAddr := configs.ChainConfigInfo().Dpor.Contracts[configs.ContractCampaign4]
-
-	// new campaign contract instance
-	contractInstance, err := campaign4.NewCampaign(campaignAddr, rs.client)
-	if err != nil {
-		log.Debug("error when create campaign 4 instance", "err", err)
-		return nil, err
-	}
-
-	// candidates from new campaign contract
-	cds, err := contractInstance.CandidatesOf(nil, new(big.Int).SetUint64(term))
-	if err != nil {
-		log.Debug("error when read candidates from campaign 4", "err", err)
-		return nil, err
-	}
-
-	log.Debug("now read candidates from campaign contract 4", "len", len(cds), "contract addr", campaignAddr.Hex())
-	return cds, nil
 }
 
 // RptService provides methods to obtain all rpt related information from block txs and contracts.

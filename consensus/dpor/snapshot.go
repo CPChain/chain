@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/consensus/dpor/campaign"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/database"
@@ -262,7 +263,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 
 // apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee bool, candidateService rpt.CandidateService, rptService rpt.RptService) (*DporSnapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee bool, candidateService campaign.CandidateService, rptService rpt.RptService) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
@@ -297,7 +298,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee boo
 }
 
 // applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
-func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool, candidateService rpt.CandidateService, rptService rpt.RptService) error {
+func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool, candidateService campaign.CandidateService, rptService rpt.RptService) error {
 	// Update Snapshot attributes.
 	s.setNumber(header.Number.Uint64())
 	s.setHash(header.Hash())
@@ -358,7 +359,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 }
 
 // updateCandidates updates proposer candidates from campaign contract
-func (s *DporSnapshot) updateCandidates(candidateService rpt.CandidateService) error {
+func (s *DporSnapshot) updateCandidates(candidateService campaign.CandidateService) error {
 	var candidates []common.Address
 
 	if s.Mode == NormalMode && s.isStartElection() && candidateService != nil {
