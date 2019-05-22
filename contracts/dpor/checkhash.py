@@ -24,18 +24,10 @@ def libs_hash():
         #  (filename, expected hashsum)
         ("campaign/lib/safeMath.sol", safe_math),
         ("campaign/lib/set.sol", set_),
-        ("campaign2/lib/safeMath.sol", safe_math),
-        ("campaign2/lib/set.sol", set_),
-        ("campaign3/lib/safeMath.sol", safe_math),
-        ("campaign3/lib/set.sol", set_),
-        ("reward/lib/safeMath.sol", safe_math),
-        ("reward/lib/set.sol", set_),
         ("rnode/lib/safeMath.sol", safe_math),
         ("rnode/lib/set.sol", set_),
-        ("rpt/lib/safeMath.sol", safe_math),
-        ("rpt/lib/primitive_contracts.sol", primite_contracts),
     ]
-    assert len(libs) == 12
+    assert len(libs) == 4
     return libs
 
 

@@ -1,8 +1,23 @@
+/**
+ * campaign contract is used for rnodes to claim campaign.
+ * the general campaign process is as follows:
+ * 1. nodes submit parameters(numOfCampaign) and proofs, including memory and cpu proofs.
+ * 2. each proof consists of an address, a nonce and a block number(hash);
+ * 3. 'address' prevents nodes from stealing others' proof, 'block hash' avoids calculation in advance;
+ * 4. campaign contract checks if all requirements are satisfied:
+ *    rnode, admission and parameters
+ * 5. if pass, nodes become candidate.
+**/
+
+
 pragma solidity ^0.4.24;
 
 import "./lib/safeMath.sol";
 import "./lib/set.sol";
 
+// there are two interfaces to interact with admission and rnode contracts
+// rnode and admission contracts must be deployed before this campaign contract, because
+// addresses of rnode and admission contracts are needed to initiate interfaces during construction of campaign contract
 contract AdmissionInterface {
     function verify(
         uint64 _cpuNonce,
@@ -10,14 +25,14 @@ contract AdmissionInterface {
         uint64 _memoryNonce,
         uint _memoryBlockNumber,
         address _sender
-        )
-        public
-        view
-        returns (bool);
+    )
+    public
+    view
+    returns (bool);
 }
 
-contract RewardInterface{
-    function isCandidate(address _addr)public view returns (bool);
+contract RnodeInterface{
+    function isRnode(address _addr)public view returns (bool);
 }
 
 
@@ -26,91 +41,104 @@ contract RewardInterface{
 contract Campaign {
 
     using Set for Set.Data;
-    using SafeMath for uint256;
+    using SafeMath for uint;
 
-    address owner;
-    // The current round number.
-    uint public termIdx = 0;
-    // The number of blocks it can propose is viewLen.
-    uint public viewLen = 3;
-    // The number of proposers in a certain term is termLen
-    uint public termLen =4;
-    // The sum of block in a term.
-    uint public numPerRound = termLen * viewLen;
-    // The minimun and maximun round to claim.
-    uint public minNoc = 1;
-    uint public maxNoc = 10;
-    // withdraw deposit after each round.
-    uint withdrawTermIdx = 0;
+    address owner; // owner has permission to set parameters
+    uint public termIdx = 0; // current term
+    uint public viewLen = 3; // view length: the number of blocks it can propose within a term
+    uint public termLen =12; // term length: the number of proposers in a certain term
+    // 'round' is same with 'term'.
+    uint public numPerRound = termLen * viewLen; // total number of blocks produced in a term.
+    // a node must choose the number of terms when it claims campaign
+    uint public minNoc = 1; // minimal number of terms
+    uint public maxNoc = 10; //maximum number of terms
+    uint public acceptableBlocks = 10; // only latest 10 blocks based proofs will be accepted
+    uint public supportedVersion = 1; // only nodes with new version can claim campaign
 
+    uint public updatedTermIdx = 0; // indicate updated term
+    bool firstCall = true;
+
+    // a new type for a single candidate
     struct CandidateInfo {
-        uint numOfCampaign;
+        uint numOfCampaign; // rest terms that the candidate will claim campaign
         uint startTermIdx;
         uint stopTermIdx;
     }
 
-    mapping(address => CandidateInfo) candidates;
-    mapping(uint => Set.Data) campaignSnapshots;
+    mapping(address => CandidateInfo) candidates; // store a 'CandidateInfo' struct for each possible address
+    mapping(uint => Set.Data) campaignSnapshots; // store all candidates for each term
 
+    // declare admission and rnode interfaces
     AdmissionInterface admission;
-    RewardInterface    reward;
+    RnodeInterface    rnode;
 
     modifier onlyOwner() {require(msg.sender == owner);_;}
 
-    // TODO add some log.
     event ClaimCampaign(address candidate, uint startTermIdx, uint stopTermIdx);
-    event QuitCampaign(address candidate, uint payback);
-    event ViewChange();
 
-    constructor(address _admissionAddr,address _rewardAddr) public {
+    // admission and rnode interfaces will be initiated during creation of campaign contract
+    constructor(address _admissionAddr, address _rnodeAddr) public {
         owner = msg.sender;
         admission = AdmissionInterface(_admissionAddr);
-        reward = RewardInterface(_rewardAddr);
+        rnode = RnodeInterface(_rnodeAddr);
+        updatedTermIdx = (block.number.sub(1)).div(numPerRound);
     }
 
-    function() payable public { }
+    function() payable public { revert(); }
 
+    // get all candidates of given term index
     function candidatesOf(uint _termIdx) public view returns (address[]){
         return campaignSnapshots[_termIdx].values;
     }
 
+    // get info of given candidate
     function candidateInfoOf(address _candidate)
-        public
-        view
-        returns (uint, uint, uint)
+    public
+    view
+    returns (uint, uint, uint)
     {
         return (
-            candidates[_candidate].numOfCampaign,
-            candidates[_candidate].startTermIdx,
-            candidates[_candidate].stopTermIdx
+        candidates[_candidate].numOfCampaign,
+        candidates[_candidate].startTermIdx,
+        candidates[_candidate].stopTermIdx
         );
     }
 
-    /** set the Admission interface address. */
-    function setAdmissionAddr(address _addr) public onlyOwner(){
+    // admission interface can be set afterwards by owner
+    function setAdmissionAddr(address _addr) public onlyOwner {
         admission = AdmissionInterface(_addr);
     }
-    /** set the Reward interface address. */
-    function setRewardInterface(address _addr) public onlyOwner(){
-        reward = RewardInterface(_addr);
+
+    // rnode interface can be set afterwards by owner
+    function setRnodeInterface(address _addr) public onlyOwner {
+        rnode = RnodeInterface(_addr);
     }
 
-    function updateMinNoc(uint _minNoc) public onlyOwner(){
+    // owner can set these parameters
+    function updateMinNoc(uint _minNoc) public onlyOwner {
         minNoc = _minNoc;
     }
 
-    function updateMaxNoc(uint _maxNoc) public onlyOwner(){
+    function updateMaxNoc(uint _maxNoc) public onlyOwner {
         maxNoc = _maxNoc;
     }
 
-    function updateTermLen(uint _termLen) public onlyOwner(){
+    function updateTermLen(uint _termLen) public onlyOwner {
         termLen = _termLen;
         numPerRound = SafeMath.mul(termLen, viewLen);
     }
 
-    function updateViewLen(uint _viewLen) public onlyOwner(){
+    function updateViewLen(uint _viewLen) public onlyOwner {
         viewLen = _viewLen;
         numPerRound = SafeMath.mul(termLen, viewLen);
+    }
+
+    function updateAcceptableBlocks(uint _acceptableBlocks) public onlyOwner {
+        acceptableBlocks = _acceptableBlocks;
+    }
+
+    function updateSupportedVersion(uint _supportedVersion) public onlyOwner {
+        supportedVersion = _supportedVersion;
     }
 
     /**
@@ -123,31 +151,51 @@ contract Campaign {
      * 2. pass the cpu&memory capacity proof.
      * 3. rpt score reaches the threshold (be computed somewhere else).
      */
+
+    // claim campaign will verify these parameters, if pass, the node will become candidate
     function claimCampaign(
-        uint _numOfCampaign,
+        uint _numOfCampaign,  // number of terms that the node want to claim campaign
+
+        // admission parameters
         uint64 _cpuNonce,
         uint _cpuBlockNumber,
         uint64 _memoryNonce,
-        uint _memoryBlockNumber
-        )
-        public
-        payable
+        uint _memoryBlockNumber,
+        uint version
+    )
+    public
     {
-        // TODO: @ac once finishes pre-pay cpc for nodes to become candidates, enable the requirement checking below
-        //require(reward.isRNode(msg.sender)==true, "not RNode by reward");
+        // initiate updatedTermIdx during first call,
+        // in case that termIdx too large while updatedTermIdx too low,
+        // resulting in large 'for' loop and gas not enough.
+        if(firstCall) {
+            updatedTermIdx = (block.number.sub(1)).div(numPerRound);
+            firstCall = false;
+        }
+        require(version >= supportedVersion);
+
+        // proofs must be calculated based on latest blocks
+        if(block.number > acceptableBlocks) {
+            require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
+        }
+        // only rnode can become candidate
+        require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
+
         // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
 
-        updateCandidateStatus(); // update status first then check
+        updateCandidateStatus(); // update status firstly,  then check
 
         address candidate = msg.sender;
 
+        // if nodes have not ended their terms, they can not claim again
         require(
             candidates[candidate].numOfCampaign == 0,
             "please waite until your last round ended and try again."
         );
 
+        // set candidate's numOfCampaign according to arguments, and set start and end termIdx respectively
         candidates[candidate].numOfCampaign = _numOfCampaign;
         candidates[candidate].startTermIdx = termIdx.add(1);
 
@@ -165,18 +213,26 @@ contract Campaign {
      * The function will be called when a node claims to campaign for proposer election to update candidates status.
      *
      */
-    function updateCandidateStatus() public payable {
+
+    // update candidate status, i.e. subtract 1 from numOfCampaign when a new term begin
+    // updatedTermIdx record the start term that need to update
+    function updateCandidateStatus() internal {
+        // get current term, update termIdx
         updateTermIdx();
-        if (withdrawTermIdx >= termIdx) {
+
+        if (updatedTermIdx >= termIdx) {
             return;
         }
-
+        uint termsToUpdate = termIdx - updatedTermIdx;
         uint size;
-        for(; withdrawTermIdx <= termIdx; withdrawTermIdx++) {
+        // updatedTermIdx is the last term where candidates claim campaign
+        for(uint j=0; j<termsToUpdate; j++) {
+            updatedTermIdx = updatedTermIdx.add(1);
             // avoid recalculate the size for circulation times.
-            size = campaignSnapshots[withdrawTermIdx].values.length;
+            size = campaignSnapshots[updatedTermIdx].values.length;
+            // go through all candidates in term updatedTermIdx, and update their numOfCampaign
             for(uint i = 0; i < size; i++) {
-                address candidate = campaignSnapshots[withdrawTermIdx].values[i];
+                address candidate = campaignSnapshots[updatedTermIdx].values[i];
 
                 if (candidates[candidate].numOfCampaign == 0) {
                     continue;
@@ -200,7 +256,9 @@ contract Campaign {
             termIdx = 0;
             return;
         }
-        termIdx = (blockNumber - 1).div(numPerRound);
+
+        // calculate current term
+        termIdx = (blockNumber.sub(1)).div(numPerRound);
     }
 
 }

@@ -29,7 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
-	times "bitbucket.org/cpchain/chain/commons/time"
+	"bitbucket.org/cpchain/chain/commons/time"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"

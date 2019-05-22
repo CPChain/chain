@@ -15,172 +15,11 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 )
 
-// PrimitiveContractsInterfaceABI is the input ABI used to generate the binding from.
-const PrimitiveContractsInterfaceABI = "[]"
-
-// PrimitiveContractsInterfaceBin is the compiled bytecode used for deploying new contracts.
-const PrimitiveContractsInterfaceBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820bee1dfbd6948d50784a2171bfa61ebac7d59248586a0265246ffe7b28e58f0580029`
-
-// DeployPrimitiveContractsInterface deploys a new cpchain contract, binding an instance of PrimitiveContractsInterface to it.
-func DeployPrimitiveContractsInterface(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *PrimitiveContractsInterface, error) {
-	parsed, err := abi.JSON(strings.NewReader(PrimitiveContractsInterfaceABI))
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(PrimitiveContractsInterfaceBin), backend)
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-	return address, tx, &PrimitiveContractsInterface{PrimitiveContractsInterfaceCaller: PrimitiveContractsInterfaceCaller{contract: contract}, PrimitiveContractsInterfaceTransactor: PrimitiveContractsInterfaceTransactor{contract: contract}, PrimitiveContractsInterfaceFilterer: PrimitiveContractsInterfaceFilterer{contract: contract}}, nil
-}
-
-// PrimitiveContractsInterface is an auto generated Go binding around an cpchain contract.
-type PrimitiveContractsInterface struct {
-	PrimitiveContractsInterfaceCaller     // Read-only binding to the contract
-	PrimitiveContractsInterfaceTransactor // Write-only binding to the contract
-	PrimitiveContractsInterfaceFilterer   // Log filterer for contract events
-}
-
-// PrimitiveContractsInterfaceCaller is an auto generated read-only Go binding around an cpchain contract.
-type PrimitiveContractsInterfaceCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// PrimitiveContractsInterfaceTransactor is an auto generated write-only Go binding around an cpchain contract.
-type PrimitiveContractsInterfaceTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// PrimitiveContractsInterfaceFilterer is an auto generated log filtering Go binding around an cpchain contract events.
-type PrimitiveContractsInterfaceFilterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// PrimitiveContractsInterfaceSession is an auto generated Go binding around an cpchain contract,
-// with pre-set call and transact options.
-type PrimitiveContractsInterfaceSession struct {
-	Contract     *PrimitiveContractsInterface // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts                // Call options to use throughout this session
-	TransactOpts bind.TransactOpts            // Transaction auth options to use throughout this session
-}
-
-// PrimitiveContractsInterfaceCallerSession is an auto generated read-only Go binding around an cpchain contract,
-// with pre-set call options.
-type PrimitiveContractsInterfaceCallerSession struct {
-	Contract *PrimitiveContractsInterfaceCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts                      // Call options to use throughout this session
-}
-
-// PrimitiveContractsInterfaceTransactorSession is an auto generated write-only Go binding around an cpchain contract,
-// with pre-set transact options.
-type PrimitiveContractsInterfaceTransactorSession struct {
-	Contract     *PrimitiveContractsInterfaceTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts                      // Transaction auth options to use throughout this session
-}
-
-// PrimitiveContractsInterfaceRaw is an auto generated low-level Go binding around an cpchain contract.
-type PrimitiveContractsInterfaceRaw struct {
-	Contract *PrimitiveContractsInterface // Generic contract binding to access the raw methods on
-}
-
-// PrimitiveContractsInterfaceCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
-type PrimitiveContractsInterfaceCallerRaw struct {
-	Contract *PrimitiveContractsInterfaceCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// PrimitiveContractsInterfaceTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
-type PrimitiveContractsInterfaceTransactorRaw struct {
-	Contract *PrimitiveContractsInterfaceTransactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewPrimitiveContractsInterface creates a new instance of PrimitiveContractsInterface, bound to a specific deployed contract.
-func NewPrimitiveContractsInterface(address common.Address, backend bind.ContractBackend) (*PrimitiveContractsInterface, error) {
-	contract, err := bindPrimitiveContractsInterface(address, backend, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &PrimitiveContractsInterface{PrimitiveContractsInterfaceCaller: PrimitiveContractsInterfaceCaller{contract: contract}, PrimitiveContractsInterfaceTransactor: PrimitiveContractsInterfaceTransactor{contract: contract}, PrimitiveContractsInterfaceFilterer: PrimitiveContractsInterfaceFilterer{contract: contract}}, nil
-}
-
-// NewPrimitiveContractsInterfaceCaller creates a new read-only instance of PrimitiveContractsInterface, bound to a specific deployed contract.
-func NewPrimitiveContractsInterfaceCaller(address common.Address, caller bind.ContractCaller) (*PrimitiveContractsInterfaceCaller, error) {
-	contract, err := bindPrimitiveContractsInterface(address, caller, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &PrimitiveContractsInterfaceCaller{contract: contract}, nil
-}
-
-// NewPrimitiveContractsInterfaceTransactor creates a new write-only instance of PrimitiveContractsInterface, bound to a specific deployed contract.
-func NewPrimitiveContractsInterfaceTransactor(address common.Address, transactor bind.ContractTransactor) (*PrimitiveContractsInterfaceTransactor, error) {
-	contract, err := bindPrimitiveContractsInterface(address, nil, transactor, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &PrimitiveContractsInterfaceTransactor{contract: contract}, nil
-}
-
-// NewPrimitiveContractsInterfaceFilterer creates a new log filterer instance of PrimitiveContractsInterface, bound to a specific deployed contract.
-func NewPrimitiveContractsInterfaceFilterer(address common.Address, filterer bind.ContractFilterer) (*PrimitiveContractsInterfaceFilterer, error) {
-	contract, err := bindPrimitiveContractsInterface(address, nil, nil, filterer)
-	if err != nil {
-		return nil, err
-	}
-	return &PrimitiveContractsInterfaceFilterer{contract: contract}, nil
-}
-
-// bindPrimitiveContractsInterface binds a generic wrapper to an already deployed contract.
-func bindPrimitiveContractsInterface(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(PrimitiveContractsInterfaceABI))
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_PrimitiveContractsInterface *PrimitiveContractsInterfaceRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _PrimitiveContractsInterface.Contract.PrimitiveContractsInterfaceCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_PrimitiveContractsInterface *PrimitiveContractsInterfaceRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _PrimitiveContractsInterface.Contract.PrimitiveContractsInterfaceTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_PrimitiveContractsInterface *PrimitiveContractsInterfaceRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _PrimitiveContractsInterface.Contract.PrimitiveContractsInterfaceTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_PrimitiveContractsInterface *PrimitiveContractsInterfaceCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _PrimitiveContractsInterface.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_PrimitiveContractsInterface *PrimitiveContractsInterfaceTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _PrimitiveContractsInterface.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_PrimitiveContractsInterface *PrimitiveContractsInterfaceTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _PrimitiveContractsInterface.Contract.contract.Transact(opts, method, params...)
-}
-
 // RptABI is the input ABI used to generate the binding from.
-const RptABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"}],\"name\":\"updateAlpha\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"omega\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"f\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getProxyRep\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"window\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_gamma\",\"type\":\"uint256\"}],\"name\":\"updateGamma\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getRpt\",\"outputs\":[{\"name\":\"rpt\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getTx\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getDataContribution\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"psi\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"beta\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_omega\",\"type\":\"uint256\"}],\"name\":\"updateOmega\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_beta\",\"type\":\"uint256\"}],\"name\":\"updateBeta\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"gamma\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_psi\",\"type\":\"uint256\"}],\"name\":\"updatePsi\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateWindow\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"},{\"name\":\"_beta\",\"type\":\"uint256\"},{\"name\":\"_gamma\",\"type\":\"uint256\"},{\"name\":\"_psi\",\"type\":\"uint256\"},{\"name\":\"_omega\",\"type\":\"uint256\"},{\"name\":\"_f\",\"type\":\"uint256\"},{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateConfigs\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"alpha\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getCoinage\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_addr\",\"type\":\"address\"},{\"name\":\"_blockNumber\",\"type\":\"uint256\"}],\"name\":\"getBlockchainMaintenance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"name\":\"UpdateConfigs\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"configName\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"configValue\",\"type\":\"uint256\"}],\"name\":\"UpdateOneConfig\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"exprNmae\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"expr\",\"type\":\"string\"}],\"name\":\"SetExp\",\"type\":\"event\"}]"
+const RptABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"}],\"name\":\"updateAlpha\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSeats\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"omega\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_lowRptPercentage\",\"type\":\"uint256\"}],\"name\":\"updateLowRptPercentage\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"window\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_lowRptSeats\",\"type\":\"uint256\"}],\"name\":\"updateLowRptSeats\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_gamma\",\"type\":\"uint256\"}],\"name\":\"updateGamma\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_lowRptPercentage\",\"type\":\"uint256\"},{\"name\":\"_totalSeats\",\"type\":\"uint256\"},{\"name\":\"_lowRptSeats\",\"type\":\"uint256\"}],\"name\":\"updateElectionConfigs\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"psi\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_totalSeats\",\"type\":\"uint256\"}],\"name\":\"updateTotalSeats\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"beta\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_omega\",\"type\":\"uint256\"}],\"name\":\"updateOmega\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_beta\",\"type\":\"uint256\"}],\"name\":\"updateBeta\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"gamma\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_psi\",\"type\":\"uint256\"}],\"name\":\"updatePsi\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateWindow\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"alpha\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_alpha\",\"type\":\"uint256\"},{\"name\":\"_beta\",\"type\":\"uint256\"},{\"name\":\"_gamma\",\"type\":\"uint256\"},{\"name\":\"_psi\",\"type\":\"uint256\"},{\"name\":\"_omega\",\"type\":\"uint256\"},{\"name\":\"_window\",\"type\":\"uint256\"}],\"name\":\"updateWeightConfigs\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"lowRptPercentage\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"lowRptSeats\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"name\":\"UpdateWeightConfigs\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"configName\",\"type\":\"string\"},{\"indexed\":false,\"name\":\"configValue\",\"type\":\"uint256\"}],\"name\":\"UpdateOneConfig\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"name\":\"UpdateElectionConfigs\",\"type\":\"event\"}]"
 
 // RptBin is the compiled bytecode used for deploying new contracts.
-const RptBin = `0x60806040526032600055600f600155600a600255600f600355600a6004556004600555601560065534801561003357600080fd5b5060078054600160a060020a03191633179055610baa806100556000396000f30060806040526004361061011c5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306d2d3dc81146101215780632262a1b31461013b57806326121ff01461016257806344cc5c5214610177578063461645bf1461019b5780636d8004c5146101b05780636f126a8f146101c8578063741a35c4146101ec5780637c9f4b661461021057806386f87fdd146102345780638da5cb5b146102495780639faa3c911461027a578063a23f52b81461028f578063ac7dabbc146102a7578063b1373929146102bf578063b2f801c4146102d4578063b98f0056146102ec578063bd5c5f8614610304578063db1d0fd51461032e578063db40a12e14610343578063e81092a514610367575b600080fd5b34801561012d57600080fd5b5061013960043561038b565b005b34801561014757600080fd5b50610150610406565b60408051918252519081900360200190f35b34801561016e57600080fd5b5061015061040c565b34801561018357600080fd5b50610150600160a060020a0360043516602435610412565b3480156101a757600080fd5b506101506104a0565b3480156101bc57600080fd5b506101396004356104a6565b3480156101d457600080fd5b50610150600160a060020a0360043516602435610521565b3480156101f857600080fd5b50610150600160a060020a036004351660243561063a565b34801561021c57600080fd5b50610150600160a060020a0360043516602435610688565b34801561024057600080fd5b506101506106d8565b34801561025557600080fd5b5061025e6106de565b60408051600160a060020a039092168252519081900360200190f35b34801561028657600080fd5b506101506106ed565b34801561029b57600080fd5b506101396004356106f3565b3480156102b357600080fd5b5061013960043561076e565b3480156102cb57600080fd5b506101506107e9565b3480156102e057600080fd5b506101396004356107ef565b3480156102f857600080fd5b50610139600435610869565b34801561031057600080fd5b5061013960043560243560443560643560843560a43560c4356108e4565b34801561033a57600080fd5b5061015061095a565b34801561034f57600080fd5b50610150600160a060020a0360043516602435610960565b34801561037357600080fd5b50610150600160a060020a03600435166024356109f4565b600754600160a060020a031633146103a257600080fd5b6000819055604080514381528082018390526060602082018190526005908201527f616c70686100000000000000000000000000000000000000000000000000000060808201529051600080516020610b5f8339815191529181900360a00190a150565b60045481565b60065481565b6000808080610430600160a060020a0387168663ffffffff610a3e16565b92508215156104425760009350610497565b61045b600160a060020a0387168663ffffffff610a6b16565b915061047f600a61047384600563ffffffff610a9016565b9063ffffffff610abb16565b905060648111156104935760649350610497565b8093505b50505092915050565b60055481565b600754600160a060020a031633146104bd57600080fd5b6002819055604080514381528082018390526060602082018190526005908201527f67616d6d6100000000000000000000000000000000000000000000000000000060808201529051600080516020610b5f8339815191529181900360a00190a150565b60004382111561059257604080517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601960248201527f626c6f636b4e756d62657220697320746f6f206c617267652e00000000000000604482015290519081900360640190fd5b5060006105b36105a28484610960565b60005483910263ffffffff610abb16565b90506105d36105c2848461063a565b60015483910263ffffffff610abb16565b90506105f36105e28484610412565b60025483910263ffffffff610abb16565b90506106136106028484610688565b60035483910263ffffffff610abb16565b905061063361062284846109f4565b60045483910263ffffffff610abb16565b9392505050565b600080610656600160a060020a0385168463ffffffff610aca16565b905061066981600563ffffffff610a9016565b9050606481111561067d5760649150610681565b8091505b5092915050565b600080806106a5600160a060020a0386168563ffffffff610aef16565b91506106b882600363ffffffff610a9016565b905060648111156106cc57606492506106d0565b8092505b505092915050565b60035481565b600754600160a060020a031681565b60015481565b600754600160a060020a0316331461070a57600080fd5b6004819055604080514381528082018390526060602082018190526005908201527f6f6d65676100000000000000000000000000000000000000000000000000000060808201529051600080516020610b5f8339815191529181900360a00190a150565b600754600160a060020a0316331461078557600080fd5b6001819055604080514381528082018390526060602082018190526004908201527f626574610000000000000000000000000000000000000000000000000000000060808201529051600080516020610b5f8339815191529181900360a00190a150565b60025481565b600754600160a060020a0316331461080657600080fd5b6003818155604080514381528082018490526060602082018190528101929092527f7073690000000000000000000000000000000000000000000000000000000000608083015251600080516020610b5f8339815191529181900360a00190a150565b600754600160a060020a0316331461088057600080fd5b6005819055604080514381528082018390526060602082018190526006908201527f77696e646f77000000000000000000000000000000000000000000000000000060808201529051600080516020610b5f8339815191529181900360a00190a150565b600754600160a060020a031633146108fb57600080fd5b60008790556001869055600285905560038490556004839055600581905560068290556040805143815290517f78a3671679b68721aaad9eb74535be0be119bd34c0efa671eb6ab3210d1fe2579181900360200190a150505050505050565b60005481565b60008061097c600160a060020a0385168463ffffffff610b1416565b905060028110156109905760649150610681565b60058110156109a257605a9150610681565b600f8110156109b45760509150610681565b60238110156109c65760469150610681565b603c8110156109d857603c9150610681565b60508110156109ea5760289150610681565b5060149392505050565b600080610a10600160a060020a0385168463ffffffff610b3916565b9050801515610a225760649150610681565b8060011415610a345760509150610681565b50603c9392505050565b60006040518381528260208201526020816040836069600019fa1515610a6357600080fd5b519392505050565b60006040518381528260208201526020816040836066600019fa1515610a6357600080fd5b600080831515610aa35760009150610681565b50828202828482811515610ab357fe5b041461067d57fe5b60008282018381101561067d57fe5b60006040518381528260208201526020816040836068600019fa1515610a6357600080fd5b60006040518381528260208201526020816040836067600019fa1515610a6357600080fd5b60006040518381528260208201526020816040836064600019fa1515610a6357600080fd5b60006040518381528260208201526020816040836065600019fa1515610a6357600080fd007c2d85cf45868065466ed7df2e23f26349626794d112e41a734a4e34727fcb21a165627a7a72305820928063b23defe4881a64220f4146140be0581c90cc1a93d731d9148c507b38a90029`
+const RptBin = `0x60806040526032600055600f600155600a600255600f600355600a600455606460055560326006556008600755600260085534801561003d57600080fd5b5060098054600160a060020a031916331790556108fa8061005f6000396000f3006080604052600436106101115763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166306d2d3dc81146101165780631ffc615e146101305780632262a1b314610157578063255c45901461016c578063461645bf146101845780636479b8e6146101995780636d8004c5146101b1578063854c42c5146101c957806386f87fdd146101e757806390530bf0146101fc5780639faa3c9114610214578063a23f52b814610229578063ac7dabbc14610241578063b137392914610259578063b2f801c41461026e578063b98f005614610286578063db1d0fd51461029e578063f182c59c146102b3578063f75ca7ff146102da578063fb2eb7f6146102ef575b600080fd5b34801561012257600080fd5b5061012e600435610304565b005b34801561013c57600080fd5b5061014561037f565b60408051918252519081900360200190f35b34801561016357600080fd5b50610145610385565b34801561017857600080fd5b5061012e60043561038b565b34801561019057600080fd5b50610145610414565b3480156101a557600080fd5b5061012e60043561041a565b3480156101bd57600080fd5b5061012e6004356104a4565b3480156101d557600080fd5b5061012e60043560243560443561051f565b3480156101f357600080fd5b506101456105a6565b34801561020857600080fd5b5061012e6004356105ac565b34801561022057600080fd5b50610145610635565b34801561023557600080fd5b5061012e60043561063b565b34801561024d57600080fd5b5061012e6004356106b6565b34801561026557600080fd5b50610145610731565b34801561027a57600080fd5b5061012e600435610737565b34801561029257600080fd5b5061012e6004356107b1565b3480156102aa57600080fd5b5061014561082c565b3480156102bf57600080fd5b5061012e60043560243560443560643560843560a435610832565b3480156102e657600080fd5b506101456108a2565b3480156102fb57600080fd5b506101456108a8565b600954600160a060020a0316331461031b57600080fd5b6000819055604080514381528082018390526060602082018190526005908201527f616c706861000000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60075481565b60045481565b600954600160a060020a031633146103a257600080fd5b60648111156103b057600080fd5b6006819055604080514381528082018390526060602082018190526010908201527f6c6f7752707450657263656e7461676500000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60055481565b600954600160a060020a0316331461043157600080fd5b60075481111561044057600080fd5b600881905560408051438152808201839052606060208201819052600b908201527f6c6f775270745365617473000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b600954600160a060020a031633146104bb57600080fd5b6002819055604080514381528082018390526060602082018190526005908201527f67616d6d61000000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b600954600160a060020a0316331461053657600080fd5b60648311158015610548575060088211155b80156105545750818111155b151561055f57600080fd5b6006839055600782905560088190556040805143815290517f09e649367469a85db638685b74f92f1ef17cdebb4610b4c42b7da19c2f1b189c9181900360200190a1505050565b60035481565b600954600160a060020a031633146105c357600080fd5b60088111156105d157600080fd5b600781905560408051438152808201839052606060208201819052600a908201527f746f74616c536561747300000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60015481565b600954600160a060020a0316331461065257600080fd5b6004819055604080514381528082018390526060602082018190526005908201527f6f6d656761000000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b600954600160a060020a031633146106cd57600080fd5b6001819055604080514381528082018390526060602082018190526004908201527f6265746100000000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60025481565b600954600160a060020a0316331461074e57600080fd5b6003818155604080514381528082018490526060602082018190528101929092527f70736900000000000000000000000000000000000000000000000000000000006080830152516000805160206108af8339815191529181900360a00190a150565b600954600160a060020a031633146107c857600080fd5b6005819055604080514381528082018390526060602082018190526006908201527f77696e646f770000000000000000000000000000000000000000000000000000608082015290516000805160206108af8339815191529181900360a00190a150565b60005481565b600954600160a060020a0316331461084957600080fd5b6000869055600185905560028490556003839055600482905560058190556040805143815290517f94cb95e42d1f9f5b3e73da8fddc18ba25b0c89408eb91f64e417c59c6833a82b9181900360200190a1505050505050565b60065481565b6008548156007c2d85cf45868065466ed7df2e23f26349626794d112e41a734a4e34727fcb21a165627a7a72305820d173e8affa79eef6c94f2fa54706859a90e175ca5ca42afd2428b3ba60f40af80029`
 
 // DeployRpt deploys a new cpchain contract, binding an instance of Rpt to it.
 func DeployRpt(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Rpt, error) {
@@ -389,32 +228,6 @@ func (_Rpt *RptCallerSession) Beta() (*big.Int, error) {
 	return _Rpt.Contract.Beta(&_Rpt.CallOpts)
 }
 
-// F is a free data retrieval call binding the contract method 0x26121ff0.
-//
-// Solidity: function f() constant returns(uint256)
-func (_Rpt *RptCaller) F(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Rpt.contract.Call(opts, out, "f")
-	return *ret0, err
-}
-
-// F is a free data retrieval call binding the contract method 0x26121ff0.
-//
-// Solidity: function f() constant returns(uint256)
-func (_Rpt *RptSession) F() (*big.Int, error) {
-	return _Rpt.Contract.F(&_Rpt.CallOpts)
-}
-
-// F is a free data retrieval call binding the contract method 0x26121ff0.
-//
-// Solidity: function f() constant returns(uint256)
-func (_Rpt *RptCallerSession) F() (*big.Int, error) {
-	return _Rpt.Contract.F(&_Rpt.CallOpts)
-}
-
 // Gamma is a free data retrieval call binding the contract method 0xb1373929.
 //
 // Solidity: function gamma() constant returns(uint256)
@@ -441,160 +254,56 @@ func (_Rpt *RptCallerSession) Gamma() (*big.Int, error) {
 	return _Rpt.Contract.Gamma(&_Rpt.CallOpts)
 }
 
-// GetBlockchainMaintenance is a free data retrieval call binding the contract method 0xe81092a5.
+// LowRptPercentage is a free data retrieval call binding the contract method 0xf75ca7ff.
 //
-// Solidity: function getBlockchainMaintenance(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCaller) GetBlockchainMaintenance(opts *bind.CallOpts, _addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
+// Solidity: function lowRptPercentage() constant returns(uint256)
+func (_Rpt *RptCaller) LowRptPercentage(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 	)
 	out := ret0
-	err := _Rpt.contract.Call(opts, out, "getBlockchainMaintenance", _addr, _blockNumber)
+	err := _Rpt.contract.Call(opts, out, "lowRptPercentage")
 	return *ret0, err
 }
 
-// GetBlockchainMaintenance is a free data retrieval call binding the contract method 0xe81092a5.
+// LowRptPercentage is a free data retrieval call binding the contract method 0xf75ca7ff.
 //
-// Solidity: function getBlockchainMaintenance(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptSession) GetBlockchainMaintenance(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetBlockchainMaintenance(&_Rpt.CallOpts, _addr, _blockNumber)
+// Solidity: function lowRptPercentage() constant returns(uint256)
+func (_Rpt *RptSession) LowRptPercentage() (*big.Int, error) {
+	return _Rpt.Contract.LowRptPercentage(&_Rpt.CallOpts)
 }
 
-// GetBlockchainMaintenance is a free data retrieval call binding the contract method 0xe81092a5.
+// LowRptPercentage is a free data retrieval call binding the contract method 0xf75ca7ff.
 //
-// Solidity: function getBlockchainMaintenance(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCallerSession) GetBlockchainMaintenance(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetBlockchainMaintenance(&_Rpt.CallOpts, _addr, _blockNumber)
+// Solidity: function lowRptPercentage() constant returns(uint256)
+func (_Rpt *RptCallerSession) LowRptPercentage() (*big.Int, error) {
+	return _Rpt.Contract.LowRptPercentage(&_Rpt.CallOpts)
 }
 
-// GetCoinage is a free data retrieval call binding the contract method 0xdb40a12e.
+// LowRptSeats is a free data retrieval call binding the contract method 0xfb2eb7f6.
 //
-// Solidity: function getCoinage(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCaller) GetCoinage(opts *bind.CallOpts, _addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
+// Solidity: function lowRptSeats() constant returns(uint256)
+func (_Rpt *RptCaller) LowRptSeats(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
 	)
 	out := ret0
-	err := _Rpt.contract.Call(opts, out, "getCoinage", _addr, _blockNumber)
+	err := _Rpt.contract.Call(opts, out, "lowRptSeats")
 	return *ret0, err
 }
 
-// GetCoinage is a free data retrieval call binding the contract method 0xdb40a12e.
+// LowRptSeats is a free data retrieval call binding the contract method 0xfb2eb7f6.
 //
-// Solidity: function getCoinage(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptSession) GetCoinage(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetCoinage(&_Rpt.CallOpts, _addr, _blockNumber)
+// Solidity: function lowRptSeats() constant returns(uint256)
+func (_Rpt *RptSession) LowRptSeats() (*big.Int, error) {
+	return _Rpt.Contract.LowRptSeats(&_Rpt.CallOpts)
 }
 
-// GetCoinage is a free data retrieval call binding the contract method 0xdb40a12e.
+// LowRptSeats is a free data retrieval call binding the contract method 0xfb2eb7f6.
 //
-// Solidity: function getCoinage(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCallerSession) GetCoinage(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetCoinage(&_Rpt.CallOpts, _addr, _blockNumber)
-}
-
-// GetDataContribution is a free data retrieval call binding the contract method 0x7c9f4b66.
-//
-// Solidity: function getDataContribution(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCaller) GetDataContribution(opts *bind.CallOpts, _addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Rpt.contract.Call(opts, out, "getDataContribution", _addr, _blockNumber)
-	return *ret0, err
-}
-
-// GetDataContribution is a free data retrieval call binding the contract method 0x7c9f4b66.
-//
-// Solidity: function getDataContribution(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptSession) GetDataContribution(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetDataContribution(&_Rpt.CallOpts, _addr, _blockNumber)
-}
-
-// GetDataContribution is a free data retrieval call binding the contract method 0x7c9f4b66.
-//
-// Solidity: function getDataContribution(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCallerSession) GetDataContribution(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetDataContribution(&_Rpt.CallOpts, _addr, _blockNumber)
-}
-
-// GetProxyRep is a free data retrieval call binding the contract method 0x44cc5c52.
-//
-// Solidity: function getProxyRep(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCaller) GetProxyRep(opts *bind.CallOpts, _addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Rpt.contract.Call(opts, out, "getProxyRep", _addr, _blockNumber)
-	return *ret0, err
-}
-
-// GetProxyRep is a free data retrieval call binding the contract method 0x44cc5c52.
-//
-// Solidity: function getProxyRep(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptSession) GetProxyRep(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetProxyRep(&_Rpt.CallOpts, _addr, _blockNumber)
-}
-
-// GetProxyRep is a free data retrieval call binding the contract method 0x44cc5c52.
-//
-// Solidity: function getProxyRep(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCallerSession) GetProxyRep(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetProxyRep(&_Rpt.CallOpts, _addr, _blockNumber)
-}
-
-// GetRpt is a free data retrieval call binding the contract method 0x6f126a8f.
-//
-// Solidity: function getRpt(_addr address, _blockNumber uint256) constant returns(rpt uint256)
-func (_Rpt *RptCaller) GetRpt(opts *bind.CallOpts, _addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Rpt.contract.Call(opts, out, "getRpt", _addr, _blockNumber)
-	return *ret0, err
-}
-
-// GetRpt is a free data retrieval call binding the contract method 0x6f126a8f.
-//
-// Solidity: function getRpt(_addr address, _blockNumber uint256) constant returns(rpt uint256)
-func (_Rpt *RptSession) GetRpt(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetRpt(&_Rpt.CallOpts, _addr, _blockNumber)
-}
-
-// GetRpt is a free data retrieval call binding the contract method 0x6f126a8f.
-//
-// Solidity: function getRpt(_addr address, _blockNumber uint256) constant returns(rpt uint256)
-func (_Rpt *RptCallerSession) GetRpt(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetRpt(&_Rpt.CallOpts, _addr, _blockNumber)
-}
-
-// GetTx is a free data retrieval call binding the contract method 0x741a35c4.
-//
-// Solidity: function getTx(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCaller) GetTx(opts *bind.CallOpts, _addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Rpt.contract.Call(opts, out, "getTx", _addr, _blockNumber)
-	return *ret0, err
-}
-
-// GetTx is a free data retrieval call binding the contract method 0x741a35c4.
-//
-// Solidity: function getTx(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptSession) GetTx(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetTx(&_Rpt.CallOpts, _addr, _blockNumber)
-}
-
-// GetTx is a free data retrieval call binding the contract method 0x741a35c4.
-//
-// Solidity: function getTx(_addr address, _blockNumber uint256) constant returns(uint256)
-func (_Rpt *RptCallerSession) GetTx(_addr common.Address, _blockNumber *big.Int) (*big.Int, error) {
-	return _Rpt.Contract.GetTx(&_Rpt.CallOpts, _addr, _blockNumber)
+// Solidity: function lowRptSeats() constant returns(uint256)
+func (_Rpt *RptCallerSession) LowRptSeats() (*big.Int, error) {
+	return _Rpt.Contract.LowRptSeats(&_Rpt.CallOpts)
 }
 
 // Omega is a free data retrieval call binding the contract method 0x2262a1b3.
@@ -623,32 +332,6 @@ func (_Rpt *RptCallerSession) Omega() (*big.Int, error) {
 	return _Rpt.Contract.Omega(&_Rpt.CallOpts)
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_Rpt *RptCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Rpt.contract.Call(opts, out, "owner")
-	return *ret0, err
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_Rpt *RptSession) Owner() (common.Address, error) {
-	return _Rpt.Contract.Owner(&_Rpt.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() constant returns(address)
-func (_Rpt *RptCallerSession) Owner() (common.Address, error) {
-	return _Rpt.Contract.Owner(&_Rpt.CallOpts)
-}
-
 // Psi is a free data retrieval call binding the contract method 0x86f87fdd.
 //
 // Solidity: function psi() constant returns(uint256)
@@ -673,6 +356,32 @@ func (_Rpt *RptSession) Psi() (*big.Int, error) {
 // Solidity: function psi() constant returns(uint256)
 func (_Rpt *RptCallerSession) Psi() (*big.Int, error) {
 	return _Rpt.Contract.Psi(&_Rpt.CallOpts)
+}
+
+// TotalSeats is a free data retrieval call binding the contract method 0x1ffc615e.
+//
+// Solidity: function totalSeats() constant returns(uint256)
+func (_Rpt *RptCaller) TotalSeats(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _Rpt.contract.Call(opts, out, "totalSeats")
+	return *ret0, err
+}
+
+// TotalSeats is a free data retrieval call binding the contract method 0x1ffc615e.
+//
+// Solidity: function totalSeats() constant returns(uint256)
+func (_Rpt *RptSession) TotalSeats() (*big.Int, error) {
+	return _Rpt.Contract.TotalSeats(&_Rpt.CallOpts)
+}
+
+// TotalSeats is a free data retrieval call binding the contract method 0x1ffc615e.
+//
+// Solidity: function totalSeats() constant returns(uint256)
+func (_Rpt *RptCallerSession) TotalSeats() (*big.Int, error) {
+	return _Rpt.Contract.TotalSeats(&_Rpt.CallOpts)
 }
 
 // Window is a free data retrieval call binding the contract method 0x461645bf.
@@ -743,25 +452,25 @@ func (_Rpt *RptTransactorSession) UpdateBeta(_beta *big.Int) (*types.Transaction
 	return _Rpt.Contract.UpdateBeta(&_Rpt.TransactOpts, _beta)
 }
 
-// UpdateConfigs is a paid mutator transaction binding the contract method 0xbd5c5f86.
+// UpdateElectionConfigs is a paid mutator transaction binding the contract method 0x854c42c5.
 //
-// Solidity: function updateConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _f uint256, _window uint256) returns()
-func (_Rpt *RptTransactor) UpdateConfigs(opts *bind.TransactOpts, _alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _f *big.Int, _window *big.Int) (*types.Transaction, error) {
-	return _Rpt.contract.Transact(opts, "updateConfigs", _alpha, _beta, _gamma, _psi, _omega, _f, _window)
+// Solidity: function updateElectionConfigs(_lowRptPercentage uint256, _totalSeats uint256, _lowRptSeats uint256) returns()
+func (_Rpt *RptTransactor) UpdateElectionConfigs(opts *bind.TransactOpts, _lowRptPercentage *big.Int, _totalSeats *big.Int, _lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateElectionConfigs", _lowRptPercentage, _totalSeats, _lowRptSeats)
 }
 
-// UpdateConfigs is a paid mutator transaction binding the contract method 0xbd5c5f86.
+// UpdateElectionConfigs is a paid mutator transaction binding the contract method 0x854c42c5.
 //
-// Solidity: function updateConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _f uint256, _window uint256) returns()
-func (_Rpt *RptSession) UpdateConfigs(_alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _f *big.Int, _window *big.Int) (*types.Transaction, error) {
-	return _Rpt.Contract.UpdateConfigs(&_Rpt.TransactOpts, _alpha, _beta, _gamma, _psi, _omega, _f, _window)
+// Solidity: function updateElectionConfigs(_lowRptPercentage uint256, _totalSeats uint256, _lowRptSeats uint256) returns()
+func (_Rpt *RptSession) UpdateElectionConfigs(_lowRptPercentage *big.Int, _totalSeats *big.Int, _lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateElectionConfigs(&_Rpt.TransactOpts, _lowRptPercentage, _totalSeats, _lowRptSeats)
 }
 
-// UpdateConfigs is a paid mutator transaction binding the contract method 0xbd5c5f86.
+// UpdateElectionConfigs is a paid mutator transaction binding the contract method 0x854c42c5.
 //
-// Solidity: function updateConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _f uint256, _window uint256) returns()
-func (_Rpt *RptTransactorSession) UpdateConfigs(_alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _f *big.Int, _window *big.Int) (*types.Transaction, error) {
-	return _Rpt.Contract.UpdateConfigs(&_Rpt.TransactOpts, _alpha, _beta, _gamma, _psi, _omega, _f, _window)
+// Solidity: function updateElectionConfigs(_lowRptPercentage uint256, _totalSeats uint256, _lowRptSeats uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateElectionConfigs(_lowRptPercentage *big.Int, _totalSeats *big.Int, _lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateElectionConfigs(&_Rpt.TransactOpts, _lowRptPercentage, _totalSeats, _lowRptSeats)
 }
 
 // UpdateGamma is a paid mutator transaction binding the contract method 0x6d8004c5.
@@ -783,6 +492,48 @@ func (_Rpt *RptSession) UpdateGamma(_gamma *big.Int) (*types.Transaction, error)
 // Solidity: function updateGamma(_gamma uint256) returns()
 func (_Rpt *RptTransactorSession) UpdateGamma(_gamma *big.Int) (*types.Transaction, error) {
 	return _Rpt.Contract.UpdateGamma(&_Rpt.TransactOpts, _gamma)
+}
+
+// UpdateLowRptPercentage is a paid mutator transaction binding the contract method 0x255c4590.
+//
+// Solidity: function updateLowRptPercentage(_lowRptPercentage uint256) returns()
+func (_Rpt *RptTransactor) UpdateLowRptPercentage(opts *bind.TransactOpts, _lowRptPercentage *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateLowRptPercentage", _lowRptPercentage)
+}
+
+// UpdateLowRptPercentage is a paid mutator transaction binding the contract method 0x255c4590.
+//
+// Solidity: function updateLowRptPercentage(_lowRptPercentage uint256) returns()
+func (_Rpt *RptSession) UpdateLowRptPercentage(_lowRptPercentage *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateLowRptPercentage(&_Rpt.TransactOpts, _lowRptPercentage)
+}
+
+// UpdateLowRptPercentage is a paid mutator transaction binding the contract method 0x255c4590.
+//
+// Solidity: function updateLowRptPercentage(_lowRptPercentage uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateLowRptPercentage(_lowRptPercentage *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateLowRptPercentage(&_Rpt.TransactOpts, _lowRptPercentage)
+}
+
+// UpdateLowRptSeats is a paid mutator transaction binding the contract method 0x6479b8e6.
+//
+// Solidity: function updateLowRptSeats(_lowRptSeats uint256) returns()
+func (_Rpt *RptTransactor) UpdateLowRptSeats(opts *bind.TransactOpts, _lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateLowRptSeats", _lowRptSeats)
+}
+
+// UpdateLowRptSeats is a paid mutator transaction binding the contract method 0x6479b8e6.
+//
+// Solidity: function updateLowRptSeats(_lowRptSeats uint256) returns()
+func (_Rpt *RptSession) UpdateLowRptSeats(_lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateLowRptSeats(&_Rpt.TransactOpts, _lowRptSeats)
+}
+
+// UpdateLowRptSeats is a paid mutator transaction binding the contract method 0x6479b8e6.
+//
+// Solidity: function updateLowRptSeats(_lowRptSeats uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateLowRptSeats(_lowRptSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateLowRptSeats(&_Rpt.TransactOpts, _lowRptSeats)
 }
 
 // UpdateOmega is a paid mutator transaction binding the contract method 0xa23f52b8.
@@ -827,6 +578,48 @@ func (_Rpt *RptTransactorSession) UpdatePsi(_psi *big.Int) (*types.Transaction, 
 	return _Rpt.Contract.UpdatePsi(&_Rpt.TransactOpts, _psi)
 }
 
+// UpdateTotalSeats is a paid mutator transaction binding the contract method 0x90530bf0.
+//
+// Solidity: function updateTotalSeats(_totalSeats uint256) returns()
+func (_Rpt *RptTransactor) UpdateTotalSeats(opts *bind.TransactOpts, _totalSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateTotalSeats", _totalSeats)
+}
+
+// UpdateTotalSeats is a paid mutator transaction binding the contract method 0x90530bf0.
+//
+// Solidity: function updateTotalSeats(_totalSeats uint256) returns()
+func (_Rpt *RptSession) UpdateTotalSeats(_totalSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateTotalSeats(&_Rpt.TransactOpts, _totalSeats)
+}
+
+// UpdateTotalSeats is a paid mutator transaction binding the contract method 0x90530bf0.
+//
+// Solidity: function updateTotalSeats(_totalSeats uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateTotalSeats(_totalSeats *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateTotalSeats(&_Rpt.TransactOpts, _totalSeats)
+}
+
+// UpdateWeightConfigs is a paid mutator transaction binding the contract method 0xf182c59c.
+//
+// Solidity: function updateWeightConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256) returns()
+func (_Rpt *RptTransactor) UpdateWeightConfigs(opts *bind.TransactOpts, _alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int) (*types.Transaction, error) {
+	return _Rpt.contract.Transact(opts, "updateWeightConfigs", _alpha, _beta, _gamma, _psi, _omega, _window)
+}
+
+// UpdateWeightConfigs is a paid mutator transaction binding the contract method 0xf182c59c.
+//
+// Solidity: function updateWeightConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256) returns()
+func (_Rpt *RptSession) UpdateWeightConfigs(_alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateWeightConfigs(&_Rpt.TransactOpts, _alpha, _beta, _gamma, _psi, _omega, _window)
+}
+
+// UpdateWeightConfigs is a paid mutator transaction binding the contract method 0xf182c59c.
+//
+// Solidity: function updateWeightConfigs(_alpha uint256, _beta uint256, _gamma uint256, _psi uint256, _omega uint256, _window uint256) returns()
+func (_Rpt *RptTransactorSession) UpdateWeightConfigs(_alpha *big.Int, _beta *big.Int, _gamma *big.Int, _psi *big.Int, _omega *big.Int, _window *big.Int) (*types.Transaction, error) {
+	return _Rpt.Contract.UpdateWeightConfigs(&_Rpt.TransactOpts, _alpha, _beta, _gamma, _psi, _omega, _window)
+}
+
 // UpdateWindow is a paid mutator transaction binding the contract method 0xb98f0056.
 //
 // Solidity: function updateWindow(_window uint256) returns()
@@ -848,9 +641,9 @@ func (_Rpt *RptTransactorSession) UpdateWindow(_window *big.Int) (*types.Transac
 	return _Rpt.Contract.UpdateWindow(&_Rpt.TransactOpts, _window)
 }
 
-// RptSetExpIterator is returned from FilterSetExp and is used to iterate over the raw logs and unpacked data for SetExp events raised by the Rpt contract.
-type RptSetExpIterator struct {
-	Event *RptSetExp // Event containing the contract specifics and raw log
+// RptUpdateElectionConfigsIterator is returned from FilterUpdateElectionConfigs and is used to iterate over the raw logs and unpacked data for UpdateElectionConfigs events raised by the Rpt contract.
+type RptUpdateElectionConfigsIterator struct {
+	Event *RptUpdateElectionConfigs // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -864,7 +657,7 @@ type RptSetExpIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *RptSetExpIterator) Next() bool {
+func (it *RptUpdateElectionConfigsIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -873,7 +666,7 @@ func (it *RptSetExpIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(RptSetExp)
+			it.Event = new(RptUpdateElectionConfigs)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -888,7 +681,7 @@ func (it *RptSetExpIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(RptSetExp)
+		it.Event = new(RptUpdateElectionConfigs)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -904,43 +697,41 @@ func (it *RptSetExpIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *RptSetExpIterator) Error() error {
+func (it *RptUpdateElectionConfigsIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *RptSetExpIterator) Close() error {
+func (it *RptUpdateElectionConfigsIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// RptSetExp represents a SetExp event raised by the Rpt contract.
-type RptSetExp struct {
+// RptUpdateElectionConfigs represents a UpdateElectionConfigs event raised by the Rpt contract.
+type RptUpdateElectionConfigs struct {
 	BlockNumber *big.Int
-	ExprNmae    string
-	Expr        string
 	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// FilterSetExp is a free log retrieval operation binding the contract event 0xb14fcf0092d0dcc5be78d778e4f514b5d12a1671f6260cf9d84ac5847b08e894.
+// FilterUpdateElectionConfigs is a free log retrieval operation binding the contract event 0x09e649367469a85db638685b74f92f1ef17cdebb4610b4c42b7da19c2f1b189c.
 //
-// Solidity: e SetExp(blockNumber uint256, exprNmae string, expr string)
-func (_Rpt *RptFilterer) FilterSetExp(opts *bind.FilterOpts) (*RptSetExpIterator, error) {
+// Solidity: e UpdateElectionConfigs(blockNumber uint256)
+func (_Rpt *RptFilterer) FilterUpdateElectionConfigs(opts *bind.FilterOpts) (*RptUpdateElectionConfigsIterator, error) {
 
-	logs, sub, err := _Rpt.contract.FilterLogs(opts, "SetExp")
+	logs, sub, err := _Rpt.contract.FilterLogs(opts, "UpdateElectionConfigs")
 	if err != nil {
 		return nil, err
 	}
-	return &RptSetExpIterator{contract: _Rpt.contract, event: "SetExp", logs: logs, sub: sub}, nil
+	return &RptUpdateElectionConfigsIterator{contract: _Rpt.contract, event: "UpdateElectionConfigs", logs: logs, sub: sub}, nil
 }
 
-// WatchSetExp is a free log subscription operation binding the contract event 0xb14fcf0092d0dcc5be78d778e4f514b5d12a1671f6260cf9d84ac5847b08e894.
+// WatchUpdateElectionConfigs is a free log subscription operation binding the contract event 0x09e649367469a85db638685b74f92f1ef17cdebb4610b4c42b7da19c2f1b189c.
 //
-// Solidity: e SetExp(blockNumber uint256, exprNmae string, expr string)
-func (_Rpt *RptFilterer) WatchSetExp(opts *bind.WatchOpts, sink chan<- *RptSetExp) (event.Subscription, error) {
+// Solidity: e UpdateElectionConfigs(blockNumber uint256)
+func (_Rpt *RptFilterer) WatchUpdateElectionConfigs(opts *bind.WatchOpts, sink chan<- *RptUpdateElectionConfigs) (event.Subscription, error) {
 
-	logs, sub, err := _Rpt.contract.WatchLogs(opts, "SetExp")
+	logs, sub, err := _Rpt.contract.WatchLogs(opts, "UpdateElectionConfigs")
 	if err != nil {
 		return nil, err
 	}
@@ -950,130 +741,8 @@ func (_Rpt *RptFilterer) WatchSetExp(opts *bind.WatchOpts, sink chan<- *RptSetEx
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(RptSetExp)
-				if err := _Rpt.contract.UnpackLog(event, "SetExp", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// RptUpdateConfigsIterator is returned from FilterUpdateConfigs and is used to iterate over the raw logs and unpacked data for UpdateConfigs events raised by the Rpt contract.
-type RptUpdateConfigsIterator struct {
-	Event *RptUpdateConfigs // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log       // Log channel receiving the found contract events
-	sub  cpchain.Subscription // Subscription for errors, completion and termination
-	done bool                 // Whether the subscription completed delivering logs
-	fail error                // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *RptUpdateConfigsIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(RptUpdateConfigs)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(RptUpdateConfigs)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *RptUpdateConfigsIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *RptUpdateConfigsIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// RptUpdateConfigs represents a UpdateConfigs event raised by the Rpt contract.
-type RptUpdateConfigs struct {
-	BlockNumber *big.Int
-	Raw         types.Log // Blockchain specific contextual infos
-}
-
-// FilterUpdateConfigs is a free log retrieval operation binding the contract event 0x78a3671679b68721aaad9eb74535be0be119bd34c0efa671eb6ab3210d1fe257.
-//
-// Solidity: e UpdateConfigs(blockNumber uint256)
-func (_Rpt *RptFilterer) FilterUpdateConfigs(opts *bind.FilterOpts) (*RptUpdateConfigsIterator, error) {
-
-	logs, sub, err := _Rpt.contract.FilterLogs(opts, "UpdateConfigs")
-	if err != nil {
-		return nil, err
-	}
-	return &RptUpdateConfigsIterator{contract: _Rpt.contract, event: "UpdateConfigs", logs: logs, sub: sub}, nil
-}
-
-// WatchUpdateConfigs is a free log subscription operation binding the contract event 0x78a3671679b68721aaad9eb74535be0be119bd34c0efa671eb6ab3210d1fe257.
-//
-// Solidity: e UpdateConfigs(blockNumber uint256)
-func (_Rpt *RptFilterer) WatchUpdateConfigs(opts *bind.WatchOpts, sink chan<- *RptUpdateConfigs) (event.Subscription, error) {
-
-	logs, sub, err := _Rpt.contract.WatchLogs(opts, "UpdateConfigs")
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(RptUpdateConfigs)
-				if err := _Rpt.contract.UnpackLog(event, "UpdateConfigs", log); err != nil {
+				event := new(RptUpdateElectionConfigs)
+				if err := _Rpt.contract.UnpackLog(event, "UpdateElectionConfigs", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1218,163 +887,124 @@ func (_Rpt *RptFilterer) WatchUpdateOneConfig(opts *bind.WatchOpts, sink chan<- 
 	}), nil
 }
 
-// SafeMathABI is the input ABI used to generate the binding from.
-const SafeMathABI = "[]"
+// RptUpdateWeightConfigsIterator is returned from FilterUpdateWeightConfigs and is used to iterate over the raw logs and unpacked data for UpdateWeightConfigs events raised by the Rpt contract.
+type RptUpdateWeightConfigsIterator struct {
+	Event *RptUpdateWeightConfigs // Event containing the contract specifics and raw log
 
-// SafeMathBin is the compiled bytecode used for deploying new contracts.
-const SafeMathBin = `0x604c602c600b82828239805160001a60731460008114601c57601e565bfe5b5030600052607381538281f30073000000000000000000000000000000000000000030146080604052600080fd00a165627a7a72305820d1f8b94503f14546f1799393ac4cde1d4dd1874a326932593ac0a27f57c786ad0029`
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
 
-// DeploySafeMath deploys a new cpchain contract, binding an instance of SafeMath to it.
-func DeploySafeMath(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *SafeMath, error) {
-	parsed, err := abi.JSON(strings.NewReader(SafeMathABI))
-	if err != nil {
-		return common.Address{}, nil, nil, err
+	logs chan types.Log       // Log channel receiving the found contract events
+	sub  cpchain.Subscription // Subscription for errors, completion and termination
+	done bool                 // Whether the subscription completed delivering logs
+	fail error                // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *RptUpdateWeightConfigsIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
 	}
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(SafeMathBin), backend)
-	if err != nil {
-		return common.Address{}, nil, nil, err
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(RptUpdateWeightConfigs)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
 	}
-	return address, tx, &SafeMath{SafeMathCaller: SafeMathCaller{contract: contract}, SafeMathTransactor: SafeMathTransactor{contract: contract}, SafeMathFilterer: SafeMathFilterer{contract: contract}}, nil
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(RptUpdateWeightConfigs)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
 }
 
-// SafeMath is an auto generated Go binding around an cpchain contract.
-type SafeMath struct {
-	SafeMathCaller     // Read-only binding to the contract
-	SafeMathTransactor // Write-only binding to the contract
-	SafeMathFilterer   // Log filterer for contract events
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *RptUpdateWeightConfigsIterator) Error() error {
+	return it.fail
 }
 
-// SafeMathCaller is an auto generated read-only Go binding around an cpchain contract.
-type SafeMathCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *RptUpdateWeightConfigsIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
 }
 
-// SafeMathTransactor is an auto generated write-only Go binding around an cpchain contract.
-type SafeMathTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+// RptUpdateWeightConfigs represents a UpdateWeightConfigs event raised by the Rpt contract.
+type RptUpdateWeightConfigs struct {
+	BlockNumber *big.Int
+	Raw         types.Log // Blockchain specific contextual infos
 }
 
-// SafeMathFilterer is an auto generated log filtering Go binding around an cpchain contract events.
-type SafeMathFilterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
+// FilterUpdateWeightConfigs is a free log retrieval operation binding the contract event 0x94cb95e42d1f9f5b3e73da8fddc18ba25b0c89408eb91f64e417c59c6833a82b.
+//
+// Solidity: e UpdateWeightConfigs(blockNumber uint256)
+func (_Rpt *RptFilterer) FilterUpdateWeightConfigs(opts *bind.FilterOpts) (*RptUpdateWeightConfigsIterator, error) {
 
-// SafeMathSession is an auto generated Go binding around an cpchain contract,
-// with pre-set call and transact options.
-type SafeMathSession struct {
-	Contract     *SafeMath         // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// SafeMathCallerSession is an auto generated read-only Go binding around an cpchain contract,
-// with pre-set call options.
-type SafeMathCallerSession struct {
-	Contract *SafeMathCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts   // Call options to use throughout this session
-}
-
-// SafeMathTransactorSession is an auto generated write-only Go binding around an cpchain contract,
-// with pre-set transact options.
-type SafeMathTransactorSession struct {
-	Contract     *SafeMathTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
-}
-
-// SafeMathRaw is an auto generated low-level Go binding around an cpchain contract.
-type SafeMathRaw struct {
-	Contract *SafeMath // Generic contract binding to access the raw methods on
-}
-
-// SafeMathCallerRaw is an auto generated low-level read-only Go binding around an cpchain contract.
-type SafeMathCallerRaw struct {
-	Contract *SafeMathCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// SafeMathTransactorRaw is an auto generated low-level write-only Go binding around an cpchain contract.
-type SafeMathTransactorRaw struct {
-	Contract *SafeMathTransactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewSafeMath creates a new instance of SafeMath, bound to a specific deployed contract.
-func NewSafeMath(address common.Address, backend bind.ContractBackend) (*SafeMath, error) {
-	contract, err := bindSafeMath(address, backend, backend, backend)
+	logs, sub, err := _Rpt.contract.FilterLogs(opts, "UpdateWeightConfigs")
 	if err != nil {
 		return nil, err
 	}
-	return &SafeMath{SafeMathCaller: SafeMathCaller{contract: contract}, SafeMathTransactor: SafeMathTransactor{contract: contract}, SafeMathFilterer: SafeMathFilterer{contract: contract}}, nil
+	return &RptUpdateWeightConfigsIterator{contract: _Rpt.contract, event: "UpdateWeightConfigs", logs: logs, sub: sub}, nil
 }
 
-// NewSafeMathCaller creates a new read-only instance of SafeMath, bound to a specific deployed contract.
-func NewSafeMathCaller(address common.Address, caller bind.ContractCaller) (*SafeMathCaller, error) {
-	contract, err := bindSafeMath(address, caller, nil, nil)
+// WatchUpdateWeightConfigs is a free log subscription operation binding the contract event 0x94cb95e42d1f9f5b3e73da8fddc18ba25b0c89408eb91f64e417c59c6833a82b.
+//
+// Solidity: e UpdateWeightConfigs(blockNumber uint256)
+func (_Rpt *RptFilterer) WatchUpdateWeightConfigs(opts *bind.WatchOpts, sink chan<- *RptUpdateWeightConfigs) (event.Subscription, error) {
+
+	logs, sub, err := _Rpt.contract.WatchLogs(opts, "UpdateWeightConfigs")
 	if err != nil {
 		return nil, err
 	}
-	return &SafeMathCaller{contract: contract}, nil
-}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(RptUpdateWeightConfigs)
+				if err := _Rpt.contract.UnpackLog(event, "UpdateWeightConfigs", log); err != nil {
+					return err
+				}
+				event.Raw = log
 
-// NewSafeMathTransactor creates a new write-only instance of SafeMath, bound to a specific deployed contract.
-func NewSafeMathTransactor(address common.Address, transactor bind.ContractTransactor) (*SafeMathTransactor, error) {
-	contract, err := bindSafeMath(address, nil, transactor, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &SafeMathTransactor{contract: contract}, nil
-}
-
-// NewSafeMathFilterer creates a new log filterer instance of SafeMath, bound to a specific deployed contract.
-func NewSafeMathFilterer(address common.Address, filterer bind.ContractFilterer) (*SafeMathFilterer, error) {
-	contract, err := bindSafeMath(address, nil, nil, filterer)
-	if err != nil {
-		return nil, err
-	}
-	return &SafeMathFilterer{contract: contract}, nil
-}
-
-// bindSafeMath binds a generic wrapper to an already deployed contract.
-func bindSafeMath(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(SafeMathABI))
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_SafeMath *SafeMathRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _SafeMath.Contract.SafeMathCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_SafeMath *SafeMathRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _SafeMath.Contract.SafeMathTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_SafeMath *SafeMathRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _SafeMath.Contract.SafeMathTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_SafeMath *SafeMathCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _SafeMath.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_SafeMath *SafeMathTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _SafeMath.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_SafeMath *SafeMathTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _SafeMath.Contract.contract.Transact(opts, method, params...)
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
 }

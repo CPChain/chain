@@ -5,9 +5,7 @@ import (
 	"math/big"
 
 	cpchain "bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_backend"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitives"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/types"
@@ -29,8 +27,7 @@ type ContractAPI interface {
 }
 
 func RegisterPrimitiveContracts() {
-	chainClient := primitive_backend.GetChainClient()
-	for addr, c := range MakePrimitiveContracts(chainClient, chainClient) {
+	for addr, c := range MakePrimitiveContracts() {
 		err := vm.RegisterPrimitiveContract(addr, c)
 		if err != nil {
 			log.Fatal("register primitive contract error", "error", err, "addr", addr)
@@ -38,20 +35,9 @@ func RegisterPrimitiveContracts() {
 	}
 }
 
-func MakePrimitiveContracts(contractClient bind.ContractBackend, chainClient *primitive_backend.ApiClient) map[common.Address]vm.PrimitiveContract {
+func MakePrimitiveContracts() map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
 
-	// we start from 100 to reserve enough space for upstream primitive contracts.
-	RptEvaluator, err := primitives.NewRptEvaluator(contractClient, chainClient)
-	if err != nil {
-		log.Fatal("s.RptEvaluator is file")
-	}
-	contracts[common.BytesToAddress([]byte{100})] = &primitives.GetRank{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{101})] = &primitives.GetMaintenance{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{102})] = &primitives.GetProxyCount{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{103})] = &primitives.GetUploadReward{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{104})] = &primitives.GetTxVolume{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{105})] = &primitives.IsProxy{Backend: RptEvaluator}
 	contracts[common.BytesToAddress([]byte{106})] = &primitives.CpuPowValidate{}
 	contracts[common.BytesToAddress([]byte{107})] = &primitives.MemPowValidate{}
 	return contracts

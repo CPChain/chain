@@ -24,7 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	// TODO: fix this @liuq
-	campaignContract "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
+	campaignContract "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
 )
 
 // CandidateService provides methods to obtain all candidates from campaign contract

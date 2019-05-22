@@ -29,7 +29,6 @@ import (
 
 var (
 	proxyCampaignContractAddress common.Address
-	proxyRewardContractAddress   common.Address
 )
 
 func main() {
@@ -43,110 +42,45 @@ func main() {
 	password := os.Args[3]
 	log.Info("contract deploy node's password", "password", password)
 
-	// deploy init contract
-	title := "[0.DeployProxyContractRegister]"
-	proxyContractRegisterAddress := deploy.ProxyContractRegister(password)
-	deploy.PrintContract(title, proxyContractRegisterAddress)
-
 	var wg1 sync.WaitGroup
-
-	// 1
-	wg1.Add(2)
-	go deployProposer(password, proxyContractRegisterAddress, &wg1 /*, 1, 2, 3*/)
-
-	// 2,3
-	go deployRewardAdmissionAndCampaign(password, proxyContractRegisterAddress, &wg1 /*, 4, 5, 6, 7, 8, 9,10,11,12*/)
+	wg1.Add(1)
+	go deployRNodeAdmissionAndCampaign(password, &wg1)
 	wg1.Wait()
 
 	var wg2 sync.WaitGroup
-	wg2.Add(2)
-	// 4
-	go deployRpt(password, proxyContractRegisterAddress, &wg2 /*, 13, 14, 15*/)
+	wg2.Add(1)
+	go deployRpt(password, &wg2)
 
-	// 5
-	go deployRegister(password, proxyContractRegisterAddress, &wg2 /*, 16, 17, 18*/)
 	wg2.Wait()
 
-	var wg3 sync.WaitGroup
-	wg3.Add(1)
-	// 6
-	go deployPdash(password, proxyContractRegisterAddress, &wg3 /*, 19,20,21*/)
-	wg3.Wait()
-
-	var wg4 sync.WaitGroup
-	wg4.Add(1)
-	// 7
-	go deployPdashProxy(password, proxyContractRegisterAddress, &wg4 /*,22,23,24*/)
-	wg4.Wait()
-
-	// 8
 	deploy.UpdateCampaignParameters(password, proxyCampaignContractAddress, 25, 26)
-
-	// 9
-	deploy.StartNewRaise(proxyRewardContractAddress, password, 27)
 
 	fmt.Println("======== init contract deploy completed=========")
 }
 
-func deployProposer(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	title := "[1.DeployProposer]"
-	signerAddress := deploy.DeployProposerRegister(password, 1)
-	deploy.PrintContract(title, signerAddress)
-	deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, signerAddress, password, 2, 3)
-	wg.Done()
-}
+func deployRNodeAdmissionAndCampaign(password string, wg *sync.WaitGroup) {
+	// 1
+	title := "[1.DeployRNode]"
+	rnodeAddress := deploy.DeployRNode(password, 0)
+	deploy.PrintContract(title, rnodeAddress)
 
-// TODO: @xmx WILL ADJUST NONCE AND ORDER NUMBERS
-func deployRewardAdmissionAndCampaign(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
 	// 2
-	title := "[2.DeployReward]"
-	rewardAddress := deploy.DeployReward(password, 4)
-	deploy.PrintContract(title, rewardAddress)
-	proxyRewardAddress := deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, rewardAddress, password, 5, 6)
+	title = "[2.DeployAdmission]"
+	admissionAddress := deploy.DeployAdmission(password, 1)
+	deploy.PrintContract(title, admissionAddress)
 
 	// 3
-	title = "[3.DeployAdmission]"
-	admissionAddress := deploy.DeployAdmission(password, 7)
-	deploy.PrintContract(title, admissionAddress)
-	proxyAdmissionAddress := deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, admissionAddress, password, 8, 9)
-	// 4
-	title = "[4.DeployCampaign]"
-	campaignAddress := deploy.DeployCampaign(proxyAdmissionAddress, proxyRewardAddress, password, 10)
+	title = "[3.DeployCampaign]"
+	campaignAddress := deploy.DeployCampaign(admissionAddress, rnodeAddress, password, 2)
 	deploy.PrintContract(title, campaignAddress)
-	proxyCampaignContractAddress = deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, campaignAddress, password, 11, 12)
+	proxyCampaignContractAddress = campaignAddress
 	wg.Done()
-
-	// save the proxy address to global variable
-	proxyRewardContractAddress = proxyRewardAddress
 }
 
-func deployRpt(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	title := "[5.DeployRpt]"
-	rptAddress := deploy.DeployRpt(password, 13)
+func deployRpt(password string, wg *sync.WaitGroup) {
+	// 4
+	title := "[4.DeployRpt]"
+	rptAddress := deploy.DeployRpt(password, 3)
 	deploy.PrintContract(title, rptAddress)
-	deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, rptAddress, password, 14, 15)
-	wg.Done()
-}
-func deployRegister(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	title := "[6.DeployRegister]"
-	registerAddress := deploy.DeployRegister(password, 16, proxyContractRegisterAddress)
-	deploy.PrintContract(title, registerAddress)
-	deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, registerAddress, password, 17, 18)
-	wg.Done()
-}
-
-func deployPdash(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	title := "[7.DeployPdash]"
-	pdashAddress := deploy.DeployPdash(password, 19)
-	deploy.PrintContract(title, pdashAddress)
-	deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, pdashAddress, password, 20, 21)
-	wg.Done()
-}
-
-func deployPdashProxy(password string, proxyContractRegisterAddress common.Address, wg *sync.WaitGroup) {
-	title := "[8.DeployPdashProxy]"
-	pdashAddress := deploy.DeployPdashProxy(password, 22, proxyContractRegisterAddress)
-	deploy.PrintContract(title, pdashAddress)
-	deploy.RegisterProxyAddress(title, proxyContractRegisterAddress, pdashAddress, password, 23, 24)
 	wg.Done()
 }

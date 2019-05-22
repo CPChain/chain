@@ -18,8 +18,8 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
-	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode2"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
+	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"github.com/ethereum/go-ethereum/common"
 )
 

@@ -98,7 +98,7 @@ func (c *Console) isLocked() bool {
 	if err != nil {
 		c.output.Error(err.Error())
 	}
-	locked, err := instance.IsLocked(nil)
+	locked, err := instance.Locked(nil)
 	if err != nil {
 		c.output.Error(err.Error())
 	}
@@ -208,19 +208,19 @@ func (c *Console) GetBalanceOnReward() (*cm.RewardBalance, error) {
 		return nil, err
 	}
 	// GetLockedBalance
-	totalBalance, err := instance.GetTotalBalance(nil, c.addr)
+	totalBalance, err := instance.GetTotalBalanceOf(nil, c.addr)
 	if err != nil {
 		return nil, err
 	}
 
 	// GetFreeBalance
-	freeBalance, err := instance.GetFreeBalance(nil, c.addr)
+	freeBalance, err := instance.GetFreeBalanceOf(nil, c.addr)
 	if err != nil {
 		return nil, err
 	}
 
 	// GetLockedBalance
-	lockedBalance, err := instance.GetLockedBalance(nil, c.addr)
+	lockedBalance, err := instance.GetLockedBalanceOf(nil, c.addr)
 	if err != nil {
 		return nil, err
 	}

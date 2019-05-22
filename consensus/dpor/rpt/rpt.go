@@ -25,7 +25,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	rptContract "bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
+	rptContract "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	"github.com/ethereum/go-ethereum/common"
 )
 

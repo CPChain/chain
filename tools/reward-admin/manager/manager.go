@@ -62,7 +62,7 @@ func (c *Console) IsLocked() bool {
 	if err != nil {
 		c.output.Error(err.Error())
 	}
-	locked, err := instance.IsLocked(nil)
+	locked, err := instance.Locked(nil)
 	if err != nil {
 		c.output.Error(err.Error())
 	}
@@ -75,7 +75,7 @@ func (c *Console) TotalInvestorsAmount() *big.Int {
 	if err != nil {
 		c.output.Error(err.Error())
 	}
-	balanceAmount, _ := instance.TotalInvestAmount(nil)
+	balanceAmount, _ := instance.GetTotalLockedAmount(nil)
 	return balanceAmount
 
 }
@@ -90,8 +90,8 @@ func (c *Console) GetInvestorList(ctx *cli.Context) ([]rm.InvestorInfo, error) {
 	investors, _ := instance.GetInvestors(nil)
 	slice := make([]rm.InvestorInfo, len(investors))
 	for i, v := range investors {
-		freeB, _ := instance.GetFreeBalance(nil, v)
-		lockedB, _ := instance.GetLockedBalance(nil, v)
+		freeB, _ := instance.GetFreeBalanceOf(nil, v)
+		lockedB, _ := instance.GetLockedBalanceOf(nil, v)
 		toRenewB, _ := instance.IsToRenew(nil, v)
 		investorItem := rm.InvestorInfo{
 			FreeBalance:   freeB,
@@ -186,7 +186,7 @@ func (c *Console) StartNewRound() error {
 
 func (c *Console) checkNewRoundLockStatus(r *types.Receipt, instance *reward.Reward) {
 	if r.Status == 1 {
-		locked, err := instance.IsLocked(nil)
+		locked, err := instance.Locked(nil)
 		if err != nil {
 			log.Error(err.Error())
 			c.output.Error(err.Error())
@@ -261,7 +261,7 @@ func (c *Console) StartNewRaise() error {
 
 func (c *Console) checkNewRaiseLockStatus(r *types.Receipt, instance *reward.Reward) {
 	if r.Status == 1 {
-		locked, err := instance.IsLocked(nil)
+		locked, err := instance.Locked(nil)
 		if err != nil {
 			log.Error(err.Error())
 			c.output.Error(err.Error())

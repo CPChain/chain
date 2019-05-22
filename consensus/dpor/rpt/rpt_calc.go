@@ -9,7 +9,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
-	contracts "bitbucket.org/cpchain/chain/contracts/dpor/rpt2"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	"github.com/ethereum/go-ethereum/common"
 )
 
