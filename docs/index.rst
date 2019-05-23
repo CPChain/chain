@@ -65,7 +65,7 @@ Quick reference:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Test
+   :caption: Testing
 
    test/test-overview
 
