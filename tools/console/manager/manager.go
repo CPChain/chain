@@ -186,7 +186,7 @@ func (c *Console) JoinRnode() error {
 	// Withdraw
 	transactOpts := c.buildTransactOpts(big.NewInt(210000))
 	c.output.Info("create transaction options successfully")
-	_, err = instance.JoinRnode(transactOpts,big.NewInt(210000))
+	_, err = instance.JoinRnode(transactOpts,big.NewInt(1))
 	if err != nil {
 		return err
 	}
