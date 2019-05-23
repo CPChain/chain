@@ -42,6 +42,7 @@ contract Rpt {
         public 
         onlyOwner()
         {
+            require(_window>=10 && _window<=100);
             alpha = _alpha;
             beta = _beta;
             gamma = _gamma;
@@ -107,6 +108,7 @@ contract Rpt {
     }
     
     function updateWindow(uint _window) public onlyOwner {
+        require(_window>=10 && _window<=100);
         window = _window;
         emit UpdateOneConfig(block.number, "window", window);
     }
