@@ -207,7 +207,7 @@ func TestRptServiceImpl_CalcRptInfoList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rs, _ := rpt.NewRptService(tt.fields.Client, tt.fields.RptContract)
+			rs, _ := rpt.NewRptService(tt.fields.Client, tt.fields.RptContract, tt.fields.RptContract)
 			tt.prepare()
 			log.Printf("Testcase [%s], RPT: %v", tt.name, rs.CalcRptInfoList(tt.args.addresses, tt.args.number)[0].Rpt)
 			if got := rs.CalcRptInfoList(tt.args.addresses, tt.args.number); !reflect.DeepEqual(got, tt.want) {
@@ -376,4 +376,57 @@ func TestRptOf5(t *testing.T) {
 		t.Log("idx", i, "rpt", rpt.Rpt, "addr", addr.Hex())
 	}
 
+}
+
+func Test_PctCount(t *testing.T) {
+	type args struct {
+		pct   int
+		total int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{
+			name: "1",
+			args: args{
+				pct:   50,
+				total: 8,
+			},
+			want: 4,
+		},
+		{
+			name: "2",
+			args: args{
+				pct:   10,
+				total: 8,
+			},
+			want: 0,
+		},
+		{
+			name: "3",
+			args: args{
+				pct:   0,
+				total: 8,
+			},
+			want: 0,
+		},
+		{
+			name: "4",
+			args: args{
+				pct:   100,
+				total: 8,
+			},
+			want: 8,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := rpt.PctCount(tt.args.pct, tt.args.total); got != tt.want {
+				t.Errorf("pctCount() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

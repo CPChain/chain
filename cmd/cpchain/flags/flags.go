@@ -124,6 +124,7 @@ const (
 	CacheDatabaseFlagName = "cache.database"
 	CacheGCFlagName       = "cache.gc"
 	MaxTxMapSizeFlagName  = "txpoolsize"
+	FifoTxPoolQueue       = "fifotxpool"
 )
 
 var ChainFlags = []cli.Flag{
@@ -158,6 +159,10 @@ var ChainFlags = []cli.Flag{
 		Name:  MaxTxMapSizeFlagName,
 		Usage: "Maximum number of pending transactions",
 		Value: 1024,
+	},
+	cli.BoolFlag{
+		Name:  FifoTxPoolQueue,
+		Usage: "Use FIFO tx pool queue",
 	},
 }
 

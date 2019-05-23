@@ -41,6 +41,7 @@ const (
 var (
 	InvalidPrivateTxErr    = errors.New("Private transaction should have participants defined and payload data.")
 	NotSupportPrivateTxErr = errors.New("Not support private transaction")
+	NoSupportTxTypeErr     = errors.New("Transaction type not supported")
 )
 
 // PublicCpchainAPI provides an API to access Cpchain related information.
@@ -489,7 +490,7 @@ func (s *PublicBlockChainAPI) GetRNodes() []cpclient.RNodes {
 	for _, rodeAddr := range rnodes {
 		isCommittee := IsCommittee(rodeAddr, committeAddress)
 		role := getRole(isCommittee)
-		score := s.b.CalcRptInfo(rodeAddr, rnodes ,bn)
+		score := s.b.CalcRptInfo(rodeAddr, rnodes, bn)
 		r := cpclient.RNodes{
 			Address: rodeAddr,
 			Rpt:     score,
@@ -1163,7 +1164,8 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 					rpcTx := newRPCTransaction(tx, block.Hash(), block.NumberU64(), uint64(index)+uint64(from))
 
 					var receipt *types.Receipt
-					if tx.IsPrivate() {
+					supportPrivate, _ := s.b.SupportPrivateTx(ctx)
+					if tx.IsPrivate() && supportPrivate {
 						receipt, _ = s.b.GetPrivateReceipt(ctx, tx.Hash())
 					} else {
 						receipt = receipts[uint64(index)+uint64(from)]
@@ -1528,6 +1530,14 @@ func (s *PublicTransactionPoolAPI) SendRawTransaction(ctx context.Context, encod
 	tx := new(types.Transaction)
 	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
 		return common.Hash{}, err
+	}
+	if tx.Type() > 1 {
+		return common.Hash{}, NoSupportTxTypeErr
+	}
+	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
+	if tx.IsPrivate() && !supportPrivate {
+		// if not support private tx, immediately returns error
+		return common.Hash{}, NotSupportPrivateTxErr
 	}
 	return submitTransaction(ctx, s.b, tx)
 }

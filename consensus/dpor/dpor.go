@@ -391,7 +391,11 @@ func (d *Dpor) SetupAdmission(ac admission.ApiBackend) {
 }
 
 func (d *Dpor) SetRptBackend(backend backend.ClientBackend) {
-	d.rptBackend, _ = rpt.NewRptService(backend, configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt])
+	d.rptBackend, _ = rpt.NewRptService(
+		backend,
+		configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt],
+		configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt2],
+	)
 }
 
 func (d *Dpor) GetRptBackend() rpt.RptService {

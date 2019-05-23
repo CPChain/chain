@@ -23,7 +23,7 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"github.com/ethereum/go-ethereum/common"
 )

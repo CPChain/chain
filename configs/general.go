@@ -102,10 +102,19 @@ const (
 	ContractRnode      = "rnode"      // address of rnode
 	ContractCampaign2  = "campaign2"  // address of campaign2
 	ContractCampaign3  = "campaign3"  // address of campaign3
+	ContractCampaign4  = "campaign4"  // address of campaign4
+	ContractRnode2     = "rnode2"     // address of rnode2
+	ContractRpt2       = "rpt2"       // address of rpt2 contract,Calculation the rpt of rnode
 )
 
 const (
 	RNodeMinFundReq = 200000 // 200000 CPC for becoming a RNode
+)
+
+// some version numbers
+const (
+	RnodeVersion    = 1
+	CampaignVersion = 1
 )
 
 // pivot blocks numbers
@@ -114,9 +123,13 @@ const (
 	RptCalcMethod3BlockNumber = 372400
 	RptCalcMethod4BlockNumber = 390500
 	RptCalcMethod5BlockNumber = 398000
+	RptCalcMethod6BlockNumber = 454700
 
 	Campaign2BlockNumber = 371900
 	Campaign3BlockNumber = 390500
+	Campaign4BlockNumber = 454700
+
+	Election2BlockNumber = 454700
 )
 
 var (
