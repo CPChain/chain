@@ -2,12 +2,10 @@ package output
 
 import (
 	"fmt"
-	"math/big"
 	"os"
 	"text/template"
 
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/configs"
 	cm "bitbucket.org/cpchain/chain/tools/console/common"
 )
 
@@ -31,16 +29,6 @@ Mining:           {{.Mining}}
 RNode:            {{.RNode}}
 
 Proposer:         {{.Proposer}}
-
-Locked:           {{.Locked}}
-	`
-	if status.Proposer {
-		outTmpl += `
-NextNumber:       {{.NextNumber}}
-	`
-	}
-	outTmpl += `
-SupportPrivateTx: {{.SupportPrivateTx}}
 --------------------------
 `
 	tmpl, err := template.New("status").Parse(outTmpl)
@@ -54,45 +42,6 @@ SupportPrivateTx: {{.SupportPrivateTx}}
 	fmt.Println()
 }
 
-type _balance struct {
-	Balance string
-	Total   string
-	Free    string
-	Locked  string
-}
-
-func convert(val *big.Int) string {
-	_val := new(big.Float).SetInt(val)
-	return new(big.Float).Quo(_val, big.NewFloat(configs.Cpc)).String()
-}
-
-// Balance of account
-func (l *LogOutput) Balance(balance *cm.Balance) {
-	outTmpl := `--------------------------
-
-Balance: {{.Balance}} CPC
-
-Reward:
-	Total:  {{.Total}} CPC
-	Free:   {{.Free}} CPC
-	Locked: {{.Locked}} CPC
-
---------------------------
-`
-	tmpl, err := template.New("balance").Parse(outTmpl)
-	if err != nil {
-		l.Error(err.Error())
-	}
-	err = tmpl.Execute(os.Stdout, _balance{
-		convert(&balance.Balance),
-		convert(balance.Reward.TotalBalance),
-		convert(balance.Reward.FreeBalance),
-		convert(balance.Reward.LockedBalance),
-	})
-	if err != nil {
-		l.Error(err.Error())
-	}
-}
 
 // Info log
 func (l *LogOutput) Info(msg string, params ...interface{}) {

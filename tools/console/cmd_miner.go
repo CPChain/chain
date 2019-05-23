@@ -17,14 +17,14 @@ func init() {
 		Subcommands: []cli.Command{
 			{
 				Name:        "start",
-				Usage:       "Start mining",
+				Usage:       "Start claiming campaign",
 				Flags:       wrapperFlags(minerFlags),
 				Action:      startMining,
 				Description: fmt.Sprintf(`Start Mining`),
 			},
 			{
 				Name:        "stop",
-				Usage:       "Stop mining",
+				Usage:       "Stop claiming campaign",
 				Flags:       wrapperFlags(minerFlags),
 				Action:      stopMining,
 				Description: fmt.Sprintf(`Stop Mining`),

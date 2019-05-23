@@ -31,8 +31,7 @@ func newApp() *cli.App {
 	app.Commands = []cli.Command{
 		statusCommand,
 		minerCommand,
-		accountCommand,
-		rewardCommand,
+		rnodeCommand,
 	}
 
 	// maintain order
