@@ -192,6 +192,7 @@ contract Reward {
 
     function setPeriod(uint256 _period) public onlyOwner {
         period = _period;
+
     }
 
     function setCriteria(uint256 criteria) public onlyOwner {
@@ -219,6 +220,7 @@ contract Reward {
         for (uint i = 0; i< participants.values.length; i++){
             deposit = investors[participants.values[i]].lockedDeposit;
             interest = bonusPool.mul(deposit).div(totalAmount); // interest = [total bonus] * ([the investor's investment] / [total investment])
+            bonusPool = bonusPool.sub(interest);
             investors[participants.values[i]].returned = investors[participants.values[i]].returned.add(interest);
 
             if (investors[participants.values[i]].toRenew == false){

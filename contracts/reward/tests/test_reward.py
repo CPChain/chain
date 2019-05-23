@@ -139,11 +139,9 @@ def test_case_1():
     print("after kill the contract, balance: ", cf.fromWei(cf.cpc.getBalance(enode), "ether"))
 
 
-
-
-
 def main():
-    test_case_1()
+    # test_case_1()
+    compile_file()
 
 
 if __name__ == '__main__':
