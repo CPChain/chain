@@ -56,12 +56,21 @@ Black Box Testing
 
 The black box testing examines the functionality of the chain
 without a priori knowledge on its internal implementation.
-In black box testing,
+In black box testing, a list of test cases are curated to examine whether
+the chain can work properly.
+Each test case contains three major components:
 
-Abnormal Test Cases
-++++++++++++++++++++
+1. Scenario: briefly describe the case;
+#. Steps: how to reproduce the case;
+#. Expected result: what is the expected as a working chain.
 
-We design plenty of test cases, including abnormal and normal ones,
+Abnormal Consensus Test Cases
+++++++++++++++++++++++++++++++++
+
+Consensus is the core of a blockchain.
+We need to assure the chain's safety and consistency when facing Byzantine fault
+among validators and proposers.
+Thus, we design plenty of test cases on consensus, including abnormal and normal ones,
 to test the functionality of the chain.
 For each possible abnormal scenario, as curated in :ref:`illicit-actions`,
 a input and its expected output is designed to simulate it.
@@ -70,9 +79,29 @@ This simulation is implemented by adopting Jepsen framework.
 Stability Test Cases
 +++++++++++++++++++++++
 
-It
+Stability testing involves the launch, reboot, and abort of
+the bootnodes, proposers, validators, civilians and contract administrators.
+This testing provides the stability proof of the chain
+under extreme cases like black out, connection error, etc.
 
 
+Mining Test Cases
+++++++++++++++++++++++++++
+
+A proposer has its duty to seal and mine a block.
+This set of test cases are categorized into several types:
+
+1. Proposer: containscurated test cases in which a proposer conducts different behaviors.
+#. Campaign: examine the campaign candidate list, and smart contract.
+#. RNode: assure the admission of RNode is correct given different conditions.
+#. Reward: guarantee both basic and maintenance reward is correctly calculated and dispensed.
+#. Admission Control (AC): make sure he threshold set for minimum CPU capacity works as expected.
+#. Validator: test the validity of validator domain.
+#. Start and Stop: robustness test by multiple aborting and restarting the chain.
 
 
+Private Transaction Test Cases
++++++++++++++++++++++++++++++++
 
+
+These cases examines IPFS server as well as private transactions.
