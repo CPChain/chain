@@ -52,6 +52,13 @@ func hexToCompact(hex []byte) []byte {
 }
 
 func compactToHex(compact []byte) []byte {
+
+	// fix error in node decoding
+	// cf. https://github.com/ethereum/go-ethereum/commit/a458153098d6f66ee0c6f990f31b3646ad171bbb
+	if len(compact) == 0 {
+		return compact
+	}
+
 	base := keybytesToHex(compact)
 	// delete terminator flag
 	if base[0] < 2 {
