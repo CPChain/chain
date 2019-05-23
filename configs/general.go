@@ -92,19 +92,9 @@ const (
 // TODO @hmw make the name more meaningful.  add doc.
 const (
 	ContractCampaign   = "campaign"   // address of campaign contract,select rnode
-	ContractProposer   = "proposer"   // address of proposer_register contract, register proposer address in proposer_register contract
-	ContractReward     = "reward"     // address of reward contract
-	ContractRegister   = "register"   // address of register contract
 	ContractRpt        = "rpt"        // address of rpt contract,Calculation the rpt of rnode
-	ContractPdash      = "pdash"      // address of pdash
 	ContractAdmission  = "admission"  // address of admission
-	ContractPdashProxy = "pdashProxy" // address of PdashProxy
 	ContractRnode      = "rnode"      // address of rnode
-	ContractCampaign2  = "campaign2"  // address of campaign2
-	ContractCampaign3  = "campaign3"  // address of campaign3
-	ContractCampaign4  = "campaign4"  // address of campaign4
-	ContractRnode2     = "rnode2"     // address of rnode2
-	ContractRpt2       = "rpt2"       // address of rpt2 contract,Calculation the rpt of rnode
 )
 
 const (
