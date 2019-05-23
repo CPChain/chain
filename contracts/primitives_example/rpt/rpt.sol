@@ -26,7 +26,7 @@ contract Rpt {
     uint public omega = 10;
     
     // other configs.
-    uint public window = 4; // number of blocks used for rpt calculation
+    uint public window = 100; // number of blocks used for rpt calculation
     uint public f = 21; // candidate per round
     
     address public owner;

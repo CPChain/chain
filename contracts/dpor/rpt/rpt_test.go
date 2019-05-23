@@ -47,7 +47,7 @@ func TestRpt(t *testing.T) {
 	_ = opt
 	window, err := rpt.Window(nil)
 	checkError(t, "get window error", err)
-	verifyEqual(t, window.Uint64(), uint64(4))
+	verifyEqual(t, window.Uint64(), uint64(100))
 
 	// update windowsize
 	_, err = rpt.UpdateWindow(opt, big.NewInt(int64(1)))
