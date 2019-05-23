@@ -169,8 +169,8 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
 	primitive_backend.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
-		dpor.SetCampaignBackend(contractAddrs[configs.ContractCampaign4], primitive_backend.GetChainClient())
-		dpor.SetRptBackend(contractAddrs[configs.ContractRpt2], primitive_backend.GetChainClient())
+		dpor.SetCampaignBackend(contractAddrs[configs.ContractCampaign], primitive_backend.GetChainClient())
+		dpor.SetRptBackend(contractAddrs[configs.ContractRpt], primitive_backend.GetChainClient())
 		dpor.SetRNodeBackend(contractAddrs[configs.ContractRnode], primitive_backend.GetChainClient())
 	}
 
@@ -198,7 +198,7 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	// admission must initialize after blockchain has been initialized
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
 		contractAddrs[configs.ContractAdmission],
-		contractAddrs[configs.ContractCampaign4],
+		contractAddrs[configs.ContractCampaign],
 		contractAddrs[configs.ContractRnode])
 
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
