@@ -11,9 +11,7 @@ func TestLogOutput(t *testing.T) {
 	output.Info("Info")
 	output.Error("Error")
 	output.Warn("Warn")
-
-
-
+	
 	// Status
 	output.Status(&status.Status{
 		Mining:     true,

@@ -6,24 +6,14 @@
 
 ## Commands
 ### Overview
-- **account**  
-Show accounts of the cpchain node
 - **miner**    
 Miner operations
-- **reward**   
+- **rnode**   
 Reward contract operations
 - **status**      
 Show status of cpchain node
 - **help, h**    
 Shows a list of commands or help for one command
-
-
-### Command 'account'
-Usage: console **account** [command options] [arguments...]
-- **--rpc value**       Set the APIs offered over the HTTP-RPC interface (default: "http://127.0.0.1:8501")
-- **--password value**  Password file to use for non-interactive password input (default: "/<home path>/.cpchain/password")
-- **--keystore value**  Keystore directory (default: "/<home path>/.cpchain/keystore/")
-
 
 ### Command 'miner'
 Usage: console **miner** <subcommand\> [command options] [arguments...]
@@ -38,16 +28,14 @@ Usage: console **miner** <subcommand\> [command options] [arguments...]
 - **--keystore value**  Keystore directory (default: "/<home path>/.cpchain/keystore/")
    
 
-### Command 'reward'
-Usage: console **reward** <subcommand\> [command options] [arguments...]
+### Command 'rnode'
+Usage: console **rnode** <subcommand\> [command options] [arguments...]
 
 #### Subcommands
-- **deposit**    deposit money    
-**arguments**: <money to deposit\>, default is 1000 CPC.
-- **withdraw**   withdraw money   
-**arguments**: <money to withdraw\>, default is the balance of fundraising account.
-- **wantrenew**  want renew investment of current round
-- **quitrenew**  quit renew investment of current round
+- **join**    Join in rnode list    
+**arguments**: If this account have enough money,default transfer 200000 ether to fundraising account .
+- **quit**   Quit from rnode list   
+**arguments**: Quit from rnode,get lockedDeposit from fundraising account .
 
 #### Options
 - **--rpc value**       Set the APIs offered over the HTTP-RPC interface (default: "http://127.0.0.1:8501")
