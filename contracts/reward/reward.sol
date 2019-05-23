@@ -30,7 +30,7 @@ contract Reward {
     }
 
     // store a 'Investor' struct for each possible address
-    mapping (address => Investor) private investors;
+    mapping (address => Investor) public investors;
 
     // These events will be emitted on changes
     event OwnerSetBonusPool(uint value);
@@ -230,7 +230,7 @@ contract Reward {
     }
 
     // only owner can start a new round
-    function startNewRound() public onlyOwner() {
+    function startNewRound() public onlyOwner {
         require(block.timestamp >= (nextRoundStartTime), "the next round not start"); // allow start 3 days ahead of schedule
 
         // close previous round firstly
@@ -266,7 +266,7 @@ contract Reward {
         locked = true;
     }
 
-    function getInvestors() public onlyOwner() view returns (address[]) {
+    function getInvestors() public view returns (address[]) {
         return participants.getAll();
     }
 }
