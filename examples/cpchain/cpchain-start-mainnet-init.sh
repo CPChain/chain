@@ -19,7 +19,7 @@ echo $($stop)
 
 cd $proj_dir
 echo "[*] making"
-make all
+make cpchain
 
 cd $run_dir
 
