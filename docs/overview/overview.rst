@@ -203,9 +203,11 @@ And the total score is calculated as:
     which is latest 100 blocks.
     Data outside this window are no longer taken into consideration.
 
-The score for each dimension is calculated by the same methodology.
+Unless otherwise stated, 
+the score for each dimension is calculated by the same methodology.
 In total, there are at most 100 RNodes in each term campaign.
 The RNode with :math:`i`-th highest RPT will get :math:`100-i+1` score.
+
 
 
 
@@ -215,25 +217,7 @@ Account Balance
 A *account balance* score is granted to an RNode
 according to its account balance percentile among all RNode addresses
 (excluding CPChain Foundation and Exchange addresses).
-Score percentiles are demonstrated below.
 
-+--------------+--------------+
-| Percentile   |  Score (AB)  |
-+==============+==============+
-|    98%       |   100        |
-+--------------+--------------+
-|    95%       |    90        |
-+--------------+--------------+
-|    85%       |    80        |
-+--------------+--------------+
-|    65%       |    70        |
-+--------------+--------------+
-|    40%       |    60        |
-+--------------+--------------+
-|    20%       |    40        |
-+--------------+--------------+
-|     0%       |    20        |
-+--------------+--------------+
 
 
 Transaction
@@ -244,27 +228,9 @@ all transactions sent by a given user.
 The definition of *transactions* can be expanded as the of CPChain ecosystem develops.
 
 TX score is evaluated by all *transactions* statistics.
-Since the distribution of transactions can follow
-a long tail distribution or power laws,
-we use the following percentiles to normalize TX score.
+The distribution of transactions can follow
+a long tail distribution or power laws.
 
-+--------------+--------------+
-| Percentile   |  Score (TX)  |
-+==============+==============+
-|    98%       |   100        |
-+--------------+--------------+
-|    95%       |    90        |
-+--------------+--------------+
-|    85%       |    80        |
-+--------------+--------------+
-|    65%       |    70        |
-+--------------+--------------+
-|    40%       |    60        |
-+--------------+--------------+
-|    20%       |    40        |
-+--------------+--------------+
-|     0%       |    20        |
-+--------------+--------------+
 
 
 
@@ -279,6 +245,7 @@ Proxy reputation score is calculated according to following rules:
 1. Once an RNode registers as a proxy, it obtains 10 initial points.
 #. For each successful transaction with the node's help as a proxy, it gets 5 points.
 #. The full score is 100 points.
+
 
 
 Data Contribution
@@ -301,27 +268,6 @@ Blockchain Maintenance
 
 Blockchain Maintenance score is calculated
 given a node's contribution in proposing a certain block.
-
-In detail, it is evaluated given the following percentile
-of number of proposed blocks, similar to `Transaction`_ and `Account Balance`_.
-
-+--------------+--------------+
-| Percentile   |  Score (BM)  |
-+==============+==============+
-|    98%       |   100        |
-+--------------+--------------+
-|    95%       |    90        |
-+--------------+--------------+
-|    85%       |    80        |
-+--------------+--------------+
-|    65%       |    70        |
-+--------------+--------------+
-|    40%       |    60        |
-+--------------+--------------+
-|    20%       |    40        |
-+--------------+--------------+
-|     0%       |    20        |
-+--------------+--------------+
 
 
 
