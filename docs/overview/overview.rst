@@ -203,10 +203,10 @@ And the total score is calculated as:
     which is latest 100 blocks.
     Data outside this window are no longer taken into consideration.
 
-Unless otherwise stated, 
+Unless otherwise stated,
 the score for each dimension is calculated by the same methodology.
 In total, there are at most 100 RNodes in each term campaign.
-The RNode with :math:`i`-th highest RPT will get :math:`100-i+1` score.
+The RNode with :math:`i`-th highest RPT will get :math:`(100-i+1)` score.
 
 
 
