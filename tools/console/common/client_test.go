@@ -77,9 +77,9 @@ func TestContractExist(t *testing.T) {
 }
 
 func TestReward(t *testing.T) {
-	// if skip {
-	// 	t.Skip()
-	// }
+	if skip {
+		t.Skip()
+	}
 	// ctx, cancel := context.WithCancel(context.Background())
 	// defer cancel()
 	// client, _, _, fromAddress := buildClient(&ctx, t)
@@ -170,9 +170,9 @@ func TestMining(t *testing.T) {
 }
 
 func TestWithdrawAndDeposit(t *testing.T) {
-	// if skip {
-	// 	t.Skip()
-	// }
+	if skip {
+		t.Skip()
+	}
 	// ctx, cancel := context.WithCancel(context.Background())
 	// defer cancel()
 	// client, prvKey, _, fromAddress := buildClient(&ctx, t)
@@ -245,9 +245,9 @@ func TestWantAndQuitRenew(t *testing.T) {
 }
 
 func TestLocked(t *testing.T) {
-	// if skip {
-	// 	t.Skip()
-	// }
+	if skip {
+		t.Skip()
+	}
 	// ctx, cancel := context.WithCancel(context.Background())
 	// defer cancel()
 	// client, _, _, _ := buildClient(&ctx, t)
