@@ -119,6 +119,12 @@ func (api *PrivateDebugAPI) TraceChain(ctx context.Context, start, end rpc.Block
 	if to == nil {
 		return nil, fmt.Errorf("end block #%d not found", end)
 	}
+
+	// cf. https://github.com/ethereum/go-ethereum/pull/17460
+	if from.Number().Cmp(to.Number()) >= 0 {
+		return nil, fmt.Errorf("end block (#%d) needs to come after start block (#%d)", end, start)
+	}
+
 	return api.traceChain(ctx, from, to, config)
 }
 
