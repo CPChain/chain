@@ -781,7 +781,6 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		log.Debug("received GetBlocksMsg", "start", start)
 
 		if start >= number {
-			// TODO: @liuq return useful err type
 			return nil
 		}
 
@@ -806,7 +805,6 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		log.Debug("received BlocksMsg", "len", len(blocks))
 
 		if len(blocks) > syncer.MaxBlockFetch {
-			// TODO: @liuq return useful err type
 			return nil
 		}
 
