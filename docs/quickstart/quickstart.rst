@@ -90,6 +90,10 @@ Its file name is something like
 And you can also refer to the name of this file to retrieve the wallet address.
 ``5d6477ecd219bfe0ba44bf1b16272e72bd200e51`` is the wallet address for the example above.
 
+.. note::
+
+    If you discard ``--datadir`` option, the account file is created under default user directory.
+
 After you register a wallet address,
 you can run the following command to **connect to the chain**:
 
@@ -214,6 +218,15 @@ The command for proposers connecting P2P network is slightly different than the 
 It requires you to enter the password to further proceed.
 You may use an argument ``--password`` to indicate a file storing your plaintext password.
 But it is risky, and we do not recommend it.
+
+.. note::
+
+    If you discard ``--datadir`` option, the account file is read from default user directory.
+
+.. note::
+
+    A flag --account WALLET_ADDRESS is required
+    in case your `./datadir ` directory contains more than one account file.
 
 .. NOTE::
 
