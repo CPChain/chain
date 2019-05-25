@@ -156,26 +156,6 @@ func (c *Console) StopMining() error {
 }
 
 
-
-func (c *Console) QuitRnode() error {
-	c.output.Info("Quit Rnode...")
-	addr := cm.GetContractAddress(configs.ContractRnode)
-	instance, err := rnode.NewRnode(addr, c.client)
-	if err != nil {
-		return err
-	}
-	// Withdraw
-	transactOpts := c.buildTransactOpts(big.NewInt(0))
-	c.output.Info("create transaction options successfully")
-	_, err = instance.QuitRnode(transactOpts)
-	if err != nil {
-		return err
-	}
-	c.output.Info("quit successfully")
-	return nil
-}
-
-
 func (c *Console) JoinRnode() error {
 	c.output.Info("Join Rnode...")
 	addr := cm.GetContractAddress(configs.ContractRnode)
@@ -186,13 +166,44 @@ func (c *Console) JoinRnode() error {
 	// Withdraw
 	transactOpts := c.buildTransactOpts(big.NewInt(210000))
 	c.output.Info("create transaction options successfully")
-	_, err = instance.JoinRnode(transactOpts,big.NewInt(1))
+	tx, err:= instance.QuitRnode(transactOpts)
 	if err != nil {
 		return err
+	}
+	_, err = bind.WaitMined(context.Background(), c.client, tx)
+	if err != nil {
+		c.output.Error("wait mined failed,to startnewround is failed.", "err", err)
+		log.Error(err.Error())
 	}
 	c.output.Info("join successfully")
 	return nil
 }
+
+
+func (c *Console) QuitRnode() error {
+	c.output.Info("Quit Rnode...")
+	addr := cm.GetContractAddress(configs.ContractRnode)
+	instance, err := rnode.NewRnode(addr, c.client)
+	if err != nil {
+		return err
+	}
+	// Quit...
+	transactOpts := c.buildTransactOpts(big.NewInt(0))
+	c.output.Info("create transaction options successfully")
+	tx, err:= instance.QuitRnode(transactOpts)
+	if err != nil {
+		return err
+	}
+	_, err = bind.WaitMined(context.Background(), c.client, tx)
+	if err != nil {
+		c.output.Error("wait mined failed,to startnewround is failed.", "err", err)
+		log.Error(err.Error())
+	}
+	c.output.Info("quit successfully")
+	return nil
+
+}
+
 
 
 func (c *Console) buildTransactOpts(value *big.Int) *bind.TransactOpts {
