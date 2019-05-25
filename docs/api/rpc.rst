@@ -4,8 +4,13 @@ RPC API
 =============
 
 
+.. warning::
+
+    This page is not complete yet.
+
 JSON RPC API
----------------
+******************
+
 
 `JavaScript Object Notation (JSON) <http://json.org/>`_ is a lightweight data-interchange format.
 It consists a collection of a collection of name/value pairs and an ordered list of values.
@@ -19,7 +24,8 @@ It uses JSON `(RFC 4627) <https://www.ietf.org/rfc/rfc4627.txt>`_ as data format
 
 
 How Can We Test APIs?
------------------------------
+**************************
+
 
 All JSON-RPC requests are sent via POST method.
 You may utilize any tools that supports HTTP POST protocol,
@@ -31,117 +37,30 @@ Refer to :ref:`fusion-api-using` to see set up details.
 To use curl, you must type four arguments, request method, data, url and header.
 Request method is set to ``-X POST``, url is set to ``--url 'http://127.0.0.1:8501'``,
 and header is ``-H "Content-Type: application/json"``.
-Data for each API is listed on `API Reference`_ below.
+Data for each API is listed below.
 
 To use postman, please choose POST method, type in ``'127.0.0.1:8501'`` in to url field.
 In Header option, type in ``'Content-Type'`` as KEY, and ``'application/json'`` as VALUE.
 Data for each API, should be written in Body option (choose raw format).
 
-In the reference below, we demonstrate CPC APIs in curl.
+In the reference below, we demonstrate RPC APIs in curl.
+
+There are six classes of RPC APIS,
+which are *CPC*, *PERSONAL*, *ADMIN*, *NET*, *TXPOOL* and *VERSION*,
 
 
-API Reference
----------------
+CPC API Overview
+******************
 
-CPC
-########
-
-JSON PRC APIs in this chapter are the counterparts of ones in python class ``fusion_cpc.cpc.CPC``.
+JSON PRC APIs in this class are the counterparts of ones in python class ``fusion_cpc.cpc.CPC``.
 CPC APIs are categorized into five types according to their functions which are
-*Block*, *Transaction*, *Account*, *RNode* and *Others*.
-
-Block
-*********
-
-eth_blockNumber
-+++++++++++++++++
-
-It returns the number of most recent block.
-
-**Parameters**
-
-none
-
-**Returns**
-
-``QUANTITY`` - integer of the current block number the client is on.
-
-**Example**
-
-.. code-block:: shell
-
-    // Curl request
-    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
-
-    // Result
-    {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "result": "0x724be"  // 468158
-    }
-
-eth_getBlockby
-++++++++++++++
-
-Returns information about a block by block number.
-
-**Parameters**
-
-``QUANTITY|TAG`` - integer of a block number, or the string "earliest", "latest" or "pending", as in the default block parameter.
-
-``Boolean`` - If true it returns the full transaction objects, if false only the hashes of the transactions.
-
-**Examples**
-
-.. code-block:: shell
-
-    // Curl request
-    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x7EE2A", true],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
-    // 0x7EE2A is 519722 in decimal
-
-    // Result
-    {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "result": {
-            "difficulty": "0x1",
-            "dpor": {
-                "seal": "0x12e0c733a0d6cf7e1a1ed71db183ea47b42d19984f71b7c79b0cb4727fdfea3e61774edfe6181e05c950fe4ce35dd08840e29162c6240ac57c4abf8560a2556700",
-                "sigs": [
-                    "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-                    "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-                    "0x2a385a136ee1a96d8a944fb466cd61c26a10f95cd1119feefa7c753b0e7adfc664801b99e360b6f7d822e7b2e919a44464ddd66930194a987a75aa1ed78a55d401",
-                    "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-                ],
-                "proposers": [
-                    "0x2a15146f434c0205cfae639de2ac4bb543539b24",
-                    "0x7326d5248928b87f63a80e424a1c6d39cb334624",
-                    "0xe7a992e4187e95f28f8f69d44487fb16c465071c",
-                    "0x2661177788fe63888e93cf18b5e4e31306a01170"
-                ],
-                "validators": []
-            },
-            "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "gasLimit": "0x47e7c4",
-            "gasUsed": "0x0",
-            "hash": "0x2ae023df10e17f1c0f885d4d42bd976369b1ad22aa80a7df429b4028e3180d4d",
-            "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-            "miner": "0x2a15146f434c0205cfae639de2ac4bb543539b24",
-            "number": "0x7ee2a",
-            "parentHash": "0x81655165cf6ad2b749977c7ecabc2bc576cd58d7dfa838f00340463a865e53cb",
-            "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "size": "0x381",
-            "stateRoot": "0x902a8f498dd31d13131b53f84dd918387e002b8acba43432ff9c8ce58bf32c2b",
-            "timestamp": "0x168412e5fdb",
-            "totalDifficulty": "0x7ee2b",
-            "transactions": [],
-            "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
-        }
-    }
+*Transaction*, *Block*, *Account*, *RNode* and *Others*.
+The following chapter elaborate all CPC APIs.
 
 
-Transaction
-*************
+
+Transaction API
+******************
 
 eth_sendTransaction
 ++++++++++++++++++++++
@@ -537,7 +456,7 @@ Creates new message call transaction or a contract creation for signed transacti
 
     params: ["0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675"]
 
-Returns
+**Returns**
 
     ``DATA``, 32 Bytes - the transaction hash, or the zero hash if the transaction is not yet available.
 
@@ -559,9 +478,100 @@ Use `eth_getTransactionReceipt`_ to get the contract address, after the transact
     }
 
 
+Block API
+************
 
-Account
-***********
+eth_blockNumber
++++++++++++++++++
+
+It returns the number of most recent block.
+
+**Parameters**
+
+none
+
+**Returns**
+
+``QUANTITY`` - integer of the current block number the client is on.
+
+**Example**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": "0x724be"  // 468158
+    }
+
+eth_getBlockby
+++++++++++++++
+
+Returns information about a block by block number.
+
+**Parameters**
+
+``QUANTITY|TAG`` - integer of a block number, or the string "earliest", "latest" or "pending", as in the default block parameter.
+
+``Boolean`` - If true it returns the full transaction objects, if false only the hashes of the transactions.
+
+**Examples**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x7EE2A", true],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+    // 0x7EE2A is 519722 in decimal
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+            "difficulty": "0x1",
+            "dpor": {
+                "seal": "0x12e0c733a0d6cf7e1a1ed71db183ea47b42d19984f71b7c79b0cb4727fdfea3e61774edfe6181e05c950fe4ce35dd08840e29162c6240ac57c4abf8560a2556700",
+                "sigs": [
+                    "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                    "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                    "0x2a385a136ee1a96d8a944fb466cd61c26a10f95cd1119feefa7c753b0e7adfc664801b99e360b6f7d822e7b2e919a44464ddd66930194a987a75aa1ed78a55d401",
+                    "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+                ],
+                "proposers": [
+                    "0x2a15146f434c0205cfae639de2ac4bb543539b24",
+                    "0x7326d5248928b87f63a80e424a1c6d39cb334624",
+                    "0xe7a992e4187e95f28f8f69d44487fb16c465071c",
+                    "0x2661177788fe63888e93cf18b5e4e31306a01170"
+                ],
+                "validators": []
+            },
+            "extraData": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "gasLimit": "0x47e7c4",
+            "gasUsed": "0x0",
+            "hash": "0x2ae023df10e17f1c0f885d4d42bd976369b1ad22aa80a7df429b4028e3180d4d",
+            "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "miner": "0x2a15146f434c0205cfae639de2ac4bb543539b24",
+            "number": "0x7ee2a",
+            "parentHash": "0x81655165cf6ad2b749977c7ecabc2bc576cd58d7dfa838f00340463a865e53cb",
+            "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "size": "0x381",
+            "stateRoot": "0x902a8f498dd31d13131b53f84dd918387e002b8acba43432ff9c8ce58bf32c2b",
+            "timestamp": "0x168412e5fdb",
+            "totalDifficulty": "0x7ee2b",
+            "transactions": [],
+            "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
+        }
+    }
+
+
+
+
+Account API
+*************
 
 
 eth_getBalance
