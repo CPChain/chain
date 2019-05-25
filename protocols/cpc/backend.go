@@ -300,7 +300,6 @@ func (s *CpchainService) APIs() []rpc.API {
 			Service:   NewPublicMinerAPI(s),
 			Public:    true,
 		},
-		// // TODO: fix this @liuq
 		{
 			Namespace: "eth",
 			Version:   "1.0",
@@ -479,7 +478,6 @@ func (s *CpchainService) IsListening() bool                 { return true }     
 func (s *CpchainService) CpcVersion() int                   { return int(s.protocolManager.SubProtocols[0].Version) } // the first protocol is the latest version.
 func (s *CpchainService) NetVersion() uint64                { return s.networkID }
 func (s *CpchainService) Downloader() syncer.Syncer {
-	//TODO: fix this @liuq
 	return s.protocolManager.syncer
 }
 func (s *CpchainService) RemoteDB() database.RemoteDatabase { return s.remoteDB }
