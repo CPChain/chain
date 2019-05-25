@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"bitbucket.org/cpchain/chain/types"
 	"context"
 	"crypto/ecdsa"
 	"math/big"
@@ -87,8 +88,6 @@ func (c *Console) isRNode() bool {
 	// ISRNode
 	isRNode, err := instance.IsRnode(nil, c.addr)
 
-	//str,err:=instance.Participants(nil, c.addr)
-	//str.LockedTime
 	if err != nil {
 		c.output.Error(err.Error())
 	}
@@ -186,12 +185,14 @@ func (c *Console) QuitRnode() error {
 		if err != nil {
 			return err
 		}
-		_, err = bind.WaitMined(context.Background(), c.client, tx)
+		r,err:= bind.WaitMined(context.Background(), c.client, tx)
 		if err != nil {
 			c.output.Error("wait mined failed.", "err", err)
 			log.Error(err.Error())
 		}
-		c.output.Info("quit successfully")
+		if(r.Status==types.ReceiptStatusSuccessful) {
+			c.output.Info("quit successfully")
+		}
 	}
 	return nil
 }
