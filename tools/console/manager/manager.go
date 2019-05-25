@@ -163,7 +163,7 @@ func (c *Console) JoinRnode() error {
 	if err != nil {
 		return err
 	}
-	// Withdraw
+	// Join...
 	transactOpts := c.buildTransactOpts(big.NewInt(210000))
 	c.output.Info("create transaction options successfully")
 	tx, err:= instance.QuitRnode(transactOpts)
