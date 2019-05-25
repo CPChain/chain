@@ -225,8 +225,8 @@ But it is risky, and we do not recommend it.
 
 .. note::
 
-    A flag --account WALLET_ADDRESS is required
-    in case your `./datadir ` directory contains more than one account file.
+    A flag ``--account WALLET_ADDRESS`` is required
+    in case your ``./datadir`` directory contains more than one account file.
 
 .. NOTE::
 
@@ -337,9 +337,9 @@ Run a Private Network
     # check logs
     $ tail -f data/logs/*.log | grep number=
 
-.. node::
+.. note::
 
-    ``cpchain-all.sh`` launches the chain in dev mode
+    ``cpchain-all.sh`` launches the chain in dev mode.
 
 Run a Local Node
 ^^^^^^^^^^^^^^^^^^^^^^^
