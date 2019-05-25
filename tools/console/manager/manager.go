@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"math/big"
+	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
@@ -85,6 +86,9 @@ func (c *Console) isRNode() bool {
 	}
 	// ISRNode
 	isRNode, err := instance.IsRnode(nil, c.addr)
+
+	//str,err:=instance.Participants(nil, c.addr)
+	//str.LockedTime
 	if err != nil {
 		c.output.Error(err.Error())
 	}
@@ -124,6 +128,11 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 
 // StartMining start mining
 func (c *Console) StartMining() error {
+	// RNode
+	rnode := c.isRNode()
+	if rnode{
+		c.output.Info("You are not rnode yet ,you will spend 200000 cpc to be rnode first")
+	}
 	c.output.Info("Start Mining...")
 	client, err := rpc.DialContext(*c.ctx, c.rpc)
 	if err != nil {
@@ -156,52 +165,35 @@ func (c *Console) StopMining() error {
 }
 
 
-func (c *Console) JoinRnode() error {
-	c.output.Info("Join Rnode...")
-	addr := cm.GetContractAddress(configs.ContractRnode)
-	instance, err := rnode.NewRnode(addr, c.client)
-	if err != nil {
-		return err
-	}
-	// Join...
-	transactOpts := c.buildTransactOpts(big.NewInt(210000))
-	c.output.Info("create transaction options successfully")
-	tx, err:= instance.QuitRnode(transactOpts)
-	if err != nil {
-		return err
-	}
-	_, err = bind.WaitMined(context.Background(), c.client, tx)
-	if err != nil {
-		c.output.Error("wait mined failed,to startnewround is failed.", "err", err)
-		log.Error(err.Error())
-	}
-	c.output.Info("join successfully")
-	return nil
-}
-
-
 func (c *Console) QuitRnode() error {
 	c.output.Info("Quit Rnode...")
 	addr := cm.GetContractAddress(configs.ContractRnode)
-	instance, err := rnode.NewRnode(addr, c.client)
-	if err != nil {
-		return err
-	}
-	// Quit...
-	transactOpts := c.buildTransactOpts(big.NewInt(0))
-	c.output.Info("create transaction options successfully")
-	tx, err:= instance.QuitRnode(transactOpts)
-	if err != nil {
-		return err
-	}
-	_, err = bind.WaitMined(context.Background(), c.client, tx)
-	if err != nil {
-		c.output.Error("wait mined failed,to startnewround is failed.", "err", err)
-		log.Error(err.Error())
-	}
-	c.output.Info("quit successfully")
-	return nil
 
+	instance, err := rnode.NewRnode(addr, c.client)
+	str,err:=instance.Participants(nil, c.addr)
+	if err != nil {
+		return err
+	}
+	LockedTime:=str.LockedTime.Uint64()
+	CurrentTime:=uint64(time.Now().Unix())
+	if CurrentTime<LockedTime+1800{
+		c.output.Info("This Lock-up period is not over, you need wait for few minutes")
+	}else {
+		// Quit...
+		transactOpts := c.buildTransactOpts(big.NewInt(0))
+		c.output.Info("create transaction options successfully")
+		tx, err := instance.QuitRnode(transactOpts)
+		if err != nil {
+			return err
+		}
+		_, err = bind.WaitMined(context.Background(), c.client, tx)
+		if err != nil {
+			c.output.Error("wait mined failed.", "err", err)
+			log.Error(err.Error())
+		}
+		c.output.Info("quit successfully")
+	}
+	return nil
 }
 
 
