@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/contracts/dpor/rpt"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
@@ -21,8 +21,8 @@ var (
 		common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d86"),
 		common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d85"),
 	}
-	key, _      = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	addr        = crypto.PubkeyToAddress(key.PublicKey)
+	key, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	addr   = crypto.PubkeyToAddress(key.PublicKey)
 )
 
 func deployRpt(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (common.Address, *contracts.Rpt, *bind.TransactOpts, error) {
@@ -36,6 +36,8 @@ func deployRpt(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.Simu
 }
 
 func TestRpt(t *testing.T) {
+	t.Skip("this is deprecated")
+
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
 	contractAddr, rpt, opt, err := deployRpt(key, big.NewInt(0), contractBackend)
 	checkError(t, "deploy contract: expected no error, got %v", err)
