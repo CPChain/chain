@@ -45,12 +45,12 @@ const (
 
 const (
 	DevChainId     = 41
-	MainnetChainId = 42
+	MainnetChainId = 0x13375418
 	TestnetChainId = 43
 )
 
 const (
-	MainnetNetworkId = 0
+	MainnetNetworkId = 0x13375418
 	DevNetworkId     = 1
 	TestnetNetworkId = 2
 )
