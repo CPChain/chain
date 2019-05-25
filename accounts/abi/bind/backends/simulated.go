@@ -319,7 +319,7 @@ func (b *SimulatedBackend) SendTransaction(ctx context.Context, tx *types.Transa
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	sender, err := types.Sender(types.NewCep1Signer(big.NewInt(42)), tx)
+	sender, err := types.Sender(types.NewCep1Signer(big.NewInt(configs.MainnetChainId)), tx)
 	if err != nil {
 		panic(fmt.Errorf("invalid transaction: %v", err))
 	}
