@@ -6,7 +6,7 @@ RPC API
 
 .. warning::
 
-    This page is not complete yet.
+    This page is under construction.
 
 JSON RPC API
 ******************
