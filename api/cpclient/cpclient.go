@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -379,6 +379,18 @@ func (c *Client) GetCommitteeNumber(ctx context.Context) (int, error) {
 	var result int
 	err := c.c.CallContext(ctx, &result, "eth_getCommitteeNumber")
 	return result, err
+}
+
+// GetBlockReward returns the mining reward for the block number
+func (c *Client) GetBlockReward(ctx context.Context, blockNumber *big.Int) *big.Int {
+	var result uint64
+	err := c.c.CallContext(ctx, &result, "eth_getBlockReward", toBlockNumArg(blockNumber))
+	if err != nil {
+		fmt.Println(err)
+		return new(big.Int).SetUint64(0)
+	}
+
+	return new(big.Int).SetUint64(result)
 }
 
 func (c *Client) GetBlockGenerationInfo(ctx context.Context) (BlockGenerationInfo, error) {
