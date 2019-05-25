@@ -169,13 +169,14 @@ func (c *Console) QuitRnode() error {
 	addr := cm.GetContractAddress(configs.ContractRnode)
 
 	instance, err := rnode.NewRnode(addr, c.client)
-	str,err:=instance.Participants(nil, c.addr)
+	participants,err:=instance.Participants(nil, c.addr)
 	if err != nil {
 		return err
 	}
-	LockedTime:=str.LockedTime.Uint64()
+	LockedTime:=participants.LockedTime.Uint64()
 	CurrentTime:=uint64(time.Now().Unix())
-	if CurrentTime<LockedTime+1800{
+	period,_:=instance.Period(nil)
+	if CurrentTime<LockedTime+period.Uint64(){
 		c.output.Info("This Lock-up period is not over, you need wait for few minutes")
 	}else {
 		// Quit...
