@@ -261,12 +261,11 @@ func (s *CpchainService) CreateConsensusEngine(ctx *node.ServiceContext, chainCo
 	}
 	// If Dpor is requested, set it up
 	if chainConfig.Dpor != nil {
-		// TODO: fix this. @liuq
 		dpor := dpor.New(chainConfig.Dpor, db)
 		if eb != (common.Address{}) {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 			if wallet == nil || err != nil {
-				log.Error("Etherbase account unavailable locally", "err", err)
+				log.Error("Coinbase account unavailable locally", "err", err)
 				return nil
 			}
 			dpor.Authorize(eb, wallet.SignHash)

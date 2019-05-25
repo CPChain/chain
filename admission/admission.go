@@ -76,6 +76,8 @@ type AdmissionControl struct {
 	sendingFund int32
 }
 
+// TODO: implement Authorize like consensus.Engine @liuq
+
 // NewAdmissionControl returns a new Control instance.
 func NewAdmissionControl(chain consensus.ChainReader, address common.Address, admissionContractAddr common.Address,
 	campaignContractAddr common.Address, rNodeContractAddr common.Address) *AdmissionControl {
