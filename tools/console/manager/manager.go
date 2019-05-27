@@ -167,33 +167,37 @@ func (c *Console) StopMining() error {
 func (c *Console) QuitRnode() error {
 	c.output.Info("Quit Rnode...")
 	addr := cm.GetContractAddress(configs.ContractRnode)
-
-	instance, err := rnode.NewRnode(addr, c.client)
-	participants,err:=instance.Participants(nil, c.addr)
-	if err != nil {
-		return err
-	}
-	LockedTime:=participants.LockedTime.Uint64()
-	CurrentTime:=uint64(time.Now().Unix())
-	period,_:=instance.Period(nil)
-	if CurrentTime<LockedTime+period.Uint64(){
-		c.output.Info("This Lock-up period is not over, you need wait for few minutes")
-	}else {
-		// Quit...
-		transactOpts := c.buildTransactOpts(big.NewInt(0))
-		c.output.Info("create transaction options successfully")
-		tx, err := instance.QuitRnode(transactOpts)
+	if !c.isRNode(){
+		c.output.Info("You are not Rnode already,you don't need to quit.")
+	}else{
+		instance, err := rnode.NewRnode(addr, c.client)
+		participants,err:=instance.Participants(nil, c.addr)
 		if err != nil {
 			return err
 		}
-		r,err:= bind.WaitMined(context.Background(), c.client, tx)
-		if err != nil {
-			c.output.Error("wait mined failed.", "err", err)
-			log.Error(err.Error())
+		LockedTime:=participants.LockedTime.Uint64()
+		CurrentTime:=uint64(time.Now().Unix())
+		period,_:=instance.Period(nil)
+		if CurrentTime<LockedTime+period.Uint64(){
+			c.output.Info("This Lock-up period is not over, you need to wait for few minutes...")
+		}else {
+			// Quit...
+			transactOpts := c.buildTransactOpts(big.NewInt(0))
+			c.output.Info("create transaction options successfully")
+			tx, err := instance.QuitRnode(transactOpts)
+			if err != nil {
+				return err
+			}
+			r,err:= bind.WaitMined(context.Background(), c.client, tx)
+			if err != nil {
+				c.output.Error("wait mined failed.", "err", err)
+				log.Error(err.Error())
+			}
+			if(r.Status==types.ReceiptStatusSuccessful) {
+				c.output.Info("quit successfully")
+			}
 		}
-		if(r.Status==types.ReceiptStatusSuccessful) {
-			c.output.Info("quit successfully")
-		}
+
 	}
 	return nil
 }
