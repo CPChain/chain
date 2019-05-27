@@ -568,6 +568,10 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationI
 
 }
 
+func (s *PublicBlockChainAPI) GetBlockReward(blockNr rpc.BlockNumber) uint64 {
+	return s.b.BlockReward(blockNr).Uint64()
+}
+
 func (s *PublicBlockChainAPI) GetProposerByBlock(blockNr rpc.BlockNumber) (common.Address, error) {
 	addrs, err := s.b.Proposers(blockNr)
 	if err != nil && len(addrs) == 0 {

@@ -83,6 +83,8 @@ type Backend interface {
 	ViewLen() uint64
 	TermLen() uint64
 
+	BlockReward(blockNr rpc.BlockNumber) *big.Int
+
 	// Private API
 	SupportPrivateTx(ctx context.Context) (bool, error)
 }
