@@ -3,6 +3,8 @@
 ** packages modified
 ** go-ethereum/trie
    modification: we import from cpchain/database instead of go-ethereum/ethdb.
+   modification: we add some sanity check to ensure that the meta-root is not removed. cf. https://github.com/ethereum/go-ethereum/pull/17357
+   modification: fix error in node decoding. cf. https://github.com/ethereum/go-ethereum/commit/a458153098d6f66ee0c6f990f31b3646ad171bbb
 
 ** go-ethereum/crypto
    crypto upgrades to 1.8.15.  but we still keep the randentropy file from 1.8.12.

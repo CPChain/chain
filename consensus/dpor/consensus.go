@@ -227,7 +227,13 @@ func (d *Dpor) TryCampaign() {
 	}
 }
 
-func addCoinbaseReward(coinbase common.Address, state *state.StateDB, number *big.Int) {
+// GetBlockReward returns block reward according to block number
+func (d *Dpor) GetBlockReward(blockNum uint64) *big.Int {
+	reward := getBlockReward(new(big.Int).SetUint64(blockNum))
+	return reward
+}
+
+func getBlockReward(number *big.Int) *big.Int {
 	var amount *big.Int
 	if number.Cmp(configs.Cep1LastBlockY1) <= 0 {
 		amount = configs.Cep1BlockRewardY1
@@ -242,6 +248,11 @@ func addCoinbaseReward(coinbase common.Address, state *state.StateDB, number *bi
 	} else {
 		amount = big.NewInt(0)
 	}
+	return amount
+}
+
+func addCoinbaseReward(coinbase common.Address, state *state.StateDB, number *big.Int) {
+	amount := getBlockReward(number)
 	state.AddBalance(coinbase, amount)
 }
 

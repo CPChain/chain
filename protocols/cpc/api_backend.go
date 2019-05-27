@@ -290,6 +290,10 @@ func (b *APIBackend) CalcRptInfo(address common.Address, addresses []common.Addr
 	return b.cpc.engine.(*dpor.Dpor).GetCalcRptInfo(address, addresses, blockNum)
 }
 
+func (b *APIBackend) BlockReward(blockNum rpc.BlockNumber) *big.Int {
+	return b.cpc.engine.(*dpor.Dpor).GetBlockReward(uint64(blockNum))
+}
+
 // Proposers returns current block Proposers information
 func (b *APIBackend) Proposers(blockNr rpc.BlockNumber) ([]common.Address, error) {
 	api := b.cpc.engine.(*dpor.Dpor).APIs(b.cpc.blockchain)
