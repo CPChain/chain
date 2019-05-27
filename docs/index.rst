@@ -62,6 +62,14 @@ Quick reference:
    consensus/consensus
    implementation/implementation
 
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Testing
+
+   test/test-overview
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Misc

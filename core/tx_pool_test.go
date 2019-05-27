@@ -1097,7 +1097,8 @@ func TestTransactionPendingMinimumAllowance(t *testing.T) {
 	blockchain := &testBlockChain{statedb, 1000000, new(event.Feed)}
 
 	config := testTxPoolConfig
-	config.GlobalSlots = 0
+	// cf. https://github.com/ethereum/go-ethereum/pull/17210/files
+	config.GlobalSlots = 1
 
 	pool := NewTxPool(config, configs.TestChainConfig, blockchain)
 	defer pool.Stop()
