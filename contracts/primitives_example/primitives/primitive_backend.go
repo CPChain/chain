@@ -27,7 +27,6 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/campaign"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_backend"
 	pdash "bitbucket.org/cpchain/chain/contracts/pdash/pdash_contract"

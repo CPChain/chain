@@ -56,6 +56,7 @@ contract Campaign {
     uint public supportedVersion = 1; // only nodes with new version can claim campaign
 
     uint public updatedTermIdx = 0; // indicate updated term
+    uint public maxCandidates = 150; // max number of candidates
     bool firstCall = true;
 
     // a new type for a single candidate
@@ -141,6 +142,10 @@ contract Campaign {
         supportedVersion = _supportedVersion;
     }
 
+    function updateMaxCandidates(uint _maxCandidates) public onlyOwner {
+        maxCandidates = _maxCandidates;
+    }
+
     /**
      * Submits required information to participate the campaign for membership of the committee.
      *
@@ -172,6 +177,13 @@ contract Campaign {
             updatedTermIdx = (block.number.sub(1)).div(numPerRound);
             firstCall = false;
         }
+
+        // get current term, update termIdx
+        updateTermIdx();
+        for(uint k=termIdx+1; k<=termIdx+_numOfCampaign; k++) {
+            require(candidatesOf(k).length < maxCandidates);
+        }
+
         require(version >= supportedVersion);
 
         // proofs must be calculated based on latest blocks
@@ -217,8 +229,6 @@ contract Campaign {
     // update candidate status, i.e. subtract 1 from numOfCampaign when a new term begin
     // updatedTermIdx record the start term that need to update
     function updateCandidateStatus() internal {
-        // get current term, update termIdx
-        updateTermIdx();
 
         if (updatedTermIdx >= termIdx) {
             return;

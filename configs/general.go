@@ -21,6 +21,11 @@ const (
 	DatabaseName     = "chaindata"
 )
 
+// EnableProxyContract is used for enable proxy contract in evm
+const (
+	EnableProxyContract = false
+)
+
 // These are the multipliers for ether denominations.
 // Example: To get the wei value of an amount in 'douglas', use
 //
@@ -40,12 +45,12 @@ const (
 
 const (
 	DevChainId     = 41
-	MainnetChainId = 42
+	MainnetChainId = 0x13375418
 	TestnetChainId = 43
 )
 
 const (
-	MainnetNetworkId = 0
+	MainnetNetworkId = 0x13375418
 	DevNetworkId     = 1
 	TestnetNetworkId = 2
 )
@@ -91,10 +96,10 @@ const (
 
 // TODO @hmw make the name more meaningful.  add doc.
 const (
-	ContractCampaign   = "campaign"   // address of campaign contract,select rnode
-	ContractRpt        = "rpt"        // address of rpt contract,Calculation the rpt of rnode
-	ContractAdmission  = "admission"  // address of admission
-	ContractRnode      = "rnode"      // address of rnode
+	ContractCampaign  = "campaign"  // address of campaign contract,select rnode
+	ContractRpt       = "rpt"       // address of rpt contract,Calculation the rpt of rnode
+	ContractAdmission = "admission" // address of admission
+	ContractRnode     = "rnode"     // address of rnode
 )
 
 const (

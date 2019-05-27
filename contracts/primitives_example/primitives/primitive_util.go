@@ -1,11 +1,8 @@
 package primitives
 
 import (
-	"sort"
-
 	"math/big"
-
-	"bitbucket.org/cpchain/chain/configs"
+	"sort"
 )
 
 func calcuateRank(myBalance *big.Int, balances []float64) int64 {
