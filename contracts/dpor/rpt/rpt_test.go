@@ -50,11 +50,11 @@ func TestRpt(t *testing.T) {
 	verifyEqual(t, window.Uint64(), uint64(100))
 
 	// update windowsize
-	_, err = rpt.UpdateWindow(opt, big.NewInt(int64(1)))
+	_, err = rpt.UpdateWindow(opt, big.NewInt(int64(10)))
 	checkError(t, "UpdateWindow error ", err)
 	contractBackend.Commit()
 	newWindow, err := rpt.Window(nil)
-	verifyEqual(t, newWindow.Uint64(), uint64(1))
+	verifyEqual(t, newWindow.Uint64(), uint64(10))
 
 	// alpha
 	alpha, err := rpt.Alpha(nil)
@@ -65,7 +65,7 @@ func TestRpt(t *testing.T) {
 	_, err = rpt.UpdateAlpha(opt, big.NewInt(int64(1)))
 	checkError(t, "UpdateAlpha error ", err)
 	contractBackend.Commit()
-	newAlpha, err := rpt.Window(nil)
+	newAlpha, err := rpt.Alpha(nil)
 	verifyEqual(t, newAlpha.Uint64(), uint64(1))
 
 	// beta
