@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"bitbucket.org/cpchain/chain/types"
 	"context"
 	"crypto/ecdsa"
 	"math/big"
@@ -15,6 +14,7 @@ import (
 	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	cm "bitbucket.org/cpchain/chain/tools/console/common"
 	cc "bitbucket.org/cpchain/chain/tools/utility"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -35,7 +35,7 @@ var gasLimit uint64
 
 func init() {
 	//gasPrice = big.NewInt(1000000)
-	gasPrice =nil
+	gasPrice = nil
 	gasLimit = uint64(2000000)
 }
 
@@ -94,7 +94,6 @@ func (c *Console) isRNode() bool {
 	return isRNode
 }
 
-
 // GetStatus get status of cpchain node
 func (c *Console) GetStatus() (*cm.Status, error) {
 	// Mining
@@ -118,9 +117,9 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 	}
 
 	status := cm.Status{
-		Mining:           mining,
-		RNode:            rnode,
-		Proposer:         proposer,
+		Mining:   mining,
+		RNode:    rnode,
+		Proposer: proposer,
 	}
 	return &status, nil
 }
@@ -129,7 +128,7 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 func (c *Console) StartMining() error {
 	// RNode
 	rnode := c.isRNode()
-	if rnode{
+	if rnode {
 		c.output.Info("You are not rnode yet ,you will spend 200000 cpc to be rnode first")
 	}
 	c.output.Info("Start Mining...")
@@ -163,24 +162,23 @@ func (c *Console) StopMining() error {
 	return nil
 }
 
-
 func (c *Console) QuitRnode() error {
 	c.output.Info("Quit Rnode...")
 	addr := cm.GetContractAddress(configs.ContractRnode)
-	if !c.isRNode(){
-		c.output.Info("You are not Rnode already,you don't need to quit.")
-	}else{
+	if !c.isRNode() {
+		c.output.Info("You are not Rnode already, you don't need to quit.")
+	} else {
 		instance, err := rnode.NewRnode(addr, c.client)
-		participants,err:=instance.Participants(nil, c.addr)
+		participants, err := instance.Participants(nil, c.addr)
 		if err != nil {
 			return err
 		}
-		LockedTime:=participants.LockedTime.Uint64()
-		CurrentTime:=uint64(time.Now().Unix())
-		period,_:=instance.Period(nil)
-		if CurrentTime<LockedTime+period.Uint64(){
+		LockedTime := participants.LockedTime.Uint64()
+		CurrentTime := uint64(time.Now().Unix())
+		period, _ := instance.Period(nil)
+		if CurrentTime < LockedTime+period.Uint64() {
 			c.output.Info("This Lock-up period is not over, you need to wait for few minutes...")
-		}else {
+		} else {
 			// Quit...
 			transactOpts := c.buildTransactOpts(big.NewInt(0))
 			c.output.Info("create transaction options successfully")
@@ -188,21 +186,19 @@ func (c *Console) QuitRnode() error {
 			if err != nil {
 				return err
 			}
-			r,err:= bind.WaitMined(context.Background(), c.client, tx)
+			r, err := bind.WaitMined(context.Background(), c.client, tx)
 			if err != nil {
 				c.output.Error("wait mined failed.", "err", err)
 				log.Error(err.Error())
 			}
-			if(r.Status==types.ReceiptStatusSuccessful) {
-				c.output.Info("quit successfully")
+			if r.Status == types.ReceiptStatusSuccessful {
+				c.output.Info("quit successfully.")
 			}
 		}
 
 	}
 	return nil
 }
-
-
 
 func (c *Console) buildTransactOpts(value *big.Int) *bind.TransactOpts {
 	transactOpts := bind.NewKeyedTransactor(c.prvKey)

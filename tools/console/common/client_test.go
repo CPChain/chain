@@ -6,11 +6,9 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/contracts/reward"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -76,37 +74,6 @@ func TestContractExist(t *testing.T) {
 	}
 }
 
-func TestReward(t *testing.T) {
-	if skip {
-		t.Skip()
-	}
-	// ctx, cancel := context.WithCancel(context.Background())
-	// defer cancel()
-	// client, _, _, fromAddress := buildClient(&ctx, t)
-	// addr := common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42")
-	// instance, err := reward.NewReward(addr, client)
-	// if err != nil {
-	// 	t.Error(err)
-	// }
-	// // GetLockedBalance
-	// totalBalance, err := instance.GetTotalBalance(nil, fromAddress)
-	// checkError(t, err)
-	// t.Log("TotalBalance:", new(big.Int).Div(totalBalance, big.NewInt(configs.Cpc)))
-	// // GetFreeBalance
-	// freeBalance, err := instance.GetFreeBalance(nil, fromAddress)
-	// checkError(t, err)
-	// t.Log("FreeBalance:", freeBalance)
-	// // GetLockedBalance
-	// lockedBalance, err := instance.GetLockedBalance(nil, fromAddress)
-	// checkError(t, err)
-	// t.Log("LockedBalance:", lockedBalance)
-
-	// // ISRNode
-	// isRNode, err := instance.IsRNode(nil, fromAddress)
-	// checkError(t, err)
-	// t.Log("IsRNode", isRNode)
-}
-
 func TestStatus(t *testing.T) {
 	if skip {
 		t.Skip()
@@ -158,106 +125,13 @@ func TestMining(t *testing.T) {
 	t.Log("Is Mining:", result)
 
 	// Stop Mining
-	// err = c.CallContext(ctx, nil, "miner_stop")
-	// checkError(t, err)
+	err = c.CallContext(ctx, nil, "miner_stop")
+	checkError(t, err)
 
 	// check
 	c.CallContext(ctx, &result, "eth_mining")
 	t.Log("Is Mining:", result)
-	// if result == true {
-	// 	t.Error("Expect false but true. Stop mining failed.")
-	// }
-}
-
-func TestWithdrawAndDeposit(t *testing.T) {
-	if skip {
-		t.Skip()
+	if result == true {
+		t.Error("Expect false but true. Stop mining failed.")
 	}
-	// ctx, cancel := context.WithCancel(context.Background())
-	// defer cancel()
-	// client, prvKey, _, fromAddress := buildClient(&ctx, t)
-	// addr := common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42")
-
-	// contractBalance, err := client.BalanceAt(ctx, addr, nil)
-	// checkError(t, err)
-	// t.Log("Contract Balance:", contractBalance)
-
-	// instance, err := reward.NewReward(addr, client)
-	// checkError(t, err)
-
-	// // Deposit
-	// transactOpts := bind.NewKeyedTransactor(prvKey)
-	// participantInvest := new(big.Int).Mul(big.NewInt(100), big.NewInt(1e+18))
-	// transactOpts.Value = participantInvest
-	// transactOpts.GasPrice = big.NewInt(10)
-	// transactOpts.GasLimit = uint64(2000000)
-	// tran, err := instance.SubmitDeposit(transactOpts)
-	// checkError(t, err)
-	// t.Log("GasPrice:", tran.GasPrice(), ", Gas:", tran.Gas(), ", Nonce:", tran.Nonce())
-
-	// t.Log(fromAddress.String(), tran.To().String())
-
-	// // GetFreeBalance
-	// freeBalance, err := instance.GetFreeBalance(nil, fromAddress)
-	// checkError(t, err)
-	// t.Log("FreeBalance:", freeBalance)
-
-	// // Withdraw
-	// transactOpts1 := bind.NewKeyedTransactor(prvKey)
-	// transactOpts1.GasLimit = uint64(2000000)
-	// tran, err = instance.Withdraw(transactOpts1, big.NewInt(configs.Cpc))
-	// checkError(t, err)
-	// t.Log("GasPrice:", tran.GasPrice(), ", Gas:", tran.Gas(), ", Nonce:", tran.Nonce())
-}
-
-func TestWantAndQuitRenew(t *testing.T) {
-	if skip {
-		t.Skip()
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	client, prvKey, _, fromAddress := buildClient(&ctx, t)
-	addr := common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42")
-
-	instance, err := reward.NewReward(addr, client)
-	checkError(t, err)
-
-	nonce, err := client.NonceAt(ctx, fromAddress, nil)
-	checkError(t, err)
-	t.Log("Nonce:", nonce)
-
-	// Want Renew
-	transactOpts := bind.NewKeyedTransactor(prvKey)
-	transactOpts.GasLimit = uint64(2000000)
-	transactOpts.Value = big.NewInt(0)
-	transactOpts.Nonce = new(big.Int).Add(big.NewInt(int64(nonce)), big.NewInt(1))
-	tran, err := instance.WantRenew(transactOpts)
-	checkError(t, err)
-	t.Log("GasPrice:", tran.GasPrice(), ", Gas:", tran.Gas(), ", Nonce:", tran.Nonce())
-
-	// Quit Renew
-	transactOpts.GasLimit = uint64(2000000)
-	transactOpts.Value = big.NewInt(0)
-	transactOpts.Nonce = new(big.Int).Add(big.NewInt(int64(nonce)), big.NewInt(2))
-	tran, err = instance.QuitRenew(transactOpts)
-	checkError(t, err)
-	t.Log("GasPrice:", tran.GasPrice(), ", Gas:", tran.Gas(), ", Nonce:", tran.Nonce())
-}
-
-func TestLocked(t *testing.T) {
-	if skip {
-		t.Skip()
-	}
-	// ctx, cancel := context.WithCancel(context.Background())
-	// defer cancel()
-	// client, _, _, _ := buildClient(&ctx, t)
-	// addr := common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42")
-	// instance, err := reward.NewReward(addr, client)
-	// if err != nil {
-	// 	t.Error(err)
-	// }
-
-	// isLocked, err := instance.IsLocked(nil)
-	// checkError(t, err)
-	// t.Log("IsLocked", isLocked)
 }
