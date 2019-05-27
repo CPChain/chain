@@ -298,7 +298,10 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 		ac.mutex.Unlock()
 		return
 	}
+
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
+	transactOpts.GasLimit = 2300000
+
 	campaignContractAddress := ac.campaignContractAddr
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
 	instance, err := campaign.NewCampaign(campaignContractAddress, ac.contractBackend)
@@ -319,6 +322,7 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 		"mem result", memResult.Nonce,
 		"mem number", memResult.BlockNumber,
 		"campaign version", configs.CampaignVersion,
+		"gas limit", transactOpts.GasLimit,
 	)
 
 	_, err = instance.ClaimCampaign(
