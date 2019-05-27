@@ -300,6 +300,8 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 	}
 
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
+	// this is an *empirical* estimate of the possible largest gas needed by the claimCampaign smartcontract call.
+	// @liusw for this number.
 	transactOpts.GasLimit = 2300000
 
 	campaignContractAddress := ac.campaignContractAddr
