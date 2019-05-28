@@ -125,6 +125,8 @@ const (
 	RptCalcMethod5BlockNumber = 398000
 	RptCalcMethod6BlockNumber = 454700
 
+	ABCProposerCommitteeBlockNumber = 0
+
 	Campaign2BlockNumber = 371900
 	Campaign3BlockNumber = 390500
 	Campaign4BlockNumber = 454700
