@@ -421,11 +421,11 @@ func TestSnapshot_isLeader(t *testing.T) {
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader, err = snap.IsProposerOf(addr1, 2)
+	isLeader, err = snap.IsProposerOf(addr2, 4)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader, err = snap.IsProposerOf(addr1, 3)
+	isLeader, err = snap.IsProposerOf(addr3, 7)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
