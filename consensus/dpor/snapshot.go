@@ -657,11 +657,31 @@ func (s *DporSnapshot) IsValidatorOf(validator common.Address, number uint64) bo
 
 // IsProposerOf returns if an address is a proposer in the given block number
 func (s *DporSnapshot) IsProposerOf(signer common.Address, number uint64) (bool, error) {
+	if number < configs.ABCProposerCommitteeBlockNumber {
+		return s.isProposerOfAAA(signer, number)
+	}
+
+	return s.isProposerOfABC(signer, number)
+}
+
+func (s *DporSnapshot) isProposerOfAAA(signer common.Address, number uint64) (bool, error) {
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
 	proposers := s.ProposersOf(number)
 	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) / s.config.ViewLen)
+	if idx >= 0 && idx < len(proposers) {
+		if proposers[idx] == signer {
+			return true, nil
+		}
+	}
+
+	return false, errProposerNotInCommittee
+}
+
+func (s *DporSnapshot) isProposerOfABC(signer common.Address, number uint64) (bool, error) {
+	proposers := s.ProposersOf(number)
+	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) % s.config.TermLen)
 	if idx >= 0 && idx < len(proposers) {
 		if proposers[idx] == signer {
 			return true, nil
