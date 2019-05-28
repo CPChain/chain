@@ -261,6 +261,15 @@ func (b *APIBackend) CurrentView() uint64 {
 	return view
 }
 
+// CurrentSpan return current view
+func (b *APIBackend) CurrentSpan() uint64 {
+	block := b.cpc.blockchain.CurrentBlock()
+	bn := block.Number()
+	vl, tl := b.ViewLen(), b.TermLen()
+	span := ((bn.Uint64() - 1) % (vl * tl)) / tl
+	return span
+}
+
 // CurrentTerm return current term
 func (b *APIBackend) CurrentTerm() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
@@ -292,6 +301,11 @@ func (b *APIBackend) CalcRptInfo(address common.Address, addresses []common.Addr
 
 func (b *APIBackend) BlockReward(blockNum rpc.BlockNumber) *big.Int {
 	return b.cpc.engine.(*dpor.Dpor).GetBlockReward(uint64(blockNum))
+}
+
+func (b *APIBackend) ProposerOf(blockNum rpc.BlockNumber) (common.Address, error) {
+	p, err := b.cpc.engine.(*dpor.Dpor).ProposerOf(uint64(blockNum))
+	return p, err
 }
 
 // Proposers returns current block Proposers information
