@@ -509,12 +509,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers
-	if s.config.LightServ > 0 {
-		if s.config.LightPeers >= srvr.MaxPeers {
-			return fmt.Errorf("invalid peer config: light peer count (%d) >= total peer count (%d)", s.config.LightPeers, srvr.MaxPeers)
-		}
-		maxPeers -= s.config.LightPeers
-	}
+
 	// start the networking layer and the light server if requested
 	// by this time, the p2p has already started.  we are only starting the upper layer handling.
 	s.protocolManager.Start(maxPeers)
