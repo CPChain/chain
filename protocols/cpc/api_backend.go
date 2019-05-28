@@ -54,8 +54,6 @@ func (b *APIBackend) CurrentBlock() *types.Block {
 }
 
 func (b *APIBackend) SetHead(number uint64) {
-	// TODO: fix this @liuq
-	// b.cpc.protocolManager.downloader.Cancel()
 	b.cpc.blockchain.SetHead(number)
 }
 

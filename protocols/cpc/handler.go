@@ -54,7 +54,6 @@ func errResp(code errCode, format string, v ...interface{}) error {
 type ProtocolManager struct {
 	networkID uint64
 
-	fastSync  uint32 // whether fast sync is enabled (gets disabled if we already have blocks)
 	acceptTxs uint32 // whether we're considered synchronised (enables transaction processing)
 
 	txpool      txPool
@@ -62,7 +61,6 @@ type ProtocolManager struct {
 	chainconfig *configs.ChainConfig
 	maxPeers    int
 
-	// downloader *downloader.Downloader
 	syncer syncer.Syncer
 
 	fetcher *fetcher.Fetcher
@@ -126,7 +124,6 @@ func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *even
 				return manager.handlePeer(p, rw, version)
 			},
 			NodeInfo: func() interface{} {
-				// TODO: add dpor pbft status to this if dpor is available
 				return manager.NodeInfo()
 			},
 			PeerInfo: func(id discover.NodeID) interface{} {
@@ -152,11 +149,6 @@ func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *even
 		return blockchain.CurrentBlock().NumberU64()
 	}
 	inserter := func(blocks types.Blocks) (int, error) {
-		// if fast sync is running, deny importing weird blocks
-		if atomic.LoadUint32(&manager.fastSync) == 1 {
-			log.Warn("Discarded bad propagated block", "number", blocks[0].Number(), "hash", blocks[0].Hash().Hex())
-			return 0, nil
-		}
 		atomic.StoreUint32(&manager.acceptTxs, 1) // Mark initial sync done on any fetcher import
 		return manager.blockchain.InsertChain(blocks)
 	}
@@ -172,9 +164,6 @@ func (pm *ProtocolManager) removePeer(id string) {
 		return
 	}
 	log.Debug("Removing cpchain peer", "peer", id)
-
-	// Unregister the peer from the downloader and cpchain peer set
-	// pm.downloader.UnregisterPeer(id)
 
 	if err := pm.peers.Unregister(id); err != nil {
 		log.Error("Peer removal failed", "peer", id, "err", err)
@@ -305,9 +294,12 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		handleDporMsgs     = isMinerOrValidator && dporMode == dpor.NormalMode
 	)
 
-	if dporMode == dpor.NormalMode && isMinerOrValidator && !dporProtocol.Available() {
-		// log.Warn("dpor handler is not not available now")
-		return nil
+	if dporMode == dpor.NormalMode && isMinerOrValidator {
+		for !dporProtocol.Available() {
+			log.Debug("dpor protocol is not available now, sleeping 5 seconds.")
+			time.Sleep(5 * time.Second)
+		}
+		log.Debug("now dpor protocol is available")
 	}
 
 	// wrap up the peer
