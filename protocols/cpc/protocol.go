@@ -8,7 +8,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/core"
-	cconfigs "bitbucket.org/cpchain/chain/protocols/cpc/configs"
+	"bitbucket.org/cpchain/chain/protocols/cpc/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
@@ -19,7 +19,7 @@ import (
 var ProtocolName = "cpc"
 
 // ProtocolVersions are the versions of the cpchain protocol (first is primary).
-var ProtocolVersions = []uint{cconfigs.Cpc1}
+var ProtocolVersions = []uint{configs.Cpc1}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
 var ProtocolLengths = []uint64{100}
