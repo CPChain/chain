@@ -157,6 +157,12 @@ func (d *Dpor) ProposerOf(number uint64) (common.Address, error) {
 	return common.Address{}, nil
 }
 
+// IsProposerOf returns whether the given address is the proposer for the block number
+func (d *Dpor) IsProposerOf(addr common.Address, number uint64) (bool, error) {
+	p, err := d.ProposerOf(number)
+	return p == addr, err
+}
+
 // ValidatorsOfTerm returns validators of given term
 // TODO: this only returns validators known recently from cache,
 // does not retrieve block from local chain to get needed information.
