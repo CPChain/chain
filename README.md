@@ -153,7 +153,7 @@ check logs
 tail -f data/logs/*.log | grep number=
 ```
 
-##4 Run a local node
+## Run a local node
 ```shell
 ./cpchain run --datadir ./datadir --unlock <You Address>
 ```
@@ -167,7 +167,8 @@ The above should be enough to get you up to speed. For details, please visit our
 ---
 ## Tools and Libraries
 ### CPChain Blockchain Explorer
-Check our [website repository](https://github.com/CPChain/cpchain-website).
+Check our [explorer](https://cpchain.io/explorer/) and its
+[website repository](https://github.com/CPChain/cpchain-website).
 It shows the ongoing transactions and blocks.
 
 

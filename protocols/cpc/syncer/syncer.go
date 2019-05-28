@@ -496,7 +496,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64, 
 		}
 	}
 	// fetch blocks with batch size
-	for i := currentNumber + 1; i < height; {
+	for i := currentNumber + 1; i < height+1; {
 		timer := time.NewTimer(SyncTimeout)
 
 		log.Debug("sending sync request", "start", i)
