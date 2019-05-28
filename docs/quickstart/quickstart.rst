@@ -390,7 +390,7 @@ please refer to the `Solidity Installation`_
     If you encounter any problem when running ``solc``,
     please check :ref:`FAQ` page.
 
-Install py-solc
+Install `py-solc`
 ++++++++++++++++++
 
 Use the command below to install ``py-solc``.
@@ -399,6 +399,12 @@ This module connects python functions with ``solc`` in your computer.
 .. code-block:: shell
 
     $ pip3 install py-solc
+
+You may also be required to install `libz3.so.4` by following command:
+
+.. code-block:: shell
+
+    $ sudo  apt-get  install  libz3-dev
 
 Smart Contract Examples
 ++++++++++++++++++++++++++++++++++++
