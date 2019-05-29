@@ -125,7 +125,7 @@ func TestReward(t *testing.T) {
 	// set bonus
 	bonus := new(big.Int).Mul(big.NewInt(10000), big.NewInt(1e+18))
 	ownerTransactOpts.Value = bonus
-	_, err = instance.SetBonusPool(ownerTransactOpts, bonus)
+	_, err = instance.SetBonusPool(ownerTransactOpts)
 	contractBackend.Commit()
 
 	bonus2, err := instance.BonusPool(nil)
@@ -355,21 +355,10 @@ func TestSetBonus(t *testing.T) {
 	instance.SetPeriod(ownerTransactOpts, big.NewInt(0)) // set round period is 0
 	instance.NewRaise(ownerTransactOpts)
 
-	// set bouns fail
-	bonus := new(big.Int).Mul(big.NewInt(10000), big.NewInt(1e+18))
-	ownerTransactOpts.Value = new(big.Int)
-	tx, _ := instance.SetBonusPool(ownerTransactOpts, bonus)
-	contractBackend.Commit()
-
-	receipt, _ := contractBackend.TransactionReceipt(context.Background(), tx.Hash())
-	if receipt.Status != types.ReceiptStatusFailed {
-		t.Error("the transaction should fail because the bonus is less than value")
-	}
-
 	// set bonus success
-	bonus = new(big.Int).Mul(big.NewInt(10000), big.NewInt(1e+18))
+	bonus := new(big.Int).Mul(big.NewInt(10000), big.NewInt(1e+18))
 	ownerTransactOpts.Value = bonus
-	instance.SetBonusPool(ownerTransactOpts, bonus)
+	instance.SetBonusPool(ownerTransactOpts)
 	contractBackend.Commit()
 
 	bonus2, _ := instance.BonusPool(nil)

@@ -13,7 +13,7 @@ For ease of reading, we use ``cpchain`` to represent all available cpchain versi
 The instructions below are demonstrated on Linux.
 
 If you are using Windows platform, all commands below are also viable.
-Just replace ``chchain`` with ``cpchain-windows-4.0-386.exe`` or ``cpchain-windows-4.0-amd64.exe``.
+Just replace ``cpchain`` with ``cpchain-windows-4.0-386.exe`` or ``cpchain-windows-4.0-amd64.exe``.
 
 For 32-bit PC user, please select ``386`` version.
 And 64-bit PC users should download ``amd64`` version.

@@ -23,7 +23,7 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -115,6 +115,16 @@ func TestGetCommitteeNumber(t *testing.T) {
 	if committeesNum != 4 {
 		t.Errorf("GetCommittee failed")
 	}
+}
+
+func TestGetBlockReward(t *testing.T) {
+	t.Skip("must start chain to test")
+	client, err := cpclient.Dial("http://localhost:8501")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	reward := client.GetBlockReward(context.Background(), new(big.Int).SetInt64(100))
+	fmt.Println("block number", 100, "block reward", reward.Uint64())
 }
 
 func TestClient_BlockByNumber(t *testing.T) {

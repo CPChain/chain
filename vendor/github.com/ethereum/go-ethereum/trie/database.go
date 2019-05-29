@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"bitbucket.org/cpchain/chain/database"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -431,6 +431,14 @@ func (db *Database) reference(child common.Hash, parent common.Hash) {
 
 // Dereference removes an existing reference from a root node.
 func (db *Database) Dereference(root common.Hash) {
+
+	// cf. https://github.com/ethereum/go-ethereum/pull/17357
+	// Sanity check to ensure that the meta-root is not removed
+	if root == (common.Hash{}) {
+		log.Error("Attempted to dereference the trie cache meta root")
+		return
+	}
+
 	db.lock.Lock()
 	defer db.lock.Unlock()
 

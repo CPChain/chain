@@ -29,13 +29,9 @@ Usage: console **miner** <subcommand\> [command options] [arguments...]
    
 
 ### Command 'rnode'
-Usage: console **rnode** <subcommand\> [command options] [arguments...]
-
-#### Subcommands
-- **join**    Join in rnode list    
-**arguments**: If this account have enough money,default transfer 200000 ether to fundraising account .
-- **quit**   Quit from rnode list   
-**arguments**: Quit from rnode,get lockedDeposit from fundraising account .
+Usage: console **rnode-quit** <subcommand\> [command options] [arguments...]
+ 
+Quit from rnode,get lockedDeposit from fundraising account .
 
 #### Options
 - **--rpc value**       Set the APIs offered over the HTTP-RPC interface (default: "http://127.0.0.1:8501")

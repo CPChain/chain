@@ -16,7 +16,7 @@ using ``pip`` as follows:
 
 .. Note::
 
-    If you ``pip`` is referring to the one in python2, please use the following command instead.
+    If your ``pip`` is referring to the one in python2, please use the following command instead.
 
 .. code-block:: shell
 
