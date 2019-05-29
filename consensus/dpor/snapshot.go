@@ -661,7 +661,7 @@ func (s *DporSnapshot) IsProposerOf(signer common.Address, number uint64) (bool,
 		return s.isProposerOfAAA(signer, number)
 	}
 
-	return s.isProposerOfABC(signer, number)
+	return s.isProposerOfBlock(signer, number)
 }
 
 func (s *DporSnapshot) isProposerOfAAA(signer common.Address, number uint64) (bool, error) {
@@ -679,7 +679,7 @@ func (s *DporSnapshot) isProposerOfAAA(signer common.Address, number uint64) (bo
 	return false, errProposerNotInCommittee
 }
 
-func (s *DporSnapshot) isProposerOfABC(signer common.Address, number uint64) (bool, error) {
+func (s *DporSnapshot) isProposerOfBlock(signer common.Address, number uint64) (bool, error) {
 	proposers := s.ProposersOf(number)
 	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) % s.config.TermLen)
 	if idx >= 0 && idx < len(proposers) {
