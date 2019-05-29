@@ -257,7 +257,7 @@ func (b *APIBackend) CurrentView() uint64 {
 	bn := block.Number()
 	vl, tl := b.ViewLen(), b.TermLen()
 	// be cautious vl*tl does not overflow
-	view := ((bn.Uint64() - 1) % (vl * tl)) / vl
+	view := ((bn.Uint64() - 1) % (vl * tl)) % tl
 	return view
 }
 
@@ -266,7 +266,7 @@ func (b *APIBackend) CurrentSpan() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.ViewLen(), b.TermLen()
-	span := ((bn.Uint64() - 1) % (vl * tl)) % tl
+	span := ((bn.Uint64() - 1) % (vl * tl)) / tl
 	return span
 }
 
