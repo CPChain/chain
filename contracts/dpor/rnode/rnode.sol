@@ -13,7 +13,7 @@ contract Rnode {
     using SafeMath for uint256;
 
     address owner; // owner has permissions to modify parameters
-    uint256 public period = 30 minutes; // rnode can withdraw deposit after period, owner can change period
+    uint256 public period = 100 minutes; // rnode can withdraw deposit after period, owner can change period
     uint256 public rnodeThreshold = 200000 ether; // standard to become rnode, minimal amount, owner can change
     uint256 public supportedVersion = 1; // version control
     Set.Data private rnodes; // rnodes group
