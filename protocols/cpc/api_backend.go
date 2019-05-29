@@ -261,12 +261,12 @@ func (b *APIBackend) CurrentView() uint64 {
 	return view
 }
 
-// CurrentSpan return current view
+// CurrentSpan return current span
 func (b *APIBackend) CurrentSpan() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.ViewLen(), b.TermLen()
-	span := ((bn.Uint64() - 1) % (vl * tl)) / tl
+	span := ((bn.Uint64() - 1) % (vl * tl)) % tl
 	return span
 }
 
