@@ -81,8 +81,7 @@ contract Reward {
     }
 
     // owner set amount of bonus pool by transferring money to contract
-    function setBonusPool(uint256 _bonus) public payable onlyOwner {
-        require(_bonus <= bonusPool+msg.value);
+    function setBonusPool() public payable onlyOwner {
         bonusPool = bonusPool.add(msg.value);
         emit OwnerSetBonusPool(bonusPool);
     }
