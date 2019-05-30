@@ -40,6 +40,7 @@ For Windows users, use the commands below in cmd.
     $ mkdir datadir
     $ cpchain-windows-4.0-amd64.exe account new account --datadir ./datadir
 
+
 .. note::
 
     Change ``cpchain-windows-4.0-amd64.exe`` to ``cpchain-windows-4.0-386.exe``
@@ -51,6 +52,12 @@ For Linux and Mac users, use the commands below in terminal:
 
     $ mkdir datadir
     $ ./cpchain account new account --datadir ./datadir
+
+
+.. note::
+
+    If you discard ``--datadir`` option, the account file is created under default user directory.
+
 
 The first command is to generate a keystore file
 located in ``datadir/keystore``,
@@ -99,6 +106,15 @@ Linux and Mac users please use the following command:
         --unlock WALLET_ADDRESS \
         --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
         --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+
+.. note::
+
+    If you discard ``--datadir`` option, the account file is read from default user directory.
+
+.. note::
+
+    A flag ``--account WALLET_ADDRESS`` is required
+    in case your ``./datadir`` directory contains more than one account file.
 
 
 .. note::

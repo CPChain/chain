@@ -29,8 +29,7 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
-	"bitbucket.org/cpchain/chain/commons/time"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	times "bitbucket.org/cpchain/chain/commons/time"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
@@ -217,11 +216,7 @@ func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 		log.Fatalf("Cpchain service not running: %v", err)
 	}
 
-	// TODO: fix this, do not use *keystore.Key, use wallet instead
-	contractCaller := createContractCaller(n, key)
-	if contractCaller != nil {
-		cpchainService.AdmissionApiBackend.SetAdmissionKey(contractCaller.Key)
-	}
+	cpchainService.AdmissionApiBackend.SetAdmissionKey(key)
 
 	if ctx.Bool(flags.MineFlagName) {
 		if err := cpchainService.StartMining(true); err != nil {
@@ -234,24 +229,6 @@ func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 			log.Fatalf("Failed to setup validator: %v", err)
 		}
 	}
-}
-
-// TODO to be removed.  do not add it here.
-func createContractCaller(n *node.Node, key *keystore.Key) *backend.ContractCaller {
-	var contractCaller *backend.ContractCaller
-
-	rpcClient, err := n.Attach()
-	if err != nil {
-		log.Fatalf("Failed to attach to self: %v", err)
-	}
-	client := cpclient.NewClient(rpcClient)
-
-	// TODO: @Liuq fix this.
-	contractCaller, err = backend.NewContractCaller(key, client, 300000)
-	if err != nil {
-		log.Warn("err when make contract call", "err", err)
-	}
-	return contractCaller
 }
 
 func handleInterrupt(n *node.Node) {

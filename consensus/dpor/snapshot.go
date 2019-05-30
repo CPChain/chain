@@ -564,8 +564,12 @@ func (s *DporSnapshot) IsProposerOf(signer common.Address, number uint64) (bool,
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
+	return s.isProposerOfBlock(signer, number)
+}
+
+func (s *DporSnapshot) isProposerOfBlock(signer common.Address, number uint64) (bool, error) {
 	proposers := s.ProposersOf(number)
-	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) / s.config.ViewLen)
+	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) % s.config.TermLen)
 	if idx >= 0 && idx < len(proposers) {
 		if proposers[idx] == signer {
 			return true, nil

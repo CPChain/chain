@@ -291,6 +291,7 @@ type rpcProgress struct {
 
 type BlockGenerationInfo struct {
 	View        uint64 // contain View in each Term
+	Span        uint64
 	Term        uint64
 	Proposer    common.Address
 	BlockNumber uint64 // high
