@@ -128,7 +128,7 @@ func (c *Console) GetStatus() (*cm.Status, error) {
 func (c *Console) StartMining() error {
 	// RNode
 	rnode := c.isRNode()
-	if rnode {
+	if !rnode {
 		c.output.Info("You are not rnode yet ,you will spend 200000 cpc to be rnode first")
 	}
 	c.output.Info("Start Mining...")
@@ -153,7 +153,7 @@ func (c *Console) StopMining() error {
 	if err != nil {
 		return err
 	}
-	// Start Mining
+	// Stop Mining
 	err = client.CallContext(*c.ctx, nil, "miner_stop")
 	if err != nil {
 		return err
@@ -163,7 +163,6 @@ func (c *Console) StopMining() error {
 }
 
 func (c *Console) QuitRnode() error {
-	c.output.Info("Quit Rnode...")
 	addr := cm.GetContractAddress(configs.ContractRnode)
 	if !c.isRNode() {
 		c.output.Info("You are not Rnode already, you don't need to quit.")
@@ -179,9 +178,21 @@ func (c *Console) QuitRnode() error {
 		if CurrentTime < LockedTime+period.Uint64() {
 			c.output.Info("This Lock-up period is not over, you need to wait for few minutes...")
 		} else {
+			// miner stop
+			c.output.Info("Stop Mining...")
+			client, err := rpc.DialContext(*c.ctx, c.rpc)
+			if err != nil {
+				return err
+			}
+			// Stop Mining
+			err = client.CallContext(*c.ctx, nil, "miner_stop")
+			if err != nil {
+				return err
+			}
+			c.output.Info("Stop Mining Success")
 			// Quit...
+			c.output.Info("Quit Rnode...")
 			transactOpts := c.buildTransactOpts(big.NewInt(0))
-			c.output.Info("create transaction options successfully")
 			tx, err := instance.QuitRnode(transactOpts)
 			if err != nil {
 				return err
@@ -192,7 +203,7 @@ func (c *Console) QuitRnode() error {
 				log.Error(err.Error())
 			}
 			if r.Status == types.ReceiptStatusSuccessful {
-				c.output.Info("quit successfully.")
+				c.output.Info("Quit Success.")
 			}
 		}
 
