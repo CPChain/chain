@@ -33,8 +33,7 @@ import (
 
 // DefaultConfig contains default settings for use on the cpchain test net.
 var DefaultConfig = Config{
-	NetworkId:     configs.DevNetworkId,
-	LightPeers:    100,
+	NetworkId:     configs.MainnetNetworkId,
 	DatabaseCache: 768,
 	TrieCache:     256,
 	TrieTimeout:   60 * time.Minute,
@@ -69,10 +68,6 @@ type Config struct {
 	NetworkId uint64 // Network ID to use for selecting peers to connect to
 	NoPruning bool   // TODO: remove it {AC}
 
-	// Light client options
-	LightServ  int `toml:",omitempty"` // Maximum percentage of time allowed for serving LES requests
-	LightPeers int `toml:",omitempty"` // Maximum number of LES client peers
-
 	// Database options
 	SkipBcVersionCheck bool `toml:"-"`
 	DatabaseHandles    int  `toml:"-"`
@@ -101,7 +96,7 @@ type Config struct {
 	// Private Tx related configuration
 	PrivateTx private.Config
 
-	SyncMode syncer.SyncMode
+	SyncMode syncer.SyncMode `toml:"-"`
 }
 
 type configMarshaling struct {

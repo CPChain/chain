@@ -45,12 +45,12 @@ const (
 
 const (
 	DevChainId     = 41
-	MainnetChainId = 0x13375418
+	MainnetChainId = 0x13370000
 	TestnetChainId = 43
 )
 
 const (
-	MainnetNetworkId = 0x13375418
+	MainnetNetworkId = 0x13370000
 	DevNetworkId     = 1
 	TestnetNetworkId = 2
 )
@@ -77,11 +77,10 @@ const (
 const (
 	DefaultDevMaxInitBlockNumber     = 216
 	DefaultTestnetMaxInitBlockNumber = 240
-	DefaultMainnetMaxInitBlockNumber = 216
+	DefaultMainnetMaxInitBlockNumber = 108
 )
 
 const (
-	DefaultWaitTimeBeforeImpeachment    = 2 * time.Minute // wait 120 seconds before first impeachment
 	DefaultFailbackTimestampSampleSpace = 2 * time.Minute
 )
 
@@ -94,16 +93,11 @@ const (
 	DefaultGasLimitPerBlock = 100000000
 )
 
-// TODO @hmw make the name more meaningful.  add doc.
 const (
 	ContractCampaign  = "campaign"  // address of campaign contract,select rnode
 	ContractRpt       = "rpt"       // address of rpt contract,Calculation the rpt of rnode
 	ContractAdmission = "admission" // address of admission
 	ContractRnode     = "rnode"     // address of rnode
-)
-
-const (
-	RNodeMinFundReq = 200000 // 200000 CPC for becoming a RNode
 )
 
 // some version numbers

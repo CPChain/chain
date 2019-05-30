@@ -62,21 +62,12 @@ const (
 	Bn256PairingPerPointGas uint64 = 80000  // Per-point price for an elliptic curve pairing check
 
 	// CPChain primitives
-	GetRankGas         uint64 = 1600 // gas price for getting rank operation, need to call contract
-	GetMaintenanceGas  uint64 = 600  // gas price  needed for GetMaintenanceGas
-	IsProxyGas         uint64 = 2000 // Gas needed for IsProxyGas, need to call contract twice
-	GetTxVolumeGas     uint64 = 1200 // Gas needed for GetTxVolumeGas, involving many cryptographic operations
-	GetUploadRewardGas uint64 = 1600 // Gas needed for GetUploadRewardGas, need to call contract
-	CpuPowValidateGas  uint64 = 200  // Gas needed for CpuPowValidate, involving hash
-	MemPowValidateGas  uint64 = 200  // Gas needed for MemPowValidate, involving hash
-)
-
-var (
-	DurationLimit = big.NewInt(13) // The decision boundary on the blocktime duration used to determine whether difficulty should go up or not.
+	CpuPowValidateGas uint64 = 200 // Gas needed for CpuPowValidate, involving hash
+	MemPowValidateGas uint64 = 200 // Gas needed for MemPowValidate, involving hash
 )
 
 const (
-	Cep1BlocksPerDay = 24 * 60 * 60 / 10
+	Cep1BlocksPerDay = 24 * 60 * 60 * 1000 / int64(MainnetBlockPeriod)
 	Cep1BlocksY1     = 366 * Cep1BlocksPerDay // contain a leap day
 	Cep1BlocksY2     = 365 * Cep1BlocksPerDay
 	Cep1BlocksY3     = 365 * Cep1BlocksPerDay

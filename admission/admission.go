@@ -17,8 +17,8 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
-	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -164,7 +164,11 @@ func (ac *AdmissionControl) FundForRNode() error {
 		return nil
 	}
 
-	minRnodeFund := new(big.Int).Mul(big.NewInt(configs.RNodeMinFundReq), big.NewInt(configs.Cpc))
+	minRnodeFund, err := rNodeContract.RnodeThreshold(nil)
+	if err != nil {
+		return err
+	}
+
 	balance, _ := ac.contractBackend.BalanceAt(context.Background(), ac.address, nil)
 	if balance.Cmp(minRnodeFund) >= 0 {
 		transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
