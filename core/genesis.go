@@ -291,7 +291,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0xc811ca42e5ce147ac11efc87e21c040dadd717d06ae51a3c27fd59863c7cac80")
+var MainnetGenesisHash = common.HexToHash("0x9fac64b87618e3809a1a46935ab79ef8b1c722b8532ec213163b707da6f8486b")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
@@ -302,6 +302,8 @@ func DefaultGenesisBlock() *Genesis {
 		return newTestnetGenesisBlock()
 	case configs.IsMainnet():
 		return newMainnetGenesisBlock()
+	case configs.IsTestMainnet():
+		return newTestMainnetGenesisBlock()
 	case configs.IsTestcase():
 		return newGenesisBlock()
 	default:
@@ -393,6 +395,44 @@ func newMainnetGenesisBlock() *Genesis {
 			candidates[11]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
 
 			// contract admin account 21
+			common.HexToAddress("0xa449fac1ce809b3b816c465ca4459d6ecf6dee78"): {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			// bank 22
+			common.HexToAddress("0xbe4883ac698b22b1a830a49bdedab5d5d548a39c"): {Balance: new(big.Int).Mul(big.NewInt(1000000000), big.NewInt(configs.Cpc))},
+		},
+		Dpor: types.DporSnap{
+			Proposers:  configs.Proposers(),
+			Seal:       types.DporSignature{},
+			Sigs:       make([]types.DporSignature, configs.MainnetValidatorsNumber),
+			Validators: configs.Validators(),
+		},
+	}
+}
+
+func newTestMainnetGenesisBlock() *Genesis {
+	log.Info("newTestMainnetGenesisBlock runmode:", "vv", configs.GetRunMode())
+	candidates := configs.Candidates()
+	return &Genesis{
+		Config:     configs.ChainConfigInfo(),
+		Timestamp:  1553754594000,
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:   configs.DefaultGasLimitPerBlock,
+		Difficulty: big.NewInt(1),
+		Alloc: map[common.Address]GenesisAccount{
+			candidates[0]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[1]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[2]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[3]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[4]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[5]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+
+			candidates[6]:  {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[7]:  {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[8]:  {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[9]:  {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[10]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			candidates[11]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+
+			// contract admin account 21
 			common.HexToAddress("0xb3801b8743dea10c30b0c21cae8b1923d9625f84"): {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
 			// bank 22
 			common.HexToAddress("0xabb528bffc707c2c507307e426ce810a7ad93ed6"): {Balance: new(big.Int).Mul(big.NewInt(1000000000), big.NewInt(configs.Cpc))},
@@ -400,7 +440,7 @@ func newMainnetGenesisBlock() *Genesis {
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
 			Seal:       types.DporSignature{},
-			Sigs:       make([]types.DporSignature, configs.MainnetValidatorsNumber),
+			Sigs:       make([]types.DporSignature, configs.TestMainnetValidatorsNumber),
 			Validators: configs.Validators(),
 		},
 	}

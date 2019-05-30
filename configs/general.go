@@ -44,29 +44,34 @@ const (
 )
 
 const (
-	DevChainId     = 41
-	MainnetChainId = 0x13370000
-	TestnetChainId = 43
+	DevChainId         = 41
+	MainnetChainId     = 0x13370000
+	TestMainnetChainId = 42
+	TestnetChainId     = 43
 )
 
 const (
-	MainnetNetworkId = 0x13370000
-	DevNetworkId     = 1
-	TestnetNetworkId = 2
+	MainnetNetworkId     = 0x13370000
+	TestMainnetNetworkId = 0
+	DevNetworkId         = 1
+	TestnetNetworkId     = 2
 )
 
 const (
-	DefaultBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
-	TestnetBlockPeriod = 3e3 //  3000 Millisecond, 3 Second
-	MainnetBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
+	DefaultBlockPeriod     = 1e4 //  10000 Millisecond, 10 Second
+	TestnetBlockPeriod     = 3e3 //  3000 Millisecond, 3 Second
+	MainnetBlockPeriod     = 1e4 //  10000 Millisecond, 10 Second
+	TestMainnetBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
 
-	DefaultFaultyValidatorsNumber = 1
-	TestnetFaultyValidatorsNumber = 1
-	MainnetFaultyValidatorsNumber = 2
+	DefaultFaultyValidatorsNumber     = 1
+	TestnetFaultyValidatorsNumber     = 1
+	MainnetFaultyValidatorsNumber     = 2
+	TestMainnetFaultyValidatorsNumber = 2
 
-	DefaultValidatorsNumber = DefaultFaultyValidatorsNumber*3 + 1
-	TestnetValidatorsNumber = TestnetFaultyValidatorsNumber*3 + 1
-	MainnetValidatorsNumber = MainnetFaultyValidatorsNumber*3 + 1
+	DefaultValidatorsNumber     = DefaultFaultyValidatorsNumber*3 + 1
+	TestnetValidatorsNumber     = TestnetFaultyValidatorsNumber*3 + 1
+	MainnetValidatorsNumber     = MainnetFaultyValidatorsNumber*3 + 1
+	TestMainnetValidatorsNumber = TestMainnetFaultyValidatorsNumber*3 + 1
 )
 
 // MaximumCandidateNumber is the max number of candidates read from campaign contract
@@ -75,9 +80,10 @@ const (
 )
 
 const (
-	DefaultDevMaxInitBlockNumber     = 216
-	DefaultTestnetMaxInitBlockNumber = 240
-	DefaultMainnetMaxInitBlockNumber = 108
+	DefaultDevMaxInitBlockNumber         = 108
+	DefaultTestnetMaxInitBlockNumber     = 240
+	DefaultMainnetMaxInitBlockNumber     = 108
+	DefaultTestMainnetMaxInitBlockNumber = 108
 )
 
 const (
@@ -108,31 +114,59 @@ const (
 
 var (
 	chainConfigMap = map[RunMode]*ChainConfig{
-		Dev:      devChainConfig,
-		Testnet:  testnetChainConfig,
-		Mainnet:  mainnetChainConfig,
-		Testcase: devChainConfig,
+		Dev:         devChainConfig,
+		Testnet:     testnetChainConfig,
+		Mainnet:     mainnetChainConfig,
+		TestMainnet: testMainnetChainConfig,
+		Testcase:    devChainConfig,
 	}
 
 	proposersMap = map[RunMode][]common.Address{
-		Dev:      devProposers,
-		Testnet:  testnetProposers,
-		Mainnet:  mainnetProposers,
-		Testcase: devProposers,
+		Dev:         devProposers,
+		Testnet:     testnetProposers,
+		Mainnet:     mainnetProposers,
+		TestMainnet: testMainnetProposers,
+		Testcase:    devProposers,
 	}
 
 	candidatesMap = map[RunMode][]common.Address{
-		Dev:      devDefaultCandidates,
-		Testnet:  testnetDefaultCandidates,
-		Mainnet:  mainnetDefaultCandidates,
-		Testcase: devDefaultCandidates,
+		Dev:         devDefaultCandidates,
+		Testnet:     testnetDefaultCandidates,
+		Mainnet:     mainnetDefaultCandidates,
+		TestMainnet: testMainnetDefaultCandidates,
+		Testcase:    devDefaultCandidates,
 	}
 
 	validatorsMap = map[RunMode][]common.Address{
-		Dev:      devValidators,
-		Testnet:  testnetValidators,
-		Mainnet:  mainnetValidators,
-		Testcase: devValidators,
+		Dev:         devValidators,
+		Testnet:     testnetValidators,
+		Mainnet:     mainnetValidators,
+		TestMainnet: testMainnetValidators,
+		Testcase:    devValidators,
+	}
+
+	bootnodesMap = map[RunMode][]string{
+		Dev:         devBootnodes,
+		Testnet:     testnetBootnodes,
+		Mainnet:     mainnetBootnodes,
+		TestMainnet: testMainnetBootnodes,
+		Testcase:    devBootnodes,
+	}
+
+	depositMap = map[RunMode]*big.Int{
+		Dev:         devDeposit,
+		Testnet:     testnetDeposit,
+		Mainnet:     mainnetDeposit,
+		TestMainnet: testMainnetDeposit,
+		Testcase:    devDeposit,
+	}
+
+	defaultValidatorNodesMap = map[RunMode][]string{
+		Dev:         defaultDevValidatorNodes,
+		Testnet:     defaultTestnetValidatorNodes,
+		Mainnet:     defaultMainnetValidatorNodes,
+		TestMainnet: defaultTestMainnetValidatorNodes,
+		Testcase:    defaultDevValidatorNodes,
 	}
 )
 
@@ -165,29 +199,8 @@ func Validators() []common.Address {
 }
 
 func Bootnodes() []string {
-	switch {
-	case IsDev():
-		return devBootnodes
-	case IsTestnet():
-		return testnetBootnodes
-	case IsMainnet():
-		return mainnetBootnodes
-	case IsTestcase():
-		return devBootnodes
-	default:
-		return devBootnodes
-	}
+	return bootnodesMap[GetRunMode()]
 }
-
-// Deposit per time when campaign
-var (
-	depositMap = map[RunMode]*big.Int{
-		Dev:      devDeposit,
-		Testnet:  testnetDeposit,
-		Mainnet:  mainnetDeposit,
-		Testcase: devDeposit,
-	}
-)
 
 func Deposit() *big.Int {
 	return depositMap[GetRunMode()]
@@ -201,18 +214,7 @@ func GetDefaultValidators() []string {
 }
 
 func InitDefaultValidators(validators []string) {
-	defaultValidatorNodes = defaultDevValidatorNodes
-	runMode := GetRunMode()
-	switch runMode {
-	case Mainnet:
-		defaultValidatorNodes = defaultMainnetValidatorNodes
-	case Testnet:
-		defaultValidatorNodes = defaultTestnetValidatorNodes
-	case Dev:
-		defaultValidatorNodes = defaultDevValidatorNodes
-	case Testcase:
-		defaultValidatorNodes = defaultDevValidatorNodes
-	}
+	defaultValidatorNodes = defaultValidatorNodesMap[GetRunMode()]
 
 	if validators != nil && len(validators) > 0 {
 		defaultValidatorNodes = validators

@@ -3,7 +3,7 @@
 run_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 proj_dir=$run_dir/../../
 
-init="$run_dir/cpchain-init.sh mainnet"
+init="$run_dir/cpchain-init.sh testmainnet"
 echo "init: ${init}"
 stop="$run_dir/cpchain-stop.sh"
 
@@ -24,4 +24,4 @@ make all
 cd $run_dir
 
 echo "[*] initing"
-eval $init mainnet
+eval $init

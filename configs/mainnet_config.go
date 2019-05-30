@@ -16,27 +16,27 @@ var (
 	mainnetProxyContractRegister = common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93")
 
 	MainnetContractAddressMap = map[string]common.Address{
-		ContractRpt:  common.HexToAddress("0x7e9925bea4af2ebea96dd8ba9894d4503e6c0278"),
-		ContractRnode:  common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93"),
-		ContractAdmission: common.HexToAddress("0xa5e0ea2a14d91031986c2f25f6e724beeeb66781"),
-		ContractCampaign:  common.HexToAddress("0xf26b6864749cde85a29afea57ffeae115b24b505"),
+		ContractRpt:       common.HexToAddress("0x5ae4bddaf1d12baea98ebdf158c5ce3c53d21957"),
+		ContractRnode:     common.HexToAddress("0xab11ddf548e4ec7e1ed0a375a9eb34445cdee856"),
+		ContractAdmission: common.HexToAddress("0xd8cf29d5d77ce4a7bbf99ca8c665e39760c9dbe3"),
+		ContractCampaign:  common.HexToAddress("0xb9a0ca9f8f1c55124157419c956d2ac6b6a94672"),
 	}
 
 	// config
 	mainnetDefaultCandidates = []common.Address{
-		common.HexToAddress("0x9e61732d0b1c1674151a01ac0bba824c5b6258fb"), // #1
-		common.HexToAddress("0xaa6cf4f0338e04a40709dfa3c653efc6cd9e65c9"), // #2
-		common.HexToAddress("0x7170f578ca82897375f009ddea399df08f31bcff"), // #3
-		common.HexToAddress("0x4c61559aa727380e3fa516b6a7ae397b87ec2384"), // #5
-		common.HexToAddress("0xc5b481361bbcabb96ed0c835cee69b471449f49c"), // #4
-		common.HexToAddress("0x6e7fdba0fe5067a25a3cf1df90429e3c949411e3"), // #6
+		common.HexToAddress("0x5f1fa0804bf76f71d5cfb621fac1f6fe27c8e80e"), // #1
+		common.HexToAddress("0xb5edbc5a1e680e660dc78659613df7704bc198d2"), // #2
+		common.HexToAddress("0x3868a7b3c55ac0d4f85fc869a2a444ae0f39a1e7"), // #3
+		common.HexToAddress("0xf7b77be329185194520fc4447ea527217eae3974"), // #5
+		common.HexToAddress("0x9ffa9e60feaab7acdb460c4b938d5d57b19b2e10"), // #4
+		common.HexToAddress("0x352201b0e6b19b6c7e0fda80c0c3d462bcc0b81f"), // #6
 
-		common.HexToAddress("0x27e81a296f5b80d319d2f3008f2d5998530e79e4"), // #14
-		common.HexToAddress("0x52e584b4fba8688eb7edcabb18e65661a99acc67"), // #15
-		common.HexToAddress("0x030352bba36c0c7cec8669f64a26d96d5d679bdb"), // #16
-		common.HexToAddress("0xf561ebb8a40814c1cf3cc0a628df5a1bd7663b26"), // #17
-		common.HexToAddress("0xca8e011de0edea4929328bb86e35daa686c47ed0"), // #18
-		common.HexToAddress("0xcc9cd266776b331fd424ea14dc30fc8561bec628"), // #19
+		common.HexToAddress("0xd5a344b55a85b02c285fa4340dff4f54af0cb71f"), // #14
+		common.HexToAddress("0x809471f4794c633dd6c9d4b02c6c2c3fb7bdf01f"), // #15
+		common.HexToAddress("0xd0d39b67cad41642920fa0db66232709a8ce12c7"), // #16
+		common.HexToAddress("0x15676f1f87d0c64cac3892afc4268490b4bd3243"), // #17
+		common.HexToAddress("0x9e59ef188eb3e40e0540b713310fe4de70252ded"), // #18
+		common.HexToAddress("0x360db7f7b3d6db2a9c97738075dca2c4f668382a"), // #19
 	}
 	mainnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(MainnetChainId),
@@ -52,28 +52,28 @@ var (
 		},
 	}
 	mainnetProposers = []common.Address{
-		common.HexToAddress("0x9e61732d0b1c1674151a01ac0bba824c5b6258fb"), // #1
-		common.HexToAddress("0xaa6cf4f0338e04a40709dfa3c653efc6cd9e65c9"), // #2
-		common.HexToAddress("0x7170f578ca82897375f009ddea399df08f31bcff"), // #3
-		common.HexToAddress("0x4c61559aa727380e3fa516b6a7ae397b87ec2384"), // #5
-		common.HexToAddress("0xc5b481361bbcabb96ed0c835cee69b471449f49c"), // #4
-		common.HexToAddress("0x6e7fdba0fe5067a25a3cf1df90429e3c949411e3"), // #6
+		common.HexToAddress("0x5f1fa0804bf76f71d5cfb621fac1f6fe27c8e80e"), // #1
+		common.HexToAddress("0xb5edbc5a1e680e660dc78659613df7704bc198d2"), // #2
+		common.HexToAddress("0x3868a7b3c55ac0d4f85fc869a2a444ae0f39a1e7"), // #3
+		common.HexToAddress("0xf7b77be329185194520fc4447ea527217eae3974"), // #5
+		common.HexToAddress("0x9ffa9e60feaab7acdb460c4b938d5d57b19b2e10"), // #4
+		common.HexToAddress("0x352201b0e6b19b6c7e0fda80c0c3d462bcc0b81f"), // #6
 
-		common.HexToAddress("0x27e81a296f5b80d319d2f3008f2d5998530e79e4"), // #14
-		common.HexToAddress("0x52e584b4fba8688eb7edcabb18e65661a99acc67"), // #15
-		common.HexToAddress("0x030352bba36c0c7cec8669f64a26d96d5d679bdb"), // #16
-		common.HexToAddress("0xf561ebb8a40814c1cf3cc0a628df5a1bd7663b26"), // #17
-		common.HexToAddress("0xca8e011de0edea4929328bb86e35daa686c47ed0"), // #18
-		common.HexToAddress("0xcc9cd266776b331fd424ea14dc30fc8561bec628"), // #19
+		common.HexToAddress("0xd5a344b55a85b02c285fa4340dff4f54af0cb71f"), // #14
+		common.HexToAddress("0x809471f4794c633dd6c9d4b02c6c2c3fb7bdf01f"), // #15
+		common.HexToAddress("0xd0d39b67cad41642920fa0db66232709a8ce12c7"), // #16
+		common.HexToAddress("0x15676f1f87d0c64cac3892afc4268490b4bd3243"), // #17
+		common.HexToAddress("0x9e59ef188eb3e40e0540b713310fe4de70252ded"), // #18
+		common.HexToAddress("0x360db7f7b3d6db2a9c97738075dca2c4f668382a"), // #19
 	}
 	mainnetValidators = []common.Address{
-		common.HexToAddress("0x0b2ee61452cc951565ed4b8eabff85c3f585c149"),
-		common.HexToAddress("0x6a3678cac50b9266f82abe1a12bd26edc8e743a3"),
-		common.HexToAddress("0xc6bfd405a99a39fa06f3cf0f568c3a2a40c29882"),
-		common.HexToAddress("0xaee4ecd7edd59f5a2a0fe1fc786d217bea6ac3d9"),
-		common.HexToAddress("0xd7be125f3c60105b44e3242f5c5509d6c993ebb8"), // #11
-		common.HexToAddress("0x30a36525ca46504939e944e89422bdac745dd050"), // #12
-		common.HexToAddress("0x8341844d109c938f70d1ff4e621bc8da097b8d83"), // #13
+		common.HexToAddress("0x422dd016ccad93deb8ffe07416827371c37cbfe6"), //#7
+		common.HexToAddress("0x3119d0a401ba28eb5b8269b03cdf73e1ff8942eb"), //#8
+		common.HexToAddress("0x7ef70538c237e571ef35cdc600d2d01cdac3af27"), //#9
+		common.HexToAddress("0x9d6ceb3827e6a276ce655bda7281ccff97364d44"), //#10
+		common.HexToAddress("0x274ce385b87681e44c716001017e3e58c4b6864a"), // #11
+		common.HexToAddress("0xfe1fedc1205a4484d4981b690ab8b7fdabd57890"), // #12
+		common.HexToAddress("0x37163cba895198757c222f1e836d92cc1b39480f"), // #13
 	}
 
 	mainnetBootnodes = []string{

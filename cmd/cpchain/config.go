@@ -260,6 +260,8 @@ func updateChainGeneralConfig(ctx *cli.Context, cfg *cpc.Config) {
 		cfg.NetworkId = configs.TestnetNetworkId
 	case configs.Mainnet:
 		cfg.NetworkId = configs.MainnetNetworkId
+	case configs.TestMainnet:
+		cfg.NetworkId = configs.TestMainnetNetworkId
 	}
 
 	// specific
