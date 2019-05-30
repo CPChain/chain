@@ -70,7 +70,7 @@ contract Rpt {
     }
 
     function updateTotalSeats(uint _totalSeats) public onlyOwner {
-        require(_totalSeats <= 8);
+        require(_totalSeats<=8 && _totalSeats>=lowRptSeats);
         totalSeats = _totalSeats;
         emit UpdateOneConfig(block.number, "totalSeats", totalSeats);
     }
