@@ -141,19 +141,30 @@ Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`
 RNode Ecosystem
 ####################
 
-CPChain Nodes Roles
+CPChain Nodes Roles and Pools
 **********************
 
-**Economy Node**: Requires a minimum of 20,000 CPC tokens for participation.
+**Economy Node**: Requires a minimum of $20,000$ CPC tokens
+deposited in *Economy Pool* for participation.
 Investors who meet this requirement may participate as
 an economy node and have the right to vote in the community.
 
-**Reputation Node**: Requires a minimum of 200,000 CPC tokens for participation.
+**Reputation Node**: Requires a minimum of 200,000 CPC tokens
+deposited in *Economy Pool* for participation.
 Investors with the basic configuration of computing and
 storing can participate to support the CPChain Open Transmission Protocol (COTP).
 
 **Industry Node**:
 IoT Industry partners and CPChain ecosystem's peer developers have the right to participate as an Industry Node.
+
+Note that there are two separate pools for deposit.
+
+**Economy Pool**:
+Any node deposit at least $20,000$ CPC tokens in this pool is qualified as economy node.
+
+**RNode Pool**:
+Any node deposit at least $200,000$ CPC tokens in this pool is qualified as RNode.
+
 
 Reputation Nodes
 *****************
