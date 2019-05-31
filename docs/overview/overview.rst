@@ -171,7 +171,7 @@ Reputation Nodes
 
 A node has to meet one of the following requirements to become a Reputation Node:
 
-    1. Economic node + Computing and Storing node:
+    1. Economy node + Computing and Storing node:
     An economy node must lock-up a specific amount of tokens (200,000 minimum and 5,000,000 maximum)
     for 90 days and must satisfy the software, hardware, and network connection requirements.
     The locked up tokens have a positive correlation with the basic rewards.
@@ -399,9 +399,9 @@ Basic Rewards
 +++++++++++++++++
 
 CPChain will create a reward pool with 5 million CPC annually (1.25 million CPC quarterly, 13,700 CPC daily).
-The RNodes and the Economy Nodes receive the corresponding CPC reward
+The Economy Nodes receive the corresponding CPC reward
 based on the ratio of the locked margin to the total margin.
-(Economy Node and RNode will both need a 90-day lock-up session).
+(Economy Node needs a 90-day lock-up session).
 The detailed process goes as follows:
 
 Each season contains 90 days, which is also named as **lock-up period**.
@@ -409,7 +409,7 @@ There are 7 special days served as **fundraising** ahead of each lock-up period.
 Each fundraising is overlapped with previous lock-up period.
 In fundraising, the following operations are allowed:
 
-1. All civilians can deposit coin in the reward pool, to become economic nodes or RNodes.
+1. All civilians can deposit coin in the reward pool, to become Economy Nodes.
 #. Nodes that have already had coins deposited in the pool can choose to
     1. whether continue deposit the next season
     #. or renew the deposit value.
@@ -419,7 +419,7 @@ When a fundraising ends, the following rules are applied:
 
 1. No one adjusts or withdraw its deposit until next fundraising.
 #. Nodes that decide to withdraw the deposit, receive the coins.
-#. Any node that renews its deposit balance get recalculated its CPChain nodes role as economic node, RNode or the rest.
+#. Any node that renews its deposit balance get recalculated whether it is an Economy Node or not.
 #. All nodes with deposit in this lock-up period receive their reward from the pool.
 
 The reward for a certain node from the pool is proportional to its deposit in a season.
