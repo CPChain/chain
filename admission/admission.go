@@ -76,6 +76,8 @@ type AdmissionControl struct {
 	sendingFund int32
 }
 
+// TODO: implement Authorize like consensus.Engine @liuq
+
 // NewAdmissionControl returns a new Control instance.
 func NewAdmissionControl(chain consensus.ChainReader, address common.Address, admissionContractAddr common.Address,
 	campaignContractAddr common.Address, rNodeContractAddr common.Address) *AdmissionControl {
@@ -298,7 +300,12 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 		ac.mutex.Unlock()
 		return
 	}
+
 	transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
+	// this is an *empirical* estimate of the possible largest gas needed by the claimCampaign smartcontract call.
+	// @liusw for this number.
+	transactOpts.GasLimit = 2300000
+
 	campaignContractAddress := ac.campaignContractAddr
 	log.Debug("CampaignContractAddress", "address", campaignContractAddress.Hex())
 	instance, err := campaign.NewCampaign(campaignContractAddress, ac.contractBackend)
@@ -311,6 +318,17 @@ func (ac *AdmissionControl) sendCampaignResult(terms uint64) {
 
 	cpuResult := ac.cpuWork.result()
 	memResult := ac.memoryWork.result()
+
+	log.Info("ready to claim campaign",
+		"terms", terms,
+		"cpu result", cpuResult.Nonce,
+		"cpu number", cpuResult.BlockNumber,
+		"mem result", memResult.Nonce,
+		"mem number", memResult.BlockNumber,
+		"campaign version", configs.CampaignVersion,
+		"gas limit", transactOpts.GasLimit,
+	)
+
 	_, err = instance.ClaimCampaign(
 		transactOpts,
 		new(big.Int).SetUint64(terms),

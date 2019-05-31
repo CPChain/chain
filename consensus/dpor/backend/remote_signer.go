@@ -3,6 +3,7 @@ package backend
 import (
 	"errors"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
@@ -19,7 +20,9 @@ var (
 const (
 	maxQueuedBlocks  = 8
 	maxQueuedHeaders = 8
-	handshakeTimeout = 5 * time.Second
+
+	handshakeReadCnt = 6
+	handshakeTimeout = 3 * time.Second
 )
 
 // RemoteSigner represents a remote peer, ether proposer or validator
@@ -106,11 +109,22 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term u
 		errc <- err
 	}()
 	go func() {
-		msg, err := rw.ReadMsg()
-		if err == nil {
-			address, err = ReadSignerStatus(msg, &signerStatus)
-		}
+		var err error
+		for i := 0; i < handshakeReadCnt; i++ {
+			time.Sleep(handshakeTimeout / handshakeReadCnt)
 
+			msg, err := rw.ReadMsg()
+			if err == nil {
+				address, err = ReadSignerStatus(msg, &signerStatus)
+			}
+
+			if err == nil {
+				break
+			}
+			if err != io.EOF {
+				break
+			}
+		}
 		errc <- err
 	}()
 	timeout := time.NewTimer(handshakeTimeout)

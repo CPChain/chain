@@ -54,7 +54,6 @@ func errResp(code errCode, format string, v ...interface{}) error {
 type ProtocolManager struct {
 	networkID uint64
 
-	fastSync  uint32 // whether fast sync is enabled (gets disabled if we already have blocks)
 	acceptTxs uint32 // whether we're considered synchronised (enables transaction processing)
 
 	txpool      txPool
@@ -62,7 +61,6 @@ type ProtocolManager struct {
 	chainconfig *configs.ChainConfig
 	maxPeers    int
 
-	// downloader *downloader.Downloader
 	syncer syncer.Syncer
 
 	fetcher *fetcher.Fetcher
@@ -126,7 +124,6 @@ func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *even
 				return manager.handlePeer(p, rw, version)
 			},
 			NodeInfo: func() interface{} {
-				// TODO: add dpor pbft status to this if dpor is available
 				return manager.NodeInfo()
 			},
 			PeerInfo: func(id discover.NodeID) interface{} {
@@ -152,11 +149,6 @@ func NewProtocolManager(config *configs.ChainConfig, networkID uint64, mux *even
 		return blockchain.CurrentBlock().NumberU64()
 	}
 	inserter := func(blocks types.Blocks) (int, error) {
-		// if fast sync is running, deny importing weird blocks
-		if atomic.LoadUint32(&manager.fastSync) == 1 {
-			log.Warn("Discarded bad propagated block", "number", blocks[0].Number(), "hash", blocks[0].Hash().Hex())
-			return 0, nil
-		}
 		atomic.StoreUint32(&manager.acceptTxs, 1) // Mark initial sync done on any fetcher import
 		return manager.blockchain.InsertChain(blocks)
 	}
@@ -172,9 +164,6 @@ func (pm *ProtocolManager) removePeer(id string) {
 		return
 	}
 	log.Debug("Removing cpchain peer", "peer", id)
-
-	// Unregister the peer from the downloader and cpchain peer set
-	// pm.downloader.UnregisterPeer(id)
 
 	if err := pm.peers.Unregister(id); err != nil {
 		log.Error("Peer removal failed", "peer", id, "err", err)
@@ -258,7 +247,7 @@ func (pm *ProtocolManager) newPeer(pv int, p *p2p.Peer, rw p2p.MsgReadWriter) *p
 // when this function terminates, the peer is disconnected.
 func (pm *ProtocolManager) addPeer(p *peer, isMinerOrValidator bool) (bool, error) {
 	// ignore maxPeers if this is a trusted or a static peer
-	if pm.peers.Len() >= pm.maxPeers && !(p.Peer.Info().Network.Trusted || p.Peer.Info().Network.Static){
+	if pm.peers.Len() >= pm.maxPeers && !(p.Peer.Info().Network.Trusted || p.Peer.Info().Network.Static) {
 		return false, p2p.DiscTooManyPeers
 	}
 
@@ -305,9 +294,12 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		handleDporMsgs     = isMinerOrValidator && dporMode == dpor.NormalMode
 	)
 
-	if dporMode == dpor.NormalMode && isMinerOrValidator && !dporProtocol.Available() {
-		// log.Warn("dpor handler is not not available now")
-		return nil
+	if dporMode == dpor.NormalMode && isMinerOrValidator {
+		for !dporProtocol.Available() {
+			log.Debug("dpor protocol is not available now, sleeping 5 seconds.")
+			time.Sleep(5 * time.Second)
+		}
+		log.Debug("now dpor protocol is available")
 	}
 
 	// wrap up the peer
@@ -771,29 +763,39 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		pm.txpool.AddRemotes(txs)
 
 	case msg.Code == GetBlocksMsg:
-		// send blocks as requested
-		var start uint64
-		if err := msg.Decode(&start); err != nil {
+
+		var outset uint64
+		if err := msg.Decode(&outset); err != nil {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
-		number := pm.blockchain.CurrentBlock().NumberU64()
 
-		log.Debug("received GetBlocksMsg", "start", start)
+		log.Debug("received GetBlocksMsg", "start", outset)
 
-		if start >= number {
-			// TODO: @liuq return useful err type
+		current := pm.blockchain.CurrentBlock().NumberU64()
+
+		// if the number of the request block is larger than current block number, return
+		if outset > current {
 			return nil
 		}
 
+		// if equal, return the block as blocks msg
+		if outset == current {
+			block := pm.blockchain.GetBlockByNumber(current)
+			blocks := types.Blocks{block}
+			return p.SendBlocks(blocks)
+		}
+
+		// if less, return a batch of blocks
 		var (
-			end    = uint64(math.Min(float64(start+syncer.MaxBlockFetch), float64(number+1)))
-			blocks = make(types.Blocks, int(end-start))
+			end    = uint64(math.Min(float64(outset+syncer.MaxBlockFetch), float64(current+1)))
+			blocks = make(types.Blocks, int(end-outset))
 		)
 
-		for i := start; i < end; i++ {
+		for i := outset; i < end; i++ {
 			block := pm.blockchain.GetBlockByNumber(i)
-			blocks[i-start] = block
+			blocks[i-outset] = block
 		}
+
 		return p.SendBlocks(blocks)
 
 	case msg.Code == BlocksMsg:
@@ -806,7 +808,6 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		log.Debug("received BlocksMsg", "len", len(blocks))
 
 		if len(blocks) > syncer.MaxBlockFetch {
-			// TODO: @liuq return useful err type
 			return nil
 		}
 

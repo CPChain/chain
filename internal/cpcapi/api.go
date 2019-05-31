@@ -517,10 +517,16 @@ func getRole(isCommittee bool) int {
 	return cpclient.Candidate
 }
 
-// GetCommittee returns current view
+// GetCurrentView returns current view
 func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
 	CurrentView := s.b.CurrentView()
 	return CurrentView
+}
+
+// GetCurrentSpan returns current span
+func (s *PublicBlockChainAPI) GetCurrentSpan() uint64 {
+	CurrentSpan := s.b.CurrentSpan()
+	return CurrentSpan
 }
 
 // GetCurrentTerm returns current term
@@ -545,19 +551,19 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationI
 
 	t := s.b.CurrentTerm()
 	v := s.b.CurrentView()
+	p := s.b.CurrentSpan()
 	b := s.b.CurrentBlock()
 	cm := len(s.b.CommitteMember())
 	proposers, err := s.b.Proposers(rpc.BlockNumber(b.Number().Uint64()))
 	if err != nil {
 		log.Fatal("get proposer error")
 	}
-	var blockGenerationInfo cpclient.BlockGenerationInfo
 
 	header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
-
-	blockGenerationInfo = cpclient.BlockGenerationInfo{
+	blockGenerationInfo := cpclient.BlockGenerationInfo {
 		View:        v,
 		Term:        t,
+		Span:        p,
 		Proposer:    header.Coinbase,
 		BlockNumber: header.Number.Uint64(),
 		TermLen:     cm,
@@ -568,14 +574,12 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationI
 
 }
 
+func (s *PublicBlockChainAPI) GetBlockReward(blockNr rpc.BlockNumber) uint64 {
+	return s.b.BlockReward(blockNr).Uint64()
+}
+
 func (s *PublicBlockChainAPI) GetProposerByBlock(blockNr rpc.BlockNumber) (common.Address, error) {
-	addrs, err := s.b.Proposers(blockNr)
-	if err != nil && len(addrs) == 0 {
-		log.Error("get Proposer is error ", "error is ", err)
-	}
-	vl, tl := s.b.ViewLen(), s.b.TermLen()
-	view := ((uint64(blockNr) - 1) % (vl * tl)) / vl
-	return addrs[view], err
+	return s.b.ProposerOf(blockNr)
 }
 
 // BlockNumber returns the block number of the chain head.

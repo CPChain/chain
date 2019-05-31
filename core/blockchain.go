@@ -1232,7 +1232,9 @@ func (bc *BlockChain) ValidateBlockBody(block *types.Block) error {
 
 	// before validate state, we first validate block body
 	err := bc.Validator().ValidateBody(block)
-	if err != nil {
+	switch err {
+	case ErrKnownBlock:
+	default:
 		return err
 	}
 

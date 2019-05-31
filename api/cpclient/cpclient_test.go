@@ -117,6 +117,16 @@ func TestGetCommitteeNumber(t *testing.T) {
 	}
 }
 
+func TestGetBlockReward(t *testing.T) {
+	t.Skip("must start chain to test")
+	client, err := cpclient.Dial("http://localhost:8501")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	reward := client.GetBlockReward(context.Background(), new(big.Int).SetInt64(100))
+	fmt.Println("block number", 100, "block reward", reward.Uint64())
+}
+
 func TestClient_BlockByNumber(t *testing.T) {
 	t.Skip("must start chain to test")
 	client, err := cpclient.Dial("http://localhost:8501")

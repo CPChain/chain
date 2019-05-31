@@ -54,8 +54,6 @@ func (b *APIBackend) CurrentBlock() *types.Block {
 }
 
 func (b *APIBackend) SetHead(number uint64) {
-	// TODO: fix this @liuq
-	// b.cpc.protocolManager.downloader.Cancel()
 	b.cpc.blockchain.SetHead(number)
 }
 
@@ -259,8 +257,17 @@ func (b *APIBackend) CurrentView() uint64 {
 	bn := block.Number()
 	vl, tl := b.ViewLen(), b.TermLen()
 	// be cautious vl*tl does not overflow
-	view := ((bn.Uint64() - 1) % (vl * tl)) / vl
+	view := ((bn.Uint64() - 1) % (vl * tl)) % tl
 	return view
+}
+
+// CurrentSpan return current span
+func (b *APIBackend) CurrentSpan() uint64 {
+	block := b.cpc.blockchain.CurrentBlock()
+	bn := block.Number()
+	vl, tl := b.ViewLen(), b.TermLen()
+	span := ((bn.Uint64() - 1) % (vl * tl)) / tl
+	return span
 }
 
 // CurrentTerm return current term
@@ -290,6 +297,15 @@ func (b *APIBackend) CommitteMember() []common.Address {
 
 func (b *APIBackend) CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) int64 {
 	return b.cpc.engine.(*dpor.Dpor).GetCalcRptInfo(address, addresses, blockNum)
+}
+
+func (b *APIBackend) BlockReward(blockNum rpc.BlockNumber) *big.Int {
+	return b.cpc.engine.(*dpor.Dpor).GetBlockReward(uint64(blockNum))
+}
+
+func (b *APIBackend) ProposerOf(blockNum rpc.BlockNumber) (common.Address, error) {
+	p, err := b.cpc.engine.(*dpor.Dpor).ProposerOf(uint64(blockNum))
+	return p, err
 }
 
 // Proposers returns current block Proposers information

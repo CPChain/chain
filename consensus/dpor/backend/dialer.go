@@ -403,9 +403,6 @@ func enodeIDWithoutPort(enode string) string {
 // KeepConnection tries to dial remote validators if local node is a current or future proposer
 // and disconnect remote validators if it is not
 func (d *Dialer) KeepConnection() {
-
-	var last uint64
-
 	futureTimer := time.NewTicker(d.dpor.Period() / 2)
 	defer futureTimer.Stop()
 	for {
@@ -421,7 +418,7 @@ func (d *Dialer) KeepConnection() {
 
 				_, enough := d.EnoughValidatorsOfTerm(currentTerm)
 
-				if (last != currentNum && IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength())) || !enough {
+				if IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength()) || !enough {
 					switch {
 					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
@@ -441,9 +438,6 @@ func (d *Dialer) KeepConnection() {
 						d.disconnectValidators(currentTerm)
 					}
 				}
-
-				last = currentNum
-
 			}
 
 		case <-d.quitCh:

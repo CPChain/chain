@@ -268,7 +268,6 @@ func setMapItem(m map[common.Address]*txList, addr common.Address, txlist *txLis
 		return true
 	}
 
-	// TODO will be used in future @liuq
 	_ = maxSize
 
 	// add it

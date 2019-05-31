@@ -188,24 +188,12 @@ func (pm *ProtocolManager) synchronize(peer *peer) {
 	height := currentBlock.Number()
 	pHead, pHt := peer.Head()
 	if pHt.Cmp(height) <= 0 {
-		// TODO: @liuq, fix this. added because of sync_test.go err.
-		atomic.StoreUint32(&pm.fastSync, 0)
 		return
 	}
 
 	// full sync with the downloader
 	if err := pm.syncer.Synchronise(peer, pHead, pHt, pm.syncMode); err != nil {
 		return
-	}
-
-	// // full sync with the downloader
-	// if err := pm.downloader.Synchronise(peer.id, pHead, pHt, downloader.FullSync); err != nil {
-	// 	return
-	// }
-
-	if atomic.LoadUint32(&pm.fastSync) == 1 {
-		log.Info("Fast sync complete, auto disabling")
-		atomic.StoreUint32(&pm.fastSync, 0)
 	}
 
 	// because we have done the synchronization

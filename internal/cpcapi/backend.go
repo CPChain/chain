@@ -59,6 +59,7 @@ type Backend interface {
 	SubscribeChainSideEvent(ch chan<- core.ChainSideEvent) event.Subscription
 	Proposers(blockNr rpc.BlockNumber) ([]common.Address, error)
 	Validators(blockNr rpc.BlockNumber) ([]common.Address, error)
+	ProposerOf(blockNr rpc.BlockNumber) (common.Address, error)
 
 	// TxPool API
 	SendTx(ctx context.Context, signedTx *types.Transaction) error
@@ -78,10 +79,13 @@ type Backend interface {
 	RNode() ([]common.Address, uint64)
 	CurrentView() uint64
 	CurrentTerm() uint64
+	CurrentSpan() uint64
 	CommitteMember() []common.Address
 	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) int64
 	ViewLen() uint64
 	TermLen() uint64
+
+	BlockReward(blockNr rpc.BlockNumber) *big.Int
 
 	// Private API
 	SupportPrivateTx(ctx context.Context) (bool, error)
