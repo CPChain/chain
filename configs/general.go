@@ -114,7 +114,7 @@ const (
 // some version numbers
 const (
 	RnodeVersion    = 1
-	CampaignVersion = 1
+	CampaignVersion = 2
 )
 
 // pivot blocks numbers
