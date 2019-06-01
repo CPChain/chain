@@ -572,8 +572,7 @@ func TestCallSyncTwice(t *testing.T) {
 	}
 }
 
-func TestGetBalanceWhenSyncing(t *testing.T) {
-	t.Skip("this case need to be refine")
+func TestGetBalanceAtMiddleBlock(t *testing.T) {
 	var (
 		peerCnt = 1
 		numbers = 200
@@ -668,7 +667,7 @@ func TestGetBalanceWhenSyncing(t *testing.T) {
 			// state at middle block
 			block51 := localchain.GetBlockByNumber(uint64(51))
 			root51 := block51.StateRoot()
-			if state51, err := localchain.StateAt(root51); err != nil {
+			if state51, err := localchain.StateAt(root51); err == nil {
 				if state51 == nil {
 					t.Fatal("state51 is nil")
 				} else {
