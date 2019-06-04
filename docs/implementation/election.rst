@@ -33,6 +33,9 @@ and :math:`LowRptSeats` be available seats for low-RPT RNodes.
 The equation :math:`0\leq LowRptPercentage\leq 1` and
 :math:`0\leq LowRptSeats\leq LowRptPercentage \times TotalSeats \leq TotalSeats` always hold.
 
+In current implementation, :math:`LowRptPercentage` is :math:`70\%`,
+and :math:`LowRptSeats` occupies one fourth of :math:`TotalSeats`.
+
 .. code-block:: go
 
     // rptList is the list of all candidates as well as their RPT value
@@ -67,3 +70,4 @@ The equation :math:`0\leq LowRptPercentage\leq 1` and
         // using myRand to random select l addresses according to its rpt/sumRpt
         // return these l addresses
     }
+
