@@ -71,3 +71,16 @@ and :math:`LowRptSeats` occupies one fourth of :math:`TotalSeats`.
         // return these l addresses
     }
 
+The Structure of Term
+++++++++++++++++++++++++
+
+Each **term** consists of 12 proposers and 36 blocks sealed by these proposers.
+The order of proposals is scheduled in the form of *Round Robin*,
+which is shown in the following figure.
+Each term consists of three identical *views*,
+in which 12 proposers seal blocks one by one.
+
+.. image:: term_structure.png
+
+
+
