@@ -82,7 +82,7 @@ def call_contract(greeter,account_addr,keypath,password,url):
     eventlist = a.get_all_entries()
     print(eventlist)
 if __name__ == '__main__':
-    url = 'http://13.250.201.89:8501'
+    url = 'http://127.0.0.1:8501'
     # change the keypath to your keystore file
     keypath = "//home/shi/chain/workspace/src/bitbucket.org/cpchain/chain/examples/cpchain/data/data21/keystore/key21"
     password = "password"

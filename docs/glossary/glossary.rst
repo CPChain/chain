@@ -1,3 +1,6 @@
+.. _glossary:
+
+
 Glossary
 ~~~~~~~~~~
 
@@ -5,33 +8,33 @@ Glossary
 | Term                      |           Description              |
 +===========================+====================================+
 | Validators Committee      | A group of users that can validate |
-|                           | a newly proposed block             |
+|                           | a newly proposed block.            |
 +---------------------------+------------------------------------+
-| Validator                 | A member of validators committee   |
+| Validator                 | A member of validators committee.  |
 +---------------------------+------------------------------------+
 | Proposers Committee       | A group of users elected for a     |
 |                           | certain term that can propose      |
-|                           | blocks                             |
+|                           | blocks.                            |
 +---------------------------+------------------------------------+
 | Proposer                  | A member of proposers committee    |
 |                           | that can can proposes a new block  |
-|                           | in this view                       |
+|                           | in this view.                      |
 +---------------------------+------------------------------------+
 | Civilian                  | All users except the proposer and  |
-|                           | validators from the committee      |
+|                           | validators from the committee.     |
 +---------------------------+------------------------------------+
 | Seal                      | A unforgeable signature indicating |
 |                           | the proposer of corresponding      |
-|                           | for a certain block number         |
+|                           | for a certain block number.        |
 +---------------------------+------------------------------------+
 | Sigs                      | An array of unforgeable signatures |
 |                           | the proposer of corresponding      |
-|                           | for a certain block number         |
+|                           | for a certain block number.        |
 +---------------------------+------------------------------------+
 | Quorum                    | A quorum refers to a subset of     |
 |                           | committee members that can         |
 |                           | represent the whole committee      |
-|                           | to proceed to next state           |
+|                           | to proceed to next state.          |
 +---------------------------+------------------------------------+
 | Strong Quorum             | A quorum of 2f+1 members. It       |
 |                           | is used in normal cases. Unless    |
@@ -55,30 +58,30 @@ Glossary
 | P-Certificate             | A validator has a P-certificate    |
 |                           | if it has 2f+1 PREPARE messages    |
 |                           | or f+1 impeach PREPARE messages    |
-|                           | for a certain block number         |
+|                           | for a certain block number.        |
 +---------------------------+------------------------------------+
 | C-Certificate             | A validator has a C-certificate    |
 |                           | if it has 2f+1 COMMIT messages     |
 |                           | or f+1 impeach COMMIT messages     |
-|                           | for a certain block number         |
+|                           | for a certain block number.        |
 +---------------------------+------------------------------------+
 | Impeachment               | If a validator suspects the propo  |
 |                           | ser is faulty or non-responding,   |
-|                           | it activate an impeachment process |
+|                           | it activate an impeachment process.|
 +---------------------------+------------------------------------+
 | Impeachment block         | In an impeachment, a validator is  |
 |                           | aiming to propose an impeach block |
-|                           | on behalf of the a faulty proposer |
+|                           | on behalf of the a faulty proposer.|
 +---------------------------+------------------------------------+
 | Term                      | A term refers a period that a batch|
 |                           | of proposers elected for a certain |
 |                           | proposers committee. Term is a     |
 |                           | monotone increasing integer, whose |
 |                           | value is added by one each time    |
-|                           | it changes                         |
+|                           | it changes.                        |
 +---------------------------+------------------------------------+
 | Epoch                     | An obsolete variable name for      |
-|                           | *term*                             |
+|                           | *term*.                            |
 |                           |                                    |
 +---------------------------+------------------------------------+
 | TermLen                   | Short for term length. It refers to|
@@ -86,17 +89,17 @@ Glossary
 |                           | certain term. This value limits    |
 |                           | the size of proposers committee,   |
 |                           | and remains a constant unless the  |
-|                           | consensus model adjusts            |
+|                           | consensus model adjusts.           |
 +---------------------------+------------------------------------+
-| View                      | It represents the index of the     |
-|                           | proposer in the committee in a     |
-|                           | certain term. This value is an     |
-|                           | integer varying from 1 to TermLen  |
-|                           |                                    |
-|                           |                                    |
+| View                      | Available values of *view* are     |
+|                           | 0,1, and 2. It represents the      |
+|                           | sequence number of the block       |
+|                           | sealed by any proposer. Each view  |
+|                           | contains 12 blocks and their       |
+|                           | corresponding proposers.           |
 +---------------------------+------------------------------------+
 | Round                     | An obsolete variable name for      |
-|                           | *view*                             |
+|                           | *view*.                            |
 |                           |                                    |
 +---------------------------+------------------------------------+
 | ViewLen                   | A proposer is able to propose one  |
@@ -104,7 +107,7 @@ Glossary
 |                           | view. The number of blocks it can  |
 |                           | propose is ViewLen. It is also     |
 |                           | fixed unless the consensus model   |
-|                           | adjusts                            |
+|                           | adjusts.                           |
 +---------------------------+------------------------------------+
 | Period                    | Minimum time interval between two  |
 |                           | consecutive blocks.                |

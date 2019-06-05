@@ -32,7 +32,7 @@ def main():
     contract_interface = compiled_sol['<stdin>:Greeter']
 
     # web3.py instance
-    w3 = Web3(Web3.HTTPProvider('http://3.1.81.79:8501'))
+    w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:8501'))
 
     # set pre-funded account as sender
     w3.cpc.defaultAccount = w3.cpc.accounts[0]

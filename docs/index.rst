@@ -61,6 +61,7 @@ Quick reference:
 
    consensus/consensus
    implementation/implementation
+   implementation/election
 
 
 .. toctree::

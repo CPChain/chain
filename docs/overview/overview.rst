@@ -141,26 +141,37 @@ Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`
 RNode Ecosystem
 ####################
 
-CPChain Nodes Roles
+CPChain Nodes Roles and Pools
 **********************
 
-**Economy Node**: Requires a minimum of 20,000 CPC tokens for participation.
+**Economy Node**: Requires a minimum of $20,000$ CPC tokens
+deposited in *Economy Pool* for participation.
 Investors who meet this requirement may participate as
 an economy node and have the right to vote in the community.
 
-**Reputation Node**: Requires a minimum of 200,000 CPC tokens for participation.
+**Reputation Node**: Requires a minimum of 200,000 CPC tokens
+deposited in *Economy Pool* for participation.
 Investors with the basic configuration of computing and
 storing can participate to support the CPChain Open Transmission Protocol (COTP).
 
 **Industry Node**:
 IoT Industry partners and CPChain ecosystem's peer developers have the right to participate as an Industry Node.
 
+Note that there are two separate pools for deposit.
+
+**Economy Pool**:
+Any node deposit at least $20,000$ CPC tokens in this pool is qualified as economy node.
+
+**RNode Pool**:
+Any node deposit at least $200,000$ CPC tokens in this pool is qualified as RNode.
+
+
 Reputation Nodes
 *****************
 
 A node has to meet one of the following requirements to become a Reputation Node:
 
-    1. Economic node + Computing and Storing node:
+    1. Economy node + Computing and Storing node:
     An economy node must lock-up a specific amount of tokens (200,000 minimum and 5,000,000 maximum)
     for 90 days and must satisfy the software, hardware, and network connection requirements.
     The locked up tokens have a positive correlation with the basic rewards.
@@ -271,71 +282,6 @@ given a node's contribution in proposing a certain block.
 
 
 
-Election
-********************
-
-
-Principles and Steps
-+++++++++++++++++++++
-
-In election, a certain number of candidates (referred as *seats*) are elected to be proposer
-according to their RPT value.
-We have the following principles to design the election:
-
-#. An RNode with higher RPT has higher chance to be elected;
-#. Each term of proposers has a certain number of representatives from RNodes with low RPT.
-
-Thus, the basic steps of election process are:
-
-#. Candidates are divided into two partitions, high-RPT RNodes and low-RPT RNodes;
-#. Either partition has a number of available seats;
-#. The probability mass for each node being elected is proportional to its RPT in its corresponding partition;
-#. Random select nodes in two partitions, which together constitute proposers committee.
-
-Pseudocode of Election
-+++++++++++++++++++++++
-
-Let :math:`TotalRnode` be the number of all RNode candidates,
-:math:`TotalSeats` be the number of seats for each term,
-:math:`LowRptPercentage` be the percentage of low-RPT RNdoes in all RNode candidates,
-and :math:`LowRptSeats` be available seats for low-RPT RNodes.
-The equation :math:`0\leq LowRptPercentage\leq 1` and
-:math:`0\leq LowRptSeats\leq LowRptPercentage \times TotalSeats \leq TotalSeats` always hold.
-
-.. code-block:: go
-
-    // rptList is the list of all candidates as well as their RPT value
-    // seed is the seed for generating random numbers
-    // tha value of seed is the hash value of the parent block
-    func elect(rptList, seed, TotalRnode, TotalSeats, LowRptPercentage, LowRptSeats) []address {
-        // sort rptList
-        sort.Sort(rptList)
-
-        var partition uint64
-        partition = LowRptPercentage * TotalRnode
-        // partition rptList into lowRpts and highRpts
-        lowRpts := rptList[:partition]
-        highRpts := rptList[partition:]
-
-        // generate a series of random numbers given the seed
-        randSource := rand.NewSource(seed)
-        myRand := rand.rand.New(randSource)
-
-        lowElected := randomSelectByRpt(lowRpts, myRand, partition, LowRptSeats)
-        highElected := randomSelectByRpt(highRpts, myRand, TotalRnode - partition, TotalSeats - LowRptSeats)
-        return append(lowElected, highElected)
-    }
-
-    // uniform random selection from rptPartition
-    // the mass probability for each node being elected is proportional to its RPT
-    // the function select l random addresses
-    // and return them as result
-    func randomSelectByRpt(rptPartition, myRand, k, l) []address {
-        // each element in rptPartition is referred as rpt
-        // then we sum all rpt values, as sumRpt
-        // using myRand to random select l addresses according to its rpt/sumRpt
-        // return these l addresses
-    }
 
 
 
@@ -388,9 +334,9 @@ Basic Rewards
 +++++++++++++++++
 
 CPChain will create a reward pool with 5 million CPC annually (1.25 million CPC quarterly, 13,700 CPC daily).
-The RNodes and the Economy Nodes receive the corresponding CPC reward
+The Economy Nodes receive the corresponding CPC reward
 based on the ratio of the locked margin to the total margin.
-(Economy Node and RNode will both need a 90-day lock-up session).
+(Economy Node needs a 90-day lock-up session).
 The detailed process goes as follows:
 
 Each season contains 90 days, which is also named as **lock-up period**.
@@ -398,7 +344,7 @@ There are 7 special days served as **fundraising** ahead of each lock-up period.
 Each fundraising is overlapped with previous lock-up period.
 In fundraising, the following operations are allowed:
 
-1. All civilians can deposit coin in the reward pool, to become economic nodes or RNodes.
+1. All civilians can deposit coin in the reward pool, to become Economy Nodes.
 #. Nodes that have already had coins deposited in the pool can choose to
     1. whether continue deposit the next season
     #. or renew the deposit value.
@@ -408,7 +354,7 @@ When a fundraising ends, the following rules are applied:
 
 1. No one adjusts or withdraw its deposit until next fundraising.
 #. Nodes that decide to withdraw the deposit, receive the coins.
-#. Any node that renews its deposit balance get recalculated its CPChain nodes role as economic node, RNode or the rest.
+#. Any node that renews its deposit balance get recalculated whether it is an Economy Node or not.
 #. All nodes with deposit in this lock-up period receive their reward from the pool.
 
 The reward for a certain node from the pool is proportional to its deposit in a season.
@@ -468,6 +414,9 @@ Use smart contracts to lock deposit, the functions are as follow:
     lock the deposit to fixed range of length of blockchain.
     Reward distribution according to proportion of node's deposits.
     Connection with Reputation list.
+
+
+
 
 
 
