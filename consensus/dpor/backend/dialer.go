@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -95,12 +94,11 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 	// check whether or not remote peer is a proposer or a validator in the period between current term and future term
 	isProposer, isValidator := d.isCurrentOrFutureProposer(coinbase, term, futureTerm), d.isCurrentOrFutureValidator(coinbase, term, futureTerm)
 
-	// also check if remote peer is a default validator
-	enode := fmt.Sprintf("enode://%s@%s", p.ID().String(), p.RemoteAddr().String())
-	isValidator = IsDefaultValidator(enode, d.defaultValidators) || isValidator
+	// also check if remote peer is a validator
+	isValidator = IsDefaultValidator(p.ID().String(), d.defaultValidators) || isValidator
 
 	// debug output
-	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", coinbase.Hex(), "enode", enode)
+	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", coinbase.Hex())
 
 	// if remote peer is neither a proposer nor a validator, disconnect it
 	if (!isProposer && !isValidator) || err != nil {
@@ -151,13 +149,6 @@ func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 	// add validator
 	remoteValidator.SetPeer(version, p, rw)
 	d.setValidator(address.Hex(), remoteValidator)
-
-	// add remote validator as a static peer
-	err := remoteValidator.AddStatic(d.server)
-	if err != nil {
-		log.Debug("failed to add remote validator as static peer", err, "err")
-		return remoteValidator, err
-	}
 
 	// start broadcast loop
 	go remoteValidator.broadcastLoop()
@@ -363,7 +354,7 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 		}
 
 		isValidatorOfTerm, err := d.dpor.VerifyValidatorOf(address, term)
-		isDefaultV := IsDefaultValidator(validator.(*RemoteValidator).EnodeID(), d.defaultValidators)
+		isDefaultV := IsDefaultValidator(validator.(*RemoteValidator).RemoteSigner.Peer.ID().String(), d.defaultValidators)
 
 		// if the validator in peer set is a validator for given term or a default validator, return it
 		if (isValidatorOfTerm && err == nil) || isDefaultV {
@@ -376,9 +367,10 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 }
 
 // IsDefaultValidator checks if a validator is a default validator
-func IsDefaultValidator(enode string, defaultValidators []string) bool {
+func IsDefaultValidator(nodeID string, defaultValidators []string) bool {
 	for _, dv := range defaultValidators {
-		if enodeIDWithoutPort(dv) == enodeIDWithoutPort(enode) {
+		node, _ := discover.ParseNode(dv)
+		if node.ID.String() == nodeID {
 			return true
 		}
 	}
