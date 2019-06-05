@@ -176,7 +176,7 @@ func (h *Handler) HandleMsg(addr string, version int, p *p2p.Peer, rw p2p.MsgRea
 	} else {
 		// TODO: the remote proposer is not in current proposer list, fix this
 		log.Debug("handling remote proposer connection msg", "peer.addr", p.RemoteAddr().String(), "coinbase", addr, "msgcode", msg.Code)
-		return h.handleSignerConnectionMsg(version, p, rw, msg)
+		return "", nil
 	}
 }
 

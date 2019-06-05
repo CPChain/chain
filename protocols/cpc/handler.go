@@ -311,7 +311,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		pm.wg.Add(1)
 		defer pm.wg.Done()
 
-		log.Debug("received a new peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
+		log.Debug("received a new peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "is default validator", backend.IsDefaultValidator(p.ID().String(), configs.GetDefaultValidators()))
 
 		// add peer to manager.peers, this is for basic msg syncing
 		remoteIsMiner, err := pm.addPeer(peer, isMinerOrValidator)
