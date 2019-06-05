@@ -76,7 +76,6 @@ contract Reward {
         }
         nextRoundStartTime = 1; // a very small number
         startNewRound();
-        refundAll();
         locked = true;
     }
 
@@ -230,6 +229,19 @@ contract Reward {
         }
     }
 
+    // delete participants whose total balance is 0
+    function cleanParticipants() internal {
+        uint256 currentSize = participants.values.length;
+        for(uint i=0; i<currentSize; i++) {
+            address investorAddress = participants.values[i];
+            uint256 totalBalance;
+            totalBalance = getTotalBalanceOf(investorAddress);
+            if(totalBalance == 0) {
+                participants.remove(investorAddress);
+            }
+        }
+    }
+
     // only owner can start a new round
     function startNewRound() public onlyOwner {
         require(block.timestamp >= (nextRoundStartTime), "the next round not start"); // allow start 3 days ahead of schedule
@@ -265,6 +277,7 @@ contract Reward {
         }
         // set locked to true
         locked = true;
+        cleanParticipants();
     }
 
     function getInvestors() public view returns (address[]) {

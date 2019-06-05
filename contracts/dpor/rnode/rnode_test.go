@@ -279,18 +279,18 @@ func TestRNodeEnableAndDisable(t *testing.T) {
 	_, instance := deploy(ownerKey, contractBackend)
 
 	// join rnode
-	candidateTransactOpts := bind.NewKeyedTransactor(candidateKey)
-	candidateInvest := new(big.Int).Mul(big.NewInt(200000), big.NewInt(1e+18))
-	candidateTransactOpts.GasLimit = uint64(50000000)
-	candidateTransactOpts.Value = candidateInvest
-	_, err := instance.JoinRnode(candidateTransactOpts, initVersion)
-	checkError(t, "join rnode", err)
-
-	contractBackend.Commit()
-
-	checkIsRNode(t, instance, candidateAddr, true)
-
-	checkRNodeNum(t, instance, 1)
+	//candidateTransactOpts := bind.NewKeyedTransactor(candidateKey)
+	//candidateInvest := new(big.Int).Mul(big.NewInt(200000), big.NewInt(1e+18))
+	//candidateTransactOpts.GasLimit = uint64(50000000)
+	//candidateTransactOpts.Value = candidateInvest
+	//_, err := instance.JoinRnode(candidateTransactOpts, initVersion)
+	//checkError(t, "join rnode", err)
+	//
+	//contractBackend.Commit()
+	//
+	//checkIsRNode(t, instance, candidateAddr, true)
+	//
+	//checkRNodeNum(t, instance, 1)
 
 	// set contract enable = false
 	ownerTransactOpts := bind.NewKeyedTransactor(ownerKey)
@@ -298,24 +298,20 @@ func TestRNodeEnableAndDisable(t *testing.T) {
 	ownerTransactOpts.GasLimit = uint64(50000000)
 	ownerTransactOpts.Value = ownerInvest
 
-	_, err = instance.DisableContract(ownerTransactOpts)
+	_, err := instance.DisableContract(ownerTransactOpts)
 	checkError(t, "set contract disabled", err)
 
 	contractBackend.Commit()
 
-	// join rnode
-	candidate2TransactOpts := bind.NewKeyedTransactor(candidate2Key)
-	candidate2Invest := new(big.Int).Mul(big.NewInt(200000), big.NewInt(1e+18))
-	candidate2TransactOpts.GasLimit = uint64(50000000)
-	candidate2TransactOpts.Value = candidate2Invest
-	_, err = instance.JoinRnode(candidate2TransactOpts, initVersion)
-	checkError(t, "join rnode", err)
+	checkEnabled(t, instance, false)
+
+	// enable contract
+	_, err = instance.EnableContract(ownerTransactOpts)
+	checkError(t, "set contract enabled", err)
 
 	contractBackend.Commit()
 
-	checkIsRNode(t, instance, candidate2Addr, false)
-
-	checkRNodeNum(t, instance, 0)
+	checkEnabled(t, instance, true)
 }
 
 func TestRNodeWithSupportedVersion(t *testing.T) {
@@ -515,5 +511,14 @@ func checkRNodeNum(t *testing.T, instance *rnode.Rnode, amount int) {
 
 	if num.Cmp(new(big.Int).SetInt64(int64(amount))) != 0 {
 		t.Errorf("rnode'num %d != %d", num, amount)
+	}
+}
+
+func checkEnabled(t *testing.T, instance *rnode.Rnode, expect bool) {
+	enabled, err := instance.Enabled(nil)
+	checkError(t, "check enabled", err)
+
+	if enabled != expect {
+		t.Errorf("rnode'num %v != %v", enabled, expect)
 	}
 }

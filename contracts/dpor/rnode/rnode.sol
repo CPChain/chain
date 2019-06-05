@@ -119,7 +119,6 @@ contract Rnode {
     }
 
     function disableContract() public onlyOwner {
-        refundAll();
         enabled = false;
     }
 
