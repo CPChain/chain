@@ -196,6 +196,12 @@ func (d *Dpor) TryCampaign() {
 		isV := snap.IsValidatorOf(d.coinbase, snap.Number)
 		log.Debug("check if participate campaign", "isToCampaign", d.IsToCampaign(), "isStartCampaign", snap.isStartCampaign(), "number", snap.number(), "isValidator", isV)
 
+		// check network status before continue
+		if !d.ac.CheckNetworkStatus() {
+			log.Warn("Failed to check network status, Campaign stopped, you may ignore this check with", "flag", "dontchecknetwork")
+			return
+		}
+
 		if d.IsToCampaign() && snap.isAboutToCampaign() && !isV {
 			// make sure it is a RNode, because only RNode has permission to participate campaign
 			isRNode, err := d.ac.IsRNode()

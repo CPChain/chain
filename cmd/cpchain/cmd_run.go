@@ -30,6 +30,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
 	times "bitbucket.org/cpchain/chain/commons/time"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
@@ -217,6 +218,9 @@ func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 	}
 
 	cpchainService.AdmissionApiBackend.SetAdmissionKey(key)
+	if configs.IgnoreNetworkStatusCheck {
+		cpchainService.AdmissionApiBackend.IgnoreNetworkCheck()
+	}
 
 	if ctx.Bool(flags.MineFlagName) {
 		if err := cpchainService.StartMining(true); err != nil {

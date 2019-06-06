@@ -26,6 +26,11 @@ const (
 	EnableProxyContract = false
 )
 
+// IgnoreNetworkStatusCheck is used for ignore network status check before campaign
+const (
+	IgnoreNetworkStatusCheck = false
+)
+
 // These are the multipliers for ether denominations.
 // Example: To get the wei value of an amount in 'douglas', use
 //
