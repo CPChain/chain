@@ -307,11 +307,6 @@ func (s *Synchronizer) Synchronise(p SyncPeer, head common.Hash, height *big.Int
 		}
 	} else {
 		err = s.synchronise(p, head, height.Uint64(), mode)
-		// if err != nil {
-		// 	log.Error("error", "err", err)
-		// } else {
-		// 	log.Info("==================")
-		// }
 	}
 
 	switch err {
@@ -538,7 +533,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64, 
 			case <-prepare:
 				// wait the headers and receipts and transactions of this batch are fetched
 				if result, cnt, err := s.insertBlocks(p, &cnt, blocks, receipts, headers, bodies); result {
-					log.Info("success insert Blocks!", "count", cnt)
+					log.Debug("success insert Blocks!", "count", cnt)
 					i += uint64(cnt)
 					goto forEnd
 				} else if err != nil {
@@ -583,7 +578,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64, 
 			case blocks = <-s.syncBlocksCh:
 				err := s.blocksQueue.put(resultTask{blocks})
 				if err != nil {
-					log.Info("blocks queue put err", "err", err)
+					log.Debug("blocks queue put err", "err", err)
 					return err
 				}
 				i += uint64(MaxBlockFetch)
@@ -603,7 +598,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64, 
 				prepare <- true
 				log.Debug("Validation Finish!")
 			case <-timer.C:
-				log.Info("sync timeout")
+				log.Warn("sync timeout")
 				return ErrTimeout
 			case <-s.cancelCh:
 				return errCanceled
