@@ -560,7 +560,7 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationI
 	}
 
 	header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
-	blockGenerationInfo := cpclient.BlockGenerationInfo {
+	blockGenerationInfo := cpclient.BlockGenerationInfo{
 		View:        v,
 		Term:        t,
 		Span:        p,
@@ -1158,6 +1158,7 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 			if err != nil {
 				log.Error(err.Error())
 				errCh <- true
+				return
 			}
 
 			wg := sync.WaitGroup{}
@@ -1195,6 +1196,7 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 								log.Error(err.Error())
 							}
 							errCh <- true
+							return
 						}
 						code := state.GetCode(contract)
 						results[index] = newRPCTransactionWithContract(rpcTx, &creator, true, code, &contract, gasUsed, status)
