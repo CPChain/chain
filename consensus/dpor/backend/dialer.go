@@ -97,7 +97,7 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 
 	// also check if remote peer is a default validator
 	enode := fmt.Sprintf("enode://%s@%s", p.ID().String(), p.RemoteAddr().String())
-	isValidator = isDefaultValidator(enode, d.defaultValidators) || isValidator
+	isValidator = IsDefaultValidator(enode, d.defaultValidators) || isValidator
 
 	// debug output
 	log.Debug("qualification", "is proposer", isProposer, "is validator", isValidator, "addr", coinbase.Hex(), "enode", enode)
@@ -202,36 +202,26 @@ func (d *Dialer) UpdateRemoteProposers(term uint64, proposers []common.Address) 
 // dialAllRemoteValidators tries to dial all remote validators
 func (d *Dialer) dialAllRemoteValidators(term uint64) {
 
-	// TODO: this can be changed, and get remote validators by term
-	// dial default validators
+	validators := d.ValidatorsOfTerm(term)
+
+	// dial validators not connected yet
 	for _, validatorID := range d.defaultValidators {
 		node, err := discover.ParseNode(validatorID)
 		if err != nil {
 			continue
 		}
-		log.Debug("dial remote validator", "enode", node.ID.String(), "addr", node.IP.String(), "port", node.TCP)
-		d.server.AddPeer(node)
-	}
 
-	// send new signer msg to let remote validator know my coinbase
-	for _, v := range d.ValidatorsOfTerm(term) {
-
-		// compose msg
-		mac, sig, err := d.dpor.GetMac()
-		if err != nil {
-			continue
+		connected := false
+		for _, v := range validators {
+			if node.ID == v.ID() {
+				connected = true
+			}
 		}
 
-		log.Debug("sending new signer msg to remote validator", "v", v.Coinbase().Hex())
-
-		// send it!
-		go func(v *RemoteValidator) {
-			_ = p2p.Send(v.rw, NewSignerMsg, &SignerStatusData{
-				ProtocolVersion: uint32(ProtocolVersion),
-				Mac:             mac,
-				Sig:             sig,
-			})
-		}(v)
+		if !connected {
+			log.Debug("dial remote validator", "enode", node.ID.String(), "addr", node.IP.String(), "port", node.TCP)
+			d.server.AddPeer(node)
+		}
 	}
 }
 
@@ -373,7 +363,7 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 		}
 
 		isValidatorOfTerm, err := d.dpor.VerifyValidatorOf(address, term)
-		isDefaultV := isDefaultValidator(validator.(*RemoteValidator).EnodeID(), d.defaultValidators)
+		isDefaultV := IsDefaultValidator(validator.(*RemoteValidator).EnodeID(), d.defaultValidators)
 
 		// if the validator in peer set is a validator for given term or a default validator, return it
 		if (isValidatorOfTerm && err == nil) || isDefaultV {
@@ -385,8 +375,8 @@ func (d *Dialer) ValidatorsOfTerm(term uint64) map[common.Address]*RemoteValidat
 	return validators
 }
 
-// isDefaultValidator checks if a validator is a default validator
-func isDefaultValidator(enode string, defaultValidators []string) bool {
+// IsDefaultValidator checks if a validator is a default validator
+func IsDefaultValidator(enode string, defaultValidators []string) bool {
 	for _, dv := range defaultValidators {
 		if enodeIDWithoutPort(dv) == enodeIDWithoutPort(enode) {
 			return true
@@ -403,9 +393,6 @@ func enodeIDWithoutPort(enode string) string {
 // KeepConnection tries to dial remote validators if local node is a current or future proposer
 // and disconnect remote validators if it is not
 func (d *Dialer) KeepConnection() {
-
-	var last uint64
-
 	futureTimer := time.NewTicker(d.dpor.Period() / 2)
 	defer futureTimer.Stop()
 	for {
@@ -419,31 +406,24 @@ func (d *Dialer) KeepConnection() {
 					address     = d.dpor.Coinbase()
 				)
 
-				_, enough := d.EnoughValidatorsOfTerm(currentTerm)
+				switch {
+				case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
-				if (last != currentNum && IsCheckPoint(currentNum, d.dpor.TermLength(), d.dpor.ViewLength())) || !enough {
-					switch {
-					case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
+					log.Debug("I am current or future validator, dialing remote validators and disconnecting useless proposers", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
-						log.Debug("I am current or future validator, dialing remote validators and disconnecting useless proposers", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+					d.dialAllRemoteValidators(currentTerm)
+					d.disconnectUselessProposers()
 
-						d.dialAllRemoteValidators(currentTerm)
-						d.disconnectUselessProposers()
+				case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
 
-					case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
+					log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
-						log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+					d.dialAllRemoteValidators(currentTerm)
 
-						d.dialAllRemoteValidators(currentTerm)
-
-					default:
-						log.Debug("I am not a current or future proposer nor a validator, disconnecting remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
-						d.disconnectValidators(currentTerm)
-					}
+				default:
+					log.Debug("I am not a current or future proposer nor a validator, disconnecting remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
+					d.disconnectValidators(currentTerm)
 				}
-
-				last = currentNum
-
 			}
 
 		case <-d.quitCh:

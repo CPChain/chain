@@ -5,6 +5,7 @@ package cpc
 import (
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"sync"
 	"time"
@@ -42,7 +43,8 @@ const (
 	// above some healthy uncle limit, so use that.
 	maxQueuedAnns = 4
 
-	handshakeTimeout = 3 * time.Second
+	handshakeReadCnt = 6
+	handshakeTimeout = 5 * time.Second
 )
 
 // PeerInfo represents a short summary of the cpchain sub-protocol metadata known
@@ -347,15 +349,23 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 			GenesisBlock:       genesis,
 			IsMinerOrValidator: isMinerOrValidator,
 		}
-		//log.Log("sendStatus(network, &status, genesis)", "status", sd.FormatString(), "peer", p.id)
-
 		errc <- p2p.Send(p.rw, StatusMsg, &sd)
 	}()
 
 	// Reads the status of remote peer from the opposite side.
 	go func() {
-		errc <- p.readStatus(network, &status, genesis)
-		//log.Log("p.readStatus(network, &status, genesis)", "status", status.FormatString(), "peer", p.id)
+		var err error
+		for i := 0; i < handshakeReadCnt; i++ {
+			time.Sleep(handshakeTimeout / handshakeReadCnt)
+			err = p.readStatus(network, &status, genesis)
+			if err == nil {
+				break
+			}
+			if err != io.EOF {
+				break
+			}
+		}
+		errc <- err
 	}()
 
 	timeout := time.NewTimer(handshakeTimeout)
@@ -373,7 +383,6 @@ func (p *peer) Handshake(network uint64, ht *big.Int, head common.Hash, genesis 
 	}
 
 	p.ht, p.head = status.Height, status.CurrentBlock
-	//log.Info("handshake", "height", p.ht.Uint64(), "head", p.head.Hex())
 	return status.IsMinerOrValidator, nil
 }
 
