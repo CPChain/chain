@@ -306,32 +306,33 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 	// When ifUpdateCommittee is true, update candidates, rpts, and run election if necessary
 	if ifUpdateCommittee {
 
-		// Update candidates
-		log.Debug("start updating candidates")
-		err := s.updateCandidates(candidateService)
-		if err != nil {
-			log.Warn("err when update candidates", "err", err)
-			return err
-		}
-		log.Debug("candidates updated", "len(candidates)", len(s.candidates()), "number", s.number())
-		for i, c := range s.candidates() {
-			log.Debug(fmt.Sprintf("candiate #%d", i), "addr", c.Hex())
-		}
-
-		// Update rpts
-		log.Debug("start updating rpts")
-		rpts, err := s.updateRpts(rptService)
-		if err != nil {
-			log.Warn("err when update rpts", "err", err)
-			return err
-		}
-		log.Debug("rpts updated", "len(rpts)", len(rpts), "number", s.number())
-		for i, r := range rpts {
-			log.Debug(fmt.Sprintf("rpt #%d", i), "addr", r.Address.Hex(), "score", r.Rpt)
-		}
-
 		// If in checkpoint, run election
 		if backend.IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
+
+			// Update candidates
+			log.Debug("start updating candidates")
+			err := s.updateCandidates(candidateService)
+			if err != nil {
+				log.Warn("err when update candidates", "err", err)
+				return err
+			}
+			log.Debug("candidates updated", "len(candidates)", len(s.candidates()), "number", s.number())
+			for i, c := range s.candidates() {
+				log.Debug(fmt.Sprintf("candiate #%d", i), "addr", c.Hex())
+			}
+
+			// Update rpts
+			log.Debug("start updating rpts")
+			rpts, err := s.updateRpts(rptService)
+			if err != nil {
+				log.Warn("err when update rpts", "err", err)
+				return err
+			}
+			log.Debug("rpts updated", "len(rpts)", len(rpts), "number", s.number())
+			for i, r := range rpts {
+				log.Debug(fmt.Sprintf("rpt #%d", i), "addr", r.Address.Hex(), "score", r.Rpt)
+			}
+
 			log.Debug("update proposers committee", "number", s.number())
 			seed := header.Hash().Big().Int64()
 			log.Debug("update proposers with updateProposers 2", "number", s.number())

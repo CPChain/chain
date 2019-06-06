@@ -244,12 +244,13 @@ func (m *txSortedMap) AllBefore(t time.Time) (results []types.Transactions) {
 	for _, nonce := range *m.index {
 
 		// get a tx ordered by nonce
-		tx := m.items[nonce]
+		if tx, ok := m.items[nonce]; tx != nil && ok {
 
-		// add to result
-		if tx.updateTime.Before(t) {
-			result = append(result, tx.Tx())
-			tx.updateTime = time.Now()
+			// add to result
+			if tx.updateTime.Before(t) {
+				result = append(result, tx.Tx())
+				tx.updateTime = time.Now()
+			}
 		}
 	}
 

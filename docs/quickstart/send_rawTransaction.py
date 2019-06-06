@@ -4,7 +4,7 @@ from cpc_fusion import Web3
 
 
 def test_local_sendRawTransaction():
-    web3 = Web3(Web3.HTTPProvider('http://3.1.81.79:8501'))
+    web3 = Web3(Web3.HTTPProvider('http://127.0.0.1:8501'))
     # web3.middleware_stack.inject(geth_poa_middleware, layer=0)
     # change the keypath to your keystore file
     with open('//home/shi/chain/workspace/src/bitbucket.org/cpchain/chain/examples/cpchain/data/data21/keystore/key21') as keyfile:

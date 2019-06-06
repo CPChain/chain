@@ -175,15 +175,14 @@ func (h *Handler) HandleMsg(addr string, version int, p *p2p.Peer, rw p2p.MsgRea
 		return addr, h.handleMsg(remoteProposer.RemoteSigner, msg)
 	} else {
 		// TODO: the remote proposer is not in current proposer list, fix this
-		log.Debug("handling remote proposer connection msg", "peer.addr", p.RemoteAddr().String(), "coinbase", addr, "msgcode", msg.Code)
-		return h.handleSignerConnectionMsg(version, p, rw, msg)
+		log.Debug("handling remote proposer connection msg", "remote addr", p.RemoteAddr().String(), "local addr", p.LocalAddr().String(), "coinbase", addr, "msgcode", msg.Code)
+		return "", nil
 	}
 }
 
 func (h *Handler) handleMsg(p *RemoteSigner, msg p2p.Msg) error {
 	if msg.Code == NewSignerMsg {
-		// return errResp(ErrExtraStatusMsg, "uncontrolled new signer message")
-		log.Debug("received NewSignerMsg", "remote addr", p.Coinbase().Hex(), "addr", p.RemoteAddr().String())
+		log.Debug("received NewSignerMsg", "coinbase", p.Coinbase().Hex(), "remote addr", p.RemoteAddr().String(), "local addr", p.LocalAddr().String())
 		return nil
 	}
 
