@@ -369,7 +369,7 @@ func (c *DporConfig) PeriodDuration() time.Duration {
 
 func (c *DporConfig) BlockDelay() time.Duration {
 	if c != nil {
-		return c.ImpeachTimeout * 1 / 4
+		return c.ImpeachTimeout * 1 / 2
 	}
 	return time.Duration(0)
 }

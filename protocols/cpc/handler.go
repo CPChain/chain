@@ -311,27 +311,27 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		pm.wg.Add(1)
 		defer pm.wg.Done()
 
-		log.Debug("received a new peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "is default validator", backend.IsDefaultValidator(p.ID().String(), configs.GetDefaultValidators()))
+		log.Debug("received a new peer", "id", p.ID().String(), "remote addr", p.RemoteAddr().String(), "local addr", p.LocalAddr().String(), "is default validator", backend.IsDefaultValidator(p.ID().String(), configs.GetDefaultValidators()))
 
 		// add peer to manager.peers, this is for basic msg syncing
 		remoteIsMiner, err := pm.addPeer(peer, isMinerOrValidator)
 		if err != nil {
-			log.Debug("fail to add peer to cpc protocol manager's peer set", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
+			log.Debug("fail to add peer to cpc protocol manager's peer set", "peer.RemoteAddr", peer.RemoteAddr().String(), "local addr", peer.LocalAddr().String(), "peer.id", peer.IDString(), "err", err)
 			return err
 		}
 
 		// defer to remove the peer
 		defer pm.removePeer(peer.id)
 
-		log.Debug("is validator and remote is miner", "is validator", dporEngine.IsValidator(), "remote miner", remoteIsMiner, "id", p.ID().String(), "addr", p.RemoteAddr().String())
+		log.Debug("is validator and remote is miner", "is validator", dporEngine.IsValidator(), "remote miner", remoteIsMiner, "id", p.ID().String(), "remote addr", p.RemoteAddr().String(), "local addr", p.LocalAddr().String())
 
 		// validator do not connect to civilian to avoid deny of service attack
 		if dporEngine.IsValidator() && !remoteIsMiner {
-			log.Warn("I am a validator, but the remote peer is neither a proposer, nor a validator, disconnecting", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.id", peer.IDString(), "err", err)
+			log.Warn("I am a validator, but the remote peer is neither a proposer, nor a validator, disconnecting", "peer.RemoteAddr", peer.RemoteAddr().String(), "peer.LocalAddr", peer.LocalAddr().String(), "peer.id", peer.IDString(), "err", err)
 			return nil
 		}
 
-		log.Debug("done of handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String())
+		log.Debug("done of handshake with peer", "id", p.ID().String(), "remote addr", p.RemoteAddr().String(), "local addr", p.LocalAddr().String())
 
 		// add peer to dpor.handler.dialer.peers, this is for proposers/validators communication
 		id, added := common.Address{}.Hex(), false
@@ -339,10 +339,10 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 			switch id, _, _, err = dporProtocol.AddPeer(int(version), peer.Peer, peer.rw); err {
 			case nil:
 				added = true
-				log.Debug("done of dpor subprotocol handshake with peer", "id", p.ID().String(), "addr", p.RemoteAddr().String(), "coinbase", id)
+				log.Debug("done of dpor subprotocol handshake with peer", "id", p.ID().String(), "remote addr", p.RemoteAddr().String(), "coinbase", id, "local addr", p.LocalAddr().String())
 
 			default:
-				log.Debug("failed to add peer to dpor peer set", "err", err, "coinbase", id, "addr", p.RemoteAddr().String())
+				log.Debug("failed to add peer to dpor peer set", "err", err, "coinbase", id, "remote addr", p.RemoteAddr().String(), "local addr", p.LocalAddr().String())
 				return err
 			}
 		}
@@ -359,7 +359,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		// stuck in the message loop on this peer
 		for {
 			if id, err = pm.handleMsg(peer, id, handleTxs, handleDporMsgs, dporProtocol); err != nil {
-				log.Debug("Cpchain message handleing failed", "err", err)
+				log.Debug("CPChain message handleing failed", "err", err, "remote addr", peer.RemoteAddr().String(), "local addr", peer.LocalAddr().String())
 				return err
 			}
 		}
