@@ -100,7 +100,7 @@ contract Rnode {
     function refundAll() public onlyOwner {
         uint256 num = rnodes.values.length;
         for(uint i=0; i<num; i++){
-            address investor = rnodes.values[i];
+            address investor = rnodes.values[0];
             uint256 deposit = Participants[investor].lockedDeposit;
             investor.transfer(deposit);
             Participants[investor].lockedDeposit = 0;
