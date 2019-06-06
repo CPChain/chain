@@ -597,7 +597,7 @@ func Test_choseSomeProposers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotDefaultProposers := choseSomeProposers(tt.args.proposers, tt.args.seed, tt.args.wantLen); !reflect.DeepEqual(gotDefaultProposers, tt.wantDefaultProposers) {
+			if gotDefaultProposers := choseSomeAddresses(tt.args.proposers, tt.args.seed, tt.args.wantLen); !reflect.DeepEqual(gotDefaultProposers, tt.wantDefaultProposers) {
 				t.Errorf("choseSomeProposers() = %v, want %v", gotDefaultProposers, tt.wantDefaultProposers)
 			}
 		})
@@ -613,7 +613,7 @@ func Test_choseSomeProposers2(t *testing.T) {
 	seed := int64(0)
 	wantLen := 1
 
-	chosenProposers := choseSomeProposers(proposers, seed, wantLen)
+	chosenProposers := choseSomeAddresses(proposers, seed, wantLen)
 
 	fmt.Println("---------------------------")
 	fmt.Println("all proposers")
