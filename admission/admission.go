@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	"math/big"
+	"net"
 	"reflect"
 	"sync"
 	"sync/atomic"
@@ -64,6 +65,8 @@ type AdmissionControl struct {
 	campaignContractAddr  common.Address
 	rNodeContractAddr     common.Address
 
+	checkNetworkStatus bool
+
 	mutex      sync.RWMutex
 	wg         *sync.WaitGroup
 	cpuWork    ProofWork
@@ -88,7 +91,57 @@ func NewAdmissionControl(chain consensus.ChainReader, address common.Address, ad
 		campaignContractAddr:  campaignContractAddr,
 		rNodeContractAddr:     rNodeContractAddr,
 		status:                AcIdle,
+
+		checkNetworkStatus: true,
 	}
+}
+
+func (ac *AdmissionControl) IgnoreNetworkCheck() {
+	ac.mutex.Lock()
+	defer ac.mutex.Unlock()
+
+	ac.checkNetworkStatus = false
+}
+
+func (ac *AdmissionControl) CheckNetworkStatus() bool {
+	ac.mutex.RLock()
+	localCheck := ac.checkNetworkStatus
+	ac.mutex.RUnlock()
+
+	// TODO: read parameters from contract
+	host := "www.baidu.com"
+	count := 4
+	timeout := 300
+	check := true
+	gap := 100
+
+	if !check || !localCheck {
+		return true
+	}
+
+	// do the ping
+	if ok, err := checkNetworkStatus(host, count, timeout, gap); !ok {
+		log.Warn("Failed to check network status, try to dial", "host", host, "count", count, "timeout", timeout, "gap", gap, "err", err)
+		return false
+	}
+
+	return true
+}
+
+func checkNetworkStatus(host string, count int, timeout int, gap int) (bool, error) {
+
+	timeoutD := time.Duration(time.Duration(timeout) * time.Millisecond)
+	gapD := time.Duration(time.Duration(gap) * time.Millisecond)
+
+	for i := 0; i < count; i++ {
+		conn, err := net.DialTimeout("tcp", host, timeoutD)
+		if err != nil {
+			return false, err
+		}
+		conn.Close()
+		time.Sleep(gapD)
+	}
+	return true, nil
 }
 
 // Campaign starts running all the proof work to generate the campaign information and waits all proof work done, send msg

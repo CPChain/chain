@@ -21,7 +21,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/rpc"
-	"bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 )
 
 // ApiBackend interface provides the common JSON-RPC API.
@@ -57,6 +57,12 @@ type ApiBackend interface {
 	RegisterInProcHandler(localRPCServer *rpc.Server)
 
 	SetContractBackend(contractBackend contracts.Backend)
+
+	// IgnoreNetworkCheck tells ac backend to ignore network status check
+	IgnoreNetworkCheck()
+
+	// CheckNetworkStatus checks network status according parameters from a contract
+	CheckNetworkStatus() bool
 }
 
 // ProofWork represent a proof work

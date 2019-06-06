@@ -21,8 +21,8 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/consensus"
+	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 	"github.com/ethereum/go-ethereum/common"
-	"bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
 )
 
 type AdmissionApiBackend struct {
@@ -46,6 +46,14 @@ func (b *AdmissionApiBackend) Apis() []rpc.API {
 			Public:    false,
 		},
 	}
+}
+
+func (b *AdmissionApiBackend) IgnoreNetworkCheck() {
+	b.admissionControl.IgnoreNetworkCheck()
+}
+
+func (b *AdmissionApiBackend) CheckNetworkStatus() bool {
+	return b.admissionControl.CheckNetworkStatus()
 }
 
 func (b *AdmissionApiBackend) FundForRNode() error {
