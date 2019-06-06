@@ -578,7 +578,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64, 
 			case blocks = <-s.syncBlocksCh:
 				err := s.blocksQueue.put(resultTask{blocks})
 				if err != nil {
-					log.Debug("blocks queue put err", "err", err)
+					log.Warn("blocks queue put err", "err", err)
 					return err
 				}
 				i += uint64(MaxBlockFetch)
