@@ -119,9 +119,9 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 		return nil, nil, 0, err
 	}
 
-	// For private tx, its payload is a replacement which cannot be executed as normal tx payload, thus set it to be empty to skip execution.
+	// For tx that is not basic(tx type != 0), its payload is a replacement which cannot be executed as normal tx payload, thus set it to be empty to skip execution.
 	// This around of execution generates stuff stored in public blockchain.
-	if tx.IsPrivate() {
+	if !tx.IsBasic() {
 		msg.SetData([]byte{})
 	}
 

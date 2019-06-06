@@ -23,10 +23,8 @@ var (
 )
 
 const (
-	TxTypePrivate = 1 << iota
-
-	// TODO @chengx cleanup this.
-	BasicTx = 0
+	BasicTx   = 0
+	PrivateTx = 1
 )
 
 type Transaction struct {
@@ -258,32 +256,27 @@ func (tx *Transaction) Type() uint64 {
 
 // CheckType checks the transaction's type.
 func (tx *Transaction) CheckType(t uint64) bool {
-	return tx.data.Type&t != 0
+	return tx.data.Type == t
 }
 
 // SetType sets the type to the transaction.
 func (tx *Transaction) SetType(t uint64) {
-	tx.data.Type |= t
-}
-
-// UnsetType clears the given type setting from the transaction.
-func (tx *Transaction) UnsetType(t uint64) {
-	tx.data.Type &= ^t
+	tx.data.Type = t
 }
 
 // IsPrivate checks if the tx is private.
 func (tx *Transaction) IsPrivate() bool {
-	return tx.CheckType(TxTypePrivate)
+	return tx.CheckType(PrivateTx)
+}
+
+// IsBasic checks if the tx is a basic tx.
+func (tx *Transaction) IsBasic() bool {
+	return tx.CheckType(BasicTx)
 }
 
 // SetPrivate sets the tx as private.
-func (tx *Transaction) SetPrivate(isPrivate bool) {
-	if isPrivate {
-		tx.SetType(TxTypePrivate)
-	} else {
-		tx.UnsetType(TxTypePrivate)
-	}
-
+func (tx *Transaction) SetPrivate() {
+	tx.SetType(PrivateTx)
 }
 
 // Transactions is a Transaction slice type for basic sorting.

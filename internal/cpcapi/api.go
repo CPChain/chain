@@ -560,7 +560,7 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationI
 	}
 
 	header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
-	blockGenerationInfo := cpclient.BlockGenerationInfo {
+	blockGenerationInfo := cpclient.BlockGenerationInfo{
 		View:        v,
 		Term:        t,
 		Span:        p,
@@ -1432,7 +1432,9 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 		tx = types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
 
-	tx.SetPrivate(args.IsPrivate)
+	if args.IsPrivate {
+		tx.SetPrivate()
+	}
 
 	return tx
 }
