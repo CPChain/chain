@@ -109,7 +109,7 @@ const (
 // some version numbers
 const (
 	RnodeVersion    = 1
-	CampaignVersion = 2
+	CampaignVersion = 1
 )
 
 var (
