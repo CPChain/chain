@@ -572,6 +572,125 @@ func TestCallSyncTwice(t *testing.T) {
 	}
 }
 
+func TestGetBalanceAtMiddleBlock(t *testing.T) {
+	var (
+		peerCnt = 1
+		numbers = 200
+		peers   = NewManyFakePeer(peerCnt, numbers, true)
+	)
+
+	localchain, db := newBlockchainWithDB(0, false)
+	localchain.SetSyncMode(syncer.FastSync)
+
+	removePeerCh := make(chan string, 1)
+	quitCh := make(chan bool, 1)
+
+	// create a syncer to sync blocks
+	localSyncer := syncer.New(localchain, func(peer string) {
+		removePeerCh <- peer
+	}, new(event.TypeMux))
+
+	// add peers
+	for _, peer := range peers {
+		localSyncer.AddPeer(peer)
+	}
+
+	// sync with peer1
+	p := peers[0]
+	head, height := p.Head()
+
+	errCh := make(chan error, 1)
+
+	// go sync
+	go func() {
+		err := localSyncer.Synchronise(p, head, height, syncer.FullSync)
+		if err != nil {
+			errCh <- err
+		} else {
+			quitCh <- true
+			log.Info("Finish")
+		}
+	}()
+	defer localSyncer.Terminate()
+
+	for _, peer := range peers {
+		// go fake peer request handle loop
+		go peer.returnBlocksLoop()
+		defer peer.quit()
+		go func(peer *FakePeer) {
+			for {
+				select {
+				// received blocks from remote peer, deliever to syncer
+				case blocks := <-peer.returnCh:
+					localSyncer.DeliverBlocks(peer.IDString(), blocks)
+				// received receipts from remote peer deliver to syncer
+				case receipts := <-peer.returnReceiptsCh:
+					localSyncer.DeliverReceipts(peer.IDString(), receipts)
+				case data := <-peer.returnStateDataCh:
+					localSyncer.DeliverNodeData(peer.IDString(), data)
+				case headers := <-peer.returnHeadersCh:
+					localSyncer.DeliverHeaders(peer.IDString(), headers)
+				case bodies := <-peer.returnBodiesCh:
+					localSyncer.DeliverBodies(peer.IDString(), bodies)
+				}
+			}
+		}(peer)
+	}
+
+	for {
+		select {
+		case err := <-errCh:
+			t.Error(err)
+			return
+		case peer := <-removePeerCh:
+			localSyncer.RemovePeer(peer)
+		case <-quitCh:
+			log.Info("blocks and receipts sync successful")
+
+			t.Log("sync successfully!")
+
+			b1 := localchain.GetBlockByNumber(1)
+			b1Txs := len(b1.Transactions())
+			t.Log("Transactions cnt of block1:", b1Txs)
+
+			t.Log("number", localchain.CurrentFastBlock().Number(), "db keys cnt", len(db.Keys()), len(p.db.Keys()))
+			state, err := localchain.State()
+			if err != nil {
+				t.Fatal(err)
+			}
+			balance := state.GetBalance(testBank)
+			t.Log("Bank balance:", balance, state.Empty(testBank))
+			if balance.Uint64() >= testBankBalance.Uint64() {
+				t.Error("Bank balance error, account state is error.")
+			}
+
+			// state at middle block
+			block51 := localchain.GetBlockByNumber(uint64(51))
+			root51 := block51.StateRoot()
+			if state51, err := localchain.StateAt(root51); err == nil {
+				if state51 == nil {
+					t.Fatal("state51 is nil")
+				} else {
+					t.Log("Bank balance at block 51:", state51.GetBalance(testBank))
+				}
+			} else {
+				t.Fatal(err)
+			}
+
+			// code check
+			stateP, _ := p.blockchain.State()
+			rewardP := stateP.GetCode(rewardAddr)
+			reward := state.GetCode(rewardAddr)
+			t.Log("reward contract data length:", len(reward))
+			if len(rewardP) != len(reward) {
+				t.Error("check reward code error:", len(rewardP), len(reward))
+			}
+			t.Log(localchain.CurrentBlock().NumberU64())
+			return
+		}
+	}
+}
+
 func newBlockchainWithDB(n int, deployContract bool) (syncer.BlockChain, *database.MemDatabase) {
 	db := database.NewMemDatabase()
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
@@ -617,6 +736,11 @@ func newBlockchainWithDB(n int, deployContract bool) (syncer.BlockChain, *databa
 			// In block 1, the test bank sends account #1 some ether.
 			tx, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(100), configs.TxGas, nil, nil), signer, testBankKey)
 			block.AddTx(tx)
+		case 50:
+			tx1, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(10000000), configs.TxGas, nil, nil), signer, testBankKey)
+			tx2, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank)+uint64(1), acc2Addr, big.NewInt(10000), configs.TxGas, nil, nil), signer, testBankKey)
+			block.AddTx(tx1)
+			block.AddTx(tx2)
 		case 130:
 			tx1, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(10000000), configs.TxGas, nil, nil), signer, testBankKey)
 			tx2, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank)+uint64(1), acc2Addr, big.NewInt(10000), configs.TxGas, nil, nil), signer, testBankKey)
