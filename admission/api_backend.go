@@ -30,9 +30,9 @@ type AdmissionApiBackend struct {
 }
 
 func NewAdmissionApiBackend(chain consensus.ChainReader, address common.Address, admissionContractAddr common.Address,
-	campaignContractAddr common.Address, rNodeContractAddr common.Address) ApiBackend {
+	campaignContractAddr common.Address, rNodeContractAddr common.Address, networkContractAddr common.Address) ApiBackend {
 	return &AdmissionApiBackend{
-		admissionControl: NewAdmissionControl(chain, address, admissionContractAddr, campaignContractAddr, rNodeContractAddr),
+		admissionControl: NewAdmissionControl(chain, address, admissionContractAddr, campaignContractAddr, rNodeContractAddr, networkContractAddr),
 	}
 }
 

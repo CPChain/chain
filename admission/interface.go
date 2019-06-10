@@ -60,9 +60,6 @@ type ApiBackend interface {
 
 	// IgnoreNetworkCheck tells ac backend to ignore network status check
 	IgnoreNetworkCheck()
-
-	// CheckNetworkStatus checks network status according parameters from a contract
-	CheckNetworkStatus() bool
 }
 
 // ProofWork represent a proof work
