@@ -13,9 +13,9 @@ contract Admission {
     uint cpuTarget;
     uint memoryTarget;
 
-    uint public cpuDifficulty;
+    uint public cpuDifficulty=12;
     uint public cpuWorkTimeout;
-    uint public memoryDifficulty;
+    uint public memoryDifficulty=6;
     uint public memoryWorkTimeout;
     address public owner;
 
