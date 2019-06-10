@@ -22,7 +22,6 @@ def libs_hash():
     libs = [
         #  (filename, expected hashsum)
         ("campaign/lib/safeMath.sol", safe_math),
-        ("campaign/lib/set.sol", set_),
         ("rnode/lib/safeMath.sol", safe_math),
         ("rnode/lib/set.sol", set_),
     ]
