@@ -53,6 +53,11 @@ func main() {
 
 	wg2.Wait()
 
+	var wg3 sync.WaitGroup
+	wg3.Add(1)
+	go deployNetwork(password, &wg3)
+	wg3.Wait()
+
 	deploy.UpdateCampaignParameters(password, proxyCampaignContractAddress, 25, 26)
 
 	fmt.Println("======== init contract deploy completed=========")
@@ -82,5 +87,13 @@ func deployRpt(password string, wg *sync.WaitGroup) {
 	title := "[4.DeployRpt]"
 	rptAddress := deploy.DeployRpt(password, 3)
 	deploy.PrintContract(title, rptAddress)
+	wg.Done()
+}
+
+func deployNetwork(password string, wg *sync.WaitGroup) {
+	//5
+	title := "[5.DeployNetwork]"
+	networkAddress := deploy.DeployNetwork(password, 4)
+	deploy.PrintContract(title, networkAddress)
 	wg.Done()
 }
