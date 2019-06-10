@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _index:
 
 ==================================
 Welcome to CPChain documentation!
@@ -18,8 +19,8 @@ Please mail to info@cpchain.io if you have any question.
 Quick reference:
 =====================
 
-
-1. :ref:`fusion-api` and :ref:`rpc-api`
+#. :ref:`basic-info`
+#. :ref:`fusion-api` and :ref:`rpc-api`
 #. :ref:`quick-start-beginner` and :ref:`quick-start`
 #. :ref:`overview`
 #. `Solidity`_
@@ -44,6 +45,7 @@ Quick reference:
    :maxdepth: 2
    :caption: Preliminaries
 
+   preliminaries/basic_information
    preliminaries/overview
    preliminaries/installation
    preliminaries/configuration
