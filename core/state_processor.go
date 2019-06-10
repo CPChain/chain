@@ -123,7 +123,7 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 		return nil, nil, 0, types.ErrNotSupportedTxType
 	}
 
-	// this is for sanitize, may be useful later. for now, its useless because it's already returned
+	// this is for sanitize, may be useful later. for now, its useless because it already returned
 	if !tx.IsBasic() {
 		msg.SetData([]byte{})
 	}
