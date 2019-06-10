@@ -53,7 +53,6 @@ contract Campaign {
     uint public acceptableBlocks = 10; // only latest 10 blocks based proofs will be accepted
     uint public supportedVersion = 1; // only nodes with new version can claim campaign
 
-    uint public updatedTermIdx = 0; // indicate updated term
     uint public maxCandidates = 150; // max number of candidates
 
     // a new type for a single candidate
@@ -79,7 +78,6 @@ contract Campaign {
         owner = msg.sender;
         admission = AdmissionInterface(_admissionAddr);
         rnode = RnodeInterface(_rnodeAddr);
-        updatedTermIdx = (block.number.sub(1)).div(numPerRound);
     }
 
     function() payable public { revert(); }
@@ -176,14 +174,14 @@ contract Campaign {
         require(version >= supportedVersion);
 
         // proofs must be calculated based on latest blocks
-        if(block.number > acceptableBlocks) {
-            require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
-        }
+//        if(block.number > acceptableBlocks) {
+//            require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
+//        }
         // only rnode can become candidate
-        require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
+//        require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
 
         // verify the sender's cpu&memory ability.
-        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
+//        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         require((_termsToCampaign >= minNoc && _termsToCampaign <= maxNoc), "num of campaign out of range.");
 
         address candidate = msg.sender;
