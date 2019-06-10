@@ -13,7 +13,6 @@
 pragma solidity ^0.4.24;
 
 import "./lib/safeMath.sol";
-import "./lib/set.sol";
 
 // there are two interfaces to interact with admission and rnode contracts
 // rnode and admission contracts must be deployed before this campaign contract, because
@@ -40,7 +39,6 @@ contract RnodeInterface{
 
 contract Campaign {
 
-    using Set for Set.Data;
     using SafeMath for uint;
 
     address owner; // owner has permission to set parameters
@@ -57,17 +55,16 @@ contract Campaign {
 
     uint public updatedTermIdx = 0; // indicate updated term
     uint public maxCandidates = 150; // max number of candidates
-    bool firstCall = true;
 
     // a new type for a single candidate
     struct CandidateInfo {
-        uint numOfCampaign; // rest terms that the candidate will claim campaign
+        uint numOfCampaign; // total number of terms
         uint startTermIdx;
         uint stopTermIdx;
     }
 
     mapping(address => CandidateInfo) candidates; // store a 'CandidateInfo' struct for each possible address
-    mapping(uint => Set.Data) campaignSnapshots; // store all candidates for each term
+    mapping(uint => address[]) campaignSnapshots; // store all candidates for each term
 
     // declare admission and rnode interfaces
     AdmissionInterface admission;
@@ -89,7 +86,7 @@ contract Campaign {
 
     // get all candidates of given term index
     function candidatesOf(uint _termIdx) public view returns (address[]){
-        return campaignSnapshots[_termIdx].values;
+        return campaignSnapshots[_termIdx];
     }
 
     // get info of given candidate
@@ -159,7 +156,7 @@ contract Campaign {
 
     // claim campaign will verify these parameters, if pass, the node will become candidate
     function claimCampaign(
-        uint _numOfCampaign,  // number of terms that the node want to claim campaign
+        uint _termsToCampaign,  // number of terms that the node want to claim campaign
 
         // admission parameters
         uint64 _cpuNonce,
@@ -170,17 +167,9 @@ contract Campaign {
     )
     public
     {
-        // initiate updatedTermIdx during first call,
-        // in case that termIdx too large while updatedTermIdx too low,
-        // resulting in large 'for' loop and gas not enough.
-        if(firstCall) {
-            updatedTermIdx = (block.number.sub(1)).div(numPerRound);
-            firstCall = false;
-        }
-
         // get current term, update termIdx
         updateTermIdx();
-        for(uint k=termIdx+1; k<=termIdx+_numOfCampaign; k++) {
+        for(uint k=termIdx+1; k<=termIdx+ _termsToCampaign; k++) {
             require(candidatesOf(k).length < maxCandidates);
         }
 
@@ -195,72 +184,32 @@ contract Campaign {
 
         // verify the sender's cpu&memory ability.
         require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
-        require((_numOfCampaign >= minNoc && _numOfCampaign <= maxNoc), "num of campaign out of range.");
-
-        updateCandidateStatus(); // update status firstly,  then check
+        require((_termsToCampaign >= minNoc && _termsToCampaign <= maxNoc), "num of campaign out of range.");
 
         address candidate = msg.sender;
 
         // if nodes have not ended their terms, they can not claim again
         require(
-            candidates[candidate].numOfCampaign == 0,
+            candidates[candidate].stopTermIdx <= termIdx,
             "please waite until your last round ended and try again."
         );
 
         // set candidate's numOfCampaign according to arguments, and set start and end termIdx respectively
-        candidates[candidate].numOfCampaign = _numOfCampaign;
+        candidates[candidate].numOfCampaign =candidates[candidate].numOfCampaign.add(_termsToCampaign);
         candidates[candidate].startTermIdx = termIdx.add(1);
 
         //[start, stop)
-        candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_numOfCampaign);
+        candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_termsToCampaign);
 
         // add candidate to campaignSnapshots.
         for(uint i = candidates[candidate].startTermIdx; i < candidates[candidate].stopTermIdx; i++) {
-            campaignSnapshots[i].insert(candidate);
+            campaignSnapshots[i].push(candidate);
         }
         emit ClaimCampaign(candidate, candidates[candidate].startTermIdx, candidates[candidate].stopTermIdx);
     }
 
-    /**
-     * The function will be called when a node claims to campaign for proposer election to update candidates status.
-     *
-     */
-
-    // update candidate status, i.e. subtract 1 from numOfCampaign when a new term begin
-    // updatedTermIdx record the start term that need to update
-    function updateCandidateStatus() internal {
-
-        if (updatedTermIdx >= termIdx) {
-            return;
-        }
-        uint termsToUpdate = termIdx - updatedTermIdx;
-        uint size;
-        // updatedTermIdx is the last term where candidates claim campaign
-        for(uint j=0; j<termsToUpdate; j++) {
-            updatedTermIdx = updatedTermIdx.add(1);
-            // avoid recalculate the size for circulation times.
-            size = campaignSnapshots[updatedTermIdx].values.length;
-            // go through all candidates in term updatedTermIdx, and update their numOfCampaign
-            for(uint i = 0; i < size; i++) {
-                address candidate = campaignSnapshots[updatedTermIdx].values[i];
-
-                if (candidates[candidate].numOfCampaign == 0) {
-                    continue;
-                }
-
-                candidates[candidate].numOfCampaign = SafeMath.sub(candidates[candidate].numOfCampaign, 1);
-
-                // if candidate's tenure is all over, all status return to zero.
-                if (candidates[candidate].numOfCampaign == 0) {
-                    candidates[candidate].startTermIdx = 0;
-                    candidates[candidate].stopTermIdx = 0;
-                }
-            }
-        }
-    }
-
     /** update termIdx called by function ClaimCampaign. */
-    function updateTermIdx() internal{
+    function updateTermIdx() internal {
         uint blockNumber = block.number;
         if (blockNumber == 0) {
             termIdx = 0;
