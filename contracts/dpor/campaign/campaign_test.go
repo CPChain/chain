@@ -229,7 +229,7 @@ func TestClaimCampaign(t *testing.T) {
 	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
 	// the second claim of campaign does not take effect as the previous campaign is not finished
-	assertCampaign(1, numOfCampaign, t)
+	assertCampaign(2, numOfCampaign, t)
 
 	// get candidates by view index
 	candidates, err := campaign.CandidatesOf(nil, startViewIdx)
