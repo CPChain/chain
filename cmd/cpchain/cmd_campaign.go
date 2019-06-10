@@ -9,10 +9,11 @@ import (
 	"bitbucket.org/cpchain/chain/cmd/cpchain/console/manager"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/console/output"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
+	"bitbucket.org/cpchain/chain/configs"
 	"github.com/urfave/cli"
 )
 
-var MinerCommand cli.Command
+var CampaignCommand cli.Command
 
 func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFunc, error) {
 	rpc, kspath, pwdfile, err := flags.Validator(ctx)
@@ -31,7 +32,13 @@ func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFun
 		limit = ctx.Uint64("gaslimit")
 	}
 
+	var runmode = configs.Mainnet
+	if ctx.IsSet("runmode") {
+		runmode = configs.RunMode(ctx.String("runmode"))
+	}
+
 	manager.SetGasConfig(price, limit)
+	manager.SetRunMode(runmode)
 
 	_ctx, cancel := context.WithCancel(context.Background())
 	console, err := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)
@@ -42,37 +49,38 @@ func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFun
 }
 
 func init() {
-	minerFlags := append([]cli.Flag(nil))
-	MinerCommand = cli.Command{
+	campaignFlags := append([]cli.Flag(nil))
+	stopCampaignFlags := append([]cli.Flag(nil), flags.GasFlags...)
+	CampaignCommand = cli.Command{
 		Name:  "campaign",
-		Flags: minerFlags,
+		Flags: campaignFlags,
 		Usage: "Manage campaign",
 		Subcommands: []cli.Command{
 			{
 				Name:        "start",
 				Usage:       "Start claiming campaign",
-				Flags:       flags.WrapperFlags(minerFlags),
-				Action:      startMining,
+				Flags:       flags.WrapperFlags(campaignFlags),
+				Action:      startCampaign,
 				Description: fmt.Sprintf(`Start Mining`),
 			},
 			{
 				Name:        "stop",
 				Usage:       "Stop claiming campaign",
-				Flags:       flags.WrapperFlags(minerFlags),
-				Action:      stopMining,
+				Flags:       flags.WrapperFlags(stopCampaignFlags),
+				Action:      stopCampaign,
 				Description: fmt.Sprintf(`Stop Mining`),
 			},
 			{
 				Action: showStatus,
 				Name:   "status",
-				Flags:  flags.WrapperFlags(minerFlags),
+				Flags:  flags.WrapperFlags(campaignFlags),
 				Usage:  "Show status of cpchain node",
 			},
 		},
 	}
 }
 
-func startMining(ctx *cli.Context) error {
+func startCampaign(ctx *cli.Context) error {
 	console, out, cancel, err := build(ctx)
 	if err != nil {
 		out.Error(err.Error())
@@ -87,7 +95,7 @@ func startMining(ctx *cli.Context) error {
 	return nil
 }
 
-func stopMining(ctx *cli.Context) error {
+func stopCampaign(ctx *cli.Context) error {
 	console, out, cancel, err := build(ctx)
 	if err != nil {
 		out.Error(err.Error())

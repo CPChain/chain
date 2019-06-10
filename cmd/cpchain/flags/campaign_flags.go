@@ -3,6 +3,7 @@ package flags
 import (
 	"errors"
 
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/utility"
 	"github.com/urfave/cli"
 )
@@ -40,6 +41,14 @@ var campaignAccountFlags = []cli.Flag{
 	},
 }
 
+var RunModeFlags = []cli.Flag{
+	cli.StringFlag{
+		Name:  RunModeFlagName,
+		Usage: "Run mode for switch node configuration, eg:dev|testnet|mainnet",
+		Value: configs.Mainnet.String(),
+	},
+}
+
 var GasFlags = []cli.Flag{
 	cli.Int64Flag{
 		Name:  "gasprice",
@@ -55,6 +64,7 @@ var GasFlags = []cli.Flag{
 func WrapperFlags(flags []cli.Flag) []cli.Flag {
 	flags = append(flags, RPCFlags...)
 	flags = append(flags, campaignAccountFlags...)
+	flags = append(flags, RunModeFlags...)
 	return flags
 }
 

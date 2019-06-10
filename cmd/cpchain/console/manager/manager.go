@@ -33,6 +33,8 @@ var gasPrice *big.Int
 
 var gasLimit uint64
 
+var runMode configs.RunMode
+
 func init() {
 	//gasPrice = big.NewInt(1000000)
 	gasPrice = nil
@@ -43,6 +45,10 @@ func init() {
 func SetGasConfig(price *big.Int, limit uint64) {
 	gasPrice = price
 	gasLimit = limit
+}
+
+func SetRunMode(runMode configs.RunMode) {
+	runMode = runMode
 }
 
 // NewConsole build a console
@@ -80,7 +86,7 @@ func (c *Console) isMining() bool {
 }
 
 func (c *Console) isRNode() bool {
-	addr := cm.GetContractAddress(configs.ContractRnode)
+	addr := cm.GetContractAddress(configs.ContractRnode, runMode)
 	instance, err := rnode.NewRnode(addr, c.client)
 	if err != nil {
 		c.output.Error(err.Error())
@@ -148,7 +154,7 @@ func (c *Console) StartMining() error {
 
 // StopMining stop mining
 func (c *Console) StopMining() error {
-	addr := cm.GetContractAddress(configs.ContractRnode)
+	addr := cm.GetContractAddress(configs.ContractRnode, runMode)
 	if !c.isRNode() {
 		c.output.Info("You are not Rnode already, you don't need to quit.")
 	} else {

@@ -52,7 +52,7 @@ func newApp() *cli.App {
 		chainCommand,
 
 		// new command
-		MinerCommand,
+		CampaignCommand,
 	}
 
 	// global flags
