@@ -40,8 +40,25 @@ import (
 
 var runCommand cli.Command
 
+// BusyWarning is a warning msg
 const (
-	BusyWarning = "You are a proposer in the current or future term, quit not allowed!"
+	BusyWarning = `
+
+
+################################################################################
+################################################################################
+
+		You are either a CURRENT or a FUTURE PROPOSER.
+		Please launch another CPCHAIN program to STOP MINING before quitting.
+		Refer to the LINK BELOW for console commands and detailed explanation.
+
+		https://docs.cpchain.io/misc/faq.html#sig-ctrl-c
+
+################################################################################
+################################################################################
+
+
+	`
 )
 
 func init() {
