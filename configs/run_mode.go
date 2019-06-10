@@ -60,3 +60,7 @@ func IsTestnet() bool {
 func IsTestcase() bool {
 	return Testcase == runModeValue
 }
+
+func (RunMode) String() string {
+	return string(runModeValue)
+}
