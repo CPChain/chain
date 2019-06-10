@@ -142,7 +142,7 @@ RNode Ecosystem
 ####################
 
 CPChain Nodes Roles and Pools
-**********************
+************************************
 
 **Economy Node**: Requires a minimum of $20,000$ CPC tokens
 deposited in *Economy Pool* for participation.

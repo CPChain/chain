@@ -140,3 +140,30 @@ and replace it with a 0.4.25 version.
     // copy solc 0.4.25 to /user/bin
     $ cp solc /usr/bin
 
+.. _sig-ctrl-c:
+
+Why ``Control+C`` cannot abort the program
+********************************************
+
+``Ctrl+C`` cannot abort ``cpchain`` if either of the following condition is satisfied:
+
+#. You are one of the proposers committee in the current term;
+#. You are elected to seal blocks in a future term.
+
+To sustain the throughput of the chain,
+we disable the functionality of aborting the program via ``Ctrl+C`` for all current and future proposers.
+
+To quit ``cpchain``, your node should meet neither of the conditions above.
+The safest way is to stop mining and wait all elected terms end.
+Launch another ``cpchain`` program and utilize the command below to stop mining.
+
+.. code-block:: shell
+
+    $ ./cpchain campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+
+You can also utilize the command below to check your status.
+
+.. code-block:: shell
+
+    $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+

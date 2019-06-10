@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _index:
 
 ==================================
 Welcome to CPChain documentation!
@@ -18,8 +19,8 @@ Please mail to info@cpchain.io if you have any question.
 Quick reference:
 =====================
 
-
-1. :ref:`fusion-api` and :ref:`rpc-api`
+#. :ref:`basic-info`
+#. :ref:`fusion-api` and :ref:`rpc-api`
 #. :ref:`quick-start-beginner` and :ref:`quick-start`
 #. :ref:`overview`
 #. `Solidity`_
@@ -35,7 +36,7 @@ Quick reference:
 
 .. toctree::
    :maxdepth: 2
-   :caption: First Steps
+   :caption: Quick Start
 
    quickstart/quickstart-beginner
    quickstart/quickstart
@@ -44,9 +45,10 @@ Quick reference:
    :maxdepth: 2
    :caption: Preliminaries
 
-   overview/overview
-   installation/installation
-   configuration/configuration
+   preliminaries/basic_information
+   preliminaries/overview
+   preliminaries/installation
+   preliminaries/configuration
 
 .. toctree::
    :maxdepth: 2
@@ -59,14 +61,14 @@ Quick reference:
    :maxdepth: 2
    :caption: Detailed Algorithms
 
-   consensus/consensus
-   implementation/implementation
-   implementation/election
+   detailed_algorithms/consensus
+   detailed_algorithms/implementation
+   detailed_algorithms/election
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Testing
+   :caption: Test
 
    test/test-overview
 
@@ -75,8 +77,8 @@ Quick reference:
    :maxdepth: 2
    :caption: Misc
 
-   faq/faq
-   glossary/glossary
+   misc/faq
+   misc/glossary
 
 
 
