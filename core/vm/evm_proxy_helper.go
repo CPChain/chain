@@ -8,6 +8,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/commons/cache"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -18,8 +19,12 @@ var (
 	contractLookupCache = cache.NewLRUExpireCache(200)
 )
 
-// get real logic contract address by proxy contract address
+// GetRealContractAddress get real logic contract address by proxy contract address
 func GetRealContractAddress(evm *EVM, caller ContractRef, proxyContractAddress common.Address, gas uint64) common.Address {
+	if !configs.EnableProxyContract {
+		return proxyContractAddress
+	}
+
 	realAddress := proxyContractAddress
 
 	if dc := evm.chainConfig.Dpor; dc != nil {

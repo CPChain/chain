@@ -31,8 +31,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
-	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_register"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rpt_backend_holder"
+	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_backend"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/bloombits"
 	"bitbucket.org/cpchain/chain/core/rawdb"
@@ -165,12 +164,14 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	}
 	cpc.APIBackend.gpo = gasprice.NewOracle(cpc.APIBackend, gpoParams)
 
+	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
+
 	contractClient := cpcapi.NewPublicBlockChainAPI(cpc.APIBackend)
-	rpt_backend_holder.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
+	primitive_backend.GetApiBackendHolderInstance().Init(cpc.APIBackend, contractClient)
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
-		dpor.SetCandidateBackend(primitive_register.GetChainClient())
-		dpor.SetRptBackend(primitive_register.GetChainClient())
-		dpor.SetRNodeBackend(primitive_register.GetChainClient())
+		dpor.SetCampaignBackend(contractAddrs[configs.ContractCampaign], primitive_backend.GetChainClient())
+		dpor.SetRptBackend(contractAddrs[configs.ContractRpt], primitive_backend.GetChainClient())
+		dpor.SetRNodeBackend(contractAddrs[configs.ContractRnode], primitive_backend.GetChainClient())
 	}
 
 	log.Info("Initialising cpchain protocol", "versions", ProtocolVersions, "network", config.NetworkId)
@@ -195,10 +196,9 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	cpc.blockchain.SetSyncMode(config.SyncMode)
 
 	// admission must initialize after blockchain has been initialized
-	contractAddrs := configs.ChainConfigInfo().Dpor.Contracts
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
 		contractAddrs[configs.ContractAdmission],
-		contractAddrs[configs.ContractCampaign4],
+		contractAddrs[configs.ContractCampaign],
 		contractAddrs[configs.ContractRnode])
 
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
@@ -506,12 +506,7 @@ func (s *CpchainService) Start(srvr *p2p.Server) error {
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers
-	if s.config.LightServ > 0 {
-		if s.config.LightPeers >= srvr.MaxPeers {
-			return fmt.Errorf("invalid peer config: light peer count (%d) >= total peer count (%d)", s.config.LightPeers, srvr.MaxPeers)
-		}
-		maxPeers -= s.config.LightPeers
-	}
+
 	// start the networking layer and the light server if requested
 	// by this time, the p2p has already started.  we are only starting the upper layer handling.
 	s.protocolManager.Start(maxPeers)

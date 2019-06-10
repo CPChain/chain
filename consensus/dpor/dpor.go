@@ -12,8 +12,9 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/consensus/dpor/campaign"
+	"bitbucket.org/cpchain/chain/consensus/dpor/rnode"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -83,9 +84,9 @@ type Dpor struct {
 
 	ac admission.ApiBackend
 
-	rNodeBackend     *rnode.Rnode
-	rptBackend       rpt.RptService
-	candidateBackend rpt.CandidateService
+	rNodeBackend    rnode.RNodeService
+	rptBackend      rpt.RptService
+	campaignBackend campaign.CandidateService
 
 	chain consensus.ChainReadWriter
 
@@ -390,40 +391,29 @@ func (d *Dpor) SetupAdmission(ac admission.ApiBackend) {
 	d.ac = ac
 }
 
-func (d *Dpor) SetRptBackend(backend backend.ClientBackend) {
-	d.rptBackend, _ = rpt.NewRptService(
-		backend,
-		configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt],
-		configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRpt2],
-	)
+func (d *Dpor) SetRptBackend(rptContract common.Address, backend backend.ClientBackend) {
+	d.rptBackend, _ = rpt.NewRptService(rptContract, backend)
 }
 
 func (d *Dpor) GetRptBackend() rpt.RptService {
 	return d.rptBackend
 }
 
-func (d *Dpor) SetCandidateBackend(backend backend.ClientBackend) {
-	d.candidateBackend, _ = rpt.NewCandidateService(backend)
+func (d *Dpor) SetCampaignBackend(campaignContract common.Address, backend backend.ClientBackend) {
+	d.campaignBackend, _ = campaign.NewCampaignService(campaignContract, backend)
 }
 
-func (d *Dpor) GetCandidateBackend() rpt.CandidateService {
-	return d.candidateBackend
+func (d *Dpor) GetCandidateBackend() campaign.CandidateService {
+	return d.campaignBackend
 }
 
-func (d *Dpor) SetRNodeBackend(backend backend.ClientBackend) {
-	instance, err := rnode.NewRnode(configs.ChainConfigInfo().Dpor.Contracts[configs.ContractRnode], backend)
-	if err == nil {
-		d.rNodeBackend = instance
-	}
+func (d *Dpor) SetRNodeBackend(rNodeContract common.Address, backend backend.ClientBackend) {
+	d.rNodeBackend, _ = rnode.NewRNodeService(rNodeContract, backend)
 }
 
 func (d *Dpor) GetRNodes() ([]common.Address, error) {
 	if d.rNodeBackend != nil {
-		rNodes, err := d.rNodeBackend.GetRnodes(nil)
-		if err != nil {
-			return []common.Address{}, err
-		}
-		return rNodes, nil
+		return d.rNodeBackend.GetRNodes()
 	}
 
 	return []common.Address{}, nil

@@ -22,7 +22,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -78,6 +78,6 @@ func (self *CampaignWrapper) MaximumNoc() (*big.Int, error) {
 }
 
 func (self *CampaignWrapper) ClaimCampaign(numOfCampaign *big.Int, cpuNonce uint64, cpuBlockNumber *big.Int,
-	memoryNonce uint64, memoryBlockNumber *big.Int) (*types.Transaction, error) {
-	return self.Contract.ClaimCampaign(&self.TransactOpts, numOfCampaign, cpuNonce, cpuBlockNumber, memoryNonce, memoryBlockNumber)
+	memoryNonce uint64, memoryBlockNumber *big.Int, version *big.Int) (*types.Transaction, error) {
+	return self.Contract.ClaimCampaign(&self.TransactOpts, numOfCampaign, cpuNonce, cpuBlockNumber, memoryNonce, memoryBlockNumber, version)
 }
