@@ -203,7 +203,7 @@ def test_case_2():
     print("================claim campaign continuously==================")
     cf.cpc.defaultAccount = owner
     print("try 100 times")
-    for i in range(100):
+    for i in range(10):
         cf.personal.unlockAccount(owner, "password")
         term_id = campaign.functions.termIdx().call()
         block_number = cf.cpc.blockNumber
@@ -223,7 +223,7 @@ def test_case_2():
         print("term: ", i)
         candidates = campaign.functions.candidatesOf(i).call()
         print("candidates: ", candidates)
-    total_term = campaign.functions.candidateInfoOf(owner).call()["numOfCampaign"]
+    total_term = campaign.functions.candidateInfoOf(owner).call()[0]
     print("total term: ", total_term)
 
 
