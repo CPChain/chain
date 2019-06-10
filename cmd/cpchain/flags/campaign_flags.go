@@ -1,16 +1,20 @@
-package main
+package flags
 
 import (
-	"context"
 	"errors"
-	"math/big"
 
-	"bitbucket.org/cpchain/chain/tools/console/common"
-	"bitbucket.org/cpchain/chain/tools/console/manager"
-	"bitbucket.org/cpchain/chain/tools/console/output"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/utility"
 	"github.com/urfave/cli"
 )
+
+var home, err = utility.Home()
+
+func init() {
+	if err != nil {
+		panic(err)
+	}
+}
 
 // RPCFlags set the APIs offered over the HTTP-RPC interface
 var RPCFlags = []cli.Flag{
@@ -22,43 +26,8 @@ var RPCFlags = []cli.Flag{
 	},
 }
 
-func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFunc, error) {
-	rpc, kspath, pwdfile, err := validator(ctx)
-	out := output.NewLogOutput()
-	if err != nil {
-		return nil, &out, nil, err
-	}
-
-	var price *big.Int = nil
-	if ctx.IsSet("gasprice") {
-		price = new(big.Int).SetUint64(ctx.Uint64("gasprice"))
-	}
-
-	var limit uint64 = 2000000
-	if ctx.IsSet("gaslimit") {
-		limit = ctx.Uint64("gaslimit")
-	}
-
-	manager.SetGasConfig(price, limit)
-
-	_ctx, cancel := context.WithCancel(context.Background())
-	console, err := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)
-	if err != nil {
-		out.Fatal(err.Error())
-	}
-	return console, &out, cancel, err
-}
-
-var home, err = utility.Home()
-
-func init() {
-	if err != nil {
-		panic(err)
-	}
-}
-
-// AccountFlags include account params
-var AccountFlags = []cli.Flag{
+// campaignAccountFlags include account params
+var campaignAccountFlags = []cli.Flag{
 	// do not marshal the keystore path in toml file.
 	cli.StringFlag{
 		Name:  "password",
@@ -69,6 +38,14 @@ var AccountFlags = []cli.Flag{
 		Name:  "keystore",
 		Usage: "Keystore directory",
 		Value: home + "/.cpchain/keystore/",
+	},
+}
+
+var RunModeFlags = []cli.Flag{
+	cli.StringFlag{
+		Name:  RunModeFlagName,
+		Usage: "Run mode for switch node configuration, eg:dev|testnet|mainnet|testmainnet",
+		Value: configs.Mainnet.String(),
 	},
 }
 
@@ -84,13 +61,14 @@ var GasFlags = []cli.Flag{
 	},
 }
 
-func wrapperFlags(flags []cli.Flag) []cli.Flag {
+func WrapperFlags(flags []cli.Flag) []cli.Flag {
 	flags = append(flags, RPCFlags...)
-	flags = append(flags, AccountFlags...)
+	flags = append(flags, campaignAccountFlags...)
+	flags = append(flags, RunModeFlags...)
 	return flags
 }
 
-func validator(ctx *cli.Context) (string, string, string, error) {
+func Validator(ctx *cli.Context) (string, string, string, error) {
 	pwdfile := ctx.String("password")
 	kspath := ctx.String("keystore")
 	rpc := ctx.String("rpc")

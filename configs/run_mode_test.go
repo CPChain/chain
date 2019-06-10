@@ -44,3 +44,8 @@ func TestSetRunModeToNil(t *testing.T) {
 	assert.Equal(t, Dev, runModeValue)
 	assert.Equal(t, true, IsDev())
 }
+
+func TestString(t *testing.T) {
+	SetRunMode(Testnet)
+	assert.Equal(t, "testnet", runModeValue.String())
+}
