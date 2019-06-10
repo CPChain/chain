@@ -47,8 +47,8 @@ func SetGasConfig(price *big.Int, limit uint64) {
 	gasLimit = limit
 }
 
-func SetRunMode(runMode configs.RunMode) {
-	runMode = runMode
+func SetRunMode(rm configs.RunMode) {
+	runMode = rm
 }
 
 // NewConsole build a console
@@ -87,6 +87,7 @@ func (c *Console) isMining() bool {
 
 func (c *Console) isRNode() bool {
 	addr := cm.GetContractAddress(configs.ContractRnode, runMode)
+	// c.output.Info("rnode address", "addr", addr.Hex(), "runMode", runMode)
 	instance, err := rnode.NewRnode(addr, c.client)
 	if err != nil {
 		c.output.Error(err.Error())

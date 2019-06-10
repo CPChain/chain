@@ -32,13 +32,13 @@ func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFun
 		limit = ctx.Uint64("gaslimit")
 	}
 
-	var runmode = configs.Mainnet
-	if ctx.IsSet("runmode") {
-		runmode = configs.RunMode(ctx.String("runmode"))
+	if ctx.IsSet(flags.RunModeFlagName) {
+		runMode := configs.RunMode(ctx.String(flags.RunModeFlagName))
+		configs.SetRunMode(runMode)
 	}
 
 	manager.SetGasConfig(price, limit)
-	manager.SetRunMode(runmode)
+	manager.SetRunMode(configs.GetRunMode())
 
 	_ctx, cancel := context.WithCancel(context.Background())
 	console, err := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)

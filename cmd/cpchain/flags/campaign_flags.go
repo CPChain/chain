@@ -44,7 +44,7 @@ var campaignAccountFlags = []cli.Flag{
 var RunModeFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  RunModeFlagName,
-		Usage: "Run mode for switch node configuration, eg:dev|testnet|mainnet",
+		Usage: "Run mode for switch node configuration, eg:dev|testnet|mainnet|testmainnet",
 		Value: configs.Mainnet.String(),
 	},
 }
