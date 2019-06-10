@@ -6,14 +6,14 @@ import (
 	"github.com/urfave/cli"
 )
 
-var minerCommand cli.Command
+var MinerCommand cli.Command
 
 func init() {
 	minerFlags := append([]cli.Flag(nil))
-	minerCommand = cli.Command{
-		Name:  "miner",
+	MinerCommand = cli.Command{
+		Name:  "campaign",
 		Flags: minerFlags,
-		Usage: "Manage miner",
+		Usage: "Manage campaign",
 		Subcommands: []cli.Command{
 			{
 				Name:        "start",
@@ -28,6 +28,12 @@ func init() {
 				Flags:       wrapperFlags(minerFlags),
 				Action:      stopMining,
 				Description: fmt.Sprintf(`Stop Mining`),
+			},
+			{
+				Action: showStatus,
+				Name:   "status",
+				Flags:  wrapperFlags(minerFlags),
+				Usage:  "Show status of cpchain node",
 			},
 		},
 	}
@@ -60,5 +66,21 @@ func stopMining(ctx *cli.Context) error {
 		out.Error(err.Error())
 		return nil
 	}
+	return nil
+}
+
+func showStatus(ctx *cli.Context) error {
+	console, out, cancel, err := build(ctx)
+	if err != nil {
+		out.Error(err.Error())
+		return nil
+	}
+	defer cancel()
+	status, err := console.GetStatus()
+	if err != nil {
+		out.Error(err.Error())
+		return nil
+	}
+	out.Status(status)
 	return nil
 }

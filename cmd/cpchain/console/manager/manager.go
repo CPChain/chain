@@ -9,10 +9,10 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
+	cm "bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
-	cm "bitbucket.org/cpchain/chain/tools/console/common"
 	cc "bitbucket.org/cpchain/chain/tools/utility"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -148,21 +148,6 @@ func (c *Console) StartMining() error {
 
 // StopMining stop mining
 func (c *Console) StopMining() error {
-	c.output.Info("Stop Mining...")
-	client, err := rpc.DialContext(*c.ctx, c.rpc)
-	if err != nil {
-		return err
-	}
-	// Stop Mining
-	err = client.CallContext(*c.ctx, nil, "miner_stop")
-	if err != nil {
-		return err
-	}
-	c.output.Info("Stop Success.")
-	return nil
-}
-
-func (c *Console) QuitRnode() error {
 	addr := cm.GetContractAddress(configs.ContractRnode)
 	if !c.isRNode() {
 		c.output.Info("You are not Rnode already, you don't need to quit.")

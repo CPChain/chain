@@ -50,6 +50,9 @@ func newApp() *cli.App {
 		runCommand,
 		dumpConfigCommand,
 		chainCommand,
+
+		// new command
+		MinerCommand,
 	}
 
 	// global flags
@@ -57,13 +60,6 @@ func newApp() *cli.App {
 
 	// maintain order
 	sort.Sort(cli.CommandsByName(app.Commands))
-
-	// app.Before = func(ctx *cli.Context) error {
-	// 	return nil
-	// }
-	// app.After = func(ctx *cli.Context) error {
-	// 	return nil
-	// }
 
 	return app
 }

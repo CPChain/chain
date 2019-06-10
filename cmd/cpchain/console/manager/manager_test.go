@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	out "bitbucket.org/cpchain/chain/tools/console/output"
+	out "bitbucket.org/cpchain/chain/cmd/cpchain/console/output"
 )
 
 func TestManager(t *testing.T) {

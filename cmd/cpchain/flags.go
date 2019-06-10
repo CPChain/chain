@@ -5,9 +5,9 @@ import (
 	"errors"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/tools/console/common"
-	"bitbucket.org/cpchain/chain/tools/console/manager"
-	"bitbucket.org/cpchain/chain/tools/console/output"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/console/manager"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/console/output"
 	"bitbucket.org/cpchain/chain/tools/utility"
 	"github.com/urfave/cli"
 )
