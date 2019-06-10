@@ -14,7 +14,6 @@ def compile_file(contract_path, contract_name):
     return config
 
 
-
 def main():
     admission_config = compile_file("./dpor/admission/admission.sol", "Admission")
     with open("./assets/config/admission.json", "w+") as f:

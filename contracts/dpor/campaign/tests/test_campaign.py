@@ -132,12 +132,10 @@ def prepare():
 def test_case_2():
     cf = Web3(Web3.HTTPProvider("http://127.0.0.1:8521"))
     print("========config account=========")
-    candidate = "0x3Bd95ae403FD7D98972D54e0d44F332bEf9Bc175"
+    # candidate = "0x3Bd95ae403FD7D98972D54e0d44F332bEf9Bc175"
     owner = "0xb3801b8743DEA10c30b0c21CAe8b1923d9625F84"
     password = "password"
-    cf.personal.unlockAccount(candidate, password)
     cf.personal.unlockAccount(owner, password)
-    print("balance of candidate: ", cf.fromWei(cf.cpc.getBalance(candidate), "ether"))
     print("balance of owner: ", cf.fromWei(cf.cpc.getBalance(owner), "ether"))
 
     print("===========deploy contract==============")
@@ -161,59 +159,72 @@ def test_case_2():
 
     print("============owner update configs=====================")
     cf.cpc.defaultAccount = owner
-    print("owner set max candidates")
-    tx_hash = campaign.functions.updateMaxCandidates(1).transact({"gas": 89121, "from": owner, "value": 0})
+    print("owner set term length")
+    tx_hash = campaign.functions.updateTermLen(1).transact({"gas": 89121, "from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    print("owner set view length")
+    tx_hash = campaign.functions.updateViewLen(1).transact({"gas": 89121, "from": owner, "value": 0})
     tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
     print("result: ", tx_receipt["status"])
     print("after owner set")
-    max_candidate = campaign.functions.maxCandidates().call()
-    print("max candidates: ", max_candidate)
+    term_len = campaign.functions.termLen().call()
+    view_len = campaign.functions.viewLen().call()
+    print("term length: ", term_len)
+    print("view length: ", view_len)
 
-    print("==================claim campaign===============")
-    cf.cpc.defaultAccount = candidate
-    tx_hash = campaign.functions.claimCampaign(3, 0, 0, 0, 0, 2).transact({"gas": 989121, "from": candidate, "value": 0})
-    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
-    print("claim result: ", tx_receipt["status"])
-    print(tx_receipt)
+    # print("==================claim campaign===============")
+    # cf.cpc.defaultAccount = owner
+    # tx_hash = campaign.functions.claimCampaign(3, 0, 0, 0, 0, 2).transact({"gas": 989121, "from": owner, "value": 0})
+    # tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    # print("claim result: ", tx_receipt["status"])
+    # print(tx_receipt)
+    #
+    # term_id = campaign.functions.termIdx().call()
+    # print("current term: ", term_id)
+    # candidates = campaign.functions.candidatesOf(term_id+1).call()
+    # print("term: ", term_id+1)
+    # print(candidates)
+    #
+    # candidates = campaign.functions.candidatesOf(term_id+2).call()
+    # print("term: ", term_id+2)
+    # print(candidates)
+    #
+    # candidates = campaign.functions.candidatesOf(term_id+3).call()
+    # print("term: ", term_id+3)
+    # print(candidates)
 
+    print("================claim campaign continuously==================")
     cf.cpc.defaultAccount = owner
-    tx_hash = campaign.functions.claimCampaign(3, 0, 0, 0, 0, 2).transact({"gas": 989121, "from": owner, "value": 0})
-    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
-    print("claim result: ", tx_receipt["status"])
-    print(tx_receipt)
-
+    print("try 100 times")
+    for i in range(15):
+        cf.personal.unlockAccount(owner, "password")
+        block_number = cf.cpc.blockNumber
+        term_by_contract = campaign.functions.termIdx().call()
+        blocks_per_term = campaign.functions.numPerRound().call()
+        term_by_chain = int((block_number-1) / blocks_per_term)
+        print("block number: ", block_number)
+        # print("blocks per term: ", blocks_per_term)
+        print("current term by contract: ", term_by_contract)
+        print("current term by chain: ", term_by_chain)
+        print("candidate try once")
+        tx_hash = campaign.functions.claimCampaign(3, 0, 0, 0, 0, 2).transact({"gas": 989121, "from": owner, "value": 0})
+        tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+        print("claim result: ", tx_receipt["status"])
+        start_term = campaign.functions.candidateInfoOf(owner).call()[1]
+        stop_term = campaign.functions.candidateInfoOf(owner).call()[2]
+        print("start term: ", start_term)
+        print("stop term: ", stop_term)
+        candidates = campaign.functions.candidatesOf(term_by_chain).call()
+        print("candidates: ", candidates)
+    print("check status")
     term_id = campaign.functions.termIdx().call()
-    print("current term: ", term_id)
-    candidates = campaign.functions.candidatesOf(term_id+1).call()
-    print("term: ", term_id+1)
-    print(candidates)
-
-    candidates = campaign.functions.candidatesOf(term_id+2).call()
-    print("term: ", term_id+2)
-    print(candidates)
-
-    candidates = campaign.functions.candidatesOf(term_id+3).call()
-    print("term: ", term_id+3)
-    print(candidates)
-
-    # cf.cpc.defaultAccount = candidate
-    # while True:
-    #     term_id = campaign.functions.termIdx().call()
-    #     updated_term = campaign.functions.updatedTermIdx().call()
-    #     block_number = cf.cpc.blockNumber
-    #     blocks_per_term = campaign.functions.numPerRound().call()
-    #     print("block number: ", block_number)
-    #     print("blocks per term: ", blocks_per_term)
-    #     print("current term: ", term_id)
-    #     print("updated term: ", updated_term)
-    #     print("candidate try once")
-    #     tx_hash = campaign.functions.claimCampaign(3, 0, 0, 0, 0, 2).transact({"gas": 989121, "from": candidate, "value": 0})
-    #     tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
-    #     print("claim result: ", tx_receipt["status"])
-    #     candidates = campaign.functions.candidatesOf(term_id+1).call()
-    #     print("candidates: ", candidates)
-
-
+    for i in range(term_id):
+        print("term: ", i)
+        candidates = campaign.functions.candidatesOf(i).call()
+        print("candidates: ", candidates)
+    total_term = campaign.functions.candidateInfoOf(owner).call()[0]
+    print("total term: ", total_term)
 
 
 def main():
