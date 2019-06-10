@@ -19,7 +19,8 @@ import (
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go
 
 var (
-	ErrInvalidSig = errors.New("invalid transaction v, r, s values")
+	ErrInvalidSig         = errors.New("invalid transaction v, r, s values")
+	ErrNotSupportedTxType = errors.New("not supported transaction type")
 )
 
 const (
@@ -440,3 +441,17 @@ func (m Message) Nonce() uint64           { return m.nonce }
 func (m Message) Data() []byte            { return m.data }
 func (m *Message) SetData(newData []byte) { m.data = newData }
 func (m Message) CheckNonce() bool        { return m.checkNonce }
+
+// SupportTxType returns if a transaction type is supported.
+func SupportTxType(txType uint64) bool {
+	return txType == BasicTx
+
+	// supportPrivate := private.SupportPrivateTx == "true"
+	// eng := bc.Engine()
+	// if eng != nil {
+	// 	if d, ok := eng.(*dpor.Dpor); ok {
+	// 		return (!d.IsValidator()) && supportPrivate // validator node cannot handle private tx
+	// 	}
+	// }
+	// return supportPrivate
+}

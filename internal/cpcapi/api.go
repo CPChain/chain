@@ -1539,14 +1539,17 @@ func (s *PublicTransactionPoolAPI) SendRawTransaction(ctx context.Context, encod
 	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
 		return common.Hash{}, err
 	}
-	if tx.Type() > 1 {
-		return common.Hash{}, NoSupportTxTypeErr
+
+	if !types.SupportTxType(tx.Type()) {
+		return common.Hash{}, types.ErrNotSupportedTxType
 	}
+
 	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
 	if tx.IsPrivate() && !supportPrivate {
 		// if not support private tx, immediately returns error
 		return common.Hash{}, NotSupportPrivateTxErr
 	}
+
 	return submitTransaction(ctx, s.b, tx)
 }
 

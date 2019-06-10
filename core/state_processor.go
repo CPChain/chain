@@ -23,7 +23,6 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -119,8 +118,12 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 		return nil, nil, 0, err
 	}
 
-	// For tx that is not basic(tx type != 0), its payload is a replacement which cannot be executed as normal tx payload, thus set it to be empty to skip execution.
-	// This around of execution generates stuff stored in public blockchain.
+	// if the tx type is not supported, return early
+	if !types.SupportTxType(tx.Type()) {
+		return nil, nil, 0, types.ErrNotSupportedTxType
+	}
+
+	// this is for sanitize, may be useful later. for now, its useless because it's already returned
 	if !tx.IsBasic() {
 		msg.SetData([]byte{})
 	}
@@ -154,7 +157,9 @@ func ApplyTransaction(config *configs.ChainConfig, bc ChainContext, author *comm
 	var privReceipt *types.Receipt
 	// For private tx, it should process its real private tx payload in participant's node. If account manager is nil,
 	// doesn't process private tx. If the node does not support private transaction, skip it.
-	if tx.IsPrivate() && accm != nil && SupportPrivateTx(bc) {
+	if tx.IsPrivate() && accm != nil && types.SupportTxType(tx.Type()) {
+
+		// for now, it's impossible to enter here
 		privReceipt, err = tryApplyPrivateTx(config, bc, author, gp, privateStateDb, remoteDB, header, tx, cfg, accm)
 		if err != nil {
 			if err == NoPermissionError {
@@ -222,17 +227,4 @@ func tryApplyPrivateTx(config *configs.ChainConfig, bc ChainContext, author *com
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
 	return receipt, nil
-}
-
-// SupportPrivateTx returns a bool value indicating whether it supports private transaction
-func SupportPrivateTx(bc ChainContext) bool {
-	supportPrivate := private.SupportPrivateTx == "true"
-	eng := bc.Engine()
-	if eng != nil {
-		if d, ok := eng.(*dpor.Dpor); ok {
-			return (!d.IsValidator()) && supportPrivate // validator node cannot handle private tx
-		}
-	}
-
-	return supportPrivate
 }
