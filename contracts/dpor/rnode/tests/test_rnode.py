@@ -317,29 +317,97 @@ def test_case_7():
     print("is rnode: ", result)
 
 
+def test_case_8():
+    print("test rnode refund all")
+    cf = Web3(Web3.HTTPProvider("http://127.0.0.1:8521"))
+    owner = cf.toChecksumAddress("b3801b8743dea10c30b0c21cae8b1923d9625f84")
+    cf.personal.unlockAccount(owner, "password")
+    rnodes = []
+    print("================generate 15 rnodes======================")
+    for i in range(100):
+        rnode = cf.toChecksumAddress(cf.personal.newAccount("password"))
+        rnodes.append(rnode)
+        cf.cpc.sendTransaction({"from": owner, "to": rnode, "value": cf.toWei(300000, "ether")})
+    print("wait for tx confirmation...")
+    time.sleep(15)
+    for rnode in rnodes:
+        balance = cf.fromWei(cf.cpc.getBalance(rnode), "ether")
+        print("address: ", rnode)
+        print("balance: ", balance)
+    print("=================deploy contract====================")
+    config = compile_file()
+    contract = cf.cpc.contract(abi=config["abi"], bytecode=config["bin"])
+    cf.cpc.defaultAccount = owner
+    cf.personal.unlockAccount(owner, "password")
+    estimated_gas = contract.constructor().estimateGas()
+    tx_hash = contract.constructor().transact(dict(gas=estimated_gas))
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    address = tx_receipt['contractAddress']
+    rnode_ins = cf.cpc.contract(abi=config["abi"], address=address)
+
+    print("=============nodes tries to join rnodes=========")
+    for rnode in rnodes:
+        cf.personal.unlockAccount(rnode, "password")
+        print("address: ", rnode)
+        cf.cpc.defaultAccount = rnode
+        tx_hash = rnode_ins.functions.joinRnode(1).transact({"gas": 829776, "from": rnode, "value": cf.toWei(210000, "ether")})
+        tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+        print("result: ", tx_receipt["status"])
+        is_rnode = rnode_ins.functions.isRnode(rnode).call()
+        print("is rnode: ", is_rnode)
+        rnode_num = rnode_ins.functions.getRnodeNum().call()
+        print("number of rnode: ", rnode_num)
+
+    print("===============check rnode=====================")
+    rnodes_from_contract = rnode_ins.functions.getRnodes().call()
+    rnode_num = rnode_ins.functions.getRnodeNum().call()
+    print("number of rnodes: ", rnode_num)
+    print("all rnodes from contract:")
+    print(rnodes_from_contract)
+
+    # print("===============quit rnode=======================")
+    # print("owner set period")
+    # cf.cpc.defaultAccount = owner
+    # tx_hash = rnode_ins.functions.setPeriod(1).transact({"gas": 829776, "from": owner, "value": 0})
+    # tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    # print("result: ", tx_receipt["status"])
+    # for rnode in rnodes:
+    #     cf.personal.unlockAccount(rnode, "password")
+    #     print("address: ", rnode)
+    #     cf.cpc.defaultAccount = rnode
+    #     tx_hash = rnode_ins.functions.quitRnode().transact({"gas": 829776, "from": rnode, "value": 0})
+    #     tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    #     print("result: ", tx_receipt["status"])
+    #     is_rnode = rnode_ins.functions.isRnode(rnode).call()
+    #     print("is rnode: ", is_rnode)
+
+    print("===============test refund all=================")
+    cf.cpc.defaultAccount = owner
+    cf.personal.unlockAccount(owner, "password")
+    tx_hash = rnode_ins.functions.refundAll().transact({"gas": 34829776, "from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("result: ", tx_receipt["status"])
+    print(tx_receipt)
+
+    print("===============check rnode again================")
+    print("wait for tx confirmation...")
+    time.sleep(20)
+    rnodes_from_contract = rnode_ins.functions.getRnodes().call()
+    print("number of rnodes: ", len(rnodes_from_contract))
+    print("all rnodes from contract")
+    print(rnodes_from_contract)
+
+    print("===============check balance===================")
+    for rnode in rnodes:
+        balance = cf.fromWei(cf.cpc.getBalance(rnode), "ether")
+        print("address: ", rnode)
+        print("balance: ", balance)
+
+
 def main():
-    test_case_7()
-    # config = compile_file()
-    # print(config['abi'])
-    # print(config['bin'])
-    # address = deploy_contract(config)
-    # print(address)
-    # test_case_1()
-    # test_case_2()
-    # test_case_3()
-    # test_case_4()
-    # test_case_5()
-    # test_case_6()
+    test_case_8()
 
 
 if __name__ == '__main__':
     main()
-    # cf = Web3(Web3.HTTPProvider("http://127.0.0.1:8521"))
-    # cf.cpc.sendTransaction({"to": "0x6c95FEb59EF0281b3f9fD8Ec5628E1Da1d3Cc6E8", "from": "0xb3801b8743DEA10c30b0c21CAe8b1923d9625F84", "value": cf.toWei(20000, "ether")})
-    # cf.cpc.sendTransaction({"to": "0x970c18A634B23c95a61746d172C48356DB58D8EC", "from": "0xb3801b8743DEA10c30b0c21CAe8b1923d9625F84", "value": cf.toWei(20000, "ether")})
 
-    # print(cf.cpc.blockNumber)
-    # print(cf.cpc.accounts)
-    # print(cf.cpc.getBalance(cf.cpc.accounts[0]))
-    # cf.personal.newAccount("password")
-    # print(cf.cpc.accounts)

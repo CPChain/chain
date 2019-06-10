@@ -6,6 +6,7 @@ library Set {
     */
     struct Data {
         mapping(address => bool) flags;
+        mapping(address => uint) pos;
         address[] values;
     }
 
@@ -17,41 +18,33 @@ library Set {
      * be seen as a method of that object.
     */
     function insert(Data storage self, address value)
-      internal
-      returns (bool)
+    internal
+    returns (bool)
     {
         if (self.flags[value])
             return false; // already there
         self.flags[value] = true;
+        self.pos[value] = self.values.length;
         self.values.push(value);
         return true;
     }
 
     function remove(Data storage self, address value)
-      internal
-      returns (bool)
+    internal
+    returns (bool)
     {
-        if (!self.flags[value])
+        if (!self.flags[value]) {
             return false; // not there
+        }
         self.flags[value] = false;
         uint size = self.values.length;
-        for (uint i = 0 ; i < size ; i++){
-            if (self.values[i] == value){
-                // cost too much gas.
-                // for (uint j = i; j < size - 1; j++){
-                //     self.values[j] = self.values[j+1];
-                // }
-                // delete self.values[size-1];
-                // self.values.length--;
-                // break;
+        uint position = self.pos[value];
+        address last = self.values[size-1];
+        self.values[position] = last;
+        self.pos[last] = position;
+        delete self.values[size-1];
+        self.values.length--;
 
-                // simplify the steps to save gas.
-                self.values[i] = self.values[size-1];
-                delete self.values[size-1];
-                self.values.length--;
-                break;
-            }
-        }
         return true;
     }
 

@@ -9,10 +9,10 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
+	cm "bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
-	cm "bitbucket.org/cpchain/chain/tools/console/common"
 	cc "bitbucket.org/cpchain/chain/tools/utility"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -33,6 +33,8 @@ var gasPrice *big.Int
 
 var gasLimit uint64
 
+var runMode configs.RunMode
+
 func init() {
 	//gasPrice = big.NewInt(1000000)
 	gasPrice = nil
@@ -43,6 +45,10 @@ func init() {
 func SetGasConfig(price *big.Int, limit uint64) {
 	gasPrice = price
 	gasLimit = limit
+}
+
+func SetRunMode(rm configs.RunMode) {
+	runMode = rm
 }
 
 // NewConsole build a console
@@ -80,7 +86,8 @@ func (c *Console) isMining() bool {
 }
 
 func (c *Console) isRNode() bool {
-	addr := cm.GetContractAddress(configs.ContractRnode)
+	addr := cm.GetContractAddress(configs.ContractRnode, runMode)
+	// c.output.Info("rnode address", "addr", addr.Hex(), "runMode", runMode)
 	instance, err := rnode.NewRnode(addr, c.client)
 	if err != nil {
 		c.output.Error(err.Error())
@@ -148,22 +155,7 @@ func (c *Console) StartMining() error {
 
 // StopMining stop mining
 func (c *Console) StopMining() error {
-	c.output.Info("Stop Mining...")
-	client, err := rpc.DialContext(*c.ctx, c.rpc)
-	if err != nil {
-		return err
-	}
-	// Stop Mining
-	err = client.CallContext(*c.ctx, nil, "miner_stop")
-	if err != nil {
-		return err
-	}
-	c.output.Info("Stop Success.")
-	return nil
-}
-
-func (c *Console) QuitRnode() error {
-	addr := cm.GetContractAddress(configs.ContractRnode)
+	addr := cm.GetContractAddress(configs.ContractRnode, runMode)
 	if !c.isRNode() {
 		c.output.Info("You are not Rnode already, you don't need to quit.")
 	} else {

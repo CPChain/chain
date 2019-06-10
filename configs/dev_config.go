@@ -14,9 +14,9 @@ import (
 var (
 	// contract
 	devProxyContractRegister = common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93")
-	devContractAddressMap    = map[string]common.Address{
-		ContractRpt:  common.HexToAddress("0x7e9925bea4af2ebea96dd8ba9894d4503e6c0278"),
-		ContractRnode:  common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93"),
+	DevContractAddressMap    = map[string]common.Address{
+		ContractRpt:       common.HexToAddress("0x7e9925bea4af2ebea96dd8ba9894d4503e6c0278"),
+		ContractRnode:     common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93"),
 		ContractAdmission: common.HexToAddress("0xa5e0ea2a14d91031986c2f25f6e724beeeb66781"),
 		ContractCampaign:  common.HexToAddress("0xf26b6864749cde85a29afea57ffeae115b24b505"),
 	}
@@ -39,7 +39,7 @@ var (
 			FaultyNumber:          DefaultFaultyValidatorsNumber,
 			MaxInitBlockNumber:    DefaultDevMaxInitBlockNumber,
 			ProxyContractRegister: devProxyContractRegister,
-			Contracts:             devContractAddressMap,
+			Contracts:             DevContractAddressMap,
 			ImpeachTimeout:        time.Millisecond * DefaultBlockPeriod * 10,
 		},
 	}

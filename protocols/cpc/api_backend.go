@@ -321,5 +321,5 @@ func (b *APIBackend) Validators(blockNr rpc.BlockNumber) ([]common.Address, erro
 }
 
 func (b *APIBackend) SupportPrivateTx(ctx context.Context) (bool, error) {
-	return core.SupportPrivateTx(b.cpc.blockchain), nil
+	return types.SupportTxType(types.PrivateTx), nil
 }

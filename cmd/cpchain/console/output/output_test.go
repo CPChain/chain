@@ -3,7 +3,7 @@ package output
 import (
 	"testing"
 
-	status "bitbucket.org/cpchain/chain/tools/console/common"
+	status "bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
 )
 
 func TestLogOutput(t *testing.T) {
@@ -14,13 +14,13 @@ func TestLogOutput(t *testing.T) {
 
 	// Status
 	output.Status(&status.Status{
-		Mining:     true,
-		RNode:      true,
-		Proposer:   true,
+		Mining:   true,
+		RNode:    true,
+		Proposer: true,
 	})
 	output.Status(&status.Status{
-		Mining:     true,
-		RNode:      true,
-		Proposer:   false,
+		Mining:   true,
+		RNode:    true,
+		Proposer: false,
 	})
 }

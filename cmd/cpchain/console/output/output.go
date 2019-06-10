@@ -5,8 +5,8 @@ import (
 	"os"
 	"text/template"
 
+	cm "bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
 	"bitbucket.org/cpchain/chain/commons/log"
-	cm "bitbucket.org/cpchain/chain/tools/console/common"
 )
 
 // LogOutput output data in log
@@ -41,7 +41,6 @@ Proposer:         {{.Proposer}}
 	}
 	fmt.Println()
 }
-
 
 // Info log
 func (l *LogOutput) Info(msg string, params ...interface{}) {
