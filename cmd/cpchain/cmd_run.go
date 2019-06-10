@@ -48,11 +48,12 @@ const (
 ################################################################################
 ################################################################################
 
-		You are either a CURRENT or a FUTURE PROPOSER.
-		Please launch another CPCHAIN program to STOP MINING before quitting.
-		Refer to the LINK BELOW for console commands and detailed explanation.
+	You are either a CURRENT or a FUTURE PROPOSER.
+	Please use =cpchain campaign= command to quit mining first.
 
-		https://docs.cpchain.io/misc/faq.html#sig-ctrl-c
+	Refer to the LINK BELOW for detailed explanation.
+
+	https://docs.cpchain.io/misc/faq.html#sig-ctrl-c
 
 ################################################################################
 ################################################################################
