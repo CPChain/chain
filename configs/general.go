@@ -27,6 +27,7 @@ const (
 )
 
 // IgnoreNetworkStatusCheck is used for ignore network status check before campaign
+// this is not a hard restriction, set to true to ignore the check
 const (
 	IgnoreNetworkStatusCheck = false
 )
