@@ -90,12 +90,12 @@ contract Reward {
     // the amount will not locked until new round start
     function submitDeposit() public payable unlocked {
         require(!isContract(msg.sender),"please not use contract call this function");
-        require(msg.sender>0);
+        require(msg.value>0);
         if (!isEnode(msg.sender)){
             participants.insert(msg.sender);
         }
         investors[msg.sender].freeDeposit = investors[msg.sender].freeDeposit.add(msg.value);
-        emit SubmitDeposit(msg.sender,msg.value);
+        emit SubmitDeposit(msg.sender, msg.value);
     }
 
     // get investor's total balance: freeDeposit + lockedDeposit
