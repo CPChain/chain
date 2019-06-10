@@ -336,7 +336,7 @@ func TestSnapshot_updateCandidates(t *testing.T) {
 				Candidates: tt.fields.Candidates,
 				// RecentSigners: tt.fields.RecentSigners,
 			}
-			if err := s.updateCandidates(nil); (err != nil) != tt.wantErr {
+			if err := s.updateCandidates(nil, 0); (err != nil) != tt.wantErr {
 				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 			}
 		})
