@@ -53,8 +53,6 @@ contract Campaign {
     uint public acceptableBlocks = 10; // only latest 10 blocks based proofs will be accepted
     uint public supportedVersion = 1; // only nodes with new version can claim campaign
 
-    uint public maxCandidates = 150; // max number of candidates
-
     // a new type for a single candidate
     struct CandidateInfo {
         uint numOfCampaign; // total number of terms
@@ -137,10 +135,6 @@ contract Campaign {
         supportedVersion = _supportedVersion;
     }
 
-    function updateMaxCandidates(uint _maxCandidates) public onlyOwner {
-        maxCandidates = _maxCandidates;
-    }
-
     /**
      * Submits required information to participate the campaign for membership of the committee.
      *
@@ -167,9 +161,6 @@ contract Campaign {
     {
         // get current term, update termIdx
         updateTermIdx();
-        for(uint k=termIdx+1; k<=termIdx+ _termsToCampaign; k++) {
-            require(candidatesOf(k).length < maxCandidates);
-        }
 
         require(version >= supportedVersion);
 
@@ -197,10 +188,10 @@ contract Campaign {
         candidates[candidate].startTermIdx = termIdx.add(1);
 
         //[start, stop)
-        candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_termsToCampaign);
+        candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_termsToCampaign.sub(1));
 
         // add candidate to campaignSnapshots.
-        for(uint i = candidates[candidate].startTermIdx; i < candidates[candidate].stopTermIdx; i++) {
+        for(uint i = candidates[candidate].startTermIdx; i <= candidates[candidate].stopTermIdx; i++) {
             campaignSnapshots[i].push(candidate);
         }
         emit ClaimCampaign(candidate, candidates[candidate].startTermIdx, candidates[candidate].stopTermIdx);

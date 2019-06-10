@@ -159,10 +159,6 @@ def test_case_2():
 
     print("============owner update configs=====================")
     cf.cpc.defaultAccount = owner
-    print("owner set max candidates")
-    tx_hash = campaign.functions.updateMaxCandidates(1).transact({"gas": 89121, "from": owner, "value": 0})
-    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
-    print("result: ", tx_receipt["status"])
     print("owner set term length")
     tx_hash = campaign.functions.updateTermLen(1).transact({"gas": 89121, "from": owner, "value": 0})
     tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
@@ -172,10 +168,8 @@ def test_case_2():
     tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
     print("result: ", tx_receipt["status"])
     print("after owner set")
-    max_candidate = campaign.functions.maxCandidates().call()
     term_len = campaign.functions.termLen().call()
     view_len = campaign.functions.viewLen().call()
-    print("max candidates: ", max_candidate)
     print("term length: ", term_len)
     print("view length: ", view_len)
 
@@ -217,6 +211,10 @@ def test_case_2():
         tx_hash = campaign.functions.claimCampaign(3, 0, 0, 0, 0, 2).transact({"gas": 989121, "from": owner, "value": 0})
         tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
         print("claim result: ", tx_receipt["status"])
+        start_term = campaign.functions.candidateInfoOf(owner).call()[1]
+        stop_term = campaign.functions.candidateInfoOf(owner).call()[2]
+        print("start term: ", start_term)
+        print("stop term: ", stop_term)
         candidates = campaign.functions.candidatesOf(term_by_chain).call()
         print("candidates: ", candidates)
     print("check status")
