@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 
 contract Network {
-    string public host = "8.8.8.8:8888";
+    string public host = "www.yahoo.com:443";
     uint256 public count = 3;
     uint256 public timeout = 500;
     uint256 public gap = 100;
