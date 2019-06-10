@@ -398,17 +398,15 @@ func (s *Synchronizer) blocksHandler(errCh chan error, successCh chan struct{}, 
 }
 
 func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64, mode SyncMode) error {
-	if s.Synchronising() {
-		return nil
-	}
-	s.modeMutex.Lock()
-	s.mode = mode
-	s.modeMutex.Unlock()
 	// if already syncing, return
 	if !atomic.CompareAndSwapInt32(&s.synchronizing, 0, 1) {
 		return errBusy
 	}
 	defer atomic.StoreInt32(&s.synchronizing, 0)
+
+	s.modeMutex.Lock()
+	s.mode = mode
+	s.modeMutex.Unlock()
 
 	var (
 		currentHeader = s.blockchain.CurrentBlock().Header()

@@ -222,12 +222,12 @@ func TestTransactionJSON(t *testing.T) {
 // TestTxIsPrivate tests Transaction's SetPrivate() and IsPrivate() functions.
 func TestTxIsPrivate(t *testing.T) {
 	tx := NewTransaction(0, common.HexToAddress("0xb794f5ea0ba39494ce83a213fffba74279579268"), new(big.Int), 0, new(big.Int), nil)
-	tx.SetPrivate(true)
+	tx.SetPrivate()
 	if !tx.IsPrivate() {
 		t.Fatal("The IsPrivate state should be true.")
 	}
 
-	tx.SetPrivate(false)
+	tx.SetType(BasicTx)
 	if tx.IsPrivate() {
 		t.Fatal("The IsPrivate state should be false.")
 	}
@@ -236,12 +236,12 @@ func TestTxIsPrivate(t *testing.T) {
 // TestTxCheckType tests Transaction's CheckType() function.
 func TestTxCheckType(t *testing.T) {
 	tx := NewTransaction(0, common.HexToAddress("0xb794f5ea0ba39494ce83a213fffba74279579268"), new(big.Int), 0, new(big.Int), nil)
-	tx.SetType(TxTypePrivate)
-	if !tx.CheckType(TxTypePrivate) {
+	tx.SetType(PrivateTx)
+	if !tx.CheckType(PrivateTx) {
 		t.Fatal("The types of transaction should include Private")
 	}
-	tx.UnsetType(TxTypePrivate)
-	if tx.CheckType(TxTypePrivate) {
+	tx.SetType(BasicTx)
+	if tx.CheckType(PrivateTx) {
 		t.Fatal("The types of transaction should NOT include Private")
 	}
 }
@@ -249,8 +249,8 @@ func TestTxCheckType(t *testing.T) {
 // TestTxSetType tests Transaction's SetType(), Type() function.
 func TestTxSetType(t *testing.T) {
 	tx := NewTransaction(0, common.HexToAddress("0xb794f5ea0ba39494ce83a213fffba74279579268"), new(big.Int), 0, new(big.Int), nil)
-	tx.SetType(TxTypePrivate)
-	if tx.Type() != TxTypePrivate {
+	tx.SetType(PrivateTx)
+	if tx.Type() != PrivateTx {
 		t.Fatal("The returned types of transaction is not correct.")
 	}
 }

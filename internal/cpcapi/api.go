@@ -560,7 +560,7 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationI
 	}
 
 	header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
-	blockGenerationInfo := cpclient.BlockGenerationInfo {
+	blockGenerationInfo := cpclient.BlockGenerationInfo{
 		View:        v,
 		Term:        t,
 		Span:        p,
@@ -1158,6 +1158,7 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 			if err != nil {
 				log.Error(err.Error())
 				errCh <- true
+				return
 			}
 
 			wg := sync.WaitGroup{}
@@ -1195,6 +1196,7 @@ func (s *PublicTransactionPoolAPI) GetAllTransactionsByBlockNumberAndIndex(ctx c
 								log.Error(err.Error())
 							}
 							errCh <- true
+							return
 						}
 						code := state.GetCode(contract)
 						results[index] = newRPCTransactionWithContract(rpcTx, &creator, true, code, &contract, gasUsed, status)
@@ -1432,7 +1434,9 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 		tx = types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
 
-	tx.SetPrivate(args.IsPrivate)
+	if args.IsPrivate {
+		tx.SetPrivate()
+	}
 
 	return tx
 }
@@ -1535,14 +1539,17 @@ func (s *PublicTransactionPoolAPI) SendRawTransaction(ctx context.Context, encod
 	if err := rlp.DecodeBytes(encodedTx, tx); err != nil {
 		return common.Hash{}, err
 	}
-	if tx.Type() > 1 {
-		return common.Hash{}, NoSupportTxTypeErr
+
+	if !types.SupportTxType(tx.Type()) {
+		return common.Hash{}, types.ErrNotSupportedTxType
 	}
+
 	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
 	if tx.IsPrivate() && !supportPrivate {
 		// if not support private tx, immediately returns error
 		return common.Hash{}, NotSupportPrivateTxErr
 	}
+
 	return submitTransaction(ctx, s.b, tx)
 }
 
