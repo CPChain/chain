@@ -12,7 +12,7 @@ echo  "Deploy smartcontracts start"
 echo "password is $1"
 sleep 5
 smartcontract=$proj_dir/build/bin/smartcontract
-$smartcontract http://localhost:8521 data/data21/keystore/ $1
+$smartcontract http://127.0.0.1:8521 data/data21/keystore/ $1
 
 
 echo "Deploy smartcontracts stop"

@@ -9,8 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
-
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
@@ -19,12 +17,13 @@ import (
 	"bitbucket.org/cpchain/chain/core/state"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
+	"bitbucket.org/cpchain/chain/protocols/cpc/syncer"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 )
 
-// delayBeforeSeal returns 80% of the given delay duration
+// delayBeforeSeal returns 10% of the given delay duration
 func delayBeforeSeal(d time.Duration) time.Duration {
 	return d * 1 / 10
 }

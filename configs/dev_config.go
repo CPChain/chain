@@ -14,21 +14,11 @@ import (
 var (
 	// contract
 	devProxyContractRegister = common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93")
-	devContractAddressMap    = map[string]common.Address{
-		ContractCampaign4:  common.HexToAddress("0xDf44b3f933F19feDc3BC833da1225de3e2095c10"),
-		ContractRnode2:     common.HexToAddress("0xD4826927aa2dba7930117782ED183576CCeBEd93"),
-		ContractRpt2:       common.HexToAddress("0x7e9925bEA4af2EBEA96Dd8BA9894d4503E6c0278"),
-		ContractAdmission:  common.HexToAddress("0xA5e0EA2a14d91031986c2f25F6e724BEeeB66781"),
-
-		ContractProposer:   common.HexToAddress("0xf26B6864749cdE85a29afEa57FfeaE115B24b505"),
-		ContractReward:     common.HexToAddress("0x94576e35a55D6BbF9bB45120bC835a668557eF42"),
-		ContractCampaign:   common.HexToAddress("0xf26B6864749cdE85a29afEa57FfeaE115B24b505"),
-		ContractRpt:        common.HexToAddress("0x7e9925bEA4af2EBEA96Dd8BA9894d4503E6c0278"),
-		ContractRegister:   common.HexToAddress("0xA14842fBFfFe76d34e6D45ba5701ec9971bFd596"),
-		ContractPdash:      common.HexToAddress("0x3863551C32F18c7454482E718828A1ede00034d6"),
-		ContractPdashProxy: common.HexToAddress("0xEfc4282385932d3119FbEcF9d56f4aEed87B3805"),
-		ContractRnode:      common.HexToAddress("0xD4826927aa2dba7930117782ED183576CCeBEd93"),
-		ContractCampaign2:  common.HexToAddress("0xDf44b3f933F19feDc3BC833da1225de3e2095c10"),
+	DevContractAddressMap    = map[string]common.Address{
+		ContractRpt:       common.HexToAddress("0x7e9925bea4af2ebea96dd8ba9894d4503e6c0278"),
+		ContractRnode:     common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93"),
+		ContractAdmission: common.HexToAddress("0xa5e0ea2a14d91031986c2f25f6e724beeeb66781"),
+		ContractCampaign:  common.HexToAddress("0xf26b6864749cde85a29afea57ffeae115b24b505"),
 	}
 
 	// config
@@ -49,7 +39,7 @@ var (
 			FaultyNumber:          DefaultFaultyValidatorsNumber,
 			MaxInitBlockNumber:    DefaultDevMaxInitBlockNumber,
 			ProxyContractRegister: devProxyContractRegister,
-			Contracts:             devContractAddressMap,
+			Contracts:             DevContractAddressMap,
 			ImpeachTimeout:        time.Millisecond * DefaultBlockPeriod * 10,
 		},
 	}

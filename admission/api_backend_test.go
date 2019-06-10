@@ -16,7 +16,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	acContracts "bitbucket.org/cpchain/chain/contracts/dpor/admission"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign3"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
 	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"

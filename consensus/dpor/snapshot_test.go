@@ -421,11 +421,11 @@ func TestSnapshot_isLeader(t *testing.T) {
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader, err = snap.IsProposerOf(addr2, 4)
+	isLeader, err = snap.IsProposerOf(addr2, 2)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
-	isLeader, err = snap.IsProposerOf(addr3, 7)
+	isLeader, err = snap.IsProposerOf(addr3, 3)
 	if !isLeader || err != nil {
 		t.Errorf("expect isLeader true, get %v", isLeader)
 	}
@@ -499,12 +499,12 @@ func TestSnapshot_inturn(t *testing.T) {
 		{1, addr1, true},
 		{1, addr2, false},
 		{1, addr3, false},
-		{2, addr1, true},
-		{2, addr2, false},
+		{2, addr1, false},
+		{2, addr2, true},
 		{2, addr3, false},
-		{3, addr1, true},
+		{3, addr1, false},
 		{3, addr2, false},
-		{3, addr3, false},
+		{3, addr3, true},
 	}
 
 	for _, tt := range tests {

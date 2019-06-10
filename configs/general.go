@@ -21,6 +21,11 @@ const (
 	DatabaseName     = "chaindata"
 )
 
+// EnableProxyContract is used for enable proxy contract in evm
+const (
+	EnableProxyContract = false
+)
+
 // These are the multipliers for ether denominations.
 // Example: To get the wei value of an amount in 'douglas', use
 //
@@ -39,29 +44,34 @@ const (
 )
 
 const (
-	DevChainId     = 41
-	MainnetChainId = 42
-	TestnetChainId = 43
+	DevChainId         = 41
+	MainnetChainId     = 0x13370000
+	TestMainnetChainId = 42
+	TestnetChainId     = 43
 )
 
 const (
-	MainnetNetworkId = 0
-	DevNetworkId     = 1
-	TestnetNetworkId = 2
+	MainnetNetworkId     = 0x13370000
+	TestMainnetNetworkId = 0
+	DevNetworkId         = 1
+	TestnetNetworkId     = 2
 )
 
 const (
-	DefaultBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
-	TestnetBlockPeriod = 3e3 //  3000 Millisecond, 3 Second
-	MainnetBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
+	DefaultBlockPeriod     = 1e4 //  10000 Millisecond, 10 Second
+	TestnetBlockPeriod     = 3e3 //  3000 Millisecond, 3 Second
+	MainnetBlockPeriod     = 1e4 //  10000 Millisecond, 10 Second
+	TestMainnetBlockPeriod = 1e4 //  10000 Millisecond, 10 Second
 
-	DefaultFaultyValidatorsNumber = 1
-	TestnetFaultyValidatorsNumber = 1
-	MainnetFaultyValidatorsNumber = 2
+	DefaultFaultyValidatorsNumber     = 1
+	TestnetFaultyValidatorsNumber     = 1
+	MainnetFaultyValidatorsNumber     = 2
+	TestMainnetFaultyValidatorsNumber = 2
 
-	DefaultValidatorsNumber = DefaultFaultyValidatorsNumber*3 + 1
-	TestnetValidatorsNumber = TestnetFaultyValidatorsNumber*3 + 1
-	MainnetValidatorsNumber = MainnetFaultyValidatorsNumber*3 + 1
+	DefaultValidatorsNumber     = DefaultFaultyValidatorsNumber*3 + 1
+	TestnetValidatorsNumber     = TestnetFaultyValidatorsNumber*3 + 1
+	MainnetValidatorsNumber     = MainnetFaultyValidatorsNumber*3 + 1
+	TestMainnetValidatorsNumber = TestMainnetFaultyValidatorsNumber*3 + 1
 )
 
 // MaximumCandidateNumber is the max number of candidates read from campaign contract
@@ -70,13 +80,13 @@ const (
 )
 
 const (
-	DefaultDevMaxInitBlockNumber     = 216
-	DefaultTestnetMaxInitBlockNumber = 240
-	DefaultMainnetMaxInitBlockNumber = 216
+	DefaultDevMaxInitBlockNumber         = 180
+	DefaultTestnetMaxInitBlockNumber     = 240
+	DefaultMainnetMaxInitBlockNumber     = 180
+	DefaultTestMainnetMaxInitBlockNumber = 180
 )
 
 const (
-	DefaultWaitTimeBeforeImpeachment    = 2 * time.Minute // wait 120 seconds before first impeachment
 	DefaultFailbackTimestampSampleSpace = 2 * time.Minute
 )
 
@@ -89,78 +99,74 @@ const (
 	DefaultGasLimitPerBlock = 100000000
 )
 
-// TODO @hmw make the name more meaningful.  add doc.
 const (
-	ContractCampaign   = "campaign"   // address of campaign contract,select rnode
-	ContractProposer   = "proposer"   // address of proposer_register contract, register proposer address in proposer_register contract
-	ContractReward     = "reward"     // address of reward contract
-	ContractRegister   = "register"   // address of register contract
-	ContractRpt        = "rpt"        // address of rpt contract,Calculation the rpt of rnode
-	ContractPdash      = "pdash"      // address of pdash
-	ContractAdmission  = "admission"  // address of admission
-	ContractPdashProxy = "pdashProxy" // address of PdashProxy
-	ContractRnode      = "rnode"      // address of rnode
-	ContractCampaign2  = "campaign2"  // address of campaign2
-	ContractCampaign3  = "campaign3"  // address of campaign3
-	ContractCampaign4  = "campaign4"  // address of campaign4
-	ContractRnode2     = "rnode2"     // address of rnode2
-	ContractRpt2       = "rpt2"       // address of rpt2 contract,Calculation the rpt of rnode
-)
-
-const (
-	RNodeMinFundReq = 200000 // 200000 CPC for becoming a RNode
+	ContractCampaign  = "campaign"  // address of campaign contract,select rnode
+	ContractRpt       = "rpt"       // address of rpt contract,Calculation the rpt of rnode
+	ContractAdmission = "admission" // address of admission
+	ContractRnode     = "rnode"     // address of rnode
 )
 
 // some version numbers
 const (
 	RnodeVersion    = 1
-	CampaignVersion = 2
-)
-
-// pivot blocks numbers
-const (
-	RptCalcMethod2BlockNumber = 343000
-	RptCalcMethod3BlockNumber = 372400
-	RptCalcMethod4BlockNumber = 390500
-	RptCalcMethod5BlockNumber = 398000
-	RptCalcMethod6BlockNumber = 454700
-
-	ABCProposerCommitteeBlockNumber = 516138
-
-	Campaign2BlockNumber = 371900
-	Campaign3BlockNumber = 390500
-	Campaign4BlockNumber = 454700
-
-	Election2BlockNumber = 454700
+	CampaignVersion = 1
 )
 
 var (
 	chainConfigMap = map[RunMode]*ChainConfig{
-		Dev:      devChainConfig,
-		Testnet:  testnetChainConfig,
-		Mainnet:  mainnetChainConfig,
-		Testcase: devChainConfig,
+		Dev:         devChainConfig,
+		Testnet:     testnetChainConfig,
+		Mainnet:     mainnetChainConfig,
+		TestMainnet: testMainnetChainConfig,
+		Testcase:    devChainConfig,
 	}
 
 	proposersMap = map[RunMode][]common.Address{
-		Dev:      devProposers,
-		Testnet:  testnetProposers,
-		Mainnet:  mainnetProposers,
-		Testcase: devProposers,
+		Dev:         devProposers,
+		Testnet:     testnetProposers,
+		Mainnet:     mainnetProposers,
+		TestMainnet: testMainnetProposers,
+		Testcase:    devProposers,
 	}
 
 	candidatesMap = map[RunMode][]common.Address{
-		Dev:      devDefaultCandidates,
-		Testnet:  testnetDefaultCandidates,
-		Mainnet:  mainnetDefaultCandidates,
-		Testcase: devDefaultCandidates,
+		Dev:         devDefaultCandidates,
+		Testnet:     testnetDefaultCandidates,
+		Mainnet:     mainnetDefaultCandidates,
+		TestMainnet: testMainnetDefaultCandidates,
+		Testcase:    devDefaultCandidates,
 	}
 
 	validatorsMap = map[RunMode][]common.Address{
-		Dev:      devValidators,
-		Testnet:  testnetValidators,
-		Mainnet:  mainnetValidators,
-		Testcase: devValidators,
+		Dev:         devValidators,
+		Testnet:     testnetValidators,
+		Mainnet:     mainnetValidators,
+		TestMainnet: testMainnetValidators,
+		Testcase:    devValidators,
+	}
+
+	bootnodesMap = map[RunMode][]string{
+		Dev:         devBootnodes,
+		Testnet:     testnetBootnodes,
+		Mainnet:     mainnetBootnodes,
+		TestMainnet: testMainnetBootnodes,
+		Testcase:    devBootnodes,
+	}
+
+	depositMap = map[RunMode]*big.Int{
+		Dev:         devDeposit,
+		Testnet:     testnetDeposit,
+		Mainnet:     mainnetDeposit,
+		TestMainnet: testMainnetDeposit,
+		Testcase:    devDeposit,
+	}
+
+	defaultValidatorNodesMap = map[RunMode][]string{
+		Dev:         defaultDevValidatorNodes,
+		Testnet:     defaultTestnetValidatorNodes,
+		Mainnet:     defaultMainnetValidatorNodes,
+		TestMainnet: defaultTestMainnetValidatorNodes,
+		Testcase:    defaultDevValidatorNodes,
 	}
 )
 
@@ -193,29 +199,8 @@ func Validators() []common.Address {
 }
 
 func Bootnodes() []string {
-	switch {
-	case IsDev():
-		return devBootnodes
-	case IsTestnet():
-		return testnetBootnodes
-	case IsMainnet():
-		return mainnetBootnodes
-	case IsTestcase():
-		return devBootnodes
-	default:
-		return devBootnodes
-	}
+	return bootnodesMap[GetRunMode()]
 }
-
-// Deposit per time when campaign
-var (
-	depositMap = map[RunMode]*big.Int{
-		Dev:      devDeposit,
-		Testnet:  testnetDeposit,
-		Mainnet:  mainnetDeposit,
-		Testcase: devDeposit,
-	}
-)
 
 func Deposit() *big.Int {
 	return depositMap[GetRunMode()]
@@ -229,18 +214,7 @@ func GetDefaultValidators() []string {
 }
 
 func InitDefaultValidators(validators []string) {
-	defaultValidatorNodes = defaultDevValidatorNodes
-	runMode := GetRunMode()
-	switch runMode {
-	case Mainnet:
-		defaultValidatorNodes = defaultMainnetValidatorNodes
-	case Testnet:
-		defaultValidatorNodes = defaultTestnetValidatorNodes
-	case Dev:
-		defaultValidatorNodes = defaultDevValidatorNodes
-	case Testcase:
-		defaultValidatorNodes = defaultDevValidatorNodes
-	}
+	defaultValidatorNodes = defaultValidatorNodesMap[GetRunMode()]
 
 	if validators != nil && len(validators) > 0 {
 		defaultValidatorNodes = validators

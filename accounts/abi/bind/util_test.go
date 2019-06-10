@@ -24,6 +24,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -61,7 +62,7 @@ func TestWaitDeployed(t *testing.T) {
 
 		// Create the transaction.
 		tx := types.NewContractCreation(0, big.NewInt(0), test.gas, big.NewInt(1), common.FromHex(test.code))
-		tx, _ = types.SignTx(tx, types.NewCep1Signer(big.NewInt(42)), testKey)
+		tx, _ = types.SignTx(tx, types.NewCep1Signer(big.NewInt(configs.MainnetChainId)), testKey)
 
 		// Wait for it to get mined in the background.
 		var (

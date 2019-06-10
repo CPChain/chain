@@ -4,11 +4,9 @@ import (
 	"context"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain"
-	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitives"
-	"bitbucket.org/cpchain/chain/contracts/dpor/rpt_backend_holder"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -29,8 +27,7 @@ type ContractAPI interface {
 }
 
 func RegisterPrimitiveContracts() {
-	chainClient := GetChainClient()
-	for addr, c := range MakePrimitiveContracts(chainClient, chainClient) {
+	for addr, c := range MakePrimitiveContracts() {
 		err := vm.RegisterPrimitiveContract(addr, c)
 		if err != nil {
 			log.Fatal("register primitive contract error", "error", err, "addr", addr)
@@ -38,24 +35,9 @@ func RegisterPrimitiveContracts() {
 	}
 }
 
-func GetChainClient() *rpt_backend_holder.RptApiClient {
-	return &rpt_backend_holder.RptApiClient{ChainBackend: rpt_backend_holder.GetApiBackendHolderInstance().ChainBackend, ContractBackend: rpt_backend_holder.GetApiBackendHolderInstance().ContractBackend}
-}
-
-func MakePrimitiveContracts(contractClient bind.ContractBackend, chainClient *rpt_backend_holder.RptApiClient) map[common.Address]vm.PrimitiveContract {
+func MakePrimitiveContracts() map[common.Address]vm.PrimitiveContract {
 	contracts := make(map[common.Address]vm.PrimitiveContract)
 
-	// we start from 100 to reserve enough space for upstream primitive contracts.
-	RptEvaluator, err := primitives.NewRptEvaluator(contractClient, chainClient)
-	if err != nil {
-		log.Fatal("s.RptEvaluator is file")
-	}
-	contracts[common.BytesToAddress([]byte{100})] = &primitives.GetRank{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{101})] = &primitives.GetMaintenance{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{102})] = &primitives.GetProxyCount{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{103})] = &primitives.GetUploadReward{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{104})] = &primitives.GetTxVolume{Backend: RptEvaluator}
-	contracts[common.BytesToAddress([]byte{105})] = &primitives.IsProxy{Backend: RptEvaluator}
 	contracts[common.BytesToAddress([]byte{106})] = &primitives.CpuPowValidate{}
 	contracts[common.BytesToAddress([]byte{107})] = &primitives.MemPowValidate{}
 	return contracts

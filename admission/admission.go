@@ -17,8 +17,8 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
+	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
 	contracts "bitbucket.org/cpchain/chain/contracts/dpor/campaign/tests"
-	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign4"
 	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -166,12 +166,19 @@ func (ac *AdmissionControl) FundForRNode() error {
 		return nil
 	}
 
-	minRnodeFund := new(big.Int).Mul(big.NewInt(configs.RNodeMinFundReq), big.NewInt(configs.Cpc))
+	minRnodeFund, err := rNodeContract.RnodeThreshold(nil)
+	if err != nil {
+		return err
+	}
+
 	balance, _ := ac.contractBackend.BalanceAt(context.Background(), ac.address, nil)
 	if balance.Cmp(minRnodeFund) >= 0 {
 		transactOpts := bind.NewKeyedTransactor(ac.key.PrivateKey)
 		transactOpts.Value = minRnodeFund
-		tx, err := rNodeContract.JoinRnode(transactOpts)
+		tx, err := rNodeContract.JoinRnode(
+			transactOpts,
+			new(big.Int).SetInt64(configs.RnodeVersion),
+		)
 		if err != nil {
 			log.Info("encounter error when funding deposit for node to become candidate", "error", err)
 			return err

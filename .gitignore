@@ -50,6 +50,7 @@ profile.cov
 /examples/simple-chain/data
 /examples/cpchain/conf-testnet
 /examples/cpchain/conf-mainnet
+/examples/testmainnet/conf-testmainnet
 
 /examples/cpchain/testcase
 /docs/_build

@@ -427,3 +427,19 @@ func (d *Dpor) SyncFrom(p *p2p.Peer) {
 func (d *Dpor) Synchronize() {
 	go d.pmSyncFromBestPeerFn()
 }
+
+// IsCurrentOrFutureProposer checks if an address is a proposer in the period between current term and future term
+func (d *Dpor) IsCurrentOrFutureProposer(address common.Address) bool {
+
+	snap := d.CurrentSnap()
+	number := snap.number()
+	term := snap.TermOf(number)
+	futureTerm := snap.FutureTermOf(number)
+
+	isProposer := false
+	for t := term; t <= futureTerm; t++ {
+		isP, _ := d.VerifyProposerOf(address, t)
+		isProposer = isProposer || isP
+	}
+	return isProposer
+}

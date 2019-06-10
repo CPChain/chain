@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
+	"bitbucket.org/cpchain/chain/consensus/dpor/campaign"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/database"
@@ -262,7 +263,7 @@ func (s *DporSnapshot) copy() *DporSnapshot {
 
 // apply creates a new authorization Snapshot by applying the given headers to
 // the original one.
-func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee bool, candidateService rpt.CandidateService, rptService rpt.RptService) (*DporSnapshot, error) {
+func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee bool, candidateService campaign.CandidateService, rptService rpt.RptService) (*DporSnapshot, error) {
 	// Allow passing in no headers for cleaner code
 	if len(headers) == 0 {
 		return s, nil
@@ -297,7 +298,7 @@ func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee boo
 }
 
 // applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
-func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool, candidateService rpt.CandidateService, rptService rpt.RptService) error {
+func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool, candidateService campaign.CandidateService, rptService rpt.RptService) error {
 	// Update Snapshot attributes.
 	s.setNumber(header.Number.Uint64())
 	s.setHash(header.Hash())
@@ -334,16 +335,8 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 			}
 
 			log.Debug("update proposers committee", "number", s.number())
-			if s.number() < configs.Election2BlockNumber {
-				log.Debug("update proposers with updateProposers 1", "number", s.number())
-				s.updateProposers(rpts, seed)
-			} else {
-				log.Debug("update proposers with updateProposers 2", "number", s.number())
-				s.updateProposers2(rpts, seed, rptService)
-			}
-
+			s.updateProposers(rpts, seed, rptService)
 		}
-
 	}
 
 	term := s.TermOf(header.Number.Uint64())
@@ -359,7 +352,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 }
 
 // updateCandidates updates proposer candidates from campaign contract
-func (s *DporSnapshot) updateCandidates(candidateService rpt.CandidateService, seed int64) error {
+func (s *DporSnapshot) updateCandidates(candidateService campaign.CandidateService, seed int64) error {
 	var candidates []common.Address
 
 	if s.Mode == NormalMode && s.isStartElection() && candidateService != nil {
@@ -442,99 +435,7 @@ func (s *DporSnapshot) isAboutToCampaign() bool {
 }
 
 // updateProposer uses rpt and election result to get new proposers committee
-func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64) {
-	// Elect proposers
-	if s.isStartElection() {
-
-		// some logs about rpt infos
-		log.Debug("---------------------------")
-		log.Debug("start election")
-		log.Debug("rpts list:")
-		for idx, r := range rpts {
-			log.Debug("rpt:", "idx", idx, "addr", r.Address.Hex(), "value", r.Rpt)
-		}
-		log.Debug("seed", "seed", seed)
-		log.Debug("term length", "term", int(s.config.TermLen))
-		log.Debug("---------------------------")
-
-		// run the election algorithm
-		var proposers []common.Address
-		if int(s.config.TermLen) > defaultProposersSeats {
-			electedProposers := election.Elect(rpts, seed, int(s.config.TermLen)-defaultProposersSeats)
-
-			log.Debug("---------------------------")
-			log.Debug("elected 8 proposers")
-			for i, ep := range electedProposers {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
-
-			chosenProposers := choseSomeAddresses(configs.Proposers(), seed, defaultProposersSeats)
-
-			log.Debug("---------------------------")
-			log.Debug("chosen 4 proposers")
-			for i, ep := range chosenProposers {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
-
-			log.Debug("---------------------------")
-			log.Debug("default 12 proposers")
-			for i, ep := range configs.Proposers() {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
-
-			proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
-
-			log.Debug("---------------------------")
-			log.Debug("evenly spared 12 proposers")
-			for i, ep := range proposers {
-				log.Debug("proposer", "idx", i, "addr", ep.Hex())
-			}
-			log.Debug("---------------------------")
-
-		} else {
-			proposers = election.Elect(rpts, seed, int(s.config.TermLen))
-		}
-
-		if len(proposers) != int(s.config.TermLen) {
-			panic("invalid length of prepared proposer list")
-		}
-
-		// save to cache
-		term := s.FutureTermOf(s.number())
-		s.setRecentProposers(term, proposers)
-
-		// some logs about elected proposers
-		log.Debug("---------------------------")
-		log.Debug("elected proposers:")
-		for idx, s := range proposers {
-			log.Debug("proposer", "idx", idx, "addr", s.Hex())
-		}
-		log.Debug("current number", "number", s.number())
-		log.Debug("future term(election term)", "term", term)
-		log.Debug("---------------------------")
-	}
-
-	// Set default proposer if it is in initial stage
-	if s.isUseDefaultProposers() {
-		// set default proposers
-		proposers := configs.Proposers()
-		s.setRecentProposers(s.Term()+1, proposers)
-
-		// some logs about default proposer in initialization state
-		log.Debug("use default proposers for term", "term", s.Term()+1, "proposers", len(proposers))
-		for i, p := range proposers {
-			log.Debug(fmt.Sprintf("proposer #%d details", i), "address", p.Hex())
-		}
-	}
-
-	return
-}
-
-// updateProposer uses rpt and election result to get new proposers committee
-func (s *DporSnapshot) updateProposers2(rpts rpt.RptList, seed int64, rptService rpt.RptService) {
+func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService rpt.RptService) {
 	// Elect proposers
 	if s.isStartElection() {
 
@@ -556,7 +457,7 @@ func (s *DporSnapshot) updateProposers2(rpts rpt.RptList, seed int64, rptService
 			dynamicSeats, _ := rptService.TotalSeats()
 			lowRptCount := rptService.LowRptCount(rpts.Len())
 			lowRptSeats, _ := rptService.LowRptSeats()
-			electedProposers := election.Elect2(rpts, seed, dynamicSeats, lowRptCount, lowRptSeats)
+			electedProposers := election.Elect(rpts, seed, dynamicSeats, lowRptCount, lowRptSeats)
 
 			logOutAddrs("elected proposers", "proposers", electedProposers)
 
@@ -584,7 +485,7 @@ func (s *DporSnapshot) updateProposers2(rpts rpt.RptList, seed int64, rptService
 			logOutAddrs("evenly spared 12 proposers", "proposer", proposers)
 
 		} else {
-			proposers = election.Elect(rpts, seed, int(s.config.TermLen))
+			proposers = election.Elect(rpts, seed, int(s.config.TermLen), 2, 2)
 		}
 
 		if len(proposers) != int(s.config.TermLen) {
@@ -658,29 +559,9 @@ func (s *DporSnapshot) IsValidatorOf(validator common.Address, number uint64) bo
 
 // IsProposerOf returns if an address is a proposer in the given block number
 func (s *DporSnapshot) IsProposerOf(signer common.Address, number uint64) (bool, error) {
-	if number < configs.ABCProposerCommitteeBlockNumber {
-		return s.isProposerOfAAA(signer, number)
-	}
-
-	return s.isProposerOfBlock(signer, number)
-}
-
-func (s *DporSnapshot) isProposerOfAAA(signer common.Address, number uint64) (bool, error) {
 	if number == 0 {
 		return false, errGenesisBlockNumber
 	}
-	proposers := s.ProposersOf(number)
-	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) / s.config.ViewLen)
-	if idx >= 0 && idx < len(proposers) {
-		if proposers[idx] == signer {
-			return true, nil
-		}
-	}
-
-	return false, errProposerNotInCommittee
-}
-
-func (s *DporSnapshot) isProposerOfBlock(signer common.Address, number uint64) (bool, error) {
 	proposers := s.ProposersOf(number)
 	idx := int(((number - 1) % (s.config.TermLen * s.config.ViewLen)) % s.config.TermLen)
 	if idx >= 0 && idx < len(proposers) {

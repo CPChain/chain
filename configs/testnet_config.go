@@ -15,17 +15,11 @@ var (
 	// contract
 	testnetProxyContractRegister = common.HexToAddress("0xa6a8ac0cad2150e076de638aa492042eeb823c6b")
 
-	testnetContractAddressMap = map[string]common.Address{
-		ContractProposer:   common.HexToAddress("0x04686eB1c444e1A944b51f92AEB3eFD918A350Ca"),
-		ContractReward:     common.HexToAddress("0x00C228d3A76549dB319B2C51D87267B7Cc6E6302"),
-		ContractAdmission:  common.HexToAddress("0x82102c2A09DEe47D1DDcf298AeF7877F99d787c4"),
-		ContractCampaign:   common.HexToAddress("0x2B11cA41A28571e22e242299dC308f08EDD7F011"),
-		ContractRpt:        common.HexToAddress("0x7a174062c5C8551649A86AE1b8a84282D901C2C3"),
-		ContractRegister:   common.HexToAddress("0x7bE67Ec2da5E15d394B19cab9497c307fc4FD424"),
-		ContractPdash:      common.HexToAddress("0xC6376C55BED8998523fACE2f97Daa765852A4445"),
-		ContractPdashProxy: common.HexToAddress("0xE314989a00f8fd690b17b3b93D965F4717fBBfB4"),
-		ContractRnode:      common.HexToAddress("0xF0f87e064C76674fE7c4dDceE3603AFC67998658"),
-		ContractCampaign2:  common.HexToAddress("0xDf44b3f933F19feDc3BC833da1225de3e2095c10"),
+	TestnetContractAddressMap = map[string]common.Address{
+		ContractAdmission: common.HexToAddress("0x82102c2A09DEe47D1DDcf298AeF7877F99d787c4"),
+		ContractCampaign:  common.HexToAddress("0x2B11cA41A28571e22e242299dC308f08EDD7F011"),
+		ContractRpt:       common.HexToAddress("0x7a174062c5C8551649A86AE1b8a84282D901C2C3"),
+		ContractRnode:     common.HexToAddress("0xF0f87e064C76674fE7c4dDceE3603AFC67998658"),
 	}
 
 	// config
@@ -46,7 +40,7 @@ var (
 			FaultyNumber:          TestnetFaultyValidatorsNumber,
 			MaxInitBlockNumber:    DefaultTestnetMaxInitBlockNumber,
 			ProxyContractRegister: testnetProxyContractRegister,
-			Contracts:             testnetContractAddressMap,
+			Contracts:             TestnetContractAddressMap,
 			ImpeachTimeout:        time.Millisecond * TestnetBlockPeriod * 2,
 		},
 	}
