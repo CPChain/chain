@@ -4,7 +4,7 @@ pragma solidity ^0.4.24;
 contract Network {
     string public host = "www.microsoft.com:443";
     uint256 public count = 3;
-    uint256 public timeout = 500;
+    uint256 public timeout = 300;
     uint256 public gap = 100;
     bool public open = true;
 
@@ -32,7 +32,7 @@ contract Network {
     }
 
     function updateTimeout(uint256 _timeout) public onlyOwner {
-        require(_timeout>=300 && _timeout<=3000);
+        require(_timeout>=50 && _timeout<=3000);
         timeout = _timeout;
         emit UpdateConfig("timeout", timeout);
     }
