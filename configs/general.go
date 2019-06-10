@@ -104,6 +104,7 @@ const (
 	ContractRpt       = "rpt"       // address of rpt contract,Calculation the rpt of rnode
 	ContractAdmission = "admission" // address of admission
 	ContractRnode     = "rnode"     // address of rnode
+	ContractNetwork   = "network"   // address of network
 )
 
 // some version numbers

@@ -32,6 +32,10 @@ def main():
     with open("./assets/config/rnode.json", "w+") as f:
         f.write(json.dumps(rnode_config))
 
+    network_config = compile_file("./dpor/network/network.sol", "Network")
+    with open("./assets/config/network.json", "w+") as f:
+        f.write(json.dumps(network_config))
+
     reward_config = compile_file("./reward/reward.sol", "Reward")
     with open("./assets/config/reward.json", "w+") as f:
         f.write(json.dumps(reward_config))
