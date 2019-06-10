@@ -1,10 +1,10 @@
-.. _basic_info:
+.. _basic-info:
 
 
 Basic Information
 =========================
 
-This page lists for all basic information of CPChain
+This page lists for all basic information of CPChain.
 
 1. **What open source project is CPChain based on?**
 
@@ -12,8 +12,9 @@ This page lists for all basic information of CPChain
 
 2. **Source code**
 
-    `Github repo <https://github.com/CPChain/chain>`_
-    `Bitbucket repo <https://bitbucket.org/cpchain/chain>`_
+    `GitHub repository <https://github.com/CPChain/chain>`_
+
+    `Bitbucket repository <https://bitbucket.org/cpchain/chain>`_
 
 3. **Explorer**
 
@@ -28,3 +29,14 @@ This page lists for all basic information of CPChain
     :ref:`fusion-api` (Python)
 
     :ref:`rpc-api`
+
+6. **White Paper**
+
+    `English Version <https://cpchain.io/download/CPChain_Whitepaper_English.pdf>`_
+
+    `Chinese Version <https://cpchain.io/download/CPChain_Whitepaper_CN.pdf>`_
+
+7. **Documentation**
+
+    :ref:`index`
+
