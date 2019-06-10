@@ -165,14 +165,14 @@ contract Campaign {
         require(version >= supportedVersion);
 
         // proofs must be calculated based on latest blocks
-//        if(block.number > acceptableBlocks) {
-//            require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
-//        }
+        if(block.number > acceptableBlocks) {
+            require(_cpuBlockNumber >= block.number.sub(acceptableBlocks) && _memoryBlockNumber >= block.number.sub(acceptableBlocks));
+        }
         // only rnode can become candidate
-//        require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
+        require(rnode.isRnode(msg.sender)==true, "not RNode by rnode");
 
         // verify the sender's cpu&memory ability.
-//        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
+        require(admission.verify(_cpuNonce, _cpuBlockNumber, _memoryNonce, _memoryBlockNumber, msg.sender), "cpu or memory not passed.");
         require((_termsToCampaign >= minNoc && _termsToCampaign <= maxNoc), "num of campaign out of range.");
 
         address candidate = msg.sender;
@@ -187,7 +187,7 @@ contract Campaign {
         candidates[candidate].numOfCampaign =candidates[candidate].numOfCampaign.add(_termsToCampaign);
         candidates[candidate].startTermIdx = termIdx.add(1);
 
-        //[start, stop)
+        //[start, stop]
         candidates[candidate].stopTermIdx = candidates[candidate].startTermIdx.add(_termsToCampaign.sub(1));
 
         // add candidate to campaignSnapshots.
