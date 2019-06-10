@@ -140,3 +140,17 @@ and replace it with a 0.4.25 version.
     // copy solc 0.4.25 to /user/bin
     $ cp solc /usr/bin
 
+.. _sig-ctrl-c:
+
+Why `Control+C` cannot abort the program
+********************************************
+
+`Control+C` cannot abort `./cpchain` if either of the following condition is satisfied:
+
+#. You are one of the proposers committee in the current term;
+#. You are elected to seal blocks in a future term.
+
+To sustain the throughput of the chain,
+we disable the functionality of aborting the program via `Control+C` for all current and future proposers.
+You can quit the program when neither of the condition above is held.
+
