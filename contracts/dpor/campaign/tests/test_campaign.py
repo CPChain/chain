@@ -203,19 +203,21 @@ def test_case_2():
     print("================claim campaign continuously==================")
     cf.cpc.defaultAccount = owner
     print("try 100 times")
-    for i in range(10):
+    for i in range(15):
         cf.personal.unlockAccount(owner, "password")
-        term_id = campaign.functions.termIdx().call()
         block_number = cf.cpc.blockNumber
+        term_by_contract = campaign.functions.termIdx().call()
         blocks_per_term = campaign.functions.numPerRound().call()
+        term_by_chain = int((block_number-1) / blocks_per_term)
         print("block number: ", block_number)
-        print("blocks per term: ", blocks_per_term)
-        print("current term: ", term_id)
+        # print("blocks per term: ", blocks_per_term)
+        print("current term by contract: ", term_by_contract)
+        print("current term by chain: ", term_by_chain)
         print("candidate try once")
         tx_hash = campaign.functions.claimCampaign(3, 0, 0, 0, 0, 2).transact({"gas": 989121, "from": owner, "value": 0})
         tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
         print("claim result: ", tx_receipt["status"])
-        candidates = campaign.functions.candidatesOf(term_id+1).call()
+        candidates = campaign.functions.candidatesOf(term_by_chain).call()
         print("candidates: ", candidates)
     print("check status")
     term_id = campaign.functions.termIdx().call()
