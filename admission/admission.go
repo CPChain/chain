@@ -109,7 +109,7 @@ func (ac *AdmissionControl) CheckNetworkStatus() bool {
 	ac.mutex.RUnlock()
 
 	// TODO: read parameters from contract
-	host := "www.baidu.com"
+	host := "www.yahoo.com:443"
 	count := 4
 	timeout := 300
 	check := true
