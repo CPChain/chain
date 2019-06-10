@@ -50,9 +50,7 @@ func newApp() *cli.App {
 		runCommand,
 		dumpConfigCommand,
 		chainCommand,
-
-		// new command
-		CampaignCommand,
+		campaignCommand,
 	}
 
 	// global flags

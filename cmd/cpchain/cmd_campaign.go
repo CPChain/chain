@@ -13,7 +13,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CampaignCommand cli.Command
+var campaignCommand cli.Command
 
 func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFunc, error) {
 	rpc, kspath, pwdfile, err := flags.Validator(ctx)
@@ -51,7 +51,7 @@ func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFun
 func init() {
 	campaignFlags := append([]cli.Flag(nil))
 	stopCampaignFlags := append([]cli.Flag(nil), flags.GasFlags...)
-	CampaignCommand = cli.Command{
+	campaignCommand = cli.Command{
 		Name:  "campaign",
 		Flags: campaignFlags,
 		Usage: "Manage campaign",
