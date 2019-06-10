@@ -1078,7 +1078,10 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, pubReceipts []*typ
 
 	triedb := bc.stateCache.TrieDB()
 	// If we're running an archive node, always flush
-	if bc.cacheConfig.Disabled {
+	disabled := bc.cacheConfig.Disabled
+	// commit root to the trie immediately!
+	disabled = true
+	if disabled {
 		if err := triedb.Commit(root, false); err != nil {
 			return NonStatTy, err
 		}

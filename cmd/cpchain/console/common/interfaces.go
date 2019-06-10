@@ -18,12 +18,10 @@ type Manager interface {
 	JoinRnode() error
 }
 
-
 // Status is the status of cpchain ndoe
 type Status struct {
-	Mining           bool
-	RNode            bool
-	Proposer         bool
-	Locked           bool
+	Mining   bool
+	RNode    bool
+	Proposer bool
+	Locked   bool
 }
-

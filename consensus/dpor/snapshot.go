@@ -308,10 +308,11 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 
 		// If in checkpoint, run election
 		if backend.IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {
+			seed := header.Hash().Big().Int64()
 
 			// Update candidates
 			log.Debug("start updating candidates")
-			err := s.updateCandidates(candidateService)
+			err := s.updateCandidates(candidateService, seed)
 			if err != nil {
 				log.Warn("err when update candidates", "err", err)
 				return err
@@ -334,12 +335,8 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 			}
 
 			log.Debug("update proposers committee", "number", s.number())
-			seed := header.Hash().Big().Int64()
-			log.Debug("update proposers with updateProposers 2", "number", s.number())
 			s.updateProposers(rpts, seed, rptService)
-
 		}
-
 	}
 
 	term := s.TermOf(header.Number.Uint64())
@@ -355,7 +352,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 }
 
 // updateCandidates updates proposer candidates from campaign contract
-func (s *DporSnapshot) updateCandidates(candidateService campaign.CandidateService) error {
+func (s *DporSnapshot) updateCandidates(candidateService campaign.CandidateService, seed int64) error {
 	var candidates []common.Address
 
 	if s.Mode == NormalMode && s.isStartElection() && candidateService != nil {
@@ -387,7 +384,7 @@ func (s *DporSnapshot) updateCandidates(candidateService campaign.CandidateServi
 	// too many candidates
 	if len(candidates) > configs.MaximumCandidateNumber {
 		log.Debug("candidates is more than max allowed", "max", configs.MaximumCandidateNumber, "len", len(candidates))
-		candidates = candidates[:configs.MaximumCandidateNumber]
+		candidates = choseSomeAddresses(candidates, seed, configs.MaximumCandidateNumber)
 	}
 
 	log.Debug("set candidates", "len(candidates)", len(candidates))
@@ -478,7 +475,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 			logOutAddrs("left default proposer after election and padding", "proposers", leftDefaultProposers)
 
 			// chose some default proposers
-			chosenProposers := choseSomeProposers(leftDefaultProposers, seed, defaultProposersSeats)
+			chosenProposers := choseSomeAddresses(leftDefaultProposers, seed, defaultProposersSeats)
 
 			logOutAddrs("chosen 4 proposers", "proposers", chosenProposers)
 
@@ -616,29 +613,29 @@ func (s *DporSnapshot) StartBlockNumberOfTerm(term uint64) uint64 {
 	return s.config.ViewLen * s.config.TermLen * term
 }
 
-// choseDefaultProposers choses a batch of proposers from a proposers slice with total count of `defaultProposersNum`
+// choseDefaultAddresses choses a batch of addresses from an addresses slice with total count of `wantLen`
 // by the seed of current snapshot.hash.
-func choseSomeProposers(allProposers []common.Address, seed int64, wantLen int) (defaultProposers []common.Address) {
+func choseSomeAddresses(allAddresses []common.Address, seed int64, wantLen int) (chosenAddresses []common.Address) {
 
-	var proposers []common.Address
-	for _, p := range allProposers {
-		proposers = append(proposers, p)
+	var addresses []common.Address
+	for _, addr := range allAddresses {
+		addresses = append(addresses, addr)
 	}
 
-	if len(proposers) > wantLen {
+	if len(addresses) > wantLen {
 		randSource := rand.NewSource(seed)
 		myRand := rand.New(randSource)
 
 		for i := 0; i < wantLen; i++ {
-			chosen := myRand.Intn(len(proposers))
-			defaultProposers = append(defaultProposers, proposers[chosen])
-			proposers = append(proposers[:chosen], proposers[chosen+1:]...)
+			chosen := myRand.Intn(len(addresses))
+			chosenAddresses = append(chosenAddresses, addresses[chosen])
+			addresses = append(addresses[:chosen], addresses[chosen+1:]...)
 		}
-		return defaultProposers
-	} else if len(proposers) == wantLen {
-		return proposers
+		return chosenAddresses
+	} else if len(addresses) == wantLen {
+		return addresses
 	}
-	panic("invalid length of given proposer list")
+	panic("invalid length of given address list")
 }
 
 func evenlyInsertDefaultProposers(electedProposers []common.Address, chosenDefaultProposers []common.Address, seed int64, wantLen int) (proposers []common.Address) {
