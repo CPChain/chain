@@ -30,6 +30,7 @@ import (
 	"bitbucket.org/cpchain/chain/commons/chainmetrics"
 	"bitbucket.org/cpchain/chain/commons/log"
 	times "bitbucket.org/cpchain/chain/commons/time"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/contracts/dpor/primitive_register"
 	"bitbucket.org/cpchain/chain/internal/profile"
 	"bitbucket.org/cpchain/chain/node"
@@ -38,6 +39,28 @@ import (
 )
 
 var runCommand cli.Command
+
+// BusyWarning is a warning msg
+const (
+	BusyWarning = `
+
+
+################################################################################
+################################################################################
+
+	You are either a CURRENT or a FUTURE PROPOSER.
+	Please use =cpchain campaign= command to quit mining first.
+
+	Refer to the LINK BELOW for detailed explanation.
+
+	https://docs.cpchain.io/misc/faq.html#sig-ctrl-c
+
+################################################################################
+################################################################################
+
+
+	`
+)
 
 func init() {
 
@@ -213,7 +236,7 @@ func setupMining(ctx *cli.Context, n *node.Node, key *keystore.Key) {
 	var cpchainService *cpc.CpchainService
 	// cpchainService will point to the real cpchain service in n.services
 	if err := n.Service(&cpchainService); err != nil {
-		log.Fatalf("Cpchain service not running: %v", err)
+		log.Fatalf("CPChain service not running: %v", err)
 	}
 
 	cpchainService.AdmissionApiBackend.SetAdmissionKey(key)
@@ -235,8 +258,28 @@ func handleInterrupt(n *node.Node) {
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
 	defer signal.Stop(sigc)
+
+	var cpchainService *cpc.CpchainService
+	if err := n.Service(&cpchainService); err != nil {
+		log.Fatalf("CPChain service not running: %v", err)
+	}
+
+WaitSignal:
+
 	<-sigc
-	log.Info("Got interrupt, shutting down...")
+
+	log.Info("Got interrupt")
+
+	// Warn to not to stop if local coinbase is a current or future proposer!
+	if coinbase, err := cpchainService.Coinbase(); err == nil {
+		if cpchainService.Engine().(*dpor.Dpor).IsCurrentOrFutureProposer(coinbase) {
+			log.Warn(BusyWarning)
+			goto WaitSignal
+		}
+	}
+
+	log.Info("Shutting down...")
+
 	go n.Stop()
 	for i := 10; i > 0; i-- {
 		<-sigc
