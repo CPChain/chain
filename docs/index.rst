@@ -6,17 +6,17 @@
 .. _index:
 
 ==================================
-Welcome to CPChain documentation!
+Welcome to CPChain Documentation!
 ==================================
 
 
-This documents presents both algorithms and APIs for developers.
+This documents presents an overview, algorithms and APIs for interested readers.
 
 Please mail to info@cpchain.io if you have any question.
 
 
 
-Quick reference:
+Quick Reference:
 =====================
 
 #. :ref:`basic-info`
@@ -32,6 +32,8 @@ Quick reference:
 .. _Solidity: ./solidity/index.html
 
 
+Table of Contents
+=====================
 
 
 .. toctree::
