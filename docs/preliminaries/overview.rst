@@ -226,7 +226,7 @@ Account Balance
 ++++++++++++++++++
 
 A *account balance* score is granted to an RNode
-according to its account balance percentile among all RNode addresses
+according to its account balance ranking among all RNode addresses
 (excluding CPChain Foundation and Exchange addresses).
 
 
