@@ -12,7 +12,7 @@ In this section, you are going to learn how to download our code, build the proj
 
 First, make sure you have installed `go <https://golang.org/>`_, and configured the $GOPATH.
 
-Getting repository
+Getting Repository
 ************************
 
 You can click `here <https://github.com/CPChain/chain>`_ to access source code, or execute the following commands to clone code on github.
