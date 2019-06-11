@@ -9,21 +9,21 @@ All general configuration have been curated in ``configs/general.go``.
 Two notable parameters are ``MainnetChainId`` and ``MainnetNetworkId``.
 
 The code below are cited from general.go.
-As we can see MainnetChainId is set to 42,
-while MainnetNetworkId is 0.
+As we can see MainnetChainId is set to 337.
 
 .. code-block:: go
 
     const (
-	DevChainId     = 41
-	MainnetChainId = 42
-	TestnetChainId = 43
+	DevChainId         = 41
+	MainnetChainId     = 337
+	TestMainnetChainId = 42
+	TestnetChainId     = 43
     )
 
     const (
-        MainnetNetworkId = 0
-        DevNetworkId     = 1
-        TestnetNetworkId = 2
+        TestMainnetNetworkId = 0
+        DevNetworkId         = 1
+        TestnetNetworkId     = 2
     )
 
 These two parameters are the marks of Mainnet.
