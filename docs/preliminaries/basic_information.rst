@@ -4,7 +4,7 @@
 Basic Information
 =========================
 
-This page lists for all basic information of CPChain.
+This page lists all basic information of CPChain.
 
 1. **What open source project is CPChain based on?**
 
