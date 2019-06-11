@@ -152,7 +152,7 @@ an economy node and have the right to vote in the community.
 **Reputation Node**: Requires a minimum of 200,000 CPC tokens
 deposited in *RNode Pool* for participation.
 Investors with the basic configuration of computing and
-storing can participate to support the CPChain Open Transmission Protocol (COTP).
+storage can participate to support the CPChain Open Transmission Protocol (COTP).
 
 **Industry Node**:
 IoT Industry partners and CPChain ecosystem's peer developers have the right to participate as an Industry Node.
@@ -171,7 +171,7 @@ Reputation Nodes
 
 A node has to meet one of the following requirements to become a Reputation Node:
 
-    1. Economy node + Computing and Storing node:
+    1. Economy node + Computing and Storage node:
     An economy node must lock-up a specific amount of tokens (200,000 minimum and 5,000,000 maximum)
     for 90 days and must satisfy the software, hardware, and network connection requirements.
     The locked up tokens have a positive correlation with the basic rewards.
