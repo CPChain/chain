@@ -144,13 +144,13 @@ RNode Ecosystem
 CPChain Nodes Roles and Pools
 ************************************
 
-**Economy Node**: Requires a minimum of $20,000$ CPC tokens
+**Economy Node**: Requires a minimum of 20,000 CPC tokens
 deposited in *Economy Pool* for participation.
 Investors who meet this requirement may participate as
 an economy node and have the right to vote in the community.
 
 **Reputation Node**: Requires a minimum of 200,000 CPC tokens
-deposited in *Economy Pool* for participation.
+deposited in *RNode Pool* for participation.
 Investors with the basic configuration of computing and
 storing can participate to support the CPChain Open Transmission Protocol (COTP).
 
@@ -160,10 +160,10 @@ IoT Industry partners and CPChain ecosystem's peer developers have the right to 
 Note that there are two separate pools for deposit.
 
 **Economy Pool**:
-Any node deposit at least $20,000$ CPC tokens in this pool is qualified as economy node.
+Any node deposit at least 20,000 CPC tokens in this pool is qualified as economy node.
 
 **RNode Pool**:
-Any node deposit at least $200,000$ CPC tokens in this pool is qualified as RNode.
+Any node deposit at least 200,000 CPC tokens in this pool is qualified as RNode.
 
 
 Reputation Nodes
@@ -202,11 +202,13 @@ By employing `RPT Contract`_, a node can evaluates its RPT value by following fi
 Each dimension has a full score of 100 point.
 And the total score is calculated as:
 
-:math:`RPT = 0.5\times AB +
-0.15\times TX +
-0.1\times PR +
-0.15\times DC +
-0.1\times BM`
+:math:`RPT = 50\times AB +
+15\times TX +
+10\times PR +
+15\times DC +
+10\times BM`,
+
+which leads to 10,000 full score of RPT.
 
 .. note::
 
