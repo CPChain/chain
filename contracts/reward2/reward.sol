@@ -11,7 +11,8 @@ contract Reward {
 
     // data structure for investors
     Set.Data private enodes;
-    mapping (address => uint256) public investments;
+    mapping(address => uint256) public investments;
+    mapping(uint256 => mapping(address => bool)) returned; // record investors who have claimed interests for each round
     uint256 public totalInvestment;
     uint256 public totalInterest;
 
@@ -165,12 +166,14 @@ contract Reward {
     }
 
     // investors can only claims
-    function claimInterest() public onlyOwner {
+    function claimInterest() public duringSettlement {
+        require(!returned[round][msg.sender]);
         require(enodes.contains(msg.sender));
         uint256 interest;
         interest = bonusPool.mul(investments[msg.sender]).div(totalInvestment);
         totalInterest = totalInterest.add(interest);
         investments[msg.sender] = investments[msg.sender].add(interest);
+        returned[round][msg.sender] = true;
         emit ApplyForSettlement(msg.sender, interest);
     }
 
