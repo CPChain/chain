@@ -199,7 +199,8 @@ func New(ctx *node.ServiceContext, config *Config) (*CpchainService, error) {
 	cpc.AdmissionApiBackend = admission.NewAdmissionApiBackend(cpc.blockchain, cpc.coinbase,
 		contractAddrs[configs.ContractAdmission],
 		contractAddrs[configs.ContractCampaign],
-		contractAddrs[configs.ContractRnode])
+		contractAddrs[configs.ContractRnode],
+		contractAddrs[configs.ContractNetwork])
 
 	if dpor, ok := cpc.engine.(*dpor.Dpor); ok {
 		dpor.SetupAdmission(cpc.AdmissionApiBackend)

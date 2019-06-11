@@ -24,6 +24,8 @@ package contracts
 
 //go:generate abigen --sol ./dpor/rnode/rnode.sol --pkg rnode --out ./dpor/rnode/rnode.go
 
+//go:generate abigen --sol ./dpor/network/network.sol --pkg network --out ./dpor/network/network.go
+
 
 //go:generate abigen --sol ./primitives_example/primitives/primitive_contracts.sol --pkg primitives --out ./primitives_example/primitives/primitive_contracts.go
 

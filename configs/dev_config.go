@@ -19,6 +19,7 @@ var (
 		ContractRnode:     common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93"),
 		ContractAdmission: common.HexToAddress("0xa5e0ea2a14d91031986c2f25f6e724beeeb66781"),
 		ContractCampaign:  common.HexToAddress("0xf26b6864749cde85a29afea57ffeae115b24b505"),
+		ContractNetwork:   common.HexToAddress("0xe30363ffce7f560cb69b7d9254daeb35de8c0f84"),
 	}
 
 	// config

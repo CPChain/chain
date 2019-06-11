@@ -26,6 +26,12 @@ const (
 	EnableProxyContract = false
 )
 
+// IgnoreNetworkStatusCheck is used for ignore network status check before campaign
+// this is not a hard restriction, set to true to ignore the check
+const (
+	IgnoreNetworkStatusCheck = false
+)
+
 // These are the multipliers for ether denominations.
 // Example: To get the wei value of an amount in 'douglas', use
 //
@@ -45,7 +51,7 @@ const (
 
 const (
 	DevChainId         = 41
-	MainnetChainId     = 0x13370000
+	MainnetChainId     = 337
 	TestMainnetChainId = 42
 	TestnetChainId     = 43
 )
@@ -104,6 +110,7 @@ const (
 	ContractRpt       = "rpt"       // address of rpt contract,Calculation the rpt of rnode
 	ContractAdmission = "admission" // address of admission
 	ContractRnode     = "rnode"     // address of rnode
+	ContractNetwork   = "network"   // address of network
 )
 
 // some version numbers

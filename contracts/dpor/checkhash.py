@@ -19,15 +19,13 @@ def check_hash(items):
 def libs_hash():
     safe_math = "7f3a15a26f34764a783e6f8702d5529a"
     set_ = "201ea38c4afe5258bc7a17ce19e0f48b"
-    primite_contracts = "bb363a54bd3e6cb98f5265635f125234"
     libs = [
         #  (filename, expected hashsum)
         ("campaign/lib/safeMath.sol", safe_math),
-        ("campaign/lib/set.sol", set_),
         ("rnode/lib/safeMath.sol", safe_math),
         ("rnode/lib/set.sol", set_),
     ]
-    assert len(libs) == 4
+    assert len(libs) == 3
     return libs
 
 

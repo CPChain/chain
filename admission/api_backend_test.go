@@ -17,6 +17,7 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	acContracts "bitbucket.org/cpchain/chain/contracts/dpor/admission"
 	campaign "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
+	"bitbucket.org/cpchain/chain/contracts/dpor/network"
 	rnode "bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
@@ -64,6 +65,16 @@ func deployRnode(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (
 	return rNodeAddr, rNodeContract, nil
 }
 
+func deployNetwork(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend) (common.Address, *network.Network, error) {
+	deployTransactor := bind.NewKeyedTransactor(prvKey)
+	networkAddr, _, networkContract, err := network.DeployNetwork(deployTransactor, backend)
+	if err != nil {
+		return common.Address{}, nil, err
+	}
+	backend.Commit()
+	return networkAddr, networkContract, nil
+}
+
 func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend, admissionContract common.Address, rNodeContract common.Address) (common.Address, error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	campaignAddr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, admissionContract, rNodeContract)
@@ -74,7 +85,7 @@ func deployCampaign(prvKey *ecdsa.PrivateKey, backend *backends.SimulatedBackend
 	return campaignAddr, nil
 }
 
-func deployRequiredContracts(t *testing.T) (*backends.SimulatedBackend, common.Address, common.Address, *rnode.Rnode, common.Address) {
+func deployRequiredContracts(t *testing.T) (*backends.SimulatedBackend, common.Address, common.Address, *rnode.Rnode, common.Address, common.Address) {
 	var (
 		cpuDifficulty     uint64 = 5
 		memDifficulty     uint64 = 5
@@ -92,11 +103,14 @@ func deployRequiredContracts(t *testing.T) (*backends.SimulatedBackend, common.A
 	if err != nil {
 		t.Fatal("deploy error", "error", err)
 	}
+
+	networkAddr, _, err := deployNetwork(key.PrivateKey, contractBackend)
+
 	campaignAddr, err := deployCampaign(key.PrivateKey, contractBackend, admissionAddr, rNodeAddr)
 	if err != nil {
 		t.Fatal("deploy error", "error", err)
 	}
-	return contractBackend, admissionAddr, rNodeAddr, rNodeContract, campaignAddr
+	return contractBackend, admissionAddr, rNodeAddr, rNodeContract, campaignAddr, networkAddr
 }
 
 func init() {
@@ -120,13 +134,13 @@ func newDummyChain() consensus.ChainReader {
 }
 
 // newAC return a new AdmissionControl instance
-func newAcApiBackend(chain consensus.ChainReader, admissionContractAddr common.Address, campaignContractAddr common.Address, rNodeContractAddr common.Address) admission.ApiBackend {
-	return admission.NewAdmissionApiBackend(chain, addr, admissionContractAddr, campaignContractAddr, rNodeContractAddr)
+func newAcApiBackend(chain consensus.ChainReader, admissionContractAddr common.Address, campaignContractAddr common.Address, rNodeContractAddr common.Address, networkContractAddr common.Address) admission.ApiBackend {
+	return admission.NewAdmissionApiBackend(chain, addr, admissionContractAddr, campaignContractAddr, rNodeContractAddr, networkContractAddr)
 }
 
 // TestAPIs test apis
 func TestApis(t *testing.T) {
-	ac := newAcApiBackend(newDummyChain(), common.Address{}, common.Address{}, common.Address{})
+	ac := newAcApiBackend(newDummyChain(), common.Address{}, common.Address{}, common.Address{}, common.Address{})
 	apis := ac.Apis()
 
 	wantApis := []rpc.API{
@@ -144,9 +158,9 @@ func TestApis(t *testing.T) {
 
 // TestCampaign tests campaign, check status, abort and check status
 func TestAdmissionApiBackend_Campaign(t *testing.T) {
-	contractBackend, admissionAddr, rNodeAddr, _, campaignAddr := deployRequiredContracts(t)
+	contractBackend, admissionAddr, rNodeAddr, _, campaignAddr, networkAddr := deployRequiredContracts(t)
 
-	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rNodeAddr)
+	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rNodeAddr, networkAddr)
 	status, err := ac.GetStatus()
 	var wantErr error
 	if status != admission.AcIdle || !reflect.DeepEqual(err, wantErr) {
@@ -172,8 +186,8 @@ func TestAdmissionApiBackend_Campaign(t *testing.T) {
 
 // TestIsRNode returns a bool value indicating if the current node is RNode
 func TestAdmissionApiBackend_IsRNode(t *testing.T) {
-	contractBackend, admissionAddr, rewardAddr, _, campaignAddr := deployRequiredContracts(t)
-	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rewardAddr)
+	contractBackend, admissionAddr, rewardAddr, _, campaignAddr, networkAddr := deployRequiredContracts(t)
+	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rewardAddr, networkAddr)
 	ac.SetContractBackend(contractBackend)
 	ac.SetAdmissionKey(key)
 	isRNode, _ := ac.IsRNode()
@@ -194,8 +208,8 @@ func TestAdmissionApiBackend_IsRNode(t *testing.T) {
 }
 
 func TestAdmissionApiBackend_FundForRNode(t *testing.T) {
-	contractBackend, admissionAddr, rNodeAddr, _, campaignAddr := deployRequiredContracts(t)
-	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rNodeAddr)
+	contractBackend, admissionAddr, rNodeAddr, _, campaignAddr, networkAddr := deployRequiredContracts(t)
+	ac := newAcApiBackend(contractBackend.Blockchain(), admissionAddr, campaignAddr, rNodeAddr, networkAddr)
 	ac.SetContractBackend(contractBackend)
 	ac.SetAdmissionKey(key)
 

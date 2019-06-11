@@ -24,6 +24,8 @@ import (
 	"math/big"
 	"testing"
 
+	"bitbucket.org/cpchain/chain/contracts/dpor/network"
+
 	"bitbucket.org/cpchain/chain/types"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -47,16 +49,17 @@ var (
 	version     = new(big.Int).SetInt64(1)
 )
 
-func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (campaignAddr common.Address, admissionAddr common.Address, rNodeAddr common.Address, err error) {
+func deploy(prvKey *ecdsa.PrivateKey, amount *big.Int, backend *backends.SimulatedBackend) (campaignAddr common.Address, admissionAddr common.Address, rNodeAddr common.Address, networkAddr common.Address, err error) {
 	deployTransactor := bind.NewKeyedTransactor(prvKey)
 	addrRNode, _, _, err := rnode.DeployRnode(deployTransactor, backend)
 	acAddr, _, _, err := admission.DeployAdmission(deployTransactor, backend, big.NewInt(1), big.NewInt(1), big.NewInt(1), big.NewInt(1))
+	networkAddr, _, _, _ = network.DeployNetwork(deployTransactor, backend)
 	addr, _, _, err := campaign.DeployCampaign(deployTransactor, backend, acAddr, addrRNode)
 	if err != nil {
-		return common.Address{}, common.Address{}, common.Address{}, err
+		return common.Address{}, common.Address{}, common.Address{}, common.Address{}, err
 	}
 	backend.Commit()
-	return addr, acAddr, addrRNode, nil
+	return addr, acAddr, addrRNode, networkAddr, nil
 }
 
 func fundToCampaign(prvKey *ecdsa.PrivateKey, rNodeAddr common.Address, backend *backends.SimulatedBackend) error {
@@ -84,7 +87,7 @@ func fundToCampaign(prvKey *ecdsa.PrivateKey, rNodeAddr common.Address, backend 
 
 func TestDeployCampaign(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: initBalance}})
-	contractAddr, _, rNodeAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	contractAddr, _, rNodeAddr, _, err := deploy(key, big.NewInt(0), contractBackend)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 
 	err = fundToCampaign(key, rNodeAddr, contractBackend)
@@ -128,7 +131,7 @@ func checkError(t *testing.T, msg string, err error) {
 func TestClaimCampaign(t *testing.T) {
 	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: initBalance}})
 
-	campaignAddr, acAddr, rNodeAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	campaignAddr, acAddr, rNodeAddr, networkAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
 
@@ -143,7 +146,7 @@ func TestClaimCampaign(t *testing.T) {
 	_ = campaignAddr
 
 	// compute cpu&memory pow
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rNodeAddr)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rNodeAddr, networkAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(1)
@@ -229,7 +232,7 @@ func TestClaimCampaign(t *testing.T) {
 	checkError(t, "CandidateInfoOf error: %v", err)
 	fmt.Println("candidate info of", addr.Hex(), ":", numOfCampaign, startViewIdx, endViewIdx)
 	// the second claim of campaign does not take effect as the previous campaign is not finished
-	assertCampaign(1, numOfCampaign, t)
+	assertCampaign(2, numOfCampaign, t)
 
 	// get candidates by view index
 	candidates, err := campaign.CandidatesOf(nil, startViewIdx)
@@ -250,7 +253,7 @@ func TestClaimCampaignOnSecondTerm(t *testing.T) {
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
-	campaignAddr, acAddr, rNodeAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	campaignAddr, acAddr, rNodeAddr, networkAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	fmt.Println("campaignAddr:", campaignAddr)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
@@ -271,7 +274,7 @@ func TestClaimCampaignOnSecondTerm(t *testing.T) {
 	campaign.TransactOpts.GasLimit = 1000000
 
 	// compute cpu&memory pow
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rNodeAddr)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rNodeAddr, networkAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(2)
@@ -312,7 +315,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	printBalance(contractBackend)
 
 	fmt.Println("deploy Campaign")
-	campaignAddr, acAddr, rNodeAddr, err := deploy(key, big.NewInt(0), contractBackend)
+	campaignAddr, acAddr, rNodeAddr, networkAddr, err := deploy(key, big.NewInt(0), contractBackend)
 	fmt.Println("campaignAddr:", campaignAddr)
 	checkError(t, "deploy contract: expected no error, got %v", err)
 	contractBackend.Commit()
@@ -332,7 +335,7 @@ func TestClaimAndViewChangeThenQuitCampaign(t *testing.T) {
 	campaign.TransactOpts.GasLimit = 1000000
 
 	// compute cpu&memory pow
-	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rNodeAddr)
+	ac := admission2.NewAdmissionControl(contractBackend.Blockchain(), addr, acAddr, campaignAddr, rNodeAddr, networkAddr)
 	ac.SetSimulateBackend(contractBackend)
 	configs.ChainConfigInfo().Dpor.Contracts[configs.ContractAdmission] = acAddr
 	ac.Campaign(1)
