@@ -58,7 +58,7 @@ func main() {
 	go deployNetwork(password, &wg3)
 	wg3.Wait()
 
-	deploy.UpdateCampaignParameters(password, proxyCampaignContractAddress, 25, 26)
+	deploy.UpdateCampaignParameters(password, proxyCampaignContractAddress, 5, 6)
 
 	fmt.Println("======== init contract deploy completed=========")
 }
