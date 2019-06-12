@@ -47,7 +47,7 @@ Regression Tesing
 ++++++++++++++++++++
 
 Each time a certain branch is updated in its remote repository,
-`Jenkins`_ activates a regression testing going through all testing files.
+`Jenkins`_ activates a regression testing via going through all testing files.
 By this means, all unit testing and integration testing can be redone,
 ensuring that no bug is introduced in old code blocks.
 
@@ -101,9 +101,29 @@ This set of test cases are categorized into several types:
 #. Start and Stop: robustness test by multiple aborting and restarting the chain.
 
 
-Private Transaction Test Cases
-+++++++++++++++++++++++++++++++
+Nemesis Test Cases
++++++++++++++++++++
+
+By adopting Jepsen Nemesis, we can simulate abnormal scenarios like:
+
+1. Delay of sending package
+#. Disconnection from the network
+#. Crash of a node
+#. Time drift (incorrect local clock)
+
+Note that some nemesis test cases may overlap with previously stated cases.
 
 
-These cases examines the functionality of
-InterPlanetary File System (IPFS) server as well as private transactions.
+Compatibility Test Cases
++++++++++++++++++++++++++
+
+Compatibility is a major challenge for all decentralized systems,
+as not all nodes may update to the latest version.
+Similar to the concepts of soft fork and hard fork of Bitcoin,
+CPChain also have *soft update* and *hard update*.
+In a soft update, old version can still work with the chain.
+while in a hard update, old versions are rejected when claiming campaign,
+or even cannot sync with the chain.
+
+Compatibility testing assures that
+the chain and all updated nodes are not affected by old version nodes.
