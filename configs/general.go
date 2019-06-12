@@ -51,7 +51,7 @@ const (
 
 const (
 	DevChainId         = 41
-	MainnetChainId     = 0x13370000
+	MainnetChainId     = 337
 	TestMainnetChainId = 42
 	TestnetChainId     = 43
 )
