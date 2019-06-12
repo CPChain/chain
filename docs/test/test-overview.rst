@@ -37,7 +37,7 @@ The functionality of :ref:`fusion-api` and :ref:`rpc-api` is also tested.
 Integration Testing
 ++++++++++++++++++++++
 
-Some Go files in CPChain imports and integrates multiple files.
+Some Go files in CPChain import and integrate multiple files.
 These files also have their corresponding testing files to
 conducting on integration testing.
 
