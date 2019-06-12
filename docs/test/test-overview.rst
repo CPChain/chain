@@ -123,7 +123,7 @@ Similar to the concepts of soft fork and hard fork of Bitcoin,
 CPChain also have *soft update* and *hard update*.
 In a soft update, old version can still work with the chain.
 while in a hard update, old versions are rejected when claiming campaign,
-or even cannot sync with the chain.
+proposing blocks, or even cannot sync with the chain.
 
 Compatibility testing assures that
 the chain and all updated nodes are not affected by old version nodes.
