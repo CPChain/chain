@@ -18,9 +18,9 @@ contract Reward {
 
 
     // states controllers
-    bool public raise = false;
-    bool public lock = false;
-    bool public settlement = false;
+    bool public inRaise = false;
+    bool public inLock = false;
+    bool public inSettlement = false;
 
 
     // modifiers
@@ -29,15 +29,15 @@ contract Reward {
         _;
     }
     modifier duringRaise() {
-        require(raise == true);
+        require(inRaise == true);
         _;
     }
     modifier duringLock() {
-        require(lock == true);
+        require(inLock == true);
         _;
     }
     modifier duringSettlement() {
-        require(settlement == true);
+        require(inSettlement == true);
         _;
     }
 
@@ -103,9 +103,9 @@ contract Reward {
     // start a new raise
     function newRaise() public onlyOwner {
         require(now >= nextRaiseTime.sub(1 days)); // 1 day as a buffer
-        raise = true;
-        lock = false;
-        settlement = false;
+        inRaise = true;
+        inLock = false;
+        inSettlement = false;
         round = round.add(1);
         nextLockTime = now.add(raisePeriod);
         bonusPool = bonusPool.sub(totalInterest);
@@ -146,9 +146,9 @@ contract Reward {
     // start a new lock period
     function newLock() public onlyOwner {
         require(now >= nextLockTime.sub(1 days));
-        raise = false;
-        lock = true;
-        settlement = false;
+        inRaise = false;
+        inLock = true;
+        inSettlement = false;
         nextSettlementTime = now.add(lockPeriod);
         emit SetTime("next settlement time", nextSettlementTime);
         emit NewLock(now);
@@ -157,9 +157,9 @@ contract Reward {
     // start a new settlement
     function newSettlement() public onlyOwner {
         require(now >= nextSettlementTime.sub(1 days));
-        raise = false;
-        lock = false;
-        settlement = true;
+        inRaise = false;
+        inLock = false;
+        inSettlement = true;
         nextRaiseTime = now.add(settlementPeriod);
         emit SetTime("next raise time", nextRaiseTime);
         emit NewSettlement(now);
@@ -209,8 +209,8 @@ contract Reward {
     }
 
     function disable() public onlyOwner {
-        raise = false;
-        lock = false;
-        settlement = false;
+        inRaise = false;
+        inLock = false;
+        inSettlement = false;
     }
 }
