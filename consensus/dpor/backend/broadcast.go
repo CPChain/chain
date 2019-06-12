@@ -50,13 +50,33 @@ func waitForEnoughImpeachValidators(h *Handler, term uint64, quitCh chan struct{
 	return
 }
 
+// waitForEnoughPreprepareValidators is used by proposer when trying to broadcast a preprepare block msg
+func waitForEnoughPreprepareValidators(h *Handler, term uint64, quitCh chan struct{}, deadline time.Time) (validators map[common.Address]*RemoteValidator) {
+	for i := 0; i < defaultWaitDialTimes; i++ {
+		select {
+		case <-quitCh:
+			return
+
+		default:
+
+			if validators, enough := h.dialer.EnoughImpeachValidatorsOfTerm(term); enough || time.Now().After(deadline) {
+				return validators
+			}
+
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+	return
+}
+
 // ProposerBroadcastPreprepareBlock broadcasts generated block to validators
 func (h *Handler) ProposerBroadcastPreprepareBlock(block *types.Block) {
 
 	log.Debug("broadcasting preprepare block", "number", block.NumberU64(), "hash", block.Hash().Hex())
 
 	term := h.dpor.TermOf(block.NumberU64())
-	validators := waitForEnoughImpeachValidators(h, term, h.quitCh)
+	deadline := block.Timestamp().Add(h.dpor.BlockDelay()).Add(-1 * time.Second)
+	validators := waitForEnoughPreprepareValidators(h, term, h.quitCh, deadline)
 
 	for _, peer := range validators {
 		peer.AsyncSendPreprepareBlock(block)
