@@ -536,6 +536,39 @@ we can implement it without adding too much code.
 Optimizations
 ---------------------
 
+Echo of Block
+********************
+
+Once a node is elected,
+it will try to connect to all validators and maintain the connections until it seals all blocks.
+However, this connection may be lost.
+Thus, we introduce an echo of block,
+such that all connected validators repeat its received block from the proposer
+to all other validators.
+
+Since we can tolerate at most :math:`f` faulty validators,
+:math:`f+1` connected validators can guarantee
+that at least one loyal validator can assume the responsibility to repeat the block.
+(We assume that connections between validators, i.e., `V-V`_ connections are all stable.)
+But, if the proposer cannot connect to enough validators,
+it will also broadcast the block at the last moment as the last resort.
+
+Here we list the work validators and proposers need to do.
+
+**Validator:**
+
+#. Broadcast the block to all validators if it receives a block from the proposer.
+#. This broadcast is only done once for each distinct block.
+#. No matter whether it receives the block from other validators or proposer, add the block into cache and launch normal LBFT 2.0 consensus process.
+
+**Proposer:**
+
+#. It runs a busy-waiting loop within a time window to continuously check how many validators are still connected.
+#. Once the number is no less than :math:`f+1`, it broadcasts the block to all connected validators.
+#. If the number is always below :math:`f+1` in this time window, broadcast the block to all connected validators right after the time window ends.
+
+
+
 
 Echo of Validate Message
 ******************************
@@ -895,6 +928,8 @@ By summing up above five cases, we can conclude that the theorem holds.
 **Q.E.D**
 
 
+
+
 P2P Hierarchy
 -----------------------
 
@@ -939,6 +974,9 @@ C-C
 C-C is the basic P2P connection type.
 It serves as the normal P2P connection,
 providing basic functions like receiving blocks and syncing with the chain.
+It holds the lowest priority among all P2P connections.
+Hence C-C connections are the first choice to be removed from
+the peer list due to the lack of storage.
 
 
 P-V
@@ -951,6 +989,8 @@ and upgrade the connection to P-V.
 Refer to `Upgrade and Downgrade`_ for details.
 The address of validators, unlike other addresses,
 will not be kicked out from the list of peers as long as it yet proposes the block.
+
+
 
 V-P
 **********
@@ -996,5 +1036,7 @@ Thus, all proposers of :math:`(i+3)`-th hold P-V connections with validators in 
 And if the peer list has no vacancy for new addresses,
 a proposer or validator randomly picks some C-C connection addresses,
 and remove them.
+
+
 
 
