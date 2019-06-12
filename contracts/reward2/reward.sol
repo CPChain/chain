@@ -41,6 +41,10 @@ contract Reward {
         _;
     }
 
+    constructor () public {
+        owner = msg.sender;
+    }
+
 
     // configs
     uint256 public bonusPool;
@@ -102,13 +106,16 @@ contract Reward {
     // state change
     // start a new raise
     function newRaise() public onlyOwner {
-        require(now >= nextRaiseTime.sub(1 days)); // 1 day as a buffer
+        if(round > 0) {
+            require(now >= nextRaiseTime.sub(1 days)); // 1 day as a buffer
+        }
         inRaise = true;
         inLock = false;
         inSettlement = false;
         round = round.add(1);
         nextLockTime = now.add(raisePeriod);
         bonusPool = bonusPool.sub(totalInterest);
+        totalInvestment = totalInvestment.add(totalInterest);
         totalInterest = 0;
         emit SetTime("next lock time", nextLockTime);
         emit NewRaise(now);
@@ -135,6 +142,7 @@ contract Reward {
     function withdraw(uint amount) public duringRaise {
         require(amount <= investments[msg.sender]);
         msg.sender.transfer(amount);
+        investments[msg.sender] = investments[msg.sender].sub(amount);
         totalInvestment = totalInvestment.sub(amount);
         emit SubInvestment(msg.sender, amount, totalInvestment);
         if(investments[msg.sender] < enodeThreshold) {
