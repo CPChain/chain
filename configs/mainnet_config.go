@@ -16,10 +16,10 @@ var (
 	mainnetProxyContractRegister = common.HexToAddress("0xd4826927aa2dba7930117782ed183576ccebed93")
 
 	MainnetContractAddressMap = map[string]common.Address{
-		ContractRpt:       common.HexToAddress("0x5ae4bddaf1d12baea98ebdf158c5ce3c53d21957"),
-		ContractRnode:     common.HexToAddress("0xab11ddf548e4ec7e1ed0a375a9eb34445cdee856"),
-		ContractAdmission: common.HexToAddress("0xd8cf29d5d77ce4a7bbf99ca8c665e39760c9dbe3"),
-		ContractCampaign:  common.HexToAddress("0xb9a0ca9f8f1c55124157419c956d2ac6b6a94672"),
+		ContractRpt:       common.HexToAddress("0x3fea6e441d9dbafb80f20333bd16d00e49179b33"),
+		ContractRnode:     common.HexToAddress("0x76dbca2ced6d81e2f26a6657b436d340bb924874"),
+		ContractAdmission: common.HexToAddress("0x45621603c070b051c0fc337294caa7b4a21a8b79"),
+		ContractCampaign:  common.HexToAddress("0x4e0ab103714c14d2e3b3a4d9d7355f6a01534242"),
 		ContractNetwork:   common.HexToAddress("0x951c57619ad1f7dcf2eb5f7078ee7264c9cf8ef8"),
 	}
 
