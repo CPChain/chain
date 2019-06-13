@@ -5,7 +5,7 @@ Quick Start for Beginner
 
 
 
-Refer to `Download page`_ for binary releases of cpchain.
+Refer to `Download page`_ for binary releases of ``cpchain``.
 
 .. _`Download Page`: https://github.com/CPChain/chain/releases
 
