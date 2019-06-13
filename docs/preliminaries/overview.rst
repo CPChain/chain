@@ -144,15 +144,15 @@ RNode Ecosystem
 CPChain Nodes Roles and Pools
 ************************************
 
-**Economy Node**: Requires a minimum of $20,000$ CPC tokens
+**Economy Node**: Requires a minimum of 20,000 CPC tokens
 deposited in *Economy Pool* for participation.
 Investors who meet this requirement may participate as
 an economy node and have the right to vote in the community.
 
 **Reputation Node**: Requires a minimum of 200,000 CPC tokens
-deposited in *Economy Pool* for participation.
+deposited in *RNode Pool* for participation.
 Investors with the basic configuration of computing and
-storing can participate to support the CPChain Open Transmission Protocol (COTP).
+storage can participate to support the CPChain Open Transmission Protocol (COTP).
 
 **Industry Node**:
 IoT Industry partners and CPChain ecosystem's peer developers have the right to participate as an Industry Node.
@@ -160,10 +160,10 @@ IoT Industry partners and CPChain ecosystem's peer developers have the right to 
 Note that there are two separate pools for deposit.
 
 **Economy Pool**:
-Any node deposit at least $20,000$ CPC tokens in this pool is qualified as economy node.
+Any node deposit at least 20,000 CPC tokens in this pool is qualified as economy node.
 
 **RNode Pool**:
-Any node deposit at least $200,000$ CPC tokens in this pool is qualified as RNode.
+Any node deposit at least 200,000 CPC tokens in this pool is qualified as RNode.
 
 
 Reputation Nodes
@@ -171,7 +171,7 @@ Reputation Nodes
 
 A node has to meet one of the following requirements to become a Reputation Node:
 
-    1. Economy node + Computing and Storing node:
+    1. Economy node + Computing and Storage node:
     An economy node must lock-up a specific amount of tokens (200,000 minimum and 5,000,000 maximum)
     for 90 days and must satisfy the software, hardware, and network connection requirements.
     The locked up tokens have a positive correlation with the basic rewards.
@@ -202,11 +202,13 @@ By employing `RPT Contract`_, a node can evaluates its RPT value by following fi
 Each dimension has a full score of 100 point.
 And the total score is calculated as:
 
-:math:`RPT = 0.5\times AB +
-0.15\times TX +
-0.1\times PR +
-0.15\times DC +
-0.1\times BM`
+:math:`RPT = 50\times AB +
+15\times TX +
+10\times PR +
+15\times DC +
+10\times BM`,
+
+which leads to 10,000 full score of RPT.
 
 .. note::
 
@@ -226,7 +228,7 @@ Account Balance
 ++++++++++++++++++
 
 A *account balance* score is granted to an RNode
-according to its account balance percentile among all RNode addresses
+according to its account balance ranking among all RNode addresses
 (excluding CPChain Foundation and Exchange addresses).
 
 
