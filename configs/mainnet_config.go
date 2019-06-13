@@ -25,19 +25,18 @@ var (
 
 	// config
 	mainnetDefaultCandidates = []common.Address{
-		common.HexToAddress("0x5f1fa0804bf76f71d5cfb621fac1f6fe27c8e80e"), // #1
-		common.HexToAddress("0xb5edbc5a1e680e660dc78659613df7704bc198d2"), // #2
-		common.HexToAddress("0x3868a7b3c55ac0d4f85fc869a2a444ae0f39a1e7"), // #3
-		common.HexToAddress("0xf7b77be329185194520fc4447ea527217eae3974"), // #5
-		common.HexToAddress("0x9ffa9e60feaab7acdb460c4b938d5d57b19b2e10"), // #4
-		common.HexToAddress("0x352201b0e6b19b6c7e0fda80c0c3d462bcc0b81f"), // #6
-
-		common.HexToAddress("0xd5a344b55a85b02c285fa4340dff4f54af0cb71f"), // #14
-		common.HexToAddress("0x809471f4794c633dd6c9d4b02c6c2c3fb7bdf01f"), // #15
-		common.HexToAddress("0xd0d39b67cad41642920fa0db66232709a8ce12c7"), // #16
-		common.HexToAddress("0x15676f1f87d0c64cac3892afc4268490b4bd3243"), // #17
-		common.HexToAddress("0x9e59ef188eb3e40e0540b713310fe4de70252ded"), // #18
-		common.HexToAddress("0x360db7f7b3d6db2a9c97738075dca2c4f668382a"), // #19
+		common.HexToAddress("0x27c3500c8a493a152f1dfdec162c422b3678b03e"), // #1
+		common.HexToAddress("0xf285996f36aa76adf637c60f2005da637efd71aa"), // #2
+		common.HexToAddress("0x50bf9d407d8e30b8124f3711df97611d76d45699"), // #3
+		common.HexToAddress("0x99fc3138ff48a4fae3a0e65c6f83266a5284a683"), // #5
+		common.HexToAddress("0xf6f59e901b3cd551f1753dfe80ab806bb0046b30"), // #4
+		common.HexToAddress("0xa3a0fe044eb8ce1731ed99ca0901a795abf58da8"), // #6
+		common.HexToAddress("0x45f40e0c7135d86d92a88443a160045a2897436e"), // #14
+		common.HexToAddress("0x0005efc08c5ff71c3538ebc85b1bb93c377cef14"), // #15
+		common.HexToAddress("0x46ac4607b5334b5dc7cd671b0c11c5ffa81324f6"), // #16
+		common.HexToAddress("0x1573ce2ab9a0113d25ce5e7a74b564a02f9058ad"), // #17
+		common.HexToAddress("0x01cf3229840fc212d54df720cdae3e6d04320a9c"), // #18
+		common.HexToAddress("0xaa8ad61eb978bbde0b6f69d2cd3033755d8f9d04"), // #19
 	}
 	mainnetChainConfig = &ChainConfig{
 		ChainID: big.NewInt(MainnetChainId),
@@ -52,20 +51,8 @@ var (
 			ImpeachTimeout:        time.Millisecond * MainnetBlockPeriod,
 		},
 	}
-	mainnetProposers = []common.Address{
-		common.HexToAddress("0x27c3500c8a493a152f1dfdec162c422b3678b03e"), // #1
-		common.HexToAddress("0xf285996f36aa76adf637c60f2005da637efd71aa"), // #2
-		common.HexToAddress("0x50bf9d407d8e30b8124f3711df97611d76d45699"), // #3
-		common.HexToAddress("0x99fc3138ff48a4fae3a0e65c6f83266a5284a683"), // #5
-		common.HexToAddress("0xf6f59e901b3cd551f1753dfe80ab806bb0046b30"), // #4
-		common.HexToAddress("0xa3a0fe044eb8ce1731ed99ca0901a795abf58da8"), // #6
-		common.HexToAddress("0x45f40e0c7135d86d92a88443a160045a2897436e"), // #14
-		common.HexToAddress("0x0005efc08c5ff71c3538ebc85b1bb93c377cef14"), // #15
-		common.HexToAddress("0x46ac4607b5334b5dc7cd671b0c11c5ffa81324f6"), // #16
-		common.HexToAddress("0x1573ce2ab9a0113d25ce5e7a74b564a02f9058ad"), // #17
-		common.HexToAddress("0x01cf3229840fc212d54df720cdae3e6d04320a9c"), // #18
-		common.HexToAddress("0xaa8ad61eb978bbde0b6f69d2cd3033755d8f9d04"), // #19
-	}
+	mainnetProposers = mainnetDefaultCandidates
+
 	mainnetValidators = []common.Address{
 		common.HexToAddress("0xbb0100151e0e6fde0a79f83f20b979f6453082b0"), //#7
 		common.HexToAddress("0x890f2f614f4ba5bcc1d8310aeb0e4e2891b49456"), //#8
