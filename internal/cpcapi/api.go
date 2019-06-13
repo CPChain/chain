@@ -1374,6 +1374,8 @@ type SendTxArgs struct {
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input"`
 
+	Type *hexutil.Uint64 `json:"type"`
+
 	// Private Tx Implementation
 	IsPrivate    bool     `json:"isPrivate"`
 	Participants []string `json:"participants"`
@@ -1417,6 +1419,11 @@ func (args *SendTxArgs) setDefaults(ctx context.Context, b Backend) error {
 			return errors.New(`contract creation without any data provided`)
 		}
 	}
+
+	if args.Type == nil {
+		args.Type = new(hexutil.Uint64)
+		*(*uint64)(args.Type) = 0
+	}
 	return nil
 }
 
@@ -1437,6 +1444,12 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 	if args.IsPrivate {
 		tx.SetPrivate()
 	}
+
+	if args.Type == nil {
+		args.Type = new(hexutil.Uint64)
+		*(*uint64)(args.Type) = 0
+	}
+	tx.SetType(uint64(*args.Type))
 
 	return tx
 }
@@ -1478,6 +1491,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		log.Warn("exceed rpc process rate")
 		return common.Hash{}, ErrExceedProcessRate
 	}
+
 	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
 	if args.IsPrivate && !supportPrivate {
 		// if not support private tx, immediately returns error
@@ -1502,6 +1516,10 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	// Set some sanity defaults and terminate on failure
 	if err := args.setDefaults(ctx, s.b); err != nil {
 		return common.Hash{}, err
+	}
+
+	if !types.SupportTxType(uint64(*args.Type)) {
+		return common.Hash{}, types.ErrNotSupportedTxType
 	}
 
 	if args.IsPrivate {
