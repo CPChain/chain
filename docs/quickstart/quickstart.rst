@@ -119,7 +119,7 @@ And you can also refer to the name of this file to retrieve the wallet address.
     If you discard ``--datadir`` option, the account file is created under default user directory.
 
 
-Run a Node As Civilian
+Run a Node as Civilian
 +++++++++++++++++++++++++
 
 If you hold an account,
@@ -181,7 +181,7 @@ And you can obtain the information about your account status like
 
 
 
-Run a Node As Proposer
+Run a Node as Proposer
 ++++++++++++++++++++++++
 
 
