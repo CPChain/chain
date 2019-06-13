@@ -119,8 +119,8 @@ And you can also refer to the name of this file to retrieve the wallet address.
     If you discard ``--datadir`` option, the account file is created under default user directory.
 
 
-As Civilian
-++++++++++++++
+Run a Node As Civilian
++++++++++++++++++++++++++
 
 If you hold an account,
 you can run the following command to **connect to the chain**:
@@ -209,8 +209,8 @@ It returns results like
 
 
 
-As Proposer
-+++++++++++++++++
+Run a Node As Proposer
+++++++++++++++++++++++++
 
 
 
@@ -275,66 +275,8 @@ After you stop mining, you are free to withdraw deposit by the following command
 If you do not present the argument ``VALUE``, all deposit will be withdrew by default.
 
 
-
-Source Code Building
-+++++++++++++++++++++++++
-
-
-We are going to install CPChain and run a node on the testnet. 
-
-Building the Source
-####################
-
-First, make sure you have installed `go <https://golang.org/>`_, and configured the $GOPATH.
-
-.. code::
-
-    $ git clone https://github.com/CPChain/chain
-
-    $ cd chain
-    $ make clean
-    $ make all
-
-Now you can find binary files in ``build/bin``,
-and utilize them as stated in `Binary Release`_.
-
-Running CPChain
-#################
-
-Connect to Beta Mainnet
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code::
-
-    $ cd build/bin
-    $ ./cpchain run --runmode testnet
-
-
-
-Then use the commands above to connect to Beta Mainnet.
-
-Create an Account
-^^^^^^^^^^^^^^^^^^^^^^
-
-
-For Linux and Mac users:
-
-.. code-block:: shell
-
-    $ mkdir datadir
-    $ echo YOUR_PASSWORD > datadir/password
-    $ ./cpchain account new account --datadir ./datadir
-
-For Windows users:
-
-.. code-block:: shell
-
-    $ mkdir datadir
-    $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ cpchain.exe account new account --datadir ./datadir
-
 Run a Private Network
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++++++
 
 
 
@@ -350,8 +292,8 @@ Run a Private Network
 
     ``cpchain-all.sh`` launches the chain in dev mode.
 
-Run a Local Node
-^^^^^^^^^^^^^^^^^^^^^^^
+The command below is to run a local node.
+
 
 .. code::
 
