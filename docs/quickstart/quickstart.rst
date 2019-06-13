@@ -23,8 +23,8 @@ Installation
 
 .. Note::
 
-    The functions of `console` has been integrated into `cpchain`.
-    Versions after 0.2.11 no longer contains `console`.
+    The functions of ``console`` has been integrated into ``cpchain``.
+    Versions after 0.2.11 no longer contains ``console``.
 
 
 Binary Release
