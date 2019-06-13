@@ -18,8 +18,13 @@ Earlier Linux releases may incur problems or lack necessary dependencies.
     like `ipython <https://pypi.org/project/ipython/>`_.
 
 
-Cpchain and Console
-============================
+Installation
+=================
+
+.. Note::
+
+    The functions of `console` has been integrated into `cpchain`.
+    Versions after 0.2.11 no longer contains `console`.
 
 
 Binary Release
@@ -30,12 +35,8 @@ Binary Release
 .. _`Download Page`: https://github.com/CPChain/chain/releases
 
 ``cpchain`` is the binary release for the chain.
-And ``console`` provides command line interface for operations on the chain,
-like checking account status, deposit and claiming campaign.
 
-.. NOTE::
 
-    ``console`` does not support transaction operations.
 
 You need to utilize either :ref:`fusion-api` or :ref:`rpc-api` for all available operations.
 
@@ -45,13 +46,41 @@ You can always refer to
 
     $ ./cpchain -h
 
-and
 
-.. code-block:: shell
-
-    $ ./console -h
 
 for help.
+
+
+Source Code Building
++++++++++++++++++++++++++
+
+
+We are going to install CPChain and run a node on the testnet.
+
+
+First, make sure you have installed `go <https://golang.org/>`_, and configured the $GOPATH.
+
+.. code::
+
+    $ git clone https://github.com/CPChain/chain
+
+    $ cd chain
+    $ make clean
+    $ make all
+
+Now you can find binary files in ``build/bin``,
+and utilize them as stated in `Binary Release`_.
+
+
+Running CPChain
+=====================
+
+Nodes in CPChain have three possible roles:
+**Civilian**, **Proposer**, or **Validator**.
+Interested readers can refer to :ref:`bipartite` for detailed information.
+Note that validators are not available for public use at the current stage.
+Thus, we do not state how to launch a validator node.
+
 
 As Civilian
 ##############
@@ -348,23 +377,6 @@ Run a Local Node
 
     $ ./cpchain run --datadir ./datadir --unlock <You Address>
 
-CPC Faucet
-=================
-
-CPC faucet is an application that you can collect CPC test coins for free.
-The test coins can be used in newly-published CPChain Alpha Mainnet.
-Refer to `Faucet`_ to try it now.
-
-
-Claim Test Coins
-++++++++++++++++++++++
-
-1. Copy the wallet address and paste it in `Faucet`_. Now you can claim test coins.
-#. The password it requires is *cpchain2019*.
-#. Following a successful claim, this transaction is inserted into the test chain. In the site `Explorer`_, the transaction details can be searched.
-
-.. _`Faucet`: https://cpchain.io/faucet/
-.. _`Explorer`: https://cpchain.io/explorer/
 
 
 Smart Contract
