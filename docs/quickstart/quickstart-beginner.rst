@@ -5,7 +5,7 @@ Quick Start for Beginner
 
 
 
-Refer to `Download page`_ for binary releases of cpchain and console.
+Refer to `Download page`_ for binary releases of cpchain.
 
 .. _`Download Page`: https://github.com/CPChain/chain/releases
 
@@ -153,7 +153,7 @@ For Linux and Mac users:
     :emphasize-lines: 1,3,4
 
     $ echo YOUR_PASSWORD > datadir/password
-    $ ./console status \
+    $ ./cpchain campaign status \
     --keystore ./datadir/keystore/YOUR_ACCOUNT \
     --password ./datadir/password
 
@@ -163,7 +163,7 @@ For Windows users:
     :emphasize-lines: 1,3,4
 
     $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ console.exe status ^
+    $ cpchain.exe campaign status ^
     --keystore ./datadir/keystore/YOUR_ACCOUNT ^
     --password ./datadir/password
 
