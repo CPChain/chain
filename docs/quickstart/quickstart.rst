@@ -81,14 +81,10 @@ Interested readers can refer to :ref:`bipartite` for detailed information.
 Note that validators are not available for public use at the current stage.
 Thus, we do not state how to launch a validator node.
 
+Create an Account
+++++++++++++++++++++++
 
-As Civilian
-##############
-
-After you download ``cpchain`` binary file, you can run it as a civilian.
-Go the directory you store ``cpchain`` and type in:
-
-If you do not have an account, you can **create a new account** with ``cpchain``.
+If you do not have an account, you create one with ``cpchain``
 
 For Linux and Mac users:
 
@@ -106,7 +102,6 @@ For Windows users:
     $ echo|set /p="YOUR_PASSWORD"> datadir/password
     $ cpchain.exe account new account --datadir ./datadir
 
-
 Here we first create a directory named as ``datadir`` and
 create a file containing the password you prefer.
 Command ``./cpchain account new account --datadir ./datadir`` requires
@@ -123,7 +118,11 @@ And you can also refer to the name of this file to retrieve the wallet address.
 
     If you discard ``--datadir`` option, the account file is created under default user directory.
 
-After you register a wallet address,
+
+As Civilian
+++++++++++++++
+
+If you hold an account,
 you can run the following command to **connect to the chain**:
 
 .. code-block:: shell
@@ -211,29 +210,10 @@ It returns results like
 
 
 As Proposer
-################
++++++++++++++++++
 
 
 
-Similar to operations in `As Civilian`_,
-a node willing to become proposer can also utilize the following commands to create an account.
-
-
-For Linux and Mac users:
-
-.. code-block:: shell
-
-    $ mkdir datadir
-    $ echo YOUR_PASSWORD > datadir/password
-    $ ./cpchain account new account --datadir ./datadir
-
-For Windows users:
-
-.. code-block:: shell
-
-    $ mkdir datadir
-    $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ cpchain.exe account new account --datadir ./datadir
 
 The command for proposers connecting P2P network is slightly different than the counterpart for civilians
 
