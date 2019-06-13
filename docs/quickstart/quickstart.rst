@@ -151,14 +151,13 @@ And the progress is going to running for a while to sync with the chain.
 Employ either :ref:`fusion-api` or :ref:`rpc-api` to
 wield the power as a civilian as well as assume corresponding responsibility.
 
-You can also choose to use **console** to run as a civilian.
-
-To **check the status** of your account, you can use the following command:
+You can also utilize ``cpchain``
+to **check the status** of your account by the following command:
 
 
 .. code-block:: shell
 
-    $ ./console status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+    $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
 
 Here ``YOU_ACCOUNT`` is the file generated previously in ``datadir/keystore/``.
 And you can obtain the information about your account status like
@@ -175,36 +174,9 @@ And you can obtain the information about your account status like
     RNode:            false
 
     Proposer:         false
-
-    Locked:           true
-
-    SupportPrivateTx: false
     --------------------------
 
 
-
-And you can also **check your account information** using the command:
-
-
-.. code-block:: shell
-
-    $ ./console account --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
-
-
-It returns results like
-
-.. code-block:: shell
-
-    --------------------------
-
-    Balance: 400000 CPC // this account contains 400000 CPC
-
-    Reward:
-    	Total:  0 CPC
-    	Free:   0 CPC
-    	Locked: 0 CPC
-
-    --------------------------
 
 
 
@@ -250,7 +222,7 @@ And then the node claims campaign to become a proposer.
 Using commands ``./console account`` and ``./console status`` to check
 the account info and status about this node, similar to civilians.
 
-A node can using following commands to deposit more CPC
+A node can using following commands to start mining. 
 
 .. code-block:: shell
 
