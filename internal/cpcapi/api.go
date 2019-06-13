@@ -21,7 +21,6 @@ import (
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/vm"
-	"bitbucket.org/cpchain/chain/private"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
@@ -1375,10 +1374,6 @@ type SendTxArgs struct {
 	Input *hexutil.Bytes `json:"input"`
 
 	Type *hexutil.Uint64 `json:"type"`
-
-	// Private Tx Implementation
-	IsPrivate    bool     `json:"isPrivate"`
-	Participants []string `json:"participants"`
 }
 
 // setDefaults is a helper function that fills in default values for unspecified tx fields.
@@ -1441,10 +1436,6 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 		tx = types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
 
-	if args.IsPrivate {
-		tx.SetPrivate()
-	}
-
 	if args.Type == nil {
 		args.Type = new(hexutil.Uint64)
 		*(*uint64)(args.Type) = 0
@@ -1492,12 +1483,6 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		return common.Hash{}, ErrExceedProcessRate
 	}
 
-	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
-	if args.IsPrivate && !supportPrivate {
-		// if not support private tx, immediately returns error
-		return common.Hash{}, NotSupportPrivateTxErr
-	}
-
 	// Look up the wallet containing the requested signer
 	account := accounts.Account{Address: args.From}
 
@@ -1522,22 +1507,22 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		return common.Hash{}, types.ErrNotSupportedTxType
 	}
 
-	if args.IsPrivate {
-		// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
-		if len(args.Participants) == 0 || args.Data == nil {
-			return common.Hash{}, InvalidPrivateTxErr
-		}
+	// if args.IsPrivate {
+	// 	// If args.Data is nil, it must be the transaction of transferring tokens, that should be always public.
+	// 	if len(args.Participants) == 0 || args.Data == nil {
+	// 		return common.Hash{}, InvalidPrivateTxErr
+	// 	}
 
-		payloadReplace, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants, s.b.RemoteDB())
-		if err != nil {
-			return common.Hash{}, err
-		}
-		log.Info("Payload replacement for private transaction", "payloadReplace", payloadReplace)
+	// 	payloadReplace, err := private.SealPrivatePayload(([]byte)(*args.Data), (uint64)(*args.Nonce), args.Participants, s.b.RemoteDB())
+	// 	if err != nil {
+	// 		return common.Hash{}, err
+	// 	}
+	// 	log.Info("Payload replacement for private transaction", "payloadReplace", payloadReplace)
 
-		// Replace original content with security one.
-		replaceData, _ := rlp.EncodeToBytes(payloadReplace)
-		args.Data = (*hexutil.Bytes)(&replaceData)
-	}
+	// 	// Replace original content with security one.
+	// 	replaceData, _ := rlp.EncodeToBytes(payloadReplace)
+	// 	args.Data = (*hexutil.Bytes)(&replaceData)
+	// }
 
 	// Assemble the transaction and sign with the wallet
 	tx := args.toTransaction()
@@ -1560,12 +1545,6 @@ func (s *PublicTransactionPoolAPI) SendRawTransaction(ctx context.Context, encod
 
 	if !types.SupportTxType(tx.Type()) {
 		return common.Hash{}, types.ErrNotSupportedTxType
-	}
-
-	supportPrivate, _ := s.b.SupportPrivateTx(ctx)
-	if tx.IsPrivate() && !supportPrivate {
-		// if not support private tx, immediately returns error
-		return common.Hash{}, NotSupportPrivateTxErr
 	}
 
 	return submitTransaction(ctx, s.b, tx)
