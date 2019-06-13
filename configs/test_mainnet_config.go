@@ -52,21 +52,8 @@ var (
 			ImpeachTimeout:        time.Millisecond * TestMainnetBlockPeriod,
 		},
 	}
-	testMainnetProposers = []common.Address{
-		common.HexToAddress("0x9e61732d0b1c1674151a01ac0bba824c5b6258fb"), // #1
-		common.HexToAddress("0xaa6cf4f0338e04a40709dfa3c653efc6cd9e65c9"), // #2
-		common.HexToAddress("0x7170f578ca82897375f009ddea399df08f31bcff"), // #3
-		common.HexToAddress("0x4c61559aa727380e3fa516b6a7ae397b87ec2384"), // #5
-		common.HexToAddress("0xc5b481361bbcabb96ed0c835cee69b471449f49c"), // #4
-		common.HexToAddress("0x6e7fdba0fe5067a25a3cf1df90429e3c949411e3"), // #6
+	testMainnetProposers = testMainnetDefaultCandidates
 
-		common.HexToAddress("0x27e81a296f5b80d319d2f3008f2d5998530e79e4"), // #14
-		common.HexToAddress("0x52e584b4fba8688eb7edcabb18e65661a99acc67"), // #15
-		common.HexToAddress("0x030352bba36c0c7cec8669f64a26d96d5d679bdb"), // #16
-		common.HexToAddress("0xf561ebb8a40814c1cf3cc0a628df5a1bd7663b26"), // #17
-		common.HexToAddress("0xca8e011de0edea4929328bb86e35daa686c47ed0"), // #18
-		common.HexToAddress("0xcc9cd266776b331fd424ea14dc30fc8561bec628"), // #19
-	}
 	testMainnetValidators = []common.Address{
 		common.HexToAddress("0x0b2ee61452cc951565ed4b8eabff85c3f585c149"),
 		common.HexToAddress("0x6a3678cac50b9266f82abe1a12bd26edc8e743a3"),

@@ -45,12 +45,7 @@ var (
 		},
 	}
 
-	devProposers = []common.Address{
-		common.HexToAddress("0xc05302acebd0730e3a18a058d7d1cb1204c4a092"),
-		common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
-		common.HexToAddress("0xef3dd127de235f15ffb4fc0d71469d1339df6465"),
-		common.HexToAddress("0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e"),
-	}
+	devProposers = devDefaultCandidates[0:4]
 
 	devValidators = []common.Address{
 		common.HexToAddress("0x7b2f052a372951d02798853e39ee56c895109992"),

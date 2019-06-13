@@ -291,7 +291,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0x902528384eee0362b07aabca7bda4f0af45e545ce45fea701ea8b68247cd43dc")
+var MainnetGenesisHash = common.HexToHash("0xa1db7f9a486343b670389706ec76a0170e031880b804193d327b575a8b0f8704")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
@@ -397,7 +397,7 @@ func newMainnetGenesisBlock() *Genesis {
 			// contract admin account 21
 			common.HexToAddress("0xda5ccb96e93a6a5a80ab1f0a2c5b74ab6a198b45"): {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
 			// bank 22
-			common.HexToAddress("0x0020511a8d7fd0dc831610a8c2d41c99e2cc9a51"): {Balance: new(big.Int).Mul(big.NewInt(956100000), big.NewInt(configs.Cpc))},
+			common.HexToAddress("0x0020511a8d7fd0dc831610a8c2d41c99e2cc9a51"): {Balance: new(big.Int).Mul(big.NewInt(873850000), big.NewInt(configs.Cpc))},
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),
