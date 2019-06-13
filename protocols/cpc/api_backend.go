@@ -18,6 +18,7 @@ package cpc
 
 import (
 	"context"
+	"errors"
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts"
@@ -36,6 +37,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/event"
+)
+
+var (
+	errNilBlock             = errors.New("nil block")
+	errInvalidProposersList = errors.New("invalid proposers list")
 )
 
 // APIBackend implements cpcapi.Backend for full nodes
@@ -304,14 +310,29 @@ func (b *APIBackend) BlockReward(blockNum rpc.BlockNumber) *big.Int {
 }
 
 func (b *APIBackend) ProposerOf(blockNum rpc.BlockNumber) (common.Address, error) {
-	p, err := b.cpc.engine.(*dpor.Dpor).ProposerOf(uint64(blockNum))
-	return p, err
+	proposers, err := b.Proposers(blockNum)
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	vl, tl := b.ViewLen(), b.TermLen()
+	// be cautious vl*tl does not overflow
+	view := ((uint64(blockNum) - 1) % (vl * tl)) % tl
+	if len(proposers) > int(view) {
+		return proposers[int(view)], nil
+	}
+
+	return common.Address{}, errInvalidProposersList
 }
 
-// Proposers returns current block Proposers information
-func (b *APIBackend) Proposers(blockNr rpc.BlockNumber) ([]common.Address, error) {
-	api := b.cpc.engine.(*dpor.Dpor).APIs(b.cpc.blockchain)
-	return api[0].Service.(*dpor.API).GetProposers(blockNr)
+// Proposers returns block Proposers information
+func (b *APIBackend) Proposers(blockNum rpc.BlockNumber) ([]common.Address, error) {
+	block := b.cpc.BlockChain().GetBlockByNumber(uint64(blockNum))
+	if block == nil {
+		return []common.Address{}, errNilBlock
+	}
+	proposers := block.Dpor().Proposers
+	return proposers, nil
 }
 
 // Validators returns current block Validators information
