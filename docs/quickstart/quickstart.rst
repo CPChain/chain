@@ -219,32 +219,36 @@ a node with insufficient deposit automatically sets its deposit to 200,000 CPC (
 And then the node claims campaign to become a proposer.
 
 
-Using commands ``./console account`` and ``./console status`` to check
-the account info and status about this node, similar to civilians.
+Using commands ``./cpchain campaign status`` to check
+the status about this node, similar to civilians.
 
-A node can using following commands to start mining. 
+A node can using following commands to start mining.
 
 .. code-block:: shell
 
-    $ ./console reward deposit --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password VALUE
+    $ ./cpchain campaign start --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
 
-, where ``VALUE`` is the number of CPC you willing to deposit.
+It returns info like
+
+.. code-block:: shell
+
+    INFO[06-10|14:44:47.474] You are not rnode yet, you will spend 200000 cpc to be rnode first
+    INFO[06-10|14:44:47.474] Start Mining...
+    INFO[06-10|14:44:47.474] Start Success.
+
+
 
 To stop mining, use the command below
 
 .. code-block:: shell
 
-    $ ./console miner stop --keystore ./datadir/keystore/YOUR_ACCOUNT  --password ./datadir/password
+    $ ./cpchain campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT  --password ./datadir/password
 
 Then you may check the status of the account, the attribute ``Mining`` of which should shifted to ``false``.
 
-After you stop mining, you are free to withdraw deposit by the following command:
+After you stop mining, your deposit in RNode pool will be automatically refunded.
 
-.. code-block:: shell
 
-    $ ./console reward withdraw --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password VALUE
-
-If you do not present the argument ``VALUE``, all deposit will be withdrew by default.
 
 
 Run a Private Network
