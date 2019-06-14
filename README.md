@@ -88,6 +88,7 @@ the proposer faulty.
 
 
 ### Private Transactions
+*This feature can be enabled during compilation. Currently disabled on mainnet.*
 
 We design a data privacy mechanism that allows users to conduct private transactions on cpchain in a
 secure manner. Other than the valid participants, no one else has the ability to see the
