@@ -397,7 +397,7 @@ func newMainnetGenesisBlock() *Genesis {
 			// contract admin account 21
 			common.HexToAddress("0xda5ccb96e93a6a5a80ab1f0a2c5b74ab6a198b45"): {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
 			// bank 22
-			common.HexToAddress("0x0020511a8d7fd0dc831610a8c2d41c99e2cc9a51"): {Balance: new(big.Int).Mul(big.NewInt(873850000), big.NewInt(configs.Cpc))},
+			common.HexToAddress("0x0020511a8d7fd0dc831610a8c2d41c99e2cc9a51"): {Balance: new(big.Int).Mul(big.NewInt(873880028800), big.NewInt(configs.Finney))},
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),

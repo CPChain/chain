@@ -127,3 +127,22 @@ func TestSetupGenesis(t *testing.T) {
 	}
 	configs.SetRunMode(runmode)
 }
+
+func TestGenesisAlloc(t *testing.T) {
+
+	// 1.
+	// alloc sum
+	// block reward
+
+	// wanted sum
+}
+
+func TestGenesisAllocDetailed(t *testing.T) {
+
+	// 2.
+	// bank
+	// ca
+	// candidates
+	// total reward
+	// sum
+}
