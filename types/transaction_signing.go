@@ -92,7 +92,7 @@ type Cep1Signer struct {
 
 func NewCep1Signer(chainId *big.Int) Cep1Signer {
 	if chainId == nil {
-		chainId = new(big.Int)
+		chainId = big.NewInt(configs.MainnetChainId)
 	}
 	return Cep1Signer{
 		chainId:    chainId,
