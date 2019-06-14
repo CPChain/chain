@@ -22,8 +22,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -55,7 +56,6 @@ type TransactOpts struct {
 
 	Context context.Context // Network context to support cancellation and timeouts (nil = no timeout)
 }
-
 
 // FilterOpts is the collection of options to fine tune filtering for events
 // within a bound contract.
@@ -236,7 +236,7 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	if opts.Signer == nil {
 		return nil, errors.New("no signer to authorize the transaction with")
 	}
-	signedTx, err := opts.Signer(types.HomesteadSigner{}, opts.From, rawTx)
+	signedTx, err := opts.Signer(types.NewCep1Signer(configs.ChainConfigInfo().ChainID), opts.From, rawTx)
 	if err != nil {
 		return nil, err
 	}
