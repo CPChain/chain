@@ -31,7 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-// DefaultConfig contains default settings for use on the cpchain test net.
+// DefaultConfig contains default settings.
 var DefaultConfig = Config{
 	NetworkId:     configs.MainnetNetworkId,
 	DatabaseCache: 768,
