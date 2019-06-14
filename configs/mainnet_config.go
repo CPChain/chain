@@ -78,6 +78,4 @@ var (
 		"enode://33e4739bb516a475ea8c823d305c033c7f3e2fe18883ce5d50e4f1f7c5113bc9c97a38d2f6e95db6bd951cb568fdd42075df341d0da325de43496114110c953a@v06.mainnet.cpc-servers.com:30310",
 		"enode://1e19d838d202b08fba42a7f329a2b7c79bbd5442895858ea7e494ebfa452e1fad1e39abb70ab541560265692a3fb6a355bfbcbfadb08beea242aee9568bf5707@v07.mainnet.cpc-servers.com:30310",
 	}
-
-	mainnetDeposit = big.NewInt(50)
 )

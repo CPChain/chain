@@ -1436,6 +1436,7 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 		tx = types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
 
+	// This field is optional. When the tx type is omitted, we set the field to be zero.
 	if args.Type == nil {
 		args.Type = new(hexutil.Uint64)
 		*(*uint64)(args.Type) = 0
