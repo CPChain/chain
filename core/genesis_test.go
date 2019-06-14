@@ -17,6 +17,7 @@
 package core
 
 import (
+	"fmt"
 	"math/big"
 	"reflect"
 	"testing"
@@ -130,19 +131,31 @@ func TestSetupGenesis(t *testing.T) {
 
 func TestGenesisAlloc(t *testing.T) {
 
-	// 1.
-	// alloc sum
-	// block reward
+	// genesis alloc
+	mainnetGenesisAlloc := newMainnetGenesisBlock().Alloc
+	totalAlloc := new(big.Int).SetInt64(0)
+	for _, alloc := range mainnetGenesisAlloc {
+		totalAlloc = new(big.Int).Add(totalAlloc, alloc.Balance)
+	}
 
-	// wanted sum
-}
+	fmt.Println("total genesis alloc in cpc", new(big.Int).Div(totalAlloc, big.NewInt(configs.Cpc)))
 
-func TestGenesisAllocDetailed(t *testing.T) {
+	// block mining reward
+	totalBlockReward := new(big.Int).Add(configs.Cep1BlockRewardSupplyY1, configs.Cep1BlockRewardSupplyY2)
+	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY3)
+	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY4)
+	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY5)
 
-	// 2.
-	// bank
-	// ca
-	// candidates
-	// total reward
-	// sum
+	fmt.Println("total block reward in cpc", new(big.Int).Div(totalBlockReward, big.NewInt(configs.Cpc)))
+
+	// sum of genesis alloc and block mining reward
+	totalAmount := new(big.Int).Add(totalAlloc, totalBlockReward)
+
+	// expected total supply
+	expectedAmount := new(big.Int).Mul(big.NewInt(1e9), big.NewInt(configs.Cpc))
+
+	if totalAmount.Cmp(expectedAmount) != 0 {
+		t.Log("the sum of genesis alloc and block reward is not 1e9 cpc", "total genesis alloc", totalAlloc, "total block reward", totalBlockReward)
+		t.Fail()
+	}
 }
