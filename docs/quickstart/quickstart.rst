@@ -18,8 +18,13 @@ Earlier Linux releases may incur problems or lack necessary dependencies.
     like `ipython <https://pypi.org/project/ipython/>`_.
 
 
-Cpchain and Console
-============================
+Installation
+=================
+
+.. Note::
+
+    The functions of ``console`` has been integrated into ``cpchain``.
+    Versions after 0.2.11 no longer contains ``console``.
 
 
 Binary Release
@@ -30,12 +35,8 @@ Binary Release
 .. _`Download Page`: https://github.com/CPChain/chain/releases
 
 ``cpchain`` is the binary release for the chain.
-And ``console`` provides command line interface for operations on the chain,
-like checking account status, deposit and claiming campaign.
 
-.. NOTE::
 
-    ``console`` does not support transaction operations.
 
 You need to utilize either :ref:`fusion-api` or :ref:`rpc-api` for all available operations.
 
@@ -45,21 +46,45 @@ You can always refer to
 
     $ ./cpchain -h
 
-and
 
-.. code-block:: shell
-
-    $ ./console -h
 
 for help.
 
-As Civilian
-##############
 
-After you download ``cpchain`` binary file, you can run it as a civilian.
-Go the directory you store ``cpchain`` and type in:
+Source Code Building
++++++++++++++++++++++++++
 
-If you do not have an account, you can **create a new account** with ``cpchain``.
+
+We are going to install CPChain and run a node on the testnet.
+
+
+First, make sure you have installed `go <https://golang.org/>`_, and configured the $GOPATH.
+
+.. code::
+
+    $ git clone https://github.com/CPChain/chain
+
+    $ cd chain
+    $ make clean
+    $ make all
+
+Now you can find binary files in ``build/bin``,
+and utilize them as stated in `Binary Release`_.
+
+
+Running CPChain
+=====================
+
+Nodes in CPChain have three possible roles:
+**Civilian**, **Proposer**, or **Validator**.
+Interested readers can refer to :ref:`bipartite` for detailed information.
+Note that validators are not available for public use at the current stage.
+Thus, we do not state how to launch a validator node.
+
+Create an Account
+++++++++++++++++++++++
+
+If you do not have an account, you create one with ``cpchain``
 
 For Linux and Mac users:
 
@@ -77,7 +102,6 @@ For Windows users:
     $ echo|set /p="YOUR_PASSWORD"> datadir/password
     $ cpchain.exe account new account --datadir ./datadir
 
-
 Here we first create a directory named as ``datadir`` and
 create a file containing the password you prefer.
 Command ``./cpchain account new account --datadir ./datadir`` requires
@@ -94,7 +118,11 @@ And you can also refer to the name of this file to retrieve the wallet address.
 
     If you discard ``--datadir`` option, the account file is created under default user directory.
 
-After you register a wallet address,
+
+Run a Node as Civilian
++++++++++++++++++++++++++
+
+If you hold an account,
 you can run the following command to **connect to the chain**:
 
 .. code-block:: shell
@@ -123,14 +151,13 @@ And the progress is going to running for a while to sync with the chain.
 Employ either :ref:`fusion-api` or :ref:`rpc-api` to
 wield the power as a civilian as well as assume corresponding responsibility.
 
-You can also choose to use **console** to run as a civilian.
-
-To **check the status** of your account, you can use the following command:
+You can also utilize ``cpchain``
+to **check the status** of your account by the following command:
 
 
 .. code-block:: shell
 
-    $ ./console status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+    $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
 
 Here ``YOU_ACCOUNT`` is the file generated previously in ``datadir/keystore/``.
 And you can obtain the information about your account status like
@@ -147,64 +174,18 @@ And you can obtain the information about your account status like
     RNode:            false
 
     Proposer:         false
-
-    Locked:           true
-
-    SupportPrivateTx: false
-    --------------------------
-
-
-
-And you can also **check your account information** using the command:
-
-
-.. code-block:: shell
-
-    $ ./console account --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
-
-
-It returns results like
-
-.. code-block:: shell
-
-    --------------------------
-
-    Balance: 400000 CPC // this account contains 400000 CPC
-
-    Reward:
-    	Total:  0 CPC
-    	Free:   0 CPC
-    	Locked: 0 CPC
-
     --------------------------
 
 
 
 
-As Proposer
-################
+
+
+Run a Node as Proposer
+++++++++++++++++++++++++
 
 
 
-Similar to operations in `As Civilian`_,
-a node willing to become proposer can also utilize the following commands to create an account.
-
-
-For Linux and Mac users:
-
-.. code-block:: shell
-
-    $ mkdir datadir
-    $ echo YOUR_PASSWORD > datadir/password
-    $ ./cpchain account new account --datadir ./datadir
-
-For Windows users:
-
-.. code-block:: shell
-
-    $ mkdir datadir
-    $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ cpchain.exe account new account --datadir ./datadir
 
 The command for proposers connecting P2P network is slightly different than the counterpart for civilians
 
@@ -238,94 +219,40 @@ a node with insufficient deposit automatically sets its deposit to 200,000 CPC (
 And then the node claims campaign to become a proposer.
 
 
-Using commands ``./console account`` and ``./console status`` to check
-the account info and status about this node, similar to civilians.
+Using commands ``./cpchain campaign status`` to check
+the status about this node, similar to civilians.
 
-A node can using following commands to deposit more CPC
+A node can using following commands to start mining.
 
 .. code-block:: shell
 
-    $ ./console reward deposit --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password VALUE
+    $ ./cpchain campaign start --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
 
-, where ``VALUE`` is the number of CPC you willing to deposit.
+It returns info like
+
+.. code-block:: shell
+
+    INFO[06-10|14:44:47.474] You are not rnode yet, you will spend 200000 cpc to be rnode first
+    INFO[06-10|14:44:47.474] Start Mining...
+    INFO[06-10|14:44:47.474] Start Success.
+
+
 
 To stop mining, use the command below
 
 .. code-block:: shell
 
-    $ ./console miner stop --keystore ./datadir/keystore/YOUR_ACCOUNT  --password ./datadir/password
+    $ ./cpchain campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT  --password ./datadir/password
 
 Then you may check the status of the account, the attribute ``Mining`` of which should shifted to ``false``.
 
-After you stop mining, you are free to withdraw deposit by the following command:
-
-.. code-block:: shell
-
-    $ ./console reward withdraw --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password VALUE
-
-If you do not present the argument ``VALUE``, all deposit will be withdrew by default.
+After you stop mining, your deposit in RNode pool will be automatically refunded.
 
 
 
-Source Code Building
-+++++++++++++++++++++++++
-
-
-We are going to install CPChain and run a node on the testnet. 
-
-Building the Source
-####################
-
-First, make sure you have installed `go <https://golang.org/>`_, and configured the $GOPATH.
-
-.. code::
-
-    $ git clone https://github.com/CPChain/chain
-
-    $ cd chain
-    $ make clean
-    $ make all
-
-Now you can find binary files in ``build/bin``,
-and utilize them as stated in `Binary Release`_.
-
-Running CPChain
-#################
-
-Connect to Beta Mainnet
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code::
-
-    $ cd build/bin
-    $ ./cpchain run --runmode testnet
-
-
-
-Then use the commands above to connect to Beta Mainnet.
-
-Create an Account
-^^^^^^^^^^^^^^^^^^^^^^
-
-
-For Linux and Mac users:
-
-.. code-block:: shell
-
-    $ mkdir datadir
-    $ echo YOUR_PASSWORD > datadir/password
-    $ ./cpchain account new account --datadir ./datadir
-
-For Windows users:
-
-.. code-block:: shell
-
-    $ mkdir datadir
-    $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ cpchain.exe account new account --datadir ./datadir
 
 Run a Private Network
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++++++
 
 
 
@@ -341,30 +268,13 @@ Run a Private Network
 
     ``cpchain-all.sh`` launches the chain in dev mode.
 
-Run a Local Node
-^^^^^^^^^^^^^^^^^^^^^^^
+The command below is to run a local node.
+
 
 .. code::
 
     $ ./cpchain run --datadir ./datadir --unlock <You Address>
 
-CPC Faucet
-=================
-
-CPC faucet is an application that you can collect CPC test coins for free.
-The test coins can be used in newly-published CPChain Alpha Mainnet.
-Refer to `Faucet`_ to try it now.
-
-
-Claim Test Coins
-++++++++++++++++++++++
-
-1. Copy the wallet address and paste it in `Faucet`_. Now you can claim test coins.
-#. The password it requires is *cpchain2019*.
-#. Following a successful claim, this transaction is inserted into the test chain. In the site `Explorer`_, the transaction details can be searched.
-
-.. _`Faucet`: https://cpchain.io/faucet/
-.. _`Explorer`: https://cpchain.io/explorer/
 
 
 Smart Contract

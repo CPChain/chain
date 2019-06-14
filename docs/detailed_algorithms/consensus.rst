@@ -3,6 +3,8 @@
 Consensus
 =====================
 
+.. _bipartite:
+
 DPoR Bipartite Committee
 --------------------------
 
