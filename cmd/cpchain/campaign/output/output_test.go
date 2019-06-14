@@ -3,7 +3,7 @@ package output
 import (
 	"testing"
 
-	status "bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
+	status "bitbucket.org/cpchain/chain/cmd/cpchain/campaign/common"
 )
 
 func TestLogOutput(t *testing.T) {

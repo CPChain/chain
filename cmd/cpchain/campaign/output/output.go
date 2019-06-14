@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/template"
 
-	cm "bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
+	cm "bitbucket.org/cpchain/chain/cmd/cpchain/campaign/common"
 	"bitbucket.org/cpchain/chain/commons/log"
 )
 

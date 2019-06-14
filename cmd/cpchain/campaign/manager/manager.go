@@ -9,7 +9,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/api/rpc"
-	cm "bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
+	cm "bitbucket.org/cpchain/chain/cmd/cpchain/campaign/common"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"

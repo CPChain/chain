@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"bitbucket.org/cpchain/chain/cmd/cpchain/console/common"
-	"bitbucket.org/cpchain/chain/cmd/cpchain/console/manager"
-	"bitbucket.org/cpchain/chain/cmd/cpchain/console/output"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/campaign/common"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/campaign/manager"
+	"bitbucket.org/cpchain/chain/cmd/cpchain/campaign/output"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/flags"
 	"bitbucket.org/cpchain/chain/configs"
 	"github.com/urfave/cli"
