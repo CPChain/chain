@@ -53,12 +53,6 @@ func TestBootnodes(t *testing.T) {
 	assert.Equal(t, mainnetBootnodes, Bootnodes())
 }
 
-func TestDeposit(t *testing.T) {
-	SetRunMode(Dev)
-	deposit := Deposit()
-	assert.Equal(t, devDeposit, deposit)
-}
-
 func TestGetDefaultValidators(t *testing.T) {
 	urls := GetDefaultValidators()
 	assert.Nil(t, urls)
