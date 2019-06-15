@@ -359,6 +359,12 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 	updateRunModeFlag(ctx)
 	updateNodeConfig(ctx, &cfg.Node)
 
+	// disbale mine flag and fast flag both exists
+	if ctx.IsSet(flags.FastSyncFlagName) && ctx.IsSet(flags.MineFlagName) {
+		fmt.Println("Note, currently --mine and --fast flag cannot co-exist.")
+		os.Exit(1)
+	}
+
 	updateSyncModeFlag(ctx, &cfg.Cpc)
 
 	// create node
