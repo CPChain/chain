@@ -516,16 +516,16 @@ func getRole(isCommittee bool) int {
 	return cpclient.Candidate
 }
 
-// GetCurrentView returns current view
+// GetCurrentProposerIndex returns current view (0,1,...,11)
+func (s *PublicBlockChainAPI) GetCurrentProposerIndex() uint64 {
+	CurrentProposerIndex := s.b.CurrentProposerIndex()
+	return CurrentProposerIndex
+}
+
+// GetCurrentView returns current view (0,1,2)
 func (s *PublicBlockChainAPI) GetCurrentView() uint64 {
 	CurrentView := s.b.CurrentView()
 	return CurrentView
-}
-
-// GetCurrentSpan returns current span
-func (s *PublicBlockChainAPI) GetCurrentSpan() uint64 {
-	CurrentSpan := s.b.CurrentSpan()
-	return CurrentSpan
 }
 
 // GetCurrentTerm returns current term
@@ -549,8 +549,8 @@ func (s *PublicBlockChainAPI) GetCommitteeNumber() int {
 func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationInfo {
 
 	t := s.b.CurrentTerm()
+	pi := s.b.CurrentProposerIndex()
 	v := s.b.CurrentView()
-	p := s.b.CurrentSpan()
 	b := s.b.CurrentBlock()
 	cm := len(s.b.CommitteMember())
 	proposers, err := s.b.Proposers(rpc.BlockNumber(b.Number().Uint64()))
@@ -560,13 +560,13 @@ func (s *PublicBlockChainAPI) GetBlockGenerationInfo() cpclient.BlockGenerationI
 
 	header, err := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber)
 	blockGenerationInfo := cpclient.BlockGenerationInfo{
-		View:        v,
-		Term:        t,
-		Span:        p,
-		Proposer:    header.Coinbase,
-		BlockNumber: header.Number.Uint64(),
-		TermLen:     cm,
-		Proposers:   proposers,
+		ProposerIndex: pi,
+		Term:          t,
+		View:          v,
+		Proposer:      header.Coinbase,
+		BlockNumber:   header.Number.Uint64(),
+		TermLen:       cm,
+		Proposers:     proposers,
 	}
 
 	return blockGenerationInfo
