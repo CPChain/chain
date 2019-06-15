@@ -64,7 +64,6 @@ const (
 )
 
 func init() {
-
 	runFlags := append([]cli.Flag(nil), flags.RpcFlags...)
 	runFlags = append(runFlags, flags.GeneralFlags...)
 	runFlags = append(runFlags, flags.NodeFlags...)
@@ -93,6 +92,7 @@ func init() {
 }
 
 func run(ctx *cli.Context) error {
+	isRunningChain = true
 	err := times.InvalidSystemClock()
 	if err != nil {
 		log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
