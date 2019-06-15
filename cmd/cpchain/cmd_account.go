@@ -127,7 +127,15 @@ func createAccount(ctx *cli.Context) error {
 	if err != nil {
 		commons.Fatalf("Failed to read configuration: %v", err)
 	}
-	password, _ := commons.ReadPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a password.", true)
+
+	password := ""
+	passwordList := makePasswordList(ctx)
+	if len(passwordList) > 0 {
+		password = passwordList[0]
+	} else {
+		password, _ = commons.ReadPassword("If your password contains whitespaces, please be careful enough to avoid later confusion.\nPlease give a password.", true)
+	}
+
 	address, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
 	if err != nil {
 		commons.Fatalf("Failed to create account: %v", err)
