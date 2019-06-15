@@ -259,10 +259,18 @@ func accountImport(ctx *cli.Context) error {
 	}
 
 	_, n := newConfigNode(ctx)
-	password, err := commons.ReadPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\nPassword:", true)
-	if err != nil {
-		log.Fatalf("Failed to readPassword: %v", err)
+
+	password := ""
+	passwordList := makePasswordList(ctx)
+	if len(passwordList) > 0 {
+		password = passwordList[0]
+	} else {
+		password, err = commons.ReadPassword("Your new account is locked with a password. Please give a password. Do not forget this password.\n", true)
+		if err != nil {
+			log.Fatalf("Failed to readPassword: %v", err)
+		}
 	}
+
 	ks := n.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	acct, err := ks.ImportECDSA(key, password)
 	if err != nil {
