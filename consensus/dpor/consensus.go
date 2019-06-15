@@ -235,16 +235,16 @@ func (d *Dpor) GetBlockReward(blockNum uint64) *big.Int {
 
 func getBlockReward(number *big.Int) *big.Int {
 	var amount *big.Int
-	if number.Cmp(configs.Cep1LastBlockY1) <= 0 {
-		amount = configs.Cep1BlockRewardY1
-	} else if number.Cmp(configs.Cep1LastBlockY2) <= 0 {
-		amount = configs.Cep1BlockRewardY2
-	} else if number.Cmp(configs.Cep1LastBlockY3) <= 0 {
-		amount = configs.Cep1BlockRewardY3
-	} else if number.Cmp(configs.Cep1LastBlockY4) <= 0 {
-		amount = configs.Cep1BlockRewardY4
-	} else if number.Cmp(configs.Cep1LastBlockY5) <= 0 {
-		amount = configs.Cep1BlockRewardY5
+	if number.Cmp(configs.Cep1LastBlockY1()) <= 0 {
+		amount = configs.Cep1BlockRewardY1()
+	} else if number.Cmp(configs.Cep1LastBlockY2()) <= 0 {
+		amount = configs.Cep1BlockRewardY2()
+	} else if number.Cmp(configs.Cep1LastBlockY3()) <= 0 {
+		amount = configs.Cep1BlockRewardY3()
+	} else if number.Cmp(configs.Cep1LastBlockY4()) <= 0 {
+		amount = configs.Cep1BlockRewardY4()
+	} else if number.Cmp(configs.Cep1LastBlockY5()) <= 0 {
+		amount = configs.Cep1BlockRewardY5()
 	} else {
 		amount = big.NewInt(0)
 	}

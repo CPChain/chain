@@ -141,10 +141,10 @@ func TestGenesisAlloc(t *testing.T) {
 	fmt.Println("total genesis alloc in cpc", new(big.Int).Div(totalAlloc, big.NewInt(configs.Cpc)))
 
 	// block mining reward
-	totalBlockReward := new(big.Int).Add(configs.Cep1BlockRewardSupplyY1, configs.Cep1BlockRewardSupplyY2)
-	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY3)
-	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY4)
-	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY5)
+	totalBlockReward := new(big.Int).Add(configs.Cep1BlockRewardSupplyY1(), configs.Cep1BlockRewardSupplyY2())
+	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY3())
+	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY4())
+	totalBlockReward = new(big.Int).Add(totalBlockReward, configs.Cep1BlockRewardSupplyY5())
 
 	fmt.Println("total block reward in cpc", new(big.Int).Div(totalBlockReward, big.NewInt(configs.Cpc)))
 

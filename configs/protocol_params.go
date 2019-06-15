@@ -67,31 +67,59 @@ const (
 )
 
 const (
-	Cep1BlocksPerDay = 24 * 60 * 60 * 1000 / int64(MainnetBlockPeriod)
-	Cep1BlocksY1     = 366 * Cep1BlocksPerDay // contain a leap day
-	Cep1BlocksY2     = 365 * Cep1BlocksPerDay
-	Cep1BlocksY3     = 365 * Cep1BlocksPerDay
-	Cep1BlocksY4     = 365 * Cep1BlocksPerDay
-	Cep1BlocksY5     = 366 * Cep1BlocksPerDay // contain a leap day
+	cep1BlocksPerDay = 24 * 60 * 60 * 1000 / int64(MainnetBlockPeriod)
+	cep1BlocksY1     = 366 * cep1BlocksPerDay // contain a leap day
+	cep1BlocksY2     = 365 * cep1BlocksPerDay
+	cep1BlocksY3     = 365 * cep1BlocksPerDay
+	cep1BlocksY4     = 365 * cep1BlocksPerDay
+	cep1BlocksY5     = 366 * cep1BlocksPerDay // contain a leap day
 )
 
 var (
-	Cep1BlockRewardSupplyY1 = new(big.Int).Mul(big.NewInt(40002336), big.NewInt(1e+18))
-	Cep1BlockRewardSupplyY2 = new(big.Int).Mul(big.NewInt(29990736), big.NewInt(1e+18))
-	Cep1BlockRewardSupplyY3 = new(big.Int).Mul(big.NewInt(22485168), big.NewInt(1e+18))
-	Cep1BlockRewardSupplyY4 = new(big.Int).Mul(big.NewInt(16997904), big.NewInt(1e+18))
-	Cep1BlockRewardSupplyY5 = new(big.Int).Mul(big.NewInt(127438272), big.NewInt(1e+17))
+	cep1BlockRewardSupplyY1 = new(big.Int).Mul(big.NewInt(40002336), big.NewInt(1e+18))
+	cep1BlockRewardSupplyY2 = new(big.Int).Mul(big.NewInt(29990736), big.NewInt(1e+18))
+	cep1BlockRewardSupplyY3 = new(big.Int).Mul(big.NewInt(22485168), big.NewInt(1e+18))
+	cep1BlockRewardSupplyY4 = new(big.Int).Mul(big.NewInt(16997904), big.NewInt(1e+18))
+	cep1BlockRewardSupplyY5 = new(big.Int).Mul(big.NewInt(127438272), big.NewInt(1e+17))
 
 	// the calculation is based on 10 s a block	is generated.
-	Cep1BlockRewardY1 = new(big.Int).Div(Cep1BlockRewardSupplyY1, big.NewInt(Cep1BlocksY1)) // reward 12.65 cpc per block
-	Cep1BlockRewardY2 = new(big.Int).Div(Cep1BlockRewardSupplyY2, big.NewInt(Cep1BlocksY2)) // reward 9.51 cpc per block
-	Cep1BlockRewardY3 = new(big.Int).Div(Cep1BlockRewardSupplyY3, big.NewInt(Cep1BlocksY3)) // reward 7.13 cpc per block
-	Cep1BlockRewardY4 = new(big.Int).Div(Cep1BlockRewardSupplyY4, big.NewInt(Cep1BlocksY4)) // reward 5.39 cpc per block
-	Cep1BlockRewardY5 = new(big.Int).Div(Cep1BlockRewardSupplyY5, big.NewInt(Cep1BlocksY5)) // reward 4.03 cpc per block
+	cep1BlockRewardY1 = new(big.Int).Div(cep1BlockRewardSupplyY1, big.NewInt(cep1BlocksY1)) // reward 12.65 cpc per block
+	cep1BlockRewardY2 = new(big.Int).Div(cep1BlockRewardSupplyY2, big.NewInt(cep1BlocksY2)) // reward 9.51 cpc per block
+	cep1BlockRewardY3 = new(big.Int).Div(cep1BlockRewardSupplyY3, big.NewInt(cep1BlocksY3)) // reward 7.13 cpc per block
+	cep1BlockRewardY4 = new(big.Int).Div(cep1BlockRewardSupplyY4, big.NewInt(cep1BlocksY4)) // reward 5.39 cpc per block
+	cep1BlockRewardY5 = new(big.Int).Div(cep1BlockRewardSupplyY5, big.NewInt(cep1BlocksY5)) // reward 4.03 cpc per block
 
-	Cep1LastBlockY1 = big.NewInt(Cep1BlocksY1)
-	Cep1LastBlockY2 = new(big.Int).Add(big.NewInt(Cep1BlocksY2), Cep1LastBlockY1)
-	Cep1LastBlockY3 = new(big.Int).Add(big.NewInt(Cep1BlocksY3), Cep1LastBlockY2)
-	Cep1LastBlockY4 = new(big.Int).Add(big.NewInt(Cep1BlocksY4), Cep1LastBlockY3)
-	Cep1LastBlockY5 = new(big.Int).Add(big.NewInt(Cep1BlocksY5), Cep1LastBlockY4)
+	cep1LastBlockY1 = big.NewInt(cep1BlocksY1)
+	cep1LastBlockY2 = new(big.Int).Add(big.NewInt(cep1BlocksY2), cep1LastBlockY1)
+	cep1LastBlockY3 = new(big.Int).Add(big.NewInt(cep1BlocksY3), cep1LastBlockY2)
+	cep1LastBlockY4 = new(big.Int).Add(big.NewInt(cep1BlocksY4), cep1LastBlockY3)
+	cep1LastBlockY5 = new(big.Int).Add(big.NewInt(cep1BlocksY5), cep1LastBlockY4)
 )
+
+// Those are total block rewards for every year
+func Cep1BlockRewardSupplyY1() *big.Int { return new(big.Int).Set(cep1BlockRewardSupplyY1) }
+func Cep1BlockRewardSupplyY2() *big.Int { return new(big.Int).Set(cep1BlockRewardSupplyY2) }
+func Cep1BlockRewardSupplyY3() *big.Int { return new(big.Int).Set(cep1BlockRewardSupplyY3) }
+func Cep1BlockRewardSupplyY4() *big.Int { return new(big.Int).Set(cep1BlockRewardSupplyY4) }
+func Cep1BlockRewardSupplyY5() *big.Int { return new(big.Int).Set(cep1BlockRewardSupplyY5) }
+
+// Those are rewards per block for every year
+func Cep1BlockRewardY1() *big.Int { return new(big.Int).Set(cep1BlockRewardY1) }
+func Cep1BlockRewardY2() *big.Int { return new(big.Int).Set(cep1BlockRewardY2) }
+func Cep1BlockRewardY3() *big.Int { return new(big.Int).Set(cep1BlockRewardY3) }
+func Cep1BlockRewardY4() *big.Int { return new(big.Int).Set(cep1BlockRewardY4) }
+func Cep1BlockRewardY5() *big.Int { return new(big.Int).Set(cep1BlockRewardY5) }
+
+// Those are the last block numbers for every year
+func Cep1LastBlockY1() *big.Int { return new(big.Int).Set(cep1LastBlockY1) }
+func Cep1LastBlockY2() *big.Int { return new(big.Int).Set(cep1LastBlockY2) }
+func Cep1LastBlockY3() *big.Int { return new(big.Int).Set(cep1LastBlockY3) }
+func Cep1LastBlockY4() *big.Int { return new(big.Int).Set(cep1LastBlockY4) }
+func Cep1LastBlockY5() *big.Int { return new(big.Int).Set(cep1LastBlockY5) }
+
+// Those are only for test
+func SetCep1LastBlockY1(blockNum *big.Int) { cep1LastBlockY1.Set(blockNum) }
+func SetCep1LastBlockY2(blockNum *big.Int) { cep1LastBlockY2.Set(blockNum) }
+func SetCep1LastBlockY3(blockNum *big.Int) { cep1LastBlockY3.Set(blockNum) }
+func SetCep1LastBlockY4(blockNum *big.Int) { cep1LastBlockY4.Set(blockNum) }
+func SetCep1LastBlockY5(blockNum *big.Int) { cep1LastBlockY5.Set(blockNum) }
