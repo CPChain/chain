@@ -40,7 +40,7 @@ func main() {
 	config.SetConfig(os.Args[1], os.Args[2])
 
 	password := os.Args[3]
-	log.Info("contract deploy node's password", "password", password)
+	log.Info("start deploy contract")
 
 	var wg1 sync.WaitGroup
 	wg1.Add(1)
