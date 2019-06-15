@@ -118,8 +118,8 @@ func Cep1LastBlockY4() *big.Int { return new(big.Int).Set(cep1LastBlockY4) }
 func Cep1LastBlockY5() *big.Int { return new(big.Int).Set(cep1LastBlockY5) }
 
 // Those are only for test
-func SetCep1LastBlockY1(blockNum *big.Int) { cep1LastBlockY1.Set(blockNum) }
-func SetCep1LastBlockY2(blockNum *big.Int) { cep1LastBlockY2.Set(blockNum) }
-func SetCep1LastBlockY3(blockNum *big.Int) { cep1LastBlockY3.Set(blockNum) }
-func SetCep1LastBlockY4(blockNum *big.Int) { cep1LastBlockY4.Set(blockNum) }
-func SetCep1LastBlockY5(blockNum *big.Int) { cep1LastBlockY5.Set(blockNum) }
+func TestOnly_SetCep1LastBlockY1(blockNum *big.Int) { cep1LastBlockY1.Set(blockNum) }
+func TestOnly_SetCep1LastBlockY2(blockNum *big.Int) { cep1LastBlockY2.Set(blockNum) }
+func TestOnly_SetCep1LastBlockY3(blockNum *big.Int) { cep1LastBlockY3.Set(blockNum) }
+func TestOnly_SetCep1LastBlockY4(blockNum *big.Int) { cep1LastBlockY4.Set(blockNum) }
+func TestOnly_SetCep1LastBlockY5(blockNum *big.Int) { cep1LastBlockY5.Set(blockNum) }

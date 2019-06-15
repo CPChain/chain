@@ -55,19 +55,19 @@ func ExampleGenerateChain() {
 		Cep1LastBlockY5: configs.Cep1LastBlockY5(),
 	}
 
-	configs.SetCep1LastBlockY1(big.NewInt(1))
-	configs.SetCep1LastBlockY2(big.NewInt(2))
-	configs.SetCep1LastBlockY3(big.NewInt(3))
-	configs.SetCep1LastBlockY4(big.NewInt(4))
-	configs.SetCep1LastBlockY5(big.NewInt(5))
+	configs.TestOnly_SetCep1LastBlockY1(big.NewInt(1))
+	configs.TestOnly_SetCep1LastBlockY2(big.NewInt(2))
+	configs.TestOnly_SetCep1LastBlockY3(big.NewInt(3))
+	configs.TestOnly_SetCep1LastBlockY4(big.NewInt(4))
+	configs.TestOnly_SetCep1LastBlockY5(big.NewInt(5))
 
 	// recover configs.Cep1LastBlockYx
 	defer func() {
-		configs.SetCep1LastBlockY1(bak.Cep1LastBlockY1)
-		configs.SetCep1LastBlockY2(bak.Cep1LastBlockY2)
-		configs.SetCep1LastBlockY3(bak.Cep1LastBlockY3)
-		configs.SetCep1LastBlockY4(bak.Cep1LastBlockY4)
-		configs.SetCep1LastBlockY5(bak.Cep1LastBlockY5)
+		configs.TestOnly_SetCep1LastBlockY1(bak.Cep1LastBlockY1)
+		configs.TestOnly_SetCep1LastBlockY2(bak.Cep1LastBlockY2)
+		configs.TestOnly_SetCep1LastBlockY3(bak.Cep1LastBlockY3)
+		configs.TestOnly_SetCep1LastBlockY4(bak.Cep1LastBlockY4)
+		configs.TestOnly_SetCep1LastBlockY5(bak.Cep1LastBlockY5)
 
 	}()
 
