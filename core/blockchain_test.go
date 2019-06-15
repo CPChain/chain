@@ -355,63 +355,63 @@ func testReorg(t *testing.T, first, second []int64, td int64) {
 
 // Tests that the insertion functions detect banned hashes.
 
-func TestBadBlockHashes(t *testing.T) {
-	// Create a pristine chain and database
-	db := database.NewMemDatabase()
-	blockchain, err := newCanonical(fakeDpor(db), 0, db)
-	if err != nil {
-		t.Fatalf("failed to create pristine chain: %v", err)
-	}
-	defer blockchain.Stop()
+// func TestBadBlockHashes(t *testing.T) {
+// 	// Create a pristine chain and database
+// 	db := database.NewMemDatabase()
+// 	blockchain, err := newCanonical(fakeDpor(db), 0, db)
+// 	if err != nil {
+// 		t.Fatalf("failed to create pristine chain: %v", err)
+// 	}
+// 	defer blockchain.Stop()
 
-	// Create a chain, ban a hash and try to import
-	blocks := makeBlockChain(blockchain.CurrentBlock(), 3, fakeDpor(db), db, 10)
+// 	// Create a chain, ban a hash and try to import
+// 	blocks := makeBlockChain(blockchain.CurrentBlock(), 3, fakeDpor(db), db, 10)
 
-	BadHashes[blocks[2].Header().Hash()] = true
-	defer func() { delete(BadHashes, blocks[2].Header().Hash()) }()
+// 	BadHashes[blocks[2].Header().Hash()] = true
+// 	defer func() { delete(BadHashes, blocks[2].Header().Hash()) }()
 
-	_, err = blockchain.InsertChain(blocks)
-	if err != ErrBlacklistedHash {
-		t.Errorf("error mismatch: have: %v, want: %v", err, ErrBlacklistedHash)
-	}
-}
+// 	_, err = blockchain.InsertChain(blocks)
+// 	if err != ErrBlacklistedHash {
+// 		t.Errorf("error mismatch: have: %v, want: %v", err, ErrBlacklistedHash)
+// 	}
+// }
 
-// Tests that bad hashes are detected on boot, and the chain rolled back to a
-// good state prior to the bad hash.
-func TestReorgBadBlockHashes(t *testing.T) {
-	// Create a pristine chain and database
-	db := database.NewMemDatabase()
-	blockchain, err := newCanonical(fakeDpor(db), 0, db)
-	if err != nil {
-		t.Fatalf("failed to create pristine chain: %v", err)
-	}
-	// Create a chain, import and ban afterwards
-	blocks := makeBlockChain(blockchain.CurrentBlock(), 4, fakeDpor(db), db, 10)
+// // Tests that bad hashes are detected on boot, and the chain rolled back to a
+// // good state prior to the bad hash.
+// func TestReorgBadBlockHashes(t *testing.T) {
+// 	// Create a pristine chain and database
+// 	db := database.NewMemDatabase()
+// 	blockchain, err := newCanonical(fakeDpor(db), 0, db)
+// 	if err != nil {
+// 		t.Fatalf("failed to create pristine chain: %v", err)
+// 	}
+// 	// Create a chain, import and ban afterwards
+// 	blocks := makeBlockChain(blockchain.CurrentBlock(), 4, fakeDpor(db), db, 10)
 
-	if _, err = blockchain.InsertChain(blocks); err != nil {
-		t.Errorf("failed to import blocks: %v", err)
-	}
-	if blockchain.CurrentBlock().Hash() != blocks[3].Hash() {
-		t.Errorf("last block hash mismatch: have: %x, want %x", blockchain.CurrentBlock().Hash(), blocks[3].Header().Hash())
-	}
-	BadHashes[blocks[3].Header().Hash()] = true
-	defer func() { delete(BadHashes, blocks[3].Header().Hash()) }()
+// 	if _, err = blockchain.InsertChain(blocks); err != nil {
+// 		t.Errorf("failed to import blocks: %v", err)
+// 	}
+// 	if blockchain.CurrentBlock().Hash() != blocks[3].Hash() {
+// 		t.Errorf("last block hash mismatch: have: %x, want %x", blockchain.CurrentBlock().Hash(), blocks[3].Header().Hash())
+// 	}
+// 	BadHashes[blocks[3].Header().Hash()] = true
+// 	defer func() { delete(BadHashes, blocks[3].Header().Hash()) }()
 
-	blockchain.Stop()
+// 	blockchain.Stop()
 
-	// Create a new BlockChain and check that it rolled back the state.
-	ncm, err := NewBlockChain(blockchain.db, nil, blockchain.chainConfig, fakeDpor(db), vm.Config{}, nil, nil)
-	if err != nil {
-		t.Fatalf("failed to create new chain manager: %v", err)
-	}
-	if ncm.CurrentBlock().Hash() != blocks[2].Header().Hash() {
-		t.Errorf("last block hash mismatch: have: %x, want %x", ncm.CurrentBlock().Hash(), blocks[2].Header().Hash())
-	}
-	if blocks[2].Header().GasLimit != ncm.GasLimit() {
-		t.Errorf("last  block gasLimit mismatch: have: %d, want %d", ncm.GasLimit(), blocks[2].Header().GasLimit)
-	}
-	ncm.Stop()
-}
+// 	// Create a new BlockChain and check that it rolled back the state.
+// 	ncm, err := NewBlockChain(blockchain.db, nil, blockchain.chainConfig, fakeDpor(db), vm.Config{}, nil, nil)
+// 	if err != nil {
+// 		t.Fatalf("failed to create new chain manager: %v", err)
+// 	}
+// 	if ncm.CurrentBlock().Hash() != blocks[2].Header().Hash() {
+// 		t.Errorf("last block hash mismatch: have: %x, want %x", ncm.CurrentBlock().Hash(), blocks[2].Header().Hash())
+// 	}
+// 	if blocks[2].Header().GasLimit != ncm.GasLimit() {
+// 		t.Errorf("last  block gasLimit mismatch: have: %d, want %d", ncm.GasLimit(), blocks[2].Header().GasLimit)
+// 	}
+// 	ncm.Stop()
+// }
 
 // Tests chain insertions in the face of one entity containing an invalid nonce.
 func TestBlocksInsertNonceError(t *testing.T) {
