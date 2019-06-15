@@ -97,7 +97,7 @@ func TestGetBlockGenerationInfoList(t *testing.T) {
 	}
 	blockGenInfo, err := client.GetBlockGenerationInfo(context.Background())
 	fmt.Println("committee is:", blockGenInfo, len(blockGenInfo.Proposers))
-	fmt.Println("blockGenInfo ", "View:", blockGenInfo.View, "Term :", blockGenInfo.Term, "BlockNumber :", blockGenInfo.BlockNumber, "Proposer", blockGenInfo.Proposer, "Porposers", blockGenInfo.Proposers)
+	fmt.Println("blockGenInfo ", "ProposerIndex:", blockGenInfo.ProposerIndex, "Term :", blockGenInfo.Term, "BlockNumber :", blockGenInfo.BlockNumber, "Proposer", blockGenInfo.Proposer, "Porposers", blockGenInfo.Proposers)
 	if len(blockGenInfo.Proposers) != 4 {
 		t.Errorf("GetBlockGenerationInfoList failed")
 	}
