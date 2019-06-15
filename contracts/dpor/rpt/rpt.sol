@@ -19,7 +19,7 @@ contract Rpt {
     uint public window = 100; // number of blocks used for rpt calculation
 
     // 3 election configs
-    uint public lowRptPercentage = 50; // percentage: 0-100
+    uint public lowRptPercentage = 70; // percentage: 0-100
     uint public totalSeats = 8; // 0-8
     uint public lowRptSeats = 2; // 0-8 && lower than totalSeats
 
