@@ -318,6 +318,13 @@ Recommended Requirement
 - Network: 1Gbps
 
 
+VPS Recommendation
+++++++++++++++++++++
+
+Cloud servers (like Microsoft Azure or Amazon Web Service)
+of monthly cost at 40 to 50 dollars suffice to become an RNode.
+
+
 Node Entitlements & Rewards
 *******************************
 
