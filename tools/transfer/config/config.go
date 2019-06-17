@@ -21,6 +21,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"math/big"
+
 	"bitbucket.org/cpchain/chain/accounts"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
@@ -47,7 +49,7 @@ func SetConfig(ep, ksPath string) {
 	keyStoreFilePath = ksPath
 }
 
-func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, *keystore.KeyStore, accounts.Account) {
+func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, *keystore.KeyStore, accounts.Account, *big.Int) {
 	ep, err := configs.ResolveUrl(endPoint)
 	if err != nil {
 		log.Fatal("unknown endpoint", "endpoint", endPoint, "err", err)
@@ -105,5 +107,5 @@ func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecds
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 	// fmt.Println("from contractAddress:", fromAddress.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
 
-	return client, err, privateKey, publicKeyECDSA, fromAddress, kst, account
+	return client, err, privateKey, publicKeyECDSA, fromAddress, kst, account, big.NewInt(0).SetUint64(chainId)
 }
