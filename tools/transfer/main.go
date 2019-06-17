@@ -7,56 +7,93 @@ import (
 	"os"
 	"strconv"
 
-	"bitbucket.org/cpchain/chain/accounts/abi"
+	"bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/transfer/config"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 //  usage:
-// ./transfer http://localhost:8501 /tmp/111 0x0001 555
-
+// ./transfer [mainnet|dev|testmainnet] http://192.168.0.147:8501 /home/xmx0632/workspace/chain_new/src/bitbucket.org/cpchain/chain/examples/cpchain/conf-dev/keys/key1 0xc05302acebd0730e3a18a058d7d1cb1204c4a092 1
+// ./transfer mainnet http://192.168.0.147:8501 /home/xmx0632/workspace/chain_new/src/bitbucket.org/cpchain/chain/examples/cpchain/conf-dev/keys/key1 0xc05302acebd0730e3a18a058d7d1cb1204c4a092 1
 func main() {
 	log.Info("cmdline args", "args", os.Args)
-	if len(os.Args) != 5 {
-		fmt.Println("Usage: transfer <endpoint> <keystore path> <to> <value>")
+	if len(os.Args) != 6 {
+		fmt.Println("Usage: transfer <type> <endpoint> <keystore path> <to> <value>")
 		return
 	}
 
-	endpoint := os.Args[1]
-	keystorePath := os.Args[2]
-	to := common.HexToAddress(os.Args[3])
-	value, err := strconv.ParseInt(os.Args[4], 10, 64)
+	chainType := os.Args[1]
+
+	chainId := getChainId(chainType)
+
+	endpoint := os.Args[2]
+	keystorePath := os.Args[3]
+	to := common.HexToAddress(os.Args[4])
+	value, err := strconv.ParseInt(os.Args[5], 10, 64)
 	log.Info("args", "endpoint", endpoint, "keystorePath", keystorePath,
 		"to", to.Hex(), "value", value)
 	config.SetConfig(endpoint, keystorePath)
 
 	// ask for password
-	prompt := "Unlocking account"
+	prompt := "Input password to unlocking account"
 	password, _ := commons.ReadPassword(prompt, false)
-	log.Info("password", "password", password)
 
 	// decrypt keystore
 	client, err, privateKey, _, fromAddress, kst, account := config.Connect(password)
 	_, _, _ = kst, account, fromAddress
 
-	// build parameter
-	auth := bind.NewKeyedTransactor(privateKey)
-	auth.From = fromAddress
-	auth.Value = big.NewInt(0).SetInt64(value)
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Errorf("failed to retrieve account nonce: %v", err)
+	}
+	log.Infof("nonce: %v", nonce)
+	// Figure out the gas allowance and gas price values
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Errorf("failed to suggest gas price: %v", err)
+	}
 
-	// sendRawTransaction
-	nbc := bind.NewBoundContract(to, abi.ABI{}, client, client, nil)
-	tx, err := nbc.Transfer(auth)
-	log.Info("sendTx", "tx", tx.Hash().Hex())
+	log.Infof("gasPrice: %v", gasPrice)
+	vv := big.NewInt(value)
+	msg := cpchain.CallMsg{From: fromAddress, To: &to, Value: vv, Data: nil}
+	gasLimit, err := client.EstimateGas(context.Background(), msg)
 
-	// confirm receipt
-	ctx := context.Background()
-	receipt, err := bind.WaitMined(ctx, client, tx)
+	log.Infof("gasLimit: %v", gasLimit)
+	tx := types.NewTransaction(nonce, to, vv, gasLimit, gasPrice, nil)
+	signedTx, err := types.SignTx(tx, types.NewCep1Signer(chainId), privateKey)
+	log.Infof("signedTx: %v", signedTx.Hash().Hex())
+
+	err = client.SendTransaction(context.Background(), signedTx)
 	if err != nil {
 		log.Fatalf("failed to send transaction:%v", err)
 	}
-	log.Info("receipt", "status", receipt.Status)
+
+	// confirm receipt
+	receipt, err := bind.WaitMined(context.Background(), client, signedTx)
+	if err != nil {
+		log.Fatalf("failed to waitMined tx:%v", err)
+	}
+	if receipt.Status == types.ReceiptStatusSuccessful {
+		log.Info("confirm transaction success")
+	} else {
+		log.Error("confirm transaction failed", "status", receipt.Status,
+			"receipt.TxHash", receipt.TxHash)
+	}
+}
+func getChainId(chainType string) *big.Int {
+	switch chainType {
+	case "mainnet":
+		return big.NewInt(configs.MainnetChainId)
+	case "testmainnet":
+		return big.NewInt(configs.TestMainnetChainId)
+	case "dev":
+		return big.NewInt(configs.DevChainId)
+	default:
+		return big.NewInt(configs.MainnetChainId)
+	}
 }
