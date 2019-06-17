@@ -44,7 +44,7 @@ func InvalidSystemClock() error {
 	if err != nil {
 		// if ntp server not available,do nothing just print warning message.
 		log.Warn("ntp server not available, check your network please.", "err", err)
-		return nil
+		return err
 	}
 
 	now := time.Now()
