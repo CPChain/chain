@@ -171,7 +171,7 @@ Reputation Nodes
 
 A node has to meet one of the following requirements to become a Reputation Node:
 
-    1. Deposits in RNode Pool + Computing and Storage node:
+    1. At least 200,000 CPC in RNode Pool + Computing and Storage node:
     A node must lock-up a specific amount of tokens (200,000 minimum and 5,000,000 maximum)
     for 90 days and must satisfy the software, hardware, and network connection requirements.
     The locked up tokens have a positive correlation with the basic rewards.
