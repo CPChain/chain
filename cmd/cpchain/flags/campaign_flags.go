@@ -32,7 +32,6 @@ var campaignAccountFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "password",
 		Usage: "Password file to use for non-interactive password input",
-		Value: home + "/.cpchain/password",
 	},
 	cli.StringFlag{
 		Name:  "keystore",
