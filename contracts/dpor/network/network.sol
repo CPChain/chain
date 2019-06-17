@@ -32,7 +32,7 @@ contract Network {
     }
 
     function updateTimeout(uint256 _timeout) public onlyOwner {
-        require(_timeout>=50 && _timeout<=3000);
+        require(_timeout>=50 && _timeout<=10000);
         timeout = _timeout;
         emit UpdateConfig("timeout", timeout);
     }

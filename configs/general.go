@@ -160,14 +160,6 @@ var (
 		Testcase:    devBootnodes,
 	}
 
-	depositMap = map[RunMode]*big.Int{
-		Dev:         devDeposit,
-		Testnet:     testnetDeposit,
-		Mainnet:     mainnetDeposit,
-		TestMainnet: testMainnetDeposit,
-		Testcase:    devDeposit,
-	}
-
 	defaultValidatorNodesMap = map[RunMode][]string{
 		Dev:         defaultDevValidatorNodes,
 		Testnet:     defaultTestnetValidatorNodes,
@@ -207,10 +199,6 @@ func Validators() []common.Address {
 
 func Bootnodes() []string {
 	return bootnodesMap[GetRunMode()]
-}
-
-func Deposit() *big.Int {
-	return depositMap[GetRunMode()]
 }
 
 // validator nodes info

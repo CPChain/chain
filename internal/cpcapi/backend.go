@@ -77,9 +77,9 @@ type Backend interface {
 
 	//RNode API
 	RNode() ([]common.Address, uint64)
-	CurrentView() uint64
+	CurrentProposerIndex() uint64
 	CurrentTerm() uint64
-	CurrentSpan() uint64
+	CurrentView() uint64
 	CommitteMember() []common.Address
 	CalcRptInfo(address common.Address, addresses []common.Address, blockNum uint64) int64
 	ViewLen() uint64

@@ -257,18 +257,18 @@ func (b *APIBackend) RNode() ([]common.Address, uint64) {
 	return rNodes, bn.Uint64()
 }
 
-// CurrentView return current view
-func (b *APIBackend) CurrentView() uint64 {
+// CurrentProposerIndex return current proposer index, (0,1,...,11)
+func (b *APIBackend) CurrentProposerIndex() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.ViewLen(), b.TermLen()
 	// be cautious vl*tl does not overflow
-	view := ((bn.Uint64() - 1) % (vl * tl)) % tl
-	return view
+	proposerIndex := ((bn.Uint64() - 1) % (vl * tl)) % tl
+	return proposerIndex
 }
 
-// CurrentSpan return current span
-func (b *APIBackend) CurrentSpan() uint64 {
+// CurrentView return current view, (0,1,2)
+func (b *APIBackend) CurrentView() uint64 {
 	block := b.cpc.blockchain.CurrentBlock()
 	bn := block.Number()
 	vl, tl := b.ViewLen(), b.TermLen()

@@ -36,8 +36,7 @@ var campaignAccountFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  "keystore",
-		Usage: "Keystore directory",
-		Value: home + "/.cpchain/keystore/",
+		Usage: "Keystore file",
 	},
 }
 

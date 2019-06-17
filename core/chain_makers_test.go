@@ -48,26 +48,26 @@ func ExampleGenerateChain() {
 		Cep1LastBlockY5 *big.Int
 	}
 	bak := configBackup{
-		Cep1LastBlockY1: configs.Cep1LastBlockY1,
-		Cep1LastBlockY2: configs.Cep1LastBlockY2,
-		Cep1LastBlockY3: configs.Cep1LastBlockY3,
-		Cep1LastBlockY4: configs.Cep1LastBlockY4,
-		Cep1LastBlockY5: configs.Cep1LastBlockY5,
+		Cep1LastBlockY1: configs.Cep1LastBlockY1(),
+		Cep1LastBlockY2: configs.Cep1LastBlockY2(),
+		Cep1LastBlockY3: configs.Cep1LastBlockY3(),
+		Cep1LastBlockY4: configs.Cep1LastBlockY4(),
+		Cep1LastBlockY5: configs.Cep1LastBlockY5(),
 	}
 
-	configs.Cep1LastBlockY1 = big.NewInt(1)
-	configs.Cep1LastBlockY2 = big.NewInt(2)
-	configs.Cep1LastBlockY3 = big.NewInt(3)
-	configs.Cep1LastBlockY4 = big.NewInt(4)
-	configs.Cep1LastBlockY5 = big.NewInt(5)
+	configs.TestOnly_SetCep1LastBlockY1(big.NewInt(1))
+	configs.TestOnly_SetCep1LastBlockY2(big.NewInt(2))
+	configs.TestOnly_SetCep1LastBlockY3(big.NewInt(3))
+	configs.TestOnly_SetCep1LastBlockY4(big.NewInt(4))
+	configs.TestOnly_SetCep1LastBlockY5(big.NewInt(5))
 
 	// recover configs.Cep1LastBlockYx
 	defer func() {
-		configs.Cep1LastBlockY1 = bak.Cep1LastBlockY1
-		configs.Cep1LastBlockY2 = bak.Cep1LastBlockY2
-		configs.Cep1LastBlockY3 = bak.Cep1LastBlockY3
-		configs.Cep1LastBlockY4 = bak.Cep1LastBlockY4
-		configs.Cep1LastBlockY5 = bak.Cep1LastBlockY5
+		configs.TestOnly_SetCep1LastBlockY1(bak.Cep1LastBlockY1)
+		configs.TestOnly_SetCep1LastBlockY2(bak.Cep1LastBlockY2)
+		configs.TestOnly_SetCep1LastBlockY3(bak.Cep1LastBlockY3)
+		configs.TestOnly_SetCep1LastBlockY4(bak.Cep1LastBlockY4)
+		configs.TestOnly_SetCep1LastBlockY5(bak.Cep1LastBlockY5)
 
 	}()
 

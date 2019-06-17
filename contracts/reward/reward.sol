@@ -1,8 +1,3 @@
-/**
- * reward contract is for participants to deposit money and gain revenue
-**/
-
-
 pragma solidity ^0.4.24;
 
 import "./lib/safeMath.sol";
@@ -13,42 +8,36 @@ contract Reward {
     using SafeMath for uint256;
 
     address owner;
-    bool public locked = true; // indicate status of the contract, if true, nobody can deposit
-    uint256 public basicCriteria = 20000 ether;
-    uint256 public bonusPool = 0 ether; // 1.25m x 4 = 5m (cpc)
-    uint256 public nextRound = 0;
-    Set.Data internal participants; // enodes
-    uint256 public nextRoundStartTime = 0;
-    uint256 public period = 90 days;
 
-    // This is a type for a single investor
-    struct Investor {
-        uint256 freeDeposit; // amount that can be taken out
-        uint256 lockedDeposit; // locked amount
-        uint256 returned; // amount that will be returned to investor after a round
-        bool toRenew; // if true, the person will continue to invest
+    // data structure for investors
+    Set.Data private enodes;
+    mapping(address => uint256) public investments;
+    mapping(uint256 => mapping(address => bool)) returned; // record investors who have claimed interests for each round
+    uint256 public totalInvestment;
+    uint256 public totalInterest;
+
+
+    // states controllers
+    bool public inRaise = false;
+    bool public inLock = false;
+    bool public inSettlement = false;
+
+
+    // modifiers
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
     }
-
-    // store a 'Investor' struct for each possible address
-    mapping (address => Investor) public investors;
-
-    // These events will be emitted on changes
-    event OwnerSetBonusPool(uint value);
-    event SubmitDeposit(address who,uint256 value);
-    event WithdrawDeposit(address who, uint256 value);
-    event JoinEnodes(address who, uint256 value);
-    event RefundDeposit(address who, uint256 value);
-    event NewRaise(uint256 round, bool lock,uint256 _bonusPool);
-    event DepositInsufficient(address who,uint256 value);
-    event ContinuedInvest(address _addr,bool _iscontinue);
-    event FundBonusPool(uint256 value);
-    event RefundAll(uint256 num);
-
-    modifier onlyOwner() {require(msg.sender == owner);_;}
-
-    // have to unlock the contract before starting a new raise
-    modifier unlocked() {
-        require(locked == false);
+    modifier duringRaise() {
+        require(inRaise == true);
+        _;
+    }
+    modifier duringLock() {
+        require(inLock == true);
+        _;
+    }
+    modifier duringSettlement() {
+        require(inSettlement == true);
         _;
     }
 
@@ -56,232 +45,180 @@ contract Reward {
         owner = msg.sender;
     }
 
-    // value transferred to contract without calling any legitimate function will fund the bonus pool
-    function () public payable {
-        bonusPool = bonusPool.add(msg.value);
-        emit FundBonusPool(msg.value);
+
+    // configs
+    uint256 public bonusPool;
+    uint256 public raisePeriod = 3 days;
+    uint256 public lockPeriod = 84 days;
+    uint256 public settlementPeriod = 3 days;
+    uint256 public enodeThreshold = 20000 ether;
+    uint256 public round = 0;
+    uint256 public nextRaiseTime = 0;
+    uint256 public nextLockTime = 0;
+    uint256 public nextSettlementTime = 0;
+
+
+    // events
+    event FundBonusPool(address who, uint256 amount, uint256 total);
+    event SetConfig(string what, uint256 value);
+    event SetTime(string what, uint256 when);
+    event NewRaise(uint256 when);
+    event NewEnode(address who, uint256 investment);
+    event EnodeQuit(address who, uint256 balance);
+    event AddInvestment(address who, uint256 amount, uint256 total);
+    event SubInvestment(address who, uint256 amount, uint256 total);
+    event NewLock(uint256 when);
+    event NewSettlement(uint256 when);
+    event ApplyForSettlement(address who, uint256 income);
+
+
+    // get enodes
+    function getEnodes() public view returns(address[]) {
+        return enodes.getAll();
     }
 
-    // owner start a new raise by unlocking the contract
+
+    // set configs
+    // set raise period
+    function setRaisePeriod(uint256 _raisePeriod) public onlyOwner {
+        raisePeriod = _raisePeriod;
+        emit SetConfig("raise period", raisePeriod);
+    }
+
+    // set lock period
+    function setLockPeriod(uint256 _lockPeriod) public onlyOwner {
+        lockPeriod = _lockPeriod;
+        emit SetConfig("lock period", lockPeriod);
+    }
+
+    // set settlement period
+    function setSettlementPeriod(uint256 _settlementPeriod) public onlyOwner {
+        settlementPeriod = _settlementPeriod;
+        emit SetConfig("settlement period", settlementPeriod);
+    }
+
+    // set threshold to become a enode
+    function setEnodeThreshold(uint256 _enodeThreshold) public onlyOwner {
+        enodeThreshold = _enodeThreshold;
+        emit SetConfig("enode threshold", enodeThreshold);
+    }
+
+    // state change
+    // start a new raise
     function newRaise() public onlyOwner {
-        locked = false;
-        emit NewRaise(nextRound,locked,bonusPool);
-    }
-
-    // if the contract is abandoned, owner can refund all and lock the contract
-    function disableContract() public onlyOwner {
-        newRaise();
-        for(uint256 i=0; i<participants.values.length; i++){
-            investors[participants.values[i]].toRenew = false;
+        if(round > 0) {
+            require(now >= nextRaiseTime.sub(1 days)); // 1 day as a buffer
         }
-        nextRoundStartTime = 1; // a very small number
-        startNewRound();
-        locked = true;
+        inRaise = true;
+        inLock = false;
+        inSettlement = false;
+        round = round.add(1);
+        nextLockTime = now.add(raisePeriod);
+        bonusPool = bonusPool.sub(totalInterest);
+        totalInvestment = totalInvestment.add(totalInterest);
+        totalInterest = 0;
+        emit SetTime("next lock time", nextLockTime);
+        emit NewRaise(now);
     }
 
-    // owner set amount of bonus pool by transferring money to contract
-    function setBonusPool() public payable onlyOwner {
+    // fund bonus pool
+    function () public payable duringRaise {
         bonusPool = bonusPool.add(msg.value);
-        emit OwnerSetBonusPool(bonusPool);
+        emit FundBonusPool(msg.sender, msg.value, bonusPool);
     }
 
-    // deposit money to become a participate after the contract being unlocked
-    // investors will be added into participants after submitting deposit
-    // the amount will not locked until new round start
-    function submitDeposit() public payable unlocked {
-        require(!isContract(msg.sender),"please not use contract call this function");
-        require(msg.value>0);
-        if (!isEnode(msg.sender)){
-            participants.insert(msg.sender);
+    // investors can only submit deposit during raise
+    function deposit() public payable duringRaise {
+        investments[msg.sender] = investments[msg.sender].add(msg.value);
+        totalInvestment = totalInvestment.add(msg.value);
+        emit AddInvestment(msg.sender, msg.value, totalInvestment);
+        if(investments[msg.sender] >= enodeThreshold) {
+            enodes.insert(msg.sender);
+            emit NewEnode(msg.sender, investments[msg.sender]);
         }
-        investors[msg.sender].freeDeposit = investors[msg.sender].freeDeposit.add(msg.value);
-        emit SubmitDeposit(msg.sender, msg.value);
     }
 
-    // get investor's total balance: freeDeposit + lockedDeposit
-    function getTotalBalanceOf(address _addr) public view returns (uint256){
-        uint256 freeBalance=0;
-        uint256 lockedBalance=0;
-        freeBalance = investors[_addr].freeDeposit;
-        lockedBalance = investors[_addr].lockedDeposit;
-        return freeBalance.add(lockedBalance);
-    }
-
-    function getFreeBalanceOf(address _addr) public view returns (uint256){
-        uint256  deposit;
-        deposit = investors[_addr].freeDeposit;
-        return  deposit;
-    }
-
-    function getLockedBalanceOf(address _addr) public view returns (uint256){
-        uint256  deposit ;
-        deposit = investors[_addr].lockedDeposit;
-        return  deposit;
-    }
-
-    // judge whether an address is contract address by checking extcodesize
-    function isContract(address addr) public view returns (bool) {
-        uint size;
-        assembly { size := extcodesize(addr) }
-        return size > 0;
-    }
-
-    // go through all participants and accumulate locked amount
-    // participants.value is a list that stores all participant addresses
-    // 'participants' is a new defined type set.Data. see lib/set.sol
-    function getTotalLockedAmount() public view returns (uint256) {
-        uint256 totalAmount = 0;
-        for (uint256 i = 0; i < participants.values.length; i++) {
-            totalAmount = totalAmount.add(investors[participants.values[i]].lockedDeposit);
+    // investors can only withdraw during raise
+    function withdraw(uint amount) public duringRaise {
+        require(amount <= investments[msg.sender]);
+        msg.sender.transfer(amount);
+        investments[msg.sender] = investments[msg.sender].sub(amount);
+        totalInvestment = totalInvestment.sub(amount);
+        emit SubInvestment(msg.sender, amount, totalInvestment);
+        if(investments[msg.sender] < enodeThreshold) {
+            enodes.remove(msg.sender);
+            emit EnodeQuit(msg.sender, investments[msg.sender]);
         }
-        return totalAmount;
     }
 
-    // go through all participants and accumulate total amount: locked + free
-    function getTotalAmount()public view returns (uint256) {
-        uint256 totalAmount = 0;
-        for (uint256 i = 0; i < participants.values.length; i++){
-            totalAmount = totalAmount.add(getTotalBalanceOf(participants.values[i]));
-        }
-        return totalAmount;
+    // start a new lock period
+    function newLock() public onlyOwner {
+        require(now >= nextLockTime.sub(1 days));
+        inRaise = false;
+        inLock = true;
+        inSettlement = false;
+        nextSettlementTime = now.add(lockPeriod);
+        emit SetTime("next settlement time", nextSettlementTime);
+        emit NewLock(now);
     }
 
-    // investors withdraw their free deposit
-    function withdraw(uint256 _value) public {
-        require(_value <= investors[msg.sender].freeDeposit);
-        investors[msg.sender].freeDeposit = investors[msg.sender].freeDeposit.sub(_value);
-        msg.sender.transfer(_value);
-        emit WithdrawDeposit(msg.sender, _value);
+    // start a new settlement
+    function newSettlement() public onlyOwner {
+        require(now >= nextSettlementTime.sub(1 days));
+        inRaise = false;
+        inLock = false;
+        inSettlement = true;
+        nextRaiseTime = now.add(settlementPeriod);
+        emit SetTime("next raise time", nextRaiseTime);
+        emit NewSettlement(now);
     }
 
-    // owner can transfer investors' free deposit to their address
-    function refundDeposit(address _addr,uint256 _value) public onlyOwner {
-        require(_value <= investors[_addr].freeDeposit);
-        investors[_addr].freeDeposit = investors[_addr].freeDeposit.sub(_value);
-        _addr.transfer(_value);
-        emit RefundDeposit(_addr,_value);
-    }
-
-    function refundAll() public onlyOwner {
-        uint256 num = participants.values.length;
-        for(uint256 i=0; i<num; i++){
-            refundDeposit(participants.values[i], investors[participants.values[i]].freeDeposit);
-        }
-        emit RefundAll(num);
-    }
-
-    function wantRenew() public unlocked {
-        investors[msg.sender].toRenew =true;
-    }
-
-    function quitRenew() public unlocked {
-        investors[msg.sender].toRenew =false;
-    }
-
-    function isToRenew(address _addr) public view returns (bool){
-        return investors[_addr].toRenew;
-    }
-
-    // this function is for special situation
-    // usually owner will not set this parameter directly
-    function setNextRoundStartTime(uint time) public onlyOwner {
-        nextRoundStartTime = time;
-    }
-
-    function setPeriod(uint256 _period) public onlyOwner {
-        period = _period;
-
-    }
-
-    function setCriteria(uint256 criteria) public onlyOwner {
-        basicCriteria = criteria;
-    }
-
-    function isEnode(address _addr) public view returns (bool){
-        return participants.contains(_addr);
-    }
-
-    // close previous round and dividend bonus
-    function closePreviousRound() internal {
-        uint256 totalAmount = getTotalLockedAmount(); // total amount of locked money
-        if (totalAmount == 0) {  // no investors
-            return;
-        }
-
-        uint256 deposit;
+    // investors can only claims
+    function claimInterest() public duringSettlement {
+        require(!returned[round][msg.sender]);
+        require(enodes.contains(msg.sender));
         uint256 interest;
+        interest = bonusPool.mul(investments[msg.sender]).div(totalInvestment);
+        totalInterest = totalInterest.add(interest);
+        investments[msg.sender] = investments[msg.sender].add(interest);
+        returned[round][msg.sender] = true;
+        emit ApplyForSettlement(msg.sender, interest);
+    }
 
-        // go through participants, get locked deposit and calculate interest for each
-        // interest will be added to returned amount
-        // if participant does not renew, locked deposit will also be added to returned amount
-        // participants will renew by default
-        for (uint i = 0; i< participants.values.length; i++){
-            deposit = investors[participants.values[i]].lockedDeposit;
-            interest = bonusPool.mul(deposit).div(totalAmount); // interest = [total bonus] * ([the investor's investment] / [total investment])
-            bonusPool = bonusPool.sub(interest);
-            investors[participants.values[i]].returned = investors[participants.values[i]].returned.add(interest);
 
-            if (investors[participants.values[i]].toRenew == false){
-                investors[participants.values[i]].returned = investors[participants.values[i]].returned.add(deposit);
-                investors[participants.values[i]].lockedDeposit = 0;
-            }
-            emit ContinuedInvest(participants.values[i], investors[participants.values[i]].toRenew);
+    // backup
+    // set next raise time.
+    function setNextRaiseTime(uint256 _nextRaiseTime) public onlyOwner {
+        nextRaiseTime = _nextRaiseTime;
+        emit SetTime("next raise time", nextRaiseTime);
+    }
+
+    // set next lock time.
+    function setNextLockTime(uint256 _nextLockTime) public onlyOwner {
+        nextLockTime = _nextLockTime;
+        emit SetTime("next lock time", nextLockTime);
+    }
+
+    // set next settlement time.
+    function setNextSettlementTime(uint256 _nextSettlementTime) public onlyOwner {
+        nextSettlementTime = _nextSettlementTime;
+        emit SetTime("next settlement time", nextSettlementTime);
+    }
+
+    // refund money to investor
+    function refund(address investor, uint256 amount) public onlyOwner {
+        require(investments[investor] >= amount);
+        investor.transfer(amount);
+        investments[investor] = investments[investor].sub(amount);
+        if(investments[investor] < enodeThreshold) {
+            enodes.remove(investor);
+            emit EnodeQuit(investor, investments[investor]);
         }
     }
 
-    // delete participants whose total balance is 0
-    function cleanParticipants() internal {
-        uint256 currentSize = participants.values.length;
-        for(uint i=0; i<currentSize; i++) {
-            address investorAddress = participants.values[i];
-            uint256 totalBalance;
-            totalBalance = getTotalBalanceOf(investorAddress);
-            if(totalBalance == 0) {
-                participants.remove(investorAddress);
-            }
-        }
-    }
-
-    // only owner can start a new round
-    function startNewRound() public onlyOwner {
-        require(block.timestamp >= (nextRoundStartTime), "the next round not start"); // allow start 3 days ahead of schedule
-
-        // close previous round firstly
-        if (nextRound > 0) {
-            closePreviousRound();
-        }
-
-        // next round
-        nextRound = nextRound.add(1);
-        nextRoundStartTime = block.timestamp + period - 1 days; // 1days is a buffer
-
-        // Transfer deposit form freeDeposit to lockedDeposit
-        for (uint256 i = 0 ; i< participants.values.length; i++) {
-            address investorAddr = participants.values[i];
-            // keyword storage indicates a reference
-            Investor storage investor = investors[investorAddr];
-            uint256 totalAmount;
-            totalAmount = getTotalBalanceOf(investorAddr);
-            if (totalAmount < basicCriteria){
-                // the amount is not enough, return to free deposit and quit participants group
-                investor.freeDeposit = investor.freeDeposit.add(investor.returned);
-                assert(investor.lockedDeposit == 0); // locked deposit should be 0
-                emit DepositInsufficient(investorAddr, totalAmount);
-            } else {
-                investor.lockedDeposit = investor.lockedDeposit.add(investor.freeDeposit);
-                investor.freeDeposit = 0; // it is not necessary, but be helpful for understanding the logic
-                investor.freeDeposit = investor.returned;
-                investor.toRenew = true;  // by default it is "to renew" in each round
-            }
-            investor.returned = 0;
-        }
-        // set locked to true
-        locked = true;
-        cleanParticipants();
-    }
-
-    function getInvestors() public view returns (address[]) {
-        return participants.getAll();
+    function disable() public onlyOwner {
+        inRaise = false;
+        inLock = false;
+        inSettlement = false;
     }
 }
-

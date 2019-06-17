@@ -62,6 +62,26 @@ func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecds
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	chainConfig, err := client.ChainConfig()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	chainId, runMode := chainConfig.ChainID.Uint64(), configs.Mainnet
+	switch chainId {
+	case configs.DevChainId:
+		runMode = configs.Dev
+	case configs.MainnetChainId:
+		runMode = configs.Mainnet
+	case configs.TestMainnetChainId:
+		runMode = configs.TestMainnet
+	case configs.TestnetChainId:
+		runMode = configs.Testnet
+	default:
+		log.Fatal("unknown chain id")
+	}
+	configs.SetRunMode(runMode)
+
 	// Open keystore file.
 	file, err := os.Open(keyStoreFilePath)
 	if err != nil {

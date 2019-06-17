@@ -16,18 +16,11 @@ var (
 	MaxGapDuration           = 10.0 // seconds
 
 	ntpServerList = []string{
+		"time.windows.com",
 		"0.pool.ntp.org",
 		"1.pool.ntp.org",
 		"2.pool.ntp.org",
 		"3.pool.ntp.org",
-		"ntp1.aliyun.com",
-		"ntp2.aliyun.com",
-		"ntp3.aliyun.com",
-		"ntp4.aliyun.com",
-		"ntp5.aliyun.com",
-		"ntp6.aliyun.com",
-		"ntp7.aliyun.com",
-		"0.beevik-ntp.pool.ntp.org",
 	}
 )
 
@@ -51,7 +44,7 @@ func InvalidSystemClock() error {
 	if err != nil {
 		// if ntp server not available,do nothing just print warning message.
 		log.Warn("ntp server not available, check your network please.", "err", err)
-		return nil
+		return err
 	}
 
 	now := time.Now()

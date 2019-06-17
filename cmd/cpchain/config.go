@@ -43,6 +43,10 @@ import (
 	"github.com/urfave/cli"
 )
 
+var (
+	isRunningChain = false
+)
+
 type config struct {
 	Cpc  cpc.Config
 	Node node.Config
@@ -112,8 +116,11 @@ func updateP2pConfig(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.IsSet(flags.PortFlagName) {
 		cfg.ListenAddr = fmt.Sprintf(":%d", ctx.Int(flags.PortFlagName))
 	}
-	updateBootstrapNodes(ctx, cfg)
-	updateValidatorNodes(ctx)
+
+	if isRunningChain {
+		updateBootstrapNodes(ctx, cfg)
+		updateValidatorNodes(ctx)
+	}
 	updateNodeKey(ctx, cfg)
 }
 
@@ -268,7 +275,7 @@ func updateChainGeneralConfig(ctx *cli.Context, cfg *cpc.Config) {
 	if ctx.IsSet(flags.NetworkIDFlagName) {
 		cfg.NetworkId = ctx.Uint64(flags.NetworkIDFlagName)
 	}
-	log.Info("update networkId", "networkId", cfg.NetworkId)
+	log.Debug("update networkId", "networkId", cfg.NetworkId)
 }
 
 // Updates chain configuration
@@ -351,6 +358,12 @@ func newConfigNode(ctx *cli.Context) (config, *node.Node) {
 	// set runmode at first
 	updateRunModeFlag(ctx)
 	updateNodeConfig(ctx, &cfg.Node)
+
+	// disbale mine flag and fast flag both exists
+	if ctx.IsSet(flags.FastSyncFlagName) && ctx.IsSet(flags.MineFlagName) {
+		fmt.Println("Note, currently --mine and --fast flag cannot co-exist.")
+		os.Exit(1)
+	}
 
 	updateSyncModeFlag(ctx, &cfg.Cpc)
 
