@@ -32,6 +32,23 @@ func GetFirstUintArgument(ctx *cli.Context) int64 {
 	return int64(v)
 }
 
+func GetFirstBoolArgument(ctx *cli.Context) bool {
+	if len(ctx.Args()) != 1 {
+		log.Fatal("Invalid length of arguments", "want", 1, "got", len(ctx.Args()))
+	}
+
+	arg := ctx.Args().Get(0)
+	if arg == "true" || arg == "True" || arg == "TRUE" {
+		return true
+	} else if arg == "false" || arg == "False" || arg == "FALSE" {
+		return false
+	} else {
+		log.Fatal("Invalid argument", "want", "bool", "got", arg)
+	}
+
+	return false
+}
+
 // GetFirstStringArgument returns the value of the first string argument
 func GetFirstStringArgument(ctx *cli.Context) string {
 	if len(ctx.Args()) != 1 {
