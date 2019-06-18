@@ -80,7 +80,7 @@ var (
 			{
 				Name:        "showrnodes",
 				Usage:       "show rnodes in contract",
-				Action:      showConfigs,
+				Action:      showRnodes,
 				Flags:       flags.GeneralFlags,
 				Description: `show rnodes in contract`,
 			},
@@ -173,12 +173,12 @@ func disable(ctx *cli.Context) error {
 func isRnode(ctx *cli.Context) error {
 	rnd, _ := createContractInstanceAndTransactor(ctx, false)
 	addr := utils.GetFirstStringArgument(ctx)
-	_, err := rnd.IsRnode(nil, common.HexToAddress(addr))
+	isRnode, err := rnd.IsRnode(nil, common.HexToAddress(addr))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
 	}
 
-	log.Info("Successfully updated")
+	log.Info("IsRnode", "bool", isRnode)
 
 	return nil
 }
