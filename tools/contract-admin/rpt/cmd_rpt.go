@@ -96,7 +96,7 @@ var (
 
 func setLowRptPercentage(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	pct := utils.GetFirstUintArgument(ctx)
+	pct := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdateLowRptPercentage(opts, big.NewInt(pct))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -109,7 +109,7 @@ func setLowRptPercentage(ctx *cli.Context) error {
 
 func setTotalSeats(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	seats := utils.GetFirstUintArgument(ctx)
+	seats := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdateTotalSeats(opts, big.NewInt(seats))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -122,7 +122,7 @@ func setTotalSeats(ctx *cli.Context) error {
 
 func setLowRptSeats(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	seats := utils.GetFirstUintArgument(ctx)
+	seats := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdateLowRptSeats(opts, big.NewInt(seats))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -135,7 +135,7 @@ func setLowRptSeats(ctx *cli.Context) error {
 
 func setWindow(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	window := utils.GetFirstUintArgument(ctx)
+	window := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdateWindow(opts, big.NewInt(window))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -148,7 +148,7 @@ func setWindow(ctx *cli.Context) error {
 
 func setAlpha(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	alpha := utils.GetFirstUintArgument(ctx)
+	alpha := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdateAlpha(opts, big.NewInt(alpha))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -161,7 +161,7 @@ func setAlpha(ctx *cli.Context) error {
 
 func setBeta(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	beta := utils.GetFirstUintArgument(ctx)
+	beta := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdateBeta(opts, big.NewInt(beta))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -174,7 +174,7 @@ func setBeta(ctx *cli.Context) error {
 
 func setGamma(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	gamma := utils.GetFirstUintArgument(ctx)
+	gamma := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdateGamma(opts, big.NewInt(gamma))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -187,7 +187,7 @@ func setGamma(ctx *cli.Context) error {
 
 func setPsi(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	psi := utils.GetFirstUintArgument(ctx)
+	psi := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdatePsi(opts, big.NewInt(psi))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -200,7 +200,7 @@ func setPsi(ctx *cli.Context) error {
 
 func setOmega(ctx *cli.Context) error {
 	rpt, opts := createContractInstanceAndTransactor(ctx, true)
-	omega := utils.GetFirstUintArgument(ctx)
+	omega := utils.GetFirstIntArgument(ctx)
 	_, err := rpt.UpdateOmega(opts, big.NewInt(omega))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)

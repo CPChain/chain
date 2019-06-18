@@ -48,7 +48,7 @@ var (
 
 func setCPUDifficulty(ctx *cli.Context) error {
 	adm, opts := createContractInstanceAndTransactor(ctx, true)
-	difficulty := utils.GetFirstUintArgument(ctx)
+	difficulty := utils.GetFirstIntArgument(ctx)
 	_, err := adm.UpdateCPUDifficulty(opts, big.NewInt(difficulty))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -60,7 +60,7 @@ func setCPUDifficulty(ctx *cli.Context) error {
 
 func setMemDifficulty(ctx *cli.Context) error {
 	adm, opts := createContractInstanceAndTransactor(ctx, true)
-	difficulty := utils.GetFirstUintArgument(ctx)
+	difficulty := utils.GetFirstIntArgument(ctx)
 	_, err := adm.UpdateMemoryDifficulty(opts, big.NewInt(difficulty))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)

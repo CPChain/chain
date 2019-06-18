@@ -17,8 +17,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-// GetFirstUintArgument returns the value of the first uint64 argument
-func GetFirstUintArgument(ctx *cli.Context) int64 {
+// GetFirstIntArgument returns the value of the first uint64 argument
+func GetFirstIntArgument(ctx *cli.Context) int64 {
 	if len(ctx.Args()) != 1 {
 		log.Fatal("Invalid length of arguments", "want", 1, "got", len(ctx.Args()))
 	}
@@ -59,7 +59,7 @@ func GetFirstStringArgument(ctx *cli.Context) string {
 	return arg
 }
 
-func GetFirstTwoUintArgument(ctx *cli.Context) (int64, int64) {
+func GetFirstTwoIntArgument(ctx *cli.Context) (int64, int64) {
 	if len(ctx.Args()) != 2 {
 		log.Fatal("Invalid length of arguments", "want", 2, "got", len(ctx.Args()))
 	}

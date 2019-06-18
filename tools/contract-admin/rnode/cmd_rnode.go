@@ -109,7 +109,7 @@ func setThreshold(ctx *cli.Context) error {
 
 func setPeriod(ctx *cli.Context) error {
 	rnd, opts := createContractInstanceAndTransactor(ctx, true)
-	period := utils.GetFirstUintArgument(ctx)
+	period := utils.GetFirstIntArgument(ctx)
 	_, err := rnd.SetPeriod(opts, big.NewInt(period))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -122,7 +122,7 @@ func setPeriod(ctx *cli.Context) error {
 
 func setVersion(ctx *cli.Context) error {
 	rnd, opts := createContractInstanceAndTransactor(ctx, true)
-	version := utils.GetFirstUintArgument(ctx)
+	version := utils.GetFirstIntArgument(ctx)
 	_, err := rnd.SetSupportedVersion(opts, big.NewInt(version))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)

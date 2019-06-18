@@ -95,7 +95,7 @@ func setRnodeAddress(ctx *cli.Context) error {
 
 func setMinNoc(ctx *cli.Context) error {
 	cmp, opts := createContractInstanceAndTransactor(ctx, true)
-	value := utils.GetFirstUintArgument(ctx)
+	value := utils.GetFirstIntArgument(ctx)
 	_, err := cmp.UpdateMinNoc(opts, big.NewInt(value))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -108,7 +108,7 @@ func setMinNoc(ctx *cli.Context) error {
 
 func setMaxNoc(ctx *cli.Context) error {
 	cmp, opts := createContractInstanceAndTransactor(ctx, true)
-	value := utils.GetFirstUintArgument(ctx)
+	value := utils.GetFirstIntArgument(ctx)
 	_, err := cmp.UpdateMaxNoc(opts, big.NewInt(value))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -121,7 +121,7 @@ func setMaxNoc(ctx *cli.Context) error {
 
 func setAcceptableBlocks(ctx *cli.Context) error {
 	cmp, opts := createContractInstanceAndTransactor(ctx, true)
-	value := utils.GetFirstUintArgument(ctx)
+	value := utils.GetFirstIntArgument(ctx)
 	_, err := cmp.UpdateAcceptableBlocks(opts, big.NewInt(value))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -134,7 +134,7 @@ func setAcceptableBlocks(ctx *cli.Context) error {
 
 func setVersion(ctx *cli.Context) error {
 	cmp, opts := createContractInstanceAndTransactor(ctx, true)
-	value := utils.GetFirstUintArgument(ctx)
+	value := utils.GetFirstIntArgument(ctx)
 	_, err := cmp.UpdateSupportedVersion(opts, big.NewInt(value))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -201,7 +201,7 @@ func showConfigs(ctx *cli.Context) error {
 
 func showCandidates(ctx *cli.Context) error {
 	cmp, _ := createContractInstanceAndTransactor(ctx, false)
-	startTerm, endTerm := utils.GetFirstTwoUintArgument(ctx)
+	startTerm, endTerm := utils.GetFirstTwoIntArgument(ctx)
 
 	for i := startTerm; i <= endTerm; i++ {
 		candidates, err := cmp.CandidatesOf(nil, big.NewInt(i))

@@ -81,7 +81,7 @@ func setHost(ctx *cli.Context) error {
 
 func setCount(ctx *cli.Context) error {
 	ntw, opts := createContractInstanceAndTransactor(ctx, true)
-	count := utils.GetFirstUintArgument(ctx)
+	count := utils.GetFirstIntArgument(ctx)
 	_, err := ntw.UpdateCount(opts, big.NewInt(count))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -94,7 +94,7 @@ func setCount(ctx *cli.Context) error {
 
 func setTimeout(ctx *cli.Context) error {
 	ntw, opts := createContractInstanceAndTransactor(ctx, true)
-	timeout := utils.GetFirstUintArgument(ctx)
+	timeout := utils.GetFirstIntArgument(ctx)
 	_, err := ntw.UpdateTimeout(opts, big.NewInt(timeout))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
@@ -107,7 +107,7 @@ func setTimeout(ctx *cli.Context) error {
 
 func setGap(ctx *cli.Context) error {
 	ntw, opts := createContractInstanceAndTransactor(ctx, true)
-	gap := utils.GetFirstUintArgument(ctx)
+	gap := utils.GetFirstIntArgument(ctx)
 	_, err := ntw.UpdateGap(opts, big.NewInt(gap))
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
