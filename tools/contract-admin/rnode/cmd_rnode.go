@@ -1,6 +1,7 @@
 package rnode
 
 import (
+	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
 	"github.com/urfave/cli"
 )
 
@@ -16,56 +17,56 @@ var (
 				Name:        "setthreshold",
 				Usage:       "set threshold ",
 				Action:      setThreshold,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set threshold`,
 			},
 			{
 				Name:        "setperiod",
 				Usage:       "set period",
 				Action:      setPeriod,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set period`,
 			},
 			{
 				Name:        "setversion",
 				Usage:       "set version",
 				Action:      setVersion,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set version`,
 			},
 			{
 				Name:        "refund",
 				Usage:       "refund",
 				Action:      refund,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `refund`,
 			},
 			{
 				Name:        "refundall",
 				Usage:       "refund all",
 				Action:      refundAll,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `refund all`,
 			},
 			{
 				Name:        "disable",
 				Usage:       "disable rnode contract",
 				Action:      disable,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `disable rnode contract`,
 			},
 			{
 				Name:        "isrnode",
 				Usage:       "is rnode",
 				Action:      isRnode,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `check an address is rnode`,
 			},
 			{
 				Name:        "showconfigs",
 				Usage:       "show configs in contract",
 				Action:      showConfigs,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `show configs in contract`,
 			},
 		},

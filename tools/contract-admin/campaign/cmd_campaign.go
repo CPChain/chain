@@ -1,6 +1,7 @@
 package campaign
 
 import (
+	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
 	"github.com/urfave/cli"
 )
 
@@ -16,42 +17,42 @@ var (
 				Name:        "setadmissionaddr",
 				Usage:       "set admission contract address",
 				Action:      setAdmissionAddress,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set admission contract address`,
 			},
 			{
 				Name:        "setrnodeaddr",
 				Usage:       "set rnode contract address",
 				Action:      setRnodeAddress,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set rnode contract address`,
 			},
 			{
 				Name:        "setminnoc",
 				Usage:       "set min noc",
 				Action:      setMinNoc,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set rnode contract address`,
 			},
 			{
 				Name:        "setmaxnoc",
 				Usage:       "set max noc",
 				Action:      setMaxNoc,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set rnode contract address`,
 			},
 			{
 				Name:        "showconfigs",
 				Usage:       "show configs in contract",
 				Action:      showConfigs,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `show configs in contract`,
 			},
 			{
 				Name:        "showcandidates",
 				Usage:       "show candidates in contract in given term range",
 				Action:      showCandidates,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `show candidates in contract in given term range in contract`,
 			},
 		},

@@ -1,6 +1,7 @@
 package network
 
 import (
+	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
 	"github.com/urfave/cli"
 )
 
@@ -16,42 +17,42 @@ var (
 				Name:        "sethost",
 				Usage:       "set host address",
 				Action:      setHost,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set host address`,
 			},
 			{
 				Name:        "setcount",
 				Usage:       "set count",
 				Action:      setCount,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set count`,
 			},
 			{
 				Name:        "settimeout",
 				Usage:       "set timeout",
 				Action:      setTimeout,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set timeout`,
 			},
 			{
 				Name:        "setgap",
 				Usage:       "set gap",
 				Action:      setGap,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set gap`,
 			},
 			{
 				Name:        "setopen",
 				Usage:       "set open or not",
 				Action:      setOpen,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set open or nor`,
 			},
 			{
 				Name:        "showconfigs",
 				Usage:       "show configs in contract",
 				Action:      showConfigs,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `show configs in contract`,
 			},
 		},

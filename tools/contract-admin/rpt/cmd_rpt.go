@@ -1,6 +1,7 @@
 package rpt
 
 import (
+	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
 	"github.com/urfave/cli"
 )
 
@@ -16,70 +17,70 @@ var (
 				Name:        "setlowrptpct",
 				Usage:       "set low rpt percentage",
 				Action:      setLowRptPercentage,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set low rpt percentage`,
 			},
 			{
 				Name:        "settotalseats",
 				Usage:       "set total seats",
 				Action:      setTotalSeats,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set total seats`,
 			},
 			{
 				Name:        "setlowrptseats",
 				Usage:       "set low rpt seats",
 				Action:      setLowRptSeats,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set low rpt seats`,
 			},
 			{
 				Name:        "setwindow",
 				Usage:       "set window",
 				Action:      setWindow,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set window`,
 			},
 			{
 				Name:        "setalpha",
 				Usage:       "set alpha",
 				Action:      setAlpha,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set alpha`,
 			},
 			{
 				Name:        "setbeta",
 				Usage:       "set beta",
 				Action:      setBeta,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set beta`,
 			},
 			{
 				Name:        "setgamma",
 				Usage:       "set gamma",
 				Action:      setGamma,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set gamma`,
 			},
 			{
 				Name:        "setpsi",
 				Usage:       "set psi",
 				Action:      setPsi,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set psi`,
 			},
 			{
 				Name:        "setomega",
 				Usage:       "set omega",
 				Action:      setOmega,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `set omega`,
 			},
 			{
 				Name:        "showconfigs",
 				Usage:       "show configs in contract",
 				Action:      showConfigs,
-				Flags:       []cli.Flag{},
+				Flags:       flags.GeneralFlags,
 				Description: `show configs in contract`,
 			},
 		},
