@@ -9,7 +9,6 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/admission"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/campaign"
-	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/network"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/rnode"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/rpt"
@@ -38,9 +37,6 @@ func newApp() *cli.App {
 		rnode.RnodeCommand,
 		rpt.RptCommand,
 	}
-
-	// global flags
-	app.Flags = append(app.Flags, flags.GeneralFlags...)
 
 	// maintain order
 	sort.Sort(cli.CommandsByName(app.Commands))
