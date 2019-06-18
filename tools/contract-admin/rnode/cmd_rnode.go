@@ -90,8 +90,14 @@ var (
 
 func setThreshold(ctx *cli.Context) error {
 	rnd, opts := createContractInstanceAndTransactor(ctx, true)
-	threshold := utils.GetFirstUintArgument(ctx)
-	_, err := rnd.SetRnodeThreshold(opts, big.NewInt(threshold))
+	thresholdStr := utils.GetFirstStringArgument(ctx)
+	threshold := new(big.Int)
+	threshold, ok := threshold.SetString(thresholdStr, 10)
+	if !ok {
+		log.Fatal("Failed to parse string to big int", "string", thresholdStr)
+	}
+
+	_, err := rnd.SetRnodeThreshold(opts, threshold)
 	if err != nil {
 		log.Fatal("Failed to update", "err", err)
 	}
