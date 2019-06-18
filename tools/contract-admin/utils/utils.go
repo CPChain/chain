@@ -2,7 +2,6 @@ package utils
 
 import (
 	"crypto/ecdsa"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
 	"github.com/ethereum/go-ethereum/common"
@@ -30,6 +30,16 @@ func GetFirstUintArgument(ctx *cli.Context) int64 {
 	}
 
 	return int64(v)
+}
+
+// GetFirstStringArgument returns the value of the first string argument
+func GetFirstStringArgument(ctx *cli.Context) string {
+	if len(ctx.Args()) != 1 {
+		log.Fatal("Invalid length of arguments", "want", 1, "got", len(ctx.Args()))
+	}
+
+	arg := ctx.Args().Get(0)
+	return arg
 }
 
 func GetFirstTwoUintArgument(ctx *cli.Context) (int64, int64) {
@@ -89,7 +99,7 @@ func GetAddressAndKey(keystoreFilePath, password string) (common.Address, *keyst
 func PrepareCpclient(endpoint string) *cpclient.Client {
 	client, err := cpclient.Dial(endpoint)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to dial given endpoint", "endpoint", endpoint, "err", err)
 	}
 
 	chainConfig, err := client.ChainConfig()
