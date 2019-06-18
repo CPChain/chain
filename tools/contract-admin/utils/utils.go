@@ -70,7 +70,7 @@ func GetFirstTwoIntArgument(ctx *cli.Context) (int64, int64) {
 		log.Fatal("Failed to parse value", "value", arg1, "err", err)
 	}
 
-	arg2 := ctx.Args().Get(0)
+	arg2 := ctx.Args().Get(1)
 	v2, err := strconv.Atoi(arg2)
 	if err != nil {
 		log.Fatal("Failed to parse value", "value", arg2, "err", err)
