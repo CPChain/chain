@@ -92,7 +92,7 @@ func GetEndpoint(ctx *cli.Context) string {
 		log.Fatal("endpoint must be provided!")
 	}
 
-	endpoint := ctx.String(ContractAddr)
+	endpoint := ctx.String(Endpoint)
 	return endpoint
 }
 

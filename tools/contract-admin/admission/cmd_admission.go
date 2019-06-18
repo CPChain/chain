@@ -19,6 +19,7 @@ var (
 
 		Manage Admission Contract
 		`,
+		Flags: flags.GeneralFlags,
 		Subcommands: []cli.Command{
 			{
 				Name:        "setcpu",

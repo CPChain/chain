@@ -12,6 +12,7 @@ var (
 		Description: `
 		Manage Rpt Contract
 		`,
+		Flags: flags.GeneralFlags,
 		Subcommands: []cli.Command{
 			{
 				Name:        "setlowrptpct",

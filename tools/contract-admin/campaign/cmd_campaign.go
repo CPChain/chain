@@ -12,6 +12,7 @@ var (
 		Description: `
 		Manage Campaign Contract
 		`,
+		Flags: flags.GeneralFlags,
 		Subcommands: []cli.Command{
 			{
 				Name:        "setadmissionaddr",

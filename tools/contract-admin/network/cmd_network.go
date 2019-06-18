@@ -12,6 +12,7 @@ var (
 		Description: `
 		Manage Network Contract
 		`,
+		Flags: flags.GeneralFlags,
 		Subcommands: []cli.Command{
 			{
 				Name:        "sethost",

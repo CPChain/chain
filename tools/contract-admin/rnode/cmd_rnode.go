@@ -12,6 +12,7 @@ var (
 		Description: `
 		Manage Rnode Contract
 		`,
+		Flags: flags.GeneralFlags,
 		Subcommands: []cli.Command{
 			{
 				Name:        "setthreshold",
