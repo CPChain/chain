@@ -581,7 +581,7 @@ func (s *Synchronizer) synchronise(p SyncPeer, head common.Hash, height uint64, 
 					log.Warn("blocks queue put err", "err", err)
 					return err
 				}
-				i += uint64(MaxBlockFetch)
+				i += uint64(len(blocks))
 				goto forEnd
 			case receipts = <-s.syncReceiptsCh:
 				elapsed := common.PrettyDuration(time.Since(stats.fetchReceiptsStart))
