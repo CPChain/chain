@@ -318,26 +318,45 @@ Recommended Requirement
 - Network: 1Gbps
 
 
-Example Configuration for Proposers
+Example Configurations for Proposers
 ++++++++++++++++++++++++++++++++++++++
 
 Cloud servers (like Microsoft Azure or Amazon Web Service)
 of monthly cost at around 50 dollars suffice to become an RNode.
 
-Basic VPS configuration:
+**Basic VPS configurations:**
 
 * Amazon Web Service t2.medium
-    4GB memory, 2 vCPU, $0.0584 per hour pay as you go, in Singapore.
-* Microsoft Azure B2S
-    4GB memory, 2 vCPU, $0.0528 per hour pay as you go, in Singapore.
+    * 4GB memory, 2 vCPU, located in Singapore.
+    * $0.0584 per hour pay as you go.
+    * $0.03504 per hour pay one year reserved.
 
-Better computing capability configuration:
+* Microsoft Azure B2S
+    * 4GB memory, 2 vCPU, located in Singapore.
+    * $0.0528 per hour pay as you go.
+    * $0.0309 per hour one year reserved.
+
+
+**Better computing capability configurations:**
+
+These severs are equipped with Xeon Processors.
 
 * Amazon Web Service c5.large
-    4GB memory, 2 vCPU, $0.098 per hour pay as you go, in Singapore.
-* Microsoft Azure Fs2 v2
-    4GB memory, 2 vCPU, $0.098 per hour pay as you go, in Singapore.
+    * 4GB memory, 2 vCPU, in Singapore.
+    * $0.098 per hour pay as you go.
+    * $0.0588 per hour one year reserved.
 
+* Microsoft Azure F2s v2
+    * 4GB memory, 2 vCPU,  in Singapore.
+    * $0.098 per hour pay as you go.
+    * $0.0736 per hour one year reserved.
+
+
+
+Civilian Requirement
+++++++++++++++++++++++++++
+
+For normal civilians, a lower end of setup may also suffice.
 
 
 
