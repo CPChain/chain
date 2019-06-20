@@ -148,7 +148,7 @@ func (h *Handler) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) (strin
 
 	mac, sig, err := h.dpor.GetMac()
 	if err != nil {
-		log.Fatal("err when get message authentication coed", "err", err)
+		log.Fatal("err when get message authentication code", "err", err)
 	}
 
 	return h.dialer.AddPeer(version, p, rw, mac, sig, currentTerm, futureTerm)
