@@ -298,7 +298,7 @@ Minimum Requirement
 
 * Memory: 4GB
 
-* Storage: 256GB
+* Storage: 100GB
 
 * CPU: Intel Xeon E5-1650 v3 (alike)
 
