@@ -318,11 +318,21 @@ Recommended Requirement
 - Network: 1Gbps
 
 
-VPS Recommendation
-++++++++++++++++++++
+Example Configuration for Proposers
+++++++++++++++++++++++++++++++++++++++
 
 Cloud servers (like Microsoft Azure or Amazon Web Service)
 of monthly cost at 40 to 50 dollars suffice to become an RNode.
+
+
+
+* Amazon Web Service c5.large
+    4GB memory, 2 vCPU, $0.098 per hour pay as you go, in Singapore
+* Microsoft Azure Fs2 v2
+    4GB memory, 2 vCPU, $0.098 per hour pay as you go, in Singapore
+* Google Cloud Platform custom machine type
+    4GB memory, 2 vCPU, $0.098902 per hour pay as you go in Iowa US
+
 
 
 Node Entitlements & Rewards
