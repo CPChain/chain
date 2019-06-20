@@ -269,13 +269,10 @@ func handleInterrupt(n *node.Node) {
 	}
 
 WaitSignal:
-
-	<-sigc
-
+	signal := <-sigc
 	log.Info("Got interrupt")
-
 	// Warn to not to stop if local coinbase is a current or future proposer!
-	if coinbase, err := cpchainService.Coinbase(); err == nil {
+	if coinbase, err := cpchainService.Coinbase(); err == nil && signal != syscall.SIGTERM {
 		if cpchainService.Engine().(*dpor.Dpor).IsCurrentOrFutureProposer(coinbase) {
 			log.Warn(BusyWarning)
 			goto WaitSignal
