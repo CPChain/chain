@@ -731,12 +731,6 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		// Update the peers total difficulty if better than the previous
 		if _, ht := p.Head(); trueHeight.Cmp(ht) > 0 {
 			p.SetHead(trueHead, trueHeight)
-
-			currentBlock := pm.blockchain.CurrentBlock()
-			if trueHeight.Cmp(currentBlock.Number()) > 0 {
-				// bulk sync from the peer
-				go pm.synchronize(p)
-			}
 		}
 
 	case msg.Code == TxMsg:

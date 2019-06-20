@@ -170,7 +170,7 @@ func (c *Client) ChainConfig() (*configs.ChainConfig, error) {
 	cfg = new(configs.ChainConfig)
 	err := c.c.CallContext(ctx, cfg, "eth_getChainConfig")
 	if err != nil {
-		log.Error("cannot get chain config", err)
+		log.Error("cannot get chain config", "err", err)
 		return nil, err
 	}
 

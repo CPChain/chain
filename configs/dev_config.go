@@ -41,7 +41,7 @@ var (
 			MaxInitBlockNumber:    DefaultDevMaxInitBlockNumber,
 			ProxyContractRegister: devProxyContractRegister,
 			Contracts:             DevContractAddressMap,
-			ImpeachTimeout:        time.Millisecond * DefaultBlockPeriod * 10,
+			ImpeachTimeout:        time.Millisecond * DefaultBlockPeriod,
 		},
 	}
 
