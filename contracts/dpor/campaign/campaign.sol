@@ -49,7 +49,7 @@ contract Campaign {
     uint public numPerRound = termLen * viewLen; // total number of blocks produced in a term.
     // a node must choose the number of terms when it claims campaign
     uint public minNoc = 1; // minimal number of terms
-    uint public maxNoc = 10; //maximum number of terms
+    uint public maxNoc = 3; //maximum number of terms
     uint public acceptableBlocks = 10; // only latest 10 blocks based proofs will be accepted
     uint public supportedVersion = 1; // only nodes with new version can claim campaign
 
