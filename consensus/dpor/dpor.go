@@ -315,11 +315,13 @@ func (d *Dpor) initMinerAndValidator(blockchain consensus.ChainReadWriter, serve
 		handler = d.handler
 	)
 
-	fsm := backend.NewLBFT2(faulty, d, handler.ReceiveImpeachPendingBlock, d.db)
+	if d.IsValidator() {
+		fsm := backend.NewLBFT2(faulty, d, handler.ReceiveImpeachBlock, handler.ReceiveFailbackImpeachBlock, d.db)
+		handler.SetDporStateMachine(fsm)
+	}
 
 	handler.SetServer(server)
 	handler.SetDporService(d)
-	handler.SetDporStateMachine(fsm)
 	handler.SetAvailable()
 
 	d.handler = handler

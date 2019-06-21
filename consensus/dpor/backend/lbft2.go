@@ -42,7 +42,8 @@ type LBFT2 struct {
 	prepareSignatures *signaturesForBlockCaches
 	commitSignatures  *signaturesForBlockCaches
 
-	handleImpeachBlock HandleGeneratedImpeachBlock
+	handleImpeachBlock         HandleGeneratedImpeachBlock
+	handleFailbackImpeachBlock HandleGeneratedImpeachBlock
 
 	validateMsgMap *lru.ARCCache
 
@@ -50,7 +51,7 @@ type LBFT2 struct {
 }
 
 // NewLBFT2 create an LBFT2 instance
-func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock, db database.Database) *LBFT2 {
+func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGeneratedImpeachBlock, handleFailbackImpeachBlock HandleGeneratedImpeachBlock, db database.Database) *LBFT2 {
 
 	validateMap, _ := lru.NewARC(1000)
 
@@ -64,7 +65,8 @@ func NewLBFT2(faulty uint64, dpor DporService, handleImpeachBlock HandleGenerate
 		prepareSignatures: newSignaturesForBlockCaches(db),
 		commitSignatures:  newSignaturesForBlockCaches(db),
 
-		handleImpeachBlock: handleImpeachBlock,
+		handleImpeachBlock:         handleImpeachBlock,
+		handleFailbackImpeachBlock: handleFailbackImpeachBlock,
 
 		validateMsgMap: validateMap,
 	}
@@ -1118,7 +1120,7 @@ func (p *LBFT2) tryToImpeachFailback() {
 			func() {
 				currentBlock := p.dpor.GetCurrentBlock()
 				if currentBlock != nil && firstImpeach.NumberU64() > currentBlock.NumberU64() {
-					p.handleImpeachBlock(firstImpeach)
+					p.handleFailbackImpeachBlock(firstImpeach)
 				}
 			})
 
@@ -1127,7 +1129,7 @@ func (p *LBFT2) tryToImpeachFailback() {
 			func() {
 				currentBlock := p.dpor.GetCurrentBlock()
 				if currentBlock != nil && secondImpeach.NumberU64() > currentBlock.NumberU64() {
-					p.handleImpeachBlock(secondImpeach)
+					p.handleFailbackImpeachBlock(secondImpeach)
 				}
 			})
 
