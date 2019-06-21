@@ -1,17 +1,20 @@
 package utils
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"os"
 	"path/filepath"
 	"strconv"
 
+	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/keystore"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
+	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/urfave/cli"
@@ -165,4 +168,19 @@ func PrepareAll(ctx *cli.Context, withTransactor bool) (addr common.Address, cli
 	}
 
 	return addr, client, key
+}
+
+func WaitMined(client *cpclient.Client, tx *types.Transaction, err error) {
+	if err != nil {
+		log.Fatal("Failed to send transaction", "err", err)
+	}
+
+	log.Info("Transaction sent", "hash", tx.Hash().Hex())
+
+	receipt, err := bind.WaitMined(context.Background(), client, tx)
+	if err != nil {
+		log.Fatal("Failed to wait for tx being mined", "tx", tx.Hash().Hex(), "err", err)
+	}
+
+	log.Info("Transaction has been mined", "hash", receipt.TxHash.Hex(), "status", receipt.Status)
 }

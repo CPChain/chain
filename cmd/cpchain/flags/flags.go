@@ -247,7 +247,7 @@ var P2pFlags = []cli.Flag{
 	cli.IntFlag{
 		Name:  PortFlagName,
 		Usage: "Network listening port",
-		Value: 30303,
+		Value: 30310,
 	},
 	cli.StringFlag{
 		Name:  BootnodesFlagName,

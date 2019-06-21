@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/network"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
@@ -25,6 +26,7 @@ var (
 				Usage:       "set host address",
 				Action:      setHost,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "hoststring",
 				Description: `set host address`,
 			},
 			{
@@ -32,6 +34,7 @@ var (
 				Usage:       "set count",
 				Action:      setCount,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set count`,
 			},
 			{
@@ -39,6 +42,7 @@ var (
 				Usage:       "set timeout",
 				Action:      setTimeout,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set timeout`,
 			},
 			{
@@ -46,6 +50,7 @@ var (
 				Usage:       "set gap",
 				Action:      setGap,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set gap`,
 			},
 			{
@@ -53,6 +58,7 @@ var (
 				Usage:       "set open or not",
 				Action:      setOpen,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "bool",
 				Description: `set open or nor`,
 			},
 			{
@@ -67,72 +73,47 @@ var (
 )
 
 func setHost(ctx *cli.Context) error {
-	ntw, opts := createContractInstanceAndTransactor(ctx, true)
+	ntw, opts, client := createContractInstanceAndTransactor(ctx, true)
 	host := utils.GetFirstStringArgument(ctx)
-	_, err := ntw.UpdateHost(opts, host)
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := ntw.UpdateHost(opts, host)
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setCount(ctx *cli.Context) error {
-	ntw, opts := createContractInstanceAndTransactor(ctx, true)
+	ntw, opts, client := createContractInstanceAndTransactor(ctx, true)
 	count := utils.GetFirstIntArgument(ctx)
-	_, err := ntw.UpdateCount(opts, big.NewInt(count))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := ntw.UpdateCount(opts, big.NewInt(count))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setTimeout(ctx *cli.Context) error {
-	ntw, opts := createContractInstanceAndTransactor(ctx, true)
+	ntw, opts, client := createContractInstanceAndTransactor(ctx, true)
 	timeout := utils.GetFirstIntArgument(ctx)
-	_, err := ntw.UpdateTimeout(opts, big.NewInt(timeout))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := ntw.UpdateTimeout(opts, big.NewInt(timeout))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setGap(ctx *cli.Context) error {
-	ntw, opts := createContractInstanceAndTransactor(ctx, true)
+	ntw, opts, client := createContractInstanceAndTransactor(ctx, true)
 	gap := utils.GetFirstIntArgument(ctx)
-	_, err := ntw.UpdateGap(opts, big.NewInt(gap))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := ntw.UpdateGap(opts, big.NewInt(gap))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setOpen(ctx *cli.Context) error {
-	ntw, opts := createContractInstanceAndTransactor(ctx, true)
+	ntw, opts, client := createContractInstanceAndTransactor(ctx, true)
 	open := utils.GetFirstBoolArgument(ctx)
-	_, err := ntw.UpdateOpen(opts, open)
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := ntw.UpdateOpen(opts, open)
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func showConfigs(ctx *cli.Context) error {
-	ntw, _ := createContractInstanceAndTransactor(ctx, false)
+	ntw, _, _ := createContractInstanceAndTransactor(ctx, false)
 
 	host, err := ntw.Host(nil)
 	if err != nil {
@@ -167,7 +148,7 @@ func showConfigs(ctx *cli.Context) error {
 	return nil
 }
 
-func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *network.Network, opts *bind.TransactOpts) {
+func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *network.Network, opts *bind.TransactOpts, client *cpclient.Client) {
 	contractAddr, client, key := utils.PrepareAll(ctx, withTransactor)
 
 	if withTransactor {
@@ -179,5 +160,5 @@ func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) 
 		log.Fatal("Failed to create new contract instance", "err", err)
 	}
 
-	return contract, opts
+	return contract, opts, client
 }
