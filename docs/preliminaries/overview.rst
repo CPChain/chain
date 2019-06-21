@@ -12,81 +12,79 @@ Built-in Smart Contract
 #########################
 
 CPChain comes with 6 built-in smart contracts to ensure normal operations of DPoR.
+Five of them are parts of DPoR consensus protocol, admission, campaign, network, rnode and rpt.
+The reward contract is for official lock-in incentive program.
+Other contract files in out code repository are either abandoned or not yet activated.
 
-Proxy Register Contract
+Admission Contract
 *********************************
 
-   Proxy contract addresses and real contract addresses can be bound through function ``registerProxyContract()``.
-   Thus, there is no need to modify the address in Go or Solidity when a contract is update.
-   The real contract address can be obtained through function ``getRealContract()``.
-
-
-RPT Contract
-***************
-
-   RPT (abbreviated from reputation) contract calculates RNode's reputation value.
-   It is a core component of RNode ecosystem.
-   `RNode <https://cpchain.io/rnode/>`_ is the detail of the RNode ecosystem.
-   Reputation value consists of 5 dimensions,
-   **Account Balance (AB)**,
-   **Transaction (TX)**,
-   **Data Contribution (DC)**,
-   **Blockchain Maintenance (BM)**,
-   and **Proxy Reputation (PR)**.
-   Refer to `RPT Evaluation`_ for detailed implementation.
-
-   By invoking function ``getRpt()``, developer can obtain the reputation value of corresponding node.
-   RPT contract can be updated by contract deployer to avoid some faulty nodes maliciously increasing their RPT values.
-   The weights of above 5 dimensions can be customized by 5 PRT contract functions
-   ``updateAlpha()``,
-   ``updateBeta()``,
-   ``updateGamma()``,
-   ``updatePsi()``,
-   and ``updateOmega()``.
-   The weight of window size can also be adjusted via the function ``updateWindow()``.
+   Admission contract is called by campaign contract to verify whether
+   the candidates' CPU and memory resources match the requirements of mining.
+   Admission contract uses primitive contract mechanism, so that contract code can directly call
+   functions implemented in golang.
+   Two functions ``updateCPUDifficulty()`` and ``updateMemoryDifficulty()``
+   are implemented to adjust the difficulty.
 
 Campaign Contract
 ********************
 
-   A campaign contract is called once a user starts mining.
-   If its passes the test of admission contract,
-   it is registered as an RNode by the campaign contract.
-   Furthermore, given the condition that RPT value of  the user is one of the top 21 RNodes,
-   it is qualified to claim campaign aiming to become one of the committee members.
-   In other words, that user acquires an opportunity to insert a block into cpchain and obtain some cpc as rewards.
+   Campaign contract will be called once a user starts mining.
+   Campaign contract will check whether the applicants' hardware resources match basic requirement by calling admission
+   contract and check whether the applicants are rnodes by calling rnode contract.
+   If applicants pass the tests, Campaign contract will add them into candidates list for next three terms by default.
 
-   Here we list some vital functions in campaign contract.
+   Here we list two view only functions in campaign contract.
 
-   ``claimCampaign()``: this function is called when a user claims a campaign.
-   A fee paid in cpc is required by campaign contract as a deposit.
+   ``candidatesOf(uint term)``: returns all candidates' addresses of specified term.
 
-   ``quitCampaign()``: this function is called after a user quits the campaign.
-   It is about to get its deposit back via this function.
+   ``candidateInfoOf(address candidate)``: returns campaign information of specified candidate, including its start, end and total terms.
 
-   ``punishCandidate()``: this function can only be invoked by contract deployer.
-   The deployer can detain the RNode's deposit if it observes any malicious behavior from an RNode.
+Network Contract
+******************
 
-   ``candidatesOf()`` and ``candidateInfoOf()``: functions to retrieve RNodes and their information.
+    Network contract provides configs for testing network status.
+    Applicants have to pass the network test before becoming rnodes and candidates.
 
-Admission Contract
-*********************
+    The contract contains 5 configuration parameters:
 
-   Admission contract is called by campaign contract to verify whether
-   the candidates' CPU and memory resources match the requirements of mining.
-   Two functions ``updateCPUDifficulty()`` and ``updateMemoryDifficulty()``
-   are implemented to fulfil this verification purpose.
+    ``host``: the address applicants need to connect to.
 
-PDash Contract
+    ``count``: times applicants is allowed to try.
+
+    ``timeout``: maximum allowable time.
+
+    ``gap``: time interval between attempts.
+
+    ``open``: switch of the contract.
+
+Rnode Contract
 ****************
 
-   PDash contract is an important app on cpchain, which helps RPT contract to calculate Proxy Reputation.
-   You can click `PDash <https://github.com/CPChain/pdash>`_ to get more details.
+    Rnode contract records addressed of all rnodes, and holds their deposits.
 
-Register Contract
-*******************
+    Two main parameters:
 
-   Register contract is used for recoding the upload history of nodes.
-   It collaborates with RPT contract to calculate nodes' Data Contribution.
+    ``period``: rnode can quit and withdraw deposit after period.
+
+    ``rnodeThreshold``: standard to become rnodes.
+
+    Applicants join or quit rnodes through functions ``joinRnode()`` and ``quitRnode()``.
+
+RPT Contract
+***************
+
+   Rpt contract provides configs for reputation calculation.
+   Proposers will be elected from candidates based on their rpt value.
+   Rpt is calculated based on five dimensions.
+
+   The contract contains 5 weight parameters:
+
+   ``alpha`` for balance.
+   ``beta`` for transactions.
+   ``gamma`` for proxy reputation.
+   ``psi`` for data contribution.
+   ``omega`` for blockchain maintenance.
 
 Private Contract
 ###################
