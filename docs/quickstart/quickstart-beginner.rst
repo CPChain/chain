@@ -70,8 +70,8 @@ Connect to Mainnet
 
 .. note::
 
-    The line with highlight requires you to modify VARIABLES
-    which are capitalized according to your own settings.
+    The capitalized VARIABLES requires your modification
+    according to your own settings.
 
 Refer to :ref:`FAQ` if you encounter any problem.
 
