@@ -11,9 +11,7 @@ CPChain is a new blockchain infrastructure for the next generation IoT.
 Built-in Smart Contract
 #########################
 
-CPChain comes with 6 built-in smart contracts to ensure normal operations of DPoR.
-Five of them are parts of DPoR consensus protocol, admission, campaign, network, rnode and rpt.
-The reward contract is for official lock-in incentive program.
+CPChain comes with 5 built-in smart contracts to ensure normal operations of DPoR.
 Other contract files in out code repository are either abandoned or not yet activated.
 
 Admission Contract
