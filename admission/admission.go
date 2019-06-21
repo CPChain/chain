@@ -181,6 +181,14 @@ func checkNetworkStatus(host string, count int, timeout int, gap int) (bool, err
 	timeoutD := time.Duration(time.Duration(timeout) * time.Millisecond)
 	gapD := time.Duration(time.Duration(gap) * time.Millisecond)
 
+	// dial first, do not count this time as result
+	conn, err := net.DialTimeout("tcp", host, timeoutD*10)
+	if err != nil {
+		log.Debug("failed to dial remote host", "err", err)
+	}
+	log.Debug("dialed host to check network status", "host", host, "count", count, "timeout", timeout, "gap", gap)
+	conn.Close()
+
 	for i := 0; i < count; i++ {
 		conn, err := net.DialTimeout("tcp", host, timeoutD)
 		if err != nil {
