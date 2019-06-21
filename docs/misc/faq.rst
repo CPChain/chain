@@ -167,3 +167,18 @@ You can also utilize the command below to check your status.
 
     $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
 
+
+.. _ntp:
+
+How can I address ``system clock`` error?
+********************************************
+
+For users finding error message
+``system clock need to be synchronized.there is more than 10 seconds gap between ntp and this server``,
+they need to adjust their servers' local clock.
+One of the prerequisites to run the node is that
+the time gas between local time and NTP (network time protocol) must be less than 10 seconds.
+
+To address the issue, please toggle *automatic time & date* in your server
+such that the local time keeps correct.
+

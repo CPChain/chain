@@ -407,7 +407,6 @@ def test_case_8():
 def main():
     test_case_8()
 
-
 if __name__ == '__main__':
     main()
 
