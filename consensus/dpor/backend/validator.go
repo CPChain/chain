@@ -318,7 +318,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	return nil
 }
 
-// ReceiveFailbackImpeachBlock receives a block to add to pending block channel
+// ReceiveFailbackImpeachBlock receives a failback impeach block to add to pending block channel
 func (vh *Handler) ReceiveFailbackImpeachBlock(block *types.Block) error {
 	// wait for enough validators before broadcasting the failback impeachment block
 	term := vh.dpor.TermOf(block.NumberU64())
@@ -330,7 +330,11 @@ func (vh *Handler) ReceiveFailbackImpeachBlock(block *types.Block) error {
 		log.Debug("not enough validators")
 		time.Sleep(1 * time.Second)
 	}
+	return vh.ReceiveImpeachBlock(block)
+}
 
+// ReceiveImpeachBlock receives an impeach block to add to pending block channel
+func (vh *Handler) ReceiveImpeachBlock(block *types.Block) error {
 	select {
 	case vh.pendingImpeachBlockCh <- block:
 		err := vh.knownBlocks.AddBlock(block)
