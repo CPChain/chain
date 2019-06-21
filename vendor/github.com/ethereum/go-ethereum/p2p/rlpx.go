@@ -74,6 +74,9 @@ const (
 // the allowed 24 bits (i.e. length >= 16MB).
 var errPlainMessageTooLarge = errors.New("message length >= 16MB")
 
+// errBaseProtocolVersionMismatch is returned is the base protocol version is different with local baseProtocolVersion
+var errBaseProtocolVersionMismatch = errors.New("baseProtocolVersion mismatch when doProtoHandshake")
+
 // rlpx is the transport protocol used by actual (non-test) connections.
 // It wraps the frame encoder with locks and read/write deadlines.
 type rlpx struct {
@@ -165,6 +168,10 @@ func readProtocolHandshake(rw MsgReader, our *protoHandshake) (*protoHandshake, 
 	if err := msg.Decode(&hs); err != nil {
 		return nil, err
 	}
+	if hs.Version != baseProtocolVersion {
+		return nil, errBaseProtocolVersionMismatch
+	}
+
 	if (hs.ID == discover.NodeID{}) {
 		return nil, DiscInvalidIdentity
 	}
