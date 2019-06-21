@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	rptContract "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
@@ -25,6 +26,7 @@ var (
 				Usage:       "set low rpt percentage",
 				Action:      setLowRptPercentage,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set low rpt percentage`,
 			},
 			{
@@ -32,6 +34,7 @@ var (
 				Usage:       "set total seats",
 				Action:      setTotalSeats,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set total seats`,
 			},
 			{
@@ -39,6 +42,7 @@ var (
 				Usage:       "set low rpt seats",
 				Action:      setLowRptSeats,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set low rpt seats`,
 			},
 			{
@@ -46,6 +50,7 @@ var (
 				Usage:       "set window",
 				Action:      setWindow,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set window`,
 			},
 			{
@@ -53,6 +58,7 @@ var (
 				Usage:       "set alpha",
 				Action:      setAlpha,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set alpha`,
 			},
 			{
@@ -60,6 +66,7 @@ var (
 				Usage:       "set beta",
 				Action:      setBeta,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set beta`,
 			},
 			{
@@ -67,6 +74,7 @@ var (
 				Usage:       "set gamma",
 				Action:      setGamma,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set gamma`,
 			},
 			{
@@ -74,6 +82,7 @@ var (
 				Usage:       "set psi",
 				Action:      setPsi,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set psi`,
 			},
 			{
@@ -81,6 +90,7 @@ var (
 				Usage:       "set omega",
 				Action:      setOmega,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set omega`,
 			},
 			{
@@ -88,6 +98,7 @@ var (
 				Usage:       "show configs in contract",
 				Action:      showConfigs,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `show configs in contract`,
 			},
 		},
@@ -95,124 +106,79 @@ var (
 )
 
 func setLowRptPercentage(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	pct := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdateLowRptPercentage(opts, big.NewInt(pct))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdateLowRptPercentage(opts, big.NewInt(pct))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setTotalSeats(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	seats := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdateTotalSeats(opts, big.NewInt(seats))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdateTotalSeats(opts, big.NewInt(seats))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setLowRptSeats(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	seats := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdateLowRptSeats(opts, big.NewInt(seats))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdateLowRptSeats(opts, big.NewInt(seats))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setWindow(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	window := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdateWindow(opts, big.NewInt(window))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdateWindow(opts, big.NewInt(window))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setAlpha(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	alpha := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdateAlpha(opts, big.NewInt(alpha))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdateAlpha(opts, big.NewInt(alpha))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setBeta(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	beta := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdateBeta(opts, big.NewInt(beta))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdateBeta(opts, big.NewInt(beta))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setGamma(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	gamma := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdateGamma(opts, big.NewInt(gamma))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdateGamma(opts, big.NewInt(gamma))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setPsi(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	psi := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdatePsi(opts, big.NewInt(psi))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdatePsi(opts, big.NewInt(psi))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setOmega(ctx *cli.Context) error {
-	rpt, opts := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
 	omega := utils.GetFirstIntArgument(ctx)
-	_, err := rpt.UpdateOmega(opts, big.NewInt(omega))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := rpt.UpdateOmega(opts, big.NewInt(omega))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func showConfigs(ctx *cli.Context) error {
-	rpt, _ := createContractInstanceAndTransactor(ctx, false)
+	rpt, _, _ := createContractInstanceAndTransactor(ctx, false)
 
 	lowPct, err := rpt.LowRptPercentage(nil)
 	if err != nil {
@@ -271,7 +237,7 @@ func showConfigs(ctx *cli.Context) error {
 	return nil
 }
 
-func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *rptContract.Rpt, opts *bind.TransactOpts) {
+func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *rptContract.Rpt, opts *bind.TransactOpts, client *cpclient.Client) {
 	contractAddr, client, key := utils.PrepareAll(ctx, withTransactor)
 
 	if withTransactor {
@@ -283,5 +249,5 @@ func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) 
 		log.Fatal("Failed to create new contract instance", "err", err)
 	}
 
-	return contract, opts
+	return contract, opts, client
 }

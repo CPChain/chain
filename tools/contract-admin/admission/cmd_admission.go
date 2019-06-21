@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
+	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/flags"
@@ -26,6 +27,7 @@ var (
 				Usage:       "set cpu difficulty",
 				Action:      setCPUDifficulty,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set cpu difficulty`,
 			},
 			{
@@ -33,6 +35,7 @@ var (
 				Usage:       "set memory difficulty",
 				Action:      setMemDifficulty,
 				Flags:       flags.GeneralFlags,
+				ArgsUsage:   "int",
 				Description: `set memory difficulty`,
 			},
 			{
@@ -47,32 +50,23 @@ var (
 )
 
 func setCPUDifficulty(ctx *cli.Context) error {
-	adm, opts := createContractInstanceAndTransactor(ctx, true)
+	adm, opts, client := createContractInstanceAndTransactor(ctx, true)
 	difficulty := utils.GetFirstIntArgument(ctx)
-	_, err := adm.UpdateCPUDifficulty(opts, big.NewInt(difficulty))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
+	tx, err := adm.UpdateCPUDifficulty(opts, big.NewInt(difficulty))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func setMemDifficulty(ctx *cli.Context) error {
-	adm, opts := createContractInstanceAndTransactor(ctx, true)
+	adm, opts, client := createContractInstanceAndTransactor(ctx, true)
 	difficulty := utils.GetFirstIntArgument(ctx)
-	_, err := adm.UpdateMemoryDifficulty(opts, big.NewInt(difficulty))
-	if err != nil {
-		log.Fatal("Failed to update", "err", err)
-	}
-
-	log.Info("Successfully updated")
-
+	tx, err := adm.UpdateMemoryDifficulty(opts, big.NewInt(difficulty))
+	utils.WaitMined(client, tx, err)
 	return nil
 }
 
 func showDifficulties(ctx *cli.Context) error {
-	adm, _ := createContractInstanceAndTransactor(ctx, false)
+	adm, _, _ := createContractInstanceAndTransactor(ctx, false)
 
 	cpuDifficulty, err := adm.CpuDifficulty(nil)
 	if err != nil {
@@ -89,7 +83,7 @@ func showDifficulties(ctx *cli.Context) error {
 	return nil
 }
 
-func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *admission.Admission, opts *bind.TransactOpts) {
+func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *admission.Admission, opts *bind.TransactOpts, client *cpclient.Client) {
 	contractAddr, client, key := utils.PrepareAll(ctx, withTransactor)
 
 	if withTransactor {
@@ -100,5 +94,5 @@ func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) 
 		log.Fatal("Failed to create new contract instance", "err", err)
 	}
 
-	return contract, opts
+	return contract, opts, client
 }
