@@ -117,6 +117,7 @@ contract Reward {
         bonusPool = bonusPool.sub(totalInterest);
         totalInvestment = totalInvestment.add(totalInterest);
         totalInterest = 0;
+        assert(totalInvestment.add(bonusPool) == address(this).balance);
         emit SetTime("next lock time", nextLockTime);
         emit NewRaise(now);
     }
@@ -136,6 +137,7 @@ contract Reward {
             enodes.insert(msg.sender);
             emit NewEnode(msg.sender, investments[msg.sender]);
         }
+        assert(totalInvestment.add(bonusPool) == address(this).balance);
     }
 
     // investors can only withdraw during raise
@@ -149,6 +151,7 @@ contract Reward {
             enodes.remove(msg.sender);
             emit EnodeQuit(msg.sender, investments[msg.sender]);
         }
+        assert(totalInvestment.add(bonusPool) == address(this).balance);
     }
 
     // start a new lock period
@@ -173,18 +176,27 @@ contract Reward {
         emit NewSettlement(now);
     }
 
-    // investors can only claims
-    function claimInterest() public duringSettlement {
-        require(!returned[round][msg.sender]);
-        require(enodes.contains(msg.sender));
+    // calculate interest
+    function settle(address investor) internal {
+        require(!returned[round][investor]);
+        require(enodes.contains(investor));
         uint256 interest;
-        interest = bonusPool.mul(investments[msg.sender]).div(totalInvestment);
+        interest = bonusPool.mul(investments[investor]).div(totalInvestment);
         totalInterest = totalInterest.add(interest);
-        investments[msg.sender] = investments[msg.sender].add(interest);
-        returned[round][msg.sender] = true;
-        emit ApplyForSettlement(msg.sender, interest);
+        investments[investor] = investments[investor].add(interest);
+        returned[round][investor] = true;
+        emit ApplyForSettlement(investor, interest);
     }
 
+    // investors can only claim interest during settlement
+    function claimInterest() public duringSettlement {
+        settle(msg.sender);
+    }
+
+    // owner will distribute interest to those who do not claim
+    function distributeInterest(address investor) public onlyOwner duringSettlement {
+        settle(investor);
+    }
 
     // backup
     // set next raise time.
