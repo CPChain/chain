@@ -177,6 +177,9 @@ as well as the ``password`` file you just generate.
 Upgrade
 ----------
 
+If you receive any error message under good network condition,
+the first thing you need to do is to check if your node version is out-dated.
+
 The upgrade is simple, refer to `Download page`_ for the latest version.
 And download it and replace the old version with the latest one.
 
