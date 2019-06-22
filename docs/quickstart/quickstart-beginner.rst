@@ -173,3 +173,12 @@ The second command is to check your account status given the ``keystore`` file
 as well as the ``password`` file you just generate.
 
 
+
+Upgrade
+----------
+
+The upgrade is simple, refer to `Download page`_ for the latest version.
+And download it and replace the old version with the latest one.
+
+You can always use ``--version`` flag to check the version.
+
