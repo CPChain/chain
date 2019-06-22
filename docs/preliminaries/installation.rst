@@ -68,14 +68,26 @@ You can find several executables in `build/bin` directory after building the pro
 |                  | networks.                          |
 +------------------+------------------------------------+
 |contract-admin    | Executable for the cpchain         |
-|                  | official contract admin            |
+|                  | official contract admin.           |
 |                  |                                    |
 +------------------+------------------------------------+
 |testtool          | Executable command tool for easy   |
-|                  | test                               |
+|                  | test.                              |
 |                  |                                    |
 +------------------+------------------------------------+
-|transfer          | Executable for CPC transfer        |
+|transfer          | Executable for CPC transfer.       |
+|                  |                                    |
+|                  |                                    |
++------------------+------------------------------------+
+|ecpubkey          | Return the public key given a      |
+|                  | keystore file and its password.    |
+|                  |                                    |
++------------------+------------------------------------+
+|findimpeach       | Only for test purpose.             |
+|                  |                                    |
+|                  |                                    |
++------------------+------------------------------------+
+|smartcontract     | For deploying smart contract.      |
 |                  |                                    |
 |                  |                                    |
 +------------------+------------------------------------+
