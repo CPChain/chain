@@ -15,7 +15,8 @@ First, make sure you have installed `go <https://golang.org/>`_, and configured 
 Getting Repository
 ************************
 
-You can click `here <https://github.com/CPChain/chain>`_ to access source code, or execute the following commands to clone code on github.
+You can click `here <https://github.com/CPChain/chain>`_ to access source code,
+or execute the following commands to clone code on github.
 
 .. code::
     
@@ -33,7 +34,7 @@ You can click `here <https://github.com/CPChain/chain>`_ to access source code, 
 Building
 ************
 
-Run the command to compile and generate binary file in the `chain` directory.
+Run the command to compile and generate binary file in the ``chain`` directory.
 
 .. code::
 
@@ -44,7 +45,7 @@ Run the command to compile and generate binary file in the `chain` directory.
 Executables
 *************
 
-You can find several executables in `build/bin` directory after building the project.
+You can find several executables in ``build/bin`` directory after building the project.
 
 .. code::
 
@@ -52,12 +53,42 @@ You can find several executables in `build/bin` directory after building the pro
     $ ls
 
 
-========  ============
-Command   Description
-========  ============
-cpchain   Executable for the cpchain blockchain networks.
---------  ------------
-abigen    Source code generator to convert CPChain contract definitions into easy to use, compile-time type-safe Go packages. 
---------  ------------
-bootnode  A lightweight bootstrap node to aid in finding peers in private networks.
-========  ============
++------------------+------------------------------------+
+|Command           | Description                        |
++==================+====================================+
+|cpchain           | Executable for the cpchain         |
+|                  | blockchain networks.               |
++------------------+------------------------------------+
+|abigen            | Source code generator to convert   |
+|                  | CPChain contract definitions into  |
+|                  | easy to use, compile-time type-safe|
+|                  | Go packages.                       |
++------------------+------------------------------------+
+|bootnode          | A lightweight bootstrap node to    |
+|                  | aid in finding peers in private    |
+|                  | networks.                          |
++------------------+------------------------------------+
+|contract-admin    | Executable for the cpchain         |
+|                  | official contract admin.           |
+|                  |                                    |
++------------------+------------------------------------+
+|testtool          | Executable command tool for easy   |
+|                  | test.                              |
+|                  |                                    |
++------------------+------------------------------------+
+|transfer          | Executable for CPC transfer.       |
+|                  |                                    |
+|                  |                                    |
++------------------+------------------------------------+
+|ecpubkey          | Return the public key given a      |
+|                  | keystore file and its password.    |
+|                  |                                    |
++------------------+------------------------------------+
+|findimpeach       | Only for test purpose.             |
+|                  |                                    |
+|                  |                                    |
++------------------+------------------------------------+
+|smartcontract     | For deploying smart contract.      |
+|                  |                                    |
+|                  |                                    |
++------------------+------------------------------------+

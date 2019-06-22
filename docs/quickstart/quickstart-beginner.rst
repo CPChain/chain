@@ -38,7 +38,7 @@ For Windows users, use the commands below in cmd.
 .. code-block:: shell
 
     $ mkdir datadir
-    $ cpchain-windows-4.0-amd64.exe account new account --datadir ./datadir
+    $ cpchain-windows-4.0-amd64.exe account new --datadir ./datadir
 
 
 .. note::
@@ -51,7 +51,7 @@ For Linux and Mac users, use the commands below in terminal:
 .. code-block:: shell
 
     $ mkdir datadir
-    $ ./cpchain account new account --datadir ./datadir
+    $ ./cpchain account new --datadir ./datadir
 
 
 .. note::

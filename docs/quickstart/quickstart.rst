@@ -6,9 +6,7 @@ Quick Start in Detail
 
 
 Readers can choose either to use binary release or build from source code.
-Both methods require a Linux working environment,
-and have been tested on Ubuntu 18.04.
-Earlier Linux releases may incur problems or lack necessary dependencies.
+Both methods can been conducted on Linux, Mac or Windows operation system.
 
 
 .. NOTE::
@@ -92,7 +90,7 @@ For Linux and Mac users:
 
     $ mkdir datadir
     $ echo YOUR_PASSWORD > datadir/password
-    $ ./cpchain account new account --datadir ./datadir
+    $ ./cpchain account new --datadir ./datadir
 
 For Windows users:
 
@@ -100,11 +98,11 @@ For Windows users:
 
     $ mkdir datadir
     $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ cpchain.exe account new account --datadir ./datadir
+    $ cpchain.exe account new --datadir ./datadir
 
 Here we first create a directory named as ``datadir`` and
 create a file containing the password you prefer.
-Command ``./cpchain account new account --datadir ./datadir`` requires
+Command ``./cpchain account new --datadir ./datadir`` requires
 you to enter a password, which should be same as ``YOUR_PASSWORD`` in previous echo command.
 
 A successful execution returns the wallet address.
@@ -134,13 +132,18 @@ you can run the following command to **connect to the chain**:
     Please check the availability of both ports 8501 and 30311 before connection.
     You may nominate other ports as you wish.
 
-If you cannot get successfully successfully connected.
+If you cannot get successfully connected.
 You may try delete some temporary files by
 
 
 .. code-block:: shell
 
     $ ./cpchain chain cleandb
+
+.. note::
+
+    You should specify datadir by adding ``--datadir ./datadir``.
+    Otherwise, this command will remove detabase in the default datadir.
 
 You can refer to :ref:`cpchain-run-fail` in :ref:`FAQ` for detailed solutions.
 
@@ -273,8 +276,9 @@ The command below is to run a local node.
 
 .. code::
 
-    $ ./cpchain run --datadir ./datadir --unlock <You Address>
+    $ ./cpchain run --datadir ./datadir --unlock YOUR_ADDRESS --runmode dev
 
+Here ``--runmode dev`` is to prevent the node from connecting to Mainnet.
 
 
 Smart Contract
