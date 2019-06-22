@@ -707,6 +707,15 @@ func (pm *ProtocolManager) handleSyncMsg(msg p2p.Msg, p *peer) error {
 		for _, block := range unknown {
 			// use fetcher to retrieve each block
 			pm.fetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
+
+			var (
+				trueHead   = block.Hash
+				trueHeight = block.Number
+			)
+			// Update the peers height if better than the previous
+			if _, ht := p.Head(); trueHeight > ht.Uint64() {
+				p.SetHead(trueHead, new(big.Int).SetUint64(trueHeight))
+			}
 		}
 
 	case msg.Code == NewBlockMsg:
