@@ -291,3 +291,7 @@ func (h *Handler) procUnknownAncestorsLoop() {
 		time.Sleep(100 * time.Millisecond)
 	}
 }
+
+func (h *Handler) PeerInfos() ([]*PeerInfo, error) {
+	return h.dialer.PeerInfos()
+}
