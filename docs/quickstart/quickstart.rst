@@ -92,7 +92,7 @@ For Linux and Mac users:
 
     $ mkdir datadir
     $ echo YOUR_PASSWORD > datadir/password
-    $ ./cpchain account new account --datadir ./datadir
+    $ ./cpchain account new --datadir ./datadir
 
 For Windows users:
 
@@ -100,11 +100,11 @@ For Windows users:
 
     $ mkdir datadir
     $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ cpchain.exe account new account --datadir ./datadir
+    $ cpchain.exe account new --datadir ./datadir
 
 Here we first create a directory named as ``datadir`` and
 create a file containing the password you prefer.
-Command ``./cpchain account new account --datadir ./datadir`` requires
+Command ``./cpchain account new --datadir ./datadir`` requires
 you to enter a password, which should be same as ``YOUR_PASSWORD`` in previous echo command.
 
 A successful execution returns the wallet address.
