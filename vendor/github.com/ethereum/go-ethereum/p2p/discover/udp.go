@@ -80,12 +80,13 @@ type (
 
 	// pong is the reply to ping.
 	pong struct {
+		Version uint
+
 		// This field should mirror the UDP envelope address
 		// of the ping packet, which provides a way to discover the
 		// the external address (after NAT).
 		To rpcEndpoint
 
-		Version    uint
 		ReplyTok   []byte // This contains the hash of the ping packet.
 		Expiration uint64 // Absolute timestamp at which the packet becomes invalid.
 		// Ignore additional fields (for forward compatibility).
