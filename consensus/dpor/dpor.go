@@ -2,6 +2,7 @@
 package dpor
 
 import (
+	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -20,6 +21,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/p2p"
 	lru "github.com/hashicorp/golang-lru"
+)
+
+var (
+	errDporProtocolNotWorking = errors.New("Dpor Protocol is not working")
 )
 
 // BroadcastBlockFn broadcasts a block to normal peers(not pbft replicas)

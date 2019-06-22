@@ -30,14 +30,14 @@ func logMsgReceived(number uint64, hash common.Hash, msgCode MsgCode, p *RemoteS
 	}())
 }
 
-func (vh *Handler) handleSignerConnectionMsg(version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
+func (vh *Handler) handleSignerConnectionMsg(cpcVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
 	switch msg.Code {
 	case NewSignerMsg:
 
 		log.Debug("received new signer msg from", "peer.RemoteAddress", p.RemoteAddr().String())
 
 		var signerStatus SignerStatusData
-		address, err := ReadSignerStatus(msg, &signerStatus)
+		address, dporVersion, err := ReadSignerStatus(msg, &signerStatus)
 		if err != nil {
 			return common.Address{}.Hex(), err
 		}
@@ -55,13 +55,13 @@ func (vh *Handler) handleSignerConnectionMsg(version int, p *p2p.Peer, rw p2p.Ms
 
 		// if current or future proposer, add to local peer set
 		if vh.dialer.isCurrentOrFutureProposer(address, term, futureTerm) {
-			vh.dialer.addRemoteProposer(version, p, rw, address)
+			vh.dialer.addRemoteProposer(cpcVersion, dporVersion, p, rw, address)
 			log.Debug("added the signer as a proposer", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
 		}
 
 		// if current or future validator, add to local peer set
 		if vh.dialer.isCurrentOrFutureValidator(address, term, futureTerm) {
-			vh.dialer.addRemoteValidator(version, p, rw, address)
+			vh.dialer.addRemoteValidator(cpcVersion, dporVersion, p, rw, address)
 			log.Debug("added the signer as a validator", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
 		}
 
