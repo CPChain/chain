@@ -291,7 +291,7 @@ func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version
 		dporProtocol       = dporEngine.Protocol()
 		isMinerOrValidator = isMiner || workAsValidator
 		handleTxs          = !workAsValidator
-		handleDporMsgs     = isMinerOrValidator && dporMode == dpor.NormalMode
+		handleDporMsgs     = workAsValidator && dporMode == dpor.NormalMode
 	)
 
 	if dporMode == dpor.NormalMode && isMinerOrValidator {

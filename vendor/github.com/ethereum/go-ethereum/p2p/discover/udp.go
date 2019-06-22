@@ -42,6 +42,12 @@ var (
 	errTimeout          = errors.New("RPC timeout")
 	errClockWarp        = errors.New("reply deadline too far in the future")
 	errClosed           = errors.New("socket closed")
+
+	errPingVersionMismatch = errors.New("ping version mismatch")
+)
+
+const (
+	DiscoveryVersion = 9527
 )
 
 // Timeouts
@@ -277,7 +283,7 @@ func (t *udp) ping(toid NodeID, toaddr *net.UDPAddr) error {
 // when the reply arrives.
 func (t *udp) sendPing(toid NodeID, toaddr *net.UDPAddr, callback func()) <-chan error {
 	req := &ping{
-		Version:    4,
+		Version:    DiscoveryVersion,
 		From:       t.ourEndpoint,
 		To:         makeEndpoint(toaddr, 0), // TODO: maybe use known TCP port from DB
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
@@ -595,6 +601,11 @@ func decodePacket(buf []byte) (packet, NodeID, []byte, error) {
 }
 
 func (req *ping) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) error {
+	// check version
+	if req.Version != DiscoveryVersion {
+		return errPingVersionMismatch
+	}
+
 	if expired(req.Expiration) {
 		return errExpired
 	}

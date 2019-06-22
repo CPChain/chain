@@ -2,6 +2,7 @@ package backend
 
 import (
 	"hash/fnv"
+	"time"
 
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
@@ -317,8 +318,23 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 	return nil
 }
 
-// ReceiveImpeachPendingBlock receives a block to add to pending block channel
-func (vh *Handler) ReceiveImpeachPendingBlock(block *types.Block) error {
+// ReceiveFailbackImpeachBlock receives a failback impeach block to add to pending block channel
+func (vh *Handler) ReceiveFailbackImpeachBlock(block *types.Block) error {
+	// wait for enough validators before broadcasting the failback impeachment block
+	term := vh.dpor.TermOf(block.NumberU64())
+	for {
+		if rvs, ok := vh.dialer.EnoughValidatorsOfTerm(term); ok {
+			log.Debug("enough validator in dialer, failbacking", "count", len(rvs))
+			break
+		}
+		log.Debug("not enough validators")
+		time.Sleep(1 * time.Second)
+	}
+	return vh.ReceiveImpeachBlock(block)
+}
+
+// ReceiveImpeachBlock receives an impeach block to add to pending block channel
+func (vh *Handler) ReceiveImpeachBlock(block *types.Block) error {
 	select {
 	case vh.pendingImpeachBlockCh <- block:
 		err := vh.knownBlocks.AddBlock(block)

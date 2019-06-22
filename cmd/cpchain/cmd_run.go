@@ -61,6 +61,24 @@ const (
 
 
 	`
+
+	InvalidSystemClockWarn = `
+
+
+################################################################################
+################################################################################
+
+	System clock need to be synchronized.
+	Refer to the LINK BELOW for detailed explanation.
+
+	https://docs.cpchain.io/misc/faq.html#ntp
+
+
+################################################################################
+################################################################################
+
+
+	`
 )
 
 func init() {
@@ -95,6 +113,7 @@ func run(ctx *cli.Context) error {
 	isRunningChain = true
 	err := times.InvalidSystemClock()
 	if err != nil {
+		log.Warn(InvalidSystemClockWarn)
 		log.Fatalf("system clock need to be synchronized.there is more than %v seconds gap between ntp and this server", times.MaxGapDuration)
 	}
 
