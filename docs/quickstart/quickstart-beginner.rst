@@ -182,3 +182,5 @@ And download it and replace the old version with the latest one.
 
 You can always use ``--version`` flag to check the version.
 
+After you upgrade, your node can continue syncing with the chain.
+
