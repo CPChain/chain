@@ -52,12 +52,30 @@ You can find several executables in `build/bin` directory after building the pro
     $ ls
 
 
-========  ============
-Command   Description
-========  ============
-cpchain   Executable for the cpchain blockchain networks.
---------  ------------
-abigen    Source code generator to convert CPChain contract definitions into easy to use, compile-time type-safe Go packages. 
---------  ------------
-bootnode  A lightweight bootstrap node to aid in finding peers in private networks.
-========  ============
++------------------+------------------------------------+
+|Command           | Description                        |
++==================+====================================+
+|cpchain           | Executable for the cpchain         |
+|                  | blockchain networks.               |
++------------------+------------------------------------+
+|abigen            | Source code generator to convert   |
+|                  | CPChain contract definitions into  |
+|                  | easy to use, compile-time type-safe|
+|                  | Go packages.                       |
++------------------+------------------------------------+
+|bootnode          | A lightweight bootstrap node to    |
+|                  | aid in finding peers in private    |
+|                  | networks.                          |
++------------------+------------------------------------+
+|contract-admin    | Executable for the cpchain         |
+|                  | official contract admin            |
+|                  |                                    |
++------------------+------------------------------------+
+|testtool          | Executable command tool for easy   |
+|                  | test                               |
+|                  |                                    |
++------------------+------------------------------------+
+|transfer          | Executable for CPC transfer        |
+|                  |                                    |
+|                  |                                    |
++------------------+------------------------------------+
