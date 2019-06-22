@@ -8,6 +8,7 @@
 
 ** go-ethereum/p2p
    modification: add ping version and rlpx baseProtocolVersion verification, issue: CHAIN-1507
+   modification: add [pong, findnode, neighbors] version verification, issue: CHAIN-1551
 
 ** go-ethereum/crypto
    crypto upgrades to 1.8.15.  but we still keep the randentropy file from 1.8.12.
