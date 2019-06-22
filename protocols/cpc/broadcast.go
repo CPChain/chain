@@ -51,6 +51,13 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		log.Debug("Propagated block", "number", block.NumberU64(), "hash", hash.Hex(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 		return
 	}
+
+	for _, peer := range peers {
+		peer.AsyncSendNewBlockHash(block)
+	}
+
+	log.Debug("Propagated block hash and number announcement", "number", block.NumberU64(), "hash", hash.Hex(), "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+	return
 }
 
 // BroadcastTxs will propagate a batch of transactions to all peers which are not known to
