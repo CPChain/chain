@@ -65,3 +65,12 @@ func ReadPassword(prompt string, needConfirm bool) (string, error) {
 	}
 	return password, nil
 }
+
+func ReadMessage() (string, error) {
+	msg, err := inpututil.Stdin.Prompt("")
+	if err != nil {
+		Fatalf("Failed to read msg: %v", err)
+	}
+
+	return msg, nil
+}
