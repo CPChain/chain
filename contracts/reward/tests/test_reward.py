@@ -142,15 +142,15 @@ def test_case_1():
         print("enode: ", enode)
         print("claim result: ", tx_receipt["status"])
     monitor(reward, cf)
-    print("enodes claim interest again, should fail")
-    for enode in enodes:
-        cf.personal.unlockAccount(enode, "password")
-        cf.cpc.defaultAccount = enode
-        tx_hash = reward.functions.claimInterest().transact({"from": enode, "value": 0})
-        tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
-        print("enode: ", enode)
-        print("claim result: ", tx_receipt["status"])
-    monitor(reward, cf)
+    # print("enodes claim interest again, should fail")
+    # for enode in enodes:
+    #     cf.personal.unlockAccount(enode, "password")
+    #     cf.cpc.defaultAccount = enode
+    #     tx_hash = reward.functions.claimInterest().transact({"from": enode, "value": 0})
+    #     tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    #     print("enode: ", enode)
+    #     print("claim result: ", tx_receipt["status"])
+    # monitor(reward, cf)
     print("=============second round=====================")
     print("owner starts a new raise")
     cf.cpc.defaultAccount = owner
@@ -174,6 +174,7 @@ def test_case_1():
 
 def main():
     test_case_1()
+    # compile_file()
 
 
 if __name__ == '__main__':
