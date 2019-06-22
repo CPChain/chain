@@ -54,8 +54,8 @@ func (d *Dialer) SetDporService(dpor DporService) {
 
 // AddPeer adds a peer to local dpor peer set:
 // remote proposers or remote validators
-func (d *Dialer) AddPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
-	address, isProposer, isValidator, err := d.addPeer(version, p, rw, mac, sig, term, futureTerm)
+func (d *Dialer) AddPeer(cpcVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
+	address, isProposer, isValidator, err := d.addPeer(cpcVersion, p, rw, mac, sig, term, futureTerm)
 	return address, isProposer, isValidator, err
 }
 
@@ -82,11 +82,11 @@ func (d *Dialer) isCurrentOrFutureValidator(address common.Address, term uint64,
 }
 
 // addPeer tries to add a p2p peer as a proposer or a validator to local peer set based on its coinbase
-func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
+func (d *Dialer) addPeer(cpcVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (string, bool, bool, error) {
 
 	// handshake to get remote peer's coinbase
 	log.Debug("do handshaking with remote peer...")
-	coinbase, err := Handshake(p, rw, mac, sig, term, futureTerm)
+	coinbase, dporVersion, err := Handshake(p, rw, mac, sig, term, futureTerm)
 
 	// some debug output
 	log.Debug("received handshake from", "addr", coinbase.Hex())
@@ -108,13 +108,13 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 
 	// if the remote peer is a proposer, add it to local peer set
 	if isProposer {
-		remoteProposer, err := d.addRemoteProposer(version, p, rw, coinbase)
+		remoteProposer, err := d.addRemoteProposer(cpcVersion, dporVersion, p, rw, coinbase)
 		log.Debug("after add remote proposer", "proposer", remoteProposer.ID(), "err", err)
 	}
 
 	// if the remote peer is a validator, add it to local peer set
 	if isValidator {
-		remoteValidator, err := d.addRemoteValidator(version, p, rw, coinbase)
+		remoteValidator, err := d.addRemoteValidator(cpcVersion, dporVersion, p, rw, coinbase)
 		log.Debug("after add remote validator", "validator", remoteValidator.ID(), "err", err)
 	}
 
@@ -122,7 +122,7 @@ func (d *Dialer) addPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, mac str
 }
 
 // addRemoteProposer adds a p2p peer to local proposers set
-func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteProposer, error) {
+func (d *Dialer) addRemoteProposer(cpcVersion int, dporVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteProposer, error) {
 	remoteProposer, ok := d.getProposer(address.Hex())
 	if !ok {
 		remoteProposer = NewRemoteProposer(address)
@@ -131,14 +131,14 @@ func (d *Dialer) addRemoteProposer(version int, p *p2p.Peer, rw p2p.MsgReadWrite
 	log.Debug("adding remote proposer...", "proposer", address.Hex())
 
 	// add proposer
-	remoteProposer.SetPeer(version, p, rw)
+	remoteProposer.SetPeer(cpcVersion, dporVersion, Proposer, p, rw)
 	d.setProposer(address.Hex(), remoteProposer)
 
 	return remoteProposer, nil
 }
 
 // addRemoteValidator adds a p2p peer to local validators set
-func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteValidator, error) {
+func (d *Dialer) addRemoteValidator(cpcVersion int, dporVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteValidator, error) {
 	remoteValidator, ok := d.getValidator(address.Hex())
 	if !ok {
 		remoteValidator = NewRemoteValidator(address)
@@ -147,7 +147,7 @@ func (d *Dialer) addRemoteValidator(version int, p *p2p.Peer, rw p2p.MsgReadWrit
 	log.Debug("adding remote validator...", "validator", address.Hex())
 
 	// add validator
-	remoteValidator.SetPeer(version, p, rw)
+	remoteValidator.SetPeer(cpcVersion, dporVersion, Validator, p, rw)
 	d.setValidator(address.Hex(), remoteValidator)
 
 	// start broadcast loop
@@ -444,4 +444,27 @@ func (d *Dialer) Stop() {
 	d.quitCh = make(chan struct{})
 
 	return
+}
+
+func (d *Dialer) PeerInfos() ([]*PeerInfo, error) {
+	var infos []*PeerInfo
+	for _, id := range d.recentProposers.Keys() {
+		proposer, ok := d.getProposer(id.(string))
+		if ok {
+			info := proposer.Info()
+			if info != nil {
+				infos = append(infos, info)
+			}
+		}
+	}
+	for _, id := range d.recentValidators.Keys() {
+		validator, ok := d.getValidator(id.(string))
+		if ok {
+			info := validator.Info()
+			if info != nil {
+				infos = append(infos, info)
+			}
+		}
+	}
+	return infos, nil
 }
