@@ -173,3 +173,33 @@ The second command is to check your account status given the ``keystore`` file
 as well as the ``password`` file you just generate.
 
 
+
+Upgrade
+----------
+
+If you receive any error message under good network condition,
+the first thing you need to do is to check if your node version is out-dated.
+
+The upgrade is simple.
+All you need is to download the latest version from `Download page`_,
+and replace the old version with the latest one.
+
+You can always use ``--version`` flag to check the version.
+
+For Linux and Mac users, use the command as below:
+
+.. code-block:: shell
+
+    $ ./cpchain --version
+
+
+Windows users use the following command.
+
+.. code-block:: shell
+
+    $ cpchain.exe --version
+
+
+
+After you upgrade, your node can continue syncing with the chain.
+

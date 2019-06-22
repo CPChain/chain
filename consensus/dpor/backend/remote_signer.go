@@ -25,11 +25,40 @@ const (
 	handshakeTimeout = 3 * time.Second
 )
 
+type Role int
+
+const (
+	Validator Role = iota
+	Proposer
+	Civilian
+)
+
+var roleToString = map[Role]string{
+	Validator: "Validator",
+	Proposer:  "Proposer",
+	Civilian:  "Civilian",
+}
+
+func (r Role) String() string {
+	return roleToString[r]
+}
+
+type PeerInfo struct {
+	CpcVersion  int
+	DporVersion int
+	Address     common.Address
+	Role        string
+	P2PInfo     *p2p.PeerInfo
+}
+
 // RemoteSigner represents a remote peer, ether proposer or validator
 type RemoteSigner struct {
 	*p2p.Peer
-	rw      p2p.MsgReadWriter
-	version int
+	rw p2p.MsgReadWriter
+
+	role        Role
+	cpcVersion  int
+	dporVersion int
 
 	address common.Address
 	lock    sync.RWMutex
@@ -39,7 +68,20 @@ type RemoteSigner struct {
 func NewRemoteSigner(address common.Address) *RemoteSigner {
 	return &RemoteSigner{
 		address: address,
+		role:    Civilian,
 	}
+}
+
+func (s *RemoteSigner) Info() *PeerInfo {
+	info := &PeerInfo{
+		CpcVersion:  s.cpcVersion,
+		DporVersion: s.dporVersion,
+		Address:     s.address,
+		Role:        s.role.String(),
+		P2PInfo:     s.Peer.Info(),
+	}
+
+	return info
 }
 
 // EnodeID returns remote signer's enode id
@@ -87,15 +129,15 @@ func (s *RemoteSigner) disconnect(server *p2p.Server) error {
 }
 
 // SetPeer sets a p2p peer
-func (s *RemoteSigner) SetPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) {
+func (s *RemoteSigner) SetPeer(cpcVersion int, dporVersion int, role Role, p *p2p.Peer, rw p2p.MsgReadWriter) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.version, s.Peer, s.rw = version, p, rw
+	s.cpcVersion, s.dporVersion, s.role, s.Peer, s.rw = cpcVersion, dporVersion, role, p, rw
 }
 
 // Handshake tries to handshake with remote validator
-func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (address common.Address, err error) {
+func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term uint64, futureTerm uint64) (address common.Address, dporVersion int, err error) {
 	// Send out own handshake in a new thread
 	errc := make(chan error, 2)
 	var signerStatus SignerStatusData // safe to read after two values have been received from errc
@@ -115,7 +157,7 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term u
 
 			msg, err := rw.ReadMsg()
 			if err == nil {
-				address, err = ReadSignerStatus(msg, &signerStatus)
+				address, dporVersion, err = ReadSignerStatus(msg, &signerStatus)
 			}
 
 			if err == nil {
@@ -134,35 +176,36 @@ func Handshake(p *p2p.Peer, rw p2p.MsgReadWriter, mac string, sig []byte, term u
 		case err := <-errc:
 			if err != nil {
 				log.Debug("err when handshaking", "err", err)
-				return common.Address{}, err
+				return common.Address{}, ProtocolVersion, err
 			}
 		case <-timeout.C:
 			log.Debug("handshaking time out", "err", err)
-			return common.Address{}, p2p.DiscReadTimeout
+			return common.Address{}, ProtocolVersion, p2p.DiscReadTimeout
 		}
 	}
-	return address, nil
+	return address, dporVersion, nil
 }
 
 // ReadSignerStatus reads status of remote validator
-func ReadSignerStatus(msg p2p.Msg, signerStatusData *SignerStatusData) (address common.Address, err error) {
+func ReadSignerStatus(msg p2p.Msg, signerStatusData *SignerStatusData) (address common.Address, dporVersion int, err error) {
 	if msg.Code != NewSignerMsg {
-		return common.Address{}, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
+		return common.Address{}, ProtocolVersion, errResp(ErrNoStatusMsg, "first msg has code %x (!= %x)", msg.Code, NewSignerMsg)
 	}
 	if msg.Size > ProtocolMaxMsgSize {
-		return common.Address{}, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
+		return common.Address{}, ProtocolVersion, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 	}
 	// Decode the handshake and make sure everything matches
 	if err := msg.Decode(&signerStatusData); err != nil {
-		return common.Address{}, errResp(ErrDecode, "msg %v: %v", msg, err)
+		return common.Address{}, ProtocolVersion, errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
 	if int(signerStatusData.ProtocolVersion) != ProtocolVersion {
-		return common.Address{}, errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatusData.ProtocolVersion, ProtocolVersion)
+		return common.Address{}, int(signerStatusData.ProtocolVersion), errResp(ErrProtocolVersionMismatch, "%d (!= %d)", signerStatusData.ProtocolVersion, ProtocolVersion)
 	}
 
 	mac, sig := signerStatusData.Mac, signerStatusData.Sig
 	valid, address, err := ValidMacSig(mac, sig)
 	if valid {
+		dporVersion = int(signerStatusData.ProtocolVersion)
 		return
 	}
 

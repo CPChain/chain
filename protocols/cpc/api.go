@@ -30,6 +30,8 @@ import (
 	"bitbucket.org/cpchain/chain/api/rpc"
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus/dpor"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/rawdb"
 	"bitbucket.org/cpchain/chain/core/state"
@@ -304,6 +306,12 @@ func (api *PublicDebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error
 		return state.Dump{}, err
 	}
 	return stateDb.RawDump(), nil
+}
+
+// DporPeers retrieves all the information we know about each individual peer
+// at the dpor protocol level
+func (api *PublicDebugAPI) DporPeers() ([]*backend.PeerInfo, error) {
+	return api.cpc.Engine().(*dpor.Dpor).PeerInfos()
 }
 
 // PrivateDebugAPI is the collection of cpchain full node APIs exposed over
