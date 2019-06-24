@@ -490,9 +490,6 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 			proposers = election.Elect(rpts, seed, int(s.config.TermLen), 2, 2)
 		}
 
-		// TODO: remove this
-		// proposers := configs.Proposers()
-
 		if len(proposers) != int(s.config.TermLen) {
 			panic("invalid length of prepared proposer list")
 		}
