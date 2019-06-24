@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"sort"
 
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -50,6 +51,8 @@ func Elect(rpts rpt.RptList, seed int64, totalSeats int, lowRptCount int, lowRpt
 		return []common.Address{}
 	}
 
+	log.Debug("elect parameters", "seed", seed, "total seats", totalSeats, "lowRptCount", lowRptCount, "lowRptSeats", lowRptSeats)
+
 	sort.Sort(rpts)
 
 	lowRpts := rpts[:lowRptCount]
@@ -57,6 +60,8 @@ func Elect(rpts rpt.RptList, seed int64, totalSeats int, lowRptCount int, lowRpt
 
 	randSource := rand.NewSource(seed)
 	myRand := rand.New(randSource)
+
+	log.Debug("random select by rpt parameters", "lowRptSeats", lowRptSeats, "highRptSeats", totalSeats-lowRptSeats)
 
 	lowElected := randomSelectByRpt(lowRpts, myRand, lowRptSeats)
 	highElected := randomSelectByRpt(highRpts, myRand, totalSeats-lowRptSeats)
@@ -76,6 +81,8 @@ func randomSelectByRpt(rpts rpt.RptList, myRand *rand.Rand, seats int) (result [
 	// return these l addresses
 	sort.Sort(rpts)
 
+	log.Debug("seats", "seats", seats)
+
 	sums, sum := sumOfFirstN(rpts)
 	selected := make(map[int]struct{})
 
@@ -93,6 +100,8 @@ func randomSelectByRpt(rpts rpt.RptList, myRand *rand.Rand, seats int) (result [
 		result = append(result, rpts[resultIdx].Address)
 
 		seats--
+
+		log.Debug("seats in for loop", "seats", seats)
 	}
 	return result
 }
