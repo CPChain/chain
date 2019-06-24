@@ -12,7 +12,6 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/consensus/dpor/campaign"
-	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
@@ -449,46 +448,48 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 		log.Debug("term length", "term", int(s.config.TermLen))
 		log.Debug("---------------------------")
 
-		// run the election algorithm
-		var proposers []common.Address
-		if int(s.config.TermLen) > defaultProposersSeats {
+		// // run the election algorithm
+		// var proposers []common.Address
+		// if int(s.config.TermLen) > defaultProposersSeats {
 
-			logOutAddrs("default 12 proposers", "proposer", configs.Proposers())
+		// 	logOutAddrs("default 12 proposers", "proposer", configs.Proposers())
 
-			// elect some proposers based on rpts
-			dynamicSeats, _ := rptService.TotalSeats()
-			lowRptCount := rptService.LowRptCount(rpts.Len())
-			lowRptSeats, _ := rptService.LowRptSeats()
-			electedProposers := election.Elect(rpts, seed, dynamicSeats, lowRptCount, lowRptSeats)
+		// 	// elect some proposers based on rpts
+		// 	dynamicSeats, _ := rptService.TotalSeats()
+		// 	lowRptCount := rptService.LowRptCount(rpts.Len())
+		// 	lowRptSeats, _ := rptService.LowRptSeats()
+		// 	electedProposers := election.Elect(rpts, seed, dynamicSeats, lowRptCount, lowRptSeats)
 
-			logOutAddrs("elected proposers", "proposers", electedProposers)
+		// 	logOutAddrs("elected proposers", "proposers", electedProposers)
 
-			// append default proposers to the end of electedProposers
-			paddingSeats := int(s.config.TermLen) - dynamicSeats - defaultProposersSeats
-			for _, addr := range configs.Proposers()[:paddingSeats] {
-				electedProposers = append(electedProposers, addr)
-			}
+		// 	// append default proposers to the end of electedProposers
+		// 	paddingSeats := int(s.config.TermLen) - dynamicSeats - defaultProposersSeats
+		// 	for _, addr := range configs.Proposers()[:paddingSeats] {
+		// 		electedProposers = append(electedProposers, addr)
+		// 	}
 
-			logOutAddrs("elected proposers after padding", "proposers", electedProposers)
+		// 	logOutAddrs("elected proposers after padding", "proposers", electedProposers)
 
-			// remove elected and padded proposers from all default proposers
-			leftDefaultProposers := addressExcept(configs.Proposers(), electedProposers)
+		// 	// remove elected and padded proposers from all default proposers
+		// 	leftDefaultProposers := addressExcept(configs.Proposers(), electedProposers)
 
-			logOutAddrs("left default proposer after election and padding", "proposers", leftDefaultProposers)
+		// 	logOutAddrs("left default proposer after election and padding", "proposers", leftDefaultProposers)
 
-			// chose some default proposers
-			chosenProposers := choseSomeAddresses(leftDefaultProposers, seed, defaultProposersSeats)
+		// 	// chose some default proposers
+		// 	chosenProposers := choseSomeAddresses(leftDefaultProposers, seed, defaultProposersSeats)
 
-			logOutAddrs("chosen 4 proposers", "proposers", chosenProposers)
+		// 	logOutAddrs("chosen 4 proposers", "proposers", chosenProposers)
 
-			// combine together
-			proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
+		// 	// combine together
+		// 	proposers = evenlyInsertDefaultProposers(electedProposers, chosenProposers, seed, int(s.config.TermLen))
 
-			logOutAddrs("evenly spared 12 proposers", "proposer", proposers)
+		// 	logOutAddrs("evenly spared 12 proposers", "proposer", proposers)
 
-		} else {
-			proposers = election.Elect(rpts, seed, int(s.config.TermLen), 2, 2)
-		}
+		// } else {
+		// 	proposers = election.Elect(rpts, seed, int(s.config.TermLen), 2, 2)
+		// }
+
+		proposers := configs.Proposers()
 
 		if len(proposers) != int(s.config.TermLen) {
 			panic("invalid length of prepared proposer list")
