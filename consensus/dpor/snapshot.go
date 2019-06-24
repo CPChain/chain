@@ -139,8 +139,8 @@ func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 
 	signers, ok := s.RecentProposers[term]
 	if !ok {
-		log.Debug("proposers for the term not exist", "term", term)
-		return nil
+		log.Debug("proposers for the term not exist, return default proposers", "term", term)
+		return configs.Candidates()
 	}
 
 	return signers
