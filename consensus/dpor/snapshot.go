@@ -135,12 +135,14 @@ func (s *DporSnapshot) recentValidators() map[uint64][]common.Address {
 
 func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 	s.lock.RLock()
-	defer s.lock.RUnlock()
-
 	signers, ok := s.RecentProposers[term]
+	s.lock.RUnlock()
+
 	if !ok {
 		log.Debug("proposers for the term not exist, return default proposers", "term", term)
-		return configs.Proposers()
+		proposers := configs.Proposers()
+		s.setRecentProposers(term, proposers)
+		return proposers
 	}
 
 	return signers
