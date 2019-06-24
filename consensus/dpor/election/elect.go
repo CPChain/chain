@@ -47,13 +47,16 @@ import (
 // lowRptCount: the number of low Rpt RNodes among the total RNodes
 // lowRptSeats: the number of seats for low Rpt RNodes in the Proposer Committee
 func Elect(rpts rpt.RptList, seed int64, totalSeats int, lowRptCount int, lowRptSeats int) []common.Address {
-	if lowRptCount > rpts.Len() || lowRptSeats > totalSeats || totalSeats > rpts.Len() || lowRptCount < lowRptSeats {
+	if lowRptCount > rpts.Len() || lowRptSeats > totalSeats || totalSeats > rpts.Len() {
 		return []common.Address{}
 	}
 
-	log.Debug("elect parameters", "seed", seed, "total seats", totalSeats, "lowRptCount", lowRptCount, "lowRptSeats", lowRptSeats)
-
 	sort.Sort(rpts)
+
+	highRptCount := len(rpts) - lowRptCount
+	highRptSeats := totalSeats - lowRptSeats
+
+	log.Debug("elect parameters", "seed", seed, "total seats", totalSeats, "lowRptCount", lowRptCount, "lowRptSeats", lowRptSeats, "highRptCount", highRptCount, "highRptSeats", highRptSeats)
 
 	lowRpts := rpts[:lowRptCount]
 	highRpts := rpts[lowRptCount:]
@@ -63,8 +66,19 @@ func Elect(rpts rpt.RptList, seed int64, totalSeats int, lowRptCount int, lowRpt
 
 	log.Debug("random select by rpt parameters", "lowRptSeats", lowRptSeats, "highRptSeats", totalSeats-lowRptSeats)
 
-	lowElected := randomSelectByRpt(lowRpts, myRand, lowRptSeats)
-	highElected := randomSelectByRpt(highRpts, myRand, totalSeats-lowRptSeats)
+	var lowElected, highElected []common.Address
+
+	if lowRptCount > lowRptSeats {
+		lowElected = randomSelectByRpt(lowRpts, myRand, lowRptSeats)
+	} else {
+		lowElected = lowRpts.Addrs()
+	}
+
+	if highRptCount > highRptSeats {
+		highElected = randomSelectByRpt(highRpts, myRand, highRptSeats)
+	} else {
+		highElected = highRpts.Addrs()
+	}
 
 	return append(lowElected, highElected...)
 }
