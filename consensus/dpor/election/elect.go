@@ -86,9 +86,15 @@ func randomSelectByRpt(rpts rpt.RptList, myRand *rand.Rand, seats int) (result [
 	sums, sum := sumOfFirstN(rpts)
 	selected := make(map[int]struct{})
 
+	log.Debug("sums and sum", "sums", sums, "sum", sum)
+
 	for seats > 0 {
+		log.Debug("seats in for loop", "seats", seats)
+
 		randI := myRand.Int63n(sum)
 		resultIdx := findHit(randI, sums)
+
+		log.Debug("randI", "randI", randI, "result idx", resultIdx, "sum", sum, "sums", sums, "result", result)
 
 		// if already selected, continue
 		if _, already := selected[resultIdx]; already {
@@ -101,13 +107,13 @@ func randomSelectByRpt(rpts rpt.RptList, myRand *rand.Rand, seats int) (result [
 
 		seats--
 
-		log.Debug("seats in for loop", "seats", seats)
 	}
 	return result
 }
 
 func findHit(hit int64, hitSums []int64) int {
 	for idx, x := range hitSums {
+		log.Debug("find hit", "hit", hit, "idx", idx, "x", x, "hit sums", hitSums)
 		if hit <= x {
 			return idx
 		}
