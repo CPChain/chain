@@ -464,7 +464,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 			logOutAddrs("elected proposers", "proposers", electedProposers)
 
 			// append default proposers to the end of electedProposers
-			paddingSeats := int(s.config.TermLen) - dynamicSeats - defaultProposersSeats
+			paddingSeats := int(s.config.TermLen) - len(electedProposers) - defaultProposersSeats
 			for _, addr := range configs.Proposers()[:paddingSeats] {
 				electedProposers = append(electedProposers, addr)
 			}
