@@ -33,6 +33,8 @@ const (
 	defaultTotalSeats  = 8
 	defaultLowRptSeats = 2
 	defaultLowRptPct   = 50
+
+	defaultMinimumRptValue = 1000
 )
 
 // RptService provides methods to obtain all rpt related information from block txs and contracts.

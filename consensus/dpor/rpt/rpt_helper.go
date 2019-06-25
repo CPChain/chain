@@ -36,6 +36,13 @@ func (r *RptList) FormatString() string {
 	return strings.Join(items, ",")
 }
 
+func (a RptList) Addrs() (addrs []common.Address) {
+	for _, rptItem := range a {
+		addrs = append(addrs, rptItem.Address)
+	}
+	return addrs
+}
+
 // This is used for sorting.
 func (a RptList) Len() int      { return len(a) }
 func (a RptList) Swap(i, j int) { a[i], a[j] = a[j], a[i] }

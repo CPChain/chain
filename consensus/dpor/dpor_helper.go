@@ -24,7 +24,6 @@ import (
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -386,16 +385,14 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 		}
 
 		// If an on-disk checkpoint Snapshot can be found, use that
-		if backend.IsCheckPoint(numberIter, dpor.config.TermLen, dpor.config.ViewLen) {
-			log.Debug("loading snapshot", "number", numberIter, "hash", hash)
-			s, err := loadSnapshot(dpor.config, dpor.db, hash)
-			if err == nil {
-				log.Debug("Loaded checkpoint Snapshot from disk", "number", numberIter, "hash", hash)
-				snap = s
-				break
-			} else if numberIter != number {
-				log.Debug("loading snapshot fails", "error", err)
-			}
+		log.Debug("loading snapshot", "number", numberIter, "hash", hash.Hex())
+		s, err := loadSnapshot(dpor.config, dpor.db, hash)
+		if err == nil {
+			log.Debug("Loaded checkpoint Snapshot from disk", "number", numberIter, "hash", hash.Hex())
+			snap = s
+			break
+		} else {
+			log.Debug("loading snapshot fails", "error", err)
 		}
 
 		// If we're at block zero, make a Snapshot
@@ -480,13 +477,11 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
 
 	// If we've generated a new checkpoint Snapshot, save to disk
-	if backend.IsCheckPoint(newSnap.number(), dpor.config.TermLen, dpor.config.ViewLen) && len(headers) > 0 {
-		if err = newSnap.store(dpor.db); err != nil {
-			log.Warn("failed to store dpor snapshot", "error", err)
-			return nil, err
-		}
-		log.Debug("Stored voting Snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
+	if err = newSnap.store(dpor.db); err != nil {
+		log.Warn("failed to store dpor snapshot", "error", err)
+		return nil, err
 	}
+	log.Debug("Stored snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 
 	if dpor.CurrentSnap() == nil || (dpor.CurrentSnap() != nil && newSnap.number() >= dpor.CurrentSnap().number()) {
 		dpor.SetCurrentSnap(newSnap)

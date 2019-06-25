@@ -135,12 +135,14 @@ func (s *DporSnapshot) recentValidators() map[uint64][]common.Address {
 
 func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 	s.lock.RLock()
-	defer s.lock.RUnlock()
-
 	signers, ok := s.RecentProposers[term]
+	s.lock.RUnlock()
+
 	if !ok {
-		log.Debug("proposers for the term not exist", "term", term)
-		return nil
+		log.Debug("proposers for the term not exist, return default proposers", "term", term)
+		proposers := configs.Proposers()
+		s.setRecentProposers(term, proposers)
+		return proposers
 	}
 
 	return signers
@@ -462,7 +464,7 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 			logOutAddrs("elected proposers", "proposers", electedProposers)
 
 			// append default proposers to the end of electedProposers
-			paddingSeats := int(s.config.TermLen) - dynamicSeats - defaultProposersSeats
+			paddingSeats := int(s.config.TermLen) - len(electedProposers) - defaultProposersSeats
 			for _, addr := range configs.Proposers()[:paddingSeats] {
 				electedProposers = append(electedProposers, addr)
 			}
