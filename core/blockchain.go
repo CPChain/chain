@@ -782,14 +782,15 @@ func (bc *BlockChain) Stop() {
 	if !atomic.CompareAndSwapInt32(&bc.running, 0, 1) {
 		return
 	}
+
+	bc.CommitStateDB()
+
 	// Unsubscribe all subscriptions registered from blockchain
 	bc.scope.Close()
 	close(bc.Quit)
 	atomic.StoreInt32(&bc.procInterrupt, 1)
 
 	bc.wg.Wait()
-
-	bc.CommitStateDB()
 
 	log.Info("Blockchain manager stopped")
 }
@@ -1291,9 +1292,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			return 0, nil, nil, ErrInvalidChain
 		}
 	}
-	// Pre-checks passed, start the full block imports
-	bc.wg.Add(1)
-	defer bc.wg.Done()
 
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
