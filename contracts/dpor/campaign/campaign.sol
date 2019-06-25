@@ -110,28 +110,28 @@ contract Campaign {
 
     // owner can set these parameters
     function updateMinNoc(uint _minNoc) public onlyOwner {
+        require(_minNoc<=maxNoc);
         minNoc = _minNoc;
     }
 
     function updateMaxNoc(uint _maxNoc) public onlyOwner {
+        require(_maxNoc<=10 && _maxNoc>=minNoc);
         maxNoc = _maxNoc;
     }
 
     function updateTermLen(uint _termLen) public onlyOwner {
+        require(_termLen==4 || _termLen==12);
         termLen = _termLen;
         numPerRound = SafeMath.mul(termLen, viewLen);
     }
 
-    function updateViewLen(uint _viewLen) public onlyOwner {
-        viewLen = _viewLen;
-        numPerRound = SafeMath.mul(termLen, viewLen);
-    }
-
     function updateAcceptableBlocks(uint _acceptableBlocks) public onlyOwner {
+        require(_acceptableBlocks <= 20);
         acceptableBlocks = _acceptableBlocks;
     }
 
     function updateSupportedVersion(uint _supportedVersion) public onlyOwner {
+        require(_supportedVersion == supportedVersion+1);
         supportedVersion = _supportedVersion;
     }
 

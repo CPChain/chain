@@ -43,6 +43,7 @@ contract Rpt {
         onlyOwner()
         {
             require(_window>=10 && _window<=100);
+            require(_alpha<=100 && _beta<=100 && _gamma<=100 && _psi<=100 && _omega<=100);
             alpha = _alpha;
             beta = _beta;
             gamma = _gamma;
@@ -83,26 +84,31 @@ contract Rpt {
     
     /** modified one config. */
     function updateAlpha(uint _alpha) public onlyOwner {
+        require(_alpha <= 100);
         alpha = _alpha;
         emit UpdateOneConfig(block.number, "alpha", alpha);
     }
     
     function updateBeta(uint _beta) public onlyOwner {
+        require(_beta <= 100);
         beta = _beta;
         emit UpdateOneConfig(block.number, "beta", beta);
     }
     
     function updateGamma(uint _gamma) public onlyOwner {
+        require(_gamma <= 100);
         gamma = _gamma;
         emit UpdateOneConfig(block.number, "gamma", gamma);
     }
     
     function updatePsi(uint _psi) public onlyOwner {
+        require(_psi <= 100);
         psi = _psi;
         emit UpdateOneConfig(block.number, "psi", psi);
     }
     
     function updateOmega(uint _omega) public onlyOwner {
+        require(_omega <= 100);
         omega = _omega;
         emit UpdateOneConfig(block.number, "omega", omega);
     }

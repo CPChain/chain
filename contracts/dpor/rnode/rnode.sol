@@ -124,10 +124,12 @@ contract Rnode {
 
     // owner can set period, rnode threshold and supported version
     function setPeriod(uint256 _period) public onlyOwner {
+        require(_period <= 1 days);
         period = _period;
     }
 
     function setRnodeThreshold(uint256 threshold) public onlyOwner {
+        require(threshold >= 200000 ether);
         rnodeThreshold = threshold;
     }
 
