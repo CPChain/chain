@@ -65,6 +65,9 @@ and :math:`LowRptSeats` occupies one fourth of :math:`TotalSeats`.
     // the function select l random addresses
     // and return them as result
     func randomSelectByRpt(rptPartition, myRand, k, l) []address {
+        if (k < l) {
+            return all k addresses
+        }
         // each element in rptPartition is referred as rpt
         // then we sum all rpt values, as sumRpt
         // using myRand to random select l addresses according to its rpt/sumRpt
