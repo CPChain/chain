@@ -54,11 +54,4 @@ func UpdateCampaignParameters(password string, campaignContractAddr common.Addre
 		log.Fatal(err.Error())
 	}
 	log.Info("updated term len", "txhash", tx.Hash().Hex(), "termLen", cfg.Dpor.TermLen)
-
-	auth = newTransactor(privateKey, new(big.Int).SetUint64(nonce2))
-	tx, err = campaign.UpdateViewLen(auth, new(big.Int).SetUint64(cfg.Dpor.ViewLen))
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	log.Info("update view len", "txhash", tx.Hash().Hex(), "viewLen", cfg.Dpor.ViewLen)
 }

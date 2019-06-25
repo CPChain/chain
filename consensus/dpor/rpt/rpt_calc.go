@@ -330,11 +330,11 @@ func (rc *RptCollectorImpl) MaintenanceInfoOf(addr common.Address, addrs []commo
 // UploadInfoOf minor
 func (rc *RptCollectorImpl) UploadInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	log.Debug("now calculating rpt", "UploadInfo", "new", "num", num, "addr", addr.Hex())
-	return 1
+	return 0
 }
 
 // ProxyInfoOf minor
 func (rc *RptCollectorImpl) ProxyInfoOf(addr common.Address, addrs []common.Address, num uint64, windowSize int) int64 {
 	log.Debug("now calculating rpt", "ProxyInfo", "new", "num", num, "addr", addr.Hex())
-	return 1
+	return 0
 }

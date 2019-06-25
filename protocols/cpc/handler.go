@@ -224,6 +224,8 @@ func (pm *ProtocolManager) Stop() {
 	// After this send has completed, no new peers will be accepted.
 	pm.noMorePeers <- struct{}{}
 
+	pm.engine.(*dpor.Dpor).StopMining()
+
 	// Quit fetcher, txsyncLoop.
 	close(pm.quitSync)
 
