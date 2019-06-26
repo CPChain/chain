@@ -306,7 +306,8 @@ based on the ratio of the locked margin to the total margin.
 (Economy Node needs a 90-day lock-up session).
 The detailed process goes as follows:
 
-Each season contains 90 days, which is also named as **lock-up period**.
+Each season contains 90 days, which is future divided into three parts.
+ which is also named as **lock-up period**.
 There are 7 special days served as **fundraising** ahead of each lock-up period.
 Each fundraising is overlapped with previous lock-up period.
 In fundraising, the following operations are allowed:
