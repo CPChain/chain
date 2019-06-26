@@ -107,6 +107,20 @@ begin
     fsm(validators[1], "prepareMsg", validators[3]);
     fsm(validators[1], "prepareMsg", validators[4]);
 
+    \* validators[2] receives prepare msg from other validators
+    fsm(validators[2], "prepareMsg", validators[1]);
+    fsm(validators[2], "prepareMsg", validators[3]);
+    fsm(validators[2], "prepareMsg", validators[4]);
+
+    \* validators[3] receives prepare msg from other validators
+    fsm(validators[3], "prepareMsg", validators[1]);
+    fsm(validators[3], "prepareMsg", validators[2]);
+    fsm(validators[3], "prepareMsg", validators[4]);
+
+    \* validators[4] receives prepare msg from other validators
+    fsm(validators[4], "prepareMsg", validators[1]);
+    fsm(validators[4], "prepareMsg", validators[2]);
+    fsm(validators[4], "prepareMsg", validators[3]);
 
 
 
@@ -426,22 +440,22 @@ Lbl_31 == /\ pc = "Lbl_31"
                 /\ validators' = [validators EXCEPT ![1].prepareSig = (validators[1]).prepareSig \union (validators[4]).prepareSig]
                 /\ IF prepareCertificate((validators'[1]))
                       THEN /\ pc' = "Lbl_33"
-                      ELSE /\ pc' = "Done"
+                      ELSE /\ pc' = "Lbl_36"
              \/ /\ (validators[1]).state = 2
                 /\ "prepareMsg" = "commitMsg"
                 /\ (validators[4]).state = 2
                 /\ validators' = [validators EXCEPT ![1].commitSig = (validators[1]).commitSig \union (validators[4]).commitSig]
                 /\ IF commitCertificate((validators'[1]))
                       THEN /\ pc' = "Lbl_35"
-                      ELSE /\ pc' = "Done"
+                      ELSE /\ pc' = "Lbl_36"
              \/ /\ TRUE
-                /\ pc' = "Done"
+                /\ pc' = "Lbl_36"
                 /\ UNCHANGED validators
           /\ UNCHANGED proposers
 
 Lbl_32 == /\ pc = "Lbl_32"
           /\ validators' = [validators EXCEPT ![1].state = 1]
-          /\ pc' = "Done"
+          /\ pc' = "Lbl_36"
           /\ UNCHANGED proposers
 
 Lbl_33 == /\ pc = "Lbl_33"
@@ -451,11 +465,407 @@ Lbl_33 == /\ pc = "Lbl_33"
 
 Lbl_34 == /\ pc = "Lbl_34"
           /\ validators' = [validators EXCEPT ![1].state = 2]
-          /\ pc' = "Done"
+          /\ pc' = "Lbl_36"
           /\ UNCHANGED proposers
 
 Lbl_35 == /\ pc = "Lbl_35"
           /\ validators' = [validators EXCEPT ![1].state = 9]
+          /\ pc' = "Lbl_36"
+          /\ UNCHANGED proposers
+
+Lbl_36 == /\ pc = "Lbl_36"
+          /\ \/ /\ (validators[2]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![2].prepareSig = {(validators[2]).sig}]
+                /\ pc' = "Lbl_37"
+             \/ /\ (validators[2]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[1]).state = 1 \/ (validators[1]).state = 2
+                /\ validators' = [validators EXCEPT ![2].prepareSig = (validators[2]).prepareSig \union (validators[1]).prepareSig]
+                /\ IF prepareCertificate((validators'[2]))
+                      THEN /\ pc' = "Lbl_38"
+                      ELSE /\ pc' = "Lbl_41"
+             \/ /\ (validators[2]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[1]).state = 2
+                /\ validators' = [validators EXCEPT ![2].commitSig = (validators[2]).commitSig \union (validators[1]).commitSig]
+                /\ IF commitCertificate((validators'[2]))
+                      THEN /\ pc' = "Lbl_40"
+                      ELSE /\ pc' = "Lbl_41"
+             \/ /\ TRUE
+                /\ pc' = "Lbl_41"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_37 == /\ pc = "Lbl_37"
+          /\ validators' = [validators EXCEPT ![2].state = 1]
+          /\ pc' = "Lbl_41"
+          /\ UNCHANGED proposers
+
+Lbl_38 == /\ pc = "Lbl_38"
+          /\ validators' = [validators EXCEPT ![2].commitSig = {(validators[2]).sig}]
+          /\ pc' = "Lbl_39"
+          /\ UNCHANGED proposers
+
+Lbl_39 == /\ pc = "Lbl_39"
+          /\ validators' = [validators EXCEPT ![2].state = 2]
+          /\ pc' = "Lbl_41"
+          /\ UNCHANGED proposers
+
+Lbl_40 == /\ pc = "Lbl_40"
+          /\ validators' = [validators EXCEPT ![2].state = 9]
+          /\ pc' = "Lbl_41"
+          /\ UNCHANGED proposers
+
+Lbl_41 == /\ pc = "Lbl_41"
+          /\ \/ /\ (validators[2]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![2].prepareSig = {(validators[2]).sig}]
+                /\ pc' = "Lbl_42"
+             \/ /\ (validators[2]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[3]).state = 1 \/ (validators[3]).state = 2
+                /\ validators' = [validators EXCEPT ![2].prepareSig = (validators[2]).prepareSig \union (validators[3]).prepareSig]
+                /\ IF prepareCertificate((validators'[2]))
+                      THEN /\ pc' = "Lbl_43"
+                      ELSE /\ pc' = "Lbl_46"
+             \/ /\ (validators[2]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[3]).state = 2
+                /\ validators' = [validators EXCEPT ![2].commitSig = (validators[2]).commitSig \union (validators[3]).commitSig]
+                /\ IF commitCertificate((validators'[2]))
+                      THEN /\ pc' = "Lbl_45"
+                      ELSE /\ pc' = "Lbl_46"
+             \/ /\ TRUE
+                /\ pc' = "Lbl_46"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_42 == /\ pc = "Lbl_42"
+          /\ validators' = [validators EXCEPT ![2].state = 1]
+          /\ pc' = "Lbl_46"
+          /\ UNCHANGED proposers
+
+Lbl_43 == /\ pc = "Lbl_43"
+          /\ validators' = [validators EXCEPT ![2].commitSig = {(validators[2]).sig}]
+          /\ pc' = "Lbl_44"
+          /\ UNCHANGED proposers
+
+Lbl_44 == /\ pc = "Lbl_44"
+          /\ validators' = [validators EXCEPT ![2].state = 2]
+          /\ pc' = "Lbl_46"
+          /\ UNCHANGED proposers
+
+Lbl_45 == /\ pc = "Lbl_45"
+          /\ validators' = [validators EXCEPT ![2].state = 9]
+          /\ pc' = "Lbl_46"
+          /\ UNCHANGED proposers
+
+Lbl_46 == /\ pc = "Lbl_46"
+          /\ \/ /\ (validators[2]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![2].prepareSig = {(validators[2]).sig}]
+                /\ pc' = "Lbl_47"
+             \/ /\ (validators[2]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[4]).state = 1 \/ (validators[4]).state = 2
+                /\ validators' = [validators EXCEPT ![2].prepareSig = (validators[2]).prepareSig \union (validators[4]).prepareSig]
+                /\ IF prepareCertificate((validators'[2]))
+                      THEN /\ pc' = "Lbl_48"
+                      ELSE /\ pc' = "Lbl_51"
+             \/ /\ (validators[2]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[4]).state = 2
+                /\ validators' = [validators EXCEPT ![2].commitSig = (validators[2]).commitSig \union (validators[4]).commitSig]
+                /\ IF commitCertificate((validators'[2]))
+                      THEN /\ pc' = "Lbl_50"
+                      ELSE /\ pc' = "Lbl_51"
+             \/ /\ TRUE
+                /\ pc' = "Lbl_51"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_47 == /\ pc = "Lbl_47"
+          /\ validators' = [validators EXCEPT ![2].state = 1]
+          /\ pc' = "Lbl_51"
+          /\ UNCHANGED proposers
+
+Lbl_48 == /\ pc = "Lbl_48"
+          /\ validators' = [validators EXCEPT ![2].commitSig = {(validators[2]).sig}]
+          /\ pc' = "Lbl_49"
+          /\ UNCHANGED proposers
+
+Lbl_49 == /\ pc = "Lbl_49"
+          /\ validators' = [validators EXCEPT ![2].state = 2]
+          /\ pc' = "Lbl_51"
+          /\ UNCHANGED proposers
+
+Lbl_50 == /\ pc = "Lbl_50"
+          /\ validators' = [validators EXCEPT ![2].state = 9]
+          /\ pc' = "Lbl_51"
+          /\ UNCHANGED proposers
+
+Lbl_51 == /\ pc = "Lbl_51"
+          /\ \/ /\ (validators[3]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![3].prepareSig = {(validators[3]).sig}]
+                /\ pc' = "Lbl_52"
+             \/ /\ (validators[3]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[1]).state = 1 \/ (validators[1]).state = 2
+                /\ validators' = [validators EXCEPT ![3].prepareSig = (validators[3]).prepareSig \union (validators[1]).prepareSig]
+                /\ IF prepareCertificate((validators'[3]))
+                      THEN /\ pc' = "Lbl_53"
+                      ELSE /\ pc' = "Lbl_56"
+             \/ /\ (validators[3]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[1]).state = 2
+                /\ validators' = [validators EXCEPT ![3].commitSig = (validators[3]).commitSig \union (validators[1]).commitSig]
+                /\ IF commitCertificate((validators'[3]))
+                      THEN /\ pc' = "Lbl_55"
+                      ELSE /\ pc' = "Lbl_56"
+             \/ /\ TRUE
+                /\ pc' = "Lbl_56"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_52 == /\ pc = "Lbl_52"
+          /\ validators' = [validators EXCEPT ![3].state = 1]
+          /\ pc' = "Lbl_56"
+          /\ UNCHANGED proposers
+
+Lbl_53 == /\ pc = "Lbl_53"
+          /\ validators' = [validators EXCEPT ![3].commitSig = {(validators[3]).sig}]
+          /\ pc' = "Lbl_54"
+          /\ UNCHANGED proposers
+
+Lbl_54 == /\ pc = "Lbl_54"
+          /\ validators' = [validators EXCEPT ![3].state = 2]
+          /\ pc' = "Lbl_56"
+          /\ UNCHANGED proposers
+
+Lbl_55 == /\ pc = "Lbl_55"
+          /\ validators' = [validators EXCEPT ![3].state = 9]
+          /\ pc' = "Lbl_56"
+          /\ UNCHANGED proposers
+
+Lbl_56 == /\ pc = "Lbl_56"
+          /\ \/ /\ (validators[3]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![3].prepareSig = {(validators[3]).sig}]
+                /\ pc' = "Lbl_57"
+             \/ /\ (validators[3]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[2]).state = 1 \/ (validators[2]).state = 2
+                /\ validators' = [validators EXCEPT ![3].prepareSig = (validators[3]).prepareSig \union (validators[2]).prepareSig]
+                /\ IF prepareCertificate((validators'[3]))
+                      THEN /\ pc' = "Lbl_58"
+                      ELSE /\ pc' = "Lbl_61"
+             \/ /\ (validators[3]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[2]).state = 2
+                /\ validators' = [validators EXCEPT ![3].commitSig = (validators[3]).commitSig \union (validators[2]).commitSig]
+                /\ IF commitCertificate((validators'[3]))
+                      THEN /\ pc' = "Lbl_60"
+                      ELSE /\ pc' = "Lbl_61"
+             \/ /\ TRUE
+                /\ pc' = "Lbl_61"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_57 == /\ pc = "Lbl_57"
+          /\ validators' = [validators EXCEPT ![3].state = 1]
+          /\ pc' = "Lbl_61"
+          /\ UNCHANGED proposers
+
+Lbl_58 == /\ pc = "Lbl_58"
+          /\ validators' = [validators EXCEPT ![3].commitSig = {(validators[3]).sig}]
+          /\ pc' = "Lbl_59"
+          /\ UNCHANGED proposers
+
+Lbl_59 == /\ pc = "Lbl_59"
+          /\ validators' = [validators EXCEPT ![3].state = 2]
+          /\ pc' = "Lbl_61"
+          /\ UNCHANGED proposers
+
+Lbl_60 == /\ pc = "Lbl_60"
+          /\ validators' = [validators EXCEPT ![3].state = 9]
+          /\ pc' = "Lbl_61"
+          /\ UNCHANGED proposers
+
+Lbl_61 == /\ pc = "Lbl_61"
+          /\ \/ /\ (validators[3]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![3].prepareSig = {(validators[3]).sig}]
+                /\ pc' = "Lbl_62"
+             \/ /\ (validators[3]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[4]).state = 1 \/ (validators[4]).state = 2
+                /\ validators' = [validators EXCEPT ![3].prepareSig = (validators[3]).prepareSig \union (validators[4]).prepareSig]
+                /\ IF prepareCertificate((validators'[3]))
+                      THEN /\ pc' = "Lbl_63"
+                      ELSE /\ pc' = "Lbl_66"
+             \/ /\ (validators[3]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[4]).state = 2
+                /\ validators' = [validators EXCEPT ![3].commitSig = (validators[3]).commitSig \union (validators[4]).commitSig]
+                /\ IF commitCertificate((validators'[3]))
+                      THEN /\ pc' = "Lbl_65"
+                      ELSE /\ pc' = "Lbl_66"
+             \/ /\ TRUE
+                /\ pc' = "Lbl_66"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_62 == /\ pc = "Lbl_62"
+          /\ validators' = [validators EXCEPT ![3].state = 1]
+          /\ pc' = "Lbl_66"
+          /\ UNCHANGED proposers
+
+Lbl_63 == /\ pc = "Lbl_63"
+          /\ validators' = [validators EXCEPT ![3].commitSig = {(validators[3]).sig}]
+          /\ pc' = "Lbl_64"
+          /\ UNCHANGED proposers
+
+Lbl_64 == /\ pc = "Lbl_64"
+          /\ validators' = [validators EXCEPT ![3].state = 2]
+          /\ pc' = "Lbl_66"
+          /\ UNCHANGED proposers
+
+Lbl_65 == /\ pc = "Lbl_65"
+          /\ validators' = [validators EXCEPT ![3].state = 9]
+          /\ pc' = "Lbl_66"
+          /\ UNCHANGED proposers
+
+Lbl_66 == /\ pc = "Lbl_66"
+          /\ \/ /\ (validators[4]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![4].prepareSig = {(validators[4]).sig}]
+                /\ pc' = "Lbl_67"
+             \/ /\ (validators[4]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[1]).state = 1 \/ (validators[1]).state = 2
+                /\ validators' = [validators EXCEPT ![4].prepareSig = (validators[4]).prepareSig \union (validators[1]).prepareSig]
+                /\ IF prepareCertificate((validators'[4]))
+                      THEN /\ pc' = "Lbl_68"
+                      ELSE /\ pc' = "Lbl_71"
+             \/ /\ (validators[4]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[1]).state = 2
+                /\ validators' = [validators EXCEPT ![4].commitSig = (validators[4]).commitSig \union (validators[1]).commitSig]
+                /\ IF commitCertificate((validators'[4]))
+                      THEN /\ pc' = "Lbl_70"
+                      ELSE /\ pc' = "Lbl_71"
+             \/ /\ TRUE
+                /\ pc' = "Lbl_71"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_67 == /\ pc = "Lbl_67"
+          /\ validators' = [validators EXCEPT ![4].state = 1]
+          /\ pc' = "Lbl_71"
+          /\ UNCHANGED proposers
+
+Lbl_68 == /\ pc = "Lbl_68"
+          /\ validators' = [validators EXCEPT ![4].commitSig = {(validators[4]).sig}]
+          /\ pc' = "Lbl_69"
+          /\ UNCHANGED proposers
+
+Lbl_69 == /\ pc = "Lbl_69"
+          /\ validators' = [validators EXCEPT ![4].state = 2]
+          /\ pc' = "Lbl_71"
+          /\ UNCHANGED proposers
+
+Lbl_70 == /\ pc = "Lbl_70"
+          /\ validators' = [validators EXCEPT ![4].state = 9]
+          /\ pc' = "Lbl_71"
+          /\ UNCHANGED proposers
+
+Lbl_71 == /\ pc = "Lbl_71"
+          /\ \/ /\ (validators[4]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![4].prepareSig = {(validators[4]).sig}]
+                /\ pc' = "Lbl_72"
+             \/ /\ (validators[4]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[2]).state = 1 \/ (validators[2]).state = 2
+                /\ validators' = [validators EXCEPT ![4].prepareSig = (validators[4]).prepareSig \union (validators[2]).prepareSig]
+                /\ IF prepareCertificate((validators'[4]))
+                      THEN /\ pc' = "Lbl_73"
+                      ELSE /\ pc' = "Lbl_76"
+             \/ /\ (validators[4]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[2]).state = 2
+                /\ validators' = [validators EXCEPT ![4].commitSig = (validators[4]).commitSig \union (validators[2]).commitSig]
+                /\ IF commitCertificate((validators'[4]))
+                      THEN /\ pc' = "Lbl_75"
+                      ELSE /\ pc' = "Lbl_76"
+             \/ /\ TRUE
+                /\ pc' = "Lbl_76"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_72 == /\ pc = "Lbl_72"
+          /\ validators' = [validators EXCEPT ![4].state = 1]
+          /\ pc' = "Lbl_76"
+          /\ UNCHANGED proposers
+
+Lbl_73 == /\ pc = "Lbl_73"
+          /\ validators' = [validators EXCEPT ![4].commitSig = {(validators[4]).sig}]
+          /\ pc' = "Lbl_74"
+          /\ UNCHANGED proposers
+
+Lbl_74 == /\ pc = "Lbl_74"
+          /\ validators' = [validators EXCEPT ![4].state = 2]
+          /\ pc' = "Lbl_76"
+          /\ UNCHANGED proposers
+
+Lbl_75 == /\ pc = "Lbl_75"
+          /\ validators' = [validators EXCEPT ![4].state = 9]
+          /\ pc' = "Lbl_76"
+          /\ UNCHANGED proposers
+
+Lbl_76 == /\ pc = "Lbl_76"
+          /\ \/ /\ (validators[4]).state = 0
+                /\ "prepareMsg" = "block"
+                /\ validators' = [validators EXCEPT ![4].prepareSig = {(validators[4]).sig}]
+                /\ pc' = "Lbl_77"
+             \/ /\ (validators[4]).state = 1
+                /\ "prepareMsg" = "prepareMsg"
+                /\ (validators[3]).state = 1 \/ (validators[3]).state = 2
+                /\ validators' = [validators EXCEPT ![4].prepareSig = (validators[4]).prepareSig \union (validators[3]).prepareSig]
+                /\ IF prepareCertificate((validators'[4]))
+                      THEN /\ pc' = "Lbl_78"
+                      ELSE /\ pc' = "Done"
+             \/ /\ (validators[4]).state = 2
+                /\ "prepareMsg" = "commitMsg"
+                /\ (validators[3]).state = 2
+                /\ validators' = [validators EXCEPT ![4].commitSig = (validators[4]).commitSig \union (validators[3]).commitSig]
+                /\ IF commitCertificate((validators'[4]))
+                      THEN /\ pc' = "Lbl_80"
+                      ELSE /\ pc' = "Done"
+             \/ /\ TRUE
+                /\ pc' = "Done"
+                /\ UNCHANGED validators
+          /\ UNCHANGED proposers
+
+Lbl_77 == /\ pc = "Lbl_77"
+          /\ validators' = [validators EXCEPT ![4].state = 1]
+          /\ pc' = "Done"
+          /\ UNCHANGED proposers
+
+Lbl_78 == /\ pc = "Lbl_78"
+          /\ validators' = [validators EXCEPT ![4].commitSig = {(validators[4]).sig}]
+          /\ pc' = "Lbl_79"
+          /\ UNCHANGED proposers
+
+Lbl_79 == /\ pc = "Lbl_79"
+          /\ validators' = [validators EXCEPT ![4].state = 2]
+          /\ pc' = "Done"
+          /\ UNCHANGED proposers
+
+Lbl_80 == /\ pc = "Lbl_80"
+          /\ validators' = [validators EXCEPT ![4].state = 9]
           /\ pc' = "Done"
           /\ UNCHANGED proposers
 
@@ -464,6 +874,13 @@ Next == Lbl_1 \/ Lbl_2 \/ Lbl_3 \/ Lbl_4 \/ Lbl_5 \/ Lbl_6 \/ Lbl_7
            \/ Lbl_15 \/ Lbl_16 \/ Lbl_17 \/ Lbl_18 \/ Lbl_19 \/ Lbl_20 \/ Lbl_21
            \/ Lbl_22 \/ Lbl_23 \/ Lbl_24 \/ Lbl_25 \/ Lbl_26 \/ Lbl_27 \/ Lbl_28
            \/ Lbl_29 \/ Lbl_30 \/ Lbl_31 \/ Lbl_32 \/ Lbl_33 \/ Lbl_34 \/ Lbl_35
+           \/ Lbl_36 \/ Lbl_37 \/ Lbl_38 \/ Lbl_39 \/ Lbl_40 \/ Lbl_41 \/ Lbl_42
+           \/ Lbl_43 \/ Lbl_44 \/ Lbl_45 \/ Lbl_46 \/ Lbl_47 \/ Lbl_48 \/ Lbl_49
+           \/ Lbl_50 \/ Lbl_51 \/ Lbl_52 \/ Lbl_53 \/ Lbl_54 \/ Lbl_55 \/ Lbl_56
+           \/ Lbl_57 \/ Lbl_58 \/ Lbl_59 \/ Lbl_60 \/ Lbl_61 \/ Lbl_62 \/ Lbl_63
+           \/ Lbl_64 \/ Lbl_65 \/ Lbl_66 \/ Lbl_67 \/ Lbl_68 \/ Lbl_69 \/ Lbl_70
+           \/ Lbl_71 \/ Lbl_72 \/ Lbl_73 \/ Lbl_74 \/ Lbl_75 \/ Lbl_76 \/ Lbl_77
+           \/ Lbl_78 \/ Lbl_79 \/ Lbl_80
            \/ (* Disjunct to prevent deadlock on termination *)
               (pc = "Done" /\ UNCHANGED vars)
 
