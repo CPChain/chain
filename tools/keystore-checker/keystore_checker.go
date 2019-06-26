@@ -5,6 +5,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/transfer/config"
 	"github.com/urfave/cli"
 )
@@ -14,7 +15,8 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "keystore checker"
 	app.Usage = "Try to decrypt keystore with password.\n\t\tExample:./keystore_checker --ks /tmp/keystore/key21"
-
+	app.Version = configs.Version
+	app.Copyright = "LGPL"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "keystore, ks",

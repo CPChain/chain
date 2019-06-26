@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/transfer/config"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -23,6 +24,8 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = "transfer"
+	app.Version = configs.Version
+	app.Copyright = "LGPL"
 	app.Usage = "Executable for CPC transfer.\n\t\tExample:./transfer --ep http://192.168.0.147:8501 --ks /tmp/keystore/key21 -t 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"
 
 	app.Flags = []cli.Flag{

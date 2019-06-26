@@ -20,7 +20,7 @@ GO ?= latest
 # To support private transaction functionality, set ENV variable 'PRIVATE_TX' to be true
 # Example: env PRIVATE_TX=true make all
 
-all: cpchain bootnode abigen smartcontract ecpubkey testtool findimpeach transfer contract-admin
+all: cpchain bootnode abigen smartcontract ecpubkey testtool findimpeach transfer contract-admin keystore-checker
 
 
 cpchain:
@@ -52,6 +52,11 @@ transfer:
 	build/env.sh go run build/ci.go install ./tools/transfer
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/transfer\" to launch transfer."
+
+keystore-checker:
+	build/env.sh go run build/ci.go install ./tools/keystore-checker
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/keystore-checker\" to launch keystore-checker."
 
 contract-admin:
 	build/env.sh go run build/ci.go install ./tools/contract-admin
