@@ -47,7 +47,7 @@ func main() {
 
 		cli.IntFlag{
 			Name:  "value",
-			Usage: "Value in wei",
+			Usage: "Value in cpc",
 		},
 	}
 	app.Action = func(c *cli.Context) error {
@@ -70,7 +70,7 @@ func main() {
 		}
 		to := common.HexToAddress(targetAddr)
 		log.Info("args", "endpoint", endpoint, "keystorePath", keystorePath,
-			"to", to.Hex(), "value", value)
+			"to", to.Hex(), "value(cpc)", value)
 		config.SetConfig(endpoint, keystorePath)
 
 		// ask for password
@@ -80,7 +80,7 @@ func main() {
 		// decrypt keystore
 		client, err, privateKey, _, fromAddress, _, _, chainId := config.Connect(password)
 
-		log.Infof("transfer: %v wei from: %x to: %x", value, fromAddress, to)
+		log.Infof("transfer: %v cpc from: %x to: %x", value, fromAddress, to)
 
 		printBalance(client, fromAddress, to)
 		log.Info("Are you sure to continue? [Y] Yes,[N] No:")
@@ -105,12 +105,13 @@ func main() {
 		}
 
 		log.Infof("gasPrice: %v", gasPrice)
-		valueInWei := big.NewInt(value)
-		msg := cpchain.CallMsg{From: fromAddress, To: &to, Value: valueInWei, Data: nil}
+		valueInCpc := new(big.Int).Mul(big.NewInt(value), big.NewInt(configs.Cpc))
+
+		msg := cpchain.CallMsg{From: fromAddress, To: &to, Value: valueInCpc, Data: nil}
 		gasLimit, err := client.EstimateGas(context.Background(), msg)
 
 		log.Infof("gasLimit: %v", gasLimit)
-		tx := types.NewTransaction(nonce, to, valueInWei, gasLimit, gasPrice, nil)
+		tx := types.NewTransaction(nonce, to, valueInCpc, gasLimit, gasPrice, nil)
 		signedTx, err := types.SignTx(tx, types.NewCep1Signer(chainId), privateKey)
 		log.Infof("signedTx: %v", signedTx.Hash().Hex())
 
