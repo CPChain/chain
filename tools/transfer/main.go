@@ -18,8 +18,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-//  usage:
-// ./transfer http://192.168.0.147:8501 /tmp/src/bitbucket.org/cpchain/chain/examples/cpchain/conf-dev/keys/key1 0xc05302acebd0730e3a18a058d7d1cb1204c4a092 1
 func main() {
 
 	app := cli.NewApp()
@@ -60,9 +58,8 @@ func main() {
 			!c.IsSet("endpoint") ||
 			!c.IsSet("to") ||
 			!c.IsSet("keystore") {
-			// cli.ShowAppHelp(c)
 
-			return cli.NewExitError("Check parameters with ./transfer -h please. ", 1)
+			return cli.NewExitError("Need more parameter ! Check parameters with ./transfer -h please. ", 1)
 		}
 
 		if isInvalidAddress(targetAddr) {
@@ -154,11 +151,39 @@ func printBalance(client *cpclient.Client, fromAddress, to common.Address) {
 	if err != nil {
 		log.Info("get from balance failed", "address", fromAddress.Hex())
 	}
-	log.Infof("balance: %v wei in from address: %x", fromValue, fromAddress)
+	log.Infof("balance: %s wei in from address: %x", formatNumber(fromValue), fromAddress)
 
 	toValue, err := client.BalanceAt(context.Background(), to, nil)
 	if err != nil {
 		log.Info("get to balance failed", "address", to.Hex())
 	}
-	log.Infof("balance: %v wei in to address: %x", toValue, to)
+	log.Infof("balance: %s wei in to address: %x", formatNumber(toValue), to)
+}
+
+func formatNumber(value *big.Int) string {
+	return value.String()
+
+	// result := []string{}
+	// valueString := value.String()
+	// times := len(valueString) / 3
+	// mode := len(valueString) % 3
+	// if mode > 0 {
+	// 	times = times + 1
+	// }
+	//
+	// array := []rune(value.String())
+	// length := len(array)
+	// for i := 0; i < length; {
+	// 	substr := ""
+	// 	if i == 0 {
+	// 		substr = string(array[0:mode])
+	// 	} else {
+	// 		substr = string(array[i : i+1])
+	// 	}
+	// 	log.Info(substr)
+	//
+	// 	result = append(result, substr)
+	// 	i = i + 1
+	// }
+	// return strings.Join(result, ",")
 }
