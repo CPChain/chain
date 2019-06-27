@@ -137,13 +137,13 @@ Stress testing is conducted via increasing transactions per second (tps) to
 approach the limit of the throughput of the chain.
 The stress testing can be divided into two major classes:
 
-1. Send out transactions in a speed close to our tps limit.
-It can help us test if the chain can maintain stable
-and handle all transactions under this stress.
+    1. Send out transactions in a speed close to our tps limit.
+    It can help us test if the chain can maintain stable
+    and handle all transactions under this stress.
 
-2. Send out transactions in a speed outnumbering out tps limit.
-It can help us test if the chain can maintain stable
-and if the outnumbered transactions can be postponed to successive blocks.
+    2. Send out transactions in a speed outnumbering out tps limit.
+    It can help us test if the chain can maintain stable
+    and if the outnumbered transactions can be postponed to successive blocks.
 
 
 DDoS Attack
@@ -163,11 +163,14 @@ However, validators of CPChain can be a latent targets for DDoS attacks.
 Thus, we design the following scheme for potential DDoS attack:
 
 1. Set up multiple trusted nodes as default proposers.
+
 2. Validators hold a while list that contains all default proposers.
-3. Each validator has a monitor.
-Once the validator is under high performance for a long time,
-it considers it is under DDoS attack, and activate the white list.
-The white list will reject all nodes except default proposers in the level of firewall.
+
+3. Each validator has a monitor on its computing resources.
+    Once the validator is under high performance for a long time,
+    it considers it is under DDoS attack, and activate the white list.
+    The white list will reject all nodes except default proposers in the level of firewall.
+
 4. When any of the following conditions satisfies, the while list is removed:
     * No DDoS attack detected in a period of time;
     * The white list has been activated for a long time;
