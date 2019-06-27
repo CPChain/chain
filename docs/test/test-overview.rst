@@ -127,3 +127,28 @@ proposing blocks, or even cannot sync with the chain.
 
 Compatibility testing assures that
 the chain and all updated nodes are not affected by old version nodes.
+
+
+Stress Test Cases
+++++++++++++++++++
+
+
+Stress testing is conducted via increasing transactions per second (tps) to
+approach the limit of the throughput of the chain.
+The stress testing can be divided into two major classes:
+
+1. Send out transactions in a speed close to our tps limit.
+It can help us test if the chain can maintain stable
+and handle all transactions under this stress.
+
+2. Send out transactions in a speed outnumbering out tps limit.
+It can help us test if the chain can maintain stable
+and if the outnumbered transactions can be postponed to successive blocks.
+
+
+DDoS Attack
+-------------
+
+DDoS Attack, a.k.a., Distributed Denial of Service attack,
+is a major challenge all distributed systems have to confront. 
+
