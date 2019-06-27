@@ -150,5 +150,28 @@ DDoS Attack
 -------------
 
 DDoS Attack, a.k.a., Distributed Denial of Service attack,
-is a major challenge all distributed systems have to confront. 
+is a major challenge all distributed systems have to confront.
+By uniting multiple servers, DDoS can send out a flood of requests to a single target,
+in order to occupying all computing resources or bandwidth of the target.
+A targeted machine flooded with these superfluous requests will lose its functionality
+to answer any legal requests.
+
+DDoS ia a major concern for classic blockchains like Bitcoin and Ethereum,
+due to their decentralized structure.
+Malfunctions of each single node or a small portion has literally no impact to the whole chain.
+However, validators of CPChain can be a latent targets for DDoS attacks.
+Thus, we design the following scheme for potential DDoS attack:
+
+1. Set up multiple trusted nodes as default proposers.
+2. Validators hold a while list that contains all default proposers.
+3. Each validator has a monitor.
+Once the validator is under high performance for a long time,
+it considers it is under DDoS attack, and activate the white list.
+The white list will reject all nodes except default proposers in the level of firewall.
+4. When any of the following conditions satisfies, the while list is removed:
+    * No DDoS attack detected in a period of time;
+    * The white list has been activated for a long time;
+    * Deactivate the white list manually.
+
+
 
