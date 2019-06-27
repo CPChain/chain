@@ -151,39 +151,11 @@ func printBalance(client *cpclient.Client, fromAddress, to common.Address) {
 	if err != nil {
 		log.Info("get from balance failed", "address", fromAddress.Hex())
 	}
-	log.Infof("balance: %s wei in from address: %x", formatNumber(fromValue), fromAddress)
+	log.Infof("balance: %v [wei],\tabout %v [cpc] in from address: %x", fromValue, new(big.Int).Div(fromValue, big.NewInt(configs.Cpc)), fromAddress)
 
 	toValue, err := client.BalanceAt(context.Background(), to, nil)
 	if err != nil {
 		log.Info("get to balance failed", "address", to.Hex())
 	}
-	log.Infof("balance: %s wei in to address: %x", formatNumber(toValue), to)
-}
-
-func formatNumber(value *big.Int) string {
-	return value.String()
-
-	// result := []string{}
-	// valueString := value.String()
-	// times := len(valueString) / 3
-	// mode := len(valueString) % 3
-	// if mode > 0 {
-	// 	times = times + 1
-	// }
-	//
-	// array := []rune(value.String())
-	// length := len(array)
-	// for i := 0; i < length; {
-	// 	substr := ""
-	// 	if i == 0 {
-	// 		substr = string(array[0:mode])
-	// 	} else {
-	// 		substr = string(array[i : i+1])
-	// 	}
-	// 	log.Info(substr)
-	//
-	// 	result = append(result, substr)
-	// 	i = i + 1
-	// }
-	// return strings.Join(result, ",")
+	log.Infof("balance: %v [wei],\tabout %v [cpc] in to address: %x", toValue, new(big.Int).Div(toValue, big.NewInt(configs.Cpc)), to)
 }
