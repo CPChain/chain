@@ -291,7 +291,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0x8545e2d351787b516562932c72155abc441c769939693a8255fc42a432061d6b")
+var MainnetGenesisHash = common.HexToHash("0xf70bf47d2629b1e9e9f900b0eb3b73e7e93c31b330d04c0029557d2ad065282a")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
