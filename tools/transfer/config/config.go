@@ -30,6 +30,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -79,33 +80,40 @@ func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecds
 	}
 	configs.SetRunMode(runMode)
 
-	// Open keystore file.
-	file, err := os.Open(keyStoreFilePath)
+	privateKey, publicKeyECDSA, fromAddress, kst, account, err := DecryptKeystore(password)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	return client, err, privateKey, publicKeyECDSA, fromAddress, kst, account, big.NewInt(0).SetUint64(chainId)
+}
+
+func DecryptKeystore(password string) (*ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, *keystore.KeyStore, accounts.Account, error) {
+	// Open keystore file.
+	file, err := os.Open(keyStoreFilePath)
+	if err != nil {
+		return nil, nil, [20]byte{}, nil, accounts.Account{}, err
+	}
 	keyPath, err := filepath.Abs(filepath.Dir(file.Name()))
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, nil, [20]byte{}, nil, accounts.Account{}, err
 	}
 	// Create keystore and get account.
 	kst := keystore.NewKeyStore(keyPath, 2, 1)
 	account := kst.Accounts()[0]
 	account, key, err := kst.GetDecryptedKey(account, password)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, nil, [20]byte{}, nil, accounts.Account{}, err
 	}
 	// Get private and public keys.
 	privateKey := key.PrivateKey
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
-		log.Fatal("error casting public key to ECDSA")
+		return nil, nil, [20]byte{}, nil, accounts.Account{}, errors.New("error casting public key to ECDSA")
 	}
 
 	// Get contractAddress.
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	// fmt.Println("from contractAddress:", fromAddress.Hex()) // 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a
+	return privateKey, publicKeyECDSA, fromAddress, kst, account, nil
 
-	return client, err, privateKey, publicKeyECDSA, fromAddress, kst, account, big.NewInt(0).SetUint64(chainId)
 }
