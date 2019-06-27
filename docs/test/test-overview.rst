@@ -178,3 +178,19 @@ Thus, we design the following scheme for potential DDoS attack:
 
 
 
+Formal Specification
+----------------------
+
+
+Software testing neither reflects any glitch,
+nor proves the completeness of a piece of code in terms of mathematics.
+Thus, we introduce formal specification to the chain.
+
+Formal specification languages describes a program at a higher level
+through a certain form or specification,
+such that it can determine whether it is mathematically correct.
+Formal verification is especially important in highly parallel programs,
+where deadlocks and race conditions are vital issues.
+
+To this end, we will use TLA+ as a formal specification language
+to ensure the correctness of the algorithm of CPChain.
