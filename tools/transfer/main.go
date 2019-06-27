@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"os"
+	"regexp"
 	"strings"
 
 	"bitbucket.org/cpchain/chain"
@@ -158,4 +160,14 @@ func printBalance(client *cpclient.Client, fromAddress, to common.Address) {
 		log.Info("get to balance failed", "address", to.Hex())
 	}
 	log.Infof("balance: %v [wei],\tabout %v [cpc] in to address: %x", toValue, new(big.Int).Div(toValue, big.NewInt(configs.Cpc)), to)
+}
+
+func formatNumber(num *big.Int) string {
+	str := fmt.Sprintf("%d", num)
+	re := regexp.MustCompile("(\\d+)(\\d{3})")
+	for n := ""; n != str; {
+		n = str
+		str = re.ReplaceAllString(str, "$1,$2")
+	}
+	return str
 }

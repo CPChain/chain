@@ -16,22 +16,18 @@ func TestIsInvalidAddress(t *testing.T) {
 }
 
 func TestFormatNumber1(t *testing.T) {
-	t.Skip()
 	assert.Equal(t, "100,200,300", formatNumber(big.NewInt(100200300)))
 	assert.Equal(t, "100,200,300,123", formatNumber(big.NewInt(100200300123)))
 }
 
 func TestFormatNumber2(t *testing.T) {
-	t.Skip()
 	assert.Equal(t, "12,345", formatNumber(big.NewInt(12345)))
 }
 
 func TestFormatNumber3(t *testing.T) {
-	t.Skip()
 	assert.Equal(t, "7,999,244,000", formatNumber(big.NewInt(7999244000)))
 }
 
 func TestFormatNumber4(t *testing.T) {
-	t.Skip()
 	assert.Equal(t, "73,999,244,000", formatNumber(big.NewInt(73999244000)))
 }
