@@ -13,76 +13,7 @@ Built-in Smart Contract
 
 CPChain comes with 5 built-in smart contracts to ensure normal operations of DPoR.
 Other contract files in out code repository are either abandoned or not yet activated.
-
-Admission Contract
-*********************************
-
-   Admission contract is called by campaign contract to verify whether
-   the candidates' CPU and memory resources match the requirements of mining.
-   Admission contract uses primitive contract mechanism, so that contract code can directly call
-   functions implemented in golang.
-   Two functions ``updateCPUDifficulty()`` and ``updateMemoryDifficulty()``
-   are implemented to adjust the difficulty.
-
-Campaign Contract
-********************
-
-   Campaign contract will be called once a user starts mining.
-   Campaign contract will check whether the applicants' hardware resources match basic requirement by calling admission
-   contract and check whether the applicants are rnodes by calling rnode contract.
-   If applicants pass the tests, Campaign contract will add them into candidates list for next three terms by default.
-
-   Here we list two view only functions in campaign contract.
-
-   ``candidatesOf(uint term)``: returns all candidates' addresses of specified term.
-
-   ``candidateInfoOf(address candidate)``: returns campaign information of specified candidate, including its start, end and total terms.
-
-Network Contract
-******************
-
-    Network contract provides configs for testing network status.
-    Applicants have to pass the network test before becoming rnodes and candidates.
-
-    The contract contains 5 configuration parameters:
-
-    ``host``: the address applicants need to connect to.
-
-    ``count``: times applicants is allowed to try.
-
-    ``timeout``: maximum allowable time.
-
-    ``gap``: time interval between attempts.
-
-    ``open``: switch of the contract.
-
-Rnode Contract
-****************
-
-    Rnode contract records addressed of all rnodes, and holds their deposits.
-
-    Two main parameters:
-
-    ``period``: rnode can quit and withdraw deposit after period.
-
-    ``rnodeThreshold``: standard to become rnodes.
-
-    Applicants join or quit rnodes through functions ``joinRnode()`` and ``quitRnode()``.
-
-RPT Contract
-***************
-
-   Rpt contract provides configs for reputation calculation.
-   Proposers will be elected from candidates based on their rpt value.
-   Rpt is calculated based on five dimensions.
-
-   The contract contains 5 weight parameters:
-
-   ``alpha`` for balance.
-   ``beta`` for transactions.
-   ``gamma`` for proxy reputation.
-   ``psi`` for data contribution.
-   ``omega`` for blockchain maintenance.
+Due to the lack of space in this page, we explicate all five smart contracts in :ref:`built-in-sm`.
 
 Private Contract
 ###################
@@ -117,6 +48,7 @@ User Scenario Steps
 .. image:: process.png
 
 
+
 Consensus
 #####################
 
@@ -131,7 +63,7 @@ The consensus process works in a finite state machine which consists of five sta
 The former three states are designed for normal cases,
 and the rest, named as impeachment, are specializing in handling abnormal cases.
 
-Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`
+Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`.
 
 
 RNode Ecosystem
@@ -186,7 +118,7 @@ RPT Evaluation
 *******************************
 
 RPT (abbreviated from reputation) value of a node is evaluated by extracting data from blockchain.
-By employing `RPT Contract`_, a node can evaluates its RPT value by following five dimensions:
+By employing :ref:`rpt-contract`, a node can evaluates its RPT value by following five dimensions:
 
 - **Account Balance（AB)**,
 - **Transaction (TX)**,
@@ -318,7 +250,7 @@ No operation is permitted during the lock period.
 And interest for each season can be taken away during the settlement period.
 If the user does not take the interest, the administrator will assign them one by one.
 
-In fundraising, the following operations are allowed:
+In raising, the following operations are allowed:
 
 1. All civilians can deposit coin in the reward pool, to become Economy Nodes.
 #. Nodes that have already had coins deposited in the pool can choose to
