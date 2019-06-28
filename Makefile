@@ -229,10 +229,10 @@ dev-tools:
 	go get -u github.com/fjl/gencodec
 
 docs:
-	@env UID=$$(id -u) GID=$$(id -g) CPC_VERSION=$$(git describe --tags `git rev-list --tags --max-count=1`) docker-compose -f docs/docker/docker-compose.yml run --rm docs sphinx-build -b html ./ _build
+	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --rm docs CPC_VERSION=$$(git describe --tags `git rev-list --tags --max-count=1`) sphinx-build -b html ./ _build
 
 docs-serve:
-	@env UID=$$(id -u) GID=$$(id -g) CPC_VERSION=$$(git describe --tags `git rev-list --tags --max-count=1`) docker-compose -f docs/docker/docker-compose.yml run --name cpchain_docs -d --service-ports --rm serve python3 docker/app.py
+	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --name cpchain_docs -d --service-ports --rm serve python3 docker/app.py
 
 docs-serve-clean:
 	docker rm -f cpchain_docs
