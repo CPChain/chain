@@ -24,9 +24,9 @@ copyright = '2018-2019, CPChain'
 author = 'CPChain'
 
 # The short X.Y version
-version = '0.4.2'
+version= '0.4.4' 
 # The full version, including alpha/beta/rc tags
-release = 'Mainnet Beta 0.4.2-doc'
+release = 'Mainnet Beta 0.4.4-doc'
 
 
 # -- General configuration ---------------------------------------------------

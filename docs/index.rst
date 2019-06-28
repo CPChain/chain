@@ -77,6 +77,13 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Performance
+
+   performance/performance
+
+
+.. toctree::
+   :maxdepth: 2
    :caption: Misc
 
    misc/faq

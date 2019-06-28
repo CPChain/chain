@@ -127,3 +127,70 @@ proposing blocks, or even cannot sync with the chain.
 
 Compatibility testing assures that
 the chain and all updated nodes are not affected by old version nodes.
+
+
+Stress Test Cases
+++++++++++++++++++
+
+
+Stress testing is conducted via increasing transactions per second (tps) to
+approach the limit of the throughput of the chain.
+The stress testing can be divided into two major classes:
+
+    1. Send out transactions in a speed close to our tps limit.
+    It can help us test if the chain can maintain stable
+    and handle all transactions under this stress.
+
+    2. Send out transactions in a speed outnumbering out tps limit.
+    It can help us test if the chain can maintain stable
+    and if the outnumbered transactions can be postponed to successive blocks.
+
+
+DDoS Attack
+-------------
+
+DDoS Attack, a.k.a., Distributed Denial of Service attack,
+is a major challenge all distributed systems have to confront.
+By uniting multiple servers, DDoS can send out a flood of requests to a single target,
+in order to occupying all computing resources or bandwidth of the target.
+A targeted machine flooded with these superfluous requests will lose its functionality
+to answer any legal requests.
+
+DDoS ia a major concern for classic blockchains like Bitcoin and Ethereum,
+due to their decentralized structure.
+Malfunctions of each single node or a small portion has literally no impact to the whole chain.
+However, validators of CPChain can be a latent targets for DDoS attacks.
+Thus, we design the following scheme for potential DDoS attack:
+
+1. Set up multiple trusted nodes as default proposers.
+
+2. Validators hold a while list that contains all default proposers.
+
+3. Each validator has a monitor on its computing resources.
+    Once the validator is under high performance for a long time,
+    it considers it is under DDoS attack, and activate the white list.
+    The white list will reject all nodes except default proposers in the level of firewall.
+
+4. When any of the following conditions satisfies, the while list is removed:
+    * No DDoS attack detected in a period of time;
+    * The white list has been activated for a long time;
+    * Deactivate the white list manually.
+
+
+
+Formal Specification
+----------------------
+
+
+Software testing neither reflects any glitch,
+nor proves the completeness of a piece of code in terms of mathematics.
+Thus, we introduce formal specification to the chain.
+
+Formal specification languages describes a program at a higher level
+through a certain form or specification,
+such that it can determine whether it is mathematically correct.
+Formal verification is especially important in highly parallel programs,
+where deadlocks and race conditions are vital issues.
+
+To this end, we will use TLA+ as a formal specification language
+to ensure the correctness of the algorithm of CPChain.

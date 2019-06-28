@@ -59,7 +59,7 @@ We further improve our LBFT algorithm to version 2.0, providing higher robust
 to achieve a consensus among the committee while retaining the properties of liveness and safety. 
 The core ideas are **bipartite committee** and **impeachment** process.
 
-The figure below illustrate the detailed steps of LBFT 2.0: ![LBFT 2.0](https://i.imgur.com/0frdUXw.png)
+The figure below illustrate the detailed steps of LBFT 2.0: ![LBFT 2.0](https://i.imgur.com/IPvvSnu.png)
 
 The bipartite committee refers to two separate committees, namely, 
 the **proposers committee** and the **validators committee**. A Proposer is a node elected 
