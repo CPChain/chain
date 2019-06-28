@@ -49,6 +49,8 @@ Network Contract
 
     ``open``: switch of the contract.
 
+
+
 Rnode Contract
 ****************
 
@@ -61,6 +63,8 @@ Rnode Contract
     ``rnodeThreshold``: standard to become rnodes.
 
     Applicants join or quit rnodes through functions ``joinRnode()`` and ``quitRnode()``.
+
+.. _rpt-contract:
 
 RPT Contract
 ***************
