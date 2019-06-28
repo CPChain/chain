@@ -78,3 +78,20 @@ Admin API
 
 Investor API
 ****************
+
++-----------------------------------------------------------------+
+|                            Investor                             |
++----------------------------------+------------------------------+
+| API                              |           Description        |
++==================================+==============================+
+| ``deposit()``                    | It is invoked when deposit   |
+|                                  | in economy pool. The value   |
+|                                  | of the transaction is the    |
+|                                  | amount of deposit.           |
++----------------------------------+------------------------------+
+| ``withdraw(uint amount)``        | It is invoked when withdraw  |
+|                                  | deposit.                     |
++----------------------------------+------------------------------+
+| ``claimInterest()``              | Investor claim interest in   |
+|                                  | settlement period.           |
++----------------------------------+------------------------------+
