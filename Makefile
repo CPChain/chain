@@ -229,6 +229,7 @@ dev-tools:
 	go get -u github.com/fjl/gencodec
 
 docs:
+	docs/version_modify.sh
 	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --rm docs sphinx-build -b html ./ _build
 
 docs-serve:
