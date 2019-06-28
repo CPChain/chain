@@ -306,9 +306,18 @@ based on the ratio of the locked margin to the total margin.
 (Economy Node needs a 90-day lock-up session).
 The detailed process goes as follows:
 
-Each season contains 90 days, which is also named as **lock-up period**.
-There are 7 special days served as **fundraising** ahead of each lock-up period.
-Each fundraising is overlapped with previous lock-up period.
+
+Each season lasts for 90 days, including the first 3 days for the
+**raising period**, the 86 days for the **lock-up period**, and the last 3 days for
+the **settlement period**.
+There is no overlap between each period, and the second period can only be opened after the end of the first period.
+Each period does not overlap with other one.
+And the contract is always at a certain period, the raise period, the lock period or the settlement period.
+In the raise period, you can deposit tokens into the economic pool or withdraw the tokens.
+No operation is permitted during the lock period.
+And interest for each season can be taken away during the settlement period.
+If the user does not take the interest, the administrator will assign them one by one.
+
 In fundraising, the following operations are allowed:
 
 1. All civilians can deposit coin in the reward pool, to become Economy Nodes.
