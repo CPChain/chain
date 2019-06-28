@@ -258,12 +258,14 @@ In raising, the following operations are allowed:
     #. or renew the deposit value.
 #. For a node determines to withdraw deposit, it needs to call withdraw function on their own initiative after lock-up period finishes.
 
-When a fundraising ends, the following rules are applied:
+
+In settlement, the following rules are applied:
 
 1. No one adjusts or withdraw its deposit until next fundraising.
-#. Nodes that decide to withdraw the deposit, receive the coins.
-#. Any node that renews its deposit balance get recalculated whether it is an Economy Node or not.
-#. All nodes with deposit in this lock-up period receive their reward from the pool.
+#. Nodes can collect interest of this season.
+#. Interest that do not proactively collected by its owner will be allotted to the owner by admins.
+
+Interested reader can refer to :ref:`reward-sm` to check detailed smart contract implementation.
 
 The reward for a certain node from the pool is proportional to its deposit in a season.
 In other word, the basic reward is calculated as :math:`5000000 \cdot d/D`, where :math:`d` is deposit of a certain node,
