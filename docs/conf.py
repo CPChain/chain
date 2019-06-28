@@ -26,7 +26,7 @@ author = 'CPChain'
 # The short X.Y version
 version= os.environ.get('CPC_VERSION', 'latest').replace('v', '')
 # The full version, including alpha/beta/rc tags
-release = f'Mainnet {version}'
+release = 'Mainnet ' + version
 
 
 # -- General configuration ---------------------------------------------------
