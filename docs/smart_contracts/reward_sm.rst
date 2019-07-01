@@ -96,6 +96,65 @@ Investor API
 |                                  | settlement period.           |
 +----------------------------------+------------------------------+
 
+
+
+Read-only API
+**********************
+
+The reward contract all provides read-only API to seek information about the node.
+
++-----------------------------------------------------------------+
+|                             Read-only                           |
++----------------------------------+------------------------------+
+| API                              |           Description        |
++==================================+==============================+
+| ``mapping(address => uint 256)   | Query for the invest of an   |
+| public investments``             | address in the pool.         |
++----------------------------------+------------------------------+
+| ``mapping(address => mapping(    | Return a boolean result that |
+| address => bool )) returned``    | whether an address has been  |
+|                                  | distributed interest in a    |
+|                                  | certain round.               |
++----------------------------------+------------------------------+
+| ``uint256 public                 | Query for current total      |
+| totalInvestment``                | investment of the pool.      |
++----------------------------------+------------------------------+
+| ``uint256 public                 | Query for distributed        |
+| totalInterest``                  | interest of the current      |
+|                                  | season.                      |
++----------------------------------+------------------------------+
+| ``bool public inRaise``          | Return if it is in raising   |
+|                                  | period.                      |
++----------------------------------+------------------------------+
+| ``bool public inLock``           | Return if it is in lock-up   |
+|                                  | period.                      |
++----------------------------------+------------------------------+
+| ``bool public inSettlement``     | Return if it is in           |
+|                                  | settlement period.           |
++----------------------------------+------------------------------+
+| ``uint256 public bonusPool``     | Query for the total bonus    |
+|                                  | in the pool.                 |
++----------------------------------+------------------------------+
+| ``uint256 public round``         | Query for the sequence       |
+|                                  | number of the current season.|
++----------------------------------+------------------------------+
+| ``uint256 public nextRaiseTime`` | Query for the beginning of   |
+|                                  | the next raising period.     |
++----------------------------------+------------------------------+
+| ``uint256 public nextLockTime``  | Query for the beginning of   |
+|                                  | the next lock-up period.     |
++----------------------------------+------------------------------+
+| ``uint256 public                 | Query for the beginning of   |
+| nextSettlementTime``             | the next settlement period.  |
++----------------------------------+------------------------------+
+| ``function getEnodes() public    | Retrieve the address of      |
+| view returns(address[])``        | all economy nodes.           |
++----------------------------------+------------------------------+
+
+
+
+
+
 Availability of API
 --------------------------
 
@@ -112,14 +171,14 @@ The table below lists all available APIs for each period.
 |                                  +------------------------------+
 |                                  | Receive transfer.            |
 |                                  +------------------------------+
-|                                  | View-only API                |
+|                                  | Read-only API                |
 +----------------------------------+------------------------------+
-| **Lock-up**                      | View-only API                |
+| **Lock-up**                      | Read-only API                |
 +----------------------------------+------------------------------+
 | **Settlement**                   | ``claimInterest``            |
 |                                  +------------------------------+
 |                                  | ``distributeInterest(address |
 |                                  | investor)``                  |
 |                                  +------------------------------+
-|                                  | View-only API                |
+|                                  | Read-only API                |
 +----------------------------------+------------------------------+
