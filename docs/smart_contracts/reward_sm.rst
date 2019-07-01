@@ -95,3 +95,31 @@ Investor API
 | ``claimInterest()``              | Investor claim interest in   |
 |                                  | settlement period.           |
 +----------------------------------+------------------------------+
+
+Availability of API
+--------------------------
+
+Some APIs can ony be called in a certain period.
+The table below lists all available APIs for each period. 
+
+
++----------------------------------+------------------------------+
+| Period                           |           API                |
++==================================+==============================+
+| **Raising**                      | ``deposit()``                |
+|                                  +------------------------------+
+|                                  | ``withdraw(uint amount)``    |
+|                                  +------------------------------+
+|                                  | Receive transfer.            |
+|                                  +------------------------------+
+|                                  | View-only API                |
++----------------------------------+------------------------------+
+| **Lock-up**                      | View-only API                |
++----------------------------------+------------------------------+
+| **Settlement**                   | ``claimInterest``            |
+|                                  +------------------------------+
+|                                  | ``distributeInterest(address |
+|                                  | investor)``                  |
+|                                  +------------------------------+
+|                                  | View-only API                |
++----------------------------------+------------------------------+
