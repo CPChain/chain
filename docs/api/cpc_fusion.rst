@@ -505,72 +505,7 @@ Cpc.getBalance
         >>> cf.cpc.getBalance('0xd3cda913deb6f67967b99d67acdfa1712c293601')
         77320681768999138915
 
-Cpc.newAccount
-+++++++++++++++++
 
-
-
-.. py:method:: newAccount(self, password)
-
-    * Delegates to ``personal_newAccount`` RPC Method
-
-    Generates a new account in the node's keychain encrypted with the
-    given ``passphrase``.  Returns the address of the created account.
-
-    .. code-block:: python
-
-        >>> cf.personal.newAccount('1')
-        '0x062F4db4DDbE5618412ADffa33b4CbC680634Fc8'
-
-
-
-Cpc.lockAccount
-++++++++++++++++
-
-.. py:method:: lockAccount(self, account)
-
-    * Delegates to ``personal_lockAccount`` RPC Method
-
-    Locks the given ``account``.
-
-    .. code-block:: python
-
-        >>> cf.personal.lockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
-
-
-
-
-Cpc.unlockAccount
-+++++++++++++++++
-
-
-.. py:method:: unlockAccount(self, account, passphrase, duration=None)
-
-    * Delegates to ``personal_unlockAccount`` RPC Method
-
-    Unlocks the given ``account`` for ``duration`` seconds.  If ``duration`` is
-    ``None`` then the account will remain unlocked indefinitely.  Returns
-    boolean as to whether the account was successfully unlocked.
-
-    .. code-block:: python
-
-        >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'wrong-passphrase')
-        False
-        >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'the-passphrase')
-        True
-
-
-
-Cpc.sendTransaction
-+++++++++++++++++++++
-
-
-
-.. py:method:: sendTransaction(self, transaction, passphrase)
-
-    * Delegates to ``personal_sendTransaction`` RPC Method
-
-    Sends the transaction.
 
 
 Contract API
@@ -735,6 +670,80 @@ Cpc.getBlockGenerationInfo
 The ``web3.version`` object exposes methods to interact with the RPC APIs under
 the ``version_`` namespace.
 
+
+Personal API
+--------------------
+
+
+Personal.newAccount
++++++++++++++++++
+
+
+
+.. py:method:: newAccount(self, password)
+
+    * Delegates to ``personal_newAccount`` RPC Method
+
+    Generates a new account in the node's keychain encrypted with the
+    given ``passphrase``.  Returns the address of the created account.
+
+    .. code-block:: python
+
+        >>> cf.personal.newAccount('1')
+        '0x062F4db4DDbE5618412ADffa33b4CbC680634Fc8'
+
+
+
+Personal.lockAccount
+++++++++++++++++
+
+.. py:method:: lockAccount(self, account)
+
+    * Delegates to ``personal_lockAccount`` RPC Method
+
+    Locks the given ``account``.
+
+    .. code-block:: python
+
+        >>> cf.personal.lockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
+
+
+
+
+Personal.unlockAccount
++++++++++++++++++
+
+
+.. py:method:: unlockAccount(self, account, passphrase, duration=None)
+
+    * Delegates to ``personal_unlockAccount`` RPC Method
+
+    Unlocks the given ``account`` for ``duration`` seconds.  If ``duration`` is
+    ``None`` then the account will remain unlocked indefinitely.  Returns
+    boolean as to whether the account was successfully unlocked.
+
+    .. code-block:: python
+
+        >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'wrong-passphrase')
+        False
+        >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'the-passphrase')
+        True
+
+
+
+Personal.sendTransaction
++++++++++++++++++++++
+
+
+
+.. py:method:: sendTransaction(self, transaction, passphrase)
+
+    * Delegates to ``personal_sendTransaction`` RPC Method
+
+    Sends the transaction.
+
+
+
 Version API
 ---------------
 
@@ -809,3 +818,5 @@ Version.cpchain
 
         >>> web3.version.cpchain
         1
+
+
