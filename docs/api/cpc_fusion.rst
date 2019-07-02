@@ -62,8 +62,7 @@ Before connecting, you must set up a local chain or sync with our Mainnet.
 
 Please check :ref:`quick-start` for more detailed information.
 
-Use the ``auto`` module to guess at common node connection options
-<automatic_provider_detection>`.
+
 
 .. code-block:: python
 
