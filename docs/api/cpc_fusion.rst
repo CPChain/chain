@@ -662,12 +662,12 @@ Cpc.getBlockGenerationInfo
 
 
 
-.. py:module:: web3.version
-.. py:currentmodule:: web3.version
+.. py:module:: cpc.version
+.. py:currentmodule:: cpc.version
 
 .. py:class:: Version
 
-The ``web3.version`` object exposes methods to interact with the RPC APIs under
+The ``cpc.version`` object exposes methods to interact with the RPC APIs under
 the ``version_`` namespace.
 
 
@@ -816,7 +816,7 @@ Version.cpchain
 
     .. code-block:: python
 
-        >>> web3.version.cpchain
+        >>> cpc.version.cpchain
         1
 
 
