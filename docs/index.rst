@@ -67,6 +67,12 @@ Table of Contents
    detailed_algorithms/implementation
    detailed_algorithms/election
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Smart Contracts
+
+   smart_contracts/built_in_sm
+   smart_contracts/reward_sm
 
 .. toctree::
    :maxdepth: 2
