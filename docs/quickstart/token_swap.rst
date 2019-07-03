@@ -17,14 +17,15 @@ original ERC20 CPC Token wallet address.
     You can import wallet by private key or keystore.
     This operation only supports wallets using Elliptic Curve Digital Signature Algorithm (ECDSA).
 
-2. Transfer ERC20 CPC Tokens from your wallet to the following burn address:
-
+2. Transfer ERC20 CPC Tokens from your
+wallet to the following burn address:
 
     The CPChain Foundation is constantly overseeing the burn address.
     After receiving tokens in 48 hours,
     Mainnet CPC tokens of the same value will be transfered to the imported wallet.
     Tokens in the burn address is going to be burned.
-    Contact: tokenswap.service@cpchain.io
+
+    Contact us: tokenswap.service@cpchain.io
 
 Using Exchange
 ------------------
