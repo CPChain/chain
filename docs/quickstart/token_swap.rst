@@ -6,6 +6,11 @@ Token Swap
 You can swap your tokens
 from Ethereum blockchain to CPChain Mainnet by either of the following method.
 
+.. warning::
+
+    Tokens transfer from CPChain wallet back to Ethereum wallet is not supported.
+
+
 Using CPC Wallet
 ----------------------
 
