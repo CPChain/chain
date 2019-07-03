@@ -82,6 +82,17 @@ contract Reward {
         return enodes.getAll();
     }
 
+    function freeBalanceOf(address investor) view returns(uint256) {
+        return investors[investor].freeBalance;
+    }
+
+    function lockedBalanceOf(address investor) view returns(uint256) {
+        return investors[investor].lockedBalance;
+    }
+
+    function totalBalanceOf(address investor) view returns(uint256) {
+        return investors[investor].freeBalance.add(investors[investor].lockedBalance);
+    }
 
     // set configs
     // set raise period
@@ -143,7 +154,7 @@ contract Reward {
             enodes.insert(msg.sender);
             emit NewEnode(msg.sender, investors[msg.sender].freeBalance);
         }
-        assert(totalInvestment.add(bonusPool) == address(this).balance);
+        assert(totalFreeBalance.add(bonusPool) == address(this).balance);
     }
 
     // investors can only withdraw during raise
@@ -232,7 +243,7 @@ contract Reward {
     }
 
     function settleAll() public onlyOwner duringSettlement {
-        for(uint j=0; j<enodes.values.length; j++) {
+        for(uint i=0; i<enodes.values.length; i++) {
             settle(enodes.values[i]);
         }
     }

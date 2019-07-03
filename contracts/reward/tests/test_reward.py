@@ -4,23 +4,110 @@ import time
 from cpc_fusion import Web3
 
 
+def init():
+    cf = Web3(Web3.HTTPProvider("http://127.0.0.1:8521"))
+    owner = cf.cpc.accounts[0]
+
+    return cf, owner
+
+
 def compile_file():
     output = compile_files(["../reward.sol"])
     abi = output['../reward.sol:Reward']["abi"]
     bin = output['../reward.sol:Reward']["bin"]
     print(abi)
     print(bin)
-    config = {}
-    config["abi"] = abi
-    config["bin"] = bin
-    print("config: ")
-    print(config)
+    config = dict(abi=abi, bin=bin)
 
     return config
 
 
+def deploy_contract(config, cf, owner):
+    contract = cf.cpc.contract(abi=config["abi"], bytecode=config["bin"])
+    estimated_gas = contract.constructor().estimateGas()
+    cf.personal.unlockAccount(owner, "password")
+    tx_hash = contract.constructor().transact({"from": owner, "gas": estimated_gas})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("deploy contract, result: ", tx_receipt["status"])
+    contract_address = tx_receipt["contractAddress"]
+    reward = cf.cpc.contract(abi=config["abi"], address=contract_address)
+    return contract_address, reward
+
+
+def generate_nodes(num, cf, owner):
+    enodes = []
+    for i in range(num):
+        enode = cf.toChecksumAddress(cf.personal.newAccount("password"))
+        enodes.append(enode)
+        cf.cpc.sendTransaction({"from": owner, "to": enode, "value": cf.toWei(30000, "ether")})
+    print("wait for tx confirmation...")
+    time.sleep(15)
+    for enode in enodes:
+        balance = cf.fromWei(cf.cpc.getBalance(enode), "ether")
+        print("address: ", enode)
+        print("balance: ", balance)
+    return enodes
+
+
+def new_raise(cf, reward, owner):
+    tx_hash = reward.functions.newRaise().transact({"from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("owner starts a new raise, result: ", tx_receipt["status"])
+
+
+def fund_bonus_pool(cf, owner, contract_address):
+    tx_hash = cf.cpc.sendTransaction({"from": owner, "to": contract_address, "value": cf.toWei(1250000, "ether")})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("fund for bonus pool, result: ", tx_receipt["status"])
+
+
+def deposit(enode, value, reward):
+    tx_hash = reward.functions.deposit().transact({"from": enode, "value": value})
+    return tx_hash
+
+
+def withdraw(enode, value, reward):
+    tx_hash = reward.functions.withdraw(value).transact({"from": enode})
+    return tx_hash
+
+
+def new_lock(cf, reward, owner):
+    tx_hash = reward.functions.newLock().transact({"from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("owner starts a new lock and locks all free balance of enodes, result: ", tx_receipt["status"])
+
+
+def only_lock(cf, reward, owner):
+    tx_hash = reward.functions.onlyNewLock().transact({"from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("onwer only starts a new lock, result: ", tx_receipt["status"])
+
+
+def lock_deposit(enode, reward, owner):
+    tx_hash = reward.functions.lockDeposit(enode).transact({"from": owner, "value": 0})
+    return tx_hash
+
+
+def new_settlement(cf, reward, owner):
+    tx_hash = reward.functions.newSettlement().transact({"from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("owner starts a new settlement and distribute interest for all enodes, result: ", tx_receipt["status"])
+
+
+def only_settle(cf, reward, owner):
+    tx_hash = reward.functions.onlyNewSettlement().transact({"from": owner, "value": 0})
+    tx_receipt = cf.cpc.waitForTransactionReceipt(tx_hash)
+    print("owner only starts a new settlement")
+
+
+def settle(reward, owner, enode):
+    tx_hash = reward.functions.settle(enode).transact({"from": owner, "value": 0})
+    return tx_hash
+
+
 def monitor(reward, cf):
-    total_investment = reward.functions.totalInvestment().call()
+    total_free_balance = reward.functions.totalFreeBalance().call()
+    total_locked_balance = reward.functions.totalLockedBalance().call()
     total_interest = reward.functions.totalInterest().call()
     in_raise = reward.functions.inRaise().call()
     in_lock = reward.functions.inLock().call()
@@ -36,8 +123,9 @@ def monitor(reward, cf):
     next_settlement_time = reward.functions.nextSettlementTime().call()
     enodes = reward.functions.getEnodes().call()
 
-    print("*************all configs*******************")
-    print("total investment: ", cf.fromWei(total_investment, "ether"))
+    print("*************all configs*********************")
+    print("total free balance: ", cf.fromWei(total_free_balance, "ether"))
+    print("total locked balance: ", cf.fromWei(total_locked_balance, "ether"))
     print("total interest: ", cf.fromWei(total_interest, "ether"))
     print("is in raise: ", in_raise)
     print("is in lock: ", in_lock)
@@ -57,6 +145,10 @@ def monitor(reward, cf):
 
 
 def test_case_1():
+    pass
+
+
+def test_case_2():
     cf = Web3(Web3.HTTPProvider("http://127.0.0.1:8521"))
     owner = cf.toChecksumAddress("b3801b8743dea10c30b0c21cae8b1923d9625f84")
     cf.personal.unlockAccount(owner, "password")
@@ -173,8 +265,8 @@ def test_case_1():
 
 
 def main():
-    test_case_1()
-    # compile_file()
+    # test_case_1()
+    compile_file()
 
 
 if __name__ == '__main__':
