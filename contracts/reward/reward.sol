@@ -17,10 +17,9 @@ contract Reward {
     Set.Data private enodes;
     mapping(address => Investor) public investors;
     mapping(uint256 => mapping(address => bool)) returned; // record investors who have claimed interests for each round
+    mapping(uint256 => uint256) public investments;
     uint256 public totalFreeBalance;
     uint256 public totalLockedBalance;
-    uint256 public totalInterest;
-
 
     // states controllers
     bool public inRaise = false;
@@ -53,6 +52,7 @@ contract Reward {
 
     // configs
     uint256 public bonusPool;
+    mapping(uint256 => uint256) public bonus;
     uint256 public raisePeriod = 3 days;
     uint256 public lockPeriod = 84 days;
     uint256 public settlementPeriod = 3 days;
@@ -130,9 +130,6 @@ contract Reward {
         inSettlement = false;
         round = round.add(1);
         nextLockTime = now.add(raisePeriod);
-        bonusPool = bonusPool.sub(totalInterest);
-        totalFreeBalance = totalFreeBalance.add(totalInterest);
-        totalInterest = 0;
         assert(totalFreeBalance.add(bonusPool) == address(this).balance);
         assert(totalLockedBalance == 0);
         emit SetTime("next lock time", nextLockTime);
@@ -142,6 +139,8 @@ contract Reward {
     // fund bonus pool
     function () public payable duringRaise {
         bonusPool = bonusPool.add(msg.value);
+        assert(totalFreeBalance.add(bonusPool) == address(this).balance);
+        assert(totalLockedBalance == 0);
         emit FundBonusPool(msg.sender, msg.value, bonusPool);
     }
 
@@ -155,9 +154,10 @@ contract Reward {
             emit NewEnode(msg.sender, investors[msg.sender].freeBalance);
         }
         assert(totalFreeBalance.add(bonusPool) == address(this).balance);
+        assert(totalLockedBalance == 0);
     }
 
-    // investors can only withdraw during raise
+    // investors can only withdraw free balance
     function withdraw(uint amount) public {
         require(amount <= investors[msg.sender].freeBalance);
         msg.sender.transfer(amount);
@@ -171,28 +171,14 @@ contract Reward {
         assert(totalFreeBalance.add(bonusPool).add(totalLockedBalance) == address(this).balance);
     }
 
-//    function refundAll() public onlyOwner {
-//        uint256 num = rnodes.values.length;
-//        for(uint i=0; i<num; i++){
-//            address investor = rnodes.values[0];
-//            uint256 deposit = Participants[investor].lockedDeposit;
-//            investor.transfer(deposit);
-//            Participants[investor].lockedDeposit = 0;
-//            rnodes.remove(investor);
-//
-//            emit ownerRefund(investor, deposit);
-//        }
-//        assert(rnodes.values.length == 0);
-//
-//        emit ownerRefundAll(num);
-//    }
-
     function lockDeposit(address enode) public onlyOwner duringLock {
         assert(investors[enode].lockedBalance == 0);
         investors[enode].lockedBalance = investors[enode].freeBalance;
         totalLockedBalance = totalLockedBalance.add(investors[enode].lockedBalance);
         investors[enode].freeBalance = 0;
-        totalFreeBalance = totalFreeBalance.sub(investors[enode].freeBalance);
+        totalFreeBalance = totalFreeBalance.sub(investors[enode].lockedBalance);
+        investments[round] = investments[round].add(investors[enode].lockedBalance);
+        assert(totalFreeBalance.add(bonusPool).add(totalLockedBalance) == address(this).balance);
     }
 
     function lockAllDeposit() public onlyOwner duringLock {
@@ -215,6 +201,7 @@ contract Reward {
     function newLock() public onlyOwner {
         onlyNewLock();
         lockAllDeposit();
+        bonus[round] = bonusPool;
     }
 
     // start a new settlement
@@ -233,18 +220,19 @@ contract Reward {
         require(!returned[round][investor]);
         require(enodes.contains(investor));
         uint256 interest;
-        interest = bonusPool.mul(investors[investor].lockedBalance).div(totalLockedBalance);
-        totalInterest = totalInterest.add(interest);
+        interest = bonus[round].mul(investors[investor].lockedBalance).div(investments[round]);
         investors[investor].freeBalance = investors[investor].freeBalance.add(interest).add(investors[investor].lockedBalance);
-        investors[investor].lockedBalance = 0;
         totalLockedBalance = totalLockedBalance.sub(investors[investor].lockedBalance);
+        investors[investor].lockedBalance = 0;
+        totalFreeBalance = totalFreeBalance.add(investors[investor].freeBalance);
+        bonusPool = bonusPool.sub(interest);
         returned[round][investor] = true;
         emit ApplyForSettlement(investor, interest);
     }
 
     function settleAll() public onlyOwner duringSettlement {
-        for(uint i=0; i<enodes.values.length; i++) {
-            settle(enodes.values[i]);
+        for(uint j=0; j<enodes.values.length; j++) {
+            settle(enodes.values[j]);
         }
     }
 
@@ -252,16 +240,6 @@ contract Reward {
         onlyNewSettlement();
         settleAll();
     }
-
-    // investors can only claim interest during settlement
-//    function claimInterest() public duringSettlement {
-//        settle(msg.sender);
-//    }
-
-    // owner will distribute interest to those who do not claim
-//    function distributeInterest(address investor) public onlyOwner duringSettlement {
-//        settle(investor);
-//    }
 
     // backup
     // set next raise time.
@@ -281,11 +259,6 @@ contract Reward {
         nextSettlementTime = _nextSettlementTime;
         emit SetTime("next settlement time", nextSettlementTime);
     }
-
-//
-//    function ownerWithdraw(uint256 amount) public onlyOwner {
-//        owner.transfer(address(this).balance);
-//    }
 
     function disable() public onlyOwner {
         inRaise = false;
