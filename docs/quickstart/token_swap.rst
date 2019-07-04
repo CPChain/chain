@@ -6,6 +6,7 @@ Token Swap
 You can swap your ERC20 CPC Tokens
 from Ethereum blockchain to CPChain Mainnet by either of the following methods.
 
+Contact us: tokenswap.service@cpchain.io
 
 Using CPC Wallet
 ----------------------
@@ -33,7 +34,7 @@ wallet to the following burn address:
     Mainnet CPC tokens of the same value will be transfered to the imported wallet.
     Tokens in the burn address are going to be burned.
 
-    Contact us: tokenswap.service@cpchain.io
+
 
 Using Exchange
 ------------------
@@ -41,3 +42,12 @@ Using Exchange
 Please pay attention to the announcement of the exchanges and CPChain official media channels.
 
 
+Details Need Attention
+---------------------------
+
+There are several points need attention:
+
+1. Transferring tokens from CPChain wallet back to Ethereum wallet (or other wallets) is **not supported**.
+#. You can transfer at any time you prefer.
+#. The wallet does not demonstrate the swapping progress bar. Please wait patiently for at most 48 hours.
+#. Please contact us (tokenswap.service@cpchain.io) if you have any problem.
