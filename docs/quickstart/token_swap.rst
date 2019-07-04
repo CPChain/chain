@@ -3,12 +3,8 @@
 Token Swap
 ==================
 
-You can swap your tokens
-from Ethereum blockchain to CPChain Mainnet by either of the following method.
-
-.. warning::
-
-    Tokens transfer from CPChain wallet back to Ethereum wallet is not supported.
+You can swap your ERC20 CPC Tokens
+from Ethereum blockchain to CPChain Mainnet by either of the following methods.
 
 
 Using CPC Wallet
@@ -20,7 +16,10 @@ Make sure that the imported wallet address is consistent with
 original ERC20 CPC Token wallet address.
 
     You can import wallet by **private key** or **keystore**.
-    Note that the token swap only supports wallets using Elliptic Curve Digital Signature Algorithm (ECDSA).
+    Note that the token swap only supports wallets using Elliptic Curve Digital Signature Algorithm (ECDSA)*.
+
+
+    *: The majority of main stream wallets adopt ECDSA as their digital signature algorithm.
 
 2. Transfer ERC20 CPC Tokens from your
 wallet to the following burn address:
@@ -40,4 +39,5 @@ Using Exchange
 ------------------
 
 Please pay attention to the announcement of the exchanges and CPChain official media channels.
+
 
