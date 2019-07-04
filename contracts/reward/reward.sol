@@ -193,6 +193,7 @@ contract Reward {
         inLock = true;
         inSettlement = false;
         nextSettlementTime = now.add(lockPeriod);
+        bonus[round] = bonusPool;
         emit SetTime("next settlement time", nextSettlementTime);
         emit NewLock(now);
     }
@@ -201,7 +202,6 @@ contract Reward {
     function newLock() public onlyOwner {
         onlyNewLock();
         lockAllDeposit();
-        bonus[round] = bonusPool;
     }
 
     // start a new settlement
