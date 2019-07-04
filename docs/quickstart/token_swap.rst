@@ -49,5 +49,6 @@ There are several points need attention:
 
 1. Transferring tokens from CPChain wallet back to Ethereum wallet (or other wallets) is **not supported**.
 #. You can transfer at any time you prefer.
+#. You can swap your tokens multiple times.
 #. The wallet does not demonstrate the swapping progress bar. Please wait patiently for at most 48 hours.
 #. Please contact us (tokenswap.service@cpchain.io) if you have any problem.
