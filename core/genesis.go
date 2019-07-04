@@ -291,7 +291,7 @@ func GenesisBlockForTesting(db database.Database, addr common.Address, balance *
 }
 
 // Genesis hashes to enforce below configs on.
-var MainnetGenesisHash = common.HexToHash("0x8545e2d351787b516562932c72155abc441c769939693a8255fc42a432061d6b")
+var MainnetGenesisHash = common.HexToHash("0xf70bf47d2629b1e9e9f900b0eb3b73e7e93c31b330d04c0029557d2ad065282a")
 
 // DefaultGenesisBlock returns the cpchain main net genesis block.
 func DefaultGenesisBlock() *Genesis {
@@ -395,9 +395,9 @@ func newMainnetGenesisBlock() *Genesis {
 			candidates[11]: {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
 
 			// contract admin account 21
-			common.HexToAddress("0xda5ccb96e93a6a5a80ab1f0a2c5b74ab6a198b45"): {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
+			common.HexToAddress("0x66961306fd78d39a4604167f59b25697bdad05c5"): {Balance: new(big.Int).Mul(big.NewInt(300000), big.NewInt(configs.Cpc))},
 			// bank 22
-			common.HexToAddress("0x0020511a8d7fd0dc831610a8c2d41c99e2cc9a51"): {Balance: new(big.Int).Mul(big.NewInt(873880028800), big.NewInt(configs.Finney))},
+			common.HexToAddress("0xfc1e61c396c6e02f0dc06bbbe5ee41a97b05b6fd"): {Balance: new(big.Int).Mul(big.NewInt(873880028800), big.NewInt(configs.Finney))},
 		},
 		Dpor: types.DporSnap{
 			Proposers:  configs.Proposers(),

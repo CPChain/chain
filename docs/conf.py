@@ -12,7 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -24,9 +24,9 @@ copyright = '2018-2019, CPChain'
 author = 'CPChain'
 
 # The short X.Y version
-version = '0.4.2'
+version= os.environ.get('CPC_VERSION', 'latest').replace('v', '')
 # The full version, including alpha/beta/rc tags
-release = 'Mainnet Beta 0.4.2-doc'
+release = 'Mainnet ' + version
 
 
 # -- General configuration ---------------------------------------------------

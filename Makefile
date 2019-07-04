@@ -20,7 +20,7 @@ GO ?= latest
 # To support private transaction functionality, set ENV variable 'PRIVATE_TX' to be true
 # Example: env PRIVATE_TX=true make all
 
-all: cpchain bootnode abigen smartcontract ecpubkey testtool findimpeach transfer contract-admin
+all: cpchain bootnode abigen smartcontract ecpubkey testtool findimpeach transfer contract-admin keystore-checker
 
 
 cpchain:
@@ -52,6 +52,11 @@ transfer:
 	build/env.sh go run build/ci.go install ./tools/transfer
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/transfer\" to launch transfer."
+
+keystore-checker:
+	build/env.sh go run build/ci.go install ./tools/keystore-checker
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/keystore-checker\" to launch keystore-checker."
 
 contract-admin:
 	build/env.sh go run build/ci.go install ./tools/contract-admin
@@ -224,7 +229,7 @@ dev-tools:
 	go get -u github.com/fjl/gencodec
 
 docs:
-	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --rm docs sphinx-build -b html ./ _build
+	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run -e CPC_VERSION=$$(git describe --tags `git rev-list --tags --max-count=1`) --rm docs sphinx-build -b html ./ _build
 
 docs-serve:
 	@env UID=$$(id -u) GID=$$(id -g) docker-compose -f docs/docker/docker-compose.yml run --name cpchain_docs -d --service-ports --rm serve python3 docker/app.py

@@ -62,8 +62,7 @@ Before connecting, you must set up a local chain or sync with our Mainnet.
 
 Please check :ref:`quick-start` for more detailed information.
 
-Use the ``auto`` module to guess at common node connection options
-<automatic_provider_detection>`.
+
 
 .. code-block:: python
 
@@ -506,72 +505,7 @@ Cpc.getBalance
         >>> cf.cpc.getBalance('0xd3cda913deb6f67967b99d67acdfa1712c293601')
         77320681768999138915
 
-Cpc.newAccount
-+++++++++++++++++
 
-
-
-.. py:method:: newAccount(self, password)
-
-    * Delegates to ``personal_newAccount`` RPC Method
-
-    Generates a new account in the node's keychain encrypted with the
-    given ``passphrase``.  Returns the address of the created account.
-
-    .. code-block:: python
-
-        >>> cf.personal.newAccount('1')
-        '0x062F4db4DDbE5618412ADffa33b4CbC680634Fc8'
-
-
-
-Cpc.lockAccount
-++++++++++++++++
-
-.. py:method:: lockAccount(self, account)
-
-    * Delegates to ``personal_lockAccount`` RPC Method
-
-    Locks the given ``account``.
-
-    .. code-block:: python
-
-        >>> cf.personal.lockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
-
-
-
-
-Cpc.unlockAccount
-+++++++++++++++++
-
-
-.. py:method:: unlockAccount(self, account, passphrase, duration=None)
-
-    * Delegates to ``personal_unlockAccount`` RPC Method
-
-    Unlocks the given ``account`` for ``duration`` seconds.  If ``duration`` is
-    ``None`` then the account will remain unlocked indefinitely.  Returns
-    boolean as to whether the account was successfully unlocked.
-
-    .. code-block:: python
-
-        >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'wrong-passphrase')
-        False
-        >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'the-passphrase')
-        True
-
-
-
-Cpc.sendTransaction
-+++++++++++++++++++++
-
-
-
-.. py:method:: sendTransaction(self, transaction, passphrase)
-
-    * Delegates to ``personal_sendTransaction`` RPC Method
-
-    Sends the transaction.
 
 
 Contract API
@@ -673,8 +607,6 @@ Cpc.getRNodes
         from cpc_fusion.middleware import geth_poa_middleware
 
         cf = Web3(Web3.HTTPProvider('http://127.0.0.1:8501'))
-        # inject the poa compatibility middleware to the innermost layer
-        cf.middleware_stack.inject(geth_poa_middleware, layer=0)
 
         print("rnode:")
         print(cf.cpc.getRNodes)
@@ -700,7 +632,7 @@ Cpc.getCurrentView
 
 .. py:attribute:: Cpc.getCurrentView
 
-    * Delegates to ``eth_getCurrentRound`` RPC Method
+    * Delegates to ``eth_getCurrentView`` RPC Method
 
     Returns CurrentView.
 
@@ -718,23 +650,113 @@ Cpc.getBlockGenerationInfo
 
     * Delegates to ``eth_getBlockGenerationInfo`` RPC Method
 
-    Returns Committee Slice.
+    Returns Committee Dict.
 
     .. code-block:: python
 
         >>> cf.cpc.getBlockGenerationInfo
-        [{'View': 2, 'Term': 250, 'Proposer': '0x3a18598184ef84198db90c28fdfdfdf56544f747', 'BlockNumber': 3000, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0xc05302acebd0730e3a18a058d7d1cb1204c4a092', 'BlockNumber': 3001, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0xc05302acebd0730e3a18a058d7d1cb1204c4a092', 'BlockNumber': 3002, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0xc05302acebd0730e3a18a058d7d1cb1204c4a092', 'BlockNumber': 3003, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0x3a18598184ef84198db90c28fdfdfdf56544f747', 'BlockNumber': 3004, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0x3a18598184ef84198db90c28fdfdfdf56544f747', 'BlockNumber': 3005, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0x3a18598184ef84198db90c28fdfdfdf56544f747', 'BlockNumber': 3006, 'TermLen': 4}, {'View': 2, 'Term': 250, 'Proposer': '0x6e31e5b68a98dcd17264bd1ba547d0b3e874da1e', 'BlockNumber': 3007, 'TermLen': 4}]
+        AttributeDict({'BlockNumber': 43073,
+         'Proposer': '0x4d1f1d14f303b746121564e3295e2957e74ea5d2',
+         'ProposerIndex': 4,
+         'Proposers': ['0x50f8c76f6d8442c54905c74245ae163132b9f4ae',
+          '0xfaf2a2cdc4da310b52ad7d8d86e8c1bd5d4c0bd0',
+          '0x8ab63651e6ce7eed40af33276011a5e2e1a533a2',
+          '0x5a55d5ef67c047b5d748724f7401781ed0af65ed',
+          '0x4d1f1d14f303b746121564e3295e2957e74ea5d2',
+          '0x049295e2e925cec28ddeeb63507e654b6d317423',
+          '0x501f6cf7b2437671d770998e3b785474878fef1d',
+          '0x8c65cb8568c4945d4b419af9066874178f19ba43',
+          '0x1f077085dfdfa4a65f8870e50348f277d6fcd97c',
+          '0x9508e430ce672750bcf6bef9c4c0adf303b28c5c',
+          '0xcb6fb6a201d6c126f80053fe17ca45188e24fe2f',
+          '0x73ae2b32ef3fad80707d4da0f49c675d3efc727c'],
+         'Term': 1196,
+         'TermLen': 12,
+         'View': 1})
 
 
 
-
-.. py:module:: web3.version
-.. py:currentmodule:: web3.version
+.. py:module:: cpc.version
+.. py:currentmodule:: cpc.version
 
 .. py:class:: Version
 
-The ``web3.version`` object exposes methods to interact with the RPC APIs under
+The ``cpc.version`` object exposes methods to interact with the RPC APIs under
 the ``version_`` namespace.
+
+
+Personal API
+--------------------
+
+
+Personal.newAccount
++++++++++++++++++
+
+
+
+.. py:method:: newAccount(self, password)
+
+    * Delegates to ``personal_newAccount`` RPC Method
+
+    Generates a new account in the node's keychain encrypted with the
+    given ``passphrase``.  Returns the address of the created account.
+
+    .. code-block:: python
+
+        >>> cf.personal.newAccount('1')
+        '0x062F4db4DDbE5618412ADffa33b4CbC680634Fc8'
+
+
+
+Personal.lockAccount
+++++++++++++++++
+
+.. py:method:: lockAccount(self, account)
+
+    * Delegates to ``personal_lockAccount`` RPC Method
+
+    Locks the given ``account``.
+
+    .. code-block:: python
+
+        >>> cf.personal.lockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601')
+
+
+
+
+Personal.unlockAccount
++++++++++++++++++
+
+
+.. py:method:: unlockAccount(self, account, passphrase, duration=None)
+
+    * Delegates to ``personal_unlockAccount`` RPC Method
+
+    Unlocks the given ``account`` for ``duration`` seconds.  If ``duration`` is
+    ``None`` then the account will remain unlocked indefinitely.  Returns
+    boolean as to whether the account was successfully unlocked.
+
+    .. code-block:: python
+
+        >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'wrong-passphrase')
+        False
+        >>> cf.personal.unlockAccount('0xd3cda913deb6f67967b99d67acdfa1712c293601', 'the-passphrase')
+        True
+
+
+
+Personal.sendTransaction
++++++++++++++++++++++
+
+
+
+.. py:method:: sendTransaction(self, transaction, passphrase)
+
+    * Delegates to ``personal_sendTransaction`` RPC Method
+
+    Sends the transaction.
+
+
 
 Version API
 ---------------
@@ -808,5 +830,7 @@ Version.cpchain
 
     .. code-block:: python
 
-        >>> web3.version.cpchain
+        >>> cpc.version.cpchain
         1
+
+

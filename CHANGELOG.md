@@ -1,6 +1,6 @@
 # CPChain Changelog
 
-## March 2019 Version 0.2.0 (Current)
+## June 2019 Version 0.4.4
 
 This release is not compatible with Mainnet Alpha (Version 0.1.0)
 
