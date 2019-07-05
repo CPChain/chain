@@ -232,9 +232,21 @@ def test_case_1():
     monitor(reward, cf)
 
 
+def build_transaction():
+    cf, owner = init()
+    config = compile_file()
+    contract_address, reward = deploy_contract(config, cf, owner)
+    nonce = cf.cpc.getTransactionCount(owner)
+    deposit_tx = reward.functions.deposit().buildTransaction({"chainId": 41, "gas": 7000, "nonce": nonce, "value": cf.toWei(30000, "ether")})
+    print("deposit tx: ", deposit_tx)
+    withdraw_tx = reward.functions.withdraw(cf.toWei(20000, "ether")).buildTransaction({"chainId": 41, "gas": 7000, "nonce": nonce, "value": 0})
+    print("deposit tx: ", withdraw_tx)
+
+
 def main():
-    test_case_1()
+    # test_case_1()
     # compile_file()
+    build_transaction()
 
 
 if __name__ == '__main__':
