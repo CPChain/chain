@@ -43,6 +43,7 @@ define
     validatorPrepareSig1 == "1" \notin validators[1].prepareSig
     validatorCommitSig1 == "1" \notin validators[1].commitSig
     validatorState1 == validators[1].state /= 9
+    \* GoToNextHeight is violated when all validators have advanced to next block height
     GetToNextHeight ==
         validators[1].state /=9 \/
         validators[2].state /=9 \/
@@ -172,6 +173,7 @@ impeachCommitCertificate(v) ==
 validatorPrepareSig1 == "1" \notin validators[1].prepareSig
 validatorCommitSig1 == "1" \notin validators[1].commitSig
 validatorState1 == validators[1].state /= 9
+
 GetToNextHeight ==
     validators[1].state /=9 \/
     validators[2].state /=9 \/
