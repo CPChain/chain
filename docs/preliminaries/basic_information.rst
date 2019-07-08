@@ -10,7 +10,7 @@ This page lists all basic information of CPChain.
 
     `Ethereum <https://github.com/ethereum>`_
 
-2. **Source code**
+2. **Source Code**
 
     `GitHub repository <https://github.com/CPChain/chain>`_
 
