@@ -19,12 +19,14 @@ Please mail to info@cpchain.io if you have any question.
 Quick Reference:
 =====================
 
-#. :ref:`basic-info`
+#. :ref:`basic-info` and :ref:`abstract`
 #. :ref:`fusion-api` and :ref:`rpc-api`
 #. :ref:`quick-start-beginner` and :ref:`quick-start`
 #. :ref:`overview`
 #. `Solidity`_
 #. :ref:`consensus` and :ref:`implementation`
+#. :ref:`performance`
+#. :ref:`test-overview`
 #. `Download Page`_
 
 
@@ -48,6 +50,7 @@ Table of Contents
    :caption: Preliminaries
 
    preliminaries/basic_information
+   preliminaries/abstract
    preliminaries/overview
    preliminaries/installation
    preliminaries/configuration
