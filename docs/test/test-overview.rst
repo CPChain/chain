@@ -146,8 +146,8 @@ The stress testing can be divided into two major classes:
     and if the outnumbered transactions can be postponed to successive blocks.
 
 
-DDoS Attack
--------------
+Anti-DDoS Attack
+---------------------
 
 DDoS Attack, a.k.a., Distributed Denial of Service attack,
 is a major challenge all distributed systems have to confront.
