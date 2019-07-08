@@ -66,7 +66,7 @@ and the rest, named as impeachment, are specializing in handling abnormal cases.
 Due to the lack of space in this page, we explicate LBFT 2.0 in :ref:`consensus`.
 
 
-RNode Ecosystem
+CPChain Ecosystem
 ####################
 
 CPChain Nodes Roles and Pools
