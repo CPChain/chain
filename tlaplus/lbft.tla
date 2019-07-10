@@ -18,7 +18,7 @@ variables
     \* sequence of validators
     \* 0,1,2 represent idle, prepare, commit
     \* 3,4 represent impeach prepare and impeach commit state
-    \* 9 represents idle state in next block height
+    \* 9 represents a consensus of normal case
     \* imp represents impeachment
     \* four sigs refers to signatures for different messages
 
