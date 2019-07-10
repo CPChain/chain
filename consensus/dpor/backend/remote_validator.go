@@ -250,3 +250,11 @@ func (s *RemoteValidator) AsyncSendImpeachValidateBlock(block *types.Block) {
 		log.Debug("Dropping block propagation", "number", block.NumberU64(), "hash", block.Hash().Hex())
 	}
 }
+
+func (s *RemoteValidator) Stop() {
+	select {
+	case <-s.quitCh:
+	default:
+		close(s.quitCh)
+	}
+}

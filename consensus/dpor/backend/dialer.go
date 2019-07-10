@@ -164,7 +164,14 @@ func (d *Dialer) removeRemoteProposers(addr string) error {
 
 // removeRemoteValidators removes remote proposer by it's addr
 func (d *Dialer) removeRemoteValidators(addr string) error {
-	d.recentValidators.Remove(addr)
+	v, ok := d.recentValidators.Get(addr)
+	if ok {
+		validator, ok := v.(*RemoteValidator)
+		if ok {
+			validator.Stop()
+		}
+		d.recentValidators.Remove(addr)
+	}
 	return nil
 }
 
@@ -229,6 +236,7 @@ func (d *Dialer) disconnectValidators(term uint64) {
 		if err != nil {
 			log.Debug("err when disconnect", "e", err)
 		}
+		p.Stop()
 	}
 }
 
@@ -439,7 +447,7 @@ func (d *Dialer) EnoughImpeachValidatorsOfTerm(term uint64) (validators map[comm
 }
 
 func (d *Dialer) Stop() {
-
+	d.disconnectValidators(0)
 	close(d.quitCh)
 	d.quitCh = make(chan struct{})
 
