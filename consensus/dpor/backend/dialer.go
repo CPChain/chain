@@ -236,7 +236,6 @@ func (d *Dialer) disconnectValidators(term uint64) {
 		if err != nil {
 			log.Debug("err when disconnect", "e", err)
 		}
-		p.Stop()
 	}
 }
 
