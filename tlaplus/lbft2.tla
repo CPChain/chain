@@ -110,8 +110,8 @@ end macro;
 macro broadcast(sender, inputType) begin
     \* otherValidators := validatorIndices \ {number};
     with receiver \in validators do
-        skip;
-        \* fsm(receiver, inputType, sender);
+        \* skip;
+        fsm(receiver, inputType, sender);
     end with;
 end macro;
 
@@ -124,22 +124,23 @@ begin
     fsm(validators[4], "block", "");
 
     \* broadcast prepare message
+
     broadcast(1,"prepareMsg");
-    broadcast(2,"prepareMsg");
-    broadcast(3,"prepareMsg");
-    broadcast(4,"prepareMSg");
-
-    \* broadcast commit message
-    broadcast(1,"commitMsg");
-    broadcast(2,"commitMsg");
-    broadcast(3,"commitMsg");
-    broadcast(4,"commitMsg");
-
-    \* broadcast validate message
-    broadcast(1,"validateMsg");
-    broadcast(2,"validateMsg");
-    broadcast(3,"validateMsg");
-    broadcast(4,"validateMsg");
+\*    broadcast(2,"prepareMsg");
+\*    broadcast(3,"prepareMsg");
+\*    broadcast(4,"prepareMSg");
+\*
+\*    \* broadcast commit message
+\*    broadcast(1,"commitMsg");
+\*    broadcast(2,"commitMsg");
+\*    broadcast(3,"commitMsg");
+\*    broadcast(4,"commitMsg");
+\*
+\*    \* broadcast validate message
+\*    broadcast(1,"validateMsg");
+\*    broadcast(2,"validateMsg");
+\*    broadcast(3,"validateMsg");
+\*    broadcast(4,"validateMsg");
 
 
 
@@ -380,33 +381,42 @@ Lbl_10 == /\ pc = "Lbl_10"
 
 Lbl_11 == /\ pc = "Lbl_11"
           /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
-          /\ \E receiver \in validators:
-               TRUE
+               \/ /\ state[receiver] = 0
+                  /\ "prepareMsg" = "block"
+                  /\ prepareSig' = [prepareSig EXCEPT ![receiver] = {sig[receiver]}]
+                  /\ state' = [state EXCEPT ![receiver] = 1]
+                  /\ UNCHANGED commitSig
+               \/ /\ state[receiver] = 1
+                  /\ "prepareMsg" = "prepareMsg"
+                  /\ state[1] = 1 \/ state[1] = 2
+                  /\ prepareSig' = [prepareSig EXCEPT ![receiver] = prepareSig[receiver] \union prepareSig[1]]
+                  /\ IF prepareCertificate(receiver)
+                        THEN /\ commitSig' = [commitSig EXCEPT ![receiver] = {sig[receiver]}]
+                             /\ state' = [state EXCEPT ![receiver] = 2]
+                        ELSE /\ TRUE
+                             /\ UNCHANGED << state, commitSig >>
+               \/ /\ state[receiver] = 2
+                  /\ "prepareMsg" = "commitMsg"
+                  /\ state[1] = 2
+                  /\ commitSig' = [commitSig EXCEPT ![receiver] = commitSig[receiver] \union commitSig[1]]
+                  /\ IF commitCertificate(receiver)
+                        THEN /\ state' = [state EXCEPT ![receiver] = 9]
+                        ELSE /\ TRUE
+                             /\ state' = state
+                  /\ UNCHANGED prepareSig
+               \/ /\ "prepareMsg" = "validateMsg"
+                  /\ 1.state = 9
+                  /\ commitSig' = [commitSig EXCEPT ![receiver] = commitSig[receiver] \union commitSig[1]]
+                  /\ IF commitCertificate(receiver)
+                        THEN /\ state' = [state EXCEPT ![receiver] = 9]
+                        ELSE /\ TRUE
+                             /\ state' = state
+                  /\ UNCHANGED prepareSig
+               \/ /\ TRUE
+                  /\ UNCHANGED <<state, prepareSig, commitSig>>
           /\ pc' = "Done"
-          /\ UNCHANGED << proposers, validators, sig, state, prepareSig,
-                          commitSig, impeachPrepareSig, impeachCommitSig,
-                          validatorIndices >>
+          /\ UNCHANGED << proposers, validators, sig, impeachPrepareSig,
+                          impeachCommitSig, validatorIndices >>
 
 Next == Lbl_1 \/ Lbl_2 \/ Lbl_3 \/ Lbl_4 \/ Lbl_5 \/ Lbl_6 \/ Lbl_7
            \/ Lbl_8 \/ Lbl_9 \/ Lbl_10 \/ Lbl_11
@@ -422,5 +432,5 @@ Termination == <>(pc = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Tue Jul 16 20:00:48 CST 2019 by Dell
+\* Last modified Tue Jul 16 20:03:33 CST 2019 by Dell
 \* Created Tue Jul 16 19:39:20 CST 2019 by Dell
