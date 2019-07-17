@@ -28,7 +28,7 @@ Installation
 Binary Release
 +++++++++++++++++++
 
-`Download page`_ of binary releases for CPChain and Solidity.
+Refer to `Download page`_ for latest binary releases of CPChain.
 
 .. _`Download Page`: https://github.com/CPChain/chain/releases
 
@@ -47,6 +47,7 @@ You can always refer to
 
 
 for help.
+
 
 
 Source Code Building
@@ -293,10 +294,14 @@ Smart Contract
 
 .. _Solidity: ../solidity/index.html
 
+.. _solc-download:
+
 Solidity Binary Release
 +++++++++++++++++++++++++
 
-You can download corresponding solidity binary release from `Download Page`_.
+You can download corresponding solidity binary files from
+`Solc Releases <https://github.com/CPChain/solidity/releases>`_.
+
 
 And copy the solc binary file to ``/user/bin``.
 
