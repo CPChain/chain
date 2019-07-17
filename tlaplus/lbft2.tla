@@ -8,7 +8,7 @@ EXTENDS Integers, Sequences, FiniteSets
 variables
     proposers = <<"p1","p2">>,
     \* sequence of proposers
-    validators = {"v1","v2","v3","v4"},
+    validators = <<"v1","v2","v3","v4">>,
     sig = [v1|->1,v2|->2,v3|->3,v4|->4],
     state = [v \in validators |-> 0],
     prepareSig = [v \in validators |->{}],
@@ -45,12 +45,12 @@ define
     validatorCommitSig1 == "1" \notin commitSig["v1"]
     validatorState1 == state["v1"] /= 9
     \* GoToNextHeight is violated when all validators have advanced to next block height
-    GetToNextHeight ==
-        validators[1].state /=9 \/
-        validators[2].state /=9 \/
-        validators[3].state /=9 \/
-        validators[4].state /=9
-
+\*    GetToNextHeight ==
+\*        validators[1].state /=9 \/
+\*        validators[2].state /=9 \/
+\*        validators[3].state /=9 \/
+\*        validators[4].state /=9
+\*
 
 end define;
 
@@ -109,38 +109,42 @@ end macro;
 
 macro broadcast(sender, inputType) begin
     \* otherValidators := validatorIndices \ {number};
-    with receiver \in validators do
+    with receiver \in (validators \ {sender}) do
         \* skip;
         fsm(receiver, inputType, sender);
+\*        fsm("v1",inputType,sender);
+\*        fsm("v2",inputType,sender);
+\*        fsm("v3",inputType,sender);
+\*        fsm("v4",inputType,sender);
     end with;
 end macro;
 
 begin
 
     \* all validators receive the block message
-    fsm(validators[1], "block", "");
-    fsm(validators[2], "block", "");
-    fsm(validators[3], "block", "");
-    fsm(validators[4], "block", "");
+    fsm("v1", "block", "");
+    fsm("v2", "block", "");
+    fsm("v3", "block", "");
+    fsm("v4", "block", "");
 
     \* broadcast prepare message
 
-    broadcast(1,"prepareMsg");
-\*    broadcast(2,"prepareMsg");
-\*    broadcast(3,"prepareMsg");
-\*    broadcast(4,"prepareMSg");
+    broadcast("v1","prepareMsg");
+    broadcast("v2","prepareMsg");
+    broadcast("v3","prepareMsg");
+    broadcast("v4","prepareMSg");
 \*
 \*    \* broadcast commit message
-\*    broadcast(1,"commitMsg");
-\*    broadcast(2,"commitMsg");
-\*    broadcast(3,"commitMsg");
-\*    broadcast(4,"commitMsg");
+\*    broadcast("v1","commitMsg");
+\*    broadcast("v2","commitMsg");
+\*    broadcast("v3","commitMsg");
+\*    broadcast("v4","commitMsg");
 \*
 \*    \* broadcast validate message
-\*    broadcast(1,"validateMsg");
-\*    broadcast(2,"validateMsg");
-\*    broadcast(3,"validateMsg");
-\*    broadcast(4,"validateMsg");
+\*    broadcast("v1","validateMsg");
+\*    broadcast("v2","validateMsg");
+\*    broadcast("v3","validateMsg");
+\*    broadcast("v4","validateMsg");
 
 
 
@@ -174,12 +178,6 @@ validatorPrepareSig1 == "1" \notin prepareSig["v1"]
 validatorCommitSig1 == "1" \notin commitSig["v1"]
 validatorState1 == state["v1"] /= 9
 
-GetToNextHeight ==
-    validators[1].state /=9 \/
-    validators[2].state /=9 \/
-    validators[3].state /=9 \/
-    validators[4].state /=9
-
 
 vars == << proposers, validators, sig, state, prepareSig, commitSig,
            impeachPrepareSig, impeachCommitSig, validatorIndices, pc >>
@@ -197,47 +195,47 @@ Init == (* Global variables *)
         /\ pc = "Lbl_1"
 
 Lbl_1 == /\ pc = "Lbl_1"
-         /\ \/ /\ state[(validators[1])] = 0
+         /\ \/ /\ state["v1"] = 0
                /\ "block" = "block"
-               /\ prepareSig' = [prepareSig EXCEPT ![(validators[1])] = {sig[(validators[1])]}]
-               /\ state' = [state EXCEPT ![(validators[1])] = 1]
+               /\ prepareSig' = [prepareSig EXCEPT !["v1"] = {sig["v1"]}]
+               /\ state' = [state EXCEPT !["v1"] = 1]
                /\ UNCHANGED commitSig
-            \/ /\ state[(validators[1])] = 1
+            \/ /\ state["v1"] = 1
                /\ "block" = "prepareMsg"
                /\ state[""] = 1 \/ state[""] = 2
-               /\ prepareSig' = [prepareSig EXCEPT ![(validators[1])] = prepareSig[(validators[1])] \union prepareSig[""]]
-               /\ IF prepareCertificate((validators[1]))
-                     THEN /\ commitSig' = [commitSig EXCEPT ![(validators[1])] = {sig[(validators[1])]}]
-                          /\ state' = [state EXCEPT ![(validators[1])] = 2]
+               /\ prepareSig' = [prepareSig EXCEPT !["v1"] = prepareSig["v1"] \union prepareSig[""]]
+               /\ IF prepareCertificate("v1")
+                     THEN /\ commitSig' = [commitSig EXCEPT !["v1"] = {sig["v1"]}]
+                          /\ state' = [state EXCEPT !["v1"] = 2]
                      ELSE /\ TRUE
                           /\ UNCHANGED << state, commitSig >>
-            \/ /\ state[(validators[1])] = 2
+            \/ /\ state["v1"] = 2
                /\ "block" = "commitMsg"
                /\ state[""] = 2
-               /\ commitSig' = [commitSig EXCEPT ![(validators[1])] = commitSig[(validators[1])] \union commitSig[""]]
-               /\ IF commitCertificate((validators[1]))
-                     THEN /\ state' = [state EXCEPT ![(validators[1])] = 9]
+               /\ commitSig' = [commitSig EXCEPT !["v1"] = commitSig["v1"] \union commitSig[""]]
+               /\ IF commitCertificate("v1")
+                     THEN /\ state' = [state EXCEPT !["v1"] = 9]
                      ELSE /\ TRUE
                           /\ state' = state
                /\ UNCHANGED prepareSig
             \/ /\ "block" = "validateMsg"
                /\ "".state = 9
-               /\ commitSig' = [commitSig EXCEPT ![(validators[1])] = commitSig[(validators[1])] \union commitSig[""]]
-               /\ IF commitCertificate((validators[1]))
-                     THEN /\ state' = [state EXCEPT ![(validators[1])] = 9]
+               /\ commitSig' = [commitSig EXCEPT !["v1"] = commitSig["v1"] \union commitSig[""]]
+               /\ IF commitCertificate("v1")
+                     THEN /\ state' = [state EXCEPT !["v1"] = 9]
                      ELSE /\ TRUE
                           /\ state' = state
                /\ UNCHANGED prepareSig
             \/ /\ TRUE
                /\ UNCHANGED <<state, prepareSig, commitSig>>
-         /\ \/ /\ state'[(validators[2])] = 0
+         /\ \/ /\ state'["v2"] = 0
                /\ "block" = "block"
                /\ pc' = "Lbl_2"
-            \/ /\ state'[(validators[2])] = 1
+            \/ /\ state'["v2"] = 1
                /\ "block" = "prepareMsg"
                /\ state'[""] = 1 \/ state'[""] = 2
                /\ pc' = "Lbl_3"
-            \/ /\ state'[(validators[2])] = 2
+            \/ /\ state'["v2"] = 2
                /\ "block" = "commitMsg"
                /\ state'[""] = 2
                /\ pc' = "Lbl_4"
@@ -250,17 +248,17 @@ Lbl_1 == /\ pc = "Lbl_1"
                          impeachCommitSig, validatorIndices >>
 
 Lbl_2 == /\ pc = "Lbl_2"
-         /\ prepareSig' = [prepareSig EXCEPT ![(validators[2])] = {sig[(validators[2])]}]
-         /\ state' = [state EXCEPT ![(validators[2])] = 1]
+         /\ prepareSig' = [prepareSig EXCEPT !["v2"] = {sig["v2"]}]
+         /\ state' = [state EXCEPT !["v2"] = 1]
          /\ pc' = "Lbl_6"
          /\ UNCHANGED << proposers, validators, sig, commitSig,
                          impeachPrepareSig, impeachCommitSig, validatorIndices >>
 
 Lbl_3 == /\ pc = "Lbl_3"
-         /\ prepareSig' = [prepareSig EXCEPT ![(validators[2])] = prepareSig[(validators[2])] \union prepareSig[""]]
-         /\ IF prepareCertificate((validators[2]))
-               THEN /\ commitSig' = [commitSig EXCEPT ![(validators[2])] = {sig[(validators[2])]}]
-                    /\ state' = [state EXCEPT ![(validators[2])] = 2]
+         /\ prepareSig' = [prepareSig EXCEPT !["v2"] = prepareSig["v2"] \union prepareSig[""]]
+         /\ IF prepareCertificate("v2")
+               THEN /\ commitSig' = [commitSig EXCEPT !["v2"] = {sig["v2"]}]
+                    /\ state' = [state EXCEPT !["v2"] = 2]
                ELSE /\ TRUE
                     /\ UNCHANGED << state, commitSig >>
          /\ pc' = "Lbl_6"
@@ -268,9 +266,9 @@ Lbl_3 == /\ pc = "Lbl_3"
                          impeachCommitSig, validatorIndices >>
 
 Lbl_4 == /\ pc = "Lbl_4"
-         /\ commitSig' = [commitSig EXCEPT ![(validators[2])] = commitSig[(validators[2])] \union commitSig[""]]
-         /\ IF commitCertificate((validators[2]))
-               THEN /\ state' = [state EXCEPT ![(validators[2])] = 9]
+         /\ commitSig' = [commitSig EXCEPT !["v2"] = commitSig["v2"] \union commitSig[""]]
+         /\ IF commitCertificate("v2")
+               THEN /\ state' = [state EXCEPT !["v2"] = 9]
                ELSE /\ TRUE
                     /\ state' = state
          /\ pc' = "Lbl_6"
@@ -278,9 +276,9 @@ Lbl_4 == /\ pc = "Lbl_4"
                          impeachPrepareSig, impeachCommitSig, validatorIndices >>
 
 Lbl_5 == /\ pc = "Lbl_5"
-         /\ commitSig' = [commitSig EXCEPT ![(validators[2])] = commitSig[(validators[2])] \union commitSig[""]]
-         /\ IF commitCertificate((validators[2]))
-               THEN /\ state' = [state EXCEPT ![(validators[2])] = 9]
+         /\ commitSig' = [commitSig EXCEPT !["v2"] = commitSig["v2"] \union commitSig[""]]
+         /\ IF commitCertificate("v2")
+               THEN /\ state' = [state EXCEPT !["v2"] = 9]
                ELSE /\ TRUE
                     /\ state' = state
          /\ pc' = "Lbl_6"
@@ -288,47 +286,47 @@ Lbl_5 == /\ pc = "Lbl_5"
                          impeachPrepareSig, impeachCommitSig, validatorIndices >>
 
 Lbl_6 == /\ pc = "Lbl_6"
-         /\ \/ /\ state[(validators[3])] = 0
+         /\ \/ /\ state["v3"] = 0
                /\ "block" = "block"
-               /\ prepareSig' = [prepareSig EXCEPT ![(validators[3])] = {sig[(validators[3])]}]
-               /\ state' = [state EXCEPT ![(validators[3])] = 1]
+               /\ prepareSig' = [prepareSig EXCEPT !["v3"] = {sig["v3"]}]
+               /\ state' = [state EXCEPT !["v3"] = 1]
                /\ UNCHANGED commitSig
-            \/ /\ state[(validators[3])] = 1
+            \/ /\ state["v3"] = 1
                /\ "block" = "prepareMsg"
                /\ state[""] = 1 \/ state[""] = 2
-               /\ prepareSig' = [prepareSig EXCEPT ![(validators[3])] = prepareSig[(validators[3])] \union prepareSig[""]]
-               /\ IF prepareCertificate((validators[3]))
-                     THEN /\ commitSig' = [commitSig EXCEPT ![(validators[3])] = {sig[(validators[3])]}]
-                          /\ state' = [state EXCEPT ![(validators[3])] = 2]
+               /\ prepareSig' = [prepareSig EXCEPT !["v3"] = prepareSig["v3"] \union prepareSig[""]]
+               /\ IF prepareCertificate("v3")
+                     THEN /\ commitSig' = [commitSig EXCEPT !["v3"] = {sig["v3"]}]
+                          /\ state' = [state EXCEPT !["v3"] = 2]
                      ELSE /\ TRUE
                           /\ UNCHANGED << state, commitSig >>
-            \/ /\ state[(validators[3])] = 2
+            \/ /\ state["v3"] = 2
                /\ "block" = "commitMsg"
                /\ state[""] = 2
-               /\ commitSig' = [commitSig EXCEPT ![(validators[3])] = commitSig[(validators[3])] \union commitSig[""]]
-               /\ IF commitCertificate((validators[3]))
-                     THEN /\ state' = [state EXCEPT ![(validators[3])] = 9]
+               /\ commitSig' = [commitSig EXCEPT !["v3"] = commitSig["v3"] \union commitSig[""]]
+               /\ IF commitCertificate("v3")
+                     THEN /\ state' = [state EXCEPT !["v3"] = 9]
                      ELSE /\ TRUE
                           /\ state' = state
                /\ UNCHANGED prepareSig
             \/ /\ "block" = "validateMsg"
                /\ "".state = 9
-               /\ commitSig' = [commitSig EXCEPT ![(validators[3])] = commitSig[(validators[3])] \union commitSig[""]]
-               /\ IF commitCertificate((validators[3]))
-                     THEN /\ state' = [state EXCEPT ![(validators[3])] = 9]
+               /\ commitSig' = [commitSig EXCEPT !["v3"] = commitSig["v3"] \union commitSig[""]]
+               /\ IF commitCertificate("v3")
+                     THEN /\ state' = [state EXCEPT !["v3"] = 9]
                      ELSE /\ TRUE
                           /\ state' = state
                /\ UNCHANGED prepareSig
             \/ /\ TRUE
                /\ UNCHANGED <<state, prepareSig, commitSig>>
-         /\ \/ /\ state'[(validators[4])] = 0
+         /\ \/ /\ state'["v4"] = 0
                /\ "block" = "block"
                /\ pc' = "Lbl_7"
-            \/ /\ state'[(validators[4])] = 1
+            \/ /\ state'["v4"] = 1
                /\ "block" = "prepareMsg"
                /\ state'[""] = 1 \/ state'[""] = 2
                /\ pc' = "Lbl_8"
-            \/ /\ state'[(validators[4])] = 2
+            \/ /\ state'["v4"] = 2
                /\ "block" = "commitMsg"
                /\ state'[""] = 2
                /\ pc' = "Lbl_9"
@@ -336,90 +334,51 @@ Lbl_6 == /\ pc = "Lbl_6"
                /\ "".state = 9
                /\ pc' = "Lbl_10"
             \/ /\ TRUE
-               /\ pc' = "Lbl_11"
+               /\ pc' = "Done"
          /\ UNCHANGED << proposers, validators, sig, impeachPrepareSig,
                          impeachCommitSig, validatorIndices >>
 
 Lbl_7 == /\ pc = "Lbl_7"
-         /\ prepareSig' = [prepareSig EXCEPT ![(validators[4])] = {sig[(validators[4])]}]
-         /\ state' = [state EXCEPT ![(validators[4])] = 1]
-         /\ pc' = "Lbl_11"
+         /\ prepareSig' = [prepareSig EXCEPT !["v4"] = {sig["v4"]}]
+         /\ state' = [state EXCEPT !["v4"] = 1]
+         /\ pc' = "Done"
          /\ UNCHANGED << proposers, validators, sig, commitSig,
                          impeachPrepareSig, impeachCommitSig, validatorIndices >>
 
 Lbl_8 == /\ pc = "Lbl_8"
-         /\ prepareSig' = [prepareSig EXCEPT ![(validators[4])] = prepareSig[(validators[4])] \union prepareSig[""]]
-         /\ IF prepareCertificate((validators[4]))
-               THEN /\ commitSig' = [commitSig EXCEPT ![(validators[4])] = {sig[(validators[4])]}]
-                    /\ state' = [state EXCEPT ![(validators[4])] = 2]
+         /\ prepareSig' = [prepareSig EXCEPT !["v4"] = prepareSig["v4"] \union prepareSig[""]]
+         /\ IF prepareCertificate("v4")
+               THEN /\ commitSig' = [commitSig EXCEPT !["v4"] = {sig["v4"]}]
+                    /\ state' = [state EXCEPT !["v4"] = 2]
                ELSE /\ TRUE
                     /\ UNCHANGED << state, commitSig >>
-         /\ pc' = "Lbl_11"
+         /\ pc' = "Done"
          /\ UNCHANGED << proposers, validators, sig, impeachPrepareSig,
                          impeachCommitSig, validatorIndices >>
 
 Lbl_9 == /\ pc = "Lbl_9"
-         /\ commitSig' = [commitSig EXCEPT ![(validators[4])] = commitSig[(validators[4])] \union commitSig[""]]
-         /\ IF commitCertificate((validators[4]))
-               THEN /\ state' = [state EXCEPT ![(validators[4])] = 9]
+         /\ commitSig' = [commitSig EXCEPT !["v4"] = commitSig["v4"] \union commitSig[""]]
+         /\ IF commitCertificate("v4")
+               THEN /\ state' = [state EXCEPT !["v4"] = 9]
                ELSE /\ TRUE
                     /\ state' = state
-         /\ pc' = "Lbl_11"
+         /\ pc' = "Done"
          /\ UNCHANGED << proposers, validators, sig, prepareSig,
                          impeachPrepareSig, impeachCommitSig, validatorIndices >>
 
 Lbl_10 == /\ pc = "Lbl_10"
-          /\ commitSig' = [commitSig EXCEPT ![(validators[4])] = commitSig[(validators[4])] \union commitSig[""]]
-          /\ IF commitCertificate((validators[4]))
-                THEN /\ state' = [state EXCEPT ![(validators[4])] = 9]
+          /\ commitSig' = [commitSig EXCEPT !["v4"] = commitSig["v4"] \union commitSig[""]]
+          /\ IF commitCertificate("v4")
+                THEN /\ state' = [state EXCEPT !["v4"] = 9]
                 ELSE /\ TRUE
                      /\ state' = state
-          /\ pc' = "Lbl_11"
+          /\ pc' = "Done"
           /\ UNCHANGED << proposers, validators, sig, prepareSig,
                           impeachPrepareSig, impeachCommitSig,
                           validatorIndices >>
 
-Lbl_11 == /\ pc = "Lbl_11"
-          /\ \E receiver \in validators:
-               \/ /\ state[receiver] = 0
-                  /\ "prepareMsg" = "block"
-                  /\ prepareSig' = [prepareSig EXCEPT ![receiver] = {sig[receiver]}]
-                  /\ state' = [state EXCEPT ![receiver] = 1]
-                  /\ UNCHANGED commitSig
-               \/ /\ state[receiver] = 1
-                  /\ "prepareMsg" = "prepareMsg"
-                  /\ state[1] = 1 \/ state[1] = 2
-                  /\ prepareSig' = [prepareSig EXCEPT ![receiver] = prepareSig[receiver] \union prepareSig[1]]
-                  /\ IF prepareCertificate(receiver)
-                        THEN /\ commitSig' = [commitSig EXCEPT ![receiver] = {sig[receiver]}]
-                             /\ state' = [state EXCEPT ![receiver] = 2]
-                        ELSE /\ TRUE
-                             /\ UNCHANGED << state, commitSig >>
-               \/ /\ state[receiver] = 2
-                  /\ "prepareMsg" = "commitMsg"
-                  /\ state[1] = 2
-                  /\ commitSig' = [commitSig EXCEPT ![receiver] = commitSig[receiver] \union commitSig[1]]
-                  /\ IF commitCertificate(receiver)
-                        THEN /\ state' = [state EXCEPT ![receiver] = 9]
-                        ELSE /\ TRUE
-                             /\ state' = state
-                  /\ UNCHANGED prepareSig
-               \/ /\ "prepareMsg" = "validateMsg"
-                  /\ 1.state = 9
-                  /\ commitSig' = [commitSig EXCEPT ![receiver] = commitSig[receiver] \union commitSig[1]]
-                  /\ IF commitCertificate(receiver)
-                        THEN /\ state' = [state EXCEPT ![receiver] = 9]
-                        ELSE /\ TRUE
-                             /\ state' = state
-                  /\ UNCHANGED prepareSig
-               \/ /\ TRUE
-                  /\ UNCHANGED <<state, prepareSig, commitSig>>
-          /\ pc' = "Done"
-          /\ UNCHANGED << proposers, validators, sig, impeachPrepareSig,
-                          impeachCommitSig, validatorIndices >>
-
 Next == Lbl_1 \/ Lbl_2 \/ Lbl_3 \/ Lbl_4 \/ Lbl_5 \/ Lbl_6 \/ Lbl_7
-           \/ Lbl_8 \/ Lbl_9 \/ Lbl_10 \/ Lbl_11
+           \/ Lbl_8 \/ Lbl_9 \/ Lbl_10
            \/ (* Disjunct to prevent deadlock on termination *)
               (pc = "Done" /\ UNCHANGED vars)
 
@@ -432,5 +391,5 @@ Termination == <>(pc = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Tue Jul 16 20:03:33 CST 2019 by Dell
+\* Last modified Wed Jul 17 20:44:38 CST 2019 by Dell
 \* Created Tue Jul 16 19:39:20 CST 2019 by Dell
