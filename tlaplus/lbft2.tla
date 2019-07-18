@@ -19,7 +19,6 @@ variables
     \* 0,1,2 represent idle, prepare, commit
     \* 3,4 represent impeach prepare and impeach commit state
     \* 9 represents a consensus of normal case
-    \* imp represents impeachment
     \* four sigs refers to signatures for different messages
 
 define
@@ -199,7 +198,7 @@ end algorithm;*)
 
 
 \* BEGIN TRANSLATION
-\* Parameter inputType of procedure fsm at line 60 col 18 changed to inputType_
+\* Parameter inputType of procedure fsm at line 59 col 18 changed to inputType_
 CONSTANT defaultInitValue
 VARIABLES proposers, validators, sig, state, prepareSig, commitSig,
           impeachPrepareSig, impeachCommitSig, pc, stack
@@ -444,5 +443,5 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Jul 18 17:45:22 CST 2019 by Dell
+\* Last modified Thu Jul 18 17:48:27 CST 2019 by Dell
 \* Created Tue Jul 16 19:39:20 CST 2019 by Dell
