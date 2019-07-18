@@ -23,15 +23,16 @@ Quick Reference:
 #. :ref:`fusion-api` and :ref:`rpc-api`
 #. :ref:`quick-start-beginner` and :ref:`quick-start`
 #. :ref:`overview`
-#. `Solidity`_
+#. `Solidity`_ (i.e., Solc)
 #. :ref:`consensus` and :ref:`implementation`
 #. :ref:`performance`
 #. :ref:`test-overview`
-#. `Download Page`_
+#. `Download Page for CPChain`_ and :ref:`solc-download`
 
 
-.. _`Download Page`: https://github.com/CPChain/chain/releases
+.. _`Download Page for CPChain`: https://github.com/CPChain/chain/releases
 .. _Solidity: ./solidity/index.html
+
 
 
 Table of Contents
