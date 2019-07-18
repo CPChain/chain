@@ -96,7 +96,7 @@ Fsm:
         end if;
     or  \* the case of receiving validate message
         await inputType = "validateMsg";
-        await input.state = 9;
+        await state[input] = 9;
         \* a validate message has at least 3 commit signatures
         commitSig[v] := commitSig[v] \union commitSig[input];
         if commitCertificate(v)
@@ -104,9 +104,9 @@ Fsm:
         \* transfer to idle state in next height given the certificate
             state[v] := 9;
         end if;
-\*    or
-\*        await state[v] = 9;
-\*        skip;
+    or
+        \* await state[v] = 9;
+        skip;
     end either;
     return;
 end procedure;
@@ -150,12 +150,12 @@ process validator \in validators
 begin
 Idle:
     call fsm(self,"block","");
-\*Prepare:
-\*    call broadcast(self, "prepareMsg");
-\*Commit:
-\*    call broadcast(self, "commitMsg");
-\*Validate:
-\*    call broadcast(self, "validateMsg");
+Prepare:
+    call broadcast(self, "prepareMsg");
+Commit:
+    call broadcast(self, "commitMsg");
+Validate:
+    call broadcast(self, "validateMsg");
 end process
 
 \*begin
@@ -280,13 +280,15 @@ Fsm(self) == /\ pc[self] = "Fsm"
                               /\ state' = state
                    /\ UNCHANGED prepareSig
                 \/ /\ inputType_[self] = "validateMsg"
-                   /\ input[self].state = 9
+                   /\ state[input[self]] = 9
                    /\ commitSig' = [commitSig EXCEPT ![v[self]] = commitSig[v[self]] \union commitSig[input[self]]]
                    /\ IF commitCertificate(v[self])
                          THEN /\ state' = [state EXCEPT ![v[self]] = 9]
                          ELSE /\ TRUE
                               /\ state' = state
                    /\ UNCHANGED prepareSig
+                \/ /\ TRUE
+                   /\ UNCHANGED <<state, prepareSig, commitSig>>
              /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
              /\ v' = [v EXCEPT ![self] = Head(stack[self]).v]
              /\ inputType_' = [inputType_ EXCEPT ![self] = Head(stack[self]).inputType_]
@@ -374,7 +376,7 @@ Idle(self) == /\ pc[self] = "Idle"
               /\ /\ input' = [input EXCEPT ![self] = ""]
                  /\ inputType_' = [inputType_ EXCEPT ![self] = "block"]
                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "fsm",
-                                                          pc        |->  "Done",
+                                                          pc        |->  "Prepare",
                                                           v         |->  v[self],
                                                           inputType_ |->  inputType_[self],
                                                           input     |->  input[self] ] >>
@@ -385,7 +387,47 @@ Idle(self) == /\ pc[self] = "Idle"
                               commitSig, impeachPrepareSig, impeachCommitSig,
                               sender, inputType >>
 
-validator(self) == Idle(self)
+Prepare(self) == /\ pc[self] = "Prepare"
+                 /\ /\ inputType' = [inputType EXCEPT ![self] = "prepareMsg"]
+                    /\ sender' = [sender EXCEPT ![self] = self]
+                    /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcast",
+                                                             pc        |->  "Commit",
+                                                             sender    |->  sender[self],
+                                                             inputType |->  inputType[self] ] >>
+                                                         \o stack[self]]
+                 /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
+                 /\ UNCHANGED << proposers, validators, sig, state, prepareSig,
+                                 commitSig, impeachPrepareSig,
+                                 impeachCommitSig, v, inputType_, input >>
+
+Commit(self) == /\ pc[self] = "Commit"
+                /\ /\ inputType' = [inputType EXCEPT ![self] = "commitMsg"]
+                   /\ sender' = [sender EXCEPT ![self] = self]
+                   /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcast",
+                                                            pc        |->  "Validate",
+                                                            sender    |->  sender[self],
+                                                            inputType |->  inputType[self] ] >>
+                                                        \o stack[self]]
+                /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
+                /\ UNCHANGED << proposers, validators, sig, state, prepareSig,
+                                commitSig, impeachPrepareSig, impeachCommitSig,
+                                v, inputType_, input >>
+
+Validate(self) == /\ pc[self] = "Validate"
+                  /\ /\ inputType' = [inputType EXCEPT ![self] = "validateMsg"]
+                     /\ sender' = [sender EXCEPT ![self] = self]
+                     /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcast",
+                                                              pc        |->  "Done",
+                                                              sender    |->  sender[self],
+                                                              inputType |->  inputType[self] ] >>
+                                                          \o stack[self]]
+                  /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
+                  /\ UNCHANGED << proposers, validators, sig, state,
+                                  prepareSig, commitSig, impeachPrepareSig,
+                                  impeachCommitSig, v, inputType_, input >>
+
+validator(self) == Idle(self) \/ Prepare(self) \/ Commit(self)
+                      \/ Validate(self)
 
 Next == (\E self \in ProcSet:  \/ fsm(self) \/ foreverLoop(self)
                                \/ broadcast(self))
@@ -402,5 +444,5 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Jul 18 17:40:14 CST 2019 by Dell
+\* Last modified Thu Jul 18 17:45:22 CST 2019 by Dell
 \* Created Tue Jul 16 19:39:20 CST 2019 by Dell
