@@ -22,37 +22,46 @@ var (
 
 // configuration items
 var (
-	chainId        = ""
+	host           = ""
 	gatewayAddress = ""
 )
 
-func InitMetrics(port, gatewayURL string) {
+func InitPushMetrics(port, gatewayURL string) {
 	ips := getIP()
-	log.Debug("InitMetrics", "ips", ips)
+	log.Debug("InitPushMetrics", "ips", ips)
 	if len(ips) > 0 {
-		chainId = ips[0] + ":" + port
+		host = ips[0] + ":" + port
 	}
 	gatewayAddress = gatewayURL
-	log.Debug("InitMetrics", "chainId", chainId, "gatewayAddress", gatewayAddress)
+	log.Debug("InitPushMetrics", "host", host, "gatewayAddress", gatewayAddress)
 }
 
-func NeedMetrics() bool {
+func NeedPushMetrics() bool {
 	return gatewayAddress != ""
 }
 
-func ReportBlockNumberGauge(exportedJob string, blockNumber float64) {
+func UpdateBlockNumberGauge(blockNumber float64) {
 	blockNumberCounter.Set(blockNumber)
-	reportGauge(gatewayAddress, exportedJob, chainId, blockNumberCounter)
 }
 
-func ReportTxsNumberGauge(exportedJob string, txsNumber float64) {
+func UpdateTxsNumberGauge(txsNumber float64) {
 	txsNumberCounter.Set(txsNumber)
-	reportGauge(gatewayAddress, exportedJob, chainId, txsNumberCounter)
 }
 
-func ReportInsertionElapsedTime(exportedJob string, elapsed float64) {
+func UpdateInsertionElapsedTime(elapsed float64) {
 	insertionElapsedTime.Set(elapsed)
-	reportGauge(gatewayAddress, exportedJob, chainId, insertionElapsedTime)
+}
+
+func ReportBlockNumberGauge(exportedJob string) {
+	reportGauge(gatewayAddress, exportedJob, host, blockNumberCounter)
+}
+
+func ReportTxsNumberGauge(exportedJob string) {
+	reportGauge(gatewayAddress, exportedJob, host, txsNumberCounter)
+}
+
+func ReportInsertionElapsedTime(exportedJob string) {
+	reportGauge(gatewayAddress, exportedJob, host, insertionElapsedTime)
 }
 
 func reportGauge(monitorURL, exportedJob, host string, gauge prometheus.Gauge) {

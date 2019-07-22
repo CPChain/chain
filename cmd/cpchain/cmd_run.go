@@ -319,7 +319,13 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 
 	// init metrics
 	if ctx.IsSet(flags.MetricGatewayFlagName) {
-		chainmetrics.InitMetrics(ctx.String(flags.PortFlagName), ctx.String(flags.MetricGatewayFlagName))
+		chainmetrics.InitPushMetrics(ctx.String(flags.PortFlagName), ctx.String(flags.MetricGatewayFlagName))
+	}
+
+	// start Expose Metrics
+	if ctx.IsSet(flags.MetricExposeAddressFlagName) {
+		chainmetrics.InitExposeMetrics(ctx.String(flags.MetricExposeAddressFlagName))
+		go chainmetrics.StartExposeMetrics()
 	}
 
 	startNode(n)
