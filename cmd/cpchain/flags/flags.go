@@ -270,7 +270,7 @@ const (
 	ProfileFlagName             = "profile"
 	ProfileAddressFlagName      = "profileaddr"
 	MetricGatewayFlagName       = "metricgateway"
-	MetricExposeAddressFlagName = "metricexposeaddress"
+	MetricExposeAddressFlagName = "metric_expose_addr"
 )
 
 var NodeFlags = []cli.Flag{
