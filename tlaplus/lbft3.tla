@@ -1,7 +1,7 @@
 ------------------------------- MODULE lbft3 -------------------------------
 
 
-EXTENDS Integers, Sequences, FiniteSets
+EXTENDS Integers, Sequences, FiniteSets, TLC
 
 
 (*
@@ -44,7 +44,7 @@ define
     validatorCommitSig1 == 1 \notin commitSig["v1"]
     validatorPrepareCertificate1 == ~prepareCertificate("v1")
     validatorPrepareCertificate4 == ~prepareCertificate("v4")
-    validatorState1 == state["v1"] /= 2
+    validatorState1 == state["v1"] /= 9
     validatorState4 == state["v4"] /= 2
     \* GoToNextHeight is violated when all validators have advanced to next block height
 \*    GetToNextHeight ==
@@ -58,23 +58,24 @@ end define;
 
 procedure addSig(receiver, inputType, sender) begin
 PrepareMsg:
-    if inputType = "prepareMsg" /\ state[sender] = 1
+    if inputType = "prepareMsg"
     \* accumulate prepare signatures
     then
-        prepareSig[receiver] := prepareSig[sender] \union prepareSig[sender];
+        prepareSig[receiver] := prepareSig[receiver] \union prepareSig[sender];
     end if;
 
 CommitMsg:
-    if inputType = "commitMsg" /\ state[sender] = 2
+    if inputType = "commitMsg"
     then
-        prepareSig[receiver] := prepareSig[sender] \union prepareSig[sender];
-        commitSig[receiver] := commitSig[sender] \union commitSig[sender];
+        prepareSig[receiver] := prepareSig[receiver] \union prepareSig[sender];
+        commitSig[receiver] := commitSig[receiver] \union commitSig[sender];
     end if;
+
 ValidateMsg:
-    if inputType = "validateMsg" /\ state[sender] = 9
+    if inputType = "validateMsg"
     then
-        prepareSig[receiver] := prepareSig[sender] \union prepareSig[sender];
-        commitSig[receiver] := commitSig[sender] \union commitSig[sender];
+        prepareSig[receiver] := prepareSig[receiver] \union prepareSig[sender];
+        commitSig[receiver] := commitSig[receiver] \union commitSig[sender];
     end if;
     return;
 end procedure;
@@ -104,8 +105,9 @@ Fsm:
         either \* idle state
             \* transfer to prepare state given a block
             await state[self] = 0;
-            prepareSig[self] := {sig[self]};
+            prepareSig[self] := prepareSig[self] \union {sig[self]};
             state[self] := 1;
+            \* print prepareSig;
             call broadcast(self, "prepareMsg");
 
         or  \* prepare state
@@ -113,9 +115,10 @@ Fsm:
             await state[self] = 1;
             await prepareCertificate(self);
             \* transfer to commit state if collect a certificate
-                commitSig[self] := commitSig[self] \union {sig[self]};
-                state[self] := 2;
-                call broadcast(self,"commitMsg");
+            commitSig[self] := commitSig[self] \union {sig[self]};
+            state[self] := 2;
+            print commitSig;
+            call broadcast(self,"commitMsg");
 
         or  \* commit state
             \* states of both v and input should be commit state
@@ -163,7 +166,7 @@ validatorPrepareSig1 == 1 \notin prepareSig["v1"]
 validatorCommitSig1 == 1 \notin commitSig["v1"]
 validatorPrepareCertificate1 == ~prepareCertificate("v1")
 validatorPrepareCertificate4 == ~prepareCertificate("v4")
-validatorState1 == state["v1"] /= 2
+validatorState1 == state["v1"] /= 9
 validatorState4 == state["v4"] /= 2
 
 VARIABLES receiver, inputType_, sender_, sender, inputType, consensus
@@ -196,8 +199,8 @@ Init == (* Global variables *)
         /\ pc = [self \in ProcSet |-> "Fsm"]
 
 PrepareMsg(self) == /\ pc[self] = "PrepareMsg"
-                    /\ IF inputType_[self] = "prepareMsg" /\ state[sender_[self]] = 1
-                          THEN /\ prepareSig' = [prepareSig EXCEPT ![receiver[self]] = prepareSig[sender_[self]] \union prepareSig[sender_[self]]]
+                    /\ IF inputType_[self] = "prepareMsg"
+                          THEN /\ prepareSig' = [prepareSig EXCEPT ![receiver[self]] = prepareSig[receiver[self]] \union prepareSig[sender_[self]]]
                           ELSE /\ TRUE
                                /\ UNCHANGED prepareSig
                     /\ pc' = [pc EXCEPT ![self] = "CommitMsg"]
@@ -208,9 +211,9 @@ PrepareMsg(self) == /\ pc[self] = "PrepareMsg"
                                     consensus >>
 
 CommitMsg(self) == /\ pc[self] = "CommitMsg"
-                   /\ IF inputType_[self] = "commitMsg" /\ state[sender_[self]] = 2
-                         THEN /\ prepareSig' = [prepareSig EXCEPT ![receiver[self]] = prepareSig[sender_[self]] \union prepareSig[sender_[self]]]
-                              /\ commitSig' = [commitSig EXCEPT ![receiver[self]] = commitSig[sender_[self]] \union commitSig[sender_[self]]]
+                   /\ IF inputType_[self] = "commitMsg"
+                         THEN /\ prepareSig' = [prepareSig EXCEPT ![receiver[self]] = prepareSig[receiver[self]] \union prepareSig[sender_[self]]]
+                              /\ commitSig' = [commitSig EXCEPT ![receiver[self]] = commitSig[receiver[self]] \union commitSig[sender_[self]]]
                          ELSE /\ TRUE
                               /\ UNCHANGED << prepareSig, commitSig >>
                    /\ pc' = [pc EXCEPT ![self] = "ValidateMsg"]
@@ -220,9 +223,9 @@ CommitMsg(self) == /\ pc[self] = "CommitMsg"
                                    inputType, consensus >>
 
 ValidateMsg(self) == /\ pc[self] = "ValidateMsg"
-                     /\ IF inputType_[self] = "validateMsg" /\ state[sender_[self]] = 9
-                           THEN /\ prepareSig' = [prepareSig EXCEPT ![receiver[self]] = prepareSig[sender_[self]] \union prepareSig[sender_[self]]]
-                                /\ commitSig' = [commitSig EXCEPT ![receiver[self]] = commitSig[sender_[self]] \union commitSig[sender_[self]]]
+                     /\ IF inputType_[self] = "validateMsg"
+                           THEN /\ prepareSig' = [prepareSig EXCEPT ![receiver[self]] = prepareSig[receiver[self]] \union prepareSig[sender_[self]]]
+                                /\ commitSig' = [commitSig EXCEPT ![receiver[self]] = commitSig[receiver[self]] \union commitSig[sender_[self]]]
                            ELSE /\ TRUE
                                 /\ UNCHANGED << prepareSig, commitSig >>
                      /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
@@ -316,7 +319,7 @@ broadcast(self) == Broadcast1(self) \/ Broadcast2(self) \/ Broadcast3(self)
 Fsm(self) == /\ pc[self] = "Fsm"
              /\ IF ~consensus[self]
                    THEN /\ \/ /\ state[self] = 0
-                              /\ prepareSig' = [prepareSig EXCEPT ![self] = {sig[self]}]
+                              /\ prepareSig' = [prepareSig EXCEPT ![self] = prepareSig[self] \union {sig[self]}]
                               /\ state' = [state EXCEPT ![self] = 1]
                               /\ /\ inputType' = [inputType EXCEPT ![self] = "prepareMsg"]
                                  /\ sender' = [sender EXCEPT ![self] = self]
@@ -331,6 +334,7 @@ Fsm(self) == /\ pc[self] = "Fsm"
                               /\ prepareCertificate(self)
                               /\ commitSig' = [commitSig EXCEPT ![self] = commitSig[self] \union {sig[self]}]
                               /\ state' = [state EXCEPT ![self] = 2]
+                              /\ PrintT(commitSig')
                               /\ /\ inputType' = [inputType EXCEPT ![self] = "commitMsg"]
                                  /\ sender' = [sender EXCEPT ![self] = self]
                                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcast",
@@ -378,5 +382,5 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Mon Jul 22 17:33:01 CST 2019 by Dell
+\* Last modified Mon Jul 22 19:33:54 CST 2019 by Dell
 \* Created Mon Jul 22 15:23:05 CST 2019 by Dell
