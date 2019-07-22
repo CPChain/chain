@@ -442,6 +442,3 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 
 =============================================================================
-\* Modification History
-\* Last modified Thu Jul 18 17:48:27 CST 2019 by Dell
-\* Created Tue Jul 16 19:39:20 CST 2019 by Dell
