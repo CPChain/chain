@@ -1518,10 +1518,16 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		stats.report(chain, i, cache)
 		// send metrics msg to monitor(prometheus)
-		if chainmetrics.NeedMetrics() {
-			go chainmetrics.ReportBlockNumberGauge("blocknumber", float64(chain[i].Number().Int64()))
-			go chainmetrics.ReportTxsNumberGauge("txs", float64(len(chain[i].Transactions())))
-			go chainmetrics.ReportInsertionElapsedTime("insertion_elapsed", float64(time.Since(bstart).Nanoseconds()*int64(time.Nanosecond)/int64(time.Millisecond)))
+		if chainmetrics.NeedPushMetrics() || chainmetrics.NeedExposeMetrics() {
+			go chainmetrics.UpdateBlockNumberGauge(float64(chain[i].Number().Int64()))
+			go chainmetrics.UpdateTxsNumberGauge(float64(len(chain[i].Transactions())))
+			go chainmetrics.UpdateInsertionElapsedTime(float64(time.Since(bstart).Nanoseconds() * int64(time.Nanosecond) / int64(time.Millisecond)))
+
+			if chainmetrics.NeedPushMetrics() {
+				go chainmetrics.ReportBlockNumberGauge("blocknumber")
+				go chainmetrics.ReportTxsNumberGauge("txs")
+				go chainmetrics.ReportInsertionElapsedTime("insertion_elapsed")
+			}
 		}
 	}
 	// Append a single chain head event if we've progressed the chain

@@ -389,8 +389,11 @@ func (s *Synchronizer) blocksHandler(errCh chan error, successCh chan struct{}, 
 				return
 			}
 			// send metrics msg to monitor(prometheus)
-			if chainmetrics.NeedMetrics() {
-				go chainmetrics.ReportBlockNumberGauge("blocknumber", float64(s.blockchain.CurrentFastBlock().NumberU64()))
+			if chainmetrics.NeedPushMetrics() {
+				go func() {
+					chainmetrics.UpdateBlockNumberGauge(float64(s.blockchain.CurrentFastBlock().NumberU64()))
+					chainmetrics.ReportBlockNumberGauge("blocknumber")
+				}()
 			}
 			log.Debug("insert blocks with receipts", "elapsed", common.PrettyDuration(time.Since(start)))
 		}

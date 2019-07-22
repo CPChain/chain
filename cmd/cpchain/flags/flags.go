@@ -266,10 +266,11 @@ var P2pFlags = []cli.Flag{
 }
 
 const (
-	IdentityFlagName       = "identity"
-	ProfileFlagName        = "profile"
-	ProfileAddressFlagName = "profileaddr"
-	MetricGatewayFlagName  = "metricgateway"
+	IdentityFlagName            = "identity"
+	ProfileFlagName             = "profile"
+	ProfileAddressFlagName      = "profileaddr"
+	MetricGatewayFlagName       = "metricgateway"
+	MetricExposeAddressFlagName = "metricexposeaddress"
 )
 
 var NodeFlags = []cli.Flag{
@@ -289,6 +290,11 @@ var NodeFlags = []cli.Flag{
 		Name:  MetricGatewayFlagName,
 		Usage: "Metric Gateway Address",
 		Value: "",
+	},
+	cli.StringFlag{
+		Name:  MetricExposeAddressFlagName,
+		Usage: "Metric Expose Address",
+		Value: ":9100",
 	},
 }
 
