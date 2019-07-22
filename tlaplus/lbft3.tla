@@ -47,12 +47,12 @@ define
     validatorState1 == state["v1"] /= 9
     validatorState4 == state["v4"] /= 2
     \* GoToNextHeight is violated when all validators have advanced to next block height
-\*    GetToNextHeight ==
-\*        validators[1].state /=9 \/
-\*        validators[2].state /=9 \/
-\*        validators[3].state /=9 \/
-\*        validators[4].state /=9
-\*
+    GetToNextHeight ==
+        state["v1"] /=9 \/
+        state["v2"] /=9 \/
+        state["v3"] /=9 \/
+        state["v4"] /=9
+
 
 end define;
 
@@ -117,7 +117,7 @@ Fsm:
             \* transfer to commit state if collect a certificate
             commitSig[self] := commitSig[self] \union {sig[self]};
             state[self] := 2;
-            print commitSig;
+            \* print commitSig;
             call broadcast(self,"commitMsg");
 
         or  \* commit state
@@ -128,8 +128,8 @@ Fsm:
             state[self] := 9;
             consensus := TRUE;
             call broadcast(self,"validateMsg");
-        or
-            skip;
+\*        or
+\*            skip;
         end either;
     end while;
 end process
@@ -168,6 +168,12 @@ validatorPrepareCertificate1 == ~prepareCertificate("v1")
 validatorPrepareCertificate4 == ~prepareCertificate("v4")
 validatorState1 == state["v1"] /= 9
 validatorState4 == state["v4"] /= 2
+
+GetToNextHeight ==
+    state["v1"] /=9 \/
+    state["v2"] /=9 \/
+    state["v3"] /=9 \/
+    state["v4"] /=9
 
 VARIABLES receiver, inputType_, sender_, sender, inputType, consensus
 
@@ -334,7 +340,6 @@ Fsm(self) == /\ pc[self] = "Fsm"
                               /\ prepareCertificate(self)
                               /\ commitSig' = [commitSig EXCEPT ![self] = commitSig[self] \union {sig[self]}]
                               /\ state' = [state EXCEPT ![self] = 2]
-                              /\ PrintT(commitSig')
                               /\ /\ inputType' = [inputType EXCEPT ![self] = "commitMsg"]
                                  /\ sender' = [sender EXCEPT ![self] = self]
                                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcast",
@@ -357,9 +362,6 @@ Fsm(self) == /\ pc[self] = "Fsm"
                                                                       \o stack[self]]
                               /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
                               /\ UNCHANGED <<prepareSig, commitSig>>
-                           \/ /\ TRUE
-                              /\ pc' = [pc EXCEPT ![self] = "Fsm"]
-                              /\ UNCHANGED <<state, prepareSig, commitSig, stack, sender, inputType, consensus>>
                    ELSE /\ pc' = [pc EXCEPT ![self] = "Done"]
                         /\ UNCHANGED << state, prepareSig, commitSig, stack,
                                         sender, inputType, consensus >>
