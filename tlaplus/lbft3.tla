@@ -8,8 +8,9 @@ EXTENDS Integers, Sequences, FiniteSets, TLC
 --algorithm lbft3
 variables
     proposers = {"p1"},
-    \* sequence of proposers
+    \* set of proposers
     validators = {"v1","v2","v3","v4"},
+    possibleHeights = {1},
     sig = [v1|->1,v2|->2,v3|->3,v4|->4],
     predeterminedBlockHeight = [p1|->1],
     state = [va \in validators |-> 0],
@@ -17,7 +18,7 @@ variables
     commitSig = [va \in validators |->{}],
     impeachPrepareSig = [va \in validators |->{}],
     impeachCommitSig = [va \in validators |->{}],
-    blockCache = [va \in validators |->""],
+    blockCache = [va \in validators|->""],
     blockReceiver = [va \in validators |->""],
     validatorBlockHeight = [va \in validators |-> 1],
     proposerBlockHeight = [pr \in proposers |-> 1],
@@ -108,12 +109,14 @@ Broadcast4:
     return;
 end procedure;
 
-procedure broadcastAll(sender, inputType, block) begin
+procedure broadcastAll(sender, inputType, block, height) begin
 broadcastAll:
     if inputType = "blockInsertMsg" then
         with proposer \in proposers do
-            proposerChain[proposer] := block;
-            proposerBlockHeight[proposer] := proposerBlockHeight[proposer]+1;
+            if proposerBlockHeight[proposer] = height then
+                proposerChain[proposer] := Append(proposerChain[proposer],block);
+                proposerBlockHeight[proposer] := proposerBlockHeight[proposer]+1;
+            end if;
         end with;
     end if;
     return;
@@ -131,7 +134,7 @@ Fsm:
             blockCache[self] := blockReceiver[self];
             prepareSig[self] := prepareSig[self] \union {sig[self]};
             state[self] := 1;
-            \* print prepareSig;
+            print prepareSig;
             call broadcast(self, "prepareMsg");
 
         or  \* prepare state
@@ -151,9 +154,12 @@ Fsm:
             \* transfer to idle state in next height given the certificate
             state[self] := 9;
             consensus := TRUE;
-            validatorBlockHeight[self] := validatorBlockHeight[self]+1;
+            validatorChain[self] := Append(validatorChain[self], blockCache[self]);
             call broadcast(self,"validateMsg");
-
+            BroadcastAll:
+            call broadcastAll(sender, "blockInsertMsg", blockCache[self], validatorBlockHeight[self]);
+            HeightAugmentation:
+            validatorBlockHeight[self] := validatorBlockHeight[self]+1;
 \*        or
 \*            skip;
         end either;
@@ -163,7 +169,7 @@ end process;
 process proposer \in proposers
 begin
 Proposer:
-    await proposerBlockHeight = predeterminedBlockHeight[self];
+    await proposerBlockHeight[self] = predeterminedBlockHeight[self];
 SendBlock1:
     blockReceiver["v1"] := self;
 SendBlock2:
@@ -178,16 +184,17 @@ end process;
 
 end algorithm;*)
 \* BEGIN TRANSLATION
-\* Label broadcastAll of procedure broadcastAll at line 113 col 5 changed to broadcastAll_
-\* Parameter inputType of procedure addSig at line 69 col 28 changed to inputType_
-\* Parameter sender of procedure addSig at line 69 col 39 changed to sender_
-\* Parameter sender of procedure broadcast at line 99 col 21 changed to sender_b
-\* Parameter inputType of procedure broadcast at line 99 col 29 changed to inputType_b
+\* Label broadcastAll of procedure broadcastAll at line 114 col 5 changed to broadcastAll_
+\* Parameter inputType of procedure addSig at line 70 col 28 changed to inputType_
+\* Parameter sender of procedure addSig at line 70 col 39 changed to sender_
+\* Parameter sender of procedure broadcast at line 100 col 21 changed to sender_b
+\* Parameter inputType of procedure broadcast at line 100 col 29 changed to inputType_b
 CONSTANT defaultInitValue
-VARIABLES proposers, validators, sig, predeterminedBlockHeight, state,
-          prepareSig, commitSig, impeachPrepareSig, impeachCommitSig,
-          blockCache, blockReceiver, validatorBlockHeight,
-          proposerBlockHeight, validatorChain, proposerChain, pc, stack
+VARIABLES proposers, validators, possibleHeights, sig,
+          predeterminedBlockHeight, state, prepareSig, commitSig,
+          impeachPrepareSig, impeachCommitSig, blockCache, blockReceiver,
+          validatorBlockHeight, proposerBlockHeight, validatorChain,
+          proposerChain, pc, stack
 
 (* define statement *)
 prepareCertificate(v) ==
@@ -220,20 +227,21 @@ GetToNextHeight ==
     state["v4"] /=9
 
 VARIABLES receiver, inputType_, sender_, sender_b, inputType_b, sender,
-          inputType, block, consensus
+          inputType, block, height, consensus
 
-vars == << proposers, validators, sig, predeterminedBlockHeight, state,
-           prepareSig, commitSig, impeachPrepareSig, impeachCommitSig,
-           blockCache, blockReceiver, validatorBlockHeight,
-           proposerBlockHeight, validatorChain, proposerChain, pc, stack,
-           receiver, inputType_, sender_, sender_b, inputType_b, sender,
-           inputType, block, consensus >>
+vars == << proposers, validators, possibleHeights, sig,
+           predeterminedBlockHeight, state, prepareSig, commitSig,
+           impeachPrepareSig, impeachCommitSig, blockCache, blockReceiver,
+           validatorBlockHeight, proposerBlockHeight, validatorChain,
+           proposerChain, pc, stack, receiver, inputType_, sender_, sender_b,
+           inputType_b, sender, inputType, block, height, consensus >>
 
 ProcSet == (validators) \cup (proposers)
 
 Init == (* Global variables *)
         /\ proposers = {"p1"}
         /\ validators = {"v1","v2","v3","v4"}
+        /\ possibleHeights = {1}
         /\ sig = [v1|->1,v2|->2,v3|->3,v4|->4]
         /\ predeterminedBlockHeight = [p1|->1]
         /\ state = [va \in validators |-> 0]
@@ -241,7 +249,7 @@ Init == (* Global variables *)
         /\ commitSig = [va \in validators |->{}]
         /\ impeachPrepareSig = [va \in validators |->{}]
         /\ impeachCommitSig = [va \in validators |->{}]
-        /\ blockCache = [va \in validators |->""]
+        /\ blockCache = [va \in validators|->""]
         /\ blockReceiver = [va \in validators |->""]
         /\ validatorBlockHeight = [va \in validators |-> 1]
         /\ proposerBlockHeight = [pr \in proposers |-> 1]
@@ -258,6 +266,7 @@ Init == (* Global variables *)
         /\ sender = [ self \in ProcSet |-> defaultInitValue]
         /\ inputType = [ self \in ProcSet |-> defaultInitValue]
         /\ block = [ self \in ProcSet |-> defaultInitValue]
+        /\ height = [ self \in ProcSet |-> defaultInitValue]
         (* Process validator *)
         /\ consensus = [self \in validators |-> FALSE]
         /\ stack = [self \in ProcSet |-> << >>]
@@ -270,15 +279,15 @@ PrepareMsg(self) == /\ pc[self] = "PrepareMsg"
                           ELSE /\ TRUE
                                /\ UNCHANGED prepareSig
                     /\ pc' = [pc EXCEPT ![self] = "CommitMsg"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state, commitSig,
-                                    impeachPrepareSig, impeachCommitSig,
-                                    blockCache, blockReceiver,
-                                    validatorBlockHeight, proposerBlockHeight,
-                                    validatorChain, proposerChain, stack,
-                                    receiver, inputType_, sender_, sender_b,
-                                    inputType_b, sender, inputType, block,
-                                    consensus >>
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
+                                    commitSig, impeachPrepareSig,
+                                    impeachCommitSig, blockCache,
+                                    blockReceiver, validatorBlockHeight,
+                                    proposerBlockHeight, validatorChain,
+                                    proposerChain, stack, receiver, inputType_,
+                                    sender_, sender_b, inputType_b, sender,
+                                    inputType, block, height, consensus >>
 
 CommitMsg(self) == /\ pc[self] = "CommitMsg"
                    /\ IF inputType_[self] = "commitMsg"
@@ -287,7 +296,7 @@ CommitMsg(self) == /\ pc[self] = "CommitMsg"
                          ELSE /\ TRUE
                               /\ UNCHANGED << prepareSig, commitSig >>
                    /\ pc' = [pc EXCEPT ![self] = "ValidateMsg"]
-                   /\ UNCHANGED << proposers, validators, sig,
+                   /\ UNCHANGED << proposers, validators, possibleHeights, sig,
                                    predeterminedBlockHeight, state,
                                    impeachPrepareSig, impeachCommitSig,
                                    blockCache, blockReceiver,
@@ -295,7 +304,7 @@ CommitMsg(self) == /\ pc[self] = "CommitMsg"
                                    validatorChain, proposerChain, stack,
                                    receiver, inputType_, sender_, sender_b,
                                    inputType_b, sender, inputType, block,
-                                   consensus >>
+                                   height, consensus >>
 
 ValidateMsg(self) == /\ pc[self] = "ValidateMsg"
                      /\ IF inputType_[self] = "validateMsg"
@@ -308,28 +317,28 @@ ValidateMsg(self) == /\ pc[self] = "ValidateMsg"
                      /\ inputType_' = [inputType_ EXCEPT ![self] = Head(stack[self]).inputType_]
                      /\ sender_' = [sender_ EXCEPT ![self] = Head(stack[self]).sender_]
                      /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
-                     /\ UNCHANGED << proposers, validators, sig,
-                                     predeterminedBlockHeight, state,
+                     /\ UNCHANGED << proposers, validators, possibleHeights,
+                                     sig, predeterminedBlockHeight, state,
                                      impeachPrepareSig, impeachCommitSig,
                                      blockCache, blockReceiver,
                                      validatorBlockHeight, proposerBlockHeight,
                                      validatorChain, proposerChain, sender_b,
                                      inputType_b, sender, inputType, block,
-                                     consensus >>
+                                     height, consensus >>
 
 addSig(self) == PrepareMsg(self) \/ CommitMsg(self) \/ ValidateMsg(self)
 
 Forever(self) == /\ pc[self] = "Forever"
                  /\ state["v1"] = 9
                  /\ pc' = [pc EXCEPT ![self] = "Error"]
-                 /\ UNCHANGED << proposers, validators, sig,
+                 /\ UNCHANGED << proposers, validators, possibleHeights, sig,
                                  predeterminedBlockHeight, state, prepareSig,
                                  commitSig, impeachPrepareSig,
                                  impeachCommitSig, blockCache, blockReceiver,
                                  validatorBlockHeight, proposerBlockHeight,
                                  validatorChain, proposerChain, stack,
                                  receiver, inputType_, sender_, sender_b,
-                                 inputType_b, sender, inputType, block,
+                                 inputType_b, sender, inputType, block, height,
                                  consensus >>
 
 foreverLoop(self) == Forever(self)
@@ -345,14 +354,15 @@ Broadcast1(self) == /\ pc[self] = "Broadcast1"
                                                                 sender_   |->  sender_[self] ] >>
                                                             \o stack[self]]
                     /\ pc' = [pc EXCEPT ![self] = "PrepareMsg"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state,
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
                                     prepareSig, commitSig, impeachPrepareSig,
                                     impeachCommitSig, blockCache,
                                     blockReceiver, validatorBlockHeight,
                                     proposerBlockHeight, validatorChain,
                                     proposerChain, sender_b, inputType_b,
-                                    sender, inputType, block, consensus >>
+                                    sender, inputType, block, height,
+                                    consensus >>
 
 Broadcast2(self) == /\ pc[self] = "Broadcast2"
                     /\ /\ inputType_' = [inputType_ EXCEPT ![self] = inputType_b[self]]
@@ -365,14 +375,15 @@ Broadcast2(self) == /\ pc[self] = "Broadcast2"
                                                                 sender_   |->  sender_[self] ] >>
                                                             \o stack[self]]
                     /\ pc' = [pc EXCEPT ![self] = "PrepareMsg"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state,
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
                                     prepareSig, commitSig, impeachPrepareSig,
                                     impeachCommitSig, blockCache,
                                     blockReceiver, validatorBlockHeight,
                                     proposerBlockHeight, validatorChain,
                                     proposerChain, sender_b, inputType_b,
-                                    sender, inputType, block, consensus >>
+                                    sender, inputType, block, height,
+                                    consensus >>
 
 Broadcast3(self) == /\ pc[self] = "Broadcast3"
                     /\ /\ inputType_' = [inputType_ EXCEPT ![self] = inputType_b[self]]
@@ -385,14 +396,15 @@ Broadcast3(self) == /\ pc[self] = "Broadcast3"
                                                                 sender_   |->  sender_[self] ] >>
                                                             \o stack[self]]
                     /\ pc' = [pc EXCEPT ![self] = "PrepareMsg"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state,
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
                                     prepareSig, commitSig, impeachPrepareSig,
                                     impeachCommitSig, blockCache,
                                     blockReceiver, validatorBlockHeight,
                                     proposerBlockHeight, validatorChain,
                                     proposerChain, sender_b, inputType_b,
-                                    sender, inputType, block, consensus >>
+                                    sender, inputType, block, height,
+                                    consensus >>
 
 Broadcast4(self) == /\ pc[self] = "Broadcast4"
                     /\ /\ inputType_' = [inputType_ EXCEPT ![self] = inputType_b[self]]
@@ -405,14 +417,15 @@ Broadcast4(self) == /\ pc[self] = "Broadcast4"
                                                                 sender_   |->  sender_[self] ] >>
                                                             \o Tail(stack[self])]
                     /\ pc' = [pc EXCEPT ![self] = "PrepareMsg"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state,
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
                                     prepareSig, commitSig, impeachPrepareSig,
                                     impeachCommitSig, blockCache,
                                     blockReceiver, validatorBlockHeight,
                                     proposerBlockHeight, validatorChain,
                                     proposerChain, sender_b, inputType_b,
-                                    sender, inputType, block, consensus >>
+                                    sender, inputType, block, height,
+                                    consensus >>
 
 broadcast(self) == Broadcast1(self) \/ Broadcast2(self) \/ Broadcast3(self)
                       \/ Broadcast4(self)
@@ -420,8 +433,12 @@ broadcast(self) == Broadcast1(self) \/ Broadcast2(self) \/ Broadcast3(self)
 broadcastAll_(self) == /\ pc[self] = "broadcastAll_"
                        /\ IF inputType[self] = "blockInsertMsg"
                              THEN /\ \E proposer \in proposers:
-                                       /\ proposerChain' = [proposerChain EXCEPT ![proposer] = block[self]]
-                                       /\ proposerBlockHeight' = [proposerBlockHeight EXCEPT ![proposer] = proposerBlockHeight[proposer]+1]
+                                       IF proposerBlockHeight[proposer] = height[self]
+                                          THEN /\ proposerChain' = [proposerChain EXCEPT ![proposer] = Append(proposerChain[proposer],block[self])]
+                                               /\ proposerBlockHeight' = [proposerBlockHeight EXCEPT ![proposer] = proposerBlockHeight[proposer]+1]
+                                          ELSE /\ TRUE
+                                               /\ UNCHANGED << proposerBlockHeight,
+                                                               proposerChain >>
                              ELSE /\ TRUE
                                   /\ UNCHANGED << proposerBlockHeight,
                                                   proposerChain >>
@@ -429,9 +446,10 @@ broadcastAll_(self) == /\ pc[self] = "broadcastAll_"
                        /\ sender' = [sender EXCEPT ![self] = Head(stack[self]).sender]
                        /\ inputType' = [inputType EXCEPT ![self] = Head(stack[self]).inputType]
                        /\ block' = [block EXCEPT ![self] = Head(stack[self]).block]
+                       /\ height' = [height EXCEPT ![self] = Head(stack[self]).height]
                        /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
-                       /\ UNCHANGED << proposers, validators, sig,
-                                       predeterminedBlockHeight, state,
+                       /\ UNCHANGED << proposers, validators, possibleHeights,
+                                       sig, predeterminedBlockHeight, state,
                                        prepareSig, commitSig,
                                        impeachPrepareSig, impeachCommitSig,
                                        blockCache, blockReceiver,
@@ -448,6 +466,7 @@ Fsm(self) == /\ pc[self] = "Fsm"
                               /\ blockCache' = [blockCache EXCEPT ![self] = blockReceiver[self]]
                               /\ prepareSig' = [prepareSig EXCEPT ![self] = prepareSig[self] \union {sig[self]}]
                               /\ state' = [state EXCEPT ![self] = 1]
+                              /\ PrintT(prepareSig')
                               /\ /\ inputType_b' = [inputType_b EXCEPT ![self] = "prepareMsg"]
                                  /\ sender_b' = [sender_b EXCEPT ![self] = self]
                                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcast",
@@ -456,7 +475,7 @@ Fsm(self) == /\ pc[self] = "Fsm"
                                                                           inputType_b |->  inputType_b[self] ] >>
                                                                       \o stack[self]]
                               /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
-                              /\ UNCHANGED <<commitSig, validatorBlockHeight, consensus>>
+                              /\ UNCHANGED <<commitSig, validatorChain, consensus>>
                            \/ /\ state[self] = 1
                               /\ prepareCertificate(self)
                               /\ commitSig' = [commitSig EXCEPT ![self] = commitSig[self] \union {sig[self]}]
@@ -469,16 +488,16 @@ Fsm(self) == /\ pc[self] = "Fsm"
                                                                           inputType_b |->  inputType_b[self] ] >>
                                                                       \o stack[self]]
                               /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
-                              /\ UNCHANGED <<prepareSig, blockCache, validatorBlockHeight, consensus>>
+                              /\ UNCHANGED <<prepareSig, blockCache, validatorChain, consensus>>
                            \/ /\ state[self] = 2
                               /\ commitCertificate(self)
                               /\ state' = [state EXCEPT ![self] = 9]
                               /\ consensus' = [consensus EXCEPT ![self] = TRUE]
-                              /\ validatorBlockHeight' = [validatorBlockHeight EXCEPT ![self] = validatorBlockHeight[self]+1]
+                              /\ validatorChain' = [validatorChain EXCEPT ![self] = Append(validatorChain[self], blockCache[self])]
                               /\ /\ inputType_b' = [inputType_b EXCEPT ![self] = "validateMsg"]
                                  /\ sender_b' = [sender_b EXCEPT ![self] = self]
                                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcast",
-                                                                          pc        |->  "Fsm",
+                                                                          pc        |->  "BroadcastAll",
                                                                           sender_b  |->  sender_b[self],
                                                                           inputType_b |->  inputType_b[self] ] >>
                                                                       \o stack[self]]
@@ -486,22 +505,61 @@ Fsm(self) == /\ pc[self] = "Fsm"
                               /\ UNCHANGED <<prepareSig, commitSig, blockCache>>
                    ELSE /\ pc' = [pc EXCEPT ![self] = "Done"]
                         /\ UNCHANGED << state, prepareSig, commitSig,
-                                        blockCache, validatorBlockHeight,
-                                        stack, sender_b, inputType_b,
-                                        consensus >>
-             /\ UNCHANGED << proposers, validators, sig,
+                                        blockCache, validatorChain, stack,
+                                        sender_b, inputType_b, consensus >>
+             /\ UNCHANGED << proposers, validators, possibleHeights, sig,
                              predeterminedBlockHeight, impeachPrepareSig,
                              impeachCommitSig, blockReceiver,
-                             proposerBlockHeight, validatorChain,
+                             validatorBlockHeight, proposerBlockHeight,
                              proposerChain, receiver, inputType_, sender_,
-                             sender, inputType, block >>
+                             sender, inputType, block, height >>
 
-validator(self) == Fsm(self)
+BroadcastAll(self) == /\ pc[self] = "BroadcastAll"
+                      /\ /\ block' = [block EXCEPT ![self] = blockCache[self]]
+                         /\ height' = [height EXCEPT ![self] = validatorBlockHeight[self]]
+                         /\ inputType' = [inputType EXCEPT ![self] = "blockInsertMsg"]
+                         /\ sender' = [sender EXCEPT ![self] = sender[self]]
+                         /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcastAll",
+                                                                  pc        |->  "HeightAugmentation",
+                                                                  sender    |->  sender[self],
+                                                                  inputType |->  inputType[self],
+                                                                  block     |->  block[self],
+                                                                  height    |->  height[self] ] >>
+                                                              \o stack[self]]
+                      /\ pc' = [pc EXCEPT ![self] = "broadcastAll_"]
+                      /\ UNCHANGED << proposers, validators, possibleHeights,
+                                      sig, predeterminedBlockHeight, state,
+                                      prepareSig, commitSig, impeachPrepareSig,
+                                      impeachCommitSig, blockCache,
+                                      blockReceiver, validatorBlockHeight,
+                                      proposerBlockHeight, validatorChain,
+                                      proposerChain, receiver, inputType_,
+                                      sender_, sender_b, inputType_b,
+                                      consensus >>
+
+HeightAugmentation(self) == /\ pc[self] = "HeightAugmentation"
+                            /\ validatorBlockHeight' = [validatorBlockHeight EXCEPT ![self] = validatorBlockHeight[self]+1]
+                            /\ pc' = [pc EXCEPT ![self] = "Fsm"]
+                            /\ UNCHANGED << proposers, validators,
+                                            possibleHeights, sig,
+                                            predeterminedBlockHeight, state,
+                                            prepareSig, commitSig,
+                                            impeachPrepareSig,
+                                            impeachCommitSig, blockCache,
+                                            blockReceiver, proposerBlockHeight,
+                                            validatorChain, proposerChain,
+                                            stack, receiver, inputType_,
+                                            sender_, sender_b, inputType_b,
+                                            sender, inputType, block, height,
+                                            consensus >>
+
+validator(self) == Fsm(self) \/ BroadcastAll(self)
+                      \/ HeightAugmentation(self)
 
 Proposer(self) == /\ pc[self] = "Proposer"
-                  /\ proposerBlockHeight = predeterminedBlockHeight[self]
+                  /\ proposerBlockHeight[self] = predeterminedBlockHeight[self]
                   /\ pc' = [pc EXCEPT ![self] = "SendBlock1"]
-                  /\ UNCHANGED << proposers, validators, sig,
+                  /\ UNCHANGED << proposers, validators, possibleHeights, sig,
                                   predeterminedBlockHeight, state, prepareSig,
                                   commitSig, impeachPrepareSig,
                                   impeachCommitSig, blockCache, blockReceiver,
@@ -509,59 +567,59 @@ Proposer(self) == /\ pc[self] = "Proposer"
                                   validatorChain, proposerChain, stack,
                                   receiver, inputType_, sender_, sender_b,
                                   inputType_b, sender, inputType, block,
-                                  consensus >>
+                                  height, consensus >>
 
 SendBlock1(self) == /\ pc[self] = "SendBlock1"
                     /\ blockReceiver' = [blockReceiver EXCEPT !["v1"] = self]
                     /\ pc' = [pc EXCEPT ![self] = "SendBlock2"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state,
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
                                     prepareSig, commitSig, impeachPrepareSig,
                                     impeachCommitSig, blockCache,
                                     validatorBlockHeight, proposerBlockHeight,
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    consensus >>
+                                    height, consensus >>
 
 SendBlock2(self) == /\ pc[self] = "SendBlock2"
                     /\ blockReceiver' = [blockReceiver EXCEPT !["v2"] = self]
                     /\ pc' = [pc EXCEPT ![self] = "SendBlock3"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state,
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
                                     prepareSig, commitSig, impeachPrepareSig,
                                     impeachCommitSig, blockCache,
                                     validatorBlockHeight, proposerBlockHeight,
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    consensus >>
+                                    height, consensus >>
 
 SendBlock3(self) == /\ pc[self] = "SendBlock3"
                     /\ blockReceiver' = [blockReceiver EXCEPT !["v3"] = self]
                     /\ pc' = [pc EXCEPT ![self] = "SendBlock4"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state,
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
                                     prepareSig, commitSig, impeachPrepareSig,
                                     impeachCommitSig, blockCache,
                                     validatorBlockHeight, proposerBlockHeight,
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    consensus >>
+                                    height, consensus >>
 
 SendBlock4(self) == /\ pc[self] = "SendBlock4"
                     /\ blockReceiver' = [blockReceiver EXCEPT !["v4"] = self]
                     /\ pc' = [pc EXCEPT ![self] = "Done"]
-                    /\ UNCHANGED << proposers, validators, sig,
-                                    predeterminedBlockHeight, state,
+                    /\ UNCHANGED << proposers, validators, possibleHeights,
+                                    sig, predeterminedBlockHeight, state,
                                     prepareSig, commitSig, impeachPrepareSig,
                                     impeachCommitSig, blockCache,
                                     validatorBlockHeight, proposerBlockHeight,
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    consensus >>
+                                    height, consensus >>
 
 proposer(self) == Proposer(self) \/ SendBlock1(self) \/ SendBlock2(self)
                      \/ SendBlock3(self) \/ SendBlock4(self)
@@ -581,5 +639,5 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Tue Jul 23 14:13:36 CST 2019 by Dell
+\* Last modified Tue Jul 23 15:12:09 CST 2019 by Dell
 \* Created Mon Jul 22 15:23:05 CST 2019 by Dell
