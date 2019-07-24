@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -22,7 +23,7 @@ import (
 
 // GetFirstIntArgument returns the value of the first uint64 argument
 func GetFirstIntArgument(ctx *cli.Context) int64 {
-	if len(ctx.Args()) != 1 {
+	if ctx.NArg() != 1 {
 		log.Fatal("Invalid length of arguments", "want", 1, "got", len(ctx.Args()))
 	}
 
@@ -36,8 +37,8 @@ func GetFirstIntArgument(ctx *cli.Context) int64 {
 }
 
 func GetFirstBoolArgument(ctx *cli.Context) bool {
-	if len(ctx.Args()) != 1 {
-		log.Fatal("Invalid length of arguments", "want", 1, "got", len(ctx.Args()))
+	if ctx.NArg() != 1 {
+		log.Fatal("Invalid length of arguments", "want", 1, "got", ctx.NArg())
 	}
 
 	arg := ctx.Args().Get(0)
@@ -54,8 +55,8 @@ func GetFirstBoolArgument(ctx *cli.Context) bool {
 
 // GetFirstStringArgument returns the value of the first string argument
 func GetFirstStringArgument(ctx *cli.Context) string {
-	if len(ctx.Args()) != 1 {
-		log.Fatal("Invalid length of arguments", "want", 1, "got", len(ctx.Args()))
+	if ctx.NArg() != 1 {
+		log.Fatal("Invalid length of arguments", "want", 1, "got", ctx.NArg())
 	}
 
 	arg := ctx.Args().Get(0)
@@ -63,8 +64,8 @@ func GetFirstStringArgument(ctx *cli.Context) string {
 }
 
 func GetFirstTwoIntArgument(ctx *cli.Context) (int64, int64) {
-	if len(ctx.Args()) != 2 {
-		log.Fatal("Invalid length of arguments", "want", 2, "got", len(ctx.Args()))
+	if ctx.NArg() != 2 {
+		log.Fatal("Invalid length of arguments", "want", 2, "got", ctx.NArg())
 	}
 
 	arg1 := ctx.Args().Get(0)
@@ -116,15 +117,17 @@ func GetAddressAndKey(keystoreFilePath, password string) (common.Address, *keyst
 	return fromAddress, key
 }
 
-func PrepareCpclient(endpoint string) *cpclient.Client {
+func PrepareCpclient(endpoint string) (*cpclient.Client, error) {
 	client, err := cpclient.Dial(endpoint)
 	if err != nil {
-		log.Fatal("Failed to dial given endpoint", "endpoint", endpoint, "err", err)
+		log.Info("Failed to dial given endpoint", "endpoint", endpoint, "err", err)
+		return &cpclient.Client{}, errors.New("Failed to dial given endpoint")
 	}
 
 	chainConfig, err := client.ChainConfig()
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Info(err.Error())
+		return &cpclient.Client{}, err
 	}
 	chainId, runMode := chainConfig.ChainID.Uint64(), configs.Mainnet
 	switch chainId {
@@ -137,11 +140,12 @@ func PrepareCpclient(endpoint string) *cpclient.Client {
 	case configs.TestnetChainId:
 		runMode = configs.Testnet
 	default:
-		log.Fatal("unknown chain id")
+		log.Info("unknown chain id")
+		return &cpclient.Client{}, errors.New("unknown chain id")
 	}
 	configs.SetRunMode(runMode)
 
-	return client
+	return client, nil
 }
 
 func GetPassword() string {
@@ -155,32 +159,46 @@ func GetPassword() string {
 	return password
 }
 
-func PrepareAll(ctx *cli.Context, withTransactor bool) (addr common.Address, client *cpclient.Client, key *keystore.Key) {
+func PrepareAll(ctx *cli.Context, withTransactor bool) (addr common.Address, client *cpclient.Client, key *keystore.Key, err error) {
 
-	endpoint := flags.GetEndpoint(ctx)
-	addr = flags.GetContractAddress(ctx)
-	client = PrepareCpclient(endpoint)
+	endpoint, err := flags.GetEndpoint(ctx)
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	addr, err = flags.GetContractAddress(ctx)
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	client, err = PrepareCpclient(endpoint)
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
 
 	if withTransactor {
-		keystoreFile := flags.GetKeystorePath(ctx)
+		keystoreFile, err := flags.GetKeystorePath(ctx)
+		if err != nil {
+			return common.Address{}, &cpclient.Client{}, &keystore.Key{}, err
+		}
 		password := GetPassword()
 		_, key = GetAddressAndKey(keystoreFile, password)
 	}
 
-	return addr, client, key
+	return addr, client, key, nil
 }
 
-func WaitMined(client *cpclient.Client, tx *types.Transaction, err error) {
-	if err != nil {
-		log.Fatal("Failed to send transaction", "err", err)
-	}
+func WaitMined(client *cpclient.Client, tx *types.Transaction) error {
 
 	log.Info("Transaction sent", "hash", tx.Hash().Hex())
 
 	receipt, err := bind.WaitMined(context.Background(), client, tx)
 	if err != nil {
-		log.Fatal("Failed to wait for tx being mined", "tx", tx.Hash().Hex(), "err", err)
+		log.Info("Failed to wait for tx being mined", "tx", tx.Hash().Hex(), "err", err)
+		return cli.NewExitError(err, 1)
 	}
 
 	log.Info("Transaction has been mined", "hash", receipt.TxHash.Hex(), "status", receipt.Status)
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		return cli.NewExitError("receipt status is "+string(receipt.Status), 1)
+	}
+	return nil
 }

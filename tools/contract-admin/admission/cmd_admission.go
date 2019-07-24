@@ -50,49 +50,74 @@ var (
 )
 
 func setCPUDifficulty(ctx *cli.Context) error {
-	adm, opts, client := createContractInstanceAndTransactor(ctx, true)
+	adm, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		log.Info("Failed to get cpu difficulty", "err", err)
+		return err
+	}
 	difficulty := utils.GetFirstIntArgument(ctx)
 	tx, err := adm.UpdateCPUDifficulty(opts, big.NewInt(difficulty))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		log.Info("Failed to update cpu difficulty", "err", err)
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setMemDifficulty(ctx *cli.Context) error {
-	adm, opts, client := createContractInstanceAndTransactor(ctx, true)
+	adm, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		log.Info("Failed to get cpu difficulty", "err", err)
+		return err
+	}
 	difficulty := utils.GetFirstIntArgument(ctx)
 	tx, err := adm.UpdateMemoryDifficulty(opts, big.NewInt(difficulty))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		log.Info("Failed to update memory difficulty", "err", err)
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func showDifficulties(ctx *cli.Context) error {
-	adm, _, _ := createContractInstanceAndTransactor(ctx, false)
+	adm, _, _, err := createContractInstanceAndTransactor(ctx, false)
+	if err != nil {
+		log.Info("Failed to get cpu difficulty", "err", err)
+		return err
+	}
 
 	cpuDifficulty, err := adm.CpuDifficulty(nil)
 	if err != nil {
-		log.Fatal("Failed to get cpu difficulty", "err", err)
+		log.Info("Failed to get cpu difficulty", "err", err)
+		return err
 	}
 	log.Info("CPU difficulty", "value", cpuDifficulty.Int64())
 
 	memDifficulty, err := adm.MemoryDifficulty(nil)
 	if err != nil {
-		log.Fatal("Failed to get memory difficulty", "err", err)
+		log.Info("Failed to get memory difficulty", "err", err)
+		return err
 	}
 	log.Info("Mem difficulty", "value", memDifficulty.Int64())
-
 	return nil
 }
 
-func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *admission.Admission, opts *bind.TransactOpts, client *cpclient.Client) {
-	contractAddr, client, key := utils.PrepareAll(ctx, withTransactor)
+func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *admission.Admission, opts *bind.TransactOpts, client *cpclient.Client, err error) {
+	contractAddr, client, key, err := utils.PrepareAll(ctx, withTransactor)
+
+	if err != nil {
+		log.Info("Failed to create new contract instance", "err", err)
+		return &admission.Admission{}, &bind.TransactOpts{}, &cpclient.Client{}, err
+	}
 
 	if withTransactor {
 		opts = bind.NewKeyedTransactor(key.PrivateKey)
 	}
-	contract, err := admission.NewAdmission(contractAddr, client)
+	contract, err = admission.NewAdmission(contractAddr, client)
 	if err != nil {
-		log.Fatal("Failed to create new contract instance", "err", err)
+		log.Info("Failed to create new contract instance", "err", err)
+		return &admission.Admission{}, &bind.TransactOpts{}, &cpclient.Client{}, err
 	}
 
-	return contract, opts, client
+	return contract, opts, client, nil
 }

@@ -1,6 +1,7 @@
 package rnode
 
 import (
+	"errors"
 	"math/big"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
@@ -95,63 +96,98 @@ var (
 )
 
 func setThreshold(ctx *cli.Context) error {
-	rnd, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rnd, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	thresholdStr := utils.GetFirstStringArgument(ctx)
 	threshold := new(big.Int)
 	threshold, ok := threshold.SetString(thresholdStr, 10)
 	if !ok {
-		log.Fatal("Failed to parse string to big int", "string", thresholdStr)
+		log.Info("Failed to parse string to big int", "string", thresholdStr)
+		return errors.New("Failed to parse string to big int" + " string " + thresholdStr)
 	}
 
 	tx, err := rnd.SetRnodeThreshold(opts, threshold)
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setPeriod(ctx *cli.Context) error {
-	rnd, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rnd, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	period := utils.GetFirstIntArgument(ctx)
 	tx, err := rnd.SetPeriod(opts, big.NewInt(period))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setVersion(ctx *cli.Context) error {
-	rnd, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rnd, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	version := utils.GetFirstIntArgument(ctx)
 	tx, err := rnd.SetSupportedVersion(opts, big.NewInt(version))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func refund(ctx *cli.Context) error {
-	rnd, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rnd, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	addr := utils.GetFirstStringArgument(ctx)
 	tx, err := rnd.Refund(opts, common.HexToAddress(addr))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func refundAll(ctx *cli.Context) error {
-	rnd, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rnd, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	tx, err := rnd.RefundAll(opts)
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func disable(ctx *cli.Context) error {
-	rnd, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rnd, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	tx, err := rnd.DisableContract(opts)
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func isRnode(ctx *cli.Context) error {
-	rnd, _, _ := createContractInstanceAndTransactor(ctx, false)
+	rnd, _, _, err := createContractInstanceAndTransactor(ctx, false)
+	if err != nil {
+		return err
+	}
 	addr := utils.GetFirstStringArgument(ctx)
 	isRnode, err := rnd.IsRnode(nil, common.HexToAddress(addr))
 	if err != nil {
-		log.Fatal("Failed to get isRnode info", "err", err, "addr", addr)
+		log.Info("Failed to get isRnode info", "err", err, "addr", addr)
+		return err
 	}
 	log.Info("IsRnode", "bool", isRnode)
 
@@ -159,35 +195,42 @@ func isRnode(ctx *cli.Context) error {
 }
 
 func showConfigs(ctx *cli.Context) error {
-	rnd, _, _ := createContractInstanceAndTransactor(ctx, false)
-
+	rnd, _, _, err := createContractInstanceAndTransactor(ctx, false)
+	if err != nil {
+		return err
+	}
 	period, err := rnd.Period(nil)
 	if err != nil {
-		log.Fatal("Failed to get period", "err", err)
+		log.Info("Failed to get period", "err", err)
+		return err
 	}
 	log.Info("period", "value", period.Int64())
 
 	version, err := rnd.SupportedVersion(nil)
 	if err != nil {
-		log.Fatal("Failed to get version", "err", err)
+		log.Info("Failed to get version", "err", err)
+		return err
 	}
 	log.Info("version", "value", version.Int64())
 
 	threshold, err := rnd.RnodeThreshold(nil)
 	if err != nil {
-		log.Fatal("Failed to get threshold", "err", err)
+		log.Info("Failed to get threshold", "err", err)
+		return err
 	}
 	log.Info("threshold", "value", threshold)
-
 	return nil
 }
 
 func showRnodes(ctx *cli.Context) error {
-	rnd, _, _ := createContractInstanceAndTransactor(ctx, false)
-
+	rnd, _, _, err := createContractInstanceAndTransactor(ctx, false)
+	if err != nil {
+		return err
+	}
 	rnodes, err := rnd.GetRnodes(nil)
 	if err != nil {
-		log.Fatal("Failed to get rnodes", "err", err)
+		log.Info("Failed to get rnodes", "err", err)
+		return err
 	}
 	log.Info("rnode len", "value", len(rnodes))
 
@@ -198,17 +241,20 @@ func showRnodes(ctx *cli.Context) error {
 	return nil
 }
 
-func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *rnode.Rnode, opts *bind.TransactOpts, client *cpclient.Client) {
-	contractAddr, client, key := utils.PrepareAll(ctx, withTransactor)
-
+func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *rnode.Rnode, opts *bind.TransactOpts, client *cpclient.Client, err error) {
+	contractAddr, client, key, err := utils.PrepareAll(ctx, withTransactor)
+	if err != nil {
+		return &rnode.Rnode{}, &bind.TransactOpts{}, &cpclient.Client{}, err
+	}
 	if withTransactor {
 		opts = bind.NewKeyedTransactor(key.PrivateKey)
 	}
 
-	contract, err := rnode.NewRnode(contractAddr, client)
+	contract, err = rnode.NewRnode(contractAddr, client)
 	if err != nil {
-		log.Fatal("Failed to create new contract instance", "err", err)
+		log.Info("Failed to create new contract instance", "err", err)
+		return &rnode.Rnode{}, &bind.TransactOpts{}, &cpclient.Client{}, err
 	}
 
-	return contract, opts, client
+	return contract, opts, client, nil
 }
