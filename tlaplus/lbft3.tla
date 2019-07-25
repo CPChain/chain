@@ -15,6 +15,7 @@ variables
     \* set of validators
     validators = {"v1","v2","v3","v4"},
     \* legal block heights
+    \* possibleHeights = {1,2},
     possibleHeights = {1},
     \* signature for each validators
     sig = [v1|->1,v2|->2,v3|->3,v4|->4],
@@ -180,9 +181,10 @@ Fsm:
             await commitCertificate(self);
             \* transfer to idle state in next height given the certificate
             state[self] := 9;
-            consensus := TRUE;
             \* broadcast validateMsg to all validators
             call broadcast(self,"validateMsg");
+        or \* validate state
+            await state[self] = 9;
             BroadcastAll:
             call broadcastAll(sender, "blockInsertMsg", blockCache[self], validatorBlockHeight[self]);
             HeightAugmentation:
@@ -190,6 +192,19 @@ Fsm:
             \* append the block in the local chain
             validatorBlockHeight[self] := validatorBlockHeight[self]+1;
             validatorChain[self] := Append(validatorChain[self], blockCache[self]);
+            \* print result
+            print self;
+            print validatorChain[self];
+            \* clean prepare and commit sigs
+            CleanTemps:
+            prepareSig[self] := {};
+            commitSig[self] := {};
+            \* clean blockCache and blockReceiver
+            blockCache[self] := "";
+            blockReceiver[self] := "";
+            \* set state = 0
+            state[self] := 0;
+            consensus := TRUE;
 \*        or
 \*            skip;
         end either;
@@ -217,11 +232,11 @@ end process;
 
 end algorithm;*)
 \* BEGIN TRANSLATION
-\* Label broadcastAll of procedure broadcastAll at line 127 col 5 changed to broadcastAll_
-\* Parameter inputType of procedure addSig at line 85 col 28 changed to inputType_
-\* Parameter sender of procedure addSig at line 85 col 39 changed to sender_
-\* Parameter sender of procedure broadcast at line 112 col 21 changed to sender_b
-\* Parameter inputType of procedure broadcast at line 112 col 29 changed to inputType_b
+\* Label broadcastAll of procedure broadcastAll at line 128 col 5 changed to broadcastAll_
+\* Parameter inputType of procedure addSig at line 86 col 28 changed to inputType_
+\* Parameter sender of procedure addSig at line 86 col 39 changed to sender_
+\* Parameter sender of procedure broadcast at line 113 col 21 changed to sender_b
+\* Parameter inputType of procedure broadcast at line 113 col 29 changed to inputType_b
 CONSTANT defaultInitValue
 VARIABLES proposers, predeterminedBlockHeight, validators, possibleHeights,
           sig, state, prepareSig, commitSig, impeachPrepareSig,
@@ -460,7 +475,7 @@ broadcastAll_(self) == /\ pc[self] = "broadcastAll_"
                                                /\ proposerBlockHeight' = [proposerBlockHeight EXCEPT ![proposer] = proposerBlockHeight[proposer]+1]
                                           ELSE /\ IF proposerBlockHeight[proposer] = height[self]+1
                                                      THEN /\ Assert(proposerChain[proposer][height[self]] = block[self],
-                                                                    "Failure of assertion at line 139, column 17.")
+                                                                    "Failure of assertion at line 140, column 17.")
                                                      ELSE /\ TRUE
                                                /\ UNCHANGED << proposerBlockHeight,
                                                                proposerChain >>
@@ -500,7 +515,7 @@ Fsm(self) == /\ pc[self] = "Fsm"
                                                                           inputType_b |->  inputType_b[self] ] >>
                                                                       \o stack[self]]
                               /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
-                              /\ UNCHANGED <<commitSig, consensus>>
+                              /\ UNCHANGED commitSig
                            \/ /\ state[self] = 1
                               /\ prepareCertificate(self)
                               /\ commitSig' = [commitSig EXCEPT ![self] = commitSig[self] \union {sig[self]}]
@@ -513,31 +528,33 @@ Fsm(self) == /\ pc[self] = "Fsm"
                                                                           inputType_b |->  inputType_b[self] ] >>
                                                                       \o stack[self]]
                               /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
-                              /\ UNCHANGED <<prepareSig, blockCache, consensus>>
+                              /\ UNCHANGED <<prepareSig, blockCache>>
                            \/ /\ state[self] = 2
                               /\ commitCertificate(self)
                               /\ state' = [state EXCEPT ![self] = 9]
-                              /\ consensus' = [consensus EXCEPT ![self] = TRUE]
                               /\ /\ inputType_b' = [inputType_b EXCEPT ![self] = "validateMsg"]
                                  /\ sender_b' = [sender_b EXCEPT ![self] = self]
                                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "broadcast",
-                                                                          pc        |->  "BroadcastAll",
+                                                                          pc        |->  "Fsm",
                                                                           sender_b  |->  sender_b[self],
                                                                           inputType_b |->  inputType_b[self] ] >>
                                                                       \o stack[self]]
                               /\ pc' = [pc EXCEPT ![self] = "Broadcast1"]
                               /\ UNCHANGED <<prepareSig, commitSig, blockCache>>
+                           \/ /\ state[self] = 9
+                              /\ pc' = [pc EXCEPT ![self] = "BroadcastAll"]
+                              /\ UNCHANGED <<state, prepareSig, commitSig, blockCache, stack, sender_b, inputType_b>>
                    ELSE /\ pc' = [pc EXCEPT ![self] = "Done"]
                         /\ UNCHANGED << state, prepareSig, commitSig,
                                         blockCache, stack, sender_b,
-                                        inputType_b, consensus >>
+                                        inputType_b >>
              /\ UNCHANGED << proposers, predeterminedBlockHeight, validators,
                              possibleHeights, sig, impeachPrepareSig,
                              impeachCommitSig, blockReceiver,
                              validatorBlockHeight, proposerBlockHeight,
                              validatorChain, proposerChain, receiver,
                              inputType_, sender_, sender, inputType, block,
-                             height >>
+                             height, consensus >>
 
 BroadcastAll(self) == /\ pc[self] = "BroadcastAll"
                       /\ /\ block' = [block EXCEPT ![self] = blockCache[self]]
@@ -565,7 +582,9 @@ BroadcastAll(self) == /\ pc[self] = "BroadcastAll"
 HeightAugmentation(self) == /\ pc[self] = "HeightAugmentation"
                             /\ validatorBlockHeight' = [validatorBlockHeight EXCEPT ![self] = validatorBlockHeight[self]+1]
                             /\ validatorChain' = [validatorChain EXCEPT ![self] = Append(validatorChain[self], blockCache[self])]
-                            /\ pc' = [pc EXCEPT ![self] = "Fsm"]
+                            /\ PrintT(self)
+                            /\ PrintT(validatorChain'[self])
+                            /\ pc' = [pc EXCEPT ![self] = "CleanTemps"]
                             /\ UNCHANGED << proposers,
                                             predeterminedBlockHeight,
                                             validators, possibleHeights, sig,
@@ -578,8 +597,25 @@ HeightAugmentation(self) == /\ pc[self] = "HeightAugmentation"
                                             inputType_b, sender, inputType,
                                             block, height, consensus >>
 
+CleanTemps(self) == /\ pc[self] = "CleanTemps"
+                    /\ prepareSig' = [prepareSig EXCEPT ![self] = {}]
+                    /\ commitSig' = [commitSig EXCEPT ![self] = {}]
+                    /\ blockCache' = [blockCache EXCEPT ![self] = ""]
+                    /\ blockReceiver' = [blockReceiver EXCEPT ![self] = ""]
+                    /\ state' = [state EXCEPT ![self] = 0]
+                    /\ consensus' = [consensus EXCEPT ![self] = TRUE]
+                    /\ pc' = [pc EXCEPT ![self] = "Fsm"]
+                    /\ UNCHANGED << proposers, predeterminedBlockHeight,
+                                    validators, possibleHeights, sig,
+                                    impeachPrepareSig, impeachCommitSig,
+                                    validatorBlockHeight, proposerBlockHeight,
+                                    validatorChain, proposerChain, stack,
+                                    receiver, inputType_, sender_, sender_b,
+                                    inputType_b, sender, inputType, block,
+                                    height >>
+
 validator(self) == Fsm(self) \/ BroadcastAll(self)
-                      \/ HeightAugmentation(self)
+                      \/ HeightAugmentation(self) \/ CleanTemps(self)
 
 Proposer(self) == /\ pc[self] = "Proposer"
                   /\ proposerBlockHeight[self] = predeterminedBlockHeight[self]
@@ -664,5 +700,5 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Wed Jul 24 13:49:49 CST 2019 by Dell
+\* Last modified Thu Jul 25 12:06:02 CST 2019 by Dell
 \* Created Mon Jul 22 15:23:05 CST 2019 by Dell
