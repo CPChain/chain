@@ -11,14 +11,14 @@ variables
 \*    proposers = {"p1", "p2"},
 \*    predeterminedBlockHeight = [p1|->1, p2|->2],
     proposers = {"p1"},
-    predeterminedBlockHeight = [p1|->1],
+    predeterminedBlockHeight = [p1 |-> 1],
     \* set of validators
     validators = {"v1", "v2", "v3", "v4"},
     \* possible block heights
     \* possibleHeights = {1, 2},
     possibleHeights = {1},
     \* signature for each validators
-    sig = [v1|->1, v2|->2, v3|->3, v4|->4],
+    sig = [v1 |-> 1, v2 |-> 2, v3 |-> 3, v4 |-> 4],
     \* a function to represent state for each validator
     \* 0,1,2 represent idle, prepare, commit
     \* 3,4 represent impeach prepare and impeach commit state
@@ -292,10 +292,10 @@ ProcSet == (validators) \cup (proposers)
 
 Init == (* Global variables *)
         /\ proposers = {"p1"}
-        /\ predeterminedBlockHeight = [p1|->1]
+        /\ predeterminedBlockHeight = [p1 |-> 1]
         /\ validators = {"v1", "v2", "v3", "v4"}
         /\ possibleHeights = {1}
-        /\ sig = [v1|->1, v2|->2, v3|->3, v4|->4]
+        /\ sig = [v1 |-> 1, v2 |-> 2, v3 |-> 3, v4 |-> 4]
         /\ state = [va \in validators |-> 0]
         /\ prepareSig = [va \in validators |-> {}]
         /\ commitSig = [va \in validators |-> {}]
