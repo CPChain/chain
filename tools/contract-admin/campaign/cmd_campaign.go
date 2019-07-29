@@ -90,56 +90,100 @@ var (
 )
 
 func setAdmissionAddress(ctx *cli.Context) error {
-	cmp, opts, client := createContractInstanceAndTransactor(ctx, true)
+	cmp, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+
+		return err
+	}
 	addr := utils.GetFirstStringArgument(ctx)
 	tx, err := cmp.SetAdmissionAddr(opts, common.HexToAddress(addr))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		log.Info("Failed to SetAdmissionAddr", "err", err)
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setRnodeAddress(ctx *cli.Context) error {
-	cmp, opts, client := createContractInstanceAndTransactor(ctx, true)
+	cmp, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+
+		return err
+	}
 	addr := utils.GetFirstStringArgument(ctx)
 	tx, err := cmp.SetRnodeInterface(opts, common.HexToAddress(addr))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		log.Info("Failed to SetRnodeInterface", "err", err)
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setMinNoc(ctx *cli.Context) error {
-	cmp, opts, client := createContractInstanceAndTransactor(ctx, true)
+	cmp, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	value := utils.GetFirstIntArgument(ctx)
 	tx, err := cmp.UpdateMinNoc(opts, big.NewInt(value))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		log.Info("Failed to UpdateMinNoc", "err", err)
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setMaxNoc(ctx *cli.Context) error {
-	cmp, opts, client := createContractInstanceAndTransactor(ctx, true)
+	cmp, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+
+		return err
+	}
 	value := utils.GetFirstIntArgument(ctx)
 	tx, err := cmp.UpdateMaxNoc(opts, big.NewInt(value))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		log.Info("Failed to UpdateMaxNoc", "err", err)
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setAcceptableBlocks(ctx *cli.Context) error {
-	cmp, opts, client := createContractInstanceAndTransactor(ctx, true)
+	cmp, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+
+		return err
+	}
 	value := utils.GetFirstIntArgument(ctx)
 	tx, err := cmp.UpdateAcceptableBlocks(opts, big.NewInt(value))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		log.Info("Failed to UpdateAcceptableBlocks", "err", err)
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setVersion(ctx *cli.Context) error {
-	cmp, opts, client := createContractInstanceAndTransactor(ctx, true)
+	cmp, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+
+		return err
+	}
 	value := utils.GetFirstIntArgument(ctx)
 	tx, err := cmp.UpdateSupportedVersion(opts, big.NewInt(value))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		log.Info("Failed to UpdateSupportedVersion", "err", err)
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func showConfigs(ctx *cli.Context) error {
-	cmp, _, _ := createContractInstanceAndTransactor(ctx, false)
+	cmp, _, _, err := createContractInstanceAndTransactor(ctx, false)
+	if err != nil {
 
+		return err
+	}
 	termIdx, err := cmp.TermIdx(nil)
 	if err != nil {
 		log.Fatal("Failed to get term index", "err", err)
@@ -192,7 +236,11 @@ func showConfigs(ctx *cli.Context) error {
 }
 
 func showCandidates(ctx *cli.Context) error {
-	cmp, _, _ := createContractInstanceAndTransactor(ctx, false)
+	cmp, _, _, err := createContractInstanceAndTransactor(ctx, false)
+	if err != nil {
+
+		return err
+	}
 	startTerm, endTerm := utils.GetFirstTwoIntArgument(ctx)
 
 	for i := startTerm; i <= endTerm; i++ {
@@ -201,7 +249,8 @@ func showCandidates(ctx *cli.Context) error {
 		log.Info("Candidates number of term", "term", i, "len", len(candidates))
 
 		if err != nil {
-			log.Fatal("Failed to get candidates for term", "term", i, "err", err)
+			log.Info("Failed to get candidates for term", "term", i, "err", err)
+			return err
 		}
 
 		for _, candidate := range candidates {
@@ -212,16 +261,19 @@ func showCandidates(ctx *cli.Context) error {
 	return nil
 }
 
-func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *campaign.Campaign, opts *bind.TransactOpts, client *cpclient.Client) {
-	contractAddr, client, key := utils.PrepareAll(ctx, withTransactor)
-
+func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *campaign.Campaign, opts *bind.TransactOpts, client *cpclient.Client, err error) {
+	contractAddr, client, key, err := utils.PrepareAll(ctx, withTransactor)
+	if err != nil {
+		return &campaign.Campaign{}, &bind.TransactOpts{}, &cpclient.Client{}, err
+	}
 	if withTransactor {
 		opts = bind.NewKeyedTransactor(key.PrivateKey)
 	}
-	contract, err := campaign.NewCampaign(contractAddr, client)
+	contract, err = campaign.NewCampaign(contractAddr, client)
 	if err != nil {
-		log.Fatal("Failed to create new contract instance", "err", err)
+		log.Info("Failed to create new contract instance", "err", err)
+		return &campaign.Campaign{}, &bind.TransactOpts{}, &cpclient.Client{}, err
 	}
 
-	return contract, opts, client
+	return contract, opts, client, nil
 }

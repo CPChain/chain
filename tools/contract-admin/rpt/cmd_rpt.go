@@ -106,79 +106,136 @@ var (
 )
 
 func setLowRptPercentage(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	pct := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdateLowRptPercentage(opts, big.NewInt(pct))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setTotalSeats(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	seats := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdateTotalSeats(opts, big.NewInt(seats))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setLowRptSeats(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
+
 	seats := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdateLowRptSeats(opts, big.NewInt(seats))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setWindow(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	window := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdateWindow(opts, big.NewInt(window))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+
+	return utils.WaitMined(client, tx)
 }
 
 func setAlpha(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
 	alpha := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdateAlpha(opts, big.NewInt(alpha))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setBeta(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
+
 	beta := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdateBeta(opts, big.NewInt(beta))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
 }
 
 func setGamma(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
+
 	gamma := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdateGamma(opts, big.NewInt(gamma))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+
+	return utils.WaitMined(client, tx)
 }
 
 func setPsi(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
+
 	psi := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdatePsi(opts, big.NewInt(psi))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+
+	return utils.WaitMined(client, tx)
 }
 
 func setOmega(ctx *cli.Context) error {
-	rpt, opts, client := createContractInstanceAndTransactor(ctx, true)
+	rpt, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
+
 	omega := utils.GetFirstIntArgument(ctx)
 	tx, err := rpt.UpdateOmega(opts, big.NewInt(omega))
-	utils.WaitMined(client, tx, err)
-	return nil
+	if err != nil {
+		return err
+	}
+
+	return utils.WaitMined(client, tx)
 }
 
 func showConfigs(ctx *cli.Context) error {
-	rpt, _, _ := createContractInstanceAndTransactor(ctx, false)
+	rpt, _, _, err := createContractInstanceAndTransactor(ctx, false)
+	if err != nil {
+		return err
+	}
 
 	lowPct, err := rpt.LowRptPercentage(nil)
 	if err != nil {
@@ -237,17 +294,21 @@ func showConfigs(ctx *cli.Context) error {
 	return nil
 }
 
-func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *rptContract.Rpt, opts *bind.TransactOpts, client *cpclient.Client) {
-	contractAddr, client, key := utils.PrepareAll(ctx, withTransactor)
+func createContractInstanceAndTransactor(ctx *cli.Context, withTransactor bool) (contract *rptContract.Rpt, opts *bind.TransactOpts, client *cpclient.Client, err error) {
+	contractAddr, client, key, err := utils.PrepareAll(ctx, withTransactor)
+	if err != nil {
+		return &rptContract.Rpt{}, &bind.TransactOpts{}, &cpclient.Client{}, err
+	}
 
 	if withTransactor {
 		opts = bind.NewKeyedTransactor(key.PrivateKey)
 	}
 
-	contract, err := rptContract.NewRpt(contractAddr, client)
+	contract, err = rptContract.NewRpt(contractAddr, client)
 	if err != nil {
-		log.Fatal("Failed to create new contract instance", "err", err)
+		log.Info("Failed to create new contract instance", "err", err)
+		return &rptContract.Rpt{}, &bind.TransactOpts{}, &cpclient.Client{}, err
 	}
 
-	return contract, opts, client
+	return contract, opts, client, nil
 }
