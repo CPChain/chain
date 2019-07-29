@@ -8,31 +8,31 @@ EXTENDS Integers, Sequences, FiniteSets, TLC
 --algorithm lbft3
 variables
     \* set of proposers
-\*    proposers = {"p1","p2"},
+\*    proposers = {"p1", "p2"},
 \*    predeterminedBlockHeight = [p1|->1, p2|->2],
     proposers = {"p1"},
     predeterminedBlockHeight = [p1|->1],
     \* set of validators
-    validators = {"v1","v2","v3","v4"},
+    validators = {"v1", "v2", "v3", "v4"},
     \* legal block heights
-    \* possibleHeights = {1,2},
+    \* possibleHeights = {1, 2},
     possibleHeights = {1},
     \* signature for each validators
-    sig = [v1|->1,v2|->2,v3|->3,v4|->4],
+    sig = [v1|->1, v2|->2, v3|->3, v4|->4],
     \* a function to represent state for each validator
     \* 0,1,2 represent idle, prepare, commit
     \* 3,4 represent impeach prepare and impeach commit state
     \* 9 represents a consensus of normal case
     state = [va \in validators |-> 0],
     \* four sigs refers to signatures for different messages
-    prepareSig = [va \in validators |->{}],
-    commitSig = [va \in validators |->{}],
-    impeachPrepareSig = [va \in validators |->{}],
-    impeachCommitSig = [va \in validators |->{}],
+    prepareSig = [va \in validators |-> {}],
+    commitSig = [va \in validators |-> {}],
+    impeachPrepareSig = [va \in validators |-> {}],
+    impeachCommitSig = [va \in validators |-> {}],
     \* a cache store received block
-    blockCache = [va \in validators|->""],
+    blockCache = [va \in validators |-> ""],
     \* the receiver is set to the block when the proposer mines a block
-    blockReceiver = [va \in validators |->""],
+    blockReceiver = [va \in validators |-> ""],
     \* a counter to record block heights for validators and proposers
     validatorBlockHeight = [va \in validators |-> 1],
     proposerBlockHeight = [pr \in proposers |-> 1],
@@ -112,13 +112,13 @@ end procedure;
 \* broadcast the message to all validators
 procedure broadcast(sender, inputType) begin
 Broadcast1:
-        call addSig("v1",inputType,sender);
+        call addSig("v1", inputType,sender);
 Broadcast2:
-        call addSig("v2",inputType,sender);
+        call addSig("v2", inputType,sender);
 Broadcast3:
-        call addSig("v3",inputType,sender);
+        call addSig("v3", inputType,sender);
 Broadcast4:
-        call addSig("v4",inputType,sender);
+        call addSig("v4", inputType,sender);
     return;
 end procedure;
 
@@ -131,9 +131,9 @@ broadcastAll:
             then
                 \* proposer add one on its block height
                 \* and insert the block in its local chain
-                proposerChain[proposer] := Append(proposerChain[proposer],block);
-                proposerBlockHeight[proposer] := proposerBlockHeight[proposer]+1;
-            elsif proposerBlockHeight[proposer] = height+1
+                proposerChain[proposer] := Append(proposerChain[proposer], block);
+                proposerBlockHeight[proposer] := proposerBlockHeight[proposer] + 1;
+            elsif proposerBlockHeight[proposer] = height + 1
             then
                 \* assert an error if the received block is not indentical
                 \* to the counterpart of the same height in its local chain
@@ -173,7 +173,7 @@ Fsm:
             commitSig[self] := commitSig[self] \union {sig[self]};
             state[self] := 2;
             \* print commitSig;
-            call broadcast(self,"commitMsg");
+            call broadcast(self, "commitMsg");
 
         or  \* commit state
             \* state of both v should be commit state
@@ -182,7 +182,7 @@ Fsm:
             \* transfer to idle state in next height given the certificate
             state[self] := 9;
             \* broadcast validateMsg to all validators
-            call broadcast(self,"validateMsg");
+            call broadcast(self, "validateMsg");
         or \* validate state
             await state[self] = 9;
             BroadcastAll:
@@ -190,7 +190,7 @@ Fsm:
             HeightAugmentation:
             \* add one upon its block height
             \* append the block in the local chain
-            validatorBlockHeight[self] := validatorBlockHeight[self]+1;
+            validatorBlockHeight[self] := validatorBlockHeight[self] + 1;
             validatorChain[self] := Append(validatorChain[self], blockCache[self]);
             \* print result
             print self;
@@ -293,16 +293,16 @@ ProcSet == (validators) \cup (proposers)
 Init == (* Global variables *)
         /\ proposers = {"p1"}
         /\ predeterminedBlockHeight = [p1|->1]
-        /\ validators = {"v1","v2","v3","v4"}
+        /\ validators = {"v1", "v2", "v3", "v4"}
         /\ possibleHeights = {1}
-        /\ sig = [v1|->1,v2|->2,v3|->3,v4|->4]
+        /\ sig = [v1|->1, v2|->2, v3|->3, v4|->4]
         /\ state = [va \in validators |-> 0]
-        /\ prepareSig = [va \in validators |->{}]
-        /\ commitSig = [va \in validators |->{}]
-        /\ impeachPrepareSig = [va \in validators |->{}]
-        /\ impeachCommitSig = [va \in validators |->{}]
-        /\ blockCache = [va \in validators|->""]
-        /\ blockReceiver = [va \in validators |->""]
+        /\ prepareSig = [va \in validators |-> {}]
+        /\ commitSig = [va \in validators |-> {}]
+        /\ impeachPrepareSig = [va \in validators |-> {}]
+        /\ impeachCommitSig = [va \in validators |-> {}]
+        /\ blockCache = [va \in validators |-> ""]
+        /\ blockReceiver = [va \in validators |-> ""]
         /\ validatorBlockHeight = [va \in validators |-> 1]
         /\ proposerBlockHeight = [pr \in proposers |-> 1]
         /\ validatorChain = [va \in validators |-> <<>>]
@@ -471,9 +471,9 @@ broadcastAll_(self) == /\ pc[self] = "broadcastAll_"
                        /\ IF inputType[self] = "blockInsertMsg"
                              THEN /\ \E proposer \in proposers:
                                        IF proposerBlockHeight[proposer] = height[self]
-                                          THEN /\ proposerChain' = [proposerChain EXCEPT ![proposer] = Append(proposerChain[proposer],block[self])]
-                                               /\ proposerBlockHeight' = [proposerBlockHeight EXCEPT ![proposer] = proposerBlockHeight[proposer]+1]
-                                          ELSE /\ IF proposerBlockHeight[proposer] = height[self]+1
+                                          THEN /\ proposerChain' = [proposerChain EXCEPT ![proposer] = Append(proposerChain[proposer], block[self])]
+                                               /\ proposerBlockHeight' = [proposerBlockHeight EXCEPT ![proposer] = proposerBlockHeight[proposer] + 1]
+                                          ELSE /\ IF proposerBlockHeight[proposer] = height[self] + 1
                                                      THEN /\ Assert(proposerChain[proposer][height[self]] = block[self],
                                                                     "Failure of assertion at line 140, column 17.")
                                                      ELSE /\ TRUE
@@ -580,7 +580,7 @@ BroadcastAll(self) == /\ pc[self] = "BroadcastAll"
                                       consensus >>
 
 HeightAugmentation(self) == /\ pc[self] = "HeightAugmentation"
-                            /\ validatorBlockHeight' = [validatorBlockHeight EXCEPT ![self] = validatorBlockHeight[self]+1]
+                            /\ validatorBlockHeight' = [validatorBlockHeight EXCEPT ![self] = validatorBlockHeight[self] + 1]
                             /\ validatorChain' = [validatorChain EXCEPT ![self] = Append(validatorChain[self], blockCache[self])]
                             /\ PrintT(self)
                             /\ PrintT(validatorChain'[self])
@@ -700,5 +700,5 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Jul 25 12:06:02 CST 2019 by Dell
+\* Last modified Mon Jul 29 14:57:18 CST 2019 by Dell
 \* Created Mon Jul 22 15:23:05 CST 2019 by Dell
