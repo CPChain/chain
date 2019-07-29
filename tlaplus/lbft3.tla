@@ -14,7 +14,7 @@ variables
     predeterminedBlockHeight = [p1|->1],
     \* set of validators
     validators = {"v1", "v2", "v3", "v4"},
-    \* legal block heights
+    \* possible block heights
     \* possibleHeights = {1, 2},
     possibleHeights = {1},
     \* signature for each validators
@@ -700,5 +700,5 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Mon Jul 29 14:57:18 CST 2019 by Dell
+\* Last modified Mon Jul 29 15:01:56 CST 2019 by Dell
 \* Created Mon Jul 22 15:23:05 CST 2019 by Dell
