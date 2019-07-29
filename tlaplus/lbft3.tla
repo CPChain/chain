@@ -9,7 +9,7 @@ EXTENDS Integers, Sequences, FiniteSets, TLC
 variables
     \* set of proposers
 \*    proposers = {"p1", "p2"},
-\*    predeterminedBlockHeight = [p1|->1, p2|->2],
+\*    predeterminedBlockHeight = [p1 |-> 1, p2 |-> 2],
     proposers = {"p1"},
     predeterminedBlockHeight = [p1 |-> 1],
     \* set of validators
