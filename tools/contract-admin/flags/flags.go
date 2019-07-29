@@ -17,6 +17,8 @@
 package flags
 
 import (
+	"errors"
+
 	"bitbucket.org/cpchain/chain/commons/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli"
@@ -78,29 +80,26 @@ var GeneralFlags = []cli.Flag{
 	},
 }
 
-func GetContractAddress(ctx *cli.Context) common.Address {
+func GetContractAddress(ctx *cli.Context) (common.Address, error) {
 	if !ctx.IsSet(ContractAddr) {
-		log.Fatal("contract address must be provided!")
+		return common.Address{}, errors.New("contract address must be provided!")
 	}
-
 	contractAddr := common.HexToAddress(ctx.String(ContractAddr))
-	return contractAddr
+	return contractAddr, nil
 }
 
-func GetEndpoint(ctx *cli.Context) string {
+func GetEndpoint(ctx *cli.Context) (string, error) {
 	if !ctx.IsSet(Endpoint) {
-		log.Fatal("endpoint must be provided!")
+		return "", errors.New("endpoint must be provided!")
 	}
-
 	endpoint := ctx.String(Endpoint)
-	return endpoint
+	return endpoint, nil
 }
 
-func GetKeystorePath(ctx *cli.Context) string {
+func GetKeystorePath(ctx *cli.Context) (string, error) {
 	if !ctx.IsSet(KeystorePath) {
-		log.Fatal("keystore path must be provided!")
+		return "", errors.New("keystore path must be provided!")
 	}
-
 	keystorePath := ctx.String(KeystorePath)
-	return keystorePath
+	return keystorePath, nil
 }

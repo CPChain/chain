@@ -463,6 +463,11 @@ Cpc.getBlock
     contain full transactions objects.  Otherwise it will be an array of
     transaction hashes.
 
+    .. note::
+
+        The unit of returned ``timestamp`` is *millisecond*,
+        which is different from the unit of *second* of Ethereum counterpart.
+
     .. code-block:: python
 
         >>> cf.cpc.getBlock(100)
