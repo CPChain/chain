@@ -74,7 +74,12 @@ func (db *MemDatabase) NewBatch() Batch {
 	return &memBatch{db: db}
 }
 
-func (db *MemDatabase) Len() int { return len(db.db) }
+func (db *MemDatabase) Len() int {
+	db.rw.RLock()
+	defer db.rw.RUnlock()
+
+	return len(db.db)
+}
 
 type kv struct{ k, v []byte }
 
@@ -82,21 +87,31 @@ type memBatch struct {
 	db     *MemDatabase
 	writes []kv
 	size   int // for ValueSize
+	rw     sync.RWMutex
 }
 
 func (b *memBatch) Put(key, value []byte) error {
+	b.rw.Lock()
+	defer b.rw.Unlock()
+
 	b.writes = append(b.writes, kv{common.CopyBytes(key), common.CopyBytes(value)})
 	b.size += len(value)
 	return nil
 }
 
 func (b *memBatch) Delete(key []byte) error {
+	b.rw.Lock()
+	defer b.rw.Unlock()
+
 	b.writes = append(b.writes, kv{common.CopyBytes(key), nil})
 	b.size++
 	return nil
 }
 
 func (b *memBatch) Write() error {
+	b.rw.Lock()
+	defer b.rw.Unlock()
+
 	b.db.rw.Lock()
 	defer b.db.rw.Unlock()
 
@@ -111,10 +126,16 @@ func (b *memBatch) Write() error {
 }
 
 func (b *memBatch) ValueSize() int {
+	b.rw.RLock()
+	defer b.rw.RUnlock()
+
 	return b.size
 }
 
 func (b *memBatch) Reset() {
+	b.rw.Lock()
+	defer b.rw.Unlock()
+
 	b.writes = b.writes[:0]
 	b.size = 0
 }
