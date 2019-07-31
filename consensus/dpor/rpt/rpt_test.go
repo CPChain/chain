@@ -420,3 +420,115 @@ func newBlockchainWithDb(n int) (common.Address, *backends.SimulatedBackend) {
 
 	return rptAddr, backend
 }
+
+//unit testcase:
+//Testcase of rpt_calc:
+func TestRptOf4(t *testing.T) {
+	numAccount := 30
+	numBlocks := 10000
+	windowNum := rand.Intn(10000)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.BalanceValueOf(addr, accounts, 500, windowNum)
+		t.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestBalanceValueOf(t *testing.T) {
+	numAccount := 30
+	numBlocks := 10000
+	windowNum := rand.Intn(10000)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.BalanceValueOf(addr, accounts, 500, windowNum)
+		t.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestTxsValueOf(t *testing.T) {
+	numAccount := 30
+	numBlocks := 10000
+	windowNum := rand.Intn(10000)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.TxsValueOf(addr, accounts, 500, windowNum)
+		t.Log("idx", i, "Transaction Count of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestMaintenanceValueOf(t *testing.T) {
+	numAccount := 30
+	numBlocks := 10000
+	windowNum := rand.Intn(10000)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.MaintenanceValueOf(addr, accounts, 500, windowNum)
+		t.Log("idx", i, "Chain Maintenance of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestUploadValueOf(t *testing.T) {
+	numAccount := 100
+	numBlocks := 10000
+	windowNum := rand.Intn(10000)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.UploadValueOf(addr, accounts, 500, windowNum)
+		t.Log("idx", i, "File Contribution of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestProxyValueOf(t *testing.T) {
+	numAccount := 70
+	numBlocks := 10000
+	windowNum := rand.Intn(10000)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.ProxyValueOf(addr, accounts, 500, windowNum)
+		t.Log("idx", i, "Proxy Information of PDash of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestFormatString(t *testing.T) {
+	numAccount := 100
+	accounts := generateABatchAccounts(numAccount)
+	contractAddr, backend := newBlockchainWithDb(6)
+	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
+	rpts := rptInstance.CalcRptInfoList(accounts, transfer(500))
+	t.Log("rpt result", "rpts", rpts.FormatString())
+
+}
+
+//Testcase of rpt_ helper:
+func TestPctCount(t *testing.T) {
+	type args struct {
+		pct   int
+		total int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := rpt.PctCount(tt.args.pct, tt.args.total); got != tt.want {
+				t.Errorf("PctCount() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
