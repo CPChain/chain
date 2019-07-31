@@ -139,10 +139,8 @@ func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 	s.lock.RUnlock()
 
 	if !ok {
-		log.Debug("proposers for the term not exist, return default proposers", "term", term)
-		proposers := configs.Proposers()
-		s.setRecentProposers(term, proposers)
-		return proposers
+		log.Error("proposers for the term not exist", "term", term)
+		return []common.Address{}
 	}
 
 	return signers
