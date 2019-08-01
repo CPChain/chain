@@ -182,3 +182,20 @@ the time gas between local time and NTP (network time protocol) must be less tha
 To address the issue, please toggle *automatic time & date* in your server
 such that the local time keeps correct.
 
+What could I handle a large amount of impeached blocks?
+*****************************************************************
+
+For proposer finding that it has a large amount of impeached blocks,
+please check if your version is the latest one.
+You can use the command
+
+.. code-block:: shell
+
+    $ ./cpchain --version
+
+to check the version number.
+
+If your node still encounter a high frequency of getting impeached,
+please raise an issue on our GitHub `Issue Page`_.
+
+.. _Issue Page: https://github.com/CPChain/chain/issues
