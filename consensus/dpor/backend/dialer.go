@@ -103,6 +103,9 @@ func (d *Dialer) addPeer(cpcVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, mac 
 	// if remote peer is neither a proposer nor a validator, disconnect it
 	if (!isProposer && !isValidator) || err != nil {
 		log.Debug("failed to handshake in dpor", "err", err, "isProposer", isProposer, "isValidator", isValidator)
+		if !isProposer && !isValidator {
+			err = ErrNotSigner
+		}
 		return "", isProposer, isValidator, err
 	}
 

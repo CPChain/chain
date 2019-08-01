@@ -21,17 +21,16 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
-	"strconv"
 	"testing"
+	"time"
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind/backends"
-	cr "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
+	cr "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -45,7 +44,7 @@ import (
 var (
 	testBankKey, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	testBank        = crypto.PubkeyToAddress(testBankKey.PublicKey)
-	testBankBalance = new(big.Int).Mul(big.NewInt(1000000), big.NewInt(configs.Cpc))
+	testBankBalance = new(big.Int).Mul(big.NewInt(10000), big.NewInt(configs.Cpc))
 	rptAddr         common.Address
 )
 
@@ -163,30 +162,75 @@ func benchRptOf(b *testing.B, numAccount int) {
 }
 
 //Benchmark of rpt...
-// this testcase construct 1000 blocks
+//This testcase construct 1000 blocks
 
-func BenchmarkCalcRptInfoList_100n(b *testing.B) {
-	benchCalcRptInfoList(b, 100)
+// 1. The relationships between performance and the number of candidate
+// On the precondition of default windowSize (100)
+// 10 candidates' rpt with window size 100 spend about 0.003s every time
+func BenchmarkCalcRptInfoList_10c(b *testing.B) {
+	benchCalcRptInfoList(b, 100, 10)
 }
 
-// 100 candidates' rpt with window size 100 spend 0.09 ns every time
-
-func BenchmarkCalcRptInfoList_1000n(b *testing.B) {
-	benchCalcRptInfoList(b, 1000)
+// 50 candidates' rpt with window size 100 spend about 0.015s every time
+func BenchmarkCalcRptInfoList_50c(b *testing.B) {
+	benchCalcRptInfoList(b, 100, 50)
 }
 
-// 1000 candidates' rpt with window size 1000 spend 1424020047 ns every time
+// 100 candidates' rpt with window size 100 spend about 0.038s every time
+func BenchmarkCalcRptInfoList_100c(b *testing.B) {
+	benchCalcRptInfoList(b, 100, 100)
+}
 
-func benchCalcRptInfoList(b *testing.B, num int) {
+// 500 candidates' rpt with window size 100 spend about 0.5s every time
+func BenchmarkCalcRptInfoList_500c(b *testing.B) {
+	benchCalcRptInfoList(b, 100, 500)
+}
+
+// 1000 candidates' rpt with window size 100 spend about 1.85s every time
+func BenchmarkCalcRptInfoList_1000c(b *testing.B) {
+	benchCalcRptInfoList(b, 100, 1000)
+}
+
+// 2.The relationships between performance and the size of window
+// On the precondition of 100 candidates
+// 100 candidates' rpt with window size 10 spend about 0.022s every time
+func BenchmarkCalcRptInfoList_10w(b *testing.B) {
+	benchCalcRptInfoList(b, 10, 100)
+}
+
+// 100 candidates' rpt with window size 50 spend about 0.030s every time
+func BenchmarkCalcRptInfoList_50w(b *testing.B) {
+	benchCalcRptInfoList(b, 50, 100)
+}
+
+// 100 candidates' rpt with window size 100 spend about 0.038s every time
+func BenchmarkCalcRptInfoList_100w(b *testing.B) {
+	benchCalcRptInfoList(b, 100, 100)
+}
+
+// 100 candidates' rpt with window size 500 spend about 0.039s every time
+func BenchmarkCalcRptInfoList_500w(b *testing.B) {
+	benchCalcRptInfoList(b, 500, 100)
+}
+
+// 100 candidates' rpt with window size 500 spend about 0.040s every time
+func BenchmarkCalcRptInfoList_1000w(b *testing.B) {
+	benchCalcRptInfoList(b, 1000, 100)
+}
+
+func benchCalcRptInfoList(b *testing.B, windowSize int64, numAccount int) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	numAccount := num
 	accounts := generateABatchAccounts(numAccount)
-	contractAddr, backend := newBlockchainWithDb(1000)
+	contractAddr, backend, rptContract := newBlockchainWithDb(1000, accounts)
+	rptContract.UpdateWindow(bind.NewKeyedTransactor(testBankKey), big.NewInt(windowSize))
+	backend.Commit()
 	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
-	rpts := rptInstance.CalcRptInfoList(accounts, transfer(100))
-	b.Log("rpt result", "rpts", rpts)
+	tstart := time.Now()
+	rpts := rptInstance.CalcRptInfoList(accounts, uint64(1000))
+	b.Log("100 candidates' rpt with window size 100 spend time", time.Now().Sub(tstart))
+	b.Log("rpt result", "rpts", rpts.FormatString())
 }
 
 //benchmark of rpt_calc:
@@ -324,7 +368,9 @@ func benchLowRptCount(b *testing.B, total int) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	contractAddr, backend := newBlockchainWithDb(1000)
+	numAccount := 100
+	accounts := generateABatchAccounts(numAccount)
+	contractAddr, backend, _ := newBlockchainWithDb(1000, accounts)
 	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
 	lowCount := rptInstance.LowRptCount(total)
 	b.Log("LowRptCount is", lowCount)
@@ -338,71 +384,37 @@ func BenchmarkLowRptCount_10000t(b *testing.B) {
 	benchLowRptCount(b, 10000)
 }
 
-//Additional functions
-func transfer(num int) uint64 {
-	str := strconv.Itoa(num)
-	number, _ := strconv.ParseUint(str, 12, 64)
-	return number
-}
-
+// Additional functions
 // Construct a new Contract address and a backend instance
-func newBlockchainWithDb(n int) (common.Address, *backends.SimulatedBackend) {
+func newBlockchainWithDb(n int, addrs []common.Address) (common.Address, *backends.SimulatedBackend, *cr.Rpt) {
 	db := database.NewMemDatabase()
 	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
 	gspec := core.DefaultGenesisBlock()
+	gspec.GasLimit = 1000000
 	gspec.Alloc = core.GenesisAlloc{testBank: {Balance: testBankBalance}}
 	genesis := gspec.MustCommit(db)
 	config := gspec.Config
 	dporConfig := config.Dpor
 	dporFakeEngine := dpor.NewFaker(dporConfig, db)
+	from := 0
+	generator := func(i int, gen *core.BlockGen) {
+		number := rand.Intn(10)
+		a := int64(number)
+		tx := types.NewTransaction(
+			gen.TxNonce(testBank),
+			addrs[from],
+			new(big.Int).Mul(big.NewInt(a), big.NewInt(configs.Cpc)),
+			configs.TxGas,
+			nil,
+			nil,
+		)
+		tx, _ = types.SignTx(tx, types.HomesteadSigner{}, testBankKey)
+		gen.AddTx(tx)
 
-	// Define three accounts to simulate transactions with
-	acc1Key, _ := crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
-	acc2Key, _ := crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
-	acc1Addr := crypto.PubkeyToAddress(acc1Key.PublicKey)
-	acc2Addr := crypto.PubkeyToAddress(acc2Key.PublicKey)
+		from = (from + 1) % len(addrs)
 
-	signer := types.HomesteadSigner{}
-	// Create a chain generator with some simple transactions (blatantly stolen from @fjl/chain_markets_test)
-	generator := func(i int, block *core.BlockGen) {
-		switch i {
-		case 0:
-			// In block 1, the test bank sends account #1 some ether.
-			tx, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(100000), configs.TxGas, nil, nil), signer, testBankKey)
-			block.AddTx(tx)
-		case 1:
-			// In block 2, the test bank sends some more ether to account #1.
-			// acc1Addr passes it on to account #2.
-			tx1, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(1000), configs.TxGas, nil, nil), signer, testBankKey)
-			tx2, _ := types.SignTx(types.NewTransaction(block.TxNonce(acc1Addr), acc2Addr, big.NewInt(1000), configs.TxGas, nil, nil), signer, acc1Key)
-			block.AddTx(tx1)
-			block.AddTx(tx2)
-		case 2:
-			// In block 2, the test bank sends some more ether to account #1.
-			// acc1Addr passes it on to account #2.
-			tx1, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(1000), configs.TxGas, nil, nil), signer, testBankKey)
-			tx2, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank)+uint64(1), acc2Addr, big.NewInt(10000), configs.TxGas, nil, nil), signer, testBankKey)
-			block.AddTx(tx1)
-			block.AddTx(tx2)
-		case 3:
-			// Block 3 is empty but was mined by account #2.
-			block.SetCoinbase(acc2Addr)
-		case 4:
-			// In block 1, the test bank sends account #1 some ether.
-			tx, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(100), configs.TxGas, nil, nil), signer, testBankKey)
-			block.AddTx(tx)
-		case 50:
-			tx1, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(10000000), configs.TxGas, nil, nil), signer, testBankKey)
-			tx2, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank)+uint64(1), acc2Addr, big.NewInt(10000), configs.TxGas, nil, nil), signer, testBankKey)
-			block.AddTx(tx1)
-			block.AddTx(tx2)
-		case 130:
-			tx1, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(10000000), configs.TxGas, nil, nil), signer, testBankKey)
-			tx2, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank)+uint64(1), acc2Addr, big.NewInt(10000), configs.TxGas, nil, nil), signer, testBankKey)
-			block.AddTx(tx1)
-			block.AddTx(tx2)
-		}
 	}
+
 	blocks, _ := core.GenerateChain(config, genesis, dporFakeEngine, db, remoteDB, n, generator)
 	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, dporFakeEngine, vm.Config{}, remoteDB, nil)
 	_, _ = blockchain.InsertChain(blocks)
@@ -412,11 +424,11 @@ func newBlockchainWithDb(n int) (common.Address, *backends.SimulatedBackend) {
 	var err error
 	deployTransactor := bind.NewKeyedTransactor(testBankKey)
 
-	rptAddr, _, _, err = cr.DeployRpt(deployTransactor, backend)
+	rptAddr, _, rptContract, err := cr.DeployRpt(deployTransactor, backend)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	backend.Commit()
 
-	return rptAddr, backend
+	return rptAddr, backend, rptContract
 }

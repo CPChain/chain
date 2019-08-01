@@ -26,9 +26,8 @@ var (
 	// ErrFailToAddPendingBlock is returned if failed to add block to pending
 	ErrFailToAddPendingBlock = errors.New("fail to add pending block")
 
-	// ErrNotSigner is returned if i am not a signer when handshaking
-	// with remote signer
-	ErrNotSigner = errors.New("local peer is not in the PV committees")
+	// ErrNotSigner is returned if remote peer is not signer when handshaking
+	ErrNotSigner = errors.New("peer is not in the PV committees")
 )
 
 // Handler implements PbftHandler
