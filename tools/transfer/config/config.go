@@ -18,6 +18,7 @@ package config
 
 import (
 	"crypto/ecdsa"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -38,6 +39,13 @@ var (
 	keyStoreFilePath = "./chain/examples/cpchain/data/data1/keystore/"
 )
 
+var (
+	ErrNoKeyFound          = errors.New("No Key Found")
+	ErrMoreThanOneKeyFound = errors.New("More Than One Key Found")
+	ErrNotDir              = errors.New("Not Dir")
+	ErrDirNotFound         = errors.New("Dir Not Found")
+)
+
 // overwrite from environment variables
 func init() {
 	if val := os.Getenv("CPCHAIN_KEYSTORE_FILEPATH"); val != "" {
@@ -45,9 +53,42 @@ func init() {
 	}
 }
 
-func SetConfig(ep, ksPath string) {
+func SetConfig(ep, ksPath string) error {
 	endPoint = ep
+
+	sta, err := os.Stat(ksPath)
+	if err != nil {
+		log.Infof("error: %v", err)
+		return ErrDirNotFound
+	}
+	if !sta.IsDir() {
+		log.Infof("error: %v", err)
+		return ErrNotDir
+	}
+
+	files, err := ioutil.ReadDir(ksPath)
+	if err != nil {
+		log.Infof("error: %v", err)
+		return ErrNoKeyFound
+	}
+
+	fileLen := len(files)
+	log.Infof("len:%v,err:%v", fileLen, err)
+	if fileLen == 0 {
+		return ErrNoKeyFound
+	}
+
+	if fileLen > 1 {
+		return ErrMoreThanOneKeyFound
+	}
+
+	if err != nil {
+		log.Infof("error: %v", err)
+		return ErrNoKeyFound
+	}
+
 	keyStoreFilePath = ksPath
+	return nil
 }
 
 func Connect(password string) (*cpclient.Client, error, *ecdsa.PrivateKey, *ecdsa.PublicKey, common.Address, *keystore.KeyStore, accounts.Account, *big.Int) {
