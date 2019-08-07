@@ -11,7 +11,7 @@ Hi there,
 This is CPChain team. Note that this is for bug report. If you are requesting a feature, please select *Feature Request* template. 
 
 **Where does the bug occur?**
-[e.g. the chain, the wallet, the console or the explorer]
+[e.g. the chain, the wallet, the explorer]
 
 **What is your wallet address and your balance?**
 If it is too private to answer, you can skip it. 

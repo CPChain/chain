@@ -1529,6 +1529,12 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 				go chainmetrics.ReportInsertionElapsedTime("insertion_elapsed")
 			}
 		}
+
+		if chainmetrics.NeedExposeMetrics() {
+			if chain[i].Impeachment() {
+				go chainmetrics.UpdateImpeachBlockNumberGauge(float64(chain[i].Number().Int64()))
+			}
+		}
 	}
 	// Append a single chain head event if we've progressed the chain
 	if lastCanon != nil && bc.CurrentBlock() != nil && bc.CurrentBlock().Hash() == lastCanon.Hash() {

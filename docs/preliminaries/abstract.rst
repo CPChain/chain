@@ -46,16 +46,19 @@ And the transactions peeks at 1,000 blocks per second.
 In summary, our contributions are as follows:
 
 1. We propose LBFT 2.0 protocol that can handle at most 1/3 of faulty nodes in
-the validation process.
+the validation process
 
-2. We design an ecosystem that nodes
+2. We design DPoR consensus among proposers committee,
+which evaluates RPT value for each RNode based on five dimensions.
+
+3. We design an ecosystem that nodes
 can gain rewards from various methods.
 
-3. We theoretically prove the accuracy of the algorithm.
+4. We theoretically prove the accuracy of the algorithm.
 And we use TLA+ as the formal specification language to guarantee the correctness of the concurrent processing.
 In addition, we have exhaustive test cases and plans to handle latent risk and attacks.
 
-4. We experiment with hundreds of nodes all over the nodes in a public environment for a month.
+5. We experiment with hundreds of nodes all over the nodes in a public environment for a month.
 The results show satisfactory stability as well as throughput of the chain.
 And the value of 1000 tps is on a par with the existing BFT-like blockchains.
 

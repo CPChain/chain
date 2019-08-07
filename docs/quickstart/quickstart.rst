@@ -126,12 +126,18 @@ you can run the following command to **connect to the chain**:
 
 .. code-block:: shell
 
-    $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311
+    $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
 
 .. note::
 
-    Please check the availability of both ports 8501 and 30311 before connection.
-    You may nominate other ports as you wish.
+    Please check the availability of the port 30311 before connection.
+    You may nominate other port as you wish.
+
+.. note::
+
+    Flags ``--rpcaddr`` and ``--rpcapi`` make APIs available in your node.
+    You may discard them if you do not need any API.
+    Please make sure the availability of the port 8501 if you are willing to use APIs.
 
 If you cannot get successfully connected.
 You may try delete some temporary files by
@@ -145,6 +151,7 @@ You may try delete some temporary files by
 
     You should specify datadir by adding ``--datadir ./datadir``.
     Otherwise, this command will remove detabase in the default datadir.
+    The port 8051 is required if you are using APIs.
 
 You can refer to :ref:`cpchain-run-fail` in :ref:`FAQ` for detailed solutions.
 
@@ -216,6 +223,12 @@ But it is risky, and we do not recommend it.
 .. NOTE::
 
     The argument ``--mine`` indicates this connection can be used for proposing blocks.
+
+.. note::
+
+    Flags ``--rpcaddr`` and ``--rpcapi`` make APIs available in your node.
+    You may discard them if you do not need any API.
+    Make sure the availability of port 8501 if you are using APIs.
 
 
 And via this connection,

@@ -432,3 +432,179 @@ func newBlockchainWithDb(n int, addrs []common.Address) (common.Address, *backen
 
 	return rptAddr, backend, rptContract
 }
+
+
+//unit testcase:
+//Testcase of rpt_calc:
+func TestRptOf4(t *testing.T) {
+	numAccount := 30
+	numBlocks := 10000
+	windowNum := rand.Intn(10000)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.BalanceValueOf(addr, accounts, 500, windowNum)
+		t.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
+	}
+}
+func TestPrint(t *testing.T) {
+	numBlocks := 1000
+	windowNum := rand.Intn(10)
+	accounts := generateABatchAccounts(10)
+
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i,addr:=range accounts{
+		rank := rptCollector.BalanceValueOf(addr, accounts, 500, windowNum)
+		t.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
+	}
+	newAddr := common.HexToAddress("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+	rank := rptCollector.BalanceValueOf(newAddr, accounts, 500, windowNum)
+	t.Log("This didn't match address :","Balance Value of reputation", rank, "addr", newAddr.Hex())
+}
+
+
+
+func TestBalanceValueOf(t *testing.T) {
+	numAccount := 5
+	numBlocks := 100
+	windowNum := rand.Intn(100)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.BalanceValueOf(addr, accounts, 50, windowNum)
+		t.Log("idx", i, "Balance Value of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestTxsValueOf(t *testing.T) {
+	numAccount := 5
+	numBlocks := 100
+	windowNum := rand.Intn(100)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.TxsValueOf(addr, accounts, 50, windowNum)
+		t.Log("idx", i, "Transaction Count of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestMaintenanceValueOf(t *testing.T) {
+	numAccount := 5
+	numBlocks := 100
+	windowNum := rand.Intn(100)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.MaintenanceValueOf(addr, accounts, 50, windowNum)
+		t.Log("idx", i, "Chain Maintenance of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestUploadValueOf(t *testing.T) {
+	numAccount := 5
+	numBlocks := 10
+	windowNum := rand.Intn(10)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.UploadValueOf(addr, accounts, 5, windowNum)
+		t.Log("idx", i, "File Contribution of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+func TestProxyValueOf(t *testing.T) {
+	numAccount := 5
+	numBlocks := 10
+	windowNum := rand.Intn(10)
+	accounts := generateABatchAccounts(numAccount)
+	fc := newFakeChainBackendForRptCollectorWithBalances(numBlocks, accounts)
+	rptCollector := rpt.NewRptCollectorImpl6(nil, fc)
+	for i, addr := range accounts {
+		rank := rptCollector.ProxyValueOf(addr, accounts, 5, windowNum)
+		t.Log("idx", i, "Proxy Information of PDash of reputation", rank, "addr", addr.Hex())
+	}
+}
+
+//Test the input format of every account
+func TestFormatString(t *testing.T) {
+	accounts := generateABatchAccounts(5)
+	contractAddr, backend ,_:= newBlockchainWithDb(6,accounts)
+	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
+	rpts := rptInstance.CalcRptInfoList(accounts, 6)
+	t.Log("rpt result", "rpts", rpts.FormatString())
+
+}
+
+func TestAddrs(t *testing.T) {
+	accounts := generateABatchAccounts(5)
+	contractAddr, backend ,_:= newBlockchainWithDb(6,accounts)
+	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
+	rpts := rptInstance.CalcRptInfoList(accounts, 6)
+	t.Log("rpt result", "rpts", rpts.Addrs())
+}
+
+func TestSwapAndLess(t *testing.T) {
+	accounts := generateABatchAccounts(6)
+	contractAddr, backend ,_:= newBlockchainWithDb(6,accounts)
+	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
+	rpts := rptInstance.CalcRptInfoList(accounts, 6)
+	t.Log("rpt result", "rpts'format", rpts.FormatString(), "before is less or not?", rpts.Less(0, 1))
+	rpts.Swap(0, 1)
+	t.Log("rpt result", "rpts'format", rpts.FormatString(), "before is less or not?", rpts.Less(0, 1))
+}
+
+//Testcase of rpt_ helper:
+func TestPctCount(t *testing.T) {
+	type args struct {
+		pct   int
+		total int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := rpt.PctCount(tt.args.pct, tt.args.total); got != tt.want {
+				t.Errorf("PctCount() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+//testcase of rpt.go:
+func TestTotalSeats(t *testing.T){
+	numAccount := 100
+	accounts := generateABatchAccounts(numAccount)
+	_, backend, _ := newBlockchainWithDb(1000, accounts)
+	rptInstance, _ := rpt.NewRptService(common.HexToAddress("dhsjhdak"), backend)
+	abLowrptseats,_:=rptInstance.LowRptSeats()
+	t.Log("Abnormal situation ,not call contract:",abLowrptseats)
+	contractAddr, backend, _ := newBlockchainWithDb(1000, accounts)
+	rptInstance2, _ := rpt.NewRptService(contractAddr, backend)
+	lowrptseats,_:=rptInstance2.LowRptSeats()
+	t.Log("Normal situation, call contract:",lowrptseats)
+}
+
+
+func TestLowRptCount(t *testing.T){
+	numAccount := 100
+	accounts := generateABatchAccounts(numAccount)
+	contractAddr, backend, _ := newBlockchainWithDb(1000, accounts)
+	rptInstance, _ := rpt.NewRptService(contractAddr, backend)
+	lowrptsum:=rptInstance.LowRptCount(77)
+	t.Log("Low Rpt sum seats is:",lowrptsum)
+}
+
+
+
+

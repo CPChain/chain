@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"bitbucket.org/cpchain/chain"
+	cpchain "bitbucket.org/cpchain/chain"
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/api/cpclient"
 	"bitbucket.org/cpchain/chain/cmd/cpchain/commons"
@@ -26,7 +26,7 @@ func main() {
 	app.Name = "transfer"
 	app.Version = configs.Version
 	app.Copyright = "LGPL"
-	app.Usage = "Executable for CPC transfer.\n\t\tExample:./transfer --ep http://192.168.0.147:8501 --ks /tmp/keystore/key21 -t 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"
+	app.Usage = "Executable for CPC transfer.\n\t\tExample:./transfer --ep http://192.168.0.147:8501 --ks /tmp/keystore/key1/ -t 0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -36,8 +36,8 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "keystore, ks",
-			Usage: "Keystore file path for from address",
-			Value: "/tmp/keystore/key1",
+			Usage: "Keystore dir path for from address,only 1 keystore file under the dir,path must explicit end with '/'",
+			Value: "/tmp/keystore/key1/",
 		},
 
 		cli.StringFlag{
@@ -70,8 +70,12 @@ func main() {
 		to := common.HexToAddress(targetAddr)
 		log.Info("args", "endpoint", endpoint, "keystorePath", keystorePath,
 			"to", to.Hex(), "value(cpc)", value)
-		config.SetConfig(endpoint, keystorePath)
 
+		err := config.SetConfig(endpoint, keystorePath)
+		if err != nil {
+			log.Infof("invalid keystorePath :%v", err)
+			return err
+		}
 		// ask for password
 		prompt := "Input password to unlocking account"
 		password, _ := commons.ReadPassword(prompt, false)

@@ -139,7 +139,7 @@ func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 	s.lock.RUnlock()
 
 	if !ok {
-		log.Error("proposers for the term not exist", "term", term)
+		log.Debug("proposers for the term not exist", "term", term)
 		return []common.Address{}
 	}
 

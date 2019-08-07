@@ -109,6 +109,11 @@ Linux and Mac users please use the following command:
 
 .. note::
 
+    The port 30311 should be opened.
+    Otherwise, other nodes cannot connect you in the P2P network.
+
+.. note::
+
     If you discard ``--datadir`` option, the account file is read from default user directory.
 
 .. note::
@@ -116,6 +121,11 @@ Linux and Mac users please use the following command:
     A flag ``--account WALLET_ADDRESS`` is required
     in case your ``./datadir`` directory contains more than one account file.
 
+.. note::
+
+    Flags ``--rpcaddr`` and ``--rpcapi`` make APIs available in your node.
+    You may discard them if you do not need any API.
+    And make sure the port 8501 is open if you are willing to use APIs.
 
 .. note::
 

@@ -21,7 +21,7 @@ func main() {
 		cli.StringFlag{
 			Name:  "keystore, ks",
 			Usage: "Keystore file path for from address",
-			Value: "/tmp/keystore/key1",
+			Value: "/tmp/keystore/key1/",
 		},
 	}
 	app.Action = func(c *cli.Context) error {
@@ -36,7 +36,11 @@ func main() {
 		prompt := "Input password to unlocking account"
 		password, _ := commons.ReadPassword(prompt, false)
 
-		config.SetConfig("", keystorePath)
+		err := config.SetConfig("", keystorePath)
+		if err != nil {
+			log.Infof("invalid keystorePath :%v", err)
+			return err
+		}
 		// decrypt keystore
 		_, _, fromAddress, _, _, err := config.DecryptKeystore(password)
 		if err == nil {
