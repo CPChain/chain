@@ -18,6 +18,9 @@ var (
 
 	insertionElapsedTime = prometheus.NewGauge(prometheus.GaugeOpts{Name: "cpchain_insertion_elapsed_time",
 		Help: "current insertion elapsed time."})
+
+	impeachBlockNumber = prometheus.NewGauge(prometheus.GaugeOpts{Name: "impeached_block",
+		Help: "cpchain current impeached block."})
 )
 
 // configuration items
@@ -42,6 +45,10 @@ func NeedPushMetrics() bool {
 
 func UpdateBlockNumberGauge(blockNumber float64) {
 	blockNumberCounter.Set(blockNumber)
+}
+
+func UpdateImpeachBlockNumberGauge(blockNumber float64) {
+	impeachBlockNumber.Set(blockNumber)
 }
 
 func UpdateTxsNumberGauge(txsNumber float64) {

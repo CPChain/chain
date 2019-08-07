@@ -20,6 +20,7 @@ func InitExposeMetrics(exposeMetricsAddress string) {
 
 func init() {
 	prometheus.MustRegister(blockNumberCounter)
+	prometheus.MustRegister(impeachBlockNumber)
 }
 
 func NeedExposeMetrics() bool {
