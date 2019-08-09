@@ -67,14 +67,17 @@ func WrapperFlags(flags []cli.Flag) []cli.Flag {
 }
 
 func Validator(ctx *cli.Context) (string, string, string, error) {
-	pwdfile := ctx.String("password")
 	kspath := ctx.String("keystore")
 	rpc := ctx.String("rpc")
-
-	if !utility.Exists(pwdfile) {
-		err = errors.New("Password file " + pwdfile + " does not exist.")
-		return rpc, kspath, pwdfile, err
+	pwdfile := ""
+	if ctx.IsSet("password") {
+		pwdfile = ctx.String("password")
+		if !utility.Exists(pwdfile) {
+			err = errors.New("Password file " + pwdfile + " does not exist.")
+			return rpc, kspath, pwdfile, err
+		}
 	}
+
 	if !utility.Exists(kspath) {
 		err = errors.New("Keystore file " + kspath + " does not exist.")
 		return rpc, kspath, pwdfile, err
