@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"reflect"
 	"testing"
 
@@ -12,7 +13,15 @@ import (
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	lru "github.com/hashicorp/golang-lru"
+)
+
+var (
+	testBankKey, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	testBank        = crypto.PubkeyToAddress(testBankKey.PublicKey)
+	testBankBalance = new(big.Int).Mul(big.NewInt(10000), big.NewInt(configs.Cpc))
+	rptAddr         common.Address
 )
 
 type fakeDb struct {
@@ -63,6 +72,17 @@ func Test_newSnapshot(t *testing.T) {
 	}
 }
 
+func bench_newSnapshot(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress(), FakeMode)
+	b.Log("creates a new Snapshot with the specified startup parameters...Mode is :", snap.Mode)
+
+}
+func BenchmarkCreateSnapsshot(b *testing.B) {
+	bench_newSnapshot(b)
+}
+
 func Test_loadSnapshot(t *testing.T) {
 	type args struct {
 		config   *configs.DporConfig
@@ -97,6 +117,18 @@ func Test_loadSnapshot(t *testing.T) {
 			}
 		})
 	}
+}
+
+func bench_loadSnapshot(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
+	//cache, _ := lru.NewARC(inMemorySnapshots)
+	loadSnapshot(&testConfig, &fakeDb{dbType: 1}, common.Hash{})
+}
+
+func BenchmarkLoadSnapshot(b *testing.B) {
+	bench_loadSnapshot(b)
 }
 
 func TestSnapshot_store(t *testing.T) {
@@ -168,6 +200,32 @@ func TestSnapshot_copy(t *testing.T) {
 	}
 }
 
+func TestSnapshot_setRecentProposers(t *testing.T) {
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress(), FakeMode)
+	proposers := getCandidates()
+	randterm := rand.Uint64()
+	snap.setRecentProposers(randterm, proposers)
+
+	ss := snap.RecentProposers[randterm]
+
+	equal := reflect.DeepEqual(ss, proposers)
+	if !equal {
+		t.Errorf("setRecentProposers fail...")
+	}
+
+}
+
+func TestSnapshot_setCandidates(t *testing.T) {
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress(), FakeMode)
+	candidates := getCandidates()
+	snap.setCandidates(candidates)
+	sc := snap.Candidates
+	equal := reflect.DeepEqual(sc, candidates)
+	if !equal {
+		t.Errorf("setCandidates fail...")
+	}
+}
+
 func TestSnapshot_apply(t *testing.T) {
 	type fields struct {
 		config     *configs.DporConfig
@@ -226,118 +284,6 @@ func TestSnapshot_apply(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DporSnapshot.apply(%v) = \n%v, want \n%v", tt.args.headers, got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSnapshot_applyHeader(t *testing.T) {
-	t.Skip("temporally skip for further considerations in header construction")
-	type fields struct {
-		config     *configs.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Candidates []common.Address
-		//RecentSigners map[uint64][]common.Address
-	}
-	type args struct {
-		header *types.Header
-	}
-	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	testCache, _ := lru.NewARC(inMemorySnapshots)
-	expectedResult := new(DporSnapshot)
-	expectedResult.Number = 1
-	expectedResult.config = &testConfig
-	expectedResult.Candidates = getProposerAddress()
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{"empty header",
-			fields{&testConfig,
-				testCache,
-				1,
-				common.Hash{},
-				getProposerAddress(),
-			},
-			args{
-				nil,
-				//TODO: this header should not be nil, otherwise it causes a panic on invalid memory address
-			},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &DporSnapshot{
-				config: tt.fields.config,
-				// sigcache:      tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Candidates: tt.fields.Candidates,
-				// RecentSigners: tt.fields.RecentSigners,
-			}
-			if err := s.applyHeader(tt.args.header, true, nil, nil); (err != nil) != tt.wantErr {
-				t.Errorf("DporSnapshot.applyHeader(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestSnapshot_updateCandidates(t *testing.T) {
-	t.Skip("Snapshot_updateCandiates have not complete yet")
-	type fields struct {
-		config     *configs.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Candidates []common.Address
-		//RecentSigners map[uint64][]common.Address
-	}
-	type args struct {
-		header *types.Header
-	}
-	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	testCache, _ := lru.NewARC(inMemorySnapshots)
-	expectedResult := new(DporSnapshot)
-	expectedResult.Number = 1
-	expectedResult.config = &testConfig
-	expectedResult.Candidates = getProposerAddress()
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{"empty header",
-			fields{&testConfig,
-				testCache,
-				1,
-				common.Hash{},
-				getProposerAddress(),
-			},
-			args{
-				nil,
-				//TODO: this header should not be nil, otherwise it causes a panic on invalid memory address
-			},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &DporSnapshot{
-				config: tt.fields.config,
-				// sigcache:      tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Candidates: tt.fields.Candidates,
-				// RecentSigners: tt.fields.RecentSigners,
-			}
-			if err := s.updateCandidates(nil, 0); (err != nil) != tt.wantErr {
-				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
 			}
 		})
 	}
@@ -522,7 +468,6 @@ func Test_loadSnapshot_marshal(t *testing.T) {
 	recentP := make(map[uint64][]common.Address)
 	recentP[1] = proposers
 	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP}
-
 	hash := common.Hash{}
 	snapshot.setHash(hash)
 	snapshot.store(db)
@@ -580,20 +525,6 @@ func Test_choseSomeProposers(t *testing.T) {
 				common.HexToAddress("0x0000000000000000000000000000000000000002"),
 			},
 		},
-
-		// this will panic, it's correct
-		// {
-		// 	name: "1",
-		// 	args: args{
-		// 		proposers: []common.Address{
-		// 			common.HexToAddress("0x0000000000000000000000000000000000000001"),
-		// 			common.HexToAddress("0x0000000000000000000000000000000000000002"),
-		// 		},
-		// 		seed:    0,
-		// 		wantLen: 3,
-		// 	},
-		// 	wantDefaultProposers: nil,
-		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -695,10 +626,6 @@ func Test_evenlyInsertDefaultProposers(t *testing.T) {
 	}
 }
 
-func TestDporSnapshot_updateProposers(t *testing.T) {
-
-}
-
 func Test_addressExcept(t *testing.T) {
 	type args struct {
 		all    []common.Address
@@ -773,5 +700,232 @@ func Test_addressExcept(t *testing.T) {
 				t.Errorf("addressExcept() = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
+	}
+}
+
+func generateABatchAccounts(n int) []common.Address {
+	var addresses []common.Address
+	for i := 1; i < n; i++ {
+		addresses = append(addresses, common.HexToAddress("0x"+fmt.Sprintf("%040x", i)))
+	}
+	return addresses
+}
+
+func TestTermof(t *testing.T) {
+	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	recentP := make(map[uint64][]common.Address)
+	recentP[1] = proposers
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, Number: 8888}
+	calcTerm := (snapshot.Number - 1) / ((snapshot.config.TermLen) * (snapshot.config.ViewLen))
+	t.Log("blockNumber is 0:", snapshot.TermOf(0))
+	wantResult := snapshot.TermOf(snapshot.Number)
+	if !reflect.DeepEqual(calcTerm, wantResult) {
+		t.Error("termCalculateExceptresult is wrong...")
+	}
+}
+func TestStartBlockNumberOfTerm(t *testing.T) {
+	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	recentP := make(map[uint64][]common.Address)
+	recentP[1] = proposers
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, Number: 888}
+	wantResult := snapshot.config.ViewLen * snapshot.config.TermLen * (snapshot.TermOf(snapshot.Number) + 1)
+	startBlock := snapshot.StartBlockNumberOfTerm(snapshot.TermOf(snapshot.Number) + 1)
+	if !reflect.DeepEqual(startBlock, wantResult) {
+		t.Error("termStartBlock calculate is  not right...")
+	}
+}
+
+//caculate the number of this term's validator??
+func TestValidatorViewOf(t *testing.T) {
+	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	recentA := generateABatchAccounts(5)
+	recentV := make(map[uint64][]common.Address)
+	recentP := make(map[uint64][]common.Address)
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, RecentValidators: recentV, Number: 888}
+	term := snapshot.TermOf(snapshot.Number)
+	recentV[term] = recentA
+	recentP[term] = proposers
+	testAddr := common.HexToAddress("0x" + fmt.Sprintf("%040x", 4))
+	wantNumber, _ := snapshot.ValidatorViewOf(testAddr, snapshot.Number)
+	equalSigner := reflect.DeepEqual(intToBool(wantNumber), addressContains(recentV[snapshot.TermOf(snapshot.Number)], testAddr))
+	if !equalSigner {
+		t.Error("ValidatorView test fail...")
+	}
+
+}
+
+func TestFutureValidatorViewOf(t *testing.T) {
+	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
+	recentAddr := generateABatchAccounts(5)
+	recentP := make(map[uint64][]common.Address)
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, Number: 888}
+	currentTerm := snapshot.TermOf(snapshot.Number)
+	pastTerm := snapshot.TermOf(snapshot.Number) - TermDistBetweenElectionAndMining - 1
+	recentP[currentTerm] = recentAddr
+	testAddr := common.HexToAddress("0x" + fmt.Sprintf("%040x", 4))
+	wantNumber, _ := snapshot.FutureProposerViewOf(testAddr, snapshot.Number)
+	equalSigner := reflect.DeepEqual(intToBool(wantNumber), addressContains(recentP[pastTerm], testAddr))
+	if !equalSigner {
+		t.Error("ValidatorView test fail...")
+
+	}
+}
+
+func TestIsProposerOf(t *testing.T) {
+	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
+	recentAddr := generateABatchAccounts(10)
+	recentP := make(map[uint64][]common.Address)
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, Number: 888}
+	term := snapshot.TermOf(snapshot.Number)
+	recentP[term] = recentAddr
+
+	var i int
+	var testResult int
+H:
+	for i = 1; i < (len(recentAddr) + 1); i++ {
+		generateAddr := common.HexToAddress("0x" + fmt.Sprintf("%040x", i))
+		wantResult, _ := snapshot.IsProposerOf(generateAddr, snapshot.Number)
+		if wantResult {
+			testResult++
+			break H
+		}
+	}
+	equalSigner := reflect.DeepEqual(0, testResult)
+	if equalSigner {
+		t.Error("The mining proposer is not be selected... ")
+	}
+
+}
+
+func TestFutureProposersOf(t *testing.T) {
+	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
+	recentAddr := generateABatchAccounts(5)
+	recentP := make(map[uint64][]common.Address)
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, Number: 888}
+	futureTerm := snapshot.TermOf(snapshot.Number) + TermDistBetweenElectionAndMining + 1
+	recentP[futureTerm] = recentAddr
+	equalSigner := reflect.DeepEqual(snapshot.FutureProposersOf(snapshot.Number), recentAddr)
+	if !equalSigner {
+		t.Error("Proposers of future term calculate is wrong... ")
+	}
+
+}
+
+func addressContains(addresses []common.Address, address common.Address) bool {
+	for _, addr := range addresses {
+		if addr == address {
+			return true
+		}
+
+	}
+	return false
+}
+
+func intToBool(num int) bool {
+	if num == -1 {
+		return false
+	}
+	return true
+}
+
+func TestInturnOf(t *testing.T) {
+	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
+	recentAddr := generateABatchAccounts(5)
+	recentP := make(map[uint64][]common.Address)
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, Number: 888}
+	term := snapshot.TermOf(snapshot.Number)
+	recentP[term] = recentAddr
+	testAddr1 := common.HexToAddress("0x" + fmt.Sprintf("%040x", len(recentAddr)-1))
+	testAddr2 := common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")
+
+	flag1 := snapshot.InturnOf(snapshot.Number, testAddr1)
+	equalSigner1 := reflect.DeepEqual(flag1, addressContains(recentAddr, testAddr1))
+	if !equalSigner1 {
+		t.Error("Inturn function error...")
+	}
+	// test an inexistent account...
+	equalSigner2 := reflect.DeepEqual(flag1, addressContains(recentAddr, testAddr2))
+	if equalSigner2 {
+		t.Error("inexitent account should not inturn")
+	}
+	// test another term
+	flag2 := snapshot.InturnOf(732, testAddr1)
+	equalSigner3 := reflect.DeepEqual(flag2, addressContains(recentAddr, testAddr1))
+
+	if equalSigner3 {
+		t.Error("Given another term should fail")
+	}
+}
+
+func TestSnapshot_updateCandidates(t *testing.T) {
+	//t.Skip("Snapshot_updateCandiates have not complete yet")
+	type fields struct {
+		config     *configs.DporConfig
+		sigcache   *lru.ARCCache
+		Number     uint64
+		Hash       common.Hash
+		Candidates []common.Address
+		//RecentSigners map[uint64][]common.Address
+	}
+	type args struct {
+		header *types.Header
+	}
+	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
+	testCache, _ := lru.NewARC(inMemorySnapshots)
+	expectedResult := new(DporSnapshot)
+	expectedResult.Number = 1
+	expectedResult.config = &testConfig
+	expectedResult.Candidates = getProposerAddress()
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"empty header",
+			fields{&testConfig,
+				testCache,
+				1,
+				common.Hash{},
+				getProposerAddress(),
+			},
+			args{
+				nil,
+				//TODO: this header should not be nil, otherwise it causes a panic on invalid memory address
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &DporSnapshot{
+				config: tt.fields.config,
+				// sigcache:      tt.fields.sigcache,
+				Number:     tt.fields.Number,
+				Hash:       tt.fields.Hash,
+				Candidates: tt.fields.Candidates,
+				// RecentSigners: tt.fields.RecentSigners,
+			}
+			if err := s.updateCandidates(nil, 0); (err != nil) != tt.wantErr {
+				t.Errorf("DporSnapshot.updateCandidates(%v) error = %v, wantErr %v", tt.args.header, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSnapshot_setRecentValidaters(t *testing.T) {
+	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 7989, common.Hash{}, getProposerAddress(), getValidatorAddress(), FakeMode)
+	vterm := snap.TermOf(snap.Number)
+
+	ss := snap.RecentValidators[vterm]
+	getValidaters := snap.getRecentValidators(vterm)
+	snap.setRecentValidators(snap.TermOf(snap.Number), getValidaters)
+
+	equal := reflect.DeepEqual(ss, getValidaters)
+	if !equal {
+		t.Errorf("setRecentValidaters fail...")
 	}
 }

@@ -145,6 +145,9 @@ func (s *DporSnapshot) getRecentProposers(term uint64) []common.Address {
 
 	return signers
 }
+func (s *DporSnapshot) GetRecentProposers(term uint64) []common.Address {
+	return s.getRecentProposers(term)
+}
 
 func (s *DporSnapshot) getRecentValidators(term uint64) []common.Address {
 	s.lock.RLock()
@@ -188,6 +191,11 @@ func (s *DporSnapshot) setRecentProposers(term uint64, proposers []common.Addres
 		delete(s.RecentProposers, beforeTerm)
 	}
 
+}
+
+func NewSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, proposers []common.Address,
+	validators []common.Address, mode Mode) *DporSnapshot {
+	return newSnapshot(config, number, hash, proposers, validators, mode)
 }
 
 // newSnapshot creates a new Snapshot with the specified startup parameters. This
@@ -297,6 +305,11 @@ func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee boo
 	return snap, nil
 }
 
+func (s *DporSnapshot) ApplyHeader(header *types.Header, ifUpdateCommittee bool, candidateService campaign.CandidateService, rptService rpt.RptService) error {
+	err := s.applyHeader(header, ifUpdateCommittee, candidateService, rptService)
+	return err
+}
+
 // applyHeader applies header to Snapshot to calculate reputations of candidates fetched from candidate contract
 func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool, candidateService campaign.CandidateService, rptService rpt.RptService) error {
 	// Update Snapshot attributes.
@@ -349,6 +362,11 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 	}
 
 	return nil
+}
+
+func (s *DporSnapshot) UpdateCandidates(candidateService campaign.CandidateService, seed int64) error {
+	err := s.updateCandidates(candidateService, seed)
+	return err
 }
 
 // updateCandidates updates proposer candidates from campaign contract
@@ -416,6 +434,11 @@ func (s *DporSnapshot) updateRpts(rptService rpt.RptService) (rpt.RptList, error
 	}
 }
 
+func (s *DporSnapshot) UpdateRpts(rptService rpt.RptService) (rpt.RptList, error) {
+	rpts, err := s.updateRpts(rptService)
+	return rpts, err
+}
+
 // isUseDefaultProposers returns true if it should use predefined default proposers, otherwise false
 func (s *DporSnapshot) isUseDefaultProposers() bool {
 	return s.Number <= s.config.MaxInitBlockNumber
@@ -432,6 +455,10 @@ func (s *DporSnapshot) isStartCampaign() bool {
 // isAboutToCampaign returns a bool value indicating when it is about (1 round in advance) to campaign
 func (s *DporSnapshot) isAboutToCampaign() bool {
 	return s.number() >= s.config.MaxInitBlockNumber-((TermDistBetweenElectionAndMining+2)*s.config.TermLen*s.config.ViewLen)
+}
+
+func (s *DporSnapshot) UpdateProposers(rpts rpt.RptList, seed int64, rptService rpt.RptService) {
+	s.updateProposers(rpts, seed, rptService)
 }
 
 // updateProposer uses rpt and election result to get new proposers committee
@@ -460,7 +487,6 @@ func (s *DporSnapshot) updateProposers(rpts rpt.RptList, seed int64, rptService 
 			electedProposers := election.Elect(rpts, seed, dynamicSeats, lowRptCount, lowRptSeats)
 
 			logOutAddrs("elected proposers", "proposers", electedProposers)
-
 			// append default proposers to the end of electedProposers
 			paddingSeats := int(s.config.TermLen) - len(electedProposers) - defaultProposersSeats
 			for _, addr := range configs.Proposers()[:paddingSeats] {
