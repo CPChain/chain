@@ -207,7 +207,7 @@ Fsm:
             blockReceiver[self] := "";
             \* set state = 0
             state[self] := 0;
-             consensus := TRUE;
+            consensus := TRUE;
 \*        or
 \*            skip;
         end either;
@@ -216,9 +216,9 @@ end process;
 
 \* launch a process for each proposer
 process proposer \in proposers
-variable
-temp;
-isBroadcast = [va \in validators |-> FALSE]
+\*variable
+\*temp;
+\*isBroadcast = [va \in validators |-> FALSE]
 begin
 Proposer:
     \* the proposer wait until its block height to send out block
@@ -289,14 +289,14 @@ uniqueValidation ==
     validatorChain[va] = validatorChain["v1"]
 
 VARIABLES receiver, inputType_, sender_, sender_b, inputType_b, sender,
-          inputType, block, height, consensus, temp, isBroadcast
+          inputType, block, height, consensus
 
 vars == << proposers, predeterminedBlockHeight, validators, highestHeight,
            possibleHeights, validatorTimesHeight, sig, state, prepareSig,
            commitSig, blockCache, blockReceiver, validatorBlockHeight,
            proposerBlockHeight, validatorChain, proposerChain, pc, stack,
            receiver, inputType_, sender_, sender_b, inputType_b, sender,
-           inputType, block, height, consensus, temp, isBroadcast >>
+           inputType, block, height, consensus >>
 
 ProcSet == (validators) \cup (proposers)
 
@@ -331,9 +331,6 @@ Init == (* Global variables *)
         /\ height = [ self \in ProcSet |-> defaultInitValue]
         (* Process validator *)
         /\ consensus = [self \in validators |-> FALSE]
-        (* Process proposer *)
-        /\ temp = [self \in proposers |-> defaultInitValue]
-        /\ isBroadcast = [self \in proposers |-> [va \in validators |-> FALSE]]
         /\ stack = [self \in ProcSet |-> << >>]
         /\ pc = [self \in ProcSet |-> CASE self \in validators -> "Fsm"
                                         [] self \in proposers -> "Proposer"]
@@ -352,7 +349,7 @@ PrepareMsg(self) == /\ pc[self] = "PrepareMsg"
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    height, consensus, temp, isBroadcast >>
+                                    height, consensus >>
 
 CommitMsg(self) == /\ pc[self] = "CommitMsg"
                    /\ IF inputType_[self] = "commitMsg"
@@ -369,7 +366,7 @@ CommitMsg(self) == /\ pc[self] = "CommitMsg"
                                    validatorChain, proposerChain, stack,
                                    receiver, inputType_, sender_, sender_b,
                                    inputType_b, sender, inputType, block,
-                                   height, consensus, temp, isBroadcast >>
+                                   height, consensus >>
 
 ValidateMsg(self) == /\ pc[self] = "ValidateMsg"
                      /\ IF inputType_[self] = "validateMsg"
@@ -389,7 +386,7 @@ ValidateMsg(self) == /\ pc[self] = "ValidateMsg"
                                      validatorBlockHeight, proposerBlockHeight,
                                      validatorChain, proposerChain, sender_b,
                                      inputType_b, sender, inputType, block,
-                                     height, consensus, temp, isBroadcast >>
+                                     height, consensus >>
 
 addSig(self) == PrepareMsg(self) \/ CommitMsg(self) \/ ValidateMsg(self)
 
@@ -412,7 +409,7 @@ Broadcast1(self) == /\ pc[self] = "Broadcast1"
                                     proposerBlockHeight, validatorChain,
                                     proposerChain, sender_b, inputType_b,
                                     sender, inputType, block, height,
-                                    consensus, temp, isBroadcast >>
+                                    consensus >>
 
 Broadcast2(self) == /\ pc[self] = "Broadcast2"
                     /\ /\ inputType_' = [inputType_ EXCEPT ![self] = inputType_b[self]]
@@ -433,7 +430,7 @@ Broadcast2(self) == /\ pc[self] = "Broadcast2"
                                     proposerBlockHeight, validatorChain,
                                     proposerChain, sender_b, inputType_b,
                                     sender, inputType, block, height,
-                                    consensus, temp, isBroadcast >>
+                                    consensus >>
 
 Broadcast3(self) == /\ pc[self] = "Broadcast3"
                     /\ /\ inputType_' = [inputType_ EXCEPT ![self] = inputType_b[self]]
@@ -454,7 +451,7 @@ Broadcast3(self) == /\ pc[self] = "Broadcast3"
                                     proposerBlockHeight, validatorChain,
                                     proposerChain, sender_b, inputType_b,
                                     sender, inputType, block, height,
-                                    consensus, temp, isBroadcast >>
+                                    consensus >>
 
 Broadcast4(self) == /\ pc[self] = "Broadcast4"
                     /\ /\ inputType_' = [inputType_ EXCEPT ![self] = inputType_b[self]]
@@ -475,7 +472,7 @@ Broadcast4(self) == /\ pc[self] = "Broadcast4"
                                     proposerBlockHeight, validatorChain,
                                     proposerChain, sender_b, inputType_b,
                                     sender, inputType, block, height,
-                                    consensus, temp, isBroadcast >>
+                                    consensus >>
 
 broadcast(self) == Broadcast1(self) \/ Broadcast2(self) \/ Broadcast3(self)
                       \/ Broadcast4(self)
@@ -508,8 +505,7 @@ broadcastAll_(self) == /\ pc[self] = "broadcastAll_"
                                        blockCache, blockReceiver,
                                        validatorBlockHeight, validatorChain,
                                        receiver, inputType_, sender_, sender_b,
-                                       inputType_b, consensus, temp,
-                                       isBroadcast >>
+                                       inputType_b, consensus >>
 
 broadcastAll(self) == broadcastAll_(self)
 
@@ -568,7 +564,7 @@ Fsm(self) == /\ pc[self] = "Fsm"
                              validatorBlockHeight, proposerBlockHeight,
                              validatorChain, proposerChain, receiver,
                              inputType_, sender_, sender, inputType, block,
-                             height, consensus, temp, isBroadcast >>
+                             height, consensus >>
 
 BroadcastAll(self) == /\ pc[self] = "BroadcastAll"
                       /\ /\ block' = [block EXCEPT ![self] = blockCache[self]]
@@ -592,7 +588,7 @@ BroadcastAll(self) == /\ pc[self] = "BroadcastAll"
                                       proposerBlockHeight, validatorChain,
                                       proposerChain, receiver, inputType_,
                                       sender_, sender_b, inputType_b,
-                                      consensus, temp, isBroadcast >>
+                                      consensus >>
 
 HeightAugmentation(self) == /\ pc[self] = "HeightAugmentation"
                             /\ validatorBlockHeight' = [validatorBlockHeight EXCEPT ![self] = validatorBlockHeight[self] + 1]
@@ -610,8 +606,7 @@ HeightAugmentation(self) == /\ pc[self] = "HeightAugmentation"
                                             proposerChain, stack, receiver,
                                             inputType_, sender_, sender_b,
                                             inputType_b, sender, inputType,
-                                            block, height, consensus, temp,
-                                            isBroadcast >>
+                                            block, height, consensus >>
 
 CleanTemps(self) == /\ pc[self] = "CleanTemps"
                     /\ prepareSig' = [prepareSig EXCEPT ![self] = {}]
@@ -628,7 +623,7 @@ CleanTemps(self) == /\ pc[self] = "CleanTemps"
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    height, temp, isBroadcast >>
+                                    height >>
 
 validator(self) == Fsm(self) \/ BroadcastAll(self)
                       \/ HeightAugmentation(self) \/ CleanTemps(self)
@@ -644,7 +639,7 @@ Proposer(self) == /\ pc[self] = "Proposer"
                                   validatorChain, proposerChain, stack,
                                   receiver, inputType_, sender_, sender_b,
                                   inputType_b, sender, inputType, block,
-                                  height, consensus, temp, isBroadcast >>
+                                  height, consensus >>
 
 SendBlock1(self) == /\ pc[self] = "SendBlock1"
                     /\ blockReceiver' = [blockReceiver EXCEPT !["v1"] = self]
@@ -657,7 +652,7 @@ SendBlock1(self) == /\ pc[self] = "SendBlock1"
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    height, consensus, temp, isBroadcast >>
+                                    height, consensus >>
 
 SendBlock2(self) == /\ pc[self] = "SendBlock2"
                     /\ blockReceiver' = [blockReceiver EXCEPT !["v2"] = self]
@@ -670,7 +665,7 @@ SendBlock2(self) == /\ pc[self] = "SendBlock2"
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    height, consensus, temp, isBroadcast >>
+                                    height, consensus >>
 
 SendBlock3(self) == /\ pc[self] = "SendBlock3"
                     /\ blockReceiver' = [blockReceiver EXCEPT !["v3"] = self]
@@ -683,7 +678,7 @@ SendBlock3(self) == /\ pc[self] = "SendBlock3"
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    height, consensus, temp, isBroadcast >>
+                                    height, consensus >>
 
 SendBlock4(self) == /\ pc[self] = "SendBlock4"
                     /\ blockReceiver' = [blockReceiver EXCEPT !["v4"] = self]
@@ -696,7 +691,7 @@ SendBlock4(self) == /\ pc[self] = "SendBlock4"
                                     validatorChain, proposerChain, stack,
                                     receiver, inputType_, sender_, sender_b,
                                     inputType_b, sender, inputType, block,
-                                    height, consensus, temp, isBroadcast >>
+                                    height, consensus >>
 
 proposer(self) == Proposer(self) \/ SendBlock1(self) \/ SendBlock2(self)
                      \/ SendBlock3(self) \/ SendBlock4(self)
