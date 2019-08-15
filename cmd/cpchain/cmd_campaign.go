@@ -42,9 +42,6 @@ func build(ctx *cli.Context) (*manager.Console, common.Output, context.CancelFun
 
 	_ctx, cancel := context.WithCancel(context.Background())
 	console, err := manager.NewConsole(&_ctx, rpc, kspath, pwdfile, &out)
-	if err != nil {
-		out.Fatal(err.Error())
-	}
 	return console, &out, cancel, err
 }
 
