@@ -607,6 +607,7 @@ Cpc.contract
 RNode API
 ----------------
 
+.. _cpc-getrnodes:
 
 Cpc.getRNodes
 ++++++++++++++++++++
