@@ -159,14 +159,18 @@ Launch another ``cpchain`` program and utilize the command below to stop mining.
 
 .. code-block:: shell
 
-    $ ./cpchain campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+    $ ./cpchain campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT
 
 You can also utilize the command below to check your status.
 
 .. code-block:: shell
 
-    $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+    $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT
 
+.. note::
+
+    You can use the flag ``--password ./datadir/password`` to input the password,
+    similar to other ``./cpchain campaign`` commands.
 
 .. _ntp:
 

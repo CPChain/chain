@@ -401,7 +401,14 @@ Civilian Requirement
 *******************************************
 
 For normal civilians, a lower end of setup may also suffice.
+Our experiments show that a server with 2GB memory can work normally
+for at least thousands of blocks.
+But one requirement is that there are no other space-consuming processes
+competing with ``cpchain`` for space resources.
 
+And usually a user run a civilian node to invoke APIs.
+Some APIs have higher space and computing overheads like :ref:`cpc-getrnodes`.
+We recommend you to use a machine with memory of at least 3GB as a civilian.
 
 
 
