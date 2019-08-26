@@ -353,6 +353,7 @@ Minimum Requirement
     Some operation systems may have system processes with very large space or computing overheads
     running in background.
     An example is ``tracker-store`` in CentOS, which may cause up to 100% CPU load.
+
     Beware of these kind of processes if you encounter an unexpected killing of ``cpchain`` by the operation system,
     especially the one due to *out of memory (OOM)* error.
 
