@@ -349,6 +349,13 @@ Minimum Requirement
 * Network: 300Mbps
 
 
+.. note::
+    Some operation systems may have system processes with very large space or computing overheads
+    running in background.
+    An example is ``tracker-store`` in CentOS, which may cause up to 100% CPU load.
+    Beware of these kind of processes if you encounter an expected killing of ``cpchain`` by operation systems,
+    especially the one due to *out of memory (OOM)* error.
+
 
 Recommended Requirement
 ********************************
@@ -360,6 +367,7 @@ Recommended Requirement
 - CPU: Intel Xeon E5-2686 v4 (alike)
 
 - Network: 1Gbps
+
 
 
 Example Configurations for Proposers
