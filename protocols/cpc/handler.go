@@ -287,7 +287,7 @@ func (pm *ProtocolManager) addPeer(p *peer, isMinerOrValidator bool) (bool, erro
 func (pm *ProtocolManager) handlePeer(p *p2p.Peer, rw p2p.MsgReadWriter, version uint) error {
 	var (
 		dporEngine         = pm.engine.(*dpor.Dpor)
-		isMiner            = dporEngine.IsMiner()
+		isMiner            = dporEngine.IsDefaultProposer(dporEngine.Coinbase()) || dporEngine.IsCurrentOrFutureProposer(dporEngine.Coinbase())
 		workAsValidator    = dporEngine.IsValidator()
 		dporMode           = dporEngine.Mode()
 		dporProtocol       = dporEngine.Protocol()

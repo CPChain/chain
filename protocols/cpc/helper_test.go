@@ -169,11 +169,12 @@ func newTestPeer(name string, version int, pm *ProtocolManager, shake bool) (*te
 // remote side as we are simulating locally.
 func (p *testPeer) handshake(t *testing.T, ht *big.Int, head common.Hash, genesis common.Hash) {
 	msg := &statusData{
-		ProtocolVersion: uint32(p.version),
-		NetworkId:       DefaultConfig.NetworkId,
-		Height:          ht,
-		CurrentBlock:    head,
-		GenesisBlock:    genesis,
+		ProtocolVersion:    uint32(p.version),
+		NetworkId:          DefaultConfig.NetworkId,
+		Height:             ht,
+		CurrentBlock:       head,
+		GenesisBlock:       genesis,
+		IsMinerOrValidator: true,
 	}
 	if err := p2p.ExpectMsg(p.app, StatusMsg, msg); err != nil {
 		t.Fatalf("status recv: %v", err)
