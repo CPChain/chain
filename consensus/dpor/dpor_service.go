@@ -429,8 +429,21 @@ func (d *Dpor) Synchronize() {
 	go d.pmSyncFromBestPeerFn()
 }
 
+// IsDefaultProposer returns if the given address is a default proposer
+func (d *Dpor) IsDefaultProposer(address common.Address) bool {
+	for _, addr := range configs.Proposers() {
+		if addr == address {
+			return true
+		}
+	}
+	return false
+}
+
 // IsCurrentOrFutureProposer checks if an address is a proposer in the period between current term and future term
 func (d *Dpor) IsCurrentOrFutureProposer(address common.Address) bool {
+	if d.Mode() != NormalMode {
+		return true
+	}
 
 	snap := d.CurrentSnap()
 	number := snap.number()
