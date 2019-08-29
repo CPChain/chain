@@ -219,5 +219,17 @@ and the ones with only lowercase are **non-checksummed**.
 
 The checksum is a kind of validation.
 It can tell if the address is valid and do not contain typos.
+
 .. _Explorer: https://cpchain.io/explorer/
 
+What is checksum used for in `Download Page`_?
+*******************************************************
+
+We provide a checksum value for each release after version 0.4.7.
+It is used for validating if the downloaded file is correct.
+You can use the `Checksum Page`_ (SHA256) to obtain a checksum result for a file you download,
+and compare the value with the one on `Download Page`_.
+
+.. _`Download Page`: https://github.com/CPChain/chain/releases
+
+.. _`Checksum Page`: https://emn178.github.io/online-tools/sha256_checksum.html
