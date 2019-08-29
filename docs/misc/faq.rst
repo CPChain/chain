@@ -203,3 +203,21 @@ If your node still encounter a high frequency of getting impeached,
 please raise an issue on our GitHub `Issue Page`_.
 
 .. _Issue Page: https://github.com/CPChain/chain/issues
+
+
+Why are the wallet addresses mixed case?
+**************************************************
+
+Some addresses (like ones in `Explorer`_) are expressed in mixed cases,
+e.g., 0xC8d95F1b3179c30fB067243ce68F5eA20E750351.
+
+These addresses with uppercase letters are **checksummed**,
+and the ones with only lowercase are **non-checksummed**.
+
+* Non-checksummed version: 0xc8d95f1b3179c30fb067243ce68f5ea20e750351
+* checksummed version: 0xC8d95F1b3179c30fB067243ce68F5eA20E750351
+
+The checksum is a kind of validation.
+It can tell if the address is valid and do not contain typos.
+.. _Explorer: https://cpchain.io/explorer/
+
