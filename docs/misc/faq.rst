@@ -203,3 +203,33 @@ If your node still encounter a high frequency of getting impeached,
 please raise an issue on our GitHub `Issue Page`_.
 
 .. _Issue Page: https://github.com/CPChain/chain/issues
+
+
+Why are the wallet addresses mixed case?
+**************************************************
+
+Some addresses (like ones in `Explorer`_) are expressed in mixed cases,
+e.g., 0xC8d95F1b3179c30fB067243ce68F5eA20E750351.
+
+These addresses with uppercase letters are **checksummed**,
+and the ones with only lowercase are **non-checksummed**.
+
+* Non-checksummed version: 0xc8d95f1b3179c30fb067243ce68f5ea20e750351
+* checksummed version: 0xC8d95F1b3179c30fB067243ce68F5eA20E750351
+
+The checksum is a kind of validation.
+It can tell if the address is valid and do not contain typos.
+
+.. _Explorer: https://cpchain.io/explorer/
+
+What is checksum used for in `Download Page`_?
+*******************************************************
+
+We provide a checksum value for each release after version 0.4.7.
+It is used for validating if the downloaded file is correct.
+You can use the `Checksum Page`_ (SHA256) to obtain a checksum result for a file you download,
+and compare the value with the one on `Download Page`_.
+
+.. _`Download Page`: https://github.com/CPChain/chain/releases
+
+.. _`Checksum Page`: https://emn178.github.io/online-tools/sha256_checksum.html

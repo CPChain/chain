@@ -33,7 +33,7 @@ and :math:`LowRptSeats` be available seats for low-RPT RNodes.
 The equation :math:`0\leq LowRptPercentage\leq 1` and
 :math:`0\leq LowRptSeats\leq LowRptPercentage \times TotalSeats \leq TotalSeats` always hold.
 
-In current implementation, :math:`LowRptPercentage` is :math:`70\%`,
+In current implementation, :math:`LowRptPercentage` is :math:`50\%`,
 and :math:`LowRptSeats` occupies one fourth of :math:`TotalSeats`.
 
 .. code-block:: go
