@@ -202,18 +202,28 @@ The command for proposers connecting P2P network is slightly different than the 
 
 .. code-block:: shell
 
-    $ ./cpchain run --datadir ./datadir --unlock 5d6477ecd219bfe0ba44bf1b16272e72bd200e51 \
-        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
-        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+    $ ./cpchain run --unlock WALLET_ADDRESS --port 30311 --mine
 
-, where ``5d6477ecd219bfe0ba44bf1b16272e72bd200e51`` is a wallet address.
+
+, where you should fill ``WALLET_ADDRESS`` with your wallet address.
 It requires you to enter the password to further proceed.
 You may use an argument ``--password`` to indicate a file storing your plaintext password.
 But it is risky, and we do not recommend it.
 
+If you are willing to use :ref:`fusion-api` and :ref:`rpc-api`,
+please use the following command:
+
+.. code-block:: shell
+    :emphasize-lines: 2
+
+    $ ./cpchain run --datadir ./datadir \
+        --unlock WALLET_ADDRESS \
+        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
+        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+
 .. note::
 
-    If you discard ``--datadir`` option, the account file is read from default user directory.
+    You should use ``--datadir`` option, if the account file is not read from default user directory.
 
 .. note::
 
@@ -243,7 +253,7 @@ A node can using following commands to start mining.
 
 .. code-block:: shell
 
-    $ ./cpchain campaign start --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+    $ ./cpchain campaign start --keystore ./datadir/keystore/YOUR_ACCOUNT
 
 It returns info like
 
@@ -259,13 +269,16 @@ To stop mining, use the command below
 
 .. code-block:: shell
 
-    $ ./cpchain campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT  --password ./datadir/password
+    $ ./cpchain campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT
 
 Then you may check the status of the account, the attribute ``Mining`` of which should shifted to ``false``.
 
 After you stop mining, your deposit in RNode pool will be automatically refunded.
 
+.. note::
 
+    Similar to ``./cpchain run``, you can use the command ``./cpchain campaign --password YOUR_PASSWORD_FILE``
+    where ``YOUR_PASSWORD_FILE`` is the file containing your account password.
 
 
 Run a Private Network
