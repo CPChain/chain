@@ -37,8 +37,7 @@ For Windows users, use the commands below in cmd.
 
 .. code-block:: shell
 
-    $ mkdir datadir
-    $ cpchain-windows-4.0-amd64.exe account new --datadir ./datadir
+    $ cpchain-windows-4.0-amd64.exe account new
 
 
 .. note::
@@ -50,19 +49,29 @@ For Linux and Mac users, use the commands below in terminal:
 
 .. code-block:: shell
 
-    $ mkdir datadir
-    $ ./cpchain account new --datadir ./datadir
+    $ ./cpchain account new
 
+Your account will be generated in default directory.
+Use the help command below to check the manuel which includes the path of default directory for your environment.
+
+For Windows users:
+
+.. code-block:: shell
+
+    $ cpchain-windows-4.0-amd64.exe account new -h
+
+For Linux and Mac users:
+
+.. code-block:: shell
+
+    $ ./cpchain account new -h
 
 .. note::
 
-    If you discard ``--datadir`` option, the account file is created under default user directory.
+    You may use ``--datadir`` option to specify the keystore directory.
 
 
-The first command is to generate a keystore file
-located in ``datadir/keystore``,
-in which you can find the wallet address.
-The second command create a new account, and return the wallet address.
+
 
 
 Connect to Mainnet
@@ -89,23 +98,15 @@ Windows user the command below.
 (Here we use ``amd64`` version as demonstration.)
 
 .. code-block:: shell
-    :emphasize-lines: 2
 
-    $ cpchain-windows-4.0-amd64.exe run --datadir ./datadir ^
-        --unlock WALLET_ADDRESS ^
-        --rpcaddr 127.0.0.1:8501 --port 30311 --mine ^
-        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+    $ cpchain-windows-4.0-amd64.exe run --unlock WALLET_ADDRESS --port 30311 --mine
 
 
 Linux and Mac users please use the following command:
 
 .. code-block:: shell
-    :emphasize-lines: 2
 
-    $ ./cpchain run --datadir ./datadir \
-        --unlock WALLET_ADDRESS \
-        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
-        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+    $ ./cpchain run --unlock WALLET_ADDRESS --port 30311 --mine
 
 .. note::
 
@@ -114,24 +115,15 @@ Linux and Mac users please use the following command:
 
 .. note::
 
-    If you discard ``--datadir`` option, the account file is read from default user directory.
+    If you use ``--datadir`` option, the account file is read from your specified path.
 
 .. note::
 
     A flag ``--account WALLET_ADDRESS`` is required
-    in case your ``./datadir`` directory contains more than one account file.
+    in case your keystore directory contains more than one account file.
 
-.. note::
 
-    Flags ``--rpcaddr`` and ``--rpcapi`` make APIs available in your node.
-    You may discard them if you do not need any API.
-    And make sure the port 8501 is open if you are willing to use APIs.
-
-.. note::
-
-    ``^`` and ``\`` are splitters for long command for Windows and Linux (Mac), respectively.
-    You do not need to type them if you put the command in a single line.
-
+If you also willing to utilize API, please check :ref:`as-proposer`.
 
 Get Chain Synced
 ~~~~~~~~~~~~~~~~~~~~
@@ -142,14 +134,16 @@ Windows users can utilize the command below:
 
 .. code-block:: shell
 
-    $ cpchain-windows-4.0-amd64.exe run --rpcaddr 127.0.0.1:8501 --port 30311
+    $ cpchain-windows-4.0-amd64.exe run
 
 
 Linux and Mac users please try this command:
 
 .. code-block:: shell
 
-    $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311
+    $ ./cpchain run
+
+If you are willing to use API, please check :ref:`as-civilian`.
 
 Check Your Status
 ~~~~~~~~~~~~~~~~~~~~
@@ -160,28 +154,41 @@ Use the commands below to check your status.
 For Linux and Mac users:
 
 .. code-block:: shell
-    :emphasize-lines: 1,3,4
 
-    $ echo YOUR_PASSWORD > datadir/password
-    $ ./cpchain campaign status \
-    --keystore ./datadir/keystore/YOUR_ACCOUNT \
-    --password ./datadir/password
+    $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT
+
 
 For Windows users:
 
 .. code-block:: shell
-    :emphasize-lines: 1,3,4
 
-    $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ cpchain.exe campaign status ^
-    --keystore ./datadir/keystore/YOUR_ACCOUNT ^
-    --password ./datadir/password
+    $ cpchain-windows-4.0-amd64.exe campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT
 
-The first command generates a file containing your password,
-which are located in ``datadir/password``.
-The second command is to check your account status given the ``keystore`` file
-as well as the ``password`` file you just generate.
 
+
+This command is to check your account status given the ``keystore`` file.
+
+Stop Your Node from Mining
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Generally, it is safe to quit the node use ``ctrl+c``.
+Using commands like ``kill -9`` or ``killall`` may incur impeached blocks.
+Refer to :ref:`sig-ctrl-c` for detailed explanation.
+
+To stop mining without quitting the node, use the command below.
+
+Windows users:
+
+.. code-block:: shell
+
+    $ cpchain-windows-4.0-amd64.exe campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT
+
+
+Linux and Mac users:
+
+.. code-block:: shell
+
+    $ ./cpchain campaign stop --keystore ./datadir/keystore/YOUR_ACCOUNT
 
 
 Upgrade
@@ -192,7 +199,12 @@ the first thing you need to do is to check if your node version is out-dated.
 
 The upgrade is simple.
 All you need is to download the latest version from `Download page`_,
+and stop your currently running node,
 and replace the old version with the latest one.
+
+.. note::
+
+    Please check :ref:`sig-ctrl-c`, if you cannot stop the node properly.
 
 You can always use ``--version`` flag to check the version.
 
@@ -208,7 +220,6 @@ Windows users use the following command.
 .. code-block:: shell
 
     $ cpchain.exe --version
-
 
 
 After you upgrade, your node can continue syncing with the chain.
