@@ -49,9 +49,12 @@ If you use the command in :ref:`quick-start` as
 
 .. code-block:: shell
 
-    $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311
+    $ ./cpchain run
 
-, make sure both port ``8501`` and ``30311`` have not be occupied yet.
+, make sure the default port ``30310`` (or the port you specified using ``--port``)
+has not be occupied yet.
+
+If you add the flag ``--rpcaddr 127.0.0.1:8501``, you should also open port ``8501``.
 You may also use other ports as you wish.
 
 2. Remove temporary user files.
