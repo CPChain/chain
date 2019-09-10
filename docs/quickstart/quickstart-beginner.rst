@@ -99,18 +99,19 @@ Windows user the command below.
 
 .. code-block:: shell
 
-    $ cpchain-windows-4.0-amd64.exe run --unlock WALLET_ADDRESS --port 30311 --mine
+    $ cpchain-windows-4.0-amd64.exe run --unlock WALLET_ADDRESS --mine
 
 
 Linux and Mac users please use the following command:
 
 .. code-block:: shell
 
-    $ ./cpchain run --unlock WALLET_ADDRESS --port 30311 --mine
+    $ ./cpchain run --unlock WALLET_ADDRESS --mine
 
 .. note::
 
-    The port 30311 should be opened.
+    The default port 30310 (or the port you specified using ``--port``)
+    should be opened.
     Otherwise, other nodes cannot connect you in the P2P network.
 
 .. note::
