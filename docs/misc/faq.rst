@@ -3,6 +3,14 @@
 FAQ
 ~~~~~~~~~~~
 
+Issue Page
+******************
+
+If you find any questions unlisted here,
+please raise an issue on our `Issue Page`_.
+
+
+
 How to interact with CPChain?
 *********************************
 
