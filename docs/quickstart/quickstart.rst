@@ -130,12 +130,13 @@ Thus, the following command is more suitable.
 
 .. code-block:: shell
 
-    $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311 \
-        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+    $ ./cpchain run --rpcaddr 127.0.0.1:8501 \
+        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner
 
 .. note::
 
-    Please check the availability of the port 30311 before connection.
+    Please check the availability of
+    the the default port ``30310`` (or the port you specified using ``--port``) before connection.
     You may nominate other port as you wish.
 
 .. note::
@@ -212,7 +213,7 @@ The command for proposers connecting P2P network is slightly different than the 
 
 .. code-block:: shell
 
-    $ ./cpchain run --unlock WALLET_ADDRESS --port 30311 --mine
+    $ ./cpchain run --unlock WALLET_ADDRESS --mine
 
 
 , where you should fill ``WALLET_ADDRESS`` with your wallet address.
@@ -228,8 +229,14 @@ please use the following command:
 
     $ ./cpchain run \
         --unlock WALLET_ADDRESS \
-        --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
-        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+        --rpcaddr 127.0.0.1:8501 --mine \
+        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner
+
+.. note::
+
+    Please check the availability of
+    the the default port ``30310`` (or the port you specified using ``--port``) before connection.
+    You may nominate other port as you wish.
 
 .. note::
 
