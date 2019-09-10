@@ -89,40 +89,47 @@ For Linux and Mac users:
 
 .. code-block:: shell
 
-    $ mkdir datadir
-    $ echo YOUR_PASSWORD > datadir/password
-    $ ./cpchain account new --datadir ./datadir
+    $ ./cpchain account new
 
 For Windows users:
 
 .. code-block:: shell
 
-    $ mkdir datadir
-    $ echo|set /p="YOUR_PASSWORD"> datadir/password
-    $ cpchain.exe account new --datadir ./datadir
+    $ cpchain.exe account new
 
-Here we first create a directory named as ``datadir`` and
-create a file containing the password you prefer.
-Command ``./cpchain account new --datadir ./datadir`` requires
-you to enter a password, which should be same as ``YOUR_PASSWORD`` in previous echo command.
+
 
 A successful execution returns the wallet address.
-And a keystore file is generated in ``datadir/keystore/``.
+And a keystore file is generated in default directory.
 Its file name is something like
 ``UTC--2019-03-27T07-32-49.561001045Z--5d6477ecd219bfe0ba44bf1b16272e72bd200e51``.
 And you can also refer to the name of this file to retrieve the wallet address.
 ``5d6477ecd219bfe0ba44bf1b16272e72bd200e51`` is the wallet address for the example above.
 
+You can use the following command for more detailed explanation,
+as well as the path for default directory.
+
+.. code-block:: shell
+
+    $ ./cpchain account new -h
+
 .. note::
 
-    If you discard ``--datadir`` option, the account file is created under default user directory.
+    You can add ``--datadir`` option to specify the keystore directory.
 
 
 Run a Node as Civilian
 +++++++++++++++++++++++++
 
 If you hold an account,
-you can run the following command to **connect to the chain**:
+you can run a very simple command to **connect to the chain**:
+
+.. code-block:: shell
+
+    $ ./cpchain run
+
+However, the main purpose of a user to deploy a civilian is to invoke API.
+Thus, the following command is more suitable.
 
 .. code-block:: shell
 
@@ -149,7 +156,7 @@ You may try delete some temporary files by
 
 .. note::
 
-    You should specify datadir by adding ``--datadir ./datadir``.
+    You could specify datadir by adding ``--datadir ./datadir``.
     Otherwise, this command will remove detabase in the default datadir.
     The port 8051 is required if you are using APIs.
 
@@ -168,9 +175,9 @@ to **check the status** of your account by the following command:
 
 .. code-block:: shell
 
-    $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT --password ./datadir/password
+    $ ./cpchain campaign status --keystore ./datadir/keystore/YOUR_ACCOUNT
 
-Here ``YOU_ACCOUNT`` is the file generated previously in ``datadir/keystore/``.
+Here ``YOU_ACCOUNT`` is the file generated previously in ``datadir/keystore/`` (or default path).
 And you can obtain the information about your account status like
 
 
@@ -369,7 +376,7 @@ Smart Contract Examples
 
 In our repository, we have several examples for smart contract.
 Please check files in ``/docs/quickstart/``.
-You may also find it in `Download Page`_.
+
 
 .. note::
     Please replace the values of ``keystore``, ``password`` as well as ``address``
