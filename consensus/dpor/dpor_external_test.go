@@ -13,9 +13,11 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor"
 	"bitbucket.org/cpchain/chain/consensus/dpor/campaign"
+	rn "bitbucket.org/cpchain/chain/consensus/dpor/rnode"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
 	"bitbucket.org/cpchain/chain/contracts/dpor/admission"
 	ca "bitbucket.org/cpchain/chain/contracts/dpor/campaign"
+	"bitbucket.org/cpchain/chain/contracts/dpor/rnode"
 	cr "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	"bitbucket.org/cpchain/chain/contracts/proxy"
 	"bitbucket.org/cpchain/chain/contracts/reward"
@@ -35,11 +37,12 @@ const (
 var (
 	testBankKey, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	testBank        = crypto.PubkeyToAddress(testBankKey.PublicKey)
-	testBankBalance = new(big.Int).Mul(big.NewInt(1000000), big.NewInt(configs.Cpc))
+	testBankBalance = new(big.Int).Mul(big.NewInt(10000000), big.NewInt(configs.Cpc))
 	rptAddr         common.Address
 	rewardAddr      common.Address
 	campaignAddr    common.Address
 	acAddr          common.Address
+	rnodeAddr       common.Address
 )
 
 func generateABatchAccounts(n int) []common.Address {
@@ -84,7 +87,6 @@ func newBlockchainWithDb(n int, addrs []common.Address) (common.Address, common.
 	_, _ = blockchain.InsertChain(blocks)
 
 	backend := backends.NewDporSimulatedBackendWithExistsBlockchain(db, blockchain, config)
-
 	var err error
 	deployTransactor := bind.NewKeyedTransactor(testBankKey)
 
@@ -101,9 +103,152 @@ func newBlockchainWithDb(n int, addrs []common.Address) (common.Address, common.
 	return rptAddr, campaignAddr, backend
 }
 
-func TestUpdateRpts(t *testing.T) {
+func newBlockchain_contractAddr(n int) (*core.BlockChain, *bind.TransactOpts, *backends.SimulatedBackend) {
+	db := database.NewMemDatabase()
+	remoteDB := database.NewIpfsDbWithAdapter(database.NewFakeIpfsAdapter())
+	gspec := core.DefaultGenesisBlock()
+	gspec.GasLimit = 100000000
+	gspec.Alloc = core.GenesisAlloc{testBank: {Balance: testBankBalance}}
+	genesis := gspec.MustCommit(db)
+	config := gspec.Config
+	dporConfig := config.Dpor
+	dporFakeEngine := dpor.NewFaker(dporConfig, db)
+	// Define three accounts to simulate transactions with
+	acc1Key, _ := crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+	acc2Key, _ := crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
+	acc1Addr := crypto.PubkeyToAddress(acc1Key.PublicKey)
+	acc2Addr := crypto.PubkeyToAddress(acc2Key.PublicKey)
+	generator := func(i int, block *core.BlockGen) {
+		switch i {
+		case 0:
+			// In block 1, the test bank sends account #1 some ether.
+			tx, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(100000), configs.TxGas, nil, nil), types.HomesteadSigner{}, testBankKey)
+			block.AddTx(tx)
+		case 1:
+			// In block 2, the test bank sends some more ether to account #1.
+			// acc1Addr passes it on to account #2.
+			tx1, _ := types.SignTx(types.NewTransaction(block.TxNonce(testBank), acc1Addr, big.NewInt(1000), configs.TxGas, nil, nil), types.HomesteadSigner{}, testBankKey)
+			tx2, _ := types.SignTx(types.NewTransaction(block.TxNonce(acc1Addr), acc2Addr, big.NewInt(1000), configs.TxGas, nil, nil), types.HomesteadSigner{}, acc1Key)
+			block.AddTx(tx1)
+			block.AddTx(tx2)
+
+		}
+	}
+
+	blocks, _ := core.GenerateChain(config, genesis, dporFakeEngine, db, remoteDB, n, generator)
+	blockchain, _ := core.NewBlockChain(db, nil, gspec.Config, dporFakeEngine, vm.Config{}, remoteDB, nil)
+	_, _ = blockchain.InsertChain(blocks)
+
+	backend := backends.NewDporSimulatedBackendWithExistsBlockchain(db, blockchain, config)
+	deployTransactor := bind.NewKeyedTransactor(testBankKey)
+
+	backend.Commit()
+	return blockchain, deployTransactor, backend
+}
+
+func Test_SetContractBackends(t *testing.T) {
 	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
 
+	d := dpor.Dpor{}
+	snapshot := dpor.NewSnapshot(&configs.DporConfig{Period: 3, TermLen: 4, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+
+	d.SetCurrentSnap(snapshot)
+	blockchain, deployTransactor, backend := newBlockchain_contractAddr(100)
+	d.SetChainConfig(blockchain)
+	// test rpt contracts backends
+	rptAddr, _, _, err := cr.DeployRpt(deployTransactor, backend)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	d.SetRptBackend(rptAddr, backend)
+	rptBackend := d.GetRptBackend()
+	equalSigner := reflect.DeepEqual(nil, rptBackend)
+	if equalSigner {
+		t.Error("getRptContractBackend failed...")
+	}
+	// test campaign contracts backends
+	campaignAddr, _, _, err = ca.DeployCampaign(deployTransactor, backend, acAddr, rewardAddr)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	d.SetCampaignBackend(campaignAddr, backend)
+	campaignBackend := d.GetCandidateBackend()
+	equalSigner1 := reflect.DeepEqual(nil, campaignBackend)
+	if equalSigner1 {
+		t.Error("getCampaignContractBackend failed...")
+	}
+	// test rnode contracts backends
+	rnodeAddr, _, _, err = rnode.DeployRnode(deployTransactor, backend)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	d.SetRNodeBackend(rnodeAddr, backend)
+	rnodeAddrs, _ := d.GetRNodes()
+	equalSigner2 := reflect.DeepEqual(nil, rnodeAddrs)
+	if equalSigner2 {
+		t.Error("getRnodeContractBackend failed...")
+	}
+}
+
+func Test_SetConsensusCampaignBackends(t *testing.T) {
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := dpor.Dpor{}
+	snapshot := dpor.NewSnapshot(&configs.DporConfig{Period: 3, TermLen: 4, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	candidates := generateABatchAccounts(4)
+	snapshot.Candidates = candidates
+	d.SetCurrentSnap(snapshot)
+	term := d.TermOf(d.CurrentSnap().Number)
+	blockchain, deployTransactor, backend := newBlockchain_contractAddr(100)
+	//d.chain = blockchain
+	d.SetChainConfig(blockchain)
+	var err error
+	rewardAddr, _, _, err = reward.DeployReward(deployTransactor, backend)
+	acAddr, _, _, err = admission.DeployAdmission(deployTransactor, backend, big.NewInt(5), big.NewInt(5), big.NewInt(10), big.NewInt(10))
+
+	campaignAddr, _, _, err = ca.DeployCampaign(deployTransactor, backend, acAddr, rewardAddr)
+	backend.Commit()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	campaignInstance, _ := campaign.NewCampaignService(campaignAddr, backend)
+	currentCandidates, _ := campaignInstance.CandidatesOf(term)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	equalSigner := reflect.DeepEqual(nil, currentCandidates)
+	if equalSigner {
+		t.Error("getCampaignContractBackend failed...")
+	}
+}
+
+func Test_SetConsensusRnodeBackends(t *testing.T) {
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := dpor.Dpor{}
+	snapshot := dpor.NewSnapshot(&configs.DporConfig{Period: 3, TermLen: 4, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	candidates := generateABatchAccounts(4)
+	snapshot.Candidates = candidates
+	d.SetCurrentSnap(snapshot)
+	blockchain, deployTransactor, backend := newBlockchain_contractAddr(100)
+	d.SetChainConfig(blockchain)
+	var err error
+	rnodeAddr, _, _, err = rnode.DeployRnode(deployTransactor, backend)
+	backend.Commit()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	rnodeInstance, _ := rn.NewRNodeService(rnodeAddr, backend)
+	currentRnodes, _ := rnodeInstance.GetRNodes()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	equalSigner := reflect.DeepEqual(nil, currentRnodes)
+	if equalSigner {
+		t.Error("getRnodeContractBackend failed...")
+	}
+}
+
+func TestUpdateRpts(t *testing.T) {
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
 	recentC := generateABatchAccounts(3)
 	snapshot := dpor.NewSnapshot(&configs.DporConfig{Period: 3, TermLen: 4, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
 	snapshot.Candidates = recentC

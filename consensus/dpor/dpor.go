@@ -283,6 +283,11 @@ func (d *Dpor) SetChain(blockchain consensus.ChainReadWriter) {
 	d.SetCurrentSnap(snap)
 }
 
+// Set chainconfig is called for unittest
+func (d *Dpor) SetChainConfig(blockchain consensus.ChainReadWriter) {
+	d.chain = blockchain
+}
+
 func (d *Dpor) SetupAsValidator(blockchain consensus.ChainReadWriter, server *p2p.Server, pmBroadcastBlockFn BroadcastBlockFn, pmSyncFromPeerFn SyncFromPeerFn, pmSyncFromBestPeerFn SyncFromBestPeerFn) {
 	initialized := atomic.LoadInt32(&d.validatorInitialized) > 0
 	// avoid launch handler twice
