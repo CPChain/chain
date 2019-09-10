@@ -223,7 +223,7 @@ please use the following command:
 .. code-block:: shell
     :emphasize-lines: 2
 
-    $ ./cpchain run --datadir ./datadir \
+    $ ./cpchain run \
         --unlock WALLET_ADDRESS \
         --rpcaddr 127.0.0.1:8501 --port 30311 --mine \
         --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
