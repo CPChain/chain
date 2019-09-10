@@ -369,7 +369,7 @@ You may also be required to install `libz3.so.4` by following command:
 
 .. code-block:: shell
 
-    $ sudo  apt-get  install  libz3-dev
+    $ sudo apt-get install libz3-dev
 
 Smart Contract Examples
 ++++++++++++++++++++++++++++++++++++
