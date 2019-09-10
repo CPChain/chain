@@ -115,6 +115,9 @@ as well as the path for default directory.
 Run a Node as Civilian
 +++++++++++++++++++++++++
 
+Connect to P2P Network as Civilian
+**************************************
+
 If you hold an account,
 you can run a very simple command to **connect to the chain**:
 
@@ -127,7 +130,8 @@ Thus, the following command is more suitable.
 
 .. code-block:: shell
 
-    $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311 --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
+    $ ./cpchain run --rpcaddr 127.0.0.1:8501 --port 30311 \
+        --rpcapi personal,eth,cpc,admission,net,web3,db,txpool,miner --linenumber
 
 .. note::
 
@@ -162,6 +166,9 @@ And the progress is going to running for a while to sync with the chain.
 
 Employ either :ref:`fusion-api` or :ref:`rpc-api` to
 wield the power as a civilian as well as assume corresponding responsibility.
+
+Check Status
+*********************
 
 You can also utilize ``cpchain``
 to **check the status** of your account by the following command:
@@ -198,7 +205,8 @@ Run a Node as Proposer
 ++++++++++++++++++++++++
 
 
-
+Connect to P2P Network as Proposer
+************************************
 
 The command for proposers connecting P2P network is slightly different than the counterpart for civilians
 
@@ -246,6 +254,10 @@ please use the following command:
 And via this connection,
 a node with insufficient deposit automatically sets its deposit to 200,000 CPC (if its balance is enough).
 And then the node claims campaign to become a proposer.
+
+
+Check Status, Start and Stop Mining
+*************************************
 
 
 Using commands ``./cpchain campaign status`` to check
