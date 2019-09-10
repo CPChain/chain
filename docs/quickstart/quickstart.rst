@@ -7,7 +7,7 @@ Quick Start in Detail
 
 Readers can choose either to use binary release or build from source code.
 Both methods can been conducted on Linux, Mac or Windows operation system.
-
+Without loss of generality, all commands below are in Linux terminal format.
 
 .. NOTE::
 
@@ -85,17 +85,9 @@ Create an Account
 
 If you do not have an account, you create one with ``cpchain``
 
-For Linux and Mac users:
-
 .. code-block:: shell
 
     $ ./cpchain account new
-
-For Windows users:
-
-.. code-block:: shell
-
-    $ cpchain.exe account new
 
 
 
