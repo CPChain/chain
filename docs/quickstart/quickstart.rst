@@ -118,6 +118,8 @@ as well as the path for default directory.
     You can add ``--datadir`` option to specify the keystore directory.
 
 
+.. _as-civilian:
+
 Run a Node as Civilian
 +++++++++++++++++++++++++
 
@@ -198,6 +200,7 @@ And you can obtain the information about your account status like
 
 
 
+.. _as-proposer:
 
 Run a Node as Proposer
 ++++++++++++++++++++++++
