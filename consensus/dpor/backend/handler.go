@@ -109,6 +109,11 @@ func (h *Handler) GetProtocol() consensus.Protocol {
 	return h
 }
 
+// Get dialer for unit testcase
+func (h *Handler) GetDialer() *Dialer {
+	return h.dialer
+}
+
 // NodeInfo returns node status
 func (h *Handler) NodeInfo() interface{} {
 	return h.dpor.Status()
@@ -158,15 +163,15 @@ func (h *Handler) RemovePeer(addr string) {
 
 	log.Debug("removing dpor peer", "addr", addr)
 
-	_ = h.dialer.removeRemoteProposers(addr)
-	_ = h.dialer.removeRemoteValidators(addr)
+	_ = h.dialer.RemoveRemoteProposers(addr)
+	_ = h.dialer.RemoveRemoteValidators(addr)
 }
 
 // HandleMsg handles a msg of peer with id "addr"
 func (h *Handler) HandleMsg(addr string, version int, p *p2p.Peer, rw p2p.MsgReadWriter, msg p2p.Msg) (string, error) {
 
-	remoteValidator, isV := h.dialer.getValidator(addr)
-	remoteProposer, isP := h.dialer.getProposer(addr)
+	remoteValidator, isV := h.dialer.GetValidator(addr)
+	remoteProposer, isP := h.dialer.GetProposer(addr)
 
 	if isV {
 		return addr, h.handleMsg(remoteValidator.RemoteSigner, msg)
@@ -209,6 +214,14 @@ func (h *Handler) SetDporService(dpor DporService) {
 // SetDporStateMachine sets dpor state machine
 func (h *Handler) SetDporStateMachine(fsm ConsensusStateMachine) {
 	h.fsm = fsm
+}
+
+// Set Dialer for unit testcase
+func (h *Handler) SetDialer(d *Dialer) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	h.dialer = d
 }
 
 // Coinbase returns handler.signer

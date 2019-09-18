@@ -59,8 +59,8 @@ func (d *Dialer) AddPeer(cpcVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, mac 
 	return address, isProposer, isValidator, err
 }
 
-// isCurrentOrFutureProposer checks if an address is a proposer in the period between current term and future term
-func (d *Dialer) isCurrentOrFutureProposer(address common.Address, term uint64, futureTerm uint64) bool {
+// IsCurrentOrFutureProposer checks if an address is a proposer in the period between current term and future term
+func (d *Dialer) IsCurrentOrFutureProposer(address common.Address, term uint64, futureTerm uint64) bool {
 	isProposer := false
 	for t := term; t <= futureTerm; t++ {
 		isP, _ := d.dpor.VerifyProposerOf(address, t)
@@ -70,8 +70,8 @@ func (d *Dialer) isCurrentOrFutureProposer(address common.Address, term uint64, 
 	return isProposer
 }
 
-// isCurrentOrFutureValidator checks if an address is a validator in the period between current term and future term
-func (d *Dialer) isCurrentOrFutureValidator(address common.Address, term uint64, futureTerm uint64) bool {
+// IsCurrentOrFutureValidator checks if an address is a validator in the period between current term and future term
+func (d *Dialer) IsCurrentOrFutureValidator(address common.Address, term uint64, futureTerm uint64) bool {
 	isValidator := false
 	for t := term; t <= futureTerm; t++ {
 		isV, _ := d.dpor.VerifyValidatorOf(address, t)
@@ -92,7 +92,7 @@ func (d *Dialer) addPeer(cpcVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, mac 
 	log.Debug("received handshake from", "addr", coinbase.Hex())
 
 	// check whether or not remote peer is a proposer or a validator in the period between current term and future term
-	isProposer, isValidator := d.isCurrentOrFutureProposer(coinbase, term, futureTerm), d.isCurrentOrFutureValidator(coinbase, term, futureTerm)
+	isProposer, isValidator := d.IsCurrentOrFutureProposer(coinbase, term, futureTerm), d.IsCurrentOrFutureValidator(coinbase, term, futureTerm)
 
 	// also check if remote peer is a validator
 	isValidator = IsDefaultValidator(p.ID().String(), d.defaultValidators) || isValidator
@@ -111,22 +111,22 @@ func (d *Dialer) addPeer(cpcVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, mac 
 
 	// if the remote peer is a proposer, add it to local peer set
 	if isProposer {
-		remoteProposer, err := d.addRemoteProposer(cpcVersion, dporVersion, p, rw, coinbase)
+		remoteProposer, err := d.AddRemoteProposer(cpcVersion, dporVersion, p, rw, coinbase)
 		log.Debug("after add remote proposer", "proposer", remoteProposer.ID(), "err", err)
 	}
 
 	// if the remote peer is a validator, add it to local peer set
 	if isValidator {
-		remoteValidator, err := d.addRemoteValidator(cpcVersion, dporVersion, p, rw, coinbase)
+		remoteValidator, err := d.AddRemoteValidator(cpcVersion, dporVersion, p, rw, coinbase)
 		log.Debug("after add remote validator", "validator", remoteValidator.ID(), "err", err)
 	}
 
 	return coinbase.Hex(), isProposer, isValidator, err
 }
 
-// addRemoteProposer adds a p2p peer to local proposers set
-func (d *Dialer) addRemoteProposer(cpcVersion int, dporVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteProposer, error) {
-	remoteProposer, ok := d.getProposer(address.Hex())
+// AddRemoteProposer adds a p2p peer to local proposers set
+func (d *Dialer) AddRemoteProposer(cpcVersion int, dporVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteProposer, error) {
+	remoteProposer, ok := d.GetProposer(address.Hex())
 	if !ok {
 		remoteProposer = NewRemoteProposer(address)
 	}
@@ -135,14 +135,14 @@ func (d *Dialer) addRemoteProposer(cpcVersion int, dporVersion int, p *p2p.Peer,
 
 	// add proposer
 	remoteProposer.SetPeer(cpcVersion, dporVersion, Proposer, p, rw)
-	d.setProposer(address.Hex(), remoteProposer)
+	d.SetProposer(address.Hex(), remoteProposer)
 
 	return remoteProposer, nil
 }
 
-// addRemoteValidator adds a p2p peer to local validators set
-func (d *Dialer) addRemoteValidator(cpcVersion int, dporVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteValidator, error) {
-	remoteValidator, ok := d.getValidator(address.Hex())
+// AddRemoteValidator adds a p2p peer to local validators set
+func (d *Dialer) AddRemoteValidator(cpcVersion int, dporVersion int, p *p2p.Peer, rw p2p.MsgReadWriter, address common.Address) (*RemoteValidator, error) {
+	remoteValidator, ok := d.GetValidator(address.Hex())
 	if !ok {
 		remoteValidator = NewRemoteValidator(address)
 	}
@@ -151,7 +151,7 @@ func (d *Dialer) addRemoteValidator(cpcVersion int, dporVersion int, p *p2p.Peer
 
 	// add validator
 	remoteValidator.SetPeer(cpcVersion, dporVersion, Validator, p, rw)
-	d.setValidator(address.Hex(), remoteValidator)
+	d.SetValidator(address.Hex(), remoteValidator)
 
 	// start broadcast loop
 	go remoteValidator.broadcastLoop()
@@ -159,14 +159,14 @@ func (d *Dialer) addRemoteValidator(cpcVersion int, dporVersion int, p *p2p.Peer
 	return remoteValidator, nil
 }
 
-// removeRemoteProposers removes remote proposer by it's addr
-func (d *Dialer) removeRemoteProposers(addr string) error {
+// RemoveRemoteProposers removes remote proposer by it's addr
+func (d *Dialer) RemoveRemoteProposers(addr string) error {
 	d.recentProposers.Remove(addr)
 	return nil
 }
 
-// removeRemoteValidators removes remote proposer by it's addr
-func (d *Dialer) removeRemoteValidators(addr string) error {
+// RemoveRemoteValidators removes remote proposer by it's addr
+func (d *Dialer) RemoveRemoteValidators(addr string) error {
 	v, ok := d.recentValidators.Get(addr)
 	if ok {
 		validator, ok := v.(*RemoteValidator)
@@ -190,10 +190,10 @@ func (d *Dialer) SetServer(server *p2p.Server) {
 func (d *Dialer) UpdateRemoteProposers(term uint64, proposers []common.Address) error {
 
 	for _, signer := range proposers {
-		_, ok := d.getProposer(signer.Hex())
+		_, ok := d.GetProposer(signer.Hex())
 		if !ok {
 			p := NewRemoteProposer(signer)
-			d.setProposer(signer.Hex(), p)
+			d.SetProposer(signer.Hex(), p)
 		}
 	}
 
@@ -274,7 +274,7 @@ func (d *Dialer) disconnectUselessProposers() {
 	}
 }
 
-func (d *Dialer) getProposer(addr string) (*RemoteProposer, bool) {
+func (d *Dialer) GetProposer(addr string) (*RemoteProposer, bool) {
 	if rp, ok := d.recentProposers.Get(addr); ok {
 		remoteProposer, ok := rp.(*RemoteProposer)
 		return remoteProposer, ok
@@ -282,11 +282,11 @@ func (d *Dialer) getProposer(addr string) (*RemoteProposer, bool) {
 	return nil, false
 }
 
-func (d *Dialer) setProposer(addr string, proposer *RemoteProposer) {
+func (d *Dialer) SetProposer(addr string, proposer *RemoteProposer) {
 	d.recentProposers.Add(addr, proposer)
 }
 
-func (d *Dialer) getValidator(addr string) (*RemoteValidator, bool) {
+func (d *Dialer) GetValidator(addr string) (*RemoteValidator, bool) {
 	if rv, ok := d.recentValidators.Get(addr); ok {
 		remoteValidator, ok := rv.(*RemoteValidator)
 		return remoteValidator, ok
@@ -294,7 +294,7 @@ func (d *Dialer) getValidator(addr string) (*RemoteValidator, bool) {
 	return nil, false
 }
 
-func (d *Dialer) setValidator(addr string, validator *RemoteValidator) {
+func (d *Dialer) SetValidator(addr string, validator *RemoteValidator) {
 	d.recentValidators.Add(addr, validator)
 }
 
@@ -316,7 +316,7 @@ func (d *Dialer) AllUselessProposers() map[common.Address]*RemoteProposer {
 				currentTerm   = d.dpor.TermOf(currentNumber)
 				futureTerm    = d.dpor.FutureTermOf(currentNumber)
 			)
-			useful = d.isCurrentOrFutureProposer(address, currentTerm, futureTerm)
+			useful = d.IsCurrentOrFutureProposer(address, currentTerm, futureTerm)
 		}
 
 		if ok && !useful {
@@ -409,14 +409,14 @@ func (d *Dialer) KeepConnection() {
 				)
 
 				switch {
-				case d.isCurrentOrFutureValidator(address, currentTerm, futureTerm):
+				case d.IsCurrentOrFutureValidator(address, currentTerm, futureTerm):
 
 					log.Debug("I am current or future validator, dialing remote validators and disconnecting useless proposers", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
 					d.dialAllRemoteValidators(currentTerm)
 					d.disconnectUselessProposers()
 
-				case d.isCurrentOrFutureProposer(address, currentTerm, futureTerm):
+				case d.IsCurrentOrFutureProposer(address, currentTerm, futureTerm):
 
 					log.Debug("I am current or future proposer, dialing remote validators", "addr", address.Hex(), "number", currentNum, "term", currentTerm, "future term", futureTerm)
 
@@ -459,7 +459,7 @@ func (d *Dialer) Stop() {
 func (d *Dialer) PeerInfos() ([]*PeerInfo, error) {
 	var infos []*PeerInfo
 	for _, id := range d.recentProposers.Keys() {
-		proposer, ok := d.getProposer(id.(string))
+		proposer, ok := d.GetProposer(id.(string))
 		if ok {
 			info := proposer.Info()
 			if info != nil {
@@ -468,7 +468,7 @@ func (d *Dialer) PeerInfos() ([]*PeerInfo, error) {
 		}
 	}
 	for _, id := range d.recentValidators.Keys() {
-		validator, ok := d.getValidator(id.(string))
+		validator, ok := d.GetValidator(id.(string))
 		if ok {
 			info := validator.Info()
 			if info != nil {

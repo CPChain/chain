@@ -54,14 +54,14 @@ func (vh *Handler) handleSignerConnectionMsg(cpcVersion int, p *p2p.Peer, rw p2p
 		)
 
 		// if current or future proposer, add to local peer set
-		if vh.dialer.isCurrentOrFutureProposer(address, term, futureTerm) {
-			vh.dialer.addRemoteProposer(cpcVersion, dporVersion, p, rw, address)
+		if vh.dialer.IsCurrentOrFutureProposer(address, term, futureTerm) {
+			vh.dialer.AddRemoteProposer(cpcVersion, dporVersion, p, rw, address)
 			log.Debug("added the signer as a proposer", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
 		}
 
 		// if current or future validator, add to local peer set
-		if vh.dialer.isCurrentOrFutureValidator(address, term, futureTerm) {
-			vh.dialer.addRemoteValidator(cpcVersion, dporVersion, p, rw, address)
+		if vh.dialer.IsCurrentOrFutureValidator(address, term, futureTerm) {
+			vh.dialer.AddRemoteValidator(cpcVersion, dporVersion, p, rw, address)
 			log.Debug("added the signer as a validator", "address", address.Hex(), "peer.RemoteAddress", p.RemoteAddr().String())
 		}
 
@@ -225,7 +225,7 @@ func (vh *Handler) handleLBFT2Msg(msg p2p.Msg, p *RemoteSigner) error {
 			log.Debug("err when get proposer of number", "err", err, "number", input.Number())
 		}
 
-		correctProposerPeer, exist := vh.dialer.getProposer(correctProposer.Hex())
+		correctProposerPeer, exist := vh.dialer.GetProposer(correctProposer.Hex())
 		if !exist || correctProposerPeer == nil {
 			log.Debug("proposer for the block is not in local proposer peer set")
 			log.Debug("for this block number, the correct proposer should be", "addr", correctProposer.Hex())

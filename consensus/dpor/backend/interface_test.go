@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"bitbucket.org/cpchain/chain/configs"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -142,6 +144,35 @@ func TestIsCheckPoint(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsCheckPoint(tt.args.number, tt.args.termLen, tt.args.viewLen); got != tt.want {
 				t.Errorf("IsCheckPoint() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTermOf(t *testing.T) {
+	type args struct {
+		blockNum uint64
+	}
+
+	termLen := configs.ChainConfigInfo().Dpor.TermLen
+	viewLen := configs.ChainConfigInfo().Dpor.ViewLen
+	tests := []struct {
+		name string
+		args args
+		want uint64
+	}{
+		{
+			"succeed",
+			args{
+				5555,
+			},
+			(5554) / (termLen * viewLen),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := TermOf(tt.args.blockNum); got != tt.want {
+				t.Errorf("TermOf() = %v, want %v", got, tt.want)
 			}
 		})
 	}

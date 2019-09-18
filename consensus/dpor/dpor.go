@@ -166,6 +166,10 @@ func (d *Dpor) SetToCampaign(isToCampaign bool) {
 	}
 }
 
+func (d *Dpor) SetConfig(conf *configs.DporConfig) {
+	d.config = conf
+}
+
 // Mode returns dpor mode
 func (d *Dpor) Mode() Mode {
 	d.modeLock.RLock()

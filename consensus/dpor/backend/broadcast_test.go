@@ -1,51 +1,101 @@
-package backend
+package backend_test
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
+	"time"
 
 	"bitbucket.org/cpchain/chain/configs"
-	"bitbucket.org/cpchain/chain/consensus"
-	"bitbucket.org/cpchain/chain/types"
+	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func TestHandler_BroadcastMinedBlock(t *testing.T) {
-	type fields struct {
-		mode           HandlerMode
-		config         *configs.DporConfig
-		available      bool
-		coinbase       common.Address
-		dialer         *Dialer
-		snap           *consensus.PbftStatus
-		dpor           DporService
-		knownBlocks    *RecentBlocks
-		pendingBlockCh chan *types.Block
-		quitSync       chan struct{}
+func TestBroadcast_WaitForEnoughValidators(t *testing.T) {
+	dialer := backend.NewDialer()
+	d := NewDpor()
+	conf := &configs.DporConfig{}
+	conf.FaultyNumber = 2
+	d.SetConfig(conf)
+	ds := backend.DporService(d)
+	dialer.SetDporService(ds)
+	term := d.TermOf(d.CurrentSnap().Number)
+	peer := NewPeerForTest()
+	conn, _ := MsgPipe()
+	addr1 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 3))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr1)
+	addr2 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 4))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr2)
+	addr3 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 5))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr3)
+	addr4 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 1))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr4)
+	addr5 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 2))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr5)
+	vali, _ := dialer.EnoughValidatorsOfTerm(term)
+	handler := NewHandler()
+	handler.SetDporService(d)
+	handler.SetDialer(dialer)
+	validaters := backend.WaitForEnoughValidators(handler, term, nil)
+	equalSigner := reflect.DeepEqual(validaters, vali)
+	if !equalSigner {
+		t.Error("Call WaitForEnoughValidators failed...")
 	}
-	type args struct {
-		block *types.Block
+
+}
+
+func TestBroadcast_WaitForEnoughPreprepareValidators(t *testing.T) {
+	dialer := backend.NewDialer()
+	d := NewDpor()
+	conf := &configs.DporConfig{}
+	conf.FaultyNumber = 1
+	d.SetConfig(conf)
+	ds := backend.DporService(d)
+	dialer.SetDporService(ds)
+	term := d.TermOf(d.CurrentSnap().Number)
+	peer := NewPeerForTest()
+	conn, _ := MsgPipe()
+	addr1 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 3))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr1)
+	addr2 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 4))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr2)
+	addr3 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 5))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr3)
+	vi, _ := dialer.EnoughImpeachValidatorsOfTerm(term)
+	handler := NewHandler()
+	handler.SetDporService(d)
+	handler.SetDialer(dialer)
+	validaters := backend.WaitForEnoughPreprepareValidators(handler, term, nil, time.Now())
+	equalSigner := reflect.DeepEqual(validaters, vi)
+	if !equalSigner {
+		t.Error("Call WaitForEnoughImpeachValidators failed...")
 	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			h := &Handler{
-				mode:           tt.fields.mode,
-				config:         tt.fields.config,
-				available:      tt.fields.available,
-				coinbase:       tt.fields.coinbase,
-				dialer:         tt.fields.dialer,
-				dpor:           tt.fields.dpor,
-				knownBlocks:    tt.fields.knownBlocks,
-				pendingBlockCh: tt.fields.pendingBlockCh,
-				quitCh:         tt.fields.quitSync,
-			}
-			h.BroadcastPreprepareBlock(tt.args.block)
-		})
+}
+
+func TestBroadcast_WaitForEnoughImpeachValidators(t *testing.T) {
+	dialer := backend.NewDialer()
+	d := NewDpor()
+	conf := &configs.DporConfig{}
+	conf.FaultyNumber = 1
+	d.SetConfig(conf)
+	ds := backend.DporService(d)
+	dialer.SetDporService(ds)
+	term := d.TermOf(d.CurrentSnap().Number)
+	peer := NewPeerForTest()
+	conn, _ := MsgPipe()
+	addr1 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 3))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr1)
+	addr2 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 4))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr2)
+	addr3 := common.HexToAddress("0x" + fmt.Sprintf("%040x", 5))
+	dialer.AddRemoteValidator(11, 33, peer, conn, addr3)
+	vim, _ := dialer.EnoughImpeachValidatorsOfTerm(term)
+	handler := NewHandler()
+	handler.SetDporService(d)
+	handler.SetDialer(dialer)
+	validaters := backend.WaitForEnoughImpeachValidators(handler, term, nil)
+	equalSigner := reflect.DeepEqual(validaters, vim)
+	if !equalSigner {
+		t.Error("Call WaitForEnoughImpeachValidators failed...")
 	}
 }
