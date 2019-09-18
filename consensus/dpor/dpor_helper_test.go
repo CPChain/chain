@@ -17,6 +17,7 @@
 package dpor
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -253,5 +254,218 @@ func Test_dporHelper_verifySeal(t *testing.T) {
 				t.Errorf("defaultDporHelper.verifySeal(%v, %v, %v, %v, %v) error = %v, wantErr %v", tt.args.c, tt.args.chain, tt.args.header, tt.args.parents, tt.args.refHeader, err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func Test_defaultDporHelper_verifyBasicImpeach(t *testing.T) {
+	addr, _ := getTestAccount()
+
+	tx1 := types.NewTransaction(0, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d87"), big.NewInt(10), 50000, big.NewInt(10), nil)
+	tx1, _ = tx1.WithSignature(types.HomesteadSigner{}, common.Hex2Bytes("9bea4c4daac7c7c52e093e6a4c35dbbcf8856f1af7b059ba20253e70848d094f8a8fae537ce25ed8cb5af9adac3f141af69bd515bd2ba031522df09b97dd72b100"))
+	newHeader := &types.Header{
+		ParentHash:   common.HexToHash("0x83cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55"),
+		Coinbase:     common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"),
+		StateRoot:    common.HexToHash("0xef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"),
+		TxsRoot:      common.HexToHash("0x5fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67"),
+		ReceiptsRoot: common.HexToHash("0xbc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52"),
+		Number:       big.NewInt(1),
+		GasLimit:     uint64(3141592),
+		GasUsed:      uint64(21000),
+		Time:         big.NewInt(1426516743),
+		Extra:        hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		Dpor: types.DporSnap{
+			Proposers: []common.Address{
+				addr,
+			},
+			Sigs:       make([]types.DporSignature, 3),
+			Validators: []common.Address{},
+		},
+	}
+
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	err := dph.verifyBasicImpeach(d, d.chain, newHeader, newHeader)
+	errInvalidImpeachErr := errors.New("invalid impeach txs root")
+	equalSigner := reflect.DeepEqual(err, errInvalidImpeachErr)
+	if !equalSigner {
+		t.Error("Call verifyBasicImpeach failed...")
+	}
+}
+
+func Test_defaultDporHelper_snapshot(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	snapshot := NewSnapshot(&configs.DporConfig{Period: 3, TermLen: 4, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	d.SetCurrentSnap(snapshot)
+	snap, err := d.dh.snapshot(d, d.chain, 827, d.CurrentSnap().hash(), nil)
+	if snap != d.CurrentSnap() || err != nil {
+		t.Error("Call snapshot failed...")
+	}
+}
+
+func Test_defaultDporHelper_verifyHeader(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	genesis := d.chain.GetHeaderByNumber(0)
+	err := d.dh.verifyHeader(d, d.chain, genesis, nil, newHeader(), true, true)
+	if err != nil {
+		t.Error("Call verifyHeader failed...")
+	}
+	err1 := dph.verifyBasic(d, d.chain, genesis, nil, newHeader())
+	if err1 != nil {
+		t.Error("Call verifyBasic failed...")
+	}
+	err2 := d.dh.verifySignatures(d, d.chain, newHeader(), nil, nil)
+	if err2 != nil {
+		t.Error("Call verifySignatures failed...")
+	}
+
+}
+
+func Test_defaultDporHelper_verifyBasic(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	// Check status
+	err1 := dph.verifyBasic(d, d.chain, newHeader(), nil, nil)
+	fmt.Println(err1)
+	if err1 != nil {
+		t.Error("Call ValidateBlock check status failed...")
+	}
+	// Check Parent header:
+	d.mode = NormalMode
+	err2 := d.dh.verifyBasic(d, d.chain, newHeader(), nil, nil)
+	errUnknownAncestor := errors.New("unknown ancestor")
+	equalSigner := reflect.DeepEqual(err2, errUnknownAncestor)
+	if !equalSigner {
+		t.Error("Call ValidateBlock failed...")
+	}
+}
+
+func Test_defaultDporHelper_validateBlock(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	unknownBlock := types.NewBlock(&types.Header{GasLimit: configs.DefaultGasLimitPerBlock}, nil, nil)
+	err1 := d.dh.validateBlock(d, d.chain, unknownBlock, true, true)
+	err2 := d.dh.verifyHeader(d, d.chain, unknownBlock.Header(), nil, unknownBlock.RefHeader(), true, true)
+	err3 := d.chain.ValidateBlockBody(unknownBlock)
+	equalSigner1 := reflect.DeepEqual(err1, err2)
+	equalSigner2 := reflect.DeepEqual(err1, err3)
+	if equalSigner1 && (!equalSigner2) {
+		t.Error("Call validateBlock failed...")
+	}
+}
+
+func Test_defaultDporHelper_verifyDporSnapImpeach(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	// Parent is empty:
+	err := dph.verifyDporSnapImpeach(d, d.chain, newHeader(), nil, nil)
+	errUnknownAncestor := errors.New("unknown ancestor")
+	equalSigner := reflect.DeepEqual(err, errUnknownAncestor)
+	if !equalSigner {
+		t.Error("Call verifyDporSnapImpeach failed...")
+	}
+
+}
+
+func Test_defaultDporHelper_verifyProposers(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	// dpor number is 0
+	header := newHeader()
+	header.Number = big.NewInt(0)
+	err1 := dph.verifyProposers(d, d.chain, header, nil, nil)
+	if err1 != nil {
+		t.Error("Call verifyProposers failed... ")
+	}
+}
+
+func Test_defaultDporHelper_verifySeal(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	header := newHeader()
+	// dpor number is 0:
+	header.Number = big.NewInt(0)
+	errUnknown := errors.New("unknown block")
+	err1 := dph.verifySeal(d, d.chain, header, nil, nil)
+	equalSigner := reflect.DeepEqual(err1, errUnknown)
+	if !equalSigner {
+		t.Error("Call verifySeal failed,,,")
+	}
+	// Check status:
+	d.mode = FakeMode
+	err2 := dph.verifySeal(d, d.chain, newHeader(), nil, nil)
+	if err2 != nil {
+		t.Error("Call verifySeal check status failed,,,")
+	}
+}
+
+func Test_defaultDporHelper_verifySignatures(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	header := newHeader()
+	// dpor number is 0:
+	header.Number = big.NewInt(0)
+	errUnknown := errors.New("unknown block")
+	err1 := dph.verifySignatures(d, d.chain, header, nil, nil)
+	equalSigner := reflect.DeepEqual(err1, errUnknown)
+	if !equalSigner {
+		t.Error("Call verifySignatures failed,,,")
+	}
+	// Check status:
+	d.mode = FakeMode
+	err2 := dph.verifySignatures(d, d.chain, newHeader(), nil, nil)
+	if err2 != nil {
+		t.Error("Call verifySignatures check status failed,,,")
+	}
+}
+
+func Test_defaultDporHelper_signHeader(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	header := newHeader()
+	d.dh = dph
+	errInvalidState := errors.New("the state is unexpected for signing header")
+	err := dph.signHeader(d, d.chain, header, consensus.Idle)
+	equalSigner := reflect.DeepEqual(err, errInvalidState)
+	if !equalSigner {
+		t.Error("Call signerHeader check status failed...")
 	}
 }

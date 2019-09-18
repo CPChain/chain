@@ -1,11 +1,13 @@
 package dpor
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
 
 	"bitbucket.org/cpchain/chain/configs"
+	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/core"
 	"bitbucket.org/cpchain/chain/core/vm"
 	"bitbucket.org/cpchain/chain/database"
@@ -208,9 +210,7 @@ func Test_InsertChain(t *testing.T) {
 	fmt.Println(num)
 	fmt.Println(unknownBlock.Hash())
 	fmt.Println("has or not", dpor.HasBlockInChain(unknownBlock.Hash(), 888))
-	//unknownBlock.Hash()
 	fmt.Println(dpor.chain.GetBlock(unknownBlock.Hash(), 888))
-	//dpor.BroadcastBlock(unknownBlock,true)
 	if err != nil {
 		t.Error("Insertchain has some problems...")
 	}
@@ -231,4 +231,63 @@ func Test_TermOf(t *testing.T) {
 		t.Error("termCalculateExceptresult is wrong...")
 	}
 
+}
+
+func TestDpor_ValidateBlock(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	//hashBytes := dph.sigHash(newHeader).Bytes()
+
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	dpor := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	dpor.chain = newBlockchain(888)
+	dpor.dh = dph
+	unknownBlock := types.NewBlock(&types.Header{GasLimit: configs.DefaultGasLimitPerBlock}, nil, nil)
+	err := dpor.ValidateBlock(unknownBlock, true, true)
+	errUnknownAncestor := errors.New("unknown ancestor")
+	equalSigner := reflect.DeepEqual(err, errUnknownAncestor)
+	if !equalSigner {
+		t.Error("Call ValidateBlock failed...")
+	}
+
+}
+
+func TestDpor_VerifyHeaderWithState(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, NormalMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	err := d.VerifyHeaderWithState(newHeader(), consensus.Idle)
+	if err != nil {
+		t.Error("Call verifyHeader with state failed...")
+	}
+}
+
+func TestDpor_SignHeader(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.mode = FakeMode
+	d.chain = newBlockchain(888)
+	header := newHeader()
+	d.dh = dph
+	errInvalidState := errors.New("the state is unexpected for signing header")
+	err := d.SignHeader(header, consensus.Idle)
+	equalSigner := reflect.DeepEqual(err, errInvalidState)
+	if !equalSigner {
+		t.Error("Call signerHeader check status failed...")
+	}
+}
+
+func TestDpor_CheckStatus(t *testing.T) {
+	dph := &defaultDporHelper{&defaultDporUtil{}}
+	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
+	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
+	d.chain = newBlockchain(888)
+	d.dh = dph
+	equalSigner := reflect.DeepEqual(d.Status(), d.PbftStatus())
+	if !equalSigner {
+		t.Error("Check Status failed...")
+	}
 }
