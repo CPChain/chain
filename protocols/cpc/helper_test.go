@@ -55,6 +55,7 @@ func newTestProtocolManager(blocks int, generator func(int, *core.BlockGen), new
 		return nil, nil, err
 	}
 	pm.Start(1000)
+	StartSyncerLoop <- "startLoop"
 	return pm, db, nil
 }
 
