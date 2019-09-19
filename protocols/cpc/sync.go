@@ -30,6 +30,10 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/discover"
 )
 
+var (
+	StartSyncerLoop chan string = make(chan string)
+)
+
 const (
 	forceSyncCycle      = 1 * time.Second // Time interval to force syncs, even if few peers are available
 	minDesiredPeerCount = 5               // Amount of peers desired to start syncing
@@ -135,6 +139,9 @@ func (pm *ProtocolManager) txsyncLoop() {
 // syncerLoop is responsible for periodically synchronising with the network, both
 // downloading hashes and blocks as well as handling the announcement handler.
 func (pm *ProtocolManager) syncerLoop() {
+	// block until account is unlocked
+	<-StartSyncerLoop
+
 	// Start and ensure cleanup of sync mechanisms
 	pm.fetcher.Start()
 	defer pm.fetcher.Stop()

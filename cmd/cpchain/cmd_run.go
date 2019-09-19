@@ -330,6 +330,7 @@ func bootstrap(ctx *cli.Context, n *node.Node) {
 
 	startNode(n)
 	key := unlockAccounts(ctx, n)
+	cpc.StartSyncerLoop <- "startLoop"
 	handleWallet(n)
 	setupMining(ctx, n, key)
 	// handle user interrupt
