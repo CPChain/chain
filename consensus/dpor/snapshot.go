@@ -1,7 +1,6 @@
 package dpor
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -14,7 +13,6 @@ import (
 	"bitbucket.org/cpchain/chain/consensus/dpor/campaign"
 	"bitbucket.org/cpchain/chain/consensus/dpor/election"
 	"bitbucket.org/cpchain/chain/consensus/dpor/rpt"
-	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -130,6 +128,7 @@ func (s *DporSnapshot) recentValidators() map[uint64][]common.Address {
 			copy(recentValidators[term][i][:], v[:])
 		}
 	}
+
 	return recentValidators
 }
 
@@ -156,6 +155,10 @@ func (s *DporSnapshot) getRecentValidators(term uint64) []common.Address {
 	signers, ok := s.RecentValidators[term]
 	if !ok {
 		return nil
+	}
+
+	if s.Mode == NormalMode {
+		signers = configs.Validators()
 	}
 
 	return signers
@@ -217,40 +220,10 @@ func newSnapshot(config *configs.DporConfig, number uint64, hash common.Hash, pr
 	return snap
 }
 
-// loadSnapshot loads an existing Snapshot from the database.
-func loadSnapshot(config *configs.DporConfig, db database.Database, hash common.Hash) (*DporSnapshot, error) {
-
-	// Retrieve from db
-	blob, err := db.Get(append([]byte("dpor-"), hash[:]...))
-	if err != nil {
-		return nil, err
-	}
-
-	// Recover it!
-	snap := new(DporSnapshot)
-	if err := json.Unmarshal(blob, snap); err != nil {
-		return nil, err
-	}
-	snap.config = config
-
-	return snap, nil
-}
-
-// store inserts the Snapshot into the database.
-func (s *DporSnapshot) store(db database.Database) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	blob, err := json.Marshal(s)
-	if err != nil {
-		return err
-	}
-	return db.Put(append([]byte("dpor-"), s.Hash[:]...), blob)
-}
-
 // copy creates a deep copy of the Snapshot, though not the individual votes.
 func (s *DporSnapshot) copy() *DporSnapshot {
 	cpy := &DporSnapshot{
+		Mode:             s.Mode,
 		config:           s.config,
 		Number:           s.number(),
 		Hash:             s.hash(),
@@ -283,9 +256,6 @@ func (s *DporSnapshot) apply(headers []*types.Header, timeToUpdateCommitttee boo
 			return nil, errInvalidChain
 		}
 	}
-	if headers[0].Number.Uint64() != s.Number+1 {
-		return nil, errInvalidChain
-	}
 
 	// Iterate through the headers and create a new Snapshot
 	snap := s.copy()
@@ -317,7 +287,7 @@ func (s *DporSnapshot) applyHeader(header *types.Header, ifUpdateCommittee bool,
 	s.setHash(header.Hash())
 
 	// When ifUpdateCommittee is true, update candidates, rpts, and run election if necessary
-	if ifUpdateCommittee {
+	if s.Mode == NormalMode && ifUpdateCommittee {
 
 		// If in checkpoint, run election
 		if backend.IsCheckPoint(s.number(), s.config.TermLen, s.config.ViewLen) {

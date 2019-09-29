@@ -18,6 +18,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -144,6 +145,26 @@ if already existing.`,
 			}, flags.LogFlags...),
 			Description: `The arguments are interpreted as block numbers or hashes.
 Use "cpchain chain dump 0" to dump the genesis block.`,
+		},
+		{
+			Action: compactDB,
+			Name:   "compact",
+			Usage:  "Compact the database in datadir/cpchain/chaindata directory",
+			Flags: append([]cli.Flag{
+				flags.GetByName(flags.DataDirFlagName),
+			}, flags.LogFlags...),
+			Description: ``,
+		},
+		{
+			Action:    deletePattern,
+			Name:      "delete",
+			Usage:     "Delete those key-values contains the substring",
+			ArgsUsage: "<substring>",
+			Flags: append([]cli.Flag{
+				flags.GetByName(flags.DataDirFlagName),
+			}, flags.LogFlags...),
+
+			Description: "Example: ./cpchain chain delete dpor- --datadir ~/.cpchain",
 		},
 	},
 }
@@ -409,6 +430,60 @@ func dump(ctx *cli.Context) error {
 	}
 	chainDb.Close()
 	return nil
+}
+
+func compactDB(ctx *cli.Context) (err error) {
+	if len(ctx.Args()) != 0 {
+		log.Fatal("This command requires no argument.")
+	}
+
+	cfg, stack := newConfigNode(ctx)
+	_, chainDb := commons.OpenChain(ctx, stack, &cfg.Cpc)
+	defer chainDb.Close()
+
+	if db, ok := chainDb.(*database.LDBDatabase); ok {
+		log.Warn("This requires a few minutes to finish, please do not interrupt!")
+		err = db.LDB().CompactRange(util.Range{})
+		if err == nil {
+			log.Warn("Successfully compacted the underlying database!")
+		}
+	}
+
+	return err
+}
+
+func deletePattern(ctx *cli.Context) (err error) {
+	if len(ctx.Args()) != 1 {
+		log.Fatal("This command requires argument <delete-key-substring>.")
+	}
+
+	cfg, stack := newConfigNode(ctx)
+	_, chainDb := commons.OpenChain(ctx, stack, &cfg.Cpc)
+	defer chainDb.Close()
+
+	if db, ok := chainDb.(*database.LDBDatabase); ok {
+		iter := db.LDB().NewIterator(nil, nil)
+
+		log.Warn("This requires a few minutes to finish, please do not interrupt!")
+
+		for iter.Next() {
+			key := iter.Key()
+
+			// if matches, delete
+			if bytes.Contains(key, []byte(ctx.Args()[0])) {
+				err = db.Delete(key)
+				if err != nil {
+					log.Error("Error occurs when deleting key", "key", key)
+				}
+			}
+		}
+		iter.Release()
+		err = iter.Error()
+
+		log.Warn("Finished deleting!")
+	}
+
+	return err
 }
 
 // hashish returns true for strings that look like hashes.

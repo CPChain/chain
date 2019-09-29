@@ -34,7 +34,9 @@ func newDpor(config *configs.DporConfig, number uint64, hash common.Hash, propos
 			Hash:             hash,
 			RecentProposers:  make(map[uint64][]common.Address),
 			RecentValidators: make(map[uint64][]common.Address),
-		}}
+		},
+		config: config,
+	}
 	dpor.currentSnap.setRecentProposers(dpor.currentSnap.Term(), proposers)
 	dpor.currentSnap.setRecentValidators(dpor.currentSnap.Term(), validators)
 	return dpor
@@ -95,41 +97,6 @@ func Test_VerifyProposerOf(t *testing.T) {
 
 }
 
-func Test_VerifyValidatorOf(t *testing.T) {
-	// 1.validaterList just one mumber:
-	validaters := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
-	dpor := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, nil, validaters, NormalMode)
-	wantResult := true
-	testPro, _ := dpor.VerifyValidatorOf(common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a"), dpor.currentSnap.TermOf(dpor.currentSnap.Number))
-	if !reflect.DeepEqual(testPro, wantResult) {
-		t.Error("VerifyProposer failed...")
-	}
-	// 2.several members in validaterList :
-	recentAddr := generateABatchAccounts(10)
-	dpor1 := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, nil, recentAddr, NormalMode)
-
-	term := dpor1.currentSnap.TermOf(dpor.currentSnap.Number)
-	var i int
-	//var testResult bool
-	for i = 1; i < (len(recentAddr) + 1); i++ {
-		generateAddr := common.HexToAddress("0x" + fmt.Sprintf("%040x", i))
-		testResult, _ := dpor1.VerifyValidatorOf(generateAddr, term)
-		wantResult := true
-		if !reflect.DeepEqual(testResult, wantResult) {
-			t.Error("VerifyProposer failed...")
-		}
-	}
-}
-
-func Test_ValidatorsOf(t *testing.T) {
-	validaters := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
-	dpor := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, nil, validaters, NormalMode)
-	testval, _ := dpor.ValidatorsOf(dpor.currentSnap.Number)
-	if !reflect.DeepEqual(testval, validaters) {
-		t.Error("TestValidater failed...")
-	}
-}
-
 // ProposersOf returns proposers of given block number
 func Test_ProposersOf(t *testing.T) {
 	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
@@ -159,17 +126,6 @@ func Test_IsProposerOf(t *testing.T) {
 		t.Error("The mining proposer is not be selected... ")
 	}
 
-}
-func Test_ValidatorsOfTerm(t *testing.T) {
-	validaters := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
-	dpor := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, nil, validaters, NormalMode)
-	term := dpor.currentSnap.TermOf(dpor.currentSnap.Number)
-
-	wantResult, _ := dpor.ValidatorsOfTerm(term)
-	equalSigner := reflect.DeepEqual(wantResult, validaters)
-	if !equalSigner {
-		t.Error("TestValidaters failed...")
-	}
 }
 
 func Test_ProposersOfTerm(t *testing.T) {
@@ -261,22 +217,6 @@ func TestDpor_VerifyHeaderWithState(t *testing.T) {
 	err := d.VerifyHeaderWithState(newHeader(), consensus.Idle)
 	if err != nil {
 		t.Error("Call verifyHeader with state failed...")
-	}
-}
-
-func TestDpor_SignHeader(t *testing.T) {
-	dph := &defaultDporHelper{&defaultDporUtil{}}
-	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
-	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
-	d.mode = FakeMode
-	d.chain = newBlockchain(888)
-	header := newHeader()
-	d.dh = dph
-	errInvalidState := errors.New("the state is unexpected for signing header")
-	err := d.SignHeader(header, consensus.Idle)
-	equalSigner := reflect.DeepEqual(err, errInvalidState)
-	if !equalSigner {
-		t.Error("Call signerHeader check status failed...")
 	}
 }
 

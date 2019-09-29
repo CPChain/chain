@@ -87,6 +87,9 @@ var (
 
 	// --- our new error types ---
 
+	// errNilParent is returned when the parent is nil.
+	errNilParent = errors.New("parent is nil")
+
 	// errVerifyUncleNotAllowed is returned when verify uncle block.
 	errVerifyUncleNotAllowed = errors.New("uncles not allowed")
 

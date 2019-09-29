@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"errors"
 	"fmt"
 
 	"bitbucket.org/cpchain/chain/types"
@@ -121,7 +122,7 @@ func RecoverBlockFromMsg(msg p2p.Msg, p interface{}) (*types.Block, error) {
 	block.ReceivedAt = msg.ReceivedAt
 	block.ReceivedFrom = p
 
-	return block, nil
+	return block, VerifyBlockFields(block)
 }
 
 // RecoverHeaderFromMsg recovers a header from a p2p msg
@@ -131,5 +132,47 @@ func RecoverHeaderFromMsg(msg p2p.Msg, p interface{}) (*types.Header, error) {
 	if err := msg.Decode(&header); err != nil {
 		return nil, errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
-	return header, nil
+	return header, VerifyHeaderFields(header)
+}
+
+var (
+	errNilHeader = errors.New("the header is nil")
+	errNilDpor   = errors.New("the Dpor field in header is nil")
+	errNilNumber = errors.New("the Number field in header is nil")
+	errNilTime   = errors.New("the Time field in header is nil")
+	errNilExtra  = errors.New("the Extra field in header is nil")
+)
+
+// VerifyHeaderFields verifies that all fields in the header do exist.
+// if the function returns nil, then nil-pointer panic will not occur.
+func VerifyHeaderFields(header *types.Header) error {
+	if header.Number == nil {
+		return errNilNumber
+	}
+
+	if header.Time == nil {
+		return errNilTime
+	}
+
+	if header.Extra == nil {
+		return errNilExtra
+	}
+
+	if header.Dpor.Sigs == nil || header.Dpor.Proposers == nil {
+		return errNilDpor
+	}
+
+	return nil
+}
+
+// VerifyBlockFields verifies that all fields in the block do exist.
+// if the function returns nil, then nil-pointer panic will not occur.
+func VerifyBlockFields(block *types.Block) error {
+
+	if block.Header() == nil {
+		return errNilHeader
+	}
+
+	err := VerifyHeaderFields(block.Header())
+	return err
 }

@@ -9,12 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-
 	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/database"
 	"bitbucket.org/cpchain/chain/types"
+	"github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -441,8 +440,12 @@ func (p *LBFT2) handlePreprepareMsg(input *BlockOrHeader, state consensus.State,
 
 	parent := p.dpor.GetBlockFromChain(block.ParentHash(), block.NumberU64()-1)
 	// if received a preprepare msg, and current time is after parent.timestamp+period+blockDelay, drop it!
-	if parent != nil && time.Now().After(parent.Timestamp().Add(p.dpor.Period()).Add(p.dpor.BlockDelay())) {
-		log.Debug("current time is after parent + period + blockdelay", "number", number, "hash", hash.Hex(), "time.now", time.Now(), "parent timestamp", parent.Timestamp())
+	if parent == nil || (parent != nil && time.Now().After(parent.Timestamp().Add(p.dpor.Period()).Add(p.dpor.BlockDelay()))) {
+		if parent != nil {
+			log.Debug("current time is after parent + period + blockdelay", "number", number, "hash", hash.Hex(), "time.now", time.Now(), "parent timestamp", parent.Timestamp())
+		} else {
+			log.Debug("parent == nil", "number", number, "hash", hash.Hex())
+		}
 		return nil, NoAction, NoMsgCode, state, nil
 	}
 

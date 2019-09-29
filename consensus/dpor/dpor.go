@@ -37,7 +37,7 @@ type SyncFromPeerFn func(p *p2p.Peer)
 type SyncFromBestPeerFn func()
 
 const (
-	inMemorySnapshots  = 100 // Number of recent vote snapshots to keep in memory
+	inMemorySnapshots  = 200 // Number of recent vote snapshots to keep in memory
 	inMemorySignatures = 100 // Number of recent block signatures to keep in memory
 )
 

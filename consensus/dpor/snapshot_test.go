@@ -83,106 +83,6 @@ func BenchmarkCreateSnapsshot(b *testing.B) {
 	bench_newSnapshot(b)
 }
 
-func Test_loadSnapshot(t *testing.T) {
-	type args struct {
-		config   *configs.DporConfig
-		sigcache *lru.ARCCache
-		db       database.Database
-		hash     common.Hash
-	}
-	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	cache, _ := lru.NewARC(inMemorySnapshots)
-	expectedDporSnapshot := new(DporSnapshot)
-	expectedDporSnapshot.config = &testConfig
-	tests := []struct {
-		name    string
-		args    args
-		want    *DporSnapshot
-		wantErr bool
-	}{
-		{"test_loadSnapshot1",
-			args{&testConfig, cache, &fakeDb{dbType: 1}, common.Hash{}},
-			expectedDporSnapshot,
-			false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := loadSnapshot(tt.args.config, tt.args.db, tt.args.hash)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("loadSnapshot(%v, %v, %v, %v) error = %v, wantErr %v", tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash, err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("loadSnapshot(%v, %v, %v, %v) = \n %v, want \n %v\n", tt.args.config, tt.args.sigcache, tt.args.db, tt.args.hash, got, tt.want)
-			}
-		})
-	}
-}
-
-func bench_loadSnapshot(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-	testConfig := configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}
-	//cache, _ := lru.NewARC(inMemorySnapshots)
-	loadSnapshot(&testConfig, &fakeDb{dbType: 1}, common.Hash{})
-}
-
-func BenchmarkLoadSnapshot(b *testing.B) {
-	bench_loadSnapshot(b)
-}
-
-func TestSnapshot_store(t *testing.T) {
-
-	type fields struct {
-		config     *configs.DporConfig
-		sigcache   *lru.ARCCache
-		Number     uint64
-		Hash       common.Hash
-		Candidates []common.Address
-		// RecentSigners map[uint64][]common.Address
-	}
-	type args struct {
-		db database.Database
-	}
-
-	cache, _ := lru.NewARC(inMemorySnapshots)
-	config := &configs.DporConfig{Period: 3, TermLen: 3}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{"store ok",
-			fields{
-				config,
-				cache,
-				1,
-				common.Hash{},
-				getProposerAddress(),
-				// map[uint64][]common.Address{0: getSignerAddress()},
-			},
-			args{&fakeDb{}},
-			false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &DporSnapshot{
-				config: tt.fields.config,
-				// sigcache:      tt.fields.sigcache,
-				Number:     tt.fields.Number,
-				Hash:       tt.fields.Hash,
-				Candidates: tt.fields.Candidates,
-				// RecentSigners: tt.fields.RecentSigners,
-			}
-			if err := s.store(tt.args.db); (err != nil) != tt.wantErr {
-				t.Errorf("DporSnapshot.store(%v) error = %v, wantErr %v", tt.args.db, err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func TestSnapshot_copy(t *testing.T) {
 	snap := newSnapshot(&configs.DporConfig{Period: 3, TermLen: 3, ViewLen: 3}, 1, common.Hash{}, getProposerAddress(), getValidatorAddress(), FakeMode)
 	snap.Candidates = getCandidates()
@@ -233,7 +133,6 @@ func TestSnapshot_apply(t *testing.T) {
 		Number     uint64
 		Hash       common.Hash
 		Candidates []common.Address
-		//RecentSigners map[uint64][]common.Address
 	}
 	type args struct {
 		headers []*types.Header
@@ -270,12 +169,10 @@ func TestSnapshot_apply(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &DporSnapshot{
-				config: tt.fields.config,
-				// sigcache:      tt.fields.sigcache,
+				config:     tt.fields.config,
 				Number:     tt.fields.Number,
 				Hash:       tt.fields.Hash,
 				Candidates: tt.fields.Candidates,
-				// RecentSigners: tt.fields.RecentSigners,
 			}
 			got, err := s.apply(tt.args.headers, true, nil, nil)
 			if (err != nil) != tt.wantErr {
@@ -459,29 +356,6 @@ func TestSnapshot_inturn(t *testing.T) {
 			t.Errorf("expected result is %v,get %v,number:%v,addr:%v", tt.expectedResult, inturn, tt.number, tt.addr.Hex())
 		}
 	}
-}
-
-func Test_loadSnapshot_marshal(t *testing.T) {
-	cfg := &configs.DporConfig{Period: 3, ViewLen: 3, TermLen: 3}
-	db := database.NewMemDatabase()
-	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
-	recentP := make(map[uint64][]common.Address)
-	recentP[1] = proposers
-	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP}
-	hash := common.Hash{}
-	snapshot.setHash(hash)
-	snapshot.store(db)
-	got, err := loadSnapshot(cfg, db, hash)
-	_ = got
-	if err != nil {
-		t.Error("should not fail", err)
-	}
-
-	if !reflect.DeepEqual(snapshot, got) {
-		t.Error("loaded snapshot does not equal to original one")
-	}
-
-	t.Log("snapshot loaded", got)
 }
 
 func Test_choseSomeProposers(t *testing.T) {
@@ -744,7 +618,7 @@ func TestValidatorViewOf(t *testing.T) {
 	recentA := generateABatchAccounts(5)
 	recentV := make(map[uint64][]common.Address)
 	recentP := make(map[uint64][]common.Address)
-	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, RecentValidators: recentV, Number: 888}
+	snapshot := &DporSnapshot{config: cfg, RecentProposers: recentP, RecentValidators: recentV, Number: 888, Mode: FakeMode}
 	term := snapshot.TermOf(snapshot.Number)
 	recentV[term] = recentA
 	recentP[term] = proposers

@@ -17,7 +17,6 @@
 package dpor
 
 import (
-	"math"
 	"reflect"
 	"time"
 
@@ -384,17 +383,6 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 			break
 		}
 
-		// If an on-disk checkpoint Snapshot can be found, use that
-		log.Debug("loading snapshot", "number", numberIter, "hash", hash.Hex())
-		s, err := loadSnapshot(dpor.config, dpor.db, hash)
-		if err == nil {
-			log.Debug("Loaded checkpoint Snapshot from disk", "number", numberIter, "hash", hash.Hex())
-			snap = s
-			break
-		} else {
-			log.Debug("loading snapshot fails", "error", err)
-		}
-
 		// If we're at block zero, make a Snapshot
 		if numberIter == 0 {
 			// Retrieve genesis block and verify it
@@ -412,12 +400,14 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 				proposers = genesis.Dpor.CopyProposers()
 				validators = genesis.Dpor.CopyValidators()
 			}
-			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators, FakeMode)
-			if err := snap.store(dpor.db); err != nil {
-				return nil, err
-			}
-			log.Debug("Stored genesis voting Snapshot to disk")
+			snap = newSnapshot(dpor.config, 0, genesis.Hash(), proposers, validators, dpor.Mode())
 			break
+		}
+
+		// if numberIter is equal to #(number - 12*3*(2+2)), then create a snap, then apply a batch of headers to it
+		if numberIter == number-(dpor.TermLength()*dpor.ViewLength()*(TermDistBetweenElectionAndMining+2)) && number > dpor.config.MaxInitBlockNumber {
+			snap = newSnapshot(dpor.config, numberIter, hash, nil, nil, dpor.Mode())
+			log.Debug("created a new snapshot at some previous term ago", "number", numberIter, "hash", hash.Hex())
 		}
 
 		// No Snapshot for this header, gather the header and move backward
@@ -439,6 +429,8 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 		headers = append(headers, header)
 		numberIter, hash = numberIter-1, header.ParentHash
+
+		log.Debug("added header to headers", "number", numberIter, "hash", hash.Hex(), "len of headers", len(headers))
 	}
 
 	// Previous Snapshot found, apply any pending headers on top of it
@@ -456,12 +448,22 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 	log.Debug("known chain head", "number", headNumber)
 
-	timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator()
-	startBlockNumberOfRptCalculate := float64(int(headNumber) - configs.DefaultFullSyncPivot)
-	timeToUpdateRpts := float64(snap.number()) > math.Max(0., startBlockNumberOfRptCalculate)
+	timeToUpdateCommittee = dpor.IsMiner() || dpor.IsValidator() || dpor.recentSnaps.Len() == 0
+	startBlockNumberOfRptCalculate := func() uint64 {
+		if headNumber > configs.DefaultFullSyncPivot {
+			return headNumber - configs.DefaultFullSyncPivot
+		}
+		return 0
+	}()
+	timeToUpdateRpts := snap.number() > startBlockNumberOfRptCalculate
 	timeToUpdateCommittee = timeToUpdateCommittee && timeToUpdateRpts
 
-	log.Debug("now apply a batch of headers to get a new snap")
+	log.Debug("details", "startBlockNumberOfRptCalc", startBlockNumberOfRptCalculate,
+		"timeToUpdateRpt", timeToUpdateRpts,
+		"snap.number", snap.number(),
+	)
+
+	log.Debug("now apply a batch of headers to get a new snap", "timeToUpdateCommittee", timeToUpdateCommittee)
 
 	applyStartTime := time.Now()
 
@@ -475,13 +477,6 @@ func (dh *defaultDporHelper) snapshot(dpor *Dpor, chain consensus.ChainReader, n
 
 	// Save to cache
 	dpor.recentSnaps.Add(newSnap.hash(), newSnap)
-
-	// If we've generated a new checkpoint Snapshot, save to disk
-	if err = newSnap.store(dpor.db); err != nil {
-		log.Warn("failed to store dpor snapshot", "error", err)
-		return nil, err
-	}
-	log.Debug("Stored snapshot to disk", "number", newSnap.number(), "hash", newSnap.hash().Hex())
 
 	if dpor.CurrentSnap() == nil || (dpor.CurrentSnap() != nil && newSnap.number() >= dpor.CurrentSnap().number()) {
 		dpor.SetCurrentSnap(newSnap)

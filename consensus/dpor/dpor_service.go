@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"bitbucket.org/cpchain/chain/accounts"
+	"bitbucket.org/cpchain/chain/commons/log"
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
@@ -12,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 )
 
@@ -254,6 +254,9 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 	parentNum := parentHeader.Number.Uint64()
 
 	parent := d.chain.GetBlock(parentHeader.Hash(), parentNum)
+	if parent == nil {
+		return nil, errNilParent
+	}
 
 	impeachHeader := &types.Header{
 		ParentHash: parent.Hash(),
@@ -281,6 +284,9 @@ func (d *Dpor) CreateImpeachBlock() (*types.Block, error) {
 func (d *Dpor) CreateImpeachBlockAt(parentHeader *types.Header) (*types.Block, error) {
 	parentNum := parentHeader.Number.Uint64()
 	parent := d.chain.GetBlock(parentHeader.Hash(), parentNum)
+	if parent == nil {
+		return nil, errNilParent
+	}
 
 	impeachHeader := &types.Header{
 		ParentHash: parent.Hash(),

@@ -453,19 +453,3 @@ func Test_defaultDporHelper_verifySignatures(t *testing.T) {
 		t.Error("Call verifySignatures check status failed,,,")
 	}
 }
-
-func Test_defaultDporHelper_signHeader(t *testing.T) {
-	dph := &defaultDporHelper{&defaultDporUtil{}}
-	proposers := []common.Address{common.HexToAddress("0xe94b7b6c5a0e526a4d97f9768ad6097bde25c62a")}
-	d := NewDpor(&configs.DporConfig{Period: 3, TermLen: 12, ViewLen: 3, MaxInitBlockNumber: DefaultMaxInitBlockNumber}, 827, common.Hash{}, proposers, nil, FakeMode)
-	d.mode = FakeMode
-	d.chain = newBlockchain(888)
-	header := newHeader()
-	d.dh = dph
-	errInvalidState := errors.New("the state is unexpected for signing header")
-	err := dph.signHeader(d, d.chain, header, consensus.Idle)
-	equalSigner := reflect.DeepEqual(err, errInvalidState)
-	if !equalSigner {
-		t.Error("Call signerHeader check status failed...")
-	}
-}
