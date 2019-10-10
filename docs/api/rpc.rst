@@ -695,3 +695,102 @@ It returns the balance according to the wallet address.
 
 
 
+Version API
+******************
+
+
+
+web3_clientVersion
++++++++++++++++++++
+
+
+It returns the current client version.
+
+**Parameters**
+
+None
+
+
+
+**Returns**
+
+``String`` - The current client version.
+
+**Example**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": "cpchain/v0.4.6/linux-amd64/go1.11.1"
+    }
+
+
+net_version
++++++++++++++++++
+
+
+It returns the current network ID.
+
+**Parameters**
+
+None
+
+
+**Returns**
+
+``String`` - The current network id.
+
+* "0x13370000": CPChain Mainnet
+* "0": Test Mainnet
+* "1": Dev Network
+* "2": Testnet
+
+
+**Example**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": "322371584"   // 0x13370000
+    }
+
+eth_protocolVersion
+++++++++++++++++++++
+
+
+It returns the current CPChain protocol version.
+
+**Parameters**
+
+None
+
+
+**Returns**
+
+``String`` - The current CPChain protocol version.
+
+**Example**
+
+.. code-block:: shell
+
+    // Curl request
+    $ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_protocolVersion","params":[],"id":1}' --url 'http://127.0.0.1:8501' -H "Content-Type: application/json"
+
+    // Result
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": "0x1"
+    }
