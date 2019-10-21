@@ -6,7 +6,7 @@
 .. _index:
 
 ==================================
-Welcome to CPChain Documentation!
+Welcome to CPChain Documentaton!
 ==================================
 
 
