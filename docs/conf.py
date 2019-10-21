@@ -19,7 +19,7 @@ import os
 
 # -- Project information -----------------------------------------------------
 
-project = 'CPChain Docs CI2'
+project = 'CPChain Docs CI'
 copyright = '2018-2019, CPChain'
 author = 'CPChain'
 
