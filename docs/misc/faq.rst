@@ -244,3 +244,53 @@ and compare the value with the one on `Download Page`_.
 .. _`Download Page`: https://github.com/CPChain/chain/releases
 
 .. _`Checksum Page`: https://emn178.github.io/online-tools/sha256_checksum.html
+
+How to reduce the disk usage of ``cpchain``?
+************************************************
+
+From version 0.4.8, two commands are provided to delete useless files in ``cpchain`` folder.
+Please type the following two commands in order.
+
+.. code-block:: shell
+
+    ./cpchain chain delete dpor-
+    ./cpchain chain compact
+
+.. note::
+
+    i) You can use the flag ``--datadir`` to indicate your ``cpchain`` folder
+    if your node is not stored in the default directory.
+
+    ii) The ``chain delete dpor-`` command does not shrink disk usage directly.
+    It traverses all cpchain files and labels redundant and obsolete files.
+
+    iii) The ``chain compact`` command then compacts files
+    following the labels done by ``chain delete dpor-`` command.
+
+    iv) Both commands can be rather time consuming.
+    The process time is estimated to around 20 minutes for each command.
+
+    v) Note that there is a **hyphen** following ``dpor`` in ``chain delete dpor-`` command.
+    The argument ``dpor-`` indicates the prefix of file  names.
+    Other arguments rather than ``dpor-`` may lead to **unexpected results**.
+
+Is ``sudo`` needed to run ``cpchain``?
+********************************************
+
+In principle, ``sudo`` (or administrator privileges) is not required to run ``cpchain``.
+However, some users may encounter error message indicating a denied permission.
+Here we list some possible reasons accounting for this problem:
+
+**1. The root user and normal user have different default folders of** ``cpchain`` **.**
+
+Thus, if you run ``cpchain`` as root for the first time (e.g., using ``sudo``),
+you have to use ``--datadir`` to refer to the ``cpchain`` folder as a normal user.
+
+**2. Write into a log file that requires root privilege.**
+
+Some users (e.g., ones using ``nohup``) utilize ``>`` to redirect the output of ``cpchain`` to a log file.
+If the log file can only be written as root (e.g., in a root-privileged folder),
+this redirection will lead to a failure in launching ``cpchain``.
+
+You can either use the ``chmod`` command to change the permissions of the log file,
+or redirect the output to other log file that you can access.
