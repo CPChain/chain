@@ -274,6 +274,9 @@ Please type the following two commands in order.
     The argument ``dpor-`` indicates the prefix of file  names.
     Other arguments rather than ``dpor-`` may lead to **unexpected results**.
 
+    vi) Also note that both commands **can only** be executed when the chain is stopped.
+    An error will be raised if you execute either command for a running node.
+
 Is ``sudo`` needed to run ``cpchain``?
 ********************************************
 
