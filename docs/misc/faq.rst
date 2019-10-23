@@ -274,6 +274,9 @@ Please type the following two commands in order.
     The argument ``dpor-`` indicates the prefix of file  names.
     Other arguments rather than ``dpor-`` may lead to **unexpected results**.
 
+    vi) Also note that both commands **can only** be executed when the chain is stopped.
+    An error will be raised if you execute either command for a running node.
+
 Is ``sudo`` needed to run ``cpchain``?
 ********************************************
 
@@ -294,3 +297,22 @@ this redirection will lead to a failure in launching ``cpchain``.
 
 You can either use the ``chmod`` command to change the permissions of the log file,
 or redirect the output to other log file that you can access.
+
+
+
+Which version is compatible with the latest one?
+**************************************************
+
+**We strongly encourage the users to adopt the latest version!**
+
+In principle version 0.a.b is compatible with version 0.a.c, where a, b, c, are natural numbers.
+For example 0.4.8 is compatible with 0.4.6.
+
+The word **"compatible"** here means no conflicts in the level of consensus,
+but older versions certainly contain more bugs and lack new features.
+Thus, we highly recommend the user to keep the ``cpchain`` file updated to the latest version.
+
+Nevertheless, it is feasible to downgrade to a previous compatible version to
+circumvent certain bugs in the newer ones.
+Downgrading should be only considered as an expedient.
+And please update ``cpchain`` if the bug is solved.
