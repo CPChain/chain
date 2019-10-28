@@ -7,6 +7,20 @@ Glossary
 +---------------------------+------------------------------------+
 | Term                      |           Description              |
 +===========================+====================================+
+| DPoR                      | Short for *Dynamic Proof of*       |
+|                           | *Reputation*. It is the consensus  |
+|                           | algorithm among proposers.         |
++---------------------------+------------------------------------+
+| LBFT                      | Short for *Lightweight Byzantine*  |
+|                           | *Fault Tolerance*. It is a         |
+|                           | consensus algorithm inspired by    |
+|                           | PBFT.                              |
++---------------------------+------------------------------------+
+| LBFT 2.0                  | An improved version of LBFT.       |
+|                           | It is the current consensus        |
+|                           | algorithm among                    |
+|                           | validators.                        |
++---------------------------+------------------------------------+
 | Validators Committee      | A group of users that can validate |
 |                           | a newly proposed block.            |
 +---------------------------+------------------------------------+
@@ -22,6 +36,20 @@ Glossary
 +---------------------------+------------------------------------+
 | Civilian                  | All users except the proposer and  |
 |                           | validators from the committee.     |
++---------------------------+------------------------------------+
+| RNode                     | Short for *reputation node*.       |
+|                           | By depositing 200k tokens in       |
+|                           | reputation pool, a node            |
+|                           | can become an RNode.               |
++---------------------------+------------------------------------+
+| Economy node              | By depositing 20k tokens in        |
+|                           | economy node, a node can become an |
+|                           | economy node. Sometimes it is      |
+|                           | abbreviated into *ENode*.          |
++---------------------------+------------------------------------+
+| Industry node             | The node held CPChain partners.    |
+|                           | It can also propose blocks like    |
+|                           | other RNodes.                      |
 +---------------------------+------------------------------------+
 | Seal                      | A unforgeable signature indicating |
 |                           | the proposer of corresponding      |
