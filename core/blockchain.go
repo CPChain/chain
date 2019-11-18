@@ -1223,6 +1223,29 @@ func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 		}()
 	}
 
+	_, headN := bc.KnownHead()
+
+	// if the first item in the chain is in range (head-pivot, head), insert one by one.
+	if headN < configs.DefaultFullSyncPivot || chain[0].NumberU64() > headN-configs.DefaultFullSyncPivot {
+
+		rN, rErr := 0, error(nil)
+
+		for iter := 0; iter < len(chain); iter++ {
+			n, events, logs, err := bc.insertChain(chain[iter : iter+1])
+
+			rN, rErr = rN+n, err
+
+			bc.CommitStateDB()
+			bc.PostChainEvents(events, logs)
+
+			if err != nil {
+				break
+			}
+		}
+
+		return outset + rN, rErr
+	}
+
 	n, events, logs, err := bc.insertChain(chain)
 
 	bc.CommitStateDB()
@@ -1561,8 +1584,6 @@ type insertStats struct {
 // out progress. This avoids the user wondering what's going on.
 const statsReportLimit = 8 * time.Second
 
-var txCounterAfterStartup = 0
-
 // report prints statistics if some number of blocks have been processed
 // or more than a few seconds have passed since the last message.
 func (st *insertStats) report(chain []*types.Block, index int, cache common.StorageSize) {
@@ -1577,11 +1598,10 @@ func (st *insertStats) report(chain []*types.Block, index int, cache common.Stor
 			end = chain[index]
 			txs = countTransactions(chain[st.lastIndex : index+1])
 		)
-		txCounterAfterStartup += txs
 		context := []interface{}{
 			"blocks", st.processed, "txs", txs, "mgas", float64(st.usedGas) / 1000000,
 			"elapsed", common.PrettyDuration(elapsed), "mgasps", float64(st.usedGas) * 1000 / float64(elapsed),
-			"number", end.Number(), "hash", end.Hash().Hex(), "cache", cache, "txCounterAfterStartup", txCounterAfterStartup,
+			"number", end.Number(), "hash", end.Hash().Hex(), "cache", cache,
 		}
 		if st.queued > 0 {
 			context = append(context, []interface{}{"queued", st.queued}...)

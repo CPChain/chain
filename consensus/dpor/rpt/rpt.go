@@ -24,6 +24,7 @@ import (
 
 	"bitbucket.org/cpchain/chain/accounts/abi/bind"
 	"bitbucket.org/cpchain/chain/commons/log"
+	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/consensus/dpor/backend"
 	rptContract "bitbucket.org/cpchain/chain/contracts/dpor/rpt"
 	"github.com/ethereum/go-ethereum/common"
@@ -58,6 +59,8 @@ type RptServiceImpl struct {
 	contractAddr common.Address
 	rptInstance  *rptContract.Rpt
 	rptCollector RptCollector
+
+	rptCollector2 RptCollector
 }
 
 // NewRptService creates a concrete RPT service instance.
@@ -68,7 +71,8 @@ func NewRptService(contractAddr common.Address, backend backend.ClientBackend) (
 		log.Error("New rpt contract 2 error")
 	}
 
-	newRptCollector := NewRptCollectorImpl6(rptInstance, backend)
+	newRptCollector := NewRptCollectorImpl(rptInstance, backend)
+	newRptCollector2 := NewCollectorImpl2(rptInstance, backend)
 
 	bc := &RptServiceImpl{
 		client: backend,
@@ -76,11 +80,13 @@ func NewRptService(contractAddr common.Address, backend backend.ClientBackend) (
 		contractAddr: contractAddr,
 		rptInstance:  rptInstance,
 		rptCollector: newRptCollector,
+
+		rptCollector2: newRptCollector2,
 	}
 	return bc, nil
 }
 
-// TotalSeats returns total dynaimc seats
+// TotalSeats returns total dynamic seats
 func (rs *RptServiceImpl) TotalSeats() (int, error) {
 	if rs.rptInstance == nil {
 		log.Error("New rpt contract 2 error")
@@ -183,6 +189,12 @@ func (rs *RptServiceImpl) CalcRptInfoList(addresses []common.Address, number uin
 
 // CalcRptInfo return the Rpt of the candidate address
 func (rs *RptServiceImpl) CalcRptInfo(address common.Address, addresses []common.Address, number uint64) Rpt {
-	log.Debug("now calc rpt for with rpt method 6", "addr", address.Hex(), "number", number)
-	return rs.rptCollector.RptOf(address, addresses, number)
+
+	if number < configs.NewRptWithImpeachPunishmentPivotBlockNumber {
+		log.Debug("now calc rpt for with rpt method 1", "addr", address.Hex(), "number", number)
+		return rs.rptCollector.RptOf(address, addresses, number)
+	}
+
+	log.Debug("now calc rpt for with rpt method 2", "addr", address.Hex(), "number", number)
+	return rs.rptCollector2.RptOf(address, addresses, number)
 }
