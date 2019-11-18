@@ -122,8 +122,8 @@ const (
 
 // some version numbers
 const (
-	RnodeVersion    = 1
-	CampaignVersion = 1
+	RnodeVersion    = 2
+	CampaignVersion = 2
 )
 
 var (
