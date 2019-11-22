@@ -1226,7 +1226,7 @@ func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 	_, headN := bc.KnownHead()
 
 	// if the first item in the chain is in range (head-pivot, head), insert one by one.
-	if headN < configs.DefaultFullSyncPivot || chain[0].NumberU64() > headN-configs.DefaultFullSyncPivot {
+	if headN < configs.DefaultFullSyncPivot || chain[len(chain)-1].NumberU64() > headN-configs.DefaultFullSyncPivot {
 
 		rN, rErr := 0, error(nil)
 
