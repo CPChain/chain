@@ -320,16 +320,31 @@ func TestSyncerSlowPeer(t *testing.T) {
 
 func TestValidateReceiptsByManyPeers(t *testing.T) {
 	syncer.MinFullBlocks = 32
-	// validateReceiptsByManyPeers(t, 100, 1, false)
-	// validateReceiptsByManyPeers(t, 100, 3, false)
 	validateReceiptsByManyPeers(t, 200, 3, false)
-	// validateReceiptsByManyPeers(t, 1000, 3, false)
+	syncer.MinFullBlocks = 1024
+}
+
+func TestValidateReceiptsByManyPeersWithMoreBlocks(t *testing.T) {
+	syncer.MinFullBlocks = 32
+	validateReceiptsByManyPeers(t, 3000, 3, false)
+	syncer.MinFullBlocks = 1024
+}
+
+func TestValidateReceiptsByManyPeersWithMorePeers(t *testing.T) {
+	syncer.MinFullBlocks = 32
+	validateReceiptsByManyPeers(t, 1000, 20, false)
 	syncer.MinFullBlocks = 1024
 }
 
 func TestErrorValidateReceiptsByManyPeers(t *testing.T) {
 	syncer.MinFullBlocks = 0
 	validateReceiptsByManyPeers(t, 20, 20, true)
+	syncer.MinFullBlocks = 1024
+}
+
+func TestErrorValidateReceiptsByManyPeersWithMoreBlocks(t *testing.T) {
+	syncer.MinFullBlocks = 0
+	validateReceiptsByManyPeers(t, 2000, 20, true)
 	syncer.MinFullBlocks = 1024
 }
 
