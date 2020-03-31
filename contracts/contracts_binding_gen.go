@@ -24,13 +24,13 @@ package contracts
 
 //go:generate abigen --sol ./dpor/rnode/rnode.sol --pkg rnode --out ./dpor/rnode/rnode.go
 
-//go:generate abigen --sol ./dpor/network/network.sol --pkg network --out ./dpor/network/network.go
+//go:generate abigen --sol ./dpor/congress/congress.sol --pkg congress --out ./dpor/congress/congress.go
 
+//go:generate abigen --sol ./dpor/network/network.sol --pkg network --out ./dpor/network/network.go
 
 //go:generate abigen --sol ./primitives_example/primitives/primitive_contracts.sol --pkg primitives --out ./primitives_example/primitives/primitive_contracts.go
 
 //go:generate abigen --sol ./primitives_example/primitives/primitive_contracts_test.sol --pkg primitives_test --out ./primitives_example/primitives/primitive_contracts_test.go
-
 
 //go:generate abigen --sol ./pdash/pdash_contract/pdash.sol --pkg pdash_contract --out ./pdash/pdash_contract/pdash.go
 
@@ -42,7 +42,4 @@ package contracts
 
 //go:generate abigen --sol ./proxy/proxy_contract/proxy_contract_register.sol --pkg contract --out ./proxy/proxy_contract/proxy_contract_register.go
 
-
 //go:generate abigen --sol ./reward/reward.sol --pkg reward --out ./reward/reward.go
-
-

@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/cpchain/chain/configs"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/admission"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/campaign"
+	"bitbucket.org/cpchain/chain/tools/contract-admin/congress"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/network"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/rnode"
 	"bitbucket.org/cpchain/chain/tools/contract-admin/rpt"
@@ -33,6 +34,7 @@ func newApp() *cli.App {
 	app.Commands = []cli.Command{
 		admission.AdmissionCommand,
 		campaign.CampaignCommand,
+		congress.CongressCommand,
 		network.NetworkCommand,
 		rnode.RnodeCommand,
 		rpt.RptCommand,
