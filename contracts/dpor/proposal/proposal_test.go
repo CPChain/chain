@@ -1211,6 +1211,117 @@ func TestRefundAll(t *testing.T) {
 
 }
 
+func TestRefundAfterVoted(t *testing.T) {
+	var (
+		cnt = 10
+		id  = uuid
+	)
+	backend := initBackend()
+	congressIns, instance := initContracts(backend)
+	// generate 10 keys
+	keys := initKeys(t, backend, cnt)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
+
+	submitProposal(t, backend, instance, id)
+
+	checkStatus(t, instance, id, 0)
+
+	// update threshold
+	updateApprovalThreshold(t, backend, instance, cnt)
+	updateVoteThreshold(t, backend, instance, 30)
+
+	// approve all
+	approveAll(t, backend, instance, id, keys)
+
+	checkApprovalCnt(t, instance, id, int64(cnt))
+
+	checkStatus(t, instance, id, 1)
+
+	// get the balance of bank-key before refund
+	balanceBefore := getBalance(backend, bankAddr)
+
+	voteAll(t, backend, instance, id, keys)
+
+	checkStatus(t, instance, id, 2)
+
+	// check if the contract refunded
+	// check deposit first
+	if amount, _ := instance.GetLockedAmount(nil, id); amount.Cmp(big.NewInt(0)) != 0 {
+		t.Fatalf("expect deposited money to 0, but got %v", amount)
+	}
+
+	balanceAfter := getBalance(backend, bankAddr)
+	amount := big.NewInt(0).Add(balanceBefore, amountThreshold)
+
+	if amount.Cmp(balanceAfter) != 0 {
+		t.Fatalf("balance is wrong, refund failed. Before: %v, After %v, threshold is %v",
+			balanceBefore, balanceAfter, amountThreshold)
+	}
+
+}
+
+func TestRefundAfterTimeout(t *testing.T) {
+	var (
+		cnt = 10
+		id  = uuid
+	)
+	backend := initBackend()
+	congressIns, instance := initContracts(backend)
+	// generate 10 keys
+	keys := initKeys(t, backend, cnt)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
+
+	submitProposal(t, backend, instance, id)
+
+	checkStatus(t, instance, id, 0)
+
+	// update threshold
+	updateApprovalThreshold(t, backend, instance, cnt)
+	updateVoteThreshold(t, backend, instance, 30)
+
+	// approve all
+	approveAll(t, backend, instance, id, keys)
+
+	checkApprovalCnt(t, instance, id, int64(cnt))
+
+	checkStatus(t, instance, id, 1)
+
+	// get the balance of bank-key before refund
+	balanceBefore := getBalance(backend, bankAddr)
+
+	// make proposal be timeout
+	backend.AdjustTime(1000 * time.Second)
+	backend.Commit()
+
+	opts := bind.NewKeyedTransactor(ownerKey)
+	opts.Value = big.NewInt(0)
+	if _, err := instance.CheckTimeout(opts, id); err != nil {
+		t.Fatal(err)
+	}
+	backend.Commit()
+
+	checkStatus(t, instance, id, 3)
+
+	// check if the contract refunded
+	// check deposit first
+	if amount, _ := instance.GetLockedAmount(nil, id); amount.Cmp(big.NewInt(0)) != 0 {
+		t.Fatalf("expect deposited money to 0, but got %v", amount)
+	}
+
+	balanceAfter := getBalance(backend, bankAddr)
+	amount := big.NewInt(0).Add(balanceBefore, amountThreshold)
+
+	if amount.Cmp(balanceAfter) != 0 {
+		t.Fatalf("balance is wrong, refund failed. Before: %v, After %v, threshold is %v",
+			balanceBefore, balanceAfter, amountThreshold)
+	}
+
+}
+
 func randString(r *rand.Rand, len int) string {
 	bytes := make([]byte, len)
 	for i := 0; i < len; i++ {
@@ -1405,7 +1516,7 @@ func checkID(t *testing.T, instance *proposal.Proposal, index int64, id string) 
 func checkStatus(t *testing.T, instance *proposal.Proposal, id string, expect uint8) {
 	if status, err := instance.GetStatus(nil, id); err == nil {
 		if status != expect {
-			t.Errorf("status of this proposal should be %v, but got %v", expect, status)
+			t.Fatalf("status of this proposal should be %v, but got %v", expect, status)
 		}
 	} else {
 		t.Error(err)
