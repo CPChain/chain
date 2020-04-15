@@ -58,6 +58,27 @@ var (
 				Description: `submit proposal`,
 			},
 			{
+				Name:        "approve",
+				Usage:       "approve <id>",
+				Action:      approve,
+				Flags:       flags.GeneralFlags,
+				Description: `approve proposal`,
+			},
+			{
+				Name:        "vote",
+				Usage:       "vote <id>",
+				Action:      vote,
+				Flags:       flags.GeneralFlags,
+				Description: `vote proposal`,
+			},
+			{
+				Name:        "get-status",
+				Usage:       "get-status <id>",
+				Action:      getStatus,
+				Flags:       flags.GeneralFlags,
+				Description: `status of proposal`,
+			},
+			{
 				Name:        "show-configs",
 				Usage:       "proposal showconfigs",
 				Action:      showConfigs,
@@ -182,6 +203,58 @@ func submit(ctx *cli.Context) error {
 		return err
 	}
 	return utils.WaitMined(client, tx)
+}
+
+func approve(ctx *cli.Context) error {
+	id := utils.GetFirstStringArgument(ctx)
+	log.Info("approve proposal", "id", id)
+	instance, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
+	tx, err := instance.Approval(opts, id)
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
+}
+
+func vote(ctx *cli.Context) error {
+	id := utils.GetFirstStringArgument(ctx)
+	log.Info("vote proposal", "id", id)
+	instance, opts, client, err := createContractInstanceAndTransactor(ctx, true)
+	if err != nil {
+		return err
+	}
+	tx, err := instance.Vote(opts, id)
+	if err != nil {
+		return err
+	}
+	return utils.WaitMined(client, tx)
+}
+
+func getStatus(ctx *cli.Context) error {
+	id := utils.GetFirstStringArgument(ctx)
+	log.Info("proposal", "id", id)
+	instance, _, _, err := createContractInstanceAndTransactor(ctx, false)
+	if err != nil {
+		return err
+	}
+	if status, err := instance.GetStatus(nil, id); err != nil {
+		return err
+	} else {
+		switch status {
+		case 0:
+			log.Info("Deposited")
+		case 1:
+			log.Info("Approved")
+		case 2:
+			log.Info("Successful")
+		case 3:
+			log.Info("Timeout")
+		}
+	}
+	return nil
 }
 
 func showConfigs(ctx *cli.Context) error {
