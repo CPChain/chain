@@ -199,6 +199,21 @@ contract Proposal {
         return proposals[id].lockedAmount;
     }
 
+    // get deposited time
+    function getLockedTime(string id) public view existsCheck(id) returns (uint256) {
+        return proposals[id].lockedTime;
+    }
+
+    // get owner
+    function getOwner(string id) public view existsCheck(id) returns (address) {
+        return proposals[id].owner;
+    }
+
+    // get period
+    function getPeriod(string id) public view existsCheck(id) returns (uint256) {
+        return proposals[id].period;
+    }
+
     // owner can enable and disable proposal contract
     function enableContract() public onlyOwner {
         enabled = true;
