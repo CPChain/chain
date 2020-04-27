@@ -321,6 +321,37 @@ func TestUpdateLowRptSeats(t *testing.T) {
 	}
 }
 
+func TestUpdateWindowSize(t *testing.T) {
+	contractBackend := backends.NewDporSimulatedBackend(core.GenesisAlloc{addr: {Balance: big.NewInt(1000000000000)}})
+	contractAddr, rpt, opt, err := deployRpt(key, big.NewInt(0), contractBackend)
+	checkError(t, "deploy contract: expected no error, got %v", err)
+
+	// windowsize
+	_ = contractAddr
+	_ = opt
+	window, err := rpt.Window(nil)
+	checkError(t, "get window error", err)
+	verifyEqual(t, window.Uint64(), uint64(100))
+
+	// update windowsize success
+	_, err = rpt.UpdateWindow(opt, big.NewInt(int64(10)))
+	checkError(t, "UpdateWindow error ", err)
+	contractBackend.Commit()
+	newWindow, err := rpt.Window(nil)
+	verifyEqual(t, newWindow.Uint64(), uint64(10))
+
+	// update windowSize fail
+	_, err = rpt.UpdateWindow(opt, big.NewInt(int64(101)))
+	if err == nil {
+		t.Fatal("the err should be an error other than nil")
+	}
+	contractBackend.Commit()
+	newWindow, err = rpt.Window(nil)
+	// the window size should not be changed
+	verifyEqual(t, newWindow.Uint64(), uint64(10))
+
+}
+
 func verifyEqual(t *testing.T, v1 uint64, v2 uint64) {
 	fmt.Println("v1,v2 is :", v1, v2)
 	if v1 != v2 {

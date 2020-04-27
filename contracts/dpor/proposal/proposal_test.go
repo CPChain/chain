@@ -839,7 +839,7 @@ func TestWithdrawWhenStatusIsApprovedButTimeout(t *testing.T) {
 	checkStatus(t, instance, id, 3)
 }
 
-func TestWithdrawWhenStatusIssuccessfulButTimeout(t *testing.T) {
+func TestWithdrawWhenStatusIsSuccessfulButTimeout(t *testing.T) {
 	var (
 		keysCnt = 10
 		id      = uuid
@@ -1207,6 +1207,42 @@ func TestRefundAll(t *testing.T) {
 		if balance.Cmp(tmpBalance) != 0 {
 			t.Errorf("expect balance is %v, but got %v", tmpBalance, balance)
 		}
+	}
+
+}
+
+func TestRefundAfterApproved(t *testing.T) {
+	var (
+		cnt = 10
+		id  = uuid
+	)
+	backend := initBackend()
+	congressIns, instance := initContracts(backend)
+	// generate 10 keys
+	keys := initKeys(t, backend, cnt)
+
+	// init congress, add all keys to congress
+	initCongress(t, backend, congressIns, keys)
+
+	submitProposal(t, backend, instance, id)
+
+	checkStatus(t, instance, id, 0)
+
+	// update threshold
+	updateApprovalThreshold(t, backend, instance, cnt)
+	updateVoteThreshold(t, backend, instance, 30)
+
+	// approve all
+	approveAll(t, backend, instance, id, keys)
+
+	checkApprovalCnt(t, instance, id, int64(cnt))
+
+	checkStatus(t, instance, id, 1)
+
+	// check if the contract refunded, should not
+	// check deposit first
+	if amount, _ := instance.GetLockedAmount(nil, id); amount.Cmp(amountThreshold) != 0 {
+		t.Fatalf("expect deposited money to %v, but got %v", amountThreshold, amount)
 	}
 
 }
